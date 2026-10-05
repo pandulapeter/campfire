@@ -120,6 +120,7 @@ import com.pandulapeter.campfire.data.model.domain.SyncState
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.currentLanguage
 import com.pandulapeter.campfire.presentation.localization.pluralStringResource
+import com.pandulapeter.campfire.chordpro.ChordProTempo
 import com.pandulapeter.campfire.chordpro.ChordProMetadataFields.Field
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -132,7 +133,6 @@ import com.pandulapeter.campfire.presentation.resources.delete
 import com.pandulapeter.campfire.presentation.resources.done
 import com.pandulapeter.campfire.presentation.resources.ic_add
 import com.pandulapeter.campfire.presentation.resources.ic_album
-import com.pandulapeter.campfire.presentation.resources.song_details_change_cover_art
 import com.pandulapeter.campfire.presentation.resources.song_details_set_cover_art
 import com.pandulapeter.campfire.presentation.resources.ic_calendar
 import com.pandulapeter.campfire.presentation.resources.ic_clear
@@ -241,6 +241,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableConten
 import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
 import com.pandulapeter.campfire.presentation.ui.platform.calendarLocale
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsSubsection
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongDefaults
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongInfoBody
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.rememberSongInfoEditing
 import com.pandulapeter.campfire.presentation.ui.components.ACTION_BUTTON_OVERLAP
@@ -2319,9 +2320,12 @@ private fun Modifier.reachingDialogEdges() = layout { measurable, constraints ->
 }
 
 /**
- * What a song says about itself beyond how it is played, read from its text as it is now. Outside performance mode the
- * header edits details and cover art and the body edits tags, languages and links, opening their dialogs on top of the sheet;
- * performance mode shows only what the song has, without editing controls.
+ * What a song says about itself, read from its text as it is now: its details, the defaults its file declares for how
+ * it is played — with a line saying where the song is being played differently from them, which is what the steppers on
+ * the page show — and its tags, languages and links. Outside read only mode the header edits details and cover art and
+ * the body edits the rest, opening their dialogs on top of the sheet — the cover art button there only while the song has
+ * no cover, which is changed from the cover itself once it has one; read only mode shows only what the song has,
+ * without editing controls.
  */
 @Composable
 private fun SongInfoSheet(
@@ -2340,23 +2344,24 @@ private fun SongInfoSheet(
     val metadata = remember(text) { text?.let(viewModel::songMetadataOf) }
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val editing = rememberSongInfoEditing(viewModel = viewModel, song = song, isEditorDraft = false)
+    val overrides = songPlayingOverrides(viewModel = viewModel, song = song, setlistFileName = setlistFileName)
     CampfireBottomSheet(
         title = stringResource(Res.string.song_details_song_info),
         subtitle = songLabel(song),
         actions = if (isReadOnly) null else {
             {
-                editing.onEditCoverArt?.let { onEditCoverArt ->
+                // A song with a cover changes it from the cover itself, which the body draws with a pencil on it.
+                val onSetCoverArt = editing.onEditCoverArt?.takeIf { metadata?.coverArt.isNullOrBlank() }
+                onSetCoverArt?.let { onEditCoverArt ->
                     IconButton(onClick = onEditCoverArt, enabled = metadata != null) {
                         Icon(
                             painter = painterResource(Res.drawable.ic_album),
-                            contentDescription = stringResource(
-                                if (song.coverArtUrl == null) Res.string.song_details_set_cover_art else Res.string.song_details_change_cover_art,
-                            ),
+                            contentDescription = stringResource(Res.string.song_details_set_cover_art),
                         )
                     }
                 }
                 IconButton(
-                    modifier = if (editing.onEditCoverArt != null) Modifier.overlappingAction(start = ACTION_BUTTON_OVERLAP, end = 0.dp) else Modifier,
+                    modifier = if (onSetCoverArt != null) Modifier.overlappingAction(start = ACTION_BUTTON_OVERLAP, end = 0.dp) else Modifier,
                     onClick = editing.onEditMetadata,
                     enabled = metadata != null,
                 ) {
@@ -2382,6 +2387,15 @@ private fun SongInfoSheet(
                 coverArtUrl = metadata.coverArt.takeIf { userPreferences?.isCoverArtEnabled == true },
                 horizontalPadding = 16.dp,
                 editing = editing.takeUnless { isReadOnly },
+                defaults = SongDefaults(
+                    key = metadata.key?.takeIf { it.isNotBlank() }?.let(viewModel::editorKeyOf),
+                    capo = metadata.capo,
+                    tempo = ChordProTempo.parse(metadata.tempo),
+                    time = metadata.time,
+                    overrides = overrides.labels,
+                    isReadFromSetlist = setlistFileName != null,
+                    onEdit = if (isReadOnly) null else ({ viewModel.showSongPlayingDialog(song = song, setlistFileName = setlistFileName) }),
+                ),
                 onOpenLink = urlOpener,
             )
         }

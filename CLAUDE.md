@@ -254,8 +254,8 @@ localized in both languages.
   `ChordProMetadata.links`. Any page is taken, whatever site it is on, and nothing is ever fetched from one: the
   song details' About the song sheet shows each as a chip named by its optional name or its host, opening the page in
   the browser. The sheet is opened by tapping the song details app bar's title while the song is at its top, which a chevron after
-  the title says (it has no button or menu entry of its own) — and holds what the song says about itself, each group with an edit button outside
-  performance mode and outside an archived setlist, where the groups it has nothing for are one row of chips that add them; key, capo, tempo and time stay on the page as the song's first section (see How a song is played below). The editor's preview shows
+  the title says (it has no button or menu entry of its own) — and holds what the song says about itself, each group with an edit button next to its title outside
+  performance mode and outside an archived setlist, where a group it has nothing for is its title and a plus alone; key, capo, tempo and time stay on the page as the song's first section (see How a song is played below), and the sheet only reads what the file declares for them, opening the Song defaults sheet and saying where the song is being played differently. The editor's preview shows
   the same as a card that is the song's first section, flowing through its rows and columns and scaling with the
   lyrics, with the same edit buttons. The editor's overflow menu offers these actions in every pane, and the song
   details screen's editing menu — a pencil button of its own before the overflow menu, holding the editor and these —
@@ -279,7 +279,7 @@ localized in both languages.
   overridden where the song is read, so they belong to the setlist the band plays it in or to this device (see the
   Metronome section); the time signature alone is written into the file as a `{time}` directive, since it is the song
   rather than one band's reading of it, and it is what the click counts the bar by. **What the file declares for all
-  four is edited in the Song defaults sheet**, an entry of the song details editing menu, and nowhere on the page: it opens with a line saying that the steppers
+  four is edited in the Song defaults sheet**, an entry of the song details editing menu and of the About the song sheet's Song defaults group, and nowhere on the page: it opens with a line saying that the steppers
   change them for this setlist only, or, opened from the library, outside every setlist — never naming a device,
   since preferences may be synced one day — then a card naming what is adjusted there, with a Reset, while there is any, then the key, capo, tempo and time signature fields, each optional, an
   empty one leaving the default in force. A new song's template carries an empty `{key}`, `{capo}`, `{tempo}` and

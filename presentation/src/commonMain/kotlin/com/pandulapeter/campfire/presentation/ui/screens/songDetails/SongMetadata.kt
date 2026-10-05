@@ -10,8 +10,11 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -25,6 +28,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -32,7 +36,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -62,13 +69,17 @@ import com.pandulapeter.campfire.presentation.resources.song_details_album
 import com.pandulapeter.campfire.presentation.resources.song_details_capo
 import com.pandulapeter.campfire.presentation.resources.song_details_composer
 import com.pandulapeter.campfire.presentation.resources.song_details_duration
-import com.pandulapeter.campfire.presentation.resources.song_details_info_add
-import com.pandulapeter.campfire.presentation.resources.song_details_info_manage
-import com.pandulapeter.campfire.presentation.resources.song_details_info_details
+import com.pandulapeter.campfire.presentation.resources.song_details_info_defaults
 import com.pandulapeter.campfire.presentation.resources.song_details_info_languages
 import com.pandulapeter.campfire.presentation.resources.song_details_info_links
 import com.pandulapeter.campfire.presentation.resources.song_details_info_tags
 import com.pandulapeter.campfire.presentation.resources.song_details_lyricist
+import com.pandulapeter.campfire.presentation.resources.song_details_playing_edit
+import com.pandulapeter.campfire.presentation.resources.song_details_links_edit
+import com.pandulapeter.campfire.presentation.resources.song_details_languages_edit
+import com.pandulapeter.campfire.presentation.resources.song_details_tags_manage
+import com.pandulapeter.campfire.presentation.resources.song_details_playing_override_library
+import com.pandulapeter.campfire.presentation.resources.song_details_playing_override_setlist
 import com.pandulapeter.campfire.presentation.resources.song_details_metadata_edit
 import com.pandulapeter.campfire.presentation.resources.song_details_song_info
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo
@@ -76,6 +87,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_time
 import com.pandulapeter.campfire.presentation.resources.song_details_transposition
 import com.pandulapeter.campfire.presentation.resources.song_details_year
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_capo
+import com.pandulapeter.campfire.presentation.resources.song_editor_insert_key
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_tempo
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_time
 import com.pandulapeter.campfire.presentation.ui.components.TagFlowRow
@@ -466,12 +478,15 @@ internal class SongInfoEditing(
 
 /**
  * What the card and the sheet of what the song is hold: the cover, then the album, the year and the people behind the
- * song as small label-over-value tiles beside it, then a group of chips for each of its tags, its languages and its
- * links. Where [editing] is given, each category ends with a Manage chip, or an Add chip with a plus icon when empty.
- * Details are edited from the card or sheet header.
+ * song as small label-over-value tiles beside it, untitled since the card or the sheet around them already says what
+ * they are, then the song's defaults where [defaults] are given, then a group of chips for each of its tags, its
+ * languages and its links. Where [editing] is given, each category ends with a Manage chip, or an Add chip with a plus
+ * icon when empty. Details are edited from the card or sheet header.
  *
  * @param coverArtUrl The cover to draw at the start of the details, null where there is none or the cover art setting
  * is off. It opens the cover search where [editing] has a way to it, the same as the header's cover button.
+ * @param defaults What the file declares for the four values the song is played by, which only the sheet shows: the
+ * editor's preview card sits over the line of text that already reads them.
  * @param onOpenLink Follows a link; null leaves the links as plain chips.
  */
 @Composable
@@ -482,6 +497,7 @@ internal fun SongInfoBody(
     fontScale: Float = 1f,
     horizontalPadding: Dp,
     editing: SongInfoEditing?,
+    defaults: SongDefaults? = null,
     onOpenLink: ((String) -> Unit)?,
 ) {
     val rows = listOfNotNull(
@@ -497,7 +513,7 @@ internal fun SongInfoBody(
     ) {
         if (rows.isNotEmpty() || coverArtUrl != null) {
             SongInfoGroup(
-                title = stringResource(Res.string.song_details_info_details),
+                title = null,
                 count = 0,
                 fontScale = fontScale,
                 horizontalPadding = horizontalPadding,
@@ -516,6 +532,13 @@ internal fun SongInfoBody(
                 }
             }
         }
+        if (defaults != null && (defaults.hasValues || defaults.onEdit != null || defaults.overrides.isNotEmpty())) {
+            SongDefaultsGroup(
+                defaults = defaults,
+                fontScale = fontScale,
+                horizontalPadding = horizontalPadding,
+            )
+        }
         if (metadata.tags.isNotEmpty() || editing != null) {
             SongInfoChipGroup(
                 title = Res.plurals.song_details_info_tags,
@@ -523,6 +546,7 @@ internal fun SongInfoBody(
                 fontScale = fontScale,
                 horizontalPadding = horizontalPadding,
                 onEdit = editing?.onEditTags,
+                editLabel = stringResource(Res.string.song_details_tags_manage),
             ) {
                 val tags = remember(metadata.tags) { metadata.tags.sortedAlphabeticallyBy { it } }
                 tags.forEach { TagPill(text = it, leadingIcon = painterResource(Res.drawable.ic_label), fontScale = fontScale) }
@@ -535,6 +559,7 @@ internal fun SongInfoBody(
                 fontScale = fontScale,
                 horizontalPadding = horizontalPadding,
                 onEdit = editing?.onEditLanguages,
+                editLabel = stringResource(Res.string.song_details_languages_edit),
             ) {
                 metadata.languages.map { languageLabel(it) }.sortedAlphabeticallyBy { it }.forEach { label ->
                     TagPill(text = label, leadingIcon = painterResource(Res.drawable.ic_language), fontScale = fontScale)
@@ -548,6 +573,7 @@ internal fun SongInfoBody(
                 fontScale = fontScale,
                 horizontalPadding = horizontalPadding,
                 onEdit = editing?.onEditLinks,
+                editLabel = stringResource(Res.string.song_details_links_edit),
             ) {
                 // Unlike the tags and the languages, the links stay in the order the file and the dialog that
                 // edits them give them, since that order is one the user chose.
@@ -565,7 +591,8 @@ internal fun SongInfoBody(
 }
 
 /**
- * The cover in front of the details, a shortcut to the cover search where [onClick] is given. Keyed on whether there is
+ * The cover in front of the details, a shortcut to the cover search where [onClick] is given, with a small pencil on it
+ * then, since the sheet's header offers its cover button only to a song with no cover yet. Keyed on whether there is
  * a cover rather than on its address, so that a new cover crossfades in place of the old one, while a cover being set or
  * removed opens or closes its room.
  */
@@ -581,7 +608,7 @@ private fun SongInfoCover(
 ) { shownUrl ->
     if (shownUrl != null) {
         val shape = MaterialTheme.shapes.medium
-        CoverArtImage(
+        Box(
             modifier = Modifier
                 .padding(end = 16.dp * fontScale)
                 .size(SONG_INFO_COVER_SIZE * fontScale)
@@ -593,9 +620,30 @@ private fun SongInfoCover(
                         onClick = onClick,
                     ),
                 ),
-            url = shownUrl,
-            shape = shape,
-        )
+        ) {
+            CoverArtImage(
+                modifier = Modifier.matchParentSize(),
+                url = shownUrl,
+                shape = shape,
+            )
+            if (onClick != null) {
+                Surface(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(COVER_EDIT_BADGE_INSET * fontScale)
+                        .size(COVER_EDIT_BADGE_SIZE * fontScale),
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                ) {
+                    Icon(
+                        modifier = Modifier.padding(COVER_EDIT_BADGE_INSET * fontScale),
+                        painter = painterResource(Res.drawable.ic_edit),
+                        contentDescription = null,
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -628,10 +676,104 @@ private fun MetadataTiles(
     }
 }
 
+/** What the song's file declares for the four values it is played by, for the "About the song" sheet, see [SongInfoBody]. */
+@Immutable
+internal class SongDefaults(
+    /** In the reader's notation, the way the "Song defaults" sheet's field shows it. */
+    val key: String?,
+    val capo: Int?,
+    val tempo: Int?,
+    val time: String?,
+    /** How the song is played differently from these where it is read, see `songPlayingOverrides`. */
+    val overrides: List<String>,
+    /** Whether [overrides] belong to a setlist rather than to the library on this device. */
+    val isReadFromSetlist: Boolean,
+    /** Opens the "Song defaults" sheet; null in read only mode, which changes nothing about a song. */
+    val onEdit: (() -> Unit)?,
+) {
+    val hasValues get() = !key.isNullOrBlank() || capo != null || tempo != null || !time.isNullOrBlank()
+}
+
+/**
+ * The song's defaults as label-over-value tiles, the way its details are shown, with a pencil next to the title that
+ * opens the "Song defaults" sheet. Where the song is being played differently from them a line under the tiles says so, in the
+ * color the steppers on the page draw an overridden value in: the sheet would otherwise name values the page does not
+ * show, and that difference is the one the "Song defaults" sheet exists to explain.
+ */
+@Composable
+private fun SongDefaultsGroup(
+    defaults: SongDefaults,
+    fontScale: Float,
+    horizontalPadding: Dp,
+) = SongInfoGroup(
+    title = stringResource(Res.string.song_details_info_defaults),
+    count = 0,
+    fontScale = fontScale,
+    horizontalPadding = horizontalPadding,
+    action = defaults.onEdit?.let { onEdit ->
+        {
+            SongInfoAction(
+                hasValues = defaults.hasValues,
+                contentDescription = stringResource(Res.string.song_details_playing_edit),
+                fontScale = fontScale,
+                onClick = onEdit,
+            )
+        }
+    },
+    isContentShown = defaults.hasValues || defaults.overrides.isNotEmpty(),
+) {
+    SongDefaultsValues(defaults = defaults, fontScale = fontScale)
+}
+
+/** The tiles of [SongDefaultsGroup], and under them the line naming the overrides while there are any. */
+@Composable
+private fun SongDefaultsValues(
+    defaults: SongDefaults,
+    fontScale: Float,
+) {
+    val rows = listOfNotNull(
+        defaults.key?.takeIf { it.isNotBlank() }?.let { stringResource(Res.string.song_editor_insert_key) to it },
+        defaults.capo?.let { stringResource(Res.string.song_editor_insert_capo) to it.toString() },
+        defaults.tempo?.let { stringResource(Res.string.song_editor_insert_tempo) to textResource(Res.string.song_details_tempo, it.toString()) },
+        defaults.time?.takeIf { it.isNotBlank() }?.let { stringResource(Res.string.song_editor_insert_time) to it },
+    )
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp * fontScale)) {
+        if (rows.isNotEmpty()) {
+            MetadataTiles(
+                rows = rows,
+                fontScale = fontScale,
+            )
+        }
+        AnimatedVisibility(
+            visible = defaults.overrides.isNotEmpty(),
+            enter = fadeIn() + expandVertically(),
+            exit = fadeOut() + shrinkVertically(),
+        ) {
+            // The last overrides named stay while a reset folds the line away.
+            var shownOverrides by remember { mutableStateOf(defaults.overrides) }
+            if (defaults.overrides.isNotEmpty()) shownOverrides = defaults.overrides
+            Column {
+                Text(
+                    text = stringResource(
+                        if (defaults.isReadFromSetlist) Res.string.song_details_playing_override_setlist else Res.string.song_details_playing_override_library,
+                    ),
+                    style = MaterialTheme.typography.labelMedium.scaled(fontScale),
+                    color = MaterialTheme.colorScheme.primary,
+                )
+                Text(
+                    text = shownOverrides.joinToString("  •  "),
+                    style = MaterialTheme.typography.bodyMedium.scaled(fontScale),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+    }
+}
+
 /**
  * A [SongInfoGroup] of chips, titled in the singular or the plural. A group of several also says how many; a single
- * chip, which is what most songs have for a language, is named by the title alone. The Manage action follows all values;
- * an empty category offers Add with a plus icon instead.
+ * chip, which is what most songs have for a language, is named by the title alone. A pencil next to the title edits the
+ * group; an empty one offers a plus instead, and is the title row alone.
  */
 @Composable
 private fun SongInfoChipGroup(
@@ -640,62 +782,101 @@ private fun SongInfoChipGroup(
     fontScale: Float,
     horizontalPadding: Dp,
     onEdit: (() -> Unit)?,
+    editLabel: String,
     chips: @Composable FlowRowScope.() -> Unit,
 ) = SongInfoGroup(
     title = pluralStringResource(title, count),
     count = count,
     fontScale = fontScale,
     horizontalPadding = horizontalPadding,
-) {
-    TagFlowRow {
-        chips()
-        if (onEdit != null) {
-            TagPill(
-                text = stringResource(if (count == 0) Res.string.song_details_info_add else Res.string.song_details_info_manage),
-                isAction = true,
-                onClick = onEdit,
-                leadingIcon = if (count == 0) painterResource(Res.drawable.ic_add) else null,
+    action = onEdit?.let { onClick ->
+        {
+            SongInfoAction(
+                hasValues = count > 0,
+                contentDescription = editLabel,
                 fontScale = fontScale,
+                onClick = onClick,
             )
         }
-    }
+    },
+    isContentShown = count > 0,
+) {
+    TagFlowRow(content = chips)
 }
 
-/** One group of [SongInfoBody] under its title, with a count next to the title when it is more than one. */
+/**
+ * The button next to a group's title that edits it: a pencil, or a plus where the group is empty. As tall as the title
+ * row, so that a group reads the same with it and without it; the touch target still reaches beyond it.
+ */
+@Composable
+private fun SongInfoAction(
+    hasValues: Boolean,
+    contentDescription: String,
+    fontScale: Float,
+    onClick: () -> Unit,
+) = IconButton(
+    modifier = Modifier.size(SONG_INFO_TITLE_HEIGHT * fontScale),
+    onClick = onClick,
+) {
+    Icon(
+        modifier = Modifier.size(EDIT_ICON_SIZE * fontScale),
+        painter = painterResource(if (hasValues) Res.drawable.ic_edit else Res.drawable.ic_add),
+        contentDescription = contentDescription,
+        tint = MaterialTheme.colorScheme.primary,
+    )
+}
+
+/**
+ * One group of [SongInfoBody] under its title, if it has one, with a count next to the title when it is more than one
+ * and the [action] that edits the group after that. Where [isContentShown] is false the group is its title row alone,
+ * the content folding away rather than vanishing, since emptying a group is something the user did from this sheet.
+ */
 @Composable
 private fun SongInfoGroup(
-    title: String,
+    title: String?,
     count: Int,
     fontScale: Float,
     horizontalPadding: Dp,
+    action: (@Composable () -> Unit)? = null,
+    isContentShown: Boolean = true,
     content: @Composable () -> Unit,
-) = Column(
-    modifier = Modifier.fillMaxWidth(),
-    verticalArrangement = Arrangement.spacedBy(4.dp * fontScale),
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(SONG_INFO_TITLE_HEIGHT * fontScale)
-            .padding(horizontal = horizontalPadding),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleSmall.scaled(fontScale),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        if (count > 1) {
+) = Column(modifier = Modifier.fillMaxWidth()) {
+    if (title != null) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(SONG_INFO_TITLE_HEIGHT * fontScale)
+                .padding(horizontal = horizontalPadding),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             Text(
-                modifier = Modifier.padding(start = 8.dp),
-                text = count.toString(),
+                text = title,
                 style = MaterialTheme.typography.titleSmall.scaled(fontScale),
-                color = MaterialTheme.colorScheme.outline,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            if (count > 1) {
+                Text(
+                    modifier = Modifier.padding(start = 8.dp),
+                    text = count.toString(),
+                    style = MaterialTheme.typography.titleSmall.scaled(fontScale),
+                    color = MaterialTheme.colorScheme.outline,
+                )
+            }
+            if (action != null) {
+                Box(modifier = Modifier.padding(start = 4.dp * fontScale)) {
+                    action()
+                }
+            }
         }
     }
-    Box(modifier = Modifier.padding(horizontal = horizontalPadding)) {
-        content()
+    AnimatedVisibility(
+        visible = isContentShown,
+        enter = fadeIn() + expandVertically(),
+        exit = fadeOut() + shrinkVertically(),
+    ) {
+        Box(modifier = Modifier.padding(start = horizontalPadding, top = if (title == null) 0.dp else 4.dp * fontScale, end = horizontalPadding)) {
+            content()
+        }
     }
 }
 
@@ -729,3 +910,5 @@ private val SONG_INFO_GROUP_GAP = 16.dp
 
 /** As tall as two rows of detail tiles, which is what a song with a few details fills beside it. */
 private val SONG_INFO_COVER_SIZE = 96.dp
+private val COVER_EDIT_BADGE_SIZE = 24.dp
+private val COVER_EDIT_BADGE_INSET = 4.dp

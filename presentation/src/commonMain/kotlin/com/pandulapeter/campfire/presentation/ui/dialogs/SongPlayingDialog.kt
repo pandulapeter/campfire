@@ -28,6 +28,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -147,7 +148,7 @@ internal fun SongPlayingDialog(
                     ),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                SongPlayingOverrides(
+                SongPlayingOverridesCard(
                     viewModel = viewModel,
                     song = dialog.song,
                     setlistFileName = dialog.setlistFileName,
@@ -182,33 +183,61 @@ internal fun SongPlayingDialog(
 }
 
 /**
- * The card that names how the song is being played differently from its file where it is read, and takes all of it
- * back with one button. It reads the overrides live, so a reset folds it away while the sheet is open; the last values
- * it named stay in it while it does.
+ * How the song is being played differently from its file where it is read, named one value at a time, and what takes
+ * all of it back. Read live, so a reset empties it while whatever shows it is open.
  */
+@Immutable
+internal class SongPlayingOverrides(
+    val labels: List<String>,
+    val onReset: () -> Unit,
+)
+
+/** The overrides of [song] read through [setlistFileName], or in the library on this device where it is null. */
 @Composable
-private fun SongPlayingOverrides(
+internal fun songPlayingOverrides(
     viewModel: CampfireViewModel,
     song: Song,
     setlistFileName: String?,
-) {
+): SongPlayingOverrides {
     val transpositions by viewModel.transpositions.collectAsStateWithLifecycle()
     val tempos by viewModel.tempos.collectAsStateWithLifecycle()
     val capos by viewModel.capos.collectAsStateWithLifecycle()
     val transposition = transpositions[song.fileName, setlistFileName]
     val capo = effectiveCapo(song = song, setlistFileName = setlistFileName, capos = capos)
     val tempo = effectiveTempo(song = song, setlistFileName = setlistFileName, tempos = tempos)
-    val overrides = listOfNotNull(
+    val labels = listOfNotNull(
         transposition.takeIf { it != 0 }?.let {
             stringResource(Res.string.song_details_playing_override_transposition, transpositionLabel(transposition = it, key = null))
         },
         capo.takeUnless { it.isDefault }?.let { stringResource(Res.string.song_details_capo, it.fret) },
         tempo.takeUnless { it.isDefault }?.let { stringResource(Res.string.song_details_tempo, it.bpm.toString()) },
     )
-    var shownOverrides by remember { mutableStateOf(overrides) }
-    if (overrides.isNotEmpty()) shownOverrides = overrides
+    return SongPlayingOverrides(
+        labels = labels,
+        onReset = {
+            if (transposition != 0) viewModel.resetTransposition(song.fileName, setlistFileName)
+            if (!capo.isDefault) viewModel.resetCapo(song.fileName, setlistFileName)
+            if (!tempo.isDefault) viewModel.resetTempo(song.fileName, setlistFileName)
+        },
+    )
+}
+
+/**
+ * The card that names how the song is being played differently from its file where it is read, and takes all of it
+ * back with one button. It reads the overrides live, so a reset folds it away while the sheet is open; the last values
+ * it named stay in it while it does.
+ */
+@Composable
+private fun SongPlayingOverridesCard(
+    viewModel: CampfireViewModel,
+    song: Song,
+    setlistFileName: String?,
+) {
+    val overrides = songPlayingOverrides(viewModel = viewModel, song = song, setlistFileName = setlistFileName)
+    var shownOverrides by remember { mutableStateOf(overrides.labels) }
+    if (overrides.labels.isNotEmpty()) shownOverrides = overrides.labels
     AnimatedVisibility(
-        visible = overrides.isNotEmpty(),
+        visible = overrides.labels.isNotEmpty(),
         enter = fadeIn() + expandVertically(),
         exit = fadeOut() + shrinkVertically(),
     ) {
@@ -236,13 +265,7 @@ private fun SongPlayingOverrides(
                     )
                     Text(text = shownOverrides.joinToString("  •  "))
                 }
-                TextButton(
-                    onClick = {
-                        if (transposition != 0) viewModel.resetTransposition(song.fileName, setlistFileName)
-                        if (!capo.isDefault) viewModel.resetCapo(song.fileName, setlistFileName)
-                        if (!tempo.isDefault) viewModel.resetTempo(song.fileName, setlistFileName)
-                    },
-                ) { Text(stringResource(Res.string.song_details_playing_override_reset)) }
+                TextButton(onClick = overrides.onReset) { Text(stringResource(Res.string.song_details_playing_override_reset)) }
             }
         }
     }

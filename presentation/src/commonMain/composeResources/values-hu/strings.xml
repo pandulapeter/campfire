@@ -470,9 +470,7 @@
     <string name="song_details_editing_actions">Szerkesztés</string>
     <string name="song_details_metadata_edit">Daladatok szerkesztése</string>
     <string name="song_details_song_info">A dalról</string>
-    <string name="song_details_info_details">Daladatok</string>
-    <string name="song_details_info_manage">Kezelés</string>
-    <string name="song_details_info_add">Hozzáadás</string>
+    <string name="song_details_info_defaults">A dal alapértékei</string>
     <plurals name="song_details_info_tags">
         <item quantity="one">Címke</item>
         <item quantity="other">Címkék</item>

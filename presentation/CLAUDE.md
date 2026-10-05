@@ -207,11 +207,15 @@ Everything else is `commonMain`:
   read live from the song's text and closed with the song like the other song sheets), opened by a tap on the app
   bar's title (see below) and by nothing else, since the menu has entries enough; outside performance mode for every
   song, in it only where the sheet has something in it. The
-  card and the sheet share `SongInfoBody` and its edit buttons (`SongInfoEditing`, built by `rememberSongInfoEditing`): the cover, then album, year, composer, lyricist and duration as label-over-value tiles flowing side by side beside it, then a
+  card and the sheet share `SongInfoBody` and its edit buttons (`SongInfoEditing`, built by `rememberSongInfoEditing`): the cover, then album, year, composer, lyricist and duration as label-over-value tiles flowing side by side beside it,
+  untitled since the card or sheet already names them, then — in the sheet alone (`SongDefaults`), since the preview's line already reads them — a
+  Song defaults group: the file's key, capo, tempo and time as the same tiles, a line in the primary colour naming the setlist's or the
+  library's overrides while there are any (`songPlayingOverrides`, shared with the Song defaults sheet's card), and outside read only mode a
+  pencil or a plus next to its title opening the Song defaults sheet over it, which goes back to it like the other sheets it opens; then a
   group of chips for each of the tags, the languages and the links the song has, titled in the singular or the plural
-  (`<plurals>`) and counted where there are several. Outside performance mode the sheet passes `SongInfoEditing`: its header holds the cover art and Edit song details
-  buttons, and each chip group ends in an outlined "Manage" chip (`TagPill`'s `isAction`), or "Add" with a plus where the
-  song has none of that kind; each opens that group's sheet on top of the sheet (Edit song details, Manage tags, Manage
+  (`<plurals>`) and counted where there are several. Outside performance mode the sheet passes `SongInfoEditing`: its header holds the Edit song details button, and the cover art one while the song has no cover (one it has is
+  changed by tapping it, a small pencil badge on it saying so — the preview's card keeps both header buttons), and each group's title is followed by a pencil (`SongInfoAction`), or a plus where the
+  song has none of that kind, which leaves that group its title row alone, its content folding away when it empties; each opens that group's sheet on top of the sheet (Edit song details, Manage tags, Manage
   languages, Manage links, Set or Change cover art), which it goes back to once that is saved or closed. The song details
   editing menu offers the same entries after Edit song file (`SongEditingActions`, with `songInfoEditingActions` and `SongMetadataActions.kt`'s `coverArtAction`). The editor preview's card has the same buttons, always, editing the text being typed. Links open
   their page in the sheet, named by their optional label or by the host without `www.`
