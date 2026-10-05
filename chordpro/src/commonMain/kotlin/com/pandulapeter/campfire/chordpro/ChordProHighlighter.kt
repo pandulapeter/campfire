@@ -39,8 +39,8 @@ object ChordProHighlighter {
 
         /**
          * A whole directive line whose value the app reads as something - a time signature, a tempo, a capo, a
-         * duration, a key, a transposition, a cover, a link or a language - but cannot make sense of, so that it is as
-         * good as missing from the song. It takes the place of the directive's own tokens rather than lying over them.
+         * duration, a transposition, a cover, a link or a language - but cannot make sense of, so that it is as good as
+         * missing from the song. A key is never one: whatever it says is kept and shown as written. It takes the place of the directive's own tokens rather than lying over them.
          */
         INVALID,
     }
@@ -153,7 +153,6 @@ object ChordProHighlighter {
             directive.name == "tempo" -> ChordProTempo.parse(value) == null
             directive.name == "capo" -> value.toIntOrNull()?.takeIf { it >= 0 } == null
             directive.name == "duration" -> ChordProDuration.parse(value) == null
-            directive.name == "key" -> !value.isMovedChordName() && !ChordProTransposer.isSpelledOutKey(value)
             directive.name == TRANSPOSE -> ChordProParser.transposeSemitones(value) == null
             ChordProSyntax.isCoverMeta(directive) -> ChordProSyntax.cover(directive) == null
             ChordProSyntax.isLinkMeta(directive) -> ChordProSyntax.link(directive) == null
