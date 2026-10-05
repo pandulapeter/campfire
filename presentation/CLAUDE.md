@@ -91,7 +91,8 @@ Everything else is `commonMain`:
   and with no press, since the search is in the editor's menu. The About the song sheet and the preview's card put it
   at 96dp at the start of their Song details group, the detail tiles flowing beside it (the group is there for a cover
   alone too), the card's following the text the same settled way; where the cover search is offered (outside
-  performance mode, cover art on) a tap on it opens that search, the same as the header's cover button. The lyrics'
+  performance mode, cover art on) a tap on it opens that search, which is why the header's cover button is there only while no cover is (fading and
+  sliding in and out as one arrives or goes). The lyrics'
   header draws none. Both follow
   `UserPreferences.isCoverArtEnabled`, the Features tab's "Cover art" switch, which leaves every cover unfetched and
   undrawn when it is off; performance mode keeps them, since a cover changes nothing.

@@ -11,9 +11,11 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
@@ -369,7 +371,8 @@ private fun PlayingControl(
  * The card of what the song is in the editor's preview, as wide as its column whatever it holds, so that its edit buttons
  * stay where they are as the groups fill up and empty. Its links are not followed, since the preview is there to show
  * what is being typed. Its cover follows the text the way the editor's title does, once the typing has paused, and only
- * where the cover art setting gives the card its cover button, which is what tells the card that setting.
+ * where the cover art setting gives the card its cover button, which is what tells the card that setting. That button is
+ * only in the header while there is no cover to tap, since the cover itself opens the same search.
  */
 @Composable
 private fun SongInfoCard(
@@ -382,6 +385,7 @@ private fun SongInfoCard(
     shape = MaterialTheme.shapes.large,
     color = MaterialTheme.colorScheme.surfaceContainer,
 ) {
+    val coverArtUrl = rememberSettledCoverArtUrl(metadata.coverArt.takeIf { editing?.onEditCoverArt != null })
     Column {
         Row(
             modifier = Modifier.fillMaxWidth().padding(12.dp),
@@ -400,22 +404,23 @@ private fun SongInfoCard(
                 color = MaterialTheme.colorScheme.primary,
             )
             if (editing != null) {
-                editing.onEditCoverArt?.let { onEditCoverArt ->
-                    IconButton(onClick = onEditCoverArt) {
+                // Follows the settled cover the body draws rather than the text, so that the button and the cover trade places together.
+                AnimatedVisibility(
+                    modifier = Modifier.overlappingAction(start = 0.dp, end = ACTION_BUTTON_OVERLAP),
+                    visible = editing.onEditCoverArt != null && coverArtUrl == null,
+                    enter = fadeIn() + expandHorizontally(),
+                    exit = fadeOut() + shrinkHorizontally(),
+                ) {
+                    IconButton(onClick = { editing.onEditCoverArt?.invoke() }) {
                         Icon(
                             modifier = Modifier.size(EDIT_ICON_SIZE * fontScale),
                             painter = painterResource(Res.drawable.ic_album),
-                            contentDescription = stringResource(
-                                if (metadata.coverArt.isNullOrBlank()) Res.string.song_details_set_cover_art else Res.string.song_details_change_cover_art,
-                            ),
+                            contentDescription = stringResource(Res.string.song_details_set_cover_art),
                             tint = MaterialTheme.colorScheme.primary,
                         )
                     }
                 }
-                IconButton(
-                    modifier = if (editing.onEditCoverArt != null) Modifier.overlappingAction(start = ACTION_BUTTON_OVERLAP, end = 0.dp) else Modifier,
-                    onClick = editing.onEditMetadata,
-                ) {
+                IconButton(onClick = editing.onEditMetadata) {
                     Icon(
                         modifier = Modifier.size(EDIT_ICON_SIZE * fontScale),
                         painter = painterResource(Res.drawable.ic_edit),
@@ -428,7 +433,7 @@ private fun SongInfoCard(
         SongInfoBody(
             modifier = Modifier.padding(bottom = 12.dp),
             metadata = metadata,
-            coverArtUrl = rememberSettledCoverArtUrl(metadata.coverArt.takeIf { editing?.onEditCoverArt != null }),
+            coverArtUrl = coverArtUrl,
             fontScale = fontScale,
             horizontalPadding = 12.dp,
             editing = editing,
