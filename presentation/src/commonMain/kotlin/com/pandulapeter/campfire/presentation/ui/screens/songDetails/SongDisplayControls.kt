@@ -17,7 +17,6 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
@@ -45,8 +44,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.semantics.onClick
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -80,16 +77,19 @@ import org.jetbrains.compose.resources.painterResource
  * height, so that it lines up with the entries under it, and the stepper at the end. The row is not an entry that is
  * chosen and takes no press itself, and the menu stays open while the stepper's buttons are pressed, so that a song is
  * taken up three semitones in three taps with the result in sight.
+ *
+ * @param horizontalPadding A menu entry's own by default; a form that pads its fields itself passes less.
  */
 @Composable
 internal fun MenuStepperRow(
     label: String,
+    horizontalPadding: Dp = MENU_ROW_HORIZONTAL_PADDING,
     stepper: @Composable () -> Unit,
 ) = Row(
     modifier = Modifier
         .widthIn(min = MENU_ROW_MIN_WIDTH)
         .height(MENU_ROW_HEIGHT)
-        .padding(horizontal = MENU_ROW_HORIZONTAL_PADDING),
+        .padding(horizontal = horizontalPadding),
     verticalAlignment = Alignment.CenterVertically,
 ) {
     Text(
@@ -176,41 +176,6 @@ internal fun CapoControls(
     resetLabel = stringResource(Res.string.song_details_capo_reset),
     onReset = onReset,
 )
-
-/**
- * A [Stepper]'s value without the two buttons, as the way into the sheet it is picked in: the time signature, which is
- * a pair of numbers rather than a value with a next and a previous one. Shaped and sized like a stepper, so that the
- * four controls of a song's first section read as one row of settings rather than as three of one kind and an odd one.
- */
-@Composable
-internal fun ValuePill(
-    modifier: Modifier = Modifier,
-    value: String,
-    fontScale: Float = 1f,
-    height: Dp = STEPPER_HEIGHT,
-    onClickLabel: String,
-    onClick: () -> Unit,
-) = Surface(
-    modifier = modifier.height(height),
-    shape = CircleShape,
-    color = MaterialTheme.colorScheme.surfaceContainerHighest,
-    onClick = onClick,
-) {
-    Box(
-        modifier = Modifier
-            .semantics { onClick(label = onClickLabel, action = null) }
-            .widthIn(min = VALUE_MIN_WIDTH * fontScale + VALUE_PILL_PADDING * 2)
-            .padding(horizontal = VALUE_PILL_PADDING),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = value,
-            style = MaterialTheme.typography.labelLarge.scaled(fontScale),
-            textAlign = TextAlign.Center,
-            fontWeight = FontWeight.Bold,
-        )
-    }
-}
 
 /**
  * The same stepper for the editor, where transposing rewrites the file instead of changing how it is read. There is
@@ -476,7 +441,7 @@ private const val HOLD_REPEAT_FASTEST_INTERVAL_MILLIS = 30L
 private const val HOLD_REPEAT_ACCELERATION = 0.85f
 
 /**
- * How tall a stepper, a value pill and the Tap button beside them are drawn where they belong to a bar or to a menu
+ * How tall a stepper and the Tap button beside them are drawn where they belong to a bar or to a menu
  * rather than to a song: the app bar's text size stepper, the editor's transposition, the Metronome tab's steppers and
  * the rows of the overflow menu, none of which is scaled by anything.
  */
@@ -504,9 +469,6 @@ private val VALUE_MIN_WIDTH = 44.dp
 
 /** How far short of the pill's own edges the divider in front of a [Stepper]'s trailing control stops. */
 private val STEPPER_DIVIDER_PADDING = 8.dp
-
-/** What a [ValuePill] keeps at its ends, where a stepper has its buttons: enough that the pill reads as a button. */
-private val VALUE_PILL_PADDING = 12.dp
 
 /** How wide a stepper is drawn, at least, for the app bar that has to leave its title room beside one. */
 internal val STEPPER_WIDTH = stepperButtonLength(fontScale = 1f) * 2 + VALUE_MIN_WIDTH

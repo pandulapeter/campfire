@@ -24,8 +24,9 @@ class CreateSongUseCaseImpl internal constructor(
 ) : CreateSongUseCase {
 
     /**
-     * The new file holds what the user typed and the skeleton of a first verse, so that the editor opens on
-     * something that is already shaped like a song rather than on an empty page.
+     * The new file holds what the user typed, an empty line for each of the four values the song is played by and the
+     * skeleton of a first verse, so that the editor opens on something that is already shaped like a song rather than
+     * on an empty page. An empty line declares nothing, so the song is played by the defaults until one is filled in.
      */
     override suspend operator fun invoke(title: String, artist: String, metadata: Map<Field, String>): Song {
         val text = ChordProMetadataFields.set(
@@ -33,6 +34,9 @@ class CreateSongUseCaseImpl internal constructor(
                 append("{title: ").append(title.trim()).append("}\n")
                 if (artist.isNotBlank()) append("{artist: ").append(artist.trim()).append("}\n")
                 append("{key: }\n")
+                append("{capo: }\n")
+                append("{tempo: }\n")
+                append("{time: }\n")
                 append("\n")
                 append("{start_of_verse}\n")
                 // The blank line the editor puts the caret on.

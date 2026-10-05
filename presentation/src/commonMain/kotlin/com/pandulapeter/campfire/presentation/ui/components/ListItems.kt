@@ -22,6 +22,8 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -68,6 +70,8 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalWindowInfo
@@ -637,8 +641,9 @@ internal fun rememberSectionHeaderState(listState: LazyGridState, headerIndex: I
  * The cards are what makes room for a header rather than a background of its own: they are faded out entirely under
  * the row of the one pinned at the top of the list and fade back in below it ([ListTopFade]), so the name is always
  * read against the screen's background, and it and the app bar's pill of buttons next to it are the only things at
- * the top of the list. Only the header's content takes a touch, laid out as a pill with no press drawn in it; the
- * rest of the row leaves it to whatever is under it.
+ * the top of the list. Only the header's content takes a touch, laid out as a pill with no press drawn in it but the
+ * name dimmed while it is held, and of the pill only the part up to its action, whose buttons take their own; the rest
+ * of the row leaves it to whatever is under it.
  *
  * The list screens have no title in their app bar, and the header pinned at the top of the list is what stands in its
  * place, under the bar's buttons: so the row is as tall as that bar ([LIST_APP_BAR_HEIGHT]) and the pill as tall as the
@@ -697,6 +702,9 @@ internal fun SectionHeader(
     contentAlignment = Alignment.CenterStart,
 ) {
     val hasAction = action != null
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val nameAlpha by animateFloatAsState(if (isPressed) PRESSED_HEADING_ALPHA else 1f)
     val pillModifier = Modifier
         .padding(start = SONG_CARD_OUTER_PADDING)
         .layout { measurable, constraints ->
@@ -713,13 +721,30 @@ internal fun SectionHeader(
         Row(
             modifier = Modifier
                 .heightIn(min = SECTION_HEADER_PILL_HEIGHT)
-                .padding(start = SECTION_HEADER_PILL_START_PADDING, end = if (hasAction) SECTION_HEADER_PILL_ACTION_END_PADDING else SECTION_HEADER_PILL_START_PADDING),
-            // The action keeps to the end of the row, however short the name before it.
-            horizontalArrangement = Arrangement.SpaceBetween,
+                .padding(end = if (hasAction) SECTION_HEADER_PILL_ACTION_END_PADDING else 0.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            // The name is the touch target, filling the pill up to the action, which keeps it at the end of the row
+            // however short the name is. The target ends where the action begins, with the gap between the two its
+            // own, so a pointer only gets the hand where a click scrolls to the section rather than also between and
+            // around the action's buttons, and only the name answers the press, the way the song details screen's
+            // title does: the action's buttons take their own touches and ripple for them.
             Row(
-                modifier = Modifier.weight(1f, fill = false),
+                modifier = Modifier
+                    .weight(1f)
+                    .heightIn(min = SECTION_HEADER_PILL_HEIGHT)
+                    .then(
+                        if (onClick == null) {
+                            Modifier
+                        } else {
+                            Modifier
+                                .unfocusable()
+                                .pointerHoverIcon(PointerIcon.Hand)
+                                .clickable(interactionSource = interactionSource, indication = null, role = Role.Button, onClick = onClick)
+                        },
+                    )
+                    .graphicsLayer { alpha = nameAlpha }
+                    .padding(start = SECTION_HEADER_PILL_START_PADDING, end = if (hasAction) SECTION_HEADER_TEXT_GAP else SECTION_HEADER_PILL_START_PADDING),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 // Keep the painter through its exit animation when a setlist is archived from this row's own menu.
@@ -740,7 +765,7 @@ internal fun SectionHeader(
                     }
                 }
                 Column(
-                    modifier = Modifier.weight(1f, fill = false).padding(end = if (hasAction) SECTION_HEADER_TEXT_GAP else 0.dp),
+                    modifier = Modifier.weight(1f, fill = false),
                 ) {
                     Text(
                         text = text,
@@ -779,16 +804,11 @@ internal fun SectionHeader(
         }
     }
     // The pill's width is handed to its content as a minimum, or the row would wrap the name and pull a setlist's menu
-    // in next to it, and the touch would end with the name. Nothing is drawn for the press: the header has nothing behind it to draw one in, and a ripple across the
-    // width of the list would promise more than a scroll to the section.
+    // in next to it, and the touch would end with the name. Nothing is drawn behind the press: the header has nothing
+    // behind it to draw one in, and a ripple across the width of the list would promise more than a scroll to the
+    // section, so the name is dimmed instead.
     Box(
-        modifier = if (onClick == null) {
-            pillModifier
-        } else {
-            pillModifier
-                .unfocusable()
-                .clickable(interactionSource = null, indication = null, role = Role.Button, onClick = onClick)
-        },
+        modifier = pillModifier,
         propagateMinConstraints = true,
     ) { pillContent() }
 }
@@ -1241,6 +1261,12 @@ private val EMPTY_STATE_ACTION_WIDTH = 280.dp
  * The x position the text of a [ListItem] starts at, before the card's own outer inset.
  */
 internal val LIST_ITEM_KEYLINE = 16.dp
+
+/**
+ * How far a heading that takes a tap without drawing a ripple - a list's section header, the song details screen's
+ * title - is dimmed while it is held, the way a text button on iOS answers a press.
+ */
+internal const val PRESSED_HEADING_ALPHA = 0.5f
 
 /** Below this window width a song card's text gets the narrower padding, the smaller dot and a second title line. */
 private val NARROW_SONG_CARD_WINDOW_WIDTH = 480.dp

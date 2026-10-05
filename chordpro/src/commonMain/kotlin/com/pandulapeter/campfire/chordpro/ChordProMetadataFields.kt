@@ -23,10 +23,10 @@ object ChordProMetadataFields {
      * [ChordProSyntax.metadataKind]). The repeatable ones — tags, languages, links — and the cover have editors of
      * their own.
      *
-     * Of how the song is played, only [TIME] is here: a key, a capo and a tempo are what one band plays the song at
-     * and are overridden where the song is read instead of being written into the file, while the beats of a bar are
-     * the song itself — and the one thing of the four the metronome cannot be told any other way. A later `{key}` is a
-     * modulation in the body rather than a second value of its field, which is why those three stay the editor's.
+     * How the song is played is here too — [KEY], [CAPO], [TEMPO] and [TIME] — as the values the song itself declares,
+     * which a setlist or a device may override where the song is read without ever touching the file. A later `{key}`
+     * is a modulation in the body rather than a second value of its field, so [KEY] edits the line the song starts in
+     * and leaves every other `{key}` where it stands.
      */
     enum class Field(val directiveName: String) {
         TITLE("title"),
@@ -37,6 +37,9 @@ object ChordProMetadataFields {
         ALBUM("album"),
         YEAR("year"),
         DURATION("duration"),
+        KEY("key"),
+        CAPO("capo"),
+        TEMPO("tempo"),
         TIME("time"),
     }
 
@@ -50,6 +53,9 @@ object ChordProMetadataFields {
         Field.ALBUM -> metadata.album
         Field.YEAR -> metadata.year
         Field.DURATION -> metadata.duration
+        Field.KEY -> metadata.key
+        Field.CAPO -> metadata.capo?.toString()
+        Field.TEMPO -> metadata.tempo
         Field.TIME -> metadata.time
     }?.takeIf { it.isNotBlank() }
 
@@ -57,7 +63,7 @@ object ChordProMetadataFields {
      * Makes each value of [values] what the song says for its field, in one pass over [text]; a field not in [values]
      * is left alone. The line the parser reads the value from is rewritten where it stands, in the spelling it was
      * written in (`{t: …}` stays short, `{meta: title …}` stays a `meta`), and the other lines of the same field, which
-     * the parser reads past, are dropped. A field the song does not declare yet gets a line in the header, where
+     * the parser reads past, are dropped — except for [Field.KEY], whose other lines are modulations. A field the song does not declare yet gets a line in the header, where
      * [ChordProSyntax.metadataInsertionIndex] puts it. A null or blank value removes the field instead. A line break
      * in a value is read as a space, since it would otherwise end the directive and leave the rest in the song as
      * lyrics. A text that already says all of it returns unchanged.
@@ -70,12 +76,15 @@ object ChordProMetadataFields {
         val newValue = value?.replace('\r', ' ')?.replace('\n', ' ')?.trim()?.takeIf { it.isNotEmpty() }
         val lines = ChordProSyntax.splitLines(text)
         val indices = lines.indices.filter { lines[it].kind() == field.directiveName }
-        // The parser reads every one of these fields from its last line.
-        val effectiveIndex = indices.lastOrNull()
+        // The line the parser takes the value from: the first key that names one, since a later one is a modulation,
+        // and the last line that says anything of every other field. An empty line of the template stands in where
+        // none says anything, so that filling a field in fills the line the new song was created with.
+        val declaring = indices.filter { !lines[it].value().isNullOrEmpty() }
+        val effectiveIndex = if (field == Field.KEY) declaring.firstOrNull() ?: indices.firstOrNull() else declaring.lastOrNull() ?: indices.lastOrNull()
         val kept = mutableListOf<String>()
         lines.forEachIndexed { index, line ->
             when {
-                index !in indices -> kept += line
+                index !in indices || (field == Field.KEY && index != effectiveIndex) -> kept += line
                 index == effectiveIndex && newValue != null -> kept += if (line.value() == newValue) line else line.rewritten(field, newValue)
             }
         }

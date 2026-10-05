@@ -106,4 +106,19 @@ class SongMetadataTest {
 
         assertSame(body, withMetadataSection(body, playing, shouldShowChords = false, isSongInfoShown = false, hasPlayingControls = true))
     }
+
+    @Test
+    fun `read only mode names a capo of none and the common time where the file names neither`() {
+        val body = listOf(verse)
+
+        assertEquals(
+            listOf(RenderSection.Metadata(metadata = ChordProMetadata(capo = 0, time = "4/4"), readsCapoAndTime = true), verse),
+            withMetadataSection(body, ChordProMetadata(), shouldShowChords = true, isSongInfoShown = false, readsCapoAndTime = true),
+        )
+        assertEquals(
+            listOf(RenderSection.Metadata(metadata = ChordProMetadata(capo = 3, time = "6/8"), readsCapoAndTime = true), verse),
+            withMetadataSection(body, ChordProMetadata(capo = 3, time = "6/8"), shouldShowChords = true, isSongInfoShown = false, readsCapoAndTime = true),
+        )
+        assertSame(body, withMetadataSection(body, ChordProMetadata(), shouldShowChords = false, isSongInfoShown = false, readsCapoAndTime = true))
+    }
 }

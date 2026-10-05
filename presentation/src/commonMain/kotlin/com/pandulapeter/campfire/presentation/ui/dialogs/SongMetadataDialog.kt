@@ -39,16 +39,19 @@ import com.pandulapeter.campfire.chordpro.ChordProMetadataFields.Field
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.done
-import com.pandulapeter.campfire.presentation.resources.metronome_time_signature
 import com.pandulapeter.campfire.presentation.resources.optional_field_label
 import com.pandulapeter.campfire.presentation.resources.save
 import com.pandulapeter.campfire.presentation.resources.song_details_metadata_edit
+import com.pandulapeter.campfire.presentation.resources.song_details_playing_tempo
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_album
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_artist
+import com.pandulapeter.campfire.presentation.resources.song_editor_insert_capo
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_composer
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_duration
+import com.pandulapeter.campfire.presentation.resources.song_editor_insert_key
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_lyricist
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_subtitle
+import com.pandulapeter.campfire.presentation.resources.song_editor_insert_time
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_title
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_year
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
@@ -60,8 +63,8 @@ import com.pandulapeter.campfire.presentation.ui.platform.numericPlatformImeOpti
 
 /**
  * What a song is, as a form: every field is edited as a draft and only the ones changed are written, together, on Save.
- * How it is played — its key, capo, tempo and time — is not here: the first three are set where the song is read, and
- * the time signature has a sheet of its own. The values are saved as a list of strings in [SONG_METADATA_FIELDS] order,
+ * How it is played — its key, capo, tempo and time — is not here but in the "Song defaults" sheet (`SongPlayingDialog`),
+ * opened from the song's first section, where the controls overriding them are. The values are saved as a list of strings in [SONG_METADATA_FIELDS] order,
  * which is what Android's saved state takes. Unlike the dialogs that ask for one thing it opens with no field focused: it is opened to look the song
  * up as often as to correct one field of it, and a keyboard brought up over the title would hide half the form.
  */
@@ -199,7 +202,8 @@ private val MIN_SHORT_FIELDS_ROW_WIDTH = 480.dp
 /** The same gap the forms leave between their other fields. */
 private val SHORT_FIELDS_GAP = 8.dp
 
-private val Field.label: StringResource
+/** What a field is called in the forms that edit it, the metadata ones and the "Song defaults" sheet alike. */
+internal val Field.label: StringResource
     get() = when (this) {
         Field.TITLE -> Res.string.song_editor_insert_title
         Field.SUBTITLE -> Res.string.song_editor_insert_subtitle
@@ -209,7 +213,10 @@ private val Field.label: StringResource
         Field.ALBUM -> Res.string.song_editor_insert_album
         Field.YEAR -> Res.string.song_editor_insert_year
         Field.DURATION -> Res.string.song_editor_insert_duration
-        Field.TIME -> Res.string.metronome_time_signature
+        Field.KEY -> Res.string.song_editor_insert_key
+        Field.CAPO -> Res.string.song_editor_insert_capo
+        Field.TEMPO -> Res.string.song_details_playing_tempo
+        Field.TIME -> Res.string.song_editor_insert_time
     }
 
 /** The fields typed as digits alone: a year, and a duration through [DurationDigitsTransformation]. */
@@ -219,8 +226,8 @@ private const val YEAR_LENGTH = 4
 
 /**
  * The fields the New song and Edit song details forms ask for, in the order they ask for them. Not every
- * [Field] there is: the time signature is written from a sheet of its own, where the bars can be picked rather than
- * typed, so it is left out of both forms and of what they save.
+ * [Field] there is: how the song is played is written from the "Song defaults" sheet, so it is left out of both forms
+ * and of what they save.
  */
 internal val SONG_METADATA_FIELDS = listOf(
     Field.TITLE,

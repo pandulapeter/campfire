@@ -146,6 +146,7 @@ import com.pandulapeter.campfire.presentation.ui.components.DelayedLoadingIndica
 import com.pandulapeter.campfire.presentation.ui.components.EDGE_FADE_SIZE
 import com.pandulapeter.campfire.presentation.ui.components.EmptyState
 import com.pandulapeter.campfire.presentation.ui.components.EmptyStateAction
+import com.pandulapeter.campfire.presentation.ui.components.PRESSED_HEADING_ALPHA
 import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.overlappingAction
@@ -417,7 +418,7 @@ internal fun SongDetailsScreen(
                 val openSongInfoAtTop = openCurrentSongInfo?.takeIf { isScrolledToTop }
                 val titleInteractionSource = remember { MutableInteractionSource() }
                 val isTitlePressed by titleInteractionSource.collectIsPressedAsState()
-                val titleAlpha by animateFloatAsState(if (isTitlePressed) PRESSED_TITLE_ALPHA else 1f)
+                val titleAlpha by animateFloatAsState(if (isTitlePressed) PRESSED_HEADING_ALPHA else 1f)
                 AnimatedContent(
                     modifier = Modifier
                         .titleTouchTarget(
@@ -616,7 +617,10 @@ internal fun SongDetailsScreen(
                         SongEditingActions(
                             viewModel = viewModel,
                             song = song,
-                            fileEditItems = editingActions.take(1) + listOfNotNull(coverArtAction) + editingActions.drop(1),
+                            fileEditItems = editingActions.take(1) +
+                                songPlayingAction(viewModel = viewModel, song = song, setlistFileName = destination.setlistFileName) +
+                                listOfNotNull(coverArtAction) +
+                                editingActions.drop(1),
                         )
                     }
                     SongActions(
@@ -1066,6 +1070,9 @@ private fun SongDetailsPage(
                 foldedSections = foldedSections,
                 onFoldToggled = onFoldToggled,
                 playingControls = playingControls,
+                // Read only, the page is the one place left that says how the song is played, so a capo of none and the
+                // time the click counts are said rather than left to be guessed from nothing.
+                readsCapoAndTime = playingControls == null,
                 // The padding is inside the scroll, so a row is at the top of the viewport once the song is scrolled by
                 // its position plus the padding above it - all but the first, which is read at the top of the song.
                 onRowsPlaced = { rows ->
@@ -1453,7 +1460,6 @@ internal val APP_BAR_COVER_GAP = 12.dp
 private val APP_BAR_NOTE_DOT_SIZE = 16.dp
 private val MIN_TITLE_WIDTH = 160.dp // Enough of a title to tell which song is up.
 private val TITLE_TOUCH_HORIZONTAL_OUTSET = 4.dp // The padding the bar puts around its title.
-private const val PRESSED_TITLE_ALPHA = 0.5f
 private val APP_BAR_TITLE_CHEVRON_SIZE = 20.dp // A little under the titleMedium line it follows.
 private val APP_BAR_TITLE_CHEVRON_GAP = 2.dp // The chevron's own artwork leaves the rest of the gap after the title.
 private val TITLE_TOUCH_VERTICAL_OUTSET = 12.dp // From the two lines of title, 40dp, to the bar's 64dp.

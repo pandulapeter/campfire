@@ -432,8 +432,19 @@
     <string name="song_details_capo_decrease">Capo lejjebb</string>
     <string name="song_details_capo_increase">Capo feljebb</string>
     <string name="song_details_capo_reset">Capo visszaállítása</string>
-    <string name="song_details_set_time_signature">Ütemmutató megadása</string>
-    <string name="song_details_change_time_signature">Ütemmutató módosítása</string>
+    <string name="song_details_playing_edit">A dal alapértékeinek szerkesztése</string>
+    <string name="song_details_playing_description_setlist">A dal fájljába mentett értékek: a dal mindenhol ezekből indul. A dalnál lévő vezérlők csak ebben a listában módosítják őket, a fájlt nem változtatják meg. Üresen hagyott mező esetén az alapértelmezés érvényes.</string>
+    <string name="song_details_playing_description_library">A dal fájljába mentett értékek: a dal mindenhol ezekből indul. A dalnál lévő vezérlők a könyvtárból megnyitva módosítják őket, a fájlt és a listákat nem változtatják meg. Üresen hagyott mező esetén az alapértelmezés érvényes.</string>
+    <string name="song_details_playing_override_setlist">Ebben a listában módosítva</string>
+    <string name="song_details_playing_override_library">A könyvtárban módosítva</string>
+    <string name="song_details_playing_override_transposition">Transzponálás: %1$s</string>
+    <string name="song_details_playing_override_reset">Visszaállítás</string>
+    <plurals name="song_details_playing_key_transposed">
+        <item quantity="one">Az akkordok leírt hangneme. A fájl megjelenítéskor %1$s félhanggal eltolja őket.</item>
+        <item quantity="other">Az akkordok leírt hangneme. A fájl megjelenítéskor %1$s félhanggal eltolja őket.</item>
+    </plurals>
+    <string name="song_details_playing_tempo">Tempó (BPM)</string>
+    <string name="song_details_playing_range">%1$d és %2$d között</string>
     <string name="song_details_metronome_show">Metronóm megjelenítése</string>
     <string name="song_details_metronome_hide">Metronóm elrejtése</string>
     <string name="song_details_scroll_to_top">Görgetés az elejére</string>

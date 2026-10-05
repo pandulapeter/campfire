@@ -166,6 +166,8 @@ import kotlin.math.roundToInt
  * @param playingControls What sets the song's key, capo, tempo and time signature, drawn in place of the line that
  * only reads them; null leaves that line, which is what read only mode and the editor's preview get. Left out of
  * lyrics-only mode along with the values themselves, since there is nothing played to set there.
+ * @param readsCapoAndTime Whether that line names the capo and the time signature where the file names neither, which
+ * read only mode on the song details screen asks for, see [withMetadataSection].
  * @param onRowsPlaced Handed the rows of the song ([SongRows]: where a scroll comes to rest on each - the
  * bottom edge of the divider above it, so that the divider itself is just out of view - and where its content ends),
  * and the stops the song is stepped through, measured from the top of this composable's content, every time they are
@@ -202,6 +204,7 @@ internal fun SongLyrics(
     isSongInfoShown: Boolean = false,
     songInfoEditing: SongInfoEditing? = null,
     playingControls: SongPlayingControls? = null,
+    readsCapoAndTime: Boolean = false,
     onRowsPlaced: ((SongRows) -> Unit)? = null,
     rowViewportHeight: Dp = Dp.Unspecified,
     rowViewportBottomPadding: Dp = 0.dp,
@@ -215,7 +218,7 @@ internal fun SongLyrics(
     val isSongInfoEditable = songInfoEditing != null
     // The controls are only drawn where the values they set are, so a change of either decides the section's content.
     val shownPlayingControls = playingControls?.takeIf { model.shouldShowChords }
-    val sections = remember(model.sections, model.song.metadata, model.shouldShowChords, isSongInfoShown, isSongInfoEditable, shownPlayingControls != null) {
+    val sections = remember(model.sections, model.song.metadata, model.shouldShowChords, isSongInfoShown, isSongInfoEditable, shownPlayingControls != null, readsCapoAndTime) {
         withMetadataSection(
             sections = model.sections,
             metadata = model.song.metadata,
@@ -223,6 +226,7 @@ internal fun SongLyrics(
             isSongInfoShown = isSongInfoShown,
             isSongInfoEditable = isSongInfoEditable,
             hasPlayingControls = shownPlayingControls != null,
+            readsCapoAndTime = readsCapoAndTime,
         )
     }
     val glideScope = rememberCoroutineScope()
@@ -370,6 +374,8 @@ internal fun SongLyrics(
                                 isSongInfoShown = isSongInfoShown,
                                 songInfoEditing = songInfoEditing,
                                 playingControls = shownPlayingControls,
+                                readsCapoAndTime = section.readsCapoAndTime,
+                                animatesControls = sectionMotion == SectionMotion.SPRING && extraWidth <= 0.dp,
                                 titleStyle = headerStyle,
                                 fontScale = fontScale,
                             )
@@ -2139,11 +2145,13 @@ internal sealed interface RenderSection {
      *
      * @param hasPlayingControls Whether the key, capo, tempo and time are drawn as the controls that set them rather
      * than as one line of text, which is part of the content because the measured sizes of a section are kept by it.
+     * @param readsCapoAndTime Whether that line names a capo of none too, see [withMetadataSection].
      */
     @Immutable
     data class Metadata(
         val metadata: ChordProMetadata,
         val hasPlayingControls: Boolean = false,
+        val readsCapoAndTime: Boolean = false,
     ) : RenderSection
 
     /** A titled block of lines: an environment, an implicit paragraph, or a repeated chorus. */

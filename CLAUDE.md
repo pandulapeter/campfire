@@ -271,16 +271,23 @@ localized in both languages.
   the four values that decide what is played rather than what the song is — are the first section of the song details
   screen's own grid, each next to the control that sets it (the transposition stepper, which is named **Transposition**
   and reads the amount next to the key it takes the chords on the page to, the capo stepper, the tempo stepper whose
-  pill ends in a Tap segment, since tapping a tempo in sets the very number the stepper steps, and the time signature,
-  which opens a sheet of bars to pick from). They are part of the song, so they
+  pill ends in a Tap segment, since tapping a tempo in sets the very number the stepper steps, and after it the time
+  signature, which is only read there). They are part of the song, so they
   grow and shrink with its text, which is also why the text has a floor: `UserPreferences.MIN_FONT_SCALE` is the size
   below which the song details screen is not worth reading — the lyrics, and the controls with them. Starting the click
   stays the app bar's button, which is in reach wherever the song has been scrolled to. Three of them are
   overridden where the song is read, so they belong to the setlist the band plays it in or to this device (see the
   Metronome section); the time signature alone is written into the file as a `{time}` directive, since it is the song
-  rather than one band's reading of it, and it is what the click counts the bar by. **Read only mode reads them
+  rather than one band's reading of it, and it is what the click counts the bar by. **What the file declares for all
+  four is edited in the Song defaults sheet**, an entry of the song details editing menu, and nowhere on the page: it opens with a line saying that the steppers
+  change them for this setlist only, or, opened from the library, outside every setlist — never naming a device,
+  since preferences may be synced one day — then a card naming what is adjusted there, with a Reset, while there is any, then the key, capo, tempo and time signature fields, each optional, an
+  empty one leaving the default in force. A new song's template carries an empty `{key}`, `{capo}`, `{tempo}` and
+  `{time}` line for them to be filled into. **Read only mode reads them
   instead**: performance mode and a song opened from an archived setlist get the same four as one line of accent
-  colored text, as does the editor's preview, where the text being typed is what says them. Lyrics-only mode leaves
+  colored text — which always names the capo and the time signature there, "Capo 0" and the click's 4/4 where the file
+  says nothing, since with no control left on the page an absent value would read as an unknown one — as does the
+  editor's preview, where the text being typed is what says them. Lyrics-only mode leaves
   out the line and the controls alike. What is left in the app bar is about the song rather than about how it is
   played — the click, the Choose setlists and the menu, the title opening the About the song sheet — with the text size, which is
   the reader's own, at the end of that menu. **The key the band actually hears is named in the app bar**, after the
@@ -692,7 +699,7 @@ Nothing about it reaches the network. The module `CLAUDE.md` files carry the det
   entry (`Setlist.Entry.tempo`, a `tempo` member of the `*.setlist.json` song, left out where null, so it travels
   through an export, an import and a sync run), one opened from the library in `UserPreferences.tempos`, never exported
   or synced; neither reads the other, and the song file's `{tempo}` (`Song.tempo`, read at scan time with `{time}` and
-  `{capo}`) is only changed in the editor. The capo is kept the same way (`Setlist.Entry.capo`, `UserPreferences.capos`,
+  `{capo}`) is only changed in the editor and the Song defaults sheet. The capo is kept the same way (`Setlist.Entry.capo`, `UserPreferences.capos`,
   0 to 12 frets, a stored 0 being a capo this setlist takes off rather than no override at all), since one set is
   played capoed and the next in another key without. The first `{tempo}` and `{time}` count; the tempo counts the
   clicks of the bar (6/8 at 120 is six clicks a bar at 120 a minute), within 30–300.

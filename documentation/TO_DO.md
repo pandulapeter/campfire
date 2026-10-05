@@ -20,7 +20,7 @@
 - Onboarding: integrate feature toggle-presets (singers, drummers, etc)
 - Settings: promote Dropbox sign-in
 - Duplicate song?
-- Per-song preferences are not synced across devices (transposition, BPM)
+- Per-song preferences should be synced across devices (transposition, BPM)
 
 ## Features
 - Multi-select songs for bulk export or bulk edit (assign tags, languages, setlists) - rearrange mode in Setlists could be used for UX inspiration

@@ -432,8 +432,19 @@
     <string name="song_details_capo_decrease">Capo down</string>
     <string name="song_details_capo_increase">Capo up</string>
     <string name="song_details_capo_reset">Reset capo</string>
-    <string name="song_details_set_time_signature">Set time signature</string>
-    <string name="song_details_change_time_signature">Change time signature</string>
+    <string name="song_details_playing_edit">Edit song defaults</string>
+    <string name="song_details_playing_description_setlist">Saved in the song file, these are where the song starts out everywhere. The controls on the song adjust them for this setlist only, without changing the file. Leave a field empty to use the default.</string>
+    <string name="song_details_playing_description_library">Saved in the song file, these are where the song starts out everywhere. The controls on the song adjust them when it is opened from the library, without changing the file or any setlist. Leave a field empty to use the default.</string>
+    <string name="song_details_playing_override_setlist">Adjusted for this setlist</string>
+    <string name="song_details_playing_override_library">Adjusted in the library</string>
+    <string name="song_details_playing_override_transposition">Transposition %1$s</string>
+    <string name="song_details_playing_override_reset">Reset</string>
+    <plurals name="song_details_playing_key_transposed">
+        <item quantity="one">The key the chords are written in. The file moves them %1$s semitone when the song is shown.</item>
+        <item quantity="other">The key the chords are written in. The file moves them %1$s semitones when the song is shown.</item>
+    </plurals>
+    <string name="song_details_playing_tempo">Tempo (BPM)</string>
+    <string name="song_details_playing_range">%1$d to %2$d</string>
     <string name="song_details_metronome_show">Show metronome</string>
     <string name="song_details_metronome_hide">Hide metronome</string>
     <string name="song_details_scroll_to_top">Scroll to the top</string>

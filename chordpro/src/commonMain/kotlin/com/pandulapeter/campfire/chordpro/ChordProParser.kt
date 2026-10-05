@@ -627,8 +627,9 @@ object ChordProParser {
                 // A later key is a modulation from where it stands; the song is in the key it starts in.
                 "key" -> if (key.isNullOrEmpty()) key = value
                 "capo" -> value.toIntOrNull()?.let { capo = it }
-                "tempo" -> tempo = value
-                "time" -> time = value
+                // An empty line, the new song template's, says nothing rather than taking back what another one said.
+                "tempo" -> if (value.isNotEmpty()) tempo = value
+                "time" -> if (value.isNotEmpty()) time = value
                 "duration" -> duration = value
                 "tag" -> ChordProSyntax.tag(directive)?.let(::addTag)
                 "language", "lang" -> ChordProSyntax.language(directive)?.let(::addLanguage)

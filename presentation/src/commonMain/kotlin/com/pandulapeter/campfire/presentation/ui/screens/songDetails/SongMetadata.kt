@@ -36,13 +36,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.chordpro.ChordProDuration
 import com.pandulapeter.campfire.chordpro.model.ChordProLink
 import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
+import com.pandulapeter.campfire.metronome.api.model.TimeSignature
 import com.pandulapeter.campfire.presentation.localization.pluralStringResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -57,8 +60,6 @@ import com.pandulapeter.campfire.presentation.resources.ic_language
 import com.pandulapeter.campfire.presentation.resources.ic_link
 import com.pandulapeter.campfire.presentation.resources.song_details_album
 import com.pandulapeter.campfire.presentation.resources.song_details_capo
-import com.pandulapeter.campfire.presentation.resources.song_details_change_time_signature
-import com.pandulapeter.campfire.presentation.resources.song_details_set_time_signature
 import com.pandulapeter.campfire.presentation.resources.song_details_composer
 import com.pandulapeter.campfire.presentation.resources.song_details_duration
 import com.pandulapeter.campfire.presentation.resources.song_details_info_add
@@ -77,7 +78,6 @@ import com.pandulapeter.campfire.presentation.resources.song_details_year
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_capo
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_tempo
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_time
-import com.pandulapeter.campfire.presentation.resources.songs_key
 import com.pandulapeter.campfire.presentation.ui.components.TagFlowRow
 import com.pandulapeter.campfire.presentation.ui.components.ACTION_BUTTON_OVERLAP
 import com.pandulapeter.campfire.presentation.ui.components.CoverArtImage
@@ -107,6 +107,10 @@ import org.jetbrains.compose.resources.painterResource
  * @param hasPlayingControls Whether the four playing values are drawn as the controls that set them, which is what
  * the song details screen hands down outside read only mode. The section is then there for every song, since a capo
  * and a tempo can be set on one that names neither.
+ * @param readsCapoAndTime Whether the line of text read only mode draws in their place always names the capo and the
+ * time signature, a capo of none and the common time the click counts where the file names neither: a player reading
+ * from a music stand has no control left to look at to tell that nothing was set, and the absence of a value is a
+ * value to the hands on the guitar. The section is then there for every song too.
  */
 internal fun withMetadataSection(
     sections: List<RenderSection>,
@@ -115,11 +119,20 @@ internal fun withMetadataSection(
     isSongInfoShown: Boolean,
     isSongInfoEditable: Boolean = false,
     hasPlayingControls: Boolean = false,
+    readsCapoAndTime: Boolean = false,
 ): List<RenderSection> {
-    val shownMetadata = if (shouldShowChords) metadata else metadata.copy(key = null, capo = null, tempo = null, time = null)
     val hasControls = shouldShowChords && hasPlayingControls
-    return if ((isSongInfoShown && (isSongInfoEditable || shownMetadata.hasSongInfo)) || hasControls || shownMetadata.hasPlayingValues) {
-        listOf(RenderSection.Metadata(metadata = shownMetadata, hasPlayingControls = hasControls)) + sections
+    val readsBoth = shouldShowChords && !hasControls && readsCapoAndTime
+    val shownMetadata = when {
+        !shouldShowChords -> metadata.copy(key = null, capo = null, tempo = null, time = null)
+        readsBoth -> metadata.copy(
+            capo = metadata.capo ?: 0,
+            time = metadata.time?.takeIf { it.isNotBlank() } ?: TimeSignature.COMMON_TIME.toString(),
+        )
+        else -> metadata
+    }
+    return if ((isSongInfoShown && (isSongInfoEditable || shownMetadata.hasSongInfo)) || hasControls || readsBoth || shownMetadata.hasPlayingValues) {
+        listOf(RenderSection.Metadata(metadata = shownMetadata, hasPlayingControls = hasControls, readsCapoAndTime = readsBoth)) + sections
     } else {
         sections
     }
@@ -142,6 +155,9 @@ private val ChordProMetadata.hasPlayingValues
  *
  * @param playingControls What sets those four, where they are set here rather than only read: the song details screen
  * hands them down outside read only mode, see [SongPlayingControls].
+ * @param readsCapoAndTime Whether the line of text names a capo of none too, see [withMetadataSection].
+ * @param animatesControls Whether the controls travel to the places a new layout gives them, which the song's own
+ * sections decide (see `SectionMotion`): never while a pinch or a window edge being dragged changes the layout every frame.
  * @param titleStyle The style of the section titles of the lyrics, which the card's own title follows as the text is
  * scaled; what the card holds scales with [fontScale] the way the lyrics do.
  */
@@ -152,6 +168,8 @@ internal fun SongMetadataSection(
     isSongInfoShown: Boolean,
     songInfoEditing: SongInfoEditing?,
     playingControls: SongPlayingControls?,
+    readsCapoAndTime: Boolean,
+    animatesControls: Boolean,
     titleStyle: TextStyle,
     fontScale: Float,
 ) = Column(modifier = modifier) {
@@ -168,12 +186,14 @@ internal fun SongMetadataSection(
         SongPlayingMetadata(
             modifier = Modifier.padding(top = if (hasSongInfoCard) 12.dp else 0.dp),
             metadata = metadata,
+            readsCapoAndTime = readsCapoAndTime,
             fontScale = fontScale,
         )
     } else {
         SongPlayingControlsRow(
             modifier = Modifier.padding(top = if (hasSongInfoCard) 12.dp else 0.dp),
             controls = playingControls,
+            isAnimated = animatesControls,
             titleStyle = titleStyle,
             fontScale = fontScale,
         )
@@ -184,11 +204,12 @@ internal fun SongMetadataSection(
 private fun SongPlayingMetadata(
     modifier: Modifier = Modifier,
     metadata: ChordProMetadata,
+    readsCapoAndTime: Boolean,
     fontScale: Float,
 ) {
     val values = listOfNotNull(
-        metadata.key?.takeIf { it.isNotBlank() }?.let { textResource(Res.string.songs_key, it) },
-        metadata.capo?.takeIf { it != 0 }?.let { stringResource(Res.string.song_details_capo, it) },
+        metadata.key?.takeIf { it.isNotBlank() },
+        metadata.capo?.takeIf { readsCapoAndTime || it != 0 }?.let { stringResource(Res.string.song_details_capo, it) },
         metadata.tempo?.takeIf { it.isNotBlank() }?.let { textResource(Res.string.song_details_tempo, it) },
         metadata.time?.takeIf { it.isNotBlank() }?.let { textResource(Res.string.song_details_time, it) },
     )
@@ -205,10 +226,14 @@ private fun SongPlayingMetadata(
 /**
  * The four things that decide how the song is played, each next to the control that sets it: the transposition, which
  * is named as such and reads the key it takes the chords on the page to, the capo and the tempo with their own
- * steppers, the tempo's pill ending in the segment that taps one in, and the time signature as the value that opens
- * the sheet where it is picked. They flow like the chips of the card
- * above them, so a narrow column stacks them and a wide one puts them side by side. Starting a click is the app bar's
- * button, which is in reach wherever the song has been scrolled to; this row only says what it would play.
+ * steppers, the tempo's pill ending in the segment that taps one in, and the time signature after them, read rather
+ * than set. They are laid out in balanced rows ([BalancedRows]) — all four side by side, two and two, or one under the
+ * other — rather than flowed, since three over one reads as an accident. Starting a click is the app bar's button, which is
+ * in reach wherever the song has been scrolled to; this row only says what it would play.
+ *
+ * The steppers change how the song is played where it is read and never touch the file. What the file itself
+ * declares, the time signature among it, is edited in the "Song defaults" sheet of the editing menu, which is also
+ * where that difference is explained, so the page carries nothing but the song and its controls.
  *
  * Labels and controls grow and shrink with the lyrics, since they are part of the song's own first section — but the
  * way the sections' own header pills do rather than as a bar's buttons scaled up: what is written in them is scaled and
@@ -220,21 +245,22 @@ private fun SongPlayingMetadata(
 private fun SongPlayingControlsRow(
     modifier: Modifier = Modifier,
     controls: SongPlayingControls,
+    isAnimated: Boolean,
     titleStyle: TextStyle,
     fontScale: Float,
 ) {
     val height = songControlHeight(titleStyle)
-    FlowRow(
+    BalancedRows(
         modifier = modifier.padding(horizontal = 12.dp),
-        horizontalArrangement = Arrangement.spacedBy(PLAYING_CONTROL_GAP),
-        verticalArrangement = Arrangement.spacedBy(PLAYING_CONTROL_GAP),
-        // Every control is as tall as the others, but a label narrow enough to wrap makes its own item taller than the
-        // rest, and a flow row hangs its items from the top of the line they are in: centering them keeps every pill
-        // level with the ones beside it whatever its own label does.
-        itemVerticalAlignment = Alignment.CenterVertically,
+        gap = PLAYING_CONTROL_GAP,
+        isAnimated = isAnimated,
     ) {
         controls.key?.let { key ->
-            PlayingControl(label = stringResource(Res.string.song_details_transposition), fontScale = fontScale) {
+            PlayingControl(
+                modifier = Modifier.layoutId(PlayingControlId.KEY),
+                label = stringResource(Res.string.song_details_transposition),
+                fontScale = fontScale,
+            ) {
                 TranspositionControls(
                     transposition = key.transposition,
                     key = key.key,
@@ -245,7 +271,11 @@ private fun SongPlayingControlsRow(
                 )
             }
         }
-        PlayingControl(label = stringResource(Res.string.song_editor_insert_capo), fontScale = fontScale) {
+        PlayingControl(
+            modifier = Modifier.layoutId(PlayingControlId.CAPO),
+            label = stringResource(Res.string.song_editor_insert_capo),
+            fontScale = fontScale,
+        ) {
             CapoControls(
                 capo = controls.capo.capo,
                 fontScale = fontScale,
@@ -254,7 +284,11 @@ private fun SongPlayingControlsRow(
                 onReset = controls.capo.onReset,
             )
         }
-        PlayingControl(label = stringResource(Res.string.song_editor_insert_tempo), fontScale = fontScale) {
+        PlayingControl(
+            modifier = Modifier.layoutId(PlayingControlId.TEMPO),
+            label = stringResource(Res.string.song_editor_insert_tempo),
+            fontScale = fontScale,
+        ) {
             TempoStepper(
                 tempo = controls.tempo.tempo,
                 fontScale = fontScale,
@@ -264,27 +298,35 @@ private fun SongPlayingControlsRow(
                 onReset = controls.tempo.onReset,
             )
         }
-        PlayingControl(label = stringResource(Res.string.song_editor_insert_time), fontScale = fontScale) {
-            ValuePill(
-                value = controls.time.signature,
-                fontScale = fontScale,
-                height = height,
-                onClickLabel = stringResource(
-                    if (controls.time.isDeclared) Res.string.song_details_change_time_signature else Res.string.song_details_set_time_signature,
-                ),
-                onClick = controls.time.onClick,
+        // An item of its own rather than part of the tempo's, since it is the meter rather than how fast it goes, and
+        // read rather than set: it is the one of the four that only the file says, which a control of its own on the
+        // page made look like the others.
+        PlayingControl(
+            modifier = Modifier.layoutId(PlayingControlId.TIME),
+            label = stringResource(Res.string.song_editor_insert_time),
+            fontScale = fontScale,
+        ) {
+            Text(
+                text = controls.timeSignature,
+                style = MaterialTheme.typography.labelLarge.scaled(fontScale),
+                fontWeight = FontWeight.Bold,
             )
         }
     }
 }
 
+/** What [BalancedRows] follows each of [SongPlayingControlsRow]'s items by, since the transposition is not always among them. */
+private enum class PlayingControlId { KEY, CAPO, TEMPO, TIME }
+
 /** One of [SongPlayingControlsRow]'s items: what it is, in the accent color the line of text uses, and what sets it. */
 @Composable
 private fun PlayingControl(
+    modifier: Modifier = Modifier,
     label: String,
     fontScale: Float,
     control: @Composable RowScope.() -> Unit,
 ) = Row(
+    modifier = modifier,
     verticalAlignment = Alignment.CenterVertically,
 ) {
     Text(
@@ -374,8 +416,8 @@ private fun SongInfoCard(
  * read from an archived setlist get the plain line of text instead, since neither changes anything about a song.
  *
  * Three of the four are set where the song is read — a transposition, a capo and a tempo belong to the setlist the
- * band plays it in, or to this device for a song opened from the library — and the fourth, the time signature, is
- * written into the file: it is the song itself, and the one of the four the click cannot be told any other way.
+ * band plays it in, or to this device for a song opened from the library — while what the file itself declares, the
+ * time signature among it, is edited in the editing menu's "Song defaults" sheet (`SongPlayingDialog`).
  */
 @Immutable
 internal class SongPlayingControls(
@@ -383,7 +425,8 @@ internal class SongPlayingControls(
     val key: SongKeyControl?,
     val capo: SongCapoControl,
     val tempo: SongTempoControl,
-    val time: SongTimeControl,
+    /** The time signature as the file writes it, or the one the click counts the bar by where it names none. */
+    val timeSignature: String,
 )
 
 /** The transposition, which the key reads: the amount, the key it takes the song to, and the stepper's two ends. */
@@ -409,17 +452,6 @@ internal class SongTempoControl(
     val onStep: (delta: Int) -> Unit,
     val onTapped: (bpm: Int) -> Unit,
     val onReset: () -> Unit,
-)
-
-/**
- * The time signature as the file writes it, or the one the click counts the bar by where it names none
- * ([isDeclared] false), and the sheet it is picked in.
- */
-@Immutable
-internal class SongTimeControl(
-    val signature: String,
-    val isDeclared: Boolean,
-    val onClick: () -> Unit,
 )
 
 /** Editing callbacks for the card or sheet header and the groups of [SongInfoBody], see [rememberSongInfoEditing]. */

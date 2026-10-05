@@ -26,6 +26,7 @@ import androidx.lifecycle.viewModelScope
 import com.pandulapeter.campfire.chordpro.ChordNotation
 import com.pandulapeter.campfire.chordpro.ChordProMetadataFields
 import com.pandulapeter.campfire.chordpro.ChordProSummaryCache
+import com.pandulapeter.campfire.chordpro.ChordProTempo
 import com.pandulapeter.campfire.chordpro.model.ChordProLink
 import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
@@ -2602,13 +2603,46 @@ class CampfireViewModel(
     }
 
     /**
-     * The time signature is the one of the four playing values that is written into the song rather than overridden
-     * where it is read: it is the song itself, and it is also what the click counts the bar by, which nothing else
-     * could tell it. A blank value takes the `{time}` directive off.
+     * Opens the "Song defaults" sheet on what the file declares for the four values the song is played by, the key in
+     * the reader's notation (the way the editor's field shows it) and the tempo as the number the click reads out of it.
+     * [setlistFileName] is where the song is being read, whose overrides the sheet names and can take back.
      */
-    fun setSongTimeSignature(fileName: String, time: String?) = editSong(fileName = fileName, isEditorDraft = false) { text ->
-        setChordProMetadata(text = text, values = mapOf(ChordProMetadataFields.Field.TIME to time))
+    fun showSongPlayingDialog(song: Song, setlistFileName: String?) {
+        val metadata = parseChordPro(songTextOf(song.fileName, isEditorDraft = false) ?: return).metadata
+        showDialog(
+            DialogType.SongPlaying(
+                song = song,
+                setlistFileName = setlistFileName,
+                values = mapOf(
+                    ChordProMetadataFields.Field.KEY to metadata.key?.takeIf { it.isNotBlank() }?.let(::editorKeyOf).orEmpty(),
+                    ChordProMetadataFields.Field.CAPO to metadata.capo?.toString().orEmpty(),
+                    ChordProMetadataFields.Field.TEMPO to ChordProTempo.parse(metadata.tempo)?.toString().orEmpty(),
+                    ChordProMetadataFields.Field.TIME to metadata.time?.takeIf { it.isNotBlank() }.orEmpty(),
+                ),
+            )
+        )
     }
+
+    /**
+     * Writes the fields of the "Song defaults" sheet that were changed there, and only those, as [setSongMetadata]
+     * does. The key is typed in the reader's notation and written in the standard one, converted on its own rather
+     * than with the file around it, which is already in the standard notation; a blank value takes a directive off.
+     */
+    fun setSongPlaying(
+        fileName: String,
+        values: Map<ChordProMetadataFields.Field, String>,
+        offeredValues: Map<ChordProMetadataFields.Field, String>,
+    ) {
+        val changed = values
+            .filter { (field, value) -> value.trim() != offeredValues[field]?.trim() }
+            .mapValues { (field, value) -> if (field == ChordProMetadataFields.Field.KEY) fileKeyOf(value) else value }
+        if (changed.isNotEmpty()) editSong(fileName = fileName, isEditorDraft = false) { text -> setChordProMetadata(text = text, values = changed) }
+    }
+
+    /** A key typed in the editor's notation, as the file is to hold it; the inverse of [editorKeyOf]. */
+    private fun fileKeyOf(key: String) = key.trim().takeIf { it.isNotEmpty() }?.let { typed ->
+        parseChordPro(fileTextOf("{key: $typed}")).metadata.key ?: typed
+    }.orEmpty()
 
     /**
      * The view model going (the activity finished) does not take a tempo or a capo still waiting to be written with it:
@@ -4148,10 +4182,16 @@ class CampfireViewModel(
         data class SongLanguages(override val song: Song, override val isEditorDraft: Boolean = false) : SongEdit
 
         /**
-         * The beats of the song's bar, opened from the time signature of its first section: a `{time}` as the file
-         * writes it, or null where it names none, offered as bars to pick rather than as text to type.
+         * What the song's file declares for the four values it is played by, opened from the song details editing
+         * menu: a snapshot of each as the sheet offers it, blank for nothing (see
+         * [showSongPlayingDialog]). [setlistFileName] is the setlist the song is read through, whose overrides the
+         * sheet names, or null for the library's on this device.
          */
-        data class SongTimeSignature(override val song: Song, val time: String?) : SongEdit {
+        data class SongPlaying(
+            override val song: Song,
+            val setlistFileName: String?,
+            val values: Map<ChordProMetadataFields.Field, String>,
+        ) : SongEdit {
 
             /** The song's own file: the editor's preview line is not interactive, so this is never a draft's. */
             override val isEditorDraft = false

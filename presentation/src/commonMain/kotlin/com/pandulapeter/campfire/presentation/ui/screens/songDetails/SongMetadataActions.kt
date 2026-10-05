@@ -14,7 +14,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.pandulapeter.campfire.chordpro.ChordProTime
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -24,10 +23,12 @@ import com.pandulapeter.campfire.presentation.resources.ic_info
 import com.pandulapeter.campfire.presentation.resources.ic_label
 import com.pandulapeter.campfire.presentation.resources.ic_language
 import com.pandulapeter.campfire.presentation.resources.ic_link
+import com.pandulapeter.campfire.presentation.resources.ic_tune
 import com.pandulapeter.campfire.presentation.resources.song_details_change_cover_art
 import com.pandulapeter.campfire.presentation.resources.song_details_languages_edit
 import com.pandulapeter.campfire.presentation.resources.song_details_links_edit
 import com.pandulapeter.campfire.presentation.resources.song_details_metadata_edit
+import com.pandulapeter.campfire.presentation.resources.song_details_playing_edit
 import com.pandulapeter.campfire.presentation.resources.song_details_set_cover_art
 import com.pandulapeter.campfire.presentation.resources.song_details_tags_manage
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
@@ -59,7 +60,6 @@ internal fun rememberSongPlayingControls(
     // this control naming a key that is written nowhere in the song. The app bar's is the sounding one.
     val key = if (canTranspose) viewModel.renderKey(song = song, transposition = transposition, capo = 0, spelling = chordSpelling) else null
     val timeSignature = song.timeSignatureOrDefault.toString()
-    val isTimeDeclared = ChordProTime.parse(song.time) != null
     val fileName = song.fileName
     return remember(
         viewModel,
@@ -71,7 +71,6 @@ internal fun rememberSongPlayingControls(
         capo,
         tempo,
         timeSignature,
-        isTimeDeclared,
         song,
     ) {
         SongPlayingControls(
@@ -96,11 +95,7 @@ internal fun rememberSongPlayingControls(
                 onTapped = { viewModel.setTempo(fileName, setlistFileName, it) },
                 onReset = { viewModel.resetTempo(fileName, setlistFileName) },
             ),
-            time = SongTimeControl(
-                signature = timeSignature,
-                isDeclared = isTimeDeclared,
-                onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SongTimeSignature(song = song, time = song.time)) },
-            ),
+            timeSignature = timeSignature,
         )
     }
 }
@@ -163,6 +158,22 @@ internal fun songInfoEditingActions(editing: SongInfoEditing): List<ActionsMenuI
         isAlwaysInMenu = true,
         onClick = editing.onEditLinks,
     ),
+)
+
+/**
+ * Opens the "Song defaults" sheet from the song details editing menu, the one way into it: what the file declares for
+ * the four values the song is played by, next to what [setlistFileName] (or this device) overrides of them.
+ */
+@Composable
+internal fun songPlayingAction(
+    viewModel: CampfireViewModel,
+    song: Song,
+    setlistFileName: String?,
+) = ActionsMenuItem(
+    title = stringResource(Res.string.song_details_playing_edit),
+    icon = painterResource(Res.drawable.ic_tune),
+    isAlwaysInMenu = true,
+    onClick = { viewModel.showSongPlayingDialog(song = song, setlistFileName = setlistFileName) },
 )
 
 /**

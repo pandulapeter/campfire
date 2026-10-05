@@ -313,18 +313,23 @@ private val TAP_SEGMENT_PADDING = 10.dp
 
 /**
  * The time signature as bars to pick from: the common ones as chips, and the two steppers under them for every other
- * bar. Shared by the Metronome tab, where it sets the tab's own signature, and by the sheet that writes a song's
- * `{time}`, so that a bar is picked the same way wherever it is picked.
+ * bar. Shared by the Metronome tab, where it sets the tab's own signature, and by the "Song defaults" sheet that writes
+ * a song's `{time}`, so that a bar is picked the same way wherever it is picked.
+ *
+ * @param horizontalPadding Where the chips start: the tab's own margin by default, nothing in a form that already pads
+ * its fields. The stepper rows start a little before the chips, as a menu row's label does before a chip's.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun TimeSignaturePicker(
     modifier: Modifier = Modifier,
     timeSignature: TimeSignature,
+    horizontalPadding: Dp = 16.dp,
     onChange: (TimeSignature) -> Unit,
 ) = Column(modifier = modifier) {
+    val rowPadding = (horizontalPadding - TIME_SIGNATURE_ROW_INSET).coerceAtLeast(0.dp)
     FlowRow(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = horizontalPadding),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         COMMON_TIME_SIGNATURES.forEach { common ->
@@ -335,7 +340,7 @@ internal fun TimeSignaturePicker(
             )
         }
     }
-    MenuStepperRow(label = stringResource(Res.string.metronome_beats_per_bar)) {
+    MenuStepperRow(label = stringResource(Res.string.metronome_beats_per_bar), horizontalPadding = rowPadding) {
         Stepper(
             value = timeSignature.beats.toString(),
             isDefault = true,
@@ -352,7 +357,7 @@ internal fun TimeSignaturePicker(
         )
     }
     val unitIndex = TimeSignature.UNITS.indexOf(timeSignature.unit)
-    MenuStepperRow(label = stringResource(Res.string.metronome_beat_unit)) {
+    MenuStepperRow(label = stringResource(Res.string.metronome_beat_unit), horizontalPadding = rowPadding) {
         Stepper(
             value = timeSignature.unit.toString(),
             isDefault = true,
@@ -369,6 +374,9 @@ internal fun TimeSignaturePicker(
         )
     }
 }
+
+/** How much further out than the chips the stepper rows of [TimeSignaturePicker] start, see its `horizontalPadding`. */
+private val TIME_SIGNATURE_ROW_INSET = 4.dp
 
 /** The bars most songs are in, offered as chips so that the two steppers are only needed for the rest. */
 private val COMMON_TIME_SIGNATURES = listOf(

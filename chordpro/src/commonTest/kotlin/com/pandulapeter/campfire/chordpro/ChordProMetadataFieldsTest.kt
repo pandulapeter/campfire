@@ -80,4 +80,30 @@ class ChordProMetadataFieldsTest {
         assertEquals("{title: T}\n{key: G}\n{time: 3/4}\nLa", ChordProMetadataFields.set("{title: T}\n{key: G}\nLa", mapOf(Field.TIME to "3/4")))
         assertEquals("3/4", ChordProMetadataFields.valueOf(ChordProParser.parseMetadata("{time: 3/4}"), Field.TIME))
     }
+
+    @Test
+    fun `the key is set on the line the song starts in and leaves its modulations alone`() {
+        val text = "{title: T}\n{key: G}\n[G]La\n{key: A}\n[A]La"
+
+        assertEquals("{title: T}\n{key: C}\n[G]La\n{key: A}\n[A]La", ChordProMetadataFields.set(text, mapOf(Field.KEY to "C")))
+        assertEquals("{title: T}\n[G]La\n{key: A}\n[A]La", ChordProMetadataFields.set(text, mapOf(Field.KEY to "")))
+    }
+
+    @Test
+    fun `the empty lines of the new song template are filled in where they stand`() {
+        val template = "{title: T}\n{key: }\n{capo: }\n{tempo: }\n{time: }\n\nLa"
+
+        assertEquals(
+            "{title: T}\n{key: Am}\n{capo: 2}\n{tempo: 96}\n{time: 3/4}\n\nLa",
+            ChordProMetadataFields.set(template, mapOf(Field.KEY to "Am", Field.CAPO to "2", Field.TEMPO to "96", Field.TIME to "3/4")),
+        )
+    }
+
+    @Test
+    fun `an empty line says nothing about how the song is played`() {
+        val metadata = ChordProParser.parseMetadata("{key: }\n{capo: }\n{tempo: }\n{time: }")
+
+        listOf(Field.KEY, Field.CAPO, Field.TEMPO, Field.TIME).forEach { assertEquals(null, ChordProMetadataFields.valueOf(metadata, it)) }
+        assertEquals("96", ChordProMetadataFields.valueOf(ChordProParser.parseMetadata("{tempo: 96}\n{tempo: }"), Field.TEMPO))
+    }
 }

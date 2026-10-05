@@ -399,7 +399,7 @@ internal fun CampfireDialogs(
             dialog = dialog,
         )
 
-        is CampfireViewModel.DialogType.SongTimeSignature -> SongTimeSignatureDialog(
+        is CampfireViewModel.DialogType.SongPlaying -> SongPlayingDialog(
             viewModel = viewModel,
             dialog = dialog,
         )

@@ -106,7 +106,8 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   selector suffix (`{title-guitar}`) is dropped, since there is nothing to match it against, and one with a negated
   selector (`{title-guitar!}`) is read as the directive it is on for the same reason; an environment with a selector is
   the environment it selects, since its lines are the song itself; a song that changes key is in the key its first
-  `{key}` names; a `{transpose}` before the song's first line transposes the whole of it (`ChordProMetadata.transpose`,
+  `{key}` names; an empty `{key}`, `{capo}`, `{tempo}` or `{time}` (the new song template's) declares nothing and takes
+  back nothing another line said; a `{transpose}` before the song's first line transposes the whole of it (`ChordProMetadata.transpose`,
   the last one there winning), and one further down is a modulation — a `ChordProBlock.Transpose` holding the offset
   from the whole-song value for everything after it, cutting the section it stands in the way a comment does — each
   value being the transposition of the rest of the song and a valueless one going back to the one before, as the spec
@@ -171,11 +172,12 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   but only where it starts with a host (and perhaps a port), so `mailto:…`, `me@…` or a mistyped `https:/…` is refused
   rather than saved as an `https` address naming nothing.
 - `ChordProMetadataFields` — the directives that say what a song is (`title`, `subtitle`, `artist`, `composer`,
-  `lyricist`, `album`, `year`, `duration`), for the song details' metadata dialog, plus `time`, which the sheet that
-  picks a bar writes; the other three of how it is played (`key`, `capo`, `tempo`) are what one band plays the song at
-  and are overridden where it is read rather than written here (see `:presentation`), so they stay the editor's. `set` rewrites the line the parser reads each
-  value from — the last one — where it stands and in its own spelling (`{t: …}`, a `{meta: title …}`), drops the
-  earlier lines of the same field, writes a field the file lacks into the header by `metadataInsertionIndex`, and
+  `lyricist`, `album`, `year`, `duration`), for the song details' metadata dialog, plus the four of how it is played
+  (`key`, `capo`, `tempo`, `time`), which the Song defaults sheet writes as the values the song itself declares and a
+  setlist or a device may override where it is read (see `:presentation`). `set` rewrites the line the parser reads
+  each value from — the last one that says anything, or for `key` the first, since a later `{key}` is a modulation;
+  an empty line, the new song template's, where none does — where it stands and in its own spelling (`{t: …}`, a
+  `{meta: title …}`), drops the other lines of the same field (but never another `{key}`), writes a field the file lacks into the header by `metadataInsertionIndex`, and
   removes it for a blank value; editing the text for the reason `ChordProTags` does. `valueOf` reads a field back out
   of the model as text.
 - `ChordProDuration` — reads a `{duration}` value as seconds (`268`), `m:ss` or `h:mm:ss`, and anything else, zero
