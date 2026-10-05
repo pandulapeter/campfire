@@ -36,6 +36,13 @@ object ChordProHighlighter {
 
         /** A whole `#` line, which never reaches the rendered song. */
         COMMENT,
+
+        /**
+         * A whole directive line whose value the app reads as something - a time signature, a tempo, a capo, a
+         * duration, a key, a transposition, a cover, a link or a language - but cannot make sense of, so that it is as
+         * good as missing from the song. It takes the place of the directive's own tokens rather than lying over them.
+         */
+        INVALID,
     }
 
     /** [start] is inclusive and [end] exclusive, both offsets into the whole text. */
@@ -78,11 +85,15 @@ object ChordProHighlighter {
                         isInGrid = false
                         isInDelegate = false
                     }
-                    tokens += directive.tokens(
-                        line = line,
-                        lineStart = lineStart,
-                        valueStart = ChordProSyntax.directiveValueStart(trimmed),
-                    )
+                    tokens += if (!isInDelegate && directive.isUnreadable()) {
+                        listOf(Token(TokenType.INVALID, lineStart, lineStart + line.length))
+                    } else {
+                        directive.tokens(
+                            line = line,
+                            lineStart = lineStart,
+                            valueStart = ChordProSyntax.directiveValueStart(trimmed),
+                        )
+                    }
                 }
 
                 isInGrid -> tokens += gridChordTokens(line, lineStart)
@@ -121,6 +132,33 @@ object ChordProHighlighter {
             }
         } else {
             listOf(name)
+        }
+    }
+
+    /**
+     * Whether this is a directive the parser reads a value out of, holding a value it then drops: the same functions
+     * read it here as there, so that a line is marked exactly when the song comes out without what it says. A
+     * `{meta: time 3/4}` is the `{time}` it stands for. A directive with no value is left alone: it is what the
+     * editor writes into the header for the value to be typed into, and a `{transpose}` without one is a valid one
+     * besides, going back to the transposition before it.
+     */
+    private fun ChordProSyntax.Directive.isUnreadable(): Boolean {
+        val directive = ChordProSyntax.standardMeta(this) ?: this
+        val value = directive.value?.trim()
+            ?.let { if (directive.name == META) it.substringAfter(' ', missingDelimiterValue = "").trim() else it }
+            .orEmpty()
+        if (value.isEmpty()) return false
+        return when {
+            directive.name == "time" -> ChordProTime.parse(value) == null
+            directive.name == "tempo" -> ChordProTempo.parse(value) == null
+            directive.name == "capo" -> value.toIntOrNull()?.takeIf { it >= 0 } == null
+            directive.name == "duration" -> ChordProDuration.parse(value) == null
+            directive.name == "key" -> !value.isMovedChordName() && !ChordProTransposer.isSpelledOutKey(value)
+            directive.name == TRANSPOSE -> ChordProParser.transposeSemitones(value) == null
+            ChordProSyntax.isCoverMeta(directive) -> ChordProSyntax.cover(directive) == null
+            ChordProSyntax.isLinkMeta(directive) -> ChordProSyntax.link(directive) == null
+            directive.name in LANGUAGE_NAMES || ChordProSyntax.isLanguageMeta(directive) -> ChordProSyntax.language(directive) == null
+            else -> false
         }
     }
 
@@ -189,4 +227,7 @@ object ChordProHighlighter {
     private const val TAB_ENVIRONMENT = "tab"
     private const val GRID_ENVIRONMENT = "grid"
     private const val ANNOTATION_PREFIX = "*"
+    private const val TRANSPOSE = "transpose"
+    private const val META = "meta"
+    private val LANGUAGE_NAMES = setOf(ChordProSyntax.LANGUAGE_NAME, "lang")
 }

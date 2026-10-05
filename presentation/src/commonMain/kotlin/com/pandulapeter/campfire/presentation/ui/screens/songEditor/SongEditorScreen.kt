@@ -727,6 +727,7 @@ private fun ChordProTextField(
             chordColor = secondAccentColor,
             secondaryColor = colorScheme.onSurfaceVariant,
             outlineColor = colorScheme.outline,
+            errorColor = colorScheme.error,
         )
     }
     val bodyLarge = MaterialTheme.typography.bodyLarge

@@ -33,6 +33,7 @@ internal class ChordProOutputTransformation(
     private val chord: SpanStyle,
     private val annotation: SpanStyle,
     private val comment: SpanStyle,
+    private val invalid: SpanStyle,
 ) : OutputTransformation {
 
     override fun TextFieldBuffer.transformOutput() {
@@ -44,6 +45,7 @@ internal class ChordProOutputTransformation(
                     ChordProHighlighter.TokenType.CHORD -> chord
                     ChordProHighlighter.TokenType.ANNOTATION -> annotation
                     ChordProHighlighter.TokenType.COMMENT -> comment
+                    ChordProHighlighter.TokenType.INVALID -> invalid
                 },
                 token.start,
                 token.end,
@@ -53,13 +55,17 @@ internal class ChordProOutputTransformation(
 
     companion object {
 
-        /** The same colours the viewer uses, so that the editor and the preview next to it agree. */
+        /**
+         * The same colours the viewer uses, so that the editor and the preview next to it agree, and the error colour
+         * for a line whose value cannot be read, which the song then comes out without.
+         */
         fun of(
             tokenCache: ChordProTokenCache,
             primaryColor: Color,
             chordColor: Color,
             secondaryColor: Color,
             outlineColor: Color,
+            errorColor: Color,
         ) = ChordProOutputTransformation(
             tokenCache = tokenCache,
             directiveName = SpanStyle(color = primaryColor, fontWeight = FontWeight.Bold),
@@ -67,6 +73,7 @@ internal class ChordProOutputTransformation(
             chord = SpanStyle(color = chordColor, fontWeight = FontWeight.Bold),
             annotation = SpanStyle(fontStyle = FontStyle.Italic),
             comment = SpanStyle(color = outlineColor, fontStyle = FontStyle.Italic),
+            invalid = SpanStyle(color = errorColor),
         )
     }
 }

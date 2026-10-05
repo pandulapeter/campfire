@@ -314,6 +314,60 @@ class ChordProHighlighterTest {
     }
 
     @Test
+    fun `a directive whose value cannot be read is marked whole`() {
+        listOf(
+            "{time: 5/7}",
+            "  {meta: time three four}",
+            "{tempo: fast}",
+            "{capo: second}",
+            "{capo: -1}",
+            "{duration: about 4 min}",
+            "{key: Dm (capo 2)}",
+            "{transpose: up}",
+            "{meta: cover not an address}",
+            "{meta: link ftp://example.com}",
+            "{language: und}",
+        ).forEach { line ->
+            assertEquals(listOf(TokenType.INVALID to line), spans(line), line)
+        }
+    }
+
+    @Test
+    fun `a directive whose value can be read is not marked`() {
+        listOf(
+            "{time: 6/8}",
+            "{time: C|}",
+            "{meta: time 3/4}",
+            "{tempo: ♩ = 96}",
+            "{capo: 2}",
+            "{duration: 4:28}",
+            "{key: F#m}",
+            "{key: a}",
+            "{key: Bb-Dur}",
+            "{transpose: -3f}",
+            "{transpose}",
+            "{time}",
+            "{key: }",
+            "{meta: lang}",
+            "{meta: cover https://example.com/cover.jpg}",
+            "{meta: link https://example.com Lesson}",
+            "{language: en-US}",
+            "{title: 5/7}",
+            "{unknown: whatever}",
+        ).forEach { line ->
+            assertEquals(false, spans(line).any { it.first == TokenType.INVALID }, line)
+        }
+    }
+
+    @Test
+    fun `a directive inside an environment handed to another program is not marked`() {
+        assertEquals(
+            false,
+            spans("{start_of_abc}\n{time: whatever}\n{end_of_abc}").any { it.first == TokenType.INVALID },
+        )
+    }
+
+    @Test
     fun `empty text has nothing to highlight`() {
         assertEquals(emptyList(), ChordProHighlighter.tokenize(""))
     }

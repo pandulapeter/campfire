@@ -128,6 +128,9 @@ object ChordProTransposer {
         return rename(key.substring(0, noteLength)) + key.substring(noteLength)
     }
 
+    /** Whether [key] is spelled out in words the way [renameKey] reads one. */
+    internal fun isSpelledOutKey(key: String) = spelledOutKeyNoteLength(key) != null
+
     /**
      * The length of the note a key spelled out in words starts with, or null for a key that is not one. The note has
      * to start with a capital: a lowercase root is how a Central European chart writes a minor chord (`a` is `Am`),

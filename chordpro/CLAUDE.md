@@ -279,7 +279,7 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   respelled like any other note and folded back to the case the file used, and a lowercase `h` there marks a song as
   German as well. Only there: a lowercase root is still read as a minor chord and never as a note.
 - `ChordProHighlighter` — the typed spans an editor wants to colour (directive name, directive value, chord,
-  annotation, comment). It lives here rather than in the UI so that what counts as a chord is decided in exactly one
+  annotation, comment, invalid line). It lives here rather than in the UI so that what counts as a chord is decided in exactly one
   place; only what those look like on screen is the caller's business. It reads the file's lines through
   `ChordProSyntax` rather than walking them itself, so it agrees with the parser about where a line ends whichever of
   the three endings the file uses, and reads a bracket trimmed the way the parser does, so a `[ *softly]` is an
@@ -289,6 +289,11 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   transposition moves there too — whole chord names only, since a comment is drawn as it is written and neither moves a
   `[Chorus x2]` nor lifts an annotation out. Any `{end_of_…}` ends a tab, a grid or a delegated environment, whichever
   environment it names, since the parser, the summary and the transposition read the lines after it as ordinary ones.
+  A directive whose value the parser reads and then drops — a `{time}`, `{tempo}`, `{capo}`, `{duration}`, `{key}` or
+  `{transpose}` it cannot make sense of, a cover or a link that is no web address, a language that names none — is one
+  `INVALID` token over the whole line instead, decided by the same functions that read it (`ChordProTime`,
+  `ChordProDuration`, `ChordProSyntax.cover`…); one with no value at all is not, since that is what the editor writes
+  into the header for the value to be typed into.
 
 Everything here is pure, so everything here is tested: `commonTest`, run with `./gradlew :chordpro:desktopTest`. A
 change to the dialect belongs in a test first.

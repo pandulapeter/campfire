@@ -96,9 +96,7 @@ object ChordProParser {
             if (written.isEmpty()) {
                 current = restorable.removeLastOrNull() ?: 0
             } else {
-                // `2s` and `-3f` ask for sharps or flats as well; the reader's own spelling preference decides that here.
-                val number = written.removePrefix("+").let { if (it.lastOrNull()?.lowercaseChar() in SPELLING_SUFFIXES) it.dropLast(1) else it }
-                val semitones = number.trim().toIntOrNull() ?: return null
+                val semitones = transposeSemitones(written) ?: return null
                 restorable += current
                 current = semitones
             }
@@ -109,6 +107,16 @@ object ChordProParser {
 
         fun finish() = startBody()
     }
+
+    /**
+     * The semitones a non-empty `{transpose}` value asks for, or null where it is not a number. `2s` and `-3f` ask for
+     * sharps or flats as well; the reader's own spelling preference decides that here.
+     */
+    internal fun transposeSemitones(written: String) = written.trim()
+        .removePrefix("+")
+        .let { if (it.lastOrNull()?.lowercaseChar() in SPELLING_SUFFIXES) it.dropLast(1) else it }
+        .trim()
+        .toIntOrNull()
 
     /**
      * [blocks] with every recall carrying the chorus it repeats: the last one that was over by the time the recall is
