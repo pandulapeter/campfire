@@ -32,4 +32,23 @@ class SongPlayingDraftTest {
         assertFalse(isValidSongPlayingDraft(capo = "", tempo = "29"))
         assertFalse(isValidSongPlayingDraft(capo = "", tempo = "301"))
     }
+
+    @Test
+    fun `a value the file already held outside its range does not keep the sheet from saving`() {
+        assertTrue(isValidSongPlayingDraft(capo = "14", tempo = "", offeredCapo = "14"))
+        assertTrue(isValidSongPlayingDraft(capo = "-1", tempo = "", offeredCapo = "-1"))
+        assertTrue(isValidSongPlayingDraft(capo = "", tempo = "320", offeredTempo = "320"))
+    }
+
+    @Test
+    fun `a changed value outside its range keeps the sheet from saving`() {
+        assertFalse(isValidSongPlayingDraft(capo = "13", tempo = "", offeredCapo = "14"))
+        assertFalse(isValidSongPlayingDraft(capo = "", tempo = "301", offeredTempo = ""))
+    }
+
+    @Test
+    fun `a hidden field is not judged`() {
+        assertTrue(isValidSongPlayingDraft(capo = "", tempo = "320", offeredTempo = "320", isTempoShown = false))
+        assertTrue(isValidSongPlayingDraft(capo = "14", tempo = "", isCapoShown = false))
+    }
 }

@@ -112,7 +112,14 @@ internal fun SongPlayingDialog(
     val timeSignature = remember(values[Field.TIME]) {
         ChordProTime.parse(values[Field.TIME])?.let { (beats, unit) -> TimeSignature(beats, unit) } ?: TimeSignature.COMMON_TIME
     }
-    val isValid = isValidSongPlayingDraft(capo = values[Field.CAPO].orEmpty(), tempo = values[Field.TEMPO].orEmpty())
+    val isValid = isValidSongPlayingDraft(
+        capo = values[Field.CAPO].orEmpty(),
+        tempo = values[Field.TEMPO].orEmpty(),
+        offeredCapo = offeredValues[Field.CAPO].orEmpty(),
+        offeredTempo = offeredValues[Field.TEMPO].orEmpty(),
+        isCapoShown = shouldShowChords,
+        isTempoShown = shouldShowTempo,
+    )
     val scrollState = rememberScrollState()
     val fileTranspose = dialog.song.transpose
     val keyNote = if (fileTranspose == 0) {
@@ -357,9 +364,20 @@ private fun SongPlayingField(
     )
 }
 
-/** Whether the sheet's typed numbers can be written as they are: each empty, or a whole number within its range. */
-internal fun isValidSongPlayingDraft(capo: String, tempo: String) =
-    isValidSongPlayingNumber(capo, Song.CAPO_RANGE) && isValidSongPlayingNumber(tempo, MetronomePattern.BPM_RANGE)
+/**
+ * Whether the sheet's typed numbers can be written: each field that is shown and was changed is empty or a whole number
+ * within its range. A value the file already held is not the sheet's to judge - only the changed fields are written -
+ * and a hidden one cannot have been changed.
+ */
+internal fun isValidSongPlayingDraft(
+    capo: String,
+    tempo: String,
+    offeredCapo: String = "",
+    offeredTempo: String = "",
+    isCapoShown: Boolean = true,
+    isTempoShown: Boolean = true,
+) = (!isCapoShown || capo.trim() == offeredCapo.trim() || isValidSongPlayingNumber(capo, Song.CAPO_RANGE)) &&
+    (!isTempoShown || tempo.trim() == offeredTempo.trim() || isValidSongPlayingNumber(tempo, MetronomePattern.BPM_RANGE))
 
 private fun isValidSongPlayingNumber(value: String, range: IntRange) = value.isBlank() || value.trim().toIntOrNull()?.let { it in range } == true
 
