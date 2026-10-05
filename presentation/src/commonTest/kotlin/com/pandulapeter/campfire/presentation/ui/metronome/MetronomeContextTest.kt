@@ -12,6 +12,8 @@ package com.pandulapeter.campfire.presentation.ui.metronome
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class MetronomeContextTest {
 
@@ -43,4 +45,30 @@ class MetronomeContextTest {
     @Test
     fun aSongWithNoFileIsStandalone() =
         assertEquals(MetronomeContext.Standalone, metronomeContextOf(listOf(songDetails)) { null })
+
+    @Test
+    fun theSameSongStayingOnTopKeepsTheClick() = assertFalse(isMetronomeScreenLeft(songDetails, songDetails.copy()))
+
+    /** A rename rewrites the screen's file names in place, which is still the screen the click was started on. */
+    @Test
+    fun theSameSongUnderNewFileNamesKeepsTheClick() =
+        assertFalse(isMetronomeScreenLeft(songDetails, songDetails.copy(songFileNames = listOf("c.cho", "b.cho"))))
+
+    @Test
+    fun theMetronomeTabStayingOnTopKeepsTheClick() = assertFalse(isMetronomeScreenLeft(CampfireDestination.Metronome, CampfireDestination.Metronome))
+
+    @Test
+    fun aSongOpenedOverTheMetronomeTabStopsTheClick() = assertTrue(isMetronomeScreenLeft(CampfireDestination.Metronome, songDetails))
+
+    @Test
+    fun aSongOpenedOverAnotherSongStopsTheClick() = assertTrue(isMetronomeScreenLeft(songDetails, songDetails.copy(id = "2")))
+
+    @Test
+    fun aScreenWithoutAMetronomeStopsTheClick() {
+        assertTrue(isMetronomeScreenLeft(songDetails, CampfireDestination.SongEditor("a.cho")))
+        assertTrue(isMetronomeScreenLeft(songDetails, CampfireDestination.Songs))
+    }
+
+    @Test
+    fun theMetronomeTabSelectedFromASongStopsTheClick() = assertTrue(isMetronomeScreenLeft(songDetails, CampfireDestination.Metronome))
 }

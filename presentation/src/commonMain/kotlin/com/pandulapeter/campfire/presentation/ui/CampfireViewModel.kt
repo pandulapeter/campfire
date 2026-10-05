@@ -126,6 +126,7 @@ import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeContext
 import com.pandulapeter.campfire.presentation.ui.metronome.TempoKey
 import com.pandulapeter.campfire.presentation.ui.metronome.Tempos
 import com.pandulapeter.campfire.presentation.ui.metronome.effectiveTempo
+import com.pandulapeter.campfire.presentation.ui.metronome.isMetronomeScreenLeft
 import com.pandulapeter.campfire.presentation.ui.metronome.metronomeContextOf
 import com.pandulapeter.campfire.presentation.ui.metronome.metronomePatternOf
 import com.pandulapeter.campfire.presentation.ui.metronome.withTempo
@@ -1463,15 +1464,15 @@ class CampfireViewModel(
         update: SnapshotStateList<CampfireDestination>.() -> Unit,
     ) {
         if (isNavigationTransitionRunning && !isPredictiveBackCompleted) navigationGeneration++
+        val previousTop = backStack.lastOrNull()
         backStack.update()
         if (backStack.lastOrNull() != CampfireDestination.Setlists) reorderingSetlistFileName = null
         // The two screens that hold a metronome are the two it can be stopped from, so a click never outlives the one
-        // it was started on: the editor opened over a song, a song closed, a tab selected, all stop it. The panel the
-        // click was played from is a preference and stays where the user put it, so the next song is read to a click
-        // without asking for the instrument again.
-        if (backStack.lastOrNull().let { it !is CampfireDestination.SongDetails && it != CampfireDestination.Metronome }) {
-            metronome.stop()
-        }
+        // it was started on: the editor opened over a song, a song closed, a tab selected, all stop it - and so does a
+        // different screen arriving on top, a song opened over the Metronome tab or over another song, which holds a
+        // metronome but not the one that was started. The panel the click was played from is a preference and stays
+        // where the user put it, so the next song is read to a click without asking for the instrument again.
+        if (isMetronomeScreenLeft(previousTop = previousTop, top = backStack.lastOrNull())) metronome.stop()
         if (backStack.none { it is CampfireDestination.SongEditor }) retainedEditorField = null
         backStack.mapNotNullTo(mutableSetOf()) { (it as? CampfireDestination.SongDetails)?.id }.let { ids ->
             songDetailsCurrentSongs.keys.retainAll(ids)

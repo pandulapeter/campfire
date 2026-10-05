@@ -39,3 +39,10 @@ internal fun metronomeContextOf(
     val songFileName = currentSongOf(destination) ?: return MetronomeContext.Standalone
     return MetronomeContext.Song(songFileName = songFileName, setlistFileName = destination.setlistFileName)
 }
+
+/**
+ * Whether a back stack change leaves the screen a click is played from: the new top holds no metronome, or it is
+ * another screen than the one that was on top - a song opened over the Metronome tab, or over another song.
+ */
+internal fun isMetronomeScreenLeft(previousTop: CampfireDestination?, top: CampfireDestination?) =
+    (top !is CampfireDestination.SongDetails && top != CampfireDestination.Metronome) || top?.contentKey != previousTop?.contentKey

@@ -739,8 +739,9 @@ Nothing about it reaches the network. The module `CLAUDE.md` files carry the det
 - **The click belongs to the screen it is played from, and there are two of them**: the Metronome tab, whose whole
   screen is the instrument, and the song details screen, where it is a panel in the app bar. Nowhere else has a
   metronome, and a click never outlives the screen it was started on - going back to the songs, selecting a tab,
-  opening the editor or the export screen over the song, deleting it, all stop it - so there is never a click playing with nothing on screen to stop it
-  with. On a song details screen it follows the page the pager is heading for, so paging to the next song moves the
+  opening the editor or the export screen over the song, deleting it, a song opened over the tab or over another
+  song (an "Open with", an import's Open), all stop it - so there is never a click playing with nothing on screen to
+  stop it with. On a song details screen it follows the page the pager is heading for, so paging to the next song moves the
   click to its tempo from beat one. Every way onto the tab clears the back stack.
 - **Playback is media**: on Android a `mediaPlayback` foreground service with a media session and notification
   (`app/android`), on iOS the `audio` background mode, Now Playing and the remote commands (`app/ios`), on the web a
