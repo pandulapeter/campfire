@@ -65,8 +65,9 @@ internal data class SyncedPreferences(
  * The document is kept as a JSON tree rather than decoded into a class, so that it can grow without an older version
  * losing what a newer one wrote: a song's entry may gain a field, and settings that have nothing to do with the songs
  * may join [SONGS] at the top level, and a version that does not know them passes them through untouched. This
- * version only ever writes the paths it owns ([SONG_FIELDS] under each song of [SONGS]); everything else in the
- * document is carried over from the last synced one ([localDocument]), so to the merge it is simply unchanged here.
+ * version only ever writes the paths it owns ([TRANSPOSITION], [TEMPO] and [CAPO] under each song of [SONGS]), and of
+ * those only the values it can read; everything else in the document is carried over from the last synced one
+ * ([localDocument]), so to the merge it is simply unchanged here.
  *
  * ```json
  * {
@@ -90,7 +91,6 @@ internal object SyncedPreferencesDocument {
     private const val TRANSPOSITION = "transposition"
     private const val TEMPO = "tempo"
     private const val CAPO = "capo"
-    private val SONG_FIELDS = listOf(TRANSPOSITION, TEMPO, CAPO)
 
     /** The furthest a transposition can sensibly be from the key the song is written in: an octave either way. */
     private val TRANSPOSITION_RANGE = -11..11
@@ -129,14 +129,22 @@ internal object SyncedPreferencesDocument {
 
     /**
      * What this device holds, as a document: [base] - the document the last run left behind, or null where there was
-     * none - with this version's own fields replaced by [preferences]. Everything else [base] carries stays as it was,
-     * since this device has no opinion on it.
+     * none - with the values of this version's own fields that it reads ([preferencesOf]) replaced by [preferences].
+     * Everything else [base] carries stays as it was, since this device has no opinion on it - a value of one of those
+     * fields that this version cannot read included, unless [preferences] sets that field, since this device never
+     * held it and so cannot have removed it.
      */
     fun localDocument(base: JsonObject?, preferences: SyncedPreferences): JsonObject {
         val baseSongs = base?.get(SONGS) as? JsonObject
+        val readable = base?.let(::preferencesOf) ?: SyncedPreferences()
         val names = baseSongs?.keys.orEmpty() + preferences.transpositions.keys + preferences.tempos.keys + preferences.capos.keys
         val songs = names.mapNotNull { name ->
-            val fields = (baseSongs?.get(name) as? JsonObject).orEmpty() - SONG_FIELDS.toSet() + listOfNotNull(
+            val understood = listOfNotNull(
+                TRANSPOSITION.takeIf { name in readable.transpositions },
+                TEMPO.takeIf { name in readable.tempos },
+                CAPO.takeIf { name in readable.capos },
+            )
+            val fields = (baseSongs?.get(name) as? JsonObject).orEmpty() - understood.toSet() + listOfNotNull(
                 preferences.transpositions[name]?.let { TRANSPOSITION to JsonPrimitive(it) },
                 preferences.tempos[name]?.let { TEMPO to JsonPrimitive(it) },
                 preferences.capos[name]?.let { CAPO to JsonPrimitive(it) },

@@ -130,6 +130,21 @@ class SyncedPreferencesTest {
     }
 
     @Test
+    fun `a value this version cannot read is carried over from the base`() = assertEquals(
+        document("""{"a.cho":{"tempo":400}}"""),
+        SyncedPreferencesDocument.localDocument(base = document("""{"a.cho":{"tempo":400,"capo":2}}"""), preferences = SyncedPreferences()),
+    )
+
+    @Test
+    fun `a value set here replaces one this version cannot read`() = assertEquals(
+        document("""{"a.cho":{"tempo":120,"capo":2}}"""),
+        SyncedPreferencesDocument.localDocument(
+            base = document("""{"a.cho":{"tempo":400,"capo":2}}"""),
+            preferences = SyncedPreferences(tempos = mapOf("a.cho" to 120), capos = mapOf("a.cho" to 2)),
+        ),
+    )
+
+    @Test
     fun `values that could not have been written are not read`() = assertEquals(
         SyncedPreferences(transpositions = mapOf("a.cho" to 2), tempos = mapOf("a.cho" to 120)),
         SyncedPreferencesDocument.preferencesOf(

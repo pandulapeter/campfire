@@ -245,7 +245,8 @@ and a repository that has not been read yet rescans instead, since there is no l
   as a JSON tree and merges it three ways, value by value, against the document the last run settled
   (`SyncIndexDocument.syncedPreferences`, carried through every snapshot the engine hands out and dropped with the rest
   of an index written for another account); this device's side is that base with this version's own fields replaced
-  by the preferences (`localDocument`), so whatever a later version writes passes through untouched. A document that
+  by the preferences (`localDocument`), so whatever a later version writes passes through untouched — a value of one of
+  those fields that this version cannot read (a tempo of 400, a capo of 13) included, like an unknown field. A document that
   is missing from the folder, does not decode or holds no `songs` object (`isReadable`) is merged as the base, so it
   is replaced with this device's values rather than read as a removal of everything; one whose `version` is newer
   than this version's (`isNewerFormat`) is neither applied nor written over, and the step answers the base it was
