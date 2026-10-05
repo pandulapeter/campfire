@@ -29,9 +29,9 @@ import com.pandulapeter.campfire.metronome.api.Metronome
 import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import org.koin.mp.KoinPlatform
 
@@ -41,8 +41,9 @@ import org.koin.mp.KoinPlatform
  *
  * Like the sync service it plays nothing itself - the engine is the `Metronome` singleton, whose audio output also owns
  * the audio focus and the headphones being pulled - and it follows the engine's own state for stopping rather than
- * being told, since the activity that started it may be gone by the time the click ends. There is no paused state:
- * the session's pause, stop and the headset's button all stop the click, which is what ends the session too.
+ * being told, since the activity that started it may be gone by the time the click ends - from `onStartCommand` on,
+ * once it is in the foreground, since stopping before that is a crash. There is no paused state: the session's pause,
+ * stop and the headset's button all stop the click, which is what ends the session too.
  *
  * Started by the activity the moment a click starts, which is always a tap with the app in front, so the background
  * start restrictions never apply; the words arrive in the intent so that the notification is in the language chosen
@@ -54,6 +55,7 @@ class CampfireMetronomeService : Service() {
     private val metronome by lazy { KoinPlatform.getKoin().get<Metronome>() }
     private var session: MediaSession? = null
     private var isInForeground = false
+    private var playbackJob: Job? = null
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -72,11 +74,6 @@ class CampfireMetronomeService : Service() {
                     .build()
             )
             isActive = true
-        }
-        scope.launch {
-            // The state of the moment is skipped: the intent that started this service was sent because a click started,
-            // and a stop that came before it arrived is answered in onStartCommand.
-            metronome.playback.drop(1).collect { if (it !is MetronomePlayback.Playing) stop() }
         }
     }
 
@@ -108,10 +105,13 @@ class CampfireMetronomeService : Service() {
         )
         isInForeground = true
         isRunning = true
-        // The click may have stopped between the intent being sent and its arrival here; the service has to have gone
-        // into the foreground first all the same, or the system takes the promise startForegroundService made for a
-        // crash.
-        if (metronome.playback.value !is MetronomePlayback.Playing) stop()
+        // Followed only from here, once the service is in the foreground: stopping before startForeground is a crash, and a
+        // collector that saw (and had to ignore) a stop earlier would not be told about the next one, a StateFlow never
+        // repeating the value a collector last got. The first value is the state of the moment, so a click that stopped
+        // between the intent being sent and its arrival here is stopped at once.
+        if (playbackJob == null) {
+            playbackJob = scope.launch { metronome.playback.collect { if (it !is MetronomePlayback.Playing) stop() } }
+        }
         // Not sticky: a click whose process the system killed is over, and a session for it would be a lie.
         return START_NOT_STICKY
     }
