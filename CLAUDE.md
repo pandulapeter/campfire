@@ -752,20 +752,21 @@ Nothing about it reaches the network. The module `CLAUDE.md` files carry the det
   background and not the app being left**: the screen locked or another app in front is a phone on a music stand and
   keeps it, while the app being closed — swiped away or backed out of on Android, quit on the desktop — stops it, since
   nothing is left to look at the notification it keeps up.
-- **The two take the shape their screen calls for**, and share nothing but the engine and the beat row. On the **song
-  details screen** the metronome is a panel inside the app bar, under the title row, holding the least of a metronome
-  that is still one — the bar as it is heard, with its accents tapped on it as on the tab, since the accents are the
-  bar's rather than one screen's, and play and stop at the end of the row — because a song is what that screen is for, and
-  because the tempo is already in the song's own first section a line below it; the bar's own button shows and hides
-  it, opening it starts nothing, stopping the click leaves it up for the next one, and closing it stops a click that is
-  playing. **Whether it is up is a preference** (`MetronomeSettings.isSongPanelShown`) rather than something each
-  screen is asked for again, so a player who reads to a click finds the instrument on the next song and on the next
-  launch. On the **Metronome tab** the instrument is the
-  whole screen: the tempo large and stepped with its Italian marking, a slider across the range, tap tempo, the beat
-  row that the accents are drawn on, the time signature, the subdivision, the sound and the volume — with play and stop
-  on one wide button that stays at the bottom of the screen, naming what it does and squaring its corners off while the
-  click runs, since a page longer than the screen must not have to be scrolled to stop a click and the one control the
-  whole screen is played from has to be found at a glance from a music stand.
+- **Both are played from the same panel** (`MetronomePanel`): the least of a metronome that is still one — the bar as
+  it is heard, with its accents tapped on it, since the accents are the bar's rather than one screen's, and play and
+  stop at the end of the row. On the **song details screen** it is inside the app bar, under the title row, because a
+  song is what that screen is for and the tempo is already in the song's own first section a line below it; the bar's
+  own button shows and hides it, opening it starts nothing, stopping the click leaves it up for the next one, and
+  closing it stops a click that is playing. **Whether it is up is a preference** (`MetronomeSettings.isSongPanelShown`)
+  rather than something each screen is asked for again, so a player who reads to a click finds the instrument on the
+  next song and on the next launch. On the **Metronome tab** the same panel is pinned at the top and never hidden, drawn larger
+  there (a 56dp row and button), so a
+  page longer than the screen never has to be scrolled to stop a click, and under it the rest of the instrument scrolls
+  as the rows of a settings page, in two sections a wide window sets side by side: what is played — the tempo on the
+  song details screen's own stepper with its Tap segment, its Italian marking and a slider across the range, the time
+  signature (chips, and two steppers with a slash between them, under a line saying that the bar above is tapped
+  to accent or mute a beat) and the subdivision as a segmented row of the clicks per beat — and, on a card since it holds for a song's click too, how it reaches the player:
+  the sound as chips, the volume, and the flash and vibrate switches.
 - Performance mode keeps the play button, and the panel has no tempo stepper to hide; the song's own line of text says
   the tempo there, as it says the transposition. The tab stays fully usable. Settings (sound, subdivision, accents per signature, volume, flash, vibrate) are
   `UserPreferences.metronomeSettings`; there is no mute of its own, since a volume of zero leaves the click running

@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.PrimaryScrollableTabRow
@@ -151,6 +152,13 @@ internal data class SettingsWidthLayout(
     val sectionColumns: Int,
     val sectionColumnsBesidePane: Int,
 ) {
+    /**
+     * How wide a [SettingsPage] of this many sections gets at most, for what is pinned above one and has to end where
+     * its columns do.
+     */
+    fun pageMaxWidth(sections: Int) =
+        if (sectionColumns >= sections) MAX_COLUMN_WIDTH * sections + SECTION_GAP * (sections - 1) else MAX_COLUMN_WIDTH
+
     companion object {
 
         /**
@@ -238,6 +246,22 @@ internal fun SettingsSection(
     content: @Composable ColumnScope.() -> Unit,
 ) = Column(modifier = modifier.fillMaxWidth()) {
     content()
+}
+
+/**
+ * A [SettingsSection] on a card: the one of a page's two that is set apart from the other, in place of a title over
+ * each. The card starts and ends at the keylines the other section's rows do, so its own rows are inset by them once
+ * more.
+ */
+@Composable
+internal fun SettingsCard(
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit,
+) = ElevatedCard(modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+    // The card's own edge is where the rows start, so its first and last rows get the room a section title would give.
+    Column(modifier = Modifier.padding(vertical = 8.dp)) {
+        content()
+    }
 }
 
 /**

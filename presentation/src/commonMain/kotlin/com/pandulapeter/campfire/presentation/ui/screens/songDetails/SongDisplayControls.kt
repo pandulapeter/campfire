@@ -77,19 +77,16 @@ import org.jetbrains.compose.resources.painterResource
  * height, so that it lines up with the entries under it, and the stepper at the end. The row is not an entry that is
  * chosen and takes no press itself, and the menu stays open while the stepper's buttons are pressed, so that a song is
  * taken up three semitones in three taps with the result in sight.
- *
- * @param horizontalPadding A menu entry's own by default; a form that pads its fields itself passes less.
  */
 @Composable
 internal fun MenuStepperRow(
     label: String,
-    horizontalPadding: Dp = MENU_ROW_HORIZONTAL_PADDING,
     stepper: @Composable () -> Unit,
 ) = Row(
     modifier = Modifier
         .widthIn(min = MENU_ROW_MIN_WIDTH)
         .height(MENU_ROW_HEIGHT)
-        .padding(horizontal = horizontalPadding),
+        .padding(horizontal = MENU_ROW_HORIZONTAL_PADDING),
     verticalAlignment = Alignment.CenterVertically,
 ) {
     Text(

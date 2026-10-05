@@ -322,7 +322,8 @@ private fun SongPlayingControlsRow(
                 fontScale = fontScale,
             ) {
                 TempoStepper(
-                    tempo = tempo.tempo,
+                    bpm = tempo.tempo.bpm,
+                    isDefault = tempo.tempo.isDefault,
                     fontScale = fontScale,
                     height = height,
                     onStep = tempo.onStep,

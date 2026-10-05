@@ -22,21 +22,17 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -67,12 +63,10 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_add
 import com.pandulapeter.campfire.presentation.resources.ic_metronome
 import com.pandulapeter.campfire.presentation.resources.ic_subtract
-import com.pandulapeter.campfire.presentation.resources.metronome_beat_unit
 import com.pandulapeter.campfire.presentation.resources.metronome_beat_unit_decrease
 import com.pandulapeter.campfire.presentation.resources.metronome_beat_unit_increase
 import com.pandulapeter.campfire.presentation.resources.metronome_beats_decrease
 import com.pandulapeter.campfire.presentation.resources.metronome_beats_increase
-import com.pandulapeter.campfire.presentation.resources.metronome_beats_per_bar
 import com.pandulapeter.campfire.presentation.resources.metronome_tap
 import com.pandulapeter.campfire.presentation.resources.metronome_tap_description
 import com.pandulapeter.campfire.presentation.resources.song_details_metronome_hide
@@ -83,7 +77,6 @@ import com.pandulapeter.campfire.presentation.resources.song_details_tempo_incre
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo_reset
 import com.pandulapeter.campfire.presentation.ui.components.ActionsMenuItem
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.KEY_SEPARATOR
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.MenuStepperRow
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.STEPPER_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.Stepper
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.scaled
@@ -146,10 +139,10 @@ internal fun PlayStopMark(
 }
 
 /**
- * The timing of [PlayStopMark]'s morph, which the Metronome tab's button squares its corners off on as well: the length of
- * the turn, on an ordinary easing, since easing in as well would leave the shape unchanged until the turn is nearly over.
+ * The timing of [PlayStopMark]'s morph: the length of the turn, on an ordinary easing, since easing in as well would leave
+ * the shape unchanged until the turn is nearly over.
  */
-internal fun <T> playStopMorphSpec(): FiniteAnimationSpec<T> = tween(durationMillis = PLAY_STOP_TURN_DURATION)
+private fun <T> playStopMorphSpec(): FiniteAnimationSpec<T> = tween(durationMillis = PLAY_STOP_TURN_DURATION)
 
 /** How far [PlayStopMark] turns between its two states, in degrees, and how long that takes in milliseconds. */
 private const val PLAY_STOP_TURN = 90f
@@ -244,8 +237,12 @@ private fun metronomePanelLabel(isPanelShown: Boolean, bpm: Int) = if (isPanelSh
 /**
  * The tempo stepper of a song, the transposition's twin gesture for gesture: highlighted while the song plays at a
  * tempo of its own here, and one tap on the value puts it back to the file's. Its buttons repeat while held, since a
- * tempo is often far from where it starts.
+ * tempo is often far from where it starts. The Metronome tab steps its own tempo with the same pill, so that a tempo is
+ * set the same way wherever it is set.
  *
+ * @param isDefault Whether [bpm] is the one a tap on the value would put back, which is when the value is drawn plainly.
+ * @param valueKey What a new tempo cross-fades in for, see [Stepper]: every change by default, and something that stays
+ * the same across the changes that come many to a second where the caller has such a source, a slider being dragged.
  * @param onTapped Taps a tempo in, as a segment of the pill after the two buttons where it is given: tapping along
  * with a song sets the very number the stepper steps, so the two are one control rather than a stepper with a loose
  * word of a button beside it.
@@ -253,25 +250,28 @@ private fun metronomePanelLabel(isPanelShown: Boolean, bpm: Int) = if (isPanelSh
 @Composable
 internal fun TempoStepper(
     modifier: Modifier = Modifier,
-    tempo: EffectiveTempo,
+    bpm: Int,
+    isDefault: Boolean,
     fontScale: Float = 1f,
     height: Dp = STEPPER_HEIGHT,
+    valueKey: Any = bpm,
     onStep: (delta: Int) -> Unit,
     onTapped: ((bpm: Int) -> Unit)? = null,
     onReset: () -> Unit,
 ) = Stepper(
     modifier = modifier,
-    value = tempo.bpm.toString(),
+    value = bpm.toString(),
     fontScale = fontScale,
     height = height,
-    isDefault = tempo.isDefault,
+    valueKey = valueKey,
+    isDefault = isDefault,
     decreaseIcon = painterResource(Res.drawable.ic_subtract),
     decreaseLabel = stringResource(Res.string.song_details_tempo_decrease),
-    canDecrease = tempo.bpm > MetronomePattern.BPM_RANGE.first,
+    canDecrease = bpm > MetronomePattern.BPM_RANGE.first,
     onDecrease = { onStep(-1) },
     increaseIcon = painterResource(Res.drawable.ic_add),
     increaseLabel = stringResource(Res.string.song_details_tempo_increase),
-    canIncrease = tempo.bpm < MetronomePattern.BPM_RANGE.last,
+    canIncrease = bpm < MetronomePattern.BPM_RANGE.last,
     onIncrease = { onStep(1) },
     resetLabel = stringResource(Res.string.song_details_tempo_reset),
     onReset = onReset,
@@ -312,12 +312,14 @@ private fun TapTempoSegment(
 private val TAP_SEGMENT_PADDING = 10.dp
 
 /**
- * The time signature as bars to pick from: the common ones as chips, and the two steppers under them for every other
- * bar. Shared by the Metronome tab, where it sets the tab's own signature, and by the "Song defaults" sheet that writes
- * a song's `{time}`, so that a bar is picked the same way wherever it is picked.
+ * The time signature as bars to pick from: the common ones as chips, and two steppers under them for every other bar,
+ * side by side with a slash between them, so that the pair reads as the signature it sets - the beats of the bar over
+ * the note that counts as one - and needs no label of its own. Shared by the Metronome tab, where it sets the tab's own
+ * signature, and by the "Song defaults" sheet that writes a song's `{time}`, so that a bar is picked the same way
+ * wherever it is picked.
  *
- * @param horizontalPadding Where the chips start: the tab's own margin by default, nothing in a form that already pads
- * its fields. The stepper rows start a little before the chips, as a menu row's label does before a chip's.
+ * @param horizontalPadding Where the chips and the steppers start: the tab's own margin by default, nothing in a form
+ * that already pads its fields.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -327,7 +329,6 @@ internal fun TimeSignaturePicker(
     horizontalPadding: Dp = 16.dp,
     onChange: (TimeSignature) -> Unit,
 ) = Column(modifier = modifier) {
-    val rowPadding = (horizontalPadding - TIME_SIGNATURE_ROW_INSET).coerceAtLeast(0.dp)
     FlowRow(
         modifier = Modifier.fillMaxWidth().padding(horizontal = horizontalPadding),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -340,7 +341,11 @@ internal fun TimeSignaturePicker(
             )
         }
     }
-    MenuStepperRow(label = stringResource(Res.string.metronome_beats_per_bar), horizontalPadding = rowPadding) {
+    Row(
+        modifier = Modifier.padding(start = horizontalPadding, top = TIME_SIGNATURE_STEPPERS_GAP, end = horizontalPadding),
+        horizontalArrangement = Arrangement.spacedBy(TIME_SIGNATURE_SLASH_GAP),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         Stepper(
             value = timeSignature.beats.toString(),
             isDefault = true,
@@ -355,9 +360,12 @@ internal fun TimeSignaturePicker(
             resetLabel = null,
             onReset = null,
         )
-    }
-    val unitIndex = TimeSignature.UNITS.indexOf(timeSignature.unit)
-    MenuStepperRow(label = stringResource(Res.string.metronome_beat_unit), horizontalPadding = rowPadding) {
+        Text(
+            text = TIME_SIGNATURE_SLASH,
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        val unitIndex = TimeSignature.UNITS.indexOf(timeSignature.unit)
         Stepper(
             value = timeSignature.unit.toString(),
             isDefault = true,
@@ -375,8 +383,12 @@ internal fun TimeSignaturePicker(
     }
 }
 
-/** How much further out than the chips the stepper rows of [TimeSignaturePicker] start, see its `horizontalPadding`. */
-private val TIME_SIGNATURE_ROW_INSET = 4.dp
+/** The slash a time signature is written with, between the two steppers of [TimeSignaturePicker] as between its numbers. */
+private const val TIME_SIGNATURE_SLASH = "/"
+private val TIME_SIGNATURE_SLASH_GAP = 12.dp
+
+/** What the steppers of [TimeSignaturePicker] keep free under the chips, whose own touch targets pad them already. */
+private val TIME_SIGNATURE_STEPPERS_GAP = 4.dp
 
 /** The bars most songs are in, offered as chips so that the two steppers are only needed for the rest. */
 private val COMMON_TIME_SIGNATURES = listOf(
@@ -387,44 +399,6 @@ private val COMMON_TIME_SIGNATURES = listOf(
     TimeSignature(7, 8),
     TimeSignature(12, 8),
 )
-
-/**
- * Taps a tempo in: from the second tap on, every tap sets the tempo the taps make ([TapTempo]). The series lives as
- * long as the button does, and starts again after a pause.
- *
- * It is drawn at exactly the [height] of the stepper it stands next to, since Material's own is a minimum that the
- * label outgrows at a large text size and never reaches at a small one, which left the button taller or shorter than
- * the steppers beside it at every size but the one the two happened to agree on. The label is centered in that height
- * rather than padded into it, so a large system font size still has the whole of it to be laid out in.
- */
-@Composable
-internal fun TapTempoButton(
-    modifier: Modifier = Modifier,
-    fontScale: Float = 1f,
-    height: Dp = STEPPER_HEIGHT,
-    onTempo: (bpm: Int) -> Unit,
-) {
-    val tapTempo = remember { TapTempo() }
-    val description = stringResource(Res.string.metronome_tap_description)
-    TextButton(
-        modifier = modifier
-            .height(height)
-            .semantics { contentDescription = description },
-        contentPadding = PaddingValues(horizontal = TAP_HORIZONTAL_PADDING),
-        onClick = { tapTempo.tap()?.let(onTempo) },
-    ) {
-        Text(
-            text = stringResource(Res.string.metronome_tap),
-            style = LocalTextStyle.current.scaled(fontScale),
-            // One word, and at a large text size in a narrow column there is not always room for it: it is cut off
-            // rather than broken into two lines, which read as two buttons.
-            maxLines = 1,
-        )
-    }
-}
-
-/** Material's own text button padding, kept here so that it can be scaled with the label inside it. */
-private val TAP_HORIZONTAL_PADDING = 12.dp
 
 /**
  * The Italian tempo marking a tempo falls under, shown under the Metronome tab's tempo. Not translated: it is notation,

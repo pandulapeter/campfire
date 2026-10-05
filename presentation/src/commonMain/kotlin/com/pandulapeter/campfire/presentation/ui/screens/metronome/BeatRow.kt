@@ -61,8 +61,7 @@ import kotlinx.coroutines.flow.filter
  * It is the same row and the same editor wherever it is drawn, the song details panel's included: the accents belong to
  * the bar rather than to the screen they are tapped on, so the two cannot disagree about what is accented in 4/4.
  *
- * @param blockHeight How tall an accent is drawn, and how tall a column each beat is tapped in; the panel's row is a
- * small one.
+ * @param blockHeight How tall an accent is drawn, and how tall a column each beat is tapped in.
  */
 @Composable
 internal fun BeatRow(
@@ -71,8 +70,8 @@ internal fun BeatRow(
     beats: Flow<MetronomeBeat>,
     isPlaying: Boolean,
     isFlashEnabled: Boolean,
-    blockHeight: Dp = MAX_BLOCK_HEIGHT,
-    blockGap: Dp = BLOCK_GAP,
+    blockHeight: Dp,
+    blockGap: Dp,
     onBeatLevelsChanged: (List<BeatLevel>) -> Unit,
 ) {
     var litBeat by remember { mutableIntStateOf(-1) }
@@ -177,7 +176,5 @@ private fun BeatBlock(
     }
 }
 
-private val MAX_BLOCK_HEIGHT = 56.dp
-private val BLOCK_GAP = 6.dp
 private const val ACCENT_REST_ALPHA = 0.5f
 private const val NORMAL_REST_ALPHA = 0.22f

@@ -133,7 +133,7 @@ import com.pandulapeter.campfire.presentation.resources.songs_key
 import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
 import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeButton
-import com.pandulapeter.campfire.presentation.ui.metronome.SongMetronomePanel
+import com.pandulapeter.campfire.presentation.ui.metronome.MetronomePanel
 import com.pandulapeter.campfire.presentation.ui.metronome.effectiveTempo
 import com.pandulapeter.campfire.presentation.ui.metronome.metronomeAction
 import com.pandulapeter.campfire.presentation.ui.metronome.withTempo
@@ -676,7 +676,7 @@ internal fun SongDetailsScreen(
                 }
             },
             bottomContent = {
-                SongMetronomePanel(
+                MetronomePanel(
                     viewModel = viewModel,
                     isVisible = isMetronomePanelShown && isMetronomeEnabled,
                     contentPadding = contentPadding,

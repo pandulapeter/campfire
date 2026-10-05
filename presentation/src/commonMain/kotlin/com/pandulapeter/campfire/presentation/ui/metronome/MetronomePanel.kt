@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -45,19 +46,26 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.screens.metronome.BeatRow
 
 /**
- * The metronome of the song details screen: a panel inside the app bar, under its title row, that the bar's own button
- * shows and hides ([CampfireViewModel.toggleMetronomePanel]). Here the click is something a song is played to, so the
- * panel holds the least of a metronome that is still one - the bar as it is heard, with its accents drawn on it as on
- * the Metronome tab, and play and stop at the end of the row, where the thumb holding the phone reaches it - and
- * nothing else: the tempo is already in the song's own first section, right under the bar, and how the click sounds,
- * its subdivision and its volume, is the tab's. It is part of the bar rather than something floating under it, so it
- * stays where it is while the song is read and covers none of it.
+ * The least of a metronome that is still one - the bar as it is heard, with its accents tapped on it, and play and stop
+ * at the end of the row, where the thumb holding the phone reaches it - and the one shape the click takes on both
+ * screens that have one, so that it is started, stopped and accented the same way on either.
+ *
+ * On the song details screen it is a panel inside the app bar, under its title row, that the bar's own button shows and
+ * hides ([CampfireViewModel.toggleMetronomePanel]): the click is something a song is played to there, the tempo is
+ * already in the song's own first section right under the bar, and being part of the bar rather than something floating
+ * under it, it stays where it is while the song is read and covers none of it. On the Metronome tab it is the header,
+ * pinned above everything else the tab sets and never hidden ([isVisible] always true), so that the click can be
+ * stopped wherever the page has been scrolled to.
+ *
+ * @param isProminent Draws the row and the button at the size of an instrument rather than of a bar's own row, and at
+ * a settings page's margins: the tab's, where the panel is what the screen is for and heads the rows under it.
  */
 @Composable
-internal fun SongMetronomePanel(
+internal fun MetronomePanel(
     modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
     isVisible: Boolean,
+    isProminent: Boolean = false,
     contentPadding: PaddingValues,
 ) = AnimatedVisibility(
     modifier = modifier,
@@ -91,6 +99,8 @@ internal fun SongMetronomePanel(
         is MetronomeContext.Song -> songsByFileName[context.songFileName].timeSignatureOrDefault
     }
     val layoutDirection = LocalLayoutDirection.current
+    val horizontalPadding = if (isProminent) PROMINENT_PANEL_HORIZONTAL_PADDING else PANEL_PADDING
+    val height = if (isProminent) PROMINENT_PANEL_HEIGHT else PANEL_HEIGHT
     Row(
         modifier = Modifier
             .graphicsLayer {
@@ -100,11 +110,11 @@ internal fun SongMetronomePanel(
             }
             .fillMaxWidth()
             .padding(
-                start = contentPadding.calculateStartPadding(layoutDirection) + PANEL_PADDING,
-                end = contentPadding.calculateEndPadding(layoutDirection) + PANEL_PADDING,
+                start = contentPadding.calculateStartPadding(layoutDirection) + horizontalPadding,
+                end = contentPadding.calculateEndPadding(layoutDirection) + horizontalPadding,
                 bottom = PANEL_PADDING,
             )
-            .height(PANEL_HEIGHT),
+            .height(height),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(PANEL_PADDING),
     ) {
@@ -114,19 +124,23 @@ internal fun SongMetronomePanel(
             beats = viewModel.metronomeBeats,
             isPlaying = isPlaying,
             isFlashEnabled = settings.isVisualBeatEnabled,
-            blockHeight = PANEL_BEAT_HEIGHT,
-            blockGap = PANEL_BEAT_GAP,
+            blockHeight = if (isProminent) PROMINENT_PANEL_HEIGHT else PANEL_BEAT_HEIGHT,
+            blockGap = if (isProminent) PROMINENT_PANEL_BEAT_GAP else PANEL_BEAT_GAP,
             onBeatLevelsChanged = { levels -> viewModel.updateMetronomeSettings { withBeatLevels(timeSignature, levels) } },
         )
         val label = stringResource(if (isPlaying) Res.string.metronome_stop else Res.string.metronome_start)
         FilledIconButton(
             modifier = Modifier
+                .then(if (isProminent) Modifier.size(PROMINENT_PANEL_HEIGHT) else Modifier)
                 // The row already squashes it vertically, so this is what keeps the button round as it scales down.
                 .graphicsLayer { scaleX = contentProgress.value }
                 .semantics { contentDescription = label },
             onClick = viewModel::toggleMetronome,
         ) {
-            PlayStopMark(isPlaying = isPlaying)
+            PlayStopMark(
+                isPlaying = isPlaying,
+                size = if (isProminent) PROMINENT_PLAY_MARK_SIZE else PLAY_MARK_SIZE,
+            )
         }
     }
 }
@@ -141,3 +155,13 @@ private val PANEL_PADDING = 12.dp
  */
 private val PANEL_BEAT_HEIGHT = 32.dp
 private val PANEL_BEAT_GAP = 3.dp
+private val PLAY_MARK_SIZE = 24.dp
+
+/**
+ * The panel as the Metronome tab's header: the accents and the button as tall as each other, a thumb wide, and starting
+ * and ending where the rows of the page under them do.
+ */
+private val PROMINENT_PANEL_HEIGHT = 56.dp
+private val PROMINENT_PANEL_HORIZONTAL_PADDING = 16.dp
+private val PROMINENT_PANEL_BEAT_GAP = 6.dp
+private val PROMINENT_PLAY_MARK_SIZE = 32.dp

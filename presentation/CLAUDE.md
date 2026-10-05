@@ -302,7 +302,7 @@ shared controls.
   dialog to the view model and never reaches the back stack; and `onCleared`, which is the app being left rather than being sent to the background (a finished Activity
   rather than a paused one), where a singleton metronome would otherwise go on clicking, with its notification, under a
   process nobody is looking at.
-- **The song details screen's metronome** (`SongMetronomePanel.kt`) is a panel inside that screen's own app bar, under
+- **The song details screen's metronome** (`MetronomePanel.kt`, which the Metronome tab pins at its top too) is a panel inside that screen's own app bar, under
   the title row (`CampfireTopAppBar`'s `bottomContent`, the way the editor's toolbar is part of its bar), which grows
   and shrinks the bar as it comes and goes — never over its controls: they fade and squash towards the top on the bar's own
   timing (the beat row vertically, the play button whole), so they always fit the room the bar has. Being inside the screen is the whole design: it is laid out, pushed and
@@ -319,23 +319,26 @@ shared controls.
   a click started here (`CampfireViewModel.toggleMetronomePanel`), left alone when the screen is left, so the next song
   opens with the instrument the user last chose - and the next launch too, since it is saved with the rest of the
   metronome's settings.
-- **The Metronome tab** (`ui/screens/metronome/`) is the third top level destination and the whole instrument, laid out
-  by `SettingsPage` (two sections side by side where there is room): the tempo itself, large and stepped by the app's
-  own pill grown with it (`Stepper`'s `fontScale`), the Italian marking under it (not translated: notation), a slider
-  across the range and tap tempo; the beat row (`BeatRow`, resting in fainter shades of the second accent color and lit
-  from the heard beats in the full one — shades of one color, since every palette but the app's own has no second accent
-  apart from the primary — a tap cycling a beat through accent, plain and muted, stored per signature); the time
-  signature (common ones as chips, two steppers for the rest), subdivision, sound (a tap previews it) and the Vibrate
-  switch (where `rememberBeatHaptics` has a vibrator); the volume — whose zero is the mute, so there is no switch for
-  one — and the Flash switch close the first section, under the beat row, so that the two columns end at about the
-  same height, followed by the line saying why nothing is heard (`audioIssue`). Play and stop are `MetronomePlayButton`, one wide button standing at the bottom of the screen
-  rather than a row of the page, since the page is longer than a phone's screen and a metronome that has to be scrolled
-  for before it can be stopped is no metronome; the page keeps `PLAY_BUTTON_CLEARANCE` of room under its last row so
-  nothing is reached through it. It carries the morphing mark and the word for what it does, and its corners round into
-  a pill while nothing plays and square off while the click runs, on the timing the mark morphs with (`playStopMorphSpec`): a top level screen
-  has no app bar to put the control in, and the one thing this screen is played from has to be found at a glance from a
-  music stand, which a 56dp mark in a corner is not. It is capped at `PLAY_BUTTON_MAX_WIDTH` and centered like the
-  tempo above it. The screen is kept on while a click plays. Every way onto it clears the back stack, so no song is
+- **The Metronome tab** (`ui/screens/metronome/`) is the third top level destination and the whole instrument: the
+  song details screen's own `MetronomePanel` pinned at the top and never hidden (`isVisible` always true) — the beat row
+  (`BeatRow`, resting in fainter shades of the second accent color and lit from the heard beats in the full one — shades
+  of one color, since every palette but the app's own has no second accent apart from the primary — a tap cycling a beat
+  through accent, plain and muted, stored per signature) with play and stop at its end — so that the click is played the
+  same way on both screens and can be stopped wherever the page has been scrolled to, capped at the page's width
+  (`SettingsWidthLayout.pageMaxWidth`) and drawn `isProminent`: a 56dp row and button at the page's own 16dp margins,
+  where the song details bar's are 32dp and 48dp. Under
+  it a `SettingsPage` of two sections scrolls, side by side where the window has room for two columns: what is played
+  (`MetronomeBarOptions`) — the line saying why nothing is heard where so
+  (`audioIssue`), the tempo (`TempoSetting`: the song details screen's own
+  `TempoStepper`, Tap segment and all, next to the word Tempo and the Italian marking, not translated since it is
+  notation, with a slider across the range under them), the time signature (common ones as chips, and for the rest two steppers side by side
+  with a slash between them, which reads as the signature and so takes no labels; its description is the one line
+  saying that the beats of the pinned bar are tapped to accent or mute them) and the subdivision, a `SegmentedChoice`
+  of the clicks per beat as numbers (1 to 4), since the note value a beat is cut into depends on the bar and the words
+  for them do not fit a phone side by side —
+  and how it reaches the player (`MetronomeSoundOptions`, on a `SettingsCard` as the library tab's sync section is,
+  since unlike the first section it is how every click is played, a song's included): the sound (a tap previews it) as chips, the volume — whose zero is the mute, so there is no switch for one — and the Flash and Vibrate switches (the
+  latter where `rememberBeatHaptics` has a vibrator). The screen is kept on while a click plays. Every way onto it clears the back stack, so no song is
   behind it.
 - **On the song details screen** the `MetronomeButton` **shows and hides the panel** rather than starting the click
   (`toggleMetronomePanel`: opening it starts nothing, and closing it stops a click that is playing). Its mark stays the

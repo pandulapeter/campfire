@@ -28,7 +28,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
@@ -795,12 +794,9 @@ private val SIZE_UNITS = listOf(
 @Composable
 private fun SyncSection(
     viewModel: CampfireViewModel,
-) = ElevatedCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+) = SettingsCard {
     val syncState by viewModel.syncState.collectAsStateWithLifecycle()
-    // The card's own edge is where the rows start, so its first and last rows get the room a section title would give.
-    Column(modifier = Modifier.padding(vertical = 8.dp)) {
-        SyncSettings(viewModel = viewModel, syncState = syncState)
-    }
+    SyncSettings(viewModel = viewModel, syncState = syncState)
 }
 
 /**
