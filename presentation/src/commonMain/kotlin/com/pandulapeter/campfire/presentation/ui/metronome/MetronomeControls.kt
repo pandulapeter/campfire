@@ -13,12 +13,15 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
@@ -44,6 +47,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
@@ -85,7 +89,7 @@ import kotlinx.coroutines.flow.filter
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * The play and stop mark of the metronome panel's button, morphing from one into the other: the triangle's three corners
+ * The play and stop mark of both metronomes' buttons, morphing from one into the other: the triangle's three corners
  * (one of them doubled) travel to the square's four, so the change reads as one shape becoming another rather than as
  * two icons swapping.
  */
@@ -196,8 +200,11 @@ private fun metronomePanelLabel(isPanelShown: Boolean, bpm: Int) = if (isPanelSh
 /**
  * The tempo stepper of a song, the transposition's twin gesture for gesture: highlighted while the song plays at a
  * tempo of its own here, and one tap on the value puts it back to the file's. Its buttons repeat while held, since a
- * tempo is often far from where it starts; [TapTempoButton], which the caller places next to it, is the quick way to
- * a far value.
+ * tempo is often far from where it starts.
+ *
+ * @param onTapped Taps a tempo in, as a segment of the pill after the two buttons where it is given: tapping along
+ * with a song sets the very number the stepper steps, so the two are one control rather than a stepper with a loose
+ * word of a button beside it.
  */
 @Composable
 internal fun TempoStepper(
@@ -206,6 +213,7 @@ internal fun TempoStepper(
     fontScale: Float = 1f,
     height: Dp = STEPPER_HEIGHT,
     onStep: (delta: Int) -> Unit,
+    onTapped: ((bpm: Int) -> Unit)? = null,
     onReset: () -> Unit,
 ) = Stepper(
     modifier = modifier,
@@ -224,7 +232,40 @@ internal fun TempoStepper(
     resetLabel = stringResource(Res.string.song_details_tempo_reset),
     onReset = onReset,
     repeatsOnHold = true,
+    trailing = onTapped?.let { onTempo -> { TapTempoSegment(fontScale = fontScale, onTempo = onTempo) } },
 )
+
+/**
+ * Tap tempo as the last segment of the tempo stepper's own pill, see [TempoStepper]. It is as tall as the pill and
+ * takes the press over its whole padding, so that the segment and the stepper's buttons are hit the same way.
+ */
+@Composable
+private fun TapTempoSegment(
+    fontScale: Float,
+    onTempo: (bpm: Int) -> Unit,
+) {
+    val tapTempo = remember { TapTempo() }
+    val description = stringResource(Res.string.metronome_tap_description)
+    Box(
+        modifier = Modifier
+            .fillMaxHeight()
+            .clickable(role = Role.Button) { tapTempo.tap()?.let(onTempo) }
+            .padding(horizontal = TAP_SEGMENT_PADDING)
+            .semantics { contentDescription = description },
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = stringResource(Res.string.metronome_tap),
+            style = MaterialTheme.typography.labelLarge.scaled(fontScale),
+            // One word, and at a large text size in a narrow column there is not always room for it: it is cut off
+            // rather than broken into two lines, which read as two buttons.
+            maxLines = 1,
+        )
+    }
+}
+
+/** What the Tap segment keeps at its ends, a little less than the pill's buttons, since its label is wider than an icon. */
+private val TAP_SEGMENT_PADDING = 10.dp
 
 /**
  * The time signature as bars to pick from: the common ones as chips, and the two steppers under them for every other

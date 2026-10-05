@@ -88,7 +88,6 @@ import com.pandulapeter.campfire.presentation.ui.components.languageLabel
 import com.pandulapeter.campfire.presentation.ui.components.sortedAlphabeticallyBy
 import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.metronome.EffectiveTempo
-import com.pandulapeter.campfire.presentation.ui.metronome.TapTempoButton
 import com.pandulapeter.campfire.presentation.ui.metronome.TempoStepper
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 import org.jetbrains.compose.resources.PluralStringResource
@@ -205,8 +204,8 @@ private fun SongPlayingMetadata(
 
 /**
  * The four things that decide how the song is played, each next to the control that sets it: the key with the
- * transposition stepper, the capo and the tempo with their own, the tempo also carrying the button that taps one in,
- * and the time signature as the value that opens the sheet where it is picked. They flow like the chips of the card
+ * transposition stepper, the capo and the tempo with their own, the tempo's pill ending in the segment that taps one
+ * in, and the time signature as the value that opens the sheet where it is picked. They flow like the chips of the card
  * above them, so a narrow column stacks them and a wide one puts them side by side. Starting a click is the app bar's
  * button, which is in reach wherever the song has been scrolled to; this row only says what it would play.
  *
@@ -229,8 +228,8 @@ private fun SongPlayingControlsRow(
         horizontalArrangement = Arrangement.spacedBy(PLAYING_CONTROL_GAP),
         verticalArrangement = Arrangement.spacedBy(PLAYING_CONTROL_GAP),
         // Every control is as tall as the others, but a label narrow enough to wrap makes its own item taller than the
-        // rest, and a flow row hangs its items from the top of the line they are in: centering them keeps the Tap
-        // button level with the steppers whatever is beside it.
+        // rest, and a flow row hangs its items from the top of the line they are in: centering them keeps every pill
+        // level with the ones beside it whatever its own label does.
         itemVerticalAlignment = Alignment.CenterVertically,
     ) {
         controls.key?.let { key ->
@@ -260,16 +259,10 @@ private fun SongPlayingControlsRow(
                 fontScale = fontScale,
                 height = height,
                 onStep = controls.tempo.onStep,
+                onTapped = controls.tempo.onTapped,
                 onReset = controls.tempo.onReset,
             )
         }
-        // An item of its own rather than part of the tempo's, so that a narrow column at a large text size wraps it
-        // onto a line of its own instead of leaving it no room next to the stepper.
-        TapTempoButton(
-            fontScale = fontScale,
-            height = height,
-            onTempo = controls.tempo.onTapped,
-        )
         PlayingControl(label = stringResource(Res.string.song_editor_insert_time), fontScale = fontScale) {
             ValuePill(
                 value = controls.time.signature,

@@ -9,6 +9,7 @@
 -->
 # To do
 ## Bugs / issues
+- Remove the metronome mute toggle
 
 ## Improvements
 - Rename master branch to main

@@ -19,7 +19,11 @@ package com.pandulapeter.campfire.data.model.domain
  * @param beatLevels The accents the user drew for a time signature, keyed by the signature as written ("7/8"), so
  *   that a song in 7/8 is clicked 2+2+3 once that was set for 7/8 anywhere. A list whose length is not the
  *   signature's number of beats is ignored.
+ * @param bpm The Metronome tab's own tempo.
  * @param timeSignature The Metronome tab's own, as written ("4/4").
+ * @param isSongPanelShown Whether the song details screen opens with the metronome panel in its app bar: a player who
+ *   reads every song to a click wants it there for the next song too, so it is a preference rather than something each
+ *   screen asks for again.
  */
 data class MetronomeSettings(
     val soundId: String = "click",
@@ -31,6 +35,7 @@ data class MetronomeSettings(
     val beatLevels: Map<String, List<String>> = emptyMap(),
     val bpm: Int = 120,
     val timeSignature: String = "4/4",
+    val isSongPanelShown: Boolean = false,
 ) {
 
     companion object {

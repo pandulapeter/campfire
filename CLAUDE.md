@@ -267,8 +267,9 @@ localized in both languages.
   Opening a link is the user's browser making the request, not Campfire.
 - **How a song is played is set in the song itself**: the key, the capo, the tempo and the time signature — the four
   values that decide what is played rather than what the song is — are the first section of the song details screen's
-  own grid, each next to the control that sets it (the transposition stepper, the capo stepper, the tempo stepper with
-  its Tap button, and the time signature, which opens a sheet of bars to pick from). They are part of the song, so they
+  own grid, each next to the control that sets it (the transposition stepper, the capo stepper, the tempo stepper whose
+  pill ends in a Tap segment, since tapping a tempo in sets the very number the stepper steps, and the time signature,
+  which opens a sheet of bars to pick from). They are part of the song, so they
   grow and shrink with its text, which is also why the text has a floor: `UserPreferences.MIN_FONT_SCALE` is the size
   below which the song details screen is not worth reading — the lyrics, and the controls with them. Starting the click
   stays the app bar's button, which is in reach wherever the song has been scrolled to. Three of them are
@@ -704,15 +705,20 @@ Nothing about it reaches the network. The module `CLAUDE.md` files carry the det
   nothing is left to look at the notification it keeps up.
 - **The two take the shape their screen calls for**, and share nothing but the engine and the beat row. On the **song
   details screen** the metronome is a panel inside the app bar, under the title row, holding the least of a metronome
-  that is still one — play and stop, the bar as it is heard, and the tempo with its stepper — because a song is what
-  that screen is for; the bar's own button shows and hides it, opening it starts nothing, stopping the click leaves it
-  up for the next one, and closing it stops a click that is playing. On the **Metronome tab** the instrument is the
+  that is still one — the bar as it is heard, with its accents tapped on it as on the tab, since the accents are the
+  bar's rather than one screen's, and play and stop at the end of the row — because a song is what that screen is for, and
+  because the tempo is already in the song's own first section a line below it; the bar's own button shows and hides
+  it, opening it starts nothing, stopping the click leaves it up for the next one, and closing it stops a click that is
+  playing. **Whether it is up is a preference** (`MetronomeSettings.isSongPanelShown`) rather than something each
+  screen is asked for again, so a player who reads to a click finds the instrument on the next song and on the next
+  launch. On the **Metronome tab** the instrument is the
   whole screen: the tempo large and stepped with its Italian marking, a slider across the range, tap tempo, the beat
   row that the accents are drawn on, the time signature, the subdivision, the sound and the volume — with play and stop
-  on a floating button, the one in the app outside the export screen, since a page longer than the screen must not have
-  to be scrolled to stop a click.
-- Performance mode keeps the play button and hides the per-song tempo stepper, in the panel too, as it hides the
-  transposition; the tab stays fully usable there. Settings (sound, subdivision, accents per signature, volume, flash, vibrate, mute) are
+  on one wide button that stays at the bottom of the screen, naming what it does and squaring its corners off while the
+  click runs, since a page longer than the screen must not have to be scrolled to stop a click and the one control the
+  whole screen is played from has to be found at a glance from a music stand.
+- Performance mode keeps the play button, and the panel has no tempo stepper to hide; the song's own line of text says
+  the tempo there, as it says the transposition. The tab stays fully usable. Settings (sound, subdivision, accents per signature, volume, flash, vibrate, mute) are
   `UserPreferences.metronomeSettings`.
 
 ## Cover art

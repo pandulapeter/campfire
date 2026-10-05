@@ -9,18 +9,28 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.metronome
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.FloatingActionButton
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.keepScreenOn
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
@@ -41,10 +51,11 @@ import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsWidthL
  * counted and how it sounds in the other, side by side where the window has the room for both and stacked where it
  * does not, the way a settings tab is laid out ([SettingsPage]).
  *
- * The click is started and stopped from a floating button rather than from a row of the page, because the page is
- * longer than a phone's screen and a metronome that cannot be stopped without scrolling for the button is no
- * metronome. It is the one floating action button in the app outside the export screen; a top level screen has no app
- * bar to put it in, the navigation chrome standing in for one.
+ * The click is started and stopped from a button that stays at the bottom of the screen rather than from a row of the
+ * page, because the page is longer than a phone's screen and a metronome that cannot be stopped without scrolling for
+ * the button is no metronome. It takes the width of the page up to a cap and says what it does in words
+ * ([MetronomePlayButton]): on the one screen that is nothing but an instrument, the control the whole screen is played
+ * from must be the first thing a glance from a music stand finds, which a 56dp mark in the corner is not.
  *
  * The tab always shows and plays its own tempo and time signature: every way onto it clears the back stack, so no song
  * is open behind it, and a click played for a song is stopped with the song long before this screen is shown.
@@ -81,20 +92,64 @@ internal fun MetronomeScreen(
                 MetronomeOptionsSection(viewModel = viewModel)
             },
         )
-        val label = stringResource(if (isPlaying) Res.string.metronome_stop else Res.string.metronome_start)
-        FloatingActionButton(
+        MetronomePlayButton(
             modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(contentPadding.only(end = true, bottom = true))
-                .padding(PLAY_BUTTON_MARGIN)
-                .semantics { contentDescription = label },
+                .align(Alignment.BottomCenter)
+                .padding(contentPadding.only(start = true, end = true, bottom = true))
+                .padding(PLAY_BUTTON_MARGIN),
+            isPlaying = isPlaying,
             onClick = viewModel::toggleMetronome,
-        ) {
-            PlayStopMark(isPlaying = isPlaying)
+        )
+    }
+}
+
+/**
+ * What the click is started and stopped with: one wide button at the bottom of the screen, with the morphing mark and
+ * the word for what it does. Its corners round all the way into a pill while nothing is playing and square off as the
+ * click runs, on the same spring the mark morphs with, so the whole button says which of the two states it is in from
+ * across a room.
+ *
+ * It is capped at [PLAY_BUTTON_MAX_WIDTH] and centered, like the tempo above it: a maximized window would otherwise
+ * hand the one control of the screen a button a meter wide.
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun MetronomePlayButton(
+    modifier: Modifier = Modifier,
+    isPlaying: Boolean,
+    onClick: () -> Unit,
+) {
+    val cornerRadius by animateDpAsState(
+        if (isPlaying) PLAY_BUTTON_PLAYING_RADIUS else PLAY_BUTTON_HEIGHT / 2,
+        MaterialTheme.motionScheme.fastSpatialSpec(),
+    )
+    Button(
+        modifier = modifier
+            .widthIn(max = PLAY_BUTTON_MAX_WIDTH)
+            .fillMaxWidth()
+            .height(PLAY_BUTTON_HEIGHT),
+        shape = RoundedCornerShape(cornerRadius),
+        onClick = onClick,
+    ) {
+        PlayStopMark(isPlaying = isPlaying, size = PLAY_MARK_SIZE)
+        AnimatedContent(
+            targetState = isPlaying,
+            transitionSpec = { fadeIn() togetherWith fadeOut() },
+        ) { playing ->
+            Text(
+                modifier = Modifier.padding(start = PLAY_LABEL_GAP),
+                text = stringResource(if (playing) Res.string.metronome_stop else Res.string.metronome_start),
+                style = MaterialTheme.typography.titleMedium,
+            )
         }
     }
 }
 
-/** What the floating button takes out of the window's end and bottom edges, and the room the page leaves for it. */
+/** What the button takes out of the window's edges, and the room the page leaves for it under its last row. */
 private val PLAY_BUTTON_MARGIN = 16.dp
-private val PLAY_BUTTON_CLEARANCE = 88.dp
+private val PLAY_BUTTON_HEIGHT = 72.dp
+private val PLAY_BUTTON_CLEARANCE = PLAY_BUTTON_HEIGHT + PLAY_BUTTON_MARGIN * 2
+private val PLAY_BUTTON_MAX_WIDTH = 400.dp
+private val PLAY_BUTTON_PLAYING_RADIUS = 24.dp
+private val PLAY_MARK_SIZE = 32.dp
+private val PLAY_LABEL_GAP = 12.dp

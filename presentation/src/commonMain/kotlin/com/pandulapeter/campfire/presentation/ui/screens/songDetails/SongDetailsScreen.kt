@@ -282,9 +282,10 @@ internal fun SongDetailsScreen(
     val metronomeSettings by viewModel.metronomeSettings.collectAsStateWithLifecycle()
     val isMetronomePlaying = metronomePlayback is MetronomePlayback.Playing
     val currentTempo = currentSong?.let { effectiveTempo(song = it, setlistFileName = destination.setlistFileName, tempos = tempos) }
-    // A click can only play here while the panel is up, which is what starts and stops it; the flag is read beside it
-    // anyway, since a click stopped from the panel leaves it where it was, see CampfireViewModel.toggleMetronomePanel.
-    val isMetronomePanelShown = viewModel.isMetronomePanelOpen || isMetronomePlaying
+    // A click can only play here while the panel is up, which is what starts and stops it; the preference is read
+    // beside it anyway, since a click stopped from the panel leaves it where it was, see
+    // CampfireViewModel.toggleMetronomePanel.
+    val isMetronomePanelShown = metronomeSettings.isSongPanelShown || isMetronomePlaying
     val metronomeButton: @Composable () -> Unit = {
         MetronomeButton(
             isPanelShown = isMetronomePanelShown,

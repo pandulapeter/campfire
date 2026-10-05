@@ -869,14 +869,6 @@ class CampfireViewModel(
         get() = metronomeContextOf(backStack) { destination -> songDetailsTargetSongs[destination.id] ?: currentSongFileName(destination) }
 
     /**
-     * Whether the song details screen's metronome panel is up: its own button put it there ([toggleMetronomePanel]),
-     * or a click started here did. It is let go of as soon as anything else is on top of the stack - where it is let
-     * go of, the click stops with it, since the panel is the only thing that screen can stop one from.
-     */
-    internal var isMetronomePanelOpen by mutableStateOf(false)
-        private set
-
-    /**
      * Every song of the library in the order the songs screen is sorted by, with its search and filter keys, as the song
      * picker lists and searches it. Built here rather than as the sheet opens, where the first frame of the sheet would
      * wait for a whole library to be sorted and folded, and sorted by keys folded once per song rather than on both
@@ -1458,9 +1450,10 @@ class CampfireViewModel(
         backStack.update()
         if (backStack.lastOrNull() != CampfireDestination.Setlists) reorderingSetlistFileName = null
         // The two screens that hold a metronome are the two it can be stopped from, so a click never outlives the one
-        // it was started on: the editor opened over a song, a song closed, a tab selected, all stop it.
+        // it was started on: the editor opened over a song, a song closed, a tab selected, all stop it. The panel the
+        // click was played from is a preference and stays where the user put it, so the next song is read to a click
+        // without asking for the instrument again.
         if (backStack.lastOrNull().let { it !is CampfireDestination.SongDetails && it != CampfireDestination.Metronome }) {
-            isMetronomePanelOpen = false
             metronome.stop()
         }
         if (backStack.none { it is CampfireDestination.SongEditor }) retainedEditorField = null
@@ -2435,7 +2428,7 @@ class CampfireViewModel(
         } else {
             val context = metronomeContext
             metronome.start(currentMetronomePattern(context))
-            if (backStack.lastOrNull() is CampfireDestination.SongDetails) isMetronomePanelOpen = true
+            if (backStack.lastOrNull() is CampfireDestination.SongDetails) showMetronomePanel(isShown = true)
         }
     }
 
@@ -2444,15 +2437,20 @@ class CampfireViewModel(
      * what the click is started and stopped from there, so stopping one leaves the instrument up for the next and only
      * this takes it away. Opening it starts nothing, and closing it stops a click that is playing, since a click is
      * never left with nothing on screen to stop it with.
+     *
+     * Whether it is up is a preference (`MetronomeSettings.isSongPanelShown`), so a player who reads to a click finds
+     * the panel on the next song as well; a click that is playing is only ever playing with the panel up.
      */
     internal fun toggleMetronomePanel() {
-        if (isMetronomePanelOpen || metronome.playback.value is MetronomePlayback.Playing) {
-            isMetronomePanelOpen = false
+        if (metronomeSettings.value.isSongPanelShown || metronome.playback.value is MetronomePlayback.Playing) {
+            showMetronomePanel(isShown = false)
             metronome.stop()
         } else {
-            isMetronomePanelOpen = true
+            showMetronomePanel(isShown = true)
         }
     }
+
+    private fun showMetronomePanel(isShown: Boolean) = updateMetronomeSettings { copy(isSongPanelShown = isShown) }
 
     fun stopMetronome() = metronome.stop()
 
@@ -2460,25 +2458,6 @@ class CampfireViewModel(
 
     fun updateMetronomeSettings(change: MetronomeSettings.() -> MetronomeSettings) =
         _pendingMetronomeSettings.update { (it ?: metronomeSettings.value).change() }
-
-    /**
-     * One step of the metronome panel's stepper, which moves the tempo of whatever the click plays for: the song's,
-     * where it is opened, or the Metronome tab's own.
-     */
-    fun stepMetronomeTempo(delta: Int) {
-        when (val context = metronomeContext) {
-            MetronomeContext.Standalone -> updateMetronomeSettings { copy(bpm = MetronomePattern.coerceBpm(bpm + delta)) }
-            is MetronomeContext.Song -> stepTempo(songFileName = context.songFileName, setlistFileName = context.setlistFileName, delta = delta)
-        }
-    }
-
-    /** The metronome panel's value tapped: back to the song's own tempo, or to the default one on the Metronome tab. */
-    fun resetMetronomeTempo() {
-        when (val context = metronomeContext) {
-            MetronomeContext.Standalone -> updateMetronomeSettings { copy(bpm = MetronomePattern.DEFAULT_BPM) }
-            is MetronomeContext.Song -> resetTempo(songFileName = context.songFileName, setlistFileName = context.setlistFileName)
-        }
-    }
 
     /** The tempo a song plays at where it is opened, the override waiting to be written included. */
     internal fun effectiveTempoOf(songFileName: String, setlistFileName: String?) =

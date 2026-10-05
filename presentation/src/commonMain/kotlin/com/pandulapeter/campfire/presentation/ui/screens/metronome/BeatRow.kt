@@ -58,8 +58,11 @@ import kotlinx.coroutines.flow.filter
  * of the second accent color, lit in the full color as each is heard - from the heard-time beats alone, so the flash agrees with the ear - and fading down to the
  * next. A tap moves a beat on from accent to plain to muted and round again, which is the whole of the accent editor.
  *
- * @param blockHeight How tall an accent is drawn; the metronome panel's row is a small one.
- * @param onBeatLevelsChanged Null for a row that only shows the bar, whose blocks take no press.
+ * It is the same row and the same editor wherever it is drawn, the song details panel's included: the accents belong to
+ * the bar rather than to the screen they are tapped on, so the two cannot disagree about what is accented in 4/4.
+ *
+ * @param blockHeight How tall an accent is drawn, and how tall a column each beat is tapped in; the panel's row is a
+ * small one.
  */
 @Composable
 internal fun BeatRow(
@@ -70,7 +73,7 @@ internal fun BeatRow(
     isFlashEnabled: Boolean,
     blockHeight: Dp = MAX_BLOCK_HEIGHT,
     blockGap: Dp = BLOCK_GAP,
-    onBeatLevelsChanged: ((List<BeatLevel>) -> Unit)?,
+    onBeatLevelsChanged: (List<BeatLevel>) -> Unit,
 ) {
     var litBeat by remember { mutableIntStateOf(-1) }
     val flash = remember { Animatable(0f) }
@@ -104,7 +107,7 @@ internal fun BeatRow(
                 level = level,
                 maxHeight = blockHeight,
                 flash = { if (litBeat == index) flash.value else 0f },
-                onClick = onBeatLevelsChanged?.let { { it(beatLevels.toMutableList().apply { set(index, level.next()) }) } },
+                onClick = { onBeatLevelsChanged(beatLevels.toMutableList().apply { set(index, level.next()) }) },
             )
         }
     }
@@ -117,7 +120,7 @@ private fun BeatBlock(
     level: BeatLevel,
     maxHeight: Dp,
     flash: () -> Float,
-    onClick: (() -> Unit)?,
+    onClick: () -> Unit,
 ) {
     val height by animateDpAsState(
         when (level) {
@@ -150,16 +153,26 @@ private fun BeatBlock(
         ),
     )
     val shape = RoundedCornerShape(minOf(8.dp, maxHeight / 6))
+    // The press belongs to the whole column rather than to the block drawn in it: a muted beat is a sliver less than a
+    // third as tall as an accent, and in the song details panel's small row it would be a few millimeters of a target.
     Box(
         modifier = modifier
-            .height(height)
+            .height(maxHeight)
             .clip(shape)
-            .then(if (level == BeatLevel.MUTED) Modifier.border(1.dp, outlineColor, shape) else Modifier)
-            // Drawn rather than composed from the flash, so that a beat repaints the block instead of recomposing the row.
-            .drawBehind { drawRect(lerp(baseColor, flashColor, flash())) }
-            .then(if (onClick == null) Modifier else Modifier.clickable(role = Role.Button, onClick = onClick))
+            .clickable(role = Role.Button, onClick = onClick)
             .semantics { contentDescription = description },
-    )
+        contentAlignment = Alignment.BottomCenter,
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(height)
+                .clip(shape)
+                .then(if (level == BeatLevel.MUTED) Modifier.border(1.dp, outlineColor, shape) else Modifier)
+                // Drawn rather than composed from the flash, so that a beat repaints the block instead of recomposing the row.
+                .drawBehind { drawRect(lerp(baseColor, flashColor, flash())) },
+        )
+    }
 }
 
 private val MAX_BLOCK_HEIGHT = 56.dp

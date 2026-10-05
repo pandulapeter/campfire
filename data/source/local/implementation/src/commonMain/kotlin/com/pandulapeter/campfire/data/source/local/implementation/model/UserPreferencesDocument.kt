@@ -78,4 +78,5 @@ internal data class MetronomeSettingsDocument(
     val beatLevels: Map<String, List<String>> = emptyMap(),
     val bpm: Int = 120,
     val timeSignature: String = "4/4",
+    val isSongPanelShown: Boolean = false,
 )

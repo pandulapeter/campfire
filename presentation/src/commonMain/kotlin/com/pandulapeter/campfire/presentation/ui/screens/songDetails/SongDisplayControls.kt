@@ -33,6 +33,7 @@ import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -293,6 +294,9 @@ private fun fontScaleLabel(fontScale: Float) = "${(fontScale * 100).roundToInt()
  * of the key is animated.
  * @param repeatsOnHold Whether a button held down keeps stepping, faster the longer it is held, for a value that is a
  * long way from where it starts: fine for a tempo, while a semitone or a text size is a few taps away at most.
+ * @param trailing A second way to the very same value, drawn inside the pill after the increase button and behind a
+ * divider: the tempo's Tap button, which sets the number the stepper steps rather than a value of its own, and so
+ * belongs to this control instead of standing next to it.
  */
 @Composable
 internal fun Stepper(
@@ -313,6 +317,7 @@ internal fun Stepper(
     resetLabel: String?,
     onReset: (() -> Unit)?,
     repeatsOnHold: Boolean = false,
+    trailing: (@Composable () -> Unit)? = null,
 ) = Surface(
     modifier = modifier.height(height),
     shape = CircleShape,
@@ -360,6 +365,13 @@ internal fun Stepper(
             decreaseButton()
             stepperValue()
             increaseButton()
+            if (trailing != null) {
+                VerticalDivider(
+                    modifier = Modifier.padding(vertical = STEPPER_DIVIDER_PADDING),
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                )
+                trailing()
+            }
         }
     }
 }
@@ -465,7 +477,7 @@ private const val HOLD_REPEAT_ACCELERATION = 0.85f
 
 /**
  * How tall a stepper, a value pill and the Tap button beside them are drawn where they belong to a bar or to a menu
- * rather than to a song: the app bar's text size stepper, the editor's transposition, the metronome panel's tempo and
+ * rather than to a song: the app bar's text size stepper, the editor's transposition, the Metronome tab's steppers and
  * the rows of the overflow menu, none of which is scaled by anything.
  */
 internal val STEPPER_HEIGHT = 40.dp
@@ -489,6 +501,9 @@ private fun stepperButtonLength(fontScale: Float) = ICON_SIZE * fontScale + BUTT
 private val ICON_SIZE = 20.dp
 private val BUTTON_ICON_PADDING = 8.dp
 private val VALUE_MIN_WIDTH = 44.dp
+
+/** How far short of the pill's own edges the divider in front of a [Stepper]'s trailing control stops. */
+private val STEPPER_DIVIDER_PADDING = 8.dp
 
 /** What a [ValuePill] keeps at its ends, where a stepper has its buttons: enough that the pill reads as a button. */
 private val VALUE_PILL_PADDING = 12.dp
