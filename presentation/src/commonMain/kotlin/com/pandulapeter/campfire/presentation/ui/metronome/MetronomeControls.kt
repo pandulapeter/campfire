@@ -153,7 +153,7 @@ internal fun <T> playStopMorphSpec(): FiniteAnimationSpec<T> = tween(durationMil
 
 /** How far [PlayStopMark] turns between its two states, in degrees, and how long that takes in milliseconds. */
 private const val PLAY_STOP_TURN = 90f
-private const val PLAY_STOP_TURN_DURATION = 400
+private const val PLAY_STOP_TURN_DURATION = 250
 private const val FULL_TURN = 360f
 
 private fun lerp(start: Offset, stop: Offset, fraction: Float) = Offset(
