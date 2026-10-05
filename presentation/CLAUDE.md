@@ -272,44 +272,55 @@ shared controls.
   once its write has landed and the store says the same, and the writes still waiting are made on a scope of their own
   in `onCleared`. A reset (`resetTempo`) removes the override at once and cancels a waiting write. The settings
   (`metronomeSettings`) are saved like the print settings, once they have held still.
-- **What a click plays for** (`MetronomeContext.kt`, tested): the topmost `SongDetails` anywhere on the back stack, at the
-  page its pager is heading for (`onSongDetailsPageChanged`, from `targetPage`, so paging retargets while the page slides
-  in) — the editor pushed over a song keeps it — or `Standalone`, the Metronome tab's own pattern
-  (`metronomePatternOf`, in `MetronomePatterns.kt`: a song's tempo and `{time}`, 4/4 where it names none, the accents
-  drawn for that signature in any context, everything else from the settings). One collector in the view model's `init`
-  follows the context, the tempos, the settings and the library: a back stack change retargets a playing click
-  (`metronomeRetargetOf`: to a song from beat one; a song leaving the stack takes the click back to its `origin` —
-  stopped for one started on a song, the tab's pattern for one started on the tab), anything else is applied from the
-  next beat, and the first value is only remembered, so a view model built again over a playing click does not stop it.
-  `toggleMetronome` starts the context's pattern with its origin, or stops. A click that stops on its own is a
-  `Message.MetronomeStopped` snackbar naming why. Space (on the tab) and M (on a song) toggle it on the desktop and the
-  web (`toggleMetronomeByKey`), under no dialog or menu.
-- **The metronome panel** (`MetronomePanel.kt`) is up for as long as a click plays, on every screen, and always on the
-  Metronome tab: `MetronomePanelScaffold` wraps the navigation scaffold in `CampfireContent` and lays the app out next
-  to it — a 56dp bar across the top of a window taller than it is wide, a column down the end edge of a wider one
-  (`containerDpSize`) — expanding in from that edge and shrinking back into it, so a click stopped anywhere but on the
-  tab takes the panel with it and the song details bar's button, which starts one, brings it back. It holds play and
-  stop (`PlayStopMark`, morphing), a small read-only `BeatRow` and the tempo of what the click plays for
-  (`metronomeContext`) in a `Stepper` (`isVertical` in the column) that writes where that tempo lives
-  (`stepMetronomeTempo`, `resetMetronomeTempo`: the song's override or the tab's own), the number alone for a song in
-  performance mode or from an archived setlist. The panel covers the insets of its edge, and what it covers follows
-  its size frame by frame (`MetronomePanelInsets`, state written as the panel is measured): consumed for everything
-  that pads by modifier, and excluded from the paddings `CampfireScreens` makes by hand. Dialogs and sheets cover it;
-  the export screen does not.
-- **The Metronome tab** (`ui/screens/metronome/`) is the third top level destination and the rest of the instrument
-  next to the panel, laid out by `SettingsPage` (two sections side by side where there is room): the Italian marking
-  the tempo falls under (not translated: notation), tap tempo and a slider; the
-  beat row (`BeatRow`, resting in fainter shades of the second accent color and lit from the heard beats in the full
-  one — shades of one color, since every palette but the app's own has no second accent apart from the primary — a tap cycling a beat through accent, plain
-  and muted, stored per signature); the time signature (common ones as chips, two steppers for the rest), subdivision,
-  sound (a tap previews it), volume, and the Flash, Vibrate (where `rememberBeatHaptics` has a vibrator) and Mute
-  switches; and the line saying why nothing is heard (`audioIssue`). It has no play button of its own. The screen is
-  kept on while a click plays. Every way onto it clears the back stack, so no
-  song is behind it.
-- **On the song details screen** the `MetronomeButton` (a metronome mark becoming stop, pulsing on every heard beat
-  unless the flash is off) is the first thing the bar gives room to (`appBarButtons.isMetronomeShown`) and the first
+- **What a click plays for** (`MetronomeContext.kt`, tested): the `SongDetails` destination on top of the back stack, at
+  the page its pager is heading for (`onSongDetailsPageChanged`, from `targetPage`, so paging retargets while the page
+  slides in), or `Standalone`, the Metronome tab's own pattern (`metronomePatternOf`, in `MetronomePatterns.kt`: a
+  song's tempo and `{time}`, 4/4 where it names none, the accents drawn for that signature in any context, everything
+  else from the settings). Only the top of the stack is asked, since a click does not outlive the screen it is played
+  from. One collector in the view model's `init` follows the context, the tempos, the settings and the library: a song
+  paged to moves the click to it from beat one, anything else is applied from the next beat, and the first value is only
+  remembered, so a view model built again over a playing click does not stop it. `toggleMetronome` starts the context's
+  pattern or stops it, and starting one over a song opens that screen's panel with it. A click that stops on its own is
+  a `Message.MetronomeStopped` snackbar naming why. Space (on the tab) and M (on a song) toggle it on the desktop and
+  the web (`toggleMetronomeByKey`), under no dialog or menu. **Two rules stop a click outright**, and between them they
+  are the whole of the lifecycle: `updateBackStack`, whenever what is on top is neither a song nor the Metronome tab -
+  the editor opened over a song, a song closed, a tab selected - so that nothing plays under a screen with no way to
+  stop it; and `onCleared`, which is the app being left rather than being sent to the background (a finished Activity
+  rather than a paused one), where a singleton metronome would otherwise go on clicking, with its notification, under a
+  process nobody is looking at.
+- **The song details screen's metronome** (`SongMetronomePanel.kt`) is a panel inside that screen's own app bar, under
+  the title row (`CampfireTopAppBar`'s `bottomContent`, the way the editor's toolbar is part of its bar), which grows
+  and shrinks the bar as it comes and goes. Being inside the screen is the whole design: it is laid out, pushed and
+  popped with it, covers none of the song, and no scaffold wraps the app to make room for it. It holds play and stop
+  (`PlayStopMark`, morphing, in a `FilledIconButton`), a small read-only `BeatRow` and the tempo of what the click plays
+  for (`metronomeContext`) in a `Stepper` that writes where that tempo lives (`stepMetronomeTempo`,
+  `resetMetronomeTempo`), the number alone for a song in performance mode or from an archived setlist. Everything else
+  about the click - its sound, its subdivision, its accents - is the tab's. `CampfireViewModel.isMetronomePanelOpen` is
+  what keeps it up: set by the app bar's button and by a click started here, let go of as soon as anything else is on
+  top of the stack, and cleared by the button, which stops a click that is playing with it.
+- **The Metronome tab** (`ui/screens/metronome/`) is the third top level destination and the whole instrument, laid out
+  by `SettingsPage` (two sections side by side where there is room): the tempo itself, large and stepped by the app's
+  own pill grown with it (`Stepper`'s `fontScale`), the Italian marking under it (not translated: notation), a slider
+  across the range and tap tempo; the beat row (`BeatRow`, resting in fainter shades of the second accent color and lit
+  from the heard beats in the full one — shades of one color, since every palette but the app's own has no second accent
+  apart from the primary — a tap cycling a beat through accent, plain and muted, stored per signature); the time
+  signature (common ones as chips, two steppers for the rest), subdivision, sound (a tap previews it), volume, and the
+  Flash, Vibrate (where `rememberBeatHaptics` has a vibrator) and Mute switches; and the line saying why nothing is
+  heard (`audioIssue`). Play and stop are a `FloatingActionButton` at the end of the screen rather than a row of the
+  page, since the page is longer than a phone's screen and a metronome that has to be scrolled for before it can be
+  stopped is no metronome; the page keeps `PLAY_BUTTON_CLEARANCE` of room under its last row so nothing is reached
+  through it. It is the one floating action button in the app outside the export screen — a top level screen has no app
+  bar to put it in, the navigation chrome standing in for one. The screen is kept on while a click plays. Every way onto
+  it clears the back stack, so no song is behind it.
+- **On the song details screen** the `MetronomeButton` **shows and hides the panel** rather than starting the click
+  (`toggleMetronomePanel`: opening it starts nothing, and closing it stops a click that is playing). Its mark stays the
+  metronome, in the second accent color while the panel is up and pulsing on every heard beat unless the flash is off —
+  the growing alone there, the mark being in that color already and the panel's beat row being right under it. It is
+  the first thing the bar gives room to
+  (`appBarButtons.isMetronomeShown`) and the first
   entry of the overflow menu where it has none (`metronomeAction`, naming the tempo); read only, it stands next to the
-  text size stepper (`showsMetronomeInPerformanceBar`), going into the menu before the stepper. The tempo row
+  text size stepper (`showsMetronomeInPerformanceBar`), going into the menu before the stepper. M still starts and
+  stops the click itself, which opens the panel with it. The tempo row
   (`TempoControls`: the stepper, highlighted while overridden and reset by a tap on its value, and a Tap button) is in
   the song's own first section outside read only mode, the Tap button beside it; starting a click stays the bar's
   button alone, since the song's first section scrolls away and the bar does not. The page's tempo line shows the effective tempo (`withTempo`), as the

@@ -9,13 +9,12 @@
  */
 package com.pandulapeter.campfire.presentation.ui.metronome
 
-import com.pandulapeter.campfire.metronome.api.model.MetronomeOrigin
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 
 /**
- * What a click plays for right now: the song on the topmost song details screen of the back stack, wherever that is
- * in the stack - the editor pushed over a song keeps the click in the song's tempo - or nothing in particular, which
- * is the Metronome tab's own pattern.
+ * What a click plays for right now: the song on the song details screen, which is one of the two screens that hold a
+ * metronome, or nothing in particular, which is the Metronome tab's own pattern. Nothing else can be playing, since a
+ * click stops with the screen it is played from.
  */
 internal sealed interface MetronomeContext {
 
@@ -25,48 +24,18 @@ internal sealed interface MetronomeContext {
         val songFileName: String,
         val setlistFileName: String?,
     ) : MetronomeContext
-
-    val origin
-        get() = when (this) {
-            Standalone -> MetronomeOrigin.Standalone
-            is Song -> MetronomeOrigin.Song(songFileName = songFileName, setlistFileName = setlistFileName)
-        }
 }
 
 /**
- * The context of [backStack]: the topmost song details screen's current song, as [currentSongOf] answers it (the page
- * its pager is heading for), or [MetronomeContext.Standalone] where there is none.
+ * The context of [backStack]: the song details screen on top of it, at the page its pager is heading for
+ * ([currentSongOf]), or [MetronomeContext.Standalone] for every other screen - the Metronome tab, and the screens a
+ * click never survives.
  */
 internal fun metronomeContextOf(
     backStack: List<CampfireDestination>,
     currentSongOf: (CampfireDestination.SongDetails) -> String?,
 ): MetronomeContext {
-    val destination = backStack.lastOrNull { it is CampfireDestination.SongDetails } as? CampfireDestination.SongDetails
-        ?: return MetronomeContext.Standalone
+    val destination = backStack.lastOrNull() as? CampfireDestination.SongDetails ?: return MetronomeContext.Standalone
     val songFileName = currentSongOf(destination) ?: return MetronomeContext.Standalone
     return MetronomeContext.Song(songFileName = songFileName, setlistFileName = destination.setlistFileName)
-}
-
-/** What a playing click does when the back stack moves it from [previous] to [current]. */
-internal sealed interface MetronomeRetarget {
-
-    /** Nothing: the context did not change, or nothing plays. */
-    data object None : MetronomeRetarget
-
-    /** Plays the new context's pattern from beat one. */
-    data object Restart : MetronomeRetarget
-
-    data object Stop : MetronomeRetarget
-}
-
-/**
- * Opening or paging to a song retargets the click to it; the song leaving the back stack takes the click back to
- * where it was started: a click started on a song stops, one started on the Metronome tab goes back to the tab's own
- * pattern and carries on.
- */
-internal fun metronomeRetargetOf(previous: MetronomeContext, current: MetronomeContext, origin: MetronomeOrigin?) = when {
-    origin == null || previous == current -> MetronomeRetarget.None
-    current is MetronomeContext.Song -> MetronomeRetarget.Restart
-    origin is MetronomeOrigin.Song -> MetronomeRetarget.Stop
-    else -> MetronomeRetarget.Restart
 }

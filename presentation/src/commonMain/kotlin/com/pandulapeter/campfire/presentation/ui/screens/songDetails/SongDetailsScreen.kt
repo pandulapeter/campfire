@@ -118,6 +118,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_text_size
 import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
 import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeButton
+import com.pandulapeter.campfire.presentation.ui.metronome.SongMetronomePanel
 import com.pandulapeter.campfire.presentation.ui.metronome.effectiveTempo
 import com.pandulapeter.campfire.presentation.ui.metronome.metronomeAction
 import com.pandulapeter.campfire.presentation.ui.metronome.withTempo
@@ -281,19 +282,23 @@ internal fun SongDetailsScreen(
     val metronomeSettings by viewModel.metronomeSettings.collectAsStateWithLifecycle()
     val isMetronomePlaying = metronomePlayback is MetronomePlayback.Playing
     val currentTempo = currentSong?.let { effectiveTempo(song = it, setlistFileName = destination.setlistFileName, tempos = tempos) }
+    // A click can only play here while the panel is up, which is what starts and stops it; the flag is read beside it
+    // anyway, since a click stopped from the panel leaves it where it was, see CampfireViewModel.toggleMetronomePanel.
+    val isMetronomePanelShown = viewModel.isMetronomePanelOpen || isMetronomePlaying
     val metronomeButton: @Composable () -> Unit = {
         MetronomeButton(
+            isPanelShown = isMetronomePanelShown,
             isPlaying = isMetronomePlaying,
             bpm = currentTempo?.bpm ?: MetronomePattern.DEFAULT_BPM,
             beats = viewModel.metronomeBeats,
             isFlashEnabled = metronomeSettings.isVisualBeatEnabled,
-            onClick = viewModel::toggleMetronome,
+            onClick = viewModel::toggleMetronomePanel,
         )
     }
     val metronomeAction = metronomeAction(
-        isPlaying = isMetronomePlaying,
+        isPanelShown = isMetronomePanelShown,
         bpm = currentTempo?.bpm ?: MetronomePattern.DEFAULT_BPM,
-        onClick = viewModel::toggleMetronome,
+        onClick = viewModel::toggleMetronomePanel,
     )
 
     val coroutineScope = rememberCoroutineScope()
@@ -551,6 +556,13 @@ internal fun SongDetailsScreen(
                         },
                     )
                 }
+            },
+            bottomContent = {
+                SongMetronomePanel(
+                    viewModel = viewModel,
+                    isVisible = isMetronomePanelShown,
+                    contentPadding = contentPadding,
+                )
             },
         )
         // The paging bar sits below the pager and covers the bottom inset for it, so the pages only keep the

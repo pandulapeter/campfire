@@ -436,8 +436,8 @@
     <string name="song_details_capo_reset">Capo visszaállítása</string>
     <string name="song_details_set_time_signature">Ütemmutató megadása</string>
     <string name="song_details_change_time_signature">Ütemmutató módosítása</string>
-    <string name="song_details_metronome_start">Metronóm indítása</string>
-    <string name="song_details_metronome_stop">Metronóm leállítása</string>
+    <string name="song_details_metronome_show">Metronóm megjelenítése</string>
+    <string name="song_details_metronome_hide">Metronóm elrejtése</string>
     <string name="song_details_scroll_to_top">Görgetés az elejére</string>
     <string name="song_details_text_size_increase">Szöveg nagyítása</string>
     <string name="song_details_text_size_decrease">Szöveg kicsinyítése</string>

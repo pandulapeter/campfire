@@ -436,8 +436,8 @@
     <string name="song_details_capo_reset">Reset capo</string>
     <string name="song_details_set_time_signature">Set time signature</string>
     <string name="song_details_change_time_signature">Change time signature</string>
-    <string name="song_details_metronome_start">Start metronome</string>
-    <string name="song_details_metronome_stop">Stop metronome</string>
+    <string name="song_details_metronome_show">Show metronome</string>
+    <string name="song_details_metronome_hide">Hide metronome</string>
     <string name="song_details_scroll_to_top">Scroll to the top</string>
     <string name="song_details_text_size_increase">Increase text size</string>
     <string name="song_details_text_size_decrease">Decrease text size</string>

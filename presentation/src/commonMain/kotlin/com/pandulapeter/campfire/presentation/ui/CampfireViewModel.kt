@@ -122,13 +122,11 @@ import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
 import com.pandulapeter.campfire.metronome.api.model.MetronomeSound
 import com.pandulapeter.campfire.metronome.api.model.MetronomeStopReason
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeContext
-import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeRetarget
 import com.pandulapeter.campfire.presentation.ui.metronome.TempoKey
 import com.pandulapeter.campfire.presentation.ui.metronome.Tempos
 import com.pandulapeter.campfire.presentation.ui.metronome.effectiveTempo
 import com.pandulapeter.campfire.presentation.ui.metronome.metronomeContextOf
 import com.pandulapeter.campfire.presentation.ui.metronome.metronomePatternOf
-import com.pandulapeter.campfire.presentation.ui.metronome.metronomeRetargetOf
 import com.pandulapeter.campfire.presentation.ui.metronome.withTempo
 import com.pandulapeter.campfire.presentation.ui.dialogs.SONG_METADATA_FIELDS
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
@@ -871,6 +869,14 @@ class CampfireViewModel(
         get() = metronomeContextOf(backStack) { destination -> songDetailsTargetSongs[destination.id] ?: currentSongFileName(destination) }
 
     /**
+     * Whether the song details screen's metronome panel is up: its own button put it there ([toggleMetronomePanel]),
+     * or a click started here did. It is let go of as soon as anything else is on top of the stack - where it is let
+     * go of, the click stops with it, since the panel is the only thing that screen can stop one from.
+     */
+    internal var isMetronomePanelOpen by mutableStateOf(false)
+        private set
+
+    /**
      * Every song of the library in the order the songs screen is sorted by, with its search and filter keys, as the song
      * picker lists and searches it. Built here rather than as the sheet opens, where the first frame of the sheet would
      * wait for a whole library to be sorted and folded, and sorted by keys folded once per song rather than on both
@@ -1351,24 +1357,18 @@ class CampfireViewModel(
         }
         viewModelScope.launch {
             // One collector for everything that changes what a playing click plays, so that a context change and the
-            // pattern it brings are one update: the back stack moving the click (metronomeRetargetOf) restarts the bar
-            // or stops it, and anything else - a tempo stepped, a setting, a song's {tempo} saved or synced - is
-            // applied from the next beat. The first value is only remembered: a view model built again while a click
-            // plays (an activity recreated, or reopened from the notification) starts from a back stack that may hold
-            // no song at all, which is no reason to stop a click that was started on one.
+            // pattern it brings are one update: paging to another song moves the click to it from beat one, and
+            // anything else - a tempo stepped, a setting, a song's {tempo} saved or synced - is applied from the next
+            // beat. Leaving the song is not among them, since a click does not outlive the screen it is played from.
+            // The first value is only remembered: a view model built again while a click plays (an activity recreated)
+            // starts from a back stack it has not moved.
             var previous: MetronomeContext? = null
             combine(snapshotFlow { metronomeContext }, tempos, metronomeSettings, songsByFileName) { context, tempos, settings, songs ->
                 context to metronomePatternOf(context = context, settings = settings, songOf = songs::get, tempos = tempos)
             }.distinctUntilChanged().collect { (context, pattern) ->
                 val last = previous
                 previous = context
-                val origin = (metronome.playback.value as? MetronomePlayback.Playing)?.origin
-                if (last == null || origin == null) return@collect
-                when (metronomeRetargetOf(previous = last, current = context, origin = origin)) {
-                    MetronomeRetarget.None -> metronome.update(pattern, restartBar = false)
-                    MetronomeRetarget.Restart -> metronome.update(pattern, restartBar = true)
-                    MetronomeRetarget.Stop -> metronome.stop()
-                }
+                if (last != null) metronome.update(pattern, restartBar = context != last)
             }
         }
         viewModelScope.launch {
@@ -1457,6 +1457,12 @@ class CampfireViewModel(
         if (isNavigationTransitionRunning) navigationGeneration++
         backStack.update()
         if (backStack.lastOrNull() != CampfireDestination.Setlists) reorderingSetlistFileName = null
+        // The two screens that hold a metronome are the two it can be stopped from, so a click never outlives the one
+        // it was started on: the editor opened over a song, a song closed, a tab selected, all stop it.
+        if (backStack.lastOrNull().let { it !is CampfireDestination.SongDetails && it != CampfireDestination.Metronome }) {
+            isMetronomePanelOpen = false
+            metronome.stop()
+        }
         if (backStack.none { it is CampfireDestination.SongEditor }) retainedEditorField = null
         backStack.mapNotNullTo(mutableSetOf()) { (it as? CampfireDestination.SongDetails)?.id }.let { ids ->
             songDetailsCurrentSongs.keys.retainAll(ids)
@@ -2398,7 +2404,7 @@ class CampfireViewModel(
     }
 
     /** The pattern a click started now would play, for [metronomeContext]. */
-    private fun currentMetronomePattern(context: MetronomeContext = metronomeContext) = metronomePatternOf(
+    private fun currentMetronomePattern(context: MetronomeContext) = metronomePatternOf(
         context = context,
         settings = metronomeSettings.value,
         songOf = songsByFileName.value::get,
@@ -2418,13 +2424,33 @@ class CampfireViewModel(
         return true
     }
 
-    /** Starts a click for whatever is on screen - the song, or the Metronome tab's own pattern - or stops the one playing. */
+    /**
+     * Starts a click for whatever is on screen - the song, or the Metronome tab's own pattern - or stops the one
+     * playing. A click started while a song is being read opens the panel with it, so that stopping it again from there
+     * leaves the instrument up, see [toggleMetronomePanel].
+     */
     fun toggleMetronome() {
         if (metronome.playback.value is MetronomePlayback.Playing) {
             metronome.stop()
         } else {
             val context = metronomeContext
-            metronome.start(currentMetronomePattern(context), context.origin)
+            metronome.start(currentMetronomePattern(context))
+            if (backStack.lastOrNull() is CampfireDestination.SongDetails) isMetronomePanelOpen = true
+        }
+    }
+
+    /**
+     * The song details screen's metronome button, which is about the panel rather than about the click: the panel is
+     * what the click is started and stopped from there, so stopping one leaves the instrument up for the next and only
+     * this takes it away. Opening it starts nothing, and closing it stops a click that is playing, since a click is
+     * never left with nothing on screen to stop it with.
+     */
+    internal fun toggleMetronomePanel() {
+        if (isMetronomePanelOpen || metronome.playback.value is MetronomePlayback.Playing) {
+            isMetronomePanelOpen = false
+            metronome.stop()
+        } else {
+            isMetronomePanelOpen = true
         }
     }
 
@@ -2604,8 +2630,14 @@ class CampfireViewModel(
     /**
      * The view model going (the activity finished) does not take a tempo or a capo still waiting to be written with it:
      * those are written on a scope of their own, since this one is being cancelled.
+     *
+     * It does take the click, though. This is the app being left rather than being sent to the background - the one is
+     * a finished Activity, the other a paused one - and the click is kept alive across the background for a phone on a
+     * music stand with its screen off, not for an app the user has closed; the metronome is a singleton that would
+     * otherwise go on clicking, with its notification, under a process nobody is looking at any more.
      */
     override fun onCleared() {
+        metronome.stop()
         val waitingTempos = tempoWriteJobs.keys.mapNotNull { key -> pendingTempos.value[key]?.let { key to it.bpm } }
         val waitingCapos = capoWriteJobs.keys.mapNotNull { key -> pendingCapos.value[key]?.let { key to it.fret } }
         tempoWriteJobs.clear()

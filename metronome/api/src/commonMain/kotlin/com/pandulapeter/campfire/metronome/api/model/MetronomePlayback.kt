@@ -21,7 +21,6 @@ sealed interface MetronomePlayback {
      */
     data class Playing(
         val pattern: MetronomePattern,
-        val origin: MetronomeOrigin,
         val audioIssue: MetronomeAudioIssue? = null,
     ) : MetronomePlayback
 }

@@ -11,7 +11,6 @@ package com.pandulapeter.campfire.metronome.api
 
 import com.pandulapeter.campfire.metronome.api.model.BeatLevel
 import com.pandulapeter.campfire.metronome.api.model.MetronomeBeat
-import com.pandulapeter.campfire.metronome.api.model.MetronomeOrigin
 import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
 import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
 import com.pandulapeter.campfire.metronome.api.model.MetronomeSound
@@ -47,11 +46,8 @@ interface Metronome {
      */
     val beats: SharedFlow<MetronomeBeat>
 
-    /**
-     * Starts the click with [pattern] on its first beat. Starting while it already plays is [update] with the bar
-     * restarted, under the new [origin].
-     */
-    fun start(pattern: MetronomePattern, origin: MetronomeOrigin)
+    /** Starts the click with [pattern] on its first beat. Starting while it already plays is [update] with the bar restarted. */
+    fun start(pattern: MetronomePattern)
 
     /**
      * Replaces the pattern of a playing click; ignored when it is stopped. What decides the timing - the tempo, the

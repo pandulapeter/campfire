@@ -9,14 +9,9 @@
  */
 package com.pandulapeter.campfire.presentation.ui.metronome
 
-import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -62,7 +57,6 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_add
 import com.pandulapeter.campfire.presentation.resources.ic_metronome
-import com.pandulapeter.campfire.presentation.resources.ic_stop
 import com.pandulapeter.campfire.presentation.resources.ic_subtract
 import com.pandulapeter.campfire.presentation.resources.metronome_beat_unit
 import com.pandulapeter.campfire.presentation.resources.metronome_beat_unit_decrease
@@ -72,8 +66,8 @@ import com.pandulapeter.campfire.presentation.resources.metronome_beats_increase
 import com.pandulapeter.campfire.presentation.resources.metronome_beats_per_bar
 import com.pandulapeter.campfire.presentation.resources.metronome_tap
 import com.pandulapeter.campfire.presentation.resources.metronome_tap_description
-import com.pandulapeter.campfire.presentation.resources.song_details_metronome_start
-import com.pandulapeter.campfire.presentation.resources.song_details_metronome_stop
+import com.pandulapeter.campfire.presentation.resources.song_details_metronome_hide
+import com.pandulapeter.campfire.presentation.resources.song_details_metronome_show
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo_decrease
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo_increase
@@ -126,13 +120,16 @@ private val PLAY_CORNERS = listOf(Offset(8f, 5f), Offset(19f, 12f), Offset(19f, 
 private val STOP_CORNERS = listOf(Offset(6f, 6f), Offset(18f, 6f), Offset(18f, 18f), Offset(6f, 18f))
 
 /**
- * The song details screen's one-tap metronome: a metronome mark that becomes a stop mark while a click plays, and pulses
- * on every heard beat (in the second accent color, a little larger on an accent) unless the flash is off. Its content
- * description says the tempo it would start at, since that is all a screen reader user would otherwise not know.
+ * The song details screen's metronome: the mark that shows and hides the panel the click is played from, in the second
+ * accent color - the color of what is played - while the panel is up, and pulsing on every heard beat (a little larger
+ * on an accent) unless the flash is off. While the panel is up that pulse is the growing alone, the mark being in the
+ * accent color already and the panel's own beat row being right under it. The content description says the tempo the click
+ * would start at, since that is all a screen reader user would otherwise not know.
  */
 @Composable
 internal fun MetronomeButton(
     modifier: Modifier = Modifier,
+    isPanelShown: Boolean,
     isPlaying: Boolean,
     bpm: Int,
     beats: Flow<MetronomeBeat>,
@@ -152,32 +149,22 @@ internal fun MetronomeButton(
         }
     }
     LaunchedEffect(isPlaying) { if (!isPlaying) pulse.snapTo(0f) }
-    val description = if (isPlaying) {
-        stringResource(Res.string.song_details_metronome_stop)
-    } else {
-        "${stringResource(Res.string.song_details_metronome_start)} $KEY_SEPARATOR ${stringResource(Res.string.song_details_tempo, bpm.toString())}"
-    }
     val accentColor = LocalSecondAccentColor.current
-    val contentColor = LocalContentColor.current
+    val baseColor by animateColorAsState(if (isPanelShown) accentColor else LocalContentColor.current)
     IconButton(
         modifier = modifier,
         onClick = onClick,
     ) {
-        AnimatedContent(
+        Icon(
             modifier = Modifier.graphicsLayer {
                 val scale = 1f + pulse.value * PULSE_SCALE
                 scaleX = scale
                 scaleY = scale
             },
-            targetState = isPlaying,
-            transitionSpec = { (fadeIn() + scaleIn()) togetherWith (fadeOut() + scaleOut()) },
-        ) { playing ->
-            Icon(
-                painter = painterResource(if (playing) Res.drawable.ic_stop else Res.drawable.ic_metronome),
-                contentDescription = description,
-                tint = lerp(contentColor, accentColor, pulse.value.coerceIn(0f, 1f)),
-            )
-        }
+            painter = painterResource(Res.drawable.ic_metronome),
+            contentDescription = metronomePanelLabel(isPanelShown = isPanelShown, bpm = bpm),
+            tint = lerp(baseColor, accentColor, pulse.value.coerceIn(0f, 1f)),
+        )
     }
 }
 
@@ -186,22 +173,25 @@ private const val PULSE_SCALE = 0.25f
 /** [MetronomeButton] as an entry of the song details overflow menu, for a bar that has no room for the button. */
 @Composable
 internal fun metronomeAction(
-    isPlaying: Boolean,
+    isPanelShown: Boolean,
     bpm: Int,
     onClick: () -> Unit,
 ) = ActionsMenuItem(
-    title = if (isPlaying) {
-        stringResource(Res.string.song_details_metronome_stop)
-    } else {
-        "${stringResource(Res.string.song_details_metronome_start)} $KEY_SEPARATOR ${stringResource(Res.string.song_details_tempo, bpm.toString())}"
-    },
-    icon = painterResource(if (isPlaying) Res.drawable.ic_stop else Res.drawable.ic_metronome),
+    title = metronomePanelLabel(isPanelShown = isPanelShown, bpm = bpm),
+    icon = painterResource(Res.drawable.ic_metronome),
     key = METRONOME_ACTION_KEY,
-    animateIconChange = true,
     onClick = onClick,
 )
 
 private const val METRONOME_ACTION_KEY = "metronome"
+
+/** What showing or hiding the panel is called, with the tempo a click started from it would play at while it is hidden. */
+@Composable
+private fun metronomePanelLabel(isPanelShown: Boolean, bpm: Int) = if (isPanelShown) {
+    stringResource(Res.string.song_details_metronome_hide)
+} else {
+    "${stringResource(Res.string.song_details_metronome_show)} $KEY_SEPARATOR ${stringResource(Res.string.song_details_tempo, bpm.toString())}"
+}
 
 /**
  * The tempo stepper of a song, the transposition's twin gesture for gesture: highlighted while the song plays at a

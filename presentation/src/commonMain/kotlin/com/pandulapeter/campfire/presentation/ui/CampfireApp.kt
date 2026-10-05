@@ -40,7 +40,6 @@ import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.displayCutout
-import androidx.compose.foundation.layout.exclude
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.only
@@ -143,7 +142,6 @@ import com.pandulapeter.campfire.presentation.resources.metronome_stopped_interr
 import com.pandulapeter.campfire.presentation.resources.metronome_stopped_refused
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeContext
-import com.pandulapeter.campfire.presentation.ui.metronome.MetronomePanelScaffold
 import com.pandulapeter.campfire.presentation.ui.platform.LocalMetronomeNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.MetronomeNotification
 import com.pandulapeter.campfire.presentation.ui.platform.rememberBeatHaptics
@@ -504,35 +502,29 @@ private fun CampfireContent(
     }
     val chromeInScreens = isChromeInScreens || isTopLevelScreenCovered
 
-    MetronomePanelScaffold(
-        modifier = Modifier.fillMaxSize(),
-        viewModel = viewModel,
-    ) { panelInsets ->
-        NavigationChromeScaffold(
-            // Painted here as well as on every screen, so that the two screens of a cross fading tab transition blend
-            // into the same color they are painted in and the fade stays invisible.
-            modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
-            isChromePlaced = !chromeInScreens,
-            chrome = { chromeKind ->
-                NavigationChrome(
-                    kind = chromeKind,
-                    currentTopLevelDestination = backStack.lastOrNull { it is CampfireDestination.TopLevel } as? CampfireDestination.TopLevel,
-                    onDestinationSelected = viewModel::selectTopLevelDestination,
-                )
-            },
-        ) { windowWidth, windowSize, chromeKind, chromeSize ->
-            CampfireScreens(
-                viewModel = viewModel,
-                urlOpener = urlOpener,
-                windowWidth = windowWidth,
-                windowSize = windowSize,
-                chromeKind = chromeKind,
-                chromeSize = chromeSize,
-                chromeInScreens = chromeInScreens,
-                panelInsets = panelInsets,
-                onNavigationTransitionRunningChanged = { isNavigationTransitionRunning = it },
+    NavigationChromeScaffold(
+        // Painted here as well as on every screen, so that the two screens of a cross fading tab transition blend
+        // into the same color they are painted in and the fade stays invisible.
+        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
+        isChromePlaced = !chromeInScreens,
+        chrome = { chromeKind ->
+            NavigationChrome(
+                kind = chromeKind,
+                currentTopLevelDestination = backStack.lastOrNull { it is CampfireDestination.TopLevel } as? CampfireDestination.TopLevel,
+                onDestinationSelected = viewModel::selectTopLevelDestination,
             )
-        }
+        },
+    ) { windowWidth, windowSize, chromeKind, chromeSize ->
+        CampfireScreens(
+            viewModel = viewModel,
+            urlOpener = urlOpener,
+            windowWidth = windowWidth,
+            windowSize = windowSize,
+            chromeKind = chromeKind,
+            chromeSize = chromeSize,
+            chromeInScreens = chromeInScreens,
+            onNavigationTransitionRunningChanged = { isNavigationTransitionRunning = it },
+        )
     }
 }
 
@@ -542,8 +534,6 @@ private fun CampfireContent(
  * While [chromeInScreens] is set, every top level screen draws a navigation chrome of its own, under itself and
  * selected on its own destination, so that the bar or the rail moves with the screen when a card is dealt over it or
  * taken off it, the predictive back gesture included, instead of standing still while the screen slides past it.
- *
- * @param panelInsets What the metronome panel covers of the window's edges, which the paddings made here leave out.
  */
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -555,7 +545,6 @@ private fun CampfireScreens(
     chromeKind: NavigationChromeKind,
     chromeSize: NavigationChromeSize,
     chromeInScreens: Boolean,
-    panelInsets: WindowInsets,
     onNavigationTransitionRunningChanged: (Boolean) -> Unit,
 ) {
     val backStack = viewModel.backStack
@@ -581,7 +570,7 @@ private fun CampfireScreens(
     // What is left of the system bars and the display cutout once the chrome has covered the edge it sits on. The screens
     // hand these to their lists as content padding, so that items scroll under the system bars instead of stopping short
     // of them.
-    val systemBars = WindowInsets.contentEdges.exclude(panelInsets).asPaddingValues()
+    val systemBars = WindowInsets.contentEdges.asPaddingValues()
     // Never read here, see KeyboardAwarePadding.
     val ime = rememberUpdatedState(WindowInsets.ime)
     val shellContentPadding: PaddingValues = KeyboardAwarePadding(

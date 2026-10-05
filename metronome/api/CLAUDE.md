@@ -12,7 +12,7 @@
 The contract of the click, and nothing else: depends on nothing but coroutines (for `StateFlow` / `SharedFlow`), like
 `:chordpro` depends on nothing, so that no data or domain type leaks into it and the engine reads no settings of its own.
 
-- `Metronome` — the one stateful interface: `playback` (`Stopped(reason?)` or `Playing(pattern, origin, audioIssue?)`),
+- `Metronome` — the one stateful interface: `playback` (`Stopped(reason?)` or `Playing(pattern, audioIssue?)`),
   `beats` (one `MetronomeBeat` per click, emitted when it is *heard*, subdivisions flagged), `start`, `update`
   (timing changes from the next beat, `restartBar` making it beat one; the sound, volume, accents and mute from the next
   click), `preview` (one click of a sound, mixed into a playing click or on its own) and `stop`. Every call returns at
@@ -20,9 +20,8 @@ The contract of the click, and nothing else: depends on nothing but coroutines (
 - `model/` — `MetronomePattern` (complete: tempo within `BPM_RANGE` 30–300, `TimeSignature`, one `BeatLevel` per
   beat, `Subdivision`, `MetronomeSound`, volume, mute), `TimeSignature` (1–16 beats over 1/2/4/8/16, written and
   parsed as `"7/8"`, with the default accents: one, and every group of three in a compound meter), the enums with the
-  stable `id`s a stored setting uses, `MetronomeOrigin` (`Standalone` or `Song`: where a click was started, kept by
-  the engine so that a screen built again reads it rather than guessing), `MetronomeStopReason` and
-  `MetronomeAudioIssue`.
+  stable `id`s a stored setting uses, `MetronomeStopReason` and `MetronomeAudioIssue`. The engine keeps no notion of
+  what a click is played for: it is started and stopped by the screen that holds the controls, and there are two.
 - `TapTempo` — taps to a tempo: a minute over the median of the last eight intervals, a new series after a two second
   gap, clamped to the range. Pure, tested with a `TestTimeSource`.
 

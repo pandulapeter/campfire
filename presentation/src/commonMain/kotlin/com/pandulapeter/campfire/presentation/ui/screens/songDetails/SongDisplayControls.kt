@@ -18,14 +18,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
@@ -296,8 +293,6 @@ private fun fontScaleLabel(fontScale: Float) = "${(fontScale * 100).roundToInt()
  * of the key is animated.
  * @param repeatsOnHold Whether a button held down keeps stepping, faster the longer it is held, for a value that is a
  * long way from where it starts: fine for a tempo, while a semitone or a text size is a few taps away at most.
- * @param isVertical Stands the pill on its end, the increase button on top, for a column too narrow for it lying down
- * (the metronome's side panel).
  */
 @Composable
 internal fun Stepper(
@@ -318,9 +313,8 @@ internal fun Stepper(
     resetLabel: String?,
     onReset: (() -> Unit)?,
     repeatsOnHold: Boolean = false,
-    isVertical: Boolean = false,
 ) = Surface(
-    modifier = if (isVertical) modifier.width(height) else modifier.height(height),
+    modifier = modifier.height(height),
     shape = CircleShape,
     color = MaterialTheme.colorScheme.surfaceContainerHighest,
 ) {
@@ -334,7 +328,6 @@ internal fun Stepper(
                 label = decreaseLabel,
                 isEnabled = canDecrease,
                 repeatsOnHold = repeatsOnHold,
-                isVertical = isVertical,
                 fontScale = fontScale,
                 height = height,
                 buttonLength = buttonLength,
@@ -348,7 +341,6 @@ internal fun Stepper(
                 isDefault = isDefault,
                 resetLabel = resetLabel,
                 onReset = onReset,
-                isVertical = isVertical,
                 fontScale = fontScale,
             )
         }
@@ -358,25 +350,16 @@ internal fun Stepper(
                 label = increaseLabel,
                 isEnabled = canIncrease,
                 repeatsOnHold = repeatsOnHold,
-                isVertical = isVertical,
                 fontScale = fontScale,
                 height = height,
                 buttonLength = buttonLength,
                 onClick = onIncrease,
             )
         }
-        if (isVertical) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                increaseButton()
-                stepperValue()
-                decreaseButton()
-            }
-        } else {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                decreaseButton()
-                stepperValue()
-                increaseButton()
-            }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            decreaseButton()
+            stepperValue()
+            increaseButton()
         }
     }
 }
@@ -392,7 +375,6 @@ private fun StepperButton(
     label: String,
     isEnabled: Boolean,
     repeatsOnHold: Boolean,
-    isVertical: Boolean,
     fontScale: Float,
     height: Dp,
     buttonLength: Dp,
@@ -417,11 +399,7 @@ private fun StepperButton(
         }
     }
     IconButton(
-        modifier = if (isVertical) {
-            Modifier.size(width = height, height = buttonLength)
-        } else {
-            Modifier.size(width = buttonLength, height = height)
-        },
+        modifier = Modifier.size(width = buttonLength, height = height),
         enabled = isEnabled,
         interactionSource = interactionSource,
         onClick = { if (holdState.hasRepeated) holdState.hasRepeated = false else onClick() },
@@ -445,7 +423,6 @@ private fun StepperValue(
     isDefault: Boolean,
     resetLabel: String?,
     onReset: (() -> Unit)?,
-    isVertical: Boolean,
     fontScale: Float,
 ) {
     // A progress value instead of an animated color, so that the label follows the color scheme immediately while it
@@ -456,15 +433,15 @@ private fun StepperValue(
     )
     val color = lerp(MaterialTheme.colorScheme.onSurface, MaterialTheme.colorScheme.primary, changedProgress)
     AnimatedContent(
-        modifier = if (isVertical) Modifier.fillMaxWidth() else Modifier.fillMaxHeight(),
+        modifier = Modifier.fillMaxHeight(),
         targetState = StepperLabel(value = value, key = valueKey),
         transitionSpec = { fadeIn() togetherWith fadeOut() },
         contentKey = { it.key },
     ) { label ->
         Text(
-            modifier = (if (isVertical) Modifier.fillMaxWidth().height(VERTICAL_VALUE_HEIGHT * fontScale) else Modifier.fillMaxHeight())
+            modifier = Modifier.fillMaxHeight()
                 .clickable(enabled = !isDefault && onReset != null, onClickLabel = resetLabel) { onReset?.invoke() }
-                .widthIn(min = if (isVertical) 0.dp else VALUE_MIN_WIDTH * fontScale)
+                .widthIn(min = VALUE_MIN_WIDTH * fontScale)
                 .wrapContentHeight(),
             text = label.value,
             style = MaterialTheme.typography.labelLarge.scaled(fontScale),
@@ -515,7 +492,6 @@ private val VALUE_MIN_WIDTH = 44.dp
 
 /** What a [ValuePill] keeps at its ends, where a stepper has its buttons: enough that the pill reads as a button. */
 private val VALUE_PILL_PADDING = 12.dp
-private val VERTICAL_VALUE_HEIGHT = 32.dp
 
 /** How wide a stepper is drawn, at least, for the app bar that has to leave its title room beside one. */
 internal val STEPPER_WIDTH = stepperButtonLength(fontScale = 1f) * 2 + VALUE_MIN_WIDTH

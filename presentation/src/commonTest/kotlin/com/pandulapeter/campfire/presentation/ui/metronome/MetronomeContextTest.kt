@@ -9,7 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.metronome
 
-import com.pandulapeter.campfire.metronome.api.model.MetronomeOrigin
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -20,23 +19,16 @@ class MetronomeContextTest {
     private val currentSong = { destination: CampfireDestination.SongDetails -> destination.songFileNames[destination.initialIndex] }
 
     @Test
-    fun theEditorOverASongKeepsTheSong() = assertEquals(
+    fun theSongOnTopIsTheContext() = assertEquals(
         MetronomeContext.Song("a.cho", "s.setlist.json"),
-        metronomeContextOf(listOf(CampfireDestination.Songs, songDetails, CampfireDestination.SongEditor("a.cho")), currentSong),
+        metronomeContextOf(listOf(CampfireDestination.Songs, songDetails), currentSong),
     )
 
+    /** A click is stopped with the screen it was started on, so a song under another screen plays for nothing. */
     @Test
-    fun theUpperOfTwoSongsWins() = assertEquals(
-        MetronomeContext.Song("c.cho", null),
-        metronomeContextOf(
-            listOf(
-                CampfireDestination.Songs,
-                songDetails,
-                CampfireDestination.ImportReport,
-                CampfireDestination.SongDetails(songFileNames = listOf("c.cho"), setlistFileName = null, initialIndex = 0, id = "2"),
-            ),
-            currentSong,
-        ),
+    fun aSongUnderAnotherScreenIsNotTheContext() = assertEquals(
+        MetronomeContext.Standalone,
+        metronomeContextOf(listOf(CampfireDestination.Songs, songDetails, CampfireDestination.SongEditor("a.cho")), currentSong),
     )
 
     @Test
@@ -47,27 +39,8 @@ class MetronomeContextTest {
     fun thePageBeingHeadedForIsTheSong() =
         assertEquals(MetronomeContext.Song("b.cho", "s.setlist.json"), metronomeContextOf(listOf(songDetails)) { "b.cho" })
 
+    /** A song whose file the library does not hold yet has no tempo to play, so the tab's own pattern stands in. */
     @Test
-    fun aSongClickStopsWhenItsSongCloses() = assertEquals(
-        MetronomeRetarget.Stop,
-        metronomeRetargetOf(MetronomeContext.Song("a.cho", null), MetronomeContext.Standalone, MetronomeOrigin.Song("a.cho", null)),
-    )
-
-    @Test
-    fun aTabClickGoesBackToTheTab() = assertEquals(
-        MetronomeRetarget.Restart,
-        metronomeRetargetOf(MetronomeContext.Song("a.cho", null), MetronomeContext.Standalone, MetronomeOrigin.Standalone),
-    )
-
-    @Test
-    fun pagingRetargets() = assertEquals(
-        MetronomeRetarget.Restart,
-        metronomeRetargetOf(MetronomeContext.Song("a.cho", null), MetronomeContext.Song("b.cho", null), MetronomeOrigin.Song("a.cho", null)),
-    )
-
-    @Test
-    fun nothingHappensWithoutAChangeOrAClick() {
-        assertEquals(MetronomeRetarget.None, metronomeRetargetOf(MetronomeContext.Standalone, MetronomeContext.Standalone, MetronomeOrigin.Standalone))
-        assertEquals(MetronomeRetarget.None, metronomeRetargetOf(MetronomeContext.Standalone, MetronomeContext.Song("a.cho", null), null))
-    }
+    fun aSongWithNoFileIsStandalone() =
+        assertEquals(MetronomeContext.Standalone, metronomeContextOf(listOf(songDetails)) { null })
 }

@@ -11,7 +11,6 @@ package com.pandulapeter.campfire.presentation.ui.screens.metronome
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
@@ -30,11 +29,16 @@ import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
 import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.ic_add
+import com.pandulapeter.campfire.presentation.resources.ic_subtract
 import com.pandulapeter.campfire.presentation.resources.metronome_accents
 import com.pandulapeter.campfire.presentation.resources.metronome_accents_hint
 import com.pandulapeter.campfire.presentation.resources.metronome_audio_unavailable
 import com.pandulapeter.campfire.presentation.resources.metronome_audio_waiting
+import com.pandulapeter.campfire.presentation.resources.metronome_tempo_decrease
+import com.pandulapeter.campfire.presentation.resources.metronome_tempo_increase
 import com.pandulapeter.campfire.presentation.resources.metronome_tempo_slider
+import com.pandulapeter.campfire.presentation.resources.song_details_tempo_reset
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.metronome.TapTempoButton
 import com.pandulapeter.campfire.presentation.ui.metronome.beatLevelsOf
@@ -45,12 +49,14 @@ import com.pandulapeter.campfire.presentation.ui.screens.settings.AnimatedSettin
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsMessage
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsSection
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsSubsection
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.Stepper
+import org.jetbrains.compose.resources.painterResource
 import kotlin.math.roundToInt
 
 /**
- * What the tab adds to the tempo the metronome panel shows and steps: the marking it falls under, tap tempo and a slider
- * across the whole range; then the beat row, which is where the accents are drawn, and the one line that says why
- * nothing can be heard where that is so.
+ * The head of the instrument: the tempo itself, large and stepped, the marking it falls under, a slider across the
+ * whole range and the tap button; then the beat row, which is where the accents are drawn, and the one line that says
+ * why nothing can be heard where that is so. What the click is doing is the floating button's, see [MetronomeScreen].
  */
 @Composable
 internal fun MetronomeTempoSection(
@@ -63,19 +69,33 @@ internal fun MetronomeTempoSection(
     val setBpm = { value: Int -> viewModel.updateMetronomeSettings { copy(bpm = MetronomePattern.coerceBpm(value)) } }
     Column(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                modifier = Modifier.weight(1f),
-                text = tempoMarking(bpm),
-                style = MaterialTheme.typography.titleMedium,
-            )
-            TapTempoButton(onTempo = setBpm)
-        }
+        // The tempo is the one number this screen is about, so it is read at arm's length from a music stand rather
+        // than at the size of a label, and the stepper around it is the same pill every other number in the app is
+        // stepped by, grown with it.
+        Stepper(
+            value = bpm.toString(),
+            fontScale = TEMPO_SCALE,
+            height = TEMPO_HEIGHT,
+            isDefault = bpm == MetronomePattern.DEFAULT_BPM,
+            decreaseIcon = painterResource(Res.drawable.ic_subtract),
+            decreaseLabel = stringResource(Res.string.metronome_tempo_decrease),
+            canDecrease = bpm > MetronomePattern.BPM_RANGE.first,
+            onDecrease = { setBpm(bpm - 1) },
+            increaseIcon = painterResource(Res.drawable.ic_add),
+            increaseLabel = stringResource(Res.string.metronome_tempo_increase),
+            canIncrease = bpm < MetronomePattern.BPM_RANGE.last,
+            onIncrease = { setBpm(bpm + 1) },
+            resetLabel = stringResource(Res.string.song_details_tempo_reset),
+            onReset = { setBpm(MetronomePattern.DEFAULT_BPM) },
+            repeatsOnHold = true,
+        )
+        Text(
+            text = tempoMarking(bpm),
+            style = MaterialTheme.typography.titleMedium,
+        )
         val sliderDescription = stringResource(Res.string.metronome_tempo_slider)
         Slider(
             modifier = Modifier.fillMaxWidth().semantics { contentDescription = sliderDescription },
@@ -83,6 +103,7 @@ internal fun MetronomeTempoSection(
             onValueChange = { setBpm(it.roundToInt()) },
             valueRange = MetronomePattern.BPM_RANGE.first.toFloat()..MetronomePattern.BPM_RANGE.last.toFloat(),
         )
+        TapTempoButton(onTempo = setBpm)
     }
     val timeSignature = settings.timeSignatureOrDefault
     SettingsSubsection(
@@ -109,3 +130,7 @@ internal fun MetronomeTempoSection(
         )
     }
 }
+
+/** How much larger than a label the tempo is drawn, and the pill that steps it, see [MetronomeTempoSection]. */
+private const val TEMPO_SCALE = 1.8f
+private val TEMPO_HEIGHT = 64.dp

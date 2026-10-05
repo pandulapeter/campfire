@@ -13,7 +13,6 @@ import com.pandulapeter.campfire.metronome.api.Metronome
 import com.pandulapeter.campfire.metronome.api.model.BeatLevel
 import com.pandulapeter.campfire.metronome.api.model.MetronomeAudioIssue
 import com.pandulapeter.campfire.metronome.api.model.MetronomeBeat
-import com.pandulapeter.campfire.metronome.api.model.MetronomeOrigin
 import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
 import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
 import com.pandulapeter.campfire.metronome.api.model.MetronomeSound
@@ -56,11 +55,11 @@ internal class MetronomeImpl(private val output: AudioOutput) : Metronome {
     private var releaseJob: Job? = null
     private var previewEndJob: Job? = null
 
-    override fun start(pattern: MetronomePattern, origin: MetronomeOrigin) = onEngine {
+    override fun start(pattern: MetronomePattern) = onEngine {
         val playing = _playback.value as? MetronomePlayback.Playing
         if (playing != null) {
             stream?.update(pattern, restartBar = true)
-            _playback.value = playing.copy(pattern = pattern, origin = origin)
+            _playback.value = playing.copy(pattern = pattern)
             return@onEngine
         }
         closeOutput()
@@ -70,7 +69,7 @@ internal class MetronomeImpl(private val output: AudioOutput) : Metronome {
         _playback.value = when (result) {
             is AudioOutputStart.Started -> {
                 activeOutput = output
-                MetronomePlayback.Playing(pattern, origin, result.audioIssue)
+                MetronomePlayback.Playing(pattern, result.audioIssue)
             }
             is AudioOutputStart.Refused -> {
                 stream = null
@@ -79,7 +78,7 @@ internal class MetronomeImpl(private val output: AudioOutput) : Metronome {
             AudioOutputStart.Unavailable -> {
                 silentOutput.start(isPreview = false, createStream = { ClickStream(it, pattern).also { stream -> this.stream = stream } }, listener = listener)
                 activeOutput = silentOutput
-                MetronomePlayback.Playing(pattern, origin, MetronomeAudioIssue.UNAVAILABLE)
+                MetronomePlayback.Playing(pattern, MetronomeAudioIssue.UNAVAILABLE)
             }
         }
         if (_playback.value is MetronomePlayback.Playing) releaseJob = releaseHeardBeats()
