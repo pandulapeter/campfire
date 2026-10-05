@@ -116,10 +116,12 @@ import com.pandulapeter.campfire.presentation.ui.components.rememberSectionHeade
 import com.pandulapeter.campfire.presentation.ui.components.songCardPadding
 import com.pandulapeter.campfire.presentation.ui.components.searchTravelSpec
 import com.pandulapeter.campfire.presentation.ui.components.underAppBar
+import com.pandulapeter.campfire.presentation.ui.metronome.effectiveTempo
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableContent
 import com.pandulapeter.campfire.presentation.ui.platform.isDesktopPlatform
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.effectiveCapo
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.songLabelActions
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
@@ -345,6 +347,8 @@ private fun SongList(
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val songFilter by viewModel.songFilter.collectAsStateWithLifecycle()
     val transpositions by viewModel.transpositions.collectAsStateWithLifecycle()
+    val capos by viewModel.capos.collectAsStateWithLifecycle()
+    val tempos by viewModel.tempos.collectAsStateWithLifecycle()
     val labelsOnEverySong by viewModel.labelsOnEverySong.collectAsStateWithLifecycle()
     val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     val songFileNamesInSetlists by viewModel.songFileNamesInSetlists.collectAsStateWithLifecycle()
@@ -483,12 +487,15 @@ private fun SongList(
                     contentType = { _, _ -> "song" },
                 ) { songIndex, song ->
                     val actionsMenuState = rememberOverflowMenuState()
-                    // A song opened from the library is transposed in the preferences, so that is the only amount this
-                    // list knows about: the setlists each hold their own. Remembered, since the row is composed again as
-                    // every scroll starts and ends, and the key is a whole transposition to work out again.
+                    // A song opened from the library is transposed, capoed and timed in the preferences, so those are
+                    // the only values this list knows about: the setlists each hold their own. The key is remembered,
+                    // since the row is composed again as every scroll starts and ends and it is a whole transposition
+                    // to work out again.
                     val transposition = transpositions[song.fileName, null]
-                    val key = remember(song.key, song.transpose, transposition, chordSpelling) {
-                        viewModel.renderKey(song, transposition, chordSpelling)
+                    val capo = effectiveCapo(song = song, setlistFileName = null, capos = capos)
+                    val tempo = effectiveTempo(song = song, setlistFileName = null, tempos = tempos)
+                    val key = remember(song.key, song.transpose, transposition, capo, chordSpelling) {
+                        viewModel.renderKey(song = song, transposition = transposition, capo = capo.fret, spelling = chordSpelling)
                     }
                     // Worked out here rather than inside the row's actions, so that they capture what changes for this row
                     // alone rather than the set that is new on every write to any setlist.
@@ -504,6 +511,7 @@ private fun SongList(
                             song = song,
                             cardPadding = songCardPadding(songIndex, columnCount),
                             key = key,
+                            tempo = tempo.displayedBpm,
                             shouldShowChords = shouldShowChords,
                             coverArtUrl = song.coverArtUrl?.takeIf { isCoverArtEnabled },
                             labelsOnEverySong = labelsOnEverySong,

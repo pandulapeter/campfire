@@ -139,6 +139,8 @@ import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedLazy
 import com.pandulapeter.campfire.presentation.ui.components.rememberSectionHeaderState
 import com.pandulapeter.campfire.presentation.ui.components.songCardPadding
 import com.pandulapeter.campfire.presentation.ui.components.underAppBar
+import com.pandulapeter.campfire.presentation.ui.metronome.effectiveTempo
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.effectiveCapo
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.localization.pluralStringResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -315,6 +317,8 @@ private fun SetlistList(
     val setlists by viewModel.setlists.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val transpositions by viewModel.transpositions.collectAsStateWithLifecycle()
+    val capos by viewModel.capos.collectAsStateWithLifecycle()
+    val tempos by viewModel.tempos.collectAsStateWithLifecycle()
     val labelsOnEverySong by viewModel.labelsOnEverySong.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val hasLoadedLibrary = rememberHasLoadedLibrary(isLoading)
@@ -610,13 +614,24 @@ private fun SetlistList(
                                     song = entry.song,
                                     index = row.index,
                                     cardPadding = songCardPadding(rowIndex, columnCount),
-                                    // The setlist's own transposition of this song, which is why the same song
-                                    // can be listed in one key here and in another one two setlists down.
+                                    // The setlist's own transposition and capo for this song, which is why the same
+                                    // song can be listed in one key here and in another one two setlists down.
                                     key = viewModel.renderKey(
                                         song = entry.song,
                                         transposition = transpositions[entry.song.fileName, setlistWithSongs.setlist.fileName],
+                                        capo = effectiveCapo(
+                                            song = entry.song,
+                                            setlistFileName = setlistWithSongs.setlist.fileName,
+                                            capos = capos,
+                                        ).fret,
                                         spelling = chordSpelling,
                                     ),
+                                    // And the setlist's own tempo, for the same reason.
+                                    tempo = effectiveTempo(
+                                        song = entry.song,
+                                        setlistFileName = setlistWithSongs.setlist.fileName,
+                                        tempos = tempos,
+                                    ).displayedBpm,
                                     shouldShowChords = shouldShowChords,
                                     duration = entry.song.duration,
                                     coverArtUrl = entry.song.coverArtUrl?.takeIf { isCoverArtEnabled },

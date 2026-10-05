@@ -344,7 +344,7 @@
     <string name="metronome_sound_click">Click</string>
     <string name="metronome_sound_woodblock">Woodblock</string>
     <string name="metronome_sound_beep">Beep</string>
-    <string name="metronome_sound_sticks">Sticks</string>
+    <string name="metronome_sound_hi_hat">Hi-hat</string>
     <string name="metronome_sound_cowbell">Cowbell</string>
     <string name="metronome_volume">Volume</string>
     <string name="metronome_flash">Flash on the beat</string>
@@ -423,6 +423,7 @@
     <string name="song_details_scroll_up">Scroll up</string>
     <string name="song_details_scroll_down">Scroll down</string>
     <string name="song_details_song_position">%1$d / %2$d</string>
+    <string name="song_details_transposition">Transposition</string>
     <string name="song_details_transpose_up">Transpose up</string>
     <string name="song_details_transpose_down">Transpose down</string>
     <string name="song_details_transpose_reset">Reset transposition</string>

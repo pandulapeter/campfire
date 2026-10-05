@@ -37,7 +37,7 @@ import com.pandulapeter.campfire.presentation.resources.metronome_sound
 import com.pandulapeter.campfire.presentation.resources.metronome_sound_beep
 import com.pandulapeter.campfire.presentation.resources.metronome_sound_click
 import com.pandulapeter.campfire.presentation.resources.metronome_sound_cowbell
-import com.pandulapeter.campfire.presentation.resources.metronome_sound_sticks
+import com.pandulapeter.campfire.presentation.resources.metronome_sound_hi_hat
 import com.pandulapeter.campfire.presentation.resources.metronome_sound_woodblock
 import com.pandulapeter.campfire.presentation.resources.metronome_subdivision
 import com.pandulapeter.campfire.presentation.resources.metronome_subdivision_eighths
@@ -147,7 +147,7 @@ private fun MetronomeSound.label() = stringResource(
         MetronomeSound.CLICK -> Res.string.metronome_sound_click
         MetronomeSound.WOODBLOCK -> Res.string.metronome_sound_woodblock
         MetronomeSound.BEEP -> Res.string.metronome_sound_beep
-        MetronomeSound.STICKS -> Res.string.metronome_sound_sticks
+        MetronomeSound.HI_HAT -> Res.string.metronome_sound_hi_hat
         MetronomeSound.COWBELL -> Res.string.metronome_sound_cowbell
     }
 )

@@ -109,6 +109,7 @@ import com.pandulapeter.campfire.presentation.resources.setlists_no_data
 import com.pandulapeter.campfire.presentation.resources.setlists_no_data_hint
 import com.pandulapeter.campfire.presentation.resources.setlists_no_search_results
 import com.pandulapeter.campfire.presentation.resources.setlists_no_search_results_hint
+import com.pandulapeter.campfire.presentation.resources.song_details_tempo
 import com.pandulapeter.campfire.presentation.resources.songs_all_hidden
 import com.pandulapeter.campfire.presentation.resources.songs_all_hidden_hint
 import com.pandulapeter.campfire.presentation.resources.songs_empty_hint
@@ -128,8 +129,11 @@ import kotlin.time.Duration
 /**
  * @param index The song's place in the setlist it is listed in, prefixed to its title.
  *   Null on the screens where a song is not in an order of anyone's making and a number would only claim it was.
- * @param key The key the song sounds in where it is listed, which is a different key in every setlist that
- *   transposes it (`CampfireViewModel.renderKey`), drawn next to the artist. Null for a file that declares none.
+ * @param key The key the song sounds in where it is listed, the transposition and the capo of that listing applied,
+ *   which is a different key in every setlist that plays it differently (`CampfireViewModel.renderKey`), drawn next to
+ *   the artist. Null for a file that declares none.
+ * @param tempo The tempo the song is played at where it is listed, the override of that listing applied. Null where
+ *   neither the file nor an override names one, since the metronome's default says nothing about this song.
  * @param shouldShowChords False under lyrics only mode, where the row says nothing about chords at all: not the
  *   key, and not the "Lyrics only" marker either, which only tells this song from the others while the others are
  *   showing chords.
@@ -159,6 +163,7 @@ internal fun SongListItem(
     song: Song,
     index: Int? = null,
     key: String? = null,
+    tempo: Int? = null,
     shouldShowChords: Boolean = true,
     duration: Duration? = null,
     labelsOnEverySong: CampfireViewModel.LabelsOnEverySong,
@@ -194,6 +199,15 @@ internal fun SongListItem(
 
         else -> null
     }
+    // A number of its own rather than a second emphasized value next to the key: the key is the one thing a player
+    // has to find on a card at a glance, and a second accent colored item beside it halves that. It keeps the
+    // duration's muted color, since the two are what a set is timed by.
+    val tempoNote = tempo?.let {
+        SongListItemNote(
+            text = stringResource(Res.string.song_details_tempo, it.toString()),
+            isEmphasized = false,
+        )
+    }
     // Remembered, so that a row composed again with the same song hands the same lists on and the labels under it skip.
     val languages = remember(song.languages, labelsOnEverySong, shouldShowLabels) {
         if (shouldShowLabels) song.languages.filterNot { it in labelsOnEverySong.languages } else emptyList()
@@ -218,7 +232,7 @@ internal fun SongListItem(
             // here shares the title's line: a title is the longest thing on the row and the one that must never be
             // pushed out of sight, while the artist is short enough to leave the key room next to it. The languages and
             // tags go under both, since a row of those is as long as somebody chose to make it.
-            supportingContent = if (song.artist.isBlank() && note == null && displayedDuration == null) {
+            supportingContent = if (song.artist.isBlank() && note == null && tempoNote == null && displayedDuration == null) {
                 null
             } else {
                 {
@@ -233,55 +247,17 @@ internal fun SongListItem(
                                 overflow = TextOverflow.Ellipsis,
                             )
                         }
-                        // The note changes under the reader: a transposition renames the key, and lyrics only
-                        // mode takes the place away altogether. So it is crossfaded where it stands and the line
-                        // closes up around it, rather than the row being redrawn around the change. The color is
-                        // resolved inside rather than carried by the state, since the scheme is interpolated on
-                        // every frame of a theme change and each of those frames would start another crossfade.
-                        AnimatedContent(
-                            targetState = note,
-                            transitionSpec = { fadeIn() togetherWith fadeOut() },
-                        ) { currentNote ->
-                            if (currentNote != null) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                ) {
-                                    // The dot separates the note from the artist, so a song that names no artist
-                                    // starts the line with the note itself rather than with a separator before
-                                    // nothing. Neither it nor the note carries padding of its own: the glyph is a
-                                    // 4dp dot in the middle of a 24dp icon, so the box it sits in is the gap
-                                    // already, and the same gap on both sides of it - anything added here is
-                                    // added to one side only. A narrow window shrinks the box, and with it both gaps,
-                                    // since there every dp of the line is one more letter of the artist.
-                                    if (song.artist.isNotBlank()) {
-                                        Icon(
-                                            modifier = Modifier.size(if (isNarrowSongCardWindow) NARROW_DOT_SIZE else DOT_SIZE),
-                                            painter = painterResource(Res.drawable.ic_dot),
-                                            contentDescription = null,
-                                        )
-                                    }
-                                    Text(
-                                        modifier = Modifier.semantics { contentDescription = currentNote.description },
-                                        text = currentNote.text,
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = if (currentNote.isEmphasized) LocalSecondAccentColor.current else MaterialTheme.colorScheme.onSurfaceVariant,
-                                    )
-                                }
-                            }
-                        }
+                        SongCardNote(note = note, hasPrecedingContent = song.artist.isNotBlank())
+                        SongCardNote(note = tempoNote, hasPrecedingContent = song.artist.isNotBlank() || note != null)
                         if (displayedDuration != null) {
-                            // Follows the note, which fades and closes up where it stands rather than leaving the line
+                            // Follows the notes, which fade and close up where they stand rather than leaving the line
                             // in one frame, so the duration slides once instead of jumping and then sliding.
                             AnimatedVisibility(
-                                visible = song.artist.isNotBlank() || note != null,
+                                visible = song.artist.isNotBlank() || note != null || tempoNote != null,
                                 enter = fadeIn() + expandHorizontally(),
                                 exit = fadeOut() + shrinkHorizontally(),
                             ) {
-                                Icon(
-                                    modifier = Modifier.size(if (isNarrowSongCardWindow) NARROW_DOT_SIZE else DOT_SIZE),
-                                    painter = painterResource(Res.drawable.ic_dot),
-                                    contentDescription = null,
-                                )
+                                SongCardNoteDot()
                             }
                             Text(
                                 text = displayedDuration,
@@ -330,10 +306,10 @@ internal fun draggedListItemContainerColor(isBeingDragged: Boolean): Color {
 }
 
 /**
- * The one thing a song row says about chords, next to the artist: the key the song sounds in where it is listed,
- * drawn in the accent color the song details header keeps for what is played, or that the file has no chords at all.
- * Never both, since the viewer names no key for a song there is nothing to play and a row that named one would be
- * contradicting the screen it opens.
+ * One of the things a song row says about how the song is played, after the artist: the key it sounds in where it is
+ * listed, drawn in the accent color the song details header keeps for what is played, or that the file has no chords
+ * at all - never both, since the viewer names no key for a song there is nothing to play and a row that named one
+ * would be contradicting the screen it opens - and the tempo it is played at.
  *
  * @param isEmphasized Whether the note is drawn in the accent color, which is what a key is.
  * @param description What the note is read out as, since a key is two letters that say nothing on their own.
@@ -342,6 +318,57 @@ private data class SongListItemNote(
     val text: String,
     val isEmphasized: Boolean,
     val description: String = text,
+)
+
+/**
+ * A [SongListItemNote] where the song card's second line has reached it, with the dot that separates it from whatever
+ * stands in front of it.
+ *
+ * The note changes under the reader: a transposition or a capo renames the key, a stepper in a setlist moves the
+ * tempo, and lyrics only mode takes the key away altogether. So it is crossfaded where it stands and the line closes
+ * up around it, rather than the row being redrawn around the change. The color is resolved inside rather than carried
+ * by the state, since the scheme is interpolated on every frame of a theme change and each of those frames would
+ * start another crossfade.
+ *
+ * @param hasPrecedingContent Whether anything is drawn before it, which is what the dot would separate it from: a
+ *   song that names no artist starts the line with its key itself rather than with a separator before nothing.
+ */
+@Composable
+private fun SongCardNote(
+    note: SongListItemNote?,
+    hasPrecedingContent: Boolean,
+) = AnimatedContent(
+    targetState = note,
+    transitionSpec = { fadeIn() togetherWith fadeOut() },
+) { currentNote ->
+    if (currentNote != null) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (hasPrecedingContent) {
+                SongCardNoteDot()
+            }
+            Text(
+                modifier = Modifier.semantics { contentDescription = currentNote.description },
+                text = currentNote.text,
+                style = MaterialTheme.typography.labelMedium,
+                color = if (currentNote.isEmphasized) LocalSecondAccentColor.current else MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+/**
+ * What separates two values on a song card's second line. It carries no padding of its own: the glyph is a 4dp dot in
+ * the middle of a 24dp icon, so the box it sits in is the gap already, and the same gap on both sides of it - anything
+ * added here is added to one side only. A narrow window shrinks the box, and with it both gaps, since there every dp
+ * of the line is one more letter of the artist.
+ */
+@Composable
+private fun SongCardNoteDot() = Icon(
+    modifier = Modifier.size(if (isNarrowSongCardWindow) NARROW_DOT_SIZE else DOT_SIZE),
+    painter = painterResource(Res.drawable.ic_dot),
+    contentDescription = null,
 )
 
 /**

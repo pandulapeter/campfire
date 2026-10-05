@@ -72,9 +72,9 @@ import com.pandulapeter.campfire.presentation.resources.song_details_metadata_ed
 import com.pandulapeter.campfire.presentation.resources.song_details_song_info
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo
 import com.pandulapeter.campfire.presentation.resources.song_details_time
+import com.pandulapeter.campfire.presentation.resources.song_details_transposition
 import com.pandulapeter.campfire.presentation.resources.song_details_year
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_capo
-import com.pandulapeter.campfire.presentation.resources.song_editor_insert_key
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_tempo
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_time
 import com.pandulapeter.campfire.presentation.resources.songs_key
@@ -203,9 +203,10 @@ private fun SongPlayingMetadata(
 }
 
 /**
- * The four things that decide how the song is played, each next to the control that sets it: the key with the
- * transposition stepper, the capo and the tempo with their own, the tempo's pill ending in the segment that taps one
- * in, and the time signature as the value that opens the sheet where it is picked. They flow like the chips of the card
+ * The four things that decide how the song is played, each next to the control that sets it: the transposition, which
+ * is named as such and reads the key it takes the chords on the page to, the capo and the tempo with their own
+ * steppers, the tempo's pill ending in the segment that taps one in, and the time signature as the value that opens
+ * the sheet where it is picked. They flow like the chips of the card
  * above them, so a narrow column stacks them and a wide one puts them side by side. Starting a click is the app bar's
  * button, which is in reach wherever the song has been scrolled to; this row only says what it would play.
  *
@@ -233,7 +234,7 @@ private fun SongPlayingControlsRow(
         itemVerticalAlignment = Alignment.CenterVertically,
     ) {
         controls.key?.let { key ->
-            PlayingControl(label = stringResource(Res.string.song_editor_insert_key), fontScale = fontScale) {
+            PlayingControl(label = stringResource(Res.string.song_details_transposition), fontScale = fontScale) {
                 TranspositionControls(
                     transposition = key.transposition,
                     key = key.key,

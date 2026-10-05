@@ -344,7 +344,7 @@
     <string name="metronome_sound_click">Kattanás</string>
     <string name="metronome_sound_woodblock">Fadob</string>
     <string name="metronome_sound_beep">Sípolás</string>
-    <string name="metronome_sound_sticks">Dobverők</string>
+    <string name="metronome_sound_hi_hat">Lábcin</string>
     <string name="metronome_sound_cowbell">Kolomp</string>
     <string name="metronome_volume">Hangerő</string>
     <string name="metronome_flash">Villanás ütésre</string>
@@ -423,6 +423,7 @@
     <string name="song_details_scroll_up">Görgetés felfelé</string>
     <string name="song_details_scroll_down">Görgetés lefelé</string>
     <string name="song_details_song_position">%1$d / %2$d</string>
+    <string name="song_details_transposition">Transzponálás</string>
     <string name="song_details_transpose_up">Transzponálás felfelé</string>
     <string name="song_details_transpose_down">Transzponálás lefelé</string>
     <string name="song_details_transpose_reset">Transzponálás visszaállítása</string>

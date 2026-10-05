@@ -19,7 +19,7 @@ enum class MetronomeSound(val id: String) {
     CLICK("click"),
     WOODBLOCK("woodblock"),
     BEEP("beep"),
-    STICKS("sticks"),
+    HI_HAT("hi_hat"),
     COWBELL("cowbell");
 
     companion object {

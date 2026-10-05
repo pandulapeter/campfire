@@ -265,9 +265,10 @@ localized in both languages.
   shown alphabetically.
   From the editor those buttons change the text being typed rather than the file, which only Save writes.
   Opening a link is the user's browser making the request, not Campfire.
-- **How a song is played is set in the song itself**: the key, the capo, the tempo and the time signature — the four
-  values that decide what is played rather than what the song is — are the first section of the song details screen's
-  own grid, each next to the control that sets it (the transposition stepper, the capo stepper, the tempo stepper whose
+- **How a song is played is set in the song itself**: the transposition, the capo, the tempo and the time signature —
+  the four values that decide what is played rather than what the song is — are the first section of the song details
+  screen's own grid, each next to the control that sets it (the transposition stepper, which is named **Transposition**
+  and reads the amount next to the key it takes the chords on the page to, the capo stepper, the tempo stepper whose
   pill ends in a Tap segment, since tapping a tempo in sets the very number the stepper steps, and the time signature,
   which opens a sheet of bars to pick from). They are part of the song, so they
   grow and shrink with its text, which is also why the text has a floor: `UserPreferences.MIN_FONT_SCALE` is the size
@@ -280,7 +281,10 @@ localized in both languages.
   colored text, as does the editor's preview, where the text being typed is what says them. Lyrics-only mode leaves
   out the line and the controls alike. What is left in the app bar is about the song rather than about how it is
   played — the click, the About the song sheet, the setlist assignments and the menu — with the text size, which is
-  the reader's own, at the end of that menu.
+  the reader's own, at the end of that menu. **The key the band actually hears is named in the app bar**, after the
+  artist and the way a song card names it: the transposition *and* the capo applied, so it is the key the song sounds
+  in rather than the one the chords on the page spell, which is the Transposition control's — the two read differently
+  wherever the capo is not zero. The tempo the click would play at follows it there, as it does on a card.
 - **The app is shipped with two songs and one setlist**, in
   `presentation/src/commonMain/composeResources/files/demo`: public domain campfire standards, bundled as the plain
   ChordPro and setlist files they are and reaching the library through the ordinary import, so they collide, are

@@ -23,7 +23,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -43,6 +42,7 @@ import com.pandulapeter.campfire.presentation.ui.components.ScrollPosition
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedScrollState
 import com.pandulapeter.campfire.presentation.ui.metronome.PlayStopMark
+import com.pandulapeter.campfire.presentation.ui.metronome.playStopMorphSpec
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsPage
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsWidthLayout
 
@@ -106,13 +106,12 @@ internal fun MetronomeScreen(
 /**
  * What the click is started and stopped with: one wide button at the bottom of the screen, with the morphing mark and
  * the word for what it does. Its corners round all the way into a pill while nothing is playing and square off as the
- * click runs, on the same spring the mark morphs with, so the whole button says which of the two states it is in from
- * across a room.
+ * click runs, on the same timing the mark morphs with (`playStopMorphSpec`), so the whole button says which of the two
+ * states it is in from across a room.
  *
  * It is capped at [PLAY_BUTTON_MAX_WIDTH] and centered, like the tempo above it: a maximized window would otherwise
  * hand the one control of the screen a button a meter wide.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun MetronomePlayButton(
     modifier: Modifier = Modifier,
@@ -121,7 +120,7 @@ private fun MetronomePlayButton(
 ) {
     val cornerRadius by animateDpAsState(
         if (isPlaying) PLAY_BUTTON_PLAYING_RADIUS else PLAY_BUTTON_HEIGHT / 2,
-        MaterialTheme.motionScheme.fastSpatialSpec(),
+        playStopMorphSpec(),
     )
     Button(
         modifier = modifier

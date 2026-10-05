@@ -68,7 +68,7 @@ internal object ClickSynthesizer {
                 attackSeconds = 0.002,
                 releaseSeconds = 0.01,
             )
-            MetronomeSound.STICKS -> noise(
+            MetronomeSound.HI_HAT -> noise(
                 sampleRate = sampleRate,
                 durationSeconds = 0.03,
                 decaySeconds = 0.005,
@@ -108,7 +108,7 @@ internal object ClickSynthesizer {
         }
     }
 
-    /** Noise passed through a first difference, which takes out the low end and leaves the crack of two sticks. */
+    /** Noise passed through a first difference, which takes out the low end and leaves the sizzle of a closed hi-hat. */
     private fun noise(
         sampleRate: Int,
         durationSeconds: Double,

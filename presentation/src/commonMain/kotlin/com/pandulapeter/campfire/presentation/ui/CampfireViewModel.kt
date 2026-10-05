@@ -840,7 +840,7 @@ class CampfireViewModel(
 
     private val capoWriteJobs = mutableMapOf<CapoKey, Job>()
 
-    /** Every song's capo override, as the song details screen reads it. */
+    /** Every song's capo override, as the song details screen and the lists that name a sounding key read it. */
     internal val capos = combine(storedCapos, pendingCapos) { stored, pending ->
         pending.entries.fold(stored) { capos, (key, value) -> capos.with(key, value.fret) }
     }.asState(Capos())
@@ -2264,24 +2264,28 @@ class CampfireViewModel(
 
     /**
      * The key a song sounds in once everything that moves it has been applied: the file's own `{transpose}`, the
-     * transposition the reader picked for it and the spelling they read chords in. Null for a file that declares
-     * no `{key}`, which the lists then say nothing about.
+     * transposition the reader picked for it, the fret it is capoed at and the spelling they read chords in. Null for
+     * a file that declares no `{key}`, which the lists then say nothing about.
      *
      * It is what [renderSong] arrives at, worked out without the song's text: the library's metadata is read at
      * startup and its lyrics are not, so a list that had to parse a file to name its key would be reading the whole
      * library a second time to fill in one line of each row. Both use cases rewrite the key of whatever song they
      * are handed, so what they are handed here is a song that is nothing but that key.
+     *
+     * @param capo The fret the song is capoed at, which raises everything fretted above it by that many semitones.
+     * The chords on the page are the shapes the player frets and are left where they are, so this is the one of the
+     * four that moves the sounding key without moving a single chord: zero is what names the written key instead.
      */
-    fun renderKey(song: Song, transposition: Int, spelling: UserPreferences.ChordSpelling) =
-        renderKey(key = song.key, transpose = song.transpose, transposition = transposition, spelling = spelling)
+    fun renderKey(song: Song, transposition: Int, capo: Int, spelling: UserPreferences.ChordSpelling) =
+        renderKey(key = song.key, transpose = song.transpose, transposition = transposition, capo = capo, spelling = spelling)
 
     /**
-     * [renderKey] for a song known only by the two things it depends on: the [key] its file declares and the
-     * [transpose] it opens with.
+     * [renderKey] for a song known only by the three things it depends on: the [key] its file declares, the
+     * [transpose] it opens with and the [capo] it is played at.
      */
-    fun renderKey(key: String?, transpose: Int, transposition: Int, spelling: UserPreferences.ChordSpelling) = key?.let {
+    fun renderKey(key: String?, transpose: Int, transposition: Int, capo: Int, spelling: UserPreferences.ChordSpelling) = key?.let {
         val keyOnly = ChordProSong(metadata = ChordProMetadata(key = it), blocks = emptyList())
-        convertChordProNotation(transposeChordPro(keyOnly, transpose + transposition, spelling.accidentals), spelling).metadata.key
+        convertChordProNotation(transposeChordPro(keyOnly, transpose + transposition + capo, spelling.accidentals), spelling).metadata.key
     }
 
     /** Formats the current editor draft without saving it or changing its chord notation. */

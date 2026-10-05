@@ -11,7 +11,10 @@ package com.pandulapeter.campfire.presentation.ui.metronome
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -26,7 +29,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -38,8 +40,11 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -86,6 +91,7 @@ import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filter
+import kotlin.math.floor
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -93,7 +99,6 @@ import org.jetbrains.compose.resources.painterResource
  * (one of them doubled) travel to the square's four, so the change reads as one shape becoming another rather than as
  * two icons swapping.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun PlayStopMark(
     modifier: Modifier = Modifier,
@@ -101,8 +106,34 @@ internal fun PlayStopMark(
     size: Dp = 24.dp,
     color: Color = LocalContentColor.current,
 ) {
-    val progress by animateFloatAsState(if (isPlaying) 1f else 0f, MaterialTheme.motionScheme.fastSpatialSpec())
-    Canvas(modifier = modifier.size(size)) {
+    // The mark turns the way the setlist assignments star does, a quarter turn clockwise whichever way it is going, but
+    // easing in rather than leaning back and overshooting: a press that starts or stops the click is answered at once
+    // and ends on the beat, where a bounce would blur when it took effect. The morph runs over the same turn. A square looks the same a quarter turn back and the triangle a whole turn back, so a turn that starts
+    // from rest is first snapped to the angle it would have to start from to end upright, which is what lets stop turn
+    // into play clockwise too. A change that arrives mid-turn carries on clockwise from wherever the mark is, to the next
+    // angle the new shape rests upright at.
+    val progress by animateFloatAsState(if (isPlaying) 1f else 0f, playStopMorphSpec())
+    val turn = remember { Animatable(0f) }
+    var turnTarget by remember { mutableFloatStateOf(0f) }
+    var turnedFor by remember { mutableStateOf(isPlaying) }
+    LaunchedEffect(isPlaying) {
+        if (turnedFor != isPlaying) {
+            turnedFor = isPlaying
+            if (turn.value == turnTarget) {
+                turnTarget = if (isPlaying) 0f else -PLAY_STOP_TURN
+                turn.snapTo(turnTarget)
+            }
+            turnTarget = if (isPlaying) turnTarget + PLAY_STOP_TURN else (floor(turnTarget / FULL_TURN) + 1) * FULL_TURN
+            turn.animateTo(
+                targetValue = turnTarget,
+                animationSpec = tween(
+                    durationMillis = PLAY_STOP_TURN_DURATION,
+                    easing = FastOutLinearInEasing,
+                ),
+            )
+        }
+    }
+    Canvas(modifier = modifier.size(size).graphicsLayer { rotationZ = turn.value }) {
         val unit = this.size.minDimension / 24f
         val path = Path()
         PLAY_CORNERS.indices.forEach { index ->
@@ -113,6 +144,17 @@ internal fun PlayStopMark(
         drawPath(path, color)
     }
 }
+
+/**
+ * The timing of [PlayStopMark]'s morph, which the Metronome tab's button squares its corners off on as well: the length of
+ * the turn, on an ordinary easing, since easing in as well would leave the shape unchanged until the turn is nearly over.
+ */
+internal fun <T> playStopMorphSpec(): FiniteAnimationSpec<T> = tween(durationMillis = PLAY_STOP_TURN_DURATION)
+
+/** How far [PlayStopMark] turns between its two states, in degrees, and how long that takes in milliseconds. */
+private const val PLAY_STOP_TURN = 90f
+private const val PLAY_STOP_TURN_DURATION = 400
+private const val FULL_TURN = 360f
 
 private fun lerp(start: Offset, stop: Offset, fraction: Float) = Offset(
     x = start.x + (stop.x - start.x) * fraction,
@@ -141,7 +183,9 @@ internal fun MetronomeButton(
     onClick: () -> Unit,
 ) {
     val pulse = remember { Animatable(0f) }
-    val shouldFlash by rememberUpdatedState(isFlashEnabled && isPlaying)
+    // Not gated on isPlaying, as the beat row is not: the first beat can be heard before the composition knows the click
+    // plays, and the engine emits no beat while it does not.
+    val shouldFlash by rememberUpdatedState(isFlashEnabled)
     LaunchedEffect(beats) {
         // The latest beat cuts the fade of the one before it short, so that a fade longer than a beat of a fast tempo
         // never leaves the pulse behind the click.

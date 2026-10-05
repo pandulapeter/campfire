@@ -77,7 +77,9 @@ internal fun BeatRow(
 ) {
     var litBeat by remember { mutableIntStateOf(-1) }
     val flash = remember { Animatable(0f) }
-    val shouldFlash by rememberUpdatedState(isFlashEnabled && isPlaying)
+    // Not gated on isPlaying: the engine only emits beats while it plays, and a click started on an output with little
+    // latency is heard before the composition has caught up with it playing, which would leave its first beat dark.
+    val shouldFlash by rememberUpdatedState(isFlashEnabled)
     LaunchedEffect(beats) {
         // The latest beat cuts the fade of the one before it short, so that a fade longer than a beat of a fast tempo
         // never leaves the row behind the click.

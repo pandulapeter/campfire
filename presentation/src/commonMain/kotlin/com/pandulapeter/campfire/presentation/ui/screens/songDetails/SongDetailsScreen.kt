@@ -80,6 +80,8 @@ import androidx.compose.ui.keepScreenOn
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -95,6 +97,7 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.back
 import com.pandulapeter.campfire.presentation.resources.ic_back
+import com.pandulapeter.campfire.presentation.resources.ic_dot
 import com.pandulapeter.campfire.presentation.resources.ic_error
 import com.pandulapeter.campfire.presentation.resources.ic_move_down
 import com.pandulapeter.campfire.presentation.resources.ic_move_up
@@ -116,7 +119,9 @@ import com.pandulapeter.campfire.presentation.resources.song_details_scroll_to_t
 import com.pandulapeter.campfire.presentation.resources.song_details_scroll_up
 import com.pandulapeter.campfire.presentation.resources.song_details_song_info
 import com.pandulapeter.campfire.presentation.resources.song_details_song_position
+import com.pandulapeter.campfire.presentation.resources.song_details_tempo
 import com.pandulapeter.campfire.presentation.resources.song_details_text_size
+import com.pandulapeter.campfire.presentation.resources.songs_key
 import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
 import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeButton
@@ -139,7 +144,9 @@ import com.pandulapeter.campfire.presentation.ui.components.overlappingAction
 import com.pandulapeter.campfire.presentation.ui.components.SetlistAssignmentsButton
 import com.pandulapeter.campfire.presentation.ui.components.SongActions
 import com.pandulapeter.campfire.presentation.ui.components.setlistAssignmentsAction
+import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
+import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -416,6 +423,22 @@ internal fun SongDetailsScreen(
                     targetState = currentSong,
                     transitionSpec = { fadeIn() togetherWith fadeOut() },
                 ) { song ->
+                    // What the song sounds like where it is being read, the way a song card says it: the key with the
+                    // transposition and the capo applied, so this is the key the band hears rather than the one the
+                    // chords on the page spell, and the tempo the click would play at. Worked out for the song this
+                    // content was composed for rather than for the current one, since a crossfade between two songs
+                    // draws both at once. Lyrics only mode says nothing about either, as it says nothing in a row.
+                    val headerKey = song?.takeIf { shouldShowChords && it.hasChords }?.let {
+                        viewModel.renderKey(
+                            song = it,
+                            transposition = transpositions[it.fileName, destination.setlistFileName],
+                            capo = effectiveCapo(song = it, setlistFileName = destination.setlistFileName, capos = capos).fret,
+                            spelling = chordSpelling,
+                        )
+                    }
+                    val headerTempo = song
+                        ?.let { effectiveTempo(song = it, setlistFileName = destination.setlistFileName, tempos = tempos).displayedBpm }
+                        ?.let { stringResource(Res.string.song_details_tempo, it.toString()) }
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
@@ -440,13 +463,33 @@ internal fun SongDetailsScreen(
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
                             )
-                            Text(
-                                text = song?.artist.orEmpty(),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                // Drawn for every song, blank or not, so that the bar is two lines tall whatever the
+                                // song says about itself: the whole title block is what the cover beside it is as tall
+                                // as, and a bar that changed height as the pager moved from a song with an artist to
+                                // one without would take the lyrics with it.
+                                Text(
+                                    modifier = Modifier.weight(1f, fill = false),
+                                    text = song?.artist.orEmpty(),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                                SongHeaderNote(
+                                    text = headerKey,
+                                    description = headerKey?.let { textResource(Res.string.songs_key, it) },
+                                    isEmphasized = true,
+                                    hasPrecedingContent = song?.artist?.isNotBlank() == true,
+                                )
+                                SongHeaderNote(
+                                    text = headerTempo,
+                                    isEmphasized = false,
+                                    hasPrecedingContent = song?.artist?.isNotBlank() == true || headerKey != null,
+                                )
+                            }
                         }
                     }
                 }
@@ -1147,6 +1190,52 @@ private suspend fun ScrollState.scrollByKeyStep(direction: Float) = animateScrol
 )
 
 /**
+ * One of the things the app bar says about how the song on screen is played, after the artist and separated from it by
+ * the dot a song card uses: the key it sounds in, in the accent color that color is kept for, and the tempo it is
+ * played at. Crossfaded where it stands and the line closing up around it, since both change under the reader — a
+ * transposition, a capo or a tempo stepped in the song's own first section, a preference synced in from another device
+ * — and since lyrics only mode takes the key away altogether.
+ *
+ * A 16dp dot rather than the cards' 24dp one: the two lines of the title are exactly as tall as the cover beside them,
+ * and a 24dp box on the lower one grows the bar and with it the room the lyrics are laid out in.
+ *
+ * @param text Null leaves the place empty, which is what a song that names no key or tempo gets.
+ * @param description What it is read out as, where the text alone says nothing: a key is two letters, while a tempo
+ *   already reads as a tempo.
+ * @param hasPrecedingContent Whether anything stands in front of it for the dot to separate it from.
+ */
+@Composable
+private fun SongHeaderNote(
+    text: String?,
+    isEmphasized: Boolean,
+    hasPrecedingContent: Boolean,
+    description: String? = null,
+) = AnimatedContent(
+    targetState = text,
+    transitionSpec = { fadeIn() togetherWith fadeOut() },
+) { currentText ->
+    if (currentText != null) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (hasPrecedingContent) {
+                Icon(
+                    modifier = Modifier.size(APP_BAR_NOTE_DOT_SIZE),
+                    painter = painterResource(Res.drawable.ic_dot),
+                    contentDescription = null,
+                )
+            }
+            Text(
+                modifier = if (description == null) Modifier else Modifier.semantics { contentDescription = description },
+                text = currentText,
+                style = MaterialTheme.typography.labelMedium,
+                color = if (isEmphasized) LocalSecondAccentColor.current else MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+/**
  * The app bar's title as the touch target of what the caller does with a tap on it — scrolling the song back to its
  * top, the way tapping the bar does on a phone, and opening the sheet of what the song is once it is already there.
  * It is the whole of the bar that nothing else takes: as wide as the room the bar leaves the title and as tall
@@ -1304,6 +1393,9 @@ private val APP_BAR_ACTION_WIDTH = 48.dp
 /** As tall as the title and the artist next to it: a titleMedium and a bodySmall line. The editor's bar shares it. */
 internal val APP_BAR_COVER_SIZE = 40.dp
 internal val APP_BAR_COVER_GAP = 12.dp
+
+/** The dot that separates the key and the tempo from the artist, see [SongHeaderNote]. */
+private val APP_BAR_NOTE_DOT_SIZE = 16.dp
 private val MIN_TITLE_WIDTH = 160.dp // Enough of a title to tell which song is up.
 private val TITLE_TOUCH_HORIZONTAL_OUTSET = 4.dp // The padding the bar puts around its title.
 private val TITLE_TOUCH_VERTICAL_OUTSET = 12.dp // From the two lines of title, 40dp, to the bar's 64dp.

@@ -11,7 +11,6 @@
 ## Bugs / issues
 - Bug (Android): Edit screen back gesture -> Song details scrim remains stuck. Toolbar back button is okay
 - Overscroll bounce can make content on bottom sheets scroll underneath their header without fade
-- If a non-zero capo is applied, the key of the song should be changed.
 - The Song details screen is still wasteful: too much padding. Even in one-column mode some sections could be displayed in two columns
 
 ## Improvements

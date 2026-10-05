@@ -66,6 +66,13 @@ class SongTempoTest {
     fun anOverrideIsHighlighted() = assertFalse(effectiveTempo(song(96), SETLIST, tempos).isDefault)
 
     @Test
+    fun onlyATempoSomethingNamesIsShown() {
+        assertEquals(90, effectiveTempo(song(96), SETLIST, tempos).displayedBpm)
+        assertEquals(96, effectiveTempo(song(96), "other.setlist.json", tempos).displayedBpm)
+        assertEquals(null, effectiveTempo(song(null), "other.setlist.json", tempos).displayedBpm)
+    }
+
+    @Test
     fun overridesAreSetAndRemovedByKey() {
         val changed = tempos.with(TempoKey(FILE_NAME, SETLIST), null).with(TempoKey(FILE_NAME, null), 80)
         assertEquals(null, changed[FILE_NAME, SETLIST])

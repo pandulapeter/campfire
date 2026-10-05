@@ -58,6 +58,13 @@ internal data class EffectiveTempo(
     /** Whether nothing overrides the song's own tempo, which is what the stepper is drawn plainly for. */
     val isDefault get() = source == Source.FILE || source == Source.DEFAULT
 
+    /**
+     * The tempo where something actually names one, for the places that only say what the song says about itself: a
+     * song card and the song details header. Null where it is the metronome's own default, which is the number a
+     * click has to start somewhere at rather than anything about this song.
+     */
+    val displayedBpm get() = bpm.takeIf { source != Source.DEFAULT }
+
     enum class Source {
         SETLIST,
         LIBRARY_OVERRIDE,
