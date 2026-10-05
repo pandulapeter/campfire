@@ -46,3 +46,10 @@ internal fun metronomeContextOf(
  */
 internal fun isMetronomeScreenLeft(previousTop: CampfireDestination?, top: CampfireDestination?) =
     (top !is CampfireDestination.SongDetails && top != CampfireDestination.Metronome) || top?.contentKey != previousTop?.contentKey
+
+/** Whether [context] is another song than [last] rather than the same one under the name a rename gave it. */
+internal fun isMetronomeContextMoved(last: MetronomeContext, context: MetronomeContext, renames: Map<String, String>) =
+    context != last && !(
+        last is MetronomeContext.Song && context is MetronomeContext.Song &&
+            last.setlistFileName == context.setlistFileName && renames[last.songFileName] == context.songFileName
+        )

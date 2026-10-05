@@ -71,4 +71,28 @@ class MetronomeContextTest {
 
     @Test
     fun theMetronomeTabSelectedFromASongStopsTheClick() = assertTrue(isMetronomeScreenLeft(songDetails, CampfireDestination.Metronome))
+
+    /** A rename is the same song under a new name, so the click goes on in its bar. */
+    @Test
+    fun aRenamedSongIsNotMoved() = assertFalse(
+        isMetronomeContextMoved(MetronomeContext.Song("a.cho", "s.setlist.json"), MetronomeContext.Song("b.cho", "s.setlist.json"), mapOf("a.cho" to "b.cho")),
+    )
+
+    @Test
+    fun anotherSongIsMoved() = assertTrue(
+        isMetronomeContextMoved(MetronomeContext.Song("a.cho", "s.setlist.json"), MetronomeContext.Song("b.cho", "s.setlist.json"), emptyMap()),
+    )
+
+    @Test
+    fun theSameSongInAnotherSetlistIsMoved() = assertTrue(
+        isMetronomeContextMoved(MetronomeContext.Song("a.cho", "s.setlist.json"), MetronomeContext.Song("b.cho", null), mapOf("a.cho" to "b.cho")),
+    )
+
+    @Test
+    fun aSongAfterTheTabIsMoved() =
+        assertTrue(isMetronomeContextMoved(MetronomeContext.Standalone, MetronomeContext.Song("a.cho", null), emptyMap()))
+
+    @Test
+    fun theSameContextIsNotMoved() =
+        assertFalse(isMetronomeContextMoved(MetronomeContext.Song("a.cho", null), MetronomeContext.Song("a.cho", null), emptyMap()))
 }

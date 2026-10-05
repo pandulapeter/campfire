@@ -126,6 +126,7 @@ import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeContext
 import com.pandulapeter.campfire.presentation.ui.metronome.TempoKey
 import com.pandulapeter.campfire.presentation.ui.metronome.Tempos
 import com.pandulapeter.campfire.presentation.ui.metronome.effectiveTempo
+import com.pandulapeter.campfire.presentation.ui.metronome.isMetronomeContextMoved
 import com.pandulapeter.campfire.presentation.ui.metronome.isMetronomeScreenLeft
 import com.pandulapeter.campfire.presentation.ui.metronome.metronomeContextOf
 import com.pandulapeter.campfire.presentation.ui.metronome.metronomePatternOf
@@ -878,6 +879,13 @@ class CampfireViewModel(
      */
     private val songDetailsTargetSongs = mutableStateMapOf<String, String>()
 
+    /**
+     * The renames of the song a click plays for, old name to new, from the moment [updateSongFileName] knows the new
+     * name until the click's context has followed it: the context moving from one to the other is the same song under
+     * another name, which keeps the bar going instead of restarting it. Read and written on the main thread only.
+     */
+    private val metronomeRenames = mutableMapOf<String, String>()
+
     /** What a click plays for, derived from the back stack, see [metronomeContextOf]; snapshot state, observable. */
     internal val metronomeContext
         get() = metronomeContextOf(backStack) { destination -> songDetailsTargetSongs[destination.id] ?: currentSongFileName(destination) }
@@ -1367,14 +1375,37 @@ class CampfireViewModel(
             // anything else - a tempo stepped, a setting, a song's {tempo} saved or synced - is applied from the next
             // beat. Leaving the song is not among them, since a click does not outlive the screen it is played from.
             // The first value is only remembered: a view model built again while a click plays (an activity recreated)
-            // starts from a back stack it has not moved.
+            // starts from a back stack it has not moved. What was applied is compared rather than the values repeating,
+            // since a pattern that changed while the click was held is emitted again unchanged once the hold ends.
             var previous: MetronomeContext? = null
-            combine(snapshotFlow { metronomeContext }, tempos, metronomeSettings, songsByFileName) { context, tempos, settings, songs ->
-                context to metronomePatternOf(context = context, settings = settings, songOf = songs::get, tempos = tempos)
-            }.distinctUntilChanged().collect { (context, pattern) ->
+            var applied: MetronomePattern? = null
+            combine(
+                snapshotFlow { metronomeContext },
+                tempos,
+                metronomeSettings,
+                songsByFileName,
+                _songsBeingRenamed,
+            ) { context, tempos, settings, songs, renaming ->
+                Triple(
+                    context,
+                    metronomePatternOf(context = context, settings = settings, songOf = { songs[it] ?: renaming[it] }, tempos = tempos),
+                    renaming.keys,
+                )
+            }.collect { (context, pattern, renaming) ->
+                // Held while the click's own song is being renamed: its overrides move to the new name before the screen
+                // does, and the screen follows a moment after the rename is over. Whatever changed meanwhile is applied
+                // once it has.
+                if (context is MetronomeContext.Song && (context.songFileName in renaming || context.songFileName in metronomeRenames)) {
+                    return@collect
+                }
                 val last = previous
                 previous = context
-                if (last != null) metronome.update(pattern, restartBar = context != last)
+                if (last != null) {
+                    val isMoved = isMetronomeContextMoved(last = last, context = context, renames = metronomeRenames)
+                    if (last is MetronomeContext.Song && context != last) metronomeRenames.remove(last.songFileName)
+                    if (context != last || pattern != applied) metronome.update(pattern, restartBar = isMoved)
+                }
+                applied = pattern
             }
         }
         viewModelScope.launch {
@@ -1817,6 +1848,9 @@ class CampfireViewModel(
         try {
             val rename = renameSongFile(song) ?: return@launchLibraryChange
             val fileName = rename.fileName
+            // Only while the screen being rewritten is the one on top, which is what makes sure the context moves off
+            // the old name and the entry is taken out again.
+            if ((metronomeContext as? MetronomeContext.Song)?.songFileName == song.fileName) metronomeRenames[song.fileName] = fileName
             _songTexts.update { texts -> texts[song.fileName]?.let { texts - song.fileName + (fileName to it) } ?: texts }
             // The details screen is named after the songs it pages through, so the entry showing this one is rewritten
             // rather than popped: the action can be taken from that screen, and a song that has just been renamed is
@@ -1841,6 +1875,7 @@ class CampfireViewModel(
                 }
             }
             songDetailsCurrentSongs.entries.filter { it.value == song.fileName }.forEach { songDetailsCurrentSongs[it.key] = fileName }
+            songDetailsTargetSongs.entries.filter { it.value == song.fileName }.forEach { songDetailsTargetSongs[it.key] = fileName }
             followReportedFileNames { if (it == song.fileName) fileName else it }
             persistBackStack()
             // Said after the screens have followed the file, which has moved whatever else could not be rewritten.
@@ -2434,7 +2469,7 @@ class CampfireViewModel(
     private fun currentMetronomePattern(context: MetronomeContext) = metronomePatternOf(
         context = context,
         settings = metronomeSettings.value,
-        songOf = songsByFileName.value::get,
+        songOf = { songsByFileName.value[it] ?: _songsBeingRenamed.value[it] },
         tempos = tempos.value,
     )
 
