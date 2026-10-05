@@ -132,7 +132,10 @@ private fun openContext(): Boolean = js(
         if (!AudioContextType) return false;
         try {
             if (!metronome.context) metronome.context = new AudioContextType({ latencyHint: 'playback' });
-            if (metronome.context.state !== 'running') metronome.context.resume().catch(function () {});
+            // Resumed whatever its state reads: Gecko and WebKit only change it once the rendering thread answers, so a
+            // suspend the previous session's stop sent a moment ago may still read running here and would win.
+            // Control messages run in order, and resuming a running context just resolves.
+            metronome.context.resume().catch(function () {});
         } catch (error) {
             return false;
         }
