@@ -161,7 +161,7 @@ localized in both languages.
 - **Every modal with text inputs is a bottom sheet**, and the date picker is one too, holding only a calendar (no
   typed entry, whose strings Material draws in the system's language). Forms use `TextFieldBottomSheet` over `CampfireBottomSheet`; Save, Create, Done, Delete,
   sorting and Add link actions sit in the header, whose close button cancels the draft. Keep each form's existing
-  first-field focus behavior. Both **Song assignments** and **Setlist assignments** open with search unfocused;
+  first-field focus behavior. Both **Choose songs** and **Choose setlists** open with search unfocused;
   tapping their search field brings up the keyboard. New song offers subtitle, artist, album, composer, lyricist,
   year and duration alongside the required title; each optional label uses the same parenthesized marker as setlist
   description and link name. The date picker's Material container uses the shared sheet color, matching its header
@@ -280,7 +280,7 @@ localized in both languages.
   instead**: performance mode and a song opened from an archived setlist get the same four as one line of accent
   colored text, as does the editor's preview, where the text being typed is what says them. Lyrics-only mode leaves
   out the line and the controls alike. What is left in the app bar is about the song rather than about how it is
-  played — the click, the About the song sheet, the setlist assignments and the menu — with the text size, which is
+  played — the click, the About the song sheet, the Choose setlists and the menu — with the text size, which is
   the reader's own, at the end of that menu. **The key the band actually hears is named in the app bar**, after the
   artist and the way a song card names it: the transposition *and* the capo applied, so it is the key the song sounds
   in rather than the one the chords on the page spell, which is the Transposition control's — the two read differently
@@ -729,7 +729,7 @@ Nothing about it reaches the network. The module `CLAUDE.md` files carry the det
 ## Cover art
 
 A song names its cover in its own file (`{meta: cover …}`, see Conventions); the app shows it as a thumbnail at the start of
-the song cards, on the Songs and the Setlists screen alike, at the end of the Song assignments sheet's rows, in the song details app bar before the title, at the start of the About the song sheet's and the editor preview's details (where a tap opens the cover search), and in the editor's app bar, where it follows the text as it is typed, and keeps a copy of every one it has shown. The module `CLAUDE.md` files carry the detail;
+the song cards, on the Songs and the Setlists screen alike, at the end of the Choose songs sheet's rows, in the song details app bar before the title, at the start of the About the song sheet's and the editor preview's details (where a tap opens the cover search), and in the editor's app bar, where it follows the text as it is typed, and keeps a copy of every one it has shown. The module `CLAUDE.md` files carry the detail;
 the short version:
 
 - **Every request is in `:data:source:remote`**, through the one Ktor client sync uses: `CoverArtRemoteSource`

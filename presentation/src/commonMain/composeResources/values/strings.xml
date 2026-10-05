@@ -128,7 +128,7 @@
     <string name="songs_artist_and_title">%1$s - %2$s</string>
     <string name="songs_actions">Song actions</string>
     <string name="songs_edit_song">Edit song file</string>
-    <string name="songs_setlist_assignments">Setlist assignments</string>
+    <string name="songs_choose_setlists">Choose setlists</string>
     <string name="songs_update_file_name">Update file name</string>
     <string name="songs_update_file_name_partly">The file was renamed, but a setlist or the saved transposition still points at the old name</string>
     <string name="songs_delete_song_partly">The song was deleted, but a setlist or the saved transposition still names it</string>
@@ -173,7 +173,6 @@
     <string name="setlists_move_down">Move down</string>
     <string name="setlists_actions">Setlist actions</string>
     <string name="setlists_edit_details">Edit setlist</string>
-    <string name="setlists_song_assignments">Song assignments</string>
     <string name="setlists_choose_songs">Choose songs</string>
     <string name="setlists_description">Description (optional)</string>
     <string name="setlists_date">Date</string>

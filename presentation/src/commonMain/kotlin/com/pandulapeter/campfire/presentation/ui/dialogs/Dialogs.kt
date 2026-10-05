@@ -144,6 +144,7 @@ import com.pandulapeter.campfire.presentation.resources.import_conflicts_replace
 import com.pandulapeter.campfire.presentation.resources.import_conflicts_replace_description
 import com.pandulapeter.campfire.presentation.resources.import_replace_title
 import com.pandulapeter.campfire.presentation.resources.save
+import com.pandulapeter.campfire.presentation.resources.setlists_choose_songs
 import com.pandulapeter.campfire.presentation.resources.setlists_delete_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_remove_song
 import com.pandulapeter.campfire.presentation.resources.setlists_remove_song_confirmation
@@ -161,7 +162,6 @@ import com.pandulapeter.campfire.presentation.resources.setlists_new_setlist_tit
 import com.pandulapeter.campfire.presentation.resources.setlists_no_search_results
 import com.pandulapeter.campfire.presentation.resources.setlists_pick_date
 import com.pandulapeter.campfire.presentation.resources.setlists_search
-import com.pandulapeter.campfire.presentation.resources.setlists_song_assignments
 import com.pandulapeter.campfire.presentation.resources.settings_library_cover_art_cache_clear
 import com.pandulapeter.campfire.presentation.resources.settings_library_cover_art_cache_clear_action
 import com.pandulapeter.campfire.presentation.resources.settings_library_cover_art_cache_clear_confirmation
@@ -185,6 +185,7 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_revert_confi
 import com.pandulapeter.campfire.presentation.resources.song_editor_unsaved_changes
 import com.pandulapeter.campfire.presentation.resources.song_editor_unsaved_changes_confirmation
 import com.pandulapeter.campfire.presentation.resources.songs_artist_and_title
+import com.pandulapeter.campfire.presentation.resources.songs_choose_setlists
 import com.pandulapeter.campfire.presentation.resources.songs_delete_song
 import com.pandulapeter.campfire.presentation.resources.songs_delete_song_confirmation
 import com.pandulapeter.campfire.presentation.resources.songs_empty_title
@@ -192,7 +193,6 @@ import com.pandulapeter.campfire.presentation.resources.songs_filter
 import com.pandulapeter.campfire.presentation.resources.songs_new_song
 import com.pandulapeter.campfire.presentation.resources.songs_no_search_results
 import com.pandulapeter.campfire.presentation.resources.songs_search
-import com.pandulapeter.campfire.presentation.resources.songs_setlist_assignments
 import com.pandulapeter.campfire.presentation.resources.welcome_get_started
 import com.pandulapeter.campfire.presentation.resources.welcome_message
 import com.pandulapeter.campfire.presentation.resources.welcome_open_settings
@@ -1631,7 +1631,7 @@ private fun SetlistPicker(
     val closeNamingDialog = { if (isSkippingToNewSetlist) viewModel.dismissSheet(dialog) else isNamingNewSetlist = false }
     if (!isSkippingToNewSetlist) {
         CampfireBottomSheet(
-            title = stringResource(Res.string.songs_setlist_assignments),
+            title = stringResource(Res.string.songs_choose_setlists),
             subtitle = songLabel(dialog.song),
             actions = { SetlistSortMenu(viewModel = viewModel) },
             onDismiss = { viewModel.dismissSheet(dialog) },
@@ -1772,7 +1772,7 @@ private fun SongPicker(
     )
     val orderedMatches = remember(matches, songOrder) { songOrder.ordered(matches) { it.song.fileName } }
     CampfireBottomSheet(
-        title = stringResource(Res.string.setlists_song_assignments),
+        title = stringResource(Res.string.setlists_choose_songs),
         subtitle = setlist.title,
         actions = { SongSortMenu(viewModel = viewModel) },
         onDismiss = { viewModel.dismissSheet(dialog) },

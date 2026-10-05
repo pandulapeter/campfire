@@ -20,6 +20,7 @@ import com.pandulapeter.campfire.presentation.resources.ic_duplicate
 import com.pandulapeter.campfire.presentation.resources.ic_edit
 import com.pandulapeter.campfire.presentation.resources.ic_reorder_songs
 import com.pandulapeter.campfire.presentation.resources.ic_reorder_songs_done
+import com.pandulapeter.campfire.presentation.resources.setlists_choose_songs
 import com.pandulapeter.campfire.presentation.resources.setlists_done_reordering
 import com.pandulapeter.campfire.presentation.resources.setlists_reorder
 import com.pandulapeter.campfire.presentation.resources.setlists_export
@@ -31,7 +32,6 @@ import com.pandulapeter.campfire.presentation.resources.setlists_archive
 import com.pandulapeter.campfire.presentation.resources.setlists_delete_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_duplicate_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_edit_details
-import com.pandulapeter.campfire.presentation.resources.setlists_song_assignments
 import com.pandulapeter.campfire.presentation.resources.setlists_unarchive
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import org.jetbrains.compose.resources.painterResource
@@ -73,7 +73,7 @@ internal fun SetlistActions(
                 onClick = { viewModel.showDialog(CampfireViewModel.DialogType.EditSetlist(setlist)) },
             ),
             ActionsMenuItem(
-                title = stringResource(Res.string.setlists_song_assignments),
+                title = stringResource(Res.string.setlists_choose_songs),
                 isVisible = !setlist.isArchived,
                 icon = painterResource(Res.drawable.ic_songs),
                 onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SongPicker(setlist)) },

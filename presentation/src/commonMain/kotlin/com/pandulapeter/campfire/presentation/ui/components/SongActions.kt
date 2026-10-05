@@ -52,6 +52,7 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_delete
 import com.pandulapeter.campfire.presentation.resources.ic_edit
+import com.pandulapeter.campfire.presentation.resources.songs_choose_setlists
 import com.pandulapeter.campfire.presentation.resources.songs_export_song
 import com.pandulapeter.campfire.presentation.resources.ic_export
 import com.pandulapeter.campfire.presentation.resources.ic_more
@@ -61,7 +62,6 @@ import com.pandulapeter.campfire.presentation.resources.ic_setlists_outline
 import com.pandulapeter.campfire.presentation.resources.songs_actions
 import com.pandulapeter.campfire.presentation.resources.songs_delete_song
 import com.pandulapeter.campfire.presentation.resources.songs_edit_song
-import com.pandulapeter.campfire.presentation.resources.songs_setlist_assignments
 import com.pandulapeter.campfire.presentation.resources.songs_update_file_name
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import org.jetbrains.compose.resources.painterResource
@@ -415,7 +415,7 @@ internal fun SetlistAssignmentsButton(
         Icon(
             modifier = Modifier.graphicsLayer { alpha = 1f - filledAlpha },
             painter = painterResource(Res.drawable.ic_setlists_outline),
-            contentDescription = stringResource(Res.string.songs_setlist_assignments),
+            contentDescription = stringResource(Res.string.songs_choose_setlists),
         )
         Icon(
             modifier = Modifier.graphicsLayer { alpha = filledAlpha },
@@ -433,7 +433,7 @@ internal fun setlistAssignmentsAction(
     isInSetlist: Boolean,
     setlistFileName: String? = null,
 ) = ActionsMenuItem(
-    title = stringResource(Res.string.songs_setlist_assignments),
+    title = stringResource(Res.string.songs_choose_setlists),
     icon = painterResource(if (isInSetlist) Res.drawable.ic_setlists else Res.drawable.ic_setlists_outline),
     onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SetlistPicker(song = song, setlistFileName = setlistFileName)) },
 )
