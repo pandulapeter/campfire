@@ -132,6 +132,7 @@ import com.pandulapeter.campfire.presentation.ui.metronome.withTempo
 import com.pandulapeter.campfire.presentation.ui.dialogs.SONG_METADATA_FIELDS
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.NavigationState
+import com.pandulapeter.campfire.presentation.ui.navigation.withoutDisabledFeatures
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.LibraryPersistence
 import com.pandulapeter.campfire.presentation.ui.platform.requestLibraryPersistence
@@ -591,6 +592,11 @@ class CampfireViewModel(
      * bar in the app has something it takes away.
      */
     val isPerformanceModeEnabled = userPreferences.map { it?.isPerformanceModeEnabled == true }.asState(false)
+
+    /** The top level screens the navigation chrome offers, which are only those of the features switched on. */
+    internal val topLevelDestinations = userPreferences
+        .map { CampfireDestination.TopLevel.entries(areSetlistsEnabled = it?.areSetlistsEnabled != false, isMetronomeEnabled = it?.isMetronomeEnabled != false) }
+        .asState(CampfireDestination.TopLevel.entries)
     /**
      * Read straight from its own repository, like the preferences and for the same reason: sync runs on its own
      * schedule, and a settings screen must not wait for a scan of the library to say whether an account is on.
@@ -1521,18 +1527,28 @@ class CampfireViewModel(
      * Takes the user to [state] in one step, which is how the web build follows an address it was opened on or the
      * browser's Forward button. Refused, returning false, while the editor holds unsaved text: nothing but the
      * editor's own ways out may take that text off the screen, and those ask first. A search it opens is reopened on the
-     * text its field still holds, since this is stepping back to a place rather than asking anything new.
+     * text its field still holds, since this is stepping back to a place rather than asking anything new. A screen of a
+     * feature switched off is cut off with everything above it ([withoutDisabledFeatures]), so an address naming one
+     * opens what is under it, and the browser's address is then written over with that.
      */
     internal fun restoreNavigationState(state: NavigationState): Boolean {
-        if (state.backStack.isEmpty() || hasUnsavedEditorText()) return false
-        settingsTab = state.settingsTab
-        listOf(songsSearch to state.isSongsSearchOpen, setlistsSearch to state.isSetlistsSearchOpen).forEach { (search, isOpen) ->
+        if (hasUnsavedEditorText()) return false
+        // Read from the repository's own state, which the launch has waited for, rather than from userPreferences,
+        // which may not have caught up with the read yet.
+        val preferences = userPreferencesState.value.data
+        val allowedState = state.withoutDisabledFeatures(
+            areSetlistsEnabled = preferences?.areSetlistsEnabled != false,
+            isMetronomeEnabled = preferences?.isMetronomeEnabled != false,
+        )
+        if (allowedState.backStack.isEmpty()) return false
+        settingsTab = allowedState.settingsTab
+        listOf(songsSearch to allowedState.isSongsSearchOpen, setlistsSearch to allowedState.isSetlistsSearchOpen).forEach { (search, isOpen) ->
             if (isOpen != search.isOpen.value) if (isOpen) search.reopen() else search.close()
         }
-        if (backStack.toList() != state.backStack) {
+        if (backStack.toList() != allowedState.backStack) {
             updateBackStack {
                 clear()
-                addAll(state.backStack)
+                addAll(allowedState.backStack)
             }
         }
         return true
@@ -2417,7 +2433,7 @@ class CampfireViewModel(
     internal fun toggleMetronomeByKey(isSpace: Boolean): Boolean {
         if (visibleDialog.value != null || isAnyOverflowMenuOpen) return false
         val top = backStack.lastOrNull()
-        if (if (isSpace) top != CampfireDestination.Metronome else top !is CampfireDestination.SongDetails) return false
+        if (if (isSpace) top != CampfireDestination.Metronome else top !is CampfireDestination.SongDetails || userPreferences.value?.isMetronomeEnabled == false) return false
         toggleMetronome()
         return true
     }
@@ -3508,7 +3524,11 @@ class CampfireViewModel(
 
     fun setPerformanceModeEnabled(value: Boolean) = changeUserPreferences { copy(isPerformanceModeEnabled = value) }
 
-    fun setLyricsOnlyModeEnabled(value: Boolean) = changeUserPreferences { copy(isLyricsOnlyModeEnabled = value) }
+    fun setChordsEnabled(value: Boolean) = changeUserPreferences { copy(areChordsEnabled = value) }
+
+    fun setSetlistsEnabled(value: Boolean) = changeUserPreferences { copy(areSetlistsEnabled = value) }
+
+    fun setMetronomeEnabled(value: Boolean) = changeUserPreferences { copy(isMetronomeEnabled = value) }
 
     /**
      * Folds or unfolds one section of a song (or one tab or grid inside it), [key] being the name the song details
@@ -3737,6 +3757,9 @@ class CampfireViewModel(
             // An export nobody is looking at any more would put its picker up over whatever is on screen by then.
             cancelPdfExport()
         }
+        // The export screen covers the song the click is played from as a screen of its own would, and leaves no way
+        // to stop it, so it stops a click the way pushing a destination does (see updateBackStack).
+        if (dialogType is DialogType.Export) metronome.stop()
         _visibleDialog.update { dialogType }
         // Asked as the sheet is put up rather than by the sheet once it is composed, so that its first frame already
         // says that the search is running instead of crossfading from the hint to it while it slides up.

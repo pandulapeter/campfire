@@ -2343,6 +2343,8 @@ private fun SongInfoSheet(
     val text = songTexts[dialog.song.fileName]
     val metadata = remember(text) { text?.let(viewModel::songMetadataOf) }
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    val shouldShowChords = userPreferences?.areChordsEnabled != false
+    val shouldShowTempo = userPreferences?.isMetronomeEnabled != false
     val editing = rememberSongInfoEditing(viewModel = viewModel, song = song, isEditorDraft = false)
     val overrides = songPlayingOverrides(viewModel = viewModel, song = song, setlistFileName = setlistFileName)
     CampfireBottomSheet(
@@ -2387,15 +2389,20 @@ private fun SongInfoSheet(
                 coverArtUrl = metadata.coverArt.takeIf { userPreferences?.isCoverArtEnabled == true },
                 horizontalPadding = 16.dp,
                 editing = editing.takeUnless { isReadOnly },
-                defaults = SongDefaults(
-                    key = metadata.key?.takeIf { it.isNotBlank() }?.let(viewModel::editorKeyOf),
-                    capo = metadata.capo,
-                    tempo = ChordProTempo.parse(metadata.tempo),
-                    time = metadata.time,
-                    overrides = overrides.labels,
-                    isReadFromSetlist = setlistFileName != null,
-                    onEdit = if (isReadOnly) null else ({ viewModel.showSongPlayingDialog(song = song, setlistFileName = setlistFileName) }),
-                ),
+                // Each value goes with its feature, and the group with both of them, see SongPlayingDialog.
+                defaults = if (shouldShowChords || shouldShowTempo) {
+                    SongDefaults(
+                        key = metadata.key?.takeIf { shouldShowChords && it.isNotBlank() }?.let(viewModel::editorKeyOf),
+                        capo = metadata.capo?.takeIf { shouldShowChords },
+                        tempo = ChordProTempo.parse(metadata.tempo)?.takeIf { shouldShowTempo },
+                        time = metadata.time?.takeIf { shouldShowTempo },
+                        overrides = overrides.labels,
+                        isReadFromSetlist = setlistFileName != null,
+                        onEdit = if (isReadOnly) null else ({ viewModel.showSongPlayingDialog(song = song, setlistFileName = setlistFileName) }),
+                    )
+                } else {
+                    null
+                },
                 onOpenLink = urlOpener,
             )
         }

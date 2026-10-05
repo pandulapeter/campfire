@@ -17,7 +17,7 @@ editor or by importing ChordPro, plain text, PDF and Word documents, and zip arc
 images and the cover search the user asks for.** Sync is off until the user connects a cloud folder of their own in
 Settings, and still involves no server of Campfire's own — see the Sync section below. A cover is fetched from the
 address a song's own file names, once, and kept on the device; the search asks MusicBrainz and the iTunes Search API,
-and only from the sheet the user opens for it; Settings' "Cover art" switch turns both off — see Cover art below. (The web build also asks its own deployment, at every launch, which build is current, which is the page being
+and only from the sheet the user opens for it; the "Cover art" switch in Settings → Features turns both off — see Cover art below. (The web build also asks its own deployment, at every launch, which build is current, which is the page being
 loaded rather than a request about the user — see Web below. The Android build also asks Play whether a newer version of itself exists, but that
 question is answered over IPC by the Play Store app; Campfire's own process makes no request — see Updates below.
 On Android and iOS the system's own device backup also carries the library and the settings — to the user's Google or
@@ -287,14 +287,33 @@ localized in both languages.
   instead**: performance mode and a song opened from an archived setlist get the same four as one line of accent
   colored text — which always names the capo and the time signature there, "Capo 0" and the click's 4/4 where the file
   says nothing, since with no control left on the page an absent value would read as an unknown one — as does the
-  editor's preview, where the text being typed is what says them. Lyrics-only mode leaves
-  out the line and the controls alike. What is left in the app bar is about the song rather than about how it is
+  editor's preview, where the text being typed is what says them. With the chords switched off the
+  key and the capo leave the line and the controls alike, and with the metronome switched off the tempo and the time
+  signature do (see Features below). What is left in the app bar is about the song rather than about how it is
   played — the click, the Choose setlists and the menu, the title opening the About the song sheet — with the text size, which is
   the reader's own, at the end of that menu. **The key the band actually hears is named in the app bar**, after the
   artist and the way a song card names it: the transposition *and* the capo applied, so it is the key the song sounds
   in rather than the one the chords on the page spell, which is the Transposition control's — the two read differently
   wherever the capo is not zero. The tempo the click would play at follows it there, as it does on a card, and inside a setlist the song's duration
   after that, as its card there has it.
+- **Features are switched on and off as a whole** in Settings → Features, the second tab, so that the app is only
+  what its reader needs — a singer has no use for a metronome, a band playing from one list none for setlists. Every
+  switch is a `UserPreferences` field, never exported or synced, and a switch only hides: nothing in the library is
+  written or deleted by one. In order: **Read only** (`isPerformanceModeEnabled`, first because it decides what the rest
+  of the app is still allowed to do, and called performance mode in the code); **Chords** (`areChordsEnabled`, stored
+  as the inverse `isLyricsOnlyModeEnabled` the lyrics only switch was), off taking with the chords the key, the
+  transposition and the capo wherever a song is read, and leaving the chord spelling rows of the Songs tab disabled;
+  **Metronome** (`isMetronomeEnabled`), off taking its tab, the song details screen's click button and panel, its M key
+  and the tempo and the time signature wherever a song is read; **Setlists** (`areSetlistsEnabled`), off taking their tab and every way of putting a song into one, while
+  setlist files still travel through an import, an export and a sync run; and **Cover art**, last since it is the one
+  that decides whether the app reaches the network on its own. A switch cleans the interface up rather than locking
+  anything, so what it takes away is gone everywhere, the Song defaults sheet and the About the song sheet's Song
+  defaults group included (each value with its feature, the sheet's menu entry and the group once both are off), and
+  an override nobody is shown is neither named nor reset there. A tab switched off leaves the navigation chrome
+  (`CampfireViewModel.topLevelDestinations`), shrinking out of the bar or the rail as the others close the gap
+  (`components/NavigationItemPresence.kt`), and a back stack restored or an address opened is cut short at the first
+  screen that belongs to one (`NavigationState.withoutDisabledFeatures`), a song read from a setlist included — so on
+  the web `/metronome` with the metronome off opens the songs, and the address is written over with theirs.
 - **The app is shipped with two songs and one setlist**, in
   `presentation/src/commonMain/composeResources/files/demo`: public domain campfire standards, bundled as the plain
   ChordPro and setlist files they are and reaching the library through the ordinary import, so they collide, are
@@ -706,7 +725,7 @@ Nothing about it reaches the network. The module `CLAUDE.md` files carry the det
 - **The click belongs to the screen it is played from, and there are two of them**: the Metronome tab, whose whole
   screen is the instrument, and the song details screen, where it is a panel in the app bar. Nowhere else has a
   metronome, and a click never outlives the screen it was started on - going back to the songs, selecting a tab,
-  opening the editor over the song all stop it - so there is never a click playing with nothing on screen to stop it
+  opening the editor or the export screen over the song, deleting it, all stop it - so there is never a click playing with nothing on screen to stop it
   with. On a song details screen it follows the page the pager is heading for, so paging to the next song moves the
   click to its tempo from beat one. Every way onto the tab clears the back stack.
 - **Playback is media**: on Android a `mediaPlayback` foreground service with a media session and notification
@@ -770,7 +789,7 @@ the short version:
   which MusicBrainz asks of every client — except in the browser, where a script cannot set one, and MusicBrainz
   documents no other way for a page to name itself; the web build's requests carry the browser's agent and the
   page's `Origin`.
-- **Settings' "Cover art" switch** (`UserPreferences.isCoverArtEnabled`, on by default) turns all of it off: no cover
+- **The "Cover art" switch in Settings → Features** (`UserPreferences.isCoverArtEnabled`, on by default) turns all of it off: no cover
   is fetched or drawn and the search is not offered.
 - What a platform will not load is simply not shown: the web build only reaches hosts that send CORS headers, and
   plain `http://` is refused by Android's and iOS' defaults and by the browser as mixed content.
@@ -820,7 +839,7 @@ start, which is what the rest of `app/web` is about — see its `CLAUDE.md`.
   localized page that asks it to close or continue in the first, which keeps OPFS from changing behind the running
   app's cached repositories.
 - **Every screen has an address, and the browser's history is the app's back stack**: `/` is the songs, then
-  `search`, `setlists`, `setlists/search`, `settings/{general,songs,library,about}`, `song/{song}`, `song/{song}/edit`,
+  `search`, `setlists`, `setlists/search`, `settings/{general,features,songs,library,about}`, `song/{song}`, `song/{song}/edit`,
   `setlist/{setlist}/{song}` and `import`, one history entry per step a back gesture would take — a dialog, a sheet or a
   menu open over a screen is one too, and so is the setlist reorder mode, at the screen's address (`:presentation`'s
   `ui/navigation/BrowserHistory.kt`). The app decides and the history follows — pushed, replaced or gone back through

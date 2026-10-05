@@ -78,14 +78,33 @@ class SongMetadataTest {
     }
 
     @Test
-    fun `lyrics-only mode leaves out the playing metadata`() {
+    fun `without chords and metronome the playing metadata is left out`() {
         val playing = ChordProMetadata(key = "G", capo = 2, tempo = "96", time = "6/8")
         val body = listOf(verse)
 
-        assertSame(body, withMetadataSection(body, playing, shouldShowChords = false, isSongInfoShown = true))
+        assertSame(body, withMetadataSection(body, playing, shouldShowChords = false, shouldShowTempo = false, isSongInfoShown = true))
         assertEquals(
             listOf(RenderSection.Metadata(ChordProMetadata(album = "Album")), verse),
-            withMetadataSection(body, playing.copy(album = "Album"), shouldShowChords = false, isSongInfoShown = true),
+            withMetadataSection(body, playing.copy(album = "Album"), shouldShowChords = false, shouldShowTempo = false, isSongInfoShown = true),
+        )
+    }
+
+    @Test
+    fun `the chords and the metronome each take their own two values away`() {
+        val playing = ChordProMetadata(key = "G", capo = 2, tempo = "96", time = "6/8")
+        val body = listOf(verse)
+
+        assertEquals(
+            listOf(RenderSection.Metadata(ChordProMetadata(tempo = "96", time = "6/8")), verse),
+            withMetadataSection(body, playing, shouldShowChords = false, isSongInfoShown = true),
+        )
+        assertEquals(
+            listOf(RenderSection.Metadata(ChordProMetadata(key = "G", capo = 2)), verse),
+            withMetadataSection(body, playing, shouldShowChords = true, shouldShowTempo = false, isSongInfoShown = true),
+        )
+        assertEquals(
+            listOf(RenderSection.Metadata(metadata = ChordProMetadata(time = "4/4"), readsCapoAndTime = true), verse),
+            withMetadataSection(body, ChordProMetadata(), shouldShowChords = false, isSongInfoShown = false, readsCapoAndTime = true),
         )
     }
 
@@ -100,11 +119,11 @@ class SongMetadataTest {
     }
 
     @Test
-    fun `lyrics-only mode leaves out the playing controls with the values`() {
+    fun `without chords and metronome the playing controls are left out with the values`() {
         val body = listOf(verse)
         val playing = ChordProMetadata(key = "G", capo = 2, tempo = "96", time = "6/8")
 
-        assertSame(body, withMetadataSection(body, playing, shouldShowChords = false, isSongInfoShown = false, hasPlayingControls = true))
+        assertSame(body, withMetadataSection(body, playing, shouldShowChords = false, shouldShowTempo = false, isSongInfoShown = false, hasPlayingControls = true))
     }
 
     @Test
@@ -119,6 +138,6 @@ class SongMetadataTest {
             listOf(RenderSection.Metadata(metadata = ChordProMetadata(capo = 3, time = "6/8"), readsCapoAndTime = true), verse),
             withMetadataSection(body, ChordProMetadata(capo = 3, time = "6/8"), shouldShowChords = true, isSongInfoShown = false, readsCapoAndTime = true),
         )
-        assertSame(body, withMetadataSection(body, ChordProMetadata(), shouldShowChords = false, isSongInfoShown = false, readsCapoAndTime = true))
+        assertSame(body, withMetadataSection(body, ChordProMetadata(), shouldShowChords = false, shouldShowTempo = false, isSongInfoShown = false, readsCapoAndTime = true))
     }
 }

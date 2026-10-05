@@ -73,6 +73,8 @@ import com.pandulapeter.campfire.presentation.resources.ic_phone
 import com.pandulapeter.campfire.presentation.resources.ic_privacy_policy
 import com.pandulapeter.campfire.presentation.resources.ic_songs
 import com.pandulapeter.campfire.presentation.resources.ic_star
+import com.pandulapeter.campfire.presentation.resources.metronome
+import com.pandulapeter.campfire.presentation.resources.setlists
 import com.pandulapeter.campfire.presentation.resources.settings_about
 import com.pandulapeter.campfire.presentation.resources.settings_accidentals
 import com.pandulapeter.campfire.presentation.resources.settings_accidentals_description
@@ -91,6 +93,8 @@ import com.pandulapeter.campfire.presentation.resources.settings_app_icon_taskba
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_taskbar_description
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_window
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_window_description
+import com.pandulapeter.campfire.presentation.resources.settings_chords
+import com.pandulapeter.campfire.presentation.resources.settings_chords_description
 import com.pandulapeter.campfire.presentation.resources.settings_cover_art
 import com.pandulapeter.campfire.presentation.resources.settings_cover_art_description
 import com.pandulapeter.campfire.presentation.resources.settings_created_by
@@ -101,6 +105,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_distribution_pl
 import com.pandulapeter.campfire.presentation.resources.settings_distributions_all
 import com.pandulapeter.campfire.presentation.resources.settings_distributions_all_description
 import com.pandulapeter.campfire.presentation.resources.settings_export_all
+import com.pandulapeter.campfire.presentation.resources.settings_features
 import com.pandulapeter.campfire.presentation.resources.settings_general
 import com.pandulapeter.campfire.presentation.resources.settings_german_notation
 import com.pandulapeter.campfire.presentation.resources.settings_german_notation_description
@@ -126,16 +131,16 @@ import com.pandulapeter.campfire.presentation.resources.settings_library_storage
 import com.pandulapeter.campfire.presentation.resources.settings_library_storage_offline_granted
 import com.pandulapeter.campfire.presentation.resources.settings_library_storage_online_only
 import com.pandulapeter.campfire.presentation.resources.settings_library_summary
-import com.pandulapeter.campfire.presentation.resources.settings_lyrics_only_mode
-import com.pandulapeter.campfire.presentation.resources.settings_lyrics_only_mode_description
+import com.pandulapeter.campfire.presentation.resources.settings_metronome_description
 import com.pandulapeter.campfire.presentation.resources.settings_number_sections
 import com.pandulapeter.campfire.presentation.resources.settings_number_sections_description
-import com.pandulapeter.campfire.presentation.resources.settings_performance_mode
-import com.pandulapeter.campfire.presentation.resources.settings_performance_mode_description
+import com.pandulapeter.campfire.presentation.resources.settings_read_only_mode
+import com.pandulapeter.campfire.presentation.resources.settings_read_only_mode_description
 import com.pandulapeter.campfire.presentation.resources.settings_privacy_policy
 import com.pandulapeter.campfire.presentation.resources.settings_privacy_policy_description
 import com.pandulapeter.campfire.presentation.resources.settings_rate
 import com.pandulapeter.campfire.presentation.resources.settings_rate_description
+import com.pandulapeter.campfire.presentation.resources.settings_setlists_description
 import com.pandulapeter.campfire.presentation.resources.settings_songs
 import com.pandulapeter.campfire.presentation.resources.settings_support
 import com.pandulapeter.campfire.presentation.resources.settings_support_description
@@ -435,8 +440,16 @@ private fun SettingsTabPage(
         sectionColumns = sectionColumns,
         scrollState = scrollState,
         contentPadding = contentPadding,
+        section = { GeneralSection(viewModel = viewModel, userPreferences = userPreferences) },
+    )
+
+    SettingsTab.FEATURES -> SettingsPage(
+        modifier = modifier,
+        sectionColumns = sectionColumns,
+        scrollState = scrollState,
+        contentPadding = contentPadding,
         section = {
-            GeneralSection(
+            FeaturesSection(
                 viewModel = viewModel,
                 userPreferences = userPreferences,
                 isPerformanceModeEnabled = isPerformanceModeEnabled,
@@ -476,35 +489,68 @@ private fun SettingsTabPage(
     )
 }
 
+/**
+ * The parts of the app a reader can do without, each a switch that takes it out of every screen it is on, so that a
+ * singer is not handed a metronome and a band that plays from one list is not handed a setlist tab. Read only mode is
+ * first: it is the one that decides what the rest of the app is still allowed to do. Then what a song page shows, the
+ * most musical first, then the tab that is only a tab, and last the one switch that decides whether the app reaches the
+ * network on its own.
+ */
 @Composable
-private fun SongDisplaySection(
+private fun FeaturesSection(
     viewModel: CampfireViewModel,
     userPreferences: UserPreferences?,
+    isPerformanceModeEnabled: Boolean,
 ) = SettingsSection {
     SwitchListItem(
-        title = stringResource(Res.string.settings_lyrics_only_mode),
-        description = stringResource(Res.string.settings_lyrics_only_mode_description),
-        isChecked = userPreferences?.isLyricsOnlyModeEnabled == true,
-        onCheckedChange = viewModel::setLyricsOnlyModeEnabled,
+        title = stringResource(Res.string.settings_read_only_mode),
+        description = stringResource(Res.string.settings_read_only_mode_description),
+        isChecked = isPerformanceModeEnabled,
+        onCheckedChange = viewModel::setPerformanceModeEnabled,
     )
-    // The one switch here that decides whether the app reaches the network on its own: off, no cover is fetched from
-    // anywhere, which is what somebody who does not want a song file to make the app contact a host turns it off for.
+    SwitchListItem(
+        title = stringResource(Res.string.settings_chords),
+        description = stringResource(Res.string.settings_chords_description),
+        isChecked = userPreferences?.areChordsEnabled != false,
+        onCheckedChange = viewModel::setChordsEnabled,
+    )
+    SwitchListItem(
+        title = stringResource(Res.string.metronome),
+        description = stringResource(Res.string.settings_metronome_description),
+        isChecked = userPreferences?.isMetronomeEnabled != false,
+        onCheckedChange = viewModel::setMetronomeEnabled,
+    )
+    SwitchListItem(
+        title = stringResource(Res.string.setlists),
+        description = stringResource(Res.string.settings_setlists_description),
+        isChecked = userPreferences?.areSetlistsEnabled != false,
+        onCheckedChange = viewModel::setSetlistsEnabled,
+    )
+    // Off, no cover is fetched from anywhere, which is what somebody who does not want a song file to make the app
+    // contact a host turns it off for.
     SwitchListItem(
         title = stringResource(Res.string.settings_cover_art),
         description = stringResource(Res.string.settings_cover_art_description),
         isChecked = userPreferences?.isCoverArtEnabled == true,
         onCheckedChange = viewModel::setCoverArtEnabled,
     )
+}
+
+@Composable
+private fun SongDisplaySection(
+    viewModel: CampfireViewModel,
+    userPreferences: UserPreferences?,
+) = SettingsSection {
     SwitchListItem(
         title = stringResource(Res.string.settings_number_sections),
         description = stringResource(Res.string.settings_number_sections_description),
         isChecked = userPreferences?.shouldNumberSections == true,
         onCheckedChange = viewModel::setSectionNumberingEnabled,
     )
-    // Both of these only decide how a chord is written, so lyrics only mode leaves them with nothing to say. They
+    // Both of these only decide how a chord is written, so with the chords switched off they have nothing to say. They
     // stay in the section rather than disappearing from it: what they are set to is still what the chords will look
     // like as soon as they are shown again.
-    val isChordSpellingEnabled = userPreferences?.isLyricsOnlyModeEnabled != true
+    val isChordSpellingEnabled = userPreferences?.areChordsEnabled != false
     SwitchListItem(
         title = stringResource(Res.string.settings_german_notation),
         description = stringResource(Res.string.settings_german_notation_description),
@@ -530,23 +576,11 @@ private fun SongDisplaySection(
     }
 }
 
-/**
- * Performance mode is the first row of the first tab: what it does is take controls out of the interface, which is
- * what files it next to the theme and the language, and it decides what the rest of the app is still allowed to do,
- * which is what puts it on top.
- */
 @Composable
 private fun GeneralSection(
     viewModel: CampfireViewModel,
     userPreferences: UserPreferences?,
-    isPerformanceModeEnabled: Boolean,
 ) = SettingsSection {
-    SwitchListItem(
-        title = stringResource(Res.string.settings_performance_mode),
-        description = stringResource(Res.string.settings_performance_mode_description),
-        isChecked = isPerformanceModeEnabled,
-        onCheckedChange = viewModel::setPerformanceModeEnabled,
-    )
     SettingsSubsection(title = stringResource(Res.string.settings_user_interface_theme)) {
         UiModeChoice(
             selected = userPreferences?.uiMode,
@@ -613,8 +647,8 @@ private fun GeneralSection(
  * on the device are also how it is taken off: the library's row deletes every song and setlist, behind a dialog that
  * wants a word typed, and the cover cache's row deletes the copies of the covers, behind an ordinary one.
  *
- * The two actions are disabled rather than hidden by performance mode, like the chord spelling under lyrics only
- * mode: this screen is the one place the mode can be switched back off, and a settings screen whose rows come and go
+ * The two actions are disabled rather than hidden by performance mode, like the chord spelling with the chords
+ * switched off: this screen is the one place the mode can be switched back off, and a settings screen whose rows come and go
  * with a switch on it is one nobody can find their way around.
  */
 @Composable
@@ -840,6 +874,7 @@ private fun AboutSection(
 private fun SettingsTab.label() = stringResource(
     when (this) {
         SettingsTab.GENERAL -> Res.string.settings_general
+        SettingsTab.FEATURES -> Res.string.settings_features
         SettingsTab.SONGS -> Res.string.settings_songs
         SettingsTab.LIBRARY -> Res.string.settings_library
         SettingsTab.ABOUT -> Res.string.settings_about

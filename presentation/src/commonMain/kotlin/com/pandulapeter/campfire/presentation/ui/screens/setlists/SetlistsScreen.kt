@@ -312,8 +312,10 @@ private fun SetlistList(
             onReorderingSetlistChanged(null)
         }
     }
-    // Lyrics only mode takes the chords out of the viewer, and the key is the shortest way of writing them down.
-    val shouldShowChords = userPreferences?.isLyricsOnlyModeEnabled != true
+    // The chords switched off take them out of the viewer, and the key is the shortest way of writing them down.
+    val shouldShowChords = userPreferences?.areChordsEnabled != false
+    // The tempo is what the click plays, so it goes with the metronome.
+    val isMetronomeEnabled = userPreferences?.isMetronomeEnabled != false
     val isCoverArtEnabled = userPreferences?.isCoverArtEnabled == true
     val chordSpelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
     // The order the rows are drawn in while a drag is in flight, before any of it has been written down. The
@@ -606,7 +608,7 @@ private fun SetlistList(
                                         song = entry.song,
                                         setlistFileName = setlistWithSongs.setlist.fileName,
                                         tempos = tempos,
-                                    ).displayedBpm,
+                                    ).displayedBpm.takeIf { isMetronomeEnabled },
                                     shouldShowChords = shouldShowChords,
                                     duration = entry.song.duration,
                                     coverArtUrl = entry.song.coverArtUrl?.takeIf { isCoverArtEnabled },

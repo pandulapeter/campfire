@@ -270,7 +270,9 @@ internal fun SongDetailsScreen(
     // The pages only count themselves where one of them cannot be placed - the setlist is gone, or the library has not
     // caught up with a change to it yet - so that two numberings are never mixed in one bar.
     val setlistSlots = remember(setlist, songs) { setlist?.let { buildSetlistSlots(it.entries, songs.map { song -> song.fileName }) } }
-    val shouldShowChords = userPreferences?.isLyricsOnlyModeEnabled != true
+    val shouldShowChords = userPreferences?.areChordsEnabled != false
+    val isMetronomeEnabled = userPreferences?.isMetronomeEnabled != false
+    val areSetlistsEnabled = userPreferences?.areSetlistsEnabled != false
     val isCoverArtEnabled = userPreferences?.isCoverArtEnabled == true
     val currentSongText = currentSong?.let { songTexts[it.fileName] }
     // The sheet of what the song is, opened from the app bar's title. Performance mode edits nothing, so there it is only
@@ -289,7 +291,7 @@ internal fun SongDetailsScreen(
     val appBarButtons = appBarButtons(appBarWidth = appBarWidth, hasCover = isCoverArtEnabled && songs.any { it.coverArtUrl != null })
     val showsCoverInBar = isCoverArtEnabled && if (isReadOnly) showsCoverInPerformanceMode(appBarWidth) else appBarButtons.isCoverShown
     val showsFontScaleInBar = isReadOnly && showsFontScaleInPerformanceBar(appBarWidth)
-    val showsSetlistAssignmentsInBar = !isReadOnly && appBarButtons.isSetlistAssignmentsShown
+    val showsSetlistAssignmentsInBar = !isReadOnly && areSetlistsEnabled && appBarButtons.isSetlistAssignmentsShown
     // Read only, the button stands next to the text size stepper, which is all that bar holds; otherwise it is always
     // in the bar, see appBarButtons.
     val showsMetronomeInBar = !isReadOnly || showsMetronomeInPerformanceBar(appBarWidth)
@@ -313,11 +315,15 @@ internal fun SongDetailsScreen(
             onClick = viewModel::toggleMetronomePanel,
         )
     }
-    val metronomeAction = metronomeAction(
-        isPanelShown = isMetronomePanelShown,
-        bpm = currentTempo?.bpm ?: MetronomePattern.DEFAULT_BPM,
-        onClick = viewModel::toggleMetronomePanel,
-    )
+    val metronomeAction = if (isMetronomeEnabled) {
+        metronomeAction(
+            isPanelShown = isMetronomePanelShown,
+            bpm = currentTempo?.bpm ?: MetronomePattern.DEFAULT_BPM,
+            onClick = viewModel::toggleMetronomePanel,
+        )
+    } else {
+        null
+    }
 
     val coroutineScope = rememberCoroutineScope()
     val pageStepper = remember(pagerState, coroutineScope) { PageStepper(pagerState, coroutineScope) }
@@ -451,6 +457,7 @@ internal fun SongDetailsScreen(
                         )
                     }
                     val headerTempo = song
+                        ?.takeIf { isMetronomeEnabled }
                         ?.let { effectiveTempo(song = it, setlistFileName = destination.setlistFileName, tempos = tempos).displayedBpm }
                         ?.let { stringResource(Res.string.song_details_tempo, it.toString()) }
                     // The duration only inside a setlist, as the song's card there says it, since a set is what is
@@ -552,9 +559,9 @@ internal fun SongDetailsScreen(
                     exit = fadeOut() + shrinkHorizontally(),
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        ActionsMenu(items = listOfNotNull(metronomeAction.takeUnless { showsMetronomeInBar || !isPerformanceModeEnabled }))
+                        ActionsMenu(items = listOfNotNull(metronomeAction?.takeUnless { showsMetronomeInBar || !isPerformanceModeEnabled }))
                         AnimatedVisibility(
-                            visible = showsMetronomeInBar,
+                            visible = showsMetronomeInBar && isMetronomeEnabled,
                             enter = fadeIn() + expandHorizontally(),
                             exit = fadeOut() + shrinkHorizontally(),
                         ) {
@@ -574,7 +581,7 @@ internal fun SongDetailsScreen(
                     exit = fadeOut() + shrinkHorizontally(),
                 ) {
                     ActionsMenu(
-                        items = listOf(metronomeAction),
+                        items = listOfNotNull(metronomeAction),
                         menuFooter = {
                             MenuStepperRow(label = stringResource(Res.string.song_details_text_size)) {
                                 LiveFontScaleControls(viewModel = viewModel)
@@ -587,7 +594,7 @@ internal fun SongDetailsScreen(
                     val coverArtAction = if (isCoverArtEnabled) coverArtAction(viewModel = viewModel, song = song, isEditorDraft = false) else null
                     val isInSetlist = song.fileName in songFileNamesInSetlists
                     AnimatedVisibility(
-                        visible = !isReadOnly,
+                        visible = !isReadOnly && isMetronomeEnabled,
                         enter = fadeIn() + expandHorizontally(),
                         exit = fadeOut() + shrinkHorizontally(),
                     ) {
@@ -618,7 +625,14 @@ internal fun SongDetailsScreen(
                             viewModel = viewModel,
                             song = song,
                             fileEditItems = editingActions.take(1) +
-                                songPlayingAction(viewModel = viewModel, song = song, setlistFileName = destination.setlistFileName) +
+                                // The sheet edits what the two features show, so it goes once both are switched off.
+                                listOfNotNull(
+                                    if (shouldShowChords || isMetronomeEnabled) {
+                                        songPlayingAction(viewModel = viewModel, song = song, setlistFileName = destination.setlistFileName)
+                                    } else {
+                                        null
+                                    },
+                                ) +
                                 listOfNotNull(coverArtAction) +
                                 editingActions.drop(1),
                         )
@@ -633,7 +647,7 @@ internal fun SongDetailsScreen(
                         setlistFileName = destination.setlistFileName,
                         leadingItems = when {
                             !isReadOnly -> listOfNotNull(
-                                if (showsSetlistAssignmentsInBar) {
+                                if (showsSetlistAssignmentsInBar || !areSetlistsEnabled) {
                                     null
                                 } else {
                                     setlistAssignmentsAction(
@@ -644,8 +658,8 @@ internal fun SongDetailsScreen(
                                     )
                                 },
                             )
-                            showsFontScaleInBar -> listOfNotNull(metronomeAction.takeUnless { showsMetronomeInBar })
-                            else -> listOf(metronomeAction)
+                            showsFontScaleInBar -> listOfNotNull(metronomeAction?.takeUnless { showsMetronomeInBar })
+                            else -> listOfNotNull(metronomeAction)
                         },
                         // The transposition, the capo and the tempo are set in the song's own first section now; what
                         // is left for the menu is the text size, which belongs to the reader rather than to the song.
@@ -664,7 +678,7 @@ internal fun SongDetailsScreen(
             bottomContent = {
                 SongMetronomePanel(
                     viewModel = viewModel,
-                    isVisible = isMetronomePanelShown,
+                    isVisible = isMetronomePanelShown && isMetronomeEnabled,
                     contentPadding = contentPadding,
                 )
             },
@@ -768,10 +782,12 @@ internal fun SongDetailsScreen(
                                 chordSpelling = chordSpelling,
                                 tempo = tempo,
                                 capo = capo,
-                                canTranspose = shouldShowChords && song.hasChords,
+                                shouldShowChords = shouldShowChords,
+                                shouldShowTempo = isMetronomeEnabled,
                             )
                         },
                         shouldShowChords = shouldShowChords,
+                        shouldShowTempo = isMetronomeEnabled,
                         shouldNumberSections = userPreferences?.shouldNumberSections == true,
                         fontScale = if (isFollowingGesture) ({ viewModel.fontScale }) else ({ viewModel.settledFontScale }),
                         // In a setlist the step buttons page to the songs beside every song, whether it scrolls or not.
@@ -943,6 +959,7 @@ private fun SongPagerControls(
  *   same way as [tempoOverride].
  * @param playingControls What sets the key, the capo, the tempo and the time signature from the song's own first
  *   section, null in read only mode, see [SongPlayingControls].
+ * @param shouldShowTempo False with the metronome switched off, which takes the tempo and the time signature off the page.
  * @param fontScale Read where the lyrics are built rather than passed as a value: a pinch changes it on every frame,
  *   and read here it invalidates only this page's content rather than the screen and the pager around it.
  */
@@ -959,6 +976,7 @@ private fun SongDetailsPage(
     capoOverride: Int?,
     playingControls: SongPlayingControls?,
     shouldShowChords: Boolean,
+    shouldShowTempo: Boolean,
     shouldNumberSections: Boolean,
     fontScale: () -> Float,
     keepsStepButtonInset: Boolean,
@@ -1073,6 +1091,7 @@ private fun SongDetailsPage(
                 // Read only, the page is the one place left that says how the song is played, so a capo of none and the
                 // time the click counts are said rather than left to be guessed from nothing.
                 readsCapoAndTime = playingControls == null,
+                shouldShowTempo = shouldShowTempo,
                 // The padding is inside the scroll, so a row is at the top of the viewport once the song is scrolled by
                 // its position plus the padding above it - all but the first, which is read at the top of the song.
                 onRowsPlaced = { rows ->

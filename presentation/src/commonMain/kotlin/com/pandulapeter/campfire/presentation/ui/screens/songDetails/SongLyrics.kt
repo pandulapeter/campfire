@@ -164,10 +164,12 @@ import kotlin.math.roundToInt
  * [SongMetadataSection]), which the editor's preview does; the song details screen opens it as a sheet instead.
  * @param songInfoEditing The edit buttons of that card, null for none.
  * @param playingControls What sets the song's key, capo, tempo and time signature, drawn in place of the line that
- * only reads them; null leaves that line, which is what read only mode and the editor's preview get. Left out of
- * lyrics-only mode along with the values themselves, since there is nothing played to set there.
+ * only reads them; null leaves that line, which is what read only mode and the editor's preview get. Each control goes
+ * with the values it sets, see [SongPlayingControls].
  * @param readsCapoAndTime Whether that line names the capo and the time signature where the file names neither, which
  * read only mode on the song details screen asks for, see [withMetadataSection].
+ * @param shouldShowTempo False with the metronome switched off, which leaves the tempo and the time signature out of
+ * the song's first section, see [withMetadataSection]. The chords' own switch is the model's, since it shapes the lyrics.
  * @param onRowsPlaced Handed the rows of the song ([SongRows]: where a scroll comes to rest on each - the
  * bottom edge of the divider above it, so that the divider itself is just out of view - and where its content ends),
  * and the stops the song is stepped through, measured from the top of this composable's content, every time they are
@@ -205,6 +207,7 @@ internal fun SongLyrics(
     songInfoEditing: SongInfoEditing? = null,
     playingControls: SongPlayingControls? = null,
     readsCapoAndTime: Boolean = false,
+    shouldShowTempo: Boolean = true,
     onRowsPlaced: ((SongRows) -> Unit)? = null,
     rowViewportHeight: Dp = Dp.Unspecified,
     rowViewportBottomPadding: Dp = 0.dp,
@@ -217,12 +220,13 @@ internal fun SongLyrics(
     val defaultLabels = rememberDefaultSectionLabels()
     val isSongInfoEditable = songInfoEditing != null
     // The controls are only drawn where the values they set are, so a change of either decides the section's content.
-    val shownPlayingControls = playingControls?.takeIf { model.shouldShowChords }
-    val sections = remember(model.sections, model.song.metadata, model.shouldShowChords, isSongInfoShown, isSongInfoEditable, shownPlayingControls != null, readsCapoAndTime) {
+    val shownPlayingControls = playingControls?.takeIf { model.shouldShowChords || shouldShowTempo }
+    val sections = remember(model.sections, model.song.metadata, model.shouldShowChords, shouldShowTempo, isSongInfoShown, isSongInfoEditable, shownPlayingControls != null, readsCapoAndTime) {
         withMetadataSection(
             sections = model.sections,
             metadata = model.song.metadata,
             shouldShowChords = model.shouldShowChords,
+            shouldShowTempo = shouldShowTempo,
             isSongInfoShown = isSongInfoShown,
             isSongInfoEditable = isSongInfoEditable,
             hasPlayingControls = shownPlayingControls != null,

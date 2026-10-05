@@ -352,8 +352,10 @@ private fun SongList(
     val labelsOnEverySong by viewModel.labelsOnEverySong.collectAsStateWithLifecycle()
     val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     val songFileNamesInSetlists by viewModel.songFileNamesInSetlists.collectAsStateWithLifecycle()
-    // Lyrics only mode takes the chords out of the viewer, and the key is the shortest way of writing them down.
-    val shouldShowChords = userPreferences?.isLyricsOnlyModeEnabled != true
+    // The chords switched off take them out of the viewer, and the key is the shortest way of writing them down.
+    val shouldShowChords = userPreferences?.areChordsEnabled != false
+    // The tempo is what the click plays, so it goes with the metronome.
+    val isMetronomeEnabled = userPreferences?.isMetronomeEnabled != false
     val isCoverArtEnabled = userPreferences?.isCoverArtEnabled == true
     val chordSpelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
     val filePicker = LocalFilePicker.current
@@ -511,7 +513,7 @@ private fun SongList(
                             song = song,
                             cardPadding = songCardPadding(songIndex, columnCount),
                             key = key,
-                            tempo = tempo.displayedBpm,
+                            tempo = tempo.displayedBpm.takeIf { isMetronomeEnabled },
                             shouldShowChords = shouldShowChords,
                             coverArtUrl = song.coverArtUrl?.takeIf { isCoverArtEnabled },
                             labelsOnEverySong = labelsOnEverySong,
@@ -542,11 +544,13 @@ private fun SongList(
                                         horizontalArrangement = Arrangement.spacedBy(-ACTION_BUTTON_OVERLAP),
                                         verticalAlignment = Alignment.CenterVertically,
                                     ) {
-                                        SetlistAssignmentsButton(
-                                            viewModel = viewModel,
-                                            song = song,
-                                            isInSetlist = isInSetlist,
-                                        )
+                                        if (userPreferences?.areSetlistsEnabled != false) {
+                                            SetlistAssignmentsButton(
+                                                viewModel = viewModel,
+                                                song = song,
+                                                isInSetlist = isInSetlist,
+                                            )
+                                        }
                                         SongActions(
                                             state = actionsMenuState,
                                             viewModel = viewModel,

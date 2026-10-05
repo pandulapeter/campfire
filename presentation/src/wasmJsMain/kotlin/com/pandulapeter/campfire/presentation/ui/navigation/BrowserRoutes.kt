@@ -26,10 +26,10 @@ import kotlin.js.ExperimentalWasmJsInterop
  * - `` — the songs, and `search` over them while their search is open;
  * - `setlists`, and `setlists/search`;
  * - `metronome`;
- * - `settings/general`, directly on top of the songs, and `settings/songs`, `settings/library` or `settings/about`
- *   on top of that while another tab is open — a Back from any other tab goes to General before it leaves the screen,
- *   so General is a step of its own, while one tab picked after another replaces the entry rather than adding one
- *   (`settings` alone opens the tab that was open last);
+ * - `settings/general`, directly on top of the songs, and `settings/features`, `settings/songs`, `settings/library` or
+ *   `settings/about` on top of that while another tab is open — a Back from any other tab goes to General before it
+ *   leaves the screen, so General is a step of its own, while one tab picked after another replaces the entry rather
+ *   than adding one (`settings` alone opens the tab that was open last);
  * - `song/{song}`, and `song/{song}/edit` for its editor;
  * - `setlist/{setlist}/{song}` — a song read from a setlist, which follows the pager from song to song;
  * - `import` — the import screen, which an address opened on its own names nothing for, since what it shows is an

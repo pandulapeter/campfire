@@ -170,8 +170,10 @@ import com.pandulapeter.campfire.presentation.resources.songs
 import com.pandulapeter.campfire.presentation.resources.songs_delete_song_partly
 import com.pandulapeter.campfire.presentation.resources.songs_update_file_name_partly
 import com.pandulapeter.campfire.presentation.ui.components.ListLayout
+import com.pandulapeter.campfire.presentation.ui.components.NavigationItemPresence
 import com.pandulapeter.campfire.presentation.ui.components.ProvideCoverArtImageLoader
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
+import com.pandulapeter.campfire.presentation.ui.components.collapsingNavigationItem
 import com.pandulapeter.campfire.presentation.ui.components.hasRoomForSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.pluralTextResource
 import com.pandulapeter.campfire.presentation.ui.components.textResource
@@ -483,6 +485,7 @@ private fun CampfireContent(
     urlOpener: (String) -> Unit,
 ) {
     val backStack = viewModel.backStack
+    val topLevelDestinations by viewModel.topLevelDestinations.collectAsStateWithLifecycle()
     var isNavigationTransitionRunning by remember { mutableStateOf(false) }
     var isChromeInScreens by remember { mutableStateOf(false) }
     val isTopLevelScreenCovered = backStack.lastOrNull() !is CampfireDestination.TopLevel
@@ -510,6 +513,7 @@ private fun CampfireContent(
         chrome = { chromeKind ->
             NavigationChrome(
                 kind = chromeKind,
+                destinations = topLevelDestinations,
                 currentTopLevelDestination = backStack.lastOrNull { it is CampfireDestination.TopLevel } as? CampfireDestination.TopLevel,
                 onDestinationSelected = viewModel::selectTopLevelDestination,
             )
@@ -548,6 +552,7 @@ private fun CampfireScreens(
     onNavigationTransitionRunningChanged: (Boolean) -> Unit,
 ) {
     val backStack = viewModel.backStack
+    val topLevelDestinations by viewModel.topLevelDestinations.collectAsStateWithLifecycle()
     val layoutDirection = LocalLayoutDirection.current
     val density = LocalDensity.current
     val motionScheme = MaterialTheme.motionScheme
@@ -621,6 +626,7 @@ private fun CampfireScreens(
             {
                 NavigationChrome(
                     kind = chromeKind,
+                    destinations = topLevelDestinations,
                     currentTopLevelDestination = destination,
                     onDestinationSelected = viewModel::selectTopLevelDestination,
                 )
@@ -1075,6 +1081,9 @@ private val EXPANDED_NAVIGATION_RAIL_MIN_WIDTH = 220.dp
 /** Material adds the icon and its padding to this reserved label width, giving every item a 180dp pill. */
 private val EXPANDED_NAVIGATION_RAIL_LABEL_WIDTH = 116.dp
 
+/** The weight of a navigation bar item that has all but left, since a weight of zero is refused. */
+private const val MIN_NAVIGATION_ITEM_WEIGHT = 0.001f
+
 /** The gap the collapsed [NavigationRail] leaves above its first item. */
 private val EXPANDED_NAVIGATION_RAIL_TOP_PADDING = 4.dp
 
@@ -1085,10 +1094,13 @@ private val EXPANDED_NAVIGATION_RAIL_TOP_PADDING = 4.dp
  * moves the screen under it a little, and the chrome is part of that screen as far as the eye can tell, so for as long
  * as a card covers the deck or is being taken off it every top level screen draws a copy of it instead (see
  * [CampfireScreens]), which moves with the screen and which the card covers.
+ *
+ * @param destinations The top level screens of the features switched on, see `CampfireViewModel.topLevelDestinations`.
  */
 @Composable
 private fun NavigationChrome(
     kind: NavigationChromeKind,
+    destinations: List<CampfireDestination.TopLevel>,
     currentTopLevelDestination: CampfireDestination.TopLevel?,
     onDestinationSelected: (CampfireDestination.TopLevel) -> Unit,
 ) {
@@ -1103,42 +1115,55 @@ private fun NavigationChrome(
             contentPadding = PaddingValues(top = EXPANDED_NAVIGATION_RAIL_TOP_PADDING),
         ) {
             CampfireDestination.TopLevel.entries.forEach { destination ->
-                WideNavigationRailItem(
-                    selected = destination == currentTopLevelDestination,
-                    onClick = { onDestinationSelected(destination) },
-                    icon = { Icon(painter = painterResource(destination.icon), contentDescription = null) },
-                    label = {
-                        Text(
-                            text = stringResource(destination.label),
-                            modifier = Modifier.width(EXPANDED_NAVIGATION_RAIL_LABEL_WIDTH),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    },
-                    railExpanded = true,
-                )
+                NavigationItemPresence(isShown = destination in destinations) { presence ->
+                    WideNavigationRailItem(
+                        modifier = Modifier.collapsingNavigationItem(presence = presence, isHorizontal = false),
+                        selected = destination == currentTopLevelDestination,
+                        onClick = { onDestinationSelected(destination) },
+                        icon = { Icon(painter = painterResource(destination.icon), contentDescription = null) },
+                        label = {
+                            Text(
+                                text = stringResource(destination.label),
+                                modifier = Modifier.width(EXPANDED_NAVIGATION_RAIL_LABEL_WIDTH),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        },
+                        railExpanded = true,
+                    )
+                }
             }
         }
     } else if (kind == NavigationChromeKind.RAIL) {
         NavigationRail {
             CampfireDestination.TopLevel.entries.forEach { destination ->
-                NavigationRailItem(
-                    selected = destination == currentTopLevelDestination,
-                    onClick = { onDestinationSelected(destination) },
-                    icon = { Icon(painter = painterResource(destination.icon), contentDescription = null) },
-                    label = { Text(stringResource(destination.label)) },
-                )
+                NavigationItemPresence(isShown = destination in destinations) { presence ->
+                    NavigationRailItem(
+                        modifier = Modifier.collapsingNavigationItem(presence = presence, isHorizontal = false),
+                        selected = destination == currentTopLevelDestination,
+                        onClick = { onDestinationSelected(destination) },
+                        icon = { Icon(painter = painterResource(destination.icon), contentDescription = null) },
+                        label = { Text(stringResource(destination.label)) },
+                    )
+                }
             }
         }
     } else {
         NavigationBar {
             CampfireDestination.TopLevel.entries.forEach { destination ->
-                NavigationBarItem(
-                    selected = destination == currentTopLevelDestination,
-                    onClick = { onDestinationSelected(destination) },
-                    icon = { Icon(painter = painterResource(destination.icon), contentDescription = null) },
-                    label = { Text(stringResource(destination.label)) },
-                )
+                NavigationItemPresence(isShown = destination in destinations) { presence ->
+                    NavigationBarItem(
+                        // The bar hands its width out by weight, and the outermost weight is the one it reads, so this
+                        // one rather than the item's own decides the slot. A weight cannot be zero.
+                        modifier = Modifier
+                            .weight(presence().coerceAtLeast(MIN_NAVIGATION_ITEM_WEIGHT))
+                            .collapsingNavigationItem(presence = presence, isHorizontal = true),
+                        selected = destination == currentTopLevelDestination,
+                        onClick = { onDestinationSelected(destination) },
+                        icon = { Icon(painter = painterResource(destination.icon), contentDescription = null) },
+                        label = { Text(stringResource(destination.label)) },
+                    )
+                }
             }
         }
     }

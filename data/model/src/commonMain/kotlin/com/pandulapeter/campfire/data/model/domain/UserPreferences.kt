@@ -22,7 +22,21 @@ data class UserPreferences(
      * ones still in use. Off by default, which is the whole point of archiving one.
      */
     val shouldShowArchivedSetlists: Boolean,
-    val isLyricsOnlyModeEnabled: Boolean,
+    /**
+     * Whether songs are shown with their chords and everything that only matters to whoever plays them: the key, the
+     * transposition and the capo. Off, the app is a lyrics sheet for a singer.
+     */
+    val areChordsEnabled: Boolean,
+    /**
+     * Whether the app has setlists at all: their tab and every way of putting a song into one. Off, the files stay in
+     * the library and keep travelling through imports, exports and sync runs; they are only out of sight.
+     */
+    val areSetlistsEnabled: Boolean,
+    /**
+     * Whether the app has a metronome: its tab, the song details screen's click and panel, and the tempo and time
+     * signature wherever a song is read. The Song defaults sheet still edits both, since that is the file.
+     */
+    val isMetronomeEnabled: Boolean,
     /**
      * Multiplier applied to the text size of the song details screen, [DEFAULT_FONT_SCALE] being the default, and
      * never outside [MIN_FONT_SCALE] to [MAX_FONT_SCALE].

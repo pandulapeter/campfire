@@ -110,8 +110,10 @@ import org.jetbrains.compose.resources.painterResource
  * motion of the lyrics rather than taking their full width away above them: the card of what the song is, where it is
  * shown there, and under it how it is played.
  *
- * @param shouldShowChords False for lyrics-only mode, which leaves out the key, capo, tempo and time along with the
+ * @param shouldShowChords False with the chords switched off, which leaves out the key and the capo along with the
  * chords: they are what is played, and say nothing to somebody who is only singing.
+ * @param shouldShowTempo False with the metronome switched off, which leaves out the tempo and the time signature: they
+ * are what the click plays, and say nothing without one.
  * @param isSongInfoShown Whether the card of what the song is belongs to the section: it does in the editor's preview,
  * which shows everything being typed, and not on the song details screen, whose app bar opens it as a sheet instead.
  * @param isSongInfoEditable Whether that card has edit buttons, which puts it there for a song that says nothing about
@@ -128,21 +130,28 @@ internal fun withMetadataSection(
     sections: List<RenderSection>,
     metadata: ChordProMetadata,
     shouldShowChords: Boolean,
+    shouldShowTempo: Boolean = true,
     isSongInfoShown: Boolean,
     isSongInfoEditable: Boolean = false,
     hasPlayingControls: Boolean = false,
     readsCapoAndTime: Boolean = false,
 ): List<RenderSection> {
-    val hasControls = shouldShowChords && hasPlayingControls
-    val readsBoth = shouldShowChords && !hasControls && readsCapoAndTime
-    val shownMetadata = when {
-        !shouldShowChords -> metadata.copy(key = null, capo = null, tempo = null, time = null)
-        readsBoth -> metadata.copy(
-            capo = metadata.capo ?: 0,
-            time = metadata.time?.takeIf { it.isNotBlank() } ?: TimeSignature.COMMON_TIME.toString(),
-        )
-        else -> metadata
-    }
+    val hasControls = (shouldShowChords || shouldShowTempo) && hasPlayingControls
+    val readsBoth = (shouldShowChords || shouldShowTempo) && !hasControls && readsCapoAndTime
+    val shownMetadata = metadata.copy(
+        key = metadata.key.takeIf { shouldShowChords },
+        capo = when {
+            !shouldShowChords -> null
+            readsBoth -> metadata.capo ?: 0
+            else -> metadata.capo
+        },
+        tempo = metadata.tempo.takeIf { shouldShowTempo },
+        time = when {
+            !shouldShowTempo -> null
+            readsBoth -> metadata.time?.takeIf { it.isNotBlank() } ?: TimeSignature.COMMON_TIME.toString()
+            else -> metadata.time
+        },
+    )
     return if ((isSongInfoShown && (isSongInfoEditable || shownMetadata.hasSongInfo)) || hasControls || readsBoth || shownMetadata.hasPlayingValues) {
         listOf(RenderSection.Metadata(metadata = shownMetadata, hasPlayingControls = hasControls, readsCapoAndTime = readsBoth)) + sections
     } else {
@@ -283,51 +292,57 @@ private fun SongPlayingControlsRow(
                 )
             }
         }
-        PlayingControl(
-            modifier = Modifier.layoutId(PlayingControlId.CAPO),
-            label = stringResource(Res.string.song_editor_insert_capo),
-            fontScale = fontScale,
-        ) {
-            CapoControls(
-                capo = controls.capo.capo,
+        controls.capo?.let { capo ->
+            PlayingControl(
+                modifier = Modifier.layoutId(PlayingControlId.CAPO),
+                label = stringResource(Res.string.song_editor_insert_capo),
                 fontScale = fontScale,
-                height = height,
-                onStep = controls.capo.onStep,
-                onReset = controls.capo.onReset,
-            )
+            ) {
+                CapoControls(
+                    capo = capo.capo,
+                    fontScale = fontScale,
+                    height = height,
+                    onStep = capo.onStep,
+                    onReset = capo.onReset,
+                )
+            }
         }
-        PlayingControl(
-            modifier = Modifier.layoutId(PlayingControlId.TEMPO),
-            label = stringResource(Res.string.song_editor_insert_tempo),
-            fontScale = fontScale,
-        ) {
-            TempoStepper(
-                tempo = controls.tempo.tempo,
+        controls.tempo?.let { tempo ->
+            PlayingControl(
+                modifier = Modifier.layoutId(PlayingControlId.TEMPO),
+                label = stringResource(Res.string.song_editor_insert_tempo),
                 fontScale = fontScale,
-                height = height,
-                onStep = controls.tempo.onStep,
-                onTapped = controls.tempo.onTapped,
-                onReset = controls.tempo.onReset,
-            )
+            ) {
+                TempoStepper(
+                    tempo = tempo.tempo,
+                    fontScale = fontScale,
+                    height = height,
+                    onStep = tempo.onStep,
+                    onTapped = tempo.onTapped,
+                    onReset = tempo.onReset,
+                )
+            }
         }
         // An item of its own rather than part of the tempo's, since it is the meter rather than how fast it goes, and
         // read rather than set: it is the one of the four that only the file says, which a control of its own on the
         // page made look like the others.
-        PlayingControl(
-            modifier = Modifier.layoutId(PlayingControlId.TIME),
-            label = stringResource(Res.string.song_editor_insert_time),
-            fontScale = fontScale,
-        ) {
-            Text(
-                text = controls.timeSignature,
-                style = MaterialTheme.typography.labelLarge.scaled(fontScale),
-                fontWeight = FontWeight.Bold,
-            )
+        controls.timeSignature?.let { timeSignature ->
+            PlayingControl(
+                modifier = Modifier.layoutId(PlayingControlId.TIME),
+                label = stringResource(Res.string.song_editor_insert_time),
+                fontScale = fontScale,
+            ) {
+                Text(
+                    text = timeSignature,
+                    style = MaterialTheme.typography.labelLarge.scaled(fontScale),
+                    fontWeight = FontWeight.Bold,
+                )
+            }
         }
     }
 }
 
-/** What [BalancedRows] follows each of [SongPlayingControlsRow]'s items by, since the transposition is not always among them. */
+/** What [BalancedRows] follows each of [SongPlayingControlsRow]'s items by, since not all four are always among them. */
 private enum class PlayingControlId { KEY, CAPO, TEMPO, TIME }
 
 /** One of [SongPlayingControlsRow]'s items: what it is, in the accent color the line of text uses, and what sets it. */
@@ -433,12 +448,17 @@ private fun SongInfoCard(
  */
 @Immutable
 internal class SongPlayingControls(
-    /** Null for a song with nothing to transpose, whose key is then only read. */
+    /** Null for a song with nothing to transpose, whose key is then only read, and with the chords switched off. */
     val key: SongKeyControl?,
-    val capo: SongCapoControl,
-    val tempo: SongTempoControl,
-    /** The time signature as the file writes it, or the one the click counts the bar by where it names none. */
-    val timeSignature: String,
+    /** Null with the chords switched off. */
+    val capo: SongCapoControl?,
+    /** Null with the metronome switched off. */
+    val tempo: SongTempoControl?,
+    /**
+     * The time signature as the file writes it, or the one the click counts the bar by where it names none. Null with
+     * the metronome switched off, since the bar it counts is the click's.
+     */
+    val timeSignature: String?,
 )
 
 /** The transposition, which the key reads: the amount, the key it takes the song to, and the stepper's two ends. */

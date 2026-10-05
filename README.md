@@ -17,7 +17,7 @@ It runs natively on Android, iOS, macOS, Windows, Linux and the web.
 
 The interface is designed around practical use, whether you’re organizing a song library, building setlists, or playing a gig.
 Songs automatically adapt with multi-column layouts and customizable section ordering to make reading easier on stage.
-It also includes on-the-fly transposition, adjustable font sizing, a lyrics-only view for singers, customizable themes, and a Performance mode to lock the app against accidental edits.
+It also includes on-the-fly transposition, adjustable font sizing, a lyrics-only view for singers, customizable themes, a read only mode to lock the app against accidental edits, and a Features tab that switches off whatever a reader does not need, from the metronome to the setlists.
 Songs and setlists can be exported as printable PDFs, with a page preview, song selection, and saved paper, sizing and content options.
 
 <img src="documentation/screenshots/04.webp" width="32%" /> <img src="documentation/screenshots/05.webp" width="32%" /> <img src="documentation/screenshots/06.webp" width="32%" />

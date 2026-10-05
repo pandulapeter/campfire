@@ -27,3 +27,19 @@ internal data class NavigationState(
     val isSetlistsSearchOpen: Boolean,
     val settingsTab: SettingsTab,
 )
+
+/**
+ * This state with its back stack cut short at the first screen of a feature switched off (see
+ * [CampfireDestination.isEnabled]), the way an address naming a setlist the library no longer holds is: an address
+ * typed or bookmarked, a history entry gone back to or a state saved before the switch was flipped may each name one.
+ * The setlists' search is closed with their screen. What is left may be the songs alone, which is where the app then is.
+ */
+internal fun NavigationState.withoutDisabledFeatures(areSetlistsEnabled: Boolean, isMetronomeEnabled: Boolean): NavigationState {
+    val backStack = backStack.takeWhile {
+        CampfireDestination.isEnabled(destination = it, areSetlistsEnabled = areSetlistsEnabled, isMetronomeEnabled = isMetronomeEnabled)
+    }
+    return copy(
+        backStack = backStack,
+        isSetlistsSearchOpen = isSetlistsSearchOpen && CampfireDestination.Setlists in backStack,
+    )
+}

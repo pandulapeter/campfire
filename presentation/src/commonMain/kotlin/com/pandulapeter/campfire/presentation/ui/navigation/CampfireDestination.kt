@@ -38,11 +38,30 @@ sealed interface CampfireDestination : NavKey {
         companion object {
             val entries: List<TopLevel> get() = listOf(Songs, Setlists, Metronome, Settings)
 
+            /** The top level screens the navigation chrome offers, which leaves out those of the features switched off. */
+            fun entries(areSetlistsEnabled: Boolean, isMetronomeEnabled: Boolean) = entries.filter {
+                CampfireDestination.isEnabled(it, areSetlistsEnabled = areSetlistsEnabled, isMetronomeEnabled = isMetronomeEnabled)
+            }
+
             /**
              * Maps a [NavEntry][androidx.navigation3.runtime.NavEntry] content key back to the destination it
              * belongs to, since the entries only expose their content keys.
              */
             fun fromContentKey(contentKey: Any?): TopLevel? = entries.firstOrNull { it.contentKey == contentKey }
+        }
+    }
+
+    companion object {
+
+        /**
+         * Whether [destination] belongs to a feature that is switched on: the setlists screen and a song read from a
+         * setlist to the setlists, the metronome screen to the metronome. Everything else is always there.
+         */
+        fun isEnabled(destination: CampfireDestination, areSetlistsEnabled: Boolean, isMetronomeEnabled: Boolean) = when (destination) {
+            Setlists -> areSetlistsEnabled
+            Metronome -> isMetronomeEnabled
+            is SongDetails -> areSetlistsEnabled || destination.setlistFileName == null
+            else -> true
         }
     }
 

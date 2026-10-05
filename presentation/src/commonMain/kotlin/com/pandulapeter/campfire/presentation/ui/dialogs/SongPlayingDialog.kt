@@ -89,8 +89,10 @@ import kotlin.math.absoluteValue
  *
  * Every field may be left empty, which declares nothing and lets the default stand — no key, no capo, the click's
  * [MetronomePattern.DEFAULT_BPM] and [TimeSignature.COMMON_TIME] — and the placeholders say what that default is.
- * The key is typed in the reader's notation. Like the metadata form it opens with no field focused, since it is opened
- * to look the values up as often as to change one.
+ * Each field goes with its feature: the key and the capo with the chords, the tempo and the time signature with the
+ * metronome, so a reader who switched one off is not asked about it here either. The key is typed in the reader's
+ * notation. Like the metadata form it opens with no field focused, since it is opened to look the values up as often as
+ * to change one.
  *
  * The key is the one the chords are written in, which a `{transpose}` the file opens with moves before anything is
  * shown: the page, the app bar and the stepper all name the moved one. Typed in from what the page reads, it would be
@@ -102,6 +104,9 @@ internal fun SongPlayingDialog(
     dialog: CampfireViewModel.DialogType.SongPlaying,
 ) {
     val offeredValues = dialog.values
+    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    val shouldShowChords = userPreferences?.areChordsEnabled != false
+    val shouldShowTempo = userPreferences?.isMetronomeEnabled != false
     var values by rememberSaveable(dialog.song.fileName, stateSaver = songPlayingSaver) { mutableStateOf(offeredValues) }
     // Read the way the click reads it, so that a {time: C} is the common time it stands for rather than nothing.
     val timeSignature = remember(values[Field.TIME]) {
@@ -153,21 +158,31 @@ internal fun SongPlayingDialog(
                     song = dialog.song,
                     setlistFileName = dialog.setlistFileName,
                 )
-                field(Modifier.fillMaxWidth(), Field.KEY, ImeAction.Next)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    field(Modifier.weight(1f), Field.CAPO, ImeAction.Next)
-                    field(Modifier.weight(1f), Field.TEMPO, ImeAction.Done)
+                // A field of a feature switched off is left out rather than shown: the value it holds is kept as the
+                // file has it, since only the fields changed are written.
+                if (shouldShowChords) {
+                    field(Modifier.fillMaxWidth(), Field.KEY, ImeAction.Next)
                 }
-                Text(
-                    modifier = Modifier.padding(top = 8.dp),
-                    text = stringResource(Field.TIME.label),
-                    style = MaterialTheme.typography.titleSmall,
-                )
-                TimeSignaturePicker(
-                    timeSignature = timeSignature,
-                    horizontalPadding = 0.dp,
-                    onChange = { values = values + (Field.TIME to it.toString()) },
-                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (shouldShowChords) {
+                        field(Modifier.weight(1f), Field.CAPO, if (shouldShowTempo) ImeAction.Next else ImeAction.Done)
+                    }
+                    if (shouldShowTempo) {
+                        field(Modifier.weight(1f), Field.TEMPO, ImeAction.Done)
+                    }
+                }
+                if (shouldShowTempo) {
+                    Text(
+                        modifier = Modifier.padding(top = 8.dp),
+                        text = stringResource(Field.TIME.label),
+                        style = MaterialTheme.typography.titleSmall,
+                    )
+                    TimeSignaturePicker(
+                        timeSignature = timeSignature,
+                        horizontalPadding = 0.dp,
+                        onChange = { values = values + (Field.TIME to it.toString()) },
+                    )
+                }
             }
         },
         confirmButton = { close ->
@@ -192,7 +207,11 @@ internal class SongPlayingOverrides(
     val onReset: () -> Unit,
 )
 
-/** The overrides of [song] read through [setlistFileName], or in the library on this device where it is null. */
+/**
+ * The overrides of [song] read through [setlistFileName], or in the library on this device where it is null. Only those
+ * of the features switched on: the transposition and the capo go with the chords, the tempo with the metronome, and an
+ * override nobody is shown is not one to be named or taken back either.
+ */
 @Composable
 internal fun songPlayingOverrides(
     viewModel: CampfireViewModel,
@@ -202,22 +221,25 @@ internal fun songPlayingOverrides(
     val transpositions by viewModel.transpositions.collectAsStateWithLifecycle()
     val tempos by viewModel.tempos.collectAsStateWithLifecycle()
     val capos by viewModel.capos.collectAsStateWithLifecycle()
-    val transposition = transpositions[song.fileName, setlistFileName]
-    val capo = effectiveCapo(song = song, setlistFileName = setlistFileName, capos = capos)
-    val tempo = effectiveTempo(song = song, setlistFileName = setlistFileName, tempos = tempos)
+    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    val shouldShowChords = userPreferences?.areChordsEnabled != false
+    val shouldShowTempo = userPreferences?.isMetronomeEnabled != false
+    val transposition = transpositions[song.fileName, setlistFileName].takeIf { shouldShowChords } ?: 0
+    val capo = effectiveCapo(song = song, setlistFileName = setlistFileName, capos = capos).takeIf { shouldShowChords }
+    val tempo = effectiveTempo(song = song, setlistFileName = setlistFileName, tempos = tempos).takeIf { shouldShowTempo }
     val labels = listOfNotNull(
         transposition.takeIf { it != 0 }?.let {
             stringResource(Res.string.song_details_playing_override_transposition, transpositionLabel(transposition = it, key = null))
         },
-        capo.takeUnless { it.isDefault }?.let { stringResource(Res.string.song_details_capo, it.fret) },
-        tempo.takeUnless { it.isDefault }?.let { stringResource(Res.string.song_details_tempo, it.bpm.toString()) },
+        capo?.takeUnless { it.isDefault }?.let { stringResource(Res.string.song_details_capo, it.fret) },
+        tempo?.takeUnless { it.isDefault }?.let { stringResource(Res.string.song_details_tempo, it.bpm.toString()) },
     )
     return SongPlayingOverrides(
         labels = labels,
         onReset = {
             if (transposition != 0) viewModel.resetTransposition(song.fileName, setlistFileName)
-            if (!capo.isDefault) viewModel.resetCapo(song.fileName, setlistFileName)
-            if (!tempo.isDefault) viewModel.resetTempo(song.fileName, setlistFileName)
+            if (capo?.isDefault == false) viewModel.resetCapo(song.fileName, setlistFileName)
+            if (tempo?.isDefault == false) viewModel.resetTempo(song.fileName, setlistFileName)
         },
     )
 }

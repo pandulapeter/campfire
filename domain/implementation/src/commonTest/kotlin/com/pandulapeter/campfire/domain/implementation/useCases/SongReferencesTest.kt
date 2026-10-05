@@ -206,7 +206,9 @@ class SongReferencesTest {
         val PREFERENCES = UserPreferences(
             isPerformanceModeEnabled = false,
             shouldShowArchivedSetlists = false,
-            isLyricsOnlyModeEnabled = false,
+            areChordsEnabled = true,
+            areSetlistsEnabled = true,
+            isMetronomeEnabled = true,
             fontScale = 1f,
             sortingMode = UserPreferences.SortingMode.BY_TITLE,
             setlistSortingMode = UserPreferences.SetlistSortingMode.BY_DATE,

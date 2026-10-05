@@ -54,6 +54,17 @@ internal class UserPreferencesMappersTest {
     }
 
     @Test
+    fun featuresDefaultToOnAndChordsKeepTheLyricsOnlySwitchTheyReplaced() {
+        val defaults = UserPreferencesDocumentFormat.decode("{}").document.toModel()
+        assertEquals(true, defaults.areChordsEnabled)
+        assertEquals(true, defaults.areSetlistsEnabled)
+        assertEquals(true, defaults.isMetronomeEnabled)
+        val lyricsOnly = UserPreferencesDocumentFormat.decode("""{"isLyricsOnlyModeEnabled":true}""").document
+        assertEquals(false, lyricsOnly.toModel().areChordsEnabled)
+        assertEquals(true, lyricsOnly.toModel().toDocument().isLyricsOnlyModeEnabled)
+    }
+
+    @Test
     fun anUnknownEnumIdFallsBackForThatFieldOnly() {
         val preferences = UserPreferencesDocument(
             sortingMode = "by_mood",

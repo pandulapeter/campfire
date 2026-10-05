@@ -10,9 +10,11 @@
 package com.pandulapeter.campfire.presentation.ui.metronome
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterExitState
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
@@ -27,6 +29,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -58,10 +62,23 @@ internal fun SongMetronomePanel(
 ) = AnimatedVisibility(
     modifier = modifier,
     visible = isVisible,
-    // The bar grows a row rather than something sliding out from behind it.
-    enter = fadeIn() + expandVertically(expandFrom = Alignment.Top),
-    exit = fadeOut() + shrinkVertically(shrinkTowards = Alignment.Top),
+    // The bar grows a row rather than something sliding out from behind it, and its edge never passes over the
+    // controls: they are squashed towards the top on the very spec the height follows, so at every frame they are
+    // exactly as tall as the room the bar has for them. A spring would not do here, since the size's and the scale's
+    // would settle against different thresholds and drift apart.
+    enter = expandVertically(
+        animationSpec = tween(PANEL_ANIMATION_DURATION, easing = FastOutSlowInEasing),
+        expandFrom = Alignment.Top,
+    ),
+    exit = shrinkVertically(
+        animationSpec = tween(PANEL_ANIMATION_DURATION, easing = FastOutSlowInEasing),
+        shrinkTowards = Alignment.Top,
+    ),
 ) {
+    val contentProgress = transition.animateFloat(
+        transitionSpec = { tween(PANEL_ANIMATION_DURATION, easing = FastOutSlowInEasing) },
+        label = "songMetronomePanelContent",
+    ) { state -> if (state == EnterExitState.Visible) 1f else 0f }
     val playback by viewModel.metronomePlayback.collectAsStateWithLifecycle()
     val isPlaying = playback is MetronomePlayback.Playing
     val settings by viewModel.metronomeSettings.collectAsStateWithLifecycle()
@@ -76,6 +93,11 @@ internal fun SongMetronomePanel(
     val layoutDirection = LocalLayoutDirection.current
     Row(
         modifier = Modifier
+            .graphicsLayer {
+                alpha = contentProgress.value
+                scaleY = contentProgress.value
+                transformOrigin = TransformOrigin(pivotFractionX = 0.5f, pivotFractionY = 0f)
+            }
             .fillMaxWidth()
             .padding(
                 start = contentPadding.calculateStartPadding(layoutDirection) + PANEL_PADDING,
@@ -98,7 +120,10 @@ internal fun SongMetronomePanel(
         )
         val label = stringResource(if (isPlaying) Res.string.metronome_stop else Res.string.metronome_start)
         FilledIconButton(
-            modifier = Modifier.semantics { contentDescription = label },
+            modifier = Modifier
+                // The row already squashes it vertically, so this is what keeps the button round as it scales down.
+                .graphicsLayer { scaleX = contentProgress.value }
+                .semantics { contentDescription = label },
             onClick = viewModel::toggleMetronome,
         ) {
             PlayStopMark(isPlaying = isPlaying)
@@ -106,6 +131,7 @@ internal fun SongMetronomePanel(
     }
 }
 
+private const val PANEL_ANIMATION_DURATION = 250
 private val PANEL_HEIGHT = 48.dp
 private val PANEL_PADDING = 12.dp
 

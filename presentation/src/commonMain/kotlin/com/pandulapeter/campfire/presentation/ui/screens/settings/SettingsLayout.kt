@@ -31,7 +31,7 @@ import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationDrawerItem
-import androidx.compose.material3.PrimaryTabRow
+import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -51,14 +51,15 @@ import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
 
 /**
- * The tabs of the settings screen, in the order they are read in: what the app looks like and lets its user do, then
- * what a song is read with, then where the library is and where else it goes, and what the app is last. General comes
- * first, and is what the screen opens on, because performance mode is its first row and that switch decides what the
- * rest of the app is still allowed to do - it is also the only way back out of the mode, so it must never be
- * something to go looking for.
+ * The tabs of the settings screen, in the order they are read in: what the app looks like, then which of its parts it
+ * has at all, then what a song is read with, then where the library is and where else it goes, and what the app is
+ * last. General is what the screen opens on. Features is right after it, because read only mode is its first row and
+ * that switch decides what the rest of the app is still allowed to do - it is also the only way back out of the mode,
+ * so it must never be something to go looking for.
  */
 internal enum class SettingsTab {
     GENERAL,
+    FEATURES,
     SONGS,
     LIBRARY,
     ABOUT,
@@ -67,8 +68,9 @@ internal enum class SettingsTab {
 /**
  * The tabs of the settings screen, which stay where they are while a page scrolls under them.
  *
- * The tabs are capped at [SETTINGS_TAB_ROW_MAX_WIDTH] and start where every list of the app starts - four tabs spread across a
- * wide window are four words a hand's width apart.
+ * The tabs are capped at [SETTINGS_TAB_ROW_MAX_WIDTH] and start where every list of the app starts - five tabs spread across a
+ * wide window are five words a hand's width apart. Each is as wide as its name rather than a fifth of the row, and the row
+ * scrolls where they add up to more than a phone's width: five equal tabs at 360dp leave every name cut short.
  *
  * @param badgedTab A tab holding something that waits for an answer, marked with a dot so that it is found from the
  *   others. The dot rather than the tab opening itself, which would be the screen moving under a reader's finger.
@@ -84,12 +86,13 @@ internal fun SettingsTabRow(
     endPadding: Dp,
     onTabSelected: (SettingsTab) -> Unit,
 ) = Column(modifier = modifier.fillMaxWidth()) {
-    PrimaryTabRow(
+    PrimaryScrollableTabRow(
         modifier = Modifier
             .padding(start = startPadding, end = endPadding)
             .widthIn(max = SETTINGS_TAB_ROW_MAX_WIDTH),
         selectedTabIndex = selectedTab.ordinal,
         containerColor = Color.Transparent,
+        edgePadding = 0.dp,
         divider = {},
     ) {
         SettingsTab.entries.forEach { tab ->

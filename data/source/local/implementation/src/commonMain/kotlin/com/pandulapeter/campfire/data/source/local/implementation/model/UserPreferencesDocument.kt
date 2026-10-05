@@ -21,7 +21,11 @@ internal data class UserPreferencesDocument(
     // On by default: a song created in the app starts out as a title and an artist, so hiding songs without chords
     // would hide every new song right after it was made.
     val shouldShowArchivedSetlists: Boolean = false,
+    // The inverse of UserPreferences.areChordsEnabled, stored under the name the switch had before, so that a document
+    // written either way still says the same thing.
     val isLyricsOnlyModeEnabled: Boolean = false,
+    val areSetlistsEnabled: Boolean = true,
+    val isMetronomeEnabled: Boolean = true,
     val fontScale: Float = 1f,
     val sortingMode: String = "",
     val setlistSortingMode: String = "",

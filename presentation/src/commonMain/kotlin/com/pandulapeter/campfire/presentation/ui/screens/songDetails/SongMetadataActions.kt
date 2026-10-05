@@ -43,6 +43,9 @@ import org.jetbrains.compose.resources.painterResource
  * values are read rather than set.
  *
  * @param tempo Passed in rather than read here, since the screen already holds it for the app bar's metronome button.
+ * @param shouldShowChords False with the chords switched off, which takes the transposition and the capo with them.
+ * @param shouldShowTempo False with the metronome switched off, which takes the tempo and the time signature with it.
+ * @return Null where both are switched off, which leaves the song nothing to set.
  */
 @Composable
 internal fun rememberSongPlayingControls(
@@ -53,8 +56,11 @@ internal fun rememberSongPlayingControls(
     chordSpelling: UserPreferences.ChordSpelling,
     tempo: EffectiveTempo,
     capo: EffectiveCapo,
-    canTranspose: Boolean,
-): SongPlayingControls {
+    shouldShowChords: Boolean,
+    shouldShowTempo: Boolean,
+): SongPlayingControls? {
+    if (!shouldShowChords && !shouldShowTempo) return null
+    val canTranspose = shouldShowChords && song.hasChords
     // The key the transposition alone takes the song to, which is what the chords on the page spell: the capo is the
     // stepper next to this one and moves the sounding key without moving a chord, so counting it in here would have
     // this control naming a key that is written nowhere in the song. The app bar's is the sounding one.
@@ -66,6 +72,8 @@ internal fun rememberSongPlayingControls(
         fileName,
         setlistFileName,
         canTranspose,
+        shouldShowChords,
+        shouldShowTempo,
         transposition,
         key,
         capo,
@@ -84,18 +92,26 @@ internal fun rememberSongPlayingControls(
             } else {
                 null
             },
-            capo = SongCapoControl(
-                capo = capo,
-                onStep = { viewModel.stepCapo(fileName, setlistFileName, it) },
-                onReset = { viewModel.resetCapo(fileName, setlistFileName) },
-            ),
-            tempo = SongTempoControl(
-                tempo = tempo,
-                onStep = { viewModel.stepTempo(fileName, setlistFileName, it) },
-                onTapped = { viewModel.setTempo(fileName, setlistFileName, it) },
-                onReset = { viewModel.resetTempo(fileName, setlistFileName) },
-            ),
-            timeSignature = timeSignature,
+            capo = if (shouldShowChords) {
+                SongCapoControl(
+                    capo = capo,
+                    onStep = { viewModel.stepCapo(fileName, setlistFileName, it) },
+                    onReset = { viewModel.resetCapo(fileName, setlistFileName) },
+                )
+            } else {
+                null
+            },
+            tempo = if (shouldShowTempo) {
+                SongTempoControl(
+                    tempo = tempo,
+                    onStep = { viewModel.stepTempo(fileName, setlistFileName, it) },
+                    onTapped = { viewModel.setTempo(fileName, setlistFileName, it) },
+                    onReset = { viewModel.resetTempo(fileName, setlistFileName) },
+                )
+            } else {
+                null
+            },
+            timeSignature = timeSignature.takeIf { shouldShowTempo },
         )
     }
 }

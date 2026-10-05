@@ -16,7 +16,6 @@
 ## Improvements
 - Support importing libraries from other apps
 - Rename master branch to main
-- Feature toggles: chords (also hides key info), setlists (hides the menu item and all actions related to it), metronome (also hides BPM info from songs as well as the main menu item), read-only mode (the current performance mode), cover art (exists already)
 - Onboarding: integrate feature toggle-presets (singers, drummers, etc)
 - Settings: promote Dropbox sign-in
 - Duplicate song?
