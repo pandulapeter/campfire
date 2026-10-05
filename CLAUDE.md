@@ -709,7 +709,9 @@ the only possible one. The per-module `CLAUDE.md` files carry the detail; the sh
   value by value, of this device's, the folder's and the last synced one, which the index keeps — so two devices that
   changed different songs or fields both keep their change, a change beats a removal, and two changes of one value
   keep this device's. It is merged as a JSON tree and this version only writes the fields it knows, so settings that
-  have nothing to do with the songs can join `songs` at the top level later without an older version dropping them.
+  have nothing to do with the songs can join `songs` at the top level later without an older version dropping them;
+  a document that is missing or cannot be read is taken as unchanged and replaced with this device's values, never
+  read as one that removed everything, and one whose `version` is newer than this one's is left alone.
   A song no longer in the library after the run takes its entry with it, here and in the folder, unless the run
   failed to move it. A change to those three maps schedules a run like a change to a file does; the run's own write
   does not.

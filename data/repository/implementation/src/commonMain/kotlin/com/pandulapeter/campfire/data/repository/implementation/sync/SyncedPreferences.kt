@@ -97,12 +97,29 @@ internal object SyncedPreferencesDocument {
 
     private val json = Json { prettyPrint = true }
 
-    /** Null for a document that is not a JSON object, which the run then replaces as if there were none. */
+    /**
+     * Null for a document that is not a JSON object, which the run then replaces, keeping this device's values, as if the
+     * folder had not changed it. Any other object is returned whatever its shape, so that [isNewerFormat] sees it.
+     */
     fun decode(bytes: ByteArray): JsonObject? = try {
         json.parseToJsonElement(bytes.decodeToString()) as? JsonObject
     } catch (exception: IllegalArgumentException) {
         null
     }
+
+    /**
+     * Whether [document] holds what every document this version writes does, a [SONGS] object. One that does not is
+     * replaced like one that does not decode.
+     */
+    fun isReadable(document: JsonObject) = document[SONGS] is JsonObject
+
+    /**
+     * Whether [document] declares a later format than this version writes. Fields a later version adds pass through on
+     * their own, so it only bumps [VERSION] for a change that cannot be passed through - which this version must not
+     * merge or write over.
+     */
+    fun isNewerFormat(document: JsonObject) =
+        ((document[VERSION] as? JsonPrimitive)?.takeUnless { it.isString }?.intOrNull ?: FORMAT_VERSION) > FORMAT_VERSION
 
     /** With every object's keys sorted, so that the same preferences are always the same bytes, wherever written. */
     fun encode(document: JsonObject) = json.encodeToString(JsonElement.serializer(), document.sorted()).encodeToByteArray()

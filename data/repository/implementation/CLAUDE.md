@@ -245,7 +245,11 @@ and a repository that has not been read yet rescans instead, since there is no l
   as a JSON tree and merges it three ways, value by value, against the document the last run settled
   (`SyncIndexDocument.syncedPreferences`, carried through every snapshot the engine hands out and dropped with the rest
   of an index written for another account); this device's side is that base with this version's own fields replaced
-  by the preferences (`localDocument`), so whatever a later version writes passes through untouched. A song no longer
+  by the preferences (`localDocument`), so whatever a later version writes passes through untouched. A document that
+  is missing from the folder, does not decode or holds no `songs` object (`isReadable`) is merged as the base, so it
+  is replaced with this device's values rather than read as a removal of everything; one whose `version` is newer
+  than this version's (`isNewerFormat`) is neither applied nor written over, and the step answers the base it was
+  given (an empty one where there was none), so the run still counts as successful. A song no longer
   in the library — compared by case and Unicode form, the run's failed files counting as there — is dropped from the
   merged document before it is applied. The preferences are changed before the upload, so a failed upload only leaves
   the next run a change to carry; a value changed here while the merge ran is kept (`SyncedPreferences.applyTo`). A

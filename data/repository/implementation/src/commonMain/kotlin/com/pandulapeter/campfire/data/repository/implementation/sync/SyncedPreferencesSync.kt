@@ -76,14 +76,23 @@ internal class SyncedPreferencesSync(
         var previous = base
         repeat(MAXIMUM_ATTEMPTS) {
             val remote = provider.downloadDocument(SyncedPreferencesDocument.FILE_NAME)
-            // A document that is not one is replaced, as if there were none: nothing this version reads is in it.
             val remoteDocument = remote?.bytes?.let(SyncedPreferencesDocument::decode)
+            if (remoteDocument != null && SyncedPreferencesDocument.isNewerFormat(remoteDocument)) {
+                // The version that bumped the format is the one that has to keep this one's values, so the document is
+                // neither applied nor written over. Null would report a failure no retry can mend until the app is
+                // updated, and an empty base names no song, so a later run with it only ever adds, as with none.
+                println("${SyncedPreferencesDocument.FILE_NAME} was written by a newer version of Campfire; it is left alone.")
+                return previous ?: JsonObject(emptyMap())
+            }
+            // A document that is missing, or is not one this version can read, is taken as unchanged since the last run
+            // rather than as one that removed everything: this device's values stay, and are uploaded in its place.
+            val effectiveRemote = remoteDocument?.takeIf(SyncedPreferencesDocument::isReadable) ?: previous
             val snapshot = userPreferencesRepository.userPreferences.first().data?.let(SyncedPreferences::of) ?: return null
             val merged = SyncedPreferencesDocument.withSongsWhere(
                 document = SyncedPreferencesDocument.merge(
                     base = previous,
                     local = SyncedPreferencesDocument.localDocument(base = previous, preferences = snapshot),
-                    remote = remoteDocument,
+                    remote = effectiveRemote,
                 ),
                 isKept = { it.folded() in songNames },
             )
@@ -103,7 +112,7 @@ internal class SyncedPreferencesSync(
                 is RemoteWriteResult.Written -> return merged
                 // Written elsewhere since it was read. The preferences here already hold what the document said then,
                 // so that is the base the next attempt merges what was written since against.
-                RemoteWriteResult.Conflict -> previous = remoteDocument ?: JsonObject(emptyMap())
+                RemoteWriteResult.Conflict -> previous = effectiveRemote
             }
         }
         println("Another device kept writing ${SyncedPreferencesDocument.FILE_NAME}; the next run settles it.")

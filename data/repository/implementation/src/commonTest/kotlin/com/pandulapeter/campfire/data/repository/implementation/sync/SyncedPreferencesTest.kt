@@ -209,6 +209,59 @@ class SyncedPreferencesTest {
         assertEquals(synced, step.synchronize(provider, base = synced, keptFileNames = emptyList()))
     }
 
+    @Test
+    fun `a document deleted from the folder removes nothing and is written again`() = runTest {
+        val provider = FakeSyncProvider()
+        val preferences = FakeUserPreferencesRepository(defaultUserPreferences(capos = mapOf("a.cho" to 2)))
+        sync(preferences, library("a.cho")).synchronize(provider, base = document("""{"a.cho":{"capo":2}}"""), keptFileNames = emptyList())
+        assertEquals(mapOf("a.cho" to 2), preferences.current.capos)
+        assertEquals(mapOf("a.cho" to 2), SyncedPreferencesDocument.preferencesOf(remoteDocumentOf(provider)).capos)
+    }
+
+    @Test
+    fun `a document that does not parse removes nothing and is replaced`() = assertUnreadableDocumentIsReplaced(
+        bytes = """{"version":1,"songs":{"a.cho":{"capo":2},}}""".encodeToByteArray(),
+    )
+
+    @Test
+    fun `a document whose songs are not an object removes nothing`() = assertUnreadableDocumentIsReplaced(
+        bytes = """{"version":1,"songs":[]}""".encodeToByteArray(),
+    )
+
+    @Test
+    fun `a document of a newer format is left alone`() = runTest {
+        val provider = FakeSyncProvider()
+        provider.documents[SyncedPreferencesDocument.FILE_NAME] = """{"version":2,"songs":{}}""".encodeToByteArray() to "r1"
+        provider.onUploadDocument = { throw AssertionError("Wrote over a document of a newer format.") }
+        val preferences = FakeUserPreferencesRepository(defaultUserPreferences(capos = mapOf("a.cho" to 2)))
+        val base = document("""{"a.cho":{"capo":2}}""")
+        val synced = sync(preferences, library("a.cho")).synchronize(provider, base = base, keptFileNames = emptyList())
+        assertEquals(base, synced)
+        assertEquals(mapOf("a.cho" to 2), preferences.current.capos)
+        assertEquals("r1", provider.documents.getValue(SyncedPreferencesDocument.FILE_NAME).second)
+    }
+
+    @Test
+    fun `a document of a newer format with no base yet is not a failure`() = runTest {
+        val provider = FakeSyncProvider()
+        provider.documents[SyncedPreferencesDocument.FILE_NAME] = """{"version":2,"songs":{}}""".encodeToByteArray() to "r1"
+        provider.onUploadDocument = { throw AssertionError("Wrote over a document of a newer format.") }
+        val preferences = FakeUserPreferencesRepository(defaultUserPreferences(capos = mapOf("a.cho" to 2)))
+        assertEquals(
+            JsonObject(emptyMap()),
+            sync(preferences, library("a.cho")).synchronize(provider, base = null, keptFileNames = emptyList()),
+        )
+    }
+
+    private fun assertUnreadableDocumentIsReplaced(bytes: ByteArray) = runTest {
+        val provider = FakeSyncProvider()
+        provider.documents[SyncedPreferencesDocument.FILE_NAME] = bytes to "r1"
+        val preferences = FakeUserPreferencesRepository(defaultUserPreferences(capos = mapOf("a.cho" to 2)))
+        sync(preferences, library("a.cho")).synchronize(provider, base = document("""{"a.cho":{"capo":2}}"""), keptFileNames = emptyList())
+        assertEquals(mapOf("a.cho" to 2), preferences.current.capos)
+        assertEquals(mapOf("a.cho" to 2), SyncedPreferencesDocument.preferencesOf(remoteDocumentOf(provider)).capos)
+    }
+
     private fun sync(preferences: FakeUserPreferencesRepository, library: FakeLibraryFileLocalSource) =
         SyncedPreferencesSync(userPreferencesRepository = preferences, libraryFileLocalSource = library)
 
