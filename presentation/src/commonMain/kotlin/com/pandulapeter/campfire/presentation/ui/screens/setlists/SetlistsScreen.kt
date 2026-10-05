@@ -586,39 +586,40 @@ private fun SetlistList(
                                 }
                             }
                             when (entry) {
-                                is CampfireViewModel.SetlistWithSongs.Entry.Present -> SongListItem(
-                                    modifier = moveActions.fadingUnderListTop(topFade).longPressDraggableHandle(enabled = isReorderable, onDragStarted = onDragStarted, onDragStopped = onDragStopped),
-                                    song = entry.song,
-                                    index = row.index,
-                                    cardPadding = songCardPadding(rowIndex, columnCount),
+                                is CampfireViewModel.SetlistWithSongs.Entry.Present -> {
+                                    val setlistFileName = setlistWithSongs.setlist.fileName
                                     // The setlist's own transposition and capo for this song, which is why the same
                                     // song can be listed in one key here and in another one two setlists down.
-                                    key = viewModel.renderKey(
+                                    val transposition = transpositions[entry.song.fileName, setlistFileName]
+                                    val capo = effectiveCapo(song = entry.song, setlistFileName = setlistFileName, capos = capos).fret
+                                    // Remembered as on the songs screen: the row is composed again as every scroll starts
+                                    // and ends, and it is a whole transposition to work out again.
+                                    val key = remember(entry.song.key, entry.song.transpose, transposition, capo, chordSpelling) {
+                                        viewModel.renderKey(song = entry.song, transposition = transposition, capo = capo, spelling = chordSpelling)
+                                    }
+                                    SongListItem(
+                                        modifier = moveActions.fadingUnderListTop(topFade).longPressDraggableHandle(enabled = isReorderable, onDragStarted = onDragStarted, onDragStopped = onDragStopped),
                                         song = entry.song,
-                                        transposition = transpositions[entry.song.fileName, setlistWithSongs.setlist.fileName],
-                                        capo = effectiveCapo(
+                                        index = row.index,
+                                        cardPadding = songCardPadding(rowIndex, columnCount),
+                                        key = key,
+                                        // And the setlist's own tempo, for the same reason.
+                                        tempo = effectiveTempo(
                                             song = entry.song,
-                                            setlistFileName = setlistWithSongs.setlist.fileName,
-                                            capos = capos,
-                                        ).fret,
-                                        spelling = chordSpelling,
-                                    ),
-                                    // And the setlist's own tempo, for the same reason.
-                                    tempo = effectiveTempo(
-                                        song = entry.song,
-                                        setlistFileName = setlistWithSongs.setlist.fileName,
-                                        tempos = tempos,
-                                    ).displayedBpm.takeIf { isMetronomeEnabled },
-                                    shouldShowChords = shouldShowChords,
-                                    duration = entry.song.duration,
-                                    coverArtUrl = entry.song.coverArtUrl?.takeIf { isCoverArtEnabled },
-                                    labelsOnEverySong = labelsOnEverySong,
-                                    shouldShowLabels = false,
-                                    containerColor = containerColor,
-                                    shadowElevation = elevation,
-                                    onClick = { viewModel.openSongInSetlist(setlistWithSongs, entry.song) },
-                                    actions = actions,
-                                )
+                                            setlistFileName = setlistFileName,
+                                            tempos = tempos,
+                                        ).displayedBpm.takeIf { isMetronomeEnabled },
+                                        shouldShowChords = shouldShowChords,
+                                        duration = entry.song.duration,
+                                        coverArtUrl = entry.song.coverArtUrl?.takeIf { isCoverArtEnabled },
+                                        labelsOnEverySong = labelsOnEverySong,
+                                        shouldShowLabels = false,
+                                        containerColor = containerColor,
+                                        shadowElevation = elevation,
+                                        onClick = { viewModel.openSongInSetlist(setlistWithSongs, entry.song) },
+                                        actions = actions,
+                                    )
+                                }
 
                                 // Nothing to open, but it still takes its place in the order and can be removed.
                                 is CampfireViewModel.SetlistWithSongs.Entry.Missing -> MissingSongListItem(
