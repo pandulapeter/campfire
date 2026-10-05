@@ -130,6 +130,7 @@ import com.pandulapeter.campfire.presentation.ui.metronome.metronomeContextOf
 import com.pandulapeter.campfire.presentation.ui.metronome.metronomePatternOf
 import com.pandulapeter.campfire.presentation.ui.metronome.metronomeRetargetOf
 import com.pandulapeter.campfire.presentation.ui.metronome.withTempo
+import com.pandulapeter.campfire.presentation.ui.dialogs.SONG_METADATA_FIELDS
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.NavigationState
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
@@ -137,8 +138,12 @@ import com.pandulapeter.campfire.presentation.ui.platform.LibraryPersistence
 import com.pandulapeter.campfire.presentation.ui.platform.requestLibraryPersistence
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.followingLibraryFileNames
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsTab
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.CapoKey
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.Capos
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.FontScaleAccumulator
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.PINCH_SENSITIVITY
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.effectiveCapo
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.withCapo
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.CoroutineScope
@@ -822,6 +827,26 @@ class CampfireViewModel(
         pending.entries.fold(stored) { tempos, (key, value) -> tempos.with(key, value.bpm) }
     }.asState(Tempos())
 
+    /** The capo overrides as the preferences and the setlists hold them, folded the way [tempos] are. */
+    private val storedCapos = combine(userPreferences, setlists) { userPreferences, setlists ->
+        Capos(
+            library = userPreferences?.capos.orEmpty(),
+            bySetlist = setlists.associate { setlist ->
+                setlist.fileName to setlist.entries.mapNotNull { entry -> entry.capo?.let { entry.songFileName to it } }.toMap()
+            },
+        )
+    }.asState(Capos())
+
+    /** The capos set here whose writes are waiting or still on their way back, exactly as [pendingTempos] are. */
+    private val pendingCapos = MutableStateFlow<Map<CapoKey, PendingCapo>>(emptyMap())
+
+    private val capoWriteJobs = mutableMapOf<CapoKey, Job>()
+
+    /** Every song's capo override, as the song details screen reads it. */
+    internal val capos = combine(storedCapos, pendingCapos) { stored, pending ->
+        pending.entries.fold(stored) { capos, (key, value) -> capos.with(key, value.fret) }
+    }.asState(Capos())
+
     /** Saved like [pendingPrintSettings]: a dragged slider is a new value every frame. */
     private val _pendingMetronomeSettings = MutableStateFlow<MetronomeSettings?>(null)
 
@@ -1318,6 +1343,11 @@ class CampfireViewModel(
             combine(storedTempos, pendingTempos) { stored, pending ->
                 pending.filter { (key, value) -> value.isWritten && stored[key.songFileName, key.setlistFileName] == value.bpm }.keys
             }.collect { settled -> if (settled.isNotEmpty()) pendingTempos.update { it - settled } }
+        }
+        viewModelScope.launch {
+            combine(storedCapos, pendingCapos) { stored, pending ->
+                pending.filter { (key, value) -> value.isWritten && stored[key.songFileName, key.setlistFileName] == value.fret }.keys
+            }.collect { settled -> if (settled.isNotEmpty()) pendingCapos.update { it - settled } }
         }
         viewModelScope.launch {
             // One collector for everything that changes what a playing click plays, so that a context change and the
@@ -1860,7 +1890,7 @@ class CampfireViewModel(
         showDialog(
             DialogType.SongMetadata(
                 song = song,
-                values = ChordProMetadataFields.Field.entries.associateWith { ChordProMetadataFields.valueOf(metadata, it).orEmpty() },
+                values = SONG_METADATA_FIELDS.associateWith { ChordProMetadataFields.valueOf(metadata, it).orEmpty() },
                 isEditorDraft = isEditorDraft,
             )
         )
@@ -2498,15 +2528,93 @@ class CampfireViewModel(
         }
     }
 
+    /** The fret a song is capoed at where it is opened, the override waiting to be written included. */
+    internal fun effectiveCapoOf(songFileName: String, setlistFileName: String?) =
+        effectiveCapo(song = songsByFileName.value[songFileName], setlistFileName = setlistFileName, capos = capos.value, songFileName = songFileName)
+
+    /** One step of the capo stepper, in the setlist the song was opened from or in the preferences, like a tempo. */
+    fun stepCapo(songFileName: String, setlistFileName: String?, delta: Int) =
+        changeCapo(songFileName = songFileName, setlistFileName = setlistFileName) { it + delta }
+
     /**
-     * The view model going (the activity finished) does not take a tempo still waiting to be written with it: those are
-     * written on a scope of their own, since this one is being cancelled.
+     * The stepper's value tapped: the override is removed rather than set to the file's fret, so that a `{capo}` edited
+     * later shows through, and a step still waiting to be written is dropped, exactly as [resetTempo] does it.
+     */
+    fun resetCapo(songFileName: String, setlistFileName: String?) {
+        val key = CapoKey(songFileName = songFileName, setlistFileName = setlistFileName)
+        capoWriteJobs.remove(key)?.cancel()
+        pendingCapos.update { it + (key to PendingCapo(fret = null)) }
+        viewModelScope.launch { writeCapo(key, null) }
+    }
+
+    /** [changeTempo] for a fret: absolute, debounced, and a value equal to the song's own removing the override. */
+    private fun changeCapo(songFileName: String, setlistFileName: String?, change: (Int) -> Int) {
+        val key = CapoKey(songFileName = songFileName, setlistFileName = setlistFileName)
+        val effective = effectiveCapoOf(songFileName, setlistFileName)
+        val fret = change(effective.fret).coerceIn(Song.CAPO_RANGE)
+        val override = fret.takeIf { it != effective.songFret }
+        pendingCapos.update { it + (key to PendingCapo(fret = override)) }
+        capoWriteJobs.remove(key)?.cancel()
+        capoWriteJobs[key] = viewModelScope.launch {
+            delay(FONT_SCALE_SAVE_DELAY_MILLIS)
+            capoWriteJobs.remove(key)
+            writeCapo(key, override)
+        }
+    }
+
+    private suspend fun writeCapo(key: CapoKey, fret: Int?) {
+        try {
+            val setlistFileName = key.setlistFileName
+            val isWritten = if (setlistFileName == null) {
+                updateUserPreferences { preferences ->
+                    preferences.copy(capos = if (fret == null) preferences.capos - key.songFileName else preferences.capos + (key.songFileName to fret))
+                }
+                true
+            } else {
+                updateEditableSetlist(setlistFileName) { setlist ->
+                    setlist.copy(entries = setlist.entries.map { entry -> if (entry.songFileName == key.songFileName) entry.copy(capo = fret) else entry })
+                }?.takeUnless { it.isArchived } != null
+            }
+            if (isWritten) {
+                pendingCapos.update { pending ->
+                    pending[key]?.takeIf { it.fret == fret && !it.isWritten }?.let { pending + (key to it.copy(isWritten = true)) } ?: pending
+                }
+            } else {
+                pendingCapos.update { it - key }
+                sendMessage(Message.OperationFailed)
+            }
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Exception) {
+            println("The capo could not be written: ${exception.message}")
+            pendingCapos.update { it - key }
+            sendMessage(Message.OperationFailed)
+        }
+    }
+
+    /**
+     * The time signature is the one of the four playing values that is written into the song rather than overridden
+     * where it is read: it is the song itself, and it is also what the click counts the bar by, which nothing else
+     * could tell it. A blank value takes the `{time}` directive off.
+     */
+    fun setSongTimeSignature(fileName: String, time: String?) = editSong(fileName = fileName, isEditorDraft = false) { text ->
+        setChordProMetadata(text = text, values = mapOf(ChordProMetadataFields.Field.TIME to time))
+    }
+
+    /**
+     * The view model going (the activity finished) does not take a tempo or a capo still waiting to be written with it:
+     * those are written on a scope of their own, since this one is being cancelled.
      */
     override fun onCleared() {
-        val waiting = tempoWriteJobs.keys.mapNotNull { key -> pendingTempos.value[key]?.let { key to it.bpm } }
+        val waitingTempos = tempoWriteJobs.keys.mapNotNull { key -> pendingTempos.value[key]?.let { key to it.bpm } }
+        val waitingCapos = capoWriteJobs.keys.mapNotNull { key -> pendingCapos.value[key]?.let { key to it.fret } }
         tempoWriteJobs.clear()
-        if (waiting.isNotEmpty()) {
-            CoroutineScope(Dispatchers.Default + NonCancellable).launch { waiting.forEach { (key, bpm) -> writeTempo(key, bpm) } }
+        capoWriteJobs.clear()
+        if (waitingTempos.isNotEmpty() || waitingCapos.isNotEmpty()) {
+            CoroutineScope(Dispatchers.Default + NonCancellable).launch {
+                waitingTempos.forEach { (key, bpm) -> writeTempo(key, bpm) }
+                waitingCapos.forEach { (key, fret) -> writeCapo(key, fret) }
+            }
         }
     }
 
@@ -3019,11 +3127,13 @@ class CampfireViewModel(
             val song = songs[entry.songFileName] ?: dialog.song
             val content = getSongContent(entry.songFileName)
             val transposition = transpositions.value[entry.songFileName, setlistFileName]
-            // A setlist's tempo is printed as its key is, being how the band plays it; the library's override is one
-            // reader's, like the folded sections, so a song exported from the library prints its file's own.
+            // A setlist's tempo and capo are printed as its key is, being how the band plays it; the library's
+            // overrides are one reader's, like the folded sections, so a song exported from the library prints its
+            // file's own.
             val tempo = setlistFileName?.let { effectiveTempoOf(entry.songFileName, it).takeUnless { tempo -> tempo.isDefault }?.bpm }
+            val capo = setlistFileName?.let { effectiveCapoOf(entry.songFileName, it).takeUnless { capo -> capo.isDefault }?.fret }
             val rendered = content?.let { withContext(Dispatchers.Default) {
-                renderSong(it.text, transposition, preferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default).withTempo(tempo)
+                renderSong(it.text, transposition, preferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default).withTempo(tempo).withCapo(capo)
             } }
             PrintSong(entry.songFileName, song?.title ?: entry.songFileName.substringBeforeLast('.'), song?.artist,
                 index = if (setlist == null) null else index + 1, song = rendered, text = content?.text)
@@ -3830,6 +3940,12 @@ class CampfireViewModel(
         val isWritten: Boolean = false,
     )
 
+    /** [PendingTempo] for a capo override set on this device. [fret] null removes the override. */
+    private data class PendingCapo(
+        val fret: Int?,
+        val isWritten: Boolean = false,
+    )
+
     /** The settings screen's offer to add the demo library, see [demoLibraryOffer]. */
     enum class DemoLibraryOffer {
         AVAILABLE,
@@ -4015,6 +4131,16 @@ class CampfireViewModel(
         data class SongLinks(override val song: Song, val links: List<ChordProLink>, override val isEditorDraft: Boolean = false) : SongEdit
         /** Opened from the same menu, and asking about every language at once rather than one at a time. */
         data class SongLanguages(override val song: Song, override val isEditorDraft: Boolean = false) : SongEdit
+
+        /**
+         * The beats of the song's bar, opened from the time signature of its first section: a `{time}` as the file
+         * writes it, or null where it names none, offered as bars to pick rather than as text to type.
+         */
+        data class SongTimeSignature(override val song: Song, val time: String?) : SongEdit {
+
+            /** The song's own file: the editor's preview line is not interactive, so this is never a draft's. */
+            override val isEditorDraft = false
+        }
         /** The records the song may have come out on, whose front cover can be made the song's, see [searchCoverArt]. */
         data class CoverArtSearch(override val song: Song, override val isEditorDraft: Boolean = false) : SongEdit
         /** Removing a cover rewrites the file, so the cover art sheet asks before doing it. */

@@ -163,6 +163,9 @@ import kotlin.math.roundToInt
  * @param isSongInfoShown Whether the song's first section holds the card of what the song is (see
  * [SongMetadataSection]), which the editor's preview does; the song details screen opens it as a sheet instead.
  * @param songInfoEditing The edit buttons of that card, null for none.
+ * @param playingControls What sets the song's key, capo, tempo and time signature, drawn in place of the line that
+ * only reads them; null leaves that line, which is what read only mode and the editor's preview get. Left out of
+ * lyrics-only mode along with the values themselves, since there is nothing played to set there.
  * @param onRowsPlaced Handed the rows of the song ([SongRows]: where a scroll comes to rest on each - the
  * bottom edge of the divider above it, so that the divider itself is just out of view - and where its content ends),
  * and the stops the song is stepped through, measured from the top of this composable's content, every time they are
@@ -198,6 +201,7 @@ internal fun SongLyrics(
     onFoldToggled: ((key: String) -> Unit)? = null,
     isSongInfoShown: Boolean = false,
     songInfoEditing: SongInfoEditing? = null,
+    playingControls: SongPlayingControls? = null,
     onRowsPlaced: ((SongRows) -> Unit)? = null,
     rowViewportHeight: Dp = Dp.Unspecified,
     rowViewportBottomPadding: Dp = 0.dp,
@@ -209,13 +213,16 @@ internal fun SongLyrics(
     // The fold toggles of the runs inside a section are named by these too, where the file names them nothing.
     val defaultLabels = rememberDefaultSectionLabels()
     val isSongInfoEditable = songInfoEditing != null
-    val sections = remember(model.sections, model.song.metadata, model.shouldShowChords, isSongInfoShown, isSongInfoEditable) {
+    // The controls are only drawn where the values they set are, so a change of either decides the section's content.
+    val shownPlayingControls = playingControls?.takeIf { model.shouldShowChords }
+    val sections = remember(model.sections, model.song.metadata, model.shouldShowChords, isSongInfoShown, isSongInfoEditable, shownPlayingControls != null) {
         withMetadataSection(
             sections = model.sections,
             metadata = model.song.metadata,
             shouldShowChords = model.shouldShowChords,
             isSongInfoShown = isSongInfoShown,
             isSongInfoEditable = isSongInfoEditable,
+            hasPlayingControls = shownPlayingControls != null,
         )
     }
     val glideScope = rememberCoroutineScope()
@@ -362,6 +369,7 @@ internal fun SongLyrics(
                                 metadata = section.metadata,
                                 isSongInfoShown = isSongInfoShown,
                                 songInfoEditing = songInfoEditing,
+                                playingControls = shownPlayingControls,
                                 titleStyle = headerStyle,
                                 fontScale = fontScale,
                             )
@@ -2033,6 +2041,7 @@ internal data class SongLyricsInputs(
     val shouldShowChords: Boolean,
     val labels: DefaultSectionLabels,
     val tempoOverride: Int? = null,
+    val capoOverride: Int? = null,
 )
 
 /**
@@ -2125,9 +2134,17 @@ private val WHITESPACE = Regex("\\s+")
 @Immutable
 internal sealed interface RenderSection {
 
-    /** The descriptive metadata, inserted after the body budget is applied and kept whole in the first grid cell. */
+    /**
+     * The descriptive metadata, inserted after the body budget is applied and kept whole in the first grid cell.
+     *
+     * @param hasPlayingControls Whether the key, capo, tempo and time are drawn as the controls that set them rather
+     * than as one line of text, which is part of the content because the measured sizes of a section are kept by it.
+     */
     @Immutable
-    data class Metadata(val metadata: ChordProMetadata) : RenderSection
+    data class Metadata(
+        val metadata: ChordProMetadata,
+        val hasPlayingControls: Boolean = false,
+    ) : RenderSection
 
     /** A titled block of lines: an environment, an implicit paragraph, or a repeated chorus. */
     @Immutable
@@ -2607,7 +2624,12 @@ private val COMMENT_BOX_HORIZONTAL_PADDING = 12.dp
 private val COMMENT_BOX_VERTICAL_PADDING = 8.dp
 private val HEADER_ELEVATION = 2.dp
 private val HEADER_HORIZONTAL_PADDING = 12.dp
-private val HEADER_VERTICAL_PADDING = 6.dp
+
+/**
+ * Above and below a section's name, and so, with the name's own line, the whole of a header pill's height — which is
+ * what the controls of the song's own first section are drawn at (see [songControlHeight]).
+ */
+internal val HEADER_VERTICAL_PADDING = 6.dp
 internal val FOLD_CHEVRON_SIZE = 20.dp
 internal val FOLD_CHEVRON_GAP = 4.dp
 private val FOLD_TOGGLE_HORIZONTAL_PADDING = 8.dp

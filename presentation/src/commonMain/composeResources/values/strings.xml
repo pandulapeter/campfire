@@ -316,7 +316,6 @@
     <string name="metronome">Metronome</string>
     <string name="metronome_start">Start</string>
     <string name="metronome_stop">Stop</string>
-    <string name="metronome_tempo">Tempo</string>
     <string name="metronome_tempo_decrease">Slower</string>
     <string name="metronome_tempo_increase">Faster</string>
     <string name="metronome_tempo_slider">Tempo in beats per minute</string>
@@ -432,13 +431,17 @@
     <string name="song_details_tempo_decrease">Slower</string>
     <string name="song_details_tempo_increase">Faster</string>
     <string name="song_details_tempo_reset">Reset tempo</string>
+    <string name="song_details_capo_decrease">Capo down</string>
+    <string name="song_details_capo_increase">Capo up</string>
+    <string name="song_details_capo_reset">Reset capo</string>
+    <string name="song_details_set_time_signature">Set time signature</string>
+    <string name="song_details_change_time_signature">Change time signature</string>
     <string name="song_details_metronome_start">Start metronome</string>
     <string name="song_details_metronome_stop">Stop metronome</string>
     <string name="song_details_scroll_to_top">Scroll to the top</string>
     <string name="song_details_text_size_increase">Increase text size</string>
     <string name="song_details_text_size_decrease">Decrease text size</string>
     <string name="song_details_text_size_reset">Reset text size</string>
-    <string name="song_details_transposition">Transpose</string>
     <string name="song_details_text_size">Text size</string>
     <string name="song_details_section_chorus">Chorus</string>
     <string name="song_details_section_bridge">Bridge</string>

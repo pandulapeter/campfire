@@ -49,5 +49,6 @@ internal fun StoredFileInfo.toSong(summary: ChordProSummary): Song {
         duration = ChordProDuration.parse(summary.metadata.duration),
         tempo = ChordProTempo.parse(summary.metadata.tempo),
         time = summary.metadata.time?.takeIf { it.isNotBlank() },
+        capo = summary.metadata.capo,
     )
 }

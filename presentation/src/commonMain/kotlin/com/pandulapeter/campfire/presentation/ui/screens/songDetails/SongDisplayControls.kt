@@ -17,6 +17,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -45,17 +46,24 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.domain.Song
-import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_add
 import com.pandulapeter.campfire.presentation.resources.ic_subtract
 import com.pandulapeter.campfire.presentation.resources.ic_text_decrease
 import com.pandulapeter.campfire.presentation.resources.ic_text_increase
+import com.pandulapeter.campfire.presentation.resources.song_details_capo_decrease
+import com.pandulapeter.campfire.presentation.resources.song_details_capo_increase
+import com.pandulapeter.campfire.presentation.resources.song_details_capo_reset
 import com.pandulapeter.campfire.presentation.resources.song_details_text_size_decrease
 import com.pandulapeter.campfire.presentation.resources.song_details_text_size_increase
 import com.pandulapeter.campfire.presentation.resources.song_details_text_size_reset
@@ -68,28 +76,6 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
 import org.jetbrains.compose.resources.painterResource
-
-/**
- * The transposition stepper of the song details screen for [song], reading the key it takes the song to. It is in the
- * app bar wherever the bar has the room for it, and a row at the end of the bar's overflow menu otherwise
- * ([MenuStepperRow]), since it is set once for a song rather than played with; the key itself is on the header's accent
- * line with the capo either way.
- */
-@Composable
-internal fun SongTranspositionControls(
-    modifier: Modifier = Modifier,
-    viewModel: CampfireViewModel,
-    song: Song,
-    setlistFileName: String?,
-    transposition: Int,
-    chordSpelling: UserPreferences.ChordSpelling,
-) = TranspositionControls(
-    modifier = modifier,
-    transposition = transposition,
-    key = viewModel.renderKey(song = song, transposition = transposition, spelling = chordSpelling),
-    onStep = { viewModel.stepTransposition(song.fileName, setlistFileName, it) },
-    onReset = { viewModel.resetTransposition(song.fileName, setlistFileName) },
-)
 
 /**
  * A stepper as a row of an overflow menu: the name of what it sets, in a menu entry's style, at its paddings and its
@@ -139,10 +125,14 @@ internal fun TranspositionControls(
     transposition: Int,
     /** The key the song sounds in after transposing, shown next to the amount when the file declares one. */
     key: String? = null,
+    fontScale: Float = 1f,
+    height: Dp = STEPPER_HEIGHT,
     onStep: (semitones: Int) -> Unit,
     onReset: () -> Unit,
 ) = Stepper(
     modifier = modifier,
+    fontScale = fontScale,
+    height = height,
     value = transpositionLabel(transposition, key),
     isDefault = transposition == 0,
     decreaseIcon = painterResource(Res.drawable.ic_subtract),
@@ -156,6 +146,73 @@ internal fun TranspositionControls(
     resetLabel = stringResource(Res.string.song_details_transpose_reset),
     onReset = onReset,
 )
+
+/**
+ * The capo stepper of a song, the tempo's twin: the fret it is played at where it is opened, highlighted while this
+ * setlist (or this device) capos it somewhere other than its file says, and one tap on the value puts it back to the
+ * file's. Nothing in the song moves with it — a chord chart is written as it is fretted — so this is the number the
+ * player reads off the page and not a transposition by another name.
+ */
+@Composable
+internal fun CapoControls(
+    modifier: Modifier = Modifier,
+    capo: EffectiveCapo,
+    fontScale: Float = 1f,
+    height: Dp = STEPPER_HEIGHT,
+    onStep: (frets: Int) -> Unit,
+    onReset: () -> Unit,
+) = Stepper(
+    modifier = modifier,
+    fontScale = fontScale,
+    height = height,
+    value = capo.fret.toString(),
+    isDefault = capo.isDefault,
+    decreaseIcon = painterResource(Res.drawable.ic_subtract),
+    decreaseLabel = stringResource(Res.string.song_details_capo_decrease),
+    canDecrease = capo.fret > Song.CAPO_RANGE.first,
+    onDecrease = { onStep(-1) },
+    increaseIcon = painterResource(Res.drawable.ic_add),
+    increaseLabel = stringResource(Res.string.song_details_capo_increase),
+    canIncrease = capo.fret < Song.CAPO_RANGE.last,
+    onIncrease = { onStep(1) },
+    resetLabel = stringResource(Res.string.song_details_capo_reset),
+    onReset = onReset,
+)
+
+/**
+ * A [Stepper]'s value without the two buttons, as the way into the sheet it is picked in: the time signature, which is
+ * a pair of numbers rather than a value with a next and a previous one. Shaped and sized like a stepper, so that the
+ * four controls of a song's first section read as one row of settings rather than as three of one kind and an odd one.
+ */
+@Composable
+internal fun ValuePill(
+    modifier: Modifier = Modifier,
+    value: String,
+    fontScale: Float = 1f,
+    height: Dp = STEPPER_HEIGHT,
+    onClickLabel: String,
+    onClick: () -> Unit,
+) = Surface(
+    modifier = modifier.height(height),
+    shape = CircleShape,
+    color = MaterialTheme.colorScheme.surfaceContainerHighest,
+    onClick = onClick,
+) {
+    Box(
+        modifier = Modifier
+            .semantics { onClick(label = onClickLabel, action = null) }
+            .widthIn(min = VALUE_MIN_WIDTH * fontScale + VALUE_PILL_PADDING * 2)
+            .padding(horizontal = VALUE_PILL_PADDING),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = value,
+            style = MaterialTheme.typography.labelLarge.scaled(fontScale),
+            textAlign = TextAlign.Center,
+            fontWeight = FontWeight.Bold,
+        )
+    }
+}
 
 /**
  * The same stepper for the editor, where transposing rewrites the file instead of changing how it is read. There is
@@ -231,6 +288,10 @@ private fun fontScaleLabel(fontScale: Float) = "${(fontScale * 100).roundToInt()
  * a touch 48dp across, since Compose extends a small target's touch area to the minimum touch target size; only their
  * drawn size shrinks.
  *
+ * @param fontScale Grows what is written in the pill - the value and the icons - with the text it sits among, for the
+ * steppers that are part of a song rather than of a bar or a menu (see [SongPlayingControls]). The padding around them
+ * does not grow with it, exactly as a section's header pill keeps its own while its title scales.
+ * @param height The pill's height, which the caller that scales its content gives as [songControlHeight].
  * @param valueKey What decides whether a new [value] cross-fades in or replaces the old one in place: only a change
  * of the key is animated.
  * @param repeatsOnHold Whether a button held down keeps stepping, faster the longer it is held, for a value that is a
@@ -242,6 +303,8 @@ private fun fontScaleLabel(fontScale: Float) = "${(fontScale * 100).roundToInt()
 internal fun Stepper(
     modifier: Modifier = Modifier,
     value: String,
+    fontScale: Float = 1f,
+    height: Dp = STEPPER_HEIGHT,
     valueKey: Any = value,
     isDefault: Boolean,
     decreaseIcon: Painter,
@@ -257,13 +320,14 @@ internal fun Stepper(
     repeatsOnHold: Boolean = false,
     isVertical: Boolean = false,
 ) = Surface(
-    modifier = if (isVertical) modifier.width(HEIGHT) else modifier.height(HEIGHT),
+    modifier = if (isVertical) modifier.width(height) else modifier.height(height),
     shape = CircleShape,
     color = MaterialTheme.colorScheme.surfaceContainerHighest,
 ) {
+    val buttonLength = stepperButtonLength(fontScale)
     // The buttons are laid out at the size of the pill, so the touch target enforcement of the icon buttons has
     // to be lowered to match, or it would grow them back to 48dp and the pill would no longer fit them.
-    CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides minOf(HEIGHT, BUTTON_WIDTH)) {
+    CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides minOf(height, buttonLength)) {
         val decreaseButton = @Composable {
             StepperButton(
                 icon = decreaseIcon,
@@ -271,6 +335,9 @@ internal fun Stepper(
                 isEnabled = canDecrease,
                 repeatsOnHold = repeatsOnHold,
                 isVertical = isVertical,
+                fontScale = fontScale,
+                height = height,
+                buttonLength = buttonLength,
                 onClick = onDecrease,
             )
         }
@@ -282,6 +349,7 @@ internal fun Stepper(
                 resetLabel = resetLabel,
                 onReset = onReset,
                 isVertical = isVertical,
+                fontScale = fontScale,
             )
         }
         val increaseButton = @Composable {
@@ -291,6 +359,9 @@ internal fun Stepper(
                 isEnabled = canIncrease,
                 repeatsOnHold = repeatsOnHold,
                 isVertical = isVertical,
+                fontScale = fontScale,
+                height = height,
+                buttonLength = buttonLength,
                 onClick = onIncrease,
             )
         }
@@ -322,6 +393,9 @@ private fun StepperButton(
     isEnabled: Boolean,
     repeatsOnHold: Boolean,
     isVertical: Boolean,
+    fontScale: Float,
+    height: Dp,
+    buttonLength: Dp,
     onClick: () -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -343,13 +417,17 @@ private fun StepperButton(
         }
     }
     IconButton(
-        modifier = if (isVertical) Modifier.size(width = HEIGHT, height = BUTTON_WIDTH) else Modifier.size(width = BUTTON_WIDTH, height = HEIGHT),
+        modifier = if (isVertical) {
+            Modifier.size(width = height, height = buttonLength)
+        } else {
+            Modifier.size(width = buttonLength, height = height)
+        },
         enabled = isEnabled,
         interactionSource = interactionSource,
         onClick = { if (holdState.hasRepeated) holdState.hasRepeated = false else onClick() },
     ) {
         Icon(
-            modifier = Modifier.size(ICON_SIZE),
+            modifier = Modifier.size(ICON_SIZE * fontScale),
             painter = icon,
             contentDescription = label,
         )
@@ -368,6 +446,7 @@ private fun StepperValue(
     resetLabel: String?,
     onReset: (() -> Unit)?,
     isVertical: Boolean,
+    fontScale: Float,
 ) {
     // A progress value instead of an animated color, so that the label follows the color scheme immediately while it
     // is animating between the light and the dark theme (a color animation would chase it and trail behind).
@@ -383,12 +462,12 @@ private fun StepperValue(
         contentKey = { it.key },
     ) { label ->
         Text(
-            modifier = (if (isVertical) Modifier.fillMaxWidth().height(VERTICAL_VALUE_HEIGHT) else Modifier.fillMaxHeight())
+            modifier = (if (isVertical) Modifier.fillMaxWidth().height(VERTICAL_VALUE_HEIGHT * fontScale) else Modifier.fillMaxHeight())
                 .clickable(enabled = !isDefault && onReset != null, onClickLabel = resetLabel) { onReset?.invoke() }
-                .widthIn(min = if (isVertical) 0.dp else VALUE_MIN_WIDTH)
+                .widthIn(min = if (isVertical) 0.dp else VALUE_MIN_WIDTH * fontScale)
                 .wrapContentHeight(),
             text = label.value,
-            style = MaterialTheme.typography.labelLarge,
+            style = MaterialTheme.typography.labelLarge.scaled(fontScale),
             textAlign = TextAlign.Center,
             fontWeight = FontWeight.Bold,
             color = color,
@@ -407,14 +486,39 @@ private const val HOLD_REPEAT_FIRST_INTERVAL_MILLIS = 150L
 private const val HOLD_REPEAT_FASTEST_INTERVAL_MILLIS = 30L
 private const val HOLD_REPEAT_ACCELERATION = 0.85f
 
-private val HEIGHT = 40.dp
-private val BUTTON_WIDTH = 36.dp
+/**
+ * How tall a stepper, a value pill and the Tap button beside them are drawn where they belong to a bar or to a menu
+ * rather than to a song: the app bar's text size stepper, the editor's transposition, the metronome panel's tempo and
+ * the rows of the overflow menu, none of which is scaled by anything.
+ */
+internal val STEPPER_HEIGHT = 40.dp
+
+/**
+ * How tall those same controls are drawn in a song's own first section, where they stand among its sections: exactly a
+ * section's header pill, which is built the other way round from a bar's button — the [titleStyle] of its name grows
+ * with the song while the padding around it stays as it is (`SectionHeaderPill` in `SongLyrics.kt`). Scaling a whole
+ * 40dp pill instead left the four controls towering over the page they are part of at a large text size.
+ */
+@Composable
+internal fun songControlHeight(titleStyle: TextStyle) = with(LocalDensity.current) { titleStyle.lineHeight.toDp() } +
+    HEADER_VERTICAL_PADDING * 2
+
+/**
+ * How far along the pill one of a stepper's two buttons reaches: its icon, which grows with the song's text, and a
+ * padding on either side of it that does not, the way the pills around the controls keep theirs.
+ */
+private fun stepperButtonLength(fontScale: Float) = ICON_SIZE * fontScale + BUTTON_ICON_PADDING * 2
+
+private val ICON_SIZE = 20.dp
+private val BUTTON_ICON_PADDING = 8.dp
 private val VALUE_MIN_WIDTH = 44.dp
+
+/** What a [ValuePill] keeps at its ends, where a stepper has its buttons: enough that the pill reads as a button. */
+private val VALUE_PILL_PADDING = 12.dp
 private val VERTICAL_VALUE_HEIGHT = 32.dp
 
 /** How wide a stepper is drawn, at least, for the app bar that has to leave its title room beside one. */
-internal val STEPPER_WIDTH = BUTTON_WIDTH * 2 + VALUE_MIN_WIDTH
-private val ICON_SIZE = 20.dp
+internal val STEPPER_WIDTH = stepperButtonLength(fontScale = 1f) * 2 + VALUE_MIN_WIDTH
 private val MENU_ROW_HEIGHT = 48.dp // A menu entry's own.
 private val MENU_ROW_HORIZONTAL_PADDING = 12.dp // A menu entry's own.
 private val MENU_ROW_LABEL_GAP = 16.dp

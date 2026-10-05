@@ -27,7 +27,7 @@ internal fun SetlistDocument.toModel(fileName: String, size: Long) = Setlist(
     // mention is dropped and the first one wins, its transposition with it: the screens key their rows and the
     // pager its pages by the song's file name, and a setlist naming a song twice would put the same key up twice.
     entries = songs.filter { it.file.isNotBlank() }.distinctBy { it.file }.map {
-        Setlist.Entry(songFileName = it.file, transposition = it.transposition, tempo = it.tempo, unknownFields = it.unknownFields.toFieldsText())
+        Setlist.Entry(songFileName = it.file, transposition = it.transposition, tempo = it.tempo, capo = it.capo, unknownFields = it.unknownFields.toFieldsText())
     },
     size = size,
     unknownFields = unknownFields.toFieldsText(),
@@ -41,7 +41,7 @@ internal fun Setlist.toDocument() = SetlistDocument(
     isArchived = isArchived,
     // Written the way it is read, so that a file never carries a duplicate whatever built the setlist in memory.
     songs = entries.distinctBy { it.songFileName }.map {
-        SetlistSongDocument(file = it.songFileName, transposition = it.transposition, tempo = it.tempo, unknownFields = it.unknownFields.toFields())
+        SetlistSongDocument(file = it.songFileName, transposition = it.transposition, tempo = it.tempo, capo = it.capo, unknownFields = it.unknownFields.toFields())
     },
     unknownFields = unknownFields.toFields(),
 )

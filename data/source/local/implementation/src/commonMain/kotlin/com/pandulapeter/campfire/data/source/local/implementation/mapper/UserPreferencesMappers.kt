@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.data.source.local.implementation.mapper
 
 import com.pandulapeter.campfire.data.model.domain.MetronomeSettings
 import com.pandulapeter.campfire.data.model.domain.PrintSettings
+import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.source.local.implementation.model.MetronomeSettingsDocument
 import com.pandulapeter.campfire.data.source.local.implementation.model.PrintSettingsDocument
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
@@ -39,6 +40,7 @@ internal fun UserPreferencesDocument.toModel() = UserPreferences(
     ),
     transpositions = transpositions,
     tempos = tempos.filterValues { it in MetronomeSettings.TEMPO_RANGE },
+    capos = capos.filterValues { it in Song.CAPO_RANGE },
     foldedSections = foldedSections.mapValues { (_, keys) -> keys.toSet() }.filterValues { it.isNotEmpty() },
     tagMatchMode = UserPreferences.MatchMode.entries.firstOrNull { it.id == tagMatchMode } ?: UserPreferences.MatchMode.ANY,
     languageMatchMode = UserPreferences.MatchMode.entries.firstOrNull { it.id == languageMatchMode } ?: UserPreferences.MatchMode.ANY,
@@ -66,6 +68,7 @@ internal fun UserPreferences.toDocument() = UserPreferencesDocument(
     notation = chordSpelling.notation.id,
     transpositions = transpositions,
     tempos = tempos,
+    capos = capos,
     foldedSections = foldedSections.mapValues { (_, keys) -> keys.toList() },
     tagMatchMode = tagMatchMode.id,
     languageMatchMode = languageMatchMode.id,

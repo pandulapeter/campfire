@@ -399,6 +399,11 @@ internal fun CampfireDialogs(
             dialog = dialog,
         )
 
+        is CampfireViewModel.DialogType.SongTimeSignature -> SongTimeSignatureDialog(
+            viewModel = viewModel,
+            dialog = dialog,
+        )
+
         is CampfireViewModel.DialogType.CoverArtSearch -> CoverArtSearchSheet(
             viewModel = viewModel,
             dialog = dialog,

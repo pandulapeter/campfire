@@ -255,7 +255,7 @@ localized in both languages.
   song details' About the song sheet shows each as a chip named by its optional name or its host, opening the page in
   the browser. The sheet is opened from the song details app bar — a button where there is room, the first entry of the
   overflow menu where not — and holds what the song says about itself, each group with an edit button outside
-  performance mode and outside an archived setlist, where the groups it has nothing for are one row of chips that add them; key, capo, tempo and time stay on the page as the song's first section. The editor's preview shows
+  performance mode and outside an archived setlist, where the groups it has nothing for are one row of chips that add them; key, capo, tempo and time stay on the page as the song's first section (see How a song is played below). The editor's preview shows
   the same as a card that is the song's first section, flowing through its rows and columns and scaling with the
   lyrics, with the same edit buttons. The editor's overflow menu offers these actions in every pane, and the song
   details overflow menu offers them outside performance mode and for a song not opened from an archived setlist (which
@@ -265,6 +265,21 @@ localized in both languages.
   shown alphabetically.
   From the editor those buttons change the text being typed rather than the file, which only Save writes.
   Opening a link is the user's browser making the request, not Campfire.
+- **How a song is played is set in the song itself**: the key, the capo, the tempo and the time signature — the four
+  values that decide what is played rather than what the song is — are the first section of the song details screen's
+  own grid, each next to the control that sets it (the transposition stepper, the capo stepper, the tempo stepper with
+  its Tap button, and the time signature, which opens a sheet of bars to pick from). They are part of the song, so they
+  grow and shrink with its text, which is also why the text has a floor: `UserPreferences.MIN_FONT_SCALE` is the size
+  below which the song details screen is not worth reading — the lyrics, and the controls with them. Starting the click
+  stays the app bar's button, which is in reach wherever the song has been scrolled to. Three of them are
+  overridden where the song is read, so they belong to the setlist the band plays it in or to this device (see the
+  Metronome section); the time signature alone is written into the file as a `{time}` directive, since it is the song
+  rather than one band's reading of it, and it is what the click counts the bar by. **Read only mode reads them
+  instead**: performance mode and a song opened from an archived setlist get the same four as one line of accent
+  colored text, as does the editor's preview, where the text being typed is what says them. Lyrics-only mode leaves
+  out the line and the controls alike. What is left in the app bar is about the song rather than about how it is
+  played — the click, the About the song sheet, the setlist assignments and the menu — with the text size, which is
+  the reader's own, at the end of that menu.
 - **The app is shipped with two songs and one setlist**, in
   `presentation/src/commonMain/composeResources/files/demo`: public domain campfire standards, bundled as the plain
   ChordPro and setlist files they are and reaching the library through the ordinary import, so they collide, are
@@ -668,9 +683,11 @@ network. The module `CLAUDE.md` files carry the detail (`metronome/*`, `presenta
 - **Where a tempo lives mirrors the transposition**: a song opened from a setlist keeps an override in that setlist's
   entry (`Setlist.Entry.tempo`, a `tempo` member of the `*.setlist.json` song, left out where null, so it travels
   through an export, an import and a sync run), one opened from the library in `UserPreferences.tempos`, never exported
-  or synced; neither reads the other, and the song file's `{tempo}` (`Song.tempo`, read at scan time with `{time}`) is
-  only changed in the editor. The first `{tempo}` and `{time}` count; the tempo counts the clicks of the bar (6/8 at 120
-  is six clicks a bar at 120 a minute), within 30–300.
+  or synced; neither reads the other, and the song file's `{tempo}` (`Song.tempo`, read at scan time with `{time}` and
+  `{capo}`) is only changed in the editor. The capo is kept the same way (`Setlist.Entry.capo`, `UserPreferences.capos`,
+  0 to 12 frets, a stored 0 being a capo this setlist takes off rather than no override at all), since one set is
+  played capoed and the next in another key without. The first `{tempo}` and `{time}` count; the tempo counts the
+  clicks of the bar (6/8 at 120 is six clicks a bar at 120 a minute), within 30–300.
 - **A click follows the topmost song details screen on the back stack**, at the page its pager is heading for, so
   opening or paging to a song retargets it from beat one and the editor over a song keeps it; when that song leaves the
   stack the click goes back to where it was started (its `origin`, kept by the engine): stopped for one started on a

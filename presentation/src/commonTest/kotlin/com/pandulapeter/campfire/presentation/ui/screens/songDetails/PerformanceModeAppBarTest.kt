@@ -55,13 +55,6 @@ class PerformanceModeAppBarTest {
     }
 
     @Test
-    fun `the transposition stepper is in the bar for as long as the title keeps 280dp beside it`() {
-        // Beside 104dp of everything else and the three buttons, the stepper takes 140dp.
-        assertTrue(appBarButtons(appBarWidth = 668.dp, otherContentWidth = 104.dp).isTranspositionShown)
-        assertFalse(appBarButtons(appBarWidth = 667.dp, otherContentWidth = 104.dp).isTranspositionShown)
-    }
-
-    @Test
     fun `the setlist assignments leave the bar before the song info, and the song info before the metronome`() {
         assertEquals(buttons(metronome = true, songInfo = true, setlistAssignments = true), appBarButtons(408.dp, 104.dp))
         assertEquals(buttons(metronome = true, songInfo = true, setlistAssignments = false), appBarButtons(407.dp, 104.dp))
@@ -72,7 +65,7 @@ class PerformanceModeAppBarTest {
     }
 
     @Test
-    fun `a phone keeps the three buttons and puts the transposition stepper in the menu`() {
+    fun `a phone keeps all three of the bar's buttons`() {
         assertEquals(buttons(metronome = true, songInfo = true, setlistAssignments = true), appBarButtons(411.dp, 104.dp))
     }
 
@@ -80,6 +73,5 @@ class PerformanceModeAppBarTest {
         isMetronomeShown = metronome,
         isSongInfoShown = songInfo,
         isSetlistAssignmentsShown = setlistAssignments,
-        isTranspositionShown = false,
     )
 }

@@ -32,14 +32,6 @@ import com.pandulapeter.campfire.metronome.api.model.Subdivision
 import com.pandulapeter.campfire.metronome.api.model.TimeSignature
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.ic_add
-import com.pandulapeter.campfire.presentation.resources.ic_subtract
-import com.pandulapeter.campfire.presentation.resources.metronome_beat_unit
-import com.pandulapeter.campfire.presentation.resources.metronome_beat_unit_decrease
-import com.pandulapeter.campfire.presentation.resources.metronome_beat_unit_increase
-import com.pandulapeter.campfire.presentation.resources.metronome_beats_decrease
-import com.pandulapeter.campfire.presentation.resources.metronome_beats_increase
-import com.pandulapeter.campfire.presentation.resources.metronome_beats_per_bar
 import com.pandulapeter.campfire.presentation.resources.metronome_flash
 import com.pandulapeter.campfire.presentation.resources.metronome_mute
 import com.pandulapeter.campfire.presentation.resources.metronome_mute_description
@@ -60,15 +52,13 @@ import com.pandulapeter.campfire.presentation.resources.metronome_volume
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
 import com.pandulapeter.campfire.presentation.ui.components.SwitchListItem
+import com.pandulapeter.campfire.presentation.ui.metronome.TimeSignaturePicker
 import com.pandulapeter.campfire.presentation.ui.metronome.sound
 import com.pandulapeter.campfire.presentation.ui.metronome.subdivision
 import com.pandulapeter.campfire.presentation.ui.metronome.timeSignatureOrDefault
 import com.pandulapeter.campfire.presentation.ui.platform.rememberBeatHaptics
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsSection
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsSubsection
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.MenuStepperRow
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.Stepper
-import org.jetbrains.compose.resources.painterResource
 import kotlin.math.roundToInt
 
 /**
@@ -86,51 +76,10 @@ internal fun MetronomeOptionsSection(
     val timeSignature = settings.timeSignatureOrDefault
     val setTimeSignature = { value: TimeSignature -> viewModel.updateMetronomeSettings { copy(timeSignature = value.toString()) } }
     SettingsSubsection(title = stringResource(Res.string.metronome_time_signature)) {
-        FlowRow(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            COMMON_TIME_SIGNATURES.forEach { common ->
-                FilterChip(
-                    selected = common == timeSignature,
-                    onClick = { setTimeSignature(common) },
-                    label = { Text(common.toString()) },
-                )
-            }
-        }
-        MenuStepperRow(label = stringResource(Res.string.metronome_beats_per_bar)) {
-            Stepper(
-                value = timeSignature.beats.toString(),
-                isDefault = true,
-                decreaseIcon = painterResource(Res.drawable.ic_subtract),
-                decreaseLabel = stringResource(Res.string.metronome_beats_decrease),
-                canDecrease = timeSignature.beats > TimeSignature.BEATS_RANGE.first,
-                onDecrease = { setTimeSignature(timeSignature.copy(beats = timeSignature.beats - 1)) },
-                increaseIcon = painterResource(Res.drawable.ic_add),
-                increaseLabel = stringResource(Res.string.metronome_beats_increase),
-                canIncrease = timeSignature.beats < TimeSignature.BEATS_RANGE.last,
-                onIncrease = { setTimeSignature(timeSignature.copy(beats = timeSignature.beats + 1)) },
-                resetLabel = null,
-                onReset = null,
-            )
-        }
-        val unitIndex = TimeSignature.UNITS.indexOf(timeSignature.unit)
-        MenuStepperRow(label = stringResource(Res.string.metronome_beat_unit)) {
-            Stepper(
-                value = timeSignature.unit.toString(),
-                isDefault = true,
-                decreaseIcon = painterResource(Res.drawable.ic_subtract),
-                decreaseLabel = stringResource(Res.string.metronome_beat_unit_decrease),
-                canDecrease = unitIndex > 0,
-                onDecrease = { setTimeSignature(timeSignature.copy(unit = TimeSignature.UNITS[unitIndex - 1])) },
-                increaseIcon = painterResource(Res.drawable.ic_add),
-                increaseLabel = stringResource(Res.string.metronome_beat_unit_increase),
-                canIncrease = unitIndex < TimeSignature.UNITS.lastIndex,
-                onIncrease = { setTimeSignature(timeSignature.copy(unit = TimeSignature.UNITS[unitIndex + 1])) },
-                resetLabel = null,
-                onReset = null,
-            )
-        }
+        TimeSignaturePicker(
+            timeSignature = timeSignature,
+            onChange = setTimeSignature,
+        )
     }
     SettingsSubsection(title = stringResource(Res.string.metronome_subdivision)) {
         SegmentedChoice(
@@ -209,13 +158,4 @@ private fun MetronomeSound.label() = stringResource(
         MetronomeSound.STICKS -> Res.string.metronome_sound_sticks
         MetronomeSound.COWBELL -> Res.string.metronome_sound_cowbell
     }
-)
-
-private val COMMON_TIME_SIGNATURES = listOf(
-    TimeSignature(2, 4),
-    TimeSignature(3, 4),
-    TimeSignature(4, 4),
-    TimeSignature(6, 8),
-    TimeSignature(7, 8),
-    TimeSignature(12, 8),
 )

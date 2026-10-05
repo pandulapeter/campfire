@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.FlowRowScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -56,6 +57,8 @@ import com.pandulapeter.campfire.presentation.resources.ic_language
 import com.pandulapeter.campfire.presentation.resources.ic_link
 import com.pandulapeter.campfire.presentation.resources.song_details_album
 import com.pandulapeter.campfire.presentation.resources.song_details_capo
+import com.pandulapeter.campfire.presentation.resources.song_details_change_time_signature
+import com.pandulapeter.campfire.presentation.resources.song_details_set_time_signature
 import com.pandulapeter.campfire.presentation.resources.song_details_composer
 import com.pandulapeter.campfire.presentation.resources.song_details_duration
 import com.pandulapeter.campfire.presentation.resources.song_details_info_add
@@ -70,6 +73,10 @@ import com.pandulapeter.campfire.presentation.resources.song_details_song_info
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo
 import com.pandulapeter.campfire.presentation.resources.song_details_time
 import com.pandulapeter.campfire.presentation.resources.song_details_year
+import com.pandulapeter.campfire.presentation.resources.song_editor_insert_capo
+import com.pandulapeter.campfire.presentation.resources.song_editor_insert_key
+import com.pandulapeter.campfire.presentation.resources.song_editor_insert_tempo
+import com.pandulapeter.campfire.presentation.resources.song_editor_insert_time
 import com.pandulapeter.campfire.presentation.resources.songs_key
 import com.pandulapeter.campfire.presentation.ui.components.TagFlowRow
 import com.pandulapeter.campfire.presentation.ui.components.ACTION_BUTTON_OVERLAP
@@ -80,6 +87,9 @@ import com.pandulapeter.campfire.presentation.ui.components.TagPill
 import com.pandulapeter.campfire.presentation.ui.components.languageLabel
 import com.pandulapeter.campfire.presentation.ui.components.sortedAlphabeticallyBy
 import com.pandulapeter.campfire.presentation.ui.components.textResource
+import com.pandulapeter.campfire.presentation.ui.metronome.EffectiveTempo
+import com.pandulapeter.campfire.presentation.ui.metronome.TapTempoButton
+import com.pandulapeter.campfire.presentation.ui.metronome.TempoStepper
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 import org.jetbrains.compose.resources.PluralStringResource
 import org.jetbrains.compose.resources.painterResource
@@ -87,7 +97,7 @@ import org.jetbrains.compose.resources.painterResource
 /**
  * What the song says about itself is the first section of its own grid, so it shares the rows, columns, stepping and
  * motion of the lyrics rather than taking their full width away above them: the card of what the song is, where it is
- * shown there, and under it the line of how it is played.
+ * shown there, and under it how it is played.
  *
  * @param shouldShowChords False for lyrics-only mode, which leaves out the key, capo, tempo and time along with the
  * chords: they are what is played, and say nothing to somebody who is only singing.
@@ -95,6 +105,9 @@ import org.jetbrains.compose.resources.painterResource
  * which shows everything being typed, and not on the song details screen, whose app bar opens it as a sheet instead.
  * @param isSongInfoEditable Whether that card has edit buttons, which puts it there for a song that says nothing about
  * itself yet too: it is where its first tag or link is added.
+ * @param hasPlayingControls Whether the four playing values are drawn as the controls that set them, which is what
+ * the song details screen hands down outside read only mode. The section is then there for every song, since a capo
+ * and a tempo can be set on one that names neither.
  */
 internal fun withMetadataSection(
     sections: List<RenderSection>,
@@ -102,10 +115,12 @@ internal fun withMetadataSection(
     shouldShowChords: Boolean,
     isSongInfoShown: Boolean,
     isSongInfoEditable: Boolean = false,
+    hasPlayingControls: Boolean = false,
 ): List<RenderSection> {
     val shownMetadata = if (shouldShowChords) metadata else metadata.copy(key = null, capo = null, tempo = null, time = null)
-    return if ((isSongInfoShown && (isSongInfoEditable || shownMetadata.hasSongInfo)) || shownMetadata.hasPlayingValues) {
-        listOf(RenderSection.Metadata(shownMetadata)) + sections
+    val hasControls = shouldShowChords && hasPlayingControls
+    return if ((isSongInfoShown && (isSongInfoEditable || shownMetadata.hasSongInfo)) || hasControls || shownMetadata.hasPlayingValues) {
+        listOf(RenderSection.Metadata(metadata = shownMetadata, hasPlayingControls = hasControls)) + sections
     } else {
         sections
     }
@@ -126,6 +141,8 @@ private val ChordProMetadata.hasPlayingValues
  * it or [songInfoEditing] lets it be given something, then the key, capo, tempo and time, which are always on the page,
  * since they are what is played. A whole, uncuttable section.
  *
+ * @param playingControls What sets those four, where they are set here rather than only read: the song details screen
+ * hands them down outside read only mode, see [SongPlayingControls].
  * @param titleStyle The style of the section titles of the lyrics, which the card's own title follows as the text is
  * scaled; what the card holds scales with [fontScale] the way the lyrics do.
  */
@@ -135,6 +152,7 @@ internal fun SongMetadataSection(
     metadata: ChordProMetadata,
     isSongInfoShown: Boolean,
     songInfoEditing: SongInfoEditing?,
+    playingControls: SongPlayingControls?,
     titleStyle: TextStyle,
     fontScale: Float,
 ) = Column(modifier = modifier) {
@@ -147,11 +165,20 @@ internal fun SongMetadataSection(
             fontScale = fontScale,
         )
     }
-    SongPlayingMetadata(
-        modifier = Modifier.padding(top = if (hasSongInfoCard) 12.dp else 0.dp),
-        metadata = metadata,
-        fontScale = fontScale,
-    )
+    if (playingControls == null) {
+        SongPlayingMetadata(
+            modifier = Modifier.padding(top = if (hasSongInfoCard) 12.dp else 0.dp),
+            metadata = metadata,
+            fontScale = fontScale,
+        )
+    } else {
+        SongPlayingControlsRow(
+            modifier = Modifier.padding(top = if (hasSongInfoCard) 12.dp else 0.dp),
+            controls = playingControls,
+            titleStyle = titleStyle,
+            fontScale = fontScale,
+        )
+    }
 }
 
 @Composable
@@ -174,6 +201,105 @@ private fun SongPlayingMetadata(
             color = LocalSecondAccentColor.current,
         )
     }
+}
+
+/**
+ * The four things that decide how the song is played, each next to the control that sets it: the key with the
+ * transposition stepper, the capo and the tempo with their own, the tempo also carrying the button that taps one in,
+ * and the time signature as the value that opens the sheet where it is picked. They flow like the chips of the card
+ * above them, so a narrow column stacks them and a wide one puts them side by side. Starting a click is the app bar's
+ * button, which is in reach wherever the song has been scrolled to; this row only says what it would play.
+ *
+ * Labels and controls grow and shrink with the lyrics, since they are part of the song's own first section — but the
+ * way the sections' own header pills do rather than as a bar's buttons scaled up: what is written in them is scaled and
+ * the padding around it is not, so a control is exactly as tall as the pill heading the section under it
+ * ([songControlHeight], from the [titleStyle] those pills are named in). What keeps them big enough to hit at the other
+ * end is `UserPreferences.MIN_FONT_SCALE`, the size below which the song details screen is not read at all.
+ */
+@Composable
+private fun SongPlayingControlsRow(
+    modifier: Modifier = Modifier,
+    controls: SongPlayingControls,
+    titleStyle: TextStyle,
+    fontScale: Float,
+) {
+    val height = songControlHeight(titleStyle)
+    FlowRow(
+        modifier = modifier.padding(horizontal = 12.dp),
+        horizontalArrangement = Arrangement.spacedBy(PLAYING_CONTROL_GAP),
+        verticalArrangement = Arrangement.spacedBy(PLAYING_CONTROL_GAP),
+        // Every control is as tall as the others, but a label narrow enough to wrap makes its own item taller than the
+        // rest, and a flow row hangs its items from the top of the line they are in: centering them keeps the Tap
+        // button level with the steppers whatever is beside it.
+        itemVerticalAlignment = Alignment.CenterVertically,
+    ) {
+        controls.key?.let { key ->
+            PlayingControl(label = stringResource(Res.string.song_editor_insert_key), fontScale = fontScale) {
+                TranspositionControls(
+                    transposition = key.transposition,
+                    key = key.key,
+                    fontScale = fontScale,
+                    height = height,
+                    onStep = key.onStep,
+                    onReset = key.onReset,
+                )
+            }
+        }
+        PlayingControl(label = stringResource(Res.string.song_editor_insert_capo), fontScale = fontScale) {
+            CapoControls(
+                capo = controls.capo.capo,
+                fontScale = fontScale,
+                height = height,
+                onStep = controls.capo.onStep,
+                onReset = controls.capo.onReset,
+            )
+        }
+        PlayingControl(label = stringResource(Res.string.song_editor_insert_tempo), fontScale = fontScale) {
+            TempoStepper(
+                tempo = controls.tempo.tempo,
+                fontScale = fontScale,
+                height = height,
+                onStep = controls.tempo.onStep,
+                onReset = controls.tempo.onReset,
+            )
+        }
+        // An item of its own rather than part of the tempo's, so that a narrow column at a large text size wraps it
+        // onto a line of its own instead of leaving it no room next to the stepper.
+        TapTempoButton(
+            fontScale = fontScale,
+            height = height,
+            onTempo = controls.tempo.onTapped,
+        )
+        PlayingControl(label = stringResource(Res.string.song_editor_insert_time), fontScale = fontScale) {
+            ValuePill(
+                value = controls.time.signature,
+                fontScale = fontScale,
+                height = height,
+                onClickLabel = stringResource(
+                    if (controls.time.isDeclared) Res.string.song_details_change_time_signature else Res.string.song_details_set_time_signature,
+                ),
+                onClick = controls.time.onClick,
+            )
+        }
+    }
+}
+
+/** One of [SongPlayingControlsRow]'s items: what it is, in the accent color the line of text uses, and what sets it. */
+@Composable
+private fun PlayingControl(
+    label: String,
+    fontScale: Float,
+    control: @Composable RowScope.() -> Unit,
+) = Row(
+    verticalAlignment = Alignment.CenterVertically,
+) {
+    Text(
+        modifier = Modifier.padding(end = PLAYING_CONTROL_LABEL_GAP),
+        text = label,
+        style = MaterialTheme.typography.labelLarge.scaled(fontScale),
+        color = LocalSecondAccentColor.current,
+    )
+    control()
 }
 
 /**
@@ -247,6 +373,60 @@ private fun SongInfoCard(
         )
     }
 }
+
+/**
+ * What sets the four values a song is played by, from the song's own first section, see [SongPlayingControlsRow]. The
+ * song details screen builds it for the song on screen and only outside read only mode: performance mode and a song
+ * read from an archived setlist get the plain line of text instead, since neither changes anything about a song.
+ *
+ * Three of the four are set where the song is read — a transposition, a capo and a tempo belong to the setlist the
+ * band plays it in, or to this device for a song opened from the library — and the fourth, the time signature, is
+ * written into the file: it is the song itself, and the one of the four the click cannot be told any other way.
+ */
+@Immutable
+internal class SongPlayingControls(
+    /** Null for a song with nothing to transpose, whose key is then only read. */
+    val key: SongKeyControl?,
+    val capo: SongCapoControl,
+    val tempo: SongTempoControl,
+    val time: SongTimeControl,
+)
+
+/** The transposition, which the key reads: the amount, the key it takes the song to, and the stepper's two ends. */
+@Immutable
+internal class SongKeyControl(
+    val transposition: Int,
+    val key: String?,
+    val onStep: (semitones: Int) -> Unit,
+    val onReset: () -> Unit,
+)
+
+@Immutable
+internal class SongCapoControl(
+    val capo: EffectiveCapo,
+    val onStep: (frets: Int) -> Unit,
+    val onReset: () -> Unit,
+)
+
+/** The tempo the click would play at: the same stepper and Tap button the overflow menu's row had. */
+@Immutable
+internal class SongTempoControl(
+    val tempo: EffectiveTempo,
+    val onStep: (delta: Int) -> Unit,
+    val onTapped: (bpm: Int) -> Unit,
+    val onReset: () -> Unit,
+)
+
+/**
+ * The time signature as the file writes it, or the one the click counts the bar by where it names none
+ * ([isDeclared] false), and the sheet it is picked in.
+ */
+@Immutable
+internal class SongTimeControl(
+    val signature: String,
+    val isDeclared: Boolean,
+    val onClick: () -> Unit,
+)
 
 /** Editing callbacks for the card or sheet header and the groups of [SongInfoBody], see [rememberSongInfoEditing]. */
 @Immutable
@@ -508,6 +688,14 @@ internal fun linkLabel(url: String): String = url
     .lowercase()
     .removePrefix("www.")
     .ifEmpty { url }
+
+/**
+ * Between two of the playing controls, and between the rows they wrap into: the gap the card's chips keep. It does not
+ * grow with the song's text, any more than the gaps between its sections do.
+ */
+private val PLAYING_CONTROL_GAP = 8.dp
+private val PLAYING_CONTROL_LABEL_GAP = 8.dp
+
 
 private val EDIT_ICON_SIZE = 18.dp
 private val SONG_INFO_TITLE_HEIGHT = 32.dp

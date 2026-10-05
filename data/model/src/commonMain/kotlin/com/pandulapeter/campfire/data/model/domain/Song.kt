@@ -75,4 +75,16 @@ data class Song(
     val tempo: Int? = null,
     /** The first `{time}` as written, null where the song names none; read into a time signature where it is played. */
     val time: String? = null,
-)
+    /**
+     * `{capo}`, the fret the song is played at, null where the song names none (or names something that is not a
+     * number). Read with the rest of the metadata, like [tempo], so that the capo stepper of the song details screen
+     * knows what a reset goes back to before the song's text has been read.
+     */
+    val capo: Int? = null,
+) {
+
+    companion object {
+        /** The frets a capo can be put on, and so the only values a stored override may hold; 0 is no capo. */
+        val CAPO_RANGE = 0..12
+    }
+}

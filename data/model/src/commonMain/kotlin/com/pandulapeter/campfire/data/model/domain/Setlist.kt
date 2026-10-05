@@ -68,6 +68,13 @@ data class Setlist(
          * for the same reason as [transposition]: the band plays the song at it, so it travels with the setlist.
          */
         val tempo: Int? = null,
+        /**
+         * The fret this setlist capos the song at, null for the song's own `{capo}`. Kept in the entry for the same
+         * reason as [tempo]: one set is played with a capo and the next one in another key without, and that is the
+         * setlist's business rather than the file's. 0 is a capo taken off for this setlist, which is not the same
+         * thing as null.
+         */
+        val capo: Int? = null,
         /** The same as [Setlist.unknownFields], for one entry. */
         val unknownFields: String = "",
     )

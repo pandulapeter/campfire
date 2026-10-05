@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.source.local.implementation.model
 
 import com.pandulapeter.campfire.data.model.domain.MetronomeSettings
+import com.pandulapeter.campfire.data.model.domain.Song
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
@@ -61,6 +62,9 @@ internal data class SetlistSongDocument(
      */
     @Serializable(with = OptionalTempoSerializer::class)
     val tempo: Int? = null,
+    /** The fret the song is capoed at, left out of the file where it is null, exactly as [tempo] is. */
+    @Serializable(with = OptionalCapoSerializer::class)
+    val capo: Int? = null,
     /** The same as [SetlistDocument.unknownFields], for one entry. */
     @Transient val unknownFields: JsonObject = JsonObject(emptyMap()),
 )
@@ -97,6 +101,24 @@ private object OptionalTempoSerializer : KSerializer<Int?> {
         val json = decoder as? JsonDecoder ?: return decoder.decodeInt()
         val primitive = json.decodeJsonElement() as? JsonPrimitive ?: return null
         return primitive.takeUnless { it.isString }?.content?.toIntOrNull()?.takeIf { it in MetronomeSettings.TEMPO_RANGE }
+    }
+
+    override fun serialize(encoder: Encoder, value: Int?) = if (value == null) encoder.encodeNull() else encoder.encodeInt(value)
+}
+
+/**
+ * [OptionalTempoSerializer] for a fret, within [Song.CAPO_RANGE]. Zero is a value of its own here - a capo this
+ * setlist takes off a song whose file asks for one - and is read as itself rather than as nothing.
+ */
+@OptIn(ExperimentalSerializationApi::class)
+private object OptionalCapoSerializer : KSerializer<Int?> {
+
+    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("OptionalCapo", PrimitiveKind.INT).nullable
+
+    override fun deserialize(decoder: Decoder): Int? {
+        val json = decoder as? JsonDecoder ?: return decoder.decodeInt()
+        val primitive = json.decodeJsonElement() as? JsonPrimitive ?: return null
+        return primitive.takeUnless { it.isString }?.content?.toIntOrNull()?.takeIf { it in Song.CAPO_RANGE }
     }
 
     override fun serialize(encoder: Encoder, value: Int?) = if (value == null) encoder.encodeNull() else encoder.encodeInt(value)

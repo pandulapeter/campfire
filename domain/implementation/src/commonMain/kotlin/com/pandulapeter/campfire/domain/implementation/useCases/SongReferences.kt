@@ -15,7 +15,7 @@ import kotlinx.coroutines.CancellationException
 
 /**
  * Everything in the library that refers to a song by its file name - the setlists holding it, its saved
- * transposition and tempo and the sections folded in it - moved to [newFileName], or dropped where that is null. The walk a rename and a deletion both make
+ * transposition, tempo and capo and the sections folded in it - moved to [newFileName], or dropped where that is null. The walk a rename and a deletion both make
  * once the file itself has moved or gone, which is why it is shared: neither can be undone at that point, so every
  * reference is attempted even after one fails, and whether all of them followed is the answer rather than an
  * exception. The caller runs it [kotlinx.coroutines.NonCancellable], for the same reason.
@@ -57,6 +57,7 @@ internal suspend fun followSongReferences(
             preferences.copy(
                 transpositions = preferences.transpositions.movedTo(fileName, newFileName),
                 tempos = preferences.tempos.movedTo(fileName, newFileName),
+                capos = preferences.capos.movedTo(fileName, newFileName),
                 foldedSections = preferences.foldedSections.movedTo(fileName, newFileName),
             )
         }

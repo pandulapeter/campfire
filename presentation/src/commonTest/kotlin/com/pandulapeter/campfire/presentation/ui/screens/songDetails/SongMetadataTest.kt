@@ -88,4 +88,22 @@ class SongMetadataTest {
             withMetadataSection(body, playing.copy(album = "Album"), shouldShowChords = false, isSongInfoShown = true),
         )
     }
+
+    @Test
+    fun `the playing controls are a section of their own for a song that names none of the four`() {
+        val body = listOf(verse)
+
+        assertEquals(
+            listOf(RenderSection.Metadata(metadata = ChordProMetadata(), hasPlayingControls = true), verse),
+            withMetadataSection(body, ChordProMetadata(), shouldShowChords = true, isSongInfoShown = false, hasPlayingControls = true),
+        )
+    }
+
+    @Test
+    fun `lyrics-only mode leaves out the playing controls with the values`() {
+        val body = listOf(verse)
+        val playing = ChordProMetadata(key = "G", capo = 2, tempo = "96", time = "6/8")
+
+        assertSame(body, withMetadataSection(body, playing, shouldShowChords = false, isSongInfoShown = false, hasPlayingControls = true))
+    }
 }

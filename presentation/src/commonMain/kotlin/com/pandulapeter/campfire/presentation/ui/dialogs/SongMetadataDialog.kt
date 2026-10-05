@@ -39,6 +39,7 @@ import com.pandulapeter.campfire.chordpro.ChordProMetadataFields.Field
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.done
+import com.pandulapeter.campfire.presentation.resources.metronome_time_signature
 import com.pandulapeter.campfire.presentation.resources.optional_field_label
 import com.pandulapeter.campfire.presentation.resources.save
 import com.pandulapeter.campfire.presentation.resources.song_details_metadata_edit
@@ -59,9 +60,9 @@ import com.pandulapeter.campfire.presentation.ui.platform.numericPlatformImeOpti
 
 /**
  * What a song is, as a form: every field is edited as a draft and only the ones changed are written, together, on Save.
- * How it is played — its key, capo, tempo and time — is not here, since those are part of writing the song down and
- * belong to the editor. The values are saved as a list of strings in [Field] order, which is what Android's saved
- * state takes. Unlike the dialogs that ask for one thing it opens with no field focused: it is opened to look the song
+ * How it is played — its key, capo, tempo and time — is not here: the first three are set where the song is read, and
+ * the time signature has a sheet of its own. The values are saved as a list of strings in [SONG_METADATA_FIELDS] order,
+ * which is what Android's saved state takes. Unlike the dialogs that ask for one thing it opens with no field focused: it is opened to look the song
  * up as often as to correct one field of it, and a keyboard brought up over the title would hide half the form.
  */
 @Composable
@@ -102,7 +103,7 @@ internal fun SongMetadataDialog(
         },
         confirmButton = { close ->
             BottomSheetConfirmButton(
-                enabled = Field.entries.any { values[it].orEmpty().trim() != offeredValues[it].orEmpty().trim() },
+                enabled = SONG_METADATA_FIELDS.any { values[it].orEmpty().trim() != offeredValues[it].orEmpty().trim() },
                 onClick = {
                     viewModel.setSongMetadata(
                         fileName = dialog.song.fileName,
@@ -158,7 +159,7 @@ internal fun SongMetadataField(
         keyboardOptions = KeyboardOptions(
             capitalization = if (field.isNumeric) KeyboardCapitalization.None else KeyboardCapitalization.Sentences,
             keyboardType = if (field.isNumeric) KeyboardType.Number else KeyboardType.Text,
-            imeAction = if (field == Field.entries.last()) ImeAction.Done else ImeAction.Next,
+            imeAction = if (field == SONG_METADATA_FIELDS.last()) ImeAction.Done else ImeAction.Next,
             platformImeOptions = numericPlatformImeOptions.takeIf { field.isNumeric },
         ),
     )
@@ -208,6 +209,7 @@ private val Field.label: StringResource
         Field.ALBUM -> Res.string.song_editor_insert_album
         Field.YEAR -> Res.string.song_editor_insert_year
         Field.DURATION -> Res.string.song_editor_insert_duration
+        Field.TIME -> Res.string.metronome_time_signature
     }
 
 /** The fields typed as digits alone: a year, and a duration through [DurationDigitsTransformation]. */
@@ -215,7 +217,23 @@ private val Field.isNumeric get() = this == Field.YEAR || this == Field.DURATION
 
 private const val YEAR_LENGTH = 4
 
+/**
+ * The fields the New song and Edit song details forms ask for, in the order they ask for them. Not every
+ * [Field] there is: the time signature is written from a sheet of its own, where the bars can be picked rather than
+ * typed, so it is left out of both forms and of what they save.
+ */
+internal val SONG_METADATA_FIELDS = listOf(
+    Field.TITLE,
+    Field.SUBTITLE,
+    Field.ARTIST,
+    Field.ALBUM,
+    Field.COMPOSER,
+    Field.LYRICIST,
+    Field.YEAR,
+    Field.DURATION,
+)
+
 internal val songMetadataSaver = listSaver<Map<Field, String>, String>(
-    save = { values -> Field.entries.map { values[it].orEmpty() } },
-    restore = { saved -> Field.entries.zip(saved).toMap() },
+    save = { values -> SONG_METADATA_FIELDS.map { values[it].orEmpty() } },
+    restore = { saved -> SONG_METADATA_FIELDS.zip(saved).toMap() },
 )

@@ -12,7 +12,7 @@ package com.pandulapeter.campfire.domain.api.useCases
 interface DeleteSongUseCase {
 
     /**
-     * Deletes the file and removes the song from every setlist and from the saved transpositions and tempos. Throws when the file
+     * Deletes the file and removes the song from every setlist and from the saved transpositions, tempos and capos. Throws when the file
      * could not be deleted, and nothing else has been touched then. Once it is gone the rest is attempted whatever
      * fails, and the answer is whether every reference could be removed: false leaves a setlist or the saved
      * transposition naming a file that is gone - a setlist then shows the song as missing.

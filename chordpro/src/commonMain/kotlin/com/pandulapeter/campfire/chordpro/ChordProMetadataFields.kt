@@ -21,8 +21,12 @@ object ChordProMetadataFields {
     /**
      * One directive a song says one thing with, under the name the app knows it by (see
      * [ChordProSyntax.metadataKind]). The repeatable ones — tags, languages, links — and the cover have editors of
-     * their own, and how the song is played (`key`, `capo`, `tempo`, `time`) is part of writing it down, which is the
-     * editor's: a later `{key}` is a modulation in the body rather than a second value of the field.
+     * their own.
+     *
+     * Of how the song is played, only [TIME] is here: a key, a capo and a tempo are what one band plays the song at
+     * and are overridden where the song is read instead of being written into the file, while the beats of a bar are
+     * the song itself — and the one thing of the four the metronome cannot be told any other way. A later `{key}` is a
+     * modulation in the body rather than a second value of its field, which is why those three stay the editor's.
      */
     enum class Field(val directiveName: String) {
         TITLE("title"),
@@ -33,6 +37,7 @@ object ChordProMetadataFields {
         ALBUM("album"),
         YEAR("year"),
         DURATION("duration"),
+        TIME("time"),
     }
 
     /** What [metadata] says for [field], as text, or null where the song declares nothing for it. */
@@ -45,6 +50,7 @@ object ChordProMetadataFields {
         Field.ALBUM -> metadata.album
         Field.YEAR -> metadata.year
         Field.DURATION -> metadata.duration
+        Field.TIME -> metadata.time
     }?.takeIf { it.isNotBlank() }
 
     /**

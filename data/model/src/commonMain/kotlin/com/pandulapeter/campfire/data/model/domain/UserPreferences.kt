@@ -59,6 +59,12 @@ data class UserPreferences(
      */
     val tempos: Map<String, Int> = emptyMap(),
     /**
+     * Song file name to the fret it is capoed at, for songs opened from the library rather than from a setlist: the
+     * third of these, read and written exactly as [tempos] is. A song opened from a setlist reads its entry's
+     * `Setlist.Entry.capo` instead, never this.
+     */
+    val capos: Map<String, Int> = emptyMap(),
+    /**
      * Song file name to the sections (and the tabs and grids inside them) the reader has folded away on the song details
      * screen, as the opaque keys that screen names them by. One set per song, wherever the song is opened from: unlike a
      * transposition, which the band plays the song in, how much of it one reader keeps open is their own business, so it
@@ -89,7 +95,14 @@ data class UserPreferences(
     companion object {
         /** The text size a song opens at, and the one a stored size that is not a size falls back on. */
         const val DEFAULT_FONT_SCALE = 1f
-        const val MIN_FONT_SCALE = 0.5f
+
+        /**
+         * How small a song is ever read. It bounds the whole song details screen rather than the lyrics alone - the
+         * section headers, the chords and the controls of the first section all follow it - so it is the size at which
+         * everything on that screen is still worth having on it: smaller lyrics only fit more of a song on the screen
+         * at a size nobody reads them at, and its steppers would be too small to hit.
+         */
+        const val MIN_FONT_SCALE = 0.8f
         const val MAX_FONT_SCALE = 2.5f
     }
 

@@ -73,4 +73,11 @@ class ChordProMetadataFieldsTest {
         assertEquals(null, ChordProMetadataFields.valueOf(metadata, Field.YEAR))
         assertEquals(null, ChordProMetadataFields.valueOf(metadata, Field.ARTIST))
     }
+
+    @Test
+    fun `the time signature is written where the song is played rather than among what it is`() {
+        assertEquals("{title: T}\n{time: 6/8}\nLa", ChordProMetadataFields.set("{title: T}\n{time: 4/4}\nLa", mapOf(Field.TIME to "6/8")))
+        assertEquals("{title: T}\n{key: G}\n{time: 3/4}\nLa", ChordProMetadataFields.set("{title: T}\n{key: G}\nLa", mapOf(Field.TIME to "3/4")))
+        assertEquals("3/4", ChordProMetadataFields.valueOf(ChordProParser.parseMetadata("{time: 3/4}"), Field.TIME))
+    }
 }

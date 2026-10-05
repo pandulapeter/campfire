@@ -171,8 +171,9 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   but only where it starts with a host (and perhaps a port), so `mailto:…`, `me@…` or a mistyped `https:/…` is refused
   rather than saved as an `https` address naming nothing.
 - `ChordProMetadataFields` — the directives that say what a song is (`title`, `subtitle`, `artist`, `composer`,
-  `lyricist`, `album`, `year`, `duration`), for the song details' metadata dialog; how it is played (`key`, `capo`,
-  `tempo`, `time`) is part of writing it down and stays the editor's. `set` rewrites the line the parser reads each
+  `lyricist`, `album`, `year`, `duration`), for the song details' metadata dialog, plus `time`, which the sheet that
+  picks a bar writes; the other three of how it is played (`key`, `capo`, `tempo`) are what one band plays the song at
+  and are overridden where it is read rather than written here (see `:presentation`), so they stay the editor's. `set` rewrites the line the parser reads each
   value from — the last one — where it stands and in its own spelling (`{t: …}`, a `{meta: title …}`), drops the
   earlier lines of the same field, writes a field the file lacks into the header by `metadataInsertionIndex`, and
   removes it for a blank value; editing the text for the reason `ChordProTags` does. `valueOf` reads a field back out

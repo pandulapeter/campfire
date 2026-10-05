@@ -14,7 +14,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pandulapeter.campfire.chordpro.ChordProTime
 import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_album
@@ -31,6 +33,8 @@ import com.pandulapeter.campfire.presentation.resources.song_details_song_info
 import com.pandulapeter.campfire.presentation.resources.song_details_tags_manage
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ActionsMenuItem
+import com.pandulapeter.campfire.presentation.ui.metronome.EffectiveTempo
+import com.pandulapeter.campfire.presentation.ui.metronome.timeSignatureOrDefault
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -50,6 +54,72 @@ internal fun songInfoAction(
     isEnabled = isEnabled,
     onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SongInfo(song)) },
 )
+
+/**
+ * The controls of the four values a song is played by, for one page of the song details pager: built where that page
+ * is drawn, so that each song of a setlist sets its own. The caller leaves them out in read only mode, where the
+ * values are read rather than set.
+ *
+ * @param tempo Passed in rather than read here, since the screen already holds it for the app bar's metronome button.
+ */
+@Composable
+internal fun rememberSongPlayingControls(
+    viewModel: CampfireViewModel,
+    song: Song,
+    setlistFileName: String?,
+    transposition: Int,
+    chordSpelling: UserPreferences.ChordSpelling,
+    tempo: EffectiveTempo,
+    capo: EffectiveCapo,
+    canTranspose: Boolean,
+): SongPlayingControls {
+    val key = if (canTranspose) viewModel.renderKey(song = song, transposition = transposition, spelling = chordSpelling) else null
+    val timeSignature = song.timeSignatureOrDefault.toString()
+    val isTimeDeclared = ChordProTime.parse(song.time) != null
+    val fileName = song.fileName
+    return remember(
+        viewModel,
+        fileName,
+        setlistFileName,
+        canTranspose,
+        transposition,
+        key,
+        capo,
+        tempo,
+        timeSignature,
+        isTimeDeclared,
+        song,
+    ) {
+        SongPlayingControls(
+            key = if (canTranspose) {
+                SongKeyControl(
+                    transposition = transposition,
+                    key = key,
+                    onStep = { viewModel.stepTransposition(fileName, setlistFileName, it) },
+                    onReset = { viewModel.resetTransposition(fileName, setlistFileName) },
+                )
+            } else {
+                null
+            },
+            capo = SongCapoControl(
+                capo = capo,
+                onStep = { viewModel.stepCapo(fileName, setlistFileName, it) },
+                onReset = { viewModel.resetCapo(fileName, setlistFileName) },
+            ),
+            tempo = SongTempoControl(
+                tempo = tempo,
+                onStep = { viewModel.stepTempo(fileName, setlistFileName, it) },
+                onTapped = { viewModel.setTempo(fileName, setlistFileName, it) },
+                onReset = { viewModel.resetTempo(fileName, setlistFileName) },
+            ),
+            time = SongTimeControl(
+                signature = timeSignature,
+                isDeclared = isTimeDeclared,
+                onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SongTimeSignature(song = song, time = song.time)) },
+            ),
+        )
+    }
+}
 
 /**
  * What the header and group edit buttons open: the dialog of each group, on the song details screen's sheet and on the
