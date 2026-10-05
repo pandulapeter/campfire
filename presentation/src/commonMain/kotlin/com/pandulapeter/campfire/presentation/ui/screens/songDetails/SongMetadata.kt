@@ -52,8 +52,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.chordpro.ChordProDuration
+import com.pandulapeter.campfire.chordpro.ChordProTempo
+import com.pandulapeter.campfire.chordpro.ChordProTime
 import com.pandulapeter.campfire.chordpro.model.ChordProLink
 import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
+import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
 import com.pandulapeter.campfire.metronome.api.model.TimeSignature
 import com.pandulapeter.campfire.presentation.localization.pluralStringResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -140,18 +144,20 @@ internal fun withMetadataSection(
 ): List<RenderSection> {
     val hasControls = (shouldShowChords || shouldShowTempo) && hasPlayingControls
     val readsBoth = (shouldShowChords || shouldShowTempo) && !hasControls && readsCapoAndTime
+    // Read the way the click and the steppers read them, so that the line says what is played: a number of beats a
+    // minute within the click's range, a time signature it can count ("C" being 4/4) and a capo on the neck.
     val shownMetadata = metadata.copy(
         key = metadata.key.takeIf { shouldShowChords },
         capo = when {
             !shouldShowChords -> null
-            readsBoth -> metadata.capo ?: 0
-            else -> metadata.capo
+            readsBoth -> (metadata.capo ?: 0).coerceIn(Song.CAPO_RANGE)
+            else -> metadata.capo?.coerceIn(Song.CAPO_RANGE)
         },
-        tempo = metadata.tempo.takeIf { shouldShowTempo },
+        tempo = ChordProTempo.parse(metadata.tempo)?.let(MetronomePattern::coerceBpm)?.toString()?.takeIf { shouldShowTempo },
         time = when {
             !shouldShowTempo -> null
-            readsBoth -> metadata.time?.takeIf { it.isNotBlank() } ?: TimeSignature.COMMON_TIME.toString()
-            else -> metadata.time
+            else -> ChordProTime.parse(metadata.time)?.let { (beats, unit) -> TimeSignature(beats, unit).toString() }
+                ?: TimeSignature.COMMON_TIME.toString().takeIf { readsBoth }
         },
     )
     return if ((isSongInfoShown && (isSongInfoEditable || shownMetadata.hasSongInfo)) || hasControls || readsBoth || shownMetadata.hasPlayingValues) {

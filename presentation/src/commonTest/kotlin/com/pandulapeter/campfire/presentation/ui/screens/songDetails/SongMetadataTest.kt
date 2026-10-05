@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 import com.pandulapeter.campfire.chordpro.model.CommentStyle
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlin.test.assertSame
 
 class SongMetadataTest {
@@ -139,5 +140,31 @@ class SongMetadataTest {
             withMetadataSection(body, ChordProMetadata(capo = 3, time = "6/8"), shouldShowChords = true, isSongInfoShown = false, readsCapoAndTime = true),
         )
         assertSame(body, withMetadataSection(body, ChordProMetadata(), shouldShowChords = false, shouldShowTempo = false, isSongInfoShown = false, readsCapoAndTime = true))
+    }
+
+    private fun shownMetadata(metadata: ChordProMetadata, readsCapoAndTime: Boolean = false) =
+        (withMetadataSection(emptyList(), metadata, shouldShowChords = true, isSongInfoShown = false, readsCapoAndTime = readsCapoAndTime)
+            .firstOrNull() as? RenderSection.Metadata)?.metadata
+
+    /** The line says what the click plays, so a tempo is read as the click reads it. */
+    @Test
+    fun `the tempo is the number the click plays`() {
+        assertEquals("120", shownMetadata(ChordProMetadata(tempo = "120 bpm"))?.tempo)
+        assertEquals("300", shownMetadata(ChordProMetadata(tempo = "400"))?.tempo)
+        assertNull(shownMetadata(ChordProMetadata(tempo = "fast")))
+    }
+
+    @Test
+    fun `the time signature is the one the click counts`() {
+        assertEquals("4/4", shownMetadata(ChordProMetadata(time = "C"))?.time)
+        assertEquals("4/4", shownMetadata(ChordProMetadata(time = "7/9"), readsCapoAndTime = true)?.time)
+        assertNull(shownMetadata(ChordProMetadata(time = "7/9")))
+    }
+
+    @Test
+    fun `the capo is held to the neck`() {
+        assertEquals(12, shownMetadata(ChordProMetadata(capo = 15))?.capo)
+        assertNull(shownMetadata(ChordProMetadata(capo = -1)))
+        assertEquals(0, shownMetadata(ChordProMetadata(capo = -1), readsCapoAndTime = true)?.capo)
     }
 }

@@ -197,7 +197,7 @@ Everything else is `commonMain`:
   those four used to be instead; the chords switched off leave out the key and the capo, the metronome switched off the
   tempo and the time signature, and both leave out the line and the controls entirely. On the song details screen that line always names the
   capo and the time signature (`withMetadataSection`'s `readsCapoAndTime`: "Capo 0", and the 4/4 the click counts
-  where the file names no `{time}`), so read only mode is there for every song too. The section is there for every song where the controls
+  where the file names no `{time}`), so read only mode is there for every song too. The line reads the values the way the click and the steppers do — the tempo as a number held to the click's range, the time signature as one it can count (a `C` as 4/4, one it cannot count as 4/4 where the line always names one and left out elsewhere), the capo held to the neck — so it says what is played rather than the directive's text. The section is there for every song where the controls
   are, since a capo and a tempo can be set on one that names neither, and whether it has them is part of
   `RenderSection.Metadata`, which is what the measured sizes of a section are kept by. And in
   the editor's preview (`SongLyrics`' `isSongInfoShown`), 12dp above it, an "About the song" card — as wide as its column,
