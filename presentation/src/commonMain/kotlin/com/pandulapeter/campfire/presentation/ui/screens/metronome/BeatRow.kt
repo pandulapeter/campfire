@@ -53,8 +53,8 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filter
 
 /**
- * One block per beat of the bar, as tall as the beat is loud (a muted one only an outline), lit in the second accent
- * color as each is heard - from the heard-time beats alone, so the flash agrees with the ear - and fading down to the
+ * One block per beat of the bar, as tall as the beat is loud (a muted one only an outline) and resting in a fainter shade
+ * of the second accent color, lit in the full color as each is heard - from the heard-time beats alone, so the flash agrees with the ear - and fading down to the
  * next. A tap moves a beat on from accent to plain to muted and round again, which is the whole of the accent editor.
  */
 @Composable
@@ -118,14 +118,17 @@ private fun BeatBlock(
             BeatLevel.MUTED -> MAX_BLOCK_HEIGHT * 0.3f
         }
     )
+    // The blocks at rest are fainter shades of the color they flash in rather than colors of their own: only the app's
+    // own palette has a second accent, every other one hands the primary color out as it, and an accent block resting
+    // in the primary color would have nothing to flash into there.
+    val flashColor = LocalSecondAccentColor.current
     val baseColor by animateColorAsState(
         when (level) {
-            BeatLevel.ACCENT -> MaterialTheme.colorScheme.primary
-            BeatLevel.NORMAL -> MaterialTheme.colorScheme.secondaryContainer
+            BeatLevel.ACCENT -> flashColor.copy(alpha = ACCENT_REST_ALPHA)
+            BeatLevel.NORMAL -> flashColor.copy(alpha = NORMAL_REST_ALPHA)
             BeatLevel.MUTED -> Color.Transparent
         }
     )
-    val flashColor = LocalSecondAccentColor.current
     val outlineColor = MaterialTheme.colorScheme.outline
     val description = stringResource(
         Res.string.metronome_beat_description,
@@ -153,3 +156,5 @@ private fun BeatBlock(
 
 private val MAX_BLOCK_HEIGHT = 56.dp
 private val BLOCK_GAP = 6.dp
+private const val ACCENT_REST_ALPHA = 0.5f
+private const val NORMAL_REST_ALPHA = 0.22f
