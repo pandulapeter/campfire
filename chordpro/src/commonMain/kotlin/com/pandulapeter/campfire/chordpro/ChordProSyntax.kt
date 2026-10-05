@@ -471,6 +471,23 @@ internal object ChordProSyntax {
 
     private val bodyNames = blockNames + setOf("new_song", "ns")
 
+    /** Whether [directive] begins the body of a song, see [bodyStartIndex]. */
+    fun startsBody(directive: Directive) = startOfEnvironment(directive.name) != null || directive.name in blockNames
+
+    /**
+     * Where the body of the song [lines] make up begins, the way [ChordProParser] reads it: at the first line that is
+     * not blank, a `#` comment or a directive that only sets something — the first line of lyrics, the first
+     * `{start_of_…}` or the first directive that makes a block — or past the end of a song that has none. A directive
+     * with a selector suffix puts nothing in the song, so it begins nothing either. What stands before it is the
+     * header, which is what a song opens with: its `{transpose}`, and the first of its `{key}`, `{tempo}` and `{time}`.
+     */
+    fun bodyStartIndex(lines: List<String>): Int = lines.indexOfFirst { line ->
+        val trimmedLine = line.trim()
+        if (trimmedLine.isEmpty() || trimmedLine.startsWith(SOURCE_COMMENT)) return@indexOfFirst false
+        val directive = matchDirective(trimmedLine) ?: return@indexOfFirst true
+        !hasSelectorSuffix(directive.name) && startsBody(directive)
+    }.takeIf { it >= 0 } ?: lines.size
+
     /**
      * Whether the value of the directive [name] is text the song shows — a comment, or the label of a section or of a
      * chorus recall — rather than a setting. Its brackets are then chords, as they are in a line of lyrics: that is

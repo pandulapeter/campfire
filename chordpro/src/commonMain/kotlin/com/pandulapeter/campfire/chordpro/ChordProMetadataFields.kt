@@ -26,7 +26,7 @@ object ChordProMetadataFields {
      * How the song is played is here too — [KEY], [CAPO], [TEMPO] and [TIME] — as the values the song itself declares,
      * which a setlist or a device may override where the song is read without ever touching the file. A later `{key}`,
      * `{tempo}` or `{time}` is a change in the body rather than a second value of its field, so [KEY], [TEMPO] and [TIME]
-     * edit the line the song starts in and leave every other line of theirs where it stands.
+     * edit the header line the song starts in and leave their lines in the body where they stand.
      */
     enum class Field(val directiveName: String) {
         TITLE("title"),
@@ -63,11 +63,15 @@ object ChordProMetadataFields {
      * Makes each value of [values] what the song says for its field, in one pass over [text]; a field not in [values]
      * is left alone. The line the parser reads the value from is rewritten where it stands, in the spelling it was
      * written in (`{t: …}` stays short, `{meta: title …}` stays a `meta`), and the other lines of the same field, which
-     * the parser reads past, are dropped — except for [Field.KEY], [Field.TEMPO] and [Field.TIME], whose other lines are
-     * changes mid-song. A field the song does not declare yet gets a line in the header, where
-     * [ChordProSyntax.metadataInsertionIndex] puts it. A null or blank value removes the field instead. A line break
-     * in a value is read as a space, since it would otherwise end the directive and leave the rest in the song as
-     * lyrics. A text that already says all of it returns unchanged.
+     * the parser reads past, are dropped — except for [Field.KEY], [Field.TEMPO] and [Field.TIME], whose lines in the
+     * body are changes mid-song and are always kept (see [ChordProSyntax.bodyStartIndex]): their value is the first line
+     * of the header, or where the header has no line of the field, the first line of the body. A field the song does not
+     * declare yet gets a line in the header, where [ChordProSyntax.metadataInsertionIndex] puts it. A null or blank value
+     * removes the field instead — except that clearing a header line of a field the body still changes leaves it in the
+     * header empty, so that the song declares nothing rather than starting in its first change; a value that only the
+     * body declares has no header to keep that line in, so clearing it makes the next change the song's. A line break in
+     * a value is read as a space, since it would otherwise end the directive and leave the rest in the song as lyrics. A
+     * text that already says all of it returns unchanged.
      */
     fun set(text: String, values: Map<Field, String?>): String = values.entries.fold(text) { current, (field, value) ->
         set(text = current, field = field, value = value)
@@ -77,16 +81,30 @@ object ChordProMetadataFields {
         val newValue = value?.replace('\r', ' ')?.replace('\n', ' ')?.trim()?.takeIf { it.isNotEmpty() }
         val lines = ChordProSyntax.splitLines(text)
         val indices = lines.indices.filter { lines[it].kind() == field.directiveName }
-        // The line the parser takes the value from: the first key, tempo or time signature that names one, since a later
-        // one is a change mid-song, and the last line that says anything of every other field. An empty line of the template stands in where
-        // none says anything, so that filling a field in fills the line the new song was created with.
-        val declaring = indices.filter { !lines[it].value().isNullOrEmpty() }
-        val effectiveIndex = if (field.isChangedInTheBody) declaring.firstOrNull() ?: indices.firstOrNull() else declaring.lastOrNull() ?: indices.lastOrNull()
+        // The lines of a field the song changes mid-song are its changes from the body on, which are always kept; only
+        // the header's are the song's own value, and every field of any other kind is all header.
+        val bodyStart = if (field.isChangedInTheBody) ChordProSyntax.bodyStartIndex(lines) else lines.size
+        val (header, body) = indices.partition { it < bodyStart }
+        fun List<Int>.declaring() = filter { !lines[it].value().isNullOrEmpty() }
+        // The line the parser takes the value from: the first one of the header that names one for a key, tempo or time
+        // signature, since a later one is a change mid-song, and the last one of every other field. An empty line of the
+        // template stands in where none says anything, so that filling a field in fills the line the new song was
+        // created with, and the body stands in for a header that has no line of the field at all.
+        val effectiveIndex = if (field.isChangedInTheBody) {
+            header.declaring().firstOrNull() ?: header.firstOrNull() ?: body.declaring().firstOrNull() ?: body.firstOrNull()
+        } else {
+            header.declaring().lastOrNull() ?: header.lastOrNull()
+        }
+        // Clearing the header's value while the body still changes it keeps an empty line in the header, which is what
+        // tells the parser the song declares nothing rather than starting in the body's first change.
+        val isKeptEmpty = newValue == null && effectiveIndex in header && body.declaring().isNotEmpty()
         val kept = mutableListOf<String>()
         lines.forEachIndexed { index, line ->
             when {
-                index !in indices || (field.isChangedInTheBody && index != effectiveIndex) -> kept += line
-                index == effectiveIndex && newValue != null -> kept += if (line.value() == newValue) line else line.rewritten(field, newValue)
+                index !in indices || (index in body && index != effectiveIndex) -> kept += line
+                index != effectiveIndex -> Unit
+                newValue != null -> kept += if (line.value() == newValue) line else line.rewritten(field, newValue)
+                isKeptEmpty -> kept += if (line.value().isNullOrEmpty()) line else line.rewritten(field, "")
             }
         }
         if (newValue != null && effectiveIndex == null) {

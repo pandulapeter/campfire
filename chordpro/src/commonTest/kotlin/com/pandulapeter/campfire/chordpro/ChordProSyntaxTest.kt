@@ -127,4 +127,22 @@ class ChordProSyntaxTest {
         assertTrue(duration < 5.seconds, "took $duration")
         return result
     }
+
+    @Test
+    fun `the body begins where the parser starts reading a key as a change`() {
+        listOf(
+            "" to false,
+            "# a note" to false,
+            "{title: T}" to false,
+            "{c-guitar: Intro}" to false,
+            "{start_of_verse}" to true,
+            "{c: Intro}" to true,
+            "la la" to true,
+        ).forEach { (line, isBody) ->
+            val lines = listOf("{key: }", line, "{key: G}")
+
+            assertEquals(if (isBody) 1 else 3, ChordProSyntax.bodyStartIndex(lines), line)
+            assertEquals(if (isBody) null else "G", ChordProParser.parseMetadata(lines.joinToString("\n")).key?.takeIf { it.isNotBlank() }, line)
+        }
+    }
 }

@@ -86,7 +86,18 @@ class ChordProMetadataFieldsTest {
         val text = "{title: T}\n{key: G}\n[G]La\n{key: A}\n[A]La"
 
         assertEquals("{title: T}\n{key: C}\n[G]La\n{key: A}\n[A]La", ChordProMetadataFields.set(text, mapOf(Field.KEY to "C")))
-        assertEquals("{title: T}\n[G]La\n{key: A}\n[A]La", ChordProMetadataFields.set(text, mapOf(Field.KEY to "")))
+        val cleared = ChordProMetadataFields.set(text, mapOf(Field.KEY to ""))
+        assertEquals("{title: T}\n{key: }\n[G]La\n{key: A}\n[A]La", cleared)
+        assertEquals(null, ChordProMetadataFields.valueOf(ChordProParser.summarize(cleared).metadata, Field.KEY))
+        assertEquals("{title: T}\n{meta: key }\n[G]La\n{key: A}", ChordProMetadataFields.set("{title: T}\n{meta: key G}\n[G]La\n{key: A}", mapOf(Field.KEY to null)))
+    }
+
+    @Test
+    fun `the header lines of a field the song changes mid-song are one value, and its body lines are its changes`() {
+        assertEquals("{tempo: 120}\nLa", ChordProMetadataFields.set("{tempo: 90}\n{tempo: 100}\nLa", mapOf(Field.TEMPO to "120")))
+        assertEquals("{title: T}\nLa", ChordProMetadataFields.set("{title: T}\n{key: G}\nLa", mapOf(Field.KEY to null)))
+        assertEquals("[C]la\n{key: A}", ChordProMetadataFields.set("[C]la\n{key: G}", mapOf(Field.KEY to "A")))
+        assertEquals("[C]la\n{key: A}", ChordProMetadataFields.set("[C]la\n{key: G}\n{key: A}", mapOf(Field.KEY to null)))
     }
 
     @Test

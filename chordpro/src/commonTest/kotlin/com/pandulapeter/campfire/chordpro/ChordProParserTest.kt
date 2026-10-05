@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.chordpro
 
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
+import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 import com.pandulapeter.campfire.chordpro.model.CommentPlacement
 import com.pandulapeter.campfire.chordpro.model.CommentStyle
 import com.pandulapeter.campfire.chordpro.model.GridToken
@@ -859,6 +860,24 @@ class ChordProParserTest {
             assertEquals(3, it.capo)
         }
         assertEquals("96", ChordProParser.parseMetadata("{tempo: }\n{tempo: 96}").tempo)
+    }
+
+    @Test
+    fun `a line in the body is the song's value only where its header has no line of that field`() {
+        listOf<Triple<String, String, (ChordProMetadata) -> String?>>(
+            Triple("key", "A", { it.key }),
+            Triple("tempo", "96", { it.tempo }),
+            Triple("time", "3/4", { it.time }),
+        ).forEach { (name, value, read) ->
+            fun readAll(text: String) = listOf(ChordProParser.parse(text).metadata, ChordProParser.summarize(text).metadata, ChordProParser.parseMetadata(text))
+                .map { read(it)?.takeIf(String::isNotBlank) }
+                .distinct()
+                .single()
+
+            assertNull(readAll("{$name: }\n[C]la\n{$name: $value}\nla"), name)
+            assertEquals(value, readAll("{$name: }\n{$name: $value}\n[C]la"), name)
+            assertEquals(value, readAll("[C]la\n{$name: $value}"), name)
+        }
     }
 
     @Test

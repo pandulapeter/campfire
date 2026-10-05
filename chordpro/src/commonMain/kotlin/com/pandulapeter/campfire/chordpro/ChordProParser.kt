@@ -81,7 +81,10 @@ object ChordProParser {
         /** The transposition of the whole song: what was in effect when the body began, or at the end of a song with none. */
         var wholeSong = 0
             private set
-        private var isInBody = false
+
+        /** Whether the body has begun, before which every directive is part of the header. */
+        var isInBody = false
+            private set
 
         fun startBody() {
             if (isInBody) return
@@ -197,12 +200,12 @@ object ChordProParser {
                 if (!ChordProSyntax.hasSelectorSuffix(directive.name)) {
                     if (directive.name == TRANSPOSE) {
                         transposition.consume(directive.value)
-                    } else if (ChordProSyntax.startOfEnvironment(directive.name) != null || directive.name in ChordProSyntax.blockNames) {
+                    } else if (ChordProSyntax.startsBody(directive)) {
                         transposition.startBody()
                     }
                     ChordProSyntax.startOfEnvironment(directive.name)?.let { environment = it.lowercase() }
                     ChordProSyntax.endOfEnvironment(directive.name)?.let { environment = null }
-                    metadata.consume(directive)
+                    metadata.consume(directive, isInBody = transposition.isInBody)
                 }
                 return@forEach
             }
@@ -266,7 +269,7 @@ object ChordProParser {
             transposition.consume(directive.value)?.let { semitones -> section.addBlock(ChordProBlock.Transpose(semitones)) }
             return
         }
-        if (ChordProSyntax.startOfEnvironment(name) != null || name in ChordProSyntax.blockNames) transposition.startBody()
+        if (ChordProSyntax.startsBody(directive)) transposition.startBody()
         ChordProSyntax.startOfEnvironment(name)?.let { environment ->
             // Tablature and grids are how the next few lines are written, not a section of their own: they open
             // inside whatever section is running, and a song with a solo written as a line of chords over a tab is
@@ -303,7 +306,7 @@ object ChordProParser {
             "highlight" -> section.addBlock(ChordProBlock.Comment(directive.value.orEmpty().trim(), CommentStyle.PLAIN))
             "new_page", "np", "new_physical_page", "npp", "column_break", "colb" -> section.addBlock(ChordProBlock.Break)
             "new_song", "ns" -> Unit // Splitting is ChordProSplitter's job.
-            else -> metadata.consume(directive)
+            else -> metadata.consume(directive, isInBody = transposition.isInBody)
         }
     }
 
@@ -592,6 +595,27 @@ object ChordProParser {
         }
     }
 
+    /**
+     * The value of a field a song can change mid-song — its key, tempo or time signature — of which a later line is a
+     * change from where it stands rather than a second value: the song starts in the first one its header names. An
+     * empty line, the new song template's, says nothing rather than taking back what another one said, but it still
+     * keeps the body out of the header's place, which is how a value cleared in the Song defaults sheet stays cleared
+     * rather than taking the first change in the body for the song's own. A line in the body counts only for a song
+     * whose header has no line of that field at all, so that a file that writes its metadata at the bottom is still
+     * read.
+     */
+    private class ChangeableValue {
+        var value: String? = null
+            private set
+        private var hasHeaderLine = false
+
+        fun consume(written: String, isInBody: Boolean) {
+            if (isInBody && hasHeaderLine) return
+            if (!isInBody) hasHeaderLine = true
+            if (value.isNullOrEmpty()) value = written
+        }
+    }
+
     private class MetadataBuilder {
 
         private var title: String? = null
@@ -602,10 +626,10 @@ object ChordProParser {
         private var album: String? = null
         private var year: String? = null
         private var coverArt: String? = null
-        private var key: String? = null
+        private val key = ChangeableValue()
         private var capo: Int? = null
-        private var tempo: String? = null
-        private var time: String? = null
+        private val tempo = ChangeableValue()
+        private val time = ChangeableValue()
         private var duration: String? = null
         private val tags = mutableListOf<String>()
         private val tagKeys = mutableSetOf<String>()
@@ -614,7 +638,8 @@ object ChordProParser {
         private val links = mutableListOf<ChordProLink>()
         private val custom = mutableMapOf<String, MutableList<String>>()
 
-        fun consume(directive: ChordProSyntax.Directive) {
+        /** @param isInBody Whether [directive] stands in the body of the song rather than in its header. */
+        fun consume(directive: ChordProSyntax.Directive, isInBody: Boolean) {
             val value = directive.value?.trim().orEmpty()
             when (directive.name) {
                 "title", "t" -> title = value
@@ -624,12 +649,10 @@ object ChordProParser {
                 "lyricist" -> lyricist = value
                 "album" -> album = value
                 "year" -> year = value
-                // A later key, tempo or time signature is a change from where it stands; the song starts in the first one. An
-                // empty line, the new song template's, says nothing rather than taking back what another one said.
-                "key" -> if (key.isNullOrEmpty()) key = value
+                "key" -> key.consume(value, isInBody)
                 "capo" -> value.toIntOrNull()?.let { capo = it }
-                "tempo" -> if (tempo.isNullOrEmpty()) tempo = value
-                "time" -> if (time.isNullOrEmpty()) time = value
+                "tempo" -> tempo.consume(value, isInBody)
+                "time" -> time.consume(value, isInBody)
                 "duration" -> duration = value
                 "tag" -> ChordProSyntax.tag(directive)?.let(::addTag)
                 "language", "lang" -> ChordProSyntax.language(directive)?.let(::addLanguage)
@@ -637,7 +660,7 @@ object ChordProParser {
                     // The spec defines these as the standalone directive, so they are read as one: a song whose header is
                     // all `{meta: title …}` lines is titled, named and keyed by it like any other.
                     ChordProSyntax.standardMeta(directive)?.let {
-                        consume(it)
+                        consume(it, isInBody)
                         return
                     }
                     val name = value.substringBefore(' ').trim()
@@ -680,10 +703,10 @@ object ChordProParser {
             album = album,
             year = year,
             coverArt = coverArt,
-            key = key,
+            key = key.value,
             capo = capo,
-            tempo = tempo,
-            time = time,
+            tempo = tempo.value,
+            time = time.value,
             duration = duration,
             transpose = transpose,
             tags = tags.toList(),
