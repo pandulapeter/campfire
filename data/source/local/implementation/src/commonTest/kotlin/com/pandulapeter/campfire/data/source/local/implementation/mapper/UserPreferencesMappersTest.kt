@@ -9,7 +9,9 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.mapper
 
+import com.pandulapeter.campfire.data.model.domain.MetronomeSettings
 import com.pandulapeter.campfire.data.model.domain.PrintSettings
+import com.pandulapeter.campfire.data.source.local.implementation.model.MetronomeSettingsDocument
 import com.pandulapeter.campfire.data.source.local.implementation.model.PrintSettingsDocument
 import com.pandulapeter.campfire.data.source.local.implementation.model.UserPreferencesDocumentFormat
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
@@ -93,5 +95,33 @@ internal class UserPreferencesMappersTest {
             UserPreferencesDocument(notation = "standard", isGermanNotationEnabled = true).toModel().chordSpelling.notation,
         )
         assertEquals("german", UserPreferencesDocument(isGermanNotationEnabled = true).toModel().toDocument().notation)
+    }
+
+    @Test
+    fun metronomeSettingsAndTemposSurviveSavingAndReloading() {
+        val settings = MetronomeSettings(soundId = "cowbell", volume = 0.5f, subdivisionId = "triplets", isMuted = true, isVisualBeatEnabled = false,
+            isHapticBeatEnabled = true, beatLevels = mapOf("7/8" to listOf("accent", "normal", "accent", "normal", "accent", "normal", "normal")),
+            bpm = 96, timeSignature = "7/8")
+        val preferences = UserPreferencesDocument().toModel().copy(metronomeSettings = settings, tempos = mapOf("a.cho" to 96))
+        val reloaded = UserPreferencesDocumentFormat.decode(UserPreferencesDocumentFormat.encode(preferences.toDocument())).document.toModel()
+        assertEquals(settings, reloaded.metronomeSettings)
+        assertEquals(mapOf("a.cho" to 96), reloaded.tempos)
+        assertEquals(MetronomeSettings(), UserPreferencesDocumentFormat.decode("{}").document.toModel().metronomeSettings)
+    }
+
+    @Test
+    fun aMetronomeValueOutOfRangeIsHeldWithinIt() {
+        val preferences = UserPreferencesDocument(metronomeSettings = MetronomeSettingsDocument(volume = 4f, bpm = 1_000), tempos = mapOf("a.cho" to 5, "b.cho" to 96))
+            .toModel()
+        assertEquals(1f, preferences.metronomeSettings.volume)
+        assertEquals(300, preferences.metronomeSettings.bpm)
+        assertEquals(mapOf("b.cho" to 96), preferences.tempos)
+    }
+
+    @Test
+    fun aTempoOfTheWrongShapeCostsOnlyItself() {
+        val preferences = UserPreferencesDocumentFormat.decode("""{"tempos":{"a.cho":96,"b.cho":"fast"},"uiMode":"dark"}""").document.toModel()
+        assertEquals(mapOf("a.cho" to 96), preferences.tempos)
+        assertEquals(UserPreferences.UiMode.DARK, preferences.uiMode)
     }
 }

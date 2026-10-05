@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.source.local.implementation.mapper
 
 import com.pandulapeter.campfire.chordpro.ChordProDuration
+import com.pandulapeter.campfire.chordpro.ChordProTempo
 import com.pandulapeter.campfire.chordpro.model.ChordProSummary
 import com.pandulapeter.campfire.chordpro.model.displayTitle
 import com.pandulapeter.campfire.data.model.domain.Song
@@ -46,5 +47,7 @@ internal fun StoredFileInfo.toSong(summary: ChordProSummary): Song {
         lastModified = lastModified,
         size = size,
         duration = ChordProDuration.parse(summary.metadata.duration),
+        tempo = ChordProTempo.parse(summary.metadata.tempo),
+        time = summary.metadata.time?.takeIf { it.isNotBlank() },
     )
 }

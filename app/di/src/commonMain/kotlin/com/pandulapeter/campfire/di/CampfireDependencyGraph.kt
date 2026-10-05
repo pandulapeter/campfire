@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.data.repository.DataRepositoryModule
 import com.pandulapeter.campfire.data.source.local.implementation.DataLocalSourceModule
 import com.pandulapeter.campfire.data.source.remote.implementation.DataRemoteSourceModule
 import com.pandulapeter.campfire.domain.implementation.DomainModule
+import com.pandulapeter.campfire.metronome.implementation.MetronomeModule
 import com.pandulapeter.campfire.presentation.PresentationModule
 import org.koin.core.annotation.KoinApplication
 import org.koin.dsl.KoinAppDeclaration
@@ -29,6 +30,7 @@ import org.koin.plugin.module.dsl.startKoin
         DataRemoteSourceModule::class,
         DataRepositoryModule::class,
         DomainModule::class,
+        MetronomeModule::class,
         PresentationModule::class,
     ],
 )

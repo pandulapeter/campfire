@@ -24,9 +24,10 @@ class PerformanceModeAppBarTest {
 
     @Test
     fun `the cover stays for as long as the title keeps 160dp beside it`() {
-        // The back button and the bar's paddings, the stepper and its padding, and the cover and its gap take 232dp.
-        assertTrue(showsCoverInPerformanceMode(392.dp))
-        assertFalse(showsCoverInPerformanceMode(391.dp))
+        // The back button and the bar's paddings, the stepper and its padding, the metronome button, and the cover and
+        // its gap take 280dp.
+        assertTrue(showsCoverInPerformanceMode(440.dp))
+        assertFalse(showsCoverInPerformanceMode(439.dp))
     }
 
     @Test
@@ -42,27 +43,43 @@ class PerformanceModeAppBarTest {
     }
 
     @Test
+    fun `the metronome button goes into the menu before the text size stepper does`() {
+        assertTrue(showsMetronomeInPerformanceBar(388.dp))
+        assertFalse(showsMetronomeInPerformanceBar(387.dp))
+        assertTrue(showsFontScaleInPerformanceBar(387.dp))
+    }
+
+    @Test
     fun `a phone in portrait keeps the text size stepper in the bar`() {
         assertTrue(showsFontScaleInPerformanceBar(360.dp))
     }
 
     @Test
     fun `the transposition stepper is in the bar for as long as the title keeps 280dp beside it`() {
-        // Beside 104dp of everything else and the two buttons, the stepper takes 140dp.
-        assertTrue(appBarButtons(appBarWidth = 620.dp, otherContentWidth = 104.dp).isTranspositionShown)
-        assertFalse(appBarButtons(appBarWidth = 619.dp, otherContentWidth = 104.dp).isTranspositionShown)
+        // Beside 104dp of everything else and the three buttons, the stepper takes 140dp.
+        assertTrue(appBarButtons(appBarWidth = 668.dp, otherContentWidth = 104.dp).isTranspositionShown)
+        assertFalse(appBarButtons(appBarWidth = 667.dp, otherContentWidth = 104.dp).isTranspositionShown)
     }
 
     @Test
-    fun `the setlist assignments leave the bar before the song info does`() {
-        assertEquals(AppBarButtons(isSongInfoShown = true, isSetlistAssignmentsShown = true, isTranspositionShown = false), appBarButtons(360.dp, 104.dp))
-        assertEquals(AppBarButtons(isSongInfoShown = true, isSetlistAssignmentsShown = false, isTranspositionShown = false), appBarButtons(359.dp, 104.dp))
-        assertEquals(AppBarButtons(isSongInfoShown = true, isSetlistAssignmentsShown = false, isTranspositionShown = false), appBarButtons(312.dp, 104.dp))
-        assertEquals(AppBarButtons(isSongInfoShown = false, isSetlistAssignmentsShown = false, isTranspositionShown = false), appBarButtons(311.dp, 104.dp))
+    fun `the setlist assignments leave the bar before the song info, and the song info before the metronome`() {
+        assertEquals(buttons(metronome = true, songInfo = true, setlistAssignments = true), appBarButtons(408.dp, 104.dp))
+        assertEquals(buttons(metronome = true, songInfo = true, setlistAssignments = false), appBarButtons(407.dp, 104.dp))
+        assertEquals(buttons(metronome = true, songInfo = true, setlistAssignments = false), appBarButtons(360.dp, 104.dp))
+        assertEquals(buttons(metronome = true, songInfo = false, setlistAssignments = false), appBarButtons(359.dp, 104.dp))
+        assertEquals(buttons(metronome = true, songInfo = false, setlistAssignments = false), appBarButtons(312.dp, 104.dp))
+        assertEquals(buttons(metronome = false, songInfo = false, setlistAssignments = false), appBarButtons(311.dp, 104.dp))
     }
 
     @Test
-    fun `a phone keeps both buttons and puts the transposition stepper in the menu`() {
-        assertEquals(AppBarButtons(isSongInfoShown = true, isSetlistAssignmentsShown = true, isTranspositionShown = false), appBarButtons(411.dp, 104.dp))
+    fun `a phone keeps the three buttons and puts the transposition stepper in the menu`() {
+        assertEquals(buttons(metronome = true, songInfo = true, setlistAssignments = true), appBarButtons(411.dp, 104.dp))
     }
+
+    private fun buttons(metronome: Boolean, songInfo: Boolean, setlistAssignments: Boolean) = AppBarButtons(
+        isMetronomeShown = metronome,
+        isSongInfoShown = songInfo,
+        isSetlistAssignmentsShown = setlistAssignments,
+        isTranspositionShown = false,
+    )
 }

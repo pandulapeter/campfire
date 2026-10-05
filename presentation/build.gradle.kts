@@ -45,6 +45,8 @@ kotlin {
                 implementation(project(":domain:api"))
                 // The composables render the ChordPro model directly; parsing and transposing go through use cases.
                 implementation(project(":chordpro"))
+                // The click is the app's rather than a screen's, and is handed a complete pattern by the view model.
+                implementation(project(":metronome:api"))
                 implementation(libs.androidx.lifecycle.runtime.compose)
                 implementation(libs.androidx.lifecycle.viewmodel.compose)
                 implementation(libs.androidx.navigation3.ui)

@@ -108,7 +108,9 @@ fun CampfireDesktopApp(
  * search of the list screen that is on top ([CampfireViewModel.openCurrentSearch]); it is answered here because this
  * handler hears the keys that nothing focused in the window took, and nothing is focused on a list screen until its
  * search is. Ctrl / Cmd + plus, minus and zero change the text size of the song details screen
- * ([CampfireViewModel.zoomSongText]), the shortcuts a browser zooms a page with.
+ * ([CampfireViewModel.zoomSongText]), the shortcuts a browser zooms a page with. Space and M start and stop the
+ * metronome ([CampfireViewModel.toggleMetronomeByKey]), which a focused button or field takes first, since only what
+ * nothing focused took reaches this handler.
  *
  * @param onExit Closes the application, called when there is nothing left to navigate back from, and only once a save
  *   that is still being written has finished, see [CampfireViewModel.requestExit].
@@ -127,6 +129,12 @@ fun CampfireViewModel.handleKeyEvent(keyEvent: KeyEvent, onExit: () -> Unit): Bo
             else -> return false
         }
         return zoomSongText(steps)
+    }
+    if (
+        keyEvent.type == KeyEventType.KeyDown && (keyEvent.key == Key.Spacebar || keyEvent.key == Key.M) &&
+        !keyEvent.isCtrlPressed && !keyEvent.isMetaPressed && !keyEvent.isAltPressed
+    ) {
+        return toggleMetronomeByKey(isSpace = keyEvent.key == Key.Spacebar)
     }
     if (keyEvent.type == KeyEventType.KeyDown && keyEvent.key == Key.Escape) {
         // Window key handlers run before Compose turns Escape into a back event, so consuming it here would pop the

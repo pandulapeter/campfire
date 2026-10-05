@@ -28,6 +28,14 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!--
+      A playing metronome carries on with the screen locked, as media playback: a foreground service of that type with
+      a media session, whose notification needs no notification permission. The vibration on the beat is a normal
+      permission, granted without a prompt, and only ever used while the app is in front.
+    -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <!--
       The library is the only copy of the user's own work, so it is in the device's backup and in a transfer to a
       new phone, together with the settings: see the two rules files, one per generation of Android. That copy is
       made by the system, to wherever the user's device backs up to - the app's own process still makes no request
@@ -392,6 +400,18 @@
             android:name=".sync.CampfireSyncService"
             android:exported="false"
             android:foregroundServiceType="dataSync"
+            android:stopWithTask="false" />
+
+        <!--
+          Keeps the process alive while the metronome plays, with its media session and notification, see
+          CampfireMetronomeService. Swiping Campfire away is a request for silence, which the service answers in
+          onTaskRemoved - a callback only a service that is not stopped with its task receives, and the engine it has to
+          stop outlives the service.
+        -->
+        <service
+            android:name=".metronome.CampfireMetronomeService"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback"
             android:stopWithTask="false" />
 
         <!-- Lets a shared song or setlist leave the app's private storage as a content URI, see AndroidFilePicker.shareFile in :presentation. -->

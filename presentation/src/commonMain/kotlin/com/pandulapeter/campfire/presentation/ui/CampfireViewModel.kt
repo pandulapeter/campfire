@@ -39,6 +39,7 @@ import com.pandulapeter.campfire.data.model.domain.ImportProgress
 import com.pandulapeter.campfire.data.model.domain.ImportPlan
 import com.pandulapeter.campfire.data.model.domain.ImportResult
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
+import com.pandulapeter.campfire.data.model.domain.MetronomeSettings
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.SongContent
 import com.pandulapeter.campfire.data.model.domain.Song
@@ -114,6 +115,21 @@ import com.pandulapeter.campfire.presentation.resources.whats_new_message
 import com.pandulapeter.campfire.presentation.ui.components.ScrollPosition
 import com.pandulapeter.campfire.presentation.ui.components.SearchState
 import com.pandulapeter.campfire.presentation.ui.components.isAnyOverflowMenuOpen
+import com.pandulapeter.campfire.metronome.api.Metronome
+import com.pandulapeter.campfire.metronome.api.model.BeatLevel
+import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
+import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
+import com.pandulapeter.campfire.metronome.api.model.MetronomeSound
+import com.pandulapeter.campfire.metronome.api.model.MetronomeStopReason
+import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeContext
+import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeRetarget
+import com.pandulapeter.campfire.presentation.ui.metronome.TempoKey
+import com.pandulapeter.campfire.presentation.ui.metronome.Tempos
+import com.pandulapeter.campfire.presentation.ui.metronome.effectiveTempo
+import com.pandulapeter.campfire.presentation.ui.metronome.metronomeContextOf
+import com.pandulapeter.campfire.presentation.ui.metronome.metronomePatternOf
+import com.pandulapeter.campfire.presentation.ui.metronome.metronomeRetargetOf
+import com.pandulapeter.campfire.presentation.ui.metronome.withTempo
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.NavigationState
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
@@ -124,6 +140,8 @@ import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsTab
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.FontScaleAccumulator
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.PINCH_SENSITIVITY
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
@@ -228,6 +246,7 @@ class CampfireViewModel(
     private val convertChordProNotation: ConvertChordProNotationUseCase,
     private val convertChordProTextNotation: ConvertChordProTextNotationUseCase,
     private val prettifyChordPro: PrettifyChordProUseCase,
+    private val metronome: Metronome,
     /**
      * What survives the system killing the process while the app is in the background, which Android does whenever it
      * needs the memory: the back stack, the song filter and the two searches. Empty on every real start, and on the
@@ -304,6 +323,7 @@ class CampfireViewModel(
      */
     internal val songsScrollPosition = ScrollPosition()
     internal val setlistsScrollPosition = ScrollPosition()
+    internal val metronomeScrollPosition = ScrollPosition()
     internal val settingsScrollPositions = SettingsTab.entries.associateWith { ScrollPosition() }
 
     /**
@@ -775,6 +795,56 @@ class CampfireViewModel(
     /** Shared file-name lookup for screens that resolve songs from a destination or a setlist. */
     val songsByFileName = indexedSongs.map { it.search.songsByFileName }.asState(emptyMap())
 
+    // Metronome
+
+    /** The tempo overrides as the preferences and the setlists hold them, folded the way [transpositions] are. */
+    private val storedTempos = combine(userPreferences, setlists) { userPreferences, setlists ->
+        Tempos(
+            library = userPreferences?.tempos.orEmpty(),
+            bySetlist = setlists.associate { setlist ->
+                setlist.fileName to setlist.entries.mapNotNull { entry -> entry.tempo?.let { entry.songFileName to it } }.toMap()
+            },
+        )
+    }.asState(Tempos())
+
+    /**
+     * The overrides set here whose writes are waiting or still on their way back from the repository, by song as it was
+     * opened, see [changeTempo]. A held stepper sets one on every step and writes once it lets go, so for as long as one
+     * is here it is what the stepper, the page and the click read.
+     */
+    private val pendingTempos = MutableStateFlow<Map<TempoKey, PendingTempo>>(emptyMap())
+
+    /** The debounced writes of [pendingTempos] that have not started yet; one that has started is out of reach of a cancel. */
+    private val tempoWriteJobs = mutableMapOf<TempoKey, Job>()
+
+    /** Every song's tempo override, as the screens and the click read it. */
+    internal val tempos = combine(storedTempos, pendingTempos) { stored, pending ->
+        pending.entries.fold(stored) { tempos, (key, value) -> tempos.with(key, value.bpm) }
+    }.asState(Tempos())
+
+    /** Saved like [pendingPrintSettings]: a dragged slider is a new value every frame. */
+    private val _pendingMetronomeSettings = MutableStateFlow<MetronomeSettings?>(null)
+
+    val metronomeSettings = combine(userPreferences, _pendingMetronomeSettings) { userPreferences, pending ->
+        pending ?: userPreferences?.metronomeSettings ?: MetronomeSettings()
+    }.asState(MetronomeSettings())
+
+    val metronomePlayback = metronome.playback
+
+    /** One item per click as it is heard, which the flash and the haptics are driven from and nothing else. */
+    val metronomeBeats = metronome.beats
+
+    /**
+     * The song each song details screen's pager is heading for, by [CampfireDestination.SongDetails.id]: its target page
+     * rather than the one it settles on, so that a click paged on to the next song has the new tempo while the page is
+     * still sliding in. Reported by the screen, see [onSongDetailsPageChanged].
+     */
+    private val songDetailsTargetSongs = mutableStateMapOf<String, String>()
+
+    /** What a click plays for, derived from the back stack, see [metronomeContextOf]; snapshot state, observable. */
+    internal val metronomeContext
+        get() = metronomeContextOf(backStack) { destination -> songDetailsTargetSongs[destination.id] ?: currentSongFileName(destination) }
+
     /**
      * Every song of the library in the order the songs screen is sorted by, with its search and filter keys, as the song
      * picker lists and searches it. Built here rather than as the sheet opens, where the first frame of the sheet would
@@ -1236,6 +1306,49 @@ class CampfireViewModel(
             _pendingPrintSettings.filterNotNull().debounce(FONT_SCALE_SAVE_DELAY_MILLIS).collect { savePrintSettings(it) }
         }
         viewModelScope.launch {
+            _pendingMetronomeSettings.filterNotNull().debounce(FONT_SCALE_SAVE_DELAY_MILLIS).collect { settings ->
+                updateUserPreferences { it.copy(metronomeSettings = settings) }
+                // Only if nothing newer arrived while this one was being saved, or that one would never be.
+                _pendingMetronomeSettings.compareAndSet(settings, null)
+            }
+        }
+        viewModelScope.launch {
+            // A pending tempo is let go of once its write has landed and the store says the same, so that the value on
+            // screen never steps back to the stored one for the frames in between.
+            combine(storedTempos, pendingTempos) { stored, pending ->
+                pending.filter { (key, value) -> value.isWritten && stored[key.songFileName, key.setlistFileName] == value.bpm }.keys
+            }.collect { settled -> if (settled.isNotEmpty()) pendingTempos.update { it - settled } }
+        }
+        viewModelScope.launch {
+            // One collector for everything that changes what a playing click plays, so that a context change and the
+            // pattern it brings are one update: the back stack moving the click (metronomeRetargetOf) restarts the bar
+            // or stops it, and anything else - a tempo stepped, a setting, a song's {tempo} saved or synced - is
+            // applied from the next beat. The first value is only remembered: a view model built again while a click
+            // plays (an activity recreated, or reopened from the notification) starts from a back stack that may hold
+            // no song at all, which is no reason to stop a click that was started on one.
+            var previous: MetronomeContext? = null
+            combine(snapshotFlow { metronomeContext }, tempos, metronomeSettings, songsByFileName) { context, tempos, settings, songs ->
+                context to metronomePatternOf(context = context, settings = settings, songOf = songs::get, tempos = tempos)
+            }.distinctUntilChanged().collect { (context, pattern) ->
+                val last = previous
+                previous = context
+                val origin = (metronome.playback.value as? MetronomePlayback.Playing)?.origin
+                if (last == null || origin == null) return@collect
+                when (metronomeRetargetOf(previous = last, current = context, origin = origin)) {
+                    MetronomeRetarget.None -> metronome.update(pattern, restartBar = false)
+                    MetronomeRetarget.Restart -> metronome.update(pattern, restartBar = true)
+                    MetronomeRetarget.Stop -> metronome.stop()
+                }
+            }
+        }
+        viewModelScope.launch {
+            // Only what happens from here on: the engine outlives the view model, and a reason from before it was built
+            // was said by the one before it.
+            metronome.playback.drop(1).collect { playback ->
+                (playback as? MetronomePlayback.Stopped)?.reason?.let { sendMessage(Message.MetronomeStopped(it)) }
+            }
+        }
+        viewModelScope.launch {
             // The first read at launch, a read again, a restore, a sync run: whatever wrote the preference wins
             // whenever nothing set here is still waiting to be saved. The echo of our own save equals the live value.
             userPreferences.filterNotNull().map { it.fontScale }.distinctUntilChanged().collect { stored ->
@@ -1315,7 +1428,10 @@ class CampfireViewModel(
         backStack.update()
         if (backStack.lastOrNull() != CampfireDestination.Setlists) reorderingSetlistFileName = null
         if (backStack.none { it is CampfireDestination.SongEditor }) retainedEditorField = null
-        songDetailsCurrentSongs.keys.retainAll(backStack.mapNotNullTo(mutableSetOf()) { (it as? CampfireDestination.SongDetails)?.id })
+        backStack.mapNotNullTo(mutableSetOf()) { (it as? CampfireDestination.SongDetails)?.id }.let { ids ->
+            songDetailsCurrentSongs.keys.retainAll(ids)
+            songDetailsTargetSongs.keys.retainAll(ids)
+        }
         val hadImportReport = isImportReportOnBackStack
         isImportReportOnBackStack = backStack.any { it == CampfireDestination.ImportReport }
         if (hadImportReport && !isImportReportOnBackStack) onImportReportLeft()
@@ -1565,11 +1681,13 @@ class CampfireViewModel(
      * a quit leads once [requestExit] has let it through - the shell hides the window first, so the quit looks as
      * immediate as it is. The automatic run that is waiting for the library to settle is started now: dropped, the
      * change made just before quitting would reach the other devices only the next time this computer opens Campfire.
-     * A run that is going is waited for, and so is one chained behind it. Past [EXIT_SYNC_GRACE] the run is stopped
-     * instead and its winding down waited for, briefly, since a stopped run writes its index and clears the marker
+     * A run that is going is waited for, and so is one chained behind it, the metronome having been stopped first. Past
+     * [EXIT_SYNC_GRACE] the run is stopped instead and its winding down waited for, briefly, since a stopped run writes its index and clears the marker
      * that would otherwise have the next launch report it as interrupted and start no run of its own.
      */
     suspend fun settleSynchronizationBeforeExit() {
+        // The window is already hidden, so a click still sounding while the run is waited for would come from nowhere.
+        metronome.stop()
         val isSyncing = { state: SyncState -> state is SyncState.Connected && state.isSyncing }
         val hasSettled = withTimeoutOrNull(EXIT_SYNC_GRACE) {
             // The state is the repository's own rather than syncState, which only follows it a hop to the main thread
@@ -2242,6 +2360,137 @@ class CampfireViewModel(
         }
     }
 
+    /** Reported by the song details screen whenever its pager heads for a page, see [songDetailsTargetSongs]. */
+    internal fun onSongDetailsPageChanged(destination: CampfireDestination.SongDetails, songFileName: String) {
+        if (backStack.any { it is CampfireDestination.SongDetails && it.id == destination.id }) {
+            songDetailsTargetSongs[destination.id] = songFileName
+        }
+    }
+
+    /** The pattern a click started now would play, for [metronomeContext]. */
+    private fun currentMetronomePattern(context: MetronomeContext = metronomeContext) = metronomePatternOf(
+        context = context,
+        settings = metronomeSettings.value,
+        songOf = songsByFileName.value::get,
+        tempos = tempos.value,
+    )
+
+    /**
+     * The keyboard's way to [toggleMetronome], asked from the desktop window and the web page: Space on the Metronome tab
+     * and M on the song details screen, while nothing is drawn over either. Pedals send only arrows, so this is for
+     * keyboards. Answers whether it did, so that anywhere else the key is left alone.
+     */
+    internal fun toggleMetronomeByKey(isSpace: Boolean): Boolean {
+        if (visibleDialog.value != null || isAnyOverflowMenuOpen) return false
+        val top = backStack.lastOrNull()
+        if (if (isSpace) top != CampfireDestination.Metronome else top !is CampfireDestination.SongDetails) return false
+        toggleMetronome()
+        return true
+    }
+
+    /** Starts a click for whatever is on screen - the song, or the Metronome tab's own pattern - or stops the one playing. */
+    fun toggleMetronome() {
+        if (metronome.playback.value is MetronomePlayback.Playing) {
+            metronome.stop()
+        } else {
+            val context = metronomeContext
+            metronome.start(currentMetronomePattern(context), context.origin)
+        }
+    }
+
+    fun stopMetronome() = metronome.stop()
+
+    fun previewMetronomeSound(sound: MetronomeSound) = metronome.preview(sound, BeatLevel.ACCENT)
+
+    fun updateMetronomeSettings(change: MetronomeSettings.() -> MetronomeSettings) =
+        _pendingMetronomeSettings.update { (it ?: metronomeSettings.value).change() }
+
+    /** The tempo a song plays at where it is opened, the override waiting to be written included. */
+    internal fun effectiveTempoOf(songFileName: String, setlistFileName: String?) =
+        effectiveTempo(song = songsByFileName.value[songFileName], setlistFileName = setlistFileName, tempos = tempos.value, songFileName = songFileName)
+
+    /** One step of the tempo stepper, in the setlist the song was opened from or in the preferences, like a transposition. */
+    fun stepTempo(songFileName: String, setlistFileName: String?, delta: Int) =
+        changeTempo(songFileName = songFileName, setlistFileName = setlistFileName) { it + delta }
+
+    /** A tempo tapped in. */
+    fun setTempo(songFileName: String, setlistFileName: String?, bpm: Int) =
+        changeTempo(songFileName = songFileName, setlistFileName = setlistFileName) { bpm }
+
+    /**
+     * The stepper's value tapped: the override is removed rather than set to the file's number, so that a `{tempo}`
+     * edited later shows through. Written at once, and a step still waiting to be written is dropped, so that it cannot
+     * land after the reset.
+     */
+    fun resetTempo(songFileName: String, setlistFileName: String?) {
+        val key = TempoKey(songFileName = songFileName, setlistFileName = setlistFileName)
+        tempoWriteJobs.remove(key)?.cancel()
+        pendingTempos.update { it + (key to PendingTempo(bpm = null)) }
+        viewModelScope.launch { writeTempo(key, null) }
+    }
+
+    /**
+     * Sets the override to [change] of the tempo on screen, and writes it once the stepper has held still: a setlist
+     * write is a sync run, and a held stepper is a step every few frames. Unlike [changeTransposition] the value is
+     * absolute, which is safe here because while a value is pending nothing reads the store's instead. A value equal to
+     * the song's own removes the override.
+     */
+    private fun changeTempo(songFileName: String, setlistFileName: String?, change: (Int) -> Int) {
+        val key = TempoKey(songFileName = songFileName, setlistFileName = setlistFileName)
+        val effective = effectiveTempoOf(songFileName, setlistFileName)
+        val bpm = MetronomePattern.coerceBpm(change(effective.bpm))
+        val override = bpm.takeIf { it != effective.songBpm }
+        pendingTempos.update { it + (key to PendingTempo(bpm = override)) }
+        tempoWriteJobs.remove(key)?.cancel()
+        tempoWriteJobs[key] = viewModelScope.launch {
+            delay(FONT_SCALE_SAVE_DELAY_MILLIS)
+            tempoWriteJobs.remove(key)
+            writeTempo(key, override)
+        }
+    }
+
+    private suspend fun writeTempo(key: TempoKey, bpm: Int?) {
+        try {
+            val setlistFileName = key.setlistFileName
+            val isWritten = if (setlistFileName == null) {
+                updateUserPreferences { preferences ->
+                    preferences.copy(tempos = if (bpm == null) preferences.tempos - key.songFileName else preferences.tempos + (key.songFileName to bpm))
+                }
+                true
+            } else {
+                updateEditableSetlist(setlistFileName) { setlist ->
+                    setlist.copy(entries = setlist.entries.map { entry -> if (entry.songFileName == key.songFileName) entry.copy(tempo = bpm) else entry })
+                }?.takeUnless { it.isArchived } != null
+            }
+            if (isWritten) {
+                pendingTempos.update { pending ->
+                    pending[key]?.takeIf { it.bpm == bpm && !it.isWritten }?.let { pending + (key to it.copy(isWritten = true)) } ?: pending
+                }
+            } else {
+                pendingTempos.update { it - key }
+                sendMessage(Message.OperationFailed)
+            }
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Exception) {
+            println("The tempo could not be written: ${exception.message}")
+            pendingTempos.update { it - key }
+            sendMessage(Message.OperationFailed)
+        }
+    }
+
+    /**
+     * The view model going (the activity finished) does not take a tempo still waiting to be written with it: those are
+     * written on a scope of their own, since this one is being cancelled.
+     */
+    override fun onCleared() {
+        val waiting = tempoWriteJobs.keys.mapNotNull { key -> pendingTempos.value[key]?.let { key to it.bpm } }
+        tempoWriteJobs.clear()
+        if (waiting.isNotEmpty()) {
+            CoroutineScope(Dispatchers.Default + NonCancellable).launch { waiting.forEach { (key, bpm) -> writeTempo(key, bpm) } }
+        }
+    }
+
     // Import and export
 
     /**
@@ -2751,8 +3000,11 @@ class CampfireViewModel(
             val song = songs[entry.songFileName] ?: dialog.song
             val content = getSongContent(entry.songFileName)
             val transposition = transpositions.value[entry.songFileName, setlistFileName]
+            // A setlist's tempo is printed as its key is, being how the band plays it; the library's override is one
+            // reader's, like the folded sections, so a song exported from the library prints its file's own.
+            val tempo = setlistFileName?.let { effectiveTempoOf(entry.songFileName, it).takeUnless { tempo -> tempo.isDefault }?.bpm }
             val rendered = content?.let { withContext(Dispatchers.Default) {
-                renderSong(it.text, transposition, preferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default)
+                renderSong(it.text, transposition, preferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default).withTempo(tempo)
             } }
             PrintSong(entry.songFileName, song?.title ?: entry.songFileName.substringBeforeLast('.'), song?.artist,
                 index = if (setlist == null) null else index + 1, song = rendered, text = content?.text)
@@ -3544,7 +3796,20 @@ class CampfireViewModel(
 
         /** A link nothing on this machine would open. The address is shown, since reading it is all that is left. */
         data class LinkNotOpened(val url: String) : Message
+
+        /** The click stopped, or did not start, without being asked to. */
+        data class MetronomeStopped(val reason: MetronomeStopReason) : Message
     }
+
+    /**
+     * A tempo override set on this device. [bpm] null removes the override.
+     *
+     * @param isWritten Whether its write has landed, after which it is let go of as soon as the store says the same.
+     */
+    private data class PendingTempo(
+        val bpm: Int?,
+        val isWritten: Boolean = false,
+    )
 
     /** The settings screen's offer to add the demo library, see [demoLibraryOffer]. */
     enum class DemoLibraryOffer {

@@ -15,7 +15,6 @@
 
 ## Features
 - Multi-select songs for bulk export or bulk edit (assign tags, languages, setlists) - rearrange mode in Setlists could be used for UX inspiration
-- Metronome: documentation/plans/metronome.md
 - Haptic effects, especially for the fast scroller
 
 ## Ideas

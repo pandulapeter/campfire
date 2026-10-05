@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui
 
+import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -86,6 +87,8 @@ internal fun AppUpdateGate(
     val state = controller.state
     val hasUnsavedEditorChanges by viewModel.hasUnsavedEditorChanges.collectAsStateWithLifecycle()
     val isSyncing by viewModel.isSyncing.collectAsStateWithLifecycle()
+    // A restart in the middle of a song being played along to cuts the click off, so it waits like it waits for a run.
+    val isMetronomePlaying = viewModel.metronomePlayback.collectAsStateWithLifecycle().value is MetronomePlayback.Playing
     // A required update ends with the process being replaced, and the screen it puts up leaves no way back to
     // the app, so neither is allowed near an editor holding text that has not been written: both wait until it
     // has been saved or let go of. Once the screen is up it stays up - the text can only become unsaved behind
@@ -126,7 +129,7 @@ internal fun AppUpdateGate(
 
         // Restarting is the app ending itself, so it is not offered over text that would go with it, nor over a
         // sync run it would cut off. The offer is still there when the text is saved or the run has finished.
-        AppUpdateState.ReadyToInstall -> if (!hasUnsavedEditorChanges && !isSyncing) {
+        AppUpdateState.ReadyToInstall -> if (!hasUnsavedEditorChanges && !isSyncing && !isMetronomePlaying) {
             AppUpdateDialog(
                 title = stringResource(Res.string.app_update_downloaded),
                 text = stringResource(Res.string.app_update_downloaded_hint),

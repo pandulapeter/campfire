@@ -21,7 +21,9 @@ import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
+import com.pandulapeter.campfire.presentation.ui.platform.LocalMetronomeNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.LocalSyncNotifier
+import com.pandulapeter.campfire.presentation.ui.platform.MetronomeNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.SyncNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.appIconColor
 import com.pandulapeter.campfire.presentation.ui.platform.appIconThemeColor
@@ -39,6 +41,8 @@ import org.koin.compose.viewmodel.koinViewModel
  * @param filesToImport Files opened with Campfire or shared to it, which reach the app module through `onOpenURL`.
  * @param syncNotifier Holds a background task and shows the notification while a sync run lasts. UIKit again, so it
  *   comes from the app module too.
+ * @param metronomeNotifier Shows a playing click in Now Playing and answers the lock screen's controls, for the same
+ *   reason.
  * @param onUiModeChanged Called with the theme preference whenever it changes, so that the app module can hand it to
  *   UIKit: the status bar, the system sheets and the keyboard follow the window's interface style, not Compose's. It is
  *   the preference rather than the resolved dark flag, since the system's own mode is read from the very trait
@@ -57,11 +61,13 @@ fun CampfireIosApp(
     filePicker: FilePicker,
     filesToImport: Flow<List<ImportedFile>> = emptyFlow(),
     syncNotifier: SyncNotifier = SyncNotifier { },
+    metronomeNotifier: MetronomeNotifier = MetronomeNotifier { },
     onUiModeChanged: (UserPreferences.UiMode?) -> Unit = {},
     onAppIconChanged: (UserPreferences.ThemeColor) -> Unit = {},
 ) = CompositionLocalProvider(
     LocalFilePicker provides filePicker,
     LocalSyncNotifier provides syncNotifier,
+    LocalMetronomeNotifier provides metronomeNotifier,
 ) {
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val uiMode = userPreferences?.uiMode

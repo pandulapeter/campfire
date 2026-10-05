@@ -116,6 +116,14 @@ import com.pandulapeter.campfire.presentation.resources.song_details_scroll_up
 import com.pandulapeter.campfire.presentation.resources.song_details_song_position
 import com.pandulapeter.campfire.presentation.resources.song_details_text_size
 import com.pandulapeter.campfire.presentation.resources.song_details_transposition
+import com.pandulapeter.campfire.presentation.resources.metronome_tempo
+import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
+import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
+import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeButton
+import com.pandulapeter.campfire.presentation.ui.metronome.TempoControls
+import com.pandulapeter.campfire.presentation.ui.metronome.effectiveTempo
+import com.pandulapeter.campfire.presentation.ui.metronome.metronomeAction
+import com.pandulapeter.campfire.presentation.ui.metronome.withTempo
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ACTION_BUTTON_OVERLAP
 import com.pandulapeter.campfire.presentation.ui.components.ActionsMenu
@@ -220,6 +228,15 @@ internal fun SongDetailsScreen(
             }
         }
     }
+    // The page being headed for rather than the one settled on, so that a click paged on to the next song has its tempo
+    // while the page is still sliding in.
+    LaunchedEffect(pagerState, isInitialPageSettled) {
+        if (isInitialPageSettled) {
+            snapshotFlow { latestSongs.getOrNull(pagerState.targetPage)?.fileName }.collect { fileName ->
+                if (fileName != null) viewModel.onSongDetailsPageChanged(latestDestination, fileName)
+            }
+        }
+    }
     val currentSong = songs.getOrNull(pagerState.currentPage)
     val canPage = songs.size > 1
     // A setlist of one song is still a setlist being played, so it keeps the bar that names it; only a song opened
@@ -258,6 +275,27 @@ internal fun SongDetailsScreen(
     val showsSongInfoInBar = !isReadOnly && appBarButtons.isSongInfoShown
     val showsSetlistAssignmentsInBar = !isReadOnly && appBarButtons.isSetlistAssignmentsShown
     val showsTranspositionInBar = !isReadOnly && appBarButtons.isTranspositionShown
+    // Read only, the button stands next to the text size stepper, which is all that bar holds.
+    val showsMetronomeInBar = if (isReadOnly) showsMetronomeInPerformanceBar(appBarWidth) else appBarButtons.isMetronomeShown
+    val tempos by viewModel.tempos.collectAsStateWithLifecycle()
+    val metronomePlayback by viewModel.metronomePlayback.collectAsStateWithLifecycle()
+    val metronomeSettings by viewModel.metronomeSettings.collectAsStateWithLifecycle()
+    val isMetronomePlaying = metronomePlayback is MetronomePlayback.Playing
+    val currentTempo = currentSong?.let { effectiveTempo(song = it, setlistFileName = destination.setlistFileName, tempos = tempos) }
+    val metronomeButton: @Composable () -> Unit = {
+        MetronomeButton(
+            isPlaying = isMetronomePlaying,
+            bpm = currentTempo?.bpm ?: MetronomePattern.DEFAULT_BPM,
+            beats = viewModel.metronomeBeats,
+            isFlashEnabled = metronomeSettings.isVisualBeatEnabled,
+            onClick = viewModel::toggleMetronome,
+        )
+    }
+    val metronomeAction = metronomeAction(
+        isPlaying = isMetronomePlaying,
+        bpm = currentTempo?.bpm ?: MetronomePattern.DEFAULT_BPM,
+        onClick = viewModel::toggleMetronome,
+    )
 
     val coroutineScope = rememberCoroutineScope()
     val pageStepper = remember(pagerState, coroutineScope) { PageStepper(pagerState, coroutineScope) }
@@ -406,7 +444,14 @@ internal fun SongDetailsScreen(
                     exit = fadeOut() + shrinkHorizontally(),
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        ActionsMenu(items = listOfNotNull(currentSongInfoAction))
+                        ActionsMenu(items = listOfNotNull(metronomeAction.takeUnless { showsMetronomeInBar || !isPerformanceModeEnabled }, currentSongInfoAction))
+                        AnimatedVisibility(
+                            visible = showsMetronomeInBar,
+                            enter = fadeIn() + expandHorizontally(),
+                            exit = fadeOut() + shrinkHorizontally(),
+                        ) {
+                            metronomeButton()
+                        }
                         LiveFontScaleControls(
                             modifier = Modifier.padding(end = APP_BAR_STEPPER_END_PADDING),
                             viewModel = viewModel,
@@ -421,7 +466,7 @@ internal fun SongDetailsScreen(
                     exit = fadeOut() + shrinkHorizontally(),
                 ) {
                     ActionsMenu(
-                        items = listOfNotNull(currentSongInfoAction),
+                        items = listOfNotNull(metronomeAction, currentSongInfoAction),
                         menuFooter = {
                             MenuStepperRow(label = stringResource(Res.string.song_details_text_size)) {
                                 LiveFontScaleControls(viewModel = viewModel)
@@ -435,6 +480,13 @@ internal fun SongDetailsScreen(
                     val isTranspositionShown = shouldShowChords && song.hasChords
                     val transposition = transpositions[song.fileName, destination.setlistFileName]
                     val isInSetlist = song.fileName in songFileNamesInSetlists
+                    AnimatedVisibility(
+                        visible = !isReadOnly && showsMetronomeInBar,
+                        enter = fadeIn() + expandHorizontally(),
+                        exit = fadeOut() + shrinkHorizontally(),
+                    ) {
+                        metronomeButton()
+                    }
                     // A plain icon button like the setlist assignments one, so that the transposition between the two is
                     // kept off each by the same touch target margin.
                     AnimatedVisibility(
@@ -486,6 +538,7 @@ internal fun SongDetailsScreen(
                         fileEditItems = editingActions.take(1) + listOfNotNull(coverArtAction) + editingActions.drop(1),
                         leadingItems = when {
                             !isReadOnly -> listOfNotNull(
+                                metronomeAction.takeUnless { showsMetronomeInBar },
                                 currentSongInfoAction?.takeUnless { showsSongInfoInBar },
                                 if (showsSetlistAssignmentsInBar) {
                                     null
@@ -498,8 +551,8 @@ internal fun SongDetailsScreen(
                                     )
                                 },
                             )
-                            showsFontScaleInBar -> emptyList()
-                            else -> listOfNotNull(currentSongInfoAction)
+                            showsFontScaleInBar -> listOfNotNull(metronomeAction.takeUnless { showsMetronomeInBar })
+                            else -> listOfNotNull(metronomeAction, currentSongInfoAction)
                         },
                         menuFooter = when {
                             !isReadOnly -> {
@@ -515,6 +568,16 @@ internal fun SongDetailsScreen(
                                                 setlistFileName = destination.setlistFileName,
                                                 transposition = transposition,
                                                 chordSpelling = chordSpelling,
+                                            )
+                                        }
+                                    }
+                                    currentTempo?.let { tempo ->
+                                        MenuStepperRow(label = stringResource(Res.string.metronome_tempo)) {
+                                            TempoControls(
+                                                tempo = tempo,
+                                                onStep = { viewModel.stepTempo(song.fileName, destination.setlistFileName, it) },
+                                                onTapped = { viewModel.setTempo(song.fileName, destination.setlistFileName, it) },
+                                                onReset = { viewModel.resetTempo(song.fileName, destination.setlistFileName) },
                                             )
                                         }
                                     }
@@ -615,6 +678,8 @@ internal fun SongDetailsScreen(
                         text = shownText,
                         hasFailed = song.fileName in failedSongFileNames,
                         transposition = transpositions[song.fileName, destination.setlistFileName],
+                        tempoOverride = effectiveTempo(song = song, setlistFileName = destination.setlistFileName, tempos = tempos)
+                            .takeUnless { it.isDefault }?.bpm,
                         shouldShowChords = shouldShowChords,
                         shouldNumberSections = userPreferences?.shouldNumberSections == true,
                         fontScale = if (isFollowingGesture) ({ viewModel.fontScale }) else ({ viewModel.settledFontScale }),
@@ -781,6 +846,8 @@ private fun SongPagerControls(
  *   that has nothing left to wait for.
  * @param scrollState Owned by the pager rather than by the page, so that the arrow keys can reach the scroll of the
  *   song being read, and so that a page keeps where it was left while its text is loaded again.
+ * @param tempoOverride The tempo the song plays at here where that is not its own, which the tempo line then shows,
+ *   the way the key line shows the transposed key, so that the page never contradicts the metronome.
  * @param fontScale Read where the lyrics are built rather than passed as a value: a pinch changes it on every frame,
  *   and read here it invalidates only this page's content rather than the screen and the pager around it.
  */
@@ -793,6 +860,7 @@ private fun SongDetailsPage(
     text: String?,
     hasFailed: Boolean,
     transposition: Int,
+    tempoOverride: Int?,
     shouldShowChords: Boolean,
     shouldNumberSections: Boolean,
     fontScale: () -> Float,
@@ -836,10 +904,11 @@ private fun SongDetailsPage(
                 spelling = chordSpelling,
                 shouldShowChords = shouldShowChords,
                 labels = labels,
+                tempoOverride = tempoOverride,
             ),
         ) { inputs ->
             prepareSongLyrics(
-                song = renderSong(inputs.text, inputs.transposition, inputs.spelling),
+                song = renderSong(inputs.text, inputs.transposition, inputs.spelling).withTempo(inputs.tempoOverride),
                 shouldShowChords = inputs.shouldShowChords,
                 labels = inputs.labels,
             )
@@ -1164,16 +1233,26 @@ internal fun showsFontScaleInPerformanceBar(appBarWidth: Dp) = appBarWidth - APP
     STEPPER_WIDTH - APP_BAR_STEPPER_END_PADDING >= MIN_TITLE_WIDTH
 
 /**
- * Whether the app bar of a screen [appBarWidth] wide still has room for the cover in performance mode. The cover is
- * decoration there, so it is only shown next to the text size stepper ([showsFontScaleInPerformanceBar]) and only where
- * the title is still left [MIN_TITLE_WIDTH] beside the two.
+ * Whether the app bar of a screen [appBarWidth] wide in performance mode still has room for the metronome button next to
+ * the text size stepper ([showsFontScaleInPerformanceBar]), leaving the title [MIN_TITLE_WIDTH]. It goes into the menu
+ * before the stepper does: the stepper is pinched as often as it is tapped, the button is tapped once.
  */
-internal fun showsCoverInPerformanceMode(appBarWidth: Dp) = showsFontScaleInPerformanceBar(appBarWidth) &&
+internal fun showsMetronomeInPerformanceBar(appBarWidth: Dp) = showsFontScaleInPerformanceBar(appBarWidth) &&
     appBarWidth - APP_BAR_NAVIGATION_WIDTH - APP_BAR_END_PADDING - STEPPER_WIDTH - APP_BAR_STEPPER_END_PADDING -
-    APP_BAR_COVER_SIZE - APP_BAR_COVER_GAP >= MIN_TITLE_WIDTH
+    APP_BAR_ACTION_WIDTH >= MIN_TITLE_WIDTH
+
+/**
+ * Whether the app bar of a screen [appBarWidth] wide still has room for the cover in performance mode. The cover is
+ * decoration there, so it is only shown next to the text size stepper and the metronome button
+ * ([showsMetronomeInPerformanceBar]) and only where the title is still left [MIN_TITLE_WIDTH] beside all three.
+ */
+internal fun showsCoverInPerformanceMode(appBarWidth: Dp) = showsMetronomeInPerformanceBar(appBarWidth) &&
+    appBarWidth - APP_BAR_NAVIGATION_WIDTH - APP_BAR_END_PADDING - STEPPER_WIDTH - APP_BAR_STEPPER_END_PADDING -
+    APP_BAR_ACTION_WIDTH - APP_BAR_COVER_SIZE - APP_BAR_COVER_GAP >= MIN_TITLE_WIDTH
 
 /** Which of the song details app bar's own buttons it has the room for outside performance mode, see [appBarButtons]. */
 internal data class AppBarButtons(
+    val isMetronomeShown: Boolean,
     val isSongInfoShown: Boolean,
     val isSetlistAssignmentsShown: Boolean,
     val isTranspositionShown: Boolean,
@@ -1183,16 +1262,18 @@ internal data class AppBarButtons(
  * Which buttons the app bar of a screen [appBarWidth] wide has the room for, next to [otherContentWidth] of everything
  * else it always holds. They go into the overflow menu one at a time as the bar narrows: the transposition stepper
  * first, which needs the title left [MIN_TITLE_WIDTH_BESIDE_SONG_ACTIONS] beside it, being the widest; then the setlist
- * assignments, and the way into the sheet of what the song is last, which only need it left [MIN_TITLE_WIDTH]. Each is
- * laid out after the ones that leave after it, so it is only there while they are.
+ * assignments, the way into the sheet of what the song is, and the metronome last, which only need it left
+ * [MIN_TITLE_WIDTH] - a control reached for while a song plays outranks one set once for a song. Each is laid out
+ * after the ones that leave after it, so it is only there while they are.
  */
 internal fun appBarButtons(appBarWidth: Dp, otherContentWidth: Dp): AppBarButtons {
     val room = appBarWidth - otherContentWidth
-    val bothButtons = APP_BAR_ACTION_WIDTH * 2
+    val threeButtons = APP_BAR_ACTION_WIDTH * 3
     return AppBarButtons(
-        isSongInfoShown = room - APP_BAR_ACTION_WIDTH >= MIN_TITLE_WIDTH,
-        isSetlistAssignmentsShown = room - bothButtons >= MIN_TITLE_WIDTH,
-        isTranspositionShown = room - bothButtons - TRANSPOSITION_STEPPER_WIDTH >= MIN_TITLE_WIDTH_BESIDE_SONG_ACTIONS,
+        isMetronomeShown = room - APP_BAR_ACTION_WIDTH >= MIN_TITLE_WIDTH,
+        isSongInfoShown = room - APP_BAR_ACTION_WIDTH * 2 >= MIN_TITLE_WIDTH,
+        isSetlistAssignmentsShown = room - threeButtons >= MIN_TITLE_WIDTH,
+        isTranspositionShown = room - threeButtons - TRANSPOSITION_STEPPER_WIDTH >= MIN_TITLE_WIDTH_BESIDE_SONG_ACTIONS,
     )
 }
 

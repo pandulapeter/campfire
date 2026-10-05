@@ -36,7 +36,7 @@ sealed interface CampfireDestination : NavKey {
     sealed interface TopLevel : CampfireDestination {
 
         companion object {
-            val entries: List<TopLevel> get() = listOf(Songs, Setlists, Settings)
+            val entries: List<TopLevel> get() = listOf(Songs, Setlists, Metronome, Settings)
 
             /**
              * Maps a [NavEntry][androidx.navigation3.runtime.NavEntry] content key back to the destination it
@@ -54,6 +54,11 @@ sealed interface CampfireDestination : NavKey {
     @Serializable
     data object Setlists : TopLevel {
         override val contentKey = "setlists"
+    }
+
+    @Serializable
+    data object Metronome : TopLevel {
+        override val contentKey = "metronome"
     }
 
     @Serializable

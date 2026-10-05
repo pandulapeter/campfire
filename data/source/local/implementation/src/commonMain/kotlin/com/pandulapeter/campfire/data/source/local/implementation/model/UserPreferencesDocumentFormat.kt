@@ -64,12 +64,12 @@ internal object UserPreferencesDocumentFormat {
     /**
      * The field if a document holding nothing else decodes, which asks the serializer itself instead of repeating
      * the type of every field here - a field added to the document later is covered without being named. The
-     * transpositions and the folded sections are the fields looked into, because they are the ones that are a
+     * transpositions, the tempos and the folded sections are the fields looked into, because they are the ones that are a
      * collection of the user's own choices: a single entry of the wrong shape costs that entry and not the map.
      */
     private fun readableField(key: String, value: JsonElement): Pair<String, JsonElement>? {
         val field = when {
-            key == TRANSPOSITIONS_KEY && value is JsonObject -> JsonObject(value.filterValues { it is JsonPrimitive && it.intOrNull != null })
+            (key == TRANSPOSITIONS_KEY || key == TEMPOS_KEY) && value is JsonObject -> JsonObject(value.filterValues { it is JsonPrimitive && it.intOrNull != null })
             key == FOLDED_SECTIONS_KEY && value is JsonObject -> JsonObject(
                 value.filterValues { it is JsonArray }.mapValues { (_, keys) -> JsonArray((keys as JsonArray).filter { it is JsonPrimitive && it.isString }) }
             )
@@ -85,5 +85,6 @@ internal object UserPreferencesDocumentFormat {
     }
 
     private const val TRANSPOSITIONS_KEY = "transpositions"
+    private const val TEMPOS_KEY = "tempos"
     private const val FOLDED_SECTIONS_KEY = "foldedSections"
 }

@@ -31,6 +31,7 @@ import platform.UIKit.UIWindowScene
 import platform.UIKit.alternateIconName
 import platform.UIKit.setAlternateIconName
 import platform.UIKit.supportsAlternateIcons
+import com.pandulapeter.campfire.metronome.api.Metronome
 import org.koin.mp.KoinPlatform
 
 private val koinApplication by lazy { startCampfireDependencyGraph() }
@@ -45,6 +46,9 @@ private val syncNotifier by lazy {
         onBackgroundTimeExpired = { KoinPlatform.getKoin().get<CancelSynchronizationUseCase>().invoke() },
     )
 }
+
+/** One per process, like the click it follows. Created after Koin, which the engine comes from. */
+private val metronomeNotifier by lazy { IosMetronomeNotifier(KoinPlatform.getKoin().get<Metronome>()) }
 
 /**
  * Entry point called from Swift. Returns the view controller hosting the shared Compose UI.
@@ -61,6 +65,7 @@ fun CampfireViewController(): UIViewController {
             filePicker = filePicker,
             filesToImport = filesToImport,
             syncNotifier = syncNotifier,
+            metronomeNotifier = metronomeNotifier,
             onUiModeChanged = ::applyInterfaceStyle,
             onAppIconChanged = ::applyAppIcon,
         )

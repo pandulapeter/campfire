@@ -9,7 +9,9 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.mapper
 
+import com.pandulapeter.campfire.data.model.domain.MetronomeSettings
 import com.pandulapeter.campfire.data.model.domain.PrintSettings
+import com.pandulapeter.campfire.data.source.local.implementation.model.MetronomeSettingsDocument
 import com.pandulapeter.campfire.data.source.local.implementation.model.PrintSettingsDocument
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.data.source.local.implementation.model.UserPreferencesDocument
@@ -36,12 +38,14 @@ internal fun UserPreferencesDocument.toModel() = UserPreferences(
             ?: if (isGermanNotationEnabled) UserPreferences.Notation.GERMAN else UserPreferences.Notation.STANDARD,
     ),
     transpositions = transpositions,
+    tempos = tempos.filterValues { it in MetronomeSettings.TEMPO_RANGE },
     foldedSections = foldedSections.mapValues { (_, keys) -> keys.toSet() }.filterValues { it.isNotEmpty() },
     tagMatchMode = UserPreferences.MatchMode.entries.firstOrNull { it.id == tagMatchMode } ?: UserPreferences.MatchMode.ANY,
     languageMatchMode = UserPreferences.MatchMode.entries.firstOrNull { it.id == languageMatchMode } ?: UserPreferences.MatchMode.ANY,
     tagSortingMode = UserPreferences.LabelSortingMode.entries.firstOrNull { it.id == tagSortingMode } ?: UserPreferences.LabelSortingMode.BY_USAGE,
     languageSortingMode = UserPreferences.LabelSortingMode.entries.firstOrNull { it.id == languageSortingMode } ?: UserPreferences.LabelSortingMode.BY_USAGE,
     printSettings = printSettings.toModel(),
+    metronomeSettings = metronomeSettings.toModel(),
     seenWhatsNewVersions = seenWhatsNewVersions,
 )
 
@@ -61,12 +65,14 @@ internal fun UserPreferences.toDocument() = UserPreferencesDocument(
     accidentals = chordSpelling.accidentals.id,
     notation = chordSpelling.notation.id,
     transpositions = transpositions,
+    tempos = tempos,
     foldedSections = foldedSections.mapValues { (_, keys) -> keys.toList() },
     tagMatchMode = tagMatchMode.id,
     languageMatchMode = languageMatchMode.id,
     tagSortingMode = tagSortingMode.id,
     languageSortingMode = languageSortingMode.id,
     printSettings = printSettings.toDocument(),
+    metronomeSettings = metronomeSettings.toDocument(),
     seenWhatsNewVersions = seenWhatsNewVersions,
 )
 
@@ -103,3 +109,27 @@ internal fun PrintSettings.toDocument() = normalized().let { settings ->
         includeSetlistOverview = settings.includeSetlistOverview,
     )
 }
+
+internal fun MetronomeSettingsDocument.toModel() = MetronomeSettings(
+    soundId = sound,
+    volume = volume.takeIf { it.isFinite() }?.coerceIn(0f, 1f) ?: 1f,
+    subdivisionId = subdivision,
+    isMuted = isMuted,
+    isVisualBeatEnabled = isVisualBeatEnabled,
+    isHapticBeatEnabled = isHapticBeatEnabled,
+    beatLevels = beatLevels,
+    bpm = bpm.coerceIn(MetronomeSettings.TEMPO_RANGE),
+    timeSignature = timeSignature,
+)
+
+internal fun MetronomeSettings.toDocument() = MetronomeSettingsDocument(
+    sound = soundId,
+    volume = volume,
+    subdivision = subdivisionId,
+    isMuted = isMuted,
+    isVisualBeatEnabled = isVisualBeatEnabled,
+    isHapticBeatEnabled = isHapticBeatEnabled,
+    beatLevels = beatLevels,
+    bpm = bpm,
+    timeSignature = timeSignature,
+)

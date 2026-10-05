@@ -312,6 +312,55 @@
     <string name="settings_version">Version %1$s</string>
     <string name="settings_created_by">Created by Péter Pandula</string>
 
+    <!-- Metronome screen -->
+    <string name="metronome">Metronome</string>
+    <string name="metronome_start">Start</string>
+    <string name="metronome_stop">Stop</string>
+    <string name="metronome_tempo">Tempo</string>
+    <string name="metronome_tempo_decrease">Slower</string>
+    <string name="metronome_tempo_increase">Faster</string>
+    <string name="metronome_tempo_slider">Tempo in beats per minute</string>
+    <string name="metronome_tap">Tap</string>
+    <string name="metronome_tap_description">Tap the tempo</string>
+    <string name="metronome_time_signature">Time signature</string>
+    <string name="metronome_beats_per_bar">Beats per bar</string>
+    <string name="metronome_beat_unit">Note value</string>
+    <string name="metronome_beats_decrease">Fewer beats</string>
+    <string name="metronome_beats_increase">More beats</string>
+    <string name="metronome_beat_unit_decrease">Longer note</string>
+    <string name="metronome_beat_unit_increase">Shorter note</string>
+    <string name="metronome_accents">Accents</string>
+    <string name="metronome_accents_hint">Tap a beat to accent it, mute it or make it plain again.</string>
+    <!-- One beat of the bar as a screen reader reads it: its number and how it sounds (metronome_level_…). -->
+    <string name="metronome_beat_description">Beat %1$d, %2$s</string>
+    <string name="metronome_level_accent">accent</string>
+    <string name="metronome_level_normal">plain</string>
+    <string name="metronome_level_muted">muted</string>
+    <string name="metronome_subdivision">Subdivision</string>
+    <string name="metronome_subdivision_none">None</string>
+    <string name="metronome_subdivision_eighths">Eighths</string>
+    <string name="metronome_subdivision_triplets">Triplets</string>
+    <string name="metronome_subdivision_sixteenths">Sixteenths</string>
+    <string name="metronome_sound">Sound</string>
+    <string name="metronome_sound_click">Click</string>
+    <string name="metronome_sound_woodblock">Woodblock</string>
+    <string name="metronome_sound_beep">Beep</string>
+    <string name="metronome_sound_sticks">Sticks</string>
+    <string name="metronome_sound_cowbell">Cowbell</string>
+    <string name="metronome_volume">Volume</string>
+    <string name="metronome_flash">Flash on the beat</string>
+    <string name="metronome_vibrate">Vibrate on the beat</string>
+    <string name="metronome_mute">Mute</string>
+    <string name="metronome_mute_description">The beat is only shown, nothing sounds.</string>
+    <string name="metronome_audio_unavailable">There is no sound output, so the beat is only shown.</string>
+    <string name="metronome_audio_waiting">Tap anywhere to let the browser play the sound.</string>
+    <string name="metronome_stopped_refused">The metronome could not play sound right now, maybe because of a call.</string>
+    <string name="metronome_stopped_interrupted">The metronome stopped for a call or another app.</string>
+    <string name="metronome_stopped_disconnected">The metronome stopped because the audio device went away.</string>
+    <string name="metronome_stopped_failed">The metronome stopped because the sound output failed.</string>
+    <!-- The channel of the notification a playing metronome keeps up, as the system's settings list it. -->
+    <string name="metronome_notification_channel">Metronome</string>
+
     <!-- Song editor screen -->
     <string name="song_editor_edit">Edit</string>
     <string name="song_editor_preview">Preview</string>
@@ -380,6 +429,11 @@
     <string name="song_details_transpose_up">Transpose up</string>
     <string name="song_details_transpose_down">Transpose down</string>
     <string name="song_details_transpose_reset">Reset transposition</string>
+    <string name="song_details_tempo_decrease">Slower</string>
+    <string name="song_details_tempo_increase">Faster</string>
+    <string name="song_details_tempo_reset">Reset tempo</string>
+    <string name="song_details_metronome_start">Start metronome</string>
+    <string name="song_details_metronome_stop">Stop metronome</string>
     <string name="song_details_scroll_to_top">Scroll to the top</string>
     <string name="song_details_text_size_increase">Increase text size</string>
     <string name="song_details_text_size_decrease">Decrease text size</string>

@@ -25,6 +25,7 @@ import kotlin.js.ExperimentalWasmJsInterop
  *
  * - `` — the songs, and `search` over them while their search is open;
  * - `setlists`, and `setlists/search`;
+ * - `metronome`;
  * - `settings/general`, directly on top of the songs, and `settings/songs`, `settings/library` or `settings/about`
  *   on top of that while another tab is open — a Back from any other tab goes to General before it leaves the screen,
  *   so General is a step of its own, while one tab picked after another replaces the entry rather than adding one
@@ -64,6 +65,8 @@ internal object BrowserRoutes {
                     // A transient step with the same address gives browser Back a mode to dismiss before the tab.
                     if (viewModel.isSetlistReordering && !viewModel.setlistsSearch.isOpen.value) add(SETLISTS)
                 }
+
+                CampfireDestination.Metronome -> add(METRONOME)
 
                 CampfireDestination.Settings -> {
                     add("$SETTINGS/${SettingsTab.GENERAL.pathSegment}")
@@ -125,6 +128,7 @@ internal object BrowserRoutes {
             1 -> when (segments[0]) {
                 SEARCH -> home.copy(isSongsSearchOpen = true)
                 SETLISTS -> home.copy(backStack = home.backStack + CampfireDestination.Setlists)
+                METRONOME -> home.copy(backStack = home.backStack + CampfireDestination.Metronome)
                 SETTINGS -> home.copy(backStack = home.backStack + CampfireDestination.Settings)
                 else -> null
             }
@@ -224,6 +228,7 @@ internal object BrowserRoutes {
     private const val ROOT = ""
     private const val SEARCH = "search"
     private const val SETLISTS = "setlists"
+    private const val METRONOME = "metronome"
     private const val SETTINGS = "settings"
     private const val SONG = "song"
     private const val SETLIST = "setlist"

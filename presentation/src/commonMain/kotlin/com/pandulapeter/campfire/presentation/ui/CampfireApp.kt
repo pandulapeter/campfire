@@ -129,6 +129,25 @@ import com.pandulapeter.campfire.presentation.resources.export_too_large_to_impo
 import com.pandulapeter.campfire.presentation.resources.ic_campfire
 import com.pandulapeter.campfire.presentation.resources.ic_setlists
 import com.pandulapeter.campfire.presentation.resources.ic_settings
+import com.pandulapeter.campfire.metronome.api.model.BeatLevel
+import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
+import com.pandulapeter.campfire.metronome.api.model.MetronomeStopReason
+import com.pandulapeter.campfire.presentation.resources.ic_metronome
+import com.pandulapeter.campfire.presentation.resources.metronome
+import com.pandulapeter.campfire.presentation.resources.metronome_notification_channel
+import com.pandulapeter.campfire.presentation.resources.metronome_stop
+import com.pandulapeter.campfire.presentation.resources.metronome_stopped_disconnected
+import com.pandulapeter.campfire.presentation.resources.metronome_stopped_failed
+import com.pandulapeter.campfire.presentation.resources.metronome_stopped_interrupted
+import com.pandulapeter.campfire.presentation.resources.metronome_stopped_refused
+import com.pandulapeter.campfire.presentation.resources.song_details_tempo
+import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeContext
+import com.pandulapeter.campfire.presentation.ui.platform.LocalMetronomeNotifier
+import com.pandulapeter.campfire.presentation.ui.platform.MetronomeNotification
+import com.pandulapeter.campfire.presentation.ui.platform.rememberBeatHaptics
+import com.pandulapeter.campfire.presentation.ui.screens.metronome.MetronomeScreen
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.KEY_SEPARATOR
+import androidx.lifecycle.repeatOnLifecycle
 import com.pandulapeter.campfire.presentation.resources.ic_songs
 import com.pandulapeter.campfire.presentation.resources.import_failed
 import com.pandulapeter.campfire.presentation.resources.import_converted
@@ -214,6 +233,8 @@ fun CampfireApp(
 ) {
     LaunchedEffect(filesToImport) { filesToImport.collect(viewModel::importFiles) }
     val showSyncNotification = rememberSyncNotifications(viewModel)
+    MetronomeNotificationEffect(viewModel)
+    MetronomeHapticsEffect(viewModel)
     ProvideCoverArtImageLoader()
     // A library the user can reach from outside the app (the desktop folder, the iOS Files app) can also change
     // while the app is away, so it is read again whenever Campfire comes back to the front: ON_START, which is iOS
@@ -672,6 +693,23 @@ private fun CampfireScreens(
                         )
                     }
                 }
+                entry<CampfireDestination.Metronome>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
+                    ReportNavigationTransition(viewModel, onNavigationTransitionRunningChanged)
+                    TopLevelScreenSurface(
+                        scrim = navigationScrim,
+                        windowSize = windowSize,
+                        railWidth = railWidth,
+                        navigationBarHeight = navigationBarHeight,
+                        chrome = screenChrome(destination),
+                    ) {
+                        MetronomeScreen(
+                            viewModel = viewModel,
+                            layout = settingsLayout,
+                            scrollPosition = viewModel.metronomeScrollPosition,
+                            contentPadding = shellContentPadding,
+                        )
+                    }
+                }
                 entry<CampfireDestination.Settings>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
                     ReportNavigationTransition(viewModel, onNavigationTransitionRunningChanged)
                     TopLevelScreenSurface(
@@ -803,6 +841,14 @@ private fun Messages(
         CampfireViewModel.Message.SongFileRenamedPartly -> stringResource(Res.string.songs_update_file_name_partly)
         CampfireViewModel.Message.SongDeletedPartly -> stringResource(Res.string.songs_delete_song_partly)
         is CampfireViewModel.Message.LinkNotOpened -> textResource(Res.string.error_link_not_opened, current.url)
+        is CampfireViewModel.Message.MetronomeStopped -> stringResource(
+            when (current.reason) {
+                MetronomeStopReason.AUDIO_REFUSED -> Res.string.metronome_stopped_refused
+                MetronomeStopReason.AUDIO_INTERRUPTED -> Res.string.metronome_stopped_interrupted
+                MetronomeStopReason.OUTPUT_DISCONNECTED -> Res.string.metronome_stopped_disconnected
+                MetronomeStopReason.OUTPUT_FAILED -> Res.string.metronome_stopped_failed
+            }
+        )
         null -> null
     }
     val importFinished = head?.value as? CampfireViewModel.Message.ImportFinished
@@ -971,7 +1017,7 @@ private data class NavigationChromeSize(
  * screens' own side panel would have the panel come, go and come again as a window is widened past both thresholds.
  *
  * Material decides the expanded rail's width from its items, [EXPANDED_NAVIGATION_RAIL_MIN_WIDTH] being where it
- * starts; the three labels here fit inside that in every language the app speaks.
+ * starts; the four labels here fit inside that in every language the app speaks.
  */
 private fun navigationChromeKind(windowWidth: Dp) = when {
     !WindowSize.fromWidth(windowWidth).usesNavigationRail -> NavigationChromeKind.BAR
@@ -1153,7 +1199,7 @@ private fun ScreenSurface(
  * [NavigationChromeScaffold] places the shared one, so that nothing moves as the one hands over to the other.
  *
  * A [Surface], so that it blocks touches from reaching the screen it covers during a transition, and so that it keeps
- * its screen below the status bar: none of the three top level screens has a top app bar of its own to do that.
+ * its screen below the status bar: none of the top level screens has a top app bar of its own to do that.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -1423,6 +1469,7 @@ private val CampfireDestination.TopLevel.icon: DrawableResource
     get() = when (this) {
         CampfireDestination.Songs -> Res.drawable.ic_songs
         CampfireDestination.Setlists -> Res.drawable.ic_setlists
+        CampfireDestination.Metronome -> Res.drawable.ic_metronome
         CampfireDestination.Settings -> Res.drawable.ic_settings
     }
 
@@ -1430,6 +1477,7 @@ private val CampfireDestination.TopLevel.label: StringResource
     get() = when (this) {
         CampfireDestination.Songs -> Res.string.songs
         CampfireDestination.Setlists -> Res.string.setlists
+        CampfireDestination.Metronome -> Res.string.metronome
         CampfireDestination.Settings -> Res.string.settings
     }
 
@@ -1528,3 +1576,54 @@ private fun rememberSyncNotifications(viewModel: CampfireViewModel): (SyncProgre
 }
 
 private val SyncState.progress get() = (this as? SyncState.Connected)?.progress
+
+/**
+ * Hands a playing click to the shell in the language chosen in the app, see [MetronomeNotifier], and says it is over only
+ * once it has said it began: reported on the first frame of every composition, "nothing to show" would reach the Android
+ * shell of an activity recreated over a click that is still playing.
+ */
+@Composable
+private fun MetronomeNotificationEffect(viewModel: CampfireViewModel) {
+    val notifier = LocalMetronomeNotifier.current
+    val playback by viewModel.metronomePlayback.collectAsStateWithLifecycle()
+    val songsByFileName by viewModel.songsByFileName.collectAsStateWithLifecycle()
+    val pattern = (playback as? MetronomePlayback.Playing)?.pattern
+    val songTitle = (viewModel.metronomeContext as? MetronomeContext.Song)?.let { songsByFileName[it.songFileName]?.title }
+    val notification = pattern?.let {
+        MetronomeNotification(
+            channelName = stringResource(Res.string.metronome_notification_channel),
+            title = songTitle ?: stringResource(Res.string.metronome),
+            body = "${stringResource(Res.string.song_details_tempo, it.bpm.toString())} $KEY_SEPARATOR ${it.timeSignature}",
+            stopLabel = stringResource(Res.string.metronome_stop),
+        )
+    }
+    var hasShown by remember { mutableStateOf(false) }
+    LaunchedEffect(notification) {
+        if (notification != null) {
+            hasShown = true
+            notifier.onMetronomeNotificationChanged(notification)
+        } else if (hasShown) {
+            hasShown = false
+            notifier.onMetronomeNotificationChanged(null)
+        }
+    }
+}
+
+/**
+ * The beat in the hand, from the heard beats, only while the app is resumed (see [rememberBeatHaptics]) and only where
+ * the user asked for it.
+ */
+@Composable
+private fun MetronomeHapticsEffect(viewModel: CampfireViewModel) {
+    val haptics = rememberBeatHaptics() ?: return
+    val settings by viewModel.metronomeSettings.collectAsStateWithLifecycle()
+    if (!settings.isHapticBeatEnabled) return
+    val lifecycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(haptics, lifecycleOwner) {
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            viewModel.metronomeBeats.collect { beat ->
+                if (!beat.isSubdivision && beat.level != BeatLevel.MUTED) haptics.onBeat(isAccent = beat.level == BeatLevel.ACCENT)
+            }
+        }
+    }
+}

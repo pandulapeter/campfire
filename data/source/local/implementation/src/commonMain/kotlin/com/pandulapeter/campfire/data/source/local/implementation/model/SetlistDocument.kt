@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.model
 
+import com.pandulapeter.campfire.data.model.domain.MetronomeSettings
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
@@ -54,6 +55,12 @@ internal data class SetlistDocument(
 internal data class SetlistSongDocument(
     val file: String = "",
     val transposition: Int = 0,
+    /**
+     * Beats per minute, left out of the file where it is null (the song's own tempo), so that a setlist nobody gave a
+     * tempo stays byte for byte what it was before there were tempos.
+     */
+    @Serializable(with = OptionalTempoSerializer::class)
+    val tempo: Int? = null,
     /** The same as [SetlistDocument.unknownFields], for one entry. */
     @Transient val unknownFields: JsonObject = JsonObject(emptyMap()),
 )
@@ -74,4 +81,23 @@ private object OptionalTextSerializer : KSerializer<String?> {
     }
 
     override fun serialize(encoder: Encoder, value: String?) = if (value == null) encoder.encodeNull() else encoder.encodeString(value)
+}
+
+/**
+ * Reads a whole number within [MetronomeSettings.TEMPO_RANGE] as itself and anything else - `"fast"`, `96.5`, `0`, an
+ * object - as null, for the same reason as [OptionalTextSerializer]: `coerceInputValues` only covers a `null`, and a
+ * plain `Int?` meeting any of these throws, which would fail the whole setlist rather than the one value.
+ */
+@OptIn(ExperimentalSerializationApi::class)
+private object OptionalTempoSerializer : KSerializer<Int?> {
+
+    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("OptionalTempo", PrimitiveKind.INT).nullable
+
+    override fun deserialize(decoder: Decoder): Int? {
+        val json = decoder as? JsonDecoder ?: return decoder.decodeInt()
+        val primitive = json.decodeJsonElement() as? JsonPrimitive ?: return null
+        return primitive.takeUnless { it.isString }?.content?.toIntOrNull()?.takeIf { it in MetronomeSettings.TEMPO_RANGE }
+    }
+
+    override fun serialize(encoder: Encoder, value: Int?) = if (value == null) encoder.encodeNull() else encoder.encodeInt(value)
 }

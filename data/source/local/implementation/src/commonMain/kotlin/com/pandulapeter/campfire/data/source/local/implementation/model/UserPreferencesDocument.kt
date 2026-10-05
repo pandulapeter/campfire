@@ -36,12 +36,14 @@ internal data class UserPreferencesDocument(
     // What the notation was before there could be more than two: only read, for a document that has no notation yet.
     val isGermanNotationEnabled: Boolean = false,
     val transpositions: Map<String, Int> = emptyMap(),
+    val tempos: Map<String, Int> = emptyMap(),
     val foldedSections: Map<String, List<String>> = emptyMap(),
     val tagMatchMode: String = "",
     val languageMatchMode: String = "",
     val tagSortingMode: String = "",
     val languageSortingMode: String = "",
     val printSettings: PrintSettingsDocument = PrintSettingsDocument(),
+    val metronomeSettings: MetronomeSettingsDocument = MetronomeSettingsDocument(),
     val seenWhatsNewVersions: Set<String> = emptySet(),
 )
 
@@ -61,4 +63,18 @@ internal data class PrintSettingsDocument(
     val startSongsOnNewPage: Boolean = true,
     val setlistMode: String = "song_sheets",
     val includeSetlistOverview: Boolean = true,
+)
+
+/** The ids are the metronome's own and are checked where they are read into its types, in `:presentation`. */
+@Serializable
+internal data class MetronomeSettingsDocument(
+    val sound: String = "click",
+    val volume: Float = 1f,
+    val subdivision: String = "none",
+    val isMuted: Boolean = false,
+    val isVisualBeatEnabled: Boolean = true,
+    val isHapticBeatEnabled: Boolean = false,
+    val beatLevels: Map<String, List<String>> = emptyMap(),
+    val bpm: Int = 120,
+    val timeSignature: String = "4/4",
 )

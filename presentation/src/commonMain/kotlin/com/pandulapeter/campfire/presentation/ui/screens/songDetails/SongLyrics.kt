@@ -2032,6 +2032,7 @@ internal data class SongLyricsInputs(
     val spelling: UserPreferences.ChordSpelling,
     val shouldShowChords: Boolean,
     val labels: DefaultSectionLabels,
+    val tempoOverride: Int? = null,
 )
 
 /**

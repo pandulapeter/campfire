@@ -24,7 +24,9 @@ import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.data.model.domain.SyncState
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
+import com.pandulapeter.campfire.presentation.ui.platform.LocalMetronomeNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.LocalSyncNotifier
+import com.pandulapeter.campfire.presentation.ui.platform.MetronomeNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.SyncNotificationPermissionEffect
 import com.pandulapeter.campfire.presentation.ui.platform.SyncNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.appIconThemeColor
@@ -46,6 +48,8 @@ import org.koin.compose.viewmodel.koinViewModel
  *   of a pick that outlived its process join them here.
  * @param syncNotifier Starts and stops the foreground service a running sync needs, which lives in the application
  *   module because that is where the manifest is.
+ * @param metronomeNotifier Starts the media playback service a playing metronome is kept alive and controlled by, for
+ *   the same reason.
  * @param onAppReady Released when the app itself is on screen, which is what the activity holds the system splash
  *   screen until: the frame that would otherwise take it away is the launch screen rather than the app.
  * @param onAppIconChanged Told the theme color the launcher icon is to be in (`appIconThemeColor`), once the
@@ -57,6 +61,7 @@ fun CampfireAndroidApp(
     urlOpener: (url: String, isDarkTheme: Boolean) -> Unit,
     filesToImport: Flow<List<ImportedFile>> = emptyFlow(),
     syncNotifier: SyncNotifier = SyncNotifier { },
+    metronomeNotifier: MetronomeNotifier = MetronomeNotifier { },
     onAppReady: () -> Unit = {},
     onAppIconChanged: (UserPreferences.ThemeColor) -> Unit = {},
 ) {
@@ -87,6 +92,7 @@ fun CampfireAndroidApp(
     CompositionLocalProvider(
         LocalFilePicker provides filePicker,
         LocalSyncNotifier provides syncNotifier,
+        LocalMetronomeNotifier provides metronomeNotifier,
     ) {
         CampfireApp(
             viewModel = viewModel,

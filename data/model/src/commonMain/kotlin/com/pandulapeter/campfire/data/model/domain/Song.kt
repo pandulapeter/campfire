@@ -66,4 +66,13 @@ data class Song(
      * `ChordProDuration`), so that whatever adds these up never counts a value it had to guess at.
      */
     val duration: Duration? = null,
+    /**
+     * The first `{tempo}` in beats per minute, rounded (see `ChordProTempo`), or null where the song names none that
+     * reads as one. Read with the rest of the metadata rather than from the text, so that a metronome paged on to the
+     * next song of a setlist has its tempo before that song's text is loaded. Not clamped: what the file says is shown
+     * as it is, and only what is played is held within the metronome's range.
+     */
+    val tempo: Int? = null,
+    /** The first `{time}` as written, null where the song names none; read into a time signature where it is played. */
+    val time: String? = null,
 )

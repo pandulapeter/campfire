@@ -9,7 +9,8 @@
 -->
 # Campfire
 
-Kotlin Multiplatform app (Android + iOS + JVM desktop + wasmJs web) for viewing and editing song lyrics and chords.
+Kotlin Multiplatform app (Android + iOS + JVM desktop + wasmJs web) for viewing and editing song lyrics and chords,
+with a metronome.
 Compose UI is shared between all platforms. The app owns a library folder of plain
 [ChordPro](https://www.chordpro.org) files on every platform, which the user fills by writing songs in the built-in
 editor or by importing ChordPro, plain text, PDF and Word documents, and zip archives. **The only things that ever reach the network are sync, and the cover
@@ -37,7 +38,7 @@ app:android / app:desktop / app:ios / app:web   entry points, platform chrome, "
   app:di                                     the Koin application: the one place every module is named, and the
                                              function the four entry points start Koin with
   presentation                               CampfireViewModel, Navigation 3 back stack, Material 3 theme + every screen
-                                             (Songs, Setlists, Settings, SongDetails, SongEditor), string resources; the
+                                             (Songs, Setlists, Metronome, Settings, SongDetails, SongEditor), string resources; the
                                              platform shells (system bars, file pickers, drag and drop, URL opening,
                                              desktop key handling) are its platform source sets
   domain:api / :implementation               use cases (single-method interfaces)
@@ -48,6 +49,9 @@ app:android / app:desktop / app:ios / app:web   entry points, platform chrome, "
                                                   and the MusicBrainz and iTunes searches; the only module in the project that
                                                   makes a network call (see Sync and Cover art below)
         data:model                           domain models, shared by everything
+  metronome:api / :implementation            the click: the Metronome contract, its patterns and tap tempo, and the
+                                             engine with one audio output per platform (see Metronome below). Depends
+                                             on nothing of the app's; used by :presentation, :app:android and :app:ios
   chordpro                                   dependency-free ChordPro model, parser, serializer, transposer, tab
                                              wrapper, tag editor, highlighter and positioned chord-sheet converter. Depends on nothing; used by
                                              :data:source:local:implementation (metadata for the song list),
@@ -189,7 +193,7 @@ localized in both languages.
   annotate themselves and holding a `@Single` function where a definition is built rather than constructed (the
   HTTP client, the list of sync providers). Platform definitions are ordinary annotated classes in the platform
   source sets (`AndroidFileStorage`, `IosSyncAuthenticator`, …), found by the same scan, so there is no
-  `expect`/`actual` factory between a platform and its Koin definition. `:app:di` names the five module objects in
+  `expect`/`actual` factory between a platform and its Koin definition. `:app:di` names the six module objects in
   the one `@KoinApplication`, and `startCampfireDependencyGraph()` is what the four entry points start Koin with;
   the plugin checks the whole graph there at compile time, so a definition asking for something nobody declares
   fails the build. A dependency only a platform shell provides — the Android `Context` — is marked `@Provided`,
@@ -392,11 +396,11 @@ localized in both languages.
   `:data:source:local:implementation` (zip, bounded PDF/Word readers and the JVM file storage, with independent-producer document goldens in `desktopTest`), `:data:source:remote:*` (hashing, encoders,
   the OAuth authorization URL, the cover search's queries, its `User-Agent` and its pace, the cover download),
   `:data:repository:implementation` (`SyncPlanner`, which decides what happens to every file in a sync run, and the
-  cover cache) and
+  cover cache), `:metronome:*` (the sequencer, the synthesizer, the mixer, tap tempo and time signatures) and
   `:presentation` (the pure helpers behind its screens: the search index and ranking, the song picker's filter chips, the fast scroller's section
-  index, the setlist slots, stepper labels, section grid and the cutting of sections into columns, row snapping and section measurements of the details screen, the editor's token cache), run on
+  index, the setlist slots, stepper labels, section grid and the cutting of sections into columns, row snapping and section measurements of the details screen, the editor's token cache, where a song's tempo comes from and what a click plays for), run on
   the desktop target with
-  `./gradlew :chordpro:desktopTest :domain:implementation:desktopTest :data:source:local:implementation:desktopTest :data:source:remote:api:desktopTest :data:source:remote:implementation:desktopTest :data:repository:implementation:desktopTest :presentation:desktopTest`.
+  `./gradlew :chordpro:desktopTest :domain:implementation:desktopTest :data:source:local:implementation:desktopTest :data:source:remote:api:desktopTest :data:source:remote:implementation:desktopTest :data:repository:implementation:desktopTest :metronome:api:desktopTest :metronome:implementation:desktopTest :presentation:desktopTest`.
   The web build's JavaScript — its storage worker, its service worker's routing and the page's decisions about the
   build it keeps — has Node tests of its own (see `app/web`), and the parser of a
   release's description, which is Python, a `unittest` next to it in `.github/scripts`.
@@ -650,6 +654,35 @@ the only possible one. The per-module `CLAUDE.md` files carry the detail; the sh
   than with the underscore a name the app derived itself collides with (`_2`).
 - Authorization is OAuth 2.0 with PKCE and no client secret, which is what lets this work with no backend. The four
   platforms get back from the consent page in four different ways, all behind `SyncAuthenticator`.
+
+## Metronome
+
+A third tab and a one-tap click on every song, playing on with the screen locked. Nothing about it reaches the
+network. The module `CLAUDE.md` files carry the detail (`metronome/*`, `presentation`); the short version:
+
+- **Timing is by sample count, never by a timer**: `:metronome:implementation`'s `MetronomeSequencer` places every click
+  at its frame in the output's stream with one integer division from the frame its timing started at, so nothing
+  drifts; the sounds are synthesized in Kotlin (no assets, identical everywhere). The flash and the haptics follow the
+  `beats` the engine emits when each click is *heard*, from the output's reported playback position; an output that
+  cannot open runs the same clock silently and says so.
+- **Where a tempo lives mirrors the transposition**: a song opened from a setlist keeps an override in that setlist's
+  entry (`Setlist.Entry.tempo`, a `tempo` member of the `*.setlist.json` song, left out where null, so it travels
+  through an export, an import and a sync run), one opened from the library in `UserPreferences.tempos`, never exported
+  or synced; neither reads the other, and the song file's `{tempo}` (`Song.tempo`, read at scan time with `{time}`) is
+  only changed in the editor. The first `{tempo}` and `{time}` count; the tempo counts the clicks of the bar (6/8 at 120
+  is six clicks a bar at 120 a minute), within 30–300.
+- **A click follows the topmost song details screen on the back stack**, at the page its pager is heading for, so
+  opening or paging to a song retargets it from beat one and the editor over a song keeps it; when that song leaves the
+  stack the click goes back to where it was started (its `origin`, kept by the engine): stopped for one started on a
+  song, the tab's own pattern for one started on the Metronome tab. Every way onto the tab clears the back stack.
+- **Playback is media**: on Android a `mediaPlayback` foreground service with a media session and notification
+  (`app/android`), on iOS the `audio` background mode, Now Playing and the remote commands (`app/ios`), on the web a
+  worker-timed Web Audio scheduler and a best-effort media session (`app/web`); the desktop needs nothing. Each audio
+  output owns the platform's focus or session: a call refuses or stops the click, as do headphones pulled and another
+  app taking the audio, and a click that stopped on its own says why. Swiping the app away on Android stops it.
+- Performance mode keeps the play button and hides the per-song tempo stepper, as it hides the transposition; the tab
+  stays fully usable there. Settings (sound, subdivision, accents per signature, volume, flash, vibrate, mute) are
+  `UserPreferences.metronomeSettings`.
 
 ## Cover art
 

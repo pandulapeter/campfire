@@ -63,6 +63,11 @@ data class Setlist(
     data class Entry(
         val songFileName: String,
         val transposition: Int = 0,
+        /**
+         * The beats per minute this setlist plays the song at, null for the song's own `{tempo}`. Kept in the entry
+         * for the same reason as [transposition]: the band plays the song at it, so it travels with the setlist.
+         */
+        val tempo: Int? = null,
         /** The same as [Setlist.unknownFields], for one entry. */
         val unknownFields: String = "",
     )

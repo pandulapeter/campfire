@@ -53,6 +53,12 @@
 	<true/>
 	<key>LSSupportsOpeningDocumentsInPlace</key>
 	<true/>
+	<!-- A playing metronome carries on with the screen locked. The audio session is active only while a click plays
+	     (see AudioOutput.ios.kt in :metronome:implementation), which is what App Review checks this mode against. -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+	</array>
 	<!-- Answers App Store Connect's export compliance question up front, so an upload does not wait for it by hand.
 	     The only cryptography is exempt: HTTPS through the system's networking, SHA-256 for content hashes and the
 	     PKCE challenge, and the Keychain. Anything that adds encryption of its own has to revisit this. -->

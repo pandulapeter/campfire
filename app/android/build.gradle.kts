@@ -19,6 +19,7 @@ dependencies {
     implementation(project(":app:di"))
     implementation(project(":data:source:remote:implementation"))
     implementation(project(":domain:api"))
+    implementation(project(":metronome:api"))
     implementation(project(":presentation"))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.browser)

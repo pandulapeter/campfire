@@ -101,5 +101,7 @@ include(
     ":data:source:remote:implementation",
     ":domain:api",
     ":domain:implementation",
+    ":metronome:api",
+    ":metronome:implementation",
     ":presentation",
 )

@@ -29,6 +29,7 @@ kotlin {
             implementation(project(":data:model"))
             implementation(project(":data:source:remote:implementation"))
             implementation(project(":domain:api"))
+            implementation(project(":metronome:api"))
             implementation(project(":presentation"))
             implementation(libs.compose.runtime)
             implementation(libs.compose.ui)

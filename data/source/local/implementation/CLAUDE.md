@@ -145,10 +145,10 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
   iOS and desktop the user can do — keeps whatever it does carry instead of failing to parse. A `null` is read as a
   missing field (`coerceInputValues`), in both documents. `seenWhatsNewVersions` defaults to an empty set for older preferences, and survives every settings save; a fresh installation records its first version without introducing it. The preferences go further, since they are the one document
   the app overwrites as a whole: `UserPreferencesDocumentFormat` reads them field by field when they do not decode as
-  they are — one transposition that is not a number costs that entry, not the map, and one folded section key that
+  they are — one transposition or tempo that is not a number costs that entry, not the map, and one folded section key that
   is not text costs that key — and the local source copies such a
   file to `preferences.json.bad` before anything can be saved over it. The text size is clamped to `UserPreferences`'
-  range on the way in, so a hand edit or a newer version's value never reaches the song screen as it is. A setlist that does not decode is skipped and
+  range on the way in, so a hand edit or a newer version's value never reaches the song screen as it is, and so are the metronome's volume, its tempo and the stored tempos (one out of range is dropped); the metronome's ids are checked where they are read into its types, in `:presentation`. A setlist entry's `tempo` is read by a serializer of its own, like the date's: a whole number within the range is itself, anything else (`"fast"`, `96.5`, `0`) is null, since a plain `Int?` meeting one would fail the whole setlist; a null tempo is left out of the file, so a setlist nobody gave one stays byte for byte what it was. A setlist that does not decode is skipped and
   left alone, as before. A setlist naming a song twice is read as naming it once (the first mention wins), written
   back that way, and handed back that way from a save, since the screens key their rows by the song's file name and the
   caller caches the model the save returns rather than reading the file again. `SetlistDocumentFormat` reads and

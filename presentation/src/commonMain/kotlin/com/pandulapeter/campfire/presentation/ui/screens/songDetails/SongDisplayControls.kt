@@ -15,6 +15,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
@@ -32,7 +34,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.lerp
@@ -57,6 +62,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_transpose_u
 import com.pandulapeter.campfire.presentation.resources.song_editor_transpose_text_down
 import com.pandulapeter.campfire.presentation.resources.song_editor_transpose_text_up
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
 import org.jetbrains.compose.resources.painterResource
 
@@ -224,6 +230,8 @@ private fun fontScaleLabel(fontScale: Float) = "${(fontScale * 100).roundToInt()
  *
  * @param valueKey What decides whether a new [value] cross-fades in or replaces the old one in place: only a change
  * of the key is animated.
+ * @param repeatsOnHold Whether a button held down keeps stepping, faster the longer it is held, for a value that is a
+ * long way from where it starts: fine for a tempo, while a semitone or a text size is a few taps away at most.
  */
 @Composable
 internal fun Stepper(
@@ -241,6 +249,7 @@ internal fun Stepper(
     onIncrease: () -> Unit,
     resetLabel: String?,
     onReset: (() -> Unit)?,
+    repeatsOnHold: Boolean = false,
 ) = Surface(
     modifier = modifier.height(HEIGHT),
     shape = CircleShape,
@@ -254,6 +263,7 @@ internal fun Stepper(
                 icon = decreaseIcon,
                 label = decreaseLabel,
                 isEnabled = canDecrease,
+                repeatsOnHold = repeatsOnHold,
                 onClick = onDecrease,
             )
             StepperValue(
@@ -267,29 +277,60 @@ internal fun Stepper(
                 icon = increaseIcon,
                 label = increaseLabel,
                 isEnabled = canIncrease,
+                repeatsOnHold = repeatsOnHold,
                 onClick = onIncrease,
             )
         }
     }
 }
 
+/**
+ * One end of a [Stepper]. Held down with [repeatsOnHold] it steps on its own after a moment, faster and faster, and the
+ * release that ends a hold is not one more step: a tap still steps once, on its release, like any button, which is
+ * also what a keyboard or a screen reader activating it does.
+ */
 @Composable
 private fun StepperButton(
     icon: Painter,
     label: String,
     isEnabled: Boolean,
+    repeatsOnHold: Boolean,
     onClick: () -> Unit,
-) = IconButton(
-    modifier = Modifier.size(width = BUTTON_WIDTH, height = HEIGHT),
-    enabled = isEnabled,
-    onClick = onClick,
 ) {
-    Icon(
-        modifier = Modifier.size(ICON_SIZE),
-        painter = icon,
-        contentDescription = label,
-    )
+    val interactionSource = remember { MutableInteractionSource() }
+    val holdState = remember { HoldState() }
+    if (repeatsOnHold) {
+        val isPressed by interactionSource.collectIsPressedAsState()
+        val currentOnClick by rememberUpdatedState(onClick)
+        LaunchedEffect(isPressed) {
+            if (!isPressed) return@LaunchedEffect
+            holdState.hasRepeated = false
+            delay(HOLD_REPEAT_DELAY_MILLIS)
+            var interval = HOLD_REPEAT_FIRST_INTERVAL_MILLIS.toFloat()
+            while (true) {
+                holdState.hasRepeated = true
+                currentOnClick()
+                delay(interval.toLong())
+                interval = maxOf(HOLD_REPEAT_FASTEST_INTERVAL_MILLIS.toFloat(), interval * HOLD_REPEAT_ACCELERATION)
+            }
+        }
+    }
+    IconButton(
+        modifier = Modifier.size(width = BUTTON_WIDTH, height = HEIGHT),
+        enabled = isEnabled,
+        interactionSource = interactionSource,
+        onClick = { if (holdState.hasRepeated) holdState.hasRepeated = false else onClick() },
+    ) {
+        Icon(
+            modifier = Modifier.size(ICON_SIZE),
+            painter = icon,
+            contentDescription = label,
+        )
+    }
 }
+
+/** Whether the press being released was a hold that already stepped. Not a state: nothing is drawn from it. */
+private class HoldState(var hasRepeated: Boolean = false)
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -333,6 +374,11 @@ private data class StepperLabel(
     val value: String,
     val key: Any,
 )
+
+private const val HOLD_REPEAT_DELAY_MILLIS = 400L
+private const val HOLD_REPEAT_FIRST_INTERVAL_MILLIS = 150L
+private const val HOLD_REPEAT_FASTEST_INTERVAL_MILLIS = 30L
+private const val HOLD_REPEAT_ACCELERATION = 0.85f
 
 private val HEIGHT = 40.dp
 private val BUTTON_WIDTH = 36.dp

@@ -312,6 +312,55 @@
     <string name="settings_version">%1$s verzió</string>
     <string name="settings_created_by">Készítette Pandula Péter</string>
 
+    <!-- Metronome screen -->
+    <string name="metronome">Metronóm</string>
+    <string name="metronome_start">Indítás</string>
+    <string name="metronome_stop">Leállítás</string>
+    <string name="metronome_tempo">Tempó</string>
+    <string name="metronome_tempo_decrease">Lassabban</string>
+    <string name="metronome_tempo_increase">Gyorsabban</string>
+    <string name="metronome_tempo_slider">Tempó, ütés percenként</string>
+    <string name="metronome_tap">Koppints</string>
+    <string name="metronome_tap_description">Tempó megadása koppintással</string>
+    <string name="metronome_time_signature">Ütemmutató</string>
+    <string name="metronome_beats_per_bar">Ütések ütemenként</string>
+    <string name="metronome_beat_unit">Hangérték</string>
+    <string name="metronome_beats_decrease">Kevesebb ütés</string>
+    <string name="metronome_beats_increase">Több ütés</string>
+    <string name="metronome_beat_unit_decrease">Hosszabb hang</string>
+    <string name="metronome_beat_unit_increase">Rövidebb hang</string>
+    <string name="metronome_accents">Hangsúlyok</string>
+    <string name="metronome_accents_hint">Koppints egy ütésre, hogy hangsúlyos, néma vagy újra egyszerű legyen.</string>
+    <!-- One beat of the bar as a screen reader reads it: its number and how it sounds (metronome_level_…). -->
+    <string name="metronome_beat_description">%1$d. ütés, %2$s</string>
+    <string name="metronome_level_accent">hangsúlyos</string>
+    <string name="metronome_level_normal">egyszerű</string>
+    <string name="metronome_level_muted">néma</string>
+    <string name="metronome_subdivision">Felosztás</string>
+    <string name="metronome_subdivision_none">Nincs</string>
+    <string name="metronome_subdivision_eighths">Nyolcadok</string>
+    <string name="metronome_subdivision_triplets">Triolák</string>
+    <string name="metronome_subdivision_sixteenths">Tizenhatodok</string>
+    <string name="metronome_sound">Hang</string>
+    <string name="metronome_sound_click">Kattanás</string>
+    <string name="metronome_sound_woodblock">Fadob</string>
+    <string name="metronome_sound_beep">Sípolás</string>
+    <string name="metronome_sound_sticks">Dobverők</string>
+    <string name="metronome_sound_cowbell">Kolomp</string>
+    <string name="metronome_volume">Hangerő</string>
+    <string name="metronome_flash">Villanás ütésre</string>
+    <string name="metronome_vibrate">Rezgés ütésre</string>
+    <string name="metronome_mute">Némítás</string>
+    <string name="metronome_mute_description">Az ütés csak látható, nem szól semmi.</string>
+    <string name="metronome_audio_unavailable">Nincs hangkimenet, ezért az ütés csak látható.</string>
+    <string name="metronome_audio_waiting">Koppints bárhová, hogy a böngésző lejátszhassa a hangot.</string>
+    <string name="metronome_stopped_refused">A metronóm most nem tud hangot adni, talán egy hívás miatt.</string>
+    <string name="metronome_stopped_interrupted">A metronóm egy hívás vagy egy másik alkalmazás miatt leállt.</string>
+    <string name="metronome_stopped_disconnected">A metronóm leállt, mert a hangeszköz lecsatlakozott.</string>
+    <string name="metronome_stopped_failed">A metronóm leállt, mert a hangkimenet hibát jelzett.</string>
+    <!-- The channel of the notification a playing metronome keeps up, as the system's settings list it. -->
+    <string name="metronome_notification_channel">Metronóm</string>
+
     <!-- Song editor screen -->
     <string name="song_editor_edit">Szöveg</string>
     <string name="song_editor_preview">Előnézet</string>
@@ -380,6 +429,11 @@
     <string name="song_details_transpose_up">Transzponálás felfelé</string>
     <string name="song_details_transpose_down">Transzponálás lefelé</string>
     <string name="song_details_transpose_reset">Transzponálás visszaállítása</string>
+    <string name="song_details_tempo_decrease">Lassabban</string>
+    <string name="song_details_tempo_increase">Gyorsabban</string>
+    <string name="song_details_tempo_reset">Tempó visszaállítása</string>
+    <string name="song_details_metronome_start">Metronóm indítása</string>
+    <string name="song_details_metronome_stop">Metronóm leállítása</string>
     <string name="song_details_scroll_to_top">Görgetés az elejére</string>
     <string name="song_details_text_size_increase">Szöveg nagyítása</string>
     <string name="song_details_text_size_decrease">Szöveg kicsinyítése</string>

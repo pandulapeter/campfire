@@ -28,6 +28,8 @@ import com.pandulapeter.campfire.data.source.remote.implementation.auth.isSyncRe
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.onSyncRedirectReceived
 import com.pandulapeter.campfire.presentation.ui.CampfireAndroidApp
 import com.pandulapeter.campfire.presentation.ui.platform.SyncNotification
+import com.pandulapeter.campfire.metronome.CampfireMetronomeService
+import com.pandulapeter.campfire.presentation.ui.platform.MetronomeNotification
 import com.pandulapeter.campfire.sync.CampfireSyncService
 
 class CampfireMainActivity : ComponentActivity() {
@@ -58,6 +60,7 @@ class CampfireMainActivity : ComponentActivity() {
                 urlOpener = ::openUrl,
                 filesToImport = filesToImport,
                 syncNotifier = ::onSyncNotificationChanged,
+                metronomeNotifier = ::onMetronomeNotificationChanged,
                 onAppReady = { isAppReady = true },
                 onAppIconChanged = { themeColor ->
                     appIconColor = themeColor
@@ -161,6 +164,29 @@ class CampfireMainActivity : ComponentActivity() {
             dismissSyncService()
         } else if (isLeaving) {
             startSyncService(notification)
+        }
+    }
+
+    /**
+     * Starts the metronome's service as a click starts, which is always a tap with the app in front, and hands it new
+     * words as they change. Nothing is done for a click that ended: the service follows the engine itself, since this
+     * activity may be gone by then.
+     */
+    private fun onMetronomeNotificationChanged(notification: MetronomeNotification?) {
+        if (notification == null) return
+        val intent = CampfireMetronomeService.intent(
+            context = this,
+            channelName = notification.channelName,
+            title = notification.title,
+            body = notification.body,
+            stopLabel = notification.stopLabel,
+        )
+        try {
+            if (CampfireMetronomeService.isRunning) startService(intent) else ContextCompat.startForegroundService(this, intent)
+        } catch (exception: Exception) {
+            // A notification that cannot be shown must never take the click down with it: it plays on, and only stops
+            // surviving the app being left.
+            println("Could not start the metronome service: ${exception.message}")
         }
     }
 

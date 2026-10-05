@@ -80,4 +80,36 @@ internal class SetlistDocumentFormatTest {
 
     @Test
     fun aDateThatIsTextIsKept() = assertEquals("2026-09-28", SetlistDocumentFormat.decode("""{"title":"S","date":"2026-09-28"}""").date)
+
+    @Test
+    fun aTempoRoundTripsAndIsLeftOutWhenNull() {
+        val text = """{"title":"S","songs":[{"file":"a.cho","tempo":96},{"file":"b.cho"}]}"""
+        val setlist = SetlistDocumentFormat.decode(text).toModel("s.setlist.json", size = 0)
+        assertEquals(listOf(96, null), setlist.entries.map { it.tempo })
+
+        val songs = Json.parseToJsonElement(SetlistDocumentFormat.encode(setlist.toDocument())).jsonObject.getValue("songs").jsonArray
+        assertEquals(JsonPrimitive(96), songs[0].jsonObject["tempo"])
+        assertFalse("tempo" in songs[1].jsonObject)
+    }
+
+    @Test
+    fun aTempoThatIsNotOneLosesOnlyItself() {
+        listOf("\"fast\"", "96.5", "0", "1000", "{}").forEach { tempo ->
+            val document = SetlistDocumentFormat.decode("""{"title":"S","songs":[{"file":"a.cho","tempo":$tempo,"transposition":2}]}""")
+
+            assertNull(document.songs.single().tempo)
+            assertEquals(2, document.songs.single().transposition)
+            assertEquals("S", document.title)
+        }
+    }
+
+    @Test
+    fun anUnknownMemberSurvivesBesideTheTempo() {
+        val text = """{"title":"S","songs":[{"file":"a.cho","tempo":96,"capo":2}]}"""
+        val rewritten = SetlistDocumentFormat.encode(SetlistDocumentFormat.decode(text).toModel("s.setlist.json", size = 0).toDocument())
+        val song = Json.parseToJsonElement(rewritten).jsonObject.getValue("songs").jsonArray.single().jsonObject
+
+        assertEquals(JsonPrimitive(96), song["tempo"])
+        assertEquals(JsonPrimitive(2), song["capo"])
+    }
 }

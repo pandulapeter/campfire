@@ -149,6 +149,10 @@ direction.
   Whether a binary served from the cache keeps Chromium's compiled-code cache between visits, as one from the HTTP
   cache does, is still to be measured on a warm launch in Chrome, Firefox and Safari; if not, the binaries are the
   two files worth an exception.
+- `src/wasmJsMain/resources/metronome-timer.js` — the metronome's wake-up: a dedicated worker posting a message every
+  25 ms between a `start` and a `stop`, which the web `AudioOutput` in `:metronome:implementation` schedules its next
+  clicks on (a hidden tab's own timers run at most once a second; a worker's do not). Loaded through
+  `campfireVersioned`, so the build's digest list, the kept copy and the offline launch cover it like every other file.
 - `src/wasmJsMain/resources/opfs-writer.js` — the dedicated worker `OpfsFileStorage` writes through where there is no
   `createWritable()`; a request is `{ id, path: [directory segments], name, data: bytes }`. It writes in place, so it grows the
   file to the new length first (a quota refusal then comes before anything is overwritten), writes until every byte is

@@ -53,6 +53,12 @@ data class UserPreferences(
     /** Song file name to semitones, for songs opened from the library rather than from a setlist. */
     val transpositions: Map<String, Int>,
     /**
+     * Song file name to beats per minute, for songs opened from the library rather than from a setlist: the twin of
+     * [transpositions], and like it never exported or synced. A song opened from a setlist reads its entry's
+     * `Setlist.Entry.tempo` instead, never this.
+     */
+    val tempos: Map<String, Int> = emptyMap(),
+    /**
      * Song file name to the sections (and the tabs and grids inside them) the reader has folded away on the song details
      * screen, as the opaque keys that screen names them by. One set per song, wherever the song is opened from: unlike a
      * transposition, which the band plays the song in, how much of it one reader keeps open is their own business, so it
@@ -75,6 +81,7 @@ data class UserPreferences(
     /** The order the library's languages are offered in, a standing choice of its own like [tagSortingMode]. */
     val languageSortingMode: LabelSortingMode,
     val printSettings: PrintSettings = PrintSettings(),
+    val metronomeSettings: MetronomeSettings = MetronomeSettings(),
     /** Versions already introduced here, including the first installed version whose introduction is skipped. */
     val seenWhatsNewVersions: Set<String> = emptySet(),
 ) {

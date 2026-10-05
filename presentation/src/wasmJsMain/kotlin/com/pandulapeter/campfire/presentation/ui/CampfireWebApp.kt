@@ -22,8 +22,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.presentation.ui.navigation.BrowserHistoryEffect
 import com.pandulapeter.campfire.presentation.ui.navigation.navigateToBrowserAddress
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
+import com.pandulapeter.campfire.presentation.ui.platform.LocalMetronomeNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.ProvideKeyboardInsets
 import com.pandulapeter.campfire.presentation.ui.platform.WebFilePicker
+import com.pandulapeter.campfire.presentation.ui.platform.WebMetronomeNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.appIconColor
 import com.pandulapeter.campfire.presentation.ui.platform.appIconThemeColor
 import com.pandulapeter.campfire.presentation.ui.platform.droppedFiles
@@ -55,7 +57,8 @@ import org.koin.compose.viewmodel.koinViewModel
 fun CampfireWebApp(
     viewModel: CampfireViewModel = koinViewModel(),
 ) = CompositionLocalProvider(
-    LocalFilePicker provides WebFilePicker
+    LocalFilePicker provides WebFilePicker,
+    LocalMetronomeNotifier provides WebMetronomeNotifier,
 ) {
     DisposableEffect(Unit) {
         startForwardingEscapeKey()
@@ -72,6 +75,8 @@ fun CampfireWebApp(
     remember(viewModel) { viewModel.navigateToBrowserAddress() }
     BrowserHistoryEffect(viewModel)
     SearchShortcutEffect(viewModel)
+    MetronomeShortcutEffect(viewModel)
+    LaunchedEffect(viewModel) { WebMetronomeNotifier.forEachStopRequest(viewModel::stopMetronome) }
     SongTextZoomEffect(viewModel)
     BrowserThemeColorEffect(viewModel)
     FaviconEffect(viewModel)
@@ -129,6 +134,30 @@ private fun SearchShortcutEffect(viewModel: CampfireViewModel) = DisposableEffec
     window.addEventListener(EVENT_KEY_DOWN, listener, true)
     onDispose { window.removeEventListener(EVENT_KEY_DOWN, listener, true) }
 }
+
+/**
+ * Space and M start and stop the metronome ([CampfireViewModel.toggleMetronomeByKey]). Unlike the search shortcut this
+ * listens in the bubbling phase and leaves alone whatever Compose already handled (a focused button, which Space
+ * presses) or what is typed into a field (the hidden input of a focused text field), so that the key only toggles the
+ * metronome where it would otherwise do nothing.
+ */
+@Composable
+private fun MetronomeShortcutEffect(viewModel: CampfireViewModel) = DisposableEffect(viewModel) {
+    val listener: (Event) -> Unit = listener@{ event ->
+        val keyEvent = event.unsafeCast<KeyboardEvent>()
+        if (keyEvent.defaultPrevented || keyEvent.ctrlKey || keyEvent.metaKey || keyEvent.altKey || isTypingTarget(keyEvent)) return@listener
+        val isSpace = when (keyEvent.code) {
+            "Space" -> true
+            "KeyM" -> false
+            else -> return@listener
+        }
+        if (viewModel.toggleMetronomeByKey(isSpace)) keyEvent.preventDefault()
+    }
+    window.addEventListener(EVENT_KEY_DOWN, listener)
+    onDispose { window.removeEventListener(EVENT_KEY_DOWN, listener) }
+}
+
+private fun isTypingTarget(event: KeyboardEvent): Boolean = js("event.target && (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA' || event.target.isContentEditable === true)")
 
 /**
  * Keeps the `theme-color` of the page - what Chrome on Android and the browsers built on it paint their toolbar and the
