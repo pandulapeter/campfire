@@ -24,9 +24,9 @@ object ChordProMetadataFields {
      * their own.
      *
      * How the song is played is here too — [KEY], [CAPO], [TEMPO] and [TIME] — as the values the song itself declares,
-     * which a setlist or a device may override where the song is read without ever touching the file. A later `{key}`
-     * is a modulation in the body rather than a second value of its field, so [KEY] edits the line the song starts in
-     * and leaves every other `{key}` where it stands.
+     * which a setlist or a device may override where the song is read without ever touching the file. A later `{key}`,
+     * `{tempo}` or `{time}` is a change in the body rather than a second value of its field, so [KEY], [TEMPO] and [TIME]
+     * edit the line the song starts in and leave every other line of theirs where it stands.
      */
     enum class Field(val directiveName: String) {
         TITLE("title"),
@@ -63,7 +63,8 @@ object ChordProMetadataFields {
      * Makes each value of [values] what the song says for its field, in one pass over [text]; a field not in [values]
      * is left alone. The line the parser reads the value from is rewritten where it stands, in the spelling it was
      * written in (`{t: …}` stays short, `{meta: title …}` stays a `meta`), and the other lines of the same field, which
-     * the parser reads past, are dropped — except for [Field.KEY], whose other lines are modulations. A field the song does not declare yet gets a line in the header, where
+     * the parser reads past, are dropped — except for [Field.KEY], [Field.TEMPO] and [Field.TIME], whose other lines are
+     * changes mid-song. A field the song does not declare yet gets a line in the header, where
      * [ChordProSyntax.metadataInsertionIndex] puts it. A null or blank value removes the field instead. A line break
      * in a value is read as a space, since it would otherwise end the directive and leave the rest in the song as
      * lyrics. A text that already says all of it returns unchanged.
@@ -76,15 +77,15 @@ object ChordProMetadataFields {
         val newValue = value?.replace('\r', ' ')?.replace('\n', ' ')?.trim()?.takeIf { it.isNotEmpty() }
         val lines = ChordProSyntax.splitLines(text)
         val indices = lines.indices.filter { lines[it].kind() == field.directiveName }
-        // The line the parser takes the value from: the first key that names one, since a later one is a modulation,
-        // and the last line that says anything of every other field. An empty line of the template stands in where
+        // The line the parser takes the value from: the first key, tempo or time signature that names one, since a later
+        // one is a change mid-song, and the last line that says anything of every other field. An empty line of the template stands in where
         // none says anything, so that filling a field in fills the line the new song was created with.
         val declaring = indices.filter { !lines[it].value().isNullOrEmpty() }
-        val effectiveIndex = if (field == Field.KEY) declaring.firstOrNull() ?: indices.firstOrNull() else declaring.lastOrNull() ?: indices.lastOrNull()
+        val effectiveIndex = if (field.isChangedInTheBody) declaring.firstOrNull() ?: indices.firstOrNull() else declaring.lastOrNull() ?: indices.lastOrNull()
         val kept = mutableListOf<String>()
         lines.forEachIndexed { index, line ->
             when {
-                index !in indices || (field == Field.KEY && index != effectiveIndex) -> kept += line
+                index !in indices || (field.isChangedInTheBody && index != effectiveIndex) -> kept += line
                 index == effectiveIndex && newValue != null -> kept += if (line.value() == newValue) line else line.rewritten(field, newValue)
             }
         }
@@ -93,6 +94,9 @@ object ChordProMetadataFields {
         }
         return if (kept == lines) text else ChordProSyntax.joinLines(kept, text)
     }
+
+    /** Whether a later line of this field is a change from where it stands rather than a duplicate the parser reads past. */
+    private val Field.isChangedInTheBody get() = this == Field.KEY || this == Field.TEMPO || this == Field.TIME
 
     private fun String.directive() = ChordProSyntax.matchDirective(trim())
 

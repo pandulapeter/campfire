@@ -105,8 +105,8 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   file on disk is the user's and half of it may be under the caret. Unknown directives are ignored; a directive with a
   selector suffix (`{title-guitar}`) is dropped, since there is nothing to match it against, and one with a negated
   selector (`{title-guitar!}`) is read as the directive it is on for the same reason; an environment with a selector is
-  the environment it selects, since its lines are the song itself; a song that changes key is in the key its first
-  `{key}` names; an empty `{key}`, `{capo}`, `{tempo}` or `{time}` (the new song template's) declares nothing and takes
+  the environment it selects, since its lines are the song itself; a song that changes key, tempo or time signature is in
+  the one its first `{key}`, `{tempo}` or `{time}` names; an empty `{key}`, `{capo}`, `{tempo}` or `{time}` (the new song template's) declares nothing and takes
   back nothing another line said; a `{transpose}` before the song's first line transposes the whole of it (`ChordProMetadata.transpose`,
   the last one there winning), and one further down is a modulation — a `ChordProBlock.Transpose` holding the offset
   from the whole-song value for everything after it, cutting the section it stands in the way a comment does — each
@@ -175,9 +175,9 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   `lyricist`, `album`, `year`, `duration`), for the song details' metadata dialog, plus the four of how it is played
   (`key`, `capo`, `tempo`, `time`), which the Song defaults sheet writes as the values the song itself declares and a
   setlist or a device may override where it is read (see `:presentation`). `set` rewrites the line the parser reads
-  each value from — the last one that says anything, or for `key` the first, since a later `{key}` is a modulation;
+  each value from — the last one that says anything, or for `key`, `tempo` and `time` the first, since a later one is a change mid-song;
   an empty line, the new song template's, where none does — where it stands and in its own spelling (`{t: …}`, a
-  `{meta: title …}`), drops the other lines of the same field (but never another `{key}`), writes a field the file lacks into the header by `metadataInsertionIndex`, and
+  `{meta: title …}`), drops the other lines of the same field (but never another `{key}`, `{tempo}` or `{time}`), writes a field the file lacks into the header by `metadataInsertionIndex`, and
   removes it for a blank value; editing the text for the reason `ChordProTags` does. `valueOf` reads a field back out
   of the model as text.
 - `ChordProDuration` — reads a `{duration}` value as seconds (`268`), `m:ss` or `h:mm:ss`, and anything else, zero

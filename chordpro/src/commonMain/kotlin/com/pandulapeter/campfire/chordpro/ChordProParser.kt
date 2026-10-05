@@ -624,12 +624,12 @@ object ChordProParser {
                 "lyricist" -> lyricist = value
                 "album" -> album = value
                 "year" -> year = value
-                // A later key is a modulation from where it stands; the song is in the key it starts in.
+                // A later key, tempo or time signature is a change from where it stands; the song starts in the first one. An
+                // empty line, the new song template's, says nothing rather than taking back what another one said.
                 "key" -> if (key.isNullOrEmpty()) key = value
                 "capo" -> value.toIntOrNull()?.let { capo = it }
-                // An empty line, the new song template's, says nothing rather than taking back what another one said.
-                "tempo" -> if (value.isNotEmpty()) tempo = value
-                "time" -> if (value.isNotEmpty()) time = value
+                "tempo" -> if (tempo.isNullOrEmpty()) tempo = value
+                "time" -> if (time.isNullOrEmpty()) time = value
                 "duration" -> duration = value
                 "tag" -> ChordProSyntax.tag(directive)?.let(::addTag)
                 "language", "lang" -> ChordProSyntax.language(directive)?.let(::addLanguage)

@@ -90,6 +90,20 @@ class ChordProMetadataFieldsTest {
     }
 
     @Test
+    fun `the tempo and the time signature are set on the lines the song starts in and leave their changes alone`() {
+        val text = "{title: T}\n{time: 4/4}\n{tempo: 90}\n[C]La\n{time: 3/4}\n{tempo: 140}\n[G]La"
+
+        assertEquals(
+            "{title: T}\n{time: 6/8}\n{tempo: 90}\n[C]La\n{time: 3/4}\n{tempo: 140}\n[G]La",
+            ChordProMetadataFields.set(text, mapOf(Field.TIME to "6/8")),
+        )
+        assertEquals(
+            "{title: T}\n{time: 4/4}\n{tempo: 100}\n[C]La\n{time: 3/4}\n{tempo: 140}\n[G]La",
+            ChordProMetadataFields.set(text, mapOf(Field.TEMPO to "100")),
+        )
+    }
+
+    @Test
     fun `the empty lines of the new song template are filled in where they stand`() {
         val template = "{title: T}\n{key: }\n{capo: }\n{tempo: }\n{time: }\n\nLa"
 

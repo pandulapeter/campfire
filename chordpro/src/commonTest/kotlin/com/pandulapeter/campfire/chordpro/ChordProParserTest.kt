@@ -850,6 +850,18 @@ class ChordProParserTest {
     }
 
     @Test
+    fun `a song is played at the tempo and time signature it starts in, and with its last capo`() {
+        val text = "{title: T}\n{time: 4/4}\n{tempo: 90}\n{capo: 1}\n[C]la\n{time: 3/4}\n{tempo: 140}\n{capo: 3}\n[G]la"
+
+        listOf(ChordProParser.parse(text).metadata, ChordProParser.summarize(text).metadata, ChordProParser.parseMetadata(text)).forEach {
+            assertEquals("4/4", it.time)
+            assertEquals("90", it.tempo)
+            assertEquals(3, it.capo)
+        }
+        assertEquals("96", ChordProParser.parseMetadata("{tempo: }\n{tempo: 96}").tempo)
+    }
+
+    @Test
     fun `the lines of an abc block are kept verbatim with no chords`() {
         val section = ChordProParser.parse("{start_of_abc}\nX:1\n[CEG]2 [A2B] |\n{end_of_abc}").blocks.single() as ChordProBlock.Section
 
