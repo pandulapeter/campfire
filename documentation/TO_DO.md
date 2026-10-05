@@ -11,8 +11,10 @@
 ## Bugs / issues
 - Overscroll bounce can make content on bottom sheets scroll underneath their header without fade
 - The Song details screen is still wasteful: too much padding. Even in one-column mode some sections could be displayed in two columns
+- Per-section metronome / time signature changes are not yet supported
 
 ## Improvements
+- Import the appearance of the Metronome screen
 - Support importing libraries from other apps
 - Rename master branch to main
 - Onboarding: integrate feature toggle-presets (singers, drummers, etc)

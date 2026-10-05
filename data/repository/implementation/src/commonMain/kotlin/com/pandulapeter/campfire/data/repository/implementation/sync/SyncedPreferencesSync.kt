@@ -104,10 +104,10 @@ internal class SyncedPreferencesSync(
             // Each device keeps its own spelling of a file that differs only by case or Unicode form, so all three sides
             // are put on one spelling per song before they are merged, or the merge would read one song as two. The
             // folder's spelling comes first, since every device reads the same folder and so settles on the same one.
-            val spellings = buildMap {
-                SyncedPreferencesDocument.songNamesOf(effectiveRemote).sorted().forEach { putIfAbsent(it.folded(), it) }
-                SyncedPreferencesDocument.songNamesOf(previous).sorted().forEach { putIfAbsent(it.folded(), it) }
-                localNames.forEach { (folded, name) -> putIfAbsent(folded, name) }
+            val spellings = mutableMapOf<String, String>().apply {
+                SyncedPreferencesDocument.songNamesOf(effectiveRemote).sorted().forEach { getOrPut(it.folded()) { it } }
+                SyncedPreferencesDocument.songNamesOf(previous).sorted().forEach { getOrPut(it.folded()) { it } }
+                localNames.forEach { (folded, name) -> getOrPut(folded) { name } }
             }
             val spelling = { name: String -> spellings[name.folded()] ?: name }
             val canonicalBase = previous?.let { SyncedPreferencesDocument.withSongsSpelled(it, spelling) }
