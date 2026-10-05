@@ -58,6 +58,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -113,6 +114,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_previous_so
 import com.pandulapeter.campfire.presentation.resources.song_details_scroll_down
 import com.pandulapeter.campfire.presentation.resources.song_details_scroll_to_top
 import com.pandulapeter.campfire.presentation.resources.song_details_scroll_up
+import com.pandulapeter.campfire.presentation.resources.song_details_song_info
 import com.pandulapeter.campfire.presentation.resources.song_details_song_position
 import com.pandulapeter.campfire.presentation.resources.song_details_text_size
 import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
@@ -394,11 +396,22 @@ internal fun SongDetailsScreen(
                 }
             },
             title = {
+                // The title and the cover are the heading of the sheet of what the song is, so a tap on them opens it
+                // once there is nothing left to scroll back to. The scroll is read here rather than in the screen's
+                // own body, so that passing the top recomposes the bar's title alone.
+                val isScrolledToTop by remember { derivedStateOf { (currentPageScrollState?.value ?: 0) == 0 } }
+                val songInfoAtTop = currentSongInfoAction?.takeIf { isScrolledToTop && it.isEnabled }
                 AnimatedContent(
                     modifier = Modifier.titleTouchTarget(
-                        isEnabled = currentSong != null,
-                        onClickLabel = stringResource(Res.string.song_details_scroll_to_top),
-                        onClick = { currentPageScrollState?.let { coroutineScope.launch { it.animateScrollTo(0) } } },
+                        isEnabled = currentSong != null && (songInfoAtTop != null || !isScrolledToTop),
+                        onClickLabel = stringResource(if (songInfoAtTop == null) Res.string.song_details_scroll_to_top else Res.string.song_details_song_info),
+                        onClick = {
+                            if (songInfoAtTop == null) {
+                                currentPageScrollState?.let { coroutineScope.launch { it.animateScrollTo(0) } }
+                            } else {
+                                songInfoAtTop.onClick()
+                            }
+                        },
                     ),
                     targetState = currentSong,
                     transitionSpec = { fadeIn() togetherWith fadeOut() },
@@ -1134,9 +1147,10 @@ private suspend fun ScrollState.scrollByKeyStep(direction: Float) = animateScrol
 )
 
 /**
- * The app bar's title as the touch target that scrolls the song back to its top, the way tapping the bar does on a
- * phone. It is the whole of the bar that nothing else takes: as wide as the room the bar leaves the title and as tall
- * as the bar, so that a tap anywhere on its empty part scrolls. The bar pads that room by [TITLE_TOUCH_HORIZONTAL_OUTSET]
+ * The app bar's title as the touch target of what the caller does with a tap on it — scrolling the song back to its
+ * top, the way tapping the bar does on a phone, and opening the sheet of what the song is once it is already there.
+ * It is the whole of the bar that nothing else takes: as wide as the room the bar leaves the title and as tall
+ * as the bar, so that a tap anywhere on its empty part counts. The bar pads that room by [TITLE_TOUCH_HORIZONTAL_OUTSET]
  * at either end and centers the title in its height, and the target reaches out over both while reporting only the room
  * itself, so the bar lays out the back button, the title and the actions exactly as it would without it. The outset
  * stops where the touch targets of the back button and the actions begin: the bar places the title after the back
