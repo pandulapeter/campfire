@@ -461,7 +461,7 @@ internal fun SongDetailsScreen(
                         ?.let { effectiveTempo(song = it, setlistFileName = destination.setlistFileName, tempos = tempos).displayedBpm }
                         ?.let { stringResource(Res.string.song_details_tempo, it.toString()) }
                     // The duration only inside a setlist, as the song's card there says it, since a set is what is
-                    // timed by its songs; and, as there, in lyrics only mode too, since the singer is timed by it alike.
+                    // timed by its songs; and, as there, with the chords switched off too, since the singer is timed by it alike.
                     val headerDuration = song?.takeIf { destination.setlistFileName != null }?.duration?.let(ChordProDuration::format)
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -1263,7 +1263,7 @@ private suspend fun ScrollState.scrollByKeyStep(direction: Float) = animateScrol
  * the dot a song card uses: the key it sounds in, in the accent color that color is kept for, and the tempo it is
  * played at. Crossfaded where it stands and the line closing up around it, since both change under the reader — a
  * transposition, a capo or a tempo stepped in the song's own first section, a preference synced in from another device
- * — and since lyrics only mode takes the key away altogether.
+ * — and since the chords switched off take the key away altogether.
  *
  * A 16dp dot rather than the cards' 24dp one: the two lines of the title are exactly as tall as the cover beside them,
  * and a 24dp box on the lower one grows the bar and with it the room the lyrics are laid out in.

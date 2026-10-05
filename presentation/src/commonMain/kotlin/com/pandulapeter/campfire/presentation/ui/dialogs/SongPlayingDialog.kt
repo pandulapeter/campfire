@@ -77,15 +77,16 @@ import kotlin.math.absoluteValue
 
 /**
  * "Song defaults": what the song's own file declares for the four values it is played by — its key, its capo, its
- * tempo and its time signature — opened from the song details editing menu, edited as a draft and written on Save, the
- * fields changed and only those.
+ * tempo and its time signature — opened from the song details editing menu and from the About the song sheet's Song
+ * defaults group, edited as a draft and written on Save, the fields changed and only those.
  *
  * The song's first section has a stepper for three of them, and those never touch the file: they override it for the
  * setlist the song is read through, or in the preferences for a song opened from the library. That difference is the
  * whole of what makes the four controls confusing, and the page has no room to explain it without putting the app's
  * own words among the song's, so it is explained here, where the two meet: the sheet opens with a line saying which
- * is which, and where the song is being played differently from its file, a card names how and takes it back. Values
- * set here that match an override make it no override at all, since an override equal to the file's value is none.
+ * is which, and where the song is being played differently from its file, a card names how and takes it back. An
+ * override equal to a value set here is no longer shown or named, since it plays what the file says; it is kept, so a
+ * setlist that was told 100 still says 100 if the file later moves to 110.
  *
  * Every field may be left empty, which declares nothing and lets the default stand — no key, no capo, the click's
  * [MetronomePattern.DEFAULT_BPM] and [TimeSignature.COMMON_TIME] — and the placeholders say what that default is.
@@ -215,7 +216,7 @@ internal class SongPlayingOverrides(
 )
 
 /**
- * The overrides of [song] read through [setlistFileName], or in the library on this device where it is null. Only those
+ * The overrides of [song] read through [setlistFileName], or in the library where it is null. Only those
  * of the features switched on: the transposition and the capo go with the chords, and the transposition with a song
  * that has some, the tempo with the metronome, and an override nobody is shown is not one to be named or taken back
  * either.

@@ -855,7 +855,7 @@ start, which is what the rest of `app/web` is about — see its `CLAUDE.md`.
   localized page that asks it to close or continue in the first, which keeps OPFS from changing behind the running
   app's cached repositories.
 - **Every screen has an address, and the browser's history is the app's back stack**: `/` is the songs, then
-  `search`, `setlists`, `setlists/search`, `settings/{general,features,songs,library,about}`, `song/{song}`, `song/{song}/edit`,
+  `search`, `setlists`, `setlists/search`, `metronome`, `settings/{general,features,songs,library,about}`, `song/{song}`, `song/{song}/edit`,
   `setlist/{setlist}/{song}` and `import`, one history entry per step a back gesture would take — a dialog, a sheet or a
   menu open over a screen is one too, and so is the setlist reorder mode, at the screen's address (`:presentation`'s
   `ui/navigation/BrowserHistory.kt`). The app decides and the history follows — pushed, replaced or gone back through

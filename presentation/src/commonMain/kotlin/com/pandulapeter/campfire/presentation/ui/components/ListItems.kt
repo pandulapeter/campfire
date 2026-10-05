@@ -138,10 +138,10 @@ import kotlin.time.Duration
  *   the artist. Null for a file that declares none.
  * @param tempo The tempo the song is played at where it is listed, the override of that listing applied. Null where
  *   neither the file nor an override names one, since the metronome's default says nothing about this song.
- * @param shouldShowChords False under lyrics only mode, where the row says nothing about chords at all: not the
+ * @param shouldShowChords False with the Chords switch off, where the row says nothing about chords at all: not the
  *   key, and not the "Lyrics only" marker either, which only tells this song from the others while the others are
  *   showing chords.
- * @param duration The song's duration, shown on the Setlists screen even in lyrics only mode.
+ * @param duration The song's duration, shown on the Setlists screen even with the chords switched off.
  * @param labelsOnEverySong The tags and languages the row leaves off, because every song in the library carries
  *   them and a label that is on every row tells the reader nothing about this one.
  * @param shouldShowLabels False inside a setlist, which lists the songs somebody wrote down rather than a view of the
@@ -329,7 +329,7 @@ private data class SongListItemNote(
  * stands in front of it.
  *
  * The note changes under the reader: a transposition or a capo renames the key, a stepper in a setlist moves the
- * tempo, and lyrics only mode takes the key away altogether. So it is crossfaded where it stands and the line closes
+ * tempo, and the chords switched off take the key away altogether. So it is crossfaded where it stands and the line closes
  * up around it, rather than the row being redrawn around the change. The color is resolved inside rather than carried
  * by the state, since the scheme is interpolated on every frame of a theme change and each of those frames would
  * start another crossfade.

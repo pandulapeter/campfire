@@ -177,8 +177,9 @@ internal fun songInfoEditingActions(editing: SongInfoEditing): List<ActionsMenuI
 )
 
 /**
- * Opens the "Song defaults" sheet from the song details editing menu, the one way into it: what the file declares for
- * the four values the song is played by, next to what [setlistFileName] (or this device) overrides of them.
+ * Opens the "Song defaults" sheet from the song details editing menu (the About the song sheet's Song defaults group
+ * opens it too): what the file declares for the four values the song is played by, next to what [setlistFileName] (or
+ * the library) overrides of them.
  */
 @Composable
 internal fun songPlayingAction(

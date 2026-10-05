@@ -34,7 +34,7 @@ data class UserPreferences(
     val areSetlistsEnabled: Boolean,
     /**
      * Whether the app has a metronome: its tab, the song details screen's click and panel, and the tempo and time
-     * signature wherever a song is read. The Song defaults sheet still edits both, since that is the file.
+     * signature wherever a song is read. The Song defaults sheet leaves them out too; the file keeps them.
      */
     val isMetronomeEnabled: Boolean,
     /**
