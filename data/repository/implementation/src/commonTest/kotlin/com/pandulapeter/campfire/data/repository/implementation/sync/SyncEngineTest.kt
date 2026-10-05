@@ -28,6 +28,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.yield
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -953,6 +955,28 @@ class SyncEngineTest {
         assertEquals(10, assertIs<SyncEngine.Result.Completed>(result).summary.uploaded)
         assertEquals(library.keys, local.files.keys)
         assertEquals(library.keys, provider.files.keys)
+    }
+
+    @Test
+    fun `keeping the files a run asked about forgets their synced preferences`() = runTest {
+        val library = librarySongs(10)
+        val local = FakeLibraryFileLocalSource(files = library)
+        val songs = (library.keys.map { it.name } + "elsewhere.cho").associateWith { JsonObject(mapOf("capo" to JsonPrimitive(2))) }
+
+        val result = SyncEngine(local, LibraryFileLock()).synchronize(
+            provider = FakeSyncProvider(),
+            document = indexOf(*library.toList().toTypedArray()).copy(
+                syncedPreferences = JsonObject(mapOf("version" to JsonPrimitive(1), "songs" to JsonObject(songs))),
+            ),
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+            onLocalFileChanged = {},
+            deletionPolicy = SyncDeletionPolicy.KEEP_AND_UPLOAD,
+        )
+
+        val synced = assertIs<SyncEngine.Result.Completed>(result).index.syncedPreferences
+        assertEquals(setOf("elsewhere.cho"), (synced?.get("songs") as? JsonObject)?.keys)
     }
 
     @Test

@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.repository.implementation.sync
 
 import com.pandulapeter.campfire.data.model.domain.ImportLimits
+import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionDirection
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.domain.SyncProgress
@@ -128,7 +129,7 @@ internal class SyncEngine(
         // An index written for a different account describes a different remote folder, and acting on it would read
         // that folder's absent files as deletions of this one's songs.
         var index = document.takeIf { it.accountId == accountId }?.toIndex().orEmpty()
-        val syncedPreferences = document.syncedPreferences.takeIf { document.accountId == accountId }
+        var syncedPreferences = document.syncedPreferences.takeIf { document.accountId == accountId }
         var summary = SyncSummary()
 
         // Two passes at most. A file that a second device changed between this run's listing and its upload comes
@@ -196,7 +197,16 @@ internal class SyncEngine(
                 // here, is not there and has no index entry is planned as an upload.
                 val localKeys = local.mapTo(mutableSetOf()) { it.key }
                 val remoteKeys = remote.mapTo(mutableSetOf()) { it.key }
+                val forgottenSongs = index.keys
+                    .filter { it.kind == LibraryFileKind.SONG && it in localKeys && it !in remoteKeys }
+                    .mapTo(mutableSetOf()) { it.name.normalizedToNfc().lowercase() }
                 index = index.filterKeys { it !in localKeys || it in remoteKeys }
+                // The same for what is set for those songs in preferences.json: with the base still naming them, the
+                // preferences step would read the folder's document, which another device emptied with its library,
+                // as removing their overrides, while this device was asked to keep the songs and so keeps those too.
+                syncedPreferences = syncedPreferences?.let { base ->
+                    SyncedPreferencesDocument.withSongsWhere(base) { it.normalizedToNfc().lowercase() !in forgottenSongs }
+                }
             }
             if (deletionPolicy == SyncDeletionPolicy.KEEP_AND_DOWNLOAD) {
                 // The same the other way round: a file that is there, is not here and has no index entry is a

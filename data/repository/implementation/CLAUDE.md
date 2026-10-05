@@ -211,7 +211,8 @@ and a repository that has not been read yet rescans instead, since there is no l
   device first, and the repository reports it as the run's outcome, refreshing whatever an earlier pass of the same
   run had already moved. `DELETE_LOCALLY` and `DELETE_REMOTELY` apply such a plan as it is;
   `KEEP_AND_UPLOAD` first drops the index entries of every file that is here and not there, which the planner then
-  reads as new local files, and `KEEP_AND_DOWNLOAD` those of every file that is there and not here, which it reads as
+  reads as new local files — and drops those songs from the last synced `preferences.json` too, so that their
+  overrides travel back with them rather than following a folder another device emptied — and `KEEP_AND_DOWNLOAD` those of every file that is there and not here, which it reads as
   new remote ones. An answer waives the guard of its own direction only, so a run told to delete here still stops if it
   would also empty the cloud folder. The policy is a parameter of the one run it was given to, never state. A failure on one file does not end a run; only the three failures
   that make every further call pointless (the credentials refused, the service unreachable, the remote folder full)

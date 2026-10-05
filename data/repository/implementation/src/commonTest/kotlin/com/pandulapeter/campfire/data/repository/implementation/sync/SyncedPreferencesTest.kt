@@ -288,6 +288,16 @@ class SyncedPreferencesTest {
         )
     }
 
+    @Test
+    fun `a song the base does not name keeps what is set here against an emptied folder`() = runTest {
+        val provider = FakeSyncProvider()
+        provider.documents[SyncedPreferencesDocument.FILE_NAME] = encoded("""{}""") to "r1"
+        val preferences = FakeUserPreferencesRepository(defaultUserPreferences(capos = mapOf("a.cho" to 2)))
+        sync(preferences, library("a.cho")).synchronize(provider, base = document("""{}"""), keptFileNames = emptyList())
+        assertEquals(mapOf("a.cho" to 2), preferences.current.capos)
+        assertEquals(mapOf("a.cho" to 2), SyncedPreferencesDocument.preferencesOf(remoteDocumentOf(provider)).capos)
+    }
+
     private fun assertUnreadableDocumentIsReplaced(bytes: ByteArray) = runTest {
         val provider = FakeSyncProvider()
         provider.documents[SyncedPreferencesDocument.FILE_NAME] = bytes to "r1"
