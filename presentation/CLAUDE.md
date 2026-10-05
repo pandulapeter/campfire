@@ -265,15 +265,27 @@ shared controls.
   `toggleMetronome` starts the context's pattern with its origin, or stops. A click that stops on its own is a
   `Message.MetronomeStopped` snackbar naming why. Space (on the tab) and M (on a song) toggle it on the desktop and the
   web (`toggleMetronomeByKey`), under no dialog or menu.
-- **The Metronome tab** (`ui/screens/metronome/`) is the third top level destination, laid out by `SettingsPage` (two
-  sections side by side where there is room): the tempo, large, over a stepper whose value is the Italian marking (not
-  translated: notation) and whose buttons repeat while held (`Stepper`'s `repeatsOnHold`), tap tempo and a slider; the
+- **The metronome panel** (`MetronomePanel.kt`) is up for as long as a click plays, on every screen, and always on the
+  Metronome tab: `MetronomePanelScaffold` wraps the navigation scaffold in `CampfireContent` and lays the app out next
+  to it — a 56dp bar across the top of a window taller than it is wide, a column down the end edge of a wider one
+  (`containerDpSize`) — expanding in from that edge and shrinking back into it, so a click stopped anywhere but on the
+  tab takes the panel with it and the song details bar's button, which starts one, brings it back. It holds play and
+  stop (`PlayStopMark`, morphing), a small read-only `BeatRow` and the tempo of what the click plays for
+  (`metronomeContext`) in a `Stepper` (`isVertical` in the column) that writes where that tempo lives
+  (`stepMetronomeTempo`, `resetMetronomeTempo`: the song's override or the tab's own), the number alone for a song in
+  performance mode or from an archived setlist. The panel covers the insets of its edge, and what it covers follows
+  its size frame by frame (`MetronomePanelInsets`, state written as the panel is measured): consumed for everything
+  that pads by modifier, and excluded from the paddings `CampfireScreens` makes by hand. Dialogs and sheets cover it;
+  the export screen does not.
+- **The Metronome tab** (`ui/screens/metronome/`) is the third top level destination and the rest of the instrument
+  next to the panel, laid out by `SettingsPage` (two sections side by side where there is room): the Italian marking
+  the tempo falls under (not translated: notation), tap tempo and a slider; the
   beat row (`BeatRow`, resting in fainter shades of the second accent color and lit from the heard beats in the full
   one — shades of one color, since every palette but the app's own has no second accent apart from the primary — a tap cycling a beat through accent, plain
   and muted, stored per signature); the time signature (common ones as chips, two steppers for the rest), subdivision,
   sound (a tap previews it), volume, and the Flash, Vibrate (where `rememberBeatHaptics` has a vibrator) and Mute
-  switches; and the line saying why nothing is heard (`audioIssue`). The floating action button morphs between play
-  and stop (`PlayStopMark`). The screen is kept on while a click plays. Every way onto it clears the back stack, so no
+  switches; and the line saying why nothing is heard (`audioIssue`). It has no play button of its own. The screen is
+  kept on while a click plays. Every way onto it clears the back stack, so no
   song is behind it.
 - **On the song details screen** the `MetronomeButton` (a metronome mark becoming stop, pulsing on every heard beat
   unless the flash is off) is the first thing the bar gives room to (`appBarButtons.isMetronomeShown`) and the first

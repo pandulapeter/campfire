@@ -38,6 +38,7 @@ import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.metronome.api.model.BeatLevel
 import com.pandulapeter.campfire.metronome.api.model.MetronomeBeat
@@ -56,6 +57,9 @@ import kotlinx.coroutines.flow.filter
  * One block per beat of the bar, as tall as the beat is loud (a muted one only an outline) and resting in a fainter shade
  * of the second accent color, lit in the full color as each is heard - from the heard-time beats alone, so the flash agrees with the ear - and fading down to the
  * next. A tap moves a beat on from accent to plain to muted and round again, which is the whole of the accent editor.
+ *
+ * @param blockHeight How tall an accent is drawn; the metronome panel's row is a small one.
+ * @param onBeatLevelsChanged Null for a row that only shows the bar, whose blocks take no press.
  */
 @Composable
 internal fun BeatRow(
@@ -64,7 +68,9 @@ internal fun BeatRow(
     beats: Flow<MetronomeBeat>,
     isPlaying: Boolean,
     isFlashEnabled: Boolean,
-    onBeatLevelsChanged: (List<BeatLevel>) -> Unit,
+    blockHeight: Dp = MAX_BLOCK_HEIGHT,
+    blockGap: Dp = BLOCK_GAP,
+    onBeatLevelsChanged: ((List<BeatLevel>) -> Unit)?,
 ) {
     var litBeat by remember { mutableIntStateOf(-1) }
     val flash = remember { Animatable(0f) }
@@ -87,8 +93,8 @@ internal fun BeatRow(
         }
     }
     Row(
-        modifier = modifier.fillMaxWidth().heightIn(min = MAX_BLOCK_HEIGHT),
-        horizontalArrangement = Arrangement.spacedBy(BLOCK_GAP),
+        modifier = modifier.fillMaxWidth().heightIn(min = blockHeight),
+        horizontalArrangement = Arrangement.spacedBy(blockGap),
         verticalAlignment = Alignment.Bottom,
     ) {
         beatLevels.forEachIndexed { index, level ->
@@ -96,8 +102,9 @@ internal fun BeatRow(
                 modifier = Modifier.weight(1f),
                 index = index,
                 level = level,
+                maxHeight = blockHeight,
                 flash = { if (litBeat == index) flash.value else 0f },
-                onClick = { onBeatLevelsChanged(beatLevels.toMutableList().apply { set(index, level.next()) }) },
+                onClick = onBeatLevelsChanged?.let { { it(beatLevels.toMutableList().apply { set(index, level.next()) }) } },
             )
         }
     }
@@ -108,14 +115,15 @@ private fun BeatBlock(
     modifier: Modifier = Modifier,
     index: Int,
     level: BeatLevel,
+    maxHeight: Dp,
     flash: () -> Float,
-    onClick: () -> Unit,
+    onClick: (() -> Unit)?,
 ) {
     val height by animateDpAsState(
         when (level) {
-            BeatLevel.ACCENT -> MAX_BLOCK_HEIGHT
-            BeatLevel.NORMAL -> MAX_BLOCK_HEIGHT * 0.6f
-            BeatLevel.MUTED -> MAX_BLOCK_HEIGHT * 0.3f
+            BeatLevel.ACCENT -> maxHeight
+            BeatLevel.NORMAL -> maxHeight * 0.6f
+            BeatLevel.MUTED -> maxHeight * 0.3f
         }
     )
     // The blocks at rest are fainter shades of the color they flash in rather than colors of their own: only the app's
@@ -141,7 +149,7 @@ private fun BeatBlock(
             }
         ),
     )
-    val shape = RoundedCornerShape(8.dp)
+    val shape = RoundedCornerShape(minOf(8.dp, maxHeight / 6))
     Box(
         modifier = modifier
             .height(height)
@@ -149,7 +157,7 @@ private fun BeatBlock(
             .then(if (level == BeatLevel.MUTED) Modifier.border(1.dp, outlineColor, shape) else Modifier)
             // Drawn rather than composed from the flash, so that a beat repaints the block instead of recomposing the row.
             .drawBehind { drawRect(lerp(baseColor, flashColor, flash())) }
-            .clickable(role = Role.Button, onClick = onClick)
+            .then(if (onClick == null) Modifier else Modifier.clickable(role = Role.Button, onClick = onClick))
             .semantics { contentDescription = description },
     )
 }

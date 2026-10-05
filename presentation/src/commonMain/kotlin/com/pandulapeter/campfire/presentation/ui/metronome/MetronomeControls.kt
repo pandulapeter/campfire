@@ -72,7 +72,7 @@ import kotlinx.coroutines.flow.filter
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * The play and stop mark of the Metronome tab's button, morphing from one into the other: the triangle's three corners
+ * The play and stop mark of the metronome panel's button, morphing from one into the other: the triangle's three corners
  * (one of them doubled) travel to the square's four, so the change reads as one shape becoming another rather than as
  * two icons swapping.
  */

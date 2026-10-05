@@ -657,7 +657,7 @@ the only possible one. The per-module `CLAUDE.md` files carry the detail; the sh
 
 ## Metronome
 
-A third tab and a one-tap click on every song, playing on with the screen locked. Nothing about it reaches the
+A third tab, a one-tap click on every song and a panel of controls that follows a playing click across the app, playing on with the screen locked. Nothing about it reaches the
 network. The module `CLAUDE.md` files carry the detail (`metronome/*`, `presentation`); the short version:
 
 - **Timing is by sample count, never by a timer**: `:metronome:implementation`'s `MetronomeSequencer` places every click
@@ -680,8 +680,12 @@ network. The module `CLAUDE.md` files carry the detail (`metronome/*`, `presenta
   worker-timed Web Audio scheduler and a best-effort media session (`app/web`); the desktop needs nothing. Each audio
   output owns the platform's focus or session: a call refuses or stops the click, as do headphones pulled and another
   app taking the audio, and a click that stopped on its own says why. Swiping the app away on Android stops it.
-- Performance mode keeps the play button and hides the per-song tempo stepper, as it hides the transposition; the tab
-  stays fully usable there. Settings (sound, subdivision, accents per signature, volume, flash, vibrate, mute) are
+- **A small panel of controls is up wherever a click plays**: play and stop, the beats of the bar and the tempo with
+  its stepper, as a bar across the top of a portrait window and a column down the end edge of a landscape one, the app
+  laid out next to it. Stopping the click takes it away and starting one (the song details bar's button) brings it
+  back; on the Metronome tab it is always there, and the tab's screen is everything else the instrument has.
+- Performance mode keeps the play button and hides the per-song tempo stepper, in the panel too, as it hides the
+  transposition; the tab stays fully usable there. Settings (sound, subdivision, accents per signature, volume, flash, vibrate, mute) are
   `UserPreferences.metronomeSettings`.
 
 ## Cover art

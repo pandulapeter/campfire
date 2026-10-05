@@ -2405,6 +2405,25 @@ class CampfireViewModel(
     fun updateMetronomeSettings(change: MetronomeSettings.() -> MetronomeSettings) =
         _pendingMetronomeSettings.update { (it ?: metronomeSettings.value).change() }
 
+    /**
+     * One step of the metronome panel's stepper, which moves the tempo of whatever the click plays for: the song's,
+     * where it is opened, or the Metronome tab's own.
+     */
+    fun stepMetronomeTempo(delta: Int) {
+        when (val context = metronomeContext) {
+            MetronomeContext.Standalone -> updateMetronomeSettings { copy(bpm = MetronomePattern.coerceBpm(bpm + delta)) }
+            is MetronomeContext.Song -> stepTempo(songFileName = context.songFileName, setlistFileName = context.setlistFileName, delta = delta)
+        }
+    }
+
+    /** The metronome panel's value tapped: back to the song's own tempo, or to the default one on the Metronome tab. */
+    fun resetMetronomeTempo() {
+        when (val context = metronomeContext) {
+            MetronomeContext.Standalone -> updateMetronomeSettings { copy(bpm = MetronomePattern.DEFAULT_BPM) }
+            is MetronomeContext.Song -> resetTempo(songFileName = context.songFileName, setlistFileName = context.setlistFileName)
+        }
+    }
+
     /** The tempo a song plays at where it is opened, the override waiting to be written included. */
     internal fun effectiveTempoOf(songFileName: String, setlistFileName: String?) =
         effectiveTempo(song = songsByFileName.value[songFileName], setlistFileName = setlistFileName, tempos = tempos.value, songFileName = songFileName)

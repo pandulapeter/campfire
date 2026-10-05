@@ -17,11 +17,14 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
@@ -232,6 +235,8 @@ private fun fontScaleLabel(fontScale: Float) = "${(fontScale * 100).roundToInt()
  * of the key is animated.
  * @param repeatsOnHold Whether a button held down keeps stepping, faster the longer it is held, for a value that is a
  * long way from where it starts: fine for a tempo, while a semitone or a text size is a few taps away at most.
+ * @param isVertical Stands the pill on its end, the increase button on top, for a column too narrow for it lying down
+ * (the metronome's side panel).
  */
 @Composable
 internal fun Stepper(
@@ -250,36 +255,57 @@ internal fun Stepper(
     resetLabel: String?,
     onReset: (() -> Unit)?,
     repeatsOnHold: Boolean = false,
+    isVertical: Boolean = false,
 ) = Surface(
-    modifier = modifier.height(HEIGHT),
+    modifier = if (isVertical) modifier.width(HEIGHT) else modifier.height(HEIGHT),
     shape = CircleShape,
     color = MaterialTheme.colorScheme.surfaceContainerHighest,
 ) {
     // The buttons are laid out at the size of the pill, so the touch target enforcement of the icon buttons has
     // to be lowered to match, or it would grow them back to 48dp and the pill would no longer fit them.
     CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides minOf(HEIGHT, BUTTON_WIDTH)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        val decreaseButton = @Composable {
             StepperButton(
                 icon = decreaseIcon,
                 label = decreaseLabel,
                 isEnabled = canDecrease,
                 repeatsOnHold = repeatsOnHold,
+                isVertical = isVertical,
                 onClick = onDecrease,
             )
+        }
+        val stepperValue = @Composable {
             StepperValue(
                 value = value,
                 valueKey = valueKey,
                 isDefault = isDefault,
                 resetLabel = resetLabel,
                 onReset = onReset,
+                isVertical = isVertical,
             )
+        }
+        val increaseButton = @Composable {
             StepperButton(
                 icon = increaseIcon,
                 label = increaseLabel,
                 isEnabled = canIncrease,
                 repeatsOnHold = repeatsOnHold,
+                isVertical = isVertical,
                 onClick = onIncrease,
             )
+        }
+        if (isVertical) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                increaseButton()
+                stepperValue()
+                decreaseButton()
+            }
+        } else {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                decreaseButton()
+                stepperValue()
+                increaseButton()
+            }
         }
     }
 }
@@ -295,6 +321,7 @@ private fun StepperButton(
     label: String,
     isEnabled: Boolean,
     repeatsOnHold: Boolean,
+    isVertical: Boolean,
     onClick: () -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -316,7 +343,7 @@ private fun StepperButton(
         }
     }
     IconButton(
-        modifier = Modifier.size(width = BUTTON_WIDTH, height = HEIGHT),
+        modifier = if (isVertical) Modifier.size(width = HEIGHT, height = BUTTON_WIDTH) else Modifier.size(width = BUTTON_WIDTH, height = HEIGHT),
         enabled = isEnabled,
         interactionSource = interactionSource,
         onClick = { if (holdState.hasRepeated) holdState.hasRepeated = false else onClick() },
@@ -340,6 +367,7 @@ private fun StepperValue(
     isDefault: Boolean,
     resetLabel: String?,
     onReset: (() -> Unit)?,
+    isVertical: Boolean,
 ) {
     // A progress value instead of an animated color, so that the label follows the color scheme immediately while it
     // is animating between the light and the dark theme (a color animation would chase it and trail behind).
@@ -349,16 +377,15 @@ private fun StepperValue(
     )
     val color = lerp(MaterialTheme.colorScheme.onSurface, MaterialTheme.colorScheme.primary, changedProgress)
     AnimatedContent(
-        modifier = Modifier.fillMaxHeight(),
+        modifier = if (isVertical) Modifier.fillMaxWidth() else Modifier.fillMaxHeight(),
         targetState = StepperLabel(value = value, key = valueKey),
         transitionSpec = { fadeIn() togetherWith fadeOut() },
         contentKey = { it.key },
     ) { label ->
         Text(
-            modifier = Modifier
-                .fillMaxHeight()
+            modifier = (if (isVertical) Modifier.fillMaxWidth().height(VERTICAL_VALUE_HEIGHT) else Modifier.fillMaxHeight())
                 .clickable(enabled = !isDefault && onReset != null, onClickLabel = resetLabel) { onReset?.invoke() }
-                .widthIn(min = VALUE_MIN_WIDTH)
+                .widthIn(min = if (isVertical) 0.dp else VALUE_MIN_WIDTH)
                 .wrapContentHeight(),
             text = label.value,
             style = MaterialTheme.typography.labelLarge,
@@ -383,6 +410,7 @@ private const val HOLD_REPEAT_ACCELERATION = 0.85f
 private val HEIGHT = 40.dp
 private val BUTTON_WIDTH = 36.dp
 private val VALUE_MIN_WIDTH = 44.dp
+private val VERTICAL_VALUE_HEIGHT = 32.dp
 
 /** How wide a stepper is drawn, at least, for the app bar that has to leave its title room beside one. */
 internal val STEPPER_WIDTH = BUTTON_WIDTH * 2 + VALUE_MIN_WIDTH
