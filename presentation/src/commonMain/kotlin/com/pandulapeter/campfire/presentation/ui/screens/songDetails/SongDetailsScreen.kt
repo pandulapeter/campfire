@@ -89,6 +89,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.offset
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pandulapeter.campfire.chordpro.ChordProDuration
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.Setlist
@@ -439,6 +440,9 @@ internal fun SongDetailsScreen(
                     val headerTempo = song
                         ?.let { effectiveTempo(song = it, setlistFileName = destination.setlistFileName, tempos = tempos).displayedBpm }
                         ?.let { stringResource(Res.string.song_details_tempo, it.toString()) }
+                    // The duration only inside a setlist, as the song's card there says it, since a set is what is
+                    // timed by its songs; and, as there, in lyrics only mode too, since the singer is timed by it alike.
+                    val headerDuration = song?.takeIf { destination.setlistFileName != null }?.duration?.let(ChordProDuration::format)
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
@@ -488,6 +492,11 @@ internal fun SongDetailsScreen(
                                     text = headerTempo,
                                     isEmphasized = false,
                                     hasPrecedingContent = song?.artist?.isNotBlank() == true || headerKey != null,
+                                )
+                                SongHeaderNote(
+                                    text = headerDuration,
+                                    isEmphasized = false,
+                                    hasPrecedingContent = song?.artist?.isNotBlank() == true || headerKey != null || headerTempo != null,
                                 )
                             }
                         }

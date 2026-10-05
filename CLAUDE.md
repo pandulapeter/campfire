@@ -284,7 +284,8 @@ localized in both languages.
   the reader's own, at the end of that menu. **The key the band actually hears is named in the app bar**, after the
   artist and the way a song card names it: the transposition *and* the capo applied, so it is the key the song sounds
   in rather than the one the chords on the page spell, which is the Transposition control's — the two read differently
-  wherever the capo is not zero. The tempo the click would play at follows it there, as it does on a card.
+  wherever the capo is not zero. The tempo the click would play at follows it there, as it does on a card, and inside a setlist the song's duration
+  after that, as its card there has it.
 - **The app is shipped with two songs and one setlist**, in
   `presentation/src/commonMain/composeResources/files/demo`: public domain campfire standards, bundled as the plain
   ChordPro and setlist files they are and reaching the library through the ordinary import, so they collide, are
