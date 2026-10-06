@@ -27,7 +27,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -38,7 +37,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,16 +44,15 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.metronome.api.TapTempo
-import com.pandulapeter.campfire.metronome.api.model.BeatLevel
 import com.pandulapeter.campfire.metronome.api.model.MetronomeBeat
 import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
+import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
 import com.pandulapeter.campfire.metronome.api.model.TimeSignature
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -82,8 +79,7 @@ import com.pandulapeter.campfire.presentation.ui.screens.songDetails.STEPPER_HEI
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.Stepper
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.scaled
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.StateFlow
 import kotlin.math.floor
 import org.jetbrains.compose.resources.painterResource
 
@@ -161,57 +157,36 @@ private val STOP_CORNERS = listOf(Offset(6f, 6f), Offset(18f, 6f), Offset(18f, 1
 /**
  * The song details screen's metronome: the mark that shows and hides the panel the click is played from, in the primary
  * color while the panel is up, as a control that is switched on, and pulsing on every heard beat (a little larger on an
- * accent) unless the flash is off. It is not the second accent the beat row under it is drawn in: the app's own palette
- * darkens that orange for text on its light half, and a whole filled mark in it reads as red rather than as the fire.
+ * accent) unless the Animate switch is off. It is not the second accent the beat row under it is drawn in: the app's own
+ * palette darkens that orange for text on its light half, and a whole filled mark in it reads as red rather than as the
+ * fire.
  * While the panel is up that pulse is the growing alone, the mark being in its color already and the panel's own beat
- * row being right under it. The content description says the tempo the click
- * would start at, since that is all a screen reader user would otherwise not know.
+ * row being right under it. Its pendulum swings with the click, see [rememberMetronomeIconBeat]. The content description
+ * says the tempo the click would start at, since that is all a screen reader user would otherwise not know.
  */
 @Composable
 internal fun MetronomeButton(
     modifier: Modifier = Modifier,
     isPanelShown: Boolean,
-    isPlaying: Boolean,
+    playback: StateFlow<MetronomePlayback>,
     bpm: Int,
     beats: Flow<MetronomeBeat>,
     isFlashEnabled: Boolean,
     onClick: () -> Unit,
 ) {
-    val pulse = remember { Animatable(0f) }
-    // Not gated on isPlaying, as the beat row is not: the first beat can be heard before the composition knows the click
-    // plays, and the engine emits no beat while it does not.
-    val shouldFlash by rememberUpdatedState(isFlashEnabled)
-    LaunchedEffect(beats) {
-        // The latest beat cuts the fade of the one before it short, so that a fade longer than a beat of a fast tempo
-        // never leaves the pulse behind the click.
-        beats.filter { !it.isSubdivision }.collectLatest { beat ->
-            if (shouldFlash) {
-                pulse.snapTo(if (beat.level == BeatLevel.ACCENT) 1f else 0.6f)
-                pulse.animateTo(0f)
-            }
-        }
-    }
-    LaunchedEffect(isPlaying) { if (!isPlaying) pulse.snapTo(0f) }
-    val accentColor = MaterialTheme.colorScheme.primary
-    val baseColor by animateColorAsState(if (isPanelShown) accentColor else LocalContentColor.current)
+    val baseColor by animateColorAsState(if (isPanelShown) MaterialTheme.colorScheme.primary else LocalContentColor.current)
     IconButton(
         modifier = modifier,
         onClick = onClick,
     ) {
-        Icon(
-            modifier = Modifier.graphicsLayer {
-                val scale = 1f + pulse.value * PULSE_SCALE
-                scaleX = scale
-                scaleY = scale
-            },
-            painter = painterResource(Res.drawable.ic_metronome),
+        MetronomeIcon(
+            beat = rememberMetronomeIconBeat(playback = playback, beats = beats, isEnabled = isFlashEnabled),
             contentDescription = metronomePanelLabel(isPanelShown = isPanelShown, bpm = bpm),
-            tint = lerp(baseColor, accentColor, pulse.value.coerceIn(0f, 1f)),
+            tint = baseColor,
         )
     }
 }
 
-private const val PULSE_SCALE = 0.25f
 
 /** [MetronomeButton] as an entry of the song details overflow menu, for a bar that has no room for the button. */
 @Composable

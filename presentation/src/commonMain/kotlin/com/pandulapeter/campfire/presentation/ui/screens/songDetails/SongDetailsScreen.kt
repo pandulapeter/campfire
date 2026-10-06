@@ -320,7 +320,7 @@ internal fun SongDetailsScreen(
     val metronomeButton: @Composable () -> Unit = {
         MetronomeButton(
             isPanelShown = isMetronomePanelShown,
-            isPlaying = isMetronomePlaying,
+            playback = viewModel.metronomePlayback,
             bpm = currentTempo?.bpm ?: MetronomePattern.DEFAULT_BPM,
             beats = viewModel.metronomeBeats,
             isFlashEnabled = metronomeSettings.isVisualBeatEnabled,

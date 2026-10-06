@@ -8,18 +8,18 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 # To do
-## Short-term (in this version)
+## Short-term (in the next version)
 ### Bugs / issues
-- No way to enter BPM using the keyboard
 
 ### Improvements
 - Multi-select for songs: documentation/plans/multi-select.md
 - Duplicate song button
+- Find a way to allow entering tempo using the keyboard
 
 ## Mid-term (in the next versions)
 - Haptic effects, especially for the fast scroller
-- Add support for Latin and Nashville notations
-- Chord diagrams (guitar, ukulele, keyboard) - user library, variations
+- Add support for Latin and Nashville notations: documentation/plans/latin-nashville-notation.md
+- Chord diagrams (guitar, ukulele, keyboard): documentation/plans/?.md
 - Tuner: documentation/plans/tuner.md
 - Comments in setlists (between songs)
 - Simplify adding comments / annotations to songs

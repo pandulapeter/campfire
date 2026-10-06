@@ -135,7 +135,6 @@ import com.pandulapeter.campfire.presentation.resources.ic_settings
 import com.pandulapeter.campfire.metronome.api.model.BeatLevel
 import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
 import com.pandulapeter.campfire.metronome.api.model.MetronomeStopReason
-import com.pandulapeter.campfire.presentation.resources.ic_metronome
 import com.pandulapeter.campfire.presentation.resources.metronome
 import com.pandulapeter.campfire.presentation.resources.metronome_notification_channel
 import com.pandulapeter.campfire.presentation.resources.metronome_stop
@@ -145,6 +144,9 @@ import com.pandulapeter.campfire.presentation.resources.metronome_stopped_interr
 import com.pandulapeter.campfire.presentation.resources.metronome_stopped_refused
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeContext
+import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeIcon
+import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeIconBeat
+import com.pandulapeter.campfire.presentation.ui.metronome.rememberMetronomeIconBeat
 import com.pandulapeter.campfire.presentation.ui.platform.LocalMetronomeNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.MetronomeNotification
 import com.pandulapeter.campfire.presentation.ui.platform.rememberBeatHaptics
@@ -207,7 +209,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -507,6 +508,12 @@ private fun CampfireContent(
         }
     }
     val chromeInScreens = isChromeInScreens || isTopLevelScreenCovered
+    val metronomeSettings by viewModel.metronomeSettings.collectAsStateWithLifecycle()
+    val metronomeBeat = rememberMetronomeIconBeat(
+        playback = viewModel.metronomePlayback,
+        beats = viewModel.metronomeBeats,
+        isEnabled = metronomeSettings.isVisualBeatEnabled,
+    )
 
     NavigationChromeScaffold(
         // Painted here as well as on every screen, so that the two screens of a cross fading tab transition blend
@@ -518,6 +525,7 @@ private fun CampfireContent(
                 kind = chromeKind,
                 destinations = topLevelDestinations,
                 currentTopLevelDestination = backStack.lastOrNull { it is CampfireDestination.TopLevel } as? CampfireDestination.TopLevel,
+                metronomeBeat = metronomeBeat,
                 onDestinationSelected = viewModel::selectTopLevelDestination,
             )
         },
@@ -530,6 +538,7 @@ private fun CampfireContent(
             chromeKind = chromeKind,
             chromeSize = chromeSize,
             chromeInScreens = chromeInScreens,
+            metronomeBeat = metronomeBeat,
             onNavigationTransitionRunningChanged = { isNavigationTransitionRunning = it },
         )
     }
@@ -552,6 +561,7 @@ private fun CampfireScreens(
     chromeKind: NavigationChromeKind,
     chromeSize: NavigationChromeSize,
     chromeInScreens: Boolean,
+    metronomeBeat: MetronomeIconBeat,
     onNavigationTransitionRunningChanged: (Boolean) -> Unit,
 ) {
     val backStack = viewModel.backStack
@@ -631,6 +641,7 @@ private fun CampfireScreens(
                     kind = chromeKind,
                     destinations = topLevelDestinations,
                     currentTopLevelDestination = destination,
+                    metronomeBeat = metronomeBeat,
                     onDestinationSelected = viewModel::selectTopLevelDestination,
                 )
             }
@@ -1103,12 +1114,15 @@ private val EXPANDED_NAVIGATION_RAIL_TOP_PADDING = 4.dp
  *   The item of one that is not is disabled while it shrinks away, so that it takes no tap and no focus and is not
  *   announced, and drawn in its unselected colors when disabled, since a disabled item is dimmed - in one frame on the
  *   wide rail - and nothing but the shrink should change on screen.
+ * @param metronomeBeat Where the Metronome item's icon is in the beat, see [rememberMetronomeIconBeat]: one state for
+ *   every copy of the chrome, so that a copy drawn under a card moves in step with the shared one.
  */
 @Composable
 private fun NavigationChrome(
     kind: NavigationChromeKind,
     destinations: List<CampfireDestination.TopLevel>,
     currentTopLevelDestination: CampfireDestination.TopLevel?,
+    metronomeBeat: MetronomeIconBeat,
     onDestinationSelected: (CampfireDestination.TopLevel) -> Unit,
 ) {
     if (kind == NavigationChromeKind.EXPANDED_RAIL) {
@@ -1131,7 +1145,7 @@ private fun NavigationChrome(
                         colors = WideNavigationRailItemDefaults.colors().let {
                             it.copy(disabledIconColor = it.unselectedIconColor, disabledTextColor = it.unselectedTextColor)
                         },
-                        icon = { Icon(painter = painterResource(destination.icon), contentDescription = null) },
+                        icon = { DestinationIcon(destination = destination, metronomeBeat = metronomeBeat) },
                         label = {
                             Text(
                                 text = stringResource(destination.label),
@@ -1157,7 +1171,7 @@ private fun NavigationChrome(
                         colors = NavigationRailItemDefaults.colors().let {
                             it.copy(disabledIconColor = it.unselectedIconColor, disabledTextColor = it.unselectedTextColor)
                         },
-                        icon = { Icon(painter = painterResource(destination.icon), contentDescription = null) },
+                        icon = { DestinationIcon(destination = destination, metronomeBeat = metronomeBeat) },
                         label = { Text(stringResource(destination.label)) },
                     )
                 }
@@ -1179,7 +1193,7 @@ private fun NavigationChrome(
                         colors = NavigationBarItemDefaults.colors().let {
                             it.copy(disabledIconColor = it.unselectedIconColor, disabledTextColor = it.unselectedTextColor)
                         },
-                        icon = { Icon(painter = painterResource(destination.icon), contentDescription = null) },
+                        icon = { DestinationIcon(destination = destination, metronomeBeat = metronomeBeat) },
                         label = { Text(stringResource(destination.label)) },
                     )
                 }
@@ -1518,13 +1532,17 @@ private fun Modifier.coveredScreenScrim(color: Color, coverage: () -> Float) = d
 private val Scene<CampfireDestination>.zIndex: Float
     get() = previousEntries.size.toFloat()
 
-private val CampfireDestination.TopLevel.icon: DrawableResource
-    get() = when (this) {
-        CampfireDestination.Songs -> Res.drawable.ic_songs
-        CampfireDestination.Setlists -> Res.drawable.ic_setlists
-        CampfireDestination.Metronome -> Res.drawable.ic_metronome
-        CampfireDestination.Settings -> Res.drawable.ic_settings
-    }
+/** The icon of a navigation item, the Metronome's swinging and pulsing with the click. */
+@Composable
+private fun DestinationIcon(
+    destination: CampfireDestination.TopLevel,
+    metronomeBeat: MetronomeIconBeat,
+) = when (destination) {
+    CampfireDestination.Songs -> Icon(painter = painterResource(Res.drawable.ic_songs), contentDescription = null)
+    CampfireDestination.Setlists -> Icon(painter = painterResource(Res.drawable.ic_setlists), contentDescription = null)
+    CampfireDestination.Metronome -> MetronomeIcon(beat = metronomeBeat, contentDescription = null)
+    CampfireDestination.Settings -> Icon(painter = painterResource(Res.drawable.ic_settings), contentDescription = null)
+}
 
 private val CampfireDestination.TopLevel.label: StringResource
     get() = when (this) {

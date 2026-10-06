@@ -793,7 +793,7 @@ Nothing about it reaches the network. The module `CLAUDE.md` files carry the det
   song details screen's own stepper with its Tap segment, its Italian marking and a slider across the range, the time
   signature (chips, and two steppers with a slash between them, under a line saying that the bar above is tapped
   to accent or mute a beat) and the subdivision as a segmented row of the clicks per beat — and, on a card since it holds for a song's click too, how it reaches the player:
-  the sound as chips, the volume, and the flash and vibrate switches.
+  the sound as chips, the volume, and the animate and vibrate switches.
 - Performance mode keeps the play button, and the panel has no tempo stepper to hide; the song's own line of text says
   the tempo there, as it says the transposition. The tab stays fully usable. Settings (sound, subdivision, accents per signature, volume, flash, vibrate) are
   `UserPreferences.metronomeSettings`; there is no mute of its own, since a volume of zero leaves the click running

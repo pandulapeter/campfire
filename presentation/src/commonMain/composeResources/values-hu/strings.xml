@@ -343,7 +343,7 @@
     <string name="metronome_sound_hi_hat">Lábcin</string>
     <string name="metronome_sound_cowbell">Kolomp</string>
     <string name="metronome_volume">Hangerő</string>
-    <string name="metronome_flash">Villanás ütésre</string>
+    <string name="metronome_animate">Animáció ütésre</string>
     <string name="metronome_vibrate">Rezgés ütésre</string>
     <string name="metronome_audio_unavailable">Nincs hangkimenet, ezért az ütés csak látható.</string>
     <string name="metronome_audio_waiting">Koppints bárhová, hogy a böngésző lejátszhassa a hangot.</string>

@@ -31,7 +31,7 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.metronome_accent_hint
 import com.pandulapeter.campfire.presentation.resources.metronome_audio_unavailable
 import com.pandulapeter.campfire.presentation.resources.metronome_audio_waiting
-import com.pandulapeter.campfire.presentation.resources.metronome_flash
+import com.pandulapeter.campfire.presentation.resources.metronome_animate
 import com.pandulapeter.campfire.presentation.resources.metronome_sound
 import com.pandulapeter.campfire.presentation.resources.metronome_subdivision
 import com.pandulapeter.campfire.presentation.resources.metronome_subdivision_description
@@ -184,7 +184,7 @@ private fun MetronomeSoundOptions(
         )
     }
     SwitchListItem(
-        title = stringResource(Res.string.metronome_flash),
+        title = stringResource(Res.string.metronome_animate),
         isChecked = settings.isVisualBeatEnabled,
         onCheckedChange = { value -> viewModel.updateMetronomeSettings { copy(isVisualBeatEnabled = value) } },
     )

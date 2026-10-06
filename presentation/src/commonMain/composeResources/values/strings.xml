@@ -343,7 +343,7 @@
     <string name="metronome_sound_hi_hat">Hi-hat</string>
     <string name="metronome_sound_cowbell">Cowbell</string>
     <string name="metronome_volume">Volume</string>
-    <string name="metronome_flash">Flash on the beat</string>
+    <string name="metronome_animate">Animate on the beat</string>
     <string name="metronome_vibrate">Vibrate on the beat</string>
     <string name="metronome_audio_unavailable">There is no sound output, so the beat is only shown.</string>
     <string name="metronome_audio_waiting">Tap anywhere to let the browser play the sound.</string>

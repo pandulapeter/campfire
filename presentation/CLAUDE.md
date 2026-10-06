@@ -345,13 +345,19 @@ shared controls.
   of the clicks per beat as numbers (1 to 4), since the note value a beat is cut into depends on the bar and the words
   for them do not fit a phone side by side —
   and how it reaches the player (`MetronomeSoundOptions`, on a `SettingsCard` as the library tab's sync section is,
-  since unlike the first section it is how every click is played, a song's included): the sound (a tap previews it) as chips, the volume — whose zero is the mute, so there is no switch for one — and the Flash and Vibrate switches (the
+  since unlike the first section it is how every click is played, a song's included): the sound (a tap previews it) as chips, the volume — whose zero is the mute, so there is no switch for one — and the Animate and Vibrate switches (the
   latter where `rememberBeatHaptics` has a vibrator). The screen is kept on while a click plays. Every way onto it clears the back stack, so no song is
   behind it.
 - **On the song details screen** the `MetronomeButton` **shows and hides the panel** rather than starting the click
   (`toggleMetronomePanel`: opening it starts nothing, and closing it stops a click that is playing). Its mark stays the
-  metronome, in the primary color while the panel is up (the light half of the app's own palette darkens the second accent for text, and a filled mark in it reads as red) and pulsing on every heard beat unless the flash is off —
-  the growing alone there, the mark being in that color already and the panel's beat row being right under it. Outside read only mode it is always in the bar, whatever its width; read only, it stands next to the
+  metronome, in the primary color while the panel is up (the light half of the app's own palette darkens the second accent for text, and a filled mark in it reads as red) and pulsing on every heard beat unless the Animate switch is off —
+  the growing alone there, the mark being in that color already and the panel's beat row being right under it. **Its
+  pendulum swings with the click**, and the Metronome item in the navigation bar and the rails both swings and pulses
+  the same way (`MetronomeIcon`, the mark as two drawables, `ic_metronome_body` and `ic_metronome_pendulum`, the second
+  turned about its pivot, driven by `rememberMetronomeIconBeat`): the pendulum is at an end of its arc on every heard
+  beat and swings to the other over one beat at the playing tempo, which is read from `playback` as the beat arrives,
+  each beat restarting the swing from wherever the pendulum is, so it never drifts from the ear; the Animate switch
+  stills both, and a stopped click lets the pendulum back to the mark as drawn. Outside read only mode it is always in the bar, whatever its width; read only, it stands next to the
   text size stepper (`showsMetronomeInPerformanceBar`), going into the menu before the stepper. M still starts and
   stops the click itself, which opens the panel with it. The tempo
   (`TempoStepper`: the stepper, highlighted while overridden and reset by a tap on its value, with the Tap segment
