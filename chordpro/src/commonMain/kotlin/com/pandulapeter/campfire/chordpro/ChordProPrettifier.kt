@@ -24,6 +24,9 @@ object ChordProPrettifier {
         val environments = mutableListOf<String>()
         var isHeader = true
         var gapBeforeNext = false
+        // A legacy heading section or an implicit paragraph is open: a blank line would close it, where a comment or a
+        // break standing in it only cuts it in two and leaves the rest its continuation.
+        var isImplicitSectionRunning = false
 
         fun flushMetadata() {
             output += metadata.sortedBy { it.first }.map { it.second }
@@ -77,27 +80,43 @@ object ChordProPrettifier {
                 if (end != null) {
                     val index = environments.indexOfLast { it == end }
                     if (index >= 0) environments.subList(index, environments.size).clear()
-                    if (environments.isEmpty() && end != "tab" && end != "grid") gapBeforeNext = true
+                    if (environments.isEmpty() && end != "tab" && end != "grid") {
+                        gapBeforeNext = true
+                        isImplicitSectionRunning = false
+                    }
                 }
                 continue
             }
 
             if (trimmed.isEmpty()) {
                 gap()
+                isImplicitSectionRunning = false
                 continue
             }
             val isLineMode = start == "tab" || start == "grid"
-            if (gapBeforeNext || (start != null && !isLineMode) || directive?.name in ChordProSyntax.blockNames ||
+            val isLegacyHeading = directive != null && directive.name in plainCommentNames &&
+                ChordProParser.isLegacyHeading(directive.value.orEmpty())
+            // The blank line a block directive and a break get around them would turn the rest of the section into a
+            // section of its own, so none is added where they only cut the one that is running. A recall or a heading
+            // closes it anyway.
+            val cutsRunningSection = isImplicitSectionRunning && directive != null && start == null && directive.name != "chorus" &&
+                directive.name in ChordProSyntax.blockNames && !isLegacyHeading
+            if (gapBeforeNext || (start != null && !isLineMode) || (directive?.name in ChordProSyntax.blockNames && !cutsRunningSection) ||
                 directive?.name == "new_song" || directive?.name == "ns") gap()
             gapBeforeNext = false
             output += if (directive == null) rawLine else trimmed
+            when {
+                directive == null || isLegacyHeading || isLineMode -> isImplicitSectionRunning = true
+                start != null || directive.name == "chorus" || directive.name == "new_song" || directive.name == "ns" ->
+                    isImplicitSectionRunning = false
+            }
             when {
                 start != null -> environments += start
                 directive?.name == "new_song" || directive?.name == "ns" -> {
                     isHeader = true
                     gap()
                 }
-                directive?.name in breakNames || end != null -> gapBeforeNext = true
+                (directive?.name in breakNames && !cutsRunningSection) || end != null -> gapBeforeNext = true
             }
         }
         flushMetadata()
@@ -163,6 +182,8 @@ object ChordProPrettifier {
             return indices[chosen]
         }
     }
+
+    private val plainCommentNames = setOf("comment", "c")
 
     private val breakNames = setOf("chorus", "new_page", "np", "new_physical_page", "npp", "column_break", "colb")
 }

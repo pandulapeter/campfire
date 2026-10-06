@@ -283,7 +283,12 @@ object ChordSheetConverter {
                     val next = ((index + 1)..lines.lastIndex).firstOrNull { kinds[it] != Kind.BLANK }
                     if (type == "chorus" && (next == null || kinds[next] == Kind.SECTION)) output += "{chorus}"
                     else if (type != null) { output += "{start_of_$type: ${label}}"; environment = type }
-                    else output += "{comment: ${label}}"
+                    else {
+                        // A heading the parser does not take for a section ends the lyrics before it only after a blank
+                        // line; without one it would be a comment inside them, and what follows their continuation.
+                        if (output.lastOrNull()?.isNotBlank() == true) output += ""
+                        output += "{comment: ${label}}"
+                    }
                 }
                 Kind.TAB -> { if (!inTab) { output += "{start_of_tab}"; inTab = true }; output += line.text }
                 Kind.CHORD -> {

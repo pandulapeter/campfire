@@ -360,6 +360,9 @@ object ChordProParser {
         section.addBlock(ChordProBlock.Comment(text, style))
     }
 
+    /** Whether a plain `{comment}` reading [text] is a Campfire 3 heading, which opens a section rather than cutting one. */
+    internal fun isLegacyHeading(text: String) = legacyHeading(text.trim()) != null
+
     private fun legacyHeading(text: String): SectionType? {
         val firstWord = text.takeWhile { it.isLetter() || it == '-' }
         return if (firstWord.isEmpty()) null else legacyHeadings[firstWord.lowercase()]

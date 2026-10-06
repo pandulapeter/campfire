@@ -63,6 +63,7 @@ class ChordProPrettifierTest {
             "Hello [G]world", "More [C]words", "", "{chorus}",
             "{sot}\ne|--0--|\n{eot}", "{sot}\ne|--0--|\n\ne|-1-|\n{eot}",
             "{sog}\n | G . | C . |\n{eog}", "{soc}\n[C]Sing\n{eoc}", "{sov}\nVerse\n{eov}",
+            "{c: Chorus}", "{c: x2}", "{ci: softly}", "{np}",
         )
         repeat(2000) {
             val raw = List(random.nextInt(1, 7)) { fragments[random.nextInt(fragments.size)] }.joinToString("\n")
@@ -92,6 +93,19 @@ class ChordProPrettifierTest {
     fun `comments separate headings without separating them from their following lyrics`() {
         assertEquals("{c: Verse}\nWords\n\n{c: Chorus}\nSing\n\n{chorus}\n\n{np}\n\nMore\n",
             ChordProPrettifier.prettify("{c: Verse}\nWords\n{c: Chorus}\nSing\n{chorus}\n{np}\nMore"))
+    }
+
+    @Test
+    fun `a comment or a break inside a heading section stays inside it`() {
+        listOf(
+            "{c: Chorus}\nLine one\n{c: x2}\nLine two\n\n{chorus}",
+            "{c: Chorus}\nLine one\n{np}\nLine two\n\n{chorus}",
+            "Line one\n{c: note}\nLine two",
+        ).forEach { raw ->
+            val formatted = ChordProPrettifier.prettify(raw)
+            assertEquals(ChordProParser.parse(raw).blocks, ChordProParser.parse(formatted).blocks, raw)
+            assertEquals(formatted, ChordProPrettifier.prettify(formatted), raw)
+        }
     }
 
     @Test

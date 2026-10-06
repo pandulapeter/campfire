@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.chordpro
 
+import com.pandulapeter.campfire.chordpro.model.ChordProBlock
+import com.pandulapeter.campfire.chordpro.model.CommentPlacement
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -25,6 +27,17 @@ class ChordSheetConverterTest {
         for (text in listOf("\ufeff{title: Song}\r\n[A]Hello\r\n{new_song}\r\n{title: Other}\r\n", "[G]Hello\r\n[C]world", "{t: Title}\n")) {
             assertEquals(text, convert(text))
         }
+    }
+
+    @Test
+    fun aHeadingTheParserDoesNotKnowStillEndsTheLyricsBeforeIt() {
+        val result = convert("Hello\nworld\nInterlude\nC   G")
+
+        assertTrue("world\n\n{comment: Interlude}" in result, result)
+        val comment = ChordProParser.parse(ChordProPrettifier.prettify(result)).blocks
+            .filterIsInstance<ChordProBlock.Comment>()
+            .single { it.text == "Interlude" }
+        assertEquals(CommentPlacement.BETWEEN_SECTIONS, comment.placement)
     }
 
     @Test

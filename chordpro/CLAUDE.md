@@ -35,7 +35,8 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   the header and sections, outside blank runs collapse and line endings become LF with a final newline. Source
   comments and settings anchor metadata groups; repeated directives keep their order, body key changes stay in
   place, and environment interiors retain their whitespace. No blank line is added around a tab or grid: it opens or
-  continues the running paragraph, which a blank line would split. A library file formatted with those extra blanks
+  continues the running paragraph, which a blank line would split — nor before a comment or a break inside a legacy
+  heading section or an implicit paragraph, which a blank line would close rather than cut. A library file formatted with those extra blanks
   by an older build is structurally different and asks about a conflict when the same source is imported again;
   existing files are not migrated. It preserves unsupported directives and delegated
   notation instead of serializing a parsed model. The editor overflow action and every import use it. `prettifiedOffset` keeps the editor's caret and selection on
