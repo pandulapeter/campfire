@@ -131,15 +131,33 @@ object ChordProTabWrapper {
 
     /**
      * Whether [line] holds chord names and nothing else a reader would sing: a bar line, a slash or a repeat count
-     * (`x2`) may stand between them, and a name may be put in parentheses. The song has already been converted into the
-     * reader's notation, so a name is one as a page may show it (`Sol`, `6-`, `IV`); a bare `I` stands between them
-     * like a bar line but makes no row of chords on its own, since it is a word far more often than it is a chord.
+     * (`x2`) may stand between them, and a name may be put in parentheses and keeps its own (`5(7)`). The song has
+     * already been converted into the reader's notation, so a name is one as a page may show it (`Sol`, `6-`, `IV`); a
+     * bare `I` stands between them like a bar line but makes no row of chords on its own, since it is a word far more
+     * often than it is a chord.
      */
     private fun isChordLine(line: String): Boolean {
-        val words = ChordProSyntax.words(line).map { it.value.trim('(', ')') }
-        return words.any(ChordProChordNames::isDisplayedChordName) && words.all { word ->
-            word.isEmpty() || word == ROMAN_ONE || ChordProChordNames.isDisplayedChordName(word) || word.none(Char::isLetterOrDigit) || repeatCountRegex.matches(word)
+        val words = ChordProSyntax.words(line).map { it.value }
+        return words.any(::isChordWord) && words.all { word ->
+            val trimmed = word.trim('(', ')')
+            trimmed.isEmpty() || trimmed == ROMAN_ONE || isChordWord(word) || trimmed.none(Char::isLetterOrDigit) || repeatCountRegex.matches(trimmed)
         }
+    }
+
+    /**
+     * Whether [word] is a chord name as a page shows it, in parentheses of its own (`(G)`) or opening or closing a group of
+     * them written across words (`(G`, `D)`) — the parentheses inside a name kept, since they are part of it (`5(7)`, a
+     * numbered extension, and `C(add9)`).
+     */
+    private fun isChordWord(word: String) =
+        ChordProChordNames.isDisplayedChordName(word.trim('(', ')')) || ChordProChordNames.isDisplayedChordName(word.withoutUnmatchedParentheses())
+
+    /** [this] without the `(` it starts with or the `)` it ends with where nothing in it closes or opens them. */
+    private fun String.withoutUnmatchedParentheses(): String {
+        var word = this
+        while (word.startsWith('(') && word.count { it == '(' } > word.count { it == ')' }) word = word.substring(1)
+        while (word.endsWith(')') && word.count { it == ')' } > word.count { it == '(' }) word = word.dropLast(1)
+        return word
     }
 
     private val repeatCountRegex = Regex("[xX×]?\\d+[xX×]?")

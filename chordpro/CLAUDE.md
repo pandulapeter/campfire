@@ -344,8 +344,10 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   stands for (`ChordProNotation.read`: Latin, then a lowercase minor, then German where the text is). A lowercase minor
   taken into Latin comes back spelled out (`a` → `Lam` → `Am`), since Latin has no lowercase spelling of its own.
   **The numberings** (`ChordNotation.isNumbering`) count the chords from the song's key (`ChordProNashville`): a minor
-  key from its own tonic (`Am F C G E7` is `1- b6 b3 b7 57`, or `i bVI bIII bVII V7`), the steps between always `b2 b3
-  #4 b6 b7`, a minor chord `-` in numbers and every other quality kept, the quality in the case of the numeral in Roman
+  key from its own tonic (`Am F C G E7` is `1- b6 b3 b7 5(7)`, or `i bVI bIII bVII V7`), the steps between always
+  `b2 b3 #4 b6 b7`, a minor chord `-` in numbers and every other quality kept — an extension that starts with a digit
+  in parentheses (`5(7)`, `#4(6/9)`, the minor's number after its dash as it is: `2-7`), which the tab wrapper's chord
+  rows read too — the quality in the case of the numeral in Roman
   (`vii°`, `viiø7`, `I+`), a bass note an Arabic step in both (`5/7`, `V/7`). They are only ever shown: `toNotation`
   numbers a parsed song, keeping its key, a `{transpose}`'s key and its definitions in letters (`ChordRewrite.renameInKey`,
   `rewriteDefinition`), numbering each stretch a modulation starts from the key it moved to, so a chorus recalled after

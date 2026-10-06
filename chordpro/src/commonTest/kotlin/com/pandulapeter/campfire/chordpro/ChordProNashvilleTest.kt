@@ -60,8 +60,8 @@ class ChordProNashvilleTest {
         assertEquals("1M7", nashville("CM7"))
         assertEquals("7dim", nashville("Bdim"))
         assertEquals("5sus4", nashville("Gsus4"))
-        assertEquals("17", nashville("C7"))
-        assertEquals("16/9", nashville("C6/9"))
+        assertEquals("1(7)", nashville("C7"))
+        assertEquals("1(6/9)", nashville("C6/9"))
     }
 
     @Test
@@ -80,7 +80,7 @@ class ChordProNashvilleTest {
     @Test
     fun `a minor key is numbered from its own tonic`() {
         listOf("Am", "A minor", "a-moll", "Am (capo 2)").forEach { key ->
-            assertEquals(listOf("1-", "b6", "b3", "b7", "57"), listOf("Am", "F", "C", "G", "E7").map { nashville(it, key) }, key)
+            assertEquals(listOf("1-", "b6", "b3", "b7", "5(7)"), listOf("Am", "F", "C", "G", "E7").map { nashville(it, key) }, key)
         }
         assertEquals("7°", nashville("G#°", "Am"))
         assertEquals(listOf("1-", "b6", "b3", "b7"), lyricChords(shown("{key: Em}\n[Em]a [C]b [G]c [D]d")))
@@ -165,7 +165,10 @@ class ChordProNashvilleTest {
 
     @Test
     fun `a degree is recognized as a page shows it`() {
-        listOf("1", "6-", "b7", "57", "5/7", "16/9", "2-7", "#4", "bVII", "viiø7", "IV/3", "vii°", "I+", "V7", "ii7").forEach {
+        listOf(
+            "1", "6-", "b7", "5(7)", "5/7", "1(6/9)", "2-7", "#4", "bVII", "viiø7", "IV/3", "vii°", "I+", "V7", "ii7", "b7(7sus4)", "#4(6/9)",
+            "5(7)/7", "1(7)(b9)", "(5(7))", "2(7alt)", "1(add9)",
+        ).forEach {
             assertTrue(ChordProNashville.isDegree(it), it)
         }
         listOf("I", "Iv", "IIII", "8", "Verse", "Intro", "x2", "b", "VIIII").forEach { assertFalse(ChordProNashville.isDegree(it), it) }
@@ -184,6 +187,37 @@ class ChordProNashvilleTest {
             listOf(listOf("I I I I I I"), listOf("Hello darkness"), listOf("my old friend")),
             ChordProTabWrapper.wrapPreformatted(listOf("I I I I I I", "Hello darkness my old friend"), maxColumns = 14),
         )
+        assertEquals(
+            listOf(listOf("    5(7)", "Hello darkness"), listOf("#4(6/9)", "my old friend")),
+            ChordProTabWrapper.wrapPreformatted(listOf("    5(7)       #4(6/9)", "Hello darkness my old friend"), maxColumns = 14),
+        )
+        assertEquals(
+            listOf(listOf("(5(7)", "Hello darkness"), listOf("1(add9))", "my old friend")),
+            ChordProTabWrapper.wrapPreformatted(listOf("(5(7)          1(add9))", "Hello darkness my old friend"), maxColumns = 14),
+        )
+        assertEquals(
+            listOf(listOf("    C(add9)", "Hello darkness"), listOf("(G)  x2", "my old friend")),
+            ChordProTabWrapper.wrapPreformatted(listOf("    C(add9)    (G)  x2", "Hello darkness my old friend"), maxColumns = 14),
+        )
+    }
+
+    @Test
+    fun `an extension that starts with a digit is set off in parentheses`() {
+        assertEquals("b7(7sus4)", nashville("Bb7sus4"))
+        assertEquals("b6(13)", nashville("Ab13"))
+        assertEquals("#4(6/9)", nashville("F#6/9"))
+        assertEquals("2(7#9)", nashville("D7#9"))
+        assertEquals("1(5)", nashville("C5"))
+        assertEquals("5(7)/7", nashville("G7/B"))
+        assertEquals("1(6/9)/3", nashville("C6/9/E"))
+        assertEquals("1(7)(b9)", nashville("C7(b9)"))
+        assertEquals("1(add9)", nashville("C(add9)"))
+        assertEquals("(5(7))", nashville("(G7)"))
+        assertEquals("5sus", nashville("Gsus"))
+        assertEquals("2-7", nashville("Dm7"))
+        assertEquals("bVII7sus4", roman("Bb7sus4"))
+        assertEquals(listOf("1", "5(7)"), lyricChords(shown("{key: C}\n[C]a [G7]b")))
+        assertEquals(1, ChordProHighlighter.chordsOfShownText("Intro: [#4(6/9)]", ChordNotation.NASHVILLE).size)
     }
 
     @Test

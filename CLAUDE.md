@@ -448,7 +448,8 @@ localized in both languages.
   also a standard one — and brought into the standard notation the next time the editor saves it. The one chart
   nothing can tell apart is a German one in a flat key, which never needs an `H`: it is read as standard. The editor's
   field is in the reader's notation, so what they type is never ambiguous. **Nashville numbers and Roman numerals**
-  (`1 4 5 6-`, `I IV V vi`) are only ever shown: the page, the editor's preview and the PDF count the chords from the
+  (`1 4 5 6-`, `I IV V vi`, an extension that starts with a digit set off in parentheses in numbers: `5(7)`, never
+  `57`) are only ever shown: the page, the editor's preview and the PDF count the chords from the
   song's key (a minor song from its own tonic), every key the app names stays in letters, a song with no key stays in
   letters, the chord diagrams are named by the step and by their letters, and the editor's field is in letters, since
   nothing is ever typed or stored in numbers.

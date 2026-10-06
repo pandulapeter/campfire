@@ -14,10 +14,12 @@ package com.pandulapeter.campfire.chordpro
  * is the chart a working musician writes by hand rather than the one an algorithm finds simplest:
  *
  * - The steps are counted from the key's own note, a minor key's included, so that the chord a song resolves to reads
- *   as home: in A minor `Am F C G E7` is `1- b6 b3 b7 57`, the flats being what its players already call those chords.
+ *   as home: in A minor `Am F C G E7` is `1- b6 b3 b7 5(7)`, the flats being what its players already call those chords.
  *   The steps between are always written `b2 b3 #4 b6 b7`, whatever the spelling of the key.
  * - In numbers a minor chord is marked with a `-`, the number alone is major, and every other quality is kept as the
- *   file writes it (`2-7`, `4maj7`, `5sus4`, `7dim`). `M`, `maj` and `Maj` are major sevenths and stay.
+ *   file writes it (`2-7`, `4maj7`, `5sus4`, `7dim`), an extension that starts with a digit in parentheses, since
+ *   written straight after the step it would read as one number with it (`5(7)`, `b7(7sus4)`, `1(6/9)`, a group of the
+ *   file's own left after them: `1(7)(b9)`). `M`, `maj` and `Maj` are major sevenths and stay.
  * - In numerals the quality is the case of the numeral: capitals for major, small letters for minor, a `°` after a
  *   small numeral for diminished, an `ø` for half-diminished and a `+` after a capital for augmented, everything else
  *   kept after it (`V7`, `ii7`, `vii°`, `viiø7`, `I+`, `IVmaj7`).
@@ -48,7 +50,7 @@ internal object ChordProNashville {
         val root = reader.root ?: return name
         val degree = ((ChordProChords.pitchClass(root) ?: return name) - tonic).mod(NOTE_COUNT)
         val suffix = notes.first().substring(root.length)
-        val numbered = if (isRoman) numeral(degree, reader.quality, suffix) else nashvilleDegrees[degree] + nashvilleSuffix(reader.quality, suffix)
+        val numbered = if (isRoman) numeral(degree, reader.quality, suffix) else nashvilleDegrees[degree] + extended(nashvilleSuffix(reader.quality, suffix))
         val bass = notes.getOrNull(1)?.let { note -> ChordProChords.pitchClass(note)?.let { nashvilleDegrees[(it - tonic).mod(NOTE_COUNT)] } ?: note }
         val rewritten = if (bass == null) numbered else "$numbered/$bass"
         return if (isParenthesized) "($rewritten)" else rewritten
@@ -65,7 +67,25 @@ internal object ChordProNashville {
         val slash = name.lastIndexOf('/')
         val chord = if (slash >= 0 && arabicStepEnd(name, slash + 1) == name.length) name.substring(0, slash) else name
         val stepEnd = arabicStepEnd(chord, 0).takeIf { it > 0 } ?: romanStepEnd(chord) ?: return false
-        return ChordProChordNames.isChordName("C" + chord.substring(stepEnd))
+        val rest = chord.substring(stepEnd)
+        return ChordProChordNames.isChordName("C" + rest) || ChordProChordNames.isChordName("C" + withoutExtensionParentheses(rest))
+    }
+
+    /**
+     * [rest], what follows a step in numbers, with its extension in parentheses where it starts with a digit: written
+     * straight after the step, `57` and `b77sus4` would read as one number. A group the file already wrote (`7(b9)`) is
+     * left after the parentheses rather than put inside them.
+     */
+    private fun extended(rest: String): String {
+        if (rest.firstOrNull()?.let { it in '0'..'9' } != true) return rest
+        val group = rest.indexOf('(').takeIf { it >= 0 } ?: rest.length
+        return "(" + rest.substring(0, group) + ")" + rest.substring(group)
+    }
+
+    /** [rest] with the parentheses [extended] puts around an extension taken off (`(6/9)` → `6/9`, `(7)(b9)` → `7(b9)`). */
+    private fun withoutExtensionParentheses(rest: String): String {
+        val close = rest.indexOf(')')
+        return if (rest.startsWith('(') && close > 1 && rest[1] in '0'..'9') rest.substring(1, close) + rest.substring(close + 1) else rest
     }
 
     private fun nashvilleSuffix(quality: String?, suffix: String) =
