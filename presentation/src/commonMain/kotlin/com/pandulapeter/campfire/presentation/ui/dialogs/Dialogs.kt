@@ -827,8 +827,13 @@ private fun DeleteLibraryDialog(
     viewModel: CampfireViewModel,
 ) {
     val syncState by viewModel.syncState.collectAsStateWithLifecycle()
+    val isImporting by viewModel.isImporting.collectAsStateWithLifecycle()
+    val importReport by viewModel.importReport.collectAsStateWithLifecycle()
     var value by rememberSaveable(stateSaver = TextFieldValue.Saver) { mutableStateOf(TextFieldValue()) }
     val isConfirmed = value.text.trim() == DELETE_LIBRARY_CONFIRMATION
+    // Files dropped or opened with the app while the sheet is up are imported against the library it would delete, so
+    // Delete waits, greyed, until that import and its question are over.
+    val canDelete = isConfirmed && !isImporting && importReport !is CampfireViewModel.ImportReport.Review
     val focusRequester = rememberFirstFieldFocusRequester()
     val keyboardController = LocalSoftwareKeyboardController.current
     val scrollState = rememberScrollState()
@@ -881,7 +886,7 @@ private fun DeleteLibraryDialog(
                         onDone = {
                             when {
                                 isClosing() -> Unit
-                                isConfirmed -> deleteLibrary(closeSheet)
+                                canDelete -> deleteLibrary(closeSheet)
                                 else -> keyboardController?.hide()
                             }
                         },
@@ -891,7 +896,7 @@ private fun DeleteLibraryDialog(
         },
         confirmButton = { close ->
             BottomSheetConfirmButton(
-                enabled = isConfirmed,
+                enabled = canDelete,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.error,
                     contentColor = MaterialTheme.colorScheme.onError,

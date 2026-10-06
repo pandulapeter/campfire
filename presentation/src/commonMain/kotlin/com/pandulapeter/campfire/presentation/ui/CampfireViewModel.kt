@@ -958,6 +958,8 @@ class CampfireViewModel(
     /** True while an import is running, which the screens that can start one show as a progress bar. */
     private val _isImporting = MutableStateFlow(false)
     val isImporting: StateFlow<Boolean> = _isImporting.asStateFlow()
+    /** True while [deleteLibrary] is deleting, which the import queue waits for, see [deleteLibrary]. */
+    private val isDeletingLibrary = MutableStateFlow(false)
     /**
      * The phase of an import the user asked for and how far into it it is, shown by a dialog while nothing else is
      * reporting on it, and by the import screen while that is open.
@@ -1287,6 +1289,10 @@ class CampfireViewModel(
             demoLibraryDecision.await()
             for (request in importQueue) {
                 try {
+                    // A batch that arrived while the library was being deleted is planned against what the deletion
+                    // left, not against a library half gone. Checked again after every wait, so that nothing can start
+                    // a deletion between the check and import claiming the import flag.
+                    while (isDeletingLibrary.value) isDeletingLibrary.first { !it }
                     import(request)
                     // The next batch waits for this one's conflicts question too: it would have nowhere to be asked.
                     awaitImportSettled()
@@ -3537,7 +3543,18 @@ class CampfireViewModel(
      * nothing open on a file that is about to go.
      */
     fun deleteLibrary() = launchLibraryChange {
-        deleteLibrary.invoke()
+        // An import writes against the library it planned for: one running, or one whose question is still open, would
+        // either outlive the deletion in part or be applied to a library that is gone. The import queue waits for the
+        // flag the other way round. Checked and set before the first suspension, as import claims its own flag.
+        if (_isImporting.value || pendingImport != null || isDeletingLibrary.value) {
+            return@launchLibraryChange sendMessage(Message.OperationFailed)
+        }
+        isDeletingLibrary.value = true
+        try {
+            deleteLibrary.invoke()
+        } finally {
+            isDeletingLibrary.value = false
+        }
     }
 
     fun clearCoverArtCache() {
