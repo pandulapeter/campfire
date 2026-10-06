@@ -71,7 +71,10 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   does not head it again, and the serializer writes the pieces back into one environment with what cut them inside. A
   `ChorusRecall` carries the chorus it repeats (`blocks`) — every piece of the last chorus that was over where it
   stands, what stood between them and the comments it opened and ended with — resolved by the parser, so that the
-  transposition and the notation reach it like any other block. **A comment records where it was written**, since a
+  transposition and the notation reach it like any other block. The recalls of a song together repeat at most a fixed
+  allowance plus twice the song's own size, counted in characters and chords as well as lines; a recall past it carries
+  no chorus and is drawn as its heading, since every later step expands each recall on its own and a small file of
+  recalls would otherwise be millions of lines. **A comment records where it was written**, since a
   comment that opens or ends a section leaves no continuation to recognise it by: `placement` is `START_OF_SECTION`
   before the section's first line (it belongs to the section after it), `IN_SECTION` after one (to the section before
   it) and `BETWEEN_SECTIONS` outside every environment, among the lines of an implicit paragraph, or in a section that

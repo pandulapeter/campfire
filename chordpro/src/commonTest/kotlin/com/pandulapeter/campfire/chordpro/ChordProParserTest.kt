@@ -249,6 +249,42 @@ class ChordProParserTest {
     }
 
     @Test
+    fun `recalls stop repeating once they would multiply the song`() {
+        val text = "{soc}\n" + "[H]a\n".repeat(3_000) + "{eoc}\n" + "{chorus}\n".repeat(3_000)
+
+        val song = ChordProParser.parse(text)
+
+        val recalls = song.blocks.filterIsInstance<ChordProBlock.ChorusRecall>()
+        assertEquals(3_000, recalls.size)
+        assertEquals(listOf(song.blocks.first()), recalls.first().blocks)
+        assertEquals(emptyList(), recalls.last().blocks)
+        assertTrue(recalls.sumOf { recall -> recall.blocks.sumOf { (it as? ChordProBlock.Section)?.lines?.size ?: 0 } } <= 20_000)
+        ChordProTransposer.transpose(song, 2)
+    }
+
+    @Test
+    fun `one long chorus line recalled many times stops repeating too`() {
+        val text = "{soc}\n" + "[H]a".repeat(5_000) + "\n{eoc}\n" + "{chorus}\n".repeat(1_000)
+
+        val song = ChordProParser.parse(text)
+
+        val recalls = song.blocks.filterIsInstance<ChordProBlock.ChorusRecall>()
+        assertEquals(listOf(song.blocks.first()), recalls.first().blocks)
+        assertEquals(emptyList(), recalls.last().blocks)
+        ChordProTransposer.transpose(song, 2)
+    }
+
+    @Test
+    fun `a long chorus recalled many times is repeated every time`() {
+        val text = "{soc}\n" + "[G]Some words of a long chorus line that [C]go on and [D]on\n".repeat(40) + "{eoc}\n" + "{chorus}\n".repeat(20)
+
+        val recalls = ChordProParser.parse(text).blocks.filterIsInstance<ChordProBlock.ChorusRecall>()
+
+        assertEquals(20, recalls.size)
+        recalls.forEach { recall -> assertEquals(40, recall.blocks.sumOf { (it as ChordProBlock.Section).lines.size }) }
+    }
+
+    @Test
     fun `a recall carries the comments the chorus opens and ends with`() {
         val blocks = ChordProParser.parse("{soc}\n{c: softly}\n[C]one\n{c: x2}\n{eoc}\n{c: then}\n\n{chorus}").blocks
 
