@@ -60,7 +60,7 @@ class ChordProDefinitionsTest {
 
     @Test
     fun `what declares no shape is no definition, and what cannot be read is invalid`() {
-        listOf("G copy G7", "G copyall G7", "G display G/B", "G frets 0 0 0 0 0", "G").forEach {
+        listOf("G copy G7", "G copyall G7", "G display G/B", "G frets 0 0 0 0 0", "G", "G copy G7 frets 3 2 0 0 0 3").forEach {
             assertIs<ChordProDefinitions.Reading.Other>(ChordProDefinitions.read(it), it)
         }
         listOf(
@@ -74,6 +74,10 @@ class ChordProDefinitionsTest {
             "G base-fret 25 frets 1 1 1 1 1 1",
             "G base-fret 2147483647 frets 3 2 1 1 1 3",
             "G base-fret 22 frets 1 3 3 2 1 4",
+            "G frets 1 2 3 4 5 6 7 frets 3 2 0 0 0 3",
+            "A base-fret 3 frets x 1 3 3 3 1 base-fret 5",
+            "G frets 3 2 0 0 0 3 fingers 3 2 0 0 0 4 fingers 3 2 0 0 0 4",
+            "C keys 0 4 7 keys 0 3 7",
         ).forEach {
             assertEquals(ChordProDefinitions.Reading.Invalid, ChordProDefinitions.read(it), it)
         }

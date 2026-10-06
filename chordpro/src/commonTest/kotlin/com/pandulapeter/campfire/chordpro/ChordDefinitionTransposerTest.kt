@@ -122,6 +122,14 @@ class ChordDefinitionTransposerTest {
     @Test
     fun `a line that cannot be read is left byte for byte`() {
         assertEquals("{define: C frets x 3 two 0 1 0}\n[D]x", ChordProTransposer.transposeText("{define: C frets x 3 two 0 1 0}\n[C]x", 2))
+        assertEquals(
+            "{define: G frets 1 2 3 4 5 6 7 frets 3 2 0 0 0 3}\n[Ab]x",
+            ChordProTransposer.transposeText("{define: G frets 1 2 3 4 5 6 7 frets 3 2 0 0 0 3}\n[G]x", 1),
+        )
+        assertEquals(
+            "{define: A base-fret 3 frets x 1 3 3 3 1 base-fret 5}\n[B]x",
+            ChordProTransposer.transposeText("{define: A base-fret 3 frets x 1 3 3 3 1 base-fret 5}\n[A]x", 2),
+        )
     }
 
     @Test

@@ -278,7 +278,7 @@ object ChordProDefinitions {
 
         /**
          * A shape that cannot be read: a fret that is no number, `frets` with nothing after it, fingers that do not match, a
-         * fret off the neck, a base fret past the last fret.
+         * fret off the neck, a base fret past the last fret, a value given twice.
          */
         data object Invalid : Reading
     }
@@ -297,13 +297,18 @@ object ChordProDefinitions {
         var keys: List<Int>? = null
         var isOther = false
         var index = 1
+        val given = mutableSetOf<String>()
         fun arguments(): List<String> {
             val start = index
             while (index < words.size && words[index].lowercase() !in keywords) index++
             return words.subList(start, index)
         }
         while (index < words.size) {
-            when (words[index++].lowercase()) {
+            val keyword = words[index++].lowercase()
+            // A value said twice is ambiguous to its reader as well, and rewriting one of the two would leave the other
+            // describing a shape that is no longer there.
+            if (keyword in valueKeywords && !given.add(keyword)) return Reading.Invalid
+            when (keyword) {
                 BASE_FRET -> baseFret = arguments().singleOrNull()?.toIntOrNull()?.takeIf { it in 1..MAX_FRET } ?: return Reading.Invalid
                 FRETS -> frets = arguments().takeIf { it.isNotEmpty() }?.map { word ->
                     if (word in mutedFrets) null else word.toIntOrNull()?.takeIf { it in 0..MAX_FRET } ?: return Reading.Invalid
@@ -368,6 +373,7 @@ object ChordProDefinitions {
     private const val MAX_KEY = 47
     private const val COPY = "copy"
     private const val COPY_ALL = "copyall"
+    private val valueKeywords = setOf(BASE_FRET, FRETS, FINGERS, KEYS)
     private val keywords = setOf(BASE_FRET, FRETS, FINGERS, KEYS, COPY, COPY_ALL, "display", "format", "diagram")
     private val mutedFrets = setOf("x", "X", "N", "-1")
     private val unusedFingers = setOf("-", "x", "X", "N")

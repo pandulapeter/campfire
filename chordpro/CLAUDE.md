@@ -367,8 +367,8 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   `ChordProDuration`, `ChordProSyntax.cover`…); one with no value at all is not, since that is what the editor writes
   into the header for the value to be typed into. A definition is coloured the same way: the chord it names is a
   `CHORD` token inside its value, and one whose shape cannot be read (`ChordProDefinitions.Reading.Invalid`: a fret
-  that is no number, fingers that do not match the frets, a selector naming an instrument the shape is not for) is one
-  `INVALID` token; one that is only not Campfire's to draw (a `copy`, a banjo's five strings) is neither. A directive
+  that is no number, fingers that do not match the frets, a value given twice, a selector naming an instrument the
+  shape is not for) is one `INVALID` token; one that is only not Campfire's to draw (a `copy`, a banjo's five strings) is neither. A directive
   that says again what a song can only say once — every metadata kind but `ChordProHeader.repeatableMetadata` and
   `changeableMetadata`, counted by `ChordProSyntax.metadataKind`, so a `{t}` after a `{title}` counts — is one
   `DUPLICATE` token from the line after the first that says something on, an empty one included — exactly the lines
@@ -402,7 +402,8 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   counted from the `base-fret` (`x`, `X`, `N` and `-1` muted), fingers, or a keyboard's `keys` counted from the root;
   frets and the base fret stay on a 24-fret neck (`Invalid` past it), and keys past four octaves are wrapped by their
   note, as the specification says, so no file can make a diagram draw without end; the instrument is the selector's where it names one and otherwise the one with as many strings; a `copy`, a
-  `display` alone or a string count no instrument has is `Other`, and what cannot be read `Invalid`. The last shape of
+  `display` alone or a string count no instrument has is `Other`, and what cannot be read, or gives `base-fret`,
+  `frets`, `fingers` or `keys` twice, `Invalid`. The last shape of
   a chord on an instrument wins, in the place of the first. `line` writes one the way it is read, with no selector and
   the base fret a diagram would draw. `transposed` moves one with the song: the name renamed like any chord, a fretted
   shape moved along the neck, up by the rest of the octave where it has an open string and otherwise whichever of the
