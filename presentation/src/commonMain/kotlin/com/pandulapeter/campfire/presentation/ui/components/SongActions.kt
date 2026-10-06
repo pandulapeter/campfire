@@ -291,9 +291,8 @@ private val ACTION_BUTTON_CONTAINER_SIZE = 40.dp
  *
  * The setlist assignments sheet is not among the entries of its own accord: where the song is read as part of the
  * library it has a [SetlistAssignmentsButton] in front of these, which the song details screen moves into the menu as
- * [setlistAssignmentsAction] where its bar runs out of room, and on a setlist row it is not offered at all, since a
- * sheet of every setlist next to the row's own "Remove from setlist" made two ways of leaving the setlist that read as
- * two different things.
+ * [setlistAssignmentsAction] where its bar runs out of room, and a setlist row puts the same entry among its
+ * [leadingItems], after the row's own "Remove from setlist".
  *
  * @param state Whether the menu is open, hoisted by the songs screen, whose rows also open it from a long press.
  * @param isDeletable Whether the song can be deleted from here, which it only can where the song is read as part of
@@ -396,8 +395,9 @@ private fun editSongAction(
 /**
  * The way into the setlist assignments sheet, put in front of [SongActions] on every row of the songs screen and on
  * the song details screen, since filing songs into setlists is what the library is mostly visited for, and the details
- * screen offers it the same way whether it was opened from the library or from a setlist. A setlist row has no such
- * button: the song there is already filed, and leaves the setlist through the row's own menu.
+ * screen offers it the same way whether it was opened from the library or from a setlist. A setlist row has the
+ * [setlistAssignmentsAction] in its menu instead, since the song there is already filed and the star would always be
+ * full.
  *
  * @param isInSetlist Whether the song is in at least one setlist, which fills the star. Passed in rather than collected
  *   here, since the button is in every row of the song list and one collection per screen answers them all.

@@ -136,6 +136,7 @@ import com.pandulapeter.campfire.presentation.ui.components.rememberToday
 import com.pandulapeter.campfire.presentation.ui.components.rememberHasLoadedLibrary
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedLazyGridState
 import com.pandulapeter.campfire.presentation.ui.components.rememberSectionHeaderState
+import com.pandulapeter.campfire.presentation.ui.components.setlistAssignmentsAction
 import com.pandulapeter.campfire.presentation.ui.components.songCardPadding
 import com.pandulapeter.campfire.presentation.ui.components.underAppBar
 import com.pandulapeter.campfire.presentation.ui.metronome.effectiveTempo
@@ -897,7 +898,18 @@ private fun SetlistEntryActions(
             isDeletable = false,
             isEditAndExportOnly = isArchived,
             setlistFileName = setlistFileName,
-            leadingItems = if (isArchived) emptyList() else setlistRowActions(onMoveUp, onMoveDown, onRemove),
+            leadingItems = if (isArchived) {
+                emptyList()
+            } else {
+                // The song is in this setlist by definition, so the star is always filled. This setlist's box is not
+                // locked the way the song details screen locks it: unticking it takes the row out from under the sheet,
+                // which leaves nothing behind it to pull the reader away from.
+                setlistRowActions(onMoveUp, onMoveDown, onRemove) + setlistAssignmentsAction(
+                    viewModel = viewModel,
+                    song = entry.song,
+                    isInSetlist = true,
+                )
+            },
         )
 
         is CampfireViewModel.SetlistWithSongs.Entry.Missing -> ActionsMenu(

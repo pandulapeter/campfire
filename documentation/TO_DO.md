@@ -10,8 +10,6 @@
 # To do
 ## Short-term (in this version)
 ### Bugs / issues
-- Re-add "Choose setlists" link to song card overflow menus on the Setlists screen
-- CMD/CRTL+S keyboard shortcut for saving things
 
 ### Improvements
 
