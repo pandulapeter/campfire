@@ -41,9 +41,17 @@ class SectionPagingTest {
     }
 
     @Test
-    fun anUncuttableStretchTallerThanTheScreenIsAPageOfItsOwn() {
-        val grid = page(listOf(listOf(100), listOf(800), listOf(100)), maxRowHeight = 500)
-        assertEquals(listOf(0, 1, 2), grid.pageOfEveryUnit())
+    fun nothingIsCutInFrontOfAUnitWithNoHeight() {
+        // The run of a tab drawn in slots, the last two of them empty at this width: the page may not end before them.
+        val grid = page(listOf(listOf(300), listOf(100, 100, 0, 0)), maxRowHeight = 450)
+        assertEquals(listOf(0, 0, 1, 1, 1), grid.pageOfEveryUnit())
+    }
+
+    @Test
+    fun anUncuttableStretchTallerThanTheScreenEndsItsPage() {
+        // After a short section it starts on the same page; after one that fills half the screen, on a page of its own.
+        assertEquals(listOf(0, 0, 1), page(listOf(listOf(100), listOf(800), listOf(100)), maxRowHeight = 500).pageOfEveryUnit())
+        assertEquals(listOf(0, 1, 2), page(listOf(listOf(300), listOf(800), listOf(100)), maxRowHeight = 500).pageOfEveryUnit())
     }
 
     @Test
@@ -64,6 +72,23 @@ class SectionPagingTest {
     fun aNarrowSectionNextToAWideOneIsStacked() {
         val grid = page(listOf(listOf(100), listOf(80), listOf(100)), maxRowHeight = 1000, narrow = setOf(1))
         assertContentEquals(intArrayOf(1), grid.columnCounts)
+    }
+
+    @Test
+    fun aPairThatDoesNotFitWhatIsLeftIsStackedWhereItsFirstSectionCanStartThere() {
+        // The pair would be 200 tall, which the 180 left of the first page does not hold, but the first line of its first
+        // section does.
+        val grid = page(listOf(listOf(300), listOf(100, 100), listOf(100)), maxRowHeight = 500, narrow = setOf(1, 2))
+        assertContentEquals(intArrayOf(1, 1), grid.columnCounts)
+        assertEquals(listOf(0, 0, 1, 1), grid.pageOfEveryUnit())
+    }
+
+    @Test
+    fun whatCannotBeCutRunsAMostlyEmptyPageOnPastTheScreen() {
+        // A short first section, then a 450 high staff that cannot be cut: moving it to the next page would leave the first
+        // one four fifths empty, so it starts there and the page runs on.
+        val grid = page(listOf(listOf(100), listOf(450), listOf(100)), maxRowHeight = 500)
+        assertEquals(listOf(0, 0, 1), grid.pageOfEveryUnit())
     }
 
     @Test

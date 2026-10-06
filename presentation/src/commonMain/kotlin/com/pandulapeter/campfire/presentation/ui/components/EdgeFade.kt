@@ -230,7 +230,13 @@ internal fun Modifier.fadingTopEdge(scrollState: ScrollState) = fadingTopEdge { 
  * The same fade over a known opaque background, without rasterizing the entire viewport into an offscreen buffer.
  * Only the edge strip is painted. Keep the masking overload for dialogs and other containers whose backing differs.
  */
-internal fun Modifier.fadingTopEdge(scrollState: ScrollState, backgroundColor: Color) = drawWithCache {
+internal fun Modifier.fadingTopEdge(scrollState: ScrollState, backgroundColor: Color) = fadingTopEdge(
+    scrolled = { scrollState.value },
+    backgroundColor = backgroundColor,
+)
+
+/** [fadingTopEdge] over a known opaque background, as strong as [scrolled], read while drawing, says. */
+internal fun Modifier.fadingTopEdge(scrolled: () -> Int, backgroundColor: Color) = drawWithCache {
     val height = EDGE_FADE_SIZE.toPx()
     val gradient = Brush.verticalGradient(
         colors = listOf(backgroundColor, backgroundColor.copy(alpha = 0f)),
@@ -239,7 +245,7 @@ internal fun Modifier.fadingTopEdge(scrollState: ScrollState, backgroundColor: C
     )
     onDrawWithContent {
         drawContent()
-        val strength = (scrollState.value / height).coerceIn(0f, 1f)
+        val strength = (scrolled() / height).coerceIn(0f, 1f)
         if (strength > 0f) {
             drawRect(brush = gradient, size = Size(size.width, height), alpha = strength)
         }

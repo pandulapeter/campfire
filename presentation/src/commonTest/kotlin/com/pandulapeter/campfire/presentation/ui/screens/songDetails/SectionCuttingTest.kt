@@ -22,16 +22,17 @@ import kotlin.test.assertTrue
 class SectionCuttingTest {
 
     @Test
-    fun aSectionIsOnlyCutWithTwoLinesOnEitherSide() {
-        assertContentEquals(intArrayOf(0, 2), sectionChunkStarts(listOf(CONTENT, CONTENT, CONTENT, CONTENT)))
-        assertContentEquals(intArrayOf(0), sectionChunkStarts(listOf(CONTENT, CONTENT, CONTENT)))
-        assertContentEquals(intArrayOf(0, 2, 3, 4), sectionChunkStarts(List(6) { CONTENT }))
+    fun aSectionIsCutWithALineOnEitherSide() {
+        assertContentEquals(intArrayOf(0, 1), sectionChunkStarts(listOf(CONTENT, CONTENT)))
+        assertContentEquals(intArrayOf(0), sectionChunkStarts(listOf(CONTENT)))
+        assertContentEquals(intArrayOf(0, 1, 2, 3, 4, 5), sectionChunkStarts(List(6) { CONTENT }))
+        assertContentEquals(intArrayOf(0, 1), sectionChunkStarts(listOf(CONTENT, CONTENT, BLANK)))
     }
 
     @Test
     fun noPieceStartsWithAnEmptyLineOrEndsWithAComment() {
-        assertContentEquals(intArrayOf(0, 3), sectionChunkStarts(listOf(CONTENT, CONTENT, BLANK, CONTENT, CONTENT)))
-        assertContentEquals(intArrayOf(0, 2), sectionChunkStarts(listOf(CONTENT, CONTENT, COMMENT, CONTENT, CONTENT)))
+        assertContentEquals(intArrayOf(0, 1, 3, 4), sectionChunkStarts(listOf(CONTENT, CONTENT, BLANK, CONTENT, CONTENT)))
+        assertContentEquals(intArrayOf(0, 1, 2, 4), sectionChunkStarts(listOf(CONTENT, CONTENT, COMMENT, CONTENT, CONTENT)))
     }
 
     @Test
@@ -79,11 +80,11 @@ class SectionCuttingTest {
     }
 
     @Test
-    fun aCutThatSavesLittleIsNotMade() {
-        // Cutting the second section after its first line would even the two columns out by a few pixels.
+    fun aSectionIsCutToEvenTheColumnsOut() {
+        // Kept whole, the second section would leave the first column 250 tall and the second 400.
         val sections = listOf(listOf(250), listOf(100, 100, 100, 100))
         val grid = flow(sectionUnits = sections, columnCount = 2, maxRowHeight = 500)
-        assertFalse(cutsAnySection(grid, unitSections(sections)))
+        assertTrue(cutsAnySection(grid, unitSections(sections)))
         assertContentEquals(intArrayOf(2), grid.columnCounts)
     }
 
@@ -197,7 +198,6 @@ class SectionCuttingTest {
             piecePadding = piecePadding,
             sectionGap = SECTION_GAP,
             maxRowHeight = maxRowHeight,
-            minCutSaving = 50,
         )
     }
 }

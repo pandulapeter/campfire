@@ -659,8 +659,9 @@ private fun SongSectionContent(
             ),
     ) {
         // Tablature and grids are runs of lines inside a section rather than sections of their own, so the lines are
-        // grouped: each run is folded as one, a run of tablature is also measured as one block (its columns only line
-        // up while they are measured together), and everything else is laid out line by line around them. A comment
+        // grouped: each run is folded as one and drawn as pieces the section may be cut between (see [runSlotCount]) -
+        // a system of tablature with all of its strings, a line of a grid - and everything else is laid out line by
+        // line around them. A comment
         // that cut the section stands where the file has it, between the lines around it. A section that is nothing
         // but one run is folded as the section it is, so its run has no toggle of its own.
         // Every item is counted, drawn or not, and so is every run's fold, since a run is named by how many
@@ -708,14 +709,16 @@ private fun SongSectionContent(
                         }
                         return@forEach
                     }
-                    val isShown = item++ in items
+                    val firstSlotItem = item
+                    val slotCount = group.runSlotCount(kind)
+                    item += slotCount
+                    val shownSlots = (0 until slotCount).filter { firstSlotItem + it in items }
                     val runModifier = if (wholeSectionKind != null || foldedRuns == null) {
                         Modifier
                     } else {
                         val runName = group.first().environmentLabel ?: kind.name.lowercase()
                         val run = "$sectionFold/${runNameCounts.nextFoldKey(runName)}"
-                        if (!isShown) return@forEach
-                        FoldToggleRow(
+                        if (0 in shownSlots) FoldToggleRow(
                             kind = kind,
                             label = group.first().environmentLabel ?: defaultLabels.labelOf(kind),
                             toggle = FoldToggle(isExpanded = !foldedRuns.isCollapsed(run), onToggled = { foldedRuns.toggle(run) }),
@@ -725,25 +728,36 @@ private fun SongSectionContent(
                         if (foldedRuns.isCollapsed(run)) return@forEach
                         Modifier.fadingIn(isFadingIn = foldedRuns.hasBeenToggled(run))
                     }
-                    if (!isShown) return@forEach
+                    if (shownSlots.isEmpty()) return@forEach
                     when (kind) {
-                        FoldableKind.TAB -> SongTabBlock(
-                            modifier = runModifier.fillMaxWidth(),
-                            lines = group.map { (it as? ChordProLine.Tab)?.text.orEmpty() },
-                            style = monospaceLyricsStyle,
-                            textMeasurer = textMeasurements.textMeasurer,
-                        )
+                        FoldableKind.TAB -> {
+                            val lines = remember(group) { group.map { (it as? ChordProLine.Tab)?.text.orEmpty() } }
+                            val rows = remember(lines, monospaceLyricsStyle, textMeasurements.textMeasurer) {
+                                TabRows(lines, monospaceLyricsStyle, textMeasurements.textMeasurer)
+                            }
+                            shownSlots.forEach { slot ->
+                                SongTabBlock(
+                                    modifier = runModifier.fillMaxWidth(),
+                                    lines = lines,
+                                    rows = rows,
+                                    slot = slot,
+                                    isLastSlot = slot == slotCount - 1,
+                                )
+                            }
+                        }
 
                         FoldableKind.GRID -> Column(modifier = runModifier.fillMaxWidth()) {
                             val alignedLines = remember(group) {
                                 group.filterIsInstance<ChordProLine.Grid>().map { it.tokens }.alignedGridBars { it.displayText() }
                             }
-                            alignedLines.forEach { bars ->
-                                SongGridLine(
-                                    bars = bars,
-                                    lyricsStyle = monospaceLyricsStyle,
-                                    chordStyle = monospaceChordStyle,
-                                )
+                            shownSlots.forEach { slot ->
+                                alignedLines.getOrNull(slot)?.let { bars ->
+                                    SongGridLine(
+                                        bars = bars,
+                                        lyricsStyle = monospaceLyricsStyle,
+                                        chordStyle = monospaceChordStyle,
+                                    )
+                                }
                             }
                         }
                     }
@@ -869,6 +883,18 @@ private fun ChordProLine.foldableKind() = when (this) {
     is ChordProLine.Tab -> FoldableKind.TAB
     is ChordProLine.Grid -> FoldableKind.GRID
     is ChordProLine.Lyrics, ChordProLine.Blank -> null
+}
+
+/**
+ * How many pieces a run of tablature or grid lines is drawn as, which the section may be cut between: a line of a grid
+ * each, and for tablature as many as the rows it could wrap into (see [SongTabBlock]), which are only known once the
+ * width is - a slot for every line and for every [MIN_TAB_SLOT_COLUMNS] characters of the longest, which no real width
+ * wraps it into more rows than, and never more than [MAX_TAB_SLOTS], the last one holding whatever rows are left. A slot
+ * with no row at a width has no height there, and nothing is cut in front of it.
+ */
+private fun List<ChordProLine>.runSlotCount(kind: FoldableKind) = when (kind) {
+    FoldableKind.TAB -> (size + maxOf { (it as? ChordProLine.Tab)?.text?.length ?: 0 } / MIN_TAB_SLOT_COLUMNS).coerceIn(1, MAX_TAB_SLOTS)
+    FoldableKind.GRID -> count { it is ChordProLine.Grid }.coerceAtLeast(1)
 }
 
 /** The kind a section is written in from start to end, which is then folded as a whole, or null for any other. */
@@ -1030,7 +1056,10 @@ internal fun Modifier.fadingIn(isFadingIn: Boolean): Modifier {
 }
 
 /**
- * One run of `{start_of_tab}` lines, cut into as many rows as it takes to fit the width. A run with a staff in it is
+ * One piece of a run of `{start_of_tab}` lines, which is cut into as many rows as it takes to fit the width: the row at
+ * [slot], or every row from there on where it [isLastSlot], and nothing at all where the run has no row there at this
+ * width. A run is drawn as several of these (see [runSlotCount]) so that a section may be cut between its rows, which
+ * are only known once the width is. A run with a staff in it is
  * tablature, cut the way a tab book breaks a staff into systems, its rows a blank line apart so that the last string of
  * one is never read as the first string of the next; one with no staff in it is preformatted text - chord names over
  * lyrics most often - cut between words, each line of chord names together with the lyrics under it, and read like
@@ -1046,18 +1075,26 @@ internal fun Modifier.fadingIn(isFadingIn: Boolean): Modifier {
 private fun SongTabBlock(
     modifier: Modifier = Modifier,
     lines: List<String>,
-    style: TextStyle,
-    textMeasurer: TextMeasurer,
+    rows: TabRows,
+    slot: Int,
+    isLastSlot: Boolean,
 ) {
     val color = MaterialTheme.colorScheme.onSurface
-    val rows = remember(lines, style, textMeasurer) { TabRows(lines, style, textMeasurer) }
+    // The rows of the slot at a width, and whether the run goes on after them, which is what leaves the gap that keeps
+    // the last string of one system from being read as the first string of the next under them.
+    fun slotRows(width: Int): Pair<List<List<TextLayoutResult>>, Boolean> {
+        val all = rows.at(width)
+        val mine = if (isLastSlot) all.drop(slot) else listOfNotNull(all.getOrNull(slot))
+        return mine to (slot + mine.size < all.size)
+    }
     Layout(
-        // Drawn rather than composed (see above), so the lines are handed to a screen reader here, as they stand in the file.
+        // Drawn rather than composed (see above), so the lines are handed to a screen reader here, as they stand in the
+        // file - by the first piece of the run, for all of it.
         modifier = modifier
-            .semantics { contentDescription = lines.joinToString(separator = "\n") }
+            .then(if (slot == 0) Modifier.semantics { contentDescription = lines.joinToString(separator = "\n") } else Modifier)
             .drawBehind {
                 var y = 0f
-                rows.at(size.width.roundToInt()).forEach { row ->
+                slotRows(size.width.roundToInt()).first.forEach { row ->
                     row.forEach { line ->
                         drawText(textLayoutResult = line, color = color, topLeft = Offset(0f, y))
                         y += line.size.height
@@ -1067,10 +1104,15 @@ private fun SongTabBlock(
             },
     ) { _, constraints ->
         val width = constraints.maxWidth
-        val rowsAtWidth = rows.at(width)
-        val height = rowsAtWidth.sumOf { row -> row.sumOf { it.size.height } } + rows.rowGap * (rowsAtWidth.size - 1).coerceAtLeast(0)
+        val (rowsAtWidth, goesOn) = slotRows(width)
+        val height = rowsAtWidth.sumOf { row -> row.sumOf { it.size.height } } +
+            rows.rowGap * (rowsAtWidth.size - 1).coerceAtLeast(0) +
+            if (goesOn && rowsAtWidth.isNotEmpty()) rows.rowGap else 0
+        // Asked how wide it would be, every piece answers for the whole run, unwrapped: the layout narrows a column to
+        // the widest of what it holds, and a column narrowed to what one piece of a run needs would wrap the run's other
+        // pieces into rows of fewer bars - taller than the rows the page was planned with, and different ones.
         layout(
-            width = if (width == Constraints.Infinity) rowsAtWidth.maxOf { row -> row.maxOf { it.size.width } } else width,
+            width = if (width == Constraints.Infinity) rows.at(width).maxOfOrNull { row -> row.maxOf { it.size.width } } ?: 0 else width,
             height = height.coerceIn(constraints.minHeight, constraints.maxHeight),
         ) {}
     }
@@ -1491,7 +1533,6 @@ private fun SongSectionsLayout(
                 piecePadding = piecePadding,
                 sectionGap = sectionGapPx,
                 maxRowHeight = maxRowHeightPx,
-                minCutSaving = availableHeightPx / MIN_CUT_SAVING_FRACTION,
             )
             val pageCount = grid.pageCount()
             if (pageCount < flowedPageCount) {
@@ -1686,8 +1727,8 @@ private fun SongSectionsLayout(
                     List(sectionCount) { it }
                 },
                 isSteppedByRow = isSteppedByRow,
-                // Only a single column is paged through: a row of several is never taller than the screen, and a page of
-                // a single column with a pair of narrow sections on it is no taller than the screen either.
+                // Only a single column is paged through by its lines: a row of several is never taller than the screen,
+                // and a pair of narrow sections that runs a page on past it is paged through by the screen.
                 lineTops = singleColumnUnits.map { arrangement.tops[it] },
                 lineBottoms = singleColumnUnits.map { arrangement.tops[it] + unitHeights[it] },
                 lineSections = singleColumnUnits.map { units.unitSections[it] },
@@ -2226,14 +2267,15 @@ internal sealed interface RenderSection {
 
         /**
          * What [SongSectionContent] draws the section as, one under the other: every comment between two of its lines,
-         * every line, and every run of tablature or grid lines as one.
+         * every line, and every run of tablature or grid lines as the pieces it may be cut into ([runSlotCount]).
          */
         val itemKinds = parts.flatMap { part ->
             when (part) {
                 is Comment -> listOf(SectionItemKind.COMMENT)
                 is SectionPart.Lines -> part.runs.flatMap { run ->
-                    if (run.first().foldableKind() != null) {
-                        listOf(SectionItemKind.CONTENT)
+                    val kind = run.first().foldableKind()
+                    if (kind != null) {
+                        List(run.runSlotCount(kind)) { SectionItemKind.CONTENT }
                     } else {
                         run.map { line -> if (line == ChordProLine.Blank) SectionItemKind.BLANK else SectionItemKind.CONTENT }
                     }
@@ -2705,14 +2747,9 @@ private val ROW_GAP = 16.dp
 private const val LINE_HEIGHT_SAMPLE = "X"
 private const val CHARACTER_WIDTH_SAMPLE_LENGTH = 64
 private const val MAX_TAB_WIDTHS = 8
+private const val MIN_TAB_SLOT_COLUMNS = 12
+private const val MAX_TAB_SLOTS = 24
 private const val MAX_SECTION_WIDTHS = 32
-
-/**
- * How much lower than keeping every section whole the columns of a row have to end for a section to be cut between
- * them, as a fraction of the screen: the row holds the same either way, so a cut only buys columns of a more even
- * height, and evening them out by a sliver is not worth sending the reader across in the middle of a verse.
- */
-private const val MIN_CUT_SAVING_FRACTION = 8
 
 /**
  * The most sections a song may have for its sections to be cut at all. A file of more than this is a songbook rather

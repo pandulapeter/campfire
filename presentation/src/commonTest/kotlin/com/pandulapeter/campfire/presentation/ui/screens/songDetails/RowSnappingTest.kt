@@ -15,6 +15,15 @@ import kotlin.test.assertTrue
 
 class RowSnappingTest {
 
+    @Test
+    fun theTopFadeOnlyFadesWhatIsScrolledPastTheTopOfTheRow() {
+        val rows = SongRows(restingOffsets = listOf(0, 600, 1200))
+        assertEquals(0, rows.scrolledIntoRow(600))
+        assertEquals(10, rows.scrolledIntoRow(610))
+        assertEquals(590, rows.scrolledIntoRow(590))
+        assertEquals(42, SongRows().scrolledIntoRow(42))
+    }
+
     /** Unless given, every row's content reaches down to where the next one rests, and the last one's to the end. */
     private fun snap(
         target: Float,

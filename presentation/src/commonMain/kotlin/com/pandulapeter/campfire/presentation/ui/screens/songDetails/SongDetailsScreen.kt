@@ -1100,7 +1100,10 @@ private fun SongDetailsPage(
             SongLyrics(
                 modifier = Modifier
                     .fillMaxSize()
-                    .fadingTopEdge(scrollState, MaterialTheme.colorScheme.background)
+                    .fadingTopEdge(
+                        scrolled = { flingBehavior.rows.scrolledIntoRow(scrollState.value) },
+                        backgroundColor = MaterialTheme.colorScheme.background,
+                    )
                     .bounceVerticalScroll(state = scrollState, flingBehavior = flingBehavior)
                     .padding(
                         start = contentPadding.calculateStartPadding(layoutDirection) + PAGE_HORIZONTAL_PADDING,

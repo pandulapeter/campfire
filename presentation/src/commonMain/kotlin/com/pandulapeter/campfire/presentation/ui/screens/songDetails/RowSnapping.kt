@@ -82,6 +82,15 @@ internal data class SongRows(
         lineBottoms = lineBottoms.map { it + topPadding },
     )
 
+    /**
+     * How far a scroll at [scroll] has taken the song past the top of the row it is in - the distance from the last
+     * resting offset at or above it - which is how far the top edge's fade has anything of that row to fade. A row
+     * rested on starts right under the top of the viewport, and fading it there would cover its first line; what is
+     * above a row is the empty space after the one before it, which has nothing in it to fade. Where the song is not
+     * read in rows, it is the scroll itself.
+     */
+    fun scrolledIntoRow(scroll: Int) = scroll - (restingOffsets.lastOrNull { it <= scroll } ?: 0)
+
     /** Whether the three lists that describe the pieces of a single column describe the same pieces. */
     val hasLines get() = lineTops.isNotEmpty() && lineBottoms.size == lineTops.size && lineSections.size == lineTops.size
 }
