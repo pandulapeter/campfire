@@ -157,6 +157,9 @@ internal class SyncRepositoryImpl(
 
     private var indexWriteJob: Job? = null
     private var accountRefreshJob: Job? = null
+
+    /** The failed connection a [connect] started from, which backing out of it returns to, see [stateAfterBackingOut]. */
+    private var stateBeforeConnecting: SyncState? = null
     private var lastIndexWrite: TimeMark? = null
 
     init {
@@ -278,6 +281,10 @@ internal class SyncRepositoryImpl(
 
     override suspend fun connect(providerId: SyncProviderId, completionPage: AuthorizationCompletionPage): Boolean {
         val provider = providers.firstOrNull { it.id == providerId } ?: return false
+        // Asked before the pending authorization is written, so that the answer is about the credentials the failure
+        // left. A failure with none stored - a first connection that never got that far - is disconnected at the next
+        // launch, so backing out of retrying it must say disconnected too rather than repeat the old failure.
+        stateBeforeConnecting = _syncState.value.takeIf { it is SyncState.ConnectionFailed && hasStoredCredentials(provider) }
         _syncState.update { SyncState.Connecting(providerId) }
         return try {
             val redirectUri = authenticator.prepareRedirectUri()
@@ -296,11 +303,12 @@ internal class SyncRepositoryImpl(
                     // simply closed the page, which needs no explaining.
                     _syncState.update {
                         if (outcome.message == null) {
-                            SyncState.Disconnected
+                            stateAfterBackingOut()
                         } else {
                             SyncState.ConnectionFailed(providerId, SyncFailureReason.UNKNOWN)
                         }
                     }
+                    stateBeforeConnecting = null
                     false
                 }
             }
@@ -308,7 +316,8 @@ internal class SyncRepositoryImpl(
             // The user gave up, which the UI offers while an authorization is waiting. The clean up still has to
             // happen, so it runs outside the cancellation before the exception carries on unswallowed.
             withContext(NonCancellable) { discardPendingAuthorization() }
-            _syncState.update { SyncState.Disconnected }
+            _syncState.update { stateAfterBackingOut() }
+            stateBeforeConnecting = null
             throw exception
         } catch (exception: Exception) {
             println("Could not connect to $providerId: ${exception.message}")
@@ -321,8 +330,24 @@ internal class SyncRepositoryImpl(
     override suspend fun cancelConnection() {
         if (_syncState.value !is SyncState.Connecting) return
         discardPendingAuthorization()
-        _syncState.update { if (it is SyncState.Connecting) SyncState.Disconnected else it }
+        _syncState.update { if (it is SyncState.Connecting) stateAfterBackingOut() else it }
+        stateBeforeConnecting = null
     }
+
+    /** Whether [provider] still holds credentials, which is what the next launch restores a connection from. */
+    private suspend fun hasStoredCredentials(provider: SyncProvider) = try {
+        provider.isConnected()
+    } catch (exception: CancellationException) {
+        throw exception
+    } catch (exception: Exception) {
+        false
+    }
+
+    /**
+     * What backing out of an authorization returns to: a connection that had failed stays failed, since its credentials
+     * are still stored and the next launch would otherwise restore it as connected; anything else is disconnected.
+     */
+    private fun stateAfterBackingOut() = stateBeforeConnecting ?: SyncState.Disconnected
 
     /**
      * Carried to its end once it has started taking the connection apart: the credentials go first, and a disconnect
@@ -355,6 +380,7 @@ internal class SyncRepositoryImpl(
             // out; no new one can slip in, since the providers above no longer say they are connected.
             mutex.withLock {
                 syncStateLocalSource.saveSyncIndex(null)
+                stateBeforeConnecting = null
                 _syncState.update { SyncState.Disconnected }
             }
         }
@@ -835,6 +861,7 @@ internal class SyncRepositoryImpl(
                 if (document != null && document.accountId != account.indexKey()) {
                     saveIndex(SyncIndexDocument())
                 }
+                stateBeforeConnecting = null
                 _syncState.update {
                     SyncState.Connected(account = account, progress = null, lastSyncedAt = null, lastOutcome = null)
                 }

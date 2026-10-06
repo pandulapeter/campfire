@@ -242,7 +242,9 @@ a deletion of one of those files lands before its reads or after its update and 
   stays on screen with a button that cannot work. A run the service refuses (`SyncAuthorizationException`, which the
   provider only throws once a renewal has been refused) ends the same way, rather than as a failed outcome under the
   account: its only way on would be Disconnect, which deletes the index, while Connect keeps the index for the same
-  account. It deletes the index under the run lock, so that a run stopped a
+  account. Backing out of that Connect — the consent page closed, the waiting given up — returns to the failed state
+  rather than to disconnected while the provider still holds the refused credentials, since the next launch restores a
+  connection from them; a failure that stored none backs out to disconnected. Disconnecting deletes the index under the run lock, so that a run stopped a
   moment earlier has finished writing it, and a run only ever writes its outcome into a state that is still
   `Connected`: a run that outlived the account it ran against must not bring that account back on screen.
   **`preferences.json` is settled after the files**, by `SyncedPreferencesSync`, and only after a run the engine

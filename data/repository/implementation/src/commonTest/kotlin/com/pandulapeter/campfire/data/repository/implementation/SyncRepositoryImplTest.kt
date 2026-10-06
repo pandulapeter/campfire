@@ -578,6 +578,68 @@ class SyncRepositoryImplTest {
     }
 
     @Test
+    fun `backing out of reconnecting a refused connection keeps it failed`() = runTest {
+        val repository = repository(
+            provider = FakeSyncProvider(
+                files = mapOf(song(1) to "One".encodeToByteArray()),
+                onDownload = { throw SyncAuthorizationException("Refused") },
+                account = ACCOUNT,
+            ),
+            authenticator = FakeSyncAuthenticator(outcome = SyncAuthenticator.AuthorizationOutcome.Cancelled()),
+        )
+        repository.restore()
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        repository.syncState.first { it is SyncState.ConnectionFailed }
+
+        assertFalse(repository.connect(SyncProviderId.DROPBOX, COMPLETION_PAGE))
+
+        assertEquals(SyncState.ConnectionFailed(SyncProviderId.DROPBOX, SyncFailureReason.AUTHORIZATION), repository.syncState.value)
+    }
+
+    @Test
+    fun `cancelling the reconnect of a refused connection keeps it failed`() = runTest {
+        val repository = repository(
+            provider = FakeSyncProvider(
+                files = mapOf(song(1) to "One".encodeToByteArray()),
+                onDownload = { throw SyncAuthorizationException("Refused") },
+                account = ACCOUNT,
+            ),
+            authenticator = FakeSyncAuthenticator(onAuthorize = { awaitCancellation() }),
+        )
+        repository.restore()
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        repository.syncState.first { it is SyncState.ConnectionFailed }
+
+        // In the order the view model gives up in: the waiting connection first, then the authorization it started.
+        val job = launch { repository.connect(SyncProviderId.DROPBOX, COMPLETION_PAGE) }
+        runCurrent()
+        assertEquals(SyncState.Connecting(SyncProviderId.DROPBOX), repository.syncState.value)
+        job.cancelAndJoin()
+        repository.cancelConnection()
+
+        assertEquals(SyncState.ConnectionFailed(SyncProviderId.DROPBOX, SyncFailureReason.AUTHORIZATION), repository.syncState.value)
+    }
+
+    @Test
+    fun `backing out of retrying a connection that never stored credentials ends disconnected`() = runTest {
+        val store = FakePendingAuthorizationStore().apply { onWrite = { throw LibraryStorageException("Full") } }
+        val provider = FakeSyncProvider()
+        val repository = repository(
+            provider = provider,
+            authenticator = FakeSyncAuthenticator(outcome = SyncAuthenticator.AuthorizationOutcome.Cancelled()),
+            pendingAuthorizationStore = store,
+        )
+        assertFalse(repository.connect(SyncProviderId.DROPBOX, COMPLETION_PAGE))
+        assertEquals(SyncState.ConnectionFailed(SyncProviderId.DROPBOX, SyncFailureReason.STORAGE), repository.syncState.value)
+        provider.connected = false
+        store.onWrite = {}
+
+        assertFalse(repository.connect(SyncProviderId.DROPBOX, COMPLETION_PAGE))
+
+        assertEquals(SyncState.Disconnected, repository.syncState.value)
+    }
+
+    @Test
     fun `a run whose index cannot be read stops before anything moves`() = runTest {
         val json = Json {
             prettyPrint = true
