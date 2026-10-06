@@ -431,6 +431,43 @@ internal object ChordProSyntax {
     )
 
     /**
+     * Every short directive name ChordPro defines, under its long one, see [canonicalDirective]. Declared below the maps
+     * it reads, since the properties of an object are initialized in the order they are written.
+     */
+    private val longNames = metadataAliases +
+        startShortNames.mapValues { (_, environment) -> START_OF_PREFIX + environment } +
+        endShortNames.mapValues { (_, environment) -> END_OF_PREFIX + environment } +
+        mapOf(
+            "c" to "comment",
+            "ci" to "comment_italic",
+            "cb" to "comment_box",
+            "np" to "new_page",
+            "npp" to "new_physical_page",
+            "colb" to "column_break",
+            "col" to "columns",
+            "ns" to "new_song",
+            "g" to "grid",
+            "ng" to "no_grid",
+            "tf" to "textfont",
+            "ts" to "textsize",
+            "cf" to "chordfont",
+            "cs" to "chordsize",
+        )
+
+    /**
+     * [directive] as one spelling of it: its long name, and its value after a colon and a single space, or no value at
+     * all for an empty one. Two lines with the same canonical spelling are read the same by [ChordProParser] (`{t:X}`,
+     * `{title X}` and `{Title: X}` are all `{title: X}`), which is what an import asks when it holds two copies of a song
+     * against each other. A name with a selector (`title-guitar`) is kept whole; a negated one has already been read as
+     * the directive it is written on by [matchDirective].
+     */
+    fun canonicalDirective(directive: Directive): String {
+        val name = longNames[directive.name] ?: directive.name
+        val value = directive.value?.takeIf { it.isNotEmpty() }
+        return if (value == null) "{$name}" else "{$name: $value}"
+    }
+
+    /**
      * Where a directive of kind [name] goes when one is added to a file the user wrote.
      *
      * Right after the last directive of its own kind, wherever that is, so that the tags of a song stay together and

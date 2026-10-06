@@ -132,4 +132,36 @@ class ChordProSplitterTest {
         // Another delegated environment started inside one keeps the `{ns}` part of it.
         assertEquals(1, ChordProSplitter.split("{start_of_abc}\n{start_of_ly: L}\n{ns}\nx").size)
     }
+
+    @Test
+    fun `a directive compares equal however it is spelled`() {
+        val long = ChordProSplitter.comparable("{title: T}\n{start_of_chorus}\n[Am]a\n{end_of_chorus}\n{comment: Intro}")
+
+        assertEquals(long, ChordProSplitter.comparable("{t:T}\n{soc}\n[Am]a\n{eoc}\n{c:Intro}"))
+        assertEquals(long, ChordProSplitter.comparable("{Title T}\n{SOC}\n[Am]a\n{EOC}\n{comment:  Intro}"))
+    }
+
+    @Test
+    fun `an empty value is no value`() {
+        assertEquals(ChordProSplitter.comparable("{key}"), ChordProSplitter.comparable("{key:}"))
+    }
+
+    @Test
+    fun `a selector is kept`() {
+        assertNotEquals(ChordProSplitter.comparable("{title: T}"), ChordProSplitter.comparable("{title-guitar: T}"))
+    }
+
+    @Test
+    fun `delegated text is left alone`() {
+        val lilyPond = "{start_of_ly}\n{ c d e }\n{end_of_ly}"
+
+        assertEquals(lilyPond, ChordProSplitter.comparable(lilyPond))
+        assertNotEquals(ChordProSplitter.comparable(lilyPond), ChordProSplitter.comparable("{start_of_ly}\n{c: d e}\n{end_of_ly}"))
+        assertEquals(ChordProSplitter.comparable("$lilyPond\n{comment: x}"), ChordProSplitter.comparable("$lilyPond\n{c:x}"))
+    }
+
+    @Test
+    fun `different values still differ`() {
+        assertNotEquals(ChordProSplitter.comparable("{title: B}"), ChordProSplitter.comparable("{t: A}"))
+    }
 }

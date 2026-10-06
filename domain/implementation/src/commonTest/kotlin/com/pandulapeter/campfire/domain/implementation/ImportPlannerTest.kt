@@ -596,6 +596,27 @@ internal class ImportPlannerTest {
     private suspend fun plan(library: Map<String, String>, vararg incoming: ImportPlanner.IncomingSong) =
         ImportPlanner.planSongs(incoming.toList(), library.keys) { library[it] }
 
+    @Test
+    fun aSongWrittenWithShortDirectivesIsTheLibrarysOwn() = runTest {
+        val library = "{title: River}\n{artist: Band}\n\n{start_of_chorus}\n[C]la\n{end_of_chorus}\n"
+        val incoming = "{t:River}\n{artist:Band}\n\n{soc}\n[C]la\n{eoc}\n"
+
+        val againstLibrary = ImportPlanner.planSongs(
+            incoming = listOf(song(incoming, sourceFileName = "x.cho")),
+            libraryFileNames = listOf("x.cho"),
+            readLibraryText = mapOf("x.cho" to library).exact(),
+        )
+        val withinBatch = ImportPlanner.planSongs(
+            incoming = listOf(song(library, sourceFileName = "a.cho"), song(incoming, sourceFileName = "b.cho")),
+            libraryFileNames = emptyList(),
+            readLibraryText = { null },
+        )
+
+        assertEquals(listOf(ImportPlan.Status.IDENTICAL), againstLibrary.map { it.status })
+        assertEquals(ImportPlan.Status.IDENTICAL, withinBatch.last().status)
+        assertEquals(0, withinBatch.last().repeatedEntryIndex)
+    }
+
     /** A read that finds only the exact name, as a case-sensitive file system does. */
     private fun Map<String, String>.exact(): suspend (String) -> String? = { this[it] }
 

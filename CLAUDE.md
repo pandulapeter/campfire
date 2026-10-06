@@ -369,7 +369,8 @@ localized in both languages.
   file is held against the name it wants (`PrepareImportUseCase` -> `ImportPlan`), a song the library already holds
   under that name or a numbered sibling of it (`x_2.cho`) — or under the very name it arrived with, which is what an
   export of a file named by an older rule carries — is disregarded rather than copied (for a song, comparing both
-  sides after `ChordProPrettifier` and notation normalization), and two different files of one
+  sides after `ChordProPrettifier`, notation normalization and with every directive in one spelling — `{t:X}` is
+  `{title: X}`), and two different files of one
   batch that want the same name are never a question: the second is numbered like any other collision — the
   library's own file among them: a song or setlist the batch brings back unchanged is never offered up for
   replacement, so a different one wanting its name is numbered next to it. The names

@@ -209,7 +209,10 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   each; one inside a delegated environment is that environment's text, as the parser reads it — any `{end_of_…}` closes
   the environment and any `{start_of_…: label}` moves it on, whichever one they name — and an environment the file
   never closes takes the rest of it. `comparable` folds a text the same way, line endings included, which is what an import compares a part
-  against the file already on disk with: the same song, tagged in the app or written by hand, is not a conflict. Both
+  against the file already on disk with: the same song, tagged in the app or written by hand, is not a conflict. It
+  also writes each directive outside a delegated environment in its long name and one spacing
+  (`ChordProSyntax.canonicalDirective`, `{t:X}` as `{title: X}`), which Prettify does not, since that would rewrite the
+  user's file. Both
   drop a byte order mark wherever it sits, since joining two files that each carry one leaves one in the middle, and
   U+FEFF is not whitespace to `trim`, so a `{title}` behind it would be read as lyrics.
 - `ChordProTransposer` — moves chords by semitones, on the model (the viewer) or directly on the text keeping every

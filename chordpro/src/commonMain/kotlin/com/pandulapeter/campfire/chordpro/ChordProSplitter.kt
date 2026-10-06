@@ -49,12 +49,35 @@ object ChordProSplitter {
      * endings: LF throughout, and no blank lines at either end. Two texts with the same comparable form are the same
      * song as a file, which is the question an import asks of a part [split] handed it and the file already on disk.
      * The chords are folded into the standard notation as well, since an import writes them that way: a German chart
-     * imported again is the file it became the first time, and the same as one written before that was so.
+     * imported again is the file it became the first time, and the same as one written before that was so. So is every
+     * directive outside an environment handed to another program, into one spelling
+     * ([ChordProSyntax.canonicalDirective]): a short name, a missing space or a capital is how a file was typed, not
+     * what it says.
      */
-    fun comparable(text: String) = ChordProSyntax.splitLines(ChordProNotation.convertText(text.withoutByteOrderMarks(), ChordNotation.STANDARD, ChordNotation.STANDARD))
-        .dropWhile { it.isBlank() }
-        .dropLastWhile { it.isBlank() }
-        .joinToString("\n")
+    fun comparable(text: String): String {
+        var delegatedEnvironment: String? = null
+        return ChordProSyntax.splitLines(ChordProNotation.convertText(text.withoutByteOrderMarks(), ChordNotation.STANDARD, ChordNotation.STANDARD))
+            .map { rawLine ->
+                val trimmedLine = rawLine.trim()
+                // The same walk through the delegated environments as split's, so that LilyPond's `{ c d e }` or an
+                // ABC line is never read as a directive and respelled.
+                if (delegatedEnvironment != null) {
+                    ChordProSyntax.matchDelegatedDirective(trimmedLine)?.name?.let { name ->
+                        ChordProSyntax.startOfEnvironment(name)?.let { environment ->
+                            delegatedEnvironment = environment.takeIf { it in ChordProSyntax.delegateEnvironments }
+                        }
+                        ChordProSyntax.endOfEnvironment(name)?.let { delegatedEnvironment = null }
+                    }
+                    return@map rawLine
+                }
+                val directive = ChordProSyntax.matchDirective(trimmedLine) ?: return@map rawLine
+                delegatedEnvironment = ChordProSyntax.startOfEnvironment(directive.name)?.takeIf { it in ChordProSyntax.delegateEnvironments }
+                ChordProSyntax.canonicalDirective(directive)
+            }
+            .dropWhile { it.isBlank() }
+            .dropLastWhile { it.isBlank() }
+            .joinToString("\n")
+    }
 
     /**
      * A byte order mark is never part of a song. Editors on Windows prefix a UTF-8 file with one, and joining two
