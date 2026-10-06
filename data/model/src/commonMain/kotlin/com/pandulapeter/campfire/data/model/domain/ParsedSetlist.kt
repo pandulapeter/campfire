@@ -10,9 +10,10 @@
 package com.pandulapeter.campfire.data.model.domain
 
 /**
- * A setlist document read for an import, before it is in the library. [setlist] always has a date, today's where the
- * document named none, and [isDated] says which of the two it is: a file with no day of its own says nothing about
- * the day of a library setlist it is compared with or replaces, so that one keeps its own.
+ * A setlist document as read, for an import or from the library, before anything is written for it. [setlist] always
+ * has a date, today's where the document named none, and [isDated] says which of the two it is: a file with no day of
+ * its own says nothing about the day of a library setlist it is compared with or replaces, so that one keeps its own,
+ * and a library file with none still has to be saved with the day it was given.
  */
 data class ParsedSetlist(
     val setlist: Setlist,

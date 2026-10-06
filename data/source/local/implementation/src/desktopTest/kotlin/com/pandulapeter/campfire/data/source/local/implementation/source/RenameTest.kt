@@ -131,6 +131,6 @@ class RenameTest {
 
         assertEquals("Summer.setlist.json", renamed.fileName)
         assertEquals(listOf("Summer.setlist.json"), fileStorage.list(StorageDirectory.SETLISTS).map { it.name })
-        assertEquals("Summer", setlistLocalSource.loadSetlists().single().title)
+        assertEquals("Summer", setlistLocalSource.loadSetlists().single().setlist.title)
     }
 }

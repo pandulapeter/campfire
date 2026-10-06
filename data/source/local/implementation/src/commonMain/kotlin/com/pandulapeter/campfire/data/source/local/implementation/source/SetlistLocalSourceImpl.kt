@@ -42,7 +42,7 @@ internal class SetlistLocalSourceImpl(
     private val fileStorage: FileStorage,
 ) : SetlistLocalSource {
 
-    override suspend fun loadSetlists(): List<Setlist> = withContext(Dispatchers.Default) {
+    override suspend fun loadSetlists(): List<ParsedSetlist> = withContext(Dispatchers.Default) {
         val files = fileStorage.list(StorageDirectory.SETLISTS)
             .filter { LibraryFiles.isSetlistFileName(it.name) }
             .filter { file ->
@@ -56,7 +56,9 @@ internal class SetlistLocalSourceImpl(
         files.zip(fileStorage.readTexts(StorageDirectory.SETLISTS, files.map { it.name })).mapNotNull { (file, answer) ->
             try {
                 when (answer) {
-                    is BatchRead.Text -> SetlistDocumentFormat.decode(answer.text).toDatedModel(file.name, size = file.size)
+                    is BatchRead.Text -> SetlistDocumentFormat.decode(answer.text).let { document ->
+                        ParsedSetlist(setlist = document.toModel(file.name, size = file.size, undatedDay = today()), isDated = document.isDated)
+                    }
                     BatchRead.Missing -> null
                     is BatchRead.Failed -> throw answer.cause
                 }
@@ -80,9 +82,10 @@ internal class SetlistLocalSourceImpl(
     /**
      * Every setlist has a day, so a file that names none - written before there were dates, by hand, or by an older
      * version on another device - is given the day it is first read on and saved with it at once, rather than being
-     * read as today again tomorrow. The write goes around the repository, so it announces no library change and starts
-     * no sync run of its own; the next run carries it. A write that fails leaves the setlist dated in memory only, to be
-     * tried again by the next read.
+     * read as today again tomorrow. Only [loadSetlist] does this, since its callers hold the repository's locks: the
+     * bulk read would write back the text it read a moment ago over whatever replaced it since. The write announces no
+     * library change and starts no sync run of its own; the next run carries it. A write that fails leaves the setlist
+     * dated in memory only, to be tried again by the next read.
      */
     private suspend fun SetlistDocument.toDatedModel(fileName: String, size: Long): Setlist {
         val setlist = toModel(fileName, size = size, undatedDay = today())

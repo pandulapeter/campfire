@@ -224,7 +224,7 @@ localized in both languages.
   setlist has one**: an import dates a setlist that carries none the same way (the bundled demo one included), unless
   it replaces a library setlist, whose day it keeps, and a file in the library that names none — written before there
   were dates, by hand, or by an older version on another device — is given the day it is first read on and saved with
-  it at once, around the repository, so the next sync run carries it.
+  it right after that read, through the repository's locks but announcing nothing, so the next sync run carries it.
   The setlist details sheet's **Countdown** checkbox, off by default and in the file too, puts a subtitle under the setlist's
   sticky header that says how far that day is ("In 5 days", "Today", "Yesterday") — the only place the date shows
   outside the sheet, so the one way it can be seen in performance mode. The same subtitle carries how long the setlist's songs take ("42:30 running time", the label after the number so that a narrow header cuts off the label rather than the time), after the countdown or in its place,

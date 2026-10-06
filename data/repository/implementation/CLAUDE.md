@@ -81,7 +81,12 @@ a deletion of one of those files lands before its reads or after its update and 
   a name free to the file being there under it. The write and the cache update under that lock run as one
   `NonCancellable` step, so a change whose screen goes away while it is being written is still in the cache the next
   change reads; the lock itself is waited for cancellably. `loadSetlistFileNamesNaming` reads every setlist file afresh
-  for the reference walks, outside the locks — `updateSetlist` reads each one again under them.
+  for the reference walks, outside the locks — `updateSetlist` reads each one again under them. No read writes
+  anything: the local source lists an undated file with today's day in memory (`ParsedSetlist.isDated` false), and
+  `writeDays`, after `loadSetlistsIfNeeded` and `rescan` have published, saves each such file through `latest` under
+  both locks — from a fresh read, so a download or an edit that landed since the listing is what gets the day, not
+  the listing's older copy. It announces nothing. It never runs inside the read itself, since `latest` takes the read
+  lock while it holds the other two.
 - `SongRepositoryImpl` has the same kind of lock for the three writers that pick a free name before they write
   (`createSong`, `importSong`, `renameSong`): finding the name and writing under it are two trips to the storage, and a
   second asker in between is given the same name. Every write, `saveSong`'s guard included, also holds

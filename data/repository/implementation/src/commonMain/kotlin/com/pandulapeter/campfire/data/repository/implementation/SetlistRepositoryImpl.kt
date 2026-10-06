@@ -15,7 +15,10 @@ import com.pandulapeter.campfire.data.repository.implementation.base.BaseLocalDa
 import com.pandulapeter.campfire.data.source.local.api.SetlistLocalSource
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.getAndUpdate
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -50,9 +53,26 @@ internal class SetlistRepositoryImpl(
      */
     private val writeMutex = Mutex()
 
-    override suspend fun loadDataFromLocalSource() = setlistLocalSource.loadSetlists()
+    /** The setlists the last reads found with no day of their own, which [writeDays] saves with the one they were given. */
+    private val undatedFileNames = MutableStateFlow(emptySet<String>())
 
-    override suspend fun loadSetlistsIfNeeded() = loadDataIfNeeded()
+    /**
+     * Held by [writeDays] from taking the names to its last write, so that a second caller waits for those writes rather
+     * than finding nothing left to do: the launch's sync run waits for the first read this way, and then sees the days.
+     */
+    private val dayWriteMutex = Mutex()
+
+    /**
+     * Writes nothing, since it runs under the base read lock that [latest] takes while it holds [writing]'s two: the
+     * days are written after it by [writeDays].
+     */
+    override suspend fun loadDataFromLocalSource() = setlistLocalSource.loadSetlists().let { parsed ->
+        val undated = parsed.filterNot { it.isDated }.map { it.setlist.fileName }
+        if (undated.isNotEmpty()) undatedFileNames.update { it + undated }
+        parsed.map { it.setlist }
+    }
+
+    override suspend fun loadSetlistsIfNeeded() = loadDataIfNeeded().also { writeDays() }
 
     /**
      * Read outside [writing] on purpose: [updateSetlist] reads each file again under both locks before it changes it, so
@@ -60,13 +80,14 @@ internal class SetlistRepositoryImpl(
      */
     override suspend fun loadSetlistFileNamesNaming(songFileName: String): List<String> {
         fun Setlist.names() = entries.any { it.songFileName == songFileName }
-        val onDisk = setlistLocalSource.loadSetlists().filter { it.names() }.map { it.fileName }
+        val onDisk = setlistLocalSource.loadSetlists().map { it.setlist }.filter { it.names() }.map { it.fileName }
         val cached = loadDataIfNeeded().orEmpty().filter { it.names() }.map { it.fileName }
         return (onDisk + cached).distinct()
     }
 
     override suspend fun rescan() {
         reloadData()
+        writeDays()
     }
 
     override suspend fun refresh(fileNames: Set<String>) {
@@ -173,6 +194,18 @@ internal class SetlistRepositoryImpl(
         } catch (exception: Exception) {
             println("Could not read the setlist \"$fileName\": ${exception.message}")
             cached
+        }
+    }
+
+    /**
+     * Saves every setlist a read found undated with the day it was given, from a fresh read under both locks like any
+     * other change: the bulk read is minutes old by the end of a large library, and a sync download or an edit of the
+     * file landing since is what would be written over. [latest] reads it again and dates *that* content, or leaves a
+     * file that got a day meanwhile alone. Announces nothing, so it starts no sync run; the next one carries the day.
+     */
+    private suspend fun writeDays() = dayWriteMutex.withLock {
+        undatedFileNames.getAndUpdate { emptySet() }.forEach { fileName ->
+            writing { latest(fileName)?.let { dated -> updateData { current -> current.orEmpty().filterNot { it.fileName == dated.fileName } + dated } } }
         }
     }
 

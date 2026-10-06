@@ -160,8 +160,10 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
   after the known ones; `SetlistComparisonImpl` decodes two of them for sync, telling whether they differ only in their
   `date` (and the dropped `priority`) and what one was before a read dated it. A setlist's `date` is kept as text in the document and read as a `LocalDate`, so one that is
   not a date — or not text at all, which its own serializer reads as none — costs that date and not the setlist. Every
-  setlist has a day, so one read from the library without one is given today's and saved with it at once
-  (`SetlistLocalSourceImpl.toDatedModel`, a write that announces nothing, so the next sync run carries it), and one
+  setlist has a day, so one read from the library without one is given today's: `loadSetlists` does it in memory and
+  says so (`ParsedSetlist.isDated`), writing nothing, and the repository saves it with that day right after the read,
+  under its locks, through `loadSetlist` (`SetlistLocalSourceImpl.toDatedModel`, a write that announces nothing, so
+  the next sync run carries it); one
   parsed for an import is given today's in memory, `ParsedSetlist.isDated` telling the import it was not the file's; the `priority` older versions ordered the list by is still declared,
   so that it is read and dropped rather than kept as an unknown field. No document type ever leaves this module.
 - **`document/`** — bounded, text-only PDF and Word readers in common Kotlin, with no platform parser or network.

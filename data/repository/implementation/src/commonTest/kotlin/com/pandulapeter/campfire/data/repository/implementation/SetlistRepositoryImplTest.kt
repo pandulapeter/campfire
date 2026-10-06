@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.repository.implementation
 
+import com.pandulapeter.campfire.data.model.domain.ParsedSetlist
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.source.local.api.SetlistLocalSource
 import kotlinx.coroutines.CompletableDeferred
@@ -307,6 +308,47 @@ class SetlistRepositoryImplTest {
         )
     }
 
+    @Test
+    fun `the day is written into the version of an undated setlist that replaced the one the listing read`() = runTest {
+        val localSource = FakeSetlistLocalSource(listOf(setlist(FILE_NAME, "a.cho"))).apply { undated += FILE_NAME }
+        // A sync download landing between the listing and the day being written.
+        localSource.afterListing = {
+            localSource.files[FILE_NAME] = setlist(FILE_NAME, "a.cho", "b.cho")
+            localSource.afterListing = {}
+        }
+        val repository = SetlistRepositoryImpl(localSource, LibraryFileLock(), LibraryChanges())
+
+        repository.loadSetlistsIfNeeded()
+
+        val saved = localSource.saves.single()
+        assertEquals(listOf("a.cho", "b.cho"), saved.entries.map { it.songFileName })
+        assertEquals(GIVEN_DAY, saved.date)
+        assertEquals(listOf(saved), repository.setlists.first().data)
+    }
+
+    @Test
+    fun `an undated setlist is saved with its day once`() = runTest {
+        val localSource = FakeSetlistLocalSource(listOf(setlist(FILE_NAME, "a.cho"), setlist(SECOND_FILE_NAME, "b.cho")))
+            .apply { undated += FILE_NAME }
+        val repository = SetlistRepositoryImpl(localSource, LibraryFileLock(), LibraryChanges())
+
+        repository.loadSetlistsIfNeeded()
+        repository.loadSetlistsIfNeeded()
+        repository.rescan()
+
+        assertEquals(listOf(FILE_NAME), localSource.saves.map { it.fileName })
+        assertEquals(GIVEN_DAY, localSource.files.getValue(FILE_NAME).date)
+    }
+
+    @Test
+    fun `finding the setlists that name a song writes nothing`() = runTest {
+        val localSource = FakeSetlistLocalSource(listOf(setlist(FILE_NAME, "a.cho"))).apply { undated += FILE_NAME }
+        val repository = SetlistRepositoryImpl(localSource, LibraryFileLock(), LibraryChanges())
+
+        assertEquals(listOf(FILE_NAME), repository.loadSetlistFileNamesNaming("a.cho"))
+        assertTrue(localSource.saves.isEmpty())
+    }
+
     /** A setlists directory held in a map, whose writes can be held back until the test lets them through. */
     private class FakeSetlistLocalSource(setlists: List<Setlist>) : SetlistLocalSource {
 
@@ -326,9 +368,21 @@ class SetlistRepositoryImplTest {
         /** Set to make [loadSetlists] fail the way a directory that cannot be listed does. */
         var isListingBroken = false
 
-        override suspend fun loadSetlists(): List<Setlist> {
+        /** The files that name no day of their own, which [loadSetlist] dates and saves the way the storage does. */
+        val undated = mutableSetOf<String>()
+
+        /** Every setlist [saveSetlist] wrote, in order. */
+        val saves = mutableListOf<Setlist>()
+
+        /** Run once [loadSetlists] has its answer, which is where a test changes a file behind the listing's back. */
+        var afterListing: () -> Unit = {}
+
+        override suspend fun loadSetlists(): List<ParsedSetlist> {
             if (isListingBroken) throw IllegalStateException("Not a directory.")
-            return files.values.filter { it.fileName !in unlistable }
+            return files.values
+                .filter { it.fileName !in unlistable }
+                .map { ParsedSetlist(setlist = if (it.fileName in undated) it.copy(date = GIVEN_DAY) else it, isDated = it.fileName !in undated) }
+                .also { afterListing() }
         }
 
         /** Awaited by a read of the file it is filed under, as a slow storage would keep a refresh reading. */
@@ -337,7 +391,9 @@ class SetlistRepositoryImplTest {
         override suspend fun loadSetlist(fileName: String): Setlist? {
             loadGates[fileName]?.await()
             if (isUnreadable) throw IllegalStateException("Not a setlist.")
-            return files[fileName]
+            val setlist = files[fileName] ?: return null
+            if (!undated.remove(fileName)) return setlist
+            return saveSetlist(setlist.copy(date = GIVEN_DAY))
         }
 
         override suspend fun createSetlist(title: String, description: String, date: LocalDate, isCountdownShown: Boolean): Setlist {
@@ -361,6 +417,7 @@ class SetlistRepositoryImplTest {
             saveGate?.await()
             val saved = setlist.copy(size = SAVED_SIZE)
             files[setlist.fileName] = saved
+            saves += saved
             afterSaveGate?.await()
             return saved
         }
@@ -389,6 +446,7 @@ class SetlistRepositoryImplTest {
         const val RENAMED_FILE_NAME = "summer.setlist.json"
         const val SAVED_SIZE = 42L
         val DATE = LocalDate(2026, 9, 28)
+        val GIVEN_DAY = LocalDate(2026, 10, 7)
 
         fun setlist(fileName: String, vararg songs: String) = Setlist(
             fileName = fileName,

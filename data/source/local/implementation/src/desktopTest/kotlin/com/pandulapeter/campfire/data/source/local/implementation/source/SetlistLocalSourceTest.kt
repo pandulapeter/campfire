@@ -88,12 +88,26 @@ class SetlistLocalSourceTest {
     }
 
     @Test
-    fun `a setlist file that names no day is given today's when it is read and keeps it`() = runBlocking {
+    fun `a setlist file that names no day is listed with today's and left as it is`() = runBlocking {
+        val undated = """{"title":"Old"}"""
+        fileStorage.writeText(StorageDirectory.SETLISTS, "old.setlist.json", undated)
+        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+
+        val listed = setlistLocalSource.loadSetlists().single()
+
+        assertEquals(today, listed.setlist.date)
+        assertFalse(listed.isDated)
+        assertEquals(undated, fileStorage.readText(StorageDirectory.SETLISTS, "old.setlist.json"))
+    }
+
+    @Test
+    fun `a setlist file that names no day is given today's when it is read on its own and keeps it`() = runBlocking {
         fileStorage.writeText(StorageDirectory.SETLISTS, "old.setlist.json", """{"title":"Old"}""")
         val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
 
-        assertEquals(listOf(today), setlistLocalSource.loadSetlists().map { it.date })
+        assertEquals(today, setlistLocalSource.loadSetlist("old.setlist.json")?.date)
         assertTrue("\"date\": \"$today\"" in fileStorage.readText(StorageDirectory.SETLISTS, "old.setlist.json").orEmpty())
+        assertTrue(setlistLocalSource.loadSetlists().single().isDated)
     }
 
     @Test

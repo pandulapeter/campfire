@@ -83,7 +83,7 @@ class LibraryListingTest {
         writeSetlists(setlistLocalSource)
         fileStorage.writeBytes(StorageDirectory.SETLISTS, "winter.setlist.json", tooLarge())
 
-        assertEquals(listOf("summer.setlist.json"), setlistLocalSource.loadSetlists().map { it.fileName })
+        assertEquals(listOf("summer.setlist.json"), setlistLocalSource.loadSetlists().map { it.setlist.fileName })
     }
 
     @Test
@@ -122,7 +122,7 @@ class LibraryListingTest {
         assertEquals("autumn_evenings.setlist.json", moved.fileName)
         assertEquals(sizeOf(moved.fileName), moved.size)
 
-        assertEquals(listOf(sizeOf(moved.fileName)), setlistLocalSource.loadSetlists().map { it.size })
+        assertEquals(listOf(sizeOf(moved.fileName)), setlistLocalSource.loadSetlists().map { it.setlist.size })
     }
 
     @Test
