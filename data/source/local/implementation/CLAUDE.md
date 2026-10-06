@@ -158,7 +158,7 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
   caller caches the model the save returns rather than reading the file again. `SetlistDocumentFormat` reads and
   writes the setlist files, keeping the members the document does not know in `unknownFields` and writing them back
   after the known ones; `SetlistComparisonImpl` decodes two of them for sync, telling whether they differ only in their
-  `date` (and the dropped `priority`) and what one was before a read dated it. A setlist's `date` is kept as text in the document and read as a `LocalDate`, so one that is
+  `date` (and the dropped `priority`) and what one was before a read dated it. A setlist's `date` is kept as text in the document and read as a `LocalDate` (the day of an ISO date-time too), so one that is
   not a date — or not text at all, which its own serializer reads as none — costs that date and not the setlist. Every
   setlist has a day, so one read from the library without one is given today's: `loadSetlists` does it in memory and
   says so (`ParsedSetlist.isDated`), writing nothing, and the repository saves it with that day right after the read,

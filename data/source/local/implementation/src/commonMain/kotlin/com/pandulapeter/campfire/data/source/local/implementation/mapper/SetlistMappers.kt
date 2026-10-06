@@ -49,8 +49,9 @@ internal fun Setlist.toDocument() = SetlistDocument(
     unknownFields = unknownFields.toFields(),
 )
 
+/** An ISO date, or the day of an ISO date-time (`2026-10-06T20:00:00`), which names the day just as well. */
 private fun String.toLocalDate() = try {
-    LocalDate.parse(trim())
+    LocalDate.parse(trim().substringBefore('T'))
 } catch (_: IllegalArgumentException) {
     null
 }

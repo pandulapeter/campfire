@@ -88,13 +88,21 @@ internal class SetlistMappersTest {
 
     @Test
     fun aDateThatIsNotOneIsNoDateAndTheSetlistGetsTheDayItIsHanded() {
-        (listOf("next friday", "2026-02-30", "") + null).forEach { text ->
+        (listOf("next friday", "2026-02-30", "", "2026-13-01T10:00", "T") + null).forEach { text ->
             val document = SetlistDocument(title = "Summer", date = text)
 
             assertFalse(document.isDated)
             assertEquals(DAY, document.toModel("summer.setlist.json", size = 0, undatedDay = DAY).date)
         }
         assertTrue(SetlistDocument(title = "Summer", date = "2026-09-28").isDated)
+    }
+
+    @Test
+    fun theDayOfADateWrittenWithATimeIsTheSetlistsDay() = listOf("2026-10-06T20:00:00", " 2026-10-06T20:00Z ").forEach { text ->
+        val document = SetlistDocument(title = "Summer", date = text)
+
+        assertTrue(document.isDated)
+        assertEquals(LocalDate(2026, 10, 6), document.toModel("summer.setlist.json", size = 0, undatedDay = DAY).date)
     }
 
     private companion object {
