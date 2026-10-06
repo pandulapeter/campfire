@@ -54,6 +54,7 @@ class RenderSectionsTest {
                 }
             }
             is RenderSection.Metadata -> "metadata"
+            is RenderSection.Chords -> "chords"
         }
     }
 

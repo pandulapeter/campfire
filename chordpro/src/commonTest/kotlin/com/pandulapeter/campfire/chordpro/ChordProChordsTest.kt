@@ -177,4 +177,23 @@ class ChordProChordsTest {
     fun `words in brackets are no chords`() {
         listOf("Bridge", "N.C.", "*softly", "Intro", "x2", "", "Chorus 2x", "Halt").forEach { assertNull(ChordProChords.parse(it), it) }
     }
+
+    @Test
+    fun `a song's chords are named once, in the order they are played, its key aside`() {
+        val song = ChordProParser.parse(
+            "{key: Bb}\n{comment: Intro: [Am] [*softly]}\n[G]la [C]la [G]la\n{start_of_grid}\n| D . C~E7 . |\n{end_of_grid}\n" +
+                "{start_of_tab}\nF\ne|--1--|\n{end_of_tab}\n{soc}\n[Em]la\n{eoc}\n{chorus}",
+        )
+        assertEquals(listOf("Am", "G", "C", "D", "E7", "F", "Em"), ChordProChords.namesIn(song))
+    }
+
+    @Test
+    fun `a chord name is moved in the notation it is shown in`() {
+        assertEquals("A", ChordProChords.transposedName("G", 2))
+        assertEquals("Bbm7", ChordProChords.transposedName("Am7", 1, preferFlats = true))
+        assertEquals("H", ChordProChords.transposedName("A", 2, ChordNotation.GERMAN))
+        assertEquals("B", ChordProChords.transposedName("A", 1, ChordNotation.GERMAN, preferFlats = true))
+        assertEquals("d/f#", ChordProChords.transposedName("c/e", 2))
+        assertEquals("N.C.", ChordProChords.transposedName("N.C.", 2))
+    }
 }

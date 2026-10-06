@@ -519,6 +519,10 @@
     <string name="song_details_tempo">%1$s BPM</string>
     <string name="song_details_time">%1$s</string>
     <string name="song_details_key_change">Key: %1$s</string>
+    <string name="song_details_chords">Chords</string>
+    <string name="song_details_chord_diagram">%1$s: %2$s</string>
+    <string name="song_details_chord_diagram_none">%1$s: no diagram</string>
+    <string name="song_details_chord_sounding">%1$s, sounding as %2$s</string>
     <string name="song_details_timing">From here: %1$s</string>
     <string name="song_details_composer">Composer</string>
     <string name="song_details_lyricist">Lyricist</string>

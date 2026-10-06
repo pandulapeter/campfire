@@ -88,10 +88,12 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.isSpecified
+import com.pandulapeter.campfire.chordpro.ChordNotation
 import com.pandulapeter.campfire.chordpro.ChordProHighlighter
 import com.pandulapeter.campfire.chordpro.ChordProTabWrapper
 import com.pandulapeter.campfire.chordpro.ChordProTempo
 import com.pandulapeter.campfire.chordpro.ChordProTime
+import com.pandulapeter.campfire.chordpro.model.ChordInstrument
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
@@ -123,6 +125,8 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_section_outr
 import com.pandulapeter.campfire.presentation.resources.song_editor_section_pre_chorus
 import com.pandulapeter.campfire.presentation.resources.song_editor_section_solo
 import com.pandulapeter.campfire.presentation.resources.song_editor_section_verse
+import com.pandulapeter.campfire.presentation.ui.chords.SongChord
+import com.pandulapeter.campfire.presentation.ui.chords.songChordsOf
 import com.pandulapeter.campfire.presentation.ui.components.EDGE_FADE_SIZE
 import com.pandulapeter.campfire.presentation.ui.components.ExpandChevron
 import com.pandulapeter.campfire.presentation.ui.components.textResource
@@ -220,6 +224,7 @@ internal fun SongLyrics(
     keepsStepButtonInset: Boolean = false,
     canCutSections: Boolean = false,
     isSingleColumn: Boolean = false,
+    chordDiagrams: ChordDiagrams? = null,
 ) {
     // The fold toggles of the runs inside a section are named by these too, where the file names them nothing.
     val defaultLabels = rememberDefaultSectionLabels()
@@ -237,6 +242,11 @@ internal fun SongLyrics(
             hasPlayingControls = shownPlayingControls != null,
             readsCapoAndTime = readsCapoAndTime,
         )
+    }.let { sections ->
+        val cells = remember(model.chords, chordDiagrams?.instrument, chordDiagrams?.storedShapes) {
+            chordDiagrams?.let { chordCellsOf(model.chords, it.instrument, it.storedShapes) }.orEmpty()
+        }
+        remember(sections, cells, chordDiagrams?.isFolded) { withChordsSection(sections, cells, isFolded = chordDiagrams?.isFolded == true) }
     }
     val glideScope = rememberCoroutineScope()
     val glideSpec = MaterialTheme.motionScheme.defaultSpatialSpec<IntOffset>()
@@ -298,7 +308,13 @@ internal fun SongLyrics(
             // The info section is the song's one header card: keyed by its content, every keystroke in a header directive
             // would compose it afresh, and whatever it remembers (the cover waiting for the typing to pause, the cover's
             // crossfade) would start over each time.
-            val identity: Any = if (section is RenderSection.Metadata) RenderSection.Metadata::class else section
+            val identity: Any = when (section) {
+                is RenderSection.Metadata -> RenderSection.Metadata::class
+                // Kept for the same reason: a shape chosen or the section folded is the same section, and folding it
+                // has to fade its body in rather than compose the whole of it afresh.
+                is RenderSection.Chords -> RenderSection.Chords::class
+                else -> section
+            }
             val occurrence = (occurrences[identity] ?: 0) + 1
             occurrences[identity] = occurrence
             SectionKey(hash = identity.hashCode(), occurrence = occurrence)
@@ -386,6 +402,15 @@ internal fun SongLyrics(
                                 readsCapoAndTime = section.readsCapoAndTime,
                                 animatesControls = sectionMotion == SectionMotion.SPRING && extraWidth <= 0.dp,
                                 titleStyle = headerStyle,
+                                chordStyle = chordStyle,
+                                fontScale = fontScale,
+                            )
+
+                            is RenderSection.Chords -> SongChordsSection(
+                                modifier = unitModifier.padding(horizontal = CARD_PADDING),
+                                section = section,
+                                chordDiagrams = chordDiagrams,
+                                headerStyle = headerStyle,
                                 chordStyle = chordStyle,
                                 fontScale = fontScale,
                             )
@@ -814,7 +839,7 @@ private fun SongSectionContent(
  * as it would in the lists (see [SectionHeader]).
  */
 @Composable
-private fun SectionHeaderPill(
+internal fun SectionHeaderPill(
     modifier: Modifier = Modifier,
     header: String,
     toggle: FoldToggle?,
@@ -1013,7 +1038,7 @@ private fun MutableMap<String, Int>.nextFoldKey(name: String): String {
 }
 
 /** Whether a run (or a section that is nothing else) is unfolded, and how to fold or unfold it. */
-private class FoldToggle(
+internal class FoldToggle(
     val isExpanded: Boolean,
     val onToggled: () -> Unit,
 )
@@ -2228,6 +2253,7 @@ internal class SongLyricsModel(
     val sections: List<RenderSection>,
     val isCut: Boolean,
     val shouldShowChords: Boolean,
+    val chords: List<SongChord> = emptyList(),
 )
 
 /**
@@ -2239,14 +2265,25 @@ internal class SongLyricsModel(
  * the key, capo, tempo and time of the metadata section.
  * @param showsTiming Whether a change of tempo or time signature further down the song is a line of its own that starts
  * a page ([RenderSection.Timing]): false with the metronome switched off, which lays the song out as if it had none.
+ * @param chordInstrument The instrument the song's chords are collected for its Chords section on (see [songChordsOf]),
+ * which is the slow part of that section and so belongs here; null where the song has no such section.
+ * @param notation The notation [song] is written in, which its chords are read in.
  */
 internal fun prepareSongLyrics(
     song: ChordProSong,
     shouldShowChords: Boolean,
     labels: DefaultSectionLabels,
     showsTiming: Boolean = true,
+    chordInstrument: ChordInstrument? = null,
+    notation: ChordNotation = ChordNotation.STANDARD,
 ) = LayoutBudget.fit(song.toRenderSections(shouldShowChords, labels, showsTiming)).let { (sections, isCut) ->
-    SongLyricsModel(song = song, sections = sections.withoutEmptyTimings(), isCut = isCut, shouldShowChords = shouldShowChords)
+    SongLyricsModel(
+        song = song,
+        sections = sections.withoutEmptyTimings(),
+        isCut = isCut,
+        shouldShowChords = shouldShowChords,
+        chords = if (shouldShowChords && chordInstrument != null) songChordsOf(song, notation, chordInstrument, song.metadata.capo ?: 0) else emptyList(),
+    )
 }
 
 /**
@@ -2309,6 +2346,7 @@ internal data class SongLyricsInputs(
     val tempoOverride: Int? = null,
     val capoOverride: Int? = null,
     val showsTiming: Boolean = true,
+    val chordInstrument: ChordInstrument? = null,
 )
 
 /**
@@ -2413,6 +2451,19 @@ internal sealed interface RenderSection {
         val metadata: ChordProMetadata,
         val hasPlayingControls: Boolean = false,
         val readsCapoAndTime: Boolean = false,
+    ) : RenderSection
+
+    /**
+     * The diagrams of the song's chords, inserted after the metadata the way it is, and kept whole like it: one
+     * [ChordCell] per chord the song plays, in the order they are first played, see [withChordsSection].
+     *
+     * @param isFolded Whether only the header is shown, which is part of the content because the measured sizes of a
+     * section are kept by it.
+     */
+    @Immutable
+    data class Chords(
+        val cells: List<ChordCell>,
+        val isFolded: Boolean,
     ) : RenderSection
 
     /** A titled block of lines: an environment, an implicit paragraph, or a repeated chorus. */
@@ -2948,9 +2999,9 @@ internal fun ChordProLine.Lyrics.padLyricsToFitChords(
 }
 
 private val CHORD_GAP = 4.dp
-private val CARD_PADDING = 12.dp
+internal val CARD_PADDING = 12.dp
 private val CARD_ELEVATION = 1.dp
-private val HEADER_GAP = 4.dp
+internal val HEADER_GAP = 4.dp
 private val INLINE_COMMENT_GAP = 12.dp
 private val COMMENT_BOX_HORIZONTAL_PADDING = 12.dp
 private val COMMENT_BOX_VERTICAL_PADDING = 8.dp

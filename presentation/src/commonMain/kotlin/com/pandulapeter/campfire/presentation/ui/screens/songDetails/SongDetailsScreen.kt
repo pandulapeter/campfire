@@ -135,6 +135,8 @@ import com.pandulapeter.campfire.presentation.resources.songs_key
 import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
 import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
 import com.pandulapeter.campfire.metronome.api.model.TimeSignature
+import com.pandulapeter.campfire.presentation.ui.chords.toChordInstrument
+import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeButton
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomePanel
 import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
@@ -283,6 +285,21 @@ internal fun SongDetailsScreen(
     // caught up with a change to it yet - so that two numberings are never mixed in one bar.
     val setlistSlots = remember(setlist, songs) { setlist?.let { buildSetlistSlots(it.entries, songs.map { song -> song.fileName }) } }
     val shouldShowChords = userPreferences?.areChordsEnabled != false
+    // One for the whole pager, since nothing in it belongs to one song: the instrument, the player's shapes and whether
+    // the section is folded are the same wherever a song is read.
+    val chordInstrument = userPreferences?.takeIf { shouldShowChords && it.areChordDiagramsEnabled }?.chordInstrument?.toChordInstrument()
+    val storedChordShapes = chordInstrument?.let { userPreferences?.chordVoicings?.get(it.id) }.orEmpty()
+    val isChordSectionFolded = userPreferences?.isChordSectionFolded == true
+    val chordDiagrams = remember(chordInstrument, storedChordShapes, isChordSectionFolded) {
+        chordInstrument?.let {
+            ChordDiagrams(
+                instrument = it,
+                storedShapes = storedChordShapes,
+                isFolded = isChordSectionFolded,
+                onFoldToggled = viewModel::toggleChordSectionFold,
+            )
+        }
+    }
     val isMetronomeEnabled = userPreferences?.isMetronomeEnabled != false
     val areSetlistsEnabled = userPreferences?.areSetlistsEnabled != false
     val isCoverArtEnabled = userPreferences?.isCoverArtEnabled == true
@@ -841,6 +858,7 @@ internal fun SongDetailsScreen(
                         onRetry = { viewModel.loadSongContent(song.fileName) },
                         headedOffset = { stepper.headedOffset },
                         onTimingChanged = { timing -> if (timing == null) songTimings.remove(song.fileName) else songTimings[song.fileName] = timing },
+                        chordDiagrams = chordDiagrams,
                     )
                 }
                 // The top button starts where the song's first row does, as the bottom one ends as far above the bottom
@@ -1008,6 +1026,7 @@ private fun SongPagerControls(
  * @param headedOffset Where the reader is headed in the song, see [SongStepper.headedOffset].
  * @param onTimingChanged Told the stretch of the song [headedOffset] is in whenever it changes, null for its opening:
  *   the page being headed for, rather than the one a finger is still dragging past, is what the click follows.
+ * @param chordDiagrams What the song's Chords section is drawn with, null where it has none.
  */
 @Composable
 private fun SongDetailsPage(
@@ -1035,6 +1054,7 @@ private fun SongDetailsPage(
     onRetry: () -> Unit,
     headedOffset: () -> Int?,
     onTimingChanged: (SongTiming?) -> Unit,
+    chordDiagrams: ChordDiagrams?,
 ) = AnimatedContent(
     modifier = modifier.fillMaxSize(),
     targetState = text,
@@ -1070,6 +1090,7 @@ private fun SongDetailsPage(
                 tempoOverride = tempoOverride,
                 capoOverride = capoOverride,
                 showsTiming = shouldShowTempo,
+                chordInstrument = chordDiagrams?.instrument,
             ),
         ) { inputs ->
             prepareSongLyrics(
@@ -1077,6 +1098,8 @@ private fun SongDetailsPage(
                 shouldShowChords = inputs.shouldShowChords,
                 labels = inputs.labels,
                 showsTiming = inputs.showsTiming,
+                chordInstrument = inputs.chordInstrument,
+                notation = inputs.spelling.notation.toChordNotation(),
             )
         }
         if (model.song.blocks.isEmpty()) {
@@ -1172,6 +1195,7 @@ private fun SongDetailsPage(
                 stepButtonInset = STEP_BUTTON_SIZE + STEP_BUTTON_GAP,
                 keepsStepButtonInset = keepsStepButtonInset,
                 canCutSections = true,
+                chordDiagrams = chordDiagrams,
             )
         }
     }

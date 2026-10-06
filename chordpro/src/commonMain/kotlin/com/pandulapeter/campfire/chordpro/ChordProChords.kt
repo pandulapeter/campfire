@@ -10,6 +10,10 @@
 package com.pandulapeter.campfire.chordpro
 
 import com.pandulapeter.campfire.chordpro.model.Chord
+import com.pandulapeter.campfire.chordpro.model.ChordProBlock
+import com.pandulapeter.campfire.chordpro.model.ChordProLine
+import com.pandulapeter.campfire.chordpro.model.ChordProSong
+import com.pandulapeter.campfire.chordpro.model.GridToken
 
 /**
  * What a chord name means: the notes it is made of.
@@ -54,6 +58,64 @@ object ChordProChords {
             val name = (if (preferFlats) flatNames else sharpNames)[pitchClass]
             if (notation == ChordNotation.GERMAN) ChordProNotation.toGerman(name) else name
         }
+    }
+
+    /**
+     * The chords [song] plays, each once by the name it is written under and in the order they first appear: the
+     * chords over its lyrics, the cells of its grids, the rows of chord names above its tabs and the brackets of its
+     * comments and labels, where an intro is written down as a row of chords — every name the transposition moves, its
+     * key aside, since a key is no chord anybody plays. A recalled chorus is read where it stands, which only matters
+     * for a chorus whose chords appear nowhere else. Whether a name is a chord is [parse]'s to say.
+     */
+    fun namesIn(song: ChordProSong): List<String> {
+        val names = LinkedHashSet<String>()
+        fun addBrackets(text: String?) {
+            text?.let { ChordProSyntax.brackets(it).map { bracket -> bracket.content.trim() }.filter { name -> name.isNotEmpty() && !name.startsWith("*") }.forEach(names::add) }
+        }
+        fun addBlocks(blocks: List<ChordProBlock>) {
+            blocks.forEach { block ->
+                when (block) {
+                    is ChordProBlock.Section -> {
+                        addBrackets(block.label)
+                        block.lines.forEach { line ->
+                            when (line) {
+                                is ChordProLine.Lyrics -> line.chords.filter { !it.isAnnotation }.forEach { names += it.name }
+                                is ChordProLine.Grid -> {
+                                    addBrackets(line.label)
+                                    line.tokens.filterIsInstance<GridToken.Chord>().forEach { names += ChordProSyntax.cellChords(it.name) }
+                                }
+                                is ChordProLine.Tab -> {
+                                    addBrackets(line.label)
+                                    names += ChordProTabTransposer.chordNames(listOf(line.text))
+                                }
+                                ChordProLine.Blank -> Unit
+                            }
+                        }
+                    }
+                    is ChordProBlock.ChorusRecall -> {
+                        addBrackets(block.label)
+                        addBlocks(block.blocks)
+                    }
+                    is ChordProBlock.Comment -> addBrackets(block.text)
+                    else -> Unit
+                }
+            }
+        }
+        addBlocks(song.blocks)
+        return names.toList()
+    }
+
+    /**
+     * [name], a chord as shown in [notation], moved by [semitones] and spelled with flats or sharps as [preferFlats]
+     * says, in the same notation; a word that is no chord is returned as it is.
+     */
+    fun transposedName(name: String, semitones: Int, notation: ChordNotation = ChordNotation.STANDARD, preferFlats: Boolean = false): String {
+        val rename = ChordProTransposer.keepingLowercaseMinors { chord ->
+            val standard = if (notation == ChordNotation.GERMAN) ChordProNotation.fromGerman(chord) else chord
+            val moved = ChordProTransposer.transposeChord(ChordProNotation.withAsciiAccidentals(standard), semitones, preferFlats)
+            if (notation == ChordNotation.GERMAN) ChordProNotation.toGerman(moved) else moved
+        }
+        return rename(name)
     }
 
     /** The pitch class of a note as written: a capital or lowercase letter, `H` as `B`, and an accidental or none. */

@@ -1,0 +1,211 @@
+/*
+ * This file is part of Campfire.
+ * Copyright (c) Pandula Péter 2017-2026.
+ * https://github.com/pandulapeter/campfire
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * https://mozilla.org/MPL/2.0/.
+ */
+package com.pandulapeter.campfire.presentation.ui.screens.songDetails
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.chordpro.ChordProChords
+import com.pandulapeter.campfire.chordpro.ChordVoicings
+import com.pandulapeter.campfire.chordpro.model.Chord
+import com.pandulapeter.campfire.chordpro.model.ChordInstrument
+import com.pandulapeter.campfire.chordpro.model.ChordVoicing
+import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.song_details_chord_diagram
+import com.pandulapeter.campfire.presentation.resources.song_details_chord_diagram_none
+import com.pandulapeter.campfire.presentation.resources.song_details_chord_sounding
+import com.pandulapeter.campfire.presentation.resources.song_details_chords
+import com.pandulapeter.campfire.presentation.localization.stringResource
+import com.pandulapeter.campfire.presentation.ui.chords.SelectedShape
+import com.pandulapeter.campfire.presentation.ui.chords.SongChord
+import com.pandulapeter.campfire.presentation.ui.chords.chordDiagramGeometryOf
+import com.pandulapeter.campfire.presentation.ui.chords.emptyChordDiagramGeometryOf
+import com.pandulapeter.campfire.presentation.ui.chords.selectShape
+import com.pandulapeter.campfire.presentation.ui.components.ChordDiagram
+import com.pandulapeter.campfire.presentation.ui.components.textResource
+import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
+
+/**
+ * What a song's Chords section needs beyond the song: the instrument the diagrams are drawn for, the shapes the player
+ * chose, whether the section is folded, and what its header does.
+ *
+ * @param onFoldToggled Folds the section or unfolds it, one preference for every song.
+ */
+@Immutable
+internal class ChordDiagrams(
+    val instrument: ChordInstrument,
+    val storedShapes: Map<String, String>,
+    val isFolded: Boolean,
+    val onFoldToggled: () -> Unit,
+)
+
+/** One diagram of the Chords section: the chord as the page names it and the shape it is drawn with. */
+@Immutable
+internal data class ChordCell(
+    val name: String,
+    val soundingName: String?,
+    val instrument: ChordInstrument,
+    val root: Int,
+    val selection: SelectedShape,
+)
+
+/** The cells of [chords], each with the shape [selectShape] picks for it. */
+internal fun chordCellsOf(chords: List<SongChord>, instrument: ChordInstrument, storedShapes: Map<String, String>) = chords.map { chord ->
+    ChordCell(
+        name = chord.name,
+        soundingName = chord.soundingName,
+        instrument = instrument,
+        root = chord.chord.root,
+        selection = selectShape(chord, instrument, storedShapes),
+    )
+}
+
+/**
+ * [sections] with the Chords section after the metadata section, or first where there is none: the diagrams are part of
+ * how the song is played, which the metadata section starts with. None where there is no chord to draw.
+ */
+internal fun withChordsSection(sections: List<RenderSection>, cells: List<ChordCell>, isFolded: Boolean): List<RenderSection> {
+    if (cells.isEmpty()) return sections
+    val index = if (sections.firstOrNull() is RenderSection.Metadata) 1 else 0
+    return sections.take(index) + RenderSection.Chords(cells = cells, isFolded = isFolded) + sections.drop(index)
+}
+
+/**
+ * The song's chords as diagrams, headed by a pill that folds them like any section's. The cells flow and wrap rather
+ * than scroll sideways, since a song may be read with a pedal, and take no press: a tap on them turns the page like a
+ * tap anywhere on the song.
+ */
+@Composable
+internal fun SongChordsSection(
+    modifier: Modifier = Modifier,
+    section: RenderSection.Chords,
+    chordDiagrams: ChordDiagrams?,
+    headerStyle: TextStyle,
+    chordStyle: TextStyle,
+    fontScale: Float,
+) = Column(modifier = modifier) {
+    var hasBeenToggled by remember { mutableStateOf(false) }
+    SectionHeaderPill(
+        header = stringResource(Res.string.song_details_chords),
+        toggle = chordDiagrams?.let {
+            FoldToggle(
+                isExpanded = !section.isFolded,
+                onToggled = {
+                    hasBeenToggled = true
+                    it.onFoldToggled()
+                },
+            )
+        },
+        style = headerStyle,
+        chevronSize = FOLD_CHEVRON_SIZE * fontScale,
+    )
+    if (section.isFolded) return@Column
+    FlowRow(
+        modifier = Modifier
+            .fillMaxWidth()
+            .fadingIn(isFadingIn = hasBeenToggled)
+            .padding(top = HEADER_GAP),
+        horizontalArrangement = Arrangement.spacedBy(CELL_GAP * fontScale),
+        verticalArrangement = Arrangement.spacedBy(CELL_GAP * fontScale),
+    ) {
+        section.cells.forEach { cell ->
+            ChordCellContent(
+                cell = cell,
+                chordStyle = chordStyle,
+                fontScale = fontScale,
+            )
+        }
+    }
+}
+
+@Composable
+private fun ChordCellContent(
+    cell: ChordCell,
+    chordStyle: TextStyle,
+    fontScale: Float,
+) {
+    val description = chordCellDescription(cell)
+    Column(
+        modifier = Modifier.clearAndSetSemantics { contentDescription = description },
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Row(verticalAlignment = Alignment.Bottom) {
+            Text(
+                text = cell.name,
+                style = chordStyle,
+                color = LocalSecondAccentColor.current,
+                maxLines = 1,
+                overflow = TextOverflow.Visible,
+            )
+            cell.soundingName?.let {
+                Text(
+                    modifier = Modifier.padding(start = 4.dp),
+                    text = it,
+                    style = chordStyle,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                )
+            }
+        }
+        val shape = cell.selection.shape
+        val geometry = remember(shape, cell.instrument, cell.root) {
+            shape?.let { chordDiagramGeometryOf(it, cell.instrument, cell.root) } ?: emptyChordDiagramGeometryOf(cell.instrument)
+        }
+        ChordDiagram(
+            modifier = Modifier.size(
+                width = (if (cell.instrument.isFretted) FRETTED_WIDTH else KEYBOARD_WIDTH) * fontScale,
+                height = (if (cell.instrument.isFretted) FRETTED_HEIGHT else KEYBOARD_HEIGHT) * fontScale,
+            ),
+            geometry = geometry,
+            description = description,
+        )
+    }
+}
+
+/** How a chord is read out: its name, the one it sounds as where that differs, and its shape as it would be dictated. */
+@Composable
+internal fun chordCellDescription(cell: ChordCell): String {
+    val name = cell.soundingName?.let { textResource(Res.string.song_details_chord_sounding, cell.name, it) } ?: cell.name
+    val shape = cell.selection.shape ?: return textResource(Res.string.song_details_chord_diagram_none, name)
+    return textResource(Res.string.song_details_chord_diagram, name, spokenShape(shape))
+}
+
+/** A fretted shape as its frets from the lowest string, a keyboard one as the notes it presses from the lowest up. */
+private fun spokenShape(shape: ChordVoicing) = when (shape) {
+    is ChordVoicing.Fretted -> ChordVoicings.write(shape)
+    is ChordVoicing.Keys -> (listOfNotNull(shape.bass) + shape.notes).joinToString(" ") { note ->
+        ChordProChords.noteNames(Chord(root = note % 12, intervals = listOf(0))).first()
+    }
+}
+
+private val CELL_GAP = 6.dp
+private val FRETTED_WIDTH = 40.dp
+private val FRETTED_HEIGHT = 50.dp
+private val KEYBOARD_WIDTH = 76.dp
+private val KEYBOARD_HEIGHT = 40.dp

@@ -24,7 +24,6 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.pandulapeter.campfire.chordpro.ChordNotation
 import com.pandulapeter.campfire.chordpro.ChordProMetadataFields
 import com.pandulapeter.campfire.chordpro.ChordProSummaryCache
 import com.pandulapeter.campfire.chordpro.ChordProTempo
@@ -52,6 +51,7 @@ import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
 import com.pandulapeter.campfire.data.model.domain.SyncState
 import com.pandulapeter.campfire.data.model.domain.PrintSettings
+import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.print.PrintSource
 import com.pandulapeter.campfire.presentation.ui.print.PrintSong
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
@@ -2428,12 +2428,7 @@ class CampfireViewModel(
     private var lastEditorText: EditorText? = null
 
     /** Follows the editor's text as it is typed, see `ChordProSummaryCache`; its key comes out in the standard notation. */
-    fun editorSummaryCache() = ChordProSummaryCache(
-        when (editorNotation) {
-            UserPreferences.Notation.STANDARD -> ChordNotation.STANDARD
-            UserPreferences.Notation.GERMAN -> ChordNotation.GERMAN
-        }
-    )
+    fun editorSummaryCache() = ChordProSummaryCache(editorNotation.toChordNotation())
 
     /** A key in the standard notation, as the editor's field would write it. */
     fun editorKeyOf(key: String) = convertChordProNotation(
@@ -3713,6 +3708,8 @@ class CampfireViewModel(
     fun setChordDiagramsEnabled(value: Boolean) = changeUserPreferences { copy(areChordDiagramsEnabled = value) }
 
     fun setChordInstrument(value: UserPreferences.ChordInstrument) = changeUserPreferences { copy(chordInstrument = value) }
+
+    fun toggleChordSectionFold() = changeUserPreferences { copy(isChordSectionFolded = !isChordSectionFolded) }
 
     fun setSetlistsEnabled(value: Boolean) = changeUserPreferences { copy(areSetlistsEnabled = value) }
 
