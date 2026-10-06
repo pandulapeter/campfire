@@ -12,13 +12,12 @@ package com.pandulapeter.campfire.presentation.ui.screens.metronome
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -37,10 +36,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.metronome.api.model.BeatLevel
@@ -55,11 +58,17 @@ import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filter
+import kotlin.math.ceil
+import kotlin.math.roundToInt
 
 /**
  * One block per beat of the bar, as tall as the beat is loud (a muted one only an outline) and resting in a fainter shade
  * of the second accent color, lit in the full color as each is heard - from the heard-time beats alone, so the flash agrees with the ear - and fading down to the
  * next. A tap moves a beat on from accent to plain to muted and round again, which is the whole of the accent editor.
+ *
+ * A bar that changes length - another time signature, or a song paged to in another one - is narrated rather than
+ * swapped: the blocks it gains grow in at its end and the ones it loses shrink away there, one after another, while the
+ * blocks it keeps narrow or widen to make room.
  *
  * It is the same row and the same editor wherever it is drawn, the song details panel's included: the accents belong to
  * the bar rather than to the screen they are tapped on, so the two cannot disagree about what is accented in 4/4.
@@ -99,23 +108,56 @@ internal fun BeatRow(
             litBeat = -1
         }
     }
-    Row(
+    // The bar is drawn as a count that slides between the old and the new number of beats, so a bar that changes length
+    // grows or loses its blocks one after another while the ones it keeps narrow or widen to make room for them. A beat
+    // on its way out keeps the level it was drawn with, since the bar it belonged to is no longer there to say it.
+    val animatedCount by animateFloatAsState(beatLevels.size.toFloat())
+    val shownLevels = remember { ArrayList(beatLevels) }
+    beatLevels.forEachIndexed { index, level ->
+        if (index < shownLevels.size) shownLevels[index] = level else shownLevels.add(level)
+    }
+    val slotCount = maxOf(beatLevels.size, ceil(animatedCount).toInt())
+    Layout(
         modifier = modifier.fillMaxWidth().heightIn(min = blockHeight),
-        horizontalArrangement = Arrangement.spacedBy(blockGap),
-        verticalAlignment = Alignment.Bottom,
-    ) {
-        beatLevels.forEachIndexed { index, level ->
-            BeatBlock(
-                modifier = Modifier.weight(1f),
-                index = index,
-                level = level,
-                maxHeight = blockHeight,
-                flash = { if (litBeat == index) flash.value else 0f },
-                onClick = { onBeatLevelsChanged(beatLevels.toMutableList().apply { set(index, level.next()) }) },
-            )
+        content = {
+            for (index in 0 until slotCount) {
+                val isLeaving = index >= beatLevels.size
+                val level = shownLevels[index]
+                BeatBlock(
+                    modifier = Modifier.graphicsLayer { alpha = presenceOf(index, animatedCount) },
+                    index = index,
+                    level = level,
+                    maxHeight = blockHeight,
+                    isLeaving = isLeaving,
+                    flash = { if (litBeat == index) flash.value else 0f },
+                    onClick = { onBeatLevelsChanged(beatLevels.toMutableList().apply { set(index, level.next()) }) },
+                )
+            }
+        },
+    ) { measurables, constraints ->
+        // A custom layout rather than weighted children, since a weight of zero is not allowed and the gap in front of a
+        // block has to grow and shrink with it: an arriving block starts as nothing, gap included, and the others only
+        // give up the room it takes.
+        val presences = measurables.indices.map { presenceOf(it, animatedCount) }
+        val gap = blockGap.toPx()
+        val gaps = gap * presences.drop(1).sum()
+        val unit = (constraints.maxWidth - gaps).coerceAtLeast(0f) / presences.sum().coerceAtLeast(1f)
+        val height = maxOf(constraints.minHeight, blockHeight.roundToPx())
+        var x = 0f
+        val placed = measurables.mapIndexed { index, measurable ->
+            if (index > 0) x += gap * presences[index]
+            val width = unit * presences[index]
+            val placeable = measurable.measure(Constraints.fixed((x + width).roundToInt() - x.roundToInt(), height))
+            (placeable to x.roundToInt()).also { x += width }
+        }
+        layout(constraints.maxWidth, height) {
+            placed.forEach { (placeable, offset) -> placeable.placeRelative(offset, height - placeable.height) }
         }
     }
 }
+
+/** How much of the beat at [index] is in the bar while its length animates towards a new one: 0 gone, 1 wholly there. */
+private fun presenceOf(index: Int, animatedCount: Float) = (animatedCount - index).coerceIn(0f, 1f)
 
 @Composable
 private fun BeatBlock(
@@ -123,6 +165,7 @@ private fun BeatBlock(
     index: Int,
     level: BeatLevel,
     maxHeight: Dp,
+    isLeaving: Boolean,
     flash: () -> Float,
     onClick: () -> Unit,
 ) {
@@ -164,8 +207,14 @@ private fun BeatBlock(
     Box(
         modifier = modifier
             .height(maxHeight)
-            .clickable(interactionSource = interactionSource, indication = null, role = Role.Button, onClick = onClick)
-            .semantics { contentDescription = description },
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                enabled = !isLeaving,
+                role = Role.Button,
+                onClick = onClick,
+            )
+            .then(if (isLeaving) Modifier.clearAndSetSemantics {} else Modifier.semantics { contentDescription = description }),
         contentAlignment = Alignment.BottomCenter,
     ) {
         Box(

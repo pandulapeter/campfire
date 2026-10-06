@@ -325,7 +325,8 @@ shared controls.
   song details screen's own `MetronomePanel` pinned at the top and never hidden (`isVisible` always true) — the beat row
   (`BeatRow`, resting in fainter shades of the second accent color and lit from the heard beats in the full one — shades
   of one color, since every palette but the app's own has no second accent apart from the primary — a tap cycling a beat
-  through accent, plain and muted, stored per signature) with play and stop at its end — so that the click is played the
+  through accent, plain and muted, stored per signature, and a bar that changes length gaining or losing its blocks one
+  after another at its end while the rest make room) with play and stop at its end — so that the click is played the
   same way on both screens and can be stopped wherever the page has been scrolled to, capped at the page's width
   (`SettingsWidthLayout.pageMaxWidth`) and drawn `isProminent`: a 56dp row and button at the page's own 16dp margins,
   where the song details bar's are 32dp and 48dp. Under
