@@ -8,18 +8,18 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 # To do
-## Short-term (in the next version)
+## Short-term (in this version)
 ### Bugs / issues
 
 ### Improvements
-- Chord diagrams (guitar, ukulele, keyboard): documentation/plans/chord-diagrams.md
+- Implement support for chord diagrams (guitar, ukulele, keyboard): documentation/plans/chord-diagrams.md. Answer this question before starting: How would {define} work with ukulele / keyboard? What if we have definitions for guitar, but the user prefers another instrument?
+- Add support for Latin and Nashville notations: documentation/plans/latin-nashville-notation.md - don't forget to apply the changes to the chord diagrams feature too
+
+## Mid-term (in the next versions)
 - Multi-select for songs: documentation/plans/multi-select.md
 - Duplicate song button
 - Find a way to allow entering tempo using the keyboard
-
-## Mid-term (in the next versions)
 - Haptic effects, especially for the fast scroller
-- Add support for Latin and Nashville notations: documentation/plans/latin-nashville-notation.md
 - Tuner: documentation/plans/tuner.md (question - do we want to add it to the toolbar?)
 - Comments in setlists (between songs)
 - Simplify adding comments / annotations to songs
