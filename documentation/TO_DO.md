@@ -9,7 +9,6 @@
 -->
 # To do
 ## Bugs / issues
-- The Song details screen is still wasteful: too much padding. Padding should be reduced. Even in one-column mode, some sections that are really thin could be displayed in two columns. Actually, make one-column mode use the same paging logic as multi-column, instead of the current one-page-per-section part which makes pedals less useful (too many taps to advance the song)
 - Per-section metronome / time signature changes are not yet supported
 - No way to enter BPM using the keyboard
 - Incorrect ripple effect on top of time signature and metronome sound chips in light mode

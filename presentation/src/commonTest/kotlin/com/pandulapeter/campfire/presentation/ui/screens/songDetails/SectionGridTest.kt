@@ -91,7 +91,7 @@ class SectionGridTest {
         assertContentEquals(intArrayOf(0, 500, 1440), arrangement.tops)
         assertContentEquals(listOf(480, 1420), arrangement.dividerTops)
         // What the rows hold ends where it does, whatever space follows it.
-        assertContentEquals(listOf(100, 1400, 1540), arrangement.rowBottoms)
+        assertContentEquals(listOf(100, 1400, 1540), arrangement.pageBottoms)
         assertEquals(1740, arrangement.height)
     }
 
@@ -110,7 +110,7 @@ class SectionGridTest {
         // the dividers and the height of the whole are where they would be without it.
         assertContentEquals(intArrayOf(100, 500, 1540), arrangement.tops)
         assertContentEquals(listOf(480, 1420), arrangement.dividerTops)
-        assertContentEquals(listOf(200, 1400, 1640), arrangement.rowBottoms)
+        assertContentEquals(listOf(200, 1400, 1640), arrangement.pageBottoms)
         assertEquals(1740, arrangement.height)
     }
 
@@ -180,9 +180,9 @@ class SectionGridTest {
 
     @Test
     fun onlyASingleRowThatFitsIsReadWithoutStepping() {
-        assertEquals(true, isReadWithoutStepping(fits = true, rowCount = 1))
-        assertEquals(false, isReadWithoutStepping(fits = true, rowCount = 2))
-        assertEquals(false, isReadWithoutStepping(fits = false, rowCount = 1))
+        assertEquals(true, isReadWithoutStepping(fits = true, pageCount = 1))
+        assertEquals(false, isReadWithoutStepping(fits = true, pageCount = 2))
+        assertEquals(false, isReadWithoutStepping(fits = false, pageCount = 1))
     }
 
     @Test

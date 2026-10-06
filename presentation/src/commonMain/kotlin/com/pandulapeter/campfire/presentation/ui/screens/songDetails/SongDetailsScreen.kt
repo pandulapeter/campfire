@@ -114,13 +114,13 @@ import com.pandulapeter.campfire.presentation.resources.ic_songs
 import com.pandulapeter.campfire.presentation.resources.ic_next
 import com.pandulapeter.campfire.presentation.resources.ic_previous
 import com.pandulapeter.campfire.presentation.resources.retry
-import com.pandulapeter.campfire.presentation.resources.song_details_next_row
+import com.pandulapeter.campfire.presentation.resources.song_details_next_page
 import com.pandulapeter.campfire.presentation.resources.song_details_next_section
 import com.pandulapeter.campfire.presentation.resources.song_details_next_song
 import com.pandulapeter.campfire.presentation.resources.song_details_empty
 import com.pandulapeter.campfire.presentation.resources.song_details_no_data
 import com.pandulapeter.campfire.presentation.resources.song_details_no_data_hint
-import com.pandulapeter.campfire.presentation.resources.song_details_previous_row
+import com.pandulapeter.campfire.presentation.resources.song_details_previous_page
 import com.pandulapeter.campfire.presentation.resources.song_details_previous_section
 import com.pandulapeter.campfire.presentation.resources.song_details_previous_song
 import com.pandulapeter.campfire.presentation.resources.song_details_scroll_down
@@ -829,7 +829,7 @@ internal fun SongDetailsScreen(
                     )
                 }
                 val stepButtonsTop = PAGE_TOP_PADDING + STEP_BUTTON_EDGE_MARGIN
-                val stepButtonsEnd = pageContentPadding.calculateEndPadding(layoutDirection) + 16.dp
+                val stepButtonsEnd = pageContentPadding.calculateEndPadding(layoutDirection) + PAGE_HORIZONTAL_PADDING
                 val stepButtonsBottom = pageContentPadding.calculateBottomPadding() + STEP_BUTTON_EDGE_MARGIN
                 // The dots take the room between the two buttons whether or not the buttons are there, so that neither
                 // arriving nor leaving moves them. That column is the one the song leaves the buttons, so no dot is ever
@@ -1070,7 +1070,7 @@ private fun SongDetailsPage(
         val topPadding = PAGE_TOP_PADDING
         val topPaddingPx = with(LocalDensity.current) { topPadding.roundToPx() }
         LaunchedEffect(flingBehavior) { flingBehavior.keepReaderInPlace() }
-        val bottomPadding = contentPadding.calculateBottomPadding() + 32.dp
+        val bottomPadding = contentPadding.calculateBottomPadding() + PAGE_BOTTOM_PADDING
         // The lyrics scroll, so they need to be told from the outside how much room there is for them without
         // scrolling: that is what decides how many columns they are flowed into.
         BoxWithConstraints(
@@ -1102,8 +1102,8 @@ private fun SongDetailsPage(
                     .fadingTopEdge(scrollState, MaterialTheme.colorScheme.background)
                     .bounceVerticalScroll(state = scrollState, flingBehavior = flingBehavior)
                     .padding(
-                        start = contentPadding.calculateStartPadding(layoutDirection) + 16.dp,
-                        end = contentPadding.calculateEndPadding(layoutDirection) + 16.dp,
+                        start = contentPadding.calculateStartPadding(layoutDirection) + PAGE_HORIZONTAL_PADDING,
+                        end = contentPadding.calculateEndPadding(layoutDirection) + PAGE_HORIZONTAL_PADDING,
                         top = topPadding,
                         bottom = bottomPadding,
                     ),
@@ -1179,7 +1179,7 @@ private fun BoxScope.StepButtons(
             when {
                 !canStepBackInSong -> Res.string.song_details_previous_song
                 isPagingBack -> Res.string.song_details_scroll_up
-                isSteppedByRow -> Res.string.song_details_previous_row
+                isSteppedByRow -> Res.string.song_details_previous_page
                 else -> Res.string.song_details_previous_section
             },
         ),
@@ -1196,7 +1196,7 @@ private fun BoxScope.StepButtons(
             when {
                 !canStepForwardInSong -> Res.string.song_details_next_song
                 isPagingForward -> Res.string.song_details_scroll_down
-                isSteppedByRow -> Res.string.song_details_next_row
+                isSteppedByRow -> Res.string.song_details_next_page
                 else -> Res.string.song_details_next_section
             },
         ),
@@ -1476,9 +1476,11 @@ internal fun appBarButtons(appBarWidth: Dp, hasCover: Boolean): AppBarButtons {
 
 private const val LABEL_SEPARATOR = "·"
 private val PAGE_TOP_PADDING = 8.dp // Inside the scroll, above the first row, and read with it.
+private val PAGE_BOTTOM_PADDING = 16.dp
+private val PAGE_HORIZONTAL_PADDING = 8.dp
 private val STEP_BUTTON_SIZE = 40.dp
 private val STEP_BUTTON_GAP = 8.dp
-private val STEP_BUTTON_EDGE_MARGIN = 16.dp
+private val STEP_BUTTON_EDGE_MARGIN = 8.dp
 private val PAGER_CONTROLS_HEIGHT = 48.dp
 
 /**

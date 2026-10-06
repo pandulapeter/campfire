@@ -410,11 +410,11 @@
     <!-- Song details screen -->
     <string name="song_details_previous_song">Előző dal</string>
     <string name="song_details_next_song">Következő dal</string>
-    <string name="song_details_previous_row">Előző sor</string>
-    <string name="song_details_next_row">Következő sor</string>
+    <string name="song_details_previous_page">Előző oldal</string>
+    <string name="song_details_next_page">Következő oldal</string>
     <string name="song_details_previous_section">Előző szakasz</string>
     <string name="song_details_next_section">Következő szakasz</string>
-    <string name="song_details_step_progress_row">%1$d. sor (%2$d közül)</string>
+    <string name="song_details_step_progress_page">%1$d. oldal (%2$d közül)</string>
     <string name="song_details_step_progress_section">%1$d. szakasz (%2$d közül)</string>
     <string name="song_details_scroll_up">Görgetés felfelé</string>
     <string name="song_details_scroll_down">Görgetés lefelé</string>

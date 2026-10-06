@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
+import kotlin.math.max
+
 /**
  * The song flowed into rows of [columnCount] columns the way a magazine sets an article: every column filled down to
  * [maxRowHeight], the height of the screen, a section that does not fit what is left of a column running on at the top
@@ -146,4 +148,124 @@ internal fun flowLikeAMagazine(
         start = end
     }
     return SectionGrid(rows = rows, columns = columns, columnCounts = columnCounts.toIntArray())
+}
+
+/**
+ * The song flowed onto pages of a single column, the way [flowLikeAMagazine] flows it into rows of several: every page
+ * filled down to [maxRowHeight], the height of the screen, a section that does not fit what is left of one running on
+ * at the top of the next, so that a step turns a whole screen of the song rather than stopping at every section. A
+ * window with room for one column is a phone held upright, which is where the reader has the least of the song in view
+ * and the most steps to take.
+ *
+ * Two sections next to each other that are both [isNarrow] - as narrow as half the column, a run of chords, a short
+ * refrain, a section folded down to its header - are set side by side instead, in a row of two columns joining the
+ * page ([SectionGrid.joinsPrevious]), wherever that is lower than stacking them: a column wide enough for a line of
+ * lyrics leaves most of itself empty beside them otherwise. Such a pair is never cut, and is moved to the next page
+ * whole where it does not fit what is left of one.
+ *
+ * The units are those of [flowLikeAMagazine], [heightAt] being a unit's height in a row of one or two columns, and a
+ * section may only be cut in front of a unit [isCuttableBefore] says so of, with [piecePadding] at both sides of a cut.
+ * A stretch that cannot be cut and is taller than the screen on its own is a page of its own, paged through.
+ */
+internal fun flowIntoPages(
+    sectionStarts: IntArray,
+    heightAt: (unit: Int, columnCount: Int) -> Int,
+    isNarrow: (section: Int) -> Boolean,
+    isCuttableBefore: (unit: Int) -> Boolean,
+    piecePadding: IntArray,
+    sectionGap: Int,
+    maxRowHeight: Int,
+): SectionGrid {
+    val sectionCount = sectionStarts.size - 1
+    if (sectionCount <= 0) return emptyGrid()
+    val unitCount = sectionStarts[sectionCount]
+    val heights = IntArray(unitCount) { heightAt(it, 1) }
+    fun sectionHeight(section: Int, columnCount: Int) =
+        (sectionStarts[section] until sectionStarts[section + 1]).sumOf { if (columnCount == 1) heights[it].toLong() else heightAt(it, columnCount).toLong() }
+
+    val rows = IntArray(unitCount)
+    val columns = IntArray(unitCount)
+    val columnCounts = mutableListOf<Int>()
+    val joinsPrevious = mutableListOf<Boolean>()
+    var used = 0L
+    var isPageEmpty = true
+    // Whether the last row of the page is a single column the next section can be stacked in.
+    var isColumnOpen = false
+    fun startPage() {
+        used = 0L
+        isPageEmpty = true
+        isColumnOpen = false
+    }
+    fun openRow(columnCount: Int) {
+        joinsPrevious += !isPageEmpty
+        columnCounts += columnCount
+        isPageEmpty = false
+    }
+    fun place(from: Int, until: Int, column: Int) {
+        for (unit in from until until) {
+            rows[unit] = columnCounts.lastIndex
+            columns[unit] = column
+        }
+    }
+
+    var section = 0
+    while (section < sectionCount) {
+        if (section + 1 < sectionCount && isNarrow(section) && isNarrow(section + 1)) {
+            val pairHeight = max(sectionHeight(section, 2), sectionHeight(section + 1, 2))
+            val stackedHeight = sectionHeight(section, 1) + sectionGap + sectionHeight(section + 1, 1)
+            if (pairHeight < stackedHeight && pairHeight <= maxRowHeight) {
+                if (!isPageEmpty && used + sectionGap + pairHeight > maxRowHeight) startPage()
+                used += (if (isPageEmpty) 0 else sectionGap) + pairHeight
+                openRow(columnCount = 2)
+                place(sectionStarts[section], sectionStarts[section + 1], column = 0)
+                place(sectionStarts[section + 1], sectionStarts[section + 2], column = 1)
+                isColumnOpen = false
+                section += 2
+                continue
+            }
+        }
+        val end = sectionStarts[section + 1]
+        var unit = sectionStarts[section]
+        while (unit < end) {
+            val padding = piecePadding[section].toLong()
+            val topPadding = if (unit > sectionStarts[section]) padding else 0L
+            val gap = if (isPageEmpty) 0L else sectionGap.toLong()
+            val room = maxRowHeight - used - gap - topPadding
+            // The furthest place the section may be cut at, or its end, that what is left of the page still holds.
+            var fitsUntil = -1
+            var fitHeight = 0L
+            var height = 0L
+            for (next in unit + 1..end) {
+                height += heights[next - 1]
+                if (height > room) break
+                if (next == end || isCuttableBefore(next)) {
+                    val bottomPadding = if (next == end) 0L else padding
+                    if (height + bottomPadding <= room) {
+                        fitsUntil = next
+                        fitHeight = height + bottomPadding
+                    }
+                }
+            }
+            if (fitsUntil < 0 && !isPageEmpty) {
+                startPage()
+                continue
+            }
+            val isTooTall = fitsUntil < 0
+            if (isTooTall) fitsUntil = (unit + 1 until end).firstOrNull { isCuttableBefore(it) } ?: end
+            if (!isColumnOpen) openRow(columnCount = 1)
+            used += gap + topPadding + fitHeight
+            isColumnOpen = true
+            place(unit, fitsUntil, column = 0)
+            unit = fitsUntil
+            if (isTooTall || unit < end) startPage()
+        }
+        section++
+    }
+    return SectionGrid(
+        rows = rows,
+        columns = columns,
+        columnCounts = columnCounts.toIntArray(),
+        joinsPrevious = joinsPrevious.toBooleanArray(),
+        sharesKeyline = true,
+    )
 }

@@ -28,7 +28,7 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.song_details_step_progress_row
+import com.pandulapeter.campfire.presentation.resources.song_details_step_progress_page
 import com.pandulapeter.campfire.presentation.resources.song_details_step_progress_section
 import kotlin.math.ceil
 import kotlin.math.floor
@@ -75,7 +75,7 @@ internal fun StepProgressIndicator(
     val currentStop by remember(stepper) { derivedStateOf { stepper?.stopProgress?.roundToInt() ?: 0 } }
     val description = if (isShown) {
         stringResource(
-            if (stepper?.isSteppedByRow == true) Res.string.song_details_step_progress_row else Res.string.song_details_step_progress_section,
+            if (stepper?.isSteppedByRow == true) Res.string.song_details_step_progress_page else Res.string.song_details_step_progress_section,
             currentStop.coerceAtMost(stopCount - 1) + 1,
             stopCount,
         )

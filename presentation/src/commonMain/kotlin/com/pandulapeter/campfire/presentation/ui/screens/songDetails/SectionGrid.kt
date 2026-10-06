@@ -20,6 +20,10 @@ import kotlin.math.max
  * grid it places is one of chunks, every chunk of a section in its section's cell ([expandedTo]) unless the section was
  * cut into pieces (see [flowLikeAMagazine]).
  *
+ * A row is read on a screen of its own, a page, unless it [joinsPrevious]: then it is stacked under the row before it,
+ * a section gap below it, and read on the same page (see [flowIntoPages]), the rows of one page sharing one start edge
+ * ([sharesKeyline]).
+ *
  * This is what is decided for the settled width, while the positions are only worked out by [arrange] from the
  * heights the sections have at the width the layout is actually given.
  */
@@ -29,14 +33,27 @@ internal class SectionGrid(
     val columnCounts: IntArray,
     /** The rows of a single section that are as wide as it needs rather than as a column, see [flowIntoRows]. */
     val wideRows: BooleanArray = BooleanArray(columnCounts.size),
-)
+    /** The rows read on the same page as the row above them rather than on one of their own. */
+    val joinsPrevious: BooleanArray = BooleanArray(columnCounts.size),
+    /** Whether every row starts at the same edge, the way the lines of one column do, rather than centered on its own. */
+    val sharesKeyline: Boolean = false,
+) {
+
+    /** How many pages the rows are read on, each the stop of a step. */
+    val pageCount get() = columnCounts.size - joinsPrevious.count { it }
+
+    /** Whether the row at [row] starts a page of its own. */
+    fun startsPage(row: Int) = !joinsPrevious[row]
+}
 
 /** Whether [other] puts every section into the same cell as this grid, in rows of the same widths. */
 internal fun SectionGrid.hasSameCellsAs(other: SectionGrid) = this === other || (
     rows.contentEquals(other.rows) &&
         columns.contentEquals(other.columns) &&
         columnCounts.contentEquals(other.columnCounts) &&
-        wideRows.contentEquals(other.wideRows)
+        wideRows.contentEquals(other.wideRows) &&
+        joinsPrevious.contentEquals(other.joinsPrevious) &&
+        sharesKeyline == other.sharesKeyline
     )
 
 /**
@@ -48,17 +65,19 @@ internal fun SectionGrid.expandedTo(unitSections: IntArray) = SectionGrid(
     columns = IntArray(unitSections.size) { columns[unitSections[it]] },
     columnCounts = columnCounts,
     wideRows = wideRows,
+    joinsPrevious = joinsPrevious,
+    sharesKeyline = sharesKeyline,
 )
 
 /** The grid of no sections at all. */
 internal fun emptyGrid() = SectionGrid(rows = IntArray(0), columns = IntArray(0), columnCounts = IntArray(0))
 
 /**
- * Whether a grid of [rowCount] rows, found to fit the height available to it ([fits]), is read without stepping through
- * it - which is when the song does not scroll, and so has no buttons that its lines would have to leave room for. Only a
- * single row can: several rows read across are stepped through however short they are.
+ * Whether a grid read on [pageCount] pages, found to fit the height available to it ([fits]), is read without stepping
+ * through it - which is when the song does not scroll, and so has no buttons that its lines would have to leave room
+ * for. Only a single page can: several rows read across are stepped through however short they are.
  */
-internal fun isReadWithoutStepping(fits: Boolean, rowCount: Int) = fits && rowCount == 1
+internal fun isReadWithoutStepping(fits: Boolean, pageCount: Int) = fits && pageCount == 1
 
 /**
  * A grid searched for, whether the whole song [fits] into the height available to it, and how tall it is where that
@@ -101,7 +120,7 @@ internal fun searchColumnCount(
     while (candidate < maxColumnCount) {
         candidateHeight = heightOf(candidateGrid)
         if (candidateHeight <= availableHeight) {
-            if (candidateGrid.columnCounts.size == 1) return SearchedGrid(candidateGrid, fits = true, height = candidateHeight)
+            if (candidateGrid.pageCount == 1) return SearchedGrid(candidateGrid, fits = true, height = candidateHeight)
             if (fitInRows == null) fitInRows = SearchedGrid(candidateGrid, fits = true, height = candidateHeight)
             candidate++
         } else {
@@ -111,35 +130,37 @@ internal fun searchColumnCount(
     }
     if (candidate > 1) candidateHeight = heightOf(candidateGrid)
     val widest = SearchedGrid(candidateGrid, fits = candidateHeight <= availableHeight, height = candidateHeight)
-    return if (isReadWithoutStepping(widest.fits, candidateGrid.columnCounts.size)) widest else fitInRows ?: widest
+    return if (isReadWithoutStepping(widest.fits, candidateGrid.pageCount)) widest else fitInRows ?: widest
 }
 
 /**
- * The y position of every section, the total height of the layout, the y positions (centers) of the row gaps and where
- * the content of every row ends, which is above the empty space a row may be followed by.
+ * The y position of every section, the total height of the layout, the y positions (centers) of the gaps between the
+ * pages and where the content of every page ends, which is above the empty space a page may be followed by.
  */
 internal class SongArrangement(
     val tops: IntArray,
     val height: Int,
     val dividerTops: List<Int>,
-    val rowBottoms: List<Int>,
+    val pageBottoms: List<Int>,
 )
 
 /**
  * Positions the sections of the grid, given their [heights] at the width of their own row: the sections of a cell
- * are stacked [sectionGap] apart, a row is as tall as its tallest cell, and the rows are [rowGap] apart.
+ * are stacked [sectionGap] apart, a row is as tall as its tallest cell, a row that [SectionGrid.joinsPrevious] is
+ * [sectionGap] under the one before it, and the pages - the rows that do not, with the ones joining them - are
+ * [rowGap] apart.
  *
  * Where the grid places chunks, [unitSections] names the section of each: the chunks of one section follow each other
  * with no gap. A section on a card has the card's padding at its top and bottom inside its first and last chunk, so a
  * piece of it cut off from the rest ends in that padding ([piecePadding], by section, nothing for a section drawn
  * without a card) where it is cut, and the piece continuing it in the next column starts with it.
  *
- * The top of every row is at least [minRowPitch] below the top of the one before it, and the last row takes up at
- * least [minLastRowHeight], the difference being left empty under a row that is shorter than that: a song whose
- * scroll comes to rest on the rows is then never shown with a second row under the one it rests on (see
- * `snappedScrollTarget`), and its last row can be brought to the top like the others.
+ * The top of every page is at least [minRowPitch] below the top of the one before it, and the last page takes up at
+ * least [minLastRowHeight], the difference being left empty under a page that is shorter than that: a song whose
+ * scroll comes to rest on the pages is then never shown with a second page under the one it rests on (see
+ * `snappedScrollTarget`), and its last page can be brought to the top like the others.
  *
- * A row shorter than [centeredRowHeight] is moved down by half of what it leaves of that height, so that it is read in
+ * A page shorter than [centeredRowHeight] is moved down by half of what it leaves of that height, so that it is read in
  * the middle of the screen rather than at the top of an otherwise empty one. The divider above it stays where it is,
  * so the scroll still comes to rest on the same spot.
  */
@@ -156,21 +177,29 @@ internal fun SectionGrid.arrange(
     fun sectionOf(index: Int) = unitSections?.get(index) ?: index
     fun paddingOf(index: Int) = piecePadding?.get(sectionOf(index)) ?: 0
     val tops = IntArray(heights.size)
+    val pages = IntArray(heights.size)
     val dividerTops = mutableListOf<Int>()
-    val rowBottoms = mutableListOf<Int>()
-    val rowTops = mutableListOf<Int>()
+    val pageBottoms = mutableListOf<Int>()
+    val pageTops = mutableListOf<Int>()
+    var pageTop = 0
+    var pageHeight = 0
     var rowTop = 0
-    var rowHeight = 0
     var cellBottom = 0
     for (index in heights.indices) {
         val isNewRow = index > 0 && rows[index] != rows[index - 1]
         if (isNewRow) {
-            rowBottoms += rowTop + rowHeight
-            rowTop += max(rowHeight + rowGap, minRowPitch)
-            dividerTops += rowTop - rowGap / 2
-            rowHeight = 0
+            if (startsPage(rows[index])) {
+                pageBottoms += pageTop + pageHeight
+                pageTop += max(pageHeight + rowGap, minRowPitch)
+                dividerTops += pageTop - rowGap / 2
+                pageHeight = 0
+                rowTop = pageTop
+            } else {
+                rowTop = pageTop + pageHeight + sectionGap
+            }
         }
-        if (index == 0 || isNewRow) rowTops += rowTop
+        if (index == 0 || isNewRow && startsPage(rows[index])) pageTops += pageTop
+        pages[index] = pageTops.lastIndex
         val isNewCell = index == 0 || isNewRow || columns[index] != columns[index - 1]
         val continuesSection = index > 0 && sectionOf(index) == sectionOf(index - 1)
         tops[index] = when {
@@ -181,17 +210,17 @@ internal fun SectionGrid.arrange(
         val isCut = index < heights.lastIndex && sectionOf(index + 1) == sectionOf(index) &&
             (rows[index + 1] != rows[index] || columns[index + 1] != columns[index])
         cellBottom = tops[index] + heights[index] + if (isCut) paddingOf(index) else 0
-        rowHeight = max(rowHeight, cellBottom - rowTop)
+        pageHeight = max(pageHeight, cellBottom - pageTop)
     }
-    if (heights.isNotEmpty()) rowBottoms += rowTop + rowHeight
-    val rowShifts = IntArray(rowTops.size) { row -> ((centeredRowHeight - (rowBottoms[row] - rowTops[row])) / 2).coerceAtLeast(0) }
-    for (index in heights.indices) tops[index] += rowShifts[rows[index]]
-    val shiftedRowBottoms = rowBottoms.mapIndexed { row, bottom -> bottom + rowShifts[row] }
+    if (heights.isNotEmpty()) pageBottoms += pageTop + pageHeight
+    val pageShifts = IntArray(pageTops.size) { page -> ((centeredRowHeight - (pageBottoms[page] - pageTops[page])) / 2).coerceAtLeast(0) }
+    for (index in heights.indices) tops[index] += pageShifts[pages[index]]
+    val shiftedPageBottoms = pageBottoms.mapIndexed { page, bottom -> bottom + pageShifts[page] }
     return SongArrangement(
         tops = tops,
-        height = rowTop + max(rowHeight + (rowShifts.lastOrNull() ?: 0), minLastRowHeight),
+        height = pageTop + max(pageHeight + (pageShifts.lastOrNull() ?: 0), minLastRowHeight),
         dividerTops = dividerTops,
-        rowBottoms = shiftedRowBottoms,
+        pageBottoms = shiftedPageBottoms,
     )
 }
 
@@ -482,12 +511,12 @@ internal fun pagesOf(height: Int, maxRowHeight: Int) =
     if (height <= maxRowHeight) 1 else ((height - 1L) / maxRowHeight.coerceAtLeast(1) + 1).toInt()
 
 /**
- * How many pages this grid takes on a screen [maxRowHeight] high, every row read on pages of its own (see [pagesOf]),
- * given the [heights] of what it places, as [arrange] takes them.
+ * How many pages this grid takes on a screen [maxRowHeight] high, every page of rows read on pages of its own (see
+ * [pagesOf]), given the [heights] of what it places, as [arrange] takes them.
  */
 internal fun SectionGrid.pageCount(heights: IntArray, sectionGap: Int, maxRowHeight: Int, unitSections: IntArray? = null, piecePadding: IntArray? = null): Int {
-    val rowBottoms = arrange(heights, sectionGap, rowGap = 0, unitSections = unitSections, piecePadding = piecePadding).rowBottoms
-    return rowBottoms.indices.sumOf { row -> pagesOf(rowBottoms[row] - (rowBottoms.getOrNull(row - 1) ?: 0), maxRowHeight) }
+    val pageBottoms = arrange(heights, sectionGap, rowGap = 0, unitSections = unitSections, piecePadding = piecePadding).pageBottoms
+    return pageBottoms.indices.sumOf { row -> pagesOf(pageBottoms[row] - (pageBottoms.getOrNull(row - 1) ?: 0), maxRowHeight) }
 }
 
 /**

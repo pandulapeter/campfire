@@ -457,9 +457,10 @@ internal fun SongLyrics(
                         )
                     }
                 }
-                // The dividers between the rows, one for each at most; the ones a song laid out in fewer rows has no place
-                // for stay unmeasured.
-                repeat((sections.size - 1).coerceAtLeast(0)) { HorizontalDivider() }
+                // The dividers between the pages, one for every place a page can start at - a section, or a place a section
+                // may be cut at - since that is as many as there can be; the ones a song laid out on fewer pages has no
+                // place for stay unmeasured.
+                repeat((sections.size - 1 + units.isCuttableBefore.count { it }).coerceAtLeast(0)) { HorizontalDivider() }
             }
         }
         if (model.isCut) {
@@ -1241,8 +1242,9 @@ internal fun TextStyle.scaled(scale: Float) = copy(
  * that its columns are as tall as they need, so a song that fits the screen in columns is laid out exactly
  * as it would be read top to bottom (see [flowIntoRows]). A section with lines that do not wrap - a staff of tablature
  * longer than a column - may have a row of its own as wide as those lines, where that makes the song shorter. The rows
- * are told apart by a divider drawn in the gap between them. (A single column has no rows to tell apart, so it is laid
- * out as a plain column, without dividers.)
+ * are told apart by a divider drawn in the gap between them. A width with room for a single column is cut into pages
+ * the same way, a pair of narrow sections side by side on one where that is lower (see [flowIntoPages]); where nothing
+ * is paged - the editor's preview, a songbook - it is laid out as a plain column, without dividers.
  *
  * The columns are made as wide (and therefore as few) as possible while the whole song still fits into
  * [availableHeight] so that the lyrics wrap as little as they can and the vertical space is actually used: a song
@@ -1263,8 +1265,8 @@ internal fun TextStyle.scaled(scale: Float) = copy(
  *
  * The candidate column counts are evaluated with the sections' intrinsic heights (they are only measured once, with
  * the width that won), starting from a single column and jumping straight to the smallest count that could possibly
- * fit whenever the current one does not, and a window with room for a single column asks for none of them, since one
- * column is the same grid whatever the heights are.
+ * fit whenever the current one does not, and a window with room for a single column asks for none of them, since it
+ * is paged instead or, where it is not, is the same grid whatever the heights are.
  *
  * The [SectionGrid] is decided for the width the layout settles at ([extraWidth]), the columns themselves are laid
  * out in the width that is available right now, so that a layout that is still being resized keeps its sections
@@ -1281,7 +1283,7 @@ internal fun TextStyle.scaled(scale: Float) = copy(
  *
  * [onRowsPlaced] is handed where the scroll rests on each row (the bottom edge of its divider) and where each ends as they settle,
  * every time the layout is measured ahead, which is before any of them is animated to its place, along with the stops
- * the song is stepped through: those rows wherever the song is read across the columns and scrolls, however many
+ * the song is stepped through: its pages wherever the song is read in rows or pages and scrolls, however many
  * sections a column of them holds, or otherwise a stop above every section. A song that has to be scrolled leaves [stepButtonInset] of the end edge empty, for the buttons that step
  * through it drawn over it there; the grid is searched for at that narrower width, and a song that fits the screen there
  * is laid out across the full one - unless [keepsStepButtonInset], where the buttons page through a setlist and are
@@ -1365,6 +1367,11 @@ private fun SongSectionsLayout(
         .takeIf { it > maxColumnWidthPx && totalWidth > maxColumnWidthPx }
         ?.let { minOf(it, totalWidth) }
 
+    // A section is narrow where every line of it fits half the column without wrapping, so that setting it beside
+    // another costs it nothing.
+    fun isNarrowSection(section: Int, halfColumnWidth: Int) =
+        unitsOf(section).all { sectionMeasurements.maxWidth(it, measurables[it]::maxIntrinsicWidth) <= halfColumnWidth }
+
     // A wide row is a single column in which every section is as wide as it needs: the ones whose lines do not wrap as
     // wide as those lines, and the rest as wide as a single column, so that what wraps is not read in lines longer
     // than a column's because a staff of tablature shares the row.
@@ -1401,8 +1408,8 @@ private fun SongSectionsLayout(
         fun gridFor(columnCount: Int) = when {
             // A single column is every section stacked in its order, however tall each of them is, so it is the one
             // grid that is known without an intrinsic measurement. Asking for the heights anyway lays every line of
-            // the song out once for a number nobody reads and then once more to be drawn, and on a window too narrow
-            // for a second column - which is every phone - this is the only grid there is.
+            // the song out once for a number nobody reads and then once more to be drawn, and where nothing is paged -
+            // the editor's preview, a songbook - a window too narrow for a second column has no other grid.
             columnCount == 1 -> singleColumnGrid(sectionCount)
             else -> flowIntoRows(
                 sectionCount = sectionCount,
@@ -1432,6 +1439,23 @@ private fun SongSectionsLayout(
             piecePadding = piecePadding,
         )
 
+        // A width with room for one column is stepped through a page at a time, the pages filled the way the rows of
+        // several columns are below, so that a step turns a screen of the song rather than a section of it.
+        if (canCutSections && availableHeightPx > 0 && widthColumnCountFor(totalWidth) == 1 && sectionCount <= MAX_CUT_SECTION_COUNT) {
+            val halfColumnWidth = columnWidthFor(totalWidth, 2)
+            val paged = flowIntoPages(
+                sectionStarts = units.sectionStarts,
+                heightAt = { unit, columns -> unitHeightAt(unit, columnWidthFor(totalWidth, columns)) },
+                isNarrow = { section -> isNarrowSection(section, halfColumnWidth) },
+                isCuttableBefore = { unit -> units.isCuttableBefore[unit] },
+                piecePadding = piecePadding,
+                sectionGap = sectionGapPx,
+                maxRowHeight = maxRowHeightPx,
+            )
+            val height = if (paged.pageCount == 1) paged.height() else Int.MAX_VALUE
+            return SearchedGrid(paged, fits = height <= availableHeightPx, height = height)
+        }
+
         val searched = if (availableHeightPx > 0) {
             searchColumnCount(
                 maxColumnCount = maxColumnCount,
@@ -1445,11 +1469,10 @@ private fun SongSectionsLayout(
         }
 
         // A song read whole in a single row is never cut. Anything else is stepped through a page at a time, so it is
-        // flowed the way a magazine is set wherever the width has room for two columns - which is what keeps a phone,
-        // whose single column is never measured, from measuring anything for it - since a page holds the most of the
-        // song that way, and every page saved is one the reader does not have to turn.
+        // flowed the way a magazine is set wherever the width has room for two columns, since a page holds the most of
+        // the song that way, and every page saved is one the reader does not have to turn.
         val cutColumnCount = widthColumnCountFor(totalWidth).coerceAtMost(unitCount)
-        if (isReadWithoutStepping(searched.fits, searched.grid.columnCounts.size) || !canCutSections || availableHeightPx <= 0 ||
+        if (isReadWithoutStepping(searched.fits, searched.grid.pageCount) || !canCutSections || availableHeightPx <= 0 ||
             cutColumnCount < 2 || sectionCount > MAX_CUT_SECTION_COUNT
         ) {
             return searched
@@ -1478,7 +1501,7 @@ private fun SongSectionsLayout(
         // The sections whole are only kept where they take fewer pages still, which a staff of tablature with a row as
         // wide as it needs can.
         if (flowed == null || searched.grid.pageCount() < flowedPageCount) return searched
-        val height = if (flowed.columnCounts.size == 1) flowed.height() else Int.MAX_VALUE
+        val height = if (flowed.pageCount == 1) flowed.height() else Int.MAX_VALUE
         return SearchedGrid(flowed, fits = height <= availableHeightPx, height = height)
     }
 
@@ -1489,7 +1512,7 @@ private fun SongSectionsLayout(
         // one of fewer, taller columns, which would scroll with the buttons over it. Several rows read across are
         // stepped through however short they are, since each is followed by empty space down to the bottom of the screen.
         val insetSearch = if (endInsetPx > 0) searchGrid(settledWidth - endInsetPx) else null
-        fun SearchedGrid.isReadWithoutStepping() = isReadWithoutStepping(fits, grid.columnCounts.size)
+        fun SearchedGrid.isReadWithoutStepping() = isReadWithoutStepping(fits, grid.pageCount)
         when {
             insetSearch == null -> DecidedGrid(searchGrid(settledWidth).grid, isInset = false)
             keepsStepButtonInset || !insetSearch.isReadWithoutStepping() -> DecidedGrid(insetSearch.grid, isInset = true)
@@ -1515,6 +1538,11 @@ private fun SongSectionsLayout(
             minOf(columnWidth, sectionMeasurements.maxWidth(unit, measurables[unit]::maxIntrinsicWidth))
         }
         cellWidths[row][grid.columns[unit]] = maxOf(cellWidths[row][grid.columns[unit]], contentWidth)
+    }
+    // The pages of a single column are one column cut into screens, so its lines start at the same edge on all of them.
+    if (grid.sharesKeyline) {
+        val singleColumnWidth = cellWidths.indices.filter { grid.columnCounts[it] == 1 }.maxOfOrNull { cellWidths[it][0] } ?: 0
+        cellWidths.forEachIndexed { row, widths -> if (grid.columnCounts[row] == 1) widths[0] = singleColumnWidth }
     }
     // A card narrower than its cell keeps its own width; everything else takes the cell's, so that its lines, which
     // take their direction from their own content, start at the same edge as the other lines of the cell. In a wide row,
@@ -1542,15 +1570,15 @@ private fun SongSectionsLayout(
         if (isLookingAhead) animations[index].isTooTallToAnimate = placeable.height >= heightLimit
         placeable
     }
-    val hasSeveralRows = grid.columnCounts.size > 1
+    val hasSeveralPages = grid.pageCount > 1
     val unitHeights = IntArray(placeables.size) { placeables[it].height }
-    // A single column has no rows to tell apart, so it is laid out as one, without dividers or space under it. Rows
-    // read across only scroll where they are taller than the screen, or where there are several of them, each followed by
-    // the rest of the screen. A song of one row that fits the screen is left as it is: space under it would only make it
-    // scrollable.
-    val isScrolledByRow = (hasSeveralRows || grid.columnCounts.any { it > 1 }) && (
+    // A single column that is not paged has no rows to tell apart, so it is laid out as one, without dividers or space
+    // under it. Rows read across only scroll where they are taller than the screen, or where there are several pages of
+    // them, each followed by the rest of the screen. A song of one page that fits the screen is left as it is: space
+    // under it would only make it scrollable.
+    val isScrolledByRow = (hasSeveralPages || grid.columnCounts.any { it > 1 }) && (
         grid.arrange(unitHeights, sectionGapPx, rowGapPx, unitSections = units.unitSections, piecePadding = piecePadding).height > availableHeightPx ||
-            hasSeveralRows && rowViewportHeight.isSpecified
+            hasSeveralPages && rowViewportHeight.isSpecified
         )
     // The space a row leaves is shared out evenly: as much of it before the first column, between every two and after
     // the last, so that no column looks pushed to one side of the row. Two columns are never closer than a column gap,
@@ -1564,12 +1592,11 @@ private fun SongSectionsLayout(
         // A column left empty takes no room at all.
         return IntArray(widths.size) { column -> start.also { if (widths[column] > 0) start += widths[column] + gap } }
     }
-    val cellStarts = Array(cellWidths.size) { row ->
-        val widths = cellWidths[row]
+    fun startsOf(widths: IntArray): IntArray {
         val acrossWholeWidth = spacedEvenly(widths, regionStart = 0, regionWidth = width)
         val rowEnd = widths.indices.filter { widths[it] > 0 }.maxOfOrNull { acrossWholeWidth[it] + widths[it] } ?: 0
         val rowStart = widths.indices.filter { widths[it] > 0 }.minOfOrNull { acrossWholeWidth[it] } ?: 0
-        when {
+        return when {
             !isInset -> acrossWholeWidth
             layoutDirection == LayoutDirection.Ltr && rowEnd <= layoutWidth -> acrossWholeWidth
             layoutDirection == LayoutDirection.Rtl && rowStart >= endInsetPx -> acrossWholeWidth
@@ -1577,10 +1604,31 @@ private fun SongSectionsLayout(
             else -> spacedEvenly(widths, regionStart = endInsetPx, regionWidth = layoutWidth)
         }
     }
+    val cellStarts = if (grid.sharesKeyline) {
+        // Every row is placed in one block centered as a whole: a single column's rows at its start edge, and a pair of
+        // narrow sections with the first there too and the second from the middle of the block, or as far from the
+        // first as a column gap where that is further.
+        val blockWidth = cellWidths.maxOfOrNull { widths -> widths.sum() + columnGapPx * (widths.size - 1) } ?: 0
+        val blockStart = startsOf(intArrayOf(blockWidth)).first()
+        val isLtr = layoutDirection == LayoutDirection.Ltr
+        Array(cellWidths.size) { row ->
+            val widths = cellWidths[row]
+            IntArray(widths.size) { column ->
+                val offset = if (column == 0) {
+                    0
+                } else {
+                    maxOf(widths[0] + columnGapPx, (blockWidth + columnGapPx) / 2).coerceAtMost(blockWidth - widths[column])
+                }
+                if (isLtr) blockStart + offset else blockStart + blockWidth - offset - widths[column]
+            }
+        }
+    } else {
+        Array(cellWidths.size) { row -> startsOf(cellWidths[row]) }
+    }
     // The dividers span the whole width rather than the rows, which are as wide as the text size makes the columns: a
     // divider that grew and shrank with a pinch would read as part of the song rather than as the page's own.
     val dividerConstraints = Constraints(minWidth = width, maxWidth = width)
-    val dividerPlaceables = dividerMeasurables.take((grid.columnCounts.size - 1).coerceAtLeast(0)).map { it.measure(dividerConstraints) }
+    val dividerPlaceables = dividerMeasurables.take((grid.pageCount - 1).coerceAtLeast(0)).map { it.measure(dividerConstraints) }
     val dividerHeight = dividerPlaceables.firstOrNull()?.height ?: 0
     val isPaddedToViewport = isScrolledByRow && rowViewportHeight.isSpecified
     val rowViewportHeightPx = if (isPaddedToViewport) rowViewportHeight.roundToPx() else 0
@@ -1599,8 +1647,9 @@ private fun SongSectionsLayout(
         // divider, so that the divider stays out of it too.
         minRowPitch = if (isPaddedToViewport) rowViewportHeightPx + rowGapPx else 0,
         minLastRowHeight = readableRowHeight,
-        // A row read with nothing but itself on the screen is read in the middle of what the screen shows of it.
-        centeredRowHeight = readableRowHeight,
+        // A row read with nothing but itself on the screen is read in the middle of what the screen shows of it. The
+        // pages of a single column are not: they are one column cut into screens, which reads on from the top of each.
+        centeredRowHeight = if (grid.sharesKeyline) 0 else readableRowHeight,
         unitSections = units.unitSections,
         piecePadding = piecePadding,
     )
@@ -1612,15 +1661,15 @@ private fun SongSectionsLayout(
         val dividerBottoms = dividerTops.map { it - dividerHeight / 2 + dividerHeight }
         // The first row has no divider above it, and is rested on at its own top.
         val restingOffsets = if (dividerBottoms.isEmpty()) dividerBottoms else listOf(0) + dividerBottoms
-        // A song read in rows is stepped through by them, however many sections each column holds: stepping to every
-        // section would stop in the middle of a row. A single row has no stops of its own, and is stepped through by
-        // its sections.
+        // A song read in rows is stepped through by their pages, however many sections each column holds: stepping to
+        // every section would stop in the middle of a row. A single row has no stops of its own, and is stepped through
+        // by its sections.
         val isSteppedByRow = isScrolledByRow && restingOffsets.isNotEmpty()
         val singleColumnUnits = (0 until unitCount).filter { grid.columnCounts[grid.rows[it]] == 1 }
         onRowsPlaced(
             SongRows(
                 restingOffsets = restingOffsets,
-                bottoms = if (dividerBottoms.isEmpty()) emptyList() else arrangement.rowBottoms,
+                bottoms = if (dividerBottoms.isEmpty()) emptyList() else arrangement.pageBottoms,
                 // A section is stepped to as far above it as the song fades out under the top of the screen, so that it
                 // starts where that fade ends and is read whole, its label included. The first one's stop is above the
                 // top of this layout, which whoever is handed them clamps to the top of the song.
@@ -1631,12 +1680,13 @@ private fun SongSectionsLayout(
                     List(sectionCount) { section -> arrangement.tops[units.sectionStarts[section]] - fadePx }
                 },
                 stepSections = if (isSteppedByRow) {
-                    List(grid.columnCounts.size) { row -> units.unitSections[grid.rows.indexOfFirst { it == row }] }
+                    grid.columnCounts.indices.filter(grid::startsPage).map { row -> units.unitSections[grid.rows.indexOfFirst { it == row }] }
                 } else {
                     List(sectionCount) { it }
                 },
                 isSteppedByRow = isSteppedByRow,
-                // Only a single column is paged through: a row of several is never taller than the screen.
+                // Only a single column is paged through: a row of several is never taller than the screen, and a page of
+                // a single column with a pair of narrow sections on it is no taller than the screen either.
                 lineTops = singleColumnUnits.map { arrangement.tops[it] },
                 lineBottoms = singleColumnUnits.map { arrangement.tops[it] + unitHeights[it] },
                 lineSections = singleColumnUnits.map { units.unitSections[it] },
@@ -2630,7 +2680,7 @@ internal fun ChordProLine.Lyrics.padLyricsToFitChords(
 private val CHORD_GAP = 4.dp
 private val CARD_PADDING = 12.dp
 private val CARD_ELEVATION = 1.dp
-private val HEADER_GAP = 8.dp
+private val HEADER_GAP = 4.dp
 private val INLINE_COMMENT_GAP = 12.dp
 private val COMMENT_BOX_HORIZONTAL_PADDING = 12.dp
 private val COMMENT_BOX_VERTICAL_PADDING = 8.dp
@@ -2648,9 +2698,9 @@ private val FOLD_TOGGLE_HORIZONTAL_PADDING = 8.dp
 private val FOLD_TOGGLE_VERTICAL_PADDING = 4.dp
 private val MIN_COLUMN_WIDTH = 384.dp
 private val MAX_COLUMN_WIDTH = 560.dp
-private val COLUMN_GAP = 32.dp
-private val SECTION_GAP = 20.dp
-private val ROW_GAP = 40.dp
+private val COLUMN_GAP = 16.dp
+private val SECTION_GAP = 16.dp
+private val ROW_GAP = 16.dp
 private const val LINE_HEIGHT_SAMPLE = "X"
 private const val CHARACTER_WIDTH_SAMPLE_LENGTH = 64
 private const val MAX_TAB_WIDTHS = 8
