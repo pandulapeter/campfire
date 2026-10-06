@@ -733,7 +733,7 @@ private enum class EditorPanes {
  *
  * @param fieldModifier Applied innermost, right over the field's own focus target: the sideways scrolling container
  * around it is a focus group, so a focus callback or requester outside it would see that group rather than the field.
- * @param scrollState The field's own scroll position, hoisted so that it survives the pane being composed again.
+ * @param scrollState How far the field is scrolled down, hoisted so that it survives the pane being composed again.
  * @param horizontalScrollState How far the field is scrolled sideways, hoisted for the same reason.
  */
 @Composable
@@ -760,35 +760,28 @@ private fun ChordProTextField(
         )
     }
     val bodyLarge = MaterialTheme.typography.bodyLarge
-    // BasicTextField follows the caret whenever its viewport height changes. Keep the bottom spacing independent
-    // of the scroll position: adding or removing it at the end of a touch drag resizes the focused field and sends
-    // the scroll position back to the caret, interrupting the fling. Keyboard insets still resize it deliberately
-    // so that typing stays visible above the keyboard. The field ends at the keyboard, or at the system bars where it
-    // is down, with room below the last line where the window has it: typing in a short window gives every line to
-    // the text, but none of the field may sit behind the keyboard.
-    val endPadding = if (isCompactTyping) 0.dp else 32.dp
+    // The room after the last line is inside the scroll, as at the end of every list, so the text runs under the
+    // navigation bar and comes clear of it once scrolled to the end. It is part of the field (its decorator), so a
+    // press there still places the caret, and it never changes while the field is scrolled: a viewport resized at the
+    // end of a drag sends the scroll back to the caret and interrupts the fling.
+    val restingBottomInset = WindowInsets.contentEdges.asPaddingValues().calculateBottomPadding()
+    val layoutDirection = LocalLayoutDirection.current
     BasicTextField(
         modifier = modifier
-            // The field only ever scrolls along one axis of its own, the vertical one when it holds more than a line,
-            // so the sideways scrolling is a container around it. That container measures the field against an
-            // unbounded width, which is what keeps the text from wrapping, and it still passes the pane's width on as
-            // the minimum, so the whole pane stays the field and a press anywhere in it places the caret. The field
-            // asks its ancestors to bring the caret into view as it moves, so this follows the typing on its own.
-            // The fade goes outside that container, on the pane itself, so it stays at the pane's top edge.
-            .fadingTopEdge(scrollState, MaterialTheme.colorScheme.background)
-            .bounceHorizontalScroll(horizontalScrollState)
             // The keyboard reaches the field only through the content padding this screen was handed, see CampfireApp,
-            // and that padding is applied once, whole: applying the inset a second time shrinks the field to a couple
-            // of lines as soon as the keyboard comes up. Top padding would sit outside
-            // the field's own scrolling, so the text would scroll under a strip of nothing below the toolbar rather
-            // than up to its edge. The toolbar's own bottom
-            // padding is the space between the two at rest.
-            .padding(
-                EditorFieldPadding(
-                    contentPadding = contentPadding,
-                    endPadding = endPadding,
-                )
-            )
+            // and only once it reaches above the navigation bar it covers, which is when the padding outgrows that bar:
+            // the viewport then ends at the keyboard, so the caret the field brings into view is never behind it.
+            .padding(EditorFieldPadding(contentPadding = contentPadding, restingBottomInset = restingBottomInset))
+            .fadingTopEdge(scrollState, MaterialTheme.colorScheme.background)
+            // The field's own scrolling cannot hold any room after the last line, so it is never given less height than
+            // its text and the scrolling is a container around it, one per axis. The vertical one hands its viewport
+            // height on as the minimum, so a short song is still a field down to the bottom of the pane. The sideways
+            // one measures the field against an unbounded width, which is what keeps the text from wrapping, and
+            // still passes the pane's width on as the minimum, so the whole pane stays the field and a press
+            // anywhere in it places the caret. The field asks its ancestors to bring the caret into view as it moves,
+            // so both follow the typing on their own.
+            .bounceVerticalScroll(scrollState)
+            .bounceHorizontalScroll(horizontalScrollState)
             .then(fieldModifier),
         state = textFieldState,
         // The landscape keyboard leaves the smallest phone about 150 dp, much of it taken by the 48 dp title row and the
@@ -803,9 +796,21 @@ private fun ChordProTextField(
         lineLimits = TextFieldLineLimits.MultiLine(),
         outputTransformation = outputTransformation,
         cursorBrush = SolidColor(colorScheme.primary),
-        // The field does its own scrolling when it is allowed more than one line; wrapping it in a scrollable
-        // swallows the press that should have put the caret in it, and nothing can be typed at all.
-        scrollState = scrollState,
+        // The margins are part of the field rather than of the scrolling around it, so that the field starts at the
+        // edge of what it is scrolled in: the focus brings a field wider than the pane into view by its start edge,
+        // which would scroll a margin outside it out of sight on every tap that places the caret.
+        decorator = { innerTextField ->
+            Box(
+                modifier = Modifier.padding(
+                    start = contentPadding.calculateStartPadding(layoutDirection) + 16.dp,
+                    end = contentPadding.calculateEndPadding(layoutDirection) + 16.dp,
+                    bottom = restingBottomInset + 32.dp,
+                ),
+                propagateMinConstraints = true,
+            ) {
+                innerTextField()
+            }
+        },
     )
 }
 
@@ -818,25 +823,27 @@ private class FieldFocus {
 }
 
 /**
- * The padding around the editor's field, every side of it asked for while the field is laid out rather than while it
- * is composed: the bottom follows the keyboard, whose inset changes on every frame it slides for. Reading it while
- * composing would compose the whole field again on each of those frames. Scrolling does not change this padding,
- * so the field can keep its viewport height and let the caret move out of view during a drag or fling.
- * The handed padding is applied once and whole, with [endPadding] below it, see [ChordProTextField].
+ * The keyboard's part of the padding the editor's field is handed, asked for while the field is laid out rather than
+ * while it is composed: it changes on every frame the keyboard slides for, and reading it while composing would
+ * compose the whole field again on each of those frames.
+ *
+ * The handed padding never falls below the navigation bar, [restingBottomInset], which the field reaches under, so
+ * until the keyboard rises past that bar there is nothing to take off; from then on it is the keyboard's height
+ * whole, since the keyboard covers the bar rather than pushing it up.
  */
 @Stable
 private class EditorFieldPadding(
     private val contentPadding: PaddingValues,
-    private val endPadding: Dp,
+    private val restingBottomInset: Dp,
 ) : PaddingValues {
 
-    override fun calculateLeftPadding(layoutDirection: LayoutDirection) = contentPadding.calculateLeftPadding(layoutDirection) + 16.dp
+    override fun calculateLeftPadding(layoutDirection: LayoutDirection) = 0.dp
 
     override fun calculateTopPadding() = 0.dp
 
-    override fun calculateRightPadding(layoutDirection: LayoutDirection) = contentPadding.calculateRightPadding(layoutDirection) + 16.dp
+    override fun calculateRightPadding(layoutDirection: LayoutDirection) = 0.dp
 
-    override fun calculateBottomPadding() = contentPadding.calculateBottomPadding() + endPadding
+    override fun calculateBottomPadding() = contentPadding.calculateBottomPadding().let { if (it > restingBottomInset) it else 0.dp }
 }
 
 /**
