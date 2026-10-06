@@ -94,12 +94,12 @@ import com.pandulapeter.campfire.domain.api.useCases.NormalizeSearchTextUseCase
 import com.pandulapeter.campfire.domain.api.useCases.NormalizeTextUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ParseChordProUseCase
 import com.pandulapeter.campfire.domain.api.useCases.PrepareImportUseCase
+import com.pandulapeter.campfire.domain.api.useCases.RememberDemoLibraryFilesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.RestoreSyncUseCase
 import com.pandulapeter.campfire.domain.api.useCases.RenameSongFileUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveEditorDraftUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveSongContentUseCase
-import com.pandulapeter.campfire.domain.api.useCases.SaveUserPreferencesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SearchCoverArtUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SetChordProCoverArtUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SetChordProLanguagesUseCase
@@ -231,7 +231,6 @@ class CampfireViewModel(
     private val renameSongFile: RenameSongFileUseCase,
     private val deleteSetlist: DeleteSetlistUseCase,
     private val saveSongContent: SaveSongContentUseCase,
-    private val saveUserPreferences: SaveUserPreferencesUseCase,
     private val updateUserPreferences: UpdateUserPreferencesUseCase,
     private val setChordProCoverArt: SetChordProCoverArtUseCase,
     private val setChordProLanguages: SetChordProLanguagesUseCase,
@@ -242,6 +241,7 @@ class CampfireViewModel(
     private val disconnectSyncProvider: DisconnectSyncProviderUseCase,
     private val cancelSyncConnection: CancelSyncConnectionUseCase,
     private val forgetSyncConnection: ForgetSyncConnectionUseCase,
+    private val rememberDemoLibraryFiles: RememberDemoLibraryFilesUseCase,
     private val cancelSynchronization: CancelSynchronizationUseCase,
     private val restoreSync: RestoreSyncUseCase,
     private val synchronizeLibrary: SynchronizeLibraryUseCase,
@@ -2939,11 +2939,13 @@ class CampfireViewModel(
         files: List<ImportedFile>,
         shouldAnnounceResult: Boolean = true,
         shouldOpenSong: Boolean = false,
+        isDemoLibrary: Boolean = false,
     ): CompletableDeferred<Unit> {
         val request = ImportRequest(
             files = files,
             shouldAnnounceResult = shouldAnnounceResult,
             shouldOpenSong = shouldOpenSong,
+            isDemoLibrary = isDemoLibrary,
         )
         if (files.isEmpty()) {
             request.settled.complete(Unit)
@@ -2974,7 +2976,7 @@ class CampfireViewModel(
         if (files == null) {
             sendMessage(Message.ImportFailed)
         } else {
-            enqueueImport(files).await()
+            enqueueImport(files, isDemoLibrary = true).await()
         }
         // Asked of a fresh read of the library rather than of the offer, which can still be a step behind the import
         // that just finished. Where the demo is now all there, the offer is waited for until it has left the screen,
@@ -3017,6 +3019,7 @@ class CampfireViewModel(
                                 files = files,
                                 shouldAnnounceResult = false,
                                 shouldOpenSong = false,
+                                isDemoLibrary = true,
                             ),
                         )
                         awaitImportSettled()
@@ -3026,13 +3029,11 @@ class CampfireViewModel(
                 // reason to wait for those.
                 demoLibraryDecision.complete(Unit)
                 isDemoLibraryPending.update { false }
-                // Whatever the read came to, rather than for one that succeeded: a read that failed is only tried again by
-                // a refresh, which may never come, and waiting for its value could wait for good. With nothing read there
-                // is nothing to write either, and the next start is a first run again - which plants nothing into a
-                // library that has songs in it.
-                userPreferencesState.first { it !is DataState.Loading }.data?.let {
-                    saveUserPreferences(it.copy(seenWhatsNewVersions = it.seenWhatsNewVersions + CAMPFIRE_VERSION_NAME))
-                }
+                // Read and written by the repository rather than copied from userPreferencesState, which can lag it by a
+                // dispatch and would write the demo record the import just took back out. With nothing read there is
+                // nothing to write either, and the next start is a first run again - which plants nothing into a library
+                // that has songs in it.
+                updateUserPreferences { it.copy(seenWhatsNewVersions = it.seenWhatsNewVersions + CAMPFIRE_VERSION_NAME) }
             }
         } finally {
             // In a finally rather than at the end: whatever went wrong, the app is no longer waiting for this, and
@@ -3244,6 +3245,14 @@ class CampfireViewModel(
                     plan = plan,
                     resolution = resolution,
                 ) { if (request.shouldAnnounceResult) _importProgress.value = it }
+                    .also { result ->
+                        if (request.isDemoLibrary) {
+                            rememberDemoLibraryFiles(
+                                songFileNames = DemoLibrary.songFileNamesWrittenBy(result),
+                                setlistFileNames = DemoLibrary.setlistFileNamesWrittenBy(result),
+                            )
+                        }
+                    }
             }
             _importProgress.value = null
             // A song that was already in the library is opened as well: it is still the song that was asked for, under
@@ -4094,6 +4103,7 @@ class CampfireViewModel(
      *   the library the user is about to be shown, and a progress dialog, a snackbar or a result counting the files
      *   of it would be the app reporting on something that, as far as anyone can tell, simply came with it.
      * @param shouldOpenSong True for files the system handed over, see [importFiles].
+     * @param isDemoLibrary The files are [DemoLibrary]'s, and what of them is written is remembered for sync.
      * @param files Emptied by [import] once the preparation is over: the plan carries everything the rest of the import
      *   needs, while the request lives for as long as a conflicts question does, which would otherwise keep up to the
      *   whole selection's bytes reachable for nothing.
@@ -4102,6 +4112,7 @@ class CampfireViewModel(
         var files: List<ImportedFile>,
         val shouldAnnounceResult: Boolean,
         val shouldOpenSong: Boolean,
+        val isDemoLibrary: Boolean = false,
         val settled: CompletableDeferred<Unit> = CompletableDeferred(),
     )
 

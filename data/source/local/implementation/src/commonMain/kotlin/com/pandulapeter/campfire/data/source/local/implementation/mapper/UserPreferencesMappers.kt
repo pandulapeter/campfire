@@ -55,6 +55,7 @@ internal fun UserPreferencesDocument.toModel() = UserPreferences(
     printSettings = printSettings.toModel(),
     metronomeSettings = metronomeSettings.toModel(),
     seenWhatsNewVersions = seenWhatsNewVersions,
+    demoLibraryContentHashes = demoLibraryContentHashes.filterValues { it.isNotBlank() },
 )
 
 internal fun UserPreferences.toDocument() = UserPreferencesDocument(
@@ -89,6 +90,7 @@ internal fun UserPreferences.toDocument() = UserPreferencesDocument(
     printSettings = printSettings.toDocument(),
     metronomeSettings = metronomeSettings.toDocument(),
     seenWhatsNewVersions = seenWhatsNewVersions,
+    demoLibraryContentHashes = demoLibraryContentHashes,
 )
 
 internal fun PrintSettingsDocument.toModel() = PrintSettings(

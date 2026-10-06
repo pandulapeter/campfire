@@ -36,7 +36,9 @@ Repository interfaces only. Consumed by `:domain:implementation`; implemented by
 - `SyncRepository` — the state machine around sync: `syncState: Flow<SyncState>`, the providers the build has, and
   `restore` / `connect` / `cancelConnection` / `disconnect` / `forgetStoredConnection` / `synchronize` /
   `cancelSynchronization`; `forgetStoredConnection` is the local-only wipe a first launch does, with no request — retried by
-  `restore` until it has worked. Unlike the others it caches no list — the library keeps
+  `restore` until it has worked; `rememberDemoLibraryFiles` records the content hash of the demo files just planted
+  (in `UserPreferences`, local only), so that a first comparison with a cloud folder holding another version of an
+  untouched demo takes the folder's instead of keeping both. Unlike the others it caches no list — the library keeps
   living in `SongRepository` and `SetlistRepository`, which is why a run hands the files it changed to their
   `refresh`, done by `SyncRepositoryImpl` itself. It is also the only thing above the data layer that knows a
   service is involved: the screens see a `SyncState` and never learn which provider produced it.

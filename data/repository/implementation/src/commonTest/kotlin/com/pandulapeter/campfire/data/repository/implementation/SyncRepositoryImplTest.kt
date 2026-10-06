@@ -32,6 +32,7 @@ import com.pandulapeter.campfire.data.repository.implementation.sync.RecordingSo
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncIndexDocument
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncIndexEntry
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncKey
+import com.pandulapeter.campfire.data.repository.implementation.sync.defaultUserPreferences
 import com.pandulapeter.campfire.data.repository.implementation.sync.indexKey
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import com.pandulapeter.campfire.data.source.remote.api.PendingAuthorization
@@ -57,6 +58,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
@@ -1012,6 +1014,57 @@ class SyncRepositoryImplTest {
 
         assertEquals(SyncState.Disconnected, repository.syncState.value)
         assertNull(stateLocalSource.index)
+    }
+
+    @Test
+    fun `rememberDemoLibraryFiles records the content of the files that are there`() = runTest {
+        val a = "Song a".encodeToByteArray()
+        val b = "Setlist b".encodeToByteArray()
+        val libraryFileLocalSource = FakeLibraryFileLocalSource(
+            files = mapOf(
+                SyncKey(kind = LibraryFileKind.SONG, name = "a.cho") to a,
+                SyncKey(kind = LibraryFileKind.SETLIST, name = "b.setlist.json") to b,
+            ),
+        )
+        val userPreferencesRepository = FakeUserPreferencesRepository(
+            defaultUserPreferences().copy(demoLibraryContentHashes = mapOf("songs/earlier.cho" to "0a1b")),
+        )
+        val repository = repository(
+            provider = FakeSyncProvider(),
+            libraryFileLocalSource = libraryFileLocalSource,
+            userPreferencesRepository = userPreferencesRepository,
+        )
+
+        repository.rememberDemoLibraryFiles(songFileNames = listOf("a.cho", "missing.cho"), setlistFileNames = listOf("b.setlist.json"))
+
+        assertEquals(
+            mapOf(
+                "songs/earlier.cho" to "0a1b",
+                "songs/a.cho" to localContentHash(a),
+                "setlists/b.setlist.json" to localContentHash(b),
+            ),
+            userPreferencesRepository.current.demoLibraryContentHashes,
+        )
+    }
+
+    @Test
+    fun `a run takes the folder's version of a remembered demo song`() = runTest {
+        val planted = "Demo, as this version plants it".encodeToByteArray()
+        val there = "Demo, as an older version planted it".encodeToByteArray()
+        val libraryFileLocalSource = FakeLibraryFileLocalSource(files = mapOf(song(1) to planted))
+        val repository = repository(
+            provider = FakeSyncProvider(files = mapOf(song(1) to there), account = ACCOUNT),
+            libraryFileLocalSource = libraryFileLocalSource,
+        )
+
+        repository.rememberDemoLibraryFiles(songFileNames = listOf(song(1).name), setlistFileNames = emptyList())
+        repository.restore()
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        val state = repository.awaitOutcome()
+
+        assertEquals(emptyList(), assertIs<SyncOutcome.Success>(state.lastOutcome).summary.conflicts)
+        assertEquals(setOf(song(1)), libraryFileLocalSource.files.keys)
+        assertContentEquals(there, libraryFileLocalSource.files[song(1)])
     }
 
     /** A storage that takes the pending authorization and then refuses to let go of it. */

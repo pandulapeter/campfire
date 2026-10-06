@@ -35,6 +35,17 @@ internal class UserPreferencesMappersTest {
     }
 
     @Test
+    fun theRememberedDemoFilesSurviveSavingAndReloading() {
+        val legacy = UserPreferencesDocumentFormat.decode("""{"uiMode":"dark"}""").document.toModel()
+        assertEquals(emptyMap(), legacy.demoLibraryContentHashes)
+        val hashes = mapOf("songs/a.cho" to "0a1b", "setlists/b.setlist.json" to "2c3d")
+        val saved = legacy.copy(demoLibraryContentHashes = hashes).toDocument()
+        val reloaded = UserPreferencesDocumentFormat.decode(UserPreferencesDocumentFormat.encode(saved)).document.toModel()
+        assertEquals(hashes, reloaded.demoLibraryContentHashes)
+        assertEquals(emptyMap(), UserPreferencesDocument(demoLibraryContentHashes = mapOf("songs/a.cho" to " ")).toModel().demoLibraryContentHashes)
+    }
+
+    @Test
     fun printSettingsSurviveSavingAndReloadingPreferences() {
         val settings = PrintSettings(format = PrintSettings.Format.FILES, paper = PrintSettings.Paper.LETTER, isLandscape = true, fontSize = 18,
             marginMm = 20, columns = 4, showChords = false, showChordDiagrams = false, showKey = false, showTempo = false, showComments = false, showMetadata = false,

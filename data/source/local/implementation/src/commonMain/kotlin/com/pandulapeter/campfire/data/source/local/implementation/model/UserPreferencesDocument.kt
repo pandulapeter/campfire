@@ -54,6 +54,7 @@ internal data class UserPreferencesDocument(
     val printSettings: PrintSettingsDocument = PrintSettingsDocument(),
     val metronomeSettings: MetronomeSettingsDocument = MetronomeSettingsDocument(),
     val seenWhatsNewVersions: Set<String> = emptySet(),
+    val demoLibraryContentHashes: Map<String, String> = emptyMap(),
 )
 
 

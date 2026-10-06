@@ -356,7 +356,9 @@ localized in both languages.
   the inside, and is why a library somebody has been using is never touched. That first run writes the preferences
   whether it planted anything or not, so an installation that started with an import of its own and was emptied
   later is not taken for a fresh one. Settings offers to add them for as long as the library is missing any of them, so
-  a deleted one comes back by being asked for rather than on its own. That first run is also the only one that opens
+  a deleted one comes back by being asked for rather than on its own. Both ways of planting them remember what they
+  wrote under the demo's own names (`RememberDemoLibraryFilesUseCase`, a local-only preference), so that a sync run
+  meeting another version's untouched demo in the cloud folder takes it instead of keeping a copy of each. That first run is also the only one that opens
   with the **welcome sheet** over the library: a line about the app, the theme and the color, and the way to Settings,
   naming Dropbox sync where the build has it — short on purpose, since the demo songs behind it say the rest. Each file is named exactly as the library would
   name the song inside it, which is what lets one list both read the resources and answer whether they are already
@@ -754,7 +756,8 @@ the only possible one. The per-module `CLAUDE.md` files carry the detail; the sh
   of a file still on its way down — a name of the other device's making, numbered the way any document is, rather
   than with the underscore a name the app derived itself collides with (`_2`) — except a setlist whose two versions
   differ only in the day they name, which every device gives an undated setlist on its own, or where this device's
-  only change is the day its read gave an undated file: the cloud folder's version is taken.
+  only change is the day its read gave an undated file, or a demo file this device planted that still holds exactly
+  what was planted, met in the folder for the first time: the cloud folder's version is taken.
 - **The library's per-song overrides travel too**: the transposition, tempo and capo of a song opened from the library
   (`UserPreferences.transpositions`, `tempos`, `capos`; a setlist's own are in its file already) are one
   `preferences.json` at the top of the cloud folder, beside `songs/` and `setlists/`, where the engine never looks:

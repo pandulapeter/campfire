@@ -125,6 +125,13 @@ data class UserPreferences(
     val metronomeSettings: MetronomeSettings = MetronomeSettings(),
     /** Versions already introduced here, including the first installed version whose introduction is skipped. */
     val seenWhatsNewVersions: Set<String> = emptySet(),
+    /**
+     * The content hash of every demo file this device planted, as it was written, keyed by its library path
+     * (`songs/<file name>`, `setlists/<file name>`: the folder is `LibraryFileKind.id`). Sync takes the cloud folder's
+     * version of a file that still has exactly that content instead of keeping both, see `SyncRepository`. Never
+     * exported or synced.
+     */
+    val demoLibraryContentHashes: Map<String, String> = emptyMap(),
 ) {
 
     companion object {

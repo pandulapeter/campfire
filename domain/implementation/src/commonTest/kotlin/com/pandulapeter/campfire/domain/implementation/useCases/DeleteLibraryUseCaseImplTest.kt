@@ -154,6 +154,7 @@ class DeleteLibraryUseCaseImplTest {
         override suspend fun cancelConnection() = throw NotImplementedError()
         override suspend fun disconnect() = throw NotImplementedError()
         override suspend fun forgetStoredConnection() = throw NotImplementedError()
+        override suspend fun rememberDemoLibraryFiles(songFileNames: Collection<String>, setlistFileNames: Collection<String>) = Unit
         override fun scheduleSynchronization() = throw NotImplementedError()
         override fun startScheduledSynchronization(): SyncProgress? = throw NotImplementedError()
 

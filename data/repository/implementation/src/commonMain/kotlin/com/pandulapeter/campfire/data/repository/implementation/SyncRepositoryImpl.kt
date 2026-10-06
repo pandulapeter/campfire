@@ -40,6 +40,7 @@ import com.pandulapeter.campfire.data.source.remote.api.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.SyncProvider
 import com.pandulapeter.campfire.data.source.remote.api.SyncProviders
 import com.pandulapeter.campfire.data.source.remote.api.SyncRemoteStorageFullException
+import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
 import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteAuthorizationResponse
 import com.pandulapeter.campfire.data.source.remote.api.model.redirectParameters
@@ -96,15 +97,17 @@ internal class SyncRepositoryImpl(
      */
     private val songRepository: SongRepository,
     private val setlistRepository: SetlistRepository,
-    userPreferencesRepository: UserPreferencesRepository,
-    libraryFileLocalSource: LibraryFileLocalSource,
-    libraryFileLock: LibraryFileLock,
+    private val userPreferencesRepository: UserPreferencesRepository,
+    private val libraryFileLocalSource: LibraryFileLocalSource,
+    private val libraryFileLock: LibraryFileLock,
     setlistComparison: SetlistComparison,
     libraryChanges: LibraryChanges,
 ) : SyncRepository {
 
     private val providers = syncProviders.all
-    private val engine = SyncEngine(libraryFileLocalSource, libraryFileLock, setlistComparison)
+    private val engine = SyncEngine(libraryFileLocalSource, libraryFileLock, setlistComparison) { key ->
+        userPreferencesRepository.loadUserPreferencesIfNeeded()?.demoLibraryContentHashes?.get(key.path)
+    }
     private val syncedPreferencesSync = SyncedPreferencesSync(userPreferencesRepository, libraryFileLocalSource)
     private val _syncState = MutableStateFlow<SyncState>(SyncState.Disconnected)
     override val syncState = _syncState.asStateFlow()
@@ -390,6 +393,23 @@ internal class SyncRepositoryImpl(
 
     override suspend fun forgetStoredConnection() {
         restoreMutex.withLock { withContext(NonCancellable) { forgetStoredConnectionNow() } }
+    }
+
+    override suspend fun rememberDemoLibraryFiles(songFileNames: Collection<String>, setlistFileNames: Collection<String>) {
+        try {
+            val keys = songFileNames.map { SyncKey(LibraryFileKind.SONG, it) } + setlistFileNames.map { SyncKey(LibraryFileKind.SETLIST, it) }
+            // Read under the lock the repositories write under, so the bytes recorded are the ones the import left.
+            val hashes = libraryFileLock.withLock {
+                keys.mapNotNull { key -> libraryFileLocalSource.readLibraryFile(key.kind, key.name)?.let { key.path to localContentHash(it) } }
+            }
+            if (hashes.isNotEmpty()) {
+                userPreferencesRepository.updateUserPreferences { it.copy(demoLibraryContentHashes = it.demoLibraryContentHashes + hashes) }
+            }
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Exception) {
+            println("Could not remember the demo library: ${exception.message}")
+        }
     }
 
     /**

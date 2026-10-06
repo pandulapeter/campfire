@@ -92,6 +92,8 @@ ending, never a write of the song.
 
 Sync adds `GetSyncStateUseCase`, `GetSyncProvidersUseCase`, `ConnectSyncProviderUseCase`,
 `DisconnectSyncProviderUseCase`, `ForgetSyncConnectionUseCase`, `CancelSyncConnectionUseCase`, `RestoreSyncUseCase`,
+`RememberDemoLibraryFilesUseCase` (what the demo files just planted hold, for sync to take another version's untouched
+demo instead of keeping both),
 `SynchronizeLibraryUseCase` and `CancelSynchronizationUseCase` — the only ones that share a file with each other (two
 of them), since they are one feature and each is a single line over `SyncRepository`. `ForgetSyncConnectionUseCase`
 differs from the disconnect in telling the service nothing: it is what a first launch runs before restoring, so a

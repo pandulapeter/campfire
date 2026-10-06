@@ -155,7 +155,7 @@ The ones that carry real logic:
   reference is attempted even after one fails, the deletion answering like the rename whether all of them followed.
 - `EditorDraftUseCaseImpls.kt` — the two editor draft use cases in one file, each a line over
   `EditorDraftRepository`.
-- `SyncUseCaseImpls.kt` — all nine sync use cases in one file, since each is a line over `SyncRepository` and they
+- `SyncUseCaseImpls.kt` — every sync use case in one file (`RememberDemoLibraryFilesUseCase` among them), since each is a line over `SyncRepository` and they
   are one feature. The two that are not: connecting runs a first sync straight away (an account connected onto a
   library that then stays empty leaves the user to work out that something else is expected of them), and restoring
   at startup does the same, but only when the stored credentials actually came back connected. Both start the run at

@@ -115,12 +115,15 @@ private fun SyncKey.folded() = copy(name = name.normalizedToNfc().lowercase())
  * rather than the whole library.
  *
  * [setlistComparison] is the one look this class takes inside a file: a setlist whose two versions differ only in the
- * day they name is one setlist rather than a conflict, see [resolveWith].
+ * day they name is one setlist rather than a conflict, see [resolveWith]. [plantedContentHash] is the other exception
+ * to keeping both: a demo file this device planted and nobody touched since yields to the cloud folder's version.
  */
 internal class SyncEngine(
     private val libraryFileLocalSource: LibraryFileLocalSource,
     private val libraryFileLock: LibraryFileLock,
     private val setlistComparison: SetlistComparison,
+    /** What the app planted under a name, as a content hash, or null for a file it did not plant; see [resolveWith]. */
+    private val plantedContentHash: suspend (SyncKey) -> String? = { null },
 ) {
 
     suspend fun synchronize(
@@ -649,6 +652,10 @@ internal class SyncEngine(
      * here is the day this device's read gave the undated version the last run saw ([indexEntry]), takes the remote
      * version: it needs no upload and is what every other device has or will download. What it costs is a day set on
      * purpose on two devices offline, or here while another device edited the setlist, losing to the cloud folder's.
+     *
+     * A demo file this device planted that still holds exactly what was planted ([plantedContentHash]) takes the remote
+     * version too, but only where the index has no entry for it, the first time this device meets the name in this
+     * folder.
      */
     private suspend fun resolveWith(
         provider: SyncProvider,
@@ -662,6 +669,16 @@ internal class SyncEngine(
     ): OperationOutcome {
         if (remote.contentEquals(localBytes)) {
             return OperationOutcome(entries = mapOf(key to SyncIndexEntry(localContentHash(localBytes), revision)))
+        }
+        // A demo file this device planted and nobody has touched since, met in this folder for the first time: the
+        // folder's version is an older or newer demo that another device planted under the same name (or the user's
+        // edit of one), and keeping both would be two copies of every demo song on every device. Nothing anybody wrote
+        // is lost by taking it, which a content check rather than a name check is what guarantees. Not with an index
+        // entry: a file the last run saw with other bytes and that is back at its planted ones was changed back on
+        // purpose, and that change is kept like any other.
+        val plantedHash = if (indexEntry == null) plantedContentHash(key) else null
+        if (plantedHash != null && plantedHash == localContentHash(localBytes)) {
+            return takeRemote(key = key, revision = revision, localBytes = localBytes, remote = remote, onLocalFileChanged = onLocalFileChanged)
         }
         if (key.kind == LibraryFileKind.SETLIST) {
             // Byte for byte as this version encodes the document, which holds for every file the app wrote; one written

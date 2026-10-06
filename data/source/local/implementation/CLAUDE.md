@@ -147,7 +147,7 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
 - **`model/` + `mapper/`** — `SetlistDocument`, `UserPreferencesDocument` and the two-way mapping to the `:data:model`
   types. Every field of a document is defaulted, so a file written by an older version — or edited by hand, which on
   iOS and desktop the user can do — keeps whatever it does carry instead of failing to parse. A `null` is read as a
-  missing field (`coerceInputValues`), in both documents. `seenWhatsNewVersions` defaults to an empty set for older preferences, and survives every settings save; a fresh installation records its first version without introducing it. The preferences go further, since they are the one document
+  missing field (`coerceInputValues`), in both documents. `seenWhatsNewVersions` defaults to an empty set for older preferences, and survives every settings save; a fresh installation records its first version without introducing it. `demoLibraryContentHashes` (what the demo files planted here held) defaults to an empty map for older preferences the same way. The preferences go further, since they are the one document
   the app overwrites as a whole: `UserPreferencesDocumentFormat` reads them field by field when they do not decode as
   they are — one transposition, tempo or capo that is not a number costs that entry, not the map, and one folded section key that
   is not text costs that key — and the local source copies such a
