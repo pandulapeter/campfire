@@ -1426,7 +1426,10 @@ private fun SongSectionsLayout(
     val maxRowHeightPx = if (maxRowHeight.isSpecified && maxRowHeight > 0.dp) maxRowHeight.roundToPx() else Int.MAX_VALUE
     val endInsetPx = stepButtonInset.roundToPx()
     val piecePadding = IntArray(sectionCount) { if (units.cardStarts[it] >= 0) cardPadding.roundToPx() else 0 }
-    fun widthColumnCountFor(totalWidth: Int) = if (isSingleColumn) {
+    // A songbook too long to be cut into pages is stepped by rows where it has columns, each named by its first section,
+    // so a change of tempo or time in a row's second column would only be heard on the next row: one that changes is a
+    // single column, stepped by its sections, which the click follows past every change.
+    fun widthColumnCountFor(totalWidth: Int) = if (isSingleColumn || (sectionCount > MAX_CUT_SECTION_COUNT && units.timingStarts.size > 1)) {
         1
     } else {
         ((totalWidth + columnGapPx) / (minColumnWidth.roundToPx() + columnGapPx)).coerceAtLeast(1)

@@ -761,7 +761,8 @@ Nothing about it reaches the network. The module `CLAUDE.md` files carry the det
   stepper, a setlist's entry and the library's override still hold one number, the song's opening tempo, and a later
   tempo keeps its ratio to the file's opening one (120 → 60, played at 110 → 55), so nothing new is stored. A song that
   fits one screen is still cut into pages by a change, since the page is the signal; a songbook of more than 200
-  sections keeps its one column, the click following the change scrolled past. The editor offers Tempo and Time
+  sections that changes its tempo or time is one column whatever the width, the click following the change scrolled
+  past. The editor offers Tempo and Time
   signature again and again — into the header first, at the start of the caret's line after that — and the preview
   shows each change in place and is never paged; the PDF prints it as a line kept with what follows it. **With the
   Metronome feature off none of it exists**: no line, no forced page, the song laid out as if it had none. A `{key}`
