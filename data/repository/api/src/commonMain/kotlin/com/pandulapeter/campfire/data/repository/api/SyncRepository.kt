@@ -21,8 +21,9 @@ import kotlinx.coroutines.flow.Flow
  * Keeping the library in step with a cloud service the user connected.
  *
  * Unlike the other repositories this one has no cached list to hand out: what it holds is a state machine, and the
- * library itself keeps living in the song and setlist repositories. A run that changed files on disk therefore has
- * to be followed by a rescan of those, which is the job of `SynchronizeLibraryUseCase`.
+ * library itself keeps living in the song and setlist repositories. A run writes files behind their backs, so this
+ * repository hands them the files it changed (`SongRepository.refresh`, `SetlistRepository.refresh`) while it runs and
+ * whichever way it ends.
  */
 interface SyncRepository {
 

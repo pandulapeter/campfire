@@ -24,7 +24,12 @@ interface SongRepository {
     /** See `SongLocalSource.loadSongFileSizes`: every song file in the folder with its size, read or not. Never cached. */
     suspend fun loadSongFileSizes(): Map<String, Long>
 
-    /** Reads the songs directory again, which is what a refresh and an import need. */
+    /**
+     * Reads the whole songs directory again: the app coming back to the front where the folder can be edited outside it,
+     * a retry after a failed read, and a sync run cut short by something that is not an exception, which cannot say what
+     * it changed. A sync run otherwise hands over the files it changed to [refresh], and an import ends with
+     * [adoptImported].
+     */
     suspend fun rescan()
 
     /**

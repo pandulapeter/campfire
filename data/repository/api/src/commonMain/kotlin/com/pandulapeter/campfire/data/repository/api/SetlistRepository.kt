@@ -32,7 +32,10 @@ interface SetlistRepository {
      */
     suspend fun loadSetlistFileNamesNaming(songFileName: String): List<String>
 
-    /** Reads the setlists directory again, which is what a rescan and an import need. */
+    /**
+     * Reads the whole setlists directory again, when the songs directory is, see `SongRepository.rescan`. A sync run
+     * otherwise hands over the files it changed to [refresh], and an import ends with [adoptImported].
+     */
     suspend fun rescan()
 
     /**

@@ -12,7 +12,10 @@
 Repository interfaces only. Consumed by `:domain:implementation`; implemented by `:data:repository:implementation`.
 
 - `SongRepository` — an observable `songs: Flow<DataState<List<Song>>>` plus `loadSongsIfNeeded()`, `rescan()` (re-read
-  the folder, which is what a refresh and the end of an import do), `saveSong`, `createSong`, `importFileName`, `importSong`, `deleteSong`.
+  the folder: the app back in front where the folder can be edited outside it, a retry, a sync run cut short by
+  something that is not an exception), `refresh(fileNames)` (re-read only the files a sync run changed, which the run hands over while it goes and whichever
+  way it ends), `adoptImported` (put the songs an import wrote into the list in one change, the way an import ends),
+  `saveSong`, `createSong`, `importFileName`, `importSong`, `deleteSong`.
 - `SetlistRepository` — the same shape over `*.setlist.json`, plus `parseSetlist` / `loadSetlistDocument` for the export
   and import paths (the latter optionally narrowed to some of the setlist's songs, for a zip of only those). A setlist that is already in the library is changed through `updateSetlist` (read the latest,
   transform, write, one change at a time), never by saving a copy the caller read earlier: that copy lags a write
@@ -34,15 +37,15 @@ Repository interfaces only. Consumed by `:domain:implementation`; implemented by
   `restore` / `connect` / `cancelConnection` / `disconnect` / `forgetStoredConnection` / `synchronize` /
   `cancelSynchronization`; `forgetStoredConnection` is the local-only wipe a first launch does, with no request — retried by
   `restore` until it has worked. Unlike the others it caches no list — the library keeps
-  living in `SongRepository` and `SetlistRepository`, which is why a run that changed files has to be followed by a
-  `rescan()`, done by `SynchronizeLibraryUseCase`. It is also the only thing above the data layer that knows a
+  living in `SongRepository` and `SetlistRepository`, which is why a run hands the files it changed to their
+  `refresh`, done by `SyncRepositoryImpl` itself. It is also the only thing above the data layer that knows a
   service is involved: the screens see a `SyncState` and never learn which provider produced it.
 - `ArchiveRepository` — zip pack/unpack. It has no state to cache and exists only so that the use cases can reach the
   zip code without the domain layer having to see the local sources.
 - `DocumentRepository` — the same stateless boundary for text extraction from `.pdf` and `.docx`; answers
   positioned `ExtractedDocument` or null, never retains bytes and never swallows cancellation.
 
-A `rescan()` is the only thing that re-reads the library folder. Everything else keeps the cached list in step by
-updating the one entry it changed, so writing a song does not cost a directory scan. The entry a setlist write puts in
+A `rescan()` is the only thing that lists the library folder again; `refresh` re-reads named files, and everything else
+keeps the cached list in step by updating the one entry it changed, so writing a song does not cost a directory scan. The entry a setlist write puts in
 is the one `saveSetlist` returns, carrying the size of the file it wrote, since the settings screen adds the library's
 size up from the models.
