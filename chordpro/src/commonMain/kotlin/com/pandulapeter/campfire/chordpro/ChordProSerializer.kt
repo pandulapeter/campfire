@@ -91,6 +91,7 @@ object ChordProSerializer {
         metadata.tags.forEach { add("{${ChordProSyntax.TAG_NAME}: $it}") }
         metadata.languages.forEach { add("{meta: ${ChordProSyntax.LANGUAGE_NAME} $it}") }
         metadata.links.forEach { add("{meta: ${ChordProSyntax.LINK_NAME} ${ChordProLinks.value(it)}}") }
+        metadata.definitions.forEach { add(ChordProDefinitions.line(it.name, it.voicing)) }
         metadata.custom.forEach { (name, values) ->
             values.forEach { value -> add(if (value.isEmpty()) "{meta: $name}" else "{meta: $name $value}") }
         }

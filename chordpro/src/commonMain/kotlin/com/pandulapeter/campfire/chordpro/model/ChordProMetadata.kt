@@ -51,6 +51,11 @@ data class ChordProMetadata(
      * directive for them either, so they are custom metadata items like [coverArt].
      */
     val links: List<ChordProLink> = emptyList(),
+    /**
+     * The shapes the song gives its chords, one per `{define}` or `{chord}` directive that holds one Campfire draws, in
+     * file order, the last one of a chord on an instrument taking the place of the ones before it.
+     */
+    val definitions: List<ChordDefinition> = emptyList(),
     val custom: Map<String, List<String>> = emptyMap(), // {meta: name value} and unknown x_* directives, in order
 )
 

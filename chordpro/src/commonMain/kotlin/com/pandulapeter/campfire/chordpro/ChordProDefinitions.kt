@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.chordpro
 
+import com.pandulapeter.campfire.chordpro.model.ChordDefinition
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
 import com.pandulapeter.campfire.chordpro.model.ChordVoicing
 
@@ -46,6 +47,89 @@ object ChordProDefinitions {
             val octaves = keys.minOrNull()?.takeIf { it < 0 }?.let { (-it + 11) / 12 } ?: 0
             "$KEYS " + keys.joinToString(" ") { (it + octaves * 12).toString() }
         }
+    }
+
+    /**
+     * The selector of a `{define}` or `{chord}` directive named [name]: empty for one without a selector, the selector
+     * for `define-ukulele` and the like, and null for a directive that is no definition at all.
+     */
+    internal fun selectorOf(name: String): String? {
+        val base = name.substringBefore('-')
+        if (base !in DEFINITION_DIRECTIVES) return null
+        return if ('-' in name) name.substringAfter('-') else ""
+    }
+
+    /** The shape a definition with this [value] and [selector] gives its chord, or null where it gives none Campfire draws. */
+    internal fun definitionOf(value: String, selector: String): ChordDefinition? =
+        (read(value, selector.takeIf { it.isNotEmpty() }) as? Reading.Shape)?.let { ChordDefinition(it.name, it.instrument, it.voicing) }
+
+    /**
+     * [definition] moved by [semitones], renamed by [rename] the way the song's chords are, so that it is spelled as
+     * they are.
+     *
+     * A fretted shape moves along the neck by as many frets, every string that sounds with it, the open ones too,
+     * which is what a barre or a capo does to a shape. One with an open string never goes down: down by any amount it
+     * moves up by the rest of the octave instead, which is the same chord, the way a tab with an open string is moved.
+     * For every other shape up by the transposition and down by the rest of the octave are both looked at: one that
+     * would take a fret off the neck is out, and of the rest the one a hand can hold is taken
+     * ([ChordVoicings.isHoldable]), the lower one where both can or neither can. So a shape high on the neck comes down
+     * rather than running off its end, and the lower of the two never needs more fingers than the higher, which is why
+     * there and back lands on the shape it started as.
+     *
+     * The fingering follows where the move is a barre coming or going: open strings a move stops become the first
+     * finger's barre and every other finger moves one on, and strings that come to rest open lose their finger while
+     * the others move one back. A shape that would need a fifth finger keeps no fingering, and nor does one whose strings
+     * coming to rest open were held by more than one finger. A keyboard's keys move with the root they are counted from.
+     * [ChordDefinition.movedBy] adds up, so there and back is zero.
+     */
+    fun transposed(definition: ChordDefinition, semitones: Int, rename: (String) -> String): ChordDefinition {
+        val name = rename(definition.name)
+        val shift = semitones.mod(12)
+        if (shift == 0) return definition.copy(name = name)
+        return when (val voicing = definition.voicing) {
+            is ChordVoicing.Keys -> {
+                val moved = voicing.notes.map { it + shift }
+                val octaves = (listOfNotNull(voicing.bass?.plus(shift)) + moved).min() / 12
+                definition.copy(
+                    name = name,
+                    voicing = ChordVoicing.Keys(moved.map { it - octaves * 12 }, voicing.bass?.let { it + shift - octaves * 12 }),
+                )
+            }
+            is ChordVoicing.Fretted -> {
+                val candidates = (if (voicing.frets.any { it == 0 }) listOf(shift) else listOf(shift - 12, shift))
+                    .filter { move -> voicing.frets.all { it == null || it + move in 0..MAX_FRET } }
+                val move = candidates.firstOrNull { ChordVoicings.isHoldable(voicing.frets.map { fret -> fret?.plus(it) }) }
+                    ?: candidates.firstOrNull()
+                    ?: return definition.copy(name = name)
+                definition.copy(name = name, voicing = voicing.movedBy(move), movedBy = definition.movedBy + move)
+            }
+        }
+    }
+
+    private fun ChordVoicing.Fretted.movedBy(move: Int): ChordVoicing.Fretted {
+        val moved = frets.map { it?.plus(move) }
+        val fingers = fingers?.let { fingers ->
+            val stoppedNow = frets.indices.filter { frets[it] == 0 }
+            val openedNow = moved.indices.filter { moved[it] == 0 && frets[it] != 0 }
+            val adjusted = when {
+                stoppedNow.isNotEmpty() -> fingers.mapIndexed { string, finger -> if (string in stoppedNow) 1 else if (finger > 0) finger + 1 else 0 }
+                openedNow.isNotEmpty() -> {
+                    val released = openedNow.map { fingers[it] }.filter { it > 0 }.toSet()
+                    // Strings held by several fingers coming to rest open is no barre going, and moving the shape back
+                    // could not tell which finger held which: the fingering is left out rather than guessed.
+                    if (released.size > 1) return ChordVoicing.Fretted(moved)
+                    fingers.mapIndexed { string, finger ->
+                        when {
+                            string in openedNow || finger == 0 -> 0
+                            else -> finger - released.count { it < finger }
+                        }
+                    }
+                }
+                else -> fingers
+            }
+            adjusted.takeIf { it.all { finger -> finger in 0..MAX_HAND_FINGER } }
+        }
+        return ChordVoicing.Fretted(moved, fingers)
     }
 
     /** What reading the value of a definition came to. */
@@ -124,11 +208,14 @@ object ChordProDefinitions {
     }
 
     internal const val DEFINE = "define"
+    internal val DEFINITION_DIRECTIVES = setOf(DEFINE, "chord")
     private const val BASE_FRET = "base-fret"
     private const val FRETS = "frets"
     private const val FINGERS = "fingers"
     private const val KEYS = "keys"
     private const val MAX_FINGER = 5
+    private const val MAX_HAND_FINGER = 4
+    private const val MAX_FRET = 24
     private val keywords = setOf(BASE_FRET, FRETS, FINGERS, KEYS, "copy", "copyall", "display", "format", "diagram")
     private val mutedFrets = setOf("x", "X", "N", "-1")
     private val unusedFingers = setOf("-", "x", "X", "N")

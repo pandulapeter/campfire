@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.chordpro
 
+import com.pandulapeter.campfire.chordpro.model.ChordDefinition
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.ChordProLink
@@ -316,6 +317,13 @@ object ChordProParser {
         timing: TimingChanges,
     ) {
         val name = directive.name
+        // A definition's selector names the instrument it is for, which Campfire draws, rather than a person or a
+        // device it has nothing to match against. Inside an environment handed to another program it is that
+        // program's text.
+        ChordProDefinitions.selectorOf(name)?.let { selector ->
+            if (!section.isDelegated) directive.value?.let { ChordProDefinitions.definitionOf(it, selector) }?.let(metadata::addDefinition)
+            return
+        }
         if (ChordProSyntax.hasSelectorSuffix(name)) return
         if (name == TRANSPOSE) {
             // Inside a section the modulation cuts it in two, the way a comment does, and the rest is its continuation.
@@ -831,6 +839,7 @@ object ChordProParser {
         private val languages = mutableListOf<String>()
         private val languageSet = mutableSetOf<String>()
         private val links = mutableListOf<ChordProLink>()
+        private val definitions = mutableListOf<ChordDefinition>()
         private val custom = mutableMapOf<String, MutableList<String>>()
 
         /** @param isInBody Whether [directive] stands in the body of the song rather than in its header. */
@@ -879,6 +888,12 @@ object ChordProParser {
             }
         }
 
+        /** A later shape of the same chord on the same instrument takes the place of the earlier one, where that stood. */
+        fun addDefinition(definition: ChordDefinition) {
+            val index = definitions.indexOfFirst { it.name == definition.name && it.instrument == definition.instrument }
+            if (index < 0) definitions += definition else definitions[index] = definition
+        }
+
         /** A tag the song already carries in another spelling is not a second tag, see [ChordProMetadata.tags]. */
         private fun addTag(value: String) {
             if (tagKeys.add(ChordProSyntax.caseInsensitiveKey(value))) tags += value
@@ -907,6 +922,7 @@ object ChordProParser {
             tags = tags.toList(),
             languages = languages.toList(),
             links = links.toList(),
+            definitions = definitions.toList(),
             custom = custom.mapValues { it.value.toList() },
         )
     }

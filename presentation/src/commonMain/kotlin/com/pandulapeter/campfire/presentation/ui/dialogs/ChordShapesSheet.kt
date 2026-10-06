@@ -38,10 +38,13 @@ import com.pandulapeter.campfire.chordpro.ChordVoicings
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
 import com.pandulapeter.campfire.chordpro.model.ChordVoicing
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.presentation.localization.pluralStringResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_next
 import com.pandulapeter.campfire.presentation.resources.ic_previous
+import com.pandulapeter.campfire.presentation.resources.song_details_chord_defined
+import com.pandulapeter.campfire.presentation.resources.song_details_chord_defined_moved
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_shape_next
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_shape_position
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_shape_previous
@@ -68,6 +71,7 @@ import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.painterResource
+import kotlin.math.abs
 
 /**
  * The chords of a song larger than its Chords section draws them, each with its notes and a stepper through the other
@@ -144,9 +148,9 @@ private fun ChordShapeCell(
     horizontalAlignment = Alignment.CenterHorizontally,
 ) {
     // The search for every shape of one chord is quick, but a sheet of thirty of them is not, so each cell asks for its
-    // own away from the main thread and has its stepper once they are there.
-    val shapes by produceState<List<ChordVoicing>?>(null, chord.chord, instrument) {
-        value = withContext(Dispatchers.Default) { ChordVoicings.all(chord.chord, instrument) }
+    // own away from the main thread and has its stepper once they are there. A chord the song defines has none.
+    val shapes by produceState<List<ChordVoicing>?>(null, chord.chord, instrument, selection.source) {
+        value = if (selection.source == SelectedShape.Source.DEFINED) emptyList() else withContext(Dispatchers.Default) { ChordVoicings.all(chord.chord, instrument) }
     }
     val current = selection.shape
     // A stored shape the app does not list is still the player's, and comes first, before the app's own.
@@ -193,7 +197,19 @@ private fun ChordShapeCell(
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         textAlign = TextAlign.Center,
     )
-    if (options != null && options.size > 1) {
+    if (selection.source == SelectedShape.Source.DEFINED) {
+        Text(
+            modifier = Modifier.padding(top = 8.dp).height(STEPPER_PLACEHOLDER_HEIGHT),
+            text = if (selection.movedBy == 0) {
+                stringResource(Res.string.song_details_chord_defined)
+            } else {
+                pluralStringResource(Res.plurals.song_details_chord_defined_moved, abs(selection.movedBy), abs(selection.movedBy))
+            },
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.primary,
+            textAlign = TextAlign.Center,
+        )
+    } else if (options != null && options.size > 1) {
         Stepper(
             modifier = Modifier.padding(top = 8.dp),
             value = stringResource(Res.string.song_details_chord_shape_position, index + 1, options.size),

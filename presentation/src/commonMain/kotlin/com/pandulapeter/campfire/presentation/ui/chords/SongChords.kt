@@ -12,9 +12,11 @@ package com.pandulapeter.campfire.presentation.ui.chords
 import androidx.compose.runtime.Immutable
 import com.pandulapeter.campfire.chordpro.ChordNotation
 import com.pandulapeter.campfire.chordpro.ChordProChords
+import com.pandulapeter.campfire.chordpro.ChordProDefinitions
 import com.pandulapeter.campfire.chordpro.ChordProTransposer
 import com.pandulapeter.campfire.chordpro.ChordVoicings
 import com.pandulapeter.campfire.chordpro.model.Chord
+import com.pandulapeter.campfire.chordpro.model.ChordDefinition
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.chordpro.model.ChordVoicing
@@ -29,6 +31,8 @@ import com.pandulapeter.campfire.data.model.domain.UserPreferences
  * @property soundingName The name of [chord] where it is not the one the page shows, which the cell names after it.
  * @property defaultShape The shape [chord] is shown with where nothing else says how it is played, worked out with the
  *   rest of the song away from the main thread.
+ * @property definition The shape the song itself gives the chord on the instrument, where it gives one that is drawn,
+ *   see [songChordsOf].
  */
 @Immutable
 internal data class SongChord(
@@ -36,6 +40,7 @@ internal data class SongChord(
     val chord: Chord,
     val soundingName: String? = null,
     val defaultShape: ChordVoicing? = null,
+    val definition: ChordDefinition? = null,
 )
 
 /**
@@ -44,7 +49,14 @@ internal data class SongChord(
  * [ChordProChords] does not read are not chords. A song of more than [MAX_SONG_CHORDS] chords is a songbook rather than
  * a song, and gets none: a section of fifty diagrams would be a page of its own before the first line.
  *
- * On the keyboard [capo] moves every chord to the one that sounds, see [SongChord.chord].
+ * On the keyboard [capo] moves every chord to the one that sounds, see [SongChord.chord], and the keys a definition
+ * presses with it.
+ *
+ * A chord is matched to the song's definition for the instrument by the name the page shows, which the
+ * transposition and the notation rename the definition to as well, or else by the notes the two names stand for.
+ * A definition as the file writes it is drawn whatever it asks of a hand, since asking for the unusual is what one is
+ * for; one a transposition moved only while a hand can hold it, in the octave the move chose for exactly that, and
+ * otherwise the chord is drawn as if the song gave it no shape.
  */
 internal fun songChordsOf(
     song: ChordProSong,
@@ -56,13 +68,18 @@ internal fun songChordsOf(
     if (parsed.size > MAX_SONG_CHORDS) return emptyList()
     val soundingShift = if (instrument == ChordInstrument.KEYBOARD) capo.mod(12) else 0
     val preferFlats = soundingShift != 0 && ChordProTransposer.prefersFlats(song, soundingShift)
+    val definitions = song.metadata.definitions.filter { it.instrument == instrument }
     return parsed.map { (name, chord) ->
         val sounding = if (soundingShift == 0) chord else chord.copy(root = (chord.root + soundingShift) % 12, bass = chord.bass?.let { (it + soundingShift) % 12 })
+        val definition = (definitions.lastOrNull { it.name == name } ?: definitions.lastOrNull { ChordProChords.parse(it.name, notation) == chord })
+            ?.takeIf { it.movedBy == 0 || (it.voicing as? ChordVoicing.Fretted)?.frets?.let(ChordVoicings::isHoldable) != false }
+            ?.let { if (soundingShift == 0) it else ChordProDefinitions.transposed(it, soundingShift) { name -> name } }
         SongChord(
             name = name,
             chord = sounding,
             soundingName = if (soundingShift == 0) null else ChordProChords.transposedName(name, soundingShift, notation, preferFlats),
-            defaultShape = ChordVoicings.default(sounding, instrument),
+            defaultShape = if (definition == null) ChordVoicings.default(sounding, instrument) else null,
+            definition = definition,
         )
     }
 }

@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.chordpro
 
+import com.pandulapeter.campfire.chordpro.model.ChordDefinition
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
@@ -56,13 +57,21 @@ object ChordProTransposer {
         if (shift == 0 && preferFlats == null) return ChordRewrite(rewriteTabLines = { it }, rename = { it })
         val flats = preferFlats ?: prefersFlats(song, shift)
         val rename = { name: String -> transposeChord(name, shift, flats) }
-        return ChordRewrite(rewriteTabLines = { lines -> ChordProTabTransposer.transpose(lines, shift, rename) }, rename = rename)
+        return ChordRewrite(
+            rewriteTabLines = { lines -> ChordProTabTransposer.transpose(lines, shift, rename) },
+            rename = rename,
+            rewriteDefinition = { ChordProDefinitions.transposed(it, shift, rename) },
+        )
     }
 
-    /** What [rewriteChords] does to the chords of one stretch of a song. */
+    /**
+     * What [rewriteChords] does to the chords of one stretch of a song. A definition is renamed like any chord unless
+     * [rewriteDefinition] says otherwise, which is what a change of notation wants and a transposition does not.
+     */
     internal class ChordRewrite(
         val rewriteTabLines: (List<String>) -> List<String>,
         val rename: (String) -> String,
+        val rewriteDefinition: (ChordDefinition) -> ChordDefinition = { it.copy(name = rename(it.name)) },
     )
 
     /**
@@ -89,8 +98,14 @@ object ChordProTransposer {
      */
     internal fun rewriteChords(song: ChordProSong, rewriteAt: (Int) -> ChordRewrite): ChordProSong {
         var offset = 0
+        val opening = rewriteAt(0)
         return song.copy(
-            metadata = song.metadata.copy(key = song.metadata.key?.let { key -> renameKey(key, rewriteAt(0).rename) }),
+            metadata = song.metadata.copy(
+                key = song.metadata.key?.let { key -> renameKey(key, opening.rename) },
+                // Moved by what the whole song is moved by: a modulation further down does not move them again, and a
+                // chord after it is matched by the name it is shown under.
+                definitions = song.metadata.definitions.map(opening.rewriteDefinition),
+            ),
             blocks = song.blocks.map { block ->
                 if (block is ChordProBlock.Transpose) offset = block.semitones
                 rewriteBlock(block, rewriteAt(offset))
@@ -332,7 +347,13 @@ object ChordProTransposer {
             }
             when {
                 isSourceComment -> Unit
-                directive != null -> if (!ChordProSyntax.hasSelectorSuffix(directive.name)) {
+                directive != null -> {
+                    // A definition inside an environment handed to another program is that program's text. One with a
+                    // selector is read whichever instrument it names, so it is renamed with the rest.
+                    if (renameDefinitions && !isDelegated && ChordProDefinitions.selectorOf(directive.name) != null) {
+                        lines[index] = rewriteDefinitionLine(rawLine, trimmedLine, rename)
+                    }
+                    if (ChordProSyntax.hasSelectorSuffix(directive.name)) return@forEachIndexed
                     ChordProSyntax.startOfEnvironment(directive.name)?.let {
                         lines.rewriteTab(tabLineIndices, rewriteTab)
                         environment = it.lowercase()
@@ -351,8 +372,6 @@ object ChordProTransposer {
                     }
                     // The directive's name holds no brackets, so the line can be read as a line of lyrics whole.
                     if (ChordProSyntax.hasChordsInValue(directive.name)) lines[index] = rewriteLyricsLineChords(rawLine, rename)
-                    // A definition inside an environment handed to another program is that program's text.
-                    if (renameDefinitions && !isDelegated && directive.name in definitionDirectives) lines[index] = rewriteDefinitionLine(rawLine, trimmedLine, rename)
                 }
 
                 environment == TAB -> tabLineIndices += index
@@ -525,7 +544,6 @@ object ChordProTransposer {
     private const val GRID = "grid"
     private const val BRACKET_OPEN = '['
     private const val BRACKET_CLOSE = ']'
-    private val definitionDirectives = setOf("define", "chord")
     private val keyWords = setOf("major", "minor", "maj", "min", "dur", "dúr", "moll")
     private val sharpNames = listOf("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
     private val flatNames = listOf("C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B")

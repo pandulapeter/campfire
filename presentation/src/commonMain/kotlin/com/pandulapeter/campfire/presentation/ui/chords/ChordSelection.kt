@@ -19,9 +19,14 @@ import com.pandulapeter.campfire.chordpro.model.ChordVoicing
 internal data class SelectedShape(
     val shape: ChordVoicing?,
     val source: Source,
+    /** How many frets a transposition moved a [Source.DEFINED] shape by, which the sheet says. */
+    val movedBy: Int = 0,
 ) {
 
     enum class Source {
+        /** The song's own `{define}`, which has no stepper: the song says how it is played, the editor is where that changes. */
+        DEFINED,
+
         /** The player's own choice of shape for the chord on the instrument, from the Chord shapes sheet. */
         PLAYER,
 
@@ -31,14 +36,16 @@ internal data class SelectedShape(
 }
 
 /**
- * The shape [chord] is drawn with on [instrument]: the player's stored one for the chord ([storedShapes], by the
- * chord's id), where it still reads as a shape of that instrument, and otherwise the app's own.
+ * The shape [chord] is drawn with on [instrument]: the song's own definition of it where there is one that is drawn
+ * (see [songChordsOf]), the player's stored one for the chord ([storedShapes], by the chord's id) where it still reads as
+ * a shape of that instrument, and otherwise the app's own.
  */
 internal fun selectShape(
     chord: SongChord,
     instrument: ChordInstrument,
     storedShapes: Map<String, String>,
 ): SelectedShape {
+    chord.definition?.let { return SelectedShape(it.voicing, SelectedShape.Source.DEFINED, it.movedBy) }
     storedShapes[chord.chord.id]?.let { ChordVoicings.read(it, instrument, chord.chord) }?.let { return SelectedShape(it, SelectedShape.Source.PLAYER) }
     return SelectedShape(chord.defaultShape, SelectedShape.Source.DEFAULT)
 }

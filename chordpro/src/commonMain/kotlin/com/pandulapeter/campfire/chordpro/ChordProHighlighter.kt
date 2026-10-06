@@ -39,7 +39,7 @@ object ChordProHighlighter {
 
         /**
          * A whole directive line whose value the app reads as something - a time signature, a tempo, a capo, a
-         * duration, a transposition, a cover, a link or a language - but cannot make sense of, so that it is as good as
+         * duration, a transposition, a cover, a link, a language or a chord's shape - but cannot make sense of, so that it is as good as
          * missing from the song. A key is never one: whatever it says is kept and shown as written. It takes the place of the directive's own tokens rather than lying over them.
          */
         INVALID,
@@ -148,6 +148,9 @@ object ChordProHighlighter {
             ?.let { if (directive.name == META) it.substringAfter(' ', missingDelimiterValue = "").trim() else it }
             .orEmpty()
         if (value.isEmpty()) return false
+        ChordProDefinitions.selectorOf(directive.name)?.let { selector ->
+            return ChordProDefinitions.read(value, selector.takeIf { it.isNotEmpty() }) == ChordProDefinitions.Reading.Invalid
+        }
         return when {
             directive.name == "time" -> ChordProTime.parse(value) == null
             directive.name == "tempo" -> ChordProTempo.parse(value) == null
@@ -186,10 +189,15 @@ object ChordProHighlighter {
      * [ChordProSyntax.hasChordsInValue]): those brackets are moved by the transposition, and the editor says so.
      */
     private fun ChordProSyntax.Directive.valueTokens(value: String, valueStart: Int): List<Token> {
-        val chords = if (ChordProSyntax.hasChordsInValue(name)) {
-            chordsOfShownText(value).map { it.copy(start = valueStart + it.start, end = valueStart + it.end) }
-        } else {
-            emptyList()
+        val chords = when {
+            ChordProSyntax.hasChordsInValue(name) -> chordsOfShownText(value).map { it.copy(start = valueStart + it.start, end = valueStart + it.end) }
+            // The chord a definition names is the first word of its value, written without brackets.
+            ChordProDefinitions.selectorOf(name) != null -> {
+                val start = value.indexOfFirst { !it.isWhitespace() }
+                val end = if (start < 0) -1 else (start until value.length).firstOrNull { value[it].isWhitespace() } ?: value.length
+                if (start >= 0 && value.substring(start, end).isMovedChordName()) listOf(Token(TokenType.CHORD, valueStart + start, valueStart + end)) else emptyList()
+            }
+            else -> emptyList()
         }
         val tokens = mutableListOf<Token>()
         var consumedUntil = valueStart
