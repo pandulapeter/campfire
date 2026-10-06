@@ -159,6 +159,9 @@ jobs:
           mkdir -p "$HOME_DIRECTORY"
           export JAVA_TOOL_OPTIONS="-Duser.home=$(cygpath -w "$HOME_DIRECTORY")"
           export APPDATA="$(cygpath -w "$HOME_DIRECTORY/AppData/Roaming")"
+          # The runner has no GPU. Skiko would fall back to software rendering on its own, but it logs the failed
+          # attempt as a RenderException first, which the check below would take for a crash.
+          export SKIKO_RENDER_API=SOFTWARE_FAST
           "$APP" &
           # The launcher is not a process Git Bash can signal, so it is asked about and stopped by name.
           is_running() {
