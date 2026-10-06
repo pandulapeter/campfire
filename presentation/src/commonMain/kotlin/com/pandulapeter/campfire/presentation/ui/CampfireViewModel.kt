@@ -2849,10 +2849,6 @@ class CampfireViewModel(
 
     private var pdfExportJob: Job? = null
 
-    /** Emitted with the screen an export was started from once its file is saved, for that screen, and no other, to close. */
-    private val _exportSaved = MutableSharedFlow<DialogType.Export>(extraBufferCapacity = 1)
-    val exportSaved = _exportSaved.asSharedFlow()
-
     /**
      * Only as safe as the pickers are: every one of them has to answer on every way its screen can go away, since a
      * transfer that never ended would keep the app from importing or exporting anything again. Nothing that suspends
@@ -3386,7 +3382,9 @@ class CampfireViewModel(
                     filePicker = filePicker,
                     savedMessage = Message.PdfSaved,
                     isShare = isShare,
-                    onSaved = { _exportSaved.tryEmit(dialog) },
+                    // Closed from here rather than by the screen hearing of it, which may not be composed at that moment (an
+                    // Activity recreated under the picker): dismissSheet does nothing once another dialog took its place.
+                    onSaved = { dismissSheet(dialog) },
                 ) {
                     val bytes = try {
                         withContext(Dispatchers.Default) { create { done -> _pdfExportProgress.value = PdfExportProgress(done = done, total = pageCount) } }
@@ -3428,7 +3426,7 @@ class CampfireViewModel(
                 filePicker = filePicker,
                 savedMessage = if (setlist == null) Message.SongExported else Message.SetlistExported,
                 isShare = isShare,
-                onSaved = { _exportSaved.tryEmit(dialog) },
+                onSaved = { dismissSheet(dialog) },
             ) {
                 if (setlist == null) {
                     exportSongs(listOf(requireNotNull(dialog.song).fileName))

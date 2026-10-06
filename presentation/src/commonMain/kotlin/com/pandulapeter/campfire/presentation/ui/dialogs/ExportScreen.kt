@@ -545,7 +545,6 @@ private fun ExportScreen(
         }
     }
     val close = { viewModel.dismissSheet(dialog) }
-    LaunchedEffect(dialog) { viewModel.exportSaved.collect { if (it == dialog) close() } }
     val content = when {
         state.failed || state.layoutFailed && !isFiles -> PrintScreenContent.FAILED
         state.source == null -> PrintScreenContent.LOADING

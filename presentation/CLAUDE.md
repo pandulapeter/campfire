@@ -452,8 +452,8 @@ described to a screen reader by its number.
 Export: `CampfireViewModel.exportPdf` draws the pages off the main thread, counting them into `pdfExportProgress`, which
 the save button shows as a ring in place of its icon; while it counts, the button is Cancel (`cancelPdfExport`). Once
 the picker is up there is nothing to cancel, and the progress is gone. The button leaves while there are no pages. A failure, an `OutOfMemoryError` included (except on the web, where it
-cannot be caught), is reported as a failed export. A saved file emits `exportSaved` for that screen, which closes
-it; a share leaves it open. Share is an app bar action where `FilePicker.canShare` (Android and iOS). The file is named by
+cannot be caught), is reported as a failed export. A saved file closes that screen (the view model dismisses it, whether or not the screen is
+composed at that moment, e.g. after an Activity recreated under the picker); a share leaves it open. Share is an app bar action where `FilePicker.canShare` (Android and iOS). The file is named by
 `pdfFileName` the way `ExportFileNames.kt` names a song, from its header, and a setlist's running order gets a
 `-running_order` suffix so the two exports of one setlist do not collide.
 
