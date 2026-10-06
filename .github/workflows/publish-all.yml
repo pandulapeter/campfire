@@ -33,9 +33,9 @@
 # from there. All of them are optional. Without the notes the visible description stands in for them, with its
 # markdown taken out, without the priority it is 0, and without a store's submit it is true. What is there has to be
 # readable, though (.github/scripts/release_description.py): a store name it does not know, a submit other than true or
-# false and a priority outside 0-5 stop the release, and so do notes longer than App Store Connect's 4000 characters or
-# Partner Center's 1500, whatever those stores' submit says; over Play's 500 is a warning, since Play gets the lines
-# that fit.
+# false and a priority outside 0-5 stop the release, and so does a comment that looks like one of them but is not written
+# the way one is read, and so do notes longer than App Store Connect's 4000 characters or Partner Center's 1500, whatever
+# those stores' submit says; over Play's 500 is a warning, since Play gets the lines that fit.
 
 name: 'Publish all'
 

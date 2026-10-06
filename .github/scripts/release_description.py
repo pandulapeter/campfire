@@ -12,11 +12,12 @@ Reads what a release's description tells the stores, for publish-all.yml.
 The instructions are HTML comments the rendered release page hides (the format is in publish-all.yml's header), and
 every one of them has a default that is the stronger action: a store is submitted to, the notes are the visible
 description. So a comment this script cannot read is never taken as absent - a store name it does not know, a submit
-value other than true or false, a priority outside 0-5 stop the release, since reading any of them as the default would
-submit what was meant to wait, or leave to Play's schedule what was meant to block the old version. The notes are held
-against every store's limit here too, whatever that store's submit value is, because the store scripts check it before
-they look at whether they were asked to submit, and they run after the builds: an over-long note found there fails the
-release at the very end, with a build already uploaded.
+value other than true or false, a priority outside 0-5 stop the release, and so does a comment that looks like one of
+them but is not written the way one is read, since reading any of them as the default would submit what was meant to
+wait, or leave to Play's schedule what was meant to block the old version. The notes are held against every store's
+limit here too, whatever that store's submit value is, because the store scripts check it before they look at whether
+they were asked to submit, and they run after the builds: an over-long note found there fails the release at the very
+end, with a build already uploaded.
 
 Run with the description in RELEASE_BODY; writes the outputs publish-all.yml hands to the six workflows into the file
 GITHUB_OUTPUT names.
@@ -34,6 +35,12 @@ APP_STORE_CONNECT_LIMIT = 4000
 PARTNER_CENTER_LIMIT = 1500
 PLAY_LIMIT = 500
 
+# The three shapes an instruction is read in. The two single-line ones also take a closing on the next line, the shape
+# the whats-new block has.
+WHATS_NEW = re.compile(r"<!--[ \t]*whats-new[ \t]+(\S+)[ \t]*\n.*-->", re.S | re.I)
+PRIORITY = re.compile(r"<!--[ \t]*([^\n]*?)[ \t]+update-priority:[ \t]*([^\n]*?)\s*-->")
+SUBMIT = re.compile(r"<!--[ \t]*([^\n]*?)[ \t]+submit:[ \t]*([^\n]*?)\s*-->")
+
 
 class ReleaseDescriptionError(Exception):
     """Every reason the description cannot be carried out as it is written, one message per problem."""
@@ -41,6 +48,27 @@ class ReleaseDescriptionError(Exception):
     def __init__(self, messages):
         super().__init__("\n".join(messages))
         self.messages = messages
+
+
+def unreadable_instructions(body):
+    """Every comment that looks like one of the instructions but is not written the way one is read."""
+    messages = []
+    for comment in re.finditer(r"<!--.*?-->", body, re.S):
+        text = comment.group(0)
+        whats_new = WHATS_NEW.fullmatch(text)
+        if whats_new:
+            language = whats_new.group(1).lower()
+            # A block in another language is left alone; one that is almost en-US was meant to be read.
+            if language != "en-us" and (language == "en" or language.startswith(("en-", "en_"))):
+                messages.append(f"The release has a \"whats-new {whats_new.group(1)}\" block; the stores read \"whats-new en-US\".")
+            continue
+        if PRIORITY.fullmatch(text) or SUBMIT.fullmatch(text):
+            continue
+        inner = text[4:-3].strip().lower().replace("_", "-")
+        first = inner.split()[0].rstrip(":") if inner.split() else ""
+        if first in STORES or first in {"whats-new", "whatsnew"} or "submit" in inner or "priority" in inner:
+            messages.append(f"The release has a comment I cannot read: \"{text}\". The format is in publish-all.yml's header.")
+    return messages
 
 
 def read(body):
@@ -62,9 +90,11 @@ def read(body):
         visible = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", visible)
         notes = re.sub(r"\*\*|`", "", visible).strip()
 
+    errors += unreadable_instructions(body)
+
     priority = "0"
     priority_found = False
-    for words, value in re.findall(r"<!--[ \t]*([^\n]*?)[ \t]+update-priority:[ \t]*([^\n]*?)[ \t]*-->", body):
+    for words, value in PRIORITY.findall(body):
         if words != "play-store":
             errors.append(f"The release names a store I do not know: \"{words} update-priority: {value}\". Only play-store takes a priority.")
         elif not re.fullmatch(r"[0-5]", value):
@@ -74,7 +104,7 @@ def read(body):
 
     submit = {store: "true" for store in STORES}
     seen = set()
-    for store, value in re.findall(r"<!--[ \t]*([^\n]*?)[ \t]+submit:[ \t]*([^\n]*?)[ \t]*-->", body):
+    for store, value in SUBMIT.findall(body):
         if store not in STORES:
             errors.append(f"The release names a store I do not know: \"{store} submit: {value}\". It knows {', '.join(STORES)}.")
         elif value.lower() not in {"true", "false"}:

@@ -252,8 +252,9 @@ all of them are always written:
   `true` or `false` stops the release. Mention them when reporting back.
 - **Nothing misspelt is taken as absent.** `.github/scripts/release_description.py` stops the release on a
   store name it does not know (`play_store`, `playstore`), a `submit` other than `true` or `false` and a
-  priority outside 0–5, and on notes over App Store Connect's 4 000 or Partner Center's 1 500 characters, so
-  write the four store names exactly as above.
+  priority outside 0–5, or a comment that names a store, `submit`, `priority` or `whats-new` in any other
+  shape, and on notes over App Store Connect's 4 000 or Partner Center's 1 500 characters, so write the four
+  store names exactly as above.
 
 Where `publish-android.yml` is dispatched by hand instead, its `release_notes` input is a single-line
 field that takes the same text with a literal `\n` for every line break.

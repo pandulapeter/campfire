@@ -84,6 +84,40 @@ class ReadTest(unittest.TestCase):
         self.assertEqual(len(result["warnings"]), 1)
         self.assertEqual(read(notes_of(500))["warnings"], [])
 
+    def test_a_slip_in_an_instruction_stops_the_release(self):
+        for body in [
+            "<!-- app-store sumbit: false -->",
+            "<!-- play-store submit : false -->",
+            "<!-- microsoft-store: submit false -->",
+            "<!-- play-store update_priority: 5 -->",
+            "Vis\n<!-- whats-new en-US - one line -->",
+            "Vis\n<!-- whats-new en\n- n\n-->",
+        ]:
+            with self.assertRaises(ReleaseDescriptionError):
+                read(body)
+
+    def test_a_closing_on_its_own_line_reads(self):
+        self.assertEqual(read("<!-- play-store submit: false\n-->")["outputs"]["play_store_submit"], "false")
+        self.assertEqual(read("<!-- play-store update-priority: 4\n-->")["outputs"]["update_priority"], "4")
+
+    def test_other_comments_are_left_alone(self):
+        result = read("<!-- TODO polish -->\nVisible.")
+        self.assertEqual(result["outputs"]["release_notes"], "Visible.")
+
+    def test_the_prepare_release_template_reads(self):
+        body = (
+            "Visible.\n\n"
+            "<!-- whats-new en-US\n- bullet one\n- bullet two\n-->\n"
+            "<!-- play-store update-priority: 3 -->\n"
+            "<!-- play-store submit: true -->\n"
+            "<!-- app-store submit: true -->\n"
+            "<!-- mac-app-store submit: true -->\n"
+            "<!-- microsoft-store submit: true -->\n"
+        )
+        outputs = read(body)["outputs"]
+        self.assertEqual(outputs["release_notes"], "- bullet one\n- bullet two")
+        self.assertEqual(outputs["update_priority"], "3")
+
 
 if __name__ == "__main__":
     unittest.main()
