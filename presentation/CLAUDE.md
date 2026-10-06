@@ -271,7 +271,7 @@ Everything else is `commonMain`:
   nut or the base fret's number, a dot per stopped string with the root in the second accent, an open string on the
   root ringed in it too, barres from the fingering or from the lowest fret where the shape needs one, `×` and `○` above
   the nut; a keyboard of two octaves or as many as its keys reach, up to four, a key past them left out, white keys the lighter of the two theme colours in either theme, every pressed key filled
-  whole — the root in the second accent, the rest (a slash chord's bass included) in a paler shade of it. The **Chord shapes sheet** (`DialogType.ChordShapes`, closed with the song) reads the song as the page plays
+  whole — the root in the second accent, the rest (a slash chord's bass included) in a shade of it moved away from the white keys (deeper in the dark theme, paler in the light one). The **Chord shapes sheet** (`DialogType.ChordShapes`, closed with the song) reads the song as the page plays
   it and lists its chords larger, with their fingers and notes, each with a `Stepper` through
   `ChordVoicings.all` (searched per cell off the main thread), written at once by `setChordVoicing` (stepping onto the
   app's first shape removes the entry), never highlighted and with no reset, since which shape is the default means

@@ -156,15 +156,29 @@ private fun DrawScope.drawFinger(textMeasurer: TextMeasurer, finger: Int, center
 }
 
 /**
+ * The color a keyboard diagram fills the keys a chord presses other than its root with: [root] mixed away from whichever
+ * of the keys' colors, [light] or [dark], it reads closer to in contrast — towards the black keys where the accent is
+ * light (a dark theme), towards the white keys where it is dark (a light theme, and the PDF's gray) — so that the
+ * chord's other notes stand off the white keys in either. Contrast is compared by the geometric midpoint of
+ * `luminance + 0.05`, as WCAG measures it: the arithmetic midpoint of the luminances picks the white keys for an accent
+ * as light as a dark theme's, which leaves nothing to see.
+ */
+internal fun pressedKeyColor(root: Color, light: Color, dark: Color): Color {
+    val isTowardsDark = (root.luminance() + 0.05f).let { it * it } > (light.luminance() + 0.05f) * (dark.luminance() + 0.05f)
+    return lerp(root, if (isTowardsDark) dark else light, if (isTowardsDark) PRESSED_KEY_DEEPENING else PRESSED_KEY_PALING)
+}
+
+/**
  * A keyboard is drawn as one in either theme, its white keys the lighter of [lineColor] and [backgroundColor] and its
  * black keys the darker, since a keyboard with dark white keys reads as a negative of one.
  *
  * A pressed key is filled whole, the way a hand covers it, rather than marked with a dot: at the size of the song's
  * section a dot is a speck, and one on a black key reads as belonging to the white keys under it. The root is the
- * accent itself and every other key the chord presses, a slash chord's bass among them, a paler shade of it, the
- * accent mixed with the white keys' color, so that the two read apart on either kind of key. The white keys are filled
- * before their lines and the black keys are drawn, which leaves a pressed white key the shape it has on a keyboard, and
- * a pressed black key keeps its outline, which is what tells it from a pale white key beside it.
+ * accent itself and every other key the chord presses, a slash chord's bass among them, a shade of it moved away from
+ * the white keys (deeper in the dark theme, paler in the light one, see [pressedKeyColor]), so that the two read apart
+ * on either kind of key and the chord's other notes stand off the white keys. The white keys are filled before their
+ * lines and the black keys are drawn, which leaves a pressed white key the shape it has on a keyboard, and a pressed
+ * black key keeps its outline, which is what tells it from a pale white key beside it.
  */
 private fun DrawScope.drawKeyboard(
     geometry: ChordDiagramGeometry.Keyboard,
@@ -177,7 +191,7 @@ private fun DrawScope.drawKeyboard(
     val isDarkTheme = backgroundColor.luminance() < lineColor.luminance()
     val light = if (isDarkTheme) lineColor else backgroundColor
     val dark = if (isDarkTheme) backgroundColor else lineColor
-    val pressedColor = lerp(rootColor, light, PRESSED_KEY_LIGHTNESS)
+    val pressedColor = pressedKeyColor(rootColor, light, dark)
     val pressed = geometry.keys + listOfNotNull(geometry.bass)
     fun colorOf(note: Int) = if (note in geometry.roots) rootColor else pressedColor
     val whiteKeys = geometry.octaves * WHITE_KEYS_PER_OCTAVE
@@ -223,5 +237,6 @@ private const val BASE_FRET_TEXT = 0.7f
 private const val FINGER_TEXT = 1.2f
 private const val BLACK_KEY_HEIGHT = 0.6f
 private const val BLACK_KEY_WIDTH = 0.6f
-private const val PRESSED_KEY_LIGHTNESS = 0.5f
+private const val PRESSED_KEY_DEEPENING = 0.4f
+private const val PRESSED_KEY_PALING = 0.3f
 private const val KEY_LINE_WIDTH = 0.12f
