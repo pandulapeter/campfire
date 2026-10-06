@@ -12,23 +12,47 @@ package com.pandulapeter.campfire.chordpro
 /** Linear recognition and rewriting of the notes in a chord name. */
 internal object ChordProChordNames {
 
-    fun isChordName(word: String): Boolean {
+    fun isChordName(word: String) = read(word, reader = null)
+
+    /**
+     * Walks a chord name, handing each part of it to [reader] in the order it is written, and answers whether the
+     * whole of it was a chord name. [isChordName] is this walk with nobody listening, and [ChordProChords.parse] is it
+     * with a reader that collects the notes, which is what keeps the two from ever disagreeing about a name: a part is
+     * only handed over once it has been recognized, and a name the walk rejects halfway has handed over parts that the
+     * caller then throws away.
+     */
+    fun read(word: String, reader: ChordNameReader?): Boolean {
         val name = unwrapped(word)
         if (name.isEmpty()) return false
         var index = noteEnd(name, 0)
         if (index < 0) return false
-        qualityAt(name, index)?.let { index += it.length }
+        reader?.root(name.substring(0, index))
+        qualityAt(name, index)?.let { quality ->
+            reader?.quality(quality)
+            index += quality.length
+        }
         val numberStart = index
         index = digitsEnd(name, index)
-        if (name.startsWith("alt", index) && index > numberStart) index += 3
+        if (index > numberStart) reader?.number(name.substring(numberStart, index))
+        if (name.startsWith("alt", index) && index > numberStart) {
+            reader?.altered()
+            index += 3
+        }
         while (index < name.length) {
             when (name[index]) {
-                '(' -> index = groupEnd(name, index + 1)
+                '(' -> index = groupEnd(name, index + 1, reader)
                 '/' -> {
                     val digits = digitsEnd(name, index + 1)
-                    if (digits > index + 1) index = digits else return bassNoteEnd(name, index + 1) == name.length
+                    if (digits > index + 1) {
+                        reader?.added(name.substring(index + 1, digits))
+                        index = digits
+                    } else {
+                        if (bassNoteEnd(name, index + 1) != name.length) return false
+                        reader?.bass(name.substring(index + 1))
+                        return true
+                    }
                 }
-                else -> index = alterationEnd(name, index)
+                else -> index = alterationEnd(name, index, reader)
             }
             if (index < 0) return false
         }
@@ -112,22 +136,33 @@ internal object ChordProChordNames {
      */
     private val Char.isAsciiDigit get() = this in '0'..'9'
     private fun qualityAt(name: String, index: Int) = qualities.firstOrNull { name.startsWith(it, index) }
-    private fun alterationEnd(name: String, index: Int): Int {
+    private fun alterationEnd(name: String, index: Int, reader: ChordNameReader?): Int {
         val word = alterations.firstOrNull { name.startsWith(it, index) }
-        if (word != null) return digitsEnd(name, index + word.length)
-        if (name[index] == '+') return digitsEnd(name, index + 1)
-        if (name[index] == '-') return digitsEnd(name, index + 1).takeIf { it > index + 1 } ?: -1
-        return -1
+            ?: name[index].toString().takeIf { it == "+" || it == "-" }
+            ?: return -1
+        val end = digitsEnd(name, index + word.length)
+        if (word == "-" && end == index + 1) return -1
+        reader?.alteration(word, name.substring(index + word.length, end))
+        return end
     }
-    private fun groupEnd(name: String, start: Int): Int {
+    private fun groupEnd(name: String, start: Int, reader: ChordNameReader?): Int {
         var index = start
         var requiresItem = true
         while (index < name.length && name[index] != ')') {
             if (!requiresItem && name[index] == ',') { index++; while (name.getOrNull(index) == ' ') index++; requiresItem = true; continue }
             val number = digitsEnd(name, index)
-            index = if (number > index) number else {
+            index = if (number > index) {
+                reader?.added(name.substring(index, number))
+                number
+            } else {
                 val omission = omissions.firstOrNull { name.startsWith(it, index) }
-                if (omission != null) digitsEnd(name, index + omission.length).takeIf { it > index + omission.length } ?: return -1 else alterationEnd(name, index)
+                if (omission != null) {
+                    val end = digitsEnd(name, index + omission.length).takeIf { it > index + omission.length } ?: return -1
+                    reader?.omitted(name.substring(index + omission.length, end))
+                    end
+                } else {
+                    alterationEnd(name, index, reader)
+                }
             }
             if (index < 0) return -1
             requiresItem = false
@@ -138,4 +173,35 @@ internal object ChordProChordNames {
     private val qualities = listOf("maj", "Maj", "min", "mi", "dim", "aug", "sus", "add", "m", "M", "+", "-", "°", "ø", "Δ", "∆")
     private val alterations = listOf("maj", "Maj", "min", "mi", "dim", "aug", "sus", "add", "M", "#", "b", "♯", "♭")
     private val omissions = listOf("no", "omit")
+}
+
+/**
+ * What [ChordProChordNames.read] hands over while it walks a name, each part once it has been recognized. The numbers
+ * are the digits as written, never empty except for an [alteration] written without one (`+`, `sus`, `maj`).
+ */
+internal interface ChordNameReader {
+
+    /** The root as written, its accidental included: `C`, `F#`, `Bb`, `H`. */
+    fun root(note: String)
+
+    /** The word right after the root: `m`, `maj`, `dim`, `sus`, `add`, `+`, `°`, `ø`, `Δ` and the rest. */
+    fun quality(quality: String)
+
+    /** The number after the quality: `7` in `Cm7`, `69` in `C69`, `2` in `Csus2`. */
+    fun number(number: String)
+
+    /** The `alt` after the number of `C7alt`. */
+    fun altered()
+
+    /** A degree added on its own: a number in parentheses (`C7(9)`) or after a slash (`C6/9`). */
+    fun added(degree: String)
+
+    /** A word or sign after the number, with its digits: `b` and `5` in `Cm7b5`, `add` and `9` in `Cm(add9)`. */
+    fun alteration(word: String, degree: String)
+
+    /** The degree of a `no3` or an `omit5`. */
+    fun omitted(degree: String)
+
+    /** The note after the last slash, as written, which may be in lowercase. */
+    fun bass(note: String)
 }
