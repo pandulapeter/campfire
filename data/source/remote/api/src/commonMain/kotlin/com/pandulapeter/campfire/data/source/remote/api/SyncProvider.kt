@@ -91,7 +91,11 @@ interface SyncProvider {
      */
     suspend fun list(): RemoteListing
 
-    suspend fun download(kind: LibraryFileKind, name: String): ByteArray
+    /**
+     * The file as it is now, with the revision of what was fetched rather than the one [list] named: another device may
+     * have written the file again in between, and the engine records the revision of the content it actually holds.
+     */
+    suspend fun download(kind: LibraryFileKind, name: String): RemoteDocument
 
     /**
      * The hash of [bytes] in the same format as [RemoteFile.contentHash], or null where the provider offers none.

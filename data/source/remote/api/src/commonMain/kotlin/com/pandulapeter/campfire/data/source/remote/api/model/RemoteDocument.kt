@@ -10,8 +10,8 @@
 package com.pandulapeter.campfire.data.source.remote.api.model
 
 /**
- * A file of the remote folder's own, beside the two library folders rather than in either: something every device
- * connected to the folder shares that is not a song or a setlist, such as `preferences.json`.
+ * The content of a remote file and the revision it is at: a library file as `SyncProvider.download` fetched it, or a
+ * document of the folder's own, such as `preferences.json`.
  *
  * @param revision The same opaque revision a [RemoteFile] carries, handed back to `SyncProvider.uploadDocument` so that
  *   a write made elsewhere since this was read is reported as a conflict rather than overwritten.

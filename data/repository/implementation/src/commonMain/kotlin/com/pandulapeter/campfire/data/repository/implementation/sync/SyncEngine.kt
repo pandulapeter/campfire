@@ -24,6 +24,7 @@ import com.pandulapeter.campfire.data.source.remote.api.SyncProvider
 import com.pandulapeter.campfire.data.source.remote.api.SyncRemoteStorageFullException
 import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteDeletion
+import com.pandulapeter.campfire.data.source.remote.api.model.RemoteDocument
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteFile
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteWriteResult
 import kotlinx.coroutines.CancellationException
@@ -501,7 +502,7 @@ internal class SyncEngine(
             // it is resolved as that rather than written over.
             return resolve(provider, SyncOperation.Resolve(key, operation.revision), remoteFiles, onLocalFileChanged)
         }
-        val bytes = downloadWithinLimit(provider, key, remoteFiles)
+        val downloaded = downloadWithinLimit(provider, key, remoteFiles)
         // The request can take minutes under rate limiting, and the user is free to save this very file meanwhile:
         // decided again on what is there now. The conflict it may turn out to be is resolved with the lock let go,
         // since resolving it is more requests.
@@ -510,7 +511,7 @@ internal class SyncEngine(
             if (current != null && !current.contentEquals(local)) {
                 current
             } else {
-                libraryFileLocalSource.writeLibraryFile(key.kind, key.name, bytes)
+                libraryFileLocalSource.writeLibraryFile(key.kind, key.name, downloaded.bytes)
                 onLocalFileChanged(key)
                 null
             }
@@ -519,15 +520,18 @@ internal class SyncEngine(
             return resolveWith(
                 provider = provider,
                 key = key,
-                revision = operation.revision,
+                revision = downloaded.revision,
                 localBytes = changed,
-                remote = bytes,
+                remote = downloaded.bytes,
                 remoteFiles = remoteFiles,
                 onLocalFileChanged = onLocalFileChanged,
             )
         }
+        // The revision of what was fetched rather than the listing's: another device may have written the file again in
+        // between, and an index naming the older revision for the newer content would make this device's next edit of
+        // it a conflict with its own previous version.
         return OperationOutcome(
-            entries = mapOf(key to SyncIndexEntry(localContentHash(bytes), operation.revision)),
+            entries = mapOf(key to SyncIndexEntry(localContentHash(downloaded.bytes), downloaded.revision)),
             summary = SyncSummary(downloaded = 1),
         )
     }
@@ -615,12 +619,13 @@ internal class SyncEngine(
             return OperationOutcome(entries = mapOf(key to SyncIndexEntry(localContentHash(local), operation.revision)))
         }
         val remote = downloadWithinLimit(provider, key, remoteFiles)
+        // Uploaded over the revision it was compared with, so that a version that moved on again since is a conflict.
         return resolveWith(
             provider = provider,
             key = key,
-            revision = operation.revision,
+            revision = remote.revision,
             localBytes = local,
-            remote = remote,
+            remote = remote.bytes,
             remoteFiles = remoteFiles,
             onLocalFileChanged = onLocalFileChanged,
         )
@@ -669,7 +674,7 @@ internal class SyncEngine(
         if (uploaded !is RemoteWriteResult.Written) {
             // Contested - unless what is there now is what was just sent, which is how a write looks that landed and was
             // then retried. In that case the remote version is gone from the service, and the copy is all there is of it.
-            val isOwnWrite = provider.download(key.kind, key.name).contentEquals(localBytes)
+            val isOwnWrite = provider.download(key.kind, key.name).bytes.contentEquals(localBytes)
             if (!isOwnWrite) discardCopy(copyKey, remote, onLocalFileChanged)
             return OperationOutcome(
                 summary = if (isOwnWrite) SyncSummary(conflicts = listOf(copyName)) else SyncSummary(),
@@ -722,7 +727,7 @@ internal class SyncEngine(
         provider: SyncProvider,
         key: SyncKey,
         remoteFiles: Map<SyncKey, RemoteFileState>,
-    ): ByteArray {
+    ): RemoteDocument {
         val size = remoteFiles[key]?.size ?: 0
         if (size > MAXIMUM_FILE_SIZE) throw RemoteFileTooLargeException(size)
         return provider.download(key.kind, key.name)

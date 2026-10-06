@@ -1501,6 +1501,40 @@ class SyncEngineTest {
         assertEquals(setOf(song(1)), local.files.keys)
     }
 
+    @Test
+    fun `a download records the revision it fetched`() = runTest {
+        val local = FakeLibraryFileLocalSource()
+        val provider = FakeSyncProvider(files = mapOf(song(1) to ORIGINAL))
+        // Another device saves the song again between the listing and the request.
+        provider.onDownload = {
+            provider.files[song(1)] = THERE to "r9"
+            provider.onDownload = {}
+        }
+
+        val result = synchronize(local, provider, SyncIndexDocument())
+
+        assertContentEquals(THERE, local.files[song(1)])
+        assertEquals("r9", assertIs<SyncEngine.Result.Completed>(result).index.entries.getValue(song(1).path).remoteRevision)
+    }
+
+    @Test
+    fun `an edit after a download that raced a remote save is not a conflict`() = runTest {
+        val local = FakeLibraryFileLocalSource()
+        val provider = FakeSyncProvider(files = mapOf(song(1) to ORIGINAL))
+        provider.onDownload = {
+            provider.files[song(1)] = THERE to "r9"
+            provider.onDownload = {}
+        }
+        val first = assertIs<SyncEngine.Result.Completed>(synchronize(local, provider, SyncIndexDocument()))
+        local.files[song(1)] = HERE
+
+        val second = assertIs<SyncEngine.Result.Completed>(synchronize(local, provider, first.index))
+
+        assertTrue(second.summary.conflicts.isEmpty())
+        assertContentEquals(HERE, provider.files.getValue(song(1)).first)
+        assertEquals(setOf(song(1)), local.files.keys)
+    }
+
     private suspend fun reportingSynchronize(
         local: FakeLibraryFileLocalSource,
         provider: FakeSyncProvider,

@@ -223,25 +223,28 @@ internal class DropboxSyncProvider(
         return RemoteListing(files = files)
     }
 
-    override suspend fun download(kind: LibraryFileKind, name: String): ByteArray {
+    override suspend fun download(kind: LibraryFileKind, name: String): RemoteDocument {
         val response = downloadResponse(remotePath(kind, name))
         response.ensureSuccessful()
-        return transport { response.readRawBytes() }
+        return RemoteDocument(bytes = transport { response.readRawBytes() }, revision = revisionOf(response))
     }
 
     override suspend fun downloadDocument(name: String): RemoteDocument? {
         val response = downloadResponse(documentPath(name))
         if (response.status == HttpStatusCode.Conflict && response.errorSummary().startsWith("path/not_found")) return null
         response.ensureSuccessful()
-        // A download answers with the file itself, so its metadata - the revision the next upload has to name - comes
-        // in a header instead, which Dropbox also exposes to a page's script.
-        val metadata = try {
-            response.headers[DOWNLOAD_RESULT_HEADER]?.let { json.decodeFromString<DropboxFileMetadata>(it) }
-        } catch (exception: SerializationException) {
-            null
-        } ?: throw DropboxApiException(response.status.value, "the download named no revision")
-        return RemoteDocument(bytes = transport { response.readRawBytes() }, revision = metadata.rev)
+        return RemoteDocument(bytes = transport { response.readRawBytes() }, revision = revisionOf(response))
     }
+
+    /**
+     * A download answers with the file itself, so its metadata - the revision the next upload has to name - comes in a
+     * header instead, which Dropbox also exposes to a page's script.
+     */
+    private fun revisionOf(response: HttpResponse) = try {
+        response.headers[DOWNLOAD_RESULT_HEADER]?.let { json.decodeFromString<DropboxFileMetadata>(it) }
+    } catch (exception: SerializationException) {
+        null
+    }?.rev ?: throw DropboxApiException(response.status.value, "the download named no revision")
 
     private suspend fun downloadResponse(path: String) = request { accessToken ->
         httpClient.post(DOWNLOAD_URL) {

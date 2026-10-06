@@ -119,11 +119,11 @@ internal class FakeSyncProvider(
         },
     )
 
-    override suspend fun download(kind: LibraryFileKind, name: String): ByteArray {
+    override suspend fun download(kind: LibraryFileKind, name: String): RemoteDocument {
         val key = SyncKey(kind = kind, name = name)
         downloadCounts[key] = (downloadCounts[key] ?: 0) + 1
         onDownload(key)
-        return files.getValue(stored(key)).first
+        return files.getValue(stored(key)).let { (bytes, revision) -> RemoteDocument(bytes, revision) }
     }
 
     override fun contentHashOf(bytes: ByteArray) = localContentHash(bytes)

@@ -151,7 +151,9 @@ and a repository that has not been read yet rescans instead, since there is no l
   is taken back if the service then says the remote file is still there, so the version that loses is never held only
   in memory. A download is decided about twice — before its request, so that a file already in step is
   not transferred, and again just before the write, so that a save made while the request was in flight is resolved
-  as a conflict rather than written over. That second check and the write, and every other change the engine makes to
+  as a conflict rather than written over; the index records the revision the download fetched rather than the one the
+  listing named, so a file another device wrote again in between is not this device's next edit's conflict, and a
+  conflict is uploaded over the revision it was compared with. That second check and the write, and every other change the engine makes to
   a local file (a local deletion and the check before it, a conflict copy, taking a copy back), happen under
   `LibraryFileLock`, a `@Single` the song and setlist repositories hold around their own writes from whatever they
   check to the write, so that a save lands either before the engine's check, which then sees it, or after its write,

@@ -19,7 +19,8 @@ and why each of them is load bearing, are spelled out in the KDoc of `SyncProvid
   exactly the shape the library has. Revisions are **opaque strings**: the engine stores them and hands them back,
   and never parses one, so a Dropbox `rev` and a Drive `headRevisionId` are equally fine. Every run lists the whole
   folder rather than asking what changed — one request for a library of songs, and right even after a run that was
-  interrupted half way. `upload` takes
+  interrupted half way. `download` answers the bytes with the revision it actually fetched (`RemoteDocument`), which
+  may be newer than the listing's: another device can write the file again in between. `upload` takes
   the revision the caller believes the file has and reports `RemoteWriteResult.Conflict` rather than clobbering a
   change made elsewhere. `contentHashOf` hashes local bytes in the *service's own* format, which is what keeps
   Dropbox's block hashing and Drive's MD5 out of the engine. Names must be unique, and a service that allows

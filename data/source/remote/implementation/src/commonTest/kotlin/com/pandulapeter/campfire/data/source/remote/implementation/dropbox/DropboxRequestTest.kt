@@ -310,12 +310,16 @@ class DropboxRequestTest {
                     respondJson("""{"access_token":"renewed","expires_in":14400}""")
                 }
 
-                request.headers["Authorization"] == "Bearer renewed" -> respond(content = "song", status = HttpStatusCode.OK)
+                request.headers["Authorization"] == "Bearer renewed" -> respond(
+                    content = "song",
+                    status = HttpStatusCode.OK,
+                    headers = headersOf("Dropbox-API-Result", """{"rev":"r1"}"""),
+                )
                 else -> respondJson("""{"error_summary":"expired_access_token/..."}""", HttpStatusCode.Unauthorized)
             }
         }
         coroutineScope {
-            repeat(6) { launch { assertEquals("song", provider.download(LibraryFileKind.SONG, "song_$it.cho").decodeToString()) } }
+            repeat(6) { launch { assertEquals("song", provider.download(LibraryFileKind.SONG, "song_$it.cho").bytes.decodeToString()) } }
         }
         assertEquals(expected = 1, actual = tokenRequestCount)
     }
@@ -372,6 +376,22 @@ class DropboxRequestTest {
         }
         assertIs<SocketTimeoutException>(assertFailsWith<SyncNetworkException> { provider.list() }.cause)
         assertEquals(7, attempts)
+    }
+
+    @Test
+    fun `a download answers the revision it fetched`() = runTest {
+        val provider = provider {
+            respond(content = "song", status = HttpStatusCode.OK, headers = headersOf("Dropbox-API-Result", """{"rev":"r7"}"""))
+        }
+        val downloaded = provider.download(LibraryFileKind.SONG, "song.cho")
+        assertEquals("song", downloaded.bytes.decodeToString())
+        assertEquals("r7", downloaded.revision)
+    }
+
+    @Test
+    fun `a download that names no revision fails`() = runTest {
+        val provider = provider { respond(content = "song", status = HttpStatusCode.OK) }
+        assertFailsWith<DropboxApiException> { provider.download(LibraryFileKind.SONG, "song.cho") }
     }
 
     private fun provider(
