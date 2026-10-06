@@ -53,9 +53,13 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
     to the writes by id; one that fails as a whole fails the writes waiting on it, and the next write starts another. Without `createWritable()`'s swap file a write is in place, so the worker keeps the previous
     content and puts it back when a write fails part of the way, and journals every write so that a worker terminated
     in the middle of one (a tab closed or reclaimed during a save) leaves a file that is whole, old or new (see
-    `app/web`). The journal is played back for a whole directory before its handle is first handed out, and again
-    after a write that failed, and its `.campfire-tmp` and `.campfire-commit` files are left out of every listing, so
-    nothing above the storage ever sees them. The OPFS storage
+    `app/web`); the page creates nothing on that path, and the worker creates a new file only after its commit marker,
+    so a first write cut short leaves no file at all or the whole new one. With `createWritable()` a new file is created
+    behind an empty `<name>.campfire-new` marker of the page's own, removed once the write is closed, which the recovery
+    uses to remove an empty leftover of a page closed mid-write (a name within the marker's 12 bytes of Safari's
+    255-byte limit is written without one). The journal is played back for a whole directory before its handle is first
+    handed out, and again after a write that failed, and its `.campfire-tmp`, `.campfire-commit` and `.campfire-new`
+    files are left out of every listing, so nothing above the storage ever sees them. The OPFS storage
     resolves the directory handles once and keeps them: walking down from the root is three promises, and
     nothing outside the page can remove a directory from the origin private file system.
   - Every `catch (Exception)` around a read rethrows `CancellationException` first: a scan that was cancelled is not

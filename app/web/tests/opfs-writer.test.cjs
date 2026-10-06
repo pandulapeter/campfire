@@ -100,3 +100,18 @@ test('a temporary file without a marker is discarded', async () => {
     assert.deepEqual([...instance.files.keys()], ['song.cho']);
     assert.deepEqual(instance.files.get('song.cho'), old);
 });
+
+// The page leaves the creation of a new file to the worker, so the worker is what keeps an interrupted first write from
+// leaving an empty file under the song's name.
+test('an interrupted first write never leaves an empty file under its name', async () => {
+    const original = worker(new Map());
+    assert.equal((await original.send({ name: 'song.cho', data: next })).error, undefined);
+    assert.deepEqual(original.files.get('song.cho'), next);
+    for (const snapshot of original.snapshots) {
+        const restarted = worker(snapshot);
+        assert.equal((await restarted.send({ recover: true })).error, undefined);
+        const content = restarted.files.get('song.cho');
+        assert.ok(content === undefined || content.equals(next));
+        assert.ok([...restarted.files.keys()].every(name => name === 'song.cho'));
+    }
+});

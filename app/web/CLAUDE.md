@@ -159,7 +159,8 @@ direction.
   in, since `write()` may write fewer than it was given, and when a write still fails it puts the previous content back
   and fails the save. A worker terminated part of the way through cannot put anything back, so every write is
   journaled: the new content goes to a fresh `<name>.campfire-tmp` first, an empty `<name>.campfire-commit` marks it
-  complete, and only then is the file written in place and the two removed, marker first. A marker found later is
+  complete, and only then is the file written in place and the two removed, marker first. A new file is created by the
+  worker there too, never by the page, so a first write cut short leaves no empty file under the song's name. A marker found later is
   played back over the file; a temporary file without one is discarded. `{ id, path, recover: true }` plays back a
   whole directory, which `OpfsFileStorage` asks for before it first reads one, and a file that cannot be recovered is
   only logged, since failing it would lock the user out of the whole library. `node --test app/web/tests/opfs-writer.test.cjs`
