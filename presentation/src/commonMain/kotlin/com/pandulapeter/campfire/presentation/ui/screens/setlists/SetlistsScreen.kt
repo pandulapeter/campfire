@@ -485,7 +485,11 @@ private fun SetlistList(
                             // of a search up it pushes the setlist's songs out of sight, so there it starts at two
                             // lines and opens on a tap. The keyboard counts, since that is when the room runs out.
                             var isExpanded by rememberSaveable { mutableStateOf(false) }
-                            val isCompactHeight = LocalWindowInfo.current.containerDpSize.height - contentPadding.calculateBottomPadding() < SHORT_WINDOW_HEIGHT
+                            // Derived, so that the keyboard sliding recomposes the item only as it crosses the threshold.
+                            val windowInfo = LocalWindowInfo.current
+                            val isCompactHeight by remember(windowInfo, contentPadding) {
+                                derivedStateOf { windowInfo.containerDpSize.height - contentPadding.calculateBottomPadding() < SHORT_WINDOW_HEIGHT }
+                            }
                             Text(
                                 modifier = listItemAnimation(listState, hasLoadedLibrary).fadingUnderListTop(topFade)
                                     .animateContentSize().clickable(enabled = isCompactHeight) { isExpanded = !isExpanded }

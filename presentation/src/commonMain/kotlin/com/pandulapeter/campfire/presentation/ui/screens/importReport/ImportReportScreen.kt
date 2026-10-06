@@ -137,6 +137,7 @@ import com.pandulapeter.campfire.presentation.ui.components.RadioListItem
 import com.pandulapeter.campfire.presentation.ui.components.SearchState
 import com.pandulapeter.campfire.presentation.ui.components.TruncateSearchQuery
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
+import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.dialogs.ImportProgressContent
 import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableContent
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
@@ -181,8 +182,9 @@ internal fun ImportReportScreen(
     val matchingSections = remember(sections, query) { sections.matching(query, viewModel::normalizeForSearch) }
     val isSearchAvailable = sections.isNotEmpty()
     val layoutDirection = LocalLayoutDirection.current
-    val bottomPadding = contentPadding.calculateBottomPadding() + FLOATING_BUTTON_CLEARANCE
-    val listPadding = PaddingValues(bottom = bottomPadding)
+    // Narrowed rather than taken apart, so that the keyboard of the search field lays the list out again as it slides
+    // instead of recomposing the screen on every frame of it.
+    val listPadding = contentPadding.only(bottom = true, extraBottom = FLOATING_BUTTON_CLEARANCE)
     Column(Modifier.fillMaxSize()) {
         ImportReportTopAppBar(
             title = shown.title(),
@@ -223,7 +225,7 @@ internal fun ImportReportScreen(
                     }
 
                     ImportReport.Importing -> Box(
-                        modifier = Modifier.fillMaxSize().padding(bottom = contentPadding.calculateBottomPadding()),
+                        modifier = Modifier.fillMaxSize().padding(contentPadding.only(bottom = true)),
                         contentAlignment = Alignment.Center,
                     ) {
                         ImportProgressContent(
@@ -252,7 +254,8 @@ internal fun ImportReportScreen(
             ImportReportButton(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(end = 16.dp, bottom = contentPadding.calculateBottomPadding() + 16.dp),
+                    .padding(contentPadding.only(bottom = true, extraBottom = 16.dp))
+                    .padding(end = 16.dp),
                 report = shown,
                 onImport = {
                     val summary = (shown as? ImportReport.Review)?.summary

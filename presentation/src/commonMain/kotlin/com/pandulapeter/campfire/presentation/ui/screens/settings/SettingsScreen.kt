@@ -162,6 +162,7 @@ import com.pandulapeter.campfire.presentation.ui.components.SwitchListItem
 import com.pandulapeter.campfire.presentation.ui.components.ThemeColorChoice
 import com.pandulapeter.campfire.presentation.ui.components.UiModeChoice
 import com.pandulapeter.campfire.presentation.ui.components.fadingLeftEdge
+import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedScrollState
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.AppIconSurface
@@ -294,7 +295,7 @@ internal fun SettingsScreen(
                             tab = tab,
                             sectionColumns = layout.sectionColumnsBesidePane,
                             scrollState = scrollStates[tab.ordinal],
-                            contentPadding = PaddingValues(end = endPadding, bottom = contentPadding.calculateBottomPadding()),
+                            contentPadding = contentPadding.only(bottom = true, extraEnd = endPadding),
                             isImporting = isImporting,
                             isPerformanceModeEnabled = isPerformanceModeEnabled,
                             userPreferences = userPreferences,

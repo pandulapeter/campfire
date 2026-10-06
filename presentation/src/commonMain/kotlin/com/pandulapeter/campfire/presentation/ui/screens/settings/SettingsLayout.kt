@@ -42,13 +42,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.ui.components.THEME_COLOR_CHOICE_WIDTH
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
+import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
 
 /**
@@ -204,7 +204,6 @@ internal fun SettingsPage(
     section: @Composable () -> Unit,
     secondSection: (@Composable () -> Unit)? = null,
 ) {
-    val layoutDirection = LocalLayoutDirection.current
     val sections = listOfNotNull(section, secondSection)
     val columns = if (sectionColumns >= sections.size) sections.map { listOf(it) } else listOf(sections)
     Row(
@@ -212,12 +211,8 @@ internal fun SettingsPage(
             .fillMaxSize()
             .fadingTopEdge(scrollState, MaterialTheme.colorScheme.background)
             .bounceVerticalScroll(scrollState)
-            .padding(
-                start = contentPadding.calculateStartPadding(layoutDirection),
-                top = PAGE_TOP_PADDING,
-                end = contentPadding.calculateEndPadding(layoutDirection),
-                bottom = contentPadding.calculateBottomPadding() + 16.dp,
-            ),
+            // Asked while measuring rather than while composing, since the bottom follows the keyboard of a sheet's field.
+            .padding(contentPadding.only(start = true, end = true, bottom = true, extraTop = PAGE_TOP_PADDING, extraBottom = 16.dp)),
         horizontalArrangement = Arrangement.spacedBy(SECTION_GAP, Alignment.Start),
     ) {
         columns.forEach { column ->
