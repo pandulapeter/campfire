@@ -174,7 +174,7 @@ internal fun SetlistsScreen(
     LaunchedEffect(userPreferences?.setlistSortingMode) {
         viewModel.reorderingSetlistFileName = null
     }
-    val columnCount = layout.columnCount
+    val columnCount = layout.setlistColumnCount
     HideKeyboardWhenScrolledDown(listState, isEnabled = visibleDialog == null)
     LaunchedEffect(viewModel, listState) {
         viewModel.scrollToTopRequests.collect { if (it == CampfireDestination.Setlists) listState.animateScrollToItem(0) }

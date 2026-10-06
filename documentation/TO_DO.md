@@ -11,7 +11,6 @@
 ## Bugs / issues
 - Per-section metronome / time signature changes are not yet supported
 - No way to enter BPM using the keyboard
-- More width for setlist song cards
 - Reorder songs should hide the other setlists while trying to persist the focused song
 
 ## Improvements

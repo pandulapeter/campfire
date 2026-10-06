@@ -133,16 +133,18 @@ internal fun DismissSheetWhenSidePanelAppears(
 }
 
 /**
- * What a list screen decides from the width it settles at: whether its filter side panel fits, and how many columns
- * its list lays out with and without that panel next to it. The app's `CampfireScreens` works it out and hands it down
- * in place of the width itself, so that a window being resized, whose width changes on every frame, recomposes the
- * screens only in the frames one of these decisions changes in: the value is equal everywhere between two breakpoints.
+ * What a list screen decides from the width it settles at: whether its filter side panel fits, how many columns the
+ * Songs screen lays out with and without that panel next to it, and how many the Setlists screen's wider cards fit
+ * (see [MIN_SETLIST_COLUMN_WIDTH]). The app's `CampfireScreens` works it out and hands it down in place of the width
+ * itself, so that a window being resized, whose width changes on every frame, recomposes the screens only in the
+ * frames one of these decisions changes in: the value is equal everywhere between two breakpoints.
  */
 @Immutable
 internal data class ListLayout(
     val hasRoomForSidePanel: Boolean,
     val columnCount: Int,
     val columnCountBesideSidePanel: Int,
+    val setlistColumnCount: Int,
 ) {
     companion object {
 
@@ -154,6 +156,13 @@ internal data class ListLayout(
             hasRoomForSidePanel = hasRoomForSidePanel(settledWidth),
             columnCount = songListColumnCount(settledWidth, contentPadding, layoutDirection, isSidePanelVisible = false),
             columnCountBesideSidePanel = songListColumnCount(settledWidth, contentPadding, layoutDirection, isSidePanelVisible = true),
+            setlistColumnCount = songListColumnCount(
+                settledWidth = settledWidth,
+                contentPadding = contentPadding,
+                layoutDirection = layoutDirection,
+                isSidePanelVisible = false,
+                minColumnWidth = MIN_SETLIST_COLUMN_WIDTH,
+            ),
         )
     }
 }
@@ -168,11 +177,13 @@ internal fun songListColumnCount(
     contentPadding: PaddingValues,
     layoutDirection: LayoutDirection,
     isSidePanelVisible: Boolean,
+    minColumnWidth: Dp = MIN_SONG_COLUMN_WIDTH,
 ): Int {
     // The panel covers the end inset while it is visible (see besideSidePanel), so either way the same width goes.
     val sidePanelWidth = if (isSidePanelVisible) SIDE_PANEL_WIDTH else 0.dp
     return columnCountForWidth(
-        settledWidth - contentPadding.calculateStartPadding(layoutDirection) - contentPadding.calculateEndPadding(layoutDirection) - sidePanelWidth - FAST_SCROLLER_WIDTH
+        width = settledWidth - contentPadding.calculateStartPadding(layoutDirection) - contentPadding.calculateEndPadding(layoutDirection) - sidePanelWidth - FAST_SCROLLER_WIDTH,
+        minColumnWidth = minColumnWidth,
     )
 }
 

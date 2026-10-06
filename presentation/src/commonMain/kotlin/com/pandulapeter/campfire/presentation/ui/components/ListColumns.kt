@@ -35,10 +35,22 @@ internal data class ListColumns(private val count: Int) : GridCells {
 }
 
 /**
- * The number of [MIN_COLUMN_WIDTH] wide columns that fit into the given width. Capped, so that a maximized desktop
+ * The number of [minColumnWidth] wide columns that fit into the given width. Capped, so that a maximized desktop
  * window does not turn the list into a wall of narrow columns.
  */
-internal fun columnCountForWidth(width: Dp) = (width / MIN_COLUMN_WIDTH).toInt().coerceIn(1, MAX_COLUMN_COUNT)
+internal fun columnCountForWidth(
+    width: Dp,
+    minColumnWidth: Dp = MIN_SONG_COLUMN_WIDTH,
+) = (width / minColumnWidth).toInt().coerceIn(1, MAX_COLUMN_COUNT)
 
-private val MIN_COLUMN_WIDTH = 360.dp
+/** The narrowest column a song card is laid out in, which a phone held upright still fits one of. */
+internal val MIN_SONG_COLUMN_WIDTH = 360.dp
+
+/**
+ * The narrowest column the Setlists screen lays its song cards out in. A card there carries more on one line than on
+ * the Songs screen — the slot number before the title, and the key, the tempo and the duration after the artist — so at
+ * the songs' width a laptop's maximized window fits four columns in which those lines are cut short. A phone is
+ * unaffected, since it fits one column at either width.
+ */
+internal val MIN_SETLIST_COLUMN_WIDTH = 416.dp
 private const val MAX_COLUMN_COUNT = 4

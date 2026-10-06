@@ -182,7 +182,8 @@ localized in both languages.
   (`CompactKeyboardEffect`, swiped back as a transient bar) — the only way a landscape keyboard leaves room for a
   field, a title row and three lines. A phone held upright gives song cards two title lines and narrower padding, and
   a setlist's description starts at two lines in a short window, opening on a tap. Song lists keep their 360dp
-  minimum column, so a phone on its side stays one column: two would each be narrower than the portrait one.
+  minimum column (a setlist's 440dp, since its cards say more on a line), so a phone on its side stays one column:
+  two would each be narrower than the portrait one.
 - `:app:android` and `:app:baselineprofile` are plain Android modules, `:app:desktop` a plain JVM one, `:app:ios`
   Kotlin/Native-only and `:app:web` Kotlin/Wasm-only; every other module (`:presentation` and `:chordpro` included) is
   a multiplatform library.
