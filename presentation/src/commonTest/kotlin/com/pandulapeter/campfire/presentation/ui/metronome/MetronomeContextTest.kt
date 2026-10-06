@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.metronome
 
+import com.pandulapeter.campfire.metronome.api.model.TimeSignature
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -39,12 +40,21 @@ class MetronomeContextTest {
 
     @Test
     fun thePageBeingHeadedForIsTheSong() =
-        assertEquals(MetronomeContext.Song("b.cho", "s.setlist.json"), metronomeContextOf(listOf(songDetails)) { "b.cho" })
+        assertEquals(MetronomeContext.Song("b.cho", "s.setlist.json"), metronomeContextOf(listOf(songDetails), currentSongOf = { "b.cho" }))
 
     /** A song whose file the library does not hold yet has no tempo to play, so the tab's own pattern stands in. */
     @Test
     fun aSongWithNoFileIsStandalone() =
-        assertEquals(MetronomeContext.Standalone, metronomeContextOf(listOf(songDetails)) { null })
+        assertEquals(MetronomeContext.Standalone, metronomeContextOf(listOf(songDetails), currentSongOf = { null }))
+
+    @Test
+    fun theStretchThePageIsHeadedForIsPartOfTheContext() {
+        val timing = SongTiming(index = 0, bpm = 90, timeSignature = TimeSignature(3, 4))
+        assertEquals(
+            MetronomeContext.Song("a.cho", "s.setlist.json", timing),
+            metronomeContextOf(listOf(songDetails), currentSongOf = currentSong, currentTimingOf = { timing }),
+        )
+    }
 
     @Test
     fun theSameSongStayingOnTopKeepsTheClick() = assertFalse(isMetronomeScreenLeft(songDetails, songDetails.copy()))
@@ -91,6 +101,22 @@ class MetronomeContextTest {
     @Test
     fun aSongAfterTheTabIsMoved() =
         assertTrue(isMetronomeContextMoved(MetronomeContext.Standalone, MetronomeContext.Song("a.cho", null), emptyMap()))
+
+    @Test
+    fun anotherStretchOfTheSongIsMoved() {
+        val opening = MetronomeContext.Song("a.cho", null)
+        val bridge = MetronomeContext.Song("a.cho", null, SongTiming(index = 0, bpm = 90, timeSignature = TimeSignature(3, 4)))
+        assertTrue(isMetronomeContextMoved(opening, bridge, emptyMap()))
+        assertTrue(isMetronomeContextMoved(bridge, bridge.copy(timing = bridge.timing!!.copy(index = 1)), emptyMap()))
+        assertTrue(isMetronomeContextMoved(bridge, opening, emptyMap()))
+    }
+
+    /** A stretch whose tempo scales with the opening one stepped is the same stretch, played on from the next beat. */
+    @Test
+    fun theSameStretchAtAnotherTempoIsNotMoved() {
+        val bridge = MetronomeContext.Song("a.cho", null, SongTiming(index = 0, bpm = 90, timeSignature = TimeSignature(3, 4)))
+        assertFalse(isMetronomeContextMoved(bridge, bridge.copy(timing = bridge.timing!!.copy(bpm = 95)), emptyMap()))
+    }
 
     @Test
     fun theSameContextIsNotMoved() =

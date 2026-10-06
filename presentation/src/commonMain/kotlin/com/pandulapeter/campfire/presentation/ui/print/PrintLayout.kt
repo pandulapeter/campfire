@@ -282,6 +282,7 @@ private class PrintLayouter(
         if (entry.song == null) {
             place(firstRows, keepWhole = keepFirstWhole)
         } else if (firstIndex >= 0) {
+            var timingRows = emptyList<Row>()
             blocks.forEachIndexed { index, block ->
                 if (++placedBlocks % 50 == 0) yield()
                 when {
@@ -291,10 +292,14 @@ private class PrintLayouter(
                         spaceAfter(blocks, index)
                     }
                     block == ChordProBlock.Break -> if (y > margin) nextColumn()
+                    // A change of tempo or time is kept with what it is written above, the way a heading is; one with
+                    // nothing printed after it says nothing and is left out.
+                    block is ChordProBlock.Timing -> timingRows = blockRowsAt(blocks, index)
                     else -> {
                         val rows = blockRowsAt(blocks, index)
                         if (rows.isNotEmpty()) {
-                            place(rows)
+                            place(timingRows + rows)
+                            timingRows = emptyList()
                             spaceAfter(blocks, index)
                         }
                     }
@@ -309,7 +314,7 @@ private class PrintLayouter(
         song.metadata.capo?.takeIf { options.showChords }?.let { "${labels.capo}: $it" },
         song.metadata.tempo?.let { "${labels.tempo}: $it" },
         song.metadata.time?.let { "${labels.time}: $it" },
-    ).joinToString("   ")
+    ).joinToString(METADATA_SEPARATOR)
 
     /** Between two blocks of one chorus the gap carries the chorus's bar, so that a comment does not cut it in two. */
     private fun blockRowsAt(blocks: List<ChordProBlock>, index: Int): List<Row> {
@@ -336,6 +341,7 @@ private class PrintLayouter(
         is ChordProBlock.Comment -> commentRows(block, width, isInChorus)
         is ChordProBlock.ChorusRecall -> recallRows(block, width)
         is ChordProBlock.Transpose -> keyChangeRows(block, width)
+        is ChordProBlock.Timing -> timingRows(block, width)
         ChordProBlock.Break -> emptyList()
     }
 
@@ -516,6 +522,20 @@ private class PrintLayouter(
     private fun keyChangeRows(keyChange: ChordProBlock.Transpose, width: Float): List<Row> =
         keyChange.key?.takeIf { options.showChords && it.isNotBlank() }?.let { wrapped("${labels.key}: $it", detailStyle, width) }.orEmpty()
 
+    /**
+     * How the song is played from a `{tempo}` or a `{time}` further down on, in the words and the type the heading names
+     * the opening values in, so that an import of the PDF reads it back as the change it is. Only what the song names is
+     * printed, since a time signature the file never gave would come back as the song's own.
+     */
+    private fun timingRows(timing: ChordProBlock.Timing, width: Float): List<Row> = if (options.showMetadata) {
+        listOfNotNull(
+            timing.tempo?.let { "${labels.tempo}: $it" },
+            timing.time?.let { "${labels.time}: $it" },
+        ).joinToString(METADATA_SEPARATOR).takeIf { it.isNotEmpty() }?.let { wrapped(it, detailStyle, width) }.orEmpty()
+    } else {
+        emptyList()
+    }
+
     private fun commentRows(comment: ChordProBlock.Comment, width: Float, isInChorus: Boolean): List<Row> = when {
         !options.showComments || (comment.isInTabOrGrid && !options.showChords) -> emptyList()
         isInChorus -> chorusBar(commentRows(comment, width - CHORUS_INDENT, isInChorus = false), startsWithLabel = false)
@@ -638,6 +658,9 @@ private class PageContent {
 }
 
 private fun List<Row>.height() = sumOf { it.height.toDouble() }.toFloat()
+
+/** What stands between two values on the line that says how a song is played. */
+private const val METADATA_SEPARATOR = "   "
 
 private const val CHORUS_INDENT = 8f
 private const val CHORUS_BAR_WIDTH = 1.5f

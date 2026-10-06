@@ -19,6 +19,7 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -123,6 +124,7 @@ import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
 import com.pandulapeter.campfire.metronome.api.model.MetronomeSound
 import com.pandulapeter.campfire.metronome.api.model.MetronomeStopReason
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeContext
+import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
 import com.pandulapeter.campfire.presentation.ui.metronome.TempoKey
 import com.pandulapeter.campfire.presentation.ui.metronome.Tempos
 import com.pandulapeter.campfire.presentation.ui.metronome.effectiveTempo
@@ -881,6 +883,12 @@ class CampfireViewModel(
     private val songDetailsTargetSongs = mutableStateMapOf<String, String>()
 
     /**
+     * The stretch of the song in [songDetailsTargetSongs] each song details screen's page is headed for, by the same
+     * id, where it changes its tempo or time signature further down: what the click follows inside one song.
+     */
+    private val songDetailsTargetTimings = mutableStateMapOf<String, SongTiming>()
+
+    /**
      * The renames of the song a click plays for, old name to new, from the moment [updateSongFileName] knows the new
      * name until the click's context has followed it: the context moving from one to the other is the same song under
      * another name, which keeps the bar going instead of restarting it. Read and written on the main thread only.
@@ -889,7 +897,11 @@ class CampfireViewModel(
 
     /** What a click plays for, derived from the back stack, see [metronomeContextOf]; snapshot state, observable. */
     internal val metronomeContext
-        get() = metronomeContextOf(backStack) { destination -> songDetailsTargetSongs[destination.id] ?: currentSongFileName(destination) }
+        get() = metronomeContextOf(
+            backStack = backStack,
+            currentSongOf = { destination -> songDetailsTargetSongs[destination.id] ?: currentSongFileName(destination) },
+            currentTimingOf = { destination -> songDetailsTargetTimings[destination.id]?.takeIf { songDetailsTargetSongs[destination.id] != null } },
+        )
 
     /**
      * Every song of the library in the order the songs screen is sorted by, with its search and filter keys, as the song
@@ -1515,6 +1527,7 @@ class CampfireViewModel(
         backStack.mapNotNullTo(mutableSetOf()) { (it as? CampfireDestination.SongDetails)?.id }.let { ids ->
             songDetailsCurrentSongs.keys.retainAll(ids)
             songDetailsTargetSongs.keys.retainAll(ids)
+            songDetailsTargetTimings.keys.retainAll(ids)
         }
         val hadImportReport = isImportReportOnBackStack
         isImportReportOnBackStack = backStack.any { it == CampfireDestination.ImportReport }
@@ -2483,10 +2496,17 @@ class CampfireViewModel(
         }
     }
 
-    /** Reported by the song details screen whenever its pager heads for a page, see [songDetailsTargetSongs]. */
-    internal fun onSongDetailsPageChanged(destination: CampfireDestination.SongDetails, songFileName: String) {
+    /**
+     * Reported by the song details screen whenever its pager heads for a page, or the page it heads for for another
+     * stretch of its song, see [songDetailsTargetSongs] and [songDetailsTargetTimings].
+     */
+    internal fun onSongDetailsPageChanged(destination: CampfireDestination.SongDetails, songFileName: String, timing: SongTiming?) {
         if (backStack.any { it is CampfireDestination.SongDetails && it.id == destination.id }) {
-            songDetailsTargetSongs[destination.id] = songFileName
+            // One snapshot, so that the click never reads the new song with the stretch of the one before it.
+            Snapshot.withMutableSnapshot {
+                songDetailsTargetSongs[destination.id] = songFileName
+                if (timing == null) songDetailsTargetTimings.remove(destination.id) else songDetailsTargetTimings[destination.id] = timing
+            }
         }
     }
 

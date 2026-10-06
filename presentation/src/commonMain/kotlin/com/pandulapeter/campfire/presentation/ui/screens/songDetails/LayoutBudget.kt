@@ -41,6 +41,7 @@ internal object LayoutBudget {
                 is RenderSection.Lines -> section.lines.sumOf { it.characterCount() }
                 is RenderSection.Comment -> section.text.length
                 is RenderSection.KeyChange -> section.key.length
+                is RenderSection.Timing -> section.time.length + (section.tempo?.length ?: 0)
                 is RenderSection.Metadata -> 0
             }
             if (lines + sectionLines > MAX_LINES || characters + sectionCharacters > MAX_CHARACTERS) {

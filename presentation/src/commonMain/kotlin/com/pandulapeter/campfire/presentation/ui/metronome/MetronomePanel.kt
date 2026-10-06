@@ -92,16 +92,19 @@ internal fun MetronomePanel(
     val settings by viewModel.metronomeSettings.collectAsStateWithLifecycle()
     val songsByFileName by viewModel.songsByFileName.collectAsStateWithLifecycle()
     val songsBeingRenamed by viewModel.songsBeingRenamed.collectAsStateWithLifecycle()
-    // The bar the row draws is the one the click counts, which is the song's time signature where it declares one, and
+    // The bar the row draws is the one the click counts, which is the song's time signature where it declares one (that of
+    // the stretch of it the page is on, where it changes further down), and
     // which is what the accents it is tapped are stored under, so a song in 6/8 is accented as the tab's 6/8 is. The
     // tempo it plays at is nothing this panel shows, so none of what overrides it is read here. A song being renamed is
     // still the click's song, and its bar is still its own, for the moment the library no longer has the old name.
     val timeSignature = when (val context = viewModel.metronomeContext) {
         MetronomeContext.Standalone -> settings.timeSignatureOrDefault
-        is MetronomeContext.Song -> (songsByFileName[context.songFileName] ?: songsBeingRenamed[context.songFileName]).timeSignatureOrDefault
+        is MetronomeContext.Song -> context.timing?.timeSignature
+            ?: (songsByFileName[context.songFileName] ?: songsBeingRenamed[context.songFileName]).timeSignatureOrDefault
     }
     val layoutDirection = LocalLayoutDirection.current
-    val horizontalPadding = if (isProminent) PROMINENT_PANEL_HORIZONTAL_PADDING else PANEL_PADDING
+    val startPadding = if (isProminent) PROMINENT_PANEL_HORIZONTAL_PADDING else PANEL_START_PADDING
+    val endPadding = if (isProminent) PROMINENT_PANEL_HORIZONTAL_PADDING else PANEL_END_PADDING
     val height = if (isProminent) PROMINENT_PANEL_HEIGHT else PANEL_HEIGHT
     Row(
         modifier = Modifier
@@ -112,8 +115,8 @@ internal fun MetronomePanel(
             }
             .fillMaxWidth()
             .padding(
-                start = contentPadding.calculateStartPadding(layoutDirection) + horizontalPadding,
-                end = contentPadding.calculateEndPadding(layoutDirection) + horizontalPadding,
+                start = contentPadding.calculateStartPadding(layoutDirection) + startPadding,
+                end = contentPadding.calculateEndPadding(layoutDirection) + endPadding,
                 bottom = PANEL_PADDING,
             )
             .height(height),
@@ -150,6 +153,14 @@ internal fun MetronomePanel(
 private const val PANEL_ANIMATION_DURATION = 250
 private val PANEL_HEIGHT = 48.dp
 private val PANEL_PADDING = 12.dp
+
+/**
+ * The panel's margins in the song details screen's app bar, which put the beats where the song's own text starts and
+ * the button's circle on the keyline of the step buttons under it, 8dp from the end of the screen: the button is a
+ * 48dp touch target around a 40dp circle, so its end padding is what leaves the other 4dp.
+ */
+private val PANEL_START_PADDING = 8.dp
+private val PANEL_END_PADDING = 4.dp
 
 /**
  * How tall an accent is drawn here, which is also the column each beat is tapped in: as much of the panel's own height

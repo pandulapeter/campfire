@@ -16,6 +16,39 @@ import kotlin.test.assertTrue
 class RowSnappingTest {
 
     @Test
+    fun theStretchAPageIsInIsTheLastChangeAtOrBeforeIt() {
+        val rows = SongRows(
+            restingOffsets = listOf(0, 1000, 2000, 3500),
+            stepOffsets = listOf(0, 1000, 2000, 3500),
+            stepSections = listOf(0, 3, 5, 8),
+            isSteppedByRow = true,
+            timingSections = listOf(3, 8),
+        )
+        assertEquals(-1, timingIndexAt(0, rows))
+        assertEquals(-1, timingIndexAt(990, rows))
+        assertEquals(0, timingIndexAt(1000, rows))
+        // A page taller than the screen, paged through.
+        assertEquals(0, timingIndexAt(1500, rows))
+        assertEquals(0, timingIndexAt(2000, rows))
+        assertEquals(1, timingIndexAt(3500, rows))
+        assertEquals(-1, timingIndexAt(1000, rows.copy(timingSections = emptyList())))
+    }
+
+    @Test
+    fun aSongbookSteppedBySectionsFollowsTheChangeScrolledPast() {
+        val rows = SongRows(
+            stepOffsets = listOf(-24, 100, 300, 500),
+            stepSections = listOf(0, 1, 2, 3),
+            timingSections = listOf(2),
+        )
+        assertEquals(-1, timingIndexAt(290, rows, maxValue = 400))
+        assertEquals(0, timingIndexAt(300, rows, maxValue = 400))
+        // The end of the song is its last stop, which it never brings to the top of the screen.
+        assertEquals(0, timingIndexAt(400, rows.copy(timingSections = listOf(3)), maxValue = 400))
+        assertEquals(-1, timingIndexAt(399, rows.copy(timingSections = listOf(3)), maxValue = 450))
+    }
+
+    @Test
     fun theTopFadeOnlyFadesWhatIsScrolledPastTheTopOfTheRow() {
         val rows = SongRows(restingOffsets = listOf(0, 600, 1200))
         assertEquals(0, rows.scrolledIntoRow(600))

@@ -145,6 +145,102 @@ class ChordProParserTest {
     }
 
     @Test
+    fun `a tempo or time in the body is a change from where it stands`() {
+        val song = ChordProParser.parse("{tempo: 120}\n{start_of_verse}\n[C]a\n{end_of_verse}\n\n{tempo: 90}\n{start_of_chorus}\n[C]b\n{end_of_chorus}")
+
+        assertEquals("120", song.metadata.tempo)
+        assertEquals(ChordProBlock.Timing(tempo = "90", time = null), song.blocks[1])
+        assertEquals(SectionType.Chorus, (song.blocks[2] as ChordProBlock.Section).type)
+    }
+
+    @Test
+    fun `a timing change cuts the section it stands in`() {
+        listOf(
+            "{tempo: 120}\n{start_of_verse}\n[C]a\n{tempo: 90}\n[C]b\n{end_of_verse}" to SectionType.Verse,
+            "{tempo: 120}\n[C]a\n{tempo: 90}\n[C]b" to SectionType.Paragraph,
+        ).forEach { (text, type) ->
+            assertEquals(
+                listOf(
+                    ChordProBlock.Section(type, null, listOf(ChordProParser.parseLyrics("[C]a"))),
+                    ChordProBlock.Timing(tempo = "90", time = null),
+                    ChordProBlock.Section(type, null, listOf(ChordProParser.parseLyrics("[C]b")), isContinuation = true),
+                ),
+                ChordProParser.parse(text).blocks,
+                text,
+            )
+        }
+    }
+
+    @Test
+    fun `a timing change inside a tab keeps the tab open`() {
+        val blocks = ChordProParser.parse("{tempo: 120}\n{start_of_tab}\ne|--0--|\n{tempo: 90}\ne|--2--|\n{end_of_tab}").blocks
+
+        assertEquals(ChordProBlock.Timing(tempo = "90", time = null), blocks[1])
+        assertEquals(ChordProLine.Tab("e|--2--|", continuesEnvironment = true), (blocks[2] as ChordProBlock.Section).lines.single())
+    }
+
+    @Test
+    fun `changes with no line between them are one`() {
+        listOf(
+            "{tempo: 120}\n{time: 4/4}\n[C]a\n{tempo: 90}\n{time: 3/4}\n[C]b",
+            "{tempo: 120}\n{time: 4/4}\n[C]a\n\n{tempo: 90}\n\n{time: 3/4}\n[C]b",
+            "{tempo: 120}\n{time: 4/4}\n{start_of_verse}\n[C]a\n{tempo: 90}\n\n{time: 3/4}\n[C]b\n{end_of_verse}",
+        ).forEach { text ->
+            assertEquals(listOf(ChordProBlock.Timing(tempo = "90", time = "3/4")), ChordProParser.parse(text).blocks.filterIsInstance<ChordProBlock.Timing>(), text)
+        }
+    }
+
+    @Test
+    fun `a timing change carries the value that did not change`() {
+        val timings = ChordProParser.parse("{tempo: 120}\n{time: 6/8}\n[C]a\n{tempo: 90}\n[C]b\n{time: 3/4}\n[C]c").blocks.filterIsInstance<ChordProBlock.Timing>()
+
+        assertEquals(listOf(ChordProBlock.Timing("90", "6/8"), ChordProBlock.Timing("90", "3/4")), timings)
+    }
+
+    @Test
+    fun `a tempo or time that changes nothing makes no block`() {
+        listOf(
+            "{time: 4/4}\n[C]a\n{time: C}\n[C]b",
+            "{tempo: 120}\n[C]a\n{tempo: 120 bpm}\n[C]b",
+            "{tempo: 120}\n[C]a\n{tempo: fast}\n[C]b",
+            "{tempo: 120}\n[C]a\n{tempo}\n[C]b",
+            "{time: 4/4}\n[C]a\n{time: 5/3}\n[C]b",
+            "{tempo: 120}\n[C]a\n{tempo-guitar: 90}\n[C]b",
+            "{tempo: 120}\n[C]a\n{tempo: 90}",
+            "{tempo: 120}\n[C]a\n{tempo: 90}\n\n",
+        ).forEach { text ->
+            val blocks = ChordProParser.parse(text).blocks
+
+            assertTrue(blocks.none { it is ChordProBlock.Timing } || blocks.last() is ChordProBlock.Timing, text)
+        }
+    }
+
+    @Test
+    fun `an empty header tempo opens at none and the body still changes it`() {
+        val song = ChordProParser.parse("{tempo}\n[C]a\n{tempo: 90}\n[C]b")
+
+        assertEquals("", song.metadata.tempo)
+        assertEquals(listOf(ChordProBlock.Timing(tempo = "90", time = null)), song.blocks.filterIsInstance<ChordProBlock.Timing>())
+    }
+
+    @Test
+    fun `the first readable tempo of a headerless song is its own and a second one is a change`() {
+        val song = ChordProParser.parse("[C]a\n{tempo: fast}\n{tempo: 90}\n[C]b\n{meta: tempo 120}\n[C]c")
+
+        assertEquals("90", song.metadata.tempo)
+        assertEquals(listOf(ChordProBlock.Timing(tempo = "120", time = null)), song.blocks.filterIsInstance<ChordProBlock.Timing>())
+    }
+
+    @Test
+    fun `a recalled chorus leaves the timing changes inside it out`() {
+        val blocks = ChordProParser.parse("{tempo: 120}\n{soc}\n[C]a\n{tempo: 90}\n[C]b\n{eoc}\n{chorus}").blocks
+
+        val recall = blocks.last() as ChordProBlock.ChorusRecall
+        assertEquals(2, recall.blocks.size)
+        assertTrue(recall.blocks.none { it is ChordProBlock.Timing })
+    }
+
+    @Test
     fun `short metadata directive names are parsed`() {
         val metadata = ChordProParser.parse("{t: Short Title}\n{st: Short Subtitle}").metadata
 

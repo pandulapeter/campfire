@@ -748,8 +748,22 @@ Nothing about it reaches the network. The module `CLAUDE.md` files carry the det
   but synced (see Sync); neither reads the other, and the song file's `{tempo}` (`Song.tempo`, read at scan time with `{time}` and
   `{capo}`) is only changed in the editor and the Song defaults sheet. The capo is kept the same way (`Setlist.Entry.capo`, `UserPreferences.capos`,
   0 to 12 frets, a stored 0 being a capo this setlist takes off rather than no override at all), since one set is
-  played capoed and the next in another key without. The first `{tempo}` and `{time}` count, a later one being a change mid-song the way a later `{key}` is a modulation (the capo is the song's as a whole, so its last `{capo}` counts, as for any other header field); the tempo counts the
+  played capoed and the next in another key without. The first `{tempo}` and `{time}` are the song's own (the capo is the song's as a whole, so its last `{capo}` counts, as for any other header field); the tempo counts the
   clicks of the bar (6/8 at 120 is six clicks a bar at 120 a minute), within 30–300.
+- **A later `{tempo}` or `{time}` is a change from where it stands** (`ChordProBlock.Timing`), and the page is what
+  says where the band is: on the song details screen a change starts a page of its own, headed by one read only line
+  naming the tempo and the time signature from there on as the click plays them, and a playing click follows the page
+  being read — the one a step or a fling is headed for, never one a finger is still dragging past — from beat one, the
+  panel's beat row and the app bar's tempo with it. A change inside a section cuts it there, the rest heading the new
+  page with its fold toggle alone; a recalled chorus is played in whatever is in force where it is recalled. The
+  stepper, a setlist's entry and the library's override still hold one number, the song's opening tempo, and a later
+  tempo keeps its ratio to the file's opening one (120 → 60, played at 110 → 55), so nothing new is stored. A song that
+  fits one screen is still cut into pages by a change, since the page is the signal; a songbook of more than 200
+  sections keeps its one column, the click following the change scrolled past. The editor offers Tempo and Time
+  signature again and again — into the header first, at the start of the caret's line after that — and the preview
+  shows each change in place and is never paged; the PDF prints it as a line kept with what follows it. **With the
+  Metronome feature off none of it exists**: no line, no forced page, the song laid out as if it had none. A `{key}`
+  further down is still only read past.
 - **The click belongs to the screen it is played from, and there are two of them**: the Metronome tab, whose whole
   screen is the instrument, and the song details screen, where it is a panel in the app bar. Nowhere else has a
   metronome, and a click never outlives the screen it was started on - going back to the songs, selecting a tab,

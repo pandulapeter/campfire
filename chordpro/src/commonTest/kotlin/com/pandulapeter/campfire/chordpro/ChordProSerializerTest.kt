@@ -9,8 +9,10 @@
  */
 package com.pandulapeter.campfire.chordpro
 
+import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class ChordProSerializerTest {
 
@@ -101,6 +103,24 @@ class ChordProSerializerTest {
         ).forEach { text ->
             val parsed = ChordProParser.parse(text)
 
+            assertEquals(parsed, ChordProParser.parse(ChordProSerializer.serialize(parsed)), text)
+        }
+    }
+
+    @Test
+    fun `a tempo or time change survives serializing`() {
+        listOf(
+            "{tempo: 120}\n{time: 4/4}\n{start_of_verse}\n[C]a\n{end_of_verse}\n\n{tempo: 90}\n{time: 3/4}\n{start_of_chorus}\n[C]b\n{end_of_chorus}",
+            "{tempo: 120}\n{time: 4/4}\n{start_of_verse}\n[C]a\n{time: 6/8}\n[C]b\n{end_of_verse}",
+            "{tempo: 120}\n[C]a\n{tempo: 80}\n[C]b",
+            "{tempo: 120}\n{start_of_verse}\n{start_of_tab}\ne|--0--|\n{tempo: 90}\ne|--2--|\n{end_of_tab}\n{end_of_verse}",
+            "[C]a\n{tempo: 90}\n[C]b\n{tempo: 120}\n[C]c",
+            "{tempo}\n[C]a\n{tempo: 90}\n[C]b",
+            "{time: C}\n[C]a\n{time: 3/4}\n[C]b\n{time: 4/4}\n[C]c",
+        ).forEach { text ->
+            val parsed = ChordProParser.parse(text)
+
+            assertTrue(parsed.blocks.any { it is ChordProBlock.Timing }, text)
             assertEquals(parsed, ChordProParser.parse(ChordProSerializer.serialize(parsed)), text)
         }
     }

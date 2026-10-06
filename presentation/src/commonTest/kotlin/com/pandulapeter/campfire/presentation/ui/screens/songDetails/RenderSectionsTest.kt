@@ -36,14 +36,16 @@ class RenderSectionsTest {
      *
      * @param isTransposed Whether the song's own `{transpose}` directives are applied, as they are on the page.
      */
-    private fun shape(text: String, shouldShowChords: Boolean = true, isTransposed: Boolean = false) = prepareSongLyrics(
+    private fun shape(text: String, shouldShowChords: Boolean = true, isTransposed: Boolean = false, showsTiming: Boolean = true) = prepareSongLyrics(
         song = ChordProParser.parse(text).let { if (isTransposed) ChordProTransposer.transpose(it, 0) else it },
         shouldShowChords = shouldShowChords,
         labels = labels,
+        showsTiming = showsTiming,
     ).sections.map { section ->
         when (section) {
             is RenderSection.Comment -> "comment ${section.text}"
             is RenderSection.KeyChange -> "key ${section.key}"
+            is RenderSection.Timing -> "timing ${section.tempo} ${section.time}"
             is RenderSection.Lines -> "${section.header}: " + section.parts.joinToString { part ->
                 when (part) {
                     is RenderSection.Comment -> part.text
@@ -53,6 +55,51 @@ class RenderSectionsTest {
             }
             is RenderSection.Metadata -> "metadata"
         }
+    }
+
+    @Test
+    fun `a timing change is a line of its own between two sections or where it cuts one`() {
+        assertEquals(
+            listOf("Versszak: lines", "timing 90 3/4", "Refrén: lines"),
+            shape("{tempo: 120}\n{time: 4/4}\n{sov}\n[G]la\n{eov}\n{tempo: 90}\n{time: 3/4}\n{soc}\n[G]la\n{eoc}"),
+        )
+        assertEquals(
+            listOf("Versszak: lines", "timing 90 4/4", ": lines"),
+            shape("{tempo: 120}\n{sov}\n[G]la\n{tempo: 90}\n[G]la\n{eov}"),
+        )
+    }
+
+    @Test
+    fun `a timing change inside a chorus makes two cards`() {
+        val model = prepareSongLyrics(ChordProParser.parse("{tempo: 120}\n{soc}\n[G]la\n{tempo: 90}\n[G]la\n{eoc}"), shouldShowChords = true, labels = labels)
+        val cards = model.sections.filterIsInstance<RenderSection.Lines>()
+        assertEquals(listOf(true, true), cards.map { it.isOnCard })
+        assertEquals(listOf("chorus#1", "chorus#1~1"), cards.map { it.foldKey })
+    }
+
+    @Test
+    fun `with the metronome off a timing change is joined over and the folds keep their keys`() {
+        val text = "{tempo: 120}\n{sov}\n[G]la\n{tempo: 90}\n[G]la\n{eov}\n{sov}\n[G]la\n{eov}"
+        assertEquals(listOf("Versszak: lines", "Versszak: lines"), shape(text, showsTiming = false))
+        val foldKeys = { showsTiming: Boolean ->
+            prepareSongLyrics(ChordProParser.parse(text), shouldShowChords = true, labels = labels, showsTiming = showsTiming)
+                .sections.filterIsInstance<RenderSection.Lines>().map { it.foldKey }
+        }
+        assertEquals(listOf("verse#1", "verse#2"), foldKeys(false))
+        assertEquals(listOf("verse#1", "verse#1~1", "verse#2"), foldKeys(true))
+    }
+
+    @Test
+    fun `a timing change with no line after it is dropped`() {
+        assertEquals(listOf("Versszak: lines"), shape("{tempo: 120}\n{sov}\n[G]la\n{eov}\n{tempo: 90}"))
+        assertEquals(
+            listOf("Versszak: lines", "comment Note", "timing 80 4/4", "Versszak: lines"),
+            shape("{tempo: 120}\n{sov}\n[G]la\n{eov}\n{tempo: 90}\n{comment_italic: Note}\n{tempo: 80}\n{sov}\n[G]la\n{eov}"),
+        )
+        assertEquals(
+            listOf("Versszak: lines"),
+            shape("{tempo: 120}\n{sov}\n[G]la\n{eov}\n{tempo: 90}\n{start_of_tab}\ne|--0--|\n{end_of_tab}", shouldShowChords = false),
+        )
     }
 
     @Test

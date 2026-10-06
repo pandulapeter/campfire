@@ -90,6 +90,8 @@ import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.isSpecified
 import com.pandulapeter.campfire.chordpro.ChordProHighlighter
 import com.pandulapeter.campfire.chordpro.ChordProTabWrapper
+import com.pandulapeter.campfire.chordpro.ChordProTempo
+import com.pandulapeter.campfire.chordpro.ChordProTime
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
@@ -99,6 +101,8 @@ import com.pandulapeter.campfire.chordpro.model.CommentStyle
 import com.pandulapeter.campfire.chordpro.model.GridToken
 import com.pandulapeter.campfire.chordpro.model.SectionType
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
+import com.pandulapeter.campfire.metronome.api.model.TimeSignature
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_details_cut
 import com.pandulapeter.campfire.presentation.resources.song_details_key_change
@@ -396,6 +400,12 @@ internal fun SongLyrics(
                                 modifier = unitModifier.padding(horizontal = CARD_PADDING),
                                 keyChange = section,
                                 chordStyle = chordStyle,
+                            )
+
+                            is RenderSection.Timing -> SongTimingLine(
+                                modifier = unitModifier,
+                                timing = section,
+                                style = chordStyle,
                             )
 
                             is RenderSection.Lines -> if (section.isOnCard) {
@@ -1442,8 +1452,8 @@ private fun SongSectionsLayout(
         ?.let { minOf(it, totalWidth) }
 
     // A section is narrow where every line of it fits half the column without wrapping, so that setting it beside
-    // another costs it nothing.
-    fun isNarrowSection(section: Int, halfColumnWidth: Int) =
+    // another costs it nothing. A change of tempo or time is never one, since it heads its page rather than sharing a row.
+    fun isNarrowSection(section: Int, halfColumnWidth: Int) = !units.isTiming(section) &&
         unitsOf(section).all { sectionMeasurements.maxWidth(it, measurables[it]::maxIntrinsicWidth) <= halfColumnWidth }
 
     // A wide row is a single column in which every section is as wide as it needs: the ones whose lines do not wrap as
@@ -1464,20 +1474,33 @@ private fun SongSectionsLayout(
         keepsEndInset = keepsStepButtonInset,
     )
 
-    fun searchGrid(totalWidth: Int): SearchedGrid {
-        val maxColumnCount = maxColumnCountFor(totalWidth)
+    // The grid of the sections of [segment], the units of a stretch of the song that starts at [sectionOffset], every
+    // index in it counted from the stretch's first section: the whole song where it is one stretch.
+    fun searchSegment(totalWidth: Int, segment: SongUnits, sectionOffset: Int, availableHeightPx: Int): SearchedGrid {
+        val unitOffset = units.sectionStarts[sectionOffset]
+        val sectionCount = segment.sectionStarts.size - 1
+        val unitCount = segment.unitSections.size
+        val maxColumnCount = widthColumnCountFor(totalWidth).coerceAtMost(maxOf(1, sectionCount))
+        val piecePadding = piecePadding.copyOfRange(sectionOffset, sectionOffset + sectionCount)
 
         fun unitHeightAt(unit: Int, columnWidth: Int) = sectionMeasurements.height(
-            index = unit,
-            width = unitWidthFor(unit, columnWidth),
-            measure = measurables[unit]::maxIntrinsicHeight,
+            index = unit + unitOffset,
+            width = unitWidthFor(unit + unitOffset, columnWidth),
+            measure = measurables[unit + unitOffset]::maxIntrinsicHeight,
         )
 
-        fun sectionHeightAt(section: Int, columnWidth: Int) = unitsOf(section).sumOf { unitHeightAt(it, columnWidth) }
+        fun sectionHeightAt(section: Int, columnWidth: Int) =
+            (segment.sectionStarts[section] until segment.sectionStarts[section + 1]).sumOf { unitHeightAt(it, columnWidth) }
 
         fun heightAt(section: Int, columnCount: Int) = sectionHeightAt(section, columnWidthFor(totalWidth, columnCount))
 
-        fun wideHeightAt(section: Int) = wideWidthFor(section, totalWidth)?.let { sectionHeightAt(section, it) }
+        fun wideHeightAt(section: Int) = wideWidthFor(section + sectionOffset, totalWidth)?.let { sectionHeightAt(section, it) }
+
+        fun SectionGrid.unitColumnWidth(unit: Int) = if (wideRows[rows[unit]]) {
+            wideWidthFor(segment.unitSections[unit] + sectionOffset, totalWidth) ?: columnWidthFor(totalWidth, 1)
+        } else {
+            columnWidthFor(totalWidth, columnCounts[rows[unit]])
+        }
 
         fun gridFor(columnCount: Int) = when {
             // A single column is every section stacked in its order, however tall each of them is, so it is the one
@@ -1493,15 +1516,15 @@ private fun SongSectionsLayout(
                 sectionGap = sectionGapPx,
                 maxRowHeight = maxRowHeightPx,
             )
-        }.expandedTo(units.unitSections)
+        }.expandedTo(segment.unitSections)
 
-        fun SectionGrid.unitHeights() = IntArray(unitCount) { unitHeightAt(it, columnWidthOf(it, totalWidth)) }
+        fun SectionGrid.unitHeights() = IntArray(unitCount) { unitHeightAt(it, unitColumnWidth(it)) }
 
         fun SectionGrid.height() = arrange(
             heights = unitHeights(),
             sectionGap = sectionGapPx,
             rowGap = rowGapPx,
-            unitSections = units.unitSections,
+            unitSections = segment.unitSections,
             piecePadding = piecePadding,
         ).height
 
@@ -1509,7 +1532,7 @@ private fun SongSectionsLayout(
             heights = unitHeights(),
             sectionGap = sectionGapPx,
             maxRowHeight = maxRowHeightPx,
-            unitSections = units.unitSections,
+            unitSections = segment.unitSections,
             piecePadding = piecePadding,
         )
 
@@ -1518,10 +1541,10 @@ private fun SongSectionsLayout(
         if (canCutSections && availableHeightPx > 0 && widthColumnCountFor(totalWidth) == 1 && sectionCount <= MAX_CUT_SECTION_COUNT) {
             val halfColumnWidth = columnWidthFor(totalWidth, 2)
             val paged = flowIntoPages(
-                sectionStarts = units.sectionStarts,
+                sectionStarts = segment.sectionStarts,
                 heightAt = { unit, columns -> unitHeightAt(unit, columnWidthFor(totalWidth, columns)) },
-                isNarrow = { section -> isNarrowSection(section, halfColumnWidth) },
-                isCuttableBefore = { unit -> units.isCuttableBefore[unit] },
+                isNarrow = { section -> isNarrowSection(section + sectionOffset, halfColumnWidth) },
+                isCuttableBefore = { unit -> segment.isCuttableBefore[unit] },
                 piecePadding = piecePadding,
                 sectionGap = sectionGapPx,
                 maxRowHeight = maxRowHeightPx,
@@ -1557,10 +1580,10 @@ private fun SongSectionsLayout(
         var flowedPageCount = Int.MAX_VALUE
         for (columnCount in cutColumnCount downTo 2) {
             val grid = flowLikeAMagazine(
-                sectionStarts = units.sectionStarts,
+                sectionStarts = segment.sectionStarts,
                 columnCount = columnCount,
                 heightAt = { unit, columns -> unitHeightAt(unit, columnWidthFor(totalWidth, columns)) },
-                isCuttableBefore = { unit -> units.isCuttableBefore[unit] },
+                isCuttableBefore = { unit -> segment.isCuttableBefore[unit] },
                 piecePadding = piecePadding,
                 sectionGap = sectionGapPx,
                 maxRowHeight = maxRowHeightPx,
@@ -1576,6 +1599,23 @@ private fun SongSectionsLayout(
         if (flowed == null || searched.grid.pageCount() < flowedPageCount) return searched
         val height = if (flowed.pageCount == 1) flowed.height() else Int.MAX_VALUE
         return SearchedGrid(flowed, fits = height <= availableHeightPx, height = height)
+    }
+
+    // A song that changes its tempo or time signature is laid out a stretch at a time, each searched for as a song of
+    // its own against the height of a page, and the grids put end to end, so that every stretch starts a page: the page
+    // being read is what the click follows. Such a song is always stepped through, whatever its stretches fit. Where
+    // nothing is paged anyway the changes are lines of the one column.
+    fun searchGrid(totalWidth: Int): SearchedGrid {
+        val timingStarts = units.timingStarts
+        if (timingStarts.size < 2 || !canCutSections || availableHeightPx <= 0 || sectionCount > MAX_CUT_SECTION_COUNT) {
+            return searchSegment(totalWidth, units, sectionOffset = 0, availableHeightPx = availableHeightPx)
+        }
+        val grids = timingStarts.indices.map { index ->
+            val from = timingStarts[index]
+            val until = timingStarts.getOrElse(index + 1) { sectionCount }
+            searchSegment(totalWidth, units.slice(from, until), sectionOffset = from, availableHeightPx = maxRowHeightPx).grid
+        }
+        return SearchedGrid(grids.concatenated(), fits = false, height = Int.MAX_VALUE)
     }
 
     val decidedGrid = sectionMeasurements.grid(gridKey) {
@@ -1763,6 +1803,7 @@ private fun SongSectionsLayout(
                 lineTops = singleColumnUnits.map { arrangement.tops[it] },
                 lineBottoms = singleColumnUnits.map { arrangement.tops[it] + unitHeights[it] },
                 lineSections = singleColumnUnits.map { units.unitSections[it] },
+                timingSections = units.timingStarts.drop(1),
             ),
         )
     }
@@ -1963,6 +2004,10 @@ private data class UnitContent(
  *
  * A section on a card is drawn on as many cards as it has chunks, since no more pieces of it can ever be placed than
  * that: its first is [cardStarts]`[s]` of the [cardCount] the layout is handed, -1 for a section drawn without a card.
+ *
+ * [timingStarts] are where the stretches of the song a change of tempo or time signature starts begin: 0, and the
+ * section of every [RenderSection.Timing]. Each stretch is laid out as a song of its own and starts a page, since the
+ * page being read is what tells the click how the song is played there (see `SongSectionsLayout`).
  */
 private class SongUnits(
     val sectionStarts: IntArray,
@@ -1971,7 +2016,28 @@ private class SongUnits(
     val isCuttableBefore: BooleanArray,
     val cardStarts: IntArray,
     val cardCount: Int,
+    val timingStarts: IntArray = intArrayOf(0),
 ) {
+
+    /** Whether the section at [section] is a change of tempo or time signature, which heads the stretch it starts. */
+    fun isTiming(section: Int) = section > 0 && section in timingStarts
+
+    /**
+     * The sections from [from] until [until] as the units of a song of their own, every index counted from their first:
+     * what a stretch of [timingStarts] is laid out as. The cards keep the numbers they have in the whole song.
+     */
+    fun slice(from: Int, until: Int): SongUnits {
+        val unitFrom = sectionStarts[from]
+        val unitUntil = sectionStarts[until]
+        return SongUnits(
+            sectionStarts = IntArray(until - from + 1) { sectionStarts[from + it] - unitFrom },
+            unitSections = IntArray(unitUntil - unitFrom) { unitSections[unitFrom + it] - from },
+            itemRanges = itemRanges.subList(unitFrom, unitUntil),
+            isCuttableBefore = isCuttableBefore.copyOfRange(unitFrom, unitUntil),
+            cardStarts = cardStarts.copyOfRange(from, until),
+            cardCount = cardCount,
+        )
+    }
 
     companion object {
 
@@ -2008,6 +2074,7 @@ private class SongUnits(
                 isCuttableBefore = isCuttableBefore.toBooleanArray(),
                 cardStarts = cardStarts,
                 cardCount = cardCount,
+                timingStarts = (listOf(0) + sections.indices.filter { it > 0 && sections[it] is RenderSection.Timing }).distinct().toIntArray(),
             )
         }
     }
@@ -2157,13 +2224,33 @@ internal class SongLyricsModel(
  *
  * @param shouldShowChords False for lyrics-only mode, which drops the chords, the sections that are nothing else and
  * the key, capo, tempo and time of the metadata section.
+ * @param showsTiming Whether a change of tempo or time signature further down the song is a line of its own that starts
+ * a page ([RenderSection.Timing]): false with the metronome switched off, which lays the song out as if it had none.
  */
 internal fun prepareSongLyrics(
     song: ChordProSong,
     shouldShowChords: Boolean,
     labels: DefaultSectionLabels,
-) = LayoutBudget.fit(song.toRenderSections(shouldShowChords, labels)).let { (sections, isCut) ->
-    SongLyricsModel(song = song, sections = sections, isCut = isCut, shouldShowChords = shouldShowChords)
+    showsTiming: Boolean = true,
+) = LayoutBudget.fit(song.toRenderSections(shouldShowChords, labels, showsTiming)).let { (sections, isCut) ->
+    SongLyricsModel(song = song, sections = sections.withoutEmptyTimings(), isCut = isCut, shouldShowChords = shouldShowChords)
+}
+
+/**
+ * [this] without the changes of tempo or time signature that no line of the song follows before the next one or the
+ * end: one after the last line, one whose stretch lyrics-only mode emptied, or one [LayoutBudget] cut off from what it
+ * was written above. Each would start a page with nothing on it but itself.
+ */
+internal fun List<RenderSection>.withoutEmptyTimings(): List<RenderSection> {
+    if (none { it is RenderSection.Timing }) return this
+    var isFollowedByLines = false
+    return asReversed().filter { section ->
+        when (section) {
+            is RenderSection.Timing -> isFollowedByLines.also { isFollowedByLines = false }
+            is RenderSection.Lines -> true.also { isFollowedByLines = true }
+            else -> true
+        }
+    }.asReversed()
 }
 
 /** Everything a [SongLyricsModel] is built from, see [rememberSongLyricsModel]. */
@@ -2175,6 +2262,7 @@ internal data class SongLyricsInputs(
     val labels: DefaultSectionLabels,
     val tempoOverride: Int? = null,
     val capoOverride: Int? = null,
+    val showsTiming: Boolean = true,
 )
 
 /**
@@ -2339,6 +2427,15 @@ internal sealed interface RenderSection {
      */
     @Immutable
     data class KeyChange(val key: String) : RenderSection, SectionPart
+
+    /**
+     * Where a `{tempo}` or a `{time}` further down the song changes how it is played, naming both from there on as the
+     * click plays them: the [tempo] held to the click's range, null where the song never names one, and the [time]
+     * signature the click counts, the common time where the song names none. Always a unit of its own between two
+     * sections, since it starts a page of its own (see [SongUnits.timingStarts]), and never folded or cut.
+     */
+    @Immutable
+    data class Timing(val tempo: String?, val time: String) : RenderSection
 }
 
 /** A piece of a [RenderSection.Lines]: a run of its lines, or a comment standing between two of them. */
@@ -2363,6 +2460,11 @@ internal sealed interface SectionPart {
  * the same way, so they are joined over as well, a `{transpose}` leaving a line that names the new key where it stood,
  * for a song that declares one ([RenderSection.KeyChange]); a `{chorus}` recall is a section of its own and is not.
  *
+ * A change of tempo or time signature ([ChordProBlock.Timing]) is joined over the same way where [showsTiming] is
+ * false, leaving nothing behind. Otherwise it is the one cut besides a recall that is not: the section ends before it,
+ * the change is a line of its own ([RenderSection.Timing]), and the rest of the section after it is headed by its fold
+ * toggle alone, since it starts a page of its own (see [SongUnits.timingStarts]).
+ *
  * A `{chorus}` recall repeats the chorus the parser found for it (`ChordProBlock.ChorusRecall.blocks`), every piece of
  * it and the comments inside it, headed once. In lyrics-only mode the chords go away with the sections that consist
  * of nothing else: tabs and grids say nothing without them, and a line that was only chords would leave a blank behind.
@@ -2372,8 +2474,14 @@ internal sealed interface SectionPart {
 private fun ChordProSong.toRenderSections(
     shouldShowChords: Boolean,
     defaultLabels: DefaultSectionLabels,
+    showsTiming: Boolean,
 ): List<RenderSection> {
     val sections = mutableListOf<RenderSection>()
+    // The rest of a section a change cut is folded under a key of the section it continues, so that switching the
+    // metronome on or off, which decides whether the change cuts it, does not renumber the folds after it.
+    var lastFoldKey: String? = null
+    var timingContinuations = 0
+    var isAfterTiming = false
     // Counted for every section the file has, whether or not this mode shows it, so that lyrics-only mode dropping a
     // tab does not rename the sections after it.
     val foldNameCounts = mutableMapOf<String, Int>()
@@ -2430,9 +2538,14 @@ private fun ChordProSong.toRenderSections(
         return true
     }
 
-    blocks.withNumberedSections(defaultLabels).joinCutSections().forEach { pieces ->
-        when (val block = pieces.firstSection()) {
+    blocks.withNumberedSections(defaultLabels).joinCutSections(joinsTimings = !showsTiming).forEach { pieces ->
+        val block = pieces.firstSection()
+        val continuesAfterTiming = isAfterTiming && block is ChordProBlock.Section && block.isContinuation
+        isAfterTiming = block is ChordProBlock.Timing || (isAfterTiming && block !is ChordProBlock.Section)
+        when (block) {
             is ChordProBlock.Break -> Unit // The column layout makes its own breaks.
+
+            is ChordProBlock.Timing -> if (showsTiming) sections += block.toRenderSection()
 
             is ChordProBlock.Transpose -> block.toRenderSection(shouldShowChords)?.let { sections += it }
 
@@ -2467,7 +2580,11 @@ private fun ChordProSong.toRenderSections(
             is ChordProBlock.Section -> addSection(
                 pieces = pieces,
                 header = if (block.isContinuation) UNNAMED_SECTION_HEADER else block.header(defaultLabels),
-                foldKey = foldNameCounts.nextFoldKey(block.foldName()),
+                foldKey = lastFoldKey?.takeIf { continuesAfterTiming }?.let { "$it$TIMING_CONTINUATION_SEPARATOR${++timingContinuations}" }
+                    ?: foldNameCounts.nextFoldKey(block.foldName()).also {
+                        lastFoldKey = it
+                        timingContinuations = 0
+                    },
             )
         }
     }
@@ -2480,7 +2597,8 @@ private fun ChordProSong.toRenderSections(
  * other block is a group of its own, and so is a comment written between two sections, or a break or a transposition
  * that no continuation follows.
  */
-private fun List<ChordProBlock>.joinCutSections(): List<List<ChordProBlock>> {
+private fun List<ChordProBlock>.joinCutSections(joinsTimings: Boolean = true): List<List<ChordProBlock>> {
+    fun ChordProBlock.isJoinedCut() = isSectionCut() || (joinsTimings && this is ChordProBlock.Timing)
     val groups = mutableListOf<List<ChordProBlock>>()
     var start = 0
     while (start < size) {
@@ -2490,7 +2608,7 @@ private fun List<ChordProBlock>.joinCutSections(): List<List<ChordProBlock>> {
         if (this[end] is ChordProBlock.Section) {
             while (true) {
                 var next = end + 1
-                while (next < size && this[next].isSectionCut()) next++
+                while (next < size && this[next].isJoinedCut()) next++
                 val continuation = getOrNull(next) as? ChordProBlock.Section
                 if (continuation?.isContinuation != true) break
                 end = next
@@ -2498,7 +2616,8 @@ private fun List<ChordProBlock>.joinCutSections(): List<List<ChordProBlock>> {
             // A break or a transposition between the section and a comment it ends with is joined over, as it would be
             // between two of its halves.
             var next = end + 1
-            while (next < size && (this[next] is ChordProBlock.Break || this[next] is ChordProBlock.Transpose || this[next].isCommentPlaced(CommentPlacement.IN_SECTION))) {
+            while (next < size && (this[next] is ChordProBlock.Break || this[next] is ChordProBlock.Transpose ||
+                    (joinsTimings && this[next] is ChordProBlock.Timing) || this[next].isCommentPlaced(CommentPlacement.IN_SECTION))) {
                 if (this[next] is ChordProBlock.Comment) end = next
                 next++
             }
@@ -2522,7 +2641,16 @@ private fun ChordProBlock.Comment.toRenderSection(shouldShowChords: Boolean) =
 private fun ChordProBlock.Transpose.toRenderSection(shouldShowChords: Boolean) =
     key?.takeIf { shouldShowChords && it.isNotBlank() }?.let(RenderSection::KeyChange)
 
-/** Whether the block is one that cuts a section in two without being a section itself (see `ChordProParser`). */
+/** The line naming how the song is played from a change on, read the way the click reads it. */
+private fun ChordProBlock.Timing.toRenderSection() = RenderSection.Timing(
+    tempo = ChordProTempo.parse(tempo)?.let(MetronomePattern::coerceBpm)?.toString(),
+    time = (ChordProTime.parse(time)?.let { (beats, unit) -> TimeSignature(beats, unit) } ?: TimeSignature.COMMON_TIME).toString(),
+)
+
+/**
+ * Whether the block is one that cuts a section in two without being a section itself (see `ChordProParser`), and is
+ * always joined over; a [ChordProBlock.Timing] is one too, joined over only where it is not shown.
+ */
 private fun ChordProBlock.isSectionCut() = this is ChordProBlock.Comment || this is ChordProBlock.Break || this is ChordProBlock.Transpose
 
 /**
@@ -2573,6 +2701,9 @@ internal fun ChordProBlock.Section.header(defaultLabels: DefaultSectionLabels): 
  * part of a song folds, and an empty one of the same size where nothing folds (the editor's preview).
  */
 internal const val UNNAMED_SECTION_HEADER = ""
+
+/** What joins the fold key of a section to the number of the stretch a change of tempo or time cut it into. */
+private const val TIMING_CONTINUATION_SEPARATOR = "~"
 
 /** True when every line that says anything is of the given kind, blank lines inside the run notwithstanding. */
 internal inline fun <reified T : ChordProLine> List<ChordProLine>.areAll() =

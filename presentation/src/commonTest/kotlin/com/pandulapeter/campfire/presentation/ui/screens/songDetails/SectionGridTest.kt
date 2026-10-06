@@ -18,6 +18,31 @@ import kotlin.test.assertTrue
 class SectionGridTest {
 
     @Test
+    fun stretchesLaidOutApartAreRowsOfOneGridEachStartingAPage() {
+        val first = SectionGrid(
+            rows = intArrayOf(0, 0, 1),
+            columns = intArrayOf(0, 1, 0),
+            columnCounts = intArrayOf(2, 1),
+            joinsPrevious = booleanArrayOf(false, true),
+        )
+        val second = SectionGrid(
+            rows = intArrayOf(0, 1),
+            columns = intArrayOf(0, 0),
+            columnCounts = intArrayOf(1, 1),
+            wideRows = booleanArrayOf(true, false),
+            joinsPrevious = booleanArrayOf(true, true),
+        )
+        val grid = listOf(first, second).concatenated()
+        assertContentEquals(intArrayOf(0, 0, 1, 2, 3), grid.rows)
+        assertContentEquals(intArrayOf(0, 1, 0, 0, 0), grid.columns)
+        assertContentEquals(intArrayOf(2, 1, 1, 1), grid.columnCounts)
+        assertContentEquals(booleanArrayOf(false, false, true, false), grid.wideRows)
+        assertContentEquals(booleanArrayOf(false, true, false, true), grid.joinsPrevious)
+        assertEquals(2, grid.pageCount)
+        assertTrue(listOf(first).concatenated() === first)
+    }
+
+    @Test
     fun songThatFitsTheScreenInColumnsStillFitsIt() {
         // The sections of a song of short verses, two long bridges and a few choruses, which three columns read top to
         // bottom hold on one screen while no row of them is ever as tall as its columns would have to be.

@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.metronome
 
+import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.data.model.domain.Song
@@ -84,6 +85,29 @@ class SongTempoTest {
         val song = ChordProSong(metadata = ChordProMetadata(tempo = "96 bpm"), blocks = emptyList())
         assertEquals("110", song.withTempo(110).metadata.tempo)
         assertEquals("96 bpm", song.withTempo(null).metadata.tempo)
+    }
+
+    @Test
+    fun aLaterTempoKeepsItsRatioToTheOpeningOne() {
+        assertEquals(55, sectionBpm(sectionFileBpm = 60, songFileBpm = 120, playedBpm = 110))
+        assertEquals(60, sectionBpm(sectionFileBpm = 60, songFileBpm = 120, playedBpm = 120))
+        assertEquals(110, sectionBpm(sectionFileBpm = null, songFileBpm = 120, playedBpm = 110))
+        assertEquals(60, sectionBpm(sectionFileBpm = 60, songFileBpm = null, playedBpm = 110))
+        assertEquals(300, sectionBpm(sectionFileBpm = 280, songFileBpm = 100, playedBpm = 200))
+        assertEquals(30, sectionBpm(sectionFileBpm = 30, songFileBpm = 120, playedBpm = 60))
+    }
+
+    @Test
+    fun anOverrideScalesTheChangesFurtherDown() {
+        val song = ChordProSong(
+            metadata = ChordProMetadata(tempo = "120"),
+            blocks = listOf(ChordProBlock.Timing(tempo = "60", time = "3/4"), ChordProBlock.Timing(tempo = null, time = "6/8")),
+        )
+        assertEquals(
+            listOf(ChordProBlock.Timing(tempo = "55", time = "3/4"), ChordProBlock.Timing(tempo = "110", time = "6/8")),
+            song.withTempo(110).blocks,
+        )
+        assertEquals(song.blocks, song.withTempo(null).blocks)
     }
 
     private companion object {

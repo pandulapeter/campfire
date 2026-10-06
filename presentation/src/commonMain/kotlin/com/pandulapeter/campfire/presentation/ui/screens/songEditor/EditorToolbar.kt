@@ -217,10 +217,13 @@ private fun contentInsertions(): List<List<EditorInsertion>> = listOf(
  * What the song says about itself: every metadata directive the parser reads and the app then shows somewhere, in
  * the order the header of a file tends to list them.
  *
- * This is also the order they are written in, since none of these goes to the caret: they belong to the header and
- * are put there, see [insertIntoHeader]. A directive that can only be true once — a song has one title and came out
+ * This is also the order they are written in, since none of these goes to the caret on its own: they belong to the
+ * header and are put there, see [insertIntoHeader]. A directive that can only be true once — a song has one title and came out
  * in one year — is offered until the file carries it and then no longer, which leaves the tags, the languages and the
- * links of a song as the three that can be added again and again.
+ * links of a song as the three that can be added again and again. The tempo and the time signature are offered again
+ * too, though they are not repeated: the first goes into the header as the song's own, and every later one at the
+ * caret's line, as a change from there on that the song details screen starts a page with. A `{key}` is not offered
+ * that way, since nothing in the app follows a key change written as one; that is what the key change below is for.
  *
  * `{new_song}` is left out, since it splits an imported file into several songs and the editor is only ever looking
  * at one of them. `{transpose}` is not here either: at the top of a file it shifts every chord away from what the file
@@ -313,10 +316,13 @@ private data class EditorInsertion(
 /**
  * Whether an insertion still has anything to write: a song is only ever in one key and only came out in one year,
  * so the button that says so is offered until the file says it, and then no longer. The ones a song may repeat
- * ([ChordProHeader.repeatableMetadata]) and everything that is part of the song rather than about it stay.
+ * ([ChordProHeader.repeatableMetadata]) or change further down ([ChordProHeader.changeableMetadata]) and everything
+ * that is part of the song rather than about it stay.
  */
-private fun EditorInsertion.isEnabled(declaredMetadata: Set<String>) =
-    metadataName == null || metadataName in ChordProHeader.repeatableMetadata || metadataName !in declaredMetadata
+private fun EditorInsertion.isEnabled(declaredMetadata: Set<String>) = metadataName == null ||
+    metadataName in ChordProHeader.repeatableMetadata ||
+    metadataName in ChordProHeader.changeableMetadata ||
+    metadataName !in declaredMetadata
 
 @Composable
 private fun EditorToolbarButton(
@@ -358,17 +364,29 @@ private fun TextFieldState.insert(insertion: EditorInsertion) {
  * decide here is where the directive goes: a title written into the middle of a verse is valid, invisible in the
  * rendered song, and nowhere near the rest of what the file says about itself. `:chordpro` picks the line, keeping
  * the header in the order it lists metadata in and leaving one the user has arranged otherwise alone; the caret
- * follows it there, since a directive inserted from the toolbar is one the value is about to be typed into.
+ * follows it there, since a directive inserted from the toolbar is one the value is about to be typed into. A tempo or
+ * a time signature the header already names is the one exception, see [ChordProHeader.insertChangeable].
  */
 private fun TextFieldState.insertIntoHeader(insertion: EditorInsertion, metadataName: String) = edit {
-    val header = ChordProHeader.insert(
-        text = originalText.toString(),
-        name = metadataName,
-        prefix = insertion.prefix,
-        suffix = insertion.suffix,
-    )
-    insert(header.offset, header.text)
-    selection = TextRange(header.caretOffset)
+    val header = if (metadataName in ChordProHeader.changeableMetadata) {
+        // The header holds the song's own value and the body its changes, so here the caret does say where it goes.
+        ChordProHeader.insertChangeable(
+            text = originalText.toString(),
+            name = metadataName,
+            caretOffset = minOf(selection.start, selection.end),
+            prefix = insertion.prefix,
+            suffix = insertion.suffix,
+        )
+    } else {
+        ChordProHeader.insert(
+            text = originalText.toString(),
+            name = metadataName,
+            prefix = insertion.prefix,
+            suffix = insertion.suffix,
+        )
+    }
+    replace(header.offset, header.offset + header.replacedLength, header.text)
+    selection = TextRange(header.caretOffset, header.selectionEnd)
 }
 
 /**

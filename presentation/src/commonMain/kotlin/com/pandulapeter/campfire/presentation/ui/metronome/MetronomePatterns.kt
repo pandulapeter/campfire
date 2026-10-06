@@ -20,7 +20,8 @@ import com.pandulapeter.campfire.metronome.api.model.TimeSignature
 
 /**
  * The complete pattern the click plays for [context]: a song's tempo and time signature (4/4 where it names none
- * that reads as one), or the Metronome tab's own, and everything about how it sounds from [settings].
+ * that reads as one), those of the stretch of it the page is on where it changes them further down
+ * ([MetronomeContext.Song.timing]), or the Metronome tab's own, and everything about how it sounds from [settings].
  */
 internal fun metronomePatternOf(
     context: MetronomeContext,
@@ -30,9 +31,11 @@ internal fun metronomePatternOf(
 ): MetronomePattern {
     val (bpm, timeSignature) = when (context) {
         MetronomeContext.Standalone -> settings.bpm to settings.timeSignatureOrDefault
+        // A stretch after a change has the tempo its page shows, which already scales with an override of the opening
+        // one, and the time signature it names; one that names no tempo is played at the song's own.
         is MetronomeContext.Song -> songOf(context.songFileName).let { song ->
-            effectiveTempo(song = song, setlistFileName = context.setlistFileName, tempos = tempos, songFileName = context.songFileName).bpm to
-                song.timeSignatureOrDefault
+            (context.timing?.bpm ?: effectiveTempo(song = song, setlistFileName = context.setlistFileName, tempos = tempos, songFileName = context.songFileName).bpm) to
+                (context.timing?.timeSignature ?: song.timeSignatureOrDefault)
         }
     }
     return MetronomePattern(

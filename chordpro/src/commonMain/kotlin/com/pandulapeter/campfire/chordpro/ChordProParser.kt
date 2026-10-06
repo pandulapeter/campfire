@@ -48,6 +48,7 @@ object ChordProParser {
         val blocks = mutableListOf<ChordProBlock>()
         val section = SectionBuilder(blocks)
         val transposition = Transposition()
+        val timing = TimingChanges()
         ChordProSyntax.splitLines(text).forEach { rawLine ->
             val trimmedLine = rawLine.trim()
             // Inside an environment handed to another program a `#` and a brace are that program's syntax.
@@ -57,7 +58,7 @@ object ChordProParser {
                 if (trimmedLine.isNotEmpty()) transposition.startBody()
                 section.addContent(rawLine, trimmedLine)
             } else {
-                handleDirective(directive, metadata, blocks, section, transposition)
+                handleDirective(directive, metadata, blocks, section, transposition, timing)
             }
         }
         section.close()
@@ -130,8 +131,8 @@ object ChordProParser {
      * reached, all of it — a chorus cut in two by a comment is its first section, the comment and the continuation. A
      * recall standing inside a chorus (in a tab written there) repeats the chorus before that one, since the one it
      * stands in is not over yet. A recall inside the recalled chorus is left out of the copy, which would otherwise
-     * repeat a chorus inside a repeat of itself, and so is a `{transpose}` inside it: a recalled chorus is played at the
-     * transposition of the place it is recalled at.
+     * repeat a chorus inside a repeat of itself, and so are a `{transpose}`, a `{tempo}` and a `{time}` inside it: a
+     * recalled chorus is played at the transposition, the tempo and in the time of the place it is recalled at.
      *
      * The recalls of a song together repeat at most [RECALL_BUDGET_FLOOR] plus [RECALL_BUDGET_PER_WEIGHT] times the
      * weight of what the song writes down itself (see [recallWeight]); a recall past that carries no chorus and is drawn
@@ -150,7 +151,9 @@ object ChordProParser {
             if (block !is ChordProBlock.Section) return@forEachIndexed
             val chorus = pieces
             if (chorus != null && block.isContinuation) {
-                chorus += blocks.subList(lastPieceIndex + 1, index).filterNot { it is ChordProBlock.ChorusRecall || it is ChordProBlock.Transpose }
+                chorus += blocks.subList(lastPieceIndex + 1, index).filterNot {
+                    it is ChordProBlock.ChorusRecall || it is ChordProBlock.Transpose || it is ChordProBlock.Timing
+                }
                 chorus += block
             } else {
                 chorus?.let { choruses += recalledChorus(lastPieceIndex, it + blocks.commentsEnding(lastPieceIndex)) }
@@ -198,7 +201,10 @@ object ChordProParser {
 
     /** The comments the section whose last piece is at [index] ends with, which are part of the chorus a recall repeats. */
     private fun List<ChordProBlock>.commentsEnding(index: Int) = subList(index + 1, size)
-        .takeWhile { it is ChordProBlock.Break || it is ChordProBlock.Transpose || (it as? ChordProBlock.Comment)?.placement == CommentPlacement.IN_SECTION }
+        .takeWhile {
+            it is ChordProBlock.Break || it is ChordProBlock.Transpose || it is ChordProBlock.Timing ||
+                (it as? ChordProBlock.Comment)?.placement == CommentPlacement.IN_SECTION
+        }
         .filterIsInstance<ChordProBlock.Comment>()
 
     /** Only scans directive lines, so that it is cheap enough for a caller that has no interest in the body. */
@@ -297,6 +303,7 @@ object ChordProParser {
         blocks: MutableList<ChordProBlock>,
         section: SectionBuilder,
         transposition: Transposition,
+        timing: TimingChanges,
     ) {
         val name = directive.name
         if (ChordProSyntax.hasSelectorSuffix(name)) return
@@ -342,7 +349,55 @@ object ChordProParser {
             "highlight" -> section.addBlock(ChordProBlock.Comment(directive.value.orEmpty().trim(), CommentStyle.PLAIN))
             "new_page", "np", "new_physical_page", "npp", "column_break", "colb" -> section.addBlock(ChordProBlock.Break)
             "new_song", "ns" -> Unit // Splitting is ChordProSplitter's job.
-            else -> metadata.consume(directive, isInBody = transposition.isInBody)
+            else -> {
+                // Before the metadata reads it, since whether it is a change depends on whether it becomes the song's own.
+                if (transposition.isInBody) timing.consume(directive, metadata)?.let { change -> addTiming(change, blocks, section) }
+                metadata.consume(directive, isInBody = transposition.isInBody)
+            }
+        }
+    }
+
+    /**
+     * A change with no line of the song between it and the one before is the same place in the song: a `{tempo}`
+     * directly followed by a `{time}` is one change, which keeps a viewer from starting a stretch that holds nothing.
+     */
+    private fun addTiming(change: ChordProBlock.Timing, blocks: MutableList<ChordProBlock>, section: SectionBuilder) {
+        if (blocks.lastOrNull() is ChordProBlock.Timing && !section.hasContentLine) blocks[blocks.lastIndex] = change else section.addBlock(change)
+    }
+
+    /**
+     * The tempo and the time signature a song is played in from where the parser stands, which a `{tempo}` or a
+     * `{time}` in the body changes (see [ChordProBlock.Timing]). Not every one does: an empty or unreadable value says
+     * nothing, one that restates the value in force (`{time: C}` after `4/4`) changes nothing, and the line the song
+     * takes its own value from — the first readable one of a song whose header has no line of that field — is no change
+     * but the song's opening value, which is how a file that writes its metadata at the bottom is read.
+     */
+    private class TimingChanges {
+        private var tempo: String? = null
+        private var time: String? = null
+
+        /** The change [directive] makes, or null where it makes none; called before [metadata] reads it. */
+        fun consume(directive: ChordProSyntax.Directive, metadata: MetadataBuilder): ChordProBlock.Timing? {
+            val standard = ChordProSyntax.standardMeta(directive) ?: directive
+            val written = standard.value?.trim().orEmpty()
+            val inForceTempo = tempo ?: metadata.tempo.value?.takeIf { ChordProTempo.parse(it) != null }
+            val inForceTime = time ?: metadata.time.value?.takeIf { ChordProTime.parse(it) != null }
+            when (standard.name) {
+                TEMPO -> {
+                    val bpm = ChordProTempo.parse(written) ?: return null
+                    if (metadata.tempo.takes(written, isInBody = true) || bpm == ChordProTempo.parse(inForceTempo)) return null
+                    tempo = written
+                }
+
+                TIME -> {
+                    val signature = ChordProTime.parse(written) ?: return null
+                    if (metadata.time.takes(written, isInBody = true) || signature == ChordProTime.parse(inForceTime)) return null
+                    time = written
+                }
+
+                else -> return null
+            }
+            return ChordProBlock.Timing(tempo = tempo ?: inForceTempo, time = time ?: inForceTime)
         }
     }
 
@@ -427,7 +482,8 @@ object ChordProParser {
          * Whether [lines] holds anything but blank lines, kept as they are added: an environment keeps its blank lines,
          * and scanning them again for every block that follows would make a file of blanks and comments quadratic.
          */
-        private var hasContentLine = false
+        var hasContentLine = false
+            private set
 
         /**
          * The `{comment}` a legacy heading section was opened by, which is what is left of it if no line ever
@@ -658,11 +714,16 @@ object ChordProParser {
         private var hasHeaderLine = false
 
         fun consume(written: String, isInBody: Boolean) {
-            if (isInBody && hasHeaderLine) return
             if (!isInBody) hasHeaderLine = true
+            if (takes(written, isInBody)) value = written
+        }
+
+        /** Whether [written] would become the song's own value, which makes it no change from where it stands. */
+        fun takes(written: String, isInBody: Boolean): Boolean {
+            if (isInBody && hasHeaderLine) return false
             val current = value
             // A value the song cannot read is as good as missing (the editor marks it so), and the next readable one stands in.
-            if (current.isNullOrEmpty() || (!isReadable(current) && isReadable(written))) value = written
+            return current.isNullOrEmpty() || (!isReadable(current) && isReadable(written))
         }
     }
 
@@ -678,8 +739,8 @@ object ChordProParser {
         private var coverArt: String? = null
         private val key = ChangeableValue()
         private var capo: Int? = null
-        private val tempo = ChangeableValue { ChordProTempo.parse(it) != null }
-        private val time = ChangeableValue { ChordProTime.parse(it) != null }
+        val tempo = ChangeableValue { ChordProTempo.parse(it) != null }
+        val time = ChangeableValue { ChordProTime.parse(it) != null }
         private var duration: String? = null
         private val tags = mutableListOf<String>()
         private val tagKeys = mutableSetOf<String>()
@@ -777,6 +838,8 @@ object ChordProParser {
     private const val GRID = "grid"
     private const val GERMAN_LETTER = 'H'
     private const val TRANSPOSE = "transpose"
+    private const val TEMPO = "tempo"
+    private const val TIME = "time"
     private val SPELLING_SUFFIXES = setOf('s', 'f')
 
     /**

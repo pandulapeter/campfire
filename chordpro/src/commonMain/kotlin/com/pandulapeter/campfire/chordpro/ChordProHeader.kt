@@ -33,6 +33,13 @@ object ChordProHeader {
     val repeatableMetadata = setOf(ChordProSyntax.TAG_NAME, ChordProSyntax.LANGUAGE_NAME, ChordProSyntax.LINK_NAME)
 
     /**
+     * The metadata directives a song may say again further down, each later one a change from where it stands rather
+     * than a second value (see `ChordProBlock.Timing`): the header's line is the song's own value, and every line of the
+     * body is a change. An editor keeps offering them, through [insertChangeable].
+     */
+    val changeableMetadata = setOf("tempo", "time")
+
+    /**
      * The metadata directives [text] already declares, each under the one name the app knows it by (`{t}` and
      * `{title}` are both `title`, `{meta: language en}` is `language`), and wherever in the file they stand.
      *
@@ -118,12 +125,57 @@ object ChordProHeader {
     }
 
     /**
-     * @param offset The character offset the [text] is inserted at, which is always the start of a line.
-     * @param caretOffset Where the caret belongs once it has been, which is between the two halves of the directive.
+     * [insert] for one of the [changeableMetadata], which the header holds once and the body as often as the song
+     * changes it, so where it goes depends on what the header says and on [caretOffset]:
+     * - a header with no line of [name] gets one by [insert], since the first value a song is given is its own;
+     * - an empty header line of it (one the Song defaults sheet cleared) is the line to type into, and becomes
+     *   [prefix] and [suffix] with the caret between them;
+     * - a header that names a value and a caret in the body get a line of their own at the start of the caret's line,
+     *   which never splits a line of lyrics and puts the change before what it changes;
+     * - a header that names a value and a caret in the header, or a song with no body yet, get nothing written and the
+     *   header line's value selected, since a second line in the header would be read past rather than as a change.
+     */
+    fun insertChangeable(text: String, name: String, caretOffset: Int, prefix: String, suffix: String): Insertion {
+        val lines = ChordProSyntax.splitLines(text)
+        val bodyStart = ChordProSyntax.bodyStartIndex(lines)
+        val headerIndex = (0 until bodyStart).firstOrNull { index ->
+            ChordProSyntax.matchDirective(lines[index].trim())?.let(ChordProSyntax::metadataKind) == name
+        } ?: return insert(text, name, prefix, suffix)
+        val lineStarts = ChordProSyntax.lineStartOffsets(text)
+        val headerLine = lines[headerIndex]
+        val headerLineStart = lineStarts[headerIndex]
+        val directive = ChordProSyntax.matchDirective(headerLine.trim())!!
+        val value = (ChordProSyntax.standardMeta(directive) ?: directive).value.orEmpty()
+        if (value.isEmpty()) {
+            return Insertion(
+                offset = headerLineStart,
+                text = prefix + suffix,
+                caretOffset = headerLineStart + prefix.length,
+                replacedLength = headerLine.length,
+            )
+        }
+        val caretLine = lineStarts.indexOfLast { it <= caretOffset }
+        if (bodyStart >= lines.size || caretLine < bodyStart) {
+            val valueStart = headerLineStart + headerLine.lastIndexOf(value, headerLine.lastIndexOf('}'))
+            return Insertion(offset = valueStart, text = "", caretOffset = valueStart, selectionEnd = valueStart + value.length)
+        }
+        // A caret past the final line break is on a line of its own already, the one after the last.
+        val offset = if (caretOffset >= text.length && ChordProSyntax.endsWithLineBreak(text)) text.length else lineStarts[caretLine]
+        return Insertion(offset = offset, text = "$prefix$suffix${ChordProSyntax.lineSeparatorOf(text)}", caretOffset = offset + prefix.length)
+    }
+
+    /**
+     * @param offset The character offset the [text] is inserted at.
+     * @param caretOffset Where the caret belongs once it has been, which is between the two halves of the directive,
+     *   or the start of what is selected.
+     * @param replacedLength How much of the text at [offset] the [text] takes the place of.
+     * @param selectionEnd The end of what is selected once it has been, which is [caretOffset] for no selection.
      */
     data class Insertion(
         val offset: Int,
         val text: String,
         val caretOffset: Int,
+        val replacedLength: Int = 0,
+        val selectionEnd: Int = caretOffset,
     )
 }

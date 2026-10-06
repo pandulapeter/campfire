@@ -39,6 +39,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.math.abs
 import kotlin.math.max
+import kotlin.math.roundToInt
 import kotlin.math.sign
 
 /**
@@ -58,6 +59,9 @@ import kotlin.math.sign
  * does not fit the screen can bring a line to the top of it rather than half of one. [lineBottoms] are where each of
  * those pieces ends and [lineSections] the section each belongs to, which together name a line in terms another layout
  * of the song still has (see [LineAnchor]).
+ *
+ * [timingSections] are the sections that change the tempo or the time signature the song is played in from there on,
+ * ascending, each of which starts a stop of its own wherever the song is stepped by rows (see [timingIndexAt]).
  */
 internal data class SongRows(
     val restingOffsets: List<Int> = emptyList(),
@@ -68,6 +72,7 @@ internal data class SongRows(
     val lineTops: List<Int> = emptyList(),
     val lineBottoms: List<Int> = emptyList(),
     val lineSections: List<Int> = emptyList(),
+    val timingSections: List<Int> = emptyList(),
 ) {
     /**
      * These rows in the coordinates of a scroll that holds [topPadding] above them: everything that much further down,
@@ -93,6 +98,20 @@ internal data class SongRows(
 
     /** Whether the three lists that describe the pieces of a single column describe the same pieces. */
     val hasLines get() = lineTops.isNotEmpty() && lineBottoms.size == lineTops.size && lineSections.size == lineTops.size
+}
+
+/**
+ * Which change of tempo or time signature ([SongRows.timingSections]) a scroll at [offset] reads the song under: the
+ * last one at or before the section the stop at or above it starts with, -1 before the first, which is the song's
+ * opening. A scroll at the end of the song, [maxValue], is at its last stop, which the end of a song stepped by its
+ * sections may never bring to the top of the screen.
+ */
+internal fun timingIndexAt(offset: Int, rows: SongRows, maxValue: Int = Int.MAX_VALUE): Int {
+    if (rows.timingSections.isEmpty() || rows.stepOffsets.isEmpty() || rows.stepSections.size != rows.stepOffsets.size) return -1
+    val reach = if (offset >= maxValue - POSITION_TOLERANCE) Float.MAX_VALUE else offset + POSITION_TOLERANCE
+    val stop = rows.stepOffsets.indexOfLast { it <= reach }.coerceAtLeast(0)
+    val section = rows.stepSections[stop]
+    return rows.timingSections.indexOfLast { it <= section }
 }
 
 /**
@@ -372,6 +391,10 @@ internal class RowSnapFlingBehavior(
     var rows by mutableStateOf(SongRows())
         private set
 
+    /** Where the fling being animated comes to rest, null while none is: where the reader is headed, before they are there. */
+    var flingTarget by mutableStateOf<Int?>(null)
+        private set
+
     /** What of the viewport the song is read through, which the page writes whenever its insets or text size change. */
     var readingWindow by mutableStateOf(ReadingWindow())
 
@@ -425,6 +448,15 @@ internal class RowSnapFlingBehavior(
             viewportHeight = scrollState.viewportSize,
             maxValue = scrollState.maxValue,
         )
+        flingTarget = target.roundToInt()
+        try {
+            return performFlingTo(start, target, decayTarget, initialVelocity)
+        } finally {
+            flingTarget = null
+        }
+    }
+
+    private suspend fun ScrollScope.performFlingTo(start: Float, target: Float, decayTarget: Float, initialVelocity: Float): Float {
         if (target == decayTarget) return with(defaultFling) { performFling(initialVelocity) }
         val distance = target - start
         if (distance == 0f) return 0f
@@ -644,14 +676,22 @@ internal class SongStepper(
 
     // Where the step being animated is headed, which the next press is counted from: the step is slow enough to be
     // followed, and a pedal pressed twice in quick succession means two steps from where the song was, not one step and
-    // a bit from wherever the first had got to.
-    private var stepTarget: Int? = null
+    // a bit from wherever the first had got to. Snapshot state, since it is also where the reader is headed (see
+    // [headedOffset]).
+    private var stepTarget by mutableStateOf<Int?>(null)
 
     /** Whether the song is being scrolled by a step rather than by a finger or a fling. */
     val isStepping get() = stepTarget != null
 
     /** Where the next step is counted from: where the one being animated is headed, or where the song is. */
     val origin get() = stepTarget ?: scrollState.value
+
+    /**
+     * Where the reader is headed: where a step or a fling being animated comes to rest, or where the song is once it is
+     * at rest. Null while a finger is still dragging it, or something else moves it, which says nothing yet about where
+     * it will be read.
+     */
+    val headedOffset get() = stepTarget ?: flingBehavior.flingTarget ?: scrollState.value.takeUnless { scrollState.isScrollInProgress }
 
     /** Whether there is anything to step to in [direction] from [from], or from [origin] where it is null. */
     fun canStep(direction: Int, from: Int? = null) = when {

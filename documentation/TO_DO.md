@@ -8,37 +8,37 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 # To do
-## Bugs / issues
+## Short-term (in this version)
+### Bugs / issues
 - No way to enter BPM using the keyboard
-- Per-section tempo support: documentation/plans/per-section-tempo.md
 
-## Improvements
+### Improvements
+- Multi-select for songs: documentation/plans/multi-select.md
+- Duplicate song button
+
+## Mid-term (in the next versions)
+- Haptic effects, especially for the fast scroller
+- Add support for Latin and Nashville notations
+- Chord diagrams (guitar, ukulele, keyboard) - user library, variations
+- Tuner: documentation/plans/tuner.md
+- Comments in setlists (between songs)
+- Simplify adding comments / annotations to songs
+- Optional close confirmation dialog on relevant platforms
+- Improve test coverage
+- Refactor, improve architecture, each top-level Composable should be defined in a separate file
+
+## Long-term
 - Rename master branch to main
 - Onboarding: integrate feature toggle-presets (singers, drummers, etc)
 - Settings: promote Dropbox sign-in
-
-## Features
-- Comments in setlists (between songs)
-- Multi-select songs for bulk export or bulk edit (assign tags, languages, setlists) - rearrange mode in Setlists could be used for UX inspiration
-- Haptic effects, especially for the fast scroller
-- Duplicate song button
-
-## Ideas
-- Tuner: documentation/plans/tuner.md
-- Chord diagrams (guitar, ukulele, keyboard) - user library, variations
-- Global sync status display ?
-- Fast scroller on the song details screen ?
-- Simplify adding comments / annotations
-- Optional close confirmation dialog on relevant platforms
-- Add support for Latin and Nashville notations
-- Grid formatting could be improved
-- External monitor support for lyrics only...? Maybe as a new window on desktop, lyric projection via AirPlay / Chromecast, etc
 - Streaming zip writer on all platforms
+
+## Ideas (not detailed enough yet)
+- Global sync status display
+- Fast scroller on the song details screen
+- External monitor support for lyrics only...? Maybe as a new window on desktop, lyric projection via AirPlay / Chromecast, etc
 - Backing tracks?
-- First time user experience tutorial ?
 - Native iOS, macOS, feel (overscroll, touch feedback, fonts, icons, colors, themes - Liquid Glass)
 
 ## Other
 - Test support with external control devices
-- Improve test coverage
-- Each top-level Composable should be defined in a separate file

@@ -126,6 +126,48 @@ class ChordProPrettifierTest {
     }
 
     @Test
+    fun `the song's own tempo and time in the body move into the header`() {
+        val raw = "{title: Song}\n\n[C]Words\n{tempo: fast}\n{meta: tempo 90}\n[G]More\n{time: 3/4}\n{tempo: 120}\n"
+        assertEquals("{title: Song}\n{meta: tempo 90}\n{time: 3/4}\n\n[C]Words\n{tempo: fast}\n[G]More\n{tempo: 120}\n", ChordProPrettifier.prettify(raw))
+        assertEquals(ChordProParser.parse(raw), ChordProParser.parse(ChordProPrettifier.prettify(raw)))
+    }
+
+    @Test
+    fun `a header line of the field keeps every body line where it stands`() {
+        listOf(
+            "{title: Song}\n{tempo}\n\n[C]Words\n\n{tempo: 90}\n[G]More\n",
+            "{title: Song}\n{tempo: 120}\n\n{start_of_abc}\n{tempo: 90}\n{end_of_abc}\n",
+        ).forEach { raw -> assertEquals(raw, ChordProPrettifier.prettify(raw), raw) }
+    }
+
+    @Test
+    fun `changes with only blank lines between them are one group heading what follows`() {
+        val raw = "{tempo: 120}\n{time: 4/4}\n{sov}\n[C]a\n{eov}\n{time: 3/4}\n\n\n{tempo: 90}\n\n{soc}\n[C]b\n{eoc}\n"
+        val formatted = ChordProPrettifier.prettify(raw)
+
+        assertEquals("{tempo: 120}\n{time: 4/4}\n\n{sov}\n[C]a\n{eov}\n\n{tempo: 90}\n{time: 3/4}\n{soc}\n[C]b\n{eoc}\n", formatted)
+        assertEquals(ChordProParser.parse(raw), ChordProParser.parse(formatted))
+        assertEquals(formatted, ChordProPrettifier.prettify(formatted))
+    }
+
+    @Test
+    fun `a change inside a paragraph stays inside it`() {
+        val raw = "{tempo: 120}\n\n[C]a\n{tempo: 90}\n[C]b\n"
+        val formatted = ChordProPrettifier.prettify(raw)
+
+        assertEquals(raw, formatted)
+        assertEquals(ChordProParser.parse(raw), ChordProParser.parse(formatted))
+    }
+
+    @Test
+    fun `the caret stays on a tempo moved into the header`() {
+        val before = "{title: Song}\n\n[C]Words\n{tempo: 90}\n"
+        val after = ChordProPrettifier.prettify(before)
+
+        assertEquals(after.indexOf("90"), ChordProPrettifier.prettifiedOffset(before, after, before.indexOf("90")))
+    }
+
+    @Test
     fun `formatting maps the caret to its lyric line and removed blanks to the next line`() {
         val before = "{artist: Singer}\n{title: Song}\n\n\nHello world"
         val after = ChordProPrettifier.prettify(before)

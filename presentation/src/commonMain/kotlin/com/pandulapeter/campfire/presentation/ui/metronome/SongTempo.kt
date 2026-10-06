@@ -9,9 +9,12 @@
  */
 package com.pandulapeter.campfire.presentation.ui.metronome
 
+import com.pandulapeter.campfire.chordpro.ChordProTempo
+import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
+import kotlin.math.roundToInt
 
 /**
  * Where a song's tempo override is kept, folded into one lookup the way the transpositions are: a song opened from a
@@ -92,5 +95,31 @@ internal fun effectiveTempo(song: Song?, setlistFileName: String?, tempos: Tempo
     }
 }
 
-/** The song with its tempo line reading [bpm], where there is one: what the page and the PDF show for an override. */
-internal fun ChordProSong.withTempo(bpm: Int?) = if (bpm == null) this else copy(metadata = metadata.copy(tempo = bpm.toString()))
+/**
+ * The song with its tempo line reading [bpm], where there is one, and every change of tempo further down
+ * ([ChordProBlock.Timing]) scaled with it by [sectionBpm]: what the page and the PDF show for an override.
+ */
+internal fun ChordProSong.withTempo(bpm: Int?): ChordProSong {
+    if (bpm == null) return this
+    val songFileBpm = ChordProTempo.parse(metadata.tempo)
+    return copy(
+        metadata = metadata.copy(tempo = bpm.toString()),
+        blocks = blocks.map { block ->
+            if (block is ChordProBlock.Timing) block.copy(tempo = sectionBpm(ChordProTempo.parse(block.tempo), songFileBpm, bpm).toString()) else block
+        },
+    )
+}
+
+/**
+ * The tempo a stretch of a song after a change of tempo is played at. An override holds one number, the song's opening
+ * tempo, so a later tempo keeps its ratio to the file's opening one ([songFileBpm]) at the [playedBpm] the song opens
+ * with: a file going from 120 to 60, played at 110, goes to 55. A stretch that names no tempo of its own is played at
+ * [playedBpm]; a song whose file names no opening tempo has nothing to scale by, so its later ones are played as written.
+ */
+internal fun sectionBpm(sectionFileBpm: Int?, songFileBpm: Int?, playedBpm: Int): Int = MetronomePattern.coerceBpm(
+    when {
+        sectionFileBpm == null -> playedBpm
+        songFileBpm == null || songFileBpm == playedBpm -> sectionFileBpm
+        else -> (sectionFileBpm.toDouble() * playedBpm / songFileBpm).roundToInt()
+    },
+)

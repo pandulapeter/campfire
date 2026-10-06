@@ -73,6 +73,14 @@ sealed interface ChordProBlock {
      */
     data class Transpose(val semitones: Int, val key: String? = null) : ChordProBlock
 
+    /**
+     * `{tempo}` or `{time}` after the song has begun: from here on it is played at [tempo] in [time], both as the file
+     * writes them and both complete, the one that did not change carried over, null where the song never named one.
+     * Complete rather than a change of one value, so that a reader of any one stretch needs no walk back to the start.
+     * Like [Transpose] it cuts the section it stands in.
+     */
+    data class Timing(val tempo: String?, val time: String?) : ChordProBlock
+
     /** {column_break} / {new_page} and friends: a hint that the layout may break here. */
     data object Break : ChordProBlock
 }

@@ -186,6 +186,57 @@ class ChordProHeaderTest {
         assertEquals(setOf("title"), cache.declaredMetadataOf("{title: T}\nyear: 1970}"))
     }
 
+    @Test
+    fun `a changeable directive the header lacks is written into the header wherever the caret is`() {
+        val text = "{title: T}\n\n[C]The first line"
+
+        assertEquals("{title: T}\n{tempo: }\n\n[C]The first line" to (19..19), text.insertChangeable("tempo", caret = text.length))
+    }
+
+    @Test
+    fun `an empty header line of a changeable directive is the one typed into`() {
+        val text = "{title: T}\n{tempo}\n\n[C]The first line"
+
+        assertEquals("{title: T}\n{tempo: }\n\n[C]The first line" to (19..19), text.insertChangeable("tempo", caret = text.length))
+    }
+
+    @Test
+    fun `a changeable directive is written above the caret's line in the body`() {
+        val text = "{tempo: 120}\n\n[C]The first line\n[G]The second line"
+
+        assertEquals(
+            "{tempo: 120}\n\n[C]The first line\n{tempo: }\n[G]The second line" to (40..40),
+            text.insertChangeable("tempo", caret = text.indexOf("second")),
+        )
+        assertEquals(
+            "{tempo: 120}\n\n[C]The first line\n[G]The second line\n{time: }\n" to (58..58),
+            "$text\n".let { it.insertChangeable("time", caret = it.length, header = "{time: 4/4}\n") },
+        )
+    }
+
+    @Test
+    fun `a changeable directive with the caret in the header selects the header's value`() {
+        val text = "{meta: tempo 120}\n\n[C]The first line"
+
+        assertEquals(text to (13..16), text.insertChangeable("tempo", caret = 3))
+        assertEquals("{tempo: 120}" to (8..11), "{tempo: 120}".insertChangeable("tempo", caret = 12))
+    }
+
+    @Test
+    fun `a body line of a changeable directive does not draw a new one out of the header`() {
+        val text = "{title: T}\n\n[C]a\n{tempo: 90}\n[C]b"
+
+        assertEquals("{title: T}\n{tempo: }\n\n[C]a\n{tempo: 90}\n[C]b", text.insert("tempo"))
+    }
+
+    /** The text after the insertion, and the selection after it as a range of offsets, its end exclusive as in a field. */
+    private fun String.insertChangeable(name: String, caret: Int, header: String = ""): Pair<String, IntRange> {
+        val text = header + this
+        val insertion = ChordProHeader.insertChangeable(text, name = name, caretOffset = header.length + caret, prefix = "{$name: ", suffix = "}")
+        val result = text.replaceRange(insertion.offset, insertion.offset + insertion.replacedLength, insertion.text).removePrefix(header)
+        return result to (insertion.caretOffset - header.length..insertion.selectionEnd - header.length)
+    }
+
     private fun String.insert(name: String, prefix: String = "{$name: ", suffix: String = "}"): String {
         val insertion = ChordProHeader.insert(this, name = name, prefix = prefix, suffix = suffix)
         return replaceRange(insertion.offset, insertion.offset, insertion.text)

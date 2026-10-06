@@ -47,6 +47,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -93,6 +95,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_metadata_ed
 import com.pandulapeter.campfire.presentation.resources.song_details_song_info
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo
 import com.pandulapeter.campfire.presentation.resources.song_details_time
+import com.pandulapeter.campfire.presentation.resources.song_details_timing
 import com.pandulapeter.campfire.presentation.resources.song_details_transposition
 import com.pandulapeter.campfire.presentation.resources.song_details_year
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_capo
@@ -242,22 +245,56 @@ private fun SongPlayingMetadata(
     metadata: ChordProMetadata,
     readsCapoAndTime: Boolean,
     style: TextStyle,
-) {
-    // Only the key and the capo are in the accent color, since that is the color of the chords, which are what those two
-    // decide; the tempo and the time signature are the click's.
-    val accentColor = LocalSecondAccentColor.current
-    val values = listOfNotNull(
+) = SongPlayingValues(
+    modifier = modifier,
+    values = listOfNotNull(
         metadata.key?.takeIf { it.isNotBlank() }?.let { it to true },
         metadata.capo?.takeIf { readsCapoAndTime || it != 0 }?.let { stringResource(Res.string.song_details_capo, it) to true },
         metadata.tempo?.takeIf { it.isNotBlank() }?.let { textResource(Res.string.song_details_tempo, it) to false },
         metadata.time?.takeIf { it.isNotBlank() }?.let { textResource(Res.string.song_details_time, it) to false },
+    ),
+    style = style,
+)
+
+/**
+ * How the song is played from a change of tempo or time signature on, set as the line of the song's first section is
+ * in read only mode, since it is that line again for the rest of the song: read only, as the click plays it.
+ */
+@Composable
+internal fun SongTimingLine(
+    modifier: Modifier = Modifier,
+    timing: RenderSection.Timing,
+    style: TextStyle,
+) {
+    val values = listOfNotNull(
+        timing.tempo?.let { textResource(Res.string.song_details_tempo, it) to false },
+        textResource(Res.string.song_details_time, timing.time) to false,
     )
+    val description = textResource(Res.string.song_details_timing, values.joinToString(PLAYING_VALUE_SEPARATOR) { it.first })
+    SongPlayingValues(
+        modifier = modifier.semantics { contentDescription = description },
+        values = values,
+        style = style,
+    )
+}
+
+/**
+ * Values of how the song is played on one line, the ones marked in the accent color: that is the color of the chords,
+ * which are what the key and the capo decide, while the tempo and the time signature are the click's.
+ */
+@Composable
+private fun SongPlayingValues(
+    modifier: Modifier = Modifier,
+    values: List<Pair<String, Boolean>>,
+    style: TextStyle,
+) {
+    val accentColor = LocalSecondAccentColor.current
     if (values.isNotEmpty()) {
         Text(
             modifier = modifier.padding(horizontal = 12.dp),
             text = buildAnnotatedString {
                 values.forEachIndexed { index, (value, isAccented) ->
-                    if (index > 0) append("  •  ")
+                    if (index > 0) append(PLAYING_VALUE_SEPARATOR)
                     if (isAccented) withStyle(SpanStyle(color = accentColor)) { append(value) } else append(value)
                 }
             },
@@ -265,6 +302,8 @@ private fun SongPlayingMetadata(
         )
     }
 }
+
+private const val PLAYING_VALUE_SEPARATOR = "  •  "
 
 /**
  * The four things that decide how the song is played, each next to the control that sets it: the transposition, which

@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.chordpro
 
 import com.pandulapeter.campfire.chordpro.ChordProMetadataFields.Field
+import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertSame
@@ -119,6 +120,21 @@ class ChordProMetadataFieldsTest {
             "{title: T}\n{time: 4/4}\n{tempo: 100}\n[C]La\n{time: 3/4}\n{tempo: 140}\n[G]La",
             ChordProMetadataFields.set(text, mapOf(Field.TEMPO to "100")),
         )
+    }
+
+    @Test
+    fun `the song defaults change the opening values and every change in the body stays one`() {
+        val text = "{title: T}\n{tempo: 120}\n{time: 4/4}\n\n[C]La\n{tempo: 90}\n{time: 3/4}\n[G]La"
+        val changes = listOf(ChordProBlock.Timing(tempo = "90", time = "3/4"))
+
+        val edited = ChordProMetadataFields.set(text, mapOf(Field.TEMPO to "100", Field.TIME to "6/8"))
+        assertEquals("100", ChordProParser.parse(edited).metadata.tempo)
+        assertEquals(changes, ChordProParser.parse(edited).blocks.filterIsInstance<ChordProBlock.Timing>())
+
+        val cleared = ChordProMetadataFields.set(text, mapOf(Field.TEMPO to null))
+        assertEquals("{title: T}\n{tempo: }\n{time: 4/4}\n\n[C]La\n{tempo: 90}\n{time: 3/4}\n[G]La", cleared)
+        assertEquals("", ChordProParser.parse(cleared).metadata.tempo)
+        assertEquals(changes, ChordProParser.parse(cleared).blocks.filterIsInstance<ChordProBlock.Timing>())
     }
 
     @Test

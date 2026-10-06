@@ -163,6 +163,24 @@ object ChordSheetConverter {
         return null
     }
 
+    /**
+     * The tempo and the time signature a line names, where it names nothing else: `Tempo: 90`, or the row
+     * `Tempo: 90   Time: 3/4` Campfire's PDF prints a change as. Labelled with a colon and with a value of the field's
+     * shape, since anywhere in a song a line starting with "Time" is far more likely sung than credited.
+     */
+    private fun timingChange(text: String): List<Pair<String, String>>? {
+        val parts = text.trim().split(labelGap)
+        return parts.mapNotNull { part -> metadata.matchEntire(part)?.let { metadata(part) } }.takeIf { entries ->
+            entries.size == parts.size && entries.all { (name, value) ->
+                when (name) {
+                    "tempo" -> value.first().isDigit()
+                    "time" -> timeSignature.matches(value)
+                    else -> false
+                }
+            }
+        }
+    }
+
     private fun expandLabels(lines: List<Rendered>): List<Rendered> = lines.flatMap { line ->
         val colon = line.text.indexOf(':')
         if (colon > 0 && section(line.text.substring(0, colon)) != null) {
@@ -220,7 +238,7 @@ object ChordSheetConverter {
                 tab.matches(line.text.trim()) && (lines.getOrNull(index - 1)?.let { tab.matches(it.text.trim()) } == true ||
                     lines.getOrNull(index + 1)?.let { tab.matches(it.text.trim()) } == true) -> Kind.TAB
                 section(line.text) != null -> Kind.SECTION
-                index < 15 && metadata(line.text) != null -> Kind.METADATA
+                index < 15 && metadata(line.text) != null || timingChange(line.text) != null -> Kind.METADATA
                 candidates[index] != null && (candidates[index]!!.count { chord(it.text) } > 1 ||
                     candidates[index]!!.count { chord(it.text) } == 1 &&
                     candidates[index]!!.filter { chord(it.text) }.all { it.text.first().isUpperCase() } &&
@@ -237,9 +255,18 @@ object ChordSheetConverter {
         }
         val header = mutableListOf<String>()
         val omitted = mutableSetOf<Int>()
+        // The first tempo and time signature are the song's; a later one is a change from where it stands, which is
+        // written there, as Campfire's own PDF prints one.
+        val changes = mutableMapOf<Int, List<String>>()
+        val declared = mutableSetOf<String>()
         kinds.forEachIndexed { index, kind -> if (kind == Kind.METADATA) {
-            val (name, value) = metadata(lines[index].text)!!
-            if (value.isNotBlank()) header += "{$name: ${headerValue(value)}}"
+            (timingChange(lines[index].text) ?: listOf(metadata(lines[index].text)!!)).forEach { (name, value) ->
+                when {
+                    value.isBlank() -> Unit
+                    name in timingNames && !declared.add(name) -> changes[index] = changes[index].orEmpty() + "{$name: ${headerValue(value)}}"
+                    else -> header += "{$name: ${headerValue(value)}}"
+                }
+            }
             omitted += index
         } }
         val first = kinds.indexOfFirst { it != Kind.BLANK }
@@ -270,14 +297,20 @@ object ChordSheetConverter {
         var inTab = false
         fun closeTab() { if (inTab) { output += "{end_of_tab}"; inTab = false } }
         fun closeSection() { environment?.let { output += "{end_of_$it}" }; environment = null }
+        val pendingChanges = mutableListOf<String>()
+        fun flushChanges() { output += pendingChanges; pendingChanges.clear() }
         var index = 0
         while (index < lines.size) {
+            changes[index]?.let { pendingChanges += it }
             if (index in omitted) { index++; continue }
             val line = lines[index]
             if (kinds[index] != Kind.TAB) closeTab()
+            // A change before a heading belongs to the section it heads rather than to the end of the one before.
+            if (kinds[index] != Kind.SECTION && kinds[index] != Kind.BLANK) flushChanges()
             when (kinds[index]) {
                 Kind.SECTION -> {
                     closeSection()
+                    flushChanges()
                     val label = headerValue(headingLabel(line.text))
                     val type = sectionType(line.text)
                     val next = ((index + 1)..lines.lastIndex).firstOrNull { kinds[it] != Kind.BLANK }
@@ -305,6 +338,7 @@ object ChordSheetConverter {
         }
         closeTab()
         closeSection()
+        flushChanges()
         return collapse(header + if (header.isEmpty()) output else listOf("") + output)
     }
 
@@ -451,6 +485,8 @@ object ChordSheetConverter {
     private val metadata = Regex("^(Capo|Key|Hangnem|Tempo|Time|Artist|El\u0151ad\u00f3|words and music by|by)\\s*:\\s*(.+)$", RegexOption.IGNORE_CASE)
     private val unlabelledMetadata = Regex("^(Capo|Key|Hangnem|Tempo|Time|words and music by)\\s+(.+)$", RegexOption.IGNORE_CASE)
     private val timeSignature = Regex("[0-9]+/[0-9]+")
+    private val timingNames = setOf("tempo", "time")
+    private val labelGap = Regex("\\s{2,}")
     private val credit = Regex("^(?:words and music )?by\\s+(.+)$", RegexOption.IGNORE_CASE)
     private val bpm = Regex("^([0-9]+)\\s+BPM$", RegexOption.IGNORE_CASE)
     private val tab = Regex("^[eEaAbBdDgG](?:[#b])?\\s*\\|[-0-9|hpbrx/\\\\~(). :]+$")

@@ -83,6 +83,29 @@ internal class PrintLayoutTest {
         assertTrue(layout(source(entry), PrintSettings(showChords = false)).pages.single().texts.none { it.text == "Key: E" })
     }
 
+    @Test fun aTimingChangeIsPrintedWhereItStandsAndKeptWithWhatFollows() = runTest {
+        val entry = song(emptyList(), listOf(
+            ChordProBlock.Section(SectionType.Verse, "Verse", lyrics(1)),
+            ChordProBlock.Timing(tempo = "90", time = "3/4"),
+            ChordProBlock.Section(SectionType.Verse, "Last", lyrics(1, prefix = "End")),
+            ChordProBlock.Timing(tempo = "60", time = "3/4"),
+        ))
+        val texts = layout(source(entry)).pages.single().texts
+        val timing = texts.single { it.text == "Tempo: 90   Time: 3/4" }
+        assertTrue(timing.y > texts.first { it.text == "Line 1" }.y && timing.y < texts.first { it.text == "End 1" }.y)
+        assertTrue(texts.none { it.text.startsWith("Tempo: 60") })
+        assertTrue(layout(source(entry), PrintSettings(showMetadata = false)).pages.single().texts.none { it.text.startsWith("Tempo") })
+    }
+
+    @Test fun aTimingChangeIsNotLeftAtTheEndOfAColumn() = runTest {
+        val document = layout(source(song(emptyList(), (1..80).flatMap { index ->
+            listOf(ChordProBlock.Timing(tempo = "${60 + index}", time = null), ChordProBlock.Section(SectionType.Verse, "Verse $index", lyrics(3, prefix = "V$index")))
+        })))
+        (1..80).forEach { index ->
+            assertEquals(document.placeOf("Tempo: ${60 + index}"), document.placeOf("Verse $index"))
+        }
+    }
+
     @Test fun lyricsOnlyOmitsChordsTabsGridsAndCommentsWhenRequested() = runTest {
         val entry = song(emptyList(), listOf(
             ChordProBlock.Comment("A comment", CommentStyle.PLAIN),

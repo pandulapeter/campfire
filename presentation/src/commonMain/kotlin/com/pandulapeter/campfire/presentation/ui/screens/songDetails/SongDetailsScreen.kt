@@ -134,8 +134,10 @@ import com.pandulapeter.campfire.presentation.resources.song_details_text_size
 import com.pandulapeter.campfire.presentation.resources.songs_key
 import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
 import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
+import com.pandulapeter.campfire.metronome.api.model.TimeSignature
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeButton
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomePanel
+import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
 import com.pandulapeter.campfire.presentation.ui.metronome.effectiveTempo
 import com.pandulapeter.campfire.presentation.ui.metronome.metronomeAction
 import com.pandulapeter.campfire.presentation.ui.metronome.withTempo
@@ -161,6 +163,8 @@ import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableContent
@@ -241,6 +245,9 @@ internal fun SongDetailsScreen(
             pagerState.scrollToPage(destination.initialIndex.coerceIn(0, songs.lastIndex))
         }
     }
+    // The stretch every composed page is headed for, by its song's file name, where the song changes its tempo or time
+    // signature further down: what the click and the app bar's tempo follow, see SongDetailsPage's onTimingChanged.
+    val songTimings = remember { mutableStateMapOf<String, SongTiming>() }
     // Where the pager has come to rest is where the user is, which the web build's address names. Not before the
     // initial page has been scrolled to, or the first page of a pager created before the library was read would be
     // reported on its way to the song that was tapped.
@@ -254,11 +261,12 @@ internal fun SongDetailsScreen(
         }
     }
     // The page being headed for rather than the one settled on, so that a click paged on to the next song has its tempo
-    // while the page is still sliding in.
+    // while the page is still sliding in, and the stretch of it that page is headed for. A song paged back to is put at
+    // its end first (stepBack), so the click lands on its last stretch rather than on its opening.
     LaunchedEffect(pagerState, isInitialPageSettled) {
         if (isInitialPageSettled) {
-            snapshotFlow { latestSongs.getOrNull(pagerState.targetPage)?.fileName }.collect { fileName ->
-                if (fileName != null) viewModel.onSongDetailsPageChanged(latestDestination, fileName)
+            snapshotFlow { latestSongs.getOrNull(pagerState.targetPage)?.fileName?.let { it to songTimings[it] } }.collect { target ->
+                if (target != null) viewModel.onSongDetailsPageChanged(latestDestination, target.first, target.second)
             }
         }
     }
@@ -464,9 +472,10 @@ internal fun SongDetailsScreen(
                             spelling = chordSpelling,
                         )
                     }
+                    // The stretch the page is on where the song changes its tempo further down, as the click plays it.
                     val headerTempo = song
                         ?.takeIf { isMetronomeEnabled }
-                        ?.let { effectiveTempo(song = it, setlistFileName = destination.setlistFileName, tempos = tempos).displayedBpm }
+                        ?.let { songTimings[it.fileName]?.bpm ?: effectiveTempo(song = it, setlistFileName = destination.setlistFileName, tempos = tempos).displayedBpm }
                         ?.let { stringResource(Res.string.song_details_tempo, it.toString()) }
                     // The duration only inside a setlist, as the song's card there says it, since a set is what is
                     // timed by its songs; and, as there, with the chords switched off too, since the singer is timed by it alike.
@@ -765,6 +774,9 @@ internal fun SongDetailsScreen(
                     }
                     val flingBehavior = rememberRowSnapFlingBehavior(scrollState)
                     val stepper = remember(scrollState, flingBehavior) { SongStepper(scrollState, flingBehavior) }
+                    DisposableEffect(song.fileName) {
+                        onDispose { songTimings.remove(song.fileName) }
+                    }
                     if (page == pagerState.currentPage) SideEffect {
                         currentPageScrollState = scrollState
                         currentPageStepper = stepper
@@ -827,9 +839,13 @@ internal fun SongDetailsScreen(
                         contentPadding = pageContentPadding,
                         renderSong = viewModel::renderSong,
                         onRetry = { viewModel.loadSongContent(song.fileName) },
+                        headedOffset = { stepper.headedOffset },
+                        onTimingChanged = { timing -> if (timing == null) songTimings.remove(song.fileName) else songTimings[song.fileName] = timing },
                     )
                 }
-                val stepButtonsTop = PAGE_TOP_PADDING + STEP_BUTTON_EDGE_MARGIN
+                // The top button starts where the song's first row does, as the bottom one ends as far above the bottom
+                // edge as the end ones are from the end of the screen.
+                val stepButtonsTop = PAGE_TOP_PADDING
                 val stepButtonsEnd = pageContentPadding.calculateEndPadding(layoutDirection) + PAGE_HORIZONTAL_PADDING
                 val stepButtonsBottom = pageContentPadding.calculateBottomPadding() + STEP_BUTTON_EDGE_MARGIN
                 // The dots take the room between the two buttons whether or not the buttons are there, so that neither
@@ -985,9 +1001,13 @@ private fun SongPagerControls(
  *   same way as [tempoOverride].
  * @param playingControls What sets the key, the capo, the tempo and the time signature from the song's own first
  *   section, null in read only mode, see [SongPlayingControls].
- * @param shouldShowTempo False with the metronome switched off, which takes the tempo and the time signature off the page.
+ * @param shouldShowTempo False with the metronome switched off, which takes the tempo and the time signature off the page,
+ *   the changes of them further down included.
  * @param fontScale Read where the lyrics are built rather than passed as a value: a pinch changes it on every frame,
  *   and read here it invalidates only this page's content rather than the screen and the pager around it.
+ * @param headedOffset Where the reader is headed in the song, see [SongStepper.headedOffset].
+ * @param onTimingChanged Told the stretch of the song [headedOffset] is in whenever it changes, null for its opening:
+ *   the page being headed for, rather than the one a finger is still dragging past, is what the click follows.
  */
 @Composable
 private fun SongDetailsPage(
@@ -1013,6 +1033,8 @@ private fun SongDetailsPage(
     contentPadding: PaddingValues,
     renderSong: (text: String, transposition: Int, spelling: UserPreferences.ChordSpelling) -> ChordProSong,
     onRetry: () -> Unit,
+    headedOffset: () -> Int?,
+    onTimingChanged: (SongTiming?) -> Unit,
 ) = AnimatedContent(
     modifier = modifier.fillMaxSize(),
     targetState = text,
@@ -1047,12 +1069,14 @@ private fun SongDetailsPage(
                 labels = labels,
                 tempoOverride = tempoOverride,
                 capoOverride = capoOverride,
+                showsTiming = shouldShowTempo,
             ),
         ) { inputs ->
             prepareSongLyrics(
                 song = renderSong(inputs.text, inputs.transposition, inputs.spelling).withTempo(inputs.tempoOverride).withCapo(inputs.capoOverride),
                 shouldShowChords = inputs.shouldShowChords,
                 labels = inputs.labels,
+                showsTiming = inputs.showsTiming,
             )
         }
         if (model.song.blocks.isEmpty()) {
@@ -1071,6 +1095,15 @@ private fun SongDetailsPage(
         val topPadding = PAGE_TOP_PADDING
         val topPaddingPx = with(LocalDensity.current) { topPadding.roundToPx() }
         LaunchedEffect(flingBehavior) { flingBehavior.keepReaderInPlace() }
+        val timings = remember(model.sections) { model.sections.filterIsInstance<RenderSection.Timing>() }
+        val latestHeadedOffset by rememberUpdatedState(headedOffset)
+        val latestOnTimingChanged by rememberUpdatedState(onTimingChanged)
+        LaunchedEffect(timings, flingBehavior, scrollState) {
+            snapshotFlow { latestHeadedOffset()?.let { offset -> timingIndexAt(offset, flingBehavior.rows, scrollState.maxValue) } }
+                .filterNotNull()
+                .distinctUntilChanged()
+                .collect { index -> latestOnTimingChanged(timings.getOrNull(index)?.toSongTiming(index)) }
+        }
         val bottomPadding = contentPadding.calculateBottomPadding() + PAGE_BOTTOM_PADDING
         // The lyrics scroll, so they need to be told from the outside how much room there is for them without
         // scrolling: that is what decides how many columns they are flowed into.
@@ -1521,3 +1554,10 @@ private val TITLE_TOUCH_VERTICAL_OUTSET = 12.dp // From the two lines of title, 
 private const val KEY_SCROLL_STEP_FRACTION = 0.1f // Of the height of the scrolling viewport.
 private const val KEY_SCROLL_STEP_DURATION = 120
 private const val CONTINUOUS_CHANGE_MILLIS = 200L
+
+/** The stretch after the [index]-th change of a song, as its line on the page reads it and as the click plays it. */
+private fun RenderSection.Timing.toSongTiming(index: Int) = SongTiming(
+    index = index,
+    bpm = tempo?.toIntOrNull(),
+    timeSignature = TimeSignature.parse(time) ?: TimeSignature.COMMON_TIME,
+)

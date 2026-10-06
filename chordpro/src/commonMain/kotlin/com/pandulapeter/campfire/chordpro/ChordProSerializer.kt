@@ -27,6 +27,7 @@ object ChordProSerializer {
     fun serialize(song: ChordProSong): String {
         val chunks = mutableListOf<String>()
         serializeMetadata(song.metadata).takeIf { it.isNotEmpty() }?.let { chunks += it.joinToString("\n") }
+        val writer = Writer(song.metadata)
         var index = 0
         while (index < song.blocks.size) {
             val block = song.blocks[index]
@@ -36,10 +37,10 @@ object ChordProSerializer {
                 // from, with what cut it inside: written as two, it would come back as two sections. So do the
                 // comments it opens and ends with, which would otherwise come back as standing between sections.
                 val end = sectionEnd(song.blocks, sectionStart)
-                chunks += serializeSection(song.blocks.subList(index, end), song.metadata.transpose)
+                chunks += serializeSection(song.blocks.subList(index, end), writer)
                 index = end
             } else {
-                chunks += serializeBlock(block, song.metadata.transpose)
+                chunks += serializeBlock(block, writer)
                 index++
             }
         }
@@ -96,12 +97,30 @@ object ChordProSerializer {
     }
 
     /**
-     * @param wholeSongTranspose The `{transpose}` the song opens with, which a modulation is written back on top of:
-     *   it is read as the transposition of the rest of the song, not as an addition to the one before it.
+     * What the blocks of a song are written relative to, in the order [serialize] writes them.
+     *
+     * [wholeSongTranspose] is the `{transpose}` the song opens with, which a modulation is written back on top of: it is
+     * read as the transposition of the rest of the song, not as an addition to the one before it. [tempo] and [time] are
+     * the ones in force, starting from the header's, since a [ChordProBlock.Timing] is complete and only the value it
+     * changes is written back: a `{tempo}` restating the one in force would be read as no change at all.
      */
-    private fun serializeBlock(block: ChordProBlock, wholeSongTranspose: Int): String = when (block) {
-        is ChordProBlock.Section -> serializeSection(listOf(block), wholeSongTranspose)
-        is ChordProBlock.Transpose -> "{transpose: ${wholeSongTranspose + block.semitones}}"
+    private class Writer(metadata: ChordProMetadata) {
+        val wholeSongTranspose = metadata.transpose
+        var tempo = metadata.tempo
+        var time = metadata.time
+
+        fun timing(block: ChordProBlock.Timing) = buildList {
+            if (ChordProTempo.parse(block.tempo) != ChordProTempo.parse(tempo)) add("{tempo: ${block.tempo}}")
+            if (ChordProTime.parse(block.time) != ChordProTime.parse(time) || isEmpty()) add("{time: ${block.time}}")
+            tempo = block.tempo
+            time = block.time
+        }.joinToString("\n")
+    }
+
+    private fun serializeBlock(block: ChordProBlock, writer: Writer): String = when (block) {
+        is ChordProBlock.Section -> serializeSection(listOf(block), writer)
+        is ChordProBlock.Transpose -> "{transpose: ${writer.wholeSongTranspose + block.semitones}}"
+        is ChordProBlock.Timing -> writer.timing(block)
         is ChordProBlock.ChorusRecall -> block.label?.let { "{chorus: $it}" } ?: "{chorus}"
         is ChordProBlock.Comment -> when (block.style) {
             CommentStyle.PLAIN -> "{comment: ${block.text}}"
@@ -113,12 +132,12 @@ object ChordProSerializer {
     }
 
     /** A section and its continuations, with the blocks that stood between them, as [sectionEnd] collects them. */
-    private fun serializeSection(pieces: List<ChordProBlock>, wholeSongTranspose: Int): String {
+    private fun serializeSection(pieces: List<ChordProBlock>, writer: Writer): String {
         val section = pieces.first { it is ChordProBlock.Section } as ChordProBlock.Section
         // A paragraph has no environment of its own, so a label it carries came from the tablature or grid inside
         // it and has to go back onto that, where its lines do not carry it themselves; see `SectionBuilder.openLineMode`.
-        if (section.type == SectionType.Paragraph) return serializeLines(pieces, wholeSongTranspose, section.label)
-        val body = serializeLines(pieces, wholeSongTranspose)
+        if (section.type == SectionType.Paragraph) return serializeLines(pieces, writer, section.label)
+        val body = serializeLines(pieces, writer)
         val name = environmentName(section.type)
         val header = section.label?.let { "{start_of_$name: $it}" } ?: "{start_of_$name}"
         return if (body.isEmpty()) "$header\n{end_of_$name}" else "$header\n$body\n{end_of_$name}"
@@ -135,7 +154,7 @@ object ChordProSerializer {
      * A comment says itself whether it was in one ([ChordProBlock.Comment.isInTabOrGrid]), and one that was is written
      * inside the environment of the lines around it, opening it early where it came before the first of them.
      */
-    private fun serializeLines(pieces: List<ChordProBlock>, wholeSongTranspose: Int, environmentLabel: String? = null) = buildList {
+    private fun serializeLines(pieces: List<ChordProBlock>, writer: Writer, environmentLabel: String? = null) = buildList {
         val items: List<Any> = pieces.flatMap { piece -> if (piece is ChordProBlock.Section) piece.lines else listOf(piece) }
         var openEnvironment: String? = null
         var openEnvironmentLabel: String? = null
@@ -170,7 +189,7 @@ object ChordProSerializer {
                     environmentLine?.let { startEnvironment(it, lineEnvironmentName(it, openEnvironment = null)) }
                     isEnvironmentAwaitingLine = true
                 }
-                add(serializeBlock(item, wholeSongTranspose))
+                add(serializeBlock(item, writer))
                 return@forEachIndexed
             }
             val line = item as ChordProLine

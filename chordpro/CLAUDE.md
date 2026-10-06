@@ -24,7 +24,9 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   colon removed, and tab runs wrapped. Styled titles and metadata become headers — a large title wrapped over the lines under it in its own type
   (a narrow column of Campfire's PDF export) as one title, and a label without a colon only where its value has the
   field's shape (`Capo 2`, `Key G`, `Time 4/4`), since "By the rivers…" and "Time after time" are lyrics; repeated
-  titled page starts can split a songbook. A text is passed through as ChordPro when any line is a directive ChordPro
+  titled page starts can split a songbook. The first `Tempo:` and `Time:` label are the header's; a later one, or a
+  row of both (`Tempo: 90   Time: 3/4`, the line Campfire's PDF prints a change as, anywhere in the song but only with
+  a colon and a value of the field's shape), is a change written in place, before the section it heads. A text is passed through as ChordPro when any line is a directive ChordPro
   defines (`ChordProSyntax.isKnownDirective`) or holds a chord bracketed against a syllable (`[G]Hello`), and
   otherwise only when most of its lines hold bracketed chords. The caller
   supplies NFC normalization. `ChordProLiteralText` rewrites prose brackets, directive braces and a leading hash so
@@ -38,11 +40,17 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   continues the running paragraph, which a blank line would split — nor before a comment or a break inside a legacy
   heading section or an implicit paragraph, which a blank line would close rather than cut. A library file formatted with those extra blanks
   by an older build is structurally different and asks about a conflict when the same source is imported again;
-  existing files are not migrated. It preserves unsupported directives and delegated
+  existing files are not migrated. A `{tempo}` or `{time}` is the one body directive that moves: the first readable one
+  in the body of a song whose header has none is the song's own value, so it goes into the header in `metadataOrder`
+  (never from inside a delegated environment); every other one is a change, and the changes outside every environment
+  with only blank lines between them are written as one group, the tempo first, after a blank line and straight before
+  the line they head — except inside a running implicit paragraph or legacy heading section, which a blank line would
+  close. It preserves unsupported directives and delegated
   notation instead of serializing a parsed model. The editor overflow action and every import use it. `prettifiedOffset` keeps the editor's caret and selection on
   their matched lines through header reordering and spacing changes, accounting for the original line endings.
 
-- `model/` — `ChordProSong` (metadata + blocks), `ChordProBlock` (`Section`, `ChorusRecall`, `Comment`, `Break`),
+- `model/` — `ChordProSong` (metadata + blocks), `ChordProBlock` (`Section`, `ChorusRecall`, `Comment`, `Break`,
+  `Transpose`, `Timing`),
   `ChordProLine` (`Lyrics` with positioned chords and annotations, `Tab`, `Grid`, `Blank`) and `ChordProMetadata`,
   whose `displayTitle(fallback)` is the one rule for naming a song: `{title}` with `{subtitle}` after it in
   parentheses, which is what the library scan writes into `Song.title` and what the editor's app bar shows.
@@ -120,14 +128,20 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   from the whole-song value for everything after it, and the song's `{key}` for a viewer to name the change by, as
   the file writes it and wherever the file names it, cutting the section it stands in the way a comment does — each
   value being the transposition of the rest of the song and a valueless one going back to the one before, as the spec
-  has it; `{meta: title …}` and the other standard names the spec defines as their standalone directive
+  has it; a `{tempo}` or `{time}` in the body that is readable, is not the line the song takes its own value from and
+  differs (as a number) from the one in force is a `ChordProBlock.Timing`, holding both values in force from there on
+  as the file writes them (the one that did not change carried over, null where the song never named one) and cutting
+  the section it stands in the way a `{transpose}` does — a second one with no line between them replaces the first, so
+  a `{tempo}` followed by a `{time}` is one block; a recalled chorus leaves its changes out, as it does a `{transpose}`;
+  `{meta: title …}` and the other standard names the spec defines as their standalone directive
   (`subtitle`, `artist`, `composer`, `lyricist`, `album`, `year`, `key`, `capo`, `tempo`, `time`, `duration`) are read
   as that directive; `{define}`, fonts, colours, images and page directives are parsed and dropped. It also understands
   the Campfire 3 dialect, where `{comment: Verse 1}` outside an environment was a section heading; one that no line
   follows before a blank line, another section or the end of the file stays the comment it was, since a section with
   nothing in it is not drawn.
 - `ChordProSerializer` — writes the model back as canonical ChordPro. The editor works on raw text, so the user's own
-  formatting does not have to survive this; `parse(serialize(parse(x))) == parse(x)` does.
+  formatting does not have to survive this; `parse(serialize(parse(x))) == parse(x)` does. A `Timing` is written as
+  the `{tempo}` and `{time}` it changes against the ones in force, starting from the header's.
 - `ChordProTags` — the tags of a song. ChordPro's own `{tag: Needs study}` directive, one tag per directive and as
   many of them as the song has; `{meta: tag Needs study}`, which the spec documents as the same thing, is read as
   well but never written. The value is taken whole, commas included, because the spec calls a tag arbitrary text — arbitrary text on one line: a line break in a value handed to `addTag` or `removeTag` is read as a space, since it would otherwise end the directive and leave the rest of it in the song as lyrics.
@@ -204,8 +218,12 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   `{title: }` waiting to be typed into is a title, and `DeclaredMetadataCache` is its incremental form, which an editor
   calls on every keystroke: it counts again only when the edit changes what a line declares, and is always equal to
   `declaredMetadata`. `repeatableMetadata` is what a song may say twice — its tags,
-  its languages and its links — and everything else is a thing a song can only be one of, which is what lets an editor stop
-  offering it.
+  its languages and its links — and `changeableMetadata` what it may say again further down as a change (`tempo`,
+  `time`), which `insertChangeable` writes: into the header by `insert` where it has no line of the kind, into an empty
+  header line (one the Song defaults sheet cleared), at the start of the caret's line where the header names a value
+  and the caret is in the body, and otherwise nowhere, the header's value selected instead. Everything else is a thing
+  a song can only be one of, which is what lets an editor stop offering it. `metadataInsertionIndex` counts only the
+  header's lines of a changeable kind, since one in the body is a change in the middle of the song.
 - `ChordProSplitter` — splits a file that holds several songs at `{new_song}` / `{ns}`, trimming the blank lines around
   each; one inside a delegated environment is that environment's text, as the parser reads it — any `{end_of_…}` closes
   the environment and any `{start_of_…: label}` moves it on, whichever one they name — and an environment the file

@@ -471,13 +471,15 @@ internal object ChordProSyntax {
      * Where a directive of kind [name] goes when one is added to a file the user wrote.
      *
      * Right after the last directive of its own kind, wherever that is, so that the tags of a song stay together and
-     * so do its languages. A kind the file does not declare yet goes into the block of directives the file opens
+     * so do its languages — but for the kinds a song may change further down ([ChordProHeader.changeableMetadata]) only
+     * the header's line counts, since one in the body is a change in the middle of the song. A kind the file does not declare yet goes into the block of directives the file opens
      * with, after the last one that comes before it in [metadataOrder]: a header written in that order stays in it,
      * and one the user has arranged some other way is left exactly as it is, since nothing already written is ever
      * moved. A file that opens with content rather than directives gets it on a line of its own above everything.
      */
     fun metadataInsertionIndex(lines: List<String>, name: String): Int {
-        lines.indexOfLast { line -> matchDirective(line.trim())?.let(::metadataKind) == name }.takeIf { it >= 0 }?.let { return it + 1 }
+        val searched = if (name in ChordProHeader.changeableMetadata) lines.subList(0, bodyStartIndex(lines)) else lines
+        searched.indexOfLast { line -> matchDirective(line.trim())?.let(::metadataKind) == name }.takeIf { it >= 0 }?.let { return it + 1 }
         val rank = metadataOrder.indexOf(name).takeIf { it >= 0 } ?: metadataOrder.size
         var headerIndex = -1
         var insertionIndex = -1

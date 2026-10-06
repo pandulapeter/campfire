@@ -512,6 +512,7 @@
     <string name="song_details_tempo">%1$s BPM</string>
     <string name="song_details_time">%1$s</string>
     <string name="song_details_key_change">Hangnem: %1$s</string>
+    <string name="song_details_timing">Innentől: %1$s</string>
     <string name="song_details_composer">Zeneszerző</string>
     <string name="song_details_lyricist">Szövegíró</string>
     <string name="song_details_album">Album</string>

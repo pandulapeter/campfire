@@ -77,6 +77,17 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun aLaterTempoOrTimeIsAChangeWrittenInPlace() {
+        val text = "Tempo: 120\nTime: 4/4\nVerse 1\nAm C\nHello world\n" + "Am C\nla la\n".repeat(8) + "Tempo: 90   Time: 3/4\nChorus\nAm F\nSing along"
+        val result = convert(text)
+        assertTrue(result.startsWith("{tempo: 120}\n{time: 4/4}\n"), result)
+        assertTrue(result.contains("{end_of_verse}\n{tempo: 90}\n{time: 3/4}\n{start_of_chorus: Chorus}"), result)
+        val song = ChordProParser.parse(result)
+        assertEquals(listOf(ChordProBlock.Timing("90", "3/4")), song.blocks.filterIsInstance<ChordProBlock.Timing>())
+        assertFalse(convert("Verse 1\nAm C\nHello world\n" + "Am C\nla la\n".repeat(8) + "Time: after time\nAm C\nla la").contains("{time"))
+    }
+
+    @Test
     fun headingDecorationIsLeftOutOfSectionNames() {
         val result = convert("[Verse 1]\nC   G\nHello world\n\n[Intro]\nC G\n\n[Chorus]\nAm F\nLa la")
         assertTrue(result.contains("{start_of_verse: Verse 1}"))

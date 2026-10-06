@@ -17,8 +17,17 @@ object ChordProPrettifier {
      * with a final newline. Repeated directives keep their relative order. Source comments and settings anchor
      * metadata groups; body directives (including key changes) stay where they were written. Lyrics and the inside
      * of environments retain their whitespace, including blank lines in tabs, grids and delegated notation.
+     *
+     * A `{tempo}` or a `{time}` is the exception, since what it means depends on where it stands: the first readable one
+     * in the body of a song whose header has none is the song's own value (see [ChordProParser]), so it is moved into
+     * the header, where it means the same and every file then states its main values. The others are changes from
+     * where they stand, and the ones outside every environment with only blank lines between them are written as one
+     * group, the tempo first, heading what follows it the way a section's own first line does.
      */
     fun prettify(text: String): String {
+        val lines = ChordProSyntax.splitLines(text)
+        val hoisted = hoistedTimings(lines)
+        var song = 0
         val output = mutableListOf<String>()
         val metadata = mutableListOf<Pair<Int, String>>()
         val environments = mutableListOf<String>()
@@ -27,6 +36,16 @@ object ChordProPrettifier {
         // A legacy heading section or an implicit paragraph is open: a blank line would close it, where a comment or a
         // break standing in it only cuts it in two and leaves the rest its continuation.
         var isImplicitSectionRunning = false
+        val timings = mutableListOf<String>()
+        // The line after a group of changes follows it directly, since the group is what that line starts with.
+        var isHeadedByTimings = false
+
+        fun flushTimings() {
+            if (timings.isEmpty()) return
+            output += timings.sortedBy { ChordProSyntax.matchDirective(it)?.let(ChordProSyntax::metadataKind) != TEMPO }
+            timings.clear()
+            isHeadedByTimings = true
+        }
 
         fun flushMetadata() {
             output += metadata.sortedBy { it.first }.map { it.second }
@@ -37,7 +56,7 @@ object ChordProPrettifier {
             if (output.isNotEmpty() && output.last().isNotBlank()) output += ""
         }
 
-        for (rawLine in ChordProSyntax.splitLines(text)) {
+        for ((index, rawLine) in lines.withIndex()) {
             val trimmed = rawLine.trim()
             val directive = ChordProSyntax.matchDirective(trimmed)
             val start = directive?.name?.let(ChordProSyntax::startOfEnvironment)
@@ -69,11 +88,16 @@ object ChordProPrettifier {
                     }
                     continue
                 }
+                hoisted[song]?.forEach { hoistedIndex ->
+                    val line = lines[hoistedIndex].trim()
+                    metadata += ChordProSyntax.matchDirective(line)?.let(ChordProSyntax::metadataKind)?.let(ChordProSyntax.metadataOrder::indexOf)!! to line
+                }
                 flushMetadata()
                 isHeader = false
                 gap()
             }
 
+            if (hoisted[song]?.contains(index) == true) continue
             if (environments.isNotEmpty()) {
                 output += rawLine
                 if (!delegated && start != null) environments += start
@@ -88,6 +112,17 @@ object ChordProPrettifier {
                 continue
             }
 
+            if (directive != null && ChordProSyntax.metadataKind(directive) in ChordProHeader.changeableMetadata) {
+                // A blank line before the group would close a paragraph the change only cuts, see cutsRunningSection.
+                if (timings.isEmpty() && (gapBeforeNext || !isImplicitSectionRunning)) gap()
+                gapBeforeNext = false
+                timings += trimmed
+                continue
+            }
+            if (timings.isNotEmpty()) {
+                if (trimmed.isEmpty()) continue
+                flushTimings()
+            }
             if (trimmed.isEmpty()) {
                 gap()
                 isImplicitSectionRunning = false
@@ -101,9 +136,11 @@ object ChordProPrettifier {
             // closes it anyway.
             val cutsRunningSection = isImplicitSectionRunning && directive != null && start == null && directive.name != "chorus" &&
                 directive.name in ChordProSyntax.blockNames && !isLegacyHeading
-            if (gapBeforeNext || (start != null && !isLineMode) || (directive?.name in ChordProSyntax.blockNames && !cutsRunningSection) ||
-                directive?.name == "new_song" || directive?.name == "ns") gap()
+            val isNewSong = directive?.name == "new_song" || directive?.name == "ns"
+            if ((!isHeadedByTimings || isNewSong) && (gapBeforeNext || (start != null && !isLineMode) ||
+                    (directive?.name in ChordProSyntax.blockNames && !cutsRunningSection) || isNewSong)) gap()
             gapBeforeNext = false
+            isHeadedByTimings = false
             output += if (directive == null) rawLine else trimmed
             when {
                 directive == null || isLegacyHeading || isLineMode -> isImplicitSectionRunning = true
@@ -112,13 +149,15 @@ object ChordProPrettifier {
             }
             when {
                 start != null -> environments += start
-                directive?.name == "new_song" || directive?.name == "ns" -> {
+                isNewSong -> {
                     isHeader = true
+                    song++
                     gap()
                 }
                 (directive?.name in breakNames && !cutsRunningSection) || end != null -> gapBeforeNext = true
             }
         }
+        flushTimings()
         flushMetadata()
         // An unclosed environment is unfinished input: its final blank lines are still part of its literal text.
         if (environments.isEmpty()) while (output.lastOrNull()?.isBlank() == true) output.removeAt(output.lastIndex)
@@ -182,6 +221,65 @@ object ChordProPrettifier {
             return indices[chosen]
         }
     }
+
+    /**
+     * The lines of each song of [lines], by the index of the song in the file, that [prettify] moves into its header: the
+     * first readable `{tempo}` and `{time}` of the body of a song whose header has no line of that kind, empty ones
+     * included. That line is the song's own value to the parser, so where it stands it is no change at all. Not from
+     * inside an environment handed to another program, where braces are that program's text.
+     */
+    private fun hoistedTimings(lines: List<String>): Map<Int, List<Int>> {
+        val hoisted = mutableMapOf<Int, List<Int>>()
+        var song = 0
+        var isHeader = true
+        val headerKinds = mutableSetOf<String>()
+        val found = mutableMapOf<String, Int>()
+        val environments = mutableListOf<String>()
+        fun finishSong() {
+            found.filterKeys { it !in headerKinds }.values.sorted().takeIf { it.isNotEmpty() }?.let { hoisted[song] = it }
+            found.clear()
+            headerKinds.clear()
+        }
+        lines.forEachIndexed { index, rawLine ->
+            val trimmed = rawLine.trim()
+            val delegated = environments.lastOrNull() in ChordProSyntax.delegateEnvironments
+            val directive = if (delegated) ChordProSyntax.matchDelegatedDirective(trimmed) else ChordProSyntax.matchDirective(trimmed)
+            val end = directive?.name?.let(ChordProSyntax::endOfEnvironment)
+            if (delegated) {
+                if (end != null) environments.removeAt(environments.lastIndex)
+                return@forEachIndexed
+            }
+            if (directive?.name == "new_song" || directive?.name == "ns") {
+                finishSong()
+                song++
+                isHeader = true
+                return@forEachIndexed
+            }
+            val kind = directive?.let(ChordProSyntax::metadataKind)
+            if (isHeader) {
+                if (trimmed.isEmpty() || trimmed.startsWith('#')) return@forEachIndexed
+                if (directive != null && !ChordProSyntax.startsBody(directive) && ChordProSyntax.endOfEnvironment(directive.name) == null) {
+                    kind?.let(headerKinds::add)
+                    return@forEachIndexed
+                }
+                isHeader = false
+            }
+            directive?.name?.let(ChordProSyntax::startOfEnvironment)?.let { environments += it.lowercase() }
+            if (end != null) environments.indexOfLast { it == end.lowercase() }.takeIf { it >= 0 }?.let { environments.subList(it, environments.size).clear() }
+            val value = directive?.let { (ChordProSyntax.standardMeta(it) ?: it).value }
+            val isReadable = when (kind) {
+                TEMPO -> ChordProTempo.parse(value) != null
+                TIME -> ChordProTime.parse(value) != null
+                else -> false
+            }
+            if (isReadable && kind != null && kind !in found) found[kind] = index
+        }
+        finishSong()
+        return hoisted
+    }
+
+    private const val TEMPO = "tempo"
+    private const val TIME = "time"
 
     private val plainCommentNames = setOf("comment", "c")
 

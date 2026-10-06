@@ -56,6 +56,25 @@ class MetronomePatternsTest {
     }
 
     @Test
+    fun aStretchAfterAChangePlaysItsOwnTempoAndSignature() {
+        val timing = SongTiming(index = 0, bpm = 55, timeSignature = TimeSignature(3, 4))
+        val pattern = metronomePatternOf(MetronomeContext.Song("a.cho", null, timing), settings, mapOf("a.cho" to song)::get, Tempos())
+        assertEquals(55, pattern.bpm)
+        assertEquals(TimeSignature(3, 4), pattern.timeSignature)
+        assertEquals(TimeSignature(3, 4).defaultBeatLevels(), pattern.beatLevels)
+    }
+
+    /** A stretch of a song that names no tempo is played at the song's own, an override of it included. */
+    @Test
+    fun aStretchWithNoTempoPlaysTheSongsOwn() {
+        val timing = SongTiming(index = 0, bpm = null, timeSignature = TimeSignature(6, 8))
+        val tempos = Tempos().with(TempoKey("a.cho", null), 110)
+        val pattern = metronomePatternOf(MetronomeContext.Song("a.cho", null, timing), settings, mapOf("a.cho" to song)::get, tempos)
+        assertEquals(110, pattern.bpm)
+        assertEquals(TimeSignature(6, 8), pattern.timeSignature)
+    }
+
+    @Test
     fun theTabPlaysItsOwn() {
         val pattern = metronomePatternOf(MetronomeContext.Standalone, settings, { null }, Tempos())
         assertEquals(140, pattern.bpm)
