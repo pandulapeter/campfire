@@ -45,17 +45,27 @@ internal object DesktopFilePicker : FilePicker {
     }
 
     override suspend fun saveFile(file: ExportedFile): Boolean {
-        val target = withContext(Dispatchers.Main) {
+        val chosen = withContext(Dispatchers.Main) {
             FileDialog(null as Frame?, DIALOG_TITLE, FileDialog.SAVE).run {
                 this.file = file.name
                 isVisible = true
                 val directory = this.directory
                 val name = this.file
-                if (directory == null || name == null) null else File(directory, name).withExtensionOf(file.name)
+                if (directory == null || name == null) null else File(directory, name)
             }
         } ?: return false
         return withContext(Dispatchers.IO) {
-            target.writeBytes(file.bytes)
+            val extended = chosen.withExtensionOf(file.name)
+            try {
+                extended.writeBytes(file.bytes)
+            } catch (exception: Exception) {
+                // A sandbox grants the one path the dialog returned, and a sibling with the extension added is not that
+                // path: where it could not even be created, the file goes where the user said instead, without the
+                // extension, rather than nowhere. One that was created and failed part way is a failure like any other.
+                if (extended == chosen || extended.exists()) throw exception
+                println("Could not write \"${extended.path}\", writing \"${chosen.path}\" instead: ${exception.message}")
+                chosen.writeBytes(file.bytes)
+            }
             true
         }
     }
@@ -68,7 +78,8 @@ internal object DesktopFilePicker : FilePicker {
  * The dialog has no file type to add one by (see [DesktopFilePicker]), and a file named without its extension is one
  * the import skips, since that is what decides what a file is. Not where a file already has that name: the dialog
  * asked about replacing the name that was typed, and nothing it did not ask about is written over, so the name is
- * then left exactly as typed.
+ * then left exactly as typed. Where the name with the extension cannot even be created - the Mac App Store build's
+ * sandbox grants only the path the dialog returned - the file is written under the name as typed instead.
  */
 private fun File.withExtensionOf(offeredName: String): File {
     val extension = offeredName.substringAfterLast('.', missingDelimiterValue = "")
