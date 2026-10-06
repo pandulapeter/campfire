@@ -335,7 +335,10 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   a Latin chord is read as the chord it names wherever it arrives from — a file, a sync run, the editor's field in any
   notation, a converted document's chord lines and `Key:` label, a tab's chord row, the highlighter's comment brackets,
   a key spelled out in a Romance language (`Sol mayor`, `La minore`, whose words `keyOf` reads as major or minor by a
-  set rather than by their first letter). Every reading path asks one function for the standard chord a written name
+  set rather than by their first letter). A text typed in Latin is converted whole, the brackets of its comments and
+  labels and the names of its definitions included, even where nothing else in it names a chord, and a definition's
+  Latin name counts as a Latin chord of its file on its own, so one a save wrote that way is healed when it is read.
+  Every reading path asks one function for the standard chord a written name
   stands for (`ChordProNotation.read`: Latin, then a lowercase minor, then German where the text is). A lowercase minor
   taken into Latin comes back spelled out (`a` → `Lam` → `Am`), since Latin has no lowercase spelling of its own.
   **The numberings** (`ChordNotation.isNumbering`) count the chords from the song's key (`ChordProNashville`): a minor

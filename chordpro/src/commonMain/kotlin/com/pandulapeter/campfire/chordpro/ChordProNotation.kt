@@ -84,7 +84,9 @@ object ChordProNotation {
         val written = if (from == ChordNotation.GERMAN) null else ChordProParser.parseAsWritten(text)
         val isGerman = written == null || isGermanNotated(written)
         val isWrittenInStandard = to == ChordNotation.STANDARD || to.isNumbering
-        if (!isGerman && isWrittenInStandard && text.none { it == SHARP_SIGN || it == FLAT_SIGN } && written?.let(::hasLatinName) == false) return text
+        // A text typed in the Latin notation is in it throughout, comments and definitions included, so only a text read
+        // from a file may be returned as it is: there a Latin word in a comment does not make the file Latin.
+        if (from != ChordNotation.LATIN && !isGerman && isWrittenInStandard && text.none { it == SHARP_SIGN || it == FLAT_SIGN } && written?.let(::hasLatinName) == false) return text
         val fromWritten = { name: String -> withAsciiAccidentals(if (isGerman) fromGerman(name) else name) }
         val renameWritten = if (to == ChordNotation.LATIN) {
             { name: String -> toLatin(fromWritten(ChordProChordNames.lowercaseMinorExpanded(name) ?: name)) }
@@ -177,10 +179,12 @@ object ChordProNotation {
     }
 
     /**
-     * Whether [song], as its file spells it, names a chord in Latin, its key included. Like the German `H`, a Latin name
-     * in a comment or a label only counts where another one does: they do not vote, see [ChordProTransposer.rewriteChords].
+     * Whether [song], as its file spells it, names a chord in Latin, its key and its definitions included. Like the German
+     * `H`, a Latin name in a comment or a label only counts where another one does: they do not vote, see
+     * [ChordProTransposer.rewriteChords]. A definition's name is no prose, so it counts on its own.
      */
     private fun hasLatinName(song: ChordProSong) = ChordProTransposer.writtenChordNames(song).any { ChordProChordNames.latinExpanded(it) != null } ||
+        song.metadata.definitions.any { ChordProChordNames.latinExpanded(it.name) != null } ||
         song.metadata.key?.let { key -> ChordProTransposer.renameKey(key) { ChordProChordNames.latinExpanded(it) ?: it } != key } == true
 
     /**

@@ -130,6 +130,24 @@ class ChordProLatinNotationTest {
     }
 
     @Test
+    fun `a Latin text's comments and definitions come back in the standard notation`() {
+        assertEquals("{c: Intro: [G] [D]}\nla la", ChordProNotation.convertText("{c: Intro: [Sol] [Re]}\nla la", ChordNotation.LATIN, ChordNotation.STANDARD))
+        assertEquals(
+            "{define: Am base-fret 1 frets x 0 2 2 1 0}\nla",
+            ChordProNotation.convertText("{define: Lam base-fret 1 frets x 0 2 2 1 0}\nla", ChordNotation.LATIN, ChordNotation.STANDARD),
+        )
+        val text = "{c: Intro: [G] [D]}\n{define: Am base-fret 1 frets x 0 2 2 1 0}\nla la"
+        assertEquals(text, ChordProNotation.convertText(ChordProNotation.convertText(text, ChordNotation.STANDARD, ChordNotation.LATIN), ChordNotation.LATIN, ChordNotation.STANDARD))
+        assertEquals("la la", ChordProNotation.convertText("la la", ChordNotation.LATIN, ChordNotation.STANDARD))
+        val written = "{define: Lam base-fret 1 frets x 0 2 2 1 0}\n[Am]la"
+        val song = ChordProParser.parse(written)
+        assertEquals("Am", song.metadata.definitions.single().name)
+        assertEquals("Bm", ChordProTransposer.transpose(song, 2).metadata.definitions.single().name)
+        assertEquals("{define: Am base-fret 1 frets x 0 2 2 1 0}\n[Am]la", ChordProNotation.convertText(written, ChordNotation.STANDARD, ChordNotation.STANDARD))
+        assertEquals("{c: [La] la la}\n[A]x", ChordProNotation.convertText("{c: [La] la la}\n[A]x", ChordNotation.STANDARD, ChordNotation.STANDARD))
+    }
+
+    @Test
     fun `a standard chord pasted into a Latin text is read as the chord it is`() {
         assertEquals("[Am]a [Am]b", ChordProNotation.convertText("[Lam]a [Am]b", ChordNotation.LATIN, ChordNotation.STANDARD))
     }
