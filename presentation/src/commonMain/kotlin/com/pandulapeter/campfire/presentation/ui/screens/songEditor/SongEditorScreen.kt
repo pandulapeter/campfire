@@ -964,17 +964,17 @@ private fun EditorMenu(
             onClick = onPrettify,
         ),
         ActionsMenuItem(
+            title = stringResource(Res.string.song_editor_chordpro_reference),
+            icon = painterResource(Res.drawable.ic_open_in_new),
+            isAlwaysInMenu = true,
+            onClick = onOpenChordProReference,
+        ),
+        ActionsMenuItem(
             title = stringResource(Res.string.song_editor_revert),
             icon = painterResource(Res.drawable.ic_refresh),
             isEnabled = canRevert,
             isAlwaysInMenu = true,
             onClick = onRevert,
-        ),
-        ActionsMenuItem(
-            title = stringResource(Res.string.song_editor_chordpro_reference),
-            icon = painterResource(Res.drawable.ic_open_in_new),
-            isAlwaysInMenu = true,
-            onClick = onOpenChordProReference,
         ),
     ),
 )
