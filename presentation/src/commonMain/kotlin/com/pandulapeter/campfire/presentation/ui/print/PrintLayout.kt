@@ -27,6 +27,7 @@ import com.pandulapeter.campfire.presentation.ui.chords.secondaryName
 import com.pandulapeter.campfire.presentation.ui.chords.selectShape
 import com.pandulapeter.campfire.presentation.ui.chords.songChordsOf
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.DefaultSectionLabels
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.balancedRowStarts
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.header
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.withNumber
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.withNumberedSections
@@ -408,17 +409,8 @@ private class PrintLayouter(
             val nameEnd = nameLines.maxOf { line -> line.maxOf { it.x + measure(it.text, it.style) } }
             DiagramCell(chord, diagramWidth, diagramHeight, maxOf(diagramWidth, nameEnd).coerceAtMost(columnWidth), nameLines)
         }
-        val rows = mutableListOf<List<DiagramCell>>()
-        var rowWidth = 0f
-        cells.forEach { cell ->
-            if (rows.isEmpty() || rowWidth + gap + cell.width > columnWidth) {
-                rows += listOf(cell)
-                rowWidth = cell.width
-            } else {
-                rows[rows.lastIndex] = rows.last() + cell
-                rowWidth += gap + cell.width
-            }
-        }
+        val starts = balancedRowStarts(FloatArray(cells.size) { cells[it].width }, gap, columnWidth)
+        val rows = starts.mapIndexed { index, start -> cells.subList(start, starts.getOrNull(index + 1) ?: cells.size) }
         return rows.mapIndexed { index, row ->
             var x = 0f
             val parts = mutableListOf<Part>()

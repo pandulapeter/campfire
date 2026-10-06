@@ -271,7 +271,9 @@ Everything else is `commonMain`:
   fading, scaling and expanding in and out (unclipped) with the diagrams, since it is there only while the section is unfolded and never in read
   only mode (performance mode, or a song read from an archived setlist), and rows of
   cells — the name in the chords' style and accent over its diagram, growing with the text size, wrapping rather than
-  scrolling sideways, taking no press. Which shape a cell draws is `selectShape` (`ChordSelection.kt`, tested): the
+  scrolling sideways into as few rows as the width allows, shared out between them as evenly as their order lets them
+  (`balancedRowStarts`: nine of which six fit a line are five over four, not six over three, and the PDF breaks its
+  rows the same way), taking no press. Which shape a cell draws is `selectShape` (`ChordSelection.kt`, tested): the
   song's definition, then the player's stored shape for the chord's id (`UserPreferences.chordVoicings`, where it still
   reads as a shape of that instrument), then the app's own. `ChordDiagram` draws a `ChordDiagramGeometry`
   (`ChordDiagramGeometry.kt`, pure and tested): strings and four frets or as many as the shape spans, up to 24, the

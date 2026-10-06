@@ -13,19 +13,68 @@ import com.pandulapeter.campfire.presentation.ui.chords.MAX_SONG_CHORDS
 
 /**
  * Where each row of a Chords section's diagrams starts when the section is [width] wide, as the index of its first
- * cell: the cells in their order, [gap] apart, a row ending before the cell that would take it past [width], and a
- * cell wider than [width] a row of its own. What the `FlowRow` the section used to be did, worked out without
- * composing anything, so that the section can be cut between its rows (see [chordSlotCount]).
+ * cell: the cells in their order, [gap] apart, as few rows as the width allows and a cell wider than [width] a row of
+ * its own, the cells shared out between those rows as evenly as their order lets them (see [balancedRowStarts]).
+ * Worked out without composing anything, so that the section can be cut between its rows (see [chordSlotCount]).
  */
-internal fun chordRowStarts(cellWidths: IntArray, gap: Int, width: Int): IntArray {
+internal fun chordRowStarts(cellWidths: IntArray, gap: Int, width: Int): IntArray =
+    balancedRowStarts(FloatArray(cellWidths.size) { cellWidths[it].toFloat() }, gap.toFloat(), width.toFloat())
+
+/**
+ * Where each row of [cellWidths] starts, [gap] apart within [width]: as many rows as filling each one before starting
+ * the next would take, but with the cells shared out between them so that the rows are as close to one width as their
+ * order lets them be — nine diagrams six of which fit on a line are five over four rather than six over three, and ten
+ * of which four fit are four, three and three rather than four, four and two — since a last row left short makes the
+ * section look as if it had run out of room rather than chords. Of the ways to cut the cells into that many rows none
+ * wider than [width] (a cell wider than it still a row of its own), the one whose row widths have the smallest sum of
+ * squares wins, which is the most even one, the rows always holding the same cells and gaps between them; a tie goes to
+ * the longer rows first. Shared by the song details screen and the PDF, which lay the diagrams out alike.
+ */
+internal fun balancedRowStarts(cellWidths: FloatArray, gap: Float, width: Float): IntArray {
+    val greedy = greedyRowStarts(cellWidths, gap, width)
+    val rowCount = greedy.size
+    if (rowCount <= 1) return greedy
+    val count = cellWidths.size
+    // The cheapest way to lay the cells from each one to the end out in each number of rows, and where its first row
+    // ends, worked out from the last cell backwards.
+    val cost = Array(rowCount + 1) { DoubleArray(count + 1) { Double.POSITIVE_INFINITY } }
+    val rowEnd = Array(rowCount + 1) { IntArray(count + 1) }
+    cost[0][count] = 0.0
+    for (rows in 1..rowCount) {
+        for (first in count - 1 downTo 0) {
+            var run = 0f
+            for (end in first + 1..count) {
+                run += cellWidths[end - 1] + if (end - 1 > first) gap else 0f
+                if (run > width && end - 1 > first) break
+                val total = run.toDouble() * run + cost[rows - 1][end]
+                // Not strictly cheaper only on a tie, which then keeps the longer first row.
+                if (total <= cost[rows][first]) {
+                    cost[rows][first] = total
+                    rowEnd[rows][first] = end
+                }
+            }
+        }
+    }
+    if (cost[rowCount][0].isInfinite()) return greedy
+    val starts = IntArray(rowCount)
+    var first = 0
+    for (row in 0 until rowCount) {
+        starts[row] = first
+        first = rowEnd[rowCount - row][first]
+    }
+    return starts
+}
+
+/** Where each row of [cellWidths] starts when every row takes as many cells as fit in [width] before the next begins. */
+private fun greedyRowStarts(cellWidths: FloatArray, gap: Float, width: Float): IntArray {
     if (cellWidths.isEmpty()) return IntArray(0)
     val starts = mutableListOf(0)
-    var used = cellWidths[0].toLong()
+    var used = cellWidths[0]
     for (cell in 1 until cellWidths.size) {
         val next = used + gap + cellWidths[cell]
         if (next > width) {
             starts += cell
-            used = cellWidths[cell].toLong()
+            used = cellWidths[cell]
         } else {
             used = next
         }

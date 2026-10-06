@@ -27,6 +27,14 @@ class ChordRowsTest {
     }
 
     @Test
+    fun theCellsAreSharedOutEvenlyBetweenAsFewRowsAsTheWidthAllows() {
+        // Six of nine fit on a line: two rows still, but five over four rather than six over three.
+        assertContentEquals(intArrayOf(0, 5), chordRowStarts(IntArray(9) { 56 }, gap = 6, width = 6 * 56 + 5 * 6))
+        assertContentEquals(intArrayOf(0, 4, 7), chordRowStarts(IntArray(10) { 56 }, gap = 6, width = 4 * 56 + 3 * 6))
+        assertContentEquals(intArrayOf(0, 2), chordRowStarts(intArrayOf(100, 56, 56, 56), gap = 6, width = 250))
+    }
+
+    @Test
     fun aCellWiderThanTheWidthIsARowOfItsOwn() {
         assertContentEquals(intArrayOf(0, 1, 2), chordRowStarts(intArrayOf(56, 200, 56), gap = 6, width = 120))
         assertEquals(0, chordRowStarts(IntArray(0), gap = 6, width = 120).size)

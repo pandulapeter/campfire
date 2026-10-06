@@ -10,6 +10,7 @@
 # To do
 ## Short-term (in this version)
 ### Bugs / issues
+- Setlists screen snap should not apply the gradient over the description
 
 ### Improvements
 
