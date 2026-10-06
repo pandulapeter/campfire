@@ -37,8 +37,11 @@ class ChordProTransposerTest {
         .distinct()
 
     @Test
-    fun `a transposition leaves the chords a song defines where they are`() {
-        assertEquals("{define: C frets x 3 2 0 1 0}\n[D]x", ChordProTransposer.transposeText("{define: C frets x 3 2 0 1 0}\n[C]x", 2))
+    fun `a transposition moves the chords a song defines along the neck with their names`() {
+        assertEquals(
+            "{define: D base-fret 2 frets x 4 3 1 2 1}\n[D]x",
+            ChordProTransposer.transposeText("{define: C base-fret 1 frets x 3 2 0 1 0}\n[C]x", 2),
+        )
     }
 
     @Test

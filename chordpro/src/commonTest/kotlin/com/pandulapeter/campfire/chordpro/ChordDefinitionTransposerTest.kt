@@ -99,4 +99,44 @@ class ChordDefinitionTransposerTest {
         assertEquals("F#", ChordProTransposer.transpose(opening, opening.metadata.transpose).metadata.definitions.single().name)
         assertEquals("E", ChordProTransposer.transpose(song, 0, preferFlats = true).metadata.definitions.single().name)
     }
+
+    @Test
+    fun `the text keeps every character outside the name, the base fret, the frets and the fingers`() {
+        assertEquals(
+            "{define-guitar:  F   frets  1 3 3 2 1 1  fingers 1 3 4 2 1 1 display F}",
+            ChordProTransposer.transposeText("{define-guitar:  E   frets  0 2 2 1 0 0  fingers 0 2 3 1 0 0 display F}", 1),
+        )
+        assertEquals("{define: F# base-fret 9 frets N 1 3 3 3 1}", ChordProTransposer.transposeText("{define: E base-fret 7 frets N 1 3 3 3 1}", 2))
+        assertEquals("{define: D keys 0 4 7}", ChordProTransposer.transposeText("{define: C keys 0 4 7}", 2))
+        assertEquals("{chord: Bm}\n{define: D copy A}", ChordProTransposer.transposeText("{chord: Am}\n{define: C copy G}", 2))
+    }
+
+    @Test
+    fun `a fingering the move leaves out goes with its keyword`() {
+        assertEquals(
+            "{define: D frets 2 5 4 2 3 5}",
+            ChordProTransposer.transposeText("{define: C frets 0 3 2 0 1 3 fingers 0 3 2 0 1 4}", 2),
+        )
+    }
+
+    @Test
+    fun `a line that cannot be read is left byte for byte`() {
+        assertEquals("{define: C frets x 3 two 0 1 0}\n[D]x", ChordProTransposer.transposeText("{define: C frets x 3 two 0 1 0}\n[C]x", 2))
+    }
+
+    @Test
+    fun `there and back in the text is the line it started as`() {
+        val text = "{define: C base-fret 1 frets x 3 2 0 1 0 fingers 0 3 2 0 1 0}\n{define-ukulele: Am frets 2 0 0 0}\n{define: G keys 0 4 7}\n[C]x [Am]y [G]z"
+        (-5..6).forEach { semitones ->
+            assertEquals(text, ChordProTransposer.transposeText(ChordProTransposer.transposeText(text, semitones), -semitones), "$semitones")
+        }
+    }
+
+    @Test
+    fun `the caret stays on a definition's line`() {
+        val before = "{define: C frets x 3 2 0 1 0}\n[C]x"
+        val after = ChordProTransposer.transposeText(before, 2)
+        val offset = ChordProTransposer.transposedOffset(before, after, 20)
+        assertTrue(offset < after.indexOf('\n'))
+    }
 }

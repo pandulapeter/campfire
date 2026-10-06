@@ -132,6 +132,93 @@ object ChordProDefinitions {
         return ChordVoicing.Fretted(moved, fingers)
     }
 
+    /**
+     * [rawLine], a `{define}` or `{chord}` directive whose selector is [selector], with the chords it names renamed by
+     * [rename] and, where it holds a fretted shape it can read, the shape moved by [semitones] the way [transposed]
+     * moves it: the name, the base fret, the frets and the fingers each rewritten where it stands and every other
+     * character of the line kept, a selector, a `display` and the spacing included. A base fret is written as a diagram
+     * would draw the shape, and a line that had none counts its frets from the nut whatever they come to, so that
+     * moving it back writes the line it was; a fingering the move leaves out goes with its keyword. A keyboard's keys are counted from the root and stay as
+     * they are. A line that cannot be read is left byte for byte, as a tab that fits in no octave is.
+     */
+    fun rewrittenLine(rawLine: String, selector: String, rename: (String) -> String, semitones: Int = 0): String {
+        val trimmed = rawLine.trim()
+        val indent = rawLine.length - rawLine.trimStart().length
+        val valueStart = ChordProSyntax.directiveValueStart(trimmed)?.let { it + indent } ?: return rawLine
+        val valueEnd = indent + trimmed.lastIndexOf('}')
+        if (valueEnd <= valueStart) return rawLine
+        val value = rawLine.substring(valueStart, valueEnd)
+        val reading = read(value, selector.takeIf { it.isNotEmpty() })
+        if (reading == Reading.Invalid) return rawLine
+        val words = mutableListOf<IntRange>()
+        var index = 0
+        while (index < value.length) {
+            if (value[index].isWhitespace()) {
+                index++
+                continue
+            }
+            val start = index
+            while (index < value.length && !value[index].isWhitespace()) index++
+            words += start until index
+        }
+        val replacements = mutableMapOf<Int, String>()
+        val removals = mutableSetOf<Int>()
+        replacements[0] = rename(value.substring(words[0]))
+        val keywordIndices = words.indices.filter { value.substring(words[it]).lowercase() in keywords }
+        // The other chord a `copy` names is renamed with the one it defines.
+        keywordIndices.filter { value.substring(words[it]).lowercase() == COPY }.forEach { keyword ->
+            words.getOrNull(keyword + 1)?.let { replacements[keyword + 1] = rename(value.substring(it)) }
+        }
+        val voicing = (reading as? Reading.Shape)?.voicing as? ChordVoicing.Fretted
+        if (voicing != null && semitones.mod(12) != 0) {
+            val moved = transposed(ChordDefinition(reading.name, reading.instrument, voicing), semitones) { it }.voicing as ChordVoicing.Fretted
+            val baseFretKeyword = keywordIndices.firstOrNull { value.substring(words[it]).lowercase() == BASE_FRET }
+            // A line with no base fret counts its frets from the nut whatever they are, so that moving it back writes
+            // the line it was.
+            val baseFret = if (baseFretKeyword == null) 1 else ChordVoicings.baseFret(moved.frets)
+            fun argumentsOf(keyword: String) = keywordIndices.firstOrNull { value.substring(words[it]).lowercase() == keyword }?.let { start ->
+                (start + 1 until (keywordIndices.firstOrNull { it > start } ?: words.size)).toList()
+            }
+            argumentsOf(FRETS)?.forEachIndexed { string, word ->
+                val fret = moved.frets[string]
+                // A muted string keeps the way the file writes it, `x`, `N` or `-1`.
+                if (fret != null) replacements[word] = if (fret == 0) "0" else (fret - baseFret + 1).toString()
+            }
+            if (baseFretKeyword != null) argumentsOf(BASE_FRET)?.firstOrNull()?.let { replacements[it] = baseFret.toString() }
+            val fingersKeyword = keywordIndices.firstOrNull { value.substring(words[it]).lowercase() == FINGERS }
+            if (fingersKeyword != null) {
+                val arguments = argumentsOf(FINGERS).orEmpty()
+                val fingers = moved.fingers
+                if (fingers == null) {
+                    removals += fingersKeyword
+                    removals += arguments
+                } else {
+                    arguments.forEachIndexed { string, word ->
+                        // An unused string keeps the way the file writes it, `0`, `-` or `x`.
+                        if (fingers[string] > 0 || value.substring(words[word]) !in unusedFingers) replacements[word] = fingers[string].toString()
+                    }
+                }
+            }
+        }
+        val rewritten = buildString {
+            var consumedUntil = 0
+            words.forEachIndexed { word, range ->
+                if (word in removals) {
+                    // The whitespace in front of a word that goes goes with it.
+                    var cut = range.first
+                    while (cut > consumedUntil && value[cut - 1].isWhitespace()) cut--
+                    append(value, consumedUntil, cut)
+                } else {
+                    append(value, consumedUntil, range.first)
+                    append(replacements[word] ?: value.substring(range))
+                }
+                consumedUntil = range.last + 1
+            }
+            append(value, consumedUntil, value.length)
+        }
+        return rawLine.substring(0, valueStart) + rewritten + rawLine.substring(valueEnd)
+    }
+
     /** What reading the value of a definition came to. */
     internal sealed interface Reading {
 
@@ -177,11 +264,13 @@ object ChordProDefinitions {
                     if (word in unusedFingers) 0 else word.toIntOrNull()?.takeIf { it in 0..MAX_FINGER } ?: return Reading.Invalid
                 } ?: return Reading.Invalid
                 KEYS -> keys = arguments().takeIf { it.isNotEmpty() }?.map { it.toIntOrNull() ?: return Reading.Invalid } ?: return Reading.Invalid
-                else -> {
-                    // `copy`, `copyall`, `display`, `format` and whatever a later version of the format adds.
+                // A copy declares the shape of another chord, which is that chord's to draw.
+                COPY, COPY_ALL -> {
                     arguments()
                     isOther = true
                 }
+                // `display`, `format` and `diagram` say how a shape is shown rather than what it is.
+                else -> arguments()
             }
         }
         if (fingers != null && fingers.size != frets?.size) return Reading.Invalid
@@ -216,7 +305,9 @@ object ChordProDefinitions {
     private const val MAX_FINGER = 5
     private const val MAX_HAND_FINGER = 4
     private const val MAX_FRET = 24
-    private val keywords = setOf(BASE_FRET, FRETS, FINGERS, KEYS, "copy", "copyall", "display", "format", "diagram")
+    private const val COPY = "copy"
+    private const val COPY_ALL = "copyall"
+    private val keywords = setOf(BASE_FRET, FRETS, FINGERS, KEYS, COPY, COPY_ALL, "display", "format", "diagram")
     private val mutedFrets = setOf("x", "X", "N", "-1")
     private val unusedFingers = setOf("-", "x", "X", "N")
     private val selectorInstruments = mapOf(

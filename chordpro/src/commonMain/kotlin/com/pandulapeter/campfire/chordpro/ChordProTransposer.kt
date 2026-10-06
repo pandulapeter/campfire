@@ -315,22 +315,27 @@ object ChordProTransposer {
         }
     }
 
-    private fun rewriteText(text: String, semitones: Int, rename: (String) -> String) =
-        rewriteChordNamesInText(text, rewriteTab = { lines -> ChordProTabTransposer.transpose(lines, semitones, rename) }, rename = rename)
+    private fun rewriteText(text: String, semitones: Int, rename: (String) -> String) = rewriteChordNamesInText(
+        text = text,
+        rewriteTab = { lines -> ChordProTabTransposer.transpose(lines, semitones, rename) },
+        rename = rename,
+        rewriteDefinition = { rawLine, selector -> ChordProDefinitions.rewrittenLine(rawLine, selector, rename, semitones) },
+    )
 
     /**
      * Applies [rename] to every chord a raw document names - in brackets, in grids, in its key and in directives whose
      * value holds chords - and [rewriteTab] to each run of tablature as a whole, leaving every other character of the
      * text exactly where it was.
      *
-     * With [renameDefinitions] the chord a `{define}` or `{chord}` directive names is renamed too. Only a change of
-     * notation asks for that: a transposition would rename a definition without moving the fingering that follows it.
+     * Every `{define}` and `{chord}` line is handed to [rewriteDefinition], with the directive's selector: a change of
+     * notation renames the chords it names, and a transposition moves its shape along the neck with them (see
+     * [ChordProDefinitions.rewrittenLine]).
      */
     internal fun rewriteChordNamesInText(
         text: String,
         rewriteTab: (List<String>) -> List<String>,
         rename: (String) -> String,
-        renameDefinitions: Boolean = false,
+        rewriteDefinition: (rawLine: String, selector: String) -> String = { rawLine, _ -> rawLine },
     ): String {
         val lines = ChordProSyntax.splitLines(text).toMutableList()
         val tabLineIndices = mutableListOf<Int>() // The tab environment being collected: it is rewritten as a whole.
@@ -350,9 +355,7 @@ object ChordProTransposer {
                 directive != null -> {
                     // A definition inside an environment handed to another program is that program's text. One with a
                     // selector is read whichever instrument it names, so it is renamed with the rest.
-                    if (renameDefinitions && !isDelegated && ChordProDefinitions.selectorOf(directive.name) != null) {
-                        lines[index] = rewriteDefinitionLine(rawLine, trimmedLine, rename)
-                    }
+                    if (!isDelegated) ChordProDefinitions.selectorOf(directive.name)?.let { lines[index] = rewriteDefinition(rawLine, it) }
                     if (ChordProSyntax.hasSelectorSuffix(directive.name)) return@forEachIndexed
                     ChordProSyntax.startOfEnvironment(directive.name)?.let {
                         lines.rewriteTab(tabLineIndices, rewriteTab)
@@ -514,18 +517,6 @@ object ChordProTransposer {
     private fun rewriteKeyLine(rawLine: String, key: String, rename: (String) -> String): String {
         val valueEnd = rawLine.substring(0, rawLine.trimEnd().lastIndex).trimEnd().length
         return rawLine.substring(0, valueEnd - key.length) + renameKey(key, rename) + rawLine.substring(valueEnd)
-    }
-
-    /** Renames the first word of a `{define}` or `{chord}` value, which is the chord it defines, keeping the rest of [rawLine]. */
-    private fun rewriteDefinitionLine(rawLine: String, trimmedLine: String, rename: (String) -> String): String {
-        var start = ChordProSyntax.directiveValueStart(trimmedLine) ?: return rawLine
-        val closeIndex = trimmedLine.length - 1
-        while (start < closeIndex && trimmedLine[start].isWhitespace()) start++
-        var end = start
-        while (end < closeIndex && !trimmedLine[end].isWhitespace()) end++
-        if (end == start) return rawLine
-        val offset = rawLine.length - rawLine.trimStart().length
-        return rawLine.substring(0, offset + start) + rename(trimmedLine.substring(start, end)) + rawLine.substring(offset + end)
     }
 
     /** Swaps the trimmed part of a line for [replacement], keeping the surrounding whitespace. */
