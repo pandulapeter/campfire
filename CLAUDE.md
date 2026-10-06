@@ -283,8 +283,8 @@ localized in both languages.
   four is edited in the Song defaults sheet**, an entry of the song details editing menu and of the About the song sheet's Song defaults group, and nowhere on the page: it opens with a line saying that the steppers
   change them for this setlist only, or, opened from the library, outside every setlist — never naming a device,
   since the library's own overrides are synced (see Sync) — then a card naming what is adjusted there, with a Reset, while there is any, then the key, capo, tempo and time signature fields, each optional, an
-  empty one leaving the default in force. A new song's template carries an empty `{key}`, `{capo}`, `{tempo}` and
-  `{time}` line for them to be filled into. **Read only mode reads them
+  empty one leaving the default in force. A new song's template carries an empty `{key}` line and `{capo: 0}`,
+  `{tempo: 120}` and `{time: 4/4}`, the defaults written out, for them to be edited. **Read only mode reads them
   instead**: performance mode and a song opened from an archived setlist get the same four as one line of accent
   colored text — which always names the capo and the time signature there, "Capo 0" and the click's 4/4 where the file
   says nothing, since with no control left on the page an absent value would read as an unknown one — as does the

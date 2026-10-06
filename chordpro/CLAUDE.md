@@ -114,7 +114,7 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   highlighter marks invalid counting as missing, and so does a negative `{capo}` — the first in the header (before the body begins, by the rule
   `{transpose}` is read with, `ChordProSyntax.bodyStartIndex`), a line in the body counting only for a song whose header
   has no line of that field at all, an empty one included, which is how a cleared value stays cleared; an empty `{key}`,
-  `{capo}`, `{tempo}` or `{time}` (the new song template's) declares nothing and takes back nothing another header line
+  `{capo}`, `{tempo}` or `{time}` (the new song template's `{key}`) declares nothing and takes back nothing another header line
   said; a `{transpose}` before the song's first line transposes the whole of it (`ChordProMetadata.transpose`,
   the last one there winning), and one further down is a modulation — a `ChordProBlock.Transpose` holding the offset
   from the whole-song value for everything after it, cutting the section it stands in the way a comment does — each

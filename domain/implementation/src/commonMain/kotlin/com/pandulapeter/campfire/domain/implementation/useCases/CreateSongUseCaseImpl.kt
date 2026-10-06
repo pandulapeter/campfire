@@ -24,19 +24,21 @@ class CreateSongUseCaseImpl internal constructor(
 ) : CreateSongUseCase {
 
     /**
-     * The new file holds what the user typed, an empty line for each of the four values the song is played by and the
+     * The new file holds what the user typed, a line for each of the four values the song is played by and the
      * skeleton of a first verse, so that the editor opens on something that is already shaped like a song rather than
-     * on an empty page. An empty line declares nothing, so the song is played by the defaults until one is filled in.
+     * on an empty page. The capo, the tempo and the time signature start on the values the app plays a song by when it
+     * declares none (no capo, the metronome's 120 and 4/4), so writing them changes nothing until one is edited; the
+     * key has no such default and starts empty, as does the artist where none was given, to be filled in.
      */
     override suspend operator fun invoke(title: String, artist: String, metadata: Map<Field, String>): Song {
         val text = ChordProMetadataFields.set(
             text = buildString {
                 append("{title: ").append(title.trim()).append("}\n")
-                if (artist.isNotBlank()) append("{artist: ").append(artist.trim()).append("}\n")
+                append("{artist: ").append(artist.trim()).append("}\n")
                 append("{key: }\n")
-                append("{capo: }\n")
-                append("{tempo: }\n")
-                append("{time: }\n")
+                append("{capo: 0}\n")
+                append("{tempo: 120}\n")
+                append("{time: 4/4}\n")
                 append("\n")
                 append("{start_of_verse}\n")
                 // The blank line the editor puts the caret on.

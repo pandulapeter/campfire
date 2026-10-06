@@ -51,7 +51,7 @@ class CreateSongUseCaseImplTest {
         assertEquals("2026", metadata.year)
         assertEquals("3:45", metadata.duration)
         assertEquals("Title (Acoustic)" to "Artist", repository.name)
-        assertTrue("{key: }\n{capo: }\n{tempo: }\n{time: }\n" in repository.text)
+        assertTrue("{key: }\n{capo: 0}\n{tempo: 120}\n{time: 4/4}\n" in repository.text)
         assertTrue(repository.text.endsWith("\n{start_of_verse}\n\n{end_of_verse}\n"))
     }
 
@@ -64,7 +64,7 @@ class CreateSongUseCaseImplTest {
         create(title = "Title", artist = "", metadata = mapOf(Field.SUBTITLE to "", Field.ALBUM to "  "))
         assertEquals(original, repository.text)
         assertEquals("Title" to "", repository.name)
-        assertEquals("{title: Title}\n{key: }\n{capo: }\n{tempo: }\n{time: }\n\n{start_of_verse}\n\n{end_of_verse}\n", repository.text)
+        assertEquals("{title: Title}\n{artist: }\n{key: }\n{capo: 0}\n{tempo: 120}\n{time: 4/4}\n\n{start_of_verse}\n\n{end_of_verse}\n", repository.text)
     }
 
     private class RecordingSongRepository : SongRepository {
