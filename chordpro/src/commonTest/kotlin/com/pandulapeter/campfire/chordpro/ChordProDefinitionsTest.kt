@@ -63,10 +63,34 @@ class ChordProDefinitionsTest {
         listOf("G copy G7", "G copyall G7", "G display G/B", "G frets 0 0 0 0 0", "G").forEach {
             assertIs<ChordProDefinitions.Reading.Other>(ChordProDefinitions.read(it), it)
         }
-        listOf("G frets 3 2 x two 0 3", "G frets", "G frets 3 2 0 0 0 3 fingers 1 2 3", "G base-fret 0 frets 3 2 0 0 0 3", "G keys a b").forEach {
+        listOf(
+            "G frets 3 2 x two 0 3",
+            "G frets",
+            "G frets 3 2 0 0 0 3 fingers 1 2 3",
+            "G base-fret 0 frets 3 2 0 0 0 3",
+            "G keys a b",
+            "G frets 3 2 0 0 0 25",
+            "G frets 3 2 0 0 0 99999999",
+            "G base-fret 25 frets 1 1 1 1 1 1",
+            "G base-fret 2147483647 frets 3 2 1 1 1 3",
+            "G base-fret 22 frets 1 3 3 2 1 4",
+        ).forEach {
             assertEquals(ChordProDefinitions.Reading.Invalid, ChordProDefinitions.read(it), it)
         }
         assertEquals(emptyList(), definitions("{chord: Am}\n{define: G copy G7}"))
+    }
+
+    @Test
+    fun `keys past the diagram are wrapped by their note`() {
+        mapOf(
+            "C keys 0 4 99999999" to listOf(0, 4, 99999999),
+            "C keys -99999999 4 7" to listOf(-99999999, 4, 7),
+        ).forEach { (value, written) ->
+            val notes = (assertIs<ChordProDefinitions.Reading.Shape>(ChordProDefinitions.read(value)).voicing as ChordVoicing.Keys).notes
+            assertTrue(notes.all { it in 0..47 }, value)
+            assertEquals(written.map { it.mod(12) }.toSet(), notes.map { it.mod(12) }.toSet(), value)
+        }
+        assertIs<ChordProDefinitions.Reading.Shape>(ChordProDefinitions.read("G base-fret 22 frets 1 3 3 2 1 3"))
     }
 
     @Test
@@ -117,12 +141,15 @@ class ChordProDefinitionsTest {
 
     @Test
     fun `the highlighter colours the chord a definition names, and a line it cannot read`() {
-        val text = "{define: G frets 3 2 0 0 0 3}\n{define: X frets 3 2 0 0 0 3}\n{define: G frets 3 two}\n{define-ukulele: G frets 3 2 0 0 0 3}"
+        val text = "{define: G frets 3 2 0 0 0 3}\n{define: X frets 3 2 0 0 0 3}\n{define: G frets 3 two}\n{define-ukulele: G frets 3 2 0 0 0 3}\n{define: G base-fret 2147483647 frets 3 2 1 1 1 3}"
         val tokens = ChordProHighlighter.tokenize(text)
         val chords = tokens.filter { it.type == ChordProHighlighter.TokenType.CHORD }.map { text.substring(it.start, it.end) }
         assertEquals(listOf("G"), chords)
         val invalid = tokens.filter { it.type == ChordProHighlighter.TokenType.INVALID }.map { text.substring(it.start, it.end) }
-        assertEquals(listOf("{define: G frets 3 two}", "{define-ukulele: G frets 3 2 0 0 0 3}"), invalid)
+        assertEquals(
+            listOf("{define: G frets 3 two}", "{define-ukulele: G frets 3 2 0 0 0 3}", "{define: G base-fret 2147483647 frets 3 2 1 1 1 3}"),
+            invalid,
+        )
     }
 
     @Test

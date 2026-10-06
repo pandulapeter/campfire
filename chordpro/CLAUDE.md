@@ -400,7 +400,8 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   `desktopTest` contact sheet draws them all into `CAMPFIRE_CHORD_QA_DIR` where that is set, for a player to look over.
 - `ChordProDefinitions` — a song's own shapes (`model/ChordDefinition`). `read` takes a definition's value: frets
   counted from the `base-fret` (`x`, `X`, `N` and `-1` muted), fingers, or a keyboard's `keys` counted from the root;
-  the instrument is the selector's where it names one and otherwise the one with as many strings; a `copy`, a
+  frets and the base fret stay on a 24-fret neck (`Invalid` past it), and keys past four octaves are wrapped by their
+  note, as the specification says, so no file can make a diagram draw without end; the instrument is the selector's where it names one and otherwise the one with as many strings; a `copy`, a
   `display` alone or a string count no instrument has is `Other`, and what cannot be read `Invalid`. The last shape of
   a chord on an instrument wins, in the place of the first. `line` writes one the way it is read, with no selector and
   the base fret a diagram would draw. `transposed` moves one with the song: the name renamed like any chord, a fretted

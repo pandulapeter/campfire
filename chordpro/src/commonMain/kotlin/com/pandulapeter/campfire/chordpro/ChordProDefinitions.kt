@@ -276,7 +276,10 @@ object ChordProDefinitions {
          */
         data class Other(val name: String?) : Reading
 
-        /** A shape that cannot be read: a fret that is no number, `frets` with nothing after it, fingers that do not match. */
+        /**
+         * A shape that cannot be read: a fret that is no number, `frets` with nothing after it, fingers that do not match, a
+         * fret off the neck, a base fret past the last fret.
+         */
         data object Invalid : Reading
     }
 
@@ -301,14 +304,23 @@ object ChordProDefinitions {
         }
         while (index < words.size) {
             when (words[index++].lowercase()) {
-                BASE_FRET -> baseFret = arguments().singleOrNull()?.toIntOrNull()?.takeIf { it >= 1 } ?: return Reading.Invalid
+                BASE_FRET -> baseFret = arguments().singleOrNull()?.toIntOrNull()?.takeIf { it in 1..MAX_FRET } ?: return Reading.Invalid
                 FRETS -> frets = arguments().takeIf { it.isNotEmpty() }?.map { word ->
-                    if (word in mutedFrets) null else word.toIntOrNull()?.takeIf { it >= 0 } ?: return Reading.Invalid
+                    if (word in mutedFrets) null else word.toIntOrNull()?.takeIf { it in 0..MAX_FRET } ?: return Reading.Invalid
                 } ?: return Reading.Invalid
                 FINGERS -> fingers = arguments().takeIf { it.isNotEmpty() }?.map { word ->
                     if (word in unusedFingers) 0 else word.toIntOrNull()?.takeIf { it in 0..MAX_FINGER } ?: return Reading.Invalid
                 } ?: return Reading.Invalid
-                KEYS -> keys = arguments().takeIf { it.isNotEmpty() }?.map { it.toIntOrNull() ?: return Reading.Invalid } ?: return Reading.Invalid
+                // Keys past the diagram are wrapped by their note rather than refused, as the specification says, which also keeps
+                // what a diagram draws to four octaves however large a number the file holds.
+                KEYS -> keys = arguments().takeIf { it.isNotEmpty() }?.map { word ->
+                    val key = word.toIntOrNull() ?: return Reading.Invalid
+                    when {
+                        key > MAX_KEY -> MAX_KEY - 11 + key.mod(12)
+                        key < MIN_KEY -> MIN_KEY + key.mod(12)
+                        else -> key
+                    }
+                } ?: return Reading.Invalid
                 // A copy declares the shape of another chord, which is that chord's to draw.
                 COPY, COPY_ALL -> {
                     arguments()
@@ -328,10 +340,12 @@ object ChordProDefinitions {
                 val root = ChordProChords.parse(name)?.root ?: 0
                 val absolute = keys.map { root + it }
                 val octaves = absolute.min().let { lowest -> if (lowest < 0) (-lowest + 11) / 12 else 0 }
-                return Reading.Shape(name, ChordInstrument.KEYBOARD, ChordVoicing.Keys(absolute.map { it + octaves * 12 }.distinct().sorted()))
+                val notes = absolute.map { it + octaves * 12 }.map { if (it > MAX_KEY) MAX_KEY - 11 + it.mod(12) else it }
+                return Reading.Shape(name, ChordInstrument.KEYBOARD, ChordVoicing.Keys(notes.distinct().sorted()))
             }
+            // Both operands are already on the neck, so the sum cannot overflow; past the last fret is off it.
             frets != null -> ChordVoicing.Fretted(
-                frets = frets.map { fret -> if (fret == null || fret == 0) fret else fret + baseFret - 1 },
+                frets = frets.map { fret -> if (fret == null || fret == 0) fret else (fret + baseFret - 1).takeIf { it <= MAX_FRET } ?: return Reading.Invalid },
                 fingers = fingers,
             )
             else -> return Reading.Other(name)
@@ -350,6 +364,8 @@ object ChordProDefinitions {
     private const val MAX_FINGER = 5
     private const val MAX_HAND_FINGER = 4
     private const val MAX_FRET = 24
+    private const val MIN_KEY = -24
+    private const val MAX_KEY = 47
     private const val COPY = "copy"
     private const val COPY_ALL = "copyall"
     private val keywords = setOf(BASE_FRET, FRETS, FINGERS, KEYS, COPY, COPY_ALL, "display", "format", "diagram")
