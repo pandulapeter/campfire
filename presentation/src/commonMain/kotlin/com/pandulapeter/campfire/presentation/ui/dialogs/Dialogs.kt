@@ -246,7 +246,10 @@ import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongInfoBod
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.rememberSongInfoEditing
 import com.pandulapeter.campfire.presentation.ui.components.ACTION_BUTTON_OVERLAP
 import com.pandulapeter.campfire.presentation.ui.components.overlappingAction
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -923,7 +926,9 @@ internal fun rememberFirstFieldFocusRequester(isFocused: Boolean = true): FocusR
  * frame that comes late a second tap lands on a dialog that has already been answered, and creates the song or
  * the setlist a second time. The state is written as the event is handled, so the second event of the same frame
  * already reads it. That is the keyboard's Done and the button landing on the same frame; a Done that comes after the
- * sheet has started closing is dropped by the form itself, through [LocalIsSheetClosing].
+ * sheet has started closing is dropped by the form itself, through [LocalIsSheetClosing]. The sheet's close after a
+ * confirmation cannot be taken back ([CampfireBottomSheet]), so the one confirmation let through is never left on a
+ * sheet that stays up.
  */
 @Composable
 private fun rememberSingleConfirmation(): (confirm: () -> Unit) -> Unit {
@@ -2053,12 +2058,13 @@ private fun campfireBottomSheetContainerColor() = MaterialTheme.colorScheme.back
  * @param title What the sheet is about, named in its [SheetHeader].
  * @param subtitle What the sheet acts on, under [title]: the song or the setlist it was opened for. Left out when blank.
  * @param actions Buttons at the end of the [SheetHeader], across from the close button, such as the order of a list or
- *   the button that finishes what the sheet is for. They are handed the same close the header's close button runs, and
- *   the ones that write ([BottomSheetConfirmButton]) do nothing once the sheet has started closing ([LocalIsSheetClosing]).
+ *   the button that finishes what the sheet is for. The close they are handed is final: unlike the header's close
+ *   button, a hide that follows an action is not taken back by a finger landing on the sliding sheet. The ones that
+ *   write ([BottomSheetConfirmButton]) do nothing once the sheet has started closing ([LocalIsSheetClosing]).
  * @param onDismiss Has to dismiss this sheet's own dialog and nothing else (`CampfireViewModel.dismissSheet`): it is
  *   called from the end of a hide animation, by which time another dialog may have taken the sheet's place.
- * @param content Can close the sheet the way its close button does ([BottomSheetContentScope.close]), for a sheet
- *   with a button of its own that is done with it.
+ * @param content Can close the sheet ([BottomSheetContentScope.close]), for a sheet with a button of its own that is
+ *   done with it. That close is final the way the actions' is.
  */
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -2078,6 +2084,54 @@ internal fun CampfireBottomSheet(
     val coroutineScope = rememberCoroutineScope()
     val windowHeight = LocalWindowInfo.current.containerDpSize.height
     val scrollState = rememberScrollState()
+    // Hiding the sheet by hand does not count as dismissing it, so the dialog state is cleared once it is gone: left
+    // as it was, the invisible sheet's modal layer would stay over the screen, swallowing the next tap. The close
+    // button's hide only counts when it ran to its end: one cut short by a finger taking hold of the sheet leaves the
+    // sheet where Material settles it, with the draft still in it, and one cut short by another dialog replacing the
+    // sheet has nothing left to dismiss.
+    // Set as the tap is handled, so the second tap of the same frame already reads it; Material's own hide (a swipe,
+    // the scrim) shows up as the sheet's target becoming Hidden while it is still on screen.
+    var isCloseRequested by remember { mutableStateOf(false) }
+    // Set by a close that follows something the sheet has already done - a Save, a Create, a Delete. Such a hide is
+    // never taken back: the sheet's gestures are off for the slide, and a hide cut short anyway is finished from where
+    // it is, since a sheet left up after its action would offer an action that has already happened (a dead Create over
+    // the editor).
+    var isCloseFinal by remember { mutableStateOf(false) }
+    val isClosing = remember(sheetState) {
+        { isCloseRequested || (sheetState.targetValue == SheetValue.Hidden && sheetState.currentValue != SheetValue.Hidden) }
+    }
+    val requestClose = { isFinal: Boolean ->
+        if (!isCloseRequested) {
+            isCloseRequested = true
+            isCloseFinal = isFinal
+            coroutineScope.launch { sheetState.hide() }.invokeOnCompletion { cause ->
+                when {
+                    cause == null -> onDismiss()
+                    // A finger that took hold of the sheet keeps it, and its actions with it.
+                    !isCloseFinal -> isCloseRequested = false
+                    else -> coroutineScope.launch {
+                        // Cut short after its action: by a hide of Material's own (the scrim, back, Escape), which is
+                        // let run to its end, or by a press that took hold of the sheet before the recomposition that
+                        // turned its gestures off, from whose hold it is hidden again. A frame first, by which either
+                        // has started. Calling hide while Material's own runs would cancel that one, and back's settle
+                        // dismisses in one frame when it is cancelled.
+                        while (sheetState.isVisible) {
+                            withFrameNanos { }
+                            if (sheetState.isAnimationRunning && sheetState.targetValue == SheetValue.Hidden) continue
+                            try {
+                                sheetState.hide()
+                            } catch (exception: CancellationException) {
+                                // Refused while a press still holds the sheet: tried again on the next frame.
+                                currentCoroutineContext().ensureActive()
+                            }
+                        }
+                    }.invokeOnCompletion { onDismiss() }
+                }
+            }
+        }
+    }
+    val cancel = { requestClose(false) }
+    val close = { requestClose(true) }
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         // Material applies sheetMaxWidth after this modifier. First reserve the safe horizontal span, then
@@ -2090,6 +2144,8 @@ internal fun CampfireBottomSheet(
         },
         sheetState = sheetState,
         sheetMaxWidth = sheetMaxWidth,
+        // Off for the slide of a final close, so that the second press of a double tap does not take hold of it.
+        sheetGesturesEnabled = !isCloseFinal,
         containerColor = campfireBottomSheetContainerColor(),
         dragHandle = null,
         contentWindowInsets = { WindowInsets.safeDrawing.only(WindowInsetsSides.Top) },
@@ -2113,26 +2169,6 @@ internal fun CampfireBottomSheet(
         )
         val isCompactKeyboard = windowHeight < SHORT_WINDOW_HEIGHT && isKeyboardVisible
         CompactKeyboardEffect(isEnabled = isCompactKeyboard)
-        // Hiding the sheet by hand does not count as dismissing it, so the dialog state is cleared once it is gone: left
-        // as it was, the invisible sheet's modal layer would stay over the screen, swallowing the next tap. Only a hide
-        // that ran to its end counts: one cut short by a finger taking hold of the sheet leaves the sheet where Material
-        // settles it, and one cut short by another dialog replacing the sheet has nothing left to dismiss.
-        // Set as the tap is handled, so the second tap of the same frame already reads it; Material's own hide (a swipe,
-        // the scrim) shows up as the sheet's target becoming Hidden while it is still on screen.
-        var isCloseRequested by remember { mutableStateOf(false) }
-        val isClosing = remember(sheetState) {
-            { isCloseRequested || (sheetState.targetValue == SheetValue.Hidden && sheetState.currentValue != SheetValue.Hidden) }
-        }
-        val close = {
-            if (!isCloseRequested) {
-                isCloseRequested = true
-                coroutineScope.launch { sheetState.hide() }.invokeOnCompletion { cause ->
-                    // A finger that took hold of the sheet keeps it, and its actions with it.
-                    if (cause == null) onDismiss() else isCloseRequested = false
-                }
-            }
-            Unit
-        }
         // A keyboard in a short window leaves less height than the header and a field take together, so there the
         // header and the pinned controls scroll with the rest, above the keyboard, and bringing the caret into view can
         // move them out of its way. The content keeps the window's height inside that scroll, which is what bounds
@@ -2161,7 +2197,8 @@ internal fun CampfireBottomSheet(
                         title = title,
                         subtitle = subtitle,
                         actions = actions,
-                        onClose = close,
+                        onClose = cancel,
+                        onActionDone = close,
                     )
                     // Read inside the sheet, which is a window of its own on Android and gets the insets of that window.
                     // asPaddingValues alone ignores consumption. The column above already pads above the IME, which
@@ -2227,6 +2264,7 @@ private fun SheetHeader(
     subtitle: String,
     actions: (@Composable RowScope.(close: () -> Unit) -> Unit)?,
     onClose: () -> Unit,
+    onActionDone: () -> Unit,
 ) = Row(
     // An action at the end sits as far from the edge as the close button does from the start.
     modifier = Modifier.fillMaxWidth().padding(start = 4.dp, end = if (actions == null) 16.dp else 4.dp, top = 12.dp),
@@ -2263,7 +2301,7 @@ private fun SheetHeader(
         val actionTypography = remember(typography) {
             typography.copy(labelLarge = typography.labelLarge.copy(fontSize = 16.sp, lineHeight = 24.sp))
         }
-        MaterialTheme(typography = actionTypography) { actions(onClose) }
+        MaterialTheme(typography = actionTypography) { actions(onActionDone) }
     }
 }
 
