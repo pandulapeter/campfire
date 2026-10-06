@@ -226,6 +226,18 @@ class ChordProParserTest {
     }
 
     @Test
+    fun `a timing change takes the song's own value named further down`() {
+        val text = "{title: X}\n{time: 4/4}\n\nla\n{time: 3/4}\nlo\n{tempo: 90}\nli"
+
+        assertEquals(listOf(ChordProBlock.Timing(tempo = "90", time = "3/4")), ChordProParser.parse(text).blocks.filterIsInstance<ChordProBlock.Timing>())
+        assertEquals(ChordProParser.parse(text), ChordProParser.parse(ChordProPrettifier.prettify(text)))
+        assertEquals(
+            listOf(ChordProBlock.Timing(tempo = null, time = "3/4")),
+            ChordProParser.parse("{title: X}\n{time: 4/4}\n\nla\n{time: 3/4}\nlo").blocks.filterIsInstance<ChordProBlock.Timing>(),
+        )
+    }
+
+    @Test
     fun `a timing change carries the value that did not change`() {
         val timings = ChordProParser.parse("{tempo: 120}\n{time: 6/8}\n[C]a\n{tempo: 90}\n[C]b\n{time: 3/4}\n[C]c").blocks.filterIsInstance<ChordProBlock.Timing>()
 

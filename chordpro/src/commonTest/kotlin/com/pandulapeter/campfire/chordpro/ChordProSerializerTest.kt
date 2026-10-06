@@ -10,8 +10,11 @@
 package com.pandulapeter.campfire.chordpro
 
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
+import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
+import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class ChordProSerializerTest {
@@ -117,12 +120,29 @@ class ChordProSerializerTest {
             "[C]a\n{tempo: 90}\n[C]b\n{tempo: 120}\n[C]c",
             "{tempo}\n[C]a\n{tempo: 90}\n[C]b",
             "{time: C}\n[C]a\n{time: 3/4}\n[C]b\n{time: 4/4}\n[C]c",
+            "{title: X}\n{time: 4/4}\n\nla\n{time: 3/4}\nlo\n{tempo: 90}\nli",
+            "{title: X}\n{tempo: 120}\n\nla\n{tempo: 90}\nlo\n{time: 3/4}\nli",
         ).forEach { text ->
             val parsed = ChordProParser.parse(text)
+            val serialized = ChordProSerializer.serialize(parsed)
 
             assertTrue(parsed.blocks.any { it is ChordProBlock.Timing }, text)
-            assertEquals(parsed, ChordProParser.parse(ChordProSerializer.serialize(parsed)), text)
+            assertEquals(parsed, ChordProParser.parse(serialized), text)
+            assertFalse("null" in serialized, text)
         }
+    }
+
+    @Test
+    fun `a side of a change that names nothing is not written`() {
+        val serialized = ChordProSerializer.serialize(
+            ChordProSong(
+                metadata = ChordProMetadata(),
+                blocks = listOf(ChordProBlock.Timing(tempo = null, time = "3/4")),
+            ),
+        )
+
+        assertTrue("{time: 3/4}" in serialized, serialized)
+        assertFalse("{tempo" in serialized, serialized)
     }
 
     @Test

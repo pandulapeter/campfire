@@ -110,10 +110,12 @@ object ChordProSerializer {
         var time = metadata.time
 
         fun timing(block: ChordProBlock.Timing) = buildList {
-            if (ChordProTempo.parse(block.tempo) != ChordProTempo.parse(tempo)) add("{tempo: ${block.tempo}}")
-            if (ChordProTime.parse(block.time) != ChordProTime.parse(time) || isEmpty()) add("{time: ${block.time}}")
-            tempo = block.tempo
-            time = block.time
+            if (block.tempo != null && ChordProTempo.parse(block.tempo) != ChordProTempo.parse(tempo)) add("{tempo: ${block.tempo}}")
+            if (block.time != null && ChordProTime.parse(block.time) != ChordProTime.parse(time)) add("{time: ${block.time}}")
+            // A side the model leaves null is no value to write, and the block is a change only where one is written.
+            if (isEmpty()) (block.time?.let { "{time: $it}" } ?: block.tempo?.let { "{tempo: $it}" })?.let(::add)
+            tempo = block.tempo ?: tempo
+            time = block.time ?: time
         }.joinToString("\n")
     }
 

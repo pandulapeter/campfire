@@ -9,7 +9,6 @@
  */
 package com.pandulapeter.campfire.chordpro
 
-import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -172,9 +171,7 @@ class ChordProPrettifierTest {
         assertEquals("{title: X}\n{tempo: 100}\n\nla\n{tempo: 120}\n\nlo\n", ChordProPrettifier.prettify(raws.first()))
         raws.forEach { raw ->
             val formatted = ChordProPrettifier.prettify(raw)
-            // Where the song's own time is named below a change, the parser leaves the change's time unfilled.
-            fun sections(text: String) = ChordProParser.parse(text).blocks.filterIsInstance<ChordProBlock.Section>()
-            assertEquals(sections(raw), sections(formatted), raw)
+            assertEquals(ChordProParser.parse(raw), ChordProParser.parse(formatted), raw)
             assertEquals(formatted, ChordProPrettifier.prettify(formatted), raw)
         }
     }

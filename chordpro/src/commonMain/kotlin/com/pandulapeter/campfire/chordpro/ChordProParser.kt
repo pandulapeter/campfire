@@ -66,7 +66,17 @@ object ChordProParser {
         val declared = metadata.build(transpose = transposition.wholeSong)
         // Only known once the whole file has been read, since a song may name its key under its last line.
         val key = declared.key?.takeIf { it.isNotBlank() }
-        val keyedBlocks = if (key == null) blocks else blocks.map { block -> if (block is ChordProBlock.Transpose) block.copy(key = key) else block }
+        // A side of a change is null only where no value of its kind had been read yet, and the song's own value, which
+        // may be named further down, is the one in force from the start.
+        val tempo = declared.tempo?.takeIf { ChordProTempo.parse(it) != null }
+        val time = declared.time?.takeIf { ChordProTime.parse(it) != null }
+        val keyedBlocks = blocks.map { block ->
+            when (block) {
+                is ChordProBlock.Transpose -> if (key == null) block else block.copy(key = key)
+                is ChordProBlock.Timing -> block.copy(tempo = block.tempo ?: tempo, time = block.time ?: time)
+                else -> block
+            }
+        }
         return ChordProSong(metadata = declared, blocks = withChorusesRecalled(keyedBlocks))
     }
 
