@@ -148,13 +148,14 @@ jobs:
       # the last one looked - so the app image the package was made of is started once before anything is submitted.
       # The demo library appearing in an empty data directory proves that Koin started, the window composed and the
       # library was written; the process still being there a while later proves the first frames did not kill it. The
-      # Windows launcher writes no log, so an exception that leaves the process running goes unseen here; the Linux
-      # workflow starts the same ProGuard output and reads its log.
+      # app writes everything it prints to campfire.log in the data directory, which is read for an exception the way
+      # the Linux and macOS legs read theirs.
       - name: Start the release build once
         run: |
           APP="app/desktop/build/compose/binaries/main-release/app/Campfire/Campfire.exe"
           HOME_DIRECTORY="$RUNNER_TEMP/campfire-home"
           DATA="$HOME_DIRECTORY/AppData/Roaming/Campfire"
+          LOG="$DATA/campfire.log"
           mkdir -p "$HOME_DIRECTORY"
           export JAVA_TOOL_OPTIONS="-Duser.home=$(cygpath -w "$HOME_DIRECTORY")"
           export APPDATA="$(cygpath -w "$HOME_DIRECTORY/AppData/Roaming")"
@@ -168,6 +169,7 @@ jobs:
           }
           fail() {
             echo "::error::$1"
+            cat "$LOG" 2> /dev/null || true
             stop
             exit 1
           }
@@ -181,7 +183,9 @@ jobs:
           ls "$DATA/library/songs/"*.cho > /dev/null 2>&1 || fail "The release build did not write the demo library in two minutes."
           sleep 15
           is_running || fail "The release build exited on its own after it had written the library."
+          grep -q "Exception" "$LOG" && fail "The release build logged an exception."
           stop
+          cat "$LOG"
           echo "The release build started and wrote: $(ls "$DATA/library/songs")"
       - name: Keep the package
         uses: actions/upload-artifact@v7
