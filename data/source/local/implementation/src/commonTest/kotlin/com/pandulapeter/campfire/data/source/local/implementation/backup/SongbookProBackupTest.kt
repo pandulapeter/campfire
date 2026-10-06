@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.data.source.local.implementation.model.SetlistDocumentFormat
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNull
+import kotlin.test.assertIs
 
 /** SongbookPro's backup, in the shape its version 1.0 `dataFile.txt` has been seen written. */
 internal class SongbookProBackupTest {
@@ -148,16 +148,20 @@ internal class SongbookProBackupTest {
 
     @Test
     fun anArchiveWithoutSongbookProsDocumentIsNotASongbookProLibrary() {
-        assertNull(SongbookProBackup.read(listOf(ImportedFile("song.cho", "{title: A}".encodeToByteArray()))))
-        assertNull(SongbookProBackup.read(listOf(ImportedFile(SongbookProBackup.DATA_FILE_NAME, "Just some notes".encodeToByteArray()))))
+        assertIs<SongbookProBackup.Result.NotABackup>(SongbookProBackup.read(listOf(ImportedFile("song.cho", "{title: A}".encodeToByteArray()))))
+        assertIs<SongbookProBackup.Result.NotABackup>(SongbookProBackup.read(listOf(dataFile("Just some notes"))))
     }
 
-    private fun read(vararg songs: String, folders: String = "[]", sets: String = "[]") = SongbookProBackup.read(
-        listOf(
-            ImportedFile(
-                name = SongbookProBackup.DATA_FILE_NAME,
-                bytes = "1.0\n{\"songs\": [${songs.joinToString()}], \"sets\": $sets, \"folders\": $folders}".encodeToByteArray(),
-            ),
-        ),
-    )!!
+    @Test
+    fun aDocumentThatCannotBeReadIsUnreadableWhereSongbookProsBookkeepingOrVersionLineSaysItIsABackup() {
+        assertIs<SongbookProBackup.Result.Unreadable>(SongbookProBackup.read(listOf(dataFile("{\"library\": {}}"), ImportedFile.unread("dataFile.hash"))))
+        assertIs<SongbookProBackup.Result.NotABackup>(SongbookProBackup.read(listOf(dataFile("{\"library\": {}}"))))
+        assertIs<SongbookProBackup.Result.Unreadable>(SongbookProBackup.read(listOf(dataFile("2.0\n{\"library\": {}}"))))
+    }
+
+    private fun dataFile(text: String) = ImportedFile(name = SongbookProBackup.DATA_FILE_NAME, bytes = text.encodeToByteArray())
+
+    private fun read(vararg songs: String, folders: String = "[]", sets: String = "[]") = assertIs<SongbookProBackup.Result.Library>(
+        SongbookProBackup.read(listOf(dataFile("1.0\n{\"songs\": [${songs.joinToString()}], \"sets\": $sets, \"folders\": $folders}"))),
+    ).files
 }

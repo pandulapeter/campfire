@@ -121,6 +121,22 @@ class ArchiveLocalSourceTest {
     }
 
     @Test
+    fun `reports a SongbookPro backup whose library cannot be read as one file, without its bookkeeping`() = runBlocking {
+        val backup = ZipWriter.write(
+            listOf(
+                ZipEntry("settings.hive", byteArrayOf(1, 2, 3)),
+                ZipEntry("dataFile.hash", "9ed4cb9934f75a0e".encodeToByteArray()),
+                ZipEntry("dataFile.txt", "{\"library\": {\"songs\": []}}".encodeToByteArray()),
+            ),
+        )
+
+        val files = archiveLocalSource.unpack(archive = backup, maxSize = ImportLimits.MAX_IMPORT_SIZE)
+
+        assertEquals(listOf("dataFile.txt"), files.map { it.name })
+        assertTrue(files.single().bytes.isEmpty())
+    }
+
+    @Test
     fun `reports what it did not read instead of failing`() = runBlocking {
         val archive = ZipWriter.write(
             listOf(

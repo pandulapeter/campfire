@@ -76,7 +76,19 @@ internal class ArchiveLocalSourceImpl : ArchiveLocalSource {
         val entries = content.entries.map { entry -> ImportedFile(name = entry.name.fileName, bytes = entry.bytes) }
         // Another app's library is translated into the files of one of Campfire's own, and what else its archive holds is
         // that app's bookkeeping rather than anything the user would recognise in a report of files that were left out.
-        SongbookProBackup.read(entries)?.let { return it }
+        // The entries that were not read are named to it too, since that bookkeeping is never read, and neither is a
+        // document too large for the import: a backup whose library cannot be read is still one file left out, rather
+        // than a song of its raw document and a list of names the user never saw.
+        when (val backup = SongbookProBackup.read(entries + content.unread.map { ImportedFile.unread(it.name.fileName) })) {
+            is SongbookProBackup.Result.Library -> return backup.files
+            SongbookProBackup.Result.Unreadable -> return listOf(
+                ImportedFile.unread(
+                    name = SongbookProBackup.DATA_FILE_NAME,
+                    isTooLarge = content.unread.any { it.name.fileName == SongbookProBackup.DATA_FILE_NAME && it.reason == UnreadZipEntry.Reason.TOO_LARGE },
+                ),
+            )
+            SongbookProBackup.Result.NotABackup -> Unit
+        }
         val read = entries.flatMap { file ->
             if (depth < MAX_DEPTH && LibraryFiles.isArchiveFileName(file.name)) {
                 // A nested archive that cannot be read is reported rather than failing the whole import: the files

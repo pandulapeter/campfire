@@ -47,14 +47,44 @@ internal object SongbookProBackup {
     /** The entry that holds the library, which may be much larger than any one song file. */
     const val DATA_FILE_NAME = "dataFile.txt"
 
+    /** What SongbookPro keeps beside [DATA_FILE_NAME] for itself, which is what marks an archive as its own. */
+    private val BOOKKEEPING_FILE_NAMES = setOf("dataFile.hash", "settings.hive")
+
+    /** What an archive's entries turned out to be. */
+    sealed interface Result {
+
+        /** Not SongbookPro's: the entries are imported as the files they are. */
+        data object NotABackup : Result
+
+        /** SongbookPro's, translated into the files of a Campfire library. */
+        data class Library(val files: List<ImportedFile>) : Result
+
+        /**
+         * SongbookPro's by its shape, but its document could not be read - a format version this does not know, or a
+         * truncated backup - so it is reported as one file that was left out rather than imported as text.
+         */
+        data object Unreadable : Result
+    }
+
     /**
-     * The files of the library [entries] hold, or null where they are not a SongbookPro library, in which case they are
-     * imported as the ordinary files they are. Entries are the archive's, by their names without paths.
+     * What [entries] are. Entries are the archive's, by their names without paths, and include those that were left
+     * unread (empty), since SongbookPro's bookkeeping is never read and is still what tells its backup apart from a
+     * user's own archive that happens to hold a `dataFile.txt`: without it, or the version line SongbookPro starts its
+     * document with, a document that cannot be read is an ordinary file.
      */
-    fun read(entries: List<ImportedFile>): List<ImportedFile>? {
-        val data = entries.singleOrNull { it.name == DATA_FILE_NAME } ?: return null
-        val library = parse(data.bytes.decodeLibraryText()) ?: return null
-        val songs = library.array("songs") ?: return null
+    fun read(entries: List<ImportedFile>): Result {
+        val data = entries.singleOrNull { it.name == DATA_FILE_NAME } ?: return Result.NotABackup
+        val text = data.bytes.decodeLibraryText()
+        val library = parse(text)
+        val songs = library?.array("songs")
+        if (library == null || songs == null) {
+            val isSongbookPros = entries.any { it.name in BOOKKEEPING_FILE_NAMES } || text.startsWithVersionLine()
+            return if (isSongbookPros) Result.Unreadable else Result.NotABackup
+        }
+        return Result.Library(files(library = library, songs = songs))
+    }
+
+    private fun files(library: JsonObject, songs: JsonArray): List<ImportedFile> {
         val folderNames = library.array("folders").orEmpty().mapNotNull { element ->
             val folder = element as? JsonObject ?: return@mapNotNull null
             if (folder.isDeleted) return@mapNotNull null
@@ -101,6 +131,12 @@ internal object SongbookProBackup {
             )
         }
         return files + setlists
+    }
+
+    /** Whether the text's first non-blank line is a bare version number (`1.0`, `2.0`) with more text after it. */
+    private fun String.startsWithVersionLine(): Boolean {
+        val text = trimStart()
+        return VERSION_LINE.matches(text.substringBefore('\n').trim()) && text.substringAfter('\n', missingDelimiterValue = "").isNotBlank()
     }
 
     /** The document after its version line (`1.0`), or null where the text is not one. */
@@ -209,6 +245,8 @@ internal object SongbookProBackup {
 
     /** The name of every directive the text declares, `{title: …}` and `{t:…}` alike. */
     private val DIRECTIVE = Regex("""\{\s*([A-Za-z_]+)\s*[:}\s]""")
+
+    private val VERSION_LINE = Regex("""\d+(\.\d+)+""")
 
     private val LINE_BREAK = Regex("[\\r\\n\\u2028\\u2029]+")
 
