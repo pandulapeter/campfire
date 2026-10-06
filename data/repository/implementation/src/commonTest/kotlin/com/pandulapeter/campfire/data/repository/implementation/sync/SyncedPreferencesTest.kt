@@ -21,6 +21,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class SyncedPreferencesTest {
 
@@ -203,9 +204,73 @@ class SyncedPreferencesTest {
         val provider = FakeSyncProvider()
         provider.documents[SyncedPreferencesDocument.FILE_NAME] = encoded("""{"gone.cho":{"tempo":140},"a.cho":{"capo":1}}""") to "r1"
         val preferences = FakeUserPreferencesRepository(defaultUserPreferences(transpositions = mapOf("deleted.cho" to 2)))
-        sync(preferences, library("a.cho")).synchronize(provider, base = null, keptFileNames = emptyList())
+        sync(preferences, library("a.cho")).synchronize(
+            provider,
+            base = document("""{"gone.cho":{"tempo":140}}"""),
+            keptFileNames = emptyList(),
+        )
         assertEquals(SyncedPreferences(capos = mapOf("a.cho" to 1)), SyncedPreferences.of(preferences.current))
         assertEquals(SyncedPreferences(capos = mapOf("a.cho" to 1)), SyncedPreferencesDocument.preferencesOf(remoteDocumentOf(provider)))
+    }
+
+    @Test
+    fun `a song another device added during the run keeps its preferences on both sides`() = runTest {
+        val provider = FakeSyncProvider()
+        provider.documents[SyncedPreferencesDocument.FILE_NAME] = encoded("""{"a.cho":{"capo":1},"s.cho":{"capo":3}}""") to "r1"
+        val preferences = FakeUserPreferencesRepository(defaultUserPreferences(capos = mapOf("a.cho" to 1)))
+        val synced = sync(preferences, library("a.cho")).synchronize(
+            provider,
+            base = document("""{"a.cho":{"capo":1}}"""),
+            keptFileNames = emptyList(),
+        )
+        assertEquals(mapOf("a.cho" to 1, "s.cho" to 3), SyncedPreferencesDocument.preferencesOf(remoteDocumentOf(provider)).capos)
+        assertTrue("s.cho" in SyncedPreferencesDocument.songNamesOf(synced))
+    }
+
+    @Test
+    fun `a song added elsewhere is kept on the first run too`() = runTest {
+        val provider = FakeSyncProvider()
+        provider.documents[SyncedPreferencesDocument.FILE_NAME] = encoded("""{"a.cho":{"capo":1},"s.cho":{"capo":3}}""") to "r1"
+        val preferences = FakeUserPreferencesRepository(defaultUserPreferences(capos = mapOf("a.cho" to 1)))
+        val synced = sync(preferences, library("a.cho")).synchronize(provider, base = null, keptFileNames = emptyList())
+        assertEquals(mapOf("a.cho" to 1, "s.cho" to 3), SyncedPreferencesDocument.preferencesOf(remoteDocumentOf(provider)).capos)
+        assertTrue("s.cho" in SyncedPreferencesDocument.songNamesOf(synced))
+    }
+
+    @Test
+    fun `a song added elsewhere is still kept after a conflict`() = runTest {
+        val provider = FakeSyncProvider()
+        provider.documents[SyncedPreferencesDocument.FILE_NAME] = encoded("""{"a.cho":{"capo":1},"s.cho":{"capo":3}}""") to "r1"
+        var hasWrittenElsewhere = false
+        provider.onUploadDocument = {
+            if (!hasWrittenElsewhere) {
+                hasWrittenElsewhere = true
+                provider.documents[SyncedPreferencesDocument.FILE_NAME] =
+                    encoded("""{"a.cho":{"capo":1},"s.cho":{"capo":3},"b.cho":{"tempo":90}}""") to "r9"
+            }
+        }
+        // A change made here, so that the first attempt uploads and meets the document written in between.
+        val preferences = FakeUserPreferencesRepository(defaultUserPreferences(capos = mapOf("a.cho" to 2)))
+        sync(preferences, library("a.cho", "b.cho")).synchronize(
+            provider,
+            base = document("""{"a.cho":{"capo":1}}"""),
+            keptFileNames = emptyList(),
+        )
+        val folder = SyncedPreferencesDocument.preferencesOf(remoteDocumentOf(provider))
+        assertEquals(mapOf("a.cho" to 2, "s.cho" to 3), folder.capos)
+        assertEquals(mapOf("b.cho" to 90), folder.tempos)
+    }
+
+    @Test
+    fun `a song added elsewhere and gone by the next run is pruned then`() = runTest {
+        val provider = FakeSyncProvider()
+        provider.documents[SyncedPreferencesDocument.FILE_NAME] = encoded("""{"a.cho":{"capo":1},"s.cho":{"capo":3}}""") to "r1"
+        val preferences = FakeUserPreferencesRepository(defaultUserPreferences(capos = mapOf("a.cho" to 1)))
+        val synchronization = sync(preferences, library("a.cho"))
+        val firstBase = synchronization.synchronize(provider, base = document("""{"a.cho":{"capo":1}}"""), keptFileNames = emptyList())
+        synchronization.synchronize(provider, base = firstBase, keptFileNames = emptyList())
+        assertEquals(mapOf("a.cho" to 1), SyncedPreferencesDocument.preferencesOf(remoteDocumentOf(provider)).capos)
+        assertEquals(mapOf("a.cho" to 1), preferences.current.capos)
     }
 
     @Test

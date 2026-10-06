@@ -31,7 +31,8 @@ import kotlinx.serialization.json.JsonObject
  * It comes after the library files, so that the songs the document may name are the ones the run left on both sides,
  * and it is where the preferences of a song deleted on either side are let go of: whatever the document holds for a
  * song that is no longer in the library is dropped from the preferences and the document alike - a song the run could
- * not move excepted, since it is still in the library somewhere.
+ * not move excepted, since it is still in the library somewhere, and so is a song the folder's document has gained since
+ * the last synced one, since it may have reached the folder after the run listed it.
  *
  * The preferences are changed before the document is uploaded. The other way round, an upload followed by a write
  * that failed would leave this device's old values looking like changes made here since, and the next run would
@@ -86,6 +87,12 @@ internal class SyncedPreferencesSync(
             .plus(keptFileNames)
             .sortedDescending()
             .associateBy { it.folded() }
+        // The songs the last synced document named, folded. An entry the folder's document holds for any other song was
+        // written by another device since then, possibly for a song that reached the folder after this run listed it: it
+        // is kept until a run that has seen the song decides about it, or the next run, which has it in its base, prunes
+        // it. The base rather than previous, which a conflict moves onto the remote document, so that the retry does not
+        // prune the very entry the first attempt kept.
+        val baseSongNames = SyncedPreferencesDocument.songNamesOf(base).mapTo(hashSetOf()) { it.folded() }
         var previous = base
         repeat(MAXIMUM_ATTEMPTS) {
             val remote = provider.downloadDocument(SyncedPreferencesDocument.FILE_NAME)
@@ -100,6 +107,9 @@ internal class SyncedPreferencesSync(
             // A document that is missing, or is not one this version can read, is taken as unchanged since the last run
             // rather than as one that removed everything: this device's values stay, and are uploaded in its place.
             val effectiveRemote = remoteDocument?.takeIf(SyncedPreferencesDocument::isReadable) ?: previous
+            val arrivingSongNames = SyncedPreferencesDocument.songNamesOf(effectiveRemote)
+                .map { it.folded() }
+                .filterTo(hashSetOf()) { it !in baseSongNames }
             val snapshot = userPreferencesRepository.userPreferences.first().data?.let(SyncedPreferences::of) ?: return null
             // Each device keeps its own spelling of a file that differs only by case or Unicode form, so all three sides
             // are put on one spelling per song before they are merged, or the merge would read one song as two. The
@@ -122,7 +132,7 @@ internal class SyncedPreferencesSync(
                     ),
                     remote = effectiveRemote?.let { SyncedPreferencesDocument.withSongsSpelled(it, spelling) },
                 ),
-                isKept = { it.folded() in localNames },
+                isKept = { it.folded().let { folded -> folded in localNames || folded in arrivingSongNames } },
             )
             // Applied over the snapshot as it was read, so that a value under any other spelling of a song is removed
             // here: compared with a respelled one, such a leftover would look like the merged value and stay.

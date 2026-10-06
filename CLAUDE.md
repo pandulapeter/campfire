@@ -714,7 +714,7 @@ the only possible one. The per-module `CLAUDE.md` files carry the detail; the sh
   a document that is missing or cannot be read is taken as unchanged and replaced with this device's values, never
   read as one that removed everything, and one whose `version` is newer than this one's is left alone.
   A song no longer in the library after the run takes its entry with it, here and in the folder, unless the run
-  failed to move it. A change to those three maps schedules a run like a change to a file does; the run's own write
+  failed to move it or it reached the folder after the run listed it. A change to those three maps schedules a run like a change to a file does; the run's own write
   does not.
 - Authorization is OAuth 2.0 with PKCE and no client secret, which is what lets this work with no backend. The four
   platforms get back from the consent page in four different ways, all behind `SyncAuthenticator`.
