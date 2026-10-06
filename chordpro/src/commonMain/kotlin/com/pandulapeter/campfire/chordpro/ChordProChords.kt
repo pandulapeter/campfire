@@ -27,6 +27,8 @@ import com.pandulapeter.campfire.chordpro.model.GridToken
  *   chart's `13` shape holds.
  * - `dim` and `°` are the triad and `dim7` and `°7` the diminished seventh; `ø` is the half diminished seventh.
  * - `2` alone adds the second (`C2` is `Cadd2`), `4` alone is `sus4`, `5` alone is the power chord.
+ * - A `5` after a quality names the fifth the quality has (`C+5` is `Caug`, `Cdim5` is `Cdim`), and `C-5` is the flat
+ *   five `C7-5` writes.
  * - `alt` is the seventh with a flat ninth's neighbor, the sharp ninth, and the flat thirteenth, and no fifth: the
  *   altered notes a hand can hold at once.
  * - A bare `+` after the number raises the fifth, as `C7+` is written for an augmented seventh.
@@ -184,7 +186,16 @@ object ChordProChords {
                 else -> when (number) {
                     "2" -> added += MAJOR_SECOND
                     "4" -> suspension = PERFECT_FOURTH
-                    "5" -> third = null
+                    "5" -> when (quality) {
+                        null -> third = null
+                        // `-` is the flat sign wherever a `5` follows it (`C7-5`), so `C-5` is the major triad with a flat
+                        // fifth rather than a minor one with its fifth named twice.
+                        "-" -> {
+                            third = MAJOR_THIRD
+                            fifth = DIMINISHED_FIFTH
+                        }
+                        else -> Unit
+                    }
                     else -> extend(number)
                 }
             }

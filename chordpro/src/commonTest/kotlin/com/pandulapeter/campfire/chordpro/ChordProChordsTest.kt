@@ -26,6 +26,12 @@ class ChordProChordsTest {
             "Cmi" to "C D# G",
             "C-" to "C D# G",
             "C5" to "C G",
+            "C+5" to "C E G#",
+            "Caug5" to "C E G#",
+            "Cdim5" to "C D# F#",
+            "C°5" to "C D# F#",
+            "Cm5" to "C D# G",
+            "C-5" to "C E F#",
             "C2" to "C D E G",
             "C4" to "C F G",
             "Csus" to "C F G",
@@ -129,6 +135,8 @@ class ChordProChordsTest {
             listOf("D/F#", "D/Gb", "D/f#"),
             listOf("Cmaj7", "CM7", "CΔ", "CΔ7"),
             listOf("Cm7b5", "Cø", "Cø7", "Cm7-5"),
+            listOf("Caug", "C+", "C+5", "Caug5"),
+            listOf("Cdim", "C°", "Cdim5"),
         ).forEach { names ->
             assertEquals(1, names.map { assertNotNull(ChordProChords.parse(it), it).id }.distinct().size, names.toString())
         }

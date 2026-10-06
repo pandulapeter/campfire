@@ -383,7 +383,8 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   handing each part to a `ChordNameReader`, so a name is read exactly where it is recognized. `Chord.id` (`C#:0.3.7.10`)
   is one string for every spelling of a chord, which is what a player's choice of shape is stored under. The
   readings a chart leaves open are made once here (`11` without the major third, `13` without the ninth and the
-  eleventh, `dim` the triad, `C2` an added second). `namesIn` lists the chords a song plays in order, once each — the
+  eleventh, `dim` the triad, `C2` an added second, a `5` after a quality the fifth the quality has — `C+5` is `Caug`,
+  `Cdim5` is `Cdim` — and `C-5` the flat five `C7-5` writes). `namesIn` lists the chords a song plays in order, once each — the
   lyrics, the grids, the tabs' chord rows, the brackets of comments and labels, never the key — and `transposedName`
   moves one name in its own notation.
 - `ChordVoicings` / `ChordVoicingTables` — how a chord is played on the guitar, the ukulele and the keyboard
