@@ -65,6 +65,26 @@ internal class UserPreferencesMappersTest {
     }
 
     @Test
+    fun chordDiagramsDefaultToTheGuitarAndKeepEveryChosenShape() {
+        val defaults = UserPreferencesDocumentFormat.decode("{}").document.toModel()
+        assertEquals(true, defaults.areChordDiagramsEnabled)
+        assertEquals(UserPreferences.ChordInstrument.GUITAR, defaults.chordInstrument)
+        assertEquals(false, defaults.isChordSectionFolded)
+        val chosen = defaults.copy(
+            areChordDiagramsEnabled = false,
+            chordInstrument = UserPreferences.ChordInstrument.UKULELE,
+            chordVoicings = mapOf("guitar" to mapOf("F:0.4.7" to "x x 3 2 1 1"), "banjo" to mapOf("G:0.4.7" to "0 0 0 0 0")),
+            isChordSectionFolded = true,
+        )
+        assertEquals(chosen, UserPreferencesDocumentFormat.decode(UserPreferencesDocumentFormat.encode(chosen.toDocument())).document.toModel())
+        assertEquals(
+            UserPreferences.ChordInstrument.GUITAR,
+            UserPreferencesDocument(chordInstrument = "theremin").toModel().chordInstrument,
+        )
+        assertEquals(emptyMap(), UserPreferencesDocument(chordVoicings = mapOf("guitar" to mapOf("F:0.4.7" to " "))).toModel().chordVoicings)
+    }
+
+    @Test
     fun anUnknownEnumIdFallsBackForThatFieldOnly() {
         val preferences = UserPreferencesDocument(
             sortingMode = "by_mood",

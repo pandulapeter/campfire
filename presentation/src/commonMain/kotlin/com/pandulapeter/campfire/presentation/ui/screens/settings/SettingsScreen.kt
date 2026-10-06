@@ -93,6 +93,13 @@ import com.pandulapeter.campfire.presentation.resources.settings_app_icon_taskba
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_window
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_window_description
 import com.pandulapeter.campfire.presentation.resources.settings_chords
+import com.pandulapeter.campfire.presentation.resources.settings_chord_diagrams
+import com.pandulapeter.campfire.presentation.resources.settings_chord_diagrams_description
+import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument
+import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_description
+import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_guitar
+import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_keyboard
+import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_ukulele
 import com.pandulapeter.campfire.presentation.resources.settings_chords_description
 import com.pandulapeter.campfire.presentation.resources.settings_cover_art
 import com.pandulapeter.campfire.presentation.resources.settings_cover_art_description
@@ -514,6 +521,15 @@ private fun FeaturesSection(
         isChecked = userPreferences?.areChordsEnabled != false,
         onCheckedChange = viewModel::setChordsEnabled,
     )
+    // Disabled rather than hidden with the chords off, like the chord spelling: there is nothing to finger then, and
+    // what it is set to is still what the songs will open with once the chords are back.
+    SwitchListItem(
+        title = stringResource(Res.string.settings_chord_diagrams),
+        description = stringResource(Res.string.settings_chord_diagrams_description),
+        isChecked = userPreferences?.areChordDiagramsEnabled != false,
+        isEnabled = userPreferences?.areChordsEnabled != false,
+        onCheckedChange = viewModel::setChordDiagramsEnabled,
+    )
     SwitchListItem(
         title = stringResource(Res.string.metronome),
         description = stringResource(Res.string.settings_metronome_description),
@@ -572,6 +588,23 @@ private fun SongDisplaySection(
             selected = userPreferences?.chordSpelling?.accidentals,
             isEnabled = isChordSpellingEnabled,
             onSelected = viewModel::setAccidentals,
+        )
+    }
+    val isChordInstrumentEnabled = isChordSpellingEnabled && userPreferences?.areChordDiagramsEnabled != false
+    SettingsSubsection(
+        title = stringResource(Res.string.settings_chord_instrument),
+        description = stringResource(Res.string.settings_chord_instrument_description),
+        isEnabled = isChordInstrumentEnabled,
+    ) {
+        SegmentedChoice(
+            options = listOf(
+                UserPreferences.ChordInstrument.GUITAR to stringResource(Res.string.settings_chord_instrument_guitar),
+                UserPreferences.ChordInstrument.UKULELE to stringResource(Res.string.settings_chord_instrument_ukulele),
+                UserPreferences.ChordInstrument.KEYBOARD to stringResource(Res.string.settings_chord_instrument_keyboard),
+            ),
+            selected = userPreferences?.chordInstrument,
+            isEnabled = isChordInstrumentEnabled,
+            onSelected = viewModel::setChordInstrument,
         )
     }
 }

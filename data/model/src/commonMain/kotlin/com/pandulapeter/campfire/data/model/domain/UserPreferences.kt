@@ -65,6 +65,23 @@ data class UserPreferences(
     val language: Language,
     val chordSpelling: ChordSpelling, // How the chords of a song are written when it is displayed.
     /**
+     * Whether a song opens with the diagrams of its chords, in a section of their own after the controls of how it is
+     * played. Only while [areChordsEnabled]: with the chords gone there is nothing to finger.
+     */
+    val areChordDiagramsEnabled: Boolean = true,
+    /** The instrument the diagrams are drawn for. */
+    val chordInstrument: ChordInstrument = ChordInstrument.GUITAR,
+    /**
+     * The shape the player has chosen for a chord, by [ChordInstrument.id] and then by the chord's id (its notes, the
+     * same for every spelling of it), the value the shape as `ChordVoicings.write` writes it. One choice per chord for
+     * the whole library, since which F somebody plays is a habit of their hands rather than a reading of one song; a
+     * song's own `{define}` still wins in that song. Never exported, but synced, like [transpositions]. An instrument
+     * this version does not know is kept as it is, for the version that does.
+     */
+    val chordVoicings: Map<String, Map<String, String>> = emptyMap(),
+    /** Whether the chord diagrams are folded away, one choice for every song rather than one per song like [foldedSections]. */
+    val isChordSectionFolded: Boolean = false,
+    /**
      * Song file name to semitones, for songs opened from the library rather than from a setlist. Never exported, but
      * synced: with [tempos] and [capos] it is what every device connected to one cloud folder shares through its
      * `preferences.json`, since it is how the band plays the song rather than how one reader reads it.
@@ -228,6 +245,13 @@ data class UserPreferences(
         ORIGINAL("original"),
         FLATS("flats"),
         SHARPS("sharps"),
+    }
+
+    /** The instrument the chord diagrams are drawn for, the twin of `:chordpro`'s, which this module does not see. */
+    enum class ChordInstrument(val id: String) {
+        GUITAR("guitar"),
+        UKULELE("ukulele"),
+        KEYBOARD("keyboard"),
     }
 
     enum class Language(val id: String) {

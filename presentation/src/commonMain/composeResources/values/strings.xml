@@ -248,6 +248,8 @@
     <string name="settings_read_only_mode_description">Locks the app while you play: editing, deleting, reordering and transposing are hidden, so an accidental tap can\'t change anything</string>
     <string name="settings_chords">Chords</string>
     <string name="settings_chords_description">Show the chords with the words, along with the key, the transposition and the capo. Off, every song is lyrics only.</string>
+    <string name="settings_chord_diagrams">Chord diagrams</string>
+    <string name="settings_chord_diagrams_description">Show how every chord of a song is played, at the top of the song.</string>
     <string name="settings_metronome_description">The Metronome tab and the click on a song\'s screen, along with the tempo and the time signature of every song</string>
     <string name="settings_setlists_description">The Setlists tab and adding songs to setlists. Off, they are only hidden: no setlist is deleted.</string>
     <string name="settings_cover_art">Cover art</string>
@@ -261,6 +263,11 @@
     <string name="settings_accidentals_original">As written</string>
     <string name="settings_accidentals_flats">Flats (b)</string>
     <string name="settings_accidentals_sharps">Sharps (#)</string>
+    <string name="settings_chord_instrument">Instrument</string>
+    <string name="settings_chord_instrument_description">The instrument the chord diagrams are drawn for.</string>
+    <string name="settings_chord_instrument_guitar">Guitar</string>
+    <string name="settings_chord_instrument_ukulele">Ukulele</string>
+    <string name="settings_chord_instrument_keyboard">Keyboard</string>
     <string name="settings_general">General</string>
     <string name="settings_user_interface_theme">Theme</string>
     <string name="settings_user_interface_theme_system_default">System</string>

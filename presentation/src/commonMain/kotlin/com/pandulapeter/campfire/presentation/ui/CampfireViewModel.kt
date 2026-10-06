@@ -3710,6 +3710,10 @@ class CampfireViewModel(
 
     fun setChordsEnabled(value: Boolean) = changeUserPreferences { copy(areChordsEnabled = value) }
 
+    fun setChordDiagramsEnabled(value: Boolean) = changeUserPreferences { copy(areChordDiagramsEnabled = value) }
+
+    fun setChordInstrument(value: UserPreferences.ChordInstrument) = changeUserPreferences { copy(chordInstrument = value) }
+
     fun setSetlistsEnabled(value: Boolean) = changeUserPreferences { copy(areSetlistsEnabled = value) }
 
     fun setMetronomeEnabled(value: Boolean) = changeUserPreferences { copy(isMetronomeEnabled = value) }

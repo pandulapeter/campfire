@@ -248,6 +248,8 @@
     <string name="settings_read_only_mode_description">Előadás közben zárolja az alkalmazást: a szerkesztés, a törlés, az átrendezés és a transzponálás eltűnik, így egy véletlen érintés sem változtat meg semmit</string>
     <string name="settings_chords">Akkordok</string>
     <string name="settings_chords_description">Az akkordok megjelenítése a szöveg fölött, a hangnemmel, a transzponálással és a capóval együtt. Kikapcsolva minden dalnak csak a szövege látszik.</string>
+    <string name="settings_chord_diagrams">Akkordábrák</string>
+    <string name="settings_chord_diagrams_description">A dal elején megmutatja, hogyan kell lefogni a dal minden akkordját.</string>
     <string name="settings_metronome_description">A Metronóm fül és a dalok képernyőjén a metronóm, a dalok tempójával és ütemmutatójával együtt</string>
     <string name="settings_setlists_description">A Listák fül és a dalok listákhoz adása. Kikapcsolva csak elrejti őket, egyetlen lista sem törlődik.</string>
     <string name="settings_cover_art">Borítóképek</string>
@@ -261,6 +263,11 @@
     <string name="settings_accidentals_original">Eredeti</string>
     <string name="settings_accidentals_flats">Bé (b)</string>
     <string name="settings_accidentals_sharps">Kereszt (#)</string>
+    <string name="settings_chord_instrument">Hangszer</string>
+    <string name="settings_chord_instrument_description">A hangszer, amelyhez az akkordábrák készülnek.</string>
+    <string name="settings_chord_instrument_guitar">Gitár</string>
+    <string name="settings_chord_instrument_ukulele">Ukulele</string>
+    <string name="settings_chord_instrument_keyboard">Billentyű</string>
     <string name="settings_general">Általános</string>
     <string name="settings_user_interface_theme">Téma</string>
     <string name="settings_user_interface_theme_system_default">Rendszer</string>
