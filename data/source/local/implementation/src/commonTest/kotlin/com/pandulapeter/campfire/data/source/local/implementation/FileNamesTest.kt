@@ -77,6 +77,23 @@ internal class FileNamesTest {
     }
 
     @Test
+    fun lettersOutsideTheBasicMultilingualPlaneAreKept() {
+        // Adlam and Old Hungarian are cased, so their capitals arrive lowercased; the ideograph is CJK Extension B.
+        assertEquals(codePoints(0x1E922, 0x1E922), LibraryFiles.normalizedName(codePoints(0x1E900, 0x1E922)))
+        assertEquals(codePoints(0x10CC0, 0x10CC1), LibraryFiles.normalizedName(codePoints(0x10C80, 0x10CC1)))
+        assertEquals("rock_${codePoints(0x20000)}_roll", LibraryFiles.normalizedName("Rock ${codePoints(0x20000)} Roll"))
+        assertEquals("rock_roll", LibraryFiles.normalizedName("Rock ${codePoints(0x1F3B8)}roll"))
+        listOf(codePoints(0x1E922, 0x1E922), "rock_${codePoints(0x20000)}_roll").forEach { name ->
+            assertEquals(name, LibraryFiles.normalizedName(name))
+        }
+        val capped = LibraryFiles.normalizedName(codePoints(*IntArray(40) { 0x1E922 }))
+        assertTrue(capped.encodeToByteArray().size <= LibraryFiles.MAX_NAME_BYTES, capped)
+        assertFalse(capped.last().isHighSurrogate())
+        assertEquals(codePoints(*IntArray(LibraryFiles.MAX_NAME_BYTES / 4) { 0x1E922 }), capped)
+        assertEquals(capped, LibraryFiles.normalizedName(capped))
+    }
+
+    @Test
     fun aDecomposedAccentFoldsLikeAComposedOne() {
         assertEquals("edith", LibraryFiles.normalizedName("\u00C9dith"))
         assertEquals("edith", LibraryFiles.normalizedName("E\u0301dith"))
@@ -340,6 +357,18 @@ internal class FileNamesTest {
 
         /** `ένα.cho`, the name the library would give the song. */
         const val COMPOSED_LOWERCASE = "\u03ad\u03bd\u03b1.cho"
+
+        /** The text of [values], written as code points so that the source file's own encoding decides nothing. */
+        fun codePoints(vararg values: Int) = buildString {
+            values.forEach { value ->
+                if (value < 0x10000) {
+                    append(value.toChar())
+                } else {
+                    append((0xD800 + ((value - 0x10000) shr 10)).toChar())
+                    append((0xDC00 + ((value - 0x10000) and 0x3FF)).toChar())
+                }
+            }
+        }
 
         /** Runs [block] to its end right away, which it reaches without suspending, since nothing it calls waits. */
         fun runSuspending(block: suspend () -> Unit) {

@@ -110,7 +110,21 @@ object LibraryFiles {
         // name is decomposed on macOS and iOS and composed everywhere else, and the fold below keeps a mark that follows
         // a non-Latin letter, so the two forms would be two names. Composing is also what keeps the rule idempotent
         // across platforms - a name this produced on a Mac is handed back to it by the file system in the other form.
-        for (character in base.normalizedToNfc().lowercase()) {
+        val text = base.normalizedToNfc().lowercase()
+        var index = 0
+        while (index < text.length) {
+            val character = text[index]
+            val low = text.getOrNull(index + 1)
+            // A letter outside the Basic Multilingual Plane is two surrogates, neither of which is a letter to Char, so
+            // the pair is weighed as the one character it is.
+            if (character.isHighSurrogate() && low != null && low.isLowSurrogate()) {
+                val isKept = isSupplementaryLetter(SUPPLEMENTARY_START + ((character.code - HIGH_SURROGATE_START) shl 10) + (low.code - LOW_SURROGATE_START))
+                if (isKept) folded.append(character).append(low) else folded.append(NAME_SEPARATOR)
+                isAfterForeignCharacter = isKept
+                index += 2
+                continue
+            }
+            index++
             if (character in APOSTROPHES) continue
             val isForeignCharacter = when {
                 character.isMark() -> isAfterForeignCharacter
@@ -189,17 +203,37 @@ object LibraryFiles {
 
     private fun Char.isMark() = category == CharCategory.NON_SPACING_MARK || category == CharCategory.COMBINING_SPACING_MARK
 
+    /**
+     * Whether a code point above U+FFFF is a letter a name keeps. Common Kotlin knows no category for one, and nearly
+     * everything up there is letters and ideographs; what is not is a few blocks of symbols, which become separators the
+     * way an emoji always has: musical symbols, the mathematical alphanumerics (styled Latin, which only NFKC would fold
+     * back), the emoji, cards and pictographs of U+1F000 on, and planes 14 to 16 (tags, variation selectors, private use).
+     */
+    private fun isSupplementaryLetter(codePoint: Int) = codePoint !in 0x1D000..0x1D24F && codePoint !in 0x1D400..0x1D7FF &&
+        codePoint !in 0x1F000..0x1FFFF && codePoint < 0xE0000
+
+    /** The first [limit] UTF-8 bytes of this string, never cutting a surrogate pair in two. */
     private fun String.takeBytes(limit: Int): String {
         var bytes = 0
-        return takeWhile { character ->
-            bytes += when {
-                character.code < 0x80 -> 1
-                character.code < 0x800 -> 2
+        var end = 0
+        while (end < length) {
+            val isPair = this[end].isHighSurrogate() && getOrNull(end + 1)?.isLowSurrogate() == true
+            val added = when {
+                isPair -> 4
+                this[end].code < 0x80 -> 1
+                this[end].code < 0x800 -> 2
                 else -> 3
             }
-            bytes <= limit
+            if (bytes + added > limit) break
+            bytes += added
+            end += if (isPair) 2 else 1
         }
+        return substring(0, end)
     }
+
+    private const val SUPPLEMENTARY_START = 0x10000
+    private const val HIGH_SURROGATE_START = 0xD800
+    private const val LOW_SURROGATE_START = 0xDC00
 
     /**
      * Spellings that are one word once the name is filed. Applied per word and after the folding, so what is matched
