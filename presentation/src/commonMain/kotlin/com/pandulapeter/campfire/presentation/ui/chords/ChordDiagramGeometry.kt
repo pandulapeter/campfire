@@ -69,20 +69,27 @@ internal sealed interface ChordDiagramGeometry {
  * the fingering names on several strings at one fret, or, for a shape that names no fingers, the lowest stopped fret
  * where the shape takes more than four fingers without one, or where the index finger lies across the thin strings
  * under a higher fretted one, with no open or muted string under it.
+ *
+ * Whatever the shape, the diagram is bounded: at most [MAX_FRETS] frets and [MAX_OCTAVES] octaves, a dot or a key past
+ * them left out, since every source of a shape meets here and a broken file's is better drawn in part than not at all.
  */
 internal fun chordDiagramGeometryOf(shape: ChordVoicing, instrument: ChordInstrument, root: Int): ChordDiagramGeometry = when (shape) {
-    is ChordVoicing.Keys -> ChordDiagramGeometry.Keyboard(
-        octaves = maxOf(MIN_OCTAVES, ((listOfNotNull(shape.bass) + shape.notes).maxOrNull() ?: 0) / 12 + 1),
-        keys = shape.notes.toSet(),
-        roots = shape.notes.filter { it % 12 == root }.toSet(),
-        bass = shape.bass,
-    )
+    is ChordVoicing.Keys -> {
+        val octaves = ((listOfNotNull(shape.bass) + shape.notes).maxOrNull() ?: 0).let { it / 12 + 1 }.coerceIn(MIN_OCTAVES, MAX_OCTAVES)
+        val range = 0 until octaves * 12
+        ChordDiagramGeometry.Keyboard(
+            octaves = octaves,
+            keys = shape.notes.filter { it in range }.toSet(),
+            roots = shape.notes.filter { it in range && it % 12 == root }.toSet(),
+            bass = shape.bass?.takeIf { it in range },
+        )
+    }
     is ChordVoicing.Fretted -> {
         val frets = shape.frets
         val baseFret = ChordVoicings.baseFret(frets)
         val stopped = frets.filterNotNull().filter { it > 0 }
-        val fretCount = maxOf(MIN_FRETS, (stopped.maxOrNull() ?: 0) - baseFret + 1)
-        val barres = barresOf(frets, shape.fingers)
+        val fretCount = maxOf(MIN_FRETS, (stopped.maxOrNull() ?: 0) - baseFret + 1).coerceAtMost(MAX_FRETS)
+        val barres = barresOf(frets, shape.fingers).filter { it.row in 0 until fretCount }
         val heldByBarre = barres.flatMap { barre -> (barre.fromString..barre.toString).filter { frets[it] == barre.row + baseFret } }.toSet()
         ChordDiagramGeometry.Fretted(
             strings = frets.size,
@@ -102,7 +109,7 @@ internal fun chordDiagramGeometryOf(shape: ChordVoicing, instrument: ChordInstru
                     finger = shape.fingers?.getOrNull(string)?.takeIf { it > 0 },
                     isRoot = isRootAt(instrument, string, frets[string]!!, root),
                 )
-            },
+            }.filter { it.row in 0 until fretCount },
             barres = barres,
         )
     }
@@ -152,5 +159,7 @@ internal fun emptyChordDiagramGeometryOf(instrument: ChordInstrument): ChordDiag
 }
 
 private const val MIN_FRETS = 4
+private const val MAX_FRETS = 24
 private const val MAX_FINGERS = 4
 private const val MIN_OCTAVES = 2
+private const val MAX_OCTAVES = 4

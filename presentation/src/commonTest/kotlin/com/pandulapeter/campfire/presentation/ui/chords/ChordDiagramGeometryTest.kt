@@ -105,4 +105,15 @@ class ChordDiagramGeometryTest {
         assertEquals(setOf(14), slash.roots)
         assertEquals(3, (chordDiagramGeometryOf(ChordVoicing.Keys(listOf(23, 27, 30)), ChordInstrument.KEYBOARD, root = 11) as ChordDiagramGeometry.Keyboard).octaves)
     }
+
+    @Test
+    fun `a shape out of all reason is drawn bounded`() {
+        val g = fretted(listOf(3, 2, 0, 0, 0, 99999999))
+        assertEquals(24, g.fretCount)
+        assertTrue(g.dots.none { it.row >= 24 })
+        val keys = chordDiagramGeometryOf(ChordVoicing.Keys(listOf(0, 4, 99999999)), ChordInstrument.KEYBOARD, root = 0) as ChordDiagramGeometry.Keyboard
+        assertEquals(4, keys.octaves)
+        assertEquals(setOf(0, 4), keys.keys)
+        assertEquals(null, (chordDiagramGeometryOf(ChordVoicing.Keys(listOf(4, 7), bass = -5), ChordInstrument.KEYBOARD, root = 0) as ChordDiagramGeometry.Keyboard).bass)
+    }
 }
