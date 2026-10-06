@@ -93,6 +93,8 @@ data class ImportPlan(
         val sourceFileName: String,
         /** Which picked file it came out of, as [SongEntry.origin] says: the songs its entries look for first. */
         val origin: Int? = null,
+        /** See [ParsedSetlist.isDated]: false where the date [setlist] carries is only the day it is imported on. */
+        val isDated: Boolean = true,
     )
 
     /** What the library already has under the name the entry wants. */
@@ -107,7 +109,7 @@ data class ImportPlan(
          * The library — under this name or a numbered sibling of it — or an earlier file of the same import already
          * is exactly this, so the import has nothing to do. Songs are compared by their text and setlists by their
          * fields, the entries pointing at the songs where the import puts them - never by the stored document, and
-         * never by a date the incoming setlist does not carry, since the import dates such a setlist itself.
+         * never by the date of a setlist that arrived with none, since the import dates such a setlist itself.
          */
         IDENTICAL,
 

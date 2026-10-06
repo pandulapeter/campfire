@@ -16,11 +16,14 @@ import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 
-internal fun SetlistDocument.toModel(fileName: String, size: Long) = Setlist(
+/** Whether the document names a day that reads as one. [toModel] gives one that does not the day it is handed. */
+internal val SetlistDocument.isDated get() = date?.toLocalDate() != null
+
+internal fun SetlistDocument.toModel(fileName: String, size: Long, undatedDay: LocalDate) = Setlist(
     fileName = fileName,
     title = title,
     description = description,
-    date = date?.toLocalDate(),
+    date = date?.toLocalDate() ?: undatedDay,
     isCountdownShown = isCountdownShown,
     isArchived = isArchived,
     // A document that was edited by hand can leave a blank entry behind or name the same song twice. The second
@@ -36,7 +39,7 @@ internal fun SetlistDocument.toModel(fileName: String, size: Long) = Setlist(
 internal fun Setlist.toDocument() = SetlistDocument(
     title = title,
     description = description,
-    date = date?.toString(),
+    date = date.toString(),
     isCountdownShown = isCountdownShown,
     isArchived = isArchived,
     // Written the way it is read, so that a file never carries a duplicate whatever built the setlist in memory.

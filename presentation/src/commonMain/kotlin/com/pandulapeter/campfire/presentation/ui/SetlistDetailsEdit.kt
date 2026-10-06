@@ -16,7 +16,7 @@ import kotlinx.datetime.LocalDate
 internal data class SetlistDetails(
     val title: String,
     val description: String,
-    val date: LocalDate?,
+    val date: LocalDate,
     val isCountdownShown: Boolean,
 )
 

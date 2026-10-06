@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.data.source.local.implementation.model
 
 import com.pandulapeter.campfire.data.source.local.implementation.mapper.toDocument
 import com.pandulapeter.campfire.data.source.local.implementation.mapper.toModel
+import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -30,7 +31,7 @@ internal class SetlistDocumentFormatTest {
     fun fieldsThisVersionDoesNotKnowSurviveARewrite() {
         val text = """{"title":"Summer","venue":{"city":"Pécs"},"songs":[{"file":"a.cho","note":"capo 2"},{"file":"b.cho"}]}"""
 
-        val setlist = SetlistDocumentFormat.decode(text).toModel("summer.setlist.json", size = 0)
+        val setlist = SetlistDocumentFormat.decode(text).toModel("summer.setlist.json", size = 0, undatedDay = DAY)
         val changed = setlist.copy(isArchived = true, entries = setlist.entries.reversed())
         val rewritten = Json.parseToJsonElement(SetlistDocumentFormat.encode(changed.toDocument())).jsonObject
 
@@ -64,7 +65,7 @@ internal class SetlistDocumentFormatTest {
         val document = SetlistDocumentFormat.decode("""{"title":"Summer","priority":3}""")
 
         assertTrue(document.unknownFields.isEmpty())
-        assertFalse("priority" in SetlistDocumentFormat.encode(document.toModel("summer.setlist.json", size = 0).toDocument()))
+        assertFalse("priority" in SetlistDocumentFormat.encode(document.toModel("summer.setlist.json", size = 0, undatedDay = DAY).toDocument()))
     }
 
     @Test
@@ -84,7 +85,7 @@ internal class SetlistDocumentFormatTest {
     @Test
     fun aTempoRoundTripsAndIsLeftOutWhenNull() {
         val text = """{"title":"S","songs":[{"file":"a.cho","tempo":96},{"file":"b.cho"}]}"""
-        val setlist = SetlistDocumentFormat.decode(text).toModel("s.setlist.json", size = 0)
+        val setlist = SetlistDocumentFormat.decode(text).toModel("s.setlist.json", size = 0, undatedDay = DAY)
         assertEquals(listOf(96, null), setlist.entries.map { it.tempo })
 
         val songs = Json.parseToJsonElement(SetlistDocumentFormat.encode(setlist.toDocument())).jsonObject.getValue("songs").jsonArray
@@ -106,10 +107,14 @@ internal class SetlistDocumentFormatTest {
     @Test
     fun anUnknownMemberSurvivesBesideTheTempo() {
         val text = """{"title":"S","songs":[{"file":"a.cho","tempo":96,"capo":2}]}"""
-        val rewritten = SetlistDocumentFormat.encode(SetlistDocumentFormat.decode(text).toModel("s.setlist.json", size = 0).toDocument())
+        val rewritten = SetlistDocumentFormat.encode(SetlistDocumentFormat.decode(text).toModel("s.setlist.json", size = 0, undatedDay = DAY).toDocument())
         val song = Json.parseToJsonElement(rewritten).jsonObject.getValue("songs").jsonArray.single().jsonObject
 
         assertEquals(JsonPrimitive(96), song["tempo"])
         assertEquals(JsonPrimitive(2), song["capo"])
+    }
+
+    private companion object {
+        val DAY = LocalDate(2026, 1, 1)
     }
 }

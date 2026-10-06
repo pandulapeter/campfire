@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.repository.implementation.sync
 
 import com.pandulapeter.campfire.data.model.DataState
+import com.pandulapeter.campfire.data.model.domain.ParsedSetlist
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.SongContent
@@ -207,7 +208,7 @@ internal class RecordingSetlistRepository : SetlistRepository {
     override suspend fun renameSetlist(fileName: String, title: String, description: String, date: LocalDate, isCountdownShown: Boolean): Setlist? =
         throw UnsupportedOperationException()
 
-    override suspend fun parseSetlist(document: String): Setlist? = throw UnsupportedOperationException()
+    override suspend fun parseSetlist(document: String): ParsedSetlist? = throw UnsupportedOperationException()
 
     override suspend fun importSetlist(setlist: Setlist, shouldReplace: Boolean): Setlist = throw UnsupportedOperationException()
 

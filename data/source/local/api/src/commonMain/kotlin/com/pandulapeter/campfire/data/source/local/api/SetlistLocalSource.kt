@@ -9,18 +9,22 @@
  */
 package com.pandulapeter.campfire.data.source.local.api
 
+import com.pandulapeter.campfire.data.model.domain.ParsedSetlist
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import kotlinx.datetime.LocalDate
 
 interface SetlistLocalSource {
 
-    /** Every `*.setlist.json` file in the library. Files that cannot be parsed are skipped, never deleted. */
+    /**
+     * Every `*.setlist.json` file in the library. Files that cannot be parsed are skipped, never deleted. One that names
+     * no day is given today's and saved with it, so that every setlist has a date and keeps it.
+     */
     suspend fun loadSetlists(): List<Setlist>
 
     /**
      * The setlist stored under [fileName], read from the file rather than from anything cached, so that a change built
      * on it builds on what is really there - which a sync run may have replaced a moment ago. Null if there is no such
-     * file; throws if it is there and cannot be read or decoded.
+     * file; throws if it is there and cannot be read or decoded. A file that names no day is dated as [loadSetlists] dates it.
      */
     suspend fun loadSetlist(fileName: String): Setlist?
 
@@ -47,9 +51,10 @@ interface SetlistLocalSource {
 
     /**
      * Parses an exported `*.setlist.json` document. The result carries the file name it would like to have, derived
-     * from its title, which [importSetlist] turns into a free one. Null when the document is not a setlist.
+     * from its title, which [importSetlist] turns into a free one, and today's date where the document names no day of
+     * its own, which [ParsedSetlist.isDated] says. Null when the document is not a setlist.
      */
-    suspend fun parseSetlist(document: String): Setlist?
+    suspend fun parseSetlist(document: String): ParsedSetlist?
 
     /**
      * Writes [setlist] under the file name it carries, suffixed until it is free unless [shouldReplace] says

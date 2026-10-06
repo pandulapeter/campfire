@@ -231,7 +231,7 @@ class SongReferencesTest {
             fileName = fileName,
             title = fileName,
             description = "",
-            date = null,
+            date = LocalDate(2026, 1, 1),
             isArchived = false,
             entries = songs.map { Setlist.Entry(songFileName = it) },
             size = 0L,

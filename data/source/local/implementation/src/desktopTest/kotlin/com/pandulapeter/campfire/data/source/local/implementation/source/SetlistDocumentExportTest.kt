@@ -44,7 +44,7 @@ class SetlistDocumentExportTest {
         fileStorage.writeText(StorageDirectory.SETLISTS, FILE_NAME, DOCUMENT)
 
         val narrowed = assertNotNull(setlistLocalSource.loadSetlistDocument(FILE_NAME, setOf("c.cho", "a.cho")))
-        val setlist = assertNotNull(setlistLocalSource.parseSetlist(narrowed))
+        val setlist = assertNotNull(setlistLocalSource.parseSetlist(narrowed)).setlist
 
         assertEquals(listOf("a.cho" to 2, "c.cho" to -1), setlist.entries.map { it.songFileName to it.transposition })
         assertEquals("Gig", setlist.title)

@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui
 
 import com.pandulapeter.campfire.data.model.domain.Setlist
+import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -20,7 +21,7 @@ internal class SetlistSongToggleTest {
         fileName = "set.setlist.json",
         title = "Set",
         description = "",
-        date = null,
+        date = LocalDate(2026, 1, 1),
         isArchived = false,
         entries = listOf(
             Setlist.Entry(songFileName = "a"),

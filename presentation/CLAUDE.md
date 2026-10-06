@@ -264,8 +264,9 @@ Everything else is `commonMain`:
   as many as its keys reach, white keys the lighter of the two theme colours in either theme, every pressed key filled
   whole — the root in the second accent, the rest (a slash chord's bass included) in a paler shade of it. The **Chord shapes sheet** (`DialogType.ChordShapes`, closed with the song) reads the song as the page plays
   it and lists its chords larger, with their fingers and notes, each with a `Stepper` through
-  `ChordVoicings.all` (searched per cell off the main thread), written at once by `setChordVoicing`, highlighted while
-  the shape is the player's own and reset by a tap on its value; a chord the song defines has "Defined in this song"
+  `ChordVoicings.all` (searched per cell off the main thread), written at once by `setChordVoicing` (stepping onto the
+  app's first shape removes the entry), never highlighted and with no reset, since which shape is the default means
+  nothing to the player; a chord the song defines has "Defined in this song"
   (and by how many frets it was moved) in its place. The **editor**'s first toolbar row ends in Chord shape
   (`chordShapeInsertion`, tested), which writes a `{define}` for the chord at the caret into the header, filled in with
   the shape the player would be shown and its frets selected, or sends the caret to the frets of the line already

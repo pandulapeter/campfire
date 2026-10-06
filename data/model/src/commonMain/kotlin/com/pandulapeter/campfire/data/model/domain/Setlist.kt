@@ -29,10 +29,10 @@ data class Setlist(
      * The day the setlist is for - the gig, the rehearsal, the evening at the fire - which the setlists screen sorts by,
      * the latest on top. It starts as the day the setlist was created in this library and the user may move it. A day
      * rather than a moment, since that is what a setlist is planned for, and written in the file as an ISO date, so it
-     * travels with the setlist. Null for a file that names no day (or none that reads as one), written before there
-     * was a date or by hand, which is listed after every dated setlist.
+     * travels with the setlist. Every setlist has one: a file that names no day (or none that reads as one), written
+     * before there were dates or by hand, is given the day it is first read or imported on.
      */
-    val date: LocalDate?,
+    val date: LocalDate,
     /**
      * Whether the setlist's header says how far away [date] is ("In 5 days", "Yesterday"), which is how the day can be
      * read on the setlists screen at all. Off unless the user asks for it, since plenty of setlists are dated only

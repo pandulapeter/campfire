@@ -48,7 +48,6 @@ import com.pandulapeter.campfire.presentation.resources.song_details_chord_defin
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_shape_next
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_shape_position
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_shape_previous
-import com.pandulapeter.campfire.presentation.resources.song_details_chord_shape_reset
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_shapes
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.chords.SelectedShape
@@ -133,8 +132,8 @@ internal fun ChordShapesSheet(
 
 /**
  * One chord of the sheet: its name, its diagram with the fingers that hold it, its notes, and where it has more than one
- * shape, a stepper reading which of them it is on, going around like the transposition's, highlighted while the shape
- * is the player's own and put back to the first one by a tap on its value.
+ * shape, a stepper reading which of them it is on, going around like the transposition's. It is never highlighted and
+ * has no reset: which shape is the app's first says nothing to a player who only picks the one their hands play.
  */
 @Composable
 private fun ChordShapeCell(
@@ -156,6 +155,10 @@ private fun ChordShapeCell(
     // A stored shape the app does not list is still the player's, and comes first, before the app's own.
     val options = shapes?.let { all -> if (current == null || all.any { it.sameShapeAs(current) }) all else listOf(current) + all }
     val index = options?.indexOfFirst { current != null && it.sameShapeAs(current) } ?: -1
+    // The app's own first shape is never stored as the player's: stepping around to it takes the chord's entry out, so
+    // that the app's default is what plays there, rather than a copy of it that nothing would ever update.
+    val defaultShape = shapes?.firstOrNull()
+    val select = { shape: ChordVoicing -> onShapeSelected(shape.takeUnless { defaultShape?.sameShapeAs(it) == true }) }
     val cell = ChordCell(name = chord.name, soundingName = chord.soundingName, instrument = instrument, root = chord.chord.root, selection = selection)
     val description = chordCellDescription(cell)
     Row(verticalAlignment = Alignment.Bottom) {
@@ -213,17 +216,17 @@ private fun ChordShapeCell(
         Stepper(
             modifier = Modifier.padding(top = 8.dp),
             value = stringResource(Res.string.song_details_chord_shape_position, index + 1, options.size),
-            isDefault = selection.source != SelectedShape.Source.PLAYER,
+            isDefault = true,
             decreaseIcon = painterResource(Res.drawable.ic_previous),
             decreaseLabel = textResource(Res.string.song_details_chord_shape_previous, chord.name),
             canDecrease = true,
-            onDecrease = { onShapeSelected(options[(index - 1).mod(options.size)]) },
+            onDecrease = { select(options[(index - 1).mod(options.size)]) },
             increaseIcon = painterResource(Res.drawable.ic_next),
             increaseLabel = textResource(Res.string.song_details_chord_shape_next, chord.name),
             canIncrease = true,
-            onIncrease = { onShapeSelected(options[(index + 1).mod(options.size)]) },
-            resetLabel = textResource(Res.string.song_details_chord_shape_reset, chord.name),
-            onReset = { onShapeSelected(null) },
+            onIncrease = { select(options[(index + 1).mod(options.size)]) },
+            resetLabel = null,
+            onReset = null,
         )
     } else {
         // The stepper's room is kept while the shapes are looked for, so that the cells do not grow under the finger.

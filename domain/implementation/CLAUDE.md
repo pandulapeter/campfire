@@ -25,8 +25,7 @@ The ones that carry real logic:
   carry the last good data — and where there is none yet, a part whose first read failed stands in empty (songs,
   setlists) or at the defaults (preferences), so the part that was read is still shown; such a value says so
   (`ScreenData.isWholeLibrary`) and is never cached. A part that is merely still loading is never filled in. It also
-  orders the setlists (by date, the latest day first, one day's setlists by title and the undated ones after the
-  dated ones, or by title; the archived ones after the rest either way) — every order it produces ends in the file name, because the repositories' lists are in no particular order (a
+  orders the setlists (by date, the latest day first and one day's setlists by title, or by title; the archived ones after the rest either way) — every order it produces ends in the file name, because the repositories' lists are in no particular order (a
   written item moves to the end) and a tie would otherwise be decided by it — without ever narrowing them: the song filters are about the song list, and the setlists screen decides for
   itself whether it is showing the archived ones. The whole library travels alongside the filtered list — see
   `ScreenData.unfilteredSongs`, and so do the filter and the three preferences the list was built for
@@ -73,12 +72,11 @@ The ones that carry real logic:
   (`ImportPlan.SongEntry.replacesFileName`), so that no setlist of the batch is pointed at a name the song list does
   not hold. Only a decision made before anything is written can be put to the user as one question about a
   whole archive, which is the reason for the split — three hundred questions is not a choice. A song is compared by
-  its text and a setlist by its fields, never by the stored document, and never by a date the incoming setlist does
-  not carry — nor, then, by its countdown, which no file older than the date can say either (a replacement keeps the
-  library's) — since the import dates such a setlist itself with the day it is imported on, or, where it replaces a
-  library setlist, with the day that one had; the demo library is imported with `isDatingUndatedSetlists` off, so its
-  setlist stays undated (every installation then holds the same file, and a sync run between two of them finds
-  nothing to keep side by side) and asking for it again finds it unchanged — and the entries as they will be written, each pointing where its song lands, so a setlist that
+  its text and a setlist by its fields, never by the stored document, and never by the date of a file that named
+  none (`ImportPlan.SetlistEntry.isDated` false) — nor, then, by its countdown, which no file older than the date can
+  say either (a replacement keeps the library's) — since parsing gives such a setlist the day it is imported on, and
+  the import replaces that with the day of the library setlist it replaces; the bundled demo setlist is one, so asking
+  for it again finds it unchanged — and the entries as they will be written, each pointing where its song lands, so a setlist that
   names an incoming song is only the library's one when the song ends up where the library's points. A setlist's
   entries are resolved among the songs of the picked file it came out of (`ImportPlan.SongEntry.origin`) before the
   rest of the batch, since file names are only unique within one archive. `ImportPlanner` is covered by `commonTest`. Preparing runs on `Dispatchers.Default`, because decoding, splitting, header parsing and

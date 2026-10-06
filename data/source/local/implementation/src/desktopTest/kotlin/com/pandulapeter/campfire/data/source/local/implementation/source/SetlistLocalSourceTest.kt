@@ -13,11 +13,18 @@ import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.JvmFileStorage
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StorageDirectory
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.todayIn
 import java.io.File
 import java.nio.file.Files
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
+import kotlin.time.Clock
 
 /**
  * What a save hands back is what the caller caches, so it has to be what the file holds: a model built in memory that
@@ -80,11 +87,31 @@ class SetlistLocalSourceTest {
         assertEquals(listOf("other.setlist.json"), fileStorage.list(StorageDirectory.SETLISTS).map { it.name })
     }
 
+    @Test
+    fun `a setlist file that names no day is given today's when it is read and keeps it`() = runBlocking {
+        fileStorage.writeText(StorageDirectory.SETLISTS, "old.setlist.json", """{"title":"Old"}""")
+        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+
+        assertEquals(listOf(today), setlistLocalSource.loadSetlists().map { it.date })
+        assertTrue("\"date\": \"$today\"" in fileStorage.readText(StorageDirectory.SETLISTS, "old.setlist.json").orEmpty())
+    }
+
+    @Test
+    fun `a setlist document that names no day is parsed with today's and says so`() = runBlocking {
+        val undated = assertNotNull(setlistLocalSource.parseSetlist("""{"title":"Old"}"""))
+        val dated = assertNotNull(setlistLocalSource.parseSetlist("""{"title":"New","date":"2026-09-28"}"""))
+
+        assertEquals(Clock.System.todayIn(TimeZone.currentSystemDefault()), undated.setlist.date)
+        assertFalse(undated.isDated)
+        assertEquals(LocalDate(2026, 9, 28), dated.setlist.date)
+        assertTrue(dated.isDated)
+    }
+
     private fun setlistNamingASongTwice(fileName: String, title: String) = Setlist(
         fileName = fileName,
         title = title,
         description = "",
-        date = null,
+        date = LocalDate(2026, 1, 1),
         isArchived = false,
         entries = listOf(
             Setlist.Entry(songFileName = "a.cho", transposition = 2),

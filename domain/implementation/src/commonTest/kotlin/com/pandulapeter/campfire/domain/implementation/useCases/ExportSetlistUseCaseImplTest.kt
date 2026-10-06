@@ -114,7 +114,7 @@ class ExportSetlistUseCaseImplTest {
             fileName = fileName,
             title = title,
             description = "",
-            date = null,
+            date = LocalDate(2026, 1, 1),
             isArchived = false,
             entries = emptyList(),
             size = 0L,

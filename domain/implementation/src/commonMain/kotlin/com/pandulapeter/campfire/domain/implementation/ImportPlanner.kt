@@ -50,6 +50,8 @@ internal object ImportPlanner {
         val sourceFileName: String,
         /** See [ImportPlan.SetlistEntry.origin]. */
         val origin: Int? = null,
+        /** See [ImportPlan.SetlistEntry.isDated]. */
+        val isDated: Boolean = true,
     )
 
     /**
@@ -205,7 +207,7 @@ internal object ImportPlanner {
         songFileNames: SongFileNames,
     ) = planInOrder(
         // The origin goes back in too, or the setlists written would point at the batch's songs rather than their own.
-        incoming = planned.map { IncomingSetlist(setlist = it.setlist, sourceFileName = it.sourceFileName, origin = it.origin) },
+        incoming = planned.map { IncomingSetlist(setlist = it.setlist, sourceFileName = it.sourceFileName, origin = it.origin, isDated = it.isDated) },
         librarySetlists = librarySetlists,
         songFileNames = songFileNames,
     )
@@ -249,24 +251,30 @@ internal object ImportPlanner {
         val written = incoming.map { it.setlist.withSongFileNames(songFileNames.forOrigin(it.origin)) }
         // See planSongs: every setlist against the library first, so that a library setlist the batch brings back
         // unchanged is known before a different one wanting its name could be made a question about replacing it.
-        val identicalSetlists = incoming.mapIndexed { index, (setlist, sourceFileName) ->
+        val identicalSetlists = incoming.mapIndexed { index, (setlist, sourceFileName, _, isDated) ->
             val members = setlist.fileName.familyKeys(SETLIST_EXTENSIONS).firstOrNull()?.let(libraryFamilies::get).orEmpty()
                 .mapNotNull(librarySetlistsByFileName::get)
-            members.firstOrNull { it.holdsTheSameAs(written[index]) }
+            members.firstOrNull { it.holdsTheSameAs(written[index], isDated) }
                 // See planSongs: a setlist file named before today's rule, arriving under that name.
-                ?: librarySetlistsByFileName[sourceFileName]?.takeIf { it.holdsTheSameAs(written[index]) }
+                ?: librarySetlistsByFileName[sourceFileName]?.takeIf { it.holdsTheSameAs(written[index], isDated) }
         }
         val keptLibraryFileNames = identicalSetlists.mapNotNullTo(hashSetOf()) { it?.fileName }
         val plannedSetlists = mutableMapOf<String, MutableList<Setlist>>()
         val conflictingFileNames = mutableSetOf<String>()
-        return incoming.mapIndexed { index, (setlist, sourceFileName, origin) ->
-            fun entry(fileName: String, status: ImportPlan.Status) =
-                ImportPlan.SetlistEntry(fileName = fileName, setlist = setlist, status = status, sourceFileName = sourceFileName, origin = origin)
+        return incoming.mapIndexed { index, (setlist, sourceFileName, origin, isDated) ->
+            fun entry(fileName: String, status: ImportPlan.Status) = ImportPlan.SetlistEntry(
+                fileName = fileName,
+                setlist = setlist,
+                status = status,
+                sourceFileName = sourceFileName,
+                origin = origin,
+                isDated = isDated,
+            )
             val identical = identicalSetlists[index]
             val planned = plannedSetlists.getOrPut(setlist.fileName) { mutableListOf() }
             when {
                 identical != null -> entry(fileName = identical.fileName, status = ImportPlan.Status.IDENTICAL)
-                planned.any { it.holdsTheSameAs(written[index]) } -> entry(fileName = setlist.fileName, status = ImportPlan.Status.IDENTICAL)
+                planned.any { it.holdsTheSameAs(written[index], isDated) } -> entry(fileName = setlist.fileName, status = ImportPlan.Status.IDENTICAL)
                 else -> {
                     planned += written[index]
                     val isConflicting = setlist.fileName in librarySetlistsByFileName &&
@@ -279,14 +287,14 @@ internal object ImportPlanner {
     }
 
     /**
-     * Every user-facing field decides whether a setlist is the same as the incoming [other], except a date [other] does
-     * not carry, and with it the countdown, which no file older than the date can say either: the import gives it the
-     * day it is imported on, which a copy of it already in the library can never match - the bundled demo setlist is
-     * one, and asking for it again would otherwise always be a question.
+     * Every user-facing field decides whether a setlist is the same as the incoming [other], except the date of a file
+     * that named none ([isOtherDated] false), and with it the countdown, which no file older than the date can say
+     * either: the day [other] carries is then only the one it is imported on, which a copy of it already in the library
+     * can never match - the bundled demo setlist is one, and asking for it again would otherwise always be a question.
      */
-    private fun Setlist.holdsTheSameAs(other: Setlist) =
+    private fun Setlist.holdsTheSameAs(other: Setlist, isOtherDated: Boolean) =
         title == other.title && description == other.description &&
-            (other.date == null || (date == other.date && isCountdownShown == other.isCountdownShown)) &&
+            (!isOtherDated || (date == other.date && isCountdownShown == other.isCountdownShown)) &&
             isArchived == other.isArchived && entries == other.entries && unknownFields == other.unknownFields
 
     private fun IncomingSong.toEntry(

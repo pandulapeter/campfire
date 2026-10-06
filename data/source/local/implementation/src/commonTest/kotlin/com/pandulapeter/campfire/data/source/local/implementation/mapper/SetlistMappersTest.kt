@@ -19,13 +19,13 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /**
  * A setlist file is the one thing the user can hand-edit into a shape the screens cannot draw: the rows and the
  * pages are keyed by the song's file name, so a song named twice has to be read as named once, and a date that is
- * not one has to be read as no date rather than as a file that cannot be read.
+ * not one has to be read as no date, which gives the setlist the day it is read on, rather than as a file that cannot
+ * be read.
  */
 internal class SetlistMappersTest {
 
@@ -45,7 +45,7 @@ internal class SetlistMappersTest {
                 Setlist.Entry(songFileName = "a.cho", transposition = 2, unknownFields = """{"note":"x"}"""),
                 Setlist.Entry(songFileName = "b.cho"),
             ),
-            actual = document.toModel("summer.setlist.json", size = 0).entries,
+            actual = document.toModel("summer.setlist.json", size = 0, undatedDay = DAY).entries,
         )
     }
 
@@ -55,7 +55,7 @@ internal class SetlistMappersTest {
             fileName = "summer.setlist.json",
             title = "Summer",
             description = "",
-            date = null,
+            date = LocalDate(2026, 1, 1),
             isArchived = false,
             entries = listOf(
                 Setlist.Entry(songFileName = "a.cho", transposition = 2),
@@ -71,7 +71,7 @@ internal class SetlistMappersTest {
 
     @Test
     fun theDateIsWrittenAsAnIsoDateAndReadBack() {
-        val setlist = SetlistDocument(title = "Summer", date = "2026-09-28").toModel("summer.setlist.json", size = 0)
+        val setlist = SetlistDocument(title = "Summer", date = "2026-09-28").toModel("summer.setlist.json", size = 0, undatedDay = DAY)
 
         assertEquals(LocalDate(2026, 9, 28), setlist.date)
         assertEquals("2026-09-28", setlist.toDocument().date)
@@ -79,7 +79,7 @@ internal class SetlistMappersTest {
 
     @Test
     fun theCountdownIsWrittenOnlyWhereItIsShown() {
-        val setlist = SetlistDocumentFormat.decode("""{"title":"Summer","isCountdownShown":true}""").toModel("summer.setlist.json", size = 0)
+        val setlist = SetlistDocumentFormat.decode("""{"title":"Summer","isCountdownShown":true}""").toModel("summer.setlist.json", size = 0, undatedDay = DAY)
 
         assertTrue(setlist.isCountdownShown)
         assertTrue("isCountdownShown" in SetlistDocumentFormat.encode(setlist.toDocument()))
@@ -87,9 +87,17 @@ internal class SetlistMappersTest {
     }
 
     @Test
-    fun aDateThatIsNotOneIsNoDate() {
-        listOf("next friday", "2026-02-30", "").forEach { text ->
-            assertNull(SetlistDocument(title = "Summer", date = text).toModel("summer.setlist.json", size = 0).date)
+    fun aDateThatIsNotOneIsNoDateAndTheSetlistGetsTheDayItIsHanded() {
+        (listOf("next friday", "2026-02-30", "") + null).forEach { text ->
+            val document = SetlistDocument(title = "Summer", date = text)
+
+            assertFalse(document.isDated)
+            assertEquals(DAY, document.toModel("summer.setlist.json", size = 0, undatedDay = DAY).date)
         }
+        assertTrue(SetlistDocument(title = "Summer", date = "2026-09-28").isDated)
+    }
+
+    private companion object {
+        val DAY = LocalDate(2025, 5, 5)
     }
 }

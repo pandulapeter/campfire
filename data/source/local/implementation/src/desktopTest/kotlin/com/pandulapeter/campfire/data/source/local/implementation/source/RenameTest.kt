@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.data.source.local.implementation.storage.file.F
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.JvmFileStorage
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StorageDirectory
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.LocalDate
 import java.io.File
 import java.nio.file.Files
 import kotlin.test.AfterTest
@@ -119,7 +120,7 @@ class RenameTest {
             fileName = "Summer.setlist.json",
             title = "Summer",
             description = "",
-            date = null,
+            date = LocalDate(2026, 1, 1),
             isArchived = false,
             entries = emptyList(),
             size = 0L,

@@ -130,29 +130,30 @@ internal class ImportPlannerTest {
         // The bundled demo setlist names no day, and the copy the library holds was dated by the import that planted it.
         val library = setlist(fileName = "summer_set.setlist.json", title = "Summer set").copy(date = LocalDate(2026, 9, 28))
 
-        fun statusOf(incoming: Setlist) = ImportPlanner.planSetlists(
-            incoming = listOf(ImportPlanner.IncomingSetlist(incoming, "summer_set.setlist.json")),
+        fun statusOf(incoming: Setlist, isDated: Boolean) = ImportPlanner.planSetlists(
+            incoming = listOf(ImportPlanner.IncomingSetlist(incoming, "summer_set.setlist.json", isDated = isDated)),
             librarySetlists = listOf(library),
             songFileNames = emptyMap(),
         ).single().status
 
-        assertEquals(ImportPlan.Status.IDENTICAL, statusOf(library.copy(date = null)))
-        assertEquals(ImportPlan.Status.CONFLICTING, statusOf(library.copy(date = LocalDate(2026, 10, 1))))
+        // An undated file is parsed with the day it is imported on, which is not the day the library's copy holds.
+        assertEquals(ImportPlan.Status.IDENTICAL, statusOf(library.copy(date = LocalDate(2026, 10, 1)), isDated = false))
+        assertEquals(ImportPlan.Status.CONFLICTING, statusOf(library.copy(date = LocalDate(2026, 10, 1)), isDated = true))
     }
 
     @Test
     fun aSetlistThatCarriesNoDateSaysNothingAboutTheCountdownEither() {
         val library = setlist(fileName = "summer_set.setlist.json", title = "Summer set").copy(date = LocalDate(2026, 9, 28), isCountdownShown = true)
 
-        fun statusOf(incoming: Setlist) = ImportPlanner.planSetlists(
-            incoming = listOf(ImportPlanner.IncomingSetlist(incoming, "summer_set.setlist.json")),
+        fun statusOf(incoming: Setlist, isDated: Boolean) = ImportPlanner.planSetlists(
+            incoming = listOf(ImportPlanner.IncomingSetlist(incoming, "summer_set.setlist.json", isDated = isDated)),
             librarySetlists = listOf(library),
             songFileNames = emptyMap(),
         ).single().status
 
-        assertEquals(ImportPlan.Status.IDENTICAL, statusOf(library.copy(date = null, isCountdownShown = false)))
+        assertEquals(ImportPlan.Status.IDENTICAL, statusOf(library.copy(date = LocalDate(2026, 10, 1), isCountdownShown = false), isDated = false))
         // A file that carries a date was written by a build that knew the countdown, so its flag is what it says.
-        assertEquals(ImportPlan.Status.CONFLICTING, statusOf(library.copy(isCountdownShown = false)))
+        assertEquals(ImportPlan.Status.CONFLICTING, statusOf(library.copy(isCountdownShown = false), isDated = true))
     }
 
     @Test
@@ -664,7 +665,7 @@ internal class ImportPlannerTest {
         fileName = fileName,
         title = title,
         description = "",
-        date = null,
+        date = LocalDate(2026, 1, 1),
         isArchived = false,
         entries = emptyList(),
         size = 0L,
@@ -675,7 +676,7 @@ internal class ImportPlannerTest {
             fileName = "set.setlist.json",
             title = "Set",
             description = "",
-            date = null,
+            date = LocalDate(2026, 1, 1),
             isArchived = false,
             entries = listOf(Setlist.Entry(songFileName = "song.cho")),
             size = 0L,

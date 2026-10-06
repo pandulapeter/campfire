@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.repository.api
 
 import com.pandulapeter.campfire.data.model.DataState
+import com.pandulapeter.campfire.data.model.domain.ParsedSetlist
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.LocalDate
@@ -72,7 +73,7 @@ interface SetlistRepository {
     suspend fun renameSetlist(fileName: String, title: String, description: String, date: LocalDate, isCountdownShown: Boolean): Setlist?
 
     /** See `SetlistLocalSource.parseSetlist`. */
-    suspend fun parseSetlist(document: String): Setlist?
+    suspend fun parseSetlist(document: String): ParsedSetlist?
 
     /**
      * Writes an imported setlist under the file name it carries, suffixed until it is free unless [shouldReplace]

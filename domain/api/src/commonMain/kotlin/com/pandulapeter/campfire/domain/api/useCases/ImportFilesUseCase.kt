@@ -22,18 +22,12 @@ interface ImportFilesUseCase {
      * name is taken by something else, and is the answer the user gave to that question. Progress counts every
      * processed entry, including duplicates and skipped conflicts. A write failure stops the batch and returns
      * its partial result with the failed and unprocessed names; cancellation still throws. The observer must not
-     * throw or perform blocking work.
-     *
-     * @param isDatingUndatedSetlists Whether a setlist that names no day of its own is dated by the day it is imported
-     *   on, the way a new one is. False for the bundled demo setlist: it is planted on every installation, and two
-     *   devices that planted it on different days would otherwise hold two different files under one name, which their
-     *   first sync run keeps side by side as a conflict. A setlist that replaces a library one keeps that one's day
-     *   either way.
+     * throw or perform blocking work. A setlist that arrived naming no day of its own is written with the day it was
+     * imported on, the way a new one is, unless it replaces a library setlist, whose day and countdown it keeps.
      */
     suspend operator fun invoke(
         plan: ImportPlan,
         resolution: ImportConflictResolution,
-        isDatingUndatedSetlists: Boolean = true,
         onProgress: (ImportProgress) -> Unit = {},
     ): ImportResult
 }

@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportRepo
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.followingLibraryFileNames
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.importReportSections
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.matching
+import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -57,7 +58,7 @@ class ImportReportSectionsTest {
                     fileName = "set.setlist.json",
                     title = "Summer",
                     description = "",
-                    date = null,
+                    date = LocalDate(2026, 1, 1),
                     isArchived = false,
                     entries = emptyList(),
                     size = 0L,

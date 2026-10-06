@@ -986,7 +986,7 @@ private fun CampfireViewModel.SetlistWithSongs.headerSubtitle(today: LocalDate):
  */
 @Composable
 private fun Setlist.countdownText(today: LocalDate): String? {
-    val date = date?.takeIf { isCountdownShown } ?: return null
+    val date = date.takeIf { isCountdownShown } ?: return null
     return when (val day = relativeDay(date = date, today = today)) {
         RelativeDay.Today -> stringResource(Res.string.setlists_countdown_today)
         RelativeDay.Tomorrow -> stringResource(Res.string.setlists_countdown_tomorrow)

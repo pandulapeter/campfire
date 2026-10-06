@@ -276,7 +276,7 @@ class ExportLibraryUseCaseImplTest {
             fileName = "$name.setlist.json",
             title = name,
             description = "",
-            date = null,
+            date = LocalDate(2026, 1, 1),
             isArchived = false,
             entries = emptyList(),
             size = 0L,

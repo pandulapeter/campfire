@@ -25,10 +25,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.yield
 import kotlinx.coroutines.withContext
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.todayIn
 import org.koin.core.annotation.Factory
-import kotlin.time.Clock
 
 @Factory
 class ImportFilesUseCaseImpl internal constructor(
@@ -43,7 +40,6 @@ class ImportFilesUseCaseImpl internal constructor(
     override suspend operator fun invoke(
         plan: ImportPlan,
         resolution: ImportConflictResolution,
-        isDatingUndatedSetlists: Boolean,
         onProgress: (ImportProgress) -> Unit,
     ): ImportResult {
         val importedSongs = mutableListOf<Song>()
@@ -142,9 +138,6 @@ class ImportFilesUseCaseImpl internal constructor(
             }
 
             val librarySetlists = setlistRepository.loadSetlistsIfNeeded().orEmpty()
-            // A setlist that arrives naming no day of its own is dated the way a new one is, by the day it was created
-            // here, unless the caller asked for it to stay undated (the bundled demo setlist, see ImportFilesUseCase).
-            val today = if (isDatingUndatedSetlists) Clock.System.todayIn(TimeZone.currentSystemDefault()) else null
             val replacedSetlistFileNames = mutableSetOf<String>()
             // Planned again on the names the songs actually got: a song kept next to the one it collided with is
             // numbered, and a setlist pointing at it is then no longer the library's setlist it was the same as.
@@ -169,16 +162,14 @@ class ImportFilesUseCaseImpl internal constructor(
                     Action.WRITE, Action.REPLACE -> {
                         val shouldReplace = action == Action.REPLACE && entry.fileName !in keptSetlistFileNames &&
                             replacedSetlistFileNames.add(entry.fileName)
-                        // An undated file that replaces a library setlist says nothing about its day or its countdown, so
-                        // both stay what the library had. One that is written numbered instead is a new setlist, dated as
-                        // one.
+                        // A setlist that arrived naming no day of its own carries the day it was imported on, the way a
+                        // new one carries the day it was created here. Replacing a library setlist, it says nothing about
+                        // that one's day or countdown, so both stay what the library had; written numbered instead, it is
+                        // a new setlist and keeps the import's day.
                         val replaced = if (shouldReplace) librarySetlists.firstOrNull { it.fileName == entry.fileName } else null
                         importedSetlists += setlistRepository.importSetlist(
                             setlist = entry.setlist.withSongFileNames(storedSongFileNames.forOrigin(planned.origin)).let {
-                                it.copy(
-                                    date = it.date ?: replaced?.date ?: today,
-                                    isCountdownShown = if (it.date == null && replaced != null) replaced.isCountdownShown else it.isCountdownShown,
-                                )
+                                if (planned.isDated || replaced == null) it else it.copy(date = replaced.date, isCountdownShown = replaced.isCountdownShown)
                             },
                             shouldReplace = shouldReplace,
                         )

@@ -2920,13 +2920,11 @@ class CampfireViewModel(
         files: List<ImportedFile>,
         shouldAnnounceResult: Boolean = true,
         shouldOpenSong: Boolean = false,
-        isDatingUndatedSetlists: Boolean = true,
     ): CompletableDeferred<Unit> {
         val request = ImportRequest(
             files = files,
             shouldAnnounceResult = shouldAnnounceResult,
             shouldOpenSong = shouldOpenSong,
-            isDatingUndatedSetlists = isDatingUndatedSetlists,
         )
         if (files.isEmpty()) {
             request.settled.complete(Unit)
@@ -2957,7 +2955,7 @@ class CampfireViewModel(
         if (files == null) {
             sendMessage(Message.ImportFailed)
         } else {
-            enqueueImport(files, isDatingUndatedSetlists = false).await()
+            enqueueImport(files).await()
         }
         // Asked of a fresh read of the library rather than of the offer, which can still be a step behind the import
         // that just finished. Where the demo is now all there, the offer is waited for until it has left the screen,
@@ -3000,7 +2998,6 @@ class CampfireViewModel(
                                 files = files,
                                 shouldAnnounceResult = false,
                                 shouldOpenSong = false,
-                                isDatingUndatedSetlists = false,
                             ),
                         )
                         awaitImportSettled()
@@ -3227,7 +3224,6 @@ class CampfireViewModel(
                 importFiles.invoke(
                     plan = plan,
                     resolution = resolution,
-                    isDatingUndatedSetlists = request.isDatingUndatedSetlists,
                 ) { if (request.shouldAnnounceResult) _importProgress.value = it }
             }
             _importProgress.value = null
@@ -3592,8 +3588,7 @@ class CampfireViewModel(
             fileName = offered.fileName,
             title = details.title,
             description = details.description,
-            // Only null where the sheet offered no date and kept it, which it cannot: it always confirms a day.
-            date = details.date ?: date,
+            date = details.date,
             isCountdownShown = details.isCountdownShown,
         ) ?: sendMessage(Message.OperationFailed)
     }
@@ -4069,8 +4064,6 @@ class CampfireViewModel(
      *   the library the user is about to be shown, and a progress dialog, a snackbar or a result counting the files
      *   of it would be the app reporting on something that, as far as anyone can tell, simply came with it.
      * @param shouldOpenSong True for files the system handed over, see [importFiles].
-     * @param isDatingUndatedSetlists False for the demo library, whose setlist is planted undated so that every
-     *   installation holds the same file, see [ImportFilesUseCase].
      * @param files Emptied by [import] once the preparation is over: the plan carries everything the rest of the import
      *   needs, while the request lives for as long as a conflicts question does, which would otherwise keep up to the
      *   whole selection's bytes reachable for nothing.
@@ -4079,7 +4072,6 @@ class CampfireViewModel(
         var files: List<ImportedFile>,
         val shouldAnnounceResult: Boolean,
         val shouldOpenSong: Boolean,
-        val isDatingUndatedSetlists: Boolean,
         val settled: CompletableDeferred<Unit> = CompletableDeferred(),
     )
 

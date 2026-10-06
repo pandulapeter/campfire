@@ -10,7 +10,6 @@
 # To do
 ## Short-term (in this version)
 ### Bugs / issues
-- Alternative tuning support for chord diagrams?
 
 ### Improvements
 - Add support for Latin and Nashville notations: documentation/plans/latin-nashville-notation.md - don't forget to apply the changes to the chord diagrams feature too
@@ -37,6 +36,7 @@
 ## Ideas (not detailed enough yet)
 - Global sync status display
 - Fast scroller on the song details screen
+- Alternative tuning support for chord diagrams?
 - External monitor support for lyrics only...? Maybe as a new window on desktop, lyric projection via AirPlay / Chromecast, etc
 - Backing tracks?
 - Native iOS, macOS, feel (overscroll, touch feedback, fonts, icons, colors, themes - Liquid Glass)

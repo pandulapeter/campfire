@@ -211,12 +211,12 @@ class PrepareImportUseCaseImpl internal constructor(
     ): List<ImportPlan.SetlistEntry> {
         val incoming = files.mapNotNull { (file, origin) ->
             yield()
-            val setlist = setlistRepository.parseSetlist(file.bytes.decodeLibraryText())
-            if (setlist == null) {
+            val parsed = setlistRepository.parseSetlist(file.bytes.decodeLibraryText())
+            if (parsed == null) {
                 skippedFileNames += file.name
                 return@mapNotNull null
             }
-            ImportPlanner.IncomingSetlist(setlist = setlist, sourceFileName = file.name, origin = origin)
+            ImportPlanner.IncomingSetlist(setlist = parsed.setlist, sourceFileName = file.name, origin = origin, isDated = parsed.isDated)
         }
         return ImportPlanner.planSetlists(
             incoming = incoming,

@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.dialogs
 
 import com.pandulapeter.campfire.data.model.domain.Setlist
+import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -26,7 +27,7 @@ class SetlistPickerContentsTest {
         fileName = fileName,
         title = fileName,
         description = "",
-        date = null,
+        date = LocalDate(2026, 1, 1),
         isArchived = isArchived,
         entries = songFileNames.map { Setlist.Entry(songFileName = it) },
         size = 0,

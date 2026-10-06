@@ -527,7 +527,6 @@
     <string name="song_details_chord_shapes">Chord shapes</string>
     <string name="song_details_chord_shape_previous">Previous shape of %1$s</string>
     <string name="song_details_chord_shape_next">Next shape of %1$s</string>
-    <string name="song_details_chord_shape_reset">Back to the first shape of %1$s</string>
     <string name="song_details_chord_shape_position">%1$d / %2$d</string>
     <string name="song_details_chord_defined">Defined in this song</string>
     <plurals name="song_details_chord_defined_moved">

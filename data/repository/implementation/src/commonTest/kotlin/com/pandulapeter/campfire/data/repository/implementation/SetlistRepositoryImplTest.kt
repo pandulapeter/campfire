@@ -394,7 +394,7 @@ class SetlistRepositoryImplTest {
             fileName = fileName,
             title = "Gig",
             description = "",
-            date = null,
+            date = LocalDate(2026, 1, 1),
             isArchived = false,
             entries = songs.map { Setlist.Entry(it) },
             size = 0L,

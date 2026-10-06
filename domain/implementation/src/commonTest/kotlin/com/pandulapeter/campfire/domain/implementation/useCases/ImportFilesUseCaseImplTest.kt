@@ -32,15 +32,12 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.todayIn
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlin.test.assertNull
-import kotlin.time.Clock
 
 /**
  * Applying a plan is the one place anything in the library is overwritten, so what it replaces is pinned here as well
@@ -485,57 +482,17 @@ class ImportFilesUseCaseImplTest {
     }
 
     @Test
-    fun `a setlist that names no date is dated by the import and one that does keeps its own`() = runTest {
-        val setlists = FakeSetlistRepository()
-        val dated = setlist(entries = emptyList()).copy(fileName = "dated.setlist.json", title = "Dated", date = LocalDate(2020, 1, 1))
-        val plan = ImportPlan(
-            setlists = ImportPlanner.planSetlists(
-                incoming = listOf(setlist(entries = emptyList()), dated).map { ImportPlanner.IncomingSetlist(it, it.fileName) },
-                librarySetlists = emptyList(),
-                songFileNames = emptyMap(),
-            ),
-        )
-
-        ImportFilesUseCaseImpl(songRepository = FakeSongRepository(files = mutableMapOf()), setlistRepository = setlists)
-            .invoke(plan, ImportConflictResolution.KEEP_BOTH)
-
-        assertEquals(Clock.System.todayIn(TimeZone.currentSystemDefault()), setlists.files.getValue("set.setlist.json").date)
-        assertEquals(LocalDate(2020, 1, 1), setlists.files.getValue("dated.setlist.json").date)
-    }
-
-    @Test
-    fun `an import asked not to date setlists leaves an undated one undated and a replaced one its day`() = runTest {
+    fun `an undated setlist that replaces a library one keeps its date and one kept next to it keeps the import's`() = runTest {
         val planned = LocalDate(2026, 1, 10)
-        val library = setlist(entries = listOf("a.cho")).copy(fileName = "gig.setlist.json", title = "Gig", date = planned)
-        val setlists = FakeSetlistRepository().apply { files[library.fileName] = library }
-        val undated = setlist(entries = emptyList())
-        val replacing = library.copy(date = null, entries = listOf(Setlist.Entry("b.cho")))
-        val plan = ImportPlan(
-            setlists = ImportPlanner.planSetlists(
-                incoming = listOf(
-                    ImportPlanner.IncomingSetlist(undated, undated.fileName),
-                    ImportPlanner.IncomingSetlist(replacing, replacing.fileName),
-                ),
-                librarySetlists = listOf(library),
-                songFileNames = emptyMap(),
-            ),
-        )
-
-        ImportFilesUseCaseImpl(songRepository = FakeSongRepository(files = mutableMapOf()), setlistRepository = setlists)
-            .invoke(plan, ImportConflictResolution.REPLACE, isDatingUndatedSetlists = false)
-
-        assertEquals(null, setlists.files.getValue("set.setlist.json").date)
-        assertEquals(listOf(Setlist.Entry("b.cho")), setlists.files.getValue("gig.setlist.json").entries)
-        assertEquals(planned, setlists.files.getValue("gig.setlist.json").date)
-    }
-
-    @Test
-    fun `an undated setlist that replaces a library one keeps its date and one kept next to it is dated today`() = runTest {
-        val planned = LocalDate(2026, 1, 10)
-        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+        // What parsing gives a file that names no day: the day it is imported on.
+        val today = LocalDate(2026, 10, 6)
         val library = setlist(entries = listOf("a.cho")).copy(fileName = "gig.setlist.json", title = "Gig", date = planned)
         fun incoming(vararg entries: List<String>) = entries.map {
-            ImportPlanner.IncomingSetlist(setlist = library.copy(date = null, entries = it.map(Setlist::Entry)), sourceFileName = library.fileName)
+            ImportPlanner.IncomingSetlist(
+                setlist = library.copy(date = today, entries = it.map(Setlist::Entry)),
+                sourceFileName = library.fileName,
+                isDated = false,
+            )
         }
         suspend fun importing(incoming: List<ImportPlanner.IncomingSetlist>, resolution: ImportConflictResolution) = FakeSetlistRepository().also { setlists ->
             setlists.files[library.fileName] = library
@@ -563,11 +520,11 @@ class ImportFilesUseCaseImplTest {
             date = LocalDate(2026, 1, 10),
             isCountdownShown = true,
         )
-        suspend fun replacing(incoming: Setlist) = FakeSetlistRepository().let { setlists ->
+        suspend fun replacing(incoming: Setlist, isDated: Boolean = true) = FakeSetlistRepository().let { setlists ->
             setlists.files[library.fileName] = library
             val plan = ImportPlan(
                 setlists = ImportPlanner.planSetlists(
-                    incoming = listOf(ImportPlanner.IncomingSetlist(setlist = incoming, sourceFileName = library.fileName)),
+                    incoming = listOf(ImportPlanner.IncomingSetlist(setlist = incoming, sourceFileName = library.fileName, isDated = isDated)),
                     librarySetlists = listOf(library),
                     songFileNames = emptyMap(),
                 ),
@@ -578,7 +535,7 @@ class ImportFilesUseCaseImplTest {
             setlists.files.getValue(library.fileName)
         }
 
-        replacing(library.copy(date = null, isCountdownShown = false, description = "Changed")).let { written ->
+        replacing(library.copy(date = LocalDate(2026, 10, 6), isCountdownShown = false, description = "Changed"), isDated = false).let { written ->
             assertEquals("Changed", written.description)
             assertEquals(library.date, written.date)
             assertEquals(true, written.isCountdownShown)
@@ -798,7 +755,7 @@ class ImportFilesUseCaseImplTest {
             fileName = "set.setlist.json",
             title = "Set",
             description = "",
-            date = null,
+            date = LocalDate(2026, 1, 1),
             isArchived = false,
             entries = entries.map { Setlist.Entry(songFileName = it) },
             size = 0L,

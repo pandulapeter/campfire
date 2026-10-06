@@ -85,21 +85,19 @@ class GetScreenDataUseCaseImplTest {
     }
 
     @Test
-    fun `by date the latest day is on top, one day's setlists by title and the undated and the archived ones after`() = runTest {
+    fun `by date the latest day is on top, one day's setlists by title and the archived ones after`() = runTest {
         setlists.value = DataState.Idle(
             listOf(
                 setlist("old", day = 1),
-                setlist("undated", day = null),
                 setlist("zebra", day = 20),
                 setlist("archived", day = 30, isArchived = true),
                 setlist("Apple", day = 20),
-                setlist("another undated", day = null),
                 setlist("new", day = 25),
             ),
         )
 
         assertEquals(
-            listOf("new", "Apple", "zebra", "old", "another undated", "undated", "archived"),
+            listOf("new", "Apple", "zebra", "old", "archived"),
             collectScreenData().idle().setlists.map { it.title },
         )
     }
@@ -359,11 +357,11 @@ class GetScreenDataUseCaseImplTest {
             languageSortingMode = UserPreferences.LabelSortingMode.BY_USAGE,
         )
 
-        fun setlist(title: String, day: Int?, isArchived: Boolean = false) = Setlist(
+        fun setlist(title: String, day: Int = 1, isArchived: Boolean = false) = Setlist(
             fileName = "$title.setlist.json",
             title = title,
             description = "",
-            date = day?.let { LocalDate(2026, 9, it) },
+            date = LocalDate(2026, 9, day),
             isArchived = isArchived,
             entries = emptyList(),
             size = 0L,

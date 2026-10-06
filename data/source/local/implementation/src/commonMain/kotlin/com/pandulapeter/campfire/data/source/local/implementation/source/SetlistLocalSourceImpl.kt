@@ -11,12 +11,15 @@ package com.pandulapeter.campfire.data.source.local.implementation.source
 
 import com.pandulapeter.campfire.data.model.domain.ImportLimits
 import com.pandulapeter.campfire.data.model.domain.LibraryFiles
+import com.pandulapeter.campfire.data.model.domain.ParsedSetlist
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import com.pandulapeter.campfire.data.source.local.api.SetlistLocalSource
+import com.pandulapeter.campfire.data.source.local.implementation.mapper.isDated
 import com.pandulapeter.campfire.data.source.local.implementation.mapper.toDocument
 import com.pandulapeter.campfire.data.source.local.implementation.mapper.toModel
 import com.pandulapeter.campfire.data.source.local.implementation.moveFile
+import com.pandulapeter.campfire.data.source.local.implementation.model.SetlistDocument
 import com.pandulapeter.campfire.data.source.local.implementation.model.SetlistDocumentFormat
 import com.pandulapeter.campfire.data.source.local.implementation.isNamed
 import com.pandulapeter.campfire.data.source.local.implementation.setlistFileName
@@ -28,7 +31,10 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.todayIn
 import org.koin.core.annotation.Single
+import kotlin.time.Clock
 
 /** Setlists are decoded on [Dispatchers.Default] for the reason the songs are parsed there (see [SongLocalSourceImpl]). */
 @Single
@@ -50,7 +56,7 @@ internal class SetlistLocalSourceImpl(
         files.zip(fileStorage.readTexts(StorageDirectory.SETLISTS, files.map { it.name })).mapNotNull { (file, answer) ->
             try {
                 when (answer) {
-                    is BatchRead.Text -> SetlistDocumentFormat.decode(answer.text).toModel(file.name, size = file.size)
+                    is BatchRead.Text -> SetlistDocumentFormat.decode(answer.text).toDatedModel(file.name, size = file.size)
                     BatchRead.Missing -> null
                     is BatchRead.Failed -> throw answer.cause
                 }
@@ -68,7 +74,27 @@ internal class SetlistLocalSourceImpl(
         val size = fileStorage.info(StorageDirectory.SETLISTS, fileName)?.size ?: return@withContext null
         if (size > ImportLimits.MAX_TEXT_FILE_SIZE) throw LibraryStorageException("\"$fileName\" is too large to be a setlist.")
         fileStorage.readText(StorageDirectory.SETLISTS, fileName)
-            ?.let { SetlistDocumentFormat.decode(it).toModel(fileName, size = size) }
+            ?.let { SetlistDocumentFormat.decode(it).toDatedModel(fileName, size = size) }
+    }
+
+    /**
+     * Every setlist has a day, so a file that names none - written before there were dates, by hand, or by an older
+     * version on another device - is given the day it is first read on and saved with it at once, rather than being
+     * read as today again tomorrow. The write goes around the repository, so it announces no library change and starts
+     * no sync run of its own; the next run carries it. A write that fails leaves the setlist dated in memory only, to be
+     * tried again by the next read.
+     */
+    private suspend fun SetlistDocument.toDatedModel(fileName: String, size: Long): Setlist {
+        val setlist = toModel(fileName, size = size, undatedDay = today())
+        if (isDated) return setlist
+        return try {
+            saveSetlist(setlist)
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Exception) {
+            println("Could not write the day into the setlist \"$fileName\": ${exception.message}")
+            setlist
+        }
     }
 
     override suspend fun createSetlist(title: String, description: String, date: LocalDate, isCountdownShown: Boolean): Setlist {
@@ -122,10 +148,10 @@ internal class SetlistLocalSourceImpl(
     }
 
     /** The file name is derived from the title rather than kept, so that an exported setlist keeps its identity. */
-    override suspend fun parseSetlist(document: String): Setlist? = try {
+    override suspend fun parseSetlist(document: String): ParsedSetlist? = try {
         SetlistDocumentFormat.decode(document)
             .takeIf { it.title.isNotBlank() }
-            ?.let { it.toModel(setlistFileName(it.title), size = 0) }
+            ?.let { ParsedSetlist(setlist = it.toModel(setlistFileName(it.title), size = 0, undatedDay = today()), isDated = it.isDated) }
     } catch (exception: Exception) {
         println("Could not parse an imported setlist: ${exception.message}")
         null
@@ -153,4 +179,6 @@ internal class SetlistLocalSourceImpl(
     }
 
     override suspend fun deleteSetlist(fileName: String) = fileStorage.delete(StorageDirectory.SETLISTS, fileName)
+
+    private fun today() = Clock.System.todayIn(TimeZone.currentSystemDefault())
 }
