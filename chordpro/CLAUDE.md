@@ -386,7 +386,9 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   eleventh, `dim` the triad, `C2` an added second, a `5` after a quality the fifth the quality has — `C+5` is `Caug`,
   `Cdim5` is `Cdim` — and `C-5` the flat five `C7-5` writes). `namesIn` lists the chords a song plays in order, once each — the
   lyrics, the grids, the tabs' chord rows, the brackets of comments and labels, never the key — and `transposedName`
-  moves one name in its own notation.
+  moves one name in its own notation. `spelledNoteNames` spells a chord's notes by degree from the root's letter (`Cm` is
+  `C Eb G`, a white-key enharmonic or a double accidental falling back to the plain name), which the Chord shapes sheet
+  shows under each diagram.
 - `ChordVoicings` / `ChordVoicingTables` — how a chord is played on the guitar, the ukulele and the keyboard
   (`model/ChordInstrument`, `model/ChordVoicing`). The tables are the shapes everybody knows, typed by hand in a
   `{define}`'s syntax, and always come first; a shape with no open string stands for its quality on every root and is

@@ -61,7 +61,7 @@ class SongChordsTest {
         val latin = names("[Am]la [Bb7]la", notation = ChordNotation.LATIN)
         assertEquals(listOf("Lam", "Sib7"), latin.map { it.name })
         assertEquals(listOf(null, null), latin.map { it.letterName })
-        assertEquals(listOf(false, true), latin.map { it.isSpelledWithFlats })
+        assertEquals(listOf("Am", "Bb7"), latin.map { it.spelling })
     }
 
     @Test
@@ -95,5 +95,7 @@ class SongChordsTest {
         val numbered = names("{key: G}\n[G]la", ChordNotation.NASHVILLE, ChordInstrument.KEYBOARD, capo = 2).single()
         assertEquals("1", numbered.name)
         assertEquals("A", numbered.secondaryName)
+        assertEquals("Bb", names("{key: D}\n[A]la", instrument = ChordInstrument.KEYBOARD, capo = 1).single().spelling)
+        assertEquals(listOf("Bb", "D", "F"), ChordProChords.spelledNoteNames("Bb"))
     }
 }

@@ -203,7 +203,7 @@ private fun ChordShapeCell(
     }
     Text(
         modifier = Modifier.padding(top = 4.dp),
-        text = ChordProChords.noteNames(chord.chord, notation, preferFlats = chord.isSpelledWithFlats).joinToString(" "),
+        text = (chord.spelling?.let { ChordProChords.spelledNoteNames(it, notation) } ?: ChordProChords.noteNames(chord.chord, notation)).joinToString(" "),
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         textAlign = TextAlign.Center,

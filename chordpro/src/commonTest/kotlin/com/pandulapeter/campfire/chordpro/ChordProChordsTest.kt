@@ -145,6 +145,31 @@ class ChordProChordsTest {
     }
 
     @Test
+    fun `notes are spelled by their degree from the root`() {
+        mapOf(
+            "Cm" to "C Eb G",
+            "C7" to "C E G Bb",
+            "F7" to "F A C Eb",
+            "Fm" to "F Ab C",
+            "D" to "D F# A",
+            "F#m" to "F# A C#",
+            "Bb" to "Bb D F",
+            "Caug" to "C E G#",
+            "Cdim7" to "C Eb Gb A",
+            "C7(#9)" to "C D# E G Bb",
+            "Cm(b6)" to "C Eb G Ab",
+            "D/F#" to "D F# A",
+            "C/Bb" to "Bb C E G",
+            "Gbm" to "Gb A Db",
+            "C#" to "C# F G#",
+        ).forEach { (name, notes) -> assertEquals(notes, ChordProChords.spelledNoteNames(name)?.joinToString(" "), name) }
+        assertEquals("B D F", ChordProChords.spelledNoteNames("Bb", ChordNotation.GERMAN)?.joinToString(" "))
+        assertEquals("H D# F#", ChordProChords.spelledNoteNames("B", ChordNotation.GERMAN)?.joinToString(" "))
+        assertEquals("La Do Mi", ChordProChords.spelledNoteNames("Am", ChordNotation.LATIN)?.joinToString(" "))
+        assertNull(ChordProChords.spelledNoteNames("N.C."))
+    }
+
+    @Test
     fun `German names are read in German notation`() {
         assertEquals(11, ChordProChords.parse("H7", ChordNotation.GERMAN)?.root)
         assertEquals(10, ChordProChords.parse("B", ChordNotation.GERMAN)?.root)

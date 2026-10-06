@@ -60,6 +60,65 @@ object ChordProChords {
     }
 
     /**
+     * The notes of the chord [name] stands for, as [noteNames] lists them, each spelled from the letter of the root as
+     * [name] writes it by the degree it is: `Cm` is `C Eb G` and `F7` is `F A C Eb`, as a chart spells them, where
+     * [noteNames] can only choose sharps or flats for the whole chord. A note that would need a double sharp or flat,
+     * or would be one of `Cb`, `Fb`, `E#`, `B#`, is named as [noteNames] would with the root's accidental (`Gbm` is
+     * `Gb A Db`, `C#` is `C# F G#`), since a player reads keys and strings rather than theory, and the bass of a slash
+     * chord as the name writes it. [name] is in the standard notation, its notes named in [notation]. Null where [name]
+     * is no chord.
+     */
+    fun spelledNoteNames(name: String, notation: ChordNotation = ChordNotation.STANDARD): List<String>? {
+        val reader = Reader()
+        // The standard notation always, since in German the standard `B` this is handed would be read as B flat.
+        if (!ChordProChordNames.read(ChordProNotation.read(name, isGerman = false), reader)) return null
+        val chord = reader.chord()
+        val rootName = reader.rootName?.let(::standardSpelling)
+        val rootLetter = rootName?.let { LETTERS.indexOf(it.first()) } ?: -1
+        if (rootName == null || rootLetter < 0) return noteNames(chord, notation)
+        val fallback = if (rootName.getOrNull(1) == 'b') flatNames else sharpNames
+        val pitchClasses = chord.intervals.map { (chord.root + it) % 12 }
+        val bass = chord.bass?.takeIf { it !in pitchClasses }?.let { reader.bassName?.let(::standardSpelling) ?: fallback[it] }
+        val notes = chord.intervals.map { interval ->
+            val letter = LETTERS[(rootLetter + letterStep(interval, chord.intervals)) % LETTERS.length]
+            val pitchClass = (chord.root + interval) % 12
+            val spelled = when ((pitchClass - noteIndices.getValue(letter)).mod(12)) {
+                0 -> letter.toString()
+                1 -> "$letter#"
+                11 -> "${letter}b"
+                else -> null
+            }
+            spelled?.takeIf { it !in whiteKeyEnharmonics } ?: fallback[pitchClass]
+        }
+        return (listOfNotNull(bass) + notes).map { ChordProNotation.shownName(it, notation) }
+    }
+
+    /**
+     * How many letters above the root the note [interval] semitones above it is written: a chart's degrees, with the
+     * neighbors of a note the chord also holds telling a sharp ninth from a minor third, a sharp eleventh from a flat
+     * fifth and a flat thirteenth from a sharp fifth, and a diminished seventh's `bb7` written as the sixth, as charts do.
+     */
+    private fun letterStep(interval: Int, intervals: List<Int>) = when (interval) {
+        0 -> 0
+        1, 2 -> 1
+        3 -> if (4 in intervals) 1 else 2
+        4 -> 2
+        5 -> 3
+        6 -> if (7 in intervals) 3 else 4
+        7 -> 4
+        8 -> if (7 in intervals) 5 else 4
+        9 -> 5
+        else -> 6
+    }
+
+    /** A note as written in the standard notation, with a capital letter and `#` or `b` for its accidental. */
+    private fun standardSpelling(note: String) = note.first().uppercaseChar() + when (note.getOrNull(1)) {
+        '#', '♯' -> "#"
+        'b', '♭' -> "b"
+        else -> ""
+    }
+
+    /**
      * The chords [song] plays, each once by the name it is written under and in the order they first appear: the
      * chords over its lyrics, the cells of its grids, the rows of chord names above its tabs and the brackets of its
      * comments and labels, where an intro is written down as a row of chords — every name the transposition moves, its
@@ -150,7 +209,16 @@ object ChordProChords {
         private val added = mutableSetOf<Int>()
         private var quality: String? = null
 
+        /** The root as the name writes it, which [spelledNoteNames] spells the other notes from. */
+        var rootName: String? = null
+            private set
+
+        /** The bass of a slash chord as the name writes it. */
+        var bassName: String? = null
+            private set
+
         override fun root(note: String) {
+            rootName = note
             root = pitchClass(note) ?: 0
         }
 
@@ -253,6 +321,7 @@ object ChordProChords {
         }
 
         override fun bass(note: String) {
+            bassName = note
             bass = pitchClass(note)
         }
 
@@ -318,6 +387,8 @@ object ChordProChords {
     private const val MAJOR_SEVENTH = 11
     private val degreeIntervals = mapOf(1 to 0, 2 to 2, 3 to 4, 4 to 5, 5 to 7, 6 to 9, 7 to 10, 8 to 0, 9 to 2, 10 to 4, 11 to 5, 12 to 7, 13 to 9)
     private val noteIndices = mapOf('C' to 0, 'D' to 2, 'E' to 4, 'F' to 5, 'G' to 7, 'A' to 9, 'B' to 11, 'H' to 11)
+    private const val LETTERS = "CDEFGAB"
+    private val whiteKeyEnharmonics = setOf("Cb", "Fb", "E#", "B#")
     private val sharpNames = listOf("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
     private val flatNames = listOf("C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B")
 }

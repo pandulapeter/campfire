@@ -32,7 +32,8 @@ import com.pandulapeter.campfire.data.model.domain.UserPreferences
  * @property soundingName The name of [chord] where it is not the one the page shows, which the cell names after it.
  * @property letterName The page's chord in letters where the page counts it as a step of the key, which the cell names
  *   after it too: a `6-` says nothing about the shape under it to a player who has not counted the key out yet.
- * @property isSpelledWithFlats Whether the page spells the chord's root with a flat, which its notes are spelled with.
+ * @property spelling The chord the notes are spelled from, in the standard notation: the page's, or on a capoed
+ *   keyboard the one that sounds.
  * @property defaultShape The shape [chord] is shown with where nothing else says how it is played, worked out with the
  *   rest of the song away from the main thread.
  * @property definition The shape the song itself gives the chord on the instrument, where it gives one that is drawn,
@@ -44,7 +45,7 @@ internal data class SongChord(
     val chord: Chord,
     val soundingName: String? = null,
     val letterName: String? = null,
-    val isSpelledWithFlats: Boolean = false,
+    val spelling: String? = null,
     val defaultShape: ChordVoicing? = null,
     val definition: ChordDefinition? = null,
 )
@@ -89,12 +90,13 @@ internal fun songChordsOf(
         val definition = (definitions.lastOrNull { it.name == name } ?: definitions.lastOrNull { ChordProChords.parse(it.name) == chord })
             ?.takeIf { it.movedBy == 0 || (it.voicing as? ChordVoicing.Fretted)?.frets?.let(ChordVoicings::isHoldable) != false }
             ?.let { if (soundingShift == 0) it else ChordProDefinitions.transposed(it, soundingShift) { name -> name } }
+        val spelling = if (soundingShift == 0) name else ChordProChords.transposedName(name, soundingShift, preferFlats = preferFlats)
         SongChord(
             name = shownNames.getValue(name),
             chord = sounding,
-            soundingName = if (soundingShift == 0) null else ChordProNotation.shownName(ChordProChords.transposedName(name, soundingShift, preferFlats = preferFlats), notation),
+            soundingName = if (soundingShift == 0) null else ChordProNotation.shownName(spelling, notation),
             letterName = name.takeIf { notation.isNumbering && shownNames[name] != name },
-            isSpelledWithFlats = name.getOrNull(1) == 'b',
+            spelling = spelling,
             defaultShape = if (definition == null) ChordVoicings.default(sounding, instrument) else null,
             definition = definition,
         )
