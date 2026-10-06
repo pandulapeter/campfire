@@ -775,16 +775,24 @@ private fun UnsavedChangesDialog(
     onSave: () -> Unit,
 ) {
     // A dialog is a window of its own, which holds no focus until one of its buttons is clicked: without a target
-    // taken as it opens, Ctrl / Cmd + S, the same key the editor saves with, would go unheard.
+    // taken as it opens (requested from the title, inside the dialog), Ctrl / Cmd + S, the same key the editor saves
+    // with, would go unheard.
     val focusRequester = remember { FocusRequester() }
-    LaunchedEffect(Unit) { focusRequester.requestFocus() }
     AlertDialog(
         modifier = Modifier
             .saveShortcut { if (!isSaving) onSave() }
             .focusRequester(focusRequester)
             .focusTarget(),
         onDismissRequest = onCancel,
-        title = { Text(stringResource(Res.string.song_editor_unsaved_changes)) },
+        title = {
+            // Here rather than next to the requester: on Android the dialog's content is composed a frame after the
+            // composition that shows it, and a request made from there finds no target yet.
+            LaunchedEffect(Unit) {
+                withFrameNanos { }
+                focusRequester.requestFocus()
+            }
+            Text(stringResource(Res.string.song_editor_unsaved_changes))
+        },
         text = { Text(stringResource(Res.string.song_editor_unsaved_changes_confirmation)) },
         confirmButton = {
             TextButton(
