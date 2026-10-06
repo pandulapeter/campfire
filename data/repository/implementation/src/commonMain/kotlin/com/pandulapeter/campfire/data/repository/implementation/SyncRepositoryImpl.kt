@@ -30,6 +30,7 @@ import com.pandulapeter.campfire.data.repository.implementation.sync.SyncedPrefe
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncedPreferencesSync
 import com.pandulapeter.campfire.data.repository.implementation.sync.indexKey
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
+import com.pandulapeter.campfire.data.source.local.api.SetlistComparison
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import com.pandulapeter.campfire.data.source.local.api.SyncStateLocalSource
 import com.pandulapeter.campfire.data.source.remote.api.PendingAuthorizationStore
@@ -98,11 +99,12 @@ internal class SyncRepositoryImpl(
     userPreferencesRepository: UserPreferencesRepository,
     libraryFileLocalSource: LibraryFileLocalSource,
     libraryFileLock: LibraryFileLock,
+    setlistComparison: SetlistComparison,
     libraryChanges: LibraryChanges,
 ) : SyncRepository {
 
     private val providers = syncProviders.all
-    private val engine = SyncEngine(libraryFileLocalSource, libraryFileLock)
+    private val engine = SyncEngine(libraryFileLocalSource, libraryFileLock, setlistComparison)
     private val syncedPreferencesSync = SyncedPreferencesSync(userPreferencesRepository, libraryFileLocalSource)
     private val _syncState = MutableStateFlow<SyncState>(SyncState.Disconnected)
     override val syncState = _syncState.asStateFlow()

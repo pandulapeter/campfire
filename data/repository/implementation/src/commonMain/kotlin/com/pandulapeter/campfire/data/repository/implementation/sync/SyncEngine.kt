@@ -18,6 +18,7 @@ import com.pandulapeter.campfire.data.model.domain.SyncSummary
 import com.pandulapeter.campfire.data.model.domain.normalizedToNfc
 import com.pandulapeter.campfire.data.repository.implementation.LibraryFileLock
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
+import com.pandulapeter.campfire.data.source.local.api.SetlistComparison
 import com.pandulapeter.campfire.data.source.remote.api.SyncAuthorizationException
 import com.pandulapeter.campfire.data.source.remote.api.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.SyncProvider
@@ -112,10 +113,14 @@ private fun SyncKey.folded() = copy(name = name.normalizedToNfc().lowercase())
  * reported to [synchronize]'s `onLocalFileChanged` once it is on disk, and not before: whoever re-reads the file for it
  * must not be able to read it ahead of the change. That is what lets the repositories re-read the files a run touched
  * rather than the whole library.
+ *
+ * [setlistComparison] is the one look this class takes inside a file: a setlist whose two versions differ only in the
+ * day they name is one setlist rather than a conflict, see [resolveWith].
  */
 internal class SyncEngine(
     private val libraryFileLocalSource: LibraryFileLocalSource,
     private val libraryFileLock: LibraryFileLock,
+    private val setlistComparison: SetlistComparison,
 ) {
 
     suspend fun synchronize(
@@ -419,7 +424,7 @@ internal class SyncEngine(
         when (operation) {
             is SyncOperation.Download -> download(provider, operation, index, remoteFiles, onLocalFileChanged)
             is SyncOperation.Upload -> upload(provider, operation, caseCollisions)
-            is SyncOperation.Resolve -> resolve(provider, operation, remoteFiles, onLocalFileChanged)
+            is SyncOperation.Resolve -> resolve(provider, operation, index[operation.key], remoteFiles, onLocalFileChanged)
             is SyncOperation.DeleteLocal -> deleteLocally(provider, operation, index, caseCollisions, onLocalFileChanged)
 
             is SyncOperation.DeleteRemote -> deleteRemotely(provider, listOf(operation)).single().second
@@ -500,7 +505,7 @@ internal class SyncEngine(
             // there at all when the run listed the library, so it appeared since - a conflict copy written earlier in
             // this pass, or a song the user made while the run was going. Either way it has changed on both sides, and
             // it is resolved as that rather than written over.
-            return resolve(provider, SyncOperation.Resolve(key, operation.revision), remoteFiles, onLocalFileChanged)
+            return resolve(provider, SyncOperation.Resolve(key, operation.revision), index[key], remoteFiles, onLocalFileChanged)
         }
         val downloaded = downloadWithinLimit(provider, key, remoteFiles)
         // The request can take minutes under rate limiting, and the user is free to save this very file meanwhile:
@@ -523,6 +528,7 @@ internal class SyncEngine(
                 revision = downloaded.revision,
                 localBytes = changed,
                 remote = downloaded.bytes,
+                indexEntry = index[key],
                 remoteFiles = remoteFiles,
                 onLocalFileChanged = onLocalFileChanged,
             )
@@ -595,7 +601,8 @@ internal class SyncEngine(
     /**
      * A file that changed on both sides. The local version keeps the name and goes up; the remote one comes down
      * next to it under a free name and goes back up under that name, so that both devices end with both versions
-     * and the same two names. Nothing is merged, and nothing is thrown away.
+     * and the same two names. Nothing is merged, and nothing is thrown away - except where the file is a setlist and
+     * the only difference is the day it names, which [resolveWith] settles by taking the remote version.
      *
      * The incoming version is on disk before the local one goes up, because going up is what destroys it on the
      * remote: held only in memory across that request, a copy that then cannot be written - a full disk, a process
@@ -609,6 +616,7 @@ internal class SyncEngine(
     private suspend fun resolve(
         provider: SyncProvider,
         operation: SyncOperation.Resolve,
+        indexEntry: SyncIndexEntry?,
         remoteFiles: Map<SyncKey, RemoteFileState>,
         onLocalFileChanged: suspend (SyncKey) -> Unit,
     ): OperationOutcome {
@@ -626,23 +634,43 @@ internal class SyncEngine(
             revision = remote.revision,
             localBytes = local,
             remote = remote.bytes,
+            indexEntry = indexEntry,
             remoteFiles = remoteFiles,
             onLocalFileChanged = onLocalFileChanged,
         )
     }
 
-    /** [resolve] from the point where both versions are in hand, for a [download] that found a save under its write. */
+    /**
+     * [resolve] from the point where both versions are in hand, for a [download] that found a save under its write.
+     *
+     * Every device gives an undated setlist the day it first reads it on, so after an update every setlist two devices
+     * shared changed on both sides, in nothing but that day. Kept as a conflict, that would be a copy of every setlist
+     * the library had on every device. So a setlist whose two versions differ only in the day, or whose only change
+     * here is the day this device's read gave the undated version the last run saw ([indexEntry]), takes the remote
+     * version: it needs no upload and is what every other device has or will download. What it costs is a day set on
+     * purpose on two devices offline, or here while another device edited the setlist, losing to the cloud folder's.
+     */
     private suspend fun resolveWith(
         provider: SyncProvider,
         key: SyncKey,
         revision: String,
         localBytes: ByteArray,
         remote: ByteArray,
+        indexEntry: SyncIndexEntry?,
         remoteFiles: Map<SyncKey, RemoteFileState>,
         onLocalFileChanged: suspend (SyncKey) -> Unit,
     ): OperationOutcome {
         if (remote.contentEquals(localBytes)) {
             return OperationOutcome(entries = mapOf(key to SyncIndexEntry(localContentHash(localBytes), revision)))
+        }
+        if (key.kind == LibraryFileKind.SETLIST) {
+            // Byte for byte as this version encodes the document, which holds for every file the app wrote; one written
+            // by hand never matches and keeps its conflict copy, which is the safe direction.
+            val isOnlyTheDayHere = indexEntry != null &&
+                setlistComparison.withoutDate(localBytes)?.let(::localContentHash) == indexEntry.localHash
+            if (isOnlyTheDayHere || setlistComparison.isSameApartFromDate(localBytes, remote)) {
+                return takeRemote(key = key, revision = revision, localBytes = localBytes, remote = remote, onLocalFileChanged = onLocalFileChanged)
+            }
         }
         // Free on both sides, not only here: the listing may hold a file under the copy's name that has not come down
         // yet - another device's copy, or a song that simply has that name - and is planned as a download later in
@@ -692,6 +720,33 @@ internal class SyncEngine(
             entries = entries,
             summary = SyncSummary(uploaded = 1, downloaded = 1, conflicts = listOf(copyName)),
         )
+    }
+
+    /**
+     * Writes [remote] over the local file, but only over the [localBytes] it was compared with: a save that landed since
+     * leaves the key to the next pass, which decides on a fresh listing.
+     */
+    private suspend fun takeRemote(
+        key: SyncKey,
+        revision: String,
+        localBytes: ByteArray,
+        remote: ByteArray,
+        onLocalFileChanged: suspend (SyncKey) -> Unit,
+    ): OperationOutcome {
+        val isWritten = libraryFileLock.withLock {
+            val current = libraryFileLocalSource.readLibraryFile(key.kind, key.name)
+            (current != null && current.contentEquals(localBytes)).also { isSame ->
+                if (isSame) {
+                    libraryFileLocalSource.writeLibraryFile(key.kind, key.name, remote)
+                    onLocalFileChanged(key)
+                }
+            }
+        }
+        return if (isWritten) {
+            OperationOutcome(entries = mapOf(key to SyncIndexEntry(localContentHash(remote), revision)), summary = SyncSummary(downloaded = 1))
+        } else {
+            OperationOutcome(isUnresolved = true)
+        }
     }
 
     /**

@@ -19,6 +19,7 @@ import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
+import com.pandulapeter.campfire.data.source.local.api.SetlistComparison
 import com.pandulapeter.campfire.data.source.local.api.SyncStateLocalSource
 import com.pandulapeter.campfire.data.source.remote.api.PendingAuthorization
 import com.pandulapeter.campfire.data.source.remote.api.PendingAuthorizationStore
@@ -30,6 +31,28 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.datetime.LocalDate
+
+/** Tells no two setlists apart by anything less than their bytes, so a test using it pins the engine without that rule. */
+internal object NoSetlistComparison : SetlistComparison {
+
+    override fun isSameApartFromDate(first: ByteArray, second: ByteArray) = false
+
+    override fun withoutDate(bytes: ByteArray): ByteArray? = null
+}
+
+/**
+ * Reads a `date:…;` token in a test's text as the day a setlist names, so that the engine's handling of it is what is
+ * tested rather than the JSON the real comparison reads.
+ */
+internal object DayBlindSetlistComparison : SetlistComparison {
+
+    private val day = Regex("date:[^;]*;")
+
+    override fun isSameApartFromDate(first: ByteArray, second: ByteArray) =
+        first.decodeToString().replace(day, "") == second.decodeToString().replace(day, "")
+
+    override fun withoutDate(bytes: ByteArray) = bytes.decodeToString().replace(day, "").encodeToByteArray()
+}
 
 /**
  * The two documents sync keeps between runs, held in memory. [onSaveIndex] runs before a write of the index is

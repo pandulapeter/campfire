@@ -151,7 +151,12 @@ a deletion of one of those files lands before its reads or after its update and 
   one goes up, under a name free on both sides: the pass's remote listing is passed to the free-name search, since a
   file under the copy's name that has not come down yet would otherwise be taken for the copy changed here. The copy
   is taken back if the service then says the remote file is still there, so the version that loses is never held only
-  in memory. A download is decided about twice — before its request, so that a file already in step is
+  in memory. A setlist is the exception: one whose two versions differ only in the day they name — which every device
+  gives an undated setlist on its own, the day it first reads it — or where this device's only change is the day its
+  read gave an undated file (the index version, re-encoded with no day, is the local one's), takes the cloud folder's
+  version with no copy, written only over the bytes it was compared with (`resolveWith`, `takeRemote`). The engine
+  never sees the setlist format for it: `SetlistComparison` (`:data:source:local:api`) answers both questions. A day
+  set on purpose on two devices offline loses to the folder's. A download is decided about twice — before its request, so that a file already in step is
   not transferred, and again just before the write, so that a save made while the request was in flight is resolved
   as a conflict rather than written over; the index records the revision the download fetched rather than the one the
   listing named, so a file another device wrote again in between is not this device's next edit's conflict, and a

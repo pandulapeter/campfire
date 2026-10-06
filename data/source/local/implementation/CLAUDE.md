@@ -157,7 +157,8 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
   back that way, and handed back that way from a save, since the screens key their rows by the song's file name and the
   caller caches the model the save returns rather than reading the file again. `SetlistDocumentFormat` reads and
   writes the setlist files, keeping the members the document does not know in `unknownFields` and writing them back
-  after the known ones. A setlist's `date` is kept as text in the document and read as a `LocalDate`, so one that is
+  after the known ones; `SetlistComparisonImpl` decodes two of them for sync, telling whether they differ only in their
+  `date` (and the dropped `priority`) and what one was before a read dated it. A setlist's `date` is kept as text in the document and read as a `LocalDate`, so one that is
   not a date — or not text at all, which its own serializer reads as none — costs that date and not the setlist. Every
   setlist has a day, so one read from the library without one is given today's and saved with it at once
   (`SetlistLocalSourceImpl.toDatedModel`, a write that announces nothing, so the next sync run carries it), and one

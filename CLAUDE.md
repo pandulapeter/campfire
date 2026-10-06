@@ -749,7 +749,9 @@ the only possible one. The per-module `CLAUDE.md` files carry the detail; the sh
 - A file changed on both sides is never merged: the local one keeps the name and the incoming one lands next to it
   as ` (2)` — or the first number free both on this device and in the cloud folder, so that it never takes the name
   of a file still on its way down — a name of the other device's making, numbered the way any document is, rather
-  than with the underscore a name the app derived itself collides with (`_2`).
+  than with the underscore a name the app derived itself collides with (`_2`) — except a setlist whose two versions
+  differ only in the day they name, which every device gives an undated setlist on its own, or where this device's
+  only change is the day its read gave an undated file: the cloud folder's version is taken.
 - **The library's per-song overrides travel too**: the transposition, tempo and capo of a song opened from the library
   (`UserPreferences.transpositions`, `tempos`, `capos`; a setlist's own are in its file already) are one
   `preferences.json` at the top of the cloud folder, beside `songs/` and `setlists/`, where the engine never looks:

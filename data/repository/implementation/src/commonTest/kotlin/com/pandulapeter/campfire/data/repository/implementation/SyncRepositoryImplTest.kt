@@ -26,6 +26,7 @@ import com.pandulapeter.campfire.data.repository.implementation.sync.FakeSyncAut
 import com.pandulapeter.campfire.data.repository.implementation.sync.FakeSyncProvider
 import com.pandulapeter.campfire.data.repository.implementation.sync.FakeSyncStateLocalSource
 import com.pandulapeter.campfire.data.repository.implementation.sync.FakeUserPreferencesRepository
+import com.pandulapeter.campfire.data.repository.implementation.sync.NoSetlistComparison
 import com.pandulapeter.campfire.data.repository.implementation.sync.RecordingSetlistRepository
 import com.pandulapeter.campfire.data.repository.implementation.sync.RecordingSongRepository
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncIndexDocument
@@ -1038,6 +1039,7 @@ class SyncRepositoryImplTest {
         userPreferencesRepository = userPreferencesRepository,
         libraryFileLocalSource = libraryFileLocalSource,
         libraryFileLock = LibraryFileLock(),
+        setlistComparison = NoSetlistComparison,
         libraryChanges = LibraryChanges(),
     )
 

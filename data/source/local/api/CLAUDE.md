@@ -44,6 +44,9 @@ platform types.
   the cloud folder too. `readLibraryFile` answers null only
   for a file that is not there; one that is there and cannot be read throws `LibraryStorageException`, since sync
   would carry a missing file out as a deletion on every device.
+- `SetlistComparison` — the one look sync takes inside a file: whether two setlist files differ only in the day they
+  name, and what a file was before a read gave it a day, so that the day every device gives an undated setlist on its
+  own is not a conflict copy of every setlist. Answers false or null for bytes that are not a setlist document.
 - `CoverArtLocalSource` — the copies of the cover images the songs name, as bytes under a key the caller derives from
   the address (the repository hashes it, so a name every storage can hold). Outside `library/`: never exported,
   synced or backed up, since the address travels in the song and the image can be downloaded again. Nothing here
