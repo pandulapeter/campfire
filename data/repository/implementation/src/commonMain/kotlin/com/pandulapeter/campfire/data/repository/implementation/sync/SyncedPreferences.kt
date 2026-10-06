@@ -273,7 +273,12 @@ internal object SyncedPreferencesDocument {
     fun merge(base: JsonObject?, local: JsonObject, remote: JsonObject?): JsonObject {
         val merged = (mergeValue(base, local, remote) as? JsonObject) ?: JsonObject(emptyMap())
         // Each side can take a different field off one song, which leaves an entry neither of them holds any more.
-        return withSongsWhere(merged) { (merged[SONGS] as? JsonObject)?.get(it) != JsonObject(emptyMap()) }
+        val withoutEmptySongs = withSongsWhere(merged) { (merged[SONGS] as? JsonObject)?.get(it) != JsonObject(emptyMap()) }
+        val chords = withoutEmptySongs[CHORDS] as? JsonObject ?: return withoutEmptySongs
+        // The same for an instrument each side took a different shape off. Kept out because [localDocument] never writes
+        // one, so the next run would read it as a change and upload the document again; the chords member itself stays,
+        // since that one [localDocument] does write once a base had it.
+        return JsonObject(withoutEmptySongs + (CHORDS to JsonObject(chords.filterValues { it != JsonObject(emptyMap()) })))
     }
 
     private fun mergeValue(base: JsonElement?, local: JsonElement?, remote: JsonElement?): JsonElement? = when {

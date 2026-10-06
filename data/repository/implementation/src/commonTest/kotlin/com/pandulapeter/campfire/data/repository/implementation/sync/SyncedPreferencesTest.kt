@@ -205,6 +205,34 @@ class SyncedPreferencesTest {
     )
 
     @Test
+    fun `an instrument each side took a different shape off is left out, and settling it again changes nothing`() {
+        val merged = SyncedPreferencesDocument.merge(
+            base = chordsDocument("""{"guitar":{"F":"a","G":"b"}}"""),
+            local = chordsDocument("""{"guitar":{"G":"b"}}"""),
+            remote = chordsDocument("""{"guitar":{"F":"a"}}"""),
+        )
+        assertEquals(chordsDocument("""{}"""), merged)
+        assertEquals(
+            merged,
+            SyncedPreferencesDocument.merge(
+                base = merged,
+                local = SyncedPreferencesDocument.localDocument(base = merged, preferences = SyncedPreferences()),
+                remote = merged,
+            ),
+        )
+    }
+
+    @Test
+    fun `an instrument still holding a shape is kept, one this version cannot read included`() = assertEquals(
+        chordsDocument("""{"guitar":{"C":"c"},"banjo":{"G":7}}"""),
+        SyncedPreferencesDocument.merge(
+            base = chordsDocument("""{"guitar":{"F":"a","C":"c"},"banjo":{"G":7}}"""),
+            local = chordsDocument("""{"guitar":{"C":"c"},"banjo":{"G":7}}"""),
+            remote = chordsDocument("""{"guitar":{"F":"a","C":"c"},"banjo":{"G":7}}"""),
+        ),
+    )
+
+    @Test
     fun `the chords are read and written beside the songs, what this version cannot read passing through`() {
         val base = chordsDocument("""{"guitar":{"C:0.4.7":"x 3 2 0 1 0","D:0.4.7":7},"banjo":{"G:0.4.7":"0 0 0 0 0"}}""")
         assertEquals(
