@@ -81,8 +81,8 @@ private fun File.withExtensionOf(offeredName: String): File {
  * Reads whatever of the given paths can be read, within one [ImportBudget], which is also how a file reaches the app
  * without a dialog: as a command line argument from an "open with", or as a drop onto the window. A folder stands for
  * the files directly inside it - not for the folders in there, and not for the hidden files nobody chose. Anything
- * unreadable is left out, so that one bad file does not lose the ones next to it, and anything the import does not
- * recognise is reported by it as skipped.
+ * the import does not recognise is reported by it as skipped. A file that cannot be read is handed over empty, which
+ * the import reports as skipped, as on Android; one bad file still does not lose the ones next to it.
  */
 fun List<String>.readAsImportedFiles(): List<ImportedFile> {
     val budget = ImportBudget()
@@ -98,7 +98,7 @@ fun List<String>.readAsImportedFiles(): List<ImportedFile> {
             if (file.isFile) budget.read(name = file.name, size = file.length()) { file.readBytes() } else null
         } catch (exception: Exception) {
             println("Could not read \"${file.path}\": ${exception.message}")
-            null
+            ImportedFile.unread(file.name)
         }
     }
 }
