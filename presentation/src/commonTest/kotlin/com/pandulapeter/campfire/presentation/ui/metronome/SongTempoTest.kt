@@ -98,6 +98,33 @@ class SongTempoTest {
     }
 
     @Test
+    fun aLaterTempoKeepsItsRatioToTheOpeningOneAsTheClickPlaysIt() {
+        val song = ChordProSong(
+            metadata = ChordProMetadata(tempo = "400"),
+            blocks = listOf(ChordProBlock.Timing(tempo = "200", time = null)),
+        )
+        assertEquals("100", (song.withTempo(150).blocks.single() as ChordProBlock.Timing).tempo)
+    }
+
+    @Test
+    fun aChangeAtTheSongsOwnOutOfRangeTempoFollowsTheOverride() {
+        val song = ChordProSong(
+            metadata = ChordProMetadata(tempo = "400"),
+            blocks = listOf(ChordProBlock.Timing(tempo = "400", time = "3/4")),
+        )
+        assertEquals("150", (song.withTempo(150).blocks.single() as ChordProBlock.Timing).tempo)
+    }
+
+    @Test
+    fun aChangeOutOfRangeIsHeldBeforeItIsScaled() {
+        val song = ChordProSong(
+            metadata = ChordProMetadata(tempo = "120"),
+            blocks = listOf(ChordProBlock.Timing(tempo = "400", time = null)),
+        )
+        assertEquals("150", (song.withTempo(60).blocks.single() as ChordProBlock.Timing).tempo)
+    }
+
+    @Test
     fun anOverrideScalesTheChangesFurtherDown() {
         val song = ChordProSong(
             metadata = ChordProMetadata(tempo = "120"),

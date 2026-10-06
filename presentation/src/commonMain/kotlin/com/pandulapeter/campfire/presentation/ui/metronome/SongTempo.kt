@@ -97,15 +97,21 @@ internal fun effectiveTempo(song: Song?, setlistFileName: String?, tempos: Tempo
 
 /**
  * The song with its tempo line reading [bpm], where there is one, and every change of tempo further down
- * ([ChordProBlock.Timing]) scaled with it by [sectionBpm]: what the page and the PDF show for an override.
+ * ([ChordProBlock.Timing]) scaled with it by [sectionBpm]: what the page and the PDF show for an override. The file's
+ * tempos are read as the click plays them, both held to its range before one scales the other, since the ratio the
+ * reader hears without an override is the one between those, and the stepper starts from the held opening tempo.
  */
 internal fun ChordProSong.withTempo(bpm: Int?): ChordProSong {
     if (bpm == null) return this
-    val songFileBpm = ChordProTempo.parse(metadata.tempo)
+    val songFileBpm = ChordProTempo.parse(metadata.tempo)?.let(MetronomePattern::coerceBpm)
     return copy(
         metadata = metadata.copy(tempo = bpm.toString()),
         blocks = blocks.map { block ->
-            if (block is ChordProBlock.Timing) block.copy(tempo = sectionBpm(ChordProTempo.parse(block.tempo), songFileBpm, bpm).toString()) else block
+            if (block is ChordProBlock.Timing) {
+                block.copy(tempo = sectionBpm(ChordProTempo.parse(block.tempo)?.let(MetronomePattern::coerceBpm), songFileBpm, bpm).toString())
+            } else {
+                block
+            }
         },
     )
 }
