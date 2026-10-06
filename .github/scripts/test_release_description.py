@@ -24,6 +24,11 @@ class ReadTest(unittest.TestCase):
         for store in ["play_store", "app_store", "mac_app_store", "microsoft_store"]:
             self.assertEqual(outputs[f"{store}_submit"], "true")
 
+    def test_no_notes_anywhere_give_the_default_line(self):
+        for body in ["", "<!-- whats-new en-US\n-->\n", "<!-- play-store update-priority: 0 -->\n<!-- app-store submit: true -->\n"]:
+            self.assertEqual(read(body)["outputs"]["release_notes"], "Bug fixes and improvements.")
+        self.assertEqual(read("<!-- whats-new en-US\n-->\nVisible.")["outputs"]["release_notes"], "Visible.")
+
     def test_whats_new_is_read_in_either_case(self):
         for header in ["en-US", "en-us", "EN-US"]:
             body = f"Visible.\n<!-- whats-new {header}\n- **Bold** stays\n-->\n"

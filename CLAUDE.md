@@ -636,7 +636,7 @@ localized in both languages.
     Partner Center's 1 500 (whatever those stores' `submit` says) stop the release before a build starts, and notes
     over Play's 500 are a warning, since Play is given the lines that fit. The text is carried through as it is,
     backslashes included; only the hand-dispatched
-    form's `\n` is expanded, since a single-line text box has no other way to ask for a line break. It falls back to the visible description with its markdown taken out — or,
+    form's `\n` is expanded, since a single-line text box has no other way to ask for a line break. It falls back to the visible description with its markdown taken out, and to "Bug fixes and improvements." where the description has no visible text either — or,
     dispatched by hand with nothing given, to the commit log since the previous tag. Every store listing is in
     English only, however many languages the app itself speaks. Its `update_priority` input is
     what decides whether the new version says anything about itself inside the old one — see Updates below.

@@ -35,6 +35,10 @@ APP_STORE_CONNECT_LIMIT = 4000
 PARTNER_CENTER_LIMIT = 1500
 PLAY_LIMIT = 500
 
+# What every store gets where the release says nothing: App Store Connect and Partner Center refuse an update without
+# notes, and Play would otherwise be given the commit log meant for a hand dispatch.
+DEFAULT_NOTES = "Bug fixes and improvements."
+
 # The three shapes an instruction is read in. The two single-line ones also take a closing on the next line, the shape
 # the whats-new block has.
 WHATS_NEW = re.compile(r"<!--[ \t]*whats-new[ \t]+(\S+)[ \t]*\n.*-->", re.S | re.I)
@@ -89,6 +93,8 @@ def read(body):
         visible = re.sub(r"<!--.*?-->", "", body, flags=re.S)
         visible = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", visible)
         notes = re.sub(r"\*\*|`", "", visible).strip()
+    if not notes:
+        notes = DEFAULT_NOTES
 
     errors += unreadable_instructions(body)
 
