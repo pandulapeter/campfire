@@ -13,14 +13,21 @@
 - The Song details screen is still wasteful: too much padding. Even in one-column mode some sections could be displayed in two columns
 - Per-section metronome / time signature changes are not yet supported
 - No way to enter BPM using the keyboard
+- Incorrect ripple effect on top of time signature and metronome sound chips in light mode
+- Improve touch feedback on top of metronome accent bars (clip to content)
+- Active metronome icon color in light mode is wrong (for the default theme)
+- More width for setlist song cards
+- Reorder songs should hide the other setlists while trying to persist the focused song
 
 ## Improvements
+- Setlist total duration should be prefixed as such
 - Support importing libraries from other apps
 - Rename master branch to main
 - Onboarding: integrate feature toggle-presets (singers, drummers, etc)
 - Settings: promote Dropbox sign-in
 
 ## Features
+- Comments in setlists (between songs)
 - Multi-select songs for bulk export or bulk edit (assign tags, languages, setlists) - rearrange mode in Setlists could be used for UX inspiration
 - Haptic effects, especially for the fast scroller
 - Duplicate song button
