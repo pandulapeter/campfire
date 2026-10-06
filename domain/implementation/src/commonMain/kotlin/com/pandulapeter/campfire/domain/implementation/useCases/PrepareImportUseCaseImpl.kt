@@ -91,13 +91,17 @@ class PrepareImportUseCaseImpl internal constructor(
             onProgress(ImportProgress(ImportProgress.Phase.UNPACKING, index, files.size, file.name))
             // An archive by its name, or a file under a name nothing here knows whose bytes are an archive's: the library
             // backups of other apps are zip archives of their own extension, and the songs in them are worth looking for.
-            val isArchive = LibraryFiles.isArchiveFileName(file.name) ||
-                (!LibraryFiles.isImportableFileName(file.name) && LibraryFiles.isZipArchive(file.bytes))
+            val isArchiveByName = LibraryFiles.isArchiveFileName(file.name)
+            val isArchive = isArchiveByName || (!LibraryFiles.isImportableFileName(file.name) && LibraryFiles.isZipArchive(file.bytes))
             when {
                 !isArchive -> sort(file)
                 file.isTooLarge || file.bytes.size > ImportLimits.MAX_IMPORT_SIZE -> oversizedFileNames += file.name
                 else -> try {
-                    archiveRepository.unpack(archive = file.bytes, maxSize = remaining).forEach(::sort)
+                    val entries = archiveRepository.unpack(archive = file.bytes, maxSize = remaining)
+                    // Everyday document formats are zip archives too (an OpenDocument, a spreadsheet, an e-book), and
+                    // their parts are not what anybody picked: one recognised by its bytes alone that holds nothing an
+                    // import reads is reported as the one file it was, rather than as the names of its insides.
+                    if (isArchiveByName || entries.any { it.isImportable() }) entries.forEach(::sort) else skippedFileNames += file.name
                 } catch (exception: CancellationException) {
                     throw exception
                 } catch (exception: Exception) {
@@ -212,6 +216,18 @@ class PrepareImportUseCaseImpl internal constructor(
             librarySetlists = setlistRepository.loadSetlistsIfNeeded().orEmpty(),
             songFileNames = songFileNames,
         )
+    }
+
+    /**
+     * Whether this is a file an import would read anything from: not hidden, a song, a document or a setlist by its
+     * name, and actually read. A bare `.json` does not count, since inside another app's container it is that app's
+     * configuration, and neither does an entry handed over unread, or an empty one, which holds nothing to import.
+     */
+    private fun ImportedFile.isImportable(): Boolean {
+        val extension = name.substringAfterLast('.', "").lowercase()
+        return !LibraryFiles.isHiddenFileName(name) &&
+                (bytes.isNotEmpty() || isTooLarge) &&
+                (extension in SONG_EXTENSIONS || extension in DOCUMENT_EXTENSIONS || name.endsWith(LibraryFiles.SETLIST_EXTENSION, ignoreCase = true))
     }
 
     private companion object {

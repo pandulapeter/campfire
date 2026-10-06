@@ -400,8 +400,9 @@ localized in both languages.
   PDF and Word share MIME types.
 - **Other apps' libraries are archives under names of their own.** A file whose extension the import does not know
   is read anyway (`ImportBudget`, within the selection's budget) and kept only where its bytes start like a zip
-  archive's, which is then unpacked like a `.zip` — anything else is reported as unsupported and gives its share of the
-  budget back. SongbookPro's `.sbpbackup` and `.sbp` are also named (`LibraryFiles.LIBRARY_BACKUP_EXTENSIONS`), so that
+  archive's, which is then unpacked like a `.zip` (or, where it holds nothing an import reads — an OpenDocument, an
+  e-book — reported as the one unsupported file it was) — anything else is reported as unsupported and gives its share
+  of the budget back. SongbookPro's `.sbpbackup` and `.sbp` are also named (`LibraryFiles.LIBRARY_BACKUP_EXTENSIONS`), so that
   the pickers offer them and an archive is looked inside when it holds one. An archive that turns out to be a
   SongbookPro library (`dataFile.txt`, one JSON document) is translated into the files an export of Campfire's own
   would carry — a ChordPro song per song, its title, artist, key, capo, tempo, time, duration, copyright, link and

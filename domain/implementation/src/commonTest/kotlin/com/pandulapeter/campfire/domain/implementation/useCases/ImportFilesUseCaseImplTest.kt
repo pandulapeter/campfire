@@ -179,6 +179,30 @@ class ImportFilesUseCaseImplTest {
     }
 
     @Test
+    fun `a file of an unknown type that holds nothing an import reads is reported under its own name`() = runTest {
+        var entries = emptyList<ImportedFile>()
+        val archive = object : ArchiveRepository {
+            override suspend fun unpack(archive: ByteArray, maxSize: Long) = entries
+            override suspend fun pack(files: Map<String, ByteArray>) = error("not used")
+        }
+        val zip = byteArrayOf(0x50, 0x4B, 3, 4, 0)
+        val prepare = prepare(FakeSongRepository(mutableMapOf()), archive = archive)
+        val document = listOf(ImportedFile.unread("mimetype"), ImportedFile("content.xml", "<office/>".encodeToByteArray()), ImportedFile.unread("thumbnail.png"))
+
+        entries = document
+        val plan = prepare(listOf(ImportedFile("sheet.odt", zip)))
+        assertEquals(listOf("sheet.odt"), plan.skippedFileNames)
+        assertTrue(plan.songs.isEmpty())
+        entries = listOf(ImportedFile.unread("dataFile.txt"))
+        assertEquals(listOf("library.backup"), prepare(listOf(ImportedFile("library.backup", zip))).skippedFileNames)
+        entries = emptyList()
+        assertEquals(listOf("empty.backup"), prepare(listOf(ImportedFile("empty.backup", zip))).skippedFileNames)
+        // A file picked as an archive by its name is reported by what it holds, as it always was.
+        entries = document
+        assertEquals(listOf("mimetype", "content.xml", "thumbnail.png"), prepare(listOf(ImportedFile("songs.zip", zip))).skippedFileNames)
+    }
+
+    @Test
     fun `converted replacements are counted and already imported conversions are not`() = runTest {
         val songs = FakeSongRepository(mutableMapOf("sheet.cho" to "old words\n"))
         val plain = ImportedFile("sheet.txt", "Am     C\nHello world".encodeToByteArray())
