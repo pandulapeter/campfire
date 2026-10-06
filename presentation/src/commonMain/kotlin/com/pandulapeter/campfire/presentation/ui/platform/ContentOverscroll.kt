@@ -23,6 +23,7 @@ import androidx.compose.foundation.rememberOverscrollEffect
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -67,6 +68,9 @@ internal fun Modifier.bounceScrollableContent(
     val scope = rememberCoroutineScope()
     val ownPull = remember { OverscrollPull() }
     val usedPull = pull ?: ownPull
+    // A pull handed in outlives this branch, which the content leaves as soon as it can scroll: leaving it mid-drag or
+    // mid-release, with the spring cancelled with the scope, would leave the cards carried up once it is short again.
+    DisposableEffect(usedPull) { onDispose { usedPull.towardsStart = 0f } }
     val connection = remember(state, effect, orientation, dispatcher, scope, usedPull) {
         ShortContentOverscroll(state, effect, orientation, dispatcher, scope, usedPull)
     }
