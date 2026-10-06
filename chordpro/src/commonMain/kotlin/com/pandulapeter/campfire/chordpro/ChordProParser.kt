@@ -351,7 +351,10 @@ object ChordProParser {
             "new_song", "ns" -> Unit // Splitting is ChordProSplitter's job.
             else -> {
                 // Before the metadata reads it, since whether it is a change depends on whether it becomes the song's own.
-                if (transposition.isInBody) timing.consume(directive, metadata)?.let { change -> addTiming(change, blocks, section) }
+                if (transposition.isInBody) {
+                    val before = timing.inForce(metadata)
+                    timing.consume(directive, metadata)?.let { change -> addTiming(change, before, blocks, section, timing) }
+                }
                 metadata.consume(directive, isInBody = transposition.isInBody)
             }
         }
@@ -359,10 +362,31 @@ object ChordProParser {
 
     /**
      * A change with no line of the song between it and the one before is the same place in the song: a `{tempo}`
-     * directly followed by a `{time}` is one change, which keeps a viewer from starting a stretch that holds nothing.
+     * directly followed by a `{time}` is one change, which keeps a viewer from starting a stretch that holds nothing,
+     * and a group that brings the song back to what was in force before it is no change at all. [before] is what was
+     * in force before [change].
      */
-    private fun addTiming(change: ChordProBlock.Timing, blocks: MutableList<ChordProBlock>, section: SectionBuilder) {
-        if (blocks.lastOrNull() is ChordProBlock.Timing && !section.hasContentLine) blocks[blocks.lastIndex] = change else section.addBlock(change)
+    private fun addTiming(
+        change: ChordProBlock.Timing,
+        before: ChordProBlock.Timing,
+        blocks: MutableList<ChordProBlock>,
+        section: SectionBuilder,
+        timing: TimingChanges,
+    ) {
+        val beforeGroup = timing.beforeGroup
+        when {
+            blocks.lastOrNull() !is ChordProBlock.Timing || section.hasContentLine || beforeGroup == null -> {
+                section.addBlock(change)
+                timing.beforeGroup = before
+            }
+            timing.isSame(change, beforeGroup) -> {
+                blocks.removeAt(blocks.lastIndex)
+                timing.restore(beforeGroup)
+                // The first change of the group cut the section it stood in, which is one section again without it.
+                section.rejoin()
+            }
+            else -> blocks[blocks.lastIndex] = change
+        }
     }
 
     /**
@@ -376,12 +400,30 @@ object ChordProParser {
         private var tempo: String? = null
         private var time: String? = null
 
+        /** What was in force before the latest group of changes with no line of the song between them, see [addTiming]. */
+        var beforeGroup: ChordProBlock.Timing? = null
+
+        /** The values in force now, which a change is compared with. */
+        fun inForce(metadata: MetadataBuilder) = ChordProBlock.Timing(
+            tempo = tempo ?: metadata.tempo.value?.takeIf { ChordProTempo.parse(it) != null },
+            time = time ?: metadata.time.value?.takeIf { ChordProTime.parse(it) != null },
+        )
+
+        /** Whether [first] and [second] play the same, so that `{time: C}` is `4/4`. */
+        fun isSame(first: ChordProBlock.Timing, second: ChordProBlock.Timing) =
+            ChordProTempo.parse(first.tempo) == ChordProTempo.parse(second.tempo) && ChordProTime.parse(first.time) == ChordProTime.parse(second.time)
+
+        /** Puts back what [inForce] said before a group that turned out to change nothing. */
+        fun restore(timing: ChordProBlock.Timing) {
+            tempo = timing.tempo
+            time = timing.time
+        }
+
         /** The change [directive] makes, or null where it makes none; called before [metadata] reads it. */
         fun consume(directive: ChordProSyntax.Directive, metadata: MetadataBuilder): ChordProBlock.Timing? {
             val standard = ChordProSyntax.standardMeta(directive) ?: directive
             val written = standard.value?.trim().orEmpty()
-            val inForceTempo = tempo ?: metadata.tempo.value?.takeIf { ChordProTempo.parse(it) != null }
-            val inForceTime = time ?: metadata.time.value?.takeIf { ChordProTime.parse(it) != null }
+            val (inForceTempo, inForceTime) = inForce(metadata)
             when (standard.name) {
                 TEMPO -> {
                     val bpm = ChordProTempo.parse(written) ?: return null
@@ -479,6 +521,12 @@ object ChordProParser {
         private val lines = mutableListOf<ChordProLine>()
 
         /**
+         * How many blank lines [close] trimmed off the end of the section, which a continuation [addBlock] opened carries
+         * over so that [rejoin] can put them back between the two halves.
+         */
+        private var trimmedBlankLineCount = 0
+
+        /**
          * Whether [lines] holds anything but blank lines, kept as they are added: an environment keeps its blank lines,
          * and scanning them again for every block that follows would make a file of blanks and comments quadratic.
          */
@@ -547,6 +595,7 @@ object ChordProParser {
             openingComments.clear()
             lines.clear()
             hasContentLine = false
+            trimmedBlankLineCount = 0
         }
 
         /**
@@ -585,8 +634,10 @@ object ChordProParser {
             lineMode = null
             lineModeLabel = null
             val type = type ?: return
+            trimmedBlankLineCount = 0
             while (lines.isNotEmpty() && lines.last() == ChordProLine.Blank) {
                 lines.removeAt(lines.lastIndex)
+                trimmedBlankLineCount++
             }
             if (lines.isNotEmpty()) {
                 blocks += ChordProBlock.Section(type = type, label = label, lines = lines.toList(), isContinuation = isContinuation)
@@ -646,8 +697,10 @@ object ChordProParser {
                 val hasTabLine = this.hasTabLine
                 this.lineMode = null
                 close()
+                val trimmedBlankLineCount = this.trimmedBlankLineCount
                 blocks += placedBlock
                 open(type, label, isExplicit, isContinuation = true)
+                this.trimmedBlankLineCount = trimmedBlankLineCount
                 this.lineMode = lineMode
                 this.lineModeLabel = lineModeLabel
                 this.hasTabLine = hasTabLine
@@ -658,6 +711,27 @@ object ChordProParser {
                 if (placedBlock.placement == CommentPlacement.START_OF_SECTION) openingComments += blocks.lastIndex
                 if (placedBlock.isInTabOrGrid) lineModeComments += blocks.lastIndex
             }
+        }
+
+        /**
+         * Undoes the cut [addBlock] made for a block that was taken out again: the half it emitted is the last of the
+         * [blocks], and it becomes the start of the open section once more, with the blank lines [close] trimmed off it
+         * and whatever blank lines the continuation holds already. Nothing happens where the block cut nothing.
+         */
+        fun rejoin() {
+            if (!isContinuation || hasContentLine) return
+            val removed = blocks.lastOrNull() as? ChordProBlock.Section ?: return
+            if (removed.type != type || removed.label != label) return
+            blocks.removeAt(blocks.lastIndex)
+            val continued = lines.toList()
+            lines.clear()
+            lines += removed.lines
+            repeat(trimmedBlankLineCount) { lines += ChordProLine.Blank }
+            lines += continued
+            isContinuation = removed.isContinuation
+            hasEmittedLines = removed.isContinuation
+            hasContentLine = true
+            trimmedBlankLineCount = 0
         }
 
         /**

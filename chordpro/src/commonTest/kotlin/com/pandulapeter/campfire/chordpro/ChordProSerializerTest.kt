@@ -126,6 +126,13 @@ class ChordProSerializerTest {
     }
 
     @Test
+    fun `a group of changes that comes back to the values in force survives serializing`() {
+        val parsed = ChordProParser.parse("{tempo: 100}\n{time: 4/4}\n\nla\n{tempo: 120}\n{tempo: 100}\nlo")
+
+        assertEquals(parsed, ChordProParser.parse(ChordProSerializer.serialize(parsed)))
+    }
+
+    @Test
     fun `an empty tab environment survives serializing`() {
         val parsed = ChordProParser.parse("{start_of_tab: Riff}\n{end_of_tab}\n[C]la la")
 

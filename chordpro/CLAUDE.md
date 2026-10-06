@@ -132,7 +132,8 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   differs (as a number) from the one in force is a `ChordProBlock.Timing`, holding both values in force from there on
   as the file writes them (the one that did not change carried over, null where the song never named one) and cutting
   the section it stands in the way a `{transpose}` does — a second one with no line between them replaces the first, so
-  a `{tempo}` followed by a `{time}` is one block; a recalled chorus leaves its changes out, as it does a `{transpose}`;
+  a `{tempo}` followed by a `{time}` is one block, and a group that brings the song back to what was in force before it
+  is no change at all; a recalled chorus leaves its changes out, as it does a `{transpose}`;
   `{meta: title …}` and the other standard names the spec defines as their standalone directive
   (`subtitle`, `artist`, `composer`, `lyricist`, `album`, `year`, `key`, `capo`, `tempo`, `time`, `duration`) are read
   as that directive; `{define}`, fonts, colours, images and page directives are parsed and dropped. It also understands

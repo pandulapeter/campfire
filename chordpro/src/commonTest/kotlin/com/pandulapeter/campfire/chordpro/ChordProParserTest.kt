@@ -191,6 +191,41 @@ class ChordProParserTest {
     }
 
     @Test
+    fun `a group of changes that comes back to the values in force is no change`() {
+        val header = "{tempo: 100}\n{time: 4/4}\n\n"
+        listOf(
+            "la\n{tempo: 120}\n{tempo: 100}\nlo" to "la\nlo",
+            "{start_of_verse}\nla\n{tempo: 120}\n{tempo: 100}\nlo\n{end_of_verse}" to "{start_of_verse}\nla\nlo\n{end_of_verse}",
+            "{start_of_verse}\nla\n\n{tempo: 120}\n{tempo: 100}\nlo\n{end_of_verse}" to "{start_of_verse}\nla\n\nlo\n{end_of_verse}",
+            "{start_of_verse}\nla\n{tempo: 120}\n\n{tempo: 100}\nlo\n{end_of_verse}" to "{start_of_verse}\nla\n\nlo\n{end_of_verse}",
+            "{start_of_tab}\ne|-0-|\n{tempo: 120}\n{tempo: 100}\ne|-2-|\n{end_of_tab}" to "{start_of_tab}\ne|-0-|\ne|-2-|\n{end_of_tab}",
+            "{start_of_tab}\ne|-0-|\n\n{tempo: 120}\n{tempo: 100}\ne|-2-|\n{end_of_tab}" to "{start_of_tab}\ne|-0-|\n\ne|-2-|\n{end_of_tab}",
+            "{start_of_tab}\ne|-0-|\n{tempo: 120}\n\n{tempo: 100}\ne|-2-|\n{end_of_tab}" to "{start_of_tab}\ne|-0-|\n\ne|-2-|\n{end_of_tab}",
+        ).forEach { (text, withoutGroup) ->
+            assertEquals(ChordProParser.parse(header + withoutGroup).blocks, ChordProParser.parse(header + text).blocks, text)
+        }
+        assertEquals(
+            ChordProParser.parse("{tempo: 100}\n\nla\n\nlo").blocks,
+            ChordProParser.parse("{tempo: 100}\n\nla\n\n{tempo: 120}\n{tempo: 100}\n\nlo").blocks,
+        )
+    }
+
+    @Test
+    fun `a group of changes is compared with what was in force before all of it`() {
+        fun timings(text: String) = ChordProParser.parse(text).blocks.filterIsInstance<ChordProBlock.Timing>()
+
+        assertEquals(
+            listOf(ChordProBlock.Timing(tempo = "100", time = "3/4")),
+            timings("{tempo: 100}\n{time: 4/4}\n\nla\n{tempo: 120}\n{time: 3/4}\n{tempo: 100}\nlo"),
+        )
+        assertEquals(emptyList(), timings("{time: 4/4}\n\nla\n{time: 3/4}\n{time: C}\nlo"))
+        assertEquals(
+            listOf(ChordProBlock.Timing(tempo = "90", time = null)),
+            timings("{tempo: 100}\n\nla\n{tempo: 120}\n{tempo: 100}\nlo\n{tempo: 90}\nli"),
+        )
+    }
+
+    @Test
     fun `a timing change carries the value that did not change`() {
         val timings = ChordProParser.parse("{tempo: 120}\n{time: 6/8}\n[C]a\n{tempo: 90}\n[C]b\n{time: 3/4}\n[C]c").blocks.filterIsInstance<ChordProBlock.Timing>()
 
