@@ -240,6 +240,24 @@ internal class ImportPlannerTest {
     }
 
     @Test
+    fun aSetlistWhoseTwoEntriesLandOnOneSongIsTheLibrarysOwnOnReimport() = runTest {
+        val songs = ImportPlanner.planSongs(
+            incoming = listOf(song(A, sourceFileName = "x.cho"), song(A, sourceFileName = "x_2.cho")),
+            libraryFileNames = listOf("x.cho"),
+            readLibraryText = mapOf("x.cho" to A).exact(),
+        )
+        val library = SONG_SETLIST.copy(entries = listOf(Setlist.Entry(songFileName = "x.cho")))
+        val incoming = SONG_SETLIST.copy(entries = listOf(Setlist.Entry(songFileName = "x.cho"), Setlist.Entry(songFileName = "x_2.cho")))
+        val setlists = ImportPlanner.planSetlists(
+            incoming = listOf(ImportPlanner.IncomingSetlist(incoming, SONG_SETLIST.fileName)),
+            librarySetlists = listOf(library),
+            songFileNames = ImportPlanner.plannedSongFileNames(songs),
+        )
+
+        assertEquals(listOf(ImportPlan.Status.IDENTICAL), setlists.map { it.status })
+    }
+
+    @Test
     fun aSetlistWithItsNewSongIsNewAndPointsAtIt() = runTest {
         val songs = ImportPlanner.planSongs(
             incoming = listOf(ImportPlanner.IncomingSong(fileName = "song.cho", text = A, sourceFileName = "Song.cho")),

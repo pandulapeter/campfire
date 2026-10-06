@@ -184,9 +184,15 @@ internal object ImportPlanner {
         return songFileNames
     }
 
-    /** The setlist as it is written, every entry following its song to the name [songFileNames] gives it. */
-    fun Setlist.withSongFileNames(songFileNames: Map<String, String>) =
-        copy(entries = entries.map { entry -> entry.copy(songFileName = songFileNames[entry.songFileName] ?: entry.songFileName) })
+    /**
+     * The setlist as it is written: every entry following its song to the name [songFileNames] gives it, one per song
+     * file, as the storage keeps them - the first, with its transposition, tempo and capo, as the storage does.
+     */
+    fun Setlist.withSongFileNames(songFileNames: Map<String, String>) = copy(
+        entries = entries
+            .map { entry -> entry.copy(songFileName = songFileNames[entry.songFileName] ?: entry.songFileName) }
+            .distinctBy { it.songFileName },
+    )
 
     private fun planInOrder(
         incoming: List<IncomingSetlist>,
