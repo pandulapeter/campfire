@@ -123,6 +123,14 @@ class ChordDefinitionTransposerTest {
     }
 
     @Test
+    fun `a shape no move keeps on the neck is left as it is, named as it was`() {
+        assertEquals("{define: E frets 0 x 14 13 12 0}\n[Eb]x", ChordProTransposer.transposeText("{define: E frets 0 x 14 13 12 0}\n[E]x", -1))
+        val parsed = ChordProParser.parse("{define: E frets 0 x 14 13 12 0}\n[E]x")
+        assertEquals(parsed.metadata.definitions.single(), ChordProTransposer.transpose(parsed, -1).metadata.definitions.single())
+        assertEquals("{define: A frets x x x x x x}\n[A]x", ChordProTransposer.transposeText("{define: G frets x x x x x x}\n[G]x", 2))
+    }
+
+    @Test
     fun `a line that cannot be read is left byte for byte`() {
         assertEquals("{define: C frets x 3 two 0 1 0}\n[D]x", ChordProTransposer.transposeText("{define: C frets x 3 two 0 1 0}\n[C]x", 2))
         assertEquals(

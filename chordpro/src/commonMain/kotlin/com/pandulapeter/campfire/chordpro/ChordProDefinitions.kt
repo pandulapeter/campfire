@@ -73,8 +73,9 @@ object ChordProDefinitions {
      * which is what a barre or a capo does to a shape. One with an open string never goes down: down by any amount it
      * moves up by the rest of the octave instead, which is the same chord, the way a tab with an open string is moved.
      * For every other shape up by the transposition and down by the rest of the octave are both looked at: one that
-     * would take a fret off the neck is out, and of the rest the one a hand can hold is taken
-     * ([ChordVoicings.isHoldable]), the lower one where both can or neither can. So a shape high on the neck comes down
+     * would take a fret off the neck is out (and a shape no move keeps on the neck stays as it is, named as it was), and
+     * of the rest the one a hand can hold is taken ([ChordVoicings.isHoldable]), the lower one where both can or neither
+     * can. So a shape high on the neck comes down
      * rather than running off its end, and the lower of the two never needs more fingers than the higher, which is why
      * there and back lands on the shape it started as.
      *
@@ -98,7 +99,8 @@ object ChordProDefinitions {
                 )
             }
             is ChordVoicing.Fretted -> {
-                val (move, moved) = voicing.moved(semitones, MAX_HAND_FINGER) ?: return definition.copy(name = name)
+                // A shape no move keeps on the neck is not the new chord's, so it is left as the old chord's.
+                val (move, moved) = voicing.moved(semitones, MAX_HAND_FINGER) ?: return definition
                 definition.copy(name = name, voicing = moved, movedBy = definition.movedBy + move)
             }
         }
@@ -152,7 +154,8 @@ object ChordProDefinitions {
      * would draw the shape, and a line that had none counts its frets from the nut whatever they come to, so that
      * moving it back writes the line it was; a fingering is kept up to five fingers, and one the move cannot carry back
      * (strings held by several fingers coming to rest open) goes with its keyword. A keyboard's keys are counted from the
-     * root and stay as they are. A line that cannot be read is left byte for byte, as a tab that fits in no octave is.
+     * root and stay as they are. A line that cannot be read is left byte for byte, as a tab that fits in no octave is, and
+     * so is one whose shape no move keeps on the neck.
      */
     fun rewrittenLine(rawLine: String, selector: String, rename: (String) -> String, semitones: Int = 0): String {
         val trimmed = rawLine.trim()
@@ -186,7 +189,7 @@ object ChordProDefinitions {
         if (voicing != null && semitones.mod(12) != 0) {
             // The text keeps a fingering up to the five fingers the specification allows, where the page draws none past
             // the hand's four: dropping it from the file would lose it for good, since moving back could not bring it back.
-            val moved = voicing.moved(semitones, MAX_FINGER)?.second ?: voicing
+            val moved = voicing.moved(semitones, MAX_FINGER)?.second ?: return rawLine
             val baseFretKeyword = keywordIndices.firstOrNull { keywordOf(value.substring(words[it])) == BASE_FRET }
             // A line with no base fret counts its frets from the nut whatever they are, so that moving it back writes
             // the line it was.
