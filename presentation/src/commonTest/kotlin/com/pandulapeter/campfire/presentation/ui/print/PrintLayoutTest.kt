@@ -537,6 +537,39 @@ internal class PrintLayoutTest {
         diagrams.forEach { assertTrue(it.x >= margin && it.x + it.width <= margin + columnWidth + 0.01f, it.toString()) }
     }
 
+    @Test fun chordDiagramNamesStayInsideTheirColumn() = runTest {
+        val settings = PrintSettings(showChordDiagrams = true, columns = 4, fontSize = 20, marginMm = 25)
+        val chords = listOf(
+            guitarChord("b7sus4").copy(secondaryName = "Bbsus4"),
+            guitarChord("C#m7b5/G#"),
+            guitarChord("1"),
+            guitarChord("4").copy(secondaryName = "F"),
+        )
+        val document = layout(source(song(lyrics(1)).copy(chords = chords)), settings)
+        val page = document.pages.single()
+        val margin = settings.marginMm * 72f / 25.4f
+        val columnWidth = (document.width - 2 * margin - 18 * 3) / 4
+        val names = page.texts.filter { !it.isSelectable }
+        assertTrue(names.any { it.text == "Bbsus4" } && names.none { it.text.endsWith("Bbsus4") && it.text != "Bbsus4" })
+        // The rows flow on into the next column where the first is full, so each name is held to the one it starts in.
+        fun columnOf(x: Float) = ((x - margin + 0.01f) / (columnWidth + 18)).toInt()
+        names.forEach {
+            val columnStart = margin + columnOf(it.x) * (columnWidth + 18)
+            assertTrue(it.x >= columnStart - 0.01f && it.x + measure(it.text, it.style) <= columnStart + columnWidth + 0.01f, it.toString())
+        }
+        names.forEach { name ->
+            // The diagrams of a name's row are the first line of them below it in its column.
+            val rowDiagrams = page.diagrams.filter { it.y > name.y && columnOf(it.x) == columnOf(name.x) }.minOf { it.y }
+            assertTrue(rowDiagrams >= name.y + name.style.size * 1.45f - 0.01f, name.toString())
+        }
+    }
+
+    @Test fun aNameThatFitsKeepsItsSecondNameOnItsLine() = runTest {
+        val document = layout(source(song(lyrics(1)).copy(chords = listOf(guitarChord("5").copy(secondaryName = "G")))), PrintSettings(showChordDiagrams = true))
+        val texts = document.pages.single().texts
+        assertEquals(texts.single { it.text == "5" }.y, texts.single { it.text == " G" }.y)
+    }
+
     @Test fun aMissingSongPrintsNoDiagrams() = runTest {
         val entry = PrintSong("gone.cho", "Gone", null, song = null, chords = listOf(guitarChord("D")))
         assertTrue(layout(source(entry), PrintSettings(showChordDiagrams = true)).pages.single().diagrams.isEmpty())

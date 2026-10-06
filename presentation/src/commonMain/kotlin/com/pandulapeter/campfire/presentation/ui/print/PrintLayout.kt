@@ -400,14 +400,13 @@ private class PrintLayouter(
     private fun chordDiagramRows(chords: List<PrintChord>): List<Row> {
         if (!options.showChords || !options.showChordDiagrams || chords.isEmpty()) return emptyList()
         val gap = options.fontSize * DIAGRAM_GAP
-        val nameHeight = chordStyle.size * 1.45f
         val cells = chords.map { chord ->
             val isFretted = chord.geometry is ChordDiagramGeometry.Fretted
             val diagramWidth = options.fontSize * if (isFretted) FRETTED_DIAGRAM_WIDTH else KEYBOARD_DIAGRAM_WIDTH
             val diagramHeight = options.fontSize * if (isFretted) FRETTED_DIAGRAM_HEIGHT else KEYBOARD_DIAGRAM_HEIGHT
-            val nameWidth = measure(chord.name, chordStyle)
-            val secondaryWidth = chord.secondaryName?.let { measure(" $it", detailStyle) } ?: 0f
-            DiagramCell(chord, diagramWidth, diagramHeight, maxOf(diagramWidth, nameWidth + secondaryWidth).coerceAtMost(columnWidth), nameWidth)
+            val nameLines = diagramNameLines(chord)
+            val nameEnd = nameLines.maxOf { line -> line.maxOf { it.x + measure(it.text, it.style) } }
+            DiagramCell(chord, diagramWidth, diagramHeight, maxOf(diagramWidth, nameEnd).coerceAtMost(columnWidth), nameLines)
         }
         val rows = mutableListOf<List<DiagramCell>>()
         var rowWidth = 0f
@@ -424,16 +423,43 @@ private class PrintLayouter(
             var x = 0f
             val parts = mutableListOf<Part>()
             val diagrams = mutableListOf<PrintDiagram>()
+            // The diagrams of a row stand on one line, under the name of the cell that takes the most lines.
+            val rowNameHeight = row.maxOf { cell -> cell.nameLines.sumOf { line -> line.lineHeight().toDouble() }.toFloat() }
             row.forEach { cell ->
-                parts += Part(cell.chord.name, x = x, style = chordStyle, isSelectable = false)
-                cell.chord.secondaryName?.let { parts += Part(" $it", x = x + cell.nameWidth, style = detailStyle, isSelectable = false) }
-                diagrams += PrintDiagram(cell.chord.geometry, x = x + (cell.width - cell.diagramWidth) / 2, y = nameHeight, width = cell.diagramWidth, height = cell.diagramHeight)
+                var lineTop = 0f
+                cell.nameLines.forEach { line ->
+                    line.forEach { run -> parts += Part(run.text, x = x + run.x, y = lineTop, style = run.style, isSelectable = false) }
+                    lineTop += line.lineHeight()
+                }
+                diagrams += PrintDiagram(cell.chord.geometry, x = x + (cell.width - cell.diagramWidth) / 2, y = rowNameHeight, width = cell.diagramWidth, height = cell.diagramHeight)
                 x += cell.width + gap
             }
-            val height = nameHeight + row.maxOf { it.diagramHeight } + if (index < rows.lastIndex) gap else 0f
+            val height = rowNameHeight + row.maxOf { it.diagramHeight } + if (index < rows.lastIndex) gap else 0f
             Row(parts, height, diagrams = diagrams)
         }
     }
+
+    /**
+     * The lines a diagram's name is printed on, each inside the column like every other text of the page: the name with
+     * its second name after it where the two fit side by side, the second name on a line of its own under the name where
+     * they do not, and either broken across lines where it is wider than the column on its own.
+     */
+    private fun diagramNameLines(chord: PrintChord): List<List<DiagramNamePart>> {
+        val nameWidth = measure(chord.name, chordStyle)
+        val secondary = chord.secondaryName
+        if (nameWidth <= columnWidth && (secondary == null || nameWidth + measure(" $secondary", detailStyle) <= columnWidth)) {
+            return listOf(
+                listOfNotNull(
+                    DiagramNamePart(chord.name, 0f, chordStyle),
+                    secondary?.let { DiagramNamePart(" $it", nameWidth, detailStyle) },
+                ),
+            )
+        }
+        return wrappedNameLines(chord.name, chordStyle) + secondary?.let { wrappedNameLines(it, detailStyle) }.orEmpty()
+    }
+
+    private fun wrappedNameLines(text: String, style: PrintStyle) =
+        wrapPrintText(text, columnWidth) { measure(it, style) }.map { listOf(DiagramNamePart(it, 0f, style)) }
 
     /**
      * How [song] is played, in the key it is printed in: the key, the transposition that took it there and the capo
@@ -793,8 +819,18 @@ private data class DiagramCell(
     val diagramWidth: Float,
     val diagramHeight: Float,
     val width: Float,
-    val nameWidth: Float,
+    val nameLines: List<List<DiagramNamePart>>,
 )
+
+/** A run of a diagram's name line, [x] from the cell's start. */
+private data class DiagramNamePart(
+    val text: String,
+    val x: Float,
+    val style: PrintStyle,
+)
+
+/** As tall as the largest style of its runs, with the line spacing the rest of the page's names have. */
+private fun List<DiagramNamePart>.lineHeight() = maxOf { it.style.size } * 1.45f
 
 /** A page while it is being filled. */
 private class PageContent {

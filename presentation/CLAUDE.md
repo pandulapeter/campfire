@@ -465,7 +465,8 @@ The PDF pipeline has four steps, each its own:
   word where the next word fits and never inside a grapheme cluster. Only strings of up to eight characters are cached,
   and the layout yields after each song and every 50 placed blocks: on the web it shares the page's one thread. With `PrintSettings.showChordDiagrams` and the chords, a song's diagrams follow its heading as rows of cells
   sized by the text size (the chord's name over its diagram, a `PrintDiagram` in the page), kept with the heading the
-  way a first block is; their names are `PrintText`s that are not `isSelectable`, since read back by the importer they
+  way a first block is; a name and its second name too wide for the column together are set on two lines, and one wider
+  than the column on its own is broken across lines like any other text; their names are `PrintText`s that are not `isSelectable`, since read back by the importer they
   would be a line of chords above the song. Under the heading a row of what the song names of how it is played (`playingDetails`): the key, the
   `PrintSong.transposition` the viewer prints it in and a capo other than 0 with `showKey`, and the tempo (through
   `PrintLabels.tempoValue`, "96 BPM") and the time signature with `showTempo`, which also prints a change of either
