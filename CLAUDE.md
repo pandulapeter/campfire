@@ -752,7 +752,8 @@ Nothing about it reaches the network. The module `CLAUDE.md` files carry the det
   played capoed and the next in another key without. The first `{tempo}` and `{time}` are the song's own (the capo is the song's as a whole, so its last `{capo}` counts, as for any other header field); the tempo counts the
   clicks of the bar (6/8 at 120 is six clicks a bar at 120 a minute), within 30–300.
 - **A later `{tempo}` or `{time}` is a change from where it stands** (`ChordProBlock.Timing`), and the page is what
-  says where the band is: on the song details screen a change starts a page of its own, headed by one read only line
+  says where the band is: on the song details screen a change starts a page of its own (one written before the song's
+  first line stands on the first page, played from there), headed by one read only line
   naming the tempo and the time signature from there on as the click plays them, and a playing click follows the page
   being read — the one a step or a fling is headed for, never one a finger is still dragging past — from beat one, the
   panel's beat row and the app bar's tempo with it. A change inside a section cuts it there, the rest heading the new

@@ -209,6 +209,43 @@ class RenderSectionsTest {
         )
     }
 
+    /** The stretches of [text] as the song details screen lays them out, behind its metadata section. */
+    private fun stretches(text: String): Pair<List<String>, TimingStretches> {
+        val model = prepareSongLyrics(song = ChordProParser.parse(text), shouldShowChords = true, labels = labels)
+        val sections = withMetadataSection(model.sections, model.song.metadata, shouldShowChords = true, isSongInfoShown = false)
+        return sections.map { it::class.simpleName.orEmpty() } to timingStretchesOf(sections)
+    }
+
+    @Test
+    fun `a change written before the first line starts no stretch and is in force from the first page`() {
+        val (shape, stretches) = stretches("{tempo: 120}\n{c: Slowly}\n{tempo: 60}\n{sov}\n[G]la\n{eov}\n{tempo: 90}\n{sov}\n[G]la\n{eov}")
+        assertEquals(listOf("Metadata", "Comment", "Timing", "Lines", "Timing", "Lines"), shape)
+        assertEquals(listOf(0, 4), stretches.starts.toList())
+        assertEquals(listOf(0, 4), stretches.timingSections)
+    }
+
+    @Test
+    fun `a change at the start of the first section starts no stretch`() {
+        val (shape, stretches) = stretches("{tempo: 120}\n{sov}\n{tempo: 60}\n[G]la\n{eov}")
+        assertEquals(listOf("Metadata", "Timing", "Lines"), shape)
+        assertEquals(listOf(0), stretches.starts.toList())
+        assertEquals(listOf(0), stretches.timingSections)
+    }
+
+    @Test
+    fun `a change after a line of the song starts a stretch of its own`() {
+        val (_, stretches) = stretches("{tempo: 120}\n{sov}\n[G]la\n{tempo: 90}\n[G]la\n{eov}")
+        assertEquals(listOf(0, 2), stretches.starts.toList())
+        assertEquals(listOf(2), stretches.timingSections)
+    }
+
+    @Test
+    fun `a song that changes nothing is one stretch`() {
+        val (_, stretches) = stretches("{tempo: 120}\n{sov}\n[G]la\n{eov}")
+        assertEquals(listOf(0), stretches.starts.toList())
+        assertEquals(emptyList(), stretches.timingSections)
+    }
+
     private fun firstLyric(text: String) = prepareSongLyrics(
         song = ChordProParser.parse(text),
         shouldShowChords = true,

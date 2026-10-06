@@ -1803,7 +1803,7 @@ private fun SongSectionsLayout(
                 lineTops = singleColumnUnits.map { arrangement.tops[it] },
                 lineBottoms = singleColumnUnits.map { arrangement.tops[it] + unitHeights[it] },
                 lineSections = singleColumnUnits.map { units.unitSections[it] },
-                timingSections = units.timingStarts.drop(1),
+                timingSections = units.timingSections,
             ),
         )
     }
@@ -2006,8 +2006,10 @@ private data class UnitContent(
  * that: its first is [cardStarts]`[s]` of the [cardCount] the layout is handed, -1 for a section drawn without a card.
  *
  * [timingStarts] are where the stretches of the song a change of tempo or time signature starts begin: 0, and the
- * section of every [RenderSection.Timing]. Each stretch is laid out as a song of its own and starts a page, since the
- * page being read is what tells the click how the song is played there (see `SongSectionsLayout`).
+ * section of every [RenderSection.Timing] some line of the song comes before. Each stretch is laid out as a song of its
+ * own and starts a page, since the page being read is what tells the click how the song is played there (see
+ * `SongSectionsLayout`). [timingSections] are the sections each change is in force from, and [isTimingSection] says of
+ * every section whether it is one (see [timingStretchesOf]).
  */
 private class SongUnits(
     val sectionStarts: IntArray,
@@ -2017,10 +2019,15 @@ private class SongUnits(
     val cardStarts: IntArray,
     val cardCount: Int,
     val timingStarts: IntArray = intArrayOf(0),
+    val timingSections: List<Int> = emptyList(),
+    val isTimingSection: BooleanArray = BooleanArray(0),
 ) {
 
-    /** Whether the section at [section] is a change of tempo or time signature, which heads the stretch it starts. */
-    fun isTiming(section: Int) = section > 0 && section in timingStarts
+    /**
+     * Whether the section at [section] is a change of tempo or time signature, which never shares a row: one that heads
+     * the stretch it starts, and one written before the song's first line, which stands in place on the first page.
+     */
+    fun isTiming(section: Int) = isTimingSection.getOrElse(section) { false }
 
     /**
      * The sections from [from] until [until] as the units of a song of their own, every index counted from their first:
@@ -2067,6 +2074,7 @@ private class SongUnits(
                     cardCount += ranges.size
                 }
             }
+            val stretches = timingStretchesOf(sections)
             return SongUnits(
                 sectionStarts = sectionStarts,
                 unitSections = unitSections.toIntArray(),
@@ -2074,7 +2082,9 @@ private class SongUnits(
                 isCuttableBefore = isCuttableBefore.toBooleanArray(),
                 cardStarts = cardStarts,
                 cardCount = cardCount,
-                timingStarts = (listOf(0) + sections.indices.filter { it > 0 && sections[it] is RenderSection.Timing }).distinct().toIntArray(),
+                timingStarts = stretches.starts,
+                timingSections = stretches.timingSections,
+                isTimingSection = BooleanArray(sections.size) { sections[it] is RenderSection.Timing },
             )
         }
     }
@@ -2251,6 +2261,39 @@ internal fun List<RenderSection>.withoutEmptyTimings(): List<RenderSection> {
             else -> true
         }
     }.asReversed()
+}
+
+/**
+ * Where the stretches of a song's sections start ([starts], 0 and every change some line of the song comes before) and
+ * the section each change is in force from ([timingSections], one per [RenderSection.Timing] in order: its own section,
+ * or 0 for a change written before the song's first line, which is played from the first page).
+ */
+internal class TimingStretches(val starts: IntArray, val timingSections: List<Int>)
+
+/**
+ * The stretches of [sections]: 0, and every change some line of the song comes before, each of which starts a page and is
+ * in force from its own section. A change written before the song's first line - inside an opening `{start_of_verse}`,
+ * or under a comment above it - starts none, since its stretch would hold the song's metadata alone: it stands in place
+ * on the first page, as it does in the preview and the PDF, and is in force from section 0, so the click plays it from
+ * the song's first page.
+ */
+internal fun timingStretchesOf(sections: List<RenderSection>): TimingStretches {
+    val starts = mutableListOf(0)
+    val timingSections = mutableListOf<Int>()
+    var hasSeenLines = false
+    sections.forEachIndexed { index, section ->
+        when (section) {
+            is RenderSection.Lines -> hasSeenLines = true
+            is RenderSection.Timing -> if (hasSeenLines) {
+                timingSections += index
+                if (index > 0) starts += index
+            } else {
+                timingSections += 0
+            }
+            else -> Unit
+        }
+    }
+    return TimingStretches(starts = starts.toIntArray(), timingSections = timingSections)
 }
 
 /** Everything a [SongLyricsModel] is built from, see [rememberSongLyricsModel]. */
@@ -2432,7 +2475,9 @@ internal sealed interface RenderSection {
      * Where a `{tempo}` or a `{time}` further down the song changes how it is played, naming both from there on as the
      * click plays them: the [tempo] held to the click's range, null where the song never names one, and the [time]
      * signature the click counts, the common time where the song names none. Always a unit of its own between two
-     * sections, since it starts a page of its own (see [SongUnits.timingStarts]), and never folded or cut.
+     * sections, since it starts a page of its own where some line of the song comes before it (see
+     * [SongUnits.timingStarts]; one written before the first line stands in place on the first page), and never folded
+     * or cut.
      */
     @Immutable
     data class Timing(val tempo: String?, val time: String) : RenderSection

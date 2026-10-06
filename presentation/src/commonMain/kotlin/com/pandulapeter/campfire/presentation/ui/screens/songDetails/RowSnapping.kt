@@ -61,7 +61,8 @@ import kotlin.math.sign
  * of the song still has (see [LineAnchor]).
  *
  * [timingSections] are the sections that change the tempo or the time signature the song is played in from there on,
- * ascending, each of which starts a stop of its own wherever the song is stepped by rows (see [timingIndexAt]).
+ * ascending, each of which starts a stop of its own wherever the song is stepped by rows (see [timingIndexAt]). A change
+ * written before the song's first line is reported at section 0 and starts no stop, since it is in force from the first.
  */
 internal data class SongRows(
     val restingOffsets: List<Int> = emptyList(),

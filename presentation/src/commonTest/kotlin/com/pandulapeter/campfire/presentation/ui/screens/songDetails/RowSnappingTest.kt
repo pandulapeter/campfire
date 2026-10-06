@@ -35,6 +35,19 @@ class RowSnappingTest {
     }
 
     @Test
+    fun aChangeWrittenBeforeTheFirstLineIsInForceFromTheFirstPage() {
+        val rows = SongRows(
+            restingOffsets = listOf(0, 1000),
+            stepOffsets = listOf(0, 1000),
+            stepSections = listOf(0, 4),
+            isSteppedByRow = true,
+            timingSections = listOf(0, 4),
+        )
+        assertEquals(0, timingIndexAt(0, rows))
+        assertEquals(1, timingIndexAt(1000, rows))
+    }
+
+    @Test
     fun aSongbookSteppedBySectionsFollowsTheChangeScrolledPast() {
         val rows = SongRows(
             stepOffsets = listOf(-24, 100, 300, 500),
