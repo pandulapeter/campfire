@@ -402,6 +402,7 @@
     <string name="song_editor_insert_tag">Címke</string>
     <string name="song_editor_insert_language">Nyelv</string>
     <string name="song_editor_insert_link">Hivatkozás</string>
+    <string name="song_editor_insert_chord_shape">Akkordfogás</string>
     <string name="song_editor_transpose_text_up">Szöveg transzponálása fel</string>
     <string name="song_editor_transpose_text_down">Szöveg transzponálása le</string>
     <string name="song_editor_prettify">ChordPro formázása</string>

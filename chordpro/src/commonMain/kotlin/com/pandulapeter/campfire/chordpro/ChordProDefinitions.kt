@@ -27,12 +27,13 @@ object ChordProDefinitions {
     /**
      * The line that defines [voicing] as the shape of [name], the way [read] reads it back:
      * `{define: G base-fret 1 frets 3 2 0 0 0 3 fingers 2 1 0 0 0 3}`, `{define: G keys 0 4 7}`. It carries no
-     * selector, since the number of frets already says which instrument a shape is for.
+     * selector, since the number of frets already says which instrument a shape is for. A keyboard's keys are counted
+     * from the root of [name] as it is spelled in [notation].
      */
-    fun line(name: String, voicing: ChordVoicing) = "{$DEFINE: $name ${shapeOf(name, voicing)}}"
+    fun line(name: String, voicing: ChordVoicing, notation: ChordNotation = ChordNotation.STANDARD) = "{$DEFINE: $name ${shapeOf(name, voicing, notation)}}"
 
     /** The part of a definition after the chord's name, as [line] writes it. */
-    internal fun shapeOf(name: String, voicing: ChordVoicing) = when (voicing) {
+    internal fun shapeOf(name: String, voicing: ChordVoicing, notation: ChordNotation = ChordNotation.STANDARD) = when (voicing) {
         is ChordVoicing.Fretted -> {
             val baseFret = ChordVoicings.baseFret(voicing.frets)
             buildString {
@@ -42,7 +43,7 @@ object ChordProDefinitions {
             }
         }
         is ChordVoicing.Keys -> {
-            val root = ChordProChords.parse(name)?.root ?: 0
+            val root = ChordProChords.parse(name, notation)?.root ?: 0
             val keys = (listOfNotNull(voicing.bass) + voicing.notes).map { it - root }
             val octaves = keys.minOrNull()?.takeIf { it < 0 }?.let { (-it + 11) / 12 } ?: 0
             "$KEYS " + keys.joinToString(" ") { (it + octaves * 12).toString() }
@@ -217,6 +218,50 @@ object ChordProDefinitions {
             append(value, consumedUntil, value.length)
         }
         return rawLine.substring(0, valueStart) + rewritten + rawLine.substring(valueEnd)
+    }
+
+    /**
+     * The chord of the brackets [offset] is in or touching on its line of [text] — the caret right after `[G]` or right
+     * before it included — or null where it is in none, or in one that holds an annotation or nothing.
+     */
+    fun chordAt(text: String, offset: Int): String? {
+        val starts = ChordProSyntax.lineStartOffsets(text)
+        val line = starts.indexOfLast { it <= offset }.coerceAtLeast(0)
+        val column = offset - starts[line]
+        return ChordProSyntax.brackets(ChordProSyntax.splitLines(text)[line])
+            .firstOrNull { column >= it.range.first && column <= it.range.last + 1 }
+            ?.content?.trim()?.takeIf { it.isNotEmpty() && !it.startsWith("*") }
+    }
+
+    /**
+     * Where the shape of [name] on [instrument] is written in [text]: its frets, or its keys, from the first to the last,
+     * on the line that defines it (the last one, which is the one that counts), or null where [text] defines no shape
+     * of it there. What an editor sends the caret to, rather than writing the chord a second line.
+     */
+    fun rangeOf(text: String, name: String, instrument: ChordInstrument): IntRange? {
+        val starts = ChordProSyntax.lineStartOffsets(text)
+        return ChordProSyntax.splitLines(text).withIndex().reversed().firstNotNullOfOrNull { (index, line) ->
+            val trimmed = line.trim()
+            val directive = ChordProSyntax.matchDirective(trimmed) ?: return@firstNotNullOfOrNull null
+            val selector = selectorOf(directive.name) ?: return@firstNotNullOfOrNull null
+            val shape = directive.value?.let { read(it, selector.takeIf { selector -> selector.isNotEmpty() }) } as? Reading.Shape
+            if (shape == null || shape.name != name || shape.instrument != instrument) return@firstNotNullOfOrNull null
+            val keyword = if (instrument == ChordInstrument.KEYBOARD) KEYS else FRETS
+            val lineStart = starts[index] + (line.length - line.trimStart().length)
+            val keywordAt = Regex("(?i)(^|\\s)$keyword(\\s)").find(trimmed) ?: return@firstNotNullOfOrNull null
+            var start = keywordAt.range.last + 1
+            while (start < trimmed.length && trimmed[start].isWhitespace()) start++
+            var end = start
+            var last = start
+            while (end < trimmed.length && trimmed[end] != '}') {
+                val wordStart = end
+                while (end < trimmed.length && !trimmed[end].isWhitespace() && trimmed[end] != '}') end++
+                if (trimmed.substring(wordStart, end).lowercase() in keywords) break
+                if (end > wordStart) last = end
+                while (end < trimmed.length && trimmed[end].isWhitespace()) end++
+            }
+            (lineStart + start) until (lineStart + last)
+        }
     }
 
     /** What reading the value of a definition came to. */

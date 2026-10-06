@@ -402,6 +402,7 @@
     <string name="song_editor_insert_tag">Tag</string>
     <string name="song_editor_insert_language">Language</string>
     <string name="song_editor_insert_link">Link</string>
+    <string name="song_editor_insert_chord_shape">Chord shape</string>
     <string name="song_editor_transpose_text_up">Transpose text up</string>
     <string name="song_editor_transpose_text_down">Transpose text down</string>
     <string name="song_editor_prettify">Prettify ChordPro</string>

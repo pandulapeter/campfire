@@ -135,4 +135,27 @@ class ChordProDefinitionsTest {
         assertEquals("H", song.metadata.definitions.single().name)
         assertTrue(ChordProParser.parse("{define: H frets x 2 4 4 4 2}\n[B]la").metadata.definitions.single().name in setOf("H", "B"))
     }
+
+    @Test
+    fun `the chord at the caret is the one in the brackets it is in or touching`() {
+        val text = "{title: X}\n[G]Hello [Am7]there [*softly] []la"
+        val line = text.indexOf('[')
+        assertEquals("G", ChordProDefinitions.chordAt(text, line))
+        assertEquals("G", ChordProDefinitions.chordAt(text, line + 2))
+        assertEquals("G", ChordProDefinitions.chordAt(text, line + 3))
+        assertEquals(null, ChordProDefinitions.chordAt(text, line + 5))
+        assertEquals("Am7", ChordProDefinitions.chordAt(text, text.indexOf("Am7") + 1))
+        assertEquals(null, ChordProDefinitions.chordAt(text, text.indexOf("softly")))
+        assertEquals(null, ChordProDefinitions.chordAt(text, text.indexOf("[]") + 1))
+        assertEquals(null, ChordProDefinitions.chordAt(text, 3))
+    }
+
+    @Test
+    fun `the shape of a chord defined in the text is found for the caret to go to`() {
+        val text = "{title: X}\n{define: G base-fret 1 frets 3 2 0 0 0 3 fingers 2 1 0 0 0 3}\n  {define-ukulele: G frets 0 2 3 2}\n{define: C keys 0 4 7}\n[G]la"
+        assertEquals("3 2 0 0 0 3", text.substring(ChordProDefinitions.rangeOf(text, "G", ChordInstrument.GUITAR)!!))
+        assertEquals("0 2 3 2", text.substring(ChordProDefinitions.rangeOf(text, "G", ChordInstrument.UKULELE)!!))
+        assertEquals("0 4 7", text.substring(ChordProDefinitions.rangeOf(text, "C", ChordInstrument.KEYBOARD)!!))
+        assertEquals(null, ChordProDefinitions.rangeOf(text, "C", ChordInstrument.GUITAR))
+    }
 }

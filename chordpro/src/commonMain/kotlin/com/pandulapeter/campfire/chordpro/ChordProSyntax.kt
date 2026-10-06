@@ -495,6 +495,22 @@ internal object ChordProSyntax {
         return if (insertionIndex >= 0) insertionIndex else headerIndex.coerceAtLeast(0)
     }
 
+    /**
+     * The index of the first line after the block of directives a song opens with (the comments and blank lines among
+     * them included, but not the ones after it), or 0 for a song that opens with anything else.
+     */
+    fun headerEndIndex(lines: List<String>): Int {
+        var end = 0
+        for ((index, line) in lines.withIndex()) {
+            val trimmedLine = line.trim()
+            if (trimmedLine.isEmpty() || trimmedLine.startsWith(SOURCE_COMMENT)) continue
+            val directive = matchDirective(trimmedLine) ?: break
+            if (!directive.isMetadata) break
+            end = index + 1
+        }
+        return end
+    }
+
     /** True for the directives a song is described by, as opposed to the ones that make up its body. */
     private val Directive.isMetadata
         get() = startOfEnvironment(name) == null && endOfEnvironment(name) == null && name !in bodyNames

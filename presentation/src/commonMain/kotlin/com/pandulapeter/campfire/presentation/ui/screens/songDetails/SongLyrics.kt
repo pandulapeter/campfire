@@ -243,8 +243,12 @@ internal fun SongLyrics(
             readsCapoAndTime = readsCapoAndTime,
         )
     }.let { sections ->
-        val cells = remember(model.chords, chordDiagrams?.instrument, chordDiagrams?.storedShapes) {
-            chordDiagrams?.let { chordCellsOf(model.chords, it.instrument, it.storedShapes) }.orEmpty()
+        val cells = remember(model, chordDiagrams?.instrument, chordDiagrams?.storedShapes, chordDiagrams?.showsDefinitionsOnly) {
+            when {
+                chordDiagrams == null -> emptyList()
+                chordDiagrams.showsDefinitionsOnly -> definitionCellsOf(model.song, chordDiagrams.notation)
+                else -> chordCellsOf(model.chords, chordDiagrams.instrument, chordDiagrams.storedShapes)
+            }
         }
         remember(sections, cells, chordDiagrams?.isFolded) { withChordsSection(sections, cells, isFolded = chordDiagrams?.isFolded == true) }
     }

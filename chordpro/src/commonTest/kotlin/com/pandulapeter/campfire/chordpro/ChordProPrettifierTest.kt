@@ -252,6 +252,23 @@ class ChordProPrettifierTest {
         }
     }
 
+    @Test
+    fun `chord definitions are formatted where they stand, as before there were chord diagrams`() {
+        // An import compares formatted texts, so a library file holding definitions that came out differently would be
+        // asked about as a conflict: the definitions anchor the header around them like any directive the app does not
+        // order.
+        assertEquals(
+            "{artist: A}\n{define: G frets 3 2 0 0 0 3}\n{title: T}\n{define-ukulele: C frets 0 0 0 3}\n{key: G}\n\n[G]la\n\n{define: D keys 0 4 7}\n[D]lo\n",
+            ChordProPrettifier.prettify(
+                "{artist: A}\n{define: G frets 3 2 0 0 0 3}\n{title: T}\n{define-ukulele: C frets 0 0 0 3}\n{key: G}\n[G]la\n\n{define: D keys 0 4 7}\n[D]lo",
+            ),
+        )
+        assertEquals(
+            "{title: T}\n{chord: Am}\n{define: G base-fret 1 frets 3 2 0 0 0 3}\n\n[G]la\n",
+            ChordProPrettifier.prettify("{title: T}\n{chord: Am}\n{define: G base-fret 1 frets 3 2 0 0 0 3}\n\n\n[G]la"),
+        )
+    }
+
     private companion object {
         const val NEW_SONG_IN_CHORUS =
             "{title: A}\n{start_of_chorus}\nla\n{new_song}\n{title: B}\nlb\n{tempo: 100}\n{end_of_chorus}\n{new_song}\n{title: C}\n\nlc"

@@ -124,6 +124,10 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_hide_shortcu
 import com.pandulapeter.campfire.presentation.resources.song_editor_shortcuts
 import com.pandulapeter.campfire.presentation.resources.song_editor_show_shortcuts
 import com.pandulapeter.campfire.presentation.resources.song_editor_undo
+import com.pandulapeter.campfire.chordpro.model.ChordInstrument
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.ChordDiagrams
+import com.pandulapeter.campfire.presentation.ui.chords.toChordInstrument
+import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.contentEdges
 import com.pandulapeter.campfire.presentation.ui.components.ACTION_BUTTON_OVERLAP
@@ -539,6 +543,14 @@ private fun LoadedSongEditor(
                         textFieldState = textFieldState,
                         text = text,
                         contentPadding = contentPadding,
+                        chordShapes = remember(userPreferences) {
+                            val instrument = (userPreferences?.chordInstrument ?: UserPreferences.ChordInstrument.GUITAR).toChordInstrument()
+                            EditorChordShapes(
+                                notation = viewModel.editorNotation.toChordNotation(),
+                                instrument = instrument,
+                                storedShapes = userPreferences?.chordVoicings?.get(instrument.id).orEmpty(),
+                            )
+                        },
                     )
                 }
             },
@@ -880,6 +892,8 @@ private fun SongPreview(
             isSingleColumn = isSingleColumn,
             isSongInfoShown = true,
             songInfoEditing = songInfoEditing,
+            // Whatever the two switches and the instrument in Settings say: what is being written is what is shown.
+            chordDiagrams = remember { ChordDiagrams(instrument = ChordInstrument.GUITAR, showsDefinitionsOnly = true, notation = viewModel.editorNotation.toChordNotation()) },
         )
     }
 }

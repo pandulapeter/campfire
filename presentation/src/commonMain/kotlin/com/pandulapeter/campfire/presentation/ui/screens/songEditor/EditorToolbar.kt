@@ -42,6 +42,9 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.chordpro.ChordProHeader
+import com.pandulapeter.campfire.chordpro.ChordNotation
+import com.pandulapeter.campfire.chordpro.model.ChordInstrument
+import com.pandulapeter.campfire.presentation.ui.chords.chordShapeInsertion
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_album
@@ -59,6 +62,7 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_insert_durat
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_key
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_key_change
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_language
+import com.pandulapeter.campfire.presentation.resources.song_editor_insert_chord_shape
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_link
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_lyricist
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_subtitle
@@ -95,6 +99,8 @@ import com.pandulapeter.campfire.presentation.ui.platform.bounceHorizontalScroll
  *
  * @param text The text of [textFieldState] as one string, which the screen copies once per edit for everything that
  *   follows it rather than each of them copying it again.
+ * @param chordShapes What the Chord shape button, the last of the first row, writes a definition with, see
+ *   [chordShapeInsertion].
  */
 @Composable
 internal fun EditorToolbar(
@@ -102,6 +108,7 @@ internal fun EditorToolbar(
     textFieldState: TextFieldState,
     text: State<String>,
     contentPadding: PaddingValues,
+    chordShapes: EditorChordShapes,
 ) {
     // What the song already says about itself follows the text rather than being read once, so that a directive
     // typed by hand takes its button out of reach exactly as one inserted from the toolbar does. The cache is what
@@ -120,7 +127,15 @@ internal fun EditorToolbar(
             declaredMetadata = declaredMetadata,
             textFieldState = textFieldState,
             contentPadding = contentPadding,
-        )
+        ) {
+            // A song defines as many chords as it has, so this one is never out of reach, like Tag and Language.
+            EditorToolbarDivider()
+            EditorToolbarButton(
+                label = stringResource(Res.string.song_editor_insert_chord_shape),
+                isEnabled = true,
+                onClick = { textFieldState.insertChordShape(chordShapes) },
+            )
+        }
         EditorToolbarRow(
             groups = contentInsertions(),
             declaredMetadata = declaredMetadata,
@@ -141,6 +156,7 @@ private fun EditorToolbarRow(
     declaredMetadata: Set<String>,
     textFieldState: TextFieldState,
     contentPadding: PaddingValues,
+    trailing: @Composable () -> Unit = {},
 ) {
     val layoutDirection = LocalLayoutDirection.current
     Row(
@@ -164,6 +180,7 @@ private fun EditorToolbarRow(
                 )
             }
         }
+        trailing()
     }
 }
 
@@ -387,6 +404,29 @@ private fun TextFieldState.insertIntoHeader(insertion: EditorInsertion, metadata
     }
     replace(header.offset, header.offset + header.replacedLength, header.text)
     selection = TextRange(header.caretOffset, header.selectionEnd)
+}
+
+/**
+ * What the Chord shape button needs besides the text: the notation the field is written in, and the instrument and the
+ * player's own shapes the line is filled in from.
+ */
+internal class EditorChordShapes(
+    val notation: ChordNotation,
+    val instrument: ChordInstrument,
+    val storedShapes: Map<String, String>,
+)
+
+/** Writes the definition [chordShapeInsertion] decides on as one step of the undo history, and selects what it says. */
+private fun TextFieldState.insertChordShape(chordShapes: EditorChordShapes) = edit {
+    val insertion = chordShapeInsertion(
+        text = originalText.toString(),
+        caret = minOf(selection.start, selection.end),
+        notation = chordShapes.notation,
+        instrument = chordShapes.instrument,
+        storedShapes = chordShapes.storedShapes,
+    )
+    if (insertion.text.isNotEmpty()) insert(insertion.offset, insertion.text)
+    selection = TextRange(insertion.selectionStart, insertion.selectionEnd)
 }
 
 /**

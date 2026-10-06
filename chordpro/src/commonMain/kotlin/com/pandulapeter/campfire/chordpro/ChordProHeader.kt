@@ -125,6 +125,33 @@ object ChordProHeader {
     }
 
     /**
+     * Where a chord definition, [line], goes in [text]: after the last definition of the header, or where there is
+     * none, at the end of the header, after everything the song says about itself. Definitions are not among the kinds
+     * [ChordProSyntax.metadataOrder] arranges, since Prettify keeps them where they stand and a file that holds some
+     * has to come out of it as it always did; this only decides where a new one is added. The caret goes to the start
+     * of the chord's name, where one with no name yet is typed.
+     */
+    fun insertDefinition(text: String, line: String): Insertion {
+        val nameStart = line.indexOf(':') + 2
+        if (text.isEmpty()) return Insertion(offset = 0, text = line, caretOffset = nameStart)
+        val lines = ChordProSyntax.splitLines(text)
+        val headerEnd = ChordProSyntax.headerEndIndex(lines)
+        val lastDefinition = (0 until headerEnd).lastOrNull { index ->
+            ChordProSyntax.matchDirective(lines[index].trim())?.let { ChordProDefinitions.selectorOf(it.name) } != null
+        }
+        val index = lastDefinition?.plus(1) ?: headerEnd
+        val separator = ChordProSyntax.lineSeparatorOf(text)
+        val isAppended = index >= lines.size && !ChordProSyntax.endsWithLineBreak(text)
+        val offset = if (isAppended) text.length else ChordProSyntax.lineStartOffsets(text).getOrElse(index) { text.length }
+        val opening = if (isAppended) separator else ""
+        return Insertion(
+            offset = offset,
+            text = if (isAppended) "$opening$line" else "$line$separator",
+            caretOffset = offset + opening.length + nameStart,
+        )
+    }
+
+    /**
      * [insert] for one of the [changeableMetadata], which the header holds once and the body as often as the song
      * changes it, so where it goes depends on what the header says and on [caretOffset]:
      * - a header with no line of [name] gets one by [insert], since the first value a song is given is its own;

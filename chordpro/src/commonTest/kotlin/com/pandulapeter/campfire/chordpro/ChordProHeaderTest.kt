@@ -296,4 +296,20 @@ class ChordProHeaderTest {
         val insertion = ChordProHeader.insert(this, name = name, prefix = prefix, suffix = suffix)
         return replaceRange(insertion.offset, insertion.offset, insertion.text)
     }
+
+    @Test
+    fun `a chord definition goes after the last one of the header, or at its end`() {
+        val line = "{define: G frets 3 2 0 0 0 3}"
+        val bare = "{title: X}\n{artist: Y}\n{tag: Z}\n\n[G]la"
+        val first = ChordProHeader.insertDefinition(bare, line)
+        assertEquals("{title: X}\n{artist: Y}\n{tag: Z}\n{define: G frets 3 2 0 0 0 3}\n\n[G]la", bare.substring(0, first.offset) + first.text + bare.substring(first.offset))
+        assertEquals(first.offset + "{define: ".length, first.caretOffset)
+        val defined = "{title: X}\n{define: C frets x 3 2 0 1 0}\n{key: G}\n[G]la"
+        val second = ChordProHeader.insertDefinition(defined, line)
+        assertEquals("{title: X}\n{define: C frets x 3 2 0 1 0}\n{define: G frets 3 2 0 0 0 3}\n{key: G}\n[G]la", defined.substring(0, second.offset) + second.text + defined.substring(second.offset))
+        val empty = ChordProHeader.insertDefinition("", line)
+        assertEquals(line, empty.text)
+        val noBreak = ChordProHeader.insertDefinition("{title: X}", line)
+        assertEquals("\n$line", noBreak.text)
+    }
 }

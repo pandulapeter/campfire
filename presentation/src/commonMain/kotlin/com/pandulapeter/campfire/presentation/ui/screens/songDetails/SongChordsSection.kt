@@ -35,10 +35,12 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.chordpro.ChordNotation
 import com.pandulapeter.campfire.chordpro.ChordProChords
 import com.pandulapeter.campfire.chordpro.ChordVoicings
 import com.pandulapeter.campfire.chordpro.model.Chord
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
+import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.chordpro.model.ChordVoicing
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_chord_shapes
@@ -62,17 +64,22 @@ import org.jetbrains.compose.resources.painterResource
  * What a song's Chords section needs beyond the song: the instrument the diagrams are drawn for, the shapes the player
  * chose, whether the section is folded, and what its header does.
  *
- * @param onFoldToggled Folds the section or unfolds it, one preference for every song.
+ * @param onFoldToggled Folds the section or unfolds it, one preference for every song; null where nothing folds.
  * @param onShapesClicked Opens the Chord shapes sheet of the song, null in read only mode, which takes the controls off
  * the page.
+ * @param showsDefinitionsOnly Whether the section holds the song's own definitions and nothing else, each on the
+ * instrument it is written for, which is the editor's preview: it shows what is being written, and the app's own shapes
+ * are not written. [notation] is what their names are read in.
  */
 @Immutable
 internal data class ChordDiagrams(
     val instrument: ChordInstrument,
-    val storedShapes: Map<String, String>,
-    val isFolded: Boolean,
-    val onFoldToggled: () -> Unit,
+    val storedShapes: Map<String, String> = emptyMap(),
+    val isFolded: Boolean = false,
+    val onFoldToggled: (() -> Unit)? = null,
     val onShapesClicked: (() -> Unit)? = null,
+    val showsDefinitionsOnly: Boolean = false,
+    val notation: ChordNotation = ChordNotation.STANDARD,
 )
 
 /** One diagram of the Chords section: the chord as the page names it and the shape it is drawn with. */
@@ -93,6 +100,17 @@ internal fun chordCellsOf(chords: List<SongChord>, instrument: ChordInstrument, 
         instrument = instrument,
         root = chord.chord.root,
         selection = selectShape(chord, instrument, storedShapes),
+    )
+}
+
+/** The cells of every definition [song] holds, in file order and each on its own instrument, see [ChordDiagrams.showsDefinitionsOnly]. */
+internal fun definitionCellsOf(song: ChordProSong, notation: ChordNotation) = song.metadata.definitions.map { definition ->
+    ChordCell(
+        name = definition.name,
+        soundingName = null,
+        instrument = definition.instrument,
+        root = ChordProChords.parse(definition.name, notation)?.root ?: 0,
+        selection = SelectedShape(definition.voicing, SelectedShape.Source.DEFINED, definition.movedBy),
     )
 }
 
@@ -124,12 +142,12 @@ internal fun SongChordsSection(
     Row(verticalAlignment = Alignment.CenterVertically) {
         SectionHeaderPill(
             header = stringResource(Res.string.song_details_chords),
-            toggle = chordDiagrams?.let {
+            toggle = chordDiagrams?.onFoldToggled?.let { onFoldToggled ->
                 FoldToggle(
                     isExpanded = !section.isFolded,
                     onToggled = {
                         hasBeenToggled = true
-                        it.onFoldToggled()
+                        onFoldToggled()
                     },
                 )
             },
