@@ -20,13 +20,15 @@ import kotlinx.serialization.json.intOrNull
 
 /**
  * The part of [UserPreferences] every device connected to one cloud folder shares: how each song of the library is
- * played when it is opened from the library rather than from a setlist. A setlist's own overrides are in its file and
- * travel with it, and everything else in the preferences - the folded sections included - is one reader's own.
+ * played when it is opened from the library rather than from a setlist, and the shape the player chose for each chord
+ * ([chords], [UserPreferences.chordVoicings]). A setlist's own overrides are in its file and travel with it, and
+ * everything else in the preferences - the folded sections included - is one reader's own.
  */
 internal data class SyncedPreferences(
     val transpositions: Map<String, Int> = emptyMap(),
     val tempos: Map<String, Int> = emptyMap(),
     val capos: Map<String, Int> = emptyMap(),
+    val chords: Map<String, Map<String, String>> = emptyMap(),
 ) {
 
     /**
@@ -38,6 +40,7 @@ internal data class SyncedPreferences(
         transpositions = preferences.transpositions.updated(from = since.transpositions, to = transpositions),
         tempos = preferences.tempos.updated(from = since.tempos, to = tempos),
         capos = preferences.capos.updated(from = since.capos, to = capos),
+        chordVoicings = preferences.chordVoicings.flattened().updated(from = since.chords.flattened(), to = chords.flattened()).nested(),
     )
 
     /**
@@ -48,6 +51,7 @@ internal data class SyncedPreferences(
         transpositions = transpositions.respelled(spelling, isPreferred),
         tempos = tempos.respelled(spelling, isPreferred),
         capos = capos.respelled(spelling, isPreferred),
+        chords = chords,
     )
 
     private fun Map<String, Int>.respelled(spelling: (String) -> String, isPreferred: (String) -> Boolean) =
@@ -55,7 +59,7 @@ internal data class SyncedPreferences(
             (entries.firstOrNull { isPreferred(it.key) } ?: entries.minBy { it.key }).value
         }
 
-    private fun Map<String, Int>.updated(from: Map<String, Int>, to: Map<String, Int>): Map<String, Int> {
+    private fun <T> Map<String, T>.updated(from: Map<String, T>, to: Map<String, T>): Map<String, T> {
         val result = toMutableMap()
         (from.keys + to.keys).filter { this[it] == from[it] }.forEach { key ->
             val value = to[key]
@@ -64,12 +68,25 @@ internal data class SyncedPreferences(
         return result
     }
 
+    /** The chords by instrument and chord as one map, so that they are settled value by value like the songs' fields. */
+    private fun Map<String, Map<String, String>>.flattened() = entries.flatMap { (instrument, shapes) ->
+        shapes.map { (chord, shape) -> "$instrument$KEY_SEPARATOR$chord" to shape }
+    }.toMap()
+
+    private fun Map<String, String>.nested() = entries.groupBy({ it.key.substringBefore(KEY_SEPARATOR) }) {
+        it.key.substringAfter(KEY_SEPARATOR) to it.value
+    }.mapValues { (_, shapes) -> shapes.toMap() }
+
     companion object {
         fun of(preferences: UserPreferences) = SyncedPreferences(
             transpositions = preferences.transpositions,
             tempos = preferences.tempos,
             capos = preferences.capos,
+            chords = preferences.chordVoicings,
         )
+
+        /** No instrument id has one. */
+        private const val KEY_SEPARATOR = '\u0000'
     }
 }
 
@@ -80,18 +97,25 @@ internal data class SyncedPreferences(
  * The document is kept as a JSON tree rather than decoded into a class, so that it can grow without an older version
  * losing what a newer one wrote: a song's entry may gain a field, and settings that have nothing to do with the songs
  * may join [SONGS] at the top level, and a version that does not know them passes them through untouched. This
- * version only ever writes the paths it owns ([TRANSPOSITION], [TEMPO] and [CAPO] under each song of [SONGS]), and of
- * those only the values it can read; everything else in the document is carried over from the last synced one
- * ([localDocument]), so to the merge it is simply unchanged here.
+ * version only ever writes the paths it owns ([TRANSPOSITION], [TEMPO] and [CAPO] under each song of [SONGS], and the
+ * shape of each chord under its instrument in [CHORDS]), and of those only the values it can read; everything else in
+ * the document is carried over from the last synced one ([localDocument]), so to the merge it is simply unchanged here.
  *
  * ```json
  * {
  *   "version": 1,
  *   "songs": {
  *     "green_day-good_riddance.cho": { "transposition": 2, "capo": 1, "tempo": 92 }
+ *   },
+ *   "chords": {
+ *     "guitar": { "F:0.4.7": "x x 3 2 1 1" }
  *   }
  * }
  * ```
+ *
+ * A chord is keyed by its notes rather than by its name (`C#:0.3.7.10` is every spelling of C#m7), and its shape is
+ * whatever the app wrote, which this version does not need to understand to keep: an instrument it does not know is
+ * kept as it is, for the version that does. A chord's choice belongs to no song, so none is ever dropped with one.
  *
  * Songs are keyed by file name, as the library keys them, and an entry left with no fields is dropped, so the
  * document only ever names songs that something is set for.
@@ -106,6 +130,7 @@ internal object SyncedPreferencesDocument {
     private const val TRANSPOSITION = "transposition"
     private const val TEMPO = "tempo"
     private const val CAPO = "capo"
+    private const val CHORDS = "chords"
 
     /** The furthest a transposition can sensibly be from the key the song is written in: an octave either way. */
     private val TRANSPOSITION_RANGE = -11..11
@@ -166,8 +191,24 @@ internal object SyncedPreferencesDocument {
             )
             fields.takeIf { it.isNotEmpty() }?.let { name to JsonObject(it) }
         }.toMap()
-        return JsonObject(base.orEmpty() + (VERSION to (base?.get(VERSION) ?: JsonPrimitive(FORMAT_VERSION))) + (SONGS to JsonObject(songs)))
+        val baseChords = base?.get(CHORDS) as? JsonObject
+        val chords = (baseChords?.keys.orEmpty() + preferences.chords.keys).mapNotNull { instrument ->
+            val baseShapes = (baseChords?.get(instrument) as? JsonObject).orEmpty()
+            val fields = baseShapes.filterValues { !it.isReadableShape } + preferences.chords[instrument].orEmpty().mapValues { JsonPrimitive(it.value) }
+            fields.takeIf { it.isNotEmpty() }?.let { instrument to JsonObject(it) }
+        }.toMap()
+        // Written only once there is something in it, so that a document from before the chords is left as it was.
+        val chordsMember = if (chords.isEmpty() && baseChords == null) emptyMap() else mapOf(CHORDS to JsonObject(chords))
+        return JsonObject(
+            base.orEmpty() +
+                (VERSION to (base?.get(VERSION) ?: JsonPrimitive(FORMAT_VERSION))) +
+                (SONGS to JsonObject(songs)) +
+                chordsMember,
+        )
     }
+
+    /** A shape this version reads, which is a string: anything else in [CHORDS] is passed through. */
+    private val JsonElement.isReadableShape get() = this is JsonPrimitive && isString
 
     /** The values of [document] this version understands; one that is not a value it could have written is left out. */
     fun preferencesOf(document: JsonObject): SyncedPreferences {
@@ -183,6 +224,13 @@ internal object SyncedPreferencesDocument {
             transpositions = field(TRANSPOSITION, TRANSPOSITION_RANGE).filterValues { it != 0 },
             tempos = field(TEMPO, MetronomeSettings.TEMPO_RANGE),
             capos = field(CAPO, Song.CAPO_RANGE),
+            chords = (document[CHORDS] as? JsonObject).orEmpty().mapNotNull { (instrument, shapes) ->
+                (shapes as? JsonObject)
+                    ?.filterValues { it.isReadableShape && (it as JsonPrimitive).content.isNotBlank() }
+                    ?.mapValues { (it.value as JsonPrimitive).content }
+                    ?.takeIf { it.isNotEmpty() }
+                    ?.let { instrument to it }
+            }.toMap(),
         )
     }
 
