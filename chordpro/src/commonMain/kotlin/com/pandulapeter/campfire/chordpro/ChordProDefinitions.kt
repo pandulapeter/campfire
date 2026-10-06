@@ -17,8 +17,9 @@ import com.pandulapeter.campfire.chordpro.model.ChordVoicing
  * A song's own chord shapes: ChordPro's `{define}` and `{chord}` directives.
  *
  * `{define: G base-fret 1 frets 3 2 0 0 0 3 fingers 2 1 0 0 0 3}` is a fretted shape, its frets counted from the base
- * fret (1 is the base fret itself, 0 an open string, `x`, `X`, `N` and `-1` a muted one), and
- * `{define: G keys 0 4 7}` a keyboard one, its keys counted in semitones from the chord's root. The instrument is the
+ * fret (1 is the base fret itself, 0 an open string, `x`, `X`, `N` and `-1` a muted one; `base_fret` is read too), its
+ * fingers numbered 1 to 5 and every other finger value, a thumb's `T` included, shown as none, as the specification
+ * has it ignored, and `{define: G keys 0 4 7}` a keyboard one, its keys counted in semitones from the chord's root. The instrument is the
  * directive's selector where it names one (`{define-ukulele: …}`, `-guitar`, `-keyboard`, `-piano`), and otherwise the
  * one with as many strings as the shape has frets.
  */
@@ -173,11 +174,11 @@ object ChordProDefinitions {
         val voicing = (reading as? Reading.Shape)?.voicing as? ChordVoicing.Fretted
         if (voicing != null && semitones.mod(12) != 0) {
             val moved = transposed(ChordDefinition(reading.name, reading.instrument, voicing), semitones) { it }.voicing as ChordVoicing.Fretted
-            val baseFretKeyword = keywordIndices.firstOrNull { value.substring(words[it]).lowercase() == BASE_FRET }
+            val baseFretKeyword = keywordIndices.firstOrNull { keywordOf(value.substring(words[it])) == BASE_FRET }
             // A line with no base fret counts its frets from the nut whatever they are, so that moving it back writes
             // the line it was.
             val baseFret = if (baseFretKeyword == null) 1 else ChordVoicings.baseFret(moved.frets)
-            fun argumentsOf(keyword: String) = keywordIndices.firstOrNull { value.substring(words[it]).lowercase() == keyword }?.let { start ->
+            fun argumentsOf(keyword: String) = keywordIndices.firstOrNull { keywordOf(value.substring(words[it])) == keyword }?.let { start ->
                 (start + 1 until (keywordIndices.firstOrNull { it > start } ?: words.size)).toList()
             }
             argumentsOf(FRETS)?.forEachIndexed { string, word ->
@@ -195,8 +196,8 @@ object ChordProDefinitions {
                     removals += arguments
                 } else {
                     arguments.forEachIndexed { string, word ->
-                        // An unused string keeps the way the file writes it, `0`, `-` or `x`.
-                        if (fingers[string] > 0 || value.substring(words[word]) !in unusedFingers) replacements[word] = fingers[string].toString()
+                        // A finger the move leaves as it was keeps the way the file writes it, `0`, `-`, `x` or a thumb's `T`.
+                        if (fingers[string] != voicing.fingers?.get(string)) replacements[word] = fingers[string].toString()
                     }
                 }
             }
@@ -304,7 +305,7 @@ object ChordProDefinitions {
             return words.subList(start, index)
         }
         while (index < words.size) {
-            val keyword = words[index++].lowercase()
+            val keyword = keywordOf(words[index++])
             // A value said twice is ambiguous to its reader as well, and rewriting one of the two would leave the other
             // describing a shape that is no longer there.
             if (keyword in valueKeywords && !given.add(keyword)) return Reading.Invalid
@@ -313,8 +314,9 @@ object ChordProDefinitions {
                 FRETS -> frets = arguments().takeIf { it.isNotEmpty() }?.map { word ->
                     if (word in mutedFrets) null else word.toIntOrNull()?.takeIf { it in 0..MAX_FRET } ?: return Reading.Invalid
                 } ?: return Reading.Invalid
+                // The specification has every value but a finger's number ignored: a thumb's `T`, a letter, a `-`.
                 FINGERS -> fingers = arguments().takeIf { it.isNotEmpty() }?.map { word ->
-                    if (word in unusedFingers) 0 else word.toIntOrNull()?.takeIf { it in 0..MAX_FINGER } ?: return Reading.Invalid
+                    word.toIntOrNull()?.takeIf { it in 1..MAX_FINGER } ?: 0
                 } ?: return Reading.Invalid
                 // Keys past the diagram are wrapped by their note rather than refused, as the specification says, which also keeps
                 // what a diagram draws to four octaves however large a number the file holds.
@@ -360,9 +362,13 @@ object ChordProDefinitions {
         return Reading.Shape(name, instrument, voicing)
     }
 
+    /** The keyword [word] is, with the specification's `base_fret` read as the `base-fret` it spells too. */
+    private fun keywordOf(word: String) = word.lowercase().let { if (it in baseFretKeywords) BASE_FRET else it }
+
     internal const val DEFINE = "define"
     internal val DEFINITION_DIRECTIVES = setOf(DEFINE, "chord")
     private const val BASE_FRET = "base-fret"
+    private val baseFretKeywords = setOf(BASE_FRET, "base_fret")
     private const val FRETS = "frets"
     private const val FINGERS = "fingers"
     private const val KEYS = "keys"
@@ -374,9 +380,8 @@ object ChordProDefinitions {
     private const val COPY = "copy"
     private const val COPY_ALL = "copyall"
     private val valueKeywords = setOf(BASE_FRET, FRETS, FINGERS, KEYS)
-    private val keywords = setOf(BASE_FRET, FRETS, FINGERS, KEYS, COPY, COPY_ALL, "display", "format", "diagram")
+    private val keywords = baseFretKeywords + setOf(FRETS, FINGERS, KEYS, COPY, COPY_ALL, "display", "format", "diagram")
     private val mutedFrets = setOf("x", "X", "N", "-1")
-    private val unusedFingers = setOf("-", "x", "X", "N")
     private val selectorInstruments = mapOf(
         "guitar" to ChordInstrument.GUITAR,
         "ukulele" to ChordInstrument.UKULELE,

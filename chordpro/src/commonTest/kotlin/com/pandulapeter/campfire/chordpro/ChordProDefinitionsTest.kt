@@ -85,6 +85,24 @@ class ChordProDefinitionsTest {
     }
 
     @Test
+    fun `a finger that is no number Campfire draws is shown as none, and base_fret is read as base-fret`() {
+        listOf("F frets 1 3 3 2 1 1 fingers T 3 4 2 1 1", "F frets 1 3 3 2 1 1 fingers 9 3 4 2 1 1").forEach {
+            val voicing = assertIs<ChordProDefinitions.Reading.Shape>(ChordProDefinitions.read(it), it).voicing as ChordVoicing.Fretted
+            assertEquals(listOf(0, 3, 4, 2, 1, 1), voicing.fingers, it)
+        }
+        assertEquals(
+            ChordVoicing.Fretted(listOf(0, 0, 2, 2, 2, 0)),
+            assertIs<ChordProDefinitions.Reading.Shape>(ChordProDefinitions.read("A frets 0 0 2 2 2 0 base_fret 1")).voicing,
+        )
+        assertEquals(
+            listOf(null, 5, 7, 7, 7, 5),
+            (assertIs<ChordProDefinitions.Reading.Shape>(ChordProDefinitions.read("A base_fret 5 frets x 1 3 3 3 1")).voicing as ChordVoicing.Fretted).frets,
+        )
+        assertEquals(ChordProDefinitions.Reading.Invalid, ChordProDefinitions.read("F frets 1 3 3 2 1 1 fingers 1 2 3"))
+        assertEquals(ChordProDefinitions.Reading.Invalid, ChordProDefinitions.read("A base-fret 5 frets x 1 3 3 3 1 base_fret 5"))
+    }
+
+    @Test
     fun `keys past the diagram are wrapped by their note`() {
         mapOf(
             "C keys 0 4 99999999" to listOf(0, 4, 99999999),

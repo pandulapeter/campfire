@@ -133,6 +133,12 @@ class ChordDefinitionTransposerTest {
     }
 
     @Test
+    fun `a thumb's finger and the base_fret spelling are kept as they are written`() {
+        assertEquals("{define: G frets 3 5 5 4 3 3 fingers T 3 4 2 1 1}", ChordProTransposer.transposeText("{define: F frets 1 3 3 2 1 1 fingers T 3 4 2 1 1}", 2))
+        assertEquals("{define: B base_fret 7 frets x 1 3 3 3 1}", ChordProTransposer.transposeText("{define: A base_fret 5 frets x 1 3 3 3 1}", 2))
+    }
+
+    @Test
     fun `there and back in the text is the line it started as`() {
         val text = "{define: C base-fret 1 frets x 3 2 0 1 0 fingers 0 3 2 0 1 0}\n{define-ukulele: Am frets 2 0 0 0}\n{define: G keys 0 4 7}\n[C]x [Am]y [G]z"
         (-5..6).forEach { semitones ->
