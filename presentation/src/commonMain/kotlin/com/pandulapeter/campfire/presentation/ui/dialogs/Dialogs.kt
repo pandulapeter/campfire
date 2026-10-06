@@ -1710,8 +1710,8 @@ private fun SetlistPicker(
  * Every song in the library with a box each, which is how a setlist is filled from its own side: the setlist picker
  * puts one song into any number of setlists, and this puts any number of songs into one setlist.
  *
- * What is ticked is held here rather than read back from the setlist, and the whole of it is written on every tick
- * ([CampfireViewModel.setSetlistSongs]): a list of songs is ticked faster than a write comes back through the
+ * What is ticked is held here rather than read back from the setlist, and each tick writes that one song in or out
+ * ([CampfireViewModel.setSetlistSong]): a list of songs is ticked faster than a write comes back through the
  * library, and boxes that followed the library would each flick back for the length of a round trip. A song ticked
  * here goes to the end of the setlist, so a setlist built from nothing is in the order its songs were picked, and an
  * entry whose file has gone missing stays in it, since it is not listed here to be unticked.
@@ -1733,9 +1733,9 @@ private fun SongPicker(
     val songs by viewModel.allSongs.collectAsStateWithLifecycle()
     val setlist = setlists.firstOrNull { it.fileName == dialog.setlist.fileName } ?: dialog.setlist
     // Seeded from the setlist as the library has it and saved, rather than from the snapshot the dialog was opened
-    // with: the dialog outlives a recreated Activity, and a selection seeded again from that snapshot would drop
-    // every song ticked before it from the next write.
-    val initialSongFileNames = rememberSaveable(setlist.fileName) { setlist.entries.map { it.songFileName }.distinct() }
+    // with: the dialog outlives a recreated Activity, and a selection seeded again from that snapshot would show every
+    // song ticked before it unticked.
+    val initialSongFileNames = rememberSaveable(setlist.fileName) { setlist.entries.map { it.songFileName } }
     var selectedSongFileNames by rememberSaveable(setlist.fileName) { mutableStateOf(initialSongFileNames) }
     var query by rememberSaveable { mutableStateOf("") }
     val selectedTags by viewModel.songPickerSelectedTags.collectAsStateWithLifecycle()
@@ -1834,7 +1834,7 @@ private fun SongPicker(
                     coverArtUrl = pickableSong.song.coverArtUrl?.takeIf { userPreferences?.isCoverArtEnabled == true },
                     onCheckedChange = { isChecked ->
                         selectedSongFileNames = if (isChecked) selectedSongFileNames + fileName else selectedSongFileNames - fileName
-                        viewModel.setSetlistSongs(setlistFileName = setlist.fileName, songFileNames = selectedSongFileNames)
+                        viewModel.setSetlistSong(setlistFileName = setlist.fileName, songFileName = fileName, isTicked = isChecked)
                     },
                 )
             }

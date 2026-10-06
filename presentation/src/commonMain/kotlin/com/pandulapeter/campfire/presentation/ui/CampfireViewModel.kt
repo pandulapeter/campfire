@@ -3460,24 +3460,20 @@ class CampfireViewModel(
     }
 
     /**
-     * Writes the songs a setlist holds as the song picker has them ticked: [songFileNames] is the whole of the setlist
-     * in order rather than one song going in or out. The picker is ticked a row at a time, quickly and all into the
-     * same file, while [setlists] only catches up with a write once it has been round tripped through the repository,
-     * so a toggle worked out from it would build each write on a setlist the previous tick had not reached yet and
-     * lose that tick. The entries that stay are taken from the setlist itself, so their transpositions stay with them.
-     *
-     * The writes go through [UpdateSetlistUseCase], which makes them one at a time and in the order they were asked
-     * for, so the file ends up holding what the last tick left rather than whichever write happened to finish last.
+     * Ticks one song of the song picker into the setlist or out of it. Each tick is that one song and nothing else,
+     * applied to the setlist as the library has it at the time of the write rather than to the picker's copy: the
+     * picker is ticked a row at a time, quickly and all into the same file, and the writes go through
+     * [UpdateSetlistUseCase], which makes them one at a time and in the order they were asked for, so each tick is
+     * applied to what the one before it left and none of them is lost. Nothing the picker did not touch is written back
+     * from its snapshot, so a song another device added to the setlist while the sheet was open, or the order it was
+     * given there, stays.
      *
      * A setlist that is gone by now - deleted by a sync run while the sheet was open, or unreadable - is not brought
      * back from the sheet's copy: that copy is the setlist as it was when the sheet opened, and nothing else in the app
      * recreates a setlist by changing it.
      */
-    fun setSetlistSongs(setlistFileName: String, songFileNames: List<String>) = launchLibraryChange {
-        updateEditableSetlist(setlistFileName) { setlist ->
-            val entriesBySongFileName = setlist.entries.associateBy { it.songFileName }
-            setlist.copy(entries = songFileNames.map { entriesBySongFileName[it] ?: Setlist.Entry(songFileName = it) })
-        } ?: sendMessage(Message.OperationFailed)
+    fun setSetlistSong(setlistFileName: String, songFileName: String, isTicked: Boolean) = launchLibraryChange {
+        updateEditableSetlist(setlistFileName) { it.withSongTicked(songFileName, isTicked) } ?: sendMessage(Message.OperationFailed)
     }
 
     /**
