@@ -381,6 +381,7 @@ internal fun SongLyrics(
                                 readsCapoAndTime = section.readsCapoAndTime,
                                 animatesControls = sectionMotion == SectionMotion.SPRING && extraWidth <= 0.dp,
                                 titleStyle = headerStyle,
+                                chordStyle = chordStyle,
                                 fontScale = fontScale,
                             )
 

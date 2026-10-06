@@ -27,7 +27,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
@@ -76,11 +75,12 @@ import com.pandulapeter.campfire.presentation.resources.song_details_tempo_decre
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo_increase
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo_reset
 import com.pandulapeter.campfire.presentation.ui.components.ActionsMenuItem
+import com.pandulapeter.campfire.presentation.ui.components.CHIP_GAP
+import com.pandulapeter.campfire.presentation.ui.components.SelectableChip
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.KEY_SEPARATOR
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.STEPPER_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.Stepper
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.scaled
-import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filter
@@ -159,10 +159,12 @@ private val PLAY_CORNERS = listOf(Offset(8f, 5f), Offset(19f, 12f), Offset(19f, 
 private val STOP_CORNERS = listOf(Offset(6f, 6f), Offset(18f, 6f), Offset(18f, 18f), Offset(6f, 18f))
 
 /**
- * The song details screen's metronome: the mark that shows and hides the panel the click is played from, in the second
- * accent color - the color of what is played - while the panel is up, and pulsing on every heard beat (a little larger
- * on an accent) unless the flash is off. While the panel is up that pulse is the growing alone, the mark being in the
- * accent color already and the panel's own beat row being right under it. The content description says the tempo the click
+ * The song details screen's metronome: the mark that shows and hides the panel the click is played from, in the primary
+ * color while the panel is up, as a control that is switched on, and pulsing on every heard beat (a little larger on an
+ * accent) unless the flash is off. It is not the second accent the beat row under it is drawn in: the app's own palette
+ * darkens that orange for text on its light half, and a whole filled mark in it reads as red rather than as the fire.
+ * While the panel is up that pulse is the growing alone, the mark being in its color already and the panel's own beat
+ * row being right under it. The content description says the tempo the click
  * would start at, since that is all a screen reader user would otherwise not know.
  */
 @Composable
@@ -190,7 +192,7 @@ internal fun MetronomeButton(
         }
     }
     LaunchedEffect(isPlaying) { if (!isPlaying) pulse.snapTo(0f) }
-    val accentColor = LocalSecondAccentColor.current
+    val accentColor = MaterialTheme.colorScheme.primary
     val baseColor by animateColorAsState(if (isPanelShown) accentColor else LocalContentColor.current)
     IconButton(
         modifier = modifier,
@@ -331,14 +333,21 @@ internal fun TimeSignaturePicker(
 ) = Column(modifier = modifier) {
     FlowRow(
         modifier = Modifier.fillMaxWidth().padding(horizontal = horizontalPadding),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(CHIP_GAP),
+        verticalArrangement = Arrangement.spacedBy(CHIP_GAP),
     ) {
         COMMON_TIME_SIGNATURES.forEach { common ->
-            FilterChip(
-                selected = common == timeSignature,
+            SelectableChip(
+                isSelected = common == timeSignature,
+                role = Role.RadioButton,
                 onClick = { onChange(common) },
-                label = { Text(common.toString()) },
-            )
+            ) { contentColor ->
+                Text(
+                    text = common.toString(),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = contentColor,
+                )
+            }
         }
     }
     Row(

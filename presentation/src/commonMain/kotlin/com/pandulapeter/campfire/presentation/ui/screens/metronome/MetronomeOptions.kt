@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
@@ -27,6 +26,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -43,7 +43,9 @@ import com.pandulapeter.campfire.presentation.resources.metronome_sound_woodbloc
 import com.pandulapeter.campfire.presentation.resources.metronome_tempo_slider
 import com.pandulapeter.campfire.presentation.resources.metronome_volume
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_tempo
+import com.pandulapeter.campfire.presentation.ui.components.CHIP_GAP
 import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
+import com.pandulapeter.campfire.presentation.ui.components.SelectableChip
 import com.pandulapeter.campfire.presentation.ui.metronome.TempoStepper
 import com.pandulapeter.campfire.presentation.ui.metronome.tempoMarking
 import kotlin.math.roundToInt
@@ -129,14 +131,21 @@ internal fun SoundChoice(
     onSelected: (MetronomeSound) -> Unit,
 ) = FlowRow(
     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-    horizontalArrangement = Arrangement.spacedBy(8.dp),
+    horizontalArrangement = Arrangement.spacedBy(CHIP_GAP),
+    verticalArrangement = Arrangement.spacedBy(CHIP_GAP),
 ) {
     MetronomeSound.entries.forEach { sound ->
-        FilterChip(
-            selected = sound == selected,
+        SelectableChip(
+            isSelected = sound == selected,
+            role = Role.RadioButton,
             onClick = { onSelected(sound) },
-            label = { Text(sound.label()) },
-        )
+        ) { contentColor ->
+            Text(
+                text = sound.label(),
+                style = MaterialTheme.typography.labelLarge,
+                color = contentColor,
+            )
+        }
     }
 }
 

@@ -47,8 +47,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.chordpro.ChordProDuration
@@ -189,6 +192,9 @@ private val ChordProMetadata.hasPlayingValues
  * sections decide (see `SectionMotion`): never while a pinch or a window edge being dragged changes the layout every frame.
  * @param titleStyle The style of the section titles of the lyrics, which the card's own title follows as the text is
  * scaled; what the card holds scales with [fontScale] the way the lyrics do.
+ * @param chordStyle The style the chords of the lyrics are set in, already scaled, which the line of text read only mode
+ * draws the four values in: the key and the capo are read in the chords' accent color, and in the chords' size they read
+ * as part of what is played rather than as a caption above it.
  */
 @Composable
 internal fun SongMetadataSection(
@@ -200,6 +206,7 @@ internal fun SongMetadataSection(
     readsCapoAndTime: Boolean,
     animatesControls: Boolean,
     titleStyle: TextStyle,
+    chordStyle: TextStyle,
     fontScale: Float,
 ) = Column(modifier = modifier) {
     val hasSongInfoCard = isSongInfoShown && (songInfoEditing != null || metadata.hasSongInfo)
@@ -216,7 +223,7 @@ internal fun SongMetadataSection(
             modifier = Modifier.padding(top = if (hasSongInfoCard) 12.dp else 0.dp),
             metadata = metadata,
             readsCapoAndTime = readsCapoAndTime,
-            fontScale = fontScale,
+            style = chordStyle,
         )
     } else {
         SongPlayingControlsRow(
@@ -234,20 +241,27 @@ private fun SongPlayingMetadata(
     modifier: Modifier = Modifier,
     metadata: ChordProMetadata,
     readsCapoAndTime: Boolean,
-    fontScale: Float,
+    style: TextStyle,
 ) {
+    // Only the key and the capo are in the accent color, since that is the color of the chords, which are what those two
+    // decide; the tempo and the time signature are the click's.
+    val accentColor = LocalSecondAccentColor.current
     val values = listOfNotNull(
-        metadata.key?.takeIf { it.isNotBlank() },
-        metadata.capo?.takeIf { readsCapoAndTime || it != 0 }?.let { stringResource(Res.string.song_details_capo, it) },
-        metadata.tempo?.takeIf { it.isNotBlank() }?.let { textResource(Res.string.song_details_tempo, it) },
-        metadata.time?.takeIf { it.isNotBlank() }?.let { textResource(Res.string.song_details_time, it) },
+        metadata.key?.takeIf { it.isNotBlank() }?.let { it to true },
+        metadata.capo?.takeIf { readsCapoAndTime || it != 0 }?.let { stringResource(Res.string.song_details_capo, it) to true },
+        metadata.tempo?.takeIf { it.isNotBlank() }?.let { textResource(Res.string.song_details_tempo, it) to false },
+        metadata.time?.takeIf { it.isNotBlank() }?.let { textResource(Res.string.song_details_time, it) to false },
     )
     if (values.isNotEmpty()) {
         Text(
             modifier = modifier.padding(horizontal = 12.dp),
-            text = values.joinToString("  •  "),
-            style = MaterialTheme.typography.labelLarge.scaled(fontScale),
-            color = LocalSecondAccentColor.current,
+            text = buildAnnotatedString {
+                values.forEachIndexed { index, (value, isAccented) ->
+                    if (index > 0) append("  •  ")
+                    if (isAccented) withStyle(SpanStyle(color = accentColor)) { append(value) } else append(value)
+                }
+            },
+            style = style,
         )
     }
 }
@@ -354,7 +368,10 @@ private fun SongPlayingControlsRow(
 /** What [BalancedRows] follows each of [SongPlayingControlsRow]'s items by, since not all four are always among them. */
 private enum class PlayingControlId { KEY, CAPO, TEMPO, TIME }
 
-/** One of [SongPlayingControlsRow]'s items: what it is, in the accent color the line of text uses, and what sets it. */
+/**
+ * One of [SongPlayingControlsRow]'s items: what it is and what sets it. The label is in the content color, since the
+ * controls themselves already set the row apart.
+ */
 @Composable
 private fun PlayingControl(
     modifier: Modifier = Modifier,
@@ -369,7 +386,6 @@ private fun PlayingControl(
         modifier = Modifier.padding(end = PLAYING_CONTROL_LABEL_GAP),
         text = label,
         style = MaterialTheme.typography.labelLarge.scaled(fontScale),
-        color = LocalSecondAccentColor.current,
     )
     control()
 }

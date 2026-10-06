@@ -14,6 +14,8 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -22,6 +24,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -156,11 +159,12 @@ private fun BeatBlock(
     val shape = RoundedCornerShape(minOf(8.dp, maxHeight / 6))
     // The press belongs to the whole column rather than to the block drawn in it: a muted beat is a sliver less than a
     // third as tall as an accent, and in the song details panel's small row it would be a few millimeters of a target.
+    // The ripple is the block's, though, so that what lights up under the finger is the beat that changes.
+    val interactionSource = remember { MutableInteractionSource() }
     Box(
         modifier = modifier
             .height(maxHeight)
-            .clip(shape)
-            .clickable(role = Role.Button, onClick = onClick)
+            .clickable(interactionSource = interactionSource, indication = null, role = Role.Button, onClick = onClick)
             .semantics { contentDescription = description },
         contentAlignment = Alignment.BottomCenter,
     ) {
@@ -169,6 +173,7 @@ private fun BeatBlock(
                 .fillMaxWidth()
                 .height(height)
                 .clip(shape)
+                .indication(interactionSource, ripple())
                 .then(if (level == BeatLevel.MUTED) Modifier.border(1.dp, outlineColor, shape) else Modifier)
                 // Drawn rather than composed from the flash, so that a beat repaints the block instead of recomposing the row.
                 .drawBehind { drawRect(lerp(baseColor, flashColor, flash())) },

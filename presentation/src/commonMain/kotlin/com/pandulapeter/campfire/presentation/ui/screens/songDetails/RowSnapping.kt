@@ -29,6 +29,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.unit.IntSize
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
@@ -360,9 +361,41 @@ internal class RowSnapFlingBehavior(
 ) : FlingBehavior {
 
     var rows by mutableStateOf(SongRows())
+        private set
 
     /** What of the viewport the song is read through, which the page writes whenever its insets or text size change. */
     var readingWindow by mutableStateOf(ReadingWindow())
+
+    /** Where the reader is in the song, see [keepReaderInPlace]. */
+    private var anchor: ReadingAnchor? = null
+
+    /** The viewport the last [rows] were placed in. */
+    private var placedViewport: IntSize? = null
+
+    /**
+     * Takes the [placedRows] the layout put the song in within a [viewport], in the layout pass that placed them. Where only
+     * the viewport's height changed - the metronome panel opening or closing above the page, the short window's title row
+     * collapsing - the reader is put back on their place in that same pass, before the scroll places the song: every row is
+     * padded to that height, so every divider below the top of the song moves with it, and a scroll left where it was until
+     * the change is over has the divider above the row being read slide into view for as long as the change lasts, and the
+     * song only catch up after it. A change of the width or of the text size reflows the song, and is left to
+     * [keepReaderInPlace].
+     */
+    fun onRowsPlaced(placedRows: SongRows, viewport: IntSize) {
+        val previousViewport = placedViewport
+        placedViewport = viewport
+        if (placedRows == rows) return
+        val currentAnchor = anchor
+        val isOnlyHeightChanged = previousViewport != null && previousViewport.width == viewport.width && previousViewport.height != viewport.height
+        if (currentAnchor != null && isOnlyHeightChanged && !scrollState.isScrollInProgress) {
+            anchoredScrollOffset(currentAnchor, placedRows, viewport.height, Int.MAX_VALUE, readingWindow.top)?.let { target ->
+                // Clamped to the extent of the previous layout, which only a reader near the end of the song can be past;
+                // the rest of the way is then left to keepReaderInPlace.
+                scrollState.dispatchRawDelta((target - scrollState.value).toFloat())
+            }
+        }
+        rows = placedRows
+    }
 
     override suspend fun ScrollScope.performFling(initialVelocity: Float): Float {
         val start = scrollState.value.toFloat()
@@ -427,10 +460,10 @@ internal class RowSnapFlingBehavior(
      * lays the song out on every frame while its sections glide to their new places, and a scroll following each of
      * those layouts under them flickers. It is animated, like a fling coming to rest, and waits for the end of the
      * scroll to have caught up with the new layout where that is still growing. A scroll of the reader's own, begun
-     * before or during the move, is left alone, and is where the reader is once it comes to rest.
+     * before or during the move, is left alone, and is where the reader is once it comes to rest. A viewport that only
+     * changes height is followed frame by frame instead (see [onRowsPlaced]), which leaves this nothing to move.
      */
     suspend fun keepReaderInPlace(): Nothing = coroutineScope {
-        var anchor: ReadingAnchor? = null
         var isMoving = false
         // Where a move of this function's own left the scroll, which is not somewhere the reader chose.
         var movedTo: Int? = null

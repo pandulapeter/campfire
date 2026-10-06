@@ -92,6 +92,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.offset
@@ -1123,8 +1124,10 @@ private fun SongDetailsPage(
                 // The padding is inside the scroll, so a row is at the top of the viewport once the song is scrolled by
                 // its position plus the padding above it - all but the first, which is read at the top of the song.
                 onRowsPlaced = { rows ->
-                    val offsetRows = rows.belowPadding(topPaddingPx)
-                    if (offsetRows != flingBehavior.rows) flingBehavior.rows = offsetRows
+                    flingBehavior.onRowsPlaced(
+                        placedRows = rows.belowPadding(topPaddingPx),
+                        viewport = with(density) { IntSize(maxWidth.roundToPx(), maxHeight.roundToPx()) },
+                    )
                 },
                 rowViewportHeight = maxHeight,
                 rowViewportBottomPadding = bottomPadding,

@@ -11,9 +11,6 @@
 ## Bugs / issues
 - Per-section metronome / time signature changes are not yet supported
 - No way to enter BPM using the keyboard
-- Incorrect ripple effect on top of time signature and metronome sound chips in light mode
-- Improve touch feedback on top of metronome accent bars (clip to content)
-- Active metronome icon color in light mode is wrong (for the default theme)
 - More width for setlist song cards
 - Reorder songs should hide the other setlists while trying to persist the focused song
 
