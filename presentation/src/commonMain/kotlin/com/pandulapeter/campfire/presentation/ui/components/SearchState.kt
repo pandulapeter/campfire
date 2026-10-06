@@ -13,6 +13,7 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import kotlinx.coroutines.flow.Flow
@@ -21,7 +22,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 
 /**
  * The search of one list screen: whether its field is open, and what is in it.
@@ -45,6 +46,9 @@ internal class SearchState(
     private val _isOpen = MutableStateFlow(isInitiallyOpen)
     val isOpen: StateFlow<Boolean> = _isOpen.asStateFlow()
 
+    /** [isOpen] as snapshot state, written together with it, so that [activeQuery] reads it and the text in one snapshot. */
+    private var isOpenSnapshot by mutableStateOf(isInitiallyOpen)
+
     /**
      * The field's own state, held here rather than remembered in the composition so that the text *and the caret*
      * survive a trip to another screen: a search left open is come back to with the caret where the typing stopped
@@ -65,10 +69,13 @@ internal class SearchState(
      */
     var backProgress by mutableFloatStateOf(0f)
 
-    /** What the list is actually narrowed by, which is nothing at all while the search is closed. */
-    val activeQuery: Flow<String> = combine(_isOpen, snapshotFlow { textFieldState.text.toString() }) { isOpen, query ->
-        if (isOpen) query else ""
-    }
+    /**
+     * What the list is actually narrowed by, which is nothing at all while the search is closed. The open state and the
+     * text are read in one snapshot, so that reopening never narrows the list by the query it is about to clear: a
+     * flow of the one combined with a snapshot flow of the other would see the search open a snapshot apply before it
+     * saw the field emptied.
+     */
+    val activeQuery: Flow<String> = snapshotFlow { if (isOpenSnapshot) textFieldState.text.toString() else "" }.distinctUntilChanged()
 
     /**
      * Whether the field still owes the latest opening the focus and the keyboard. The field takes it once
@@ -82,11 +89,13 @@ internal class SearchState(
     fun open() {
         textFieldState.clearText()
         isFocusOwed = true
+        isOpenSnapshot = true
         _isOpen.value = true
     }
 
     fun close() {
         isFocusOwed = false
+        isOpenSnapshot = false
         _isOpen.value = false
     }
 
@@ -96,6 +105,7 @@ internal class SearchState(
      */
     fun reopen() {
         isFocusOwed = true
+        isOpenSnapshot = true
         _isOpen.value = true
     }
 
