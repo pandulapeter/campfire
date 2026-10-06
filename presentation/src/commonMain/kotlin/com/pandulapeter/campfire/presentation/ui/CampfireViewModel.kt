@@ -1655,9 +1655,11 @@ class CampfireViewModel(
     /**
      * Rebuilds the stack around a top level screen. Refused while an editor on the stack holds unsaved text: the
      * navigation chrome that calls this is hidden over the editor, and nothing else may take that text off the screen
-     * without asking, see [navigateBack].
+     * without asking, see [navigateBack]. Refused too for a screen whose feature is switched off: its item stays on
+     * screen, and tappable, for as long as it takes to shrink away.
      */
     fun selectTopLevelDestination(destination: CampfireDestination.TopLevel) {
+        if (destination !in topLevelDestinations.value) return
         if (backStack.lastOrNull() == destination) {
             // Pressing the item of the screen that is already open takes that screen back to its resting state.
             if (destination != CampfireDestination.Settings) currentSearch?.close()

@@ -55,8 +55,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
+import androidx.compose.material3.NavigationRailItemDefaults
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -66,6 +68,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.WideNavigationRail
 import androidx.compose.material3.WideNavigationRailItem
+import androidx.compose.material3.WideNavigationRailItemDefaults
 import androidx.compose.material3.WideNavigationRailValue
 import androidx.compose.material3.rememberWideNavigationRailState
 import androidx.compose.runtime.Composable
@@ -1097,6 +1100,9 @@ private val EXPANDED_NAVIGATION_RAIL_TOP_PADDING = 4.dp
  * [CampfireScreens]), which moves with the screen and which the card covers.
  *
  * @param destinations The top level screens of the features switched on, see `CampfireViewModel.topLevelDestinations`.
+ *   The item of one that is not is disabled while it shrinks away, so that it takes no tap and no focus and is not
+ *   announced, and drawn in its unselected colors when disabled, since a disabled item is dimmed - in one frame on the
+ *   wide rail - and nothing but the shrink should change on screen.
  */
 @Composable
 private fun NavigationChrome(
@@ -1121,6 +1127,10 @@ private fun NavigationChrome(
                         modifier = Modifier.collapsingNavigationItem(presence = presence, isHorizontal = false),
                         selected = destination == currentTopLevelDestination,
                         onClick = { onDestinationSelected(destination) },
+                        enabled = destination in destinations,
+                        colors = WideNavigationRailItemDefaults.colors().let {
+                            it.copy(disabledIconColor = it.unselectedIconColor, disabledTextColor = it.unselectedTextColor)
+                        },
                         icon = { Icon(painter = painterResource(destination.icon), contentDescription = null) },
                         label = {
                             Text(
@@ -1143,6 +1153,10 @@ private fun NavigationChrome(
                         modifier = Modifier.collapsingNavigationItem(presence = presence, isHorizontal = false),
                         selected = destination == currentTopLevelDestination,
                         onClick = { onDestinationSelected(destination) },
+                        enabled = destination in destinations,
+                        colors = NavigationRailItemDefaults.colors().let {
+                            it.copy(disabledIconColor = it.unselectedIconColor, disabledTextColor = it.unselectedTextColor)
+                        },
                         icon = { Icon(painter = painterResource(destination.icon), contentDescription = null) },
                         label = { Text(stringResource(destination.label)) },
                     )
@@ -1161,6 +1175,10 @@ private fun NavigationChrome(
                             .collapsingNavigationItem(presence = presence, isHorizontal = true),
                         selected = destination == currentTopLevelDestination,
                         onClick = { onDestinationSelected(destination) },
+                        enabled = destination in destinations,
+                        colors = NavigationBarItemDefaults.colors().let {
+                            it.copy(disabledIconColor = it.unselectedIconColor, disabledTextColor = it.unselectedTextColor)
+                        },
                         icon = { Icon(painter = painterResource(destination.icon), contentDescription = null) },
                         label = { Text(stringResource(destination.label)) },
                     )
