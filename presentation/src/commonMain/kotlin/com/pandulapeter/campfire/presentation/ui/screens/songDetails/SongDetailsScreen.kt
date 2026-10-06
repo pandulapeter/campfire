@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.EnterExitState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
@@ -443,6 +444,10 @@ internal fun SongDetailsScreen(
                         )
                         .graphicsLayer { alpha = titleAlpha },
                     targetState = currentSong,
+                    // Keyed by the file, so that only paging to another song cross-fades the block: the same song
+                    // arriving again (a tag added, a tempo set, a sync run) is recomposed in place, and what changed in
+                    // it animates on its own below.
+                    contentKey = { it?.fileName },
                     transitionSpec = { fadeIn() togetherWith fadeOut() },
                 ) { song ->
                     // What the song sounds like where it is being read, the way a song card says it: the key with the
@@ -468,31 +473,44 @@ internal fun SongDetailsScreen(
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        song?.coverArtUrl?.let { url ->
-                            // Only a window resized across the width that makes room for it animates: one that opens
-                            // the screen with the cover out or in shows it that way from its first frame.
-                            AnimatedVisibility(
-                                visible = showsCoverInBar,
-                                enter = fadeIn() + expandHorizontally(),
-                                exit = fadeOut() + shrinkHorizontally(),
-                            ) {
-                                CoverArtImage(
-                                    modifier = Modifier.padding(end = APP_BAR_COVER_GAP).size(APP_BAR_COVER_SIZE),
-                                    url = url,
-                                )
+                        // Only a window resized across the width that makes room for it, or a cover set or removed, animates:
+                        // one that opens the screen with the cover out or in shows it that way from its first frame. The
+                        // last address is kept while a removed cover leaves, and is the page's own, since this is
+                        // composed afresh for every song.
+                        val coverUrl = song?.coverArtUrl
+                        var lastCoverUrl by remember { mutableStateOf(coverUrl) }
+                        if (coverUrl != null) lastCoverUrl = coverUrl
+                        AnimatedVisibility(
+                            visible = showsCoverInBar && coverUrl != null,
+                            enter = fadeIn() + expandHorizontally(),
+                            exit = fadeOut() + shrinkHorizontally(),
+                        ) {
+                            lastCoverUrl?.let { url ->
+                                Crossfade(targetState = url) {
+                                    CoverArtImage(
+                                        modifier = Modifier.padding(end = APP_BAR_COVER_GAP).size(APP_BAR_COVER_SIZE),
+                                        url = it,
+                                    )
+                                }
                             }
                         }
                         Column {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
-                                Text(
+                                // Edited in place (Edit song details) rather than paged to, so it fades in place.
+                                AnimatedContent(
                                     modifier = Modifier.weight(1f, fill = false),
-                                    text = song?.title.orEmpty(),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                )
+                                    targetState = song?.title.orEmpty(),
+                                    transitionSpec = { fadeIn() togetherWith fadeOut() },
+                                ) { title ->
+                                    Text(
+                                        text = title,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                }
                                 // What says that the title opens the sheet, shown only while a tap does: scrolled down,
                                 // a tap scrolls back to the top instead. Its room is kept while it is hidden wherever the
                                 // sheet is offered at all, so that a long title is not cut off afresh every time the
@@ -521,14 +539,19 @@ internal fun SongDetailsScreen(
                                 // song says about itself: the whole title block is what the cover beside it is as tall
                                 // as, and a bar that changed height as the pager moved from a song with an artist to
                                 // one without would take the lyrics with it.
-                                Text(
+                                AnimatedContent(
                                     modifier = Modifier.weight(1f, fill = false),
-                                    text = song?.artist.orEmpty(),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                )
+                                    targetState = song?.artist.orEmpty(),
+                                    transitionSpec = { fadeIn() togetherWith fadeOut() },
+                                ) { artist ->
+                                    Text(
+                                        text = artist,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                }
                                 SongHeaderNote(
                                     text = headerKey,
                                     description = headerKey?.let { textResource(Res.string.songs_key, it) },
