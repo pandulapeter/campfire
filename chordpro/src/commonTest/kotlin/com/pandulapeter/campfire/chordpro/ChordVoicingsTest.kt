@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordVoicing
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -114,6 +115,16 @@ class ChordVoicingsTest {
         assertEquals("12 16 19 / 4", ChordVoicings.write(ChordVoicing.Keys(listOf(12, 16, 19), bass = 4)))
         assertEquals(ChordVoicing.Fretted(listOf(null, 3, 2, 0, 1, 0)), ChordVoicings.read("x 3 2 0 1 0", ChordInstrument.GUITAR))
         assertEquals(listOf(0, 3, 2, 0, 1, 0), (ChordVoicings.read("x 3 2 0 1 0", ChordInstrument.GUITAR, ChordProChords.parse("C")) as ChordVoicing.Fretted).fingers)
+        listOf("0 4 48", "0 4 99999999", "4 7 / -5", "4 7 / 12").forEach { assertNull(ChordVoicings.read(it, ChordInstrument.KEYBOARD), it) }
+        listOf("0 4 47", "4 7 / 11").forEach { assertNotNull(ChordVoicings.read(it, ChordInstrument.KEYBOARD), it) }
+        listOf("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B").forEach { root ->
+            listOf("", "m7", "maj9", "13#11", "/E").forEach { quality ->
+                val chord = ChordProChords.parse(root + quality)!!
+                ChordVoicings.all(chord, ChordInstrument.KEYBOARD).forEach { shape ->
+                    assertEquals(shape, ChordVoicings.read(ChordVoicings.write(shape), ChordInstrument.KEYBOARD, chord), root + quality)
+                }
+            }
+        }
     }
 
     @Test

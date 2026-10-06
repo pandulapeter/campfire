@@ -72,8 +72,8 @@ object ChordVoicings {
         val words = shape.trim().split(' ').filter { it.isNotEmpty() }
         if (instrument == ChordInstrument.KEYBOARD) {
             val separator = words.indexOf(BASS_SEPARATOR)
-            val notes = (if (separator < 0) words else words.subList(0, separator)).map { it.toIntOrNull()?.takeIf { note -> note >= 0 } ?: return null }
-            val bass = if (separator < 0) null else words.getOrNull(separator + 1)?.toIntOrNull() ?: return null
+            val notes = (if (separator < 0) words else words.subList(0, separator)).map { it.toIntOrNull()?.takeIf { note -> note in 0..MAX_KEY } ?: return null }
+            val bass = if (separator < 0) null else words.getOrNull(separator + 1)?.toIntOrNull()?.takeIf { it in 0 until 12 } ?: return null
             if (notes.isEmpty() || separator >= 0 && words.size != separator + 2) return null
             return ChordVoicing.Keys(notes.distinct().sorted(), bass)
         }
@@ -289,5 +289,8 @@ object ChordVoicings {
     private const val MAX_HOLDABLE_FRET = 15
     private const val MAX_FRET = 24
     private const val MAX_KEYS = 5
+
+    /** The highest key a keyboard shape can press: four octaves above the diagram's C, past anything [keyboard] writes. */
+    private const val MAX_KEY = 47
     private const val MAX_CACHED_DEFAULTS = 256
 }
