@@ -18,8 +18,9 @@ data class ImportResult(
     val importedSetlistFileNames: List<String> = emptyList(),
     val skippedFileNames: List<String> = emptyList(),
     /**
-     * Files the library already had under the same name and with the same content. Counted separately from the
-     * skipped ones: nothing went wrong with them, there was simply nothing left to do, see [ImportPlan.Status].
+     * Files the library already had under the same name and with the same content, each named once, however many copies
+     * the batch brought. Counted separately from the skipped ones: nothing went wrong with them, there was simply nothing
+     * left to do, see [ImportPlan.Status].
      */
     val duplicateFileNames: List<String> = emptyList(),
     /** Files the import would have looked inside but did not read, see [ImportPlan.oversizedFileNames]. */

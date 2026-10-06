@@ -214,11 +214,13 @@ class ImportFilesUseCaseImpl internal constructor(
             importedSongFileNames = importedSongs.map { it.fileName },
             importedSetlistFileNames = importedSetlists.map { it.fileName },
             skippedFileNames = plan.skippedFileNames,
-            skippedConflictingFileNames = skippedConflicts,
+            // Both lists name library files and are filled once per incoming entry, so a song the batch brings twice
+            // would be named twice; and a repeat of a song this import wrote was not in the library before it.
+            skippedConflictingFileNames = skippedConflicts.distinct(),
             isFailed = isFailed,
             failedFileNames = failedFileNames,
             unprocessedFileNames = unprocessedFileNames,
-            duplicateFileNames = duplicateFileNames,
+            duplicateFileNames = duplicateFileNames.distinct() - importedSongs.mapTo(hashSetOf()) { it.fileName },
             oversizedFileNames = plan.oversizedFileNames,
             unreadableDocumentFileNames = plan.unreadableDocumentFileNames,
             convertedSongFileNames = convertedSongFileNames,

@@ -257,15 +257,46 @@ class ImportFilesUseCaseImplTest {
         )
         val skipped = FakeSongRepository(files = mutableMapOf("x.cho" to A))
         val skippedResult = ImportFilesUseCaseImpl(skipped, FakeSetlistRepository()).invoke(plan(), ImportConflictResolution.SKIP)
-        assertEquals(listOf("x.cho", "x.cho"), skippedResult.skippedConflictingFileNames)
+        assertEquals(listOf("x.cho"), skippedResult.skippedConflictingFileNames)
         assertTrue(skippedResult.duplicateFileNames.isEmpty())
         assertEquals(mapOf("x.cho" to A), skipped.files)
 
         val kept = FakeSongRepository(files = mutableMapOf("x.cho" to A))
         val keptResult = ImportFilesUseCaseImpl(kept, FakeSetlistRepository()).invoke(plan(), ImportConflictResolution.KEEP_BOTH)
         assertEquals(listOf("x_2.cho"), keptResult.importedSongFileNames)
-        assertEquals(listOf("x_2.cho"), keptResult.duplicateFileNames)
+        assertTrue(keptResult.duplicateFileNames.isEmpty())
         assertTrue(keptResult.skippedConflictingFileNames.isEmpty())
+    }
+
+    @Test
+    fun `a song the batch brings twice is listed once as already in the library`() = runTest {
+        val songs = FakeSongRepository(files = mutableMapOf("x.cho" to A))
+        val plan = ImportPlan(
+            songs = listOf(
+                ImportPlan.SongEntry(fileName = "x.cho", text = A, status = ImportPlan.Status.IDENTICAL, sourceFileName = "a/x.cho"),
+                ImportPlan.SongEntry(fileName = "x.cho", text = A, status = ImportPlan.Status.IDENTICAL, sourceFileName = "b/x.cho"),
+            ),
+        )
+
+        val result = ImportFilesUseCaseImpl(songs, FakeSetlistRepository()).invoke(plan, ImportConflictResolution.KEEP_BOTH)
+
+        assertEquals(listOf("x.cho"), result.duplicateFileNames)
+    }
+
+    @Test
+    fun `a setlist the batch brings twice is listed once as already in the library`() = runTest {
+        val setlists = FakeSetlistRepository().apply { files["set.setlist.json"] = setlist(emptyList()) }
+        val plan = ImportPlan(
+            setlists = listOf(
+                ImportPlan.SetlistEntry("set.setlist.json", setlist(emptyList()), ImportPlan.Status.IDENTICAL, "a/set.setlist.json"),
+                ImportPlan.SetlistEntry("set.setlist.json", setlist(emptyList()), ImportPlan.Status.IDENTICAL, "b/set.setlist.json"),
+            ),
+        )
+
+        val result = ImportFilesUseCaseImpl(FakeSongRepository(mutableMapOf()), setlists).invoke(plan, ImportConflictResolution.KEEP_BOTH)
+
+        assertEquals(listOf("set.setlist.json"), result.duplicateFileNames)
+        assertEquals(listOf("set.setlist.json"), setlists.files.keys.toList())
     }
 
     @Test
