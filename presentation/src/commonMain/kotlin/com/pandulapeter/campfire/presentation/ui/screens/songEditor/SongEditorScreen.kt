@@ -959,7 +959,7 @@ private fun RevertOnRequest(
     viewModel.editorRevertRequests.collect {
         viewModel.songTexts.value[fileName]?.let { text ->
             summaryCache.clear()
-            textFieldState.replaceAll(viewModel.editorTextOf(text))
+            textFieldState.replaceAll(viewModel.editorTextOf(text), isSelectionMapped = false)
         }
     }
 }
@@ -981,7 +981,7 @@ private fun EditOnRequest(
         val edited = request.edit(text)
         if (edited != text) {
             summaryCache.clear()
-            textFieldState.replaceAll(edited)
+            textFieldState.replaceAll(edited, isSelectionMapped = true)
         }
     }
 }
@@ -1027,7 +1027,7 @@ private fun FollowFileWhileUntouched(
         previous = current
         if (current != null && base != null && current != base && textFieldState.text.contentEquals(base)) {
             summaryCache.clear()
-            textFieldState.replaceAll(current)
+            textFieldState.replaceAll(current, isSelectionMapped = true)
         }
     }
 }
@@ -1036,15 +1036,24 @@ private fun FollowFileWhileUntouched(
  * Replaces everything, for the rewrites that touch the whole document. The undo history records such an edit as
  * the whole text twice and keeps a hundred of them, which for a long document is more memory than a phone hands
  * out, so there the history starts over with the rewrite: it can still be undone, what came before it cannot.
+ *
+ * @param isSelectionMapped Whether the caret and the selection stay next to the text they were next to
+ *   ([editedOffset]), for an edit that changes a few places of the text - a sheet of the menus, a save's respelling,
+ *   the file changing underneath. A revert has nothing to map by and keeps the caret's offset.
  */
 @OptIn(ExperimentalFoundationApi::class)
-private fun TextFieldState.replaceAll(text: String) {
-    if (this.text.length > LONG_DOCUMENT_LENGTH) undoState.clearHistory()
+private fun TextFieldState.replaceAll(text: String, isSelectionMapped: Boolean) {
+    val before = this.text.toString()
+    if (before.length > LONG_DOCUMENT_LENGTH) undoState.clearHistory()
     edit {
-        val caret = selection.start.coerceAtMost(text.length)
+        val newSelection = if (isSelectionMapped) {
+            TextRange(editedOffset(before, text, selection.start), editedOffset(before, text, selection.end))
+        } else {
+            TextRange(selection.start.coerceAtMost(text.length))
+        }
         delete(0, length)
         insert(0, text)
-        selection = TextRange(caret)
+        selection = newSelection
     }
 }
 
