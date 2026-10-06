@@ -157,6 +157,28 @@ class ImportFilesUseCaseImplTest {
     }
 
     @Test
+    fun `a file of an unknown type is unpacked by its content, and a document is never`() = runTest {
+        val unpacked = mutableListOf<Int>()
+        val archive = object : ArchiveRepository {
+            override suspend fun unpack(archive: ByteArray, maxSize: Long): List<ImportedFile> {
+                unpacked += archive.size
+                return listOf(ImportedFile("a.cho", "{title: A}".encodeToByteArray()))
+            }
+            override suspend fun pack(files: Map<String, ByteArray>) = error("not used")
+        }
+        val zip = byteArrayOf(0x50, 0x4B, 3, 4, 0)
+        val plan = prepare(FakeSongRepository(mutableMapOf()), archive = archive)(
+            listOf(ImportedFile("library.backup", zip), ImportedFile("set.sbp", byteArrayOf(1, 2)), ImportedFile("notes.bin", byteArrayOf(1))),
+        )
+        assertEquals(listOf(5, 2), unpacked)
+        assertEquals(listOf("notes.bin"), plan.skippedFileNames)
+        assertEquals(listOf("a.cho", "a.cho"), plan.songs.map { it.sourceFileName })
+        // A Word document is a zip archive too, and is read as the document it says it is.
+        prepare(FakeSongRepository(mutableMapOf()), archive = archive)(listOf(ImportedFile("sheet.docx", zip)))
+        assertEquals(listOf(5, 2), unpacked)
+    }
+
+    @Test
     fun `converted replacements are counted and already imported conversions are not`() = runTest {
         val songs = FakeSongRepository(mutableMapOf("sheet.cho" to "old words\n"))
         val plain = ImportedFile("sheet.txt", "Am     C\nHello world".encodeToByteArray())

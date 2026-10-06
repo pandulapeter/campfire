@@ -36,10 +36,11 @@ object ImportLimits {
 
     /**
      * How many bytes of a file called [name] an import reads, which is none for a file it would not look inside.
-     * Asked before the file is opened wherever the name is known first, which is everywhere.
+     * Asked before the file is opened wherever the name is known first, which is everywhere. A name it does not know at
+     * all is a question for [ImportBudget], which reads such a file to see whether it is an archive under another name.
      */
     fun maxSizeOf(name: String) = when {
-        name.endsWith(LibraryFiles.ARCHIVE_EXTENSION, ignoreCase = true) -> MAX_IMPORT_SIZE
+        LibraryFiles.isArchiveFileName(name) -> MAX_IMPORT_SIZE
         (LibraryFiles.DOCUMENT_EXTENSIONS + LibraryFiles.LEGACY_DOCUMENT_EXTENSION).any { name.endsWith(it, ignoreCase = true) } -> MAX_DOCUMENT_FILE_SIZE
         LibraryFiles.IMPORTABLE_EXTENSIONS.any { name.endsWith(it, ignoreCase = true) } -> MAX_TEXT_FILE_SIZE
         else -> 0L
@@ -62,12 +63,29 @@ class ImportBudget {
      *   file of unknown size is found out. Null for a file that cannot be read, which is then left out.
      */
     inline fun read(name: String, size: Long?, readBytes: (limit: Long) -> ByteArray?): ImportedFile? {
+        if (!LibraryFiles.isImportableFileName(name)) return readUnknown(name, size, readBytes)
         val ownLimit = ImportLimits.maxSizeOf(name)
-        if (ownLimit == 0L) return ImportedFile.unread(name)
         val limit = minOf(ownLimit, remaining)
         if (size != null && size > limit) return ImportedFile.unread(name, isTooLarge = true)
         val bytes = readBytes(limit) ?: return null
         if (bytes.size > limit) return ImportedFile.unread(name, isTooLarge = true)
+        remaining -= bytes.size
+        return ImportedFile(name = name, bytes = bytes)
+    }
+
+    /**
+     * A file whose name the import does not know is read as an archive would be, since another app's library backup is
+     * often a zip archive under a name of its own, and kept only where its bytes say it is one. Anything else - the
+     * photo or the recording picked with the songs - is handed back unread and gives back what it took, so that it
+     * neither crowds the files after it out of the selection nor is reported as too large rather than as unsupported:
+     * nothing says it was ever meant to be imported.
+     */
+    @PublishedApi
+    internal inline fun readUnknown(name: String, size: Long?, readBytes: (limit: Long) -> ByteArray?): ImportedFile? {
+        val limit = remaining
+        if (size != null && size > limit) return ImportedFile.unread(name)
+        val bytes = readBytes(limit) ?: return null
+        if (bytes.size > limit || !LibraryFiles.isZipArchive(bytes)) return ImportedFile.unread(name)
         remaining -= bytes.size
         return ImportedFile(name = name, bytes = bytes)
     }

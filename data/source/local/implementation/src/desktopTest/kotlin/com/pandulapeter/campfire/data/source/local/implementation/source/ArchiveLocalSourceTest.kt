@@ -101,6 +101,26 @@ class ArchiveLocalSourceTest {
     }
 
     @Test
+    fun `reads a SongbookPro backup inside an archive as its songs and sets, without its bookkeeping`() = runBlocking {
+        val data = """1.0
+            {"songs": [{"Id": 1, "name": "A", "content": "[C]La"}],
+            "sets": [{"details": {"Id": 1, "name": "Gig"}, "contents": [{"Order": 0, "SongId": 1, "ItemType": 1}]}], "folders": []}"""
+        val backup = ZipWriter.write(
+            listOf(
+                ZipEntry("settings.hive", byteArrayOf(1, 2, 3)),
+                ZipEntry("dataFile.hash", "9ed4cb9934f75a0e".encodeToByteArray()),
+                ZipEntry("dataFile.txt", data.encodeToByteArray()),
+            ),
+        )
+        val archive = ZipWriter.write(listOf(ZipEntry("b.cho", "{title: B}".encodeToByteArray()), ZipEntry("Library.sbpbackup", backup)))
+
+        val files = archiveLocalSource.unpack(archive = archive, maxSize = ImportLimits.MAX_IMPORT_SIZE)
+
+        assertEquals(listOf("b.cho", "A.cho", "Gig.setlist.json"), files.map { it.name })
+        assertEquals("{title: A}\n[C]La\n", files[1].bytes.decodeToString())
+    }
+
+    @Test
     fun `reports what it did not read instead of failing`() = runBlocking {
         val archive = ZipWriter.write(
             listOf(

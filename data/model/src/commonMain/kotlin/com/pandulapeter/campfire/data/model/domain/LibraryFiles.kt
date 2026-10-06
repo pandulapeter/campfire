@@ -35,6 +35,14 @@ object LibraryFiles {
 
     const val ARCHIVE_EXTENSION = ".zip"
 
+    /**
+     * The library backups of other apps that are zip archives under a name of their own: SongbookPro's whole-library
+     * `.sbpbackup` and the `.sbp` it shares a set or a song as. Named so that a picker offers them and an archive is
+     * looked inside when it holds one; a file under any other unknown name is still unpacked when its bytes are a zip
+     * archive (see [isZipArchive]), so this list is about being offered, not about being understood.
+     */
+    val LIBRARY_BACKUP_EXTENSIONS = listOf(".sbpbackup", ".sbp")
+
     /** Document inputs converted locally to ChordPro, never registered as system Open with file types. */
     val DOCUMENT_EXTENSIONS = listOf(".pdf", ".docx")
 
@@ -46,7 +54,23 @@ object LibraryFiles {
      * zip and JSON belong to everyone: the app happily reads one that is handed to it, but claiming them system wide would
      * put Campfire in the way of every archive and note on the device.
      */
-    val IMPORTABLE_EXTENSIONS = SONG_EXTENSIONS + DOCUMENT_EXTENSIONS + listOf(TEXT_EXTENSION, ARCHIVE_EXTENSION, ".json", LEGACY_DOCUMENT_EXTENSION)
+    val IMPORTABLE_EXTENSIONS = SONG_EXTENSIONS + DOCUMENT_EXTENSIONS + LIBRARY_BACKUP_EXTENSIONS +
+        listOf(TEXT_EXTENSION, ARCHIVE_EXTENSION, ".json", LEGACY_DOCUMENT_EXTENSION)
+
+    /** Whether a file called [name] is unpacked for what it holds by its name alone: a zip, or another app's backup. */
+    fun isArchiveFileName(name: String) = (LIBRARY_BACKUP_EXTENSIONS + ARCHIVE_EXTENSION).any { name.endsWith(it, ignoreCase = true) }
+
+    /** Whether an import knows a file called [name] by its extension, and so never has to look at its bytes to decide. */
+    fun isImportableFileName(name: String) = IMPORTABLE_EXTENSIONS.any { name.endsWith(it, ignoreCase = true) }
+
+    /**
+     * Whether [bytes] start the way a zip archive does: with a local file header, or with the end of the central
+     * directory where the archive is empty. Asked only of a file whose name says nothing an import knows, since the
+     * other apps' library backups are mostly zip archives under a name of their own; a `.docx` is one too, and is read
+     * as the document its name says it is.
+     */
+    fun isZipArchive(bytes: ByteArray) = bytes.size >= 4 && bytes[0] == 'P'.code.toByte() && bytes[1] == 'K'.code.toByte() &&
+        ((bytes[2] == 3.toByte() && bytes[3] == 4.toByte()) || (bytes[2] == 5.toByte() && bytes[3] == 6.toByte()))
 
     /**
      * Whether [name] is a file some tool wrote for itself rather than one somebody put there: macOS leaves an

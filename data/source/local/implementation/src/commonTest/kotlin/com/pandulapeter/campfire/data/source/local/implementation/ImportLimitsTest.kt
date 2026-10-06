@@ -13,7 +13,10 @@ import com.pandulapeter.campfire.data.model.domain.ImportBudget
 import com.pandulapeter.campfire.data.model.domain.ImportLimits
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.data.source.local.implementation.zip.Inflater
+import com.pandulapeter.campfire.data.source.local.implementation.zip.ZipEntry
+import com.pandulapeter.campfire.data.source.local.implementation.zip.ZipWriter
 import kotlin.test.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
@@ -23,11 +26,31 @@ import kotlin.test.assertTrue
 internal class ImportLimitsTest {
 
     @Test
-    fun aFileTheImportWouldNotLookInsideIsNeverRead() {
-        val file = ImportBudget().read(name = "video.mp4", size = 1) { error("read") }
+    fun aFileOfAnUnknownTypeIsKeptOnlyWhereItIsAnArchive() {
+        val budget = ImportBudget()
+        val video = ByteArray(10 shl 20)
+        val archive = ZipWriter.write(listOf(ZipEntry("a.cho", "{title: A}".encodeToByteArray())))
+
+        val skipped = List(3) { index -> budget.read(name = "$index.mp4", size = video.size.toLong()) { video } }
+        val backup = budget.read(name = "library.sbpbackup2", size = archive.size.toLong()) { archive }
+
+        // Unread and unsupported rather than too large, and giving back what they took, so the archive after them fits.
+        assertEquals(List(3) { index -> ImportedFile.unread("$index.mp4") }, skipped)
+        assertContentEquals(archive, backup!!.bytes)
+    }
+
+    @Test
+    fun aFileOfAnUnknownTypeLargerThanTheSelectionIsNotRead() {
+        val file = ImportBudget().read(name = "video.mp4", size = ImportLimits.MAX_IMPORT_SIZE + 1) { error("read") }
 
         assertEquals(ImportedFile.unread("video.mp4"), file)
         assertFalse(file!!.isTooLarge)
+    }
+
+    @Test
+    fun anotherAppsBackupIsReadAsAnArchive() {
+        assertEquals(ImportLimits.MAX_IMPORT_SIZE, ImportLimits.maxSizeOf("Library.SBPBACKUP"))
+        assertEquals(ImportLimits.MAX_IMPORT_SIZE, ImportLimits.maxSizeOf("set.sbp"))
     }
 
     @Test

@@ -89,8 +89,12 @@ class PrepareImportUseCaseImpl internal constructor(
         files.forEachIndexed { index, file ->
             yield()
             onProgress(ImportProgress(ImportProgress.Phase.UNPACKING, index, files.size, file.name))
+            // An archive by its name, or a file under a name nothing here knows whose bytes are an archive's: the library
+            // backups of other apps are zip archives of their own extension, and the songs in them are worth looking for.
+            val isArchive = LibraryFiles.isArchiveFileName(file.name) ||
+                (!LibraryFiles.isImportableFileName(file.name) && LibraryFiles.isZipArchive(file.bytes))
             when {
-                !file.name.endsWith(ARCHIVE_EXTENSION, ignoreCase = true) -> sort(file)
+                !isArchive -> sort(file)
                 file.isTooLarge || file.bytes.size > ImportLimits.MAX_IMPORT_SIZE -> oversizedFileNames += file.name
                 else -> try {
                     archiveRepository.unpack(archive = file.bytes, maxSize = remaining).forEach(::sort)
@@ -217,6 +221,5 @@ class PrepareImportUseCaseImpl internal constructor(
 
         /** ".setlist.json" ends in this, and a plain ".json" is worth trying to parse as a setlist too. */
         const val SETLIST_EXTENSION = "json"
-        val ARCHIVE_EXTENSION = LibraryFiles.ARCHIVE_EXTENSION
     }
 }

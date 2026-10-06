@@ -13,7 +13,7 @@ Kotlin Multiplatform app (Android + iOS + JVM desktop + wasmJs web) for viewing 
 with a metronome.
 Compose UI is shared between all platforms. The app owns a library folder of plain
 [ChordPro](https://www.chordpro.org) files on every platform, which the user fills by writing songs in the built-in
-editor or by importing ChordPro, plain text, PDF and Word documents, and zip archives. **The only things that ever reach the network are sync, and the cover
+editor or by importing ChordPro, plain text, PDF and Word documents, zip archives, and other apps' library backups. **The only things that ever reach the network are sync, and the cover
 images and the cover search the user asks for.** Sync is off until the user connects a cloud folder of their own in
 Settings, and still involves no server of Campfire's own — see the Sync section below. A cover is fetched from the
 address a song's own file names, once, and kept on the device; the search asks MusicBrainz and the iTunes Search API,
@@ -398,6 +398,17 @@ localized in both languages.
   unchanged. The result counts only converted songs actually written and offers **Open** for a single converted
   song, without navigating automatically. No new document Open with association is registered; Android adds only
   PDF and Word share MIME types.
+- **Other apps' libraries are archives under names of their own.** A file whose extension the import does not know
+  is read anyway (`ImportBudget`, within the selection's budget) and kept only where its bytes start like a zip
+  archive's, which is then unpacked like a `.zip` — anything else is reported as unsupported and gives its share of the
+  budget back. SongbookPro's `.sbpbackup` and `.sbp` are also named (`LibraryFiles.LIBRARY_BACKUP_EXTENSIONS`), so that
+  the pickers offer them and an archive is looked inside when it holds one. An archive that turns out to be a
+  SongbookPro library (`dataFile.txt`, one JSON document) is translated into the files an export of Campfire's own
+  would carry — a ChordPro song per song, its title, artist, key, capo, tempo, time, duration, copyright, link and
+  folders (as tags) written into the header where the text does not declare them, and a setlist per set, with the
+  capo a set plays a song with where it differs — and goes through the ordinary import from there
+  (`:data:source:local:implementation`'s `backup/`). Its transpositions are not carried over. None of these is
+  registered as an Open with type: they are another app's files.
 - **Every file is in the standard chord notation** (`C D E F G A B`, `#` and `b`), whatever notation its reader
   prefers: the German one (`H` for B, `B` for B flat) is a way of showing chords and of typing them, converted on the
   way to the screen and in and out of the editor's field (`:chordpro`'s `ChordProNotation`), so a library reads the

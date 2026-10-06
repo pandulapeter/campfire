@@ -50,7 +50,9 @@ The ones that carry real logic:
 
 - `PrepareImportUseCaseImpl` / `ImportPlanner` / `ImportFilesUseCaseImpl` — the import policy, split the way sync's
   is: one works out what would happen, the other carries it out. Preparing unpacks archives (recursively, path stripped, the archiving
-  tool's own hidden files left where they were, and one that was picked directly counted as skipped), sorts each file into song / document / setlist / skipped by its extension, splits
+  tool's own hidden files left where they were, and one that was picked directly counted as skipped) — a file is one by
+  its name (`LibraryFiles.isArchiveFileName`) or, where its name is nothing the import knows, by its bytes
+  (`isZipArchive`), never a `.docx` that is a zip too — sorts each file into song / document / setlist / skipped by its extension, splits
   a file holding several songs at `{new_song}` with `:chordpro`, asks `SongRepository.importFileName` what each song's
   own header names it — the name the file arrived under is
   passed as a fallback *title*, for the songs that declare none, and is otherwise only used to recognise a library

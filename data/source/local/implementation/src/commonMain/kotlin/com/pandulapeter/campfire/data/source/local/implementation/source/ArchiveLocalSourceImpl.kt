@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.data.model.domain.ImportLimits
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.data.model.domain.LibraryFiles
 import com.pandulapeter.campfire.data.source.local.api.ArchiveLocalSource
+import com.pandulapeter.campfire.data.source.local.implementation.backup.SongbookProBackup
 import com.pandulapeter.campfire.data.source.local.implementation.zip.ZipEntry
 import com.pandulapeter.campfire.data.source.local.implementation.zip.DosTimestamp
 import com.pandulapeter.campfire.data.source.local.implementation.zip.UnreadZipEntry
@@ -63,12 +64,21 @@ internal class ArchiveLocalSourceImpl : ArchiveLocalSource {
             // that took them at their word would offer to import as many unreadable files as there are songs. A file
             // somebody means to import is never a hidden one, so these are never read, and neither is anything an
             // import would not look inside: both cost nothing and cannot fail the archive.
-            limitOf = { name -> name.fileName.takeUnless(LibraryFiles::isHiddenFileName)?.let(ImportLimits::maxSizeOf)?.takeIf { it > 0 } },
+            // SongbookPro keeps a whole library in one document, which is read whatever its size within the import's.
+            limitOf = { name ->
+                when (val fileName = name.fileName) {
+                    SongbookProBackup.DATA_FILE_NAME -> ImportLimits.MAX_IMPORT_SIZE
+                    else -> fileName.takeUnless(LibraryFiles::isHiddenFileName)?.let(ImportLimits::maxSizeOf)?.takeIf { it > 0 }
+                }
+            },
         )
         inflated.count += content.chargedSize
-        val read = content.entries.flatMap { entry ->
-            val file = ImportedFile(name = entry.name.fileName, bytes = entry.bytes)
-            if (depth < MAX_DEPTH && file.name.endsWith(ZIP_EXTENSION, ignoreCase = true)) {
+        val entries = content.entries.map { entry -> ImportedFile(name = entry.name.fileName, bytes = entry.bytes) }
+        // Another app's library is translated into the files of one of Campfire's own, and what else its archive holds is
+        // that app's bookkeeping rather than anything the user would recognise in a report of files that were left out.
+        SongbookProBackup.read(entries)?.let { return it }
+        val read = entries.flatMap { file ->
+            if (depth < MAX_DEPTH && LibraryFiles.isArchiveFileName(file.name)) {
                 // A nested archive that cannot be read is reported rather than failing the whole import: the files
                 // next to it are still perfectly good.
                 try {
@@ -101,6 +111,5 @@ internal class ArchiveLocalSourceImpl : ArchiveLocalSource {
 
     private companion object {
         const val MAX_DEPTH = 3
-        const val ZIP_EXTENSION = ".zip"
     }
 }

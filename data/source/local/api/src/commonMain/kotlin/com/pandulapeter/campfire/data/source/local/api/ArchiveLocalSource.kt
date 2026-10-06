@@ -18,6 +18,10 @@ interface ArchiveLocalSource {
      * a few levels deep, so that a zip of zips of zips cannot be used to make the app work forever). Throws when the
      * bytes are not a readable archive.
      *
+     * An archive that is another app's library backup (SongbookPro's) comes back as the songs and setlists it holds,
+     * written as the ChordPro and `*.setlist.json` files an archive of Campfire's own would carry, with the setlists
+     * pointing at the songs by the names they are returned under.
+     *
      * Hidden files are not among them: an AppleDouble "._name.cho" or a ".DS_Store" is the archiving tool's own
      * bookkeeping rather than anything the user put in, so the caller never learns of them and never has to account
      * for them.

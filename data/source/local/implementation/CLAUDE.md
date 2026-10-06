@@ -214,6 +214,15 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
   437 otherwise, as the format specifies. A backslash separates paths as well as a slash, since Windows PowerShell 5.1
   writes one.
 
-Tested with `commonTest` (zip round trips, reader rejections) and `desktopTest` (the JVM storage, what unpacking an
+- **`backup/`** — other apps' library backups, read by `ArchiveLocalSourceImpl` from the entries of any archive it
+  unpacks (a `.zip`, a backup named by `LibraryFiles.LIBRARY_BACKUP_EXTENSIONS`, or one nested in either) and
+  translated into the `.cho` songs and `*.setlist.json` setlists an archive of Campfire's own would hold, the rest of
+  the archive (that app's bookkeeping) dropped unreported. `SongbookProBackup` reads SongbookPro's `dataFile.txt` — a
+  version line and one JSON document of songs, sets and folders, read up to `ImportLimits.MAX_IMPORT_SIZE` rather
+  than a song's limit — leniently, since the format is unpublished and writes numbers and booleans as strings as often
+  as not: the key is an index from A, a deleted or textless song or set is left out, and the files are named in the
+  batch by their titles, numbered within it, which is what the setlists point at.
+
+Tested with `commonTest` (zip round trips, reader rejections, the SongbookPro reader) and `desktopTest` (the JVM storage, what unpacking an
 archive keeps, and the inflater against archives the JVM produced), run with
 `./gradlew :data:source:local:implementation:desktopTest`.

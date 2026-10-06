@@ -9,11 +9,9 @@
 -->
 # To do
 ## Bugs / issues
-- Per-section metronome / time signature changes are not yet supported
 - No way to enter BPM using the keyboard
 
 ## Improvements
-- Support importing libraries from other apps
 - Rename master branch to main
 - Onboarding: integrate feature toggle-presets (singers, drummers, etc)
 - Settings: promote Dropbox sign-in
