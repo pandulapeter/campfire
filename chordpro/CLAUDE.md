@@ -221,7 +221,7 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   its languages and its links — and `changeableMetadata` what it may say again further down as a change (`tempo`,
   `time`), which `insertChangeable` writes: into the header by `insert` where it has no line of the kind, into an empty
   header line (one the Song defaults sheet cleared), at the start of the caret's line where the header names a value
-  and the caret is in the body, and otherwise nowhere, the header's value selected instead. Everything else is a thing
+  and the caret is below the body's first line of the song, and otherwise nowhere, the header's value selected instead. Everything else is a thing
   a song can only be one of, which is what lets an editor stop offering it. `metadataInsertionIndex` counts only the
   header's lines of a changeable kind, since one in the body is a change in the middle of the song.
 - `ChordProSplitter` — splits a file that holds several songs at `{new_song}` / `{ns}`, trimming the blank lines around

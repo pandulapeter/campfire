@@ -130,10 +130,12 @@ object ChordProHeader {
      * - a header with no line of [name] gets one by [insert], since the first value a song is given is its own;
      * - an empty header line of it (one the Song defaults sheet cleared) is the line to type into, and becomes
      *   [prefix] and [suffix] with the caret between them;
-     * - a header that names a value and a caret in the body get a line of their own at the start of the caret's line,
-     *   which never splits a line of lyrics and puts the change before what it changes;
-     * - a header that names a value and a caret in the header, or a song with no body yet, get nothing written and the
-     *   header line's value selected, since a second line in the header would be read past rather than as a change.
+     * - a header that names a value and a caret below the body's first line of the song (a line of lyrics, tablature
+     *   or a grid, or a `{chorus}` recall) get a line of their own at the start of the caret's line, which never splits
+     *   a line of lyrics and puts the change before what it changes;
+     * - a header that names a value and a caret in the header or anywhere up to and including that first line, or a
+     *   song with no such line yet, get nothing written and the header line's value selected, since a change before
+     *   anything is played is the song's own value.
      */
     fun insertChangeable(text: String, name: String, caretOffset: Int, prefix: String, suffix: String): Insertion {
         val lines = ChordProSyntax.splitLines(text)
@@ -155,7 +157,15 @@ object ChordProHeader {
             )
         }
         val caretLine = lineStarts.indexOfLast { it <= caretOffset }
-        if (bodyStart >= lines.size || caretLine < bodyStart) {
+        // Nothing of the song is played before its first line, so a change there would be the song's own value written
+        // in the wrong place. A recall is a part of the song, as a line of lyrics is.
+        val firstContentLine = (bodyStart until lines.size).firstOrNull { index ->
+            val trimmed = lines[index].trim()
+            if (trimmed.isEmpty() || trimmed.startsWith('#')) return@firstOrNull false
+            val directive = ChordProSyntax.matchDirective(trimmed) ?: return@firstOrNull true
+            directive.name == "chorus"
+        } ?: lines.size
+        if (caretLine <= firstContentLine) {
             val valueStart = headerLineStart + headerLine.lastIndexOf(value, headerLine.lastIndexOf('}'))
             return Insertion(offset = valueStart, text = "", caretOffset = valueStart, selectionEnd = valueStart + value.length)
         }

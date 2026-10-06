@@ -9,9 +9,12 @@
  */
 package com.pandulapeter.campfire.chordpro
 
+import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class ChordProHeaderTest {
 
@@ -220,6 +223,58 @@ class ChordProHeaderTest {
 
         assertEquals(text to (13..16), text.insertChangeable("tempo", caret = 3))
         assertEquals("{tempo: 120}" to (8..11), "{tempo: 120}".insertChangeable("tempo", caret = 12))
+    }
+
+    @Test
+    fun `a changeable directive with the caret on the first line of the song selects the header's value`() {
+        val text = "{title: T}\n{tempo: 120}\n\n[C]The first line"
+
+        assertEquals(text to (19..22), text.insertChangeable("tempo", caret = text.indexOf("[C]")))
+        assertEquals(text to (19..22), text.insertChangeable("tempo", caret = text.length))
+    }
+
+    @Test
+    fun `a changeable directive is only written below the first line inside an opening environment`() {
+        val text = "{tempo: 120}\n\n{start_of_verse}\n[C]a\n[G]b\n{end_of_verse}"
+
+        assertEquals(text to (8..11), text.insertChangeable("tempo", caret = text.indexOf("{start_of_verse}")))
+        assertEquals(text to (8..11), text.insertChangeable("tempo", caret = text.indexOf("[C]a")))
+        assertEquals(
+            "{tempo: 120}\n\n{start_of_verse}\n[C]a\n{tempo: }\n[G]b\n{end_of_verse}" to (44..44),
+            text.insertChangeable("tempo", caret = text.indexOf("[G]b")),
+        )
+    }
+
+    @Test
+    fun `a chorus recall is a line of the song and a comment is not`() {
+        val recall = "{tempo: 120}\n\n{chorus}\n[C]a"
+        val comment = "{tempo: 120}\n\n{c: Slowly}\n[C]a"
+
+        assertEquals("{tempo: 120}\n\n{chorus}\n{tempo: }\n[C]a" to (31..31), recall.insertChangeable("tempo", caret = recall.indexOf("[C]a")))
+        assertEquals(recall to (8..11), recall.insertChangeable("tempo", caret = recall.indexOf("{chorus}")))
+        assertEquals(comment to (8..11), comment.insertChangeable("tempo", caret = comment.indexOf("[C]a")))
+    }
+
+    @Test
+    fun `a changeable directive written into the body is read as a change after the song has started`() {
+        val placements = listOf(
+            "{title: T}\n{tempo: 120}\n\n[C]The first line" to "[C]",
+            "{tempo: 120}\n\n{start_of_verse}\n[C]a\n[G]b\n{end_of_verse}" to "{start_of_verse}",
+            "{tempo: 120}\n\n{start_of_verse}\n[C]a\n[G]b\n{end_of_verse}" to "[C]a",
+            "{tempo: 120}\n\n{start_of_verse}\n[C]a\n[G]b\n{end_of_verse}" to "[G]b",
+            "{tempo: 120}\n\n{chorus}\n[C]a" to "{chorus}",
+            "{tempo: 120}\n\n{chorus}\n[C]a" to "[C]a",
+            "{tempo: 120}\n\n{c: Slowly}\n[C]a" to "[C]a",
+        )
+        placements.forEach { (text, line) ->
+            val insertion = ChordProHeader.insertChangeable(text, name = "tempo", caretOffset = text.indexOf(line), prefix = "{tempo: ", suffix = "}")
+            if (insertion.text.isNotEmpty()) {
+                val inserted = text.replaceRange(insertion.offset, insertion.offset + insertion.replacedLength, insertion.text)
+                val blocks = ChordProParser.parse(inserted.replaceRange(insertion.caretOffset, insertion.caretOffset, "90")).blocks
+                assertTrue(blocks.any { it is ChordProBlock.Timing && it.tempo == "90" }, "$text at $line")
+                assertFalse(blocks.first() is ChordProBlock.Timing, "$text at $line")
+            }
+        }
     }
 
     @Test
