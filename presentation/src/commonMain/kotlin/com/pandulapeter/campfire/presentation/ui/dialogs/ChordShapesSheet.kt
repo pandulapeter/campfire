@@ -25,6 +25,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -119,13 +120,18 @@ internal fun ChordShapesSheet(
             verticalArrangement = Arrangement.spacedBy(CELL_GAP),
         ) {
             chords.orEmpty().forEach { chord ->
-                ChordShapeCell(
-                    chord = chord,
-                    instrument = instrument,
-                    notation = notation,
-                    selection = selectShape(chord, instrument, storedShapes),
-                    onShapeSelected = { shape -> viewModel.setChordVoicing(instrumentPreference, chord.chord.id, shape?.let(ChordVoicings::write)) },
-                )
+                // A cell holds its chord's shapes while a new list is worked out under the open sheet, so a slot handed to
+                // another chord would step that one through the old one's shapes. The name stays in the key since a song
+                // that defines two spellings of one chord differently lists the chord twice.
+                key(chord.chord.id, chord.name) {
+                    ChordShapeCell(
+                        chord = chord,
+                        instrument = instrument,
+                        notation = notation,
+                        selection = selectShape(chord, instrument, storedShapes),
+                        onShapeSelected = { shape -> viewModel.setChordVoicing(instrumentPreference, chord.chord.id, shape?.let(ChordVoicings::write)) },
+                    )
+                }
             }
         }
     }
