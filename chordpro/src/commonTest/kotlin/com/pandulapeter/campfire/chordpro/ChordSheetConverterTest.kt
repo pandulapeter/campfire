@@ -54,7 +54,16 @@ class ChordSheetConverterTest {
         assertEquals("A long time ago\nAm I\n", convert("A long time ago\nAm I"))
         assertEquals("[Am] [F]\n\n[A]long time ago\n", convert("Am F\n\nA\nlong time ago"))
         // Latin chords, which the import brings into the standard notation afterwards.
-        assertEquals("[Do]1 [Re]4 5 [Mi]\n", convert("Do Re Mi\n1 4 5"))
+        assertEquals("[Lam]1 4 [Re]5 [Mi]\n", convert("Lam Re Mi\n1 4 5"))
+    }
+
+    @Test
+    fun `a row of bare Latin notes is a lyric unless the sheet is Latin`() {
+        assertEquals("La La La\nque bonita\n", convert("La La La\nque bonita"))
+        assertEquals("[Am]Hel[C]lo world\nLa La La\nque bonita\n", convert("Am C\nHello world\nLa La La\nque bonita"))
+        assertEquals("[Do]can[Sol]ta [Lam]\n[La]que [La]bo[La]nita\n", convert("Do Sol Lam\ncanta\nLa La La\nque bonita"))
+        // Chords set over the syllables they fall on stand apart, which a sung line never does.
+        assertEquals("[Do]Cielito li[Fa]ndo, de la [Sol]sierra\n", convert("Do        Fa        Sol\nCielito lindo, de la sierra"))
     }
 
     @Test

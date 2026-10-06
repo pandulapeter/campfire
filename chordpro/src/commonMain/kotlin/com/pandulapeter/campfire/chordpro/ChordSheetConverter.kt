@@ -125,6 +125,9 @@ object ChordSheetConverter {
      * is written in; the import brings it into the standard notation afterwards, with the rest of the song.
      */
     private fun isChordOrLatinName(name: String) = ChordProChordNames.isChordName(name) || ChordProChordNames.latinExpanded(name) != null
+    private fun isBareLatinNote(value: String) = ascii(value).removeSurrounding("(", ")").let { ChordProChordNames.latinNoteLength(it) == it.length }
+    private fun isLatinChordBeyondNote(value: String) = ascii(value).removeSurrounding("(", ")").let { ChordProChordNames.latinExpanded(it) != null && !isBareLatinNote(it) }
+    private fun isPositioned(row: List<Token>) = row.zipWithNext().any { (a, b) -> b.index - (a.index + a.text.length) >= 2 }
     private fun furniture(value: String) = value in listOf("|", "||", "|:", ":|", "-", "/", "%", "N.C.", "NC", "(", ")") || repeat.matches(value)
     private fun chordTokens(line: Rendered): List<Token>? = tokens(line.text).takeIf { words ->
         words.any { chord(it.text) } && words.all { chord(it.text) || furniture(it.text) }
@@ -249,7 +252,13 @@ object ChordSheetConverter {
     }
 
     private fun convertSong(lines: List<Rendered>): String {
-        val candidates = lines.map(::chordTokens)
+        // A row of bare note words is as likely a sung "La la la" as a row of major chords, so it counts as chords only in a
+        // sheet whose other rows show it is written in Latin, or where its words stand apart the way chords are set over
+        // the syllables they fall on, which a sung line never is.
+        val hasLatinChords = lines.any { line -> tokens(line.text).any { isLatinChordBeyondNote(it.text) } }
+        val candidates = lines.map(::chordTokens).map { row ->
+            row?.takeUnless { !hasLatinChords && !isPositioned(it) && it.filter { word -> chord(word.text) }.all { word -> isBareLatinNote(word.text) } }
+        }
         val hasUnambiguousChords = candidates.any { it != null && it.count { word -> chord(word.text) } > 1 }
         val parenthesized = lines.flatMap { parentheses.findAll(it.text).toList() }
         val convertParentheses = parenthesized.isNotEmpty() && parenthesized.count { chord(it.groupValues[1]) } * 2 > parenthesized.size
