@@ -72,12 +72,16 @@
           recreation. The in-app language's "System" reads the JVM's default locale, which is not composition state and
           would stay in the old language, and the window background and the splash screen come from the values-night
           theme, which the window reads only as it is created.
+          The app follows the keyboard itself, through WindowInsets.ime (the content padding in CampfireApp), so the
+          system must neither pan the window nor resize it. An unspecified mode is taken as a pan for a Compose window,
+          which shifts it a second time; on an edge-to-edge window adjustResize only passes the insets through.
         -->
         <activity
             android:name=".CampfireMainActivity"
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|density|fontScale|keyboard|keyboardHidden|navigation"
             android:exported="true"
-            android:launchMode="singleTask" />
+            android:launchMode="singleTask"
+            android:windowSoftInputMode="adjustResize" />
 
         <!--
           What other apps open Campfire with: a file, a share and the way back from the sync service's consent page.
