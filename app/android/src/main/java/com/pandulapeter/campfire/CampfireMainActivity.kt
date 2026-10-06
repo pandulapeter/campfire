@@ -94,12 +94,13 @@ class CampfireMainActivity : ComponentActivity() {
      * Where the first switch of the launcher icon is made (see [AppIconSwitcher]), the one that closes the task: as the
      * user leaves. A stop that only recreates the activity is not leaving, and neither is one caused by another app's
      * screen coming up inside this task - the document picker, the share sheet, the consent page of sync - which the
-     * switch would close along with it. Every later switch is made as the color is picked.
+     * switch would close along with it, nor is a stop with a click playing, which is the screen being locked over a song
+     * on a music stand: closing the task would silence it. Every later switch is made as the color is picked.
      */
     override fun onStop() {
         super.onStop()
         val appIconColor = appIconColor
-        if (appIconColor != null && !isChangingConfigurations && !isCoveredWithinTask()) {
+        if (appIconColor != null && !isChangingConfigurations && !isCoveredWithinTask() && !CampfireMetronomeService.isRunning) {
             AppIconSwitcher.apply(context = this, themeColor = appIconColor, isLeaving = true)
         }
     }
