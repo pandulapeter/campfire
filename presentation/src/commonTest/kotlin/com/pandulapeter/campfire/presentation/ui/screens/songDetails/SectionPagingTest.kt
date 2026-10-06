@@ -158,6 +158,22 @@ class SectionPagingTest {
             maxRowHeight = maxRowHeight,
         )
     }
+
+    @Test
+    fun aChordsSectionIsCutBetweenItsRowsRatherThanRunPastThePage() {
+        val grid = flowIntoPages(
+            sectionStarts = intArrayOf(0, 1, 4),
+            heightAt = { unit, _ -> intArrayOf(90, 130, 100, 100)[unit] },
+            isNarrow = { false },
+            isCuttableBefore = { it >= 2 },
+            piecePadding = IntArray(2),
+            sectionGap = 12,
+            maxRowHeight = 163,
+        )
+        assertContentEquals(intArrayOf(0, 1, 2, 3), grid.rows)
+        assertContentEquals(intArrayOf(1, 1, 1, 1), grid.columnCounts)
+        assertTrue(grid.joinsPrevious.none { it })
+    }
 }
 
 private const val SECTION_GAP = 20

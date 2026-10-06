@@ -327,10 +327,10 @@ localized in both languages.
   the web `/metronome` with the metronome off opens the songs, and the address is written over with theirs.
 - **How every chord of a song is fingered is shown at its top**, on the guitar, the ukulele or the keyboard (the
   Songs tab's Instrument): a Chords section after the controls of how it is played, one diagram per chord in the order
-  they are first played, folded by one preference for every song and scrolling away with the song's first page. Nothing
-  is shipped for it and nothing is fetched: `:chordpro` reads what notes a chord name stands for (`ChordProChords`) and
-  finds its shapes (`ChordVoicings`) — a hand-typed table of the shapes everybody knows first, a search for every other
-  one after it. Which shape a chord is drawn with is, in order, the song's own `{define}` (or `{chord}`) for that
+  they are first played, folded by one preference for every song and cut between its rows of diagrams wherever a page
+  ends inside it, like any other section. Nothing is shipped for it and nothing is fetched: `:chordpro` reads what
+  notes a chord name stands for (`ChordProChords`) and finds its shapes (`ChordVoicings`) — a hand-typed table of the
+  shapes everybody knows first, a search for every other one after it. Which shape a chord is drawn with is, in order, the song's own `{define}` (or `{chord}`) for that
   instrument, which ChordPro has for "in this song the G is played this way" and which travels with the file; the
   player's own choice from the Chord shapes sheet, **one per chord and instrument for the whole library**, since which F
   somebody plays is a habit of their hands rather than a reading of one song, stored as the shape rather than its

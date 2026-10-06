@@ -260,6 +260,17 @@ internal fun SongLyrics(
     // Kept across a new song text rather than keyed on it, since a transposition or a tag put on rewrites the song and
     // must not make what was just unfolded fade in a second time.
     var toggledFolds by remember { mutableStateOf(emptySet<String>()) }
+    // Whether the Chords section was folded or unfolded while the page is open, so that its rows fade in as they come back
+    // in every chunk they come back in, rather than only in the one the pill is in.
+    var hasChordFoldBeenToggled by remember { mutableStateOf(false) }
+    val onChordFoldToggled = chordDiagrams?.onFoldToggled?.let { toggle ->
+        remember(toggle) {
+            {
+                hasChordFoldBeenToggled = true
+                toggle()
+            }
+        }
+    }
     // Remembered rather than built on every composition, since every section's content is handed it and compares it
     // by identity: it is rebuilt exactly when what it answers changes, and the sections skip on everything else.
     val latestOnFoldToggled by rememberUpdatedState(onFoldToggled)
@@ -291,10 +302,17 @@ internal fun SongLyrics(
     // transposition only measures the sections it changed.
     val sectionSizesPool = remember(fontScale, density, foldedSections, lyricsStyle, headerStyle, defaultLabels) { SectionSizesPool<UnitContent>() }
     // Every section that may be cut is composed as the chunks it may be cut into, which the layout keeps together unless
-    // it cuts between two of them (see flowLikeAMagazine). A folded section is one, since what is
-    // left of it is its header.
+    // it cuts between two of them (see flowLikeAMagazine): its lines, and the Chords section's slots, one per row of
+    // diagrams. A folded section is one, since what is left of it is its header.
     val units = remember(sections, foldedSections, canCutSections) {
-        SongUnits.of(sections) { section -> canCutSections && section.foldKey !in foldedSections }
+        SongUnits.of(sections) { section ->
+            when (section) {
+                is RenderSection.Lines -> canCutSections && section.foldKey !in foldedSections
+                // Folded, it is one item - its pill - whatever this says.
+                is RenderSection.Chords -> canCutSections
+                else -> false
+            }
+        }
     }
     val sectionMeasurements = remember(units, sectionSizesPool) {
         SectionMeasurements(
@@ -347,6 +365,10 @@ internal fun SongLyrics(
             chordStyle = chordStyle,
             annotationStyle = annotationStyle,
         )
+    }
+    val chordsSection = sections.firstNotNullOfOrNull { it as? RenderSection.Chords }
+    val chordLayouts = remember(chordsSection?.cells, chordStyle, textMeasurer, density, fontScale) {
+        chordsSection?.let { ChordCellLayouts(it.cells, chordStyle, textMeasurer, density, fontScale) }
     }
     Box(modifier = modifier) {
         LookaheadScope {
@@ -414,9 +436,12 @@ internal fun SongLyrics(
                             is RenderSection.Chords -> SongChordsSection(
                                 modifier = unitModifier.padding(horizontal = CARD_PADDING),
                                 section = section,
+                                items = items,
+                                layouts = checkNotNull(chordLayouts),
                                 chordDiagrams = chordDiagrams,
+                                onFoldToggled = onChordFoldToggled,
+                                isFadingIn = hasChordFoldBeenToggled,
                                 headerStyle = headerStyle,
-                                chordStyle = chordStyle,
                                 fontScale = fontScale,
                             )
 
@@ -2087,8 +2112,11 @@ private class SongUnits(
 
     companion object {
 
-        /** The chunks of [sections], where each section [isCuttable] says so is composed line by line. */
-        fun of(sections: List<RenderSection>, isCuttable: (RenderSection.Lines) -> Boolean): SongUnits {
+        /**
+         * The chunks of [sections], where each section [isCuttable] says so is composed line by line, or a Chords section
+         * row by row.
+         */
+        fun of(sections: List<RenderSection>, isCuttable: (RenderSection) -> Boolean): SongUnits {
             val sectionStarts = IntArray(sections.size + 1)
             val unitSections = mutableListOf<Int>()
             val itemRanges = mutableListOf<IntRange>()
@@ -2096,12 +2124,17 @@ private class SongUnits(
             val cardStarts = IntArray(sections.size) { -1 }
             var cardCount = 0
             sections.forEachIndexed { index, section ->
-                val ranges = if (section is RenderSection.Lines && isCuttable(section) && section.itemCount > 1) {
-                    List(section.itemCount) { item -> item..item }
-                } else {
-                    listOf(0 until ((section as? RenderSection.Lines)?.itemCount ?: 1))
+                val itemCount = when (section) {
+                    is RenderSection.Lines -> section.itemCount
+                    is RenderSection.Chords -> section.itemCount
+                    else -> 1
                 }
-                val cutStarts = (section as? RenderSection.Lines)?.chunkStarts
+                val ranges = if (isCuttable(section) && itemCount > 1) List(itemCount) { item -> item..item } else listOf(0 until itemCount)
+                val cutStarts = when (section) {
+                    is RenderSection.Lines -> section.chunkStarts
+                    is RenderSection.Chords -> section.chunkStarts
+                    else -> null
+                }
                 ranges.forEach { range ->
                     unitSections += index
                     itemRanges += range
@@ -2504,8 +2537,9 @@ internal sealed interface RenderSection {
     ) : RenderSection
 
     /**
-     * The diagrams of the song's chords, inserted after the metadata the way it is, and kept whole like it: one
-     * [ChordCell] per chord the song plays, in the order they are first played, see [withChordsSection].
+     * The diagrams of the song's chords, inserted after the metadata the way it is: one [ChordCell] per chord the song
+     * plays, in the order they are first played, see [withChordsSection]. It is cut between its rows of diagrams like any
+     * section, its rows drawn as slots the way a run of tablature is drawn as systems (see [SongChordsSection]).
      *
      * @param isFolded Whether only the header is shown, which is part of the content because the measured sizes of a
      * section are kept by it.
@@ -2514,7 +2548,14 @@ internal sealed interface RenderSection {
     data class Chords(
         val cells: List<ChordCell>,
         val isFolded: Boolean,
-    ) : RenderSection
+    ) : RenderSection {
+
+        /** One slot per row the diagrams can wrap into ([chordSlotCount]), the first headed by the pill; only the pill while folded. */
+        val itemCount = if (isFolded) 1 else chordSlotCount(cells.size)
+
+        /** Every row may start a piece: a row of diagrams is a line, with the header kept with the first one. */
+        val chunkStarts = sectionChunkStarts(List(itemCount) { SectionItemKind.CONTENT })
+    }
 
     /** A titled block of lines: an environment, an implicit paragraph, or a repeated chorus. */
     @Immutable

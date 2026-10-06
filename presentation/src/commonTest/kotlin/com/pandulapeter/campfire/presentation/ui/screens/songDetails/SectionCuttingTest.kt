@@ -200,6 +200,24 @@ class SectionCuttingTest {
             maxRowHeight = maxRowHeight,
         )
     }
+
+    @Test
+    fun aChordsSectionTallerThanThePageRunsOnIntoTheNextColumn() {
+        fun grid(isCuttable: Boolean) = flowLikeAMagazine(
+            sectionStarts = intArrayOf(0, 1, 5),
+            columnCount = 2,
+            heightAt = { unit, _ -> intArrayOf(200, 150, 150, 150, 150)[unit] },
+            isCuttableBefore = { isCuttable && it >= 2 },
+            piecePadding = IntArray(2),
+            sectionGap = 20,
+            maxRowHeight = 450,
+        )
+        val cut = grid(isCuttable = true)
+        assertContentEquals(intArrayOf(0, 0, 0, 0, 0), cut.rows)
+        assertContentEquals(intArrayOf(0, 0, 1, 1, 1), cut.columns)
+        assertContentEquals(intArrayOf(2), cut.columnCounts)
+        assertContentEquals(intArrayOf(1, 1), grid(isCuttable = false).columnCounts)
+    }
 }
 
 private const val SECTION_GAP = 20
