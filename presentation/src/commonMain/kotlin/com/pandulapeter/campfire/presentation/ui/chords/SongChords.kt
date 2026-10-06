@@ -21,6 +21,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordDefinition
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.chordpro.model.ChordVoicing
+import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 
 /**
@@ -67,8 +68,8 @@ internal val SongChord.secondaryName get() = soundingName ?: letterName
  * of the key says nothing about the notes without the stretch of the song it stands in; a chord played on both sides of
  * a modulation is one diagram, named by the step it is first played on.
  *
- * On the keyboard [capo] moves every chord to the one that sounds, see [SongChord.chord], and the keys a definition
- * presses with it.
+ * On the keyboard [capo], held to the app's capo range, moves every chord to the one that sounds, see [SongChord.chord],
+ * and the keys a definition presses with it.
  *
  * A chord is matched to the song's definition for the instrument by its name, which the transposition renames the
  * definition to as well, or else by the notes the two names stand for. A definition as the file writes it is drawn
@@ -89,7 +90,8 @@ internal fun songChordsOf(
     val shownNames = ChordProNotation.shownNames(song, notation)
     val parsed = shownNames.keys.mapNotNull { name -> ChordProChords.parse(name)?.let { name to it } }
     if (parsed.size > MAX_SONG_CHORDS) return emptyList()
-    val soundingShift = if (instrument == ChordInstrument.KEYBOARD) capo.mod(12) else 0
+    // A file may say any capo, but the app's capo stops at the twelfth fret, as its control and the sheet read it.
+    val soundingShift = if (instrument == ChordInstrument.KEYBOARD) capo.coerceIn(Song.CAPO_RANGE) % 12 else 0
     val preferFlats = soundingShift != 0 && ChordProTransposer.prefersFlats(song, soundingShift)
     val definitions = song.metadata.definitions.filter { it.instrument == instrument }
     return parsed.map { (name, chord) ->

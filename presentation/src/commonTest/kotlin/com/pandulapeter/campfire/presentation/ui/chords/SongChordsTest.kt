@@ -69,6 +69,18 @@ class SongChordsTest {
     }
 
     @Test
+    fun `a capo past the twelfth fret is read as the twelfth`() {
+        listOf(12, 15).forEach { capo ->
+            val chord = names("{capo: 15}\n[C]la", instrument = ChordInstrument.KEYBOARD, capo = capo).single()
+            assertNull(chord.soundingName)
+            assertEquals(ChordProChords.parse("C"), chord.chord)
+        }
+        val moved = names("{capo: 3}\n[C]la", instrument = ChordInstrument.KEYBOARD, capo = 3).single()
+        assertEquals(3, moved.chord.root)
+        assertEquals("Eb", moved.soundingName)
+    }
+
+    @Test
     fun `annotations, N C and words in brackets are no chords`() {
         assertEquals(listOf("G"), names("[*softly][G]la [N.C.]la [Bridge]la").map { it.name })
     }
