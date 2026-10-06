@@ -3479,17 +3479,28 @@ class CampfireViewModel(
     /**
      * The title, the description, the date and its countdown are written together, since they are the whole of what
      * the user gets to say about a setlist. Only the title reaches the file name, so the setlist that comes back may be under a name
-     * this one has never seen. The setlist is named rather than passed: the dialog has held its copy since it was
-     * opened, and the rest of the setlist may have moved on since. One that is gone by now is not brought back.
+     * this one has never seen. Only the fields the sheet changed from what it [offered] are written; the rest are the
+     * library's as they are now, since the dialog has held its copy since it was opened and a sync run may have
+     * brought another device's description or date in since. One that is gone by now is not brought back, and saying
+     * so is a failed operation rather than a sheet that closes as if it had saved.
      */
-    fun editSetlist(setlistFileName: String, title: String, description: String, date: LocalDate, isCountdownShown: Boolean) = launchLibraryChange {
-        if (setlists.value.firstOrNull { it.fileName == setlistFileName }?.isArchived != false) return@launchLibraryChange
+    fun editSetlist(offered: Setlist, title: String, description: String, date: LocalDate, isCountdownShown: Boolean) = launchLibraryChange {
+        val current = setlists.value.firstOrNull { it.fileName == offered.fileName }
+            ?: return@launchLibraryChange sendMessage(Message.OperationFailed)
+        if (current.isArchived) return@launchLibraryChange
+        val details = mergedSetlistDetails(
+            offered = offered.details,
+            chosen = SetlistDetails(title = title, description = description, date = date, isCountdownShown = isCountdownShown),
+            current = current.details,
+        )
+        if (details == current.details) return@launchLibraryChange
         editSetlist.invoke(
-            fileName = setlistFileName,
-            title = title,
-            description = description,
-            date = date,
-            isCountdownShown = isCountdownShown,
+            fileName = offered.fileName,
+            title = details.title,
+            description = details.description,
+            // Only null where the sheet offered no date and kept it, which it cannot: it always confirms a day.
+            date = details.date ?: date,
+            isCountdownShown = details.isCountdownShown,
         ) ?: sendMessage(Message.OperationFailed)
     }
 
@@ -3503,7 +3514,8 @@ class CampfireViewModel(
         // An archived setlist is copied too, since a set that has been played is the likeliest start for the next one.
         // The sheet's copy is the setlist as it was when the sheet opened; a sync run or a song rename since then has moved
         // the entries on, and the copy is made of the setlist as it is.
-        val current = setlists.value.firstOrNull { it.fileName == setlist.fileName } ?: return@launchLibraryChange
+        val current = setlists.value.firstOrNull { it.fileName == setlist.fileName }
+            ?: return@launchLibraryChange sendMessage(Message.OperationFailed)
         val copy = createSetlist.invoke(title = title, description = description, date = date, isCountdownShown = isCountdownShown)
         saveSetlist(copy.copy(entries = current.entries))
     }

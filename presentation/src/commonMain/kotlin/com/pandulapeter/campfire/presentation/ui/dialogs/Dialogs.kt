@@ -314,7 +314,7 @@ internal fun CampfireDialogs(
             onDismiss = { viewModel.dismissSheet(dialog) },
             onConfirm = { setlistTitle, description, date, isCountdownShown ->
                 viewModel.editSetlist(
-                    setlistFileName = dialog.setlist.fileName,
+                    offered = dialog.setlist,
                     title = setlistTitle,
                     description = description,
                     date = date,
