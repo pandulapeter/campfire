@@ -11,10 +11,12 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.ChordProTransposer
+import com.pandulapeter.campfire.chordpro.model.ChordInstrument
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 class RenderSectionsTest {
@@ -273,5 +275,20 @@ class RenderSectionsTest {
     fun `the cut never leaves half of a character behind`() {
         val shortened = shortenedForDescription("a".repeat(39) + "\uD83C\uDFB8" + "a".repeat(20))
         assertFalse(shortened.removeSuffix("…").last().isHighSurrogate())
+    }
+
+    @Test
+    fun `searching the shapes a first model left out keeps its sections`() {
+        val model = prepareSongLyrics(
+            song = ChordProParser.parse("[Abmaj9#11/Eb]la\n\n[G]la"),
+            shouldShowChords = true,
+            labels = labels,
+            chordInstrument = ChordInstrument.GUITAR,
+            searchesShapes = false,
+        )
+        assertTrue(model.hasPendingShapes)
+        val searched = model.withSearchedShapes()
+        assertFalse(searched.hasPendingShapes)
+        assertSame(model.sections, searched.sections)
     }
 }

@@ -1100,7 +1100,7 @@ private fun SongDetailsPage(
                 showsTiming = shouldShowTempo,
                 chordInstrument = chordDiagrams?.instrument,
             ),
-        ) { inputs ->
+        ) { inputs, searchesShapes ->
             val transposed = transposeSong(inputs.text, inputs.transposition, inputs.spelling).withTempo(inputs.tempoOverride).withCapo(inputs.capoOverride)
             prepareSongLyrics(
                 song = notateSong(transposed, inputs.spelling),
@@ -1110,6 +1110,7 @@ private fun SongDetailsPage(
                 showsTiming = inputs.showsTiming,
                 chordInstrument = inputs.chordInstrument,
                 notation = inputs.spelling.notation.toChordNotation(),
+                searchesShapes = searchesShapes,
             )
         }
         if (model.song.blocks.isEmpty()) {

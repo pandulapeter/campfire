@@ -12,10 +12,13 @@ package com.pandulapeter.campfire.presentation.ui.chords
 import com.pandulapeter.campfire.chordpro.ChordNotation
 import com.pandulapeter.campfire.chordpro.ChordProChords
 import com.pandulapeter.campfire.chordpro.ChordProParser
+import com.pandulapeter.campfire.chordpro.ChordVoicings
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
 import com.pandulapeter.campfire.chordpro.model.ChordVoicing
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -38,6 +41,31 @@ class SongChordsTest {
             listOf("Am", "F", "G", "C", "E7", "D"),
             names("{comment: Intro: [Am] [F]}\n{start_of_grid}\n| G . C~E7 . |\n{end_of_grid}\n{start_of_tab}\nD\ne|---0---|\n{end_of_tab}").map { it.name },
         )
+    }
+
+    @Test
+    fun `the first build leaves the search out`() {
+        val unusual = ChordProChords.parse("Ebmaj9#11/Bb")!!
+        assertTrue(ChordVoicings.needsSearch(unusual, ChordInstrument.GUITAR))
+        val chords = songChordsOf(ChordProParser.parse("[C]la [Ebmaj9#11/Bb]la"), ChordNotation.STANDARD, ChordInstrument.GUITAR, searchesShapes = false)
+        assertFalse(chords[0].isShapePending)
+        assertNotNull(chords[0].defaultShape)
+        assertTrue(chords[1].isShapePending)
+        assertNull(chords[1].defaultShape)
+        val searched = chords.withSearchedShapes(ChordInstrument.GUITAR)
+        assertFalse(searched[1].isShapePending)
+        assertEquals(ChordVoicings.default(unusual, ChordInstrument.GUITAR), searched[1].defaultShape)
+        assertFalse(
+            songChordsOf(ChordProParser.parse("[Fbmaj9#11/Cb]la"), ChordNotation.STANDARD, ChordInstrument.KEYBOARD, searchesShapes = false).single().isShapePending,
+        )
+        val defined = songChordsOf(
+            ChordProParser.parse("{define: Gbmaj9#11 base-fret 1 frets 2 x 3 3 2 3}\n[Gbmaj9#11]la"),
+            ChordNotation.STANDARD,
+            ChordInstrument.GUITAR,
+            searchesShapes = false,
+        ).single()
+        assertTrue(defined.definition != null)
+        assertFalse(defined.isShapePending)
     }
 
     @Test

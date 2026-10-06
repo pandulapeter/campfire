@@ -145,6 +145,16 @@ class ChordVoicingsTest {
     }
 
     @Test
+    fun `only a fretted chord the tables lack needs the search, until it has been looked for`() {
+        val unusual = ChordProChords.parse("Dbmaj9#11/Ab")!!
+        assertTrue(!ChordVoicings.needsSearch(ChordProChords.parse("G")!!, ChordInstrument.GUITAR))
+        assertTrue(!ChordVoicings.needsSearch(unusual, ChordInstrument.KEYBOARD))
+        assertTrue(ChordVoicings.needsSearch(unusual, ChordInstrument.GUITAR))
+        ChordVoicings.default(unusual, ChordInstrument.GUITAR)
+        assertTrue(!ChordVoicings.needsSearch(unusual, ChordInstrument.GUITAR))
+    }
+
+    @Test
     fun `a chord with more notes than strings has no shape`() {
         val chord = ChordProChords.parse("C(b9,9,#9,11,#11,b13,13,#13,maj7)")!!
         listOf(ChordInstrument.GUITAR, ChordInstrument.UKULELE).forEach {

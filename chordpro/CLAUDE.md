@@ -409,7 +409,8 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   the root up (the fifth, then the root, left out where there are more than five), and their inversions, a slash chord's
   bass an octave below. `default` is a table lookup wherever the tables have the chord, and the search otherwise, whose
   answer is remembered for the rest of the session (a bounded copy-on-write map, safe from any thread), so the first
-  page that names an unusual chord pays for it once; `all` runs the search. `write` and `read` are a stored choice
+  page that names an unusual chord pays for it once, and `needsSearch` says whether it would have to search, for what builds a page in a frame to
+  leave out; `all` runs the search. `write` and `read` are a stored choice
   (`x 3 2 0 1 0`, `4 7 12 / 0`), and reading one back for a chord the tables know gives it their fingering; `read`
   takes a keyboard key in four octaves and a bass as a pitch class, since a stored choice arrives through sync.
   `ChordVoicingTablesTest` checks that every shape of the tables sounds the chord it is filed under, and the

@@ -54,6 +54,13 @@ object ChordVoicings {
         return shape
     }
 
+    /**
+     * Whether [default] would have to run the search for [chord] on [instrument]: a fretted chord the tables do not
+     * hold and nothing has looked for yet this session. What builds a page in a frame asks this first.
+     */
+    fun needsSearch(chord: Chord, instrument: ChordInstrument): Boolean =
+        instrument != ChordInstrument.KEYBOARD && (chord to instrument) !in defaults && tableShapes(chord, instrument).isEmpty()
+
     /** Every shape of [chord] on [instrument], [default] first: the tables', then the search's. */
     fun all(chord: Chord, instrument: ChordInstrument): List<ChordVoicing> = when (instrument) {
         ChordInstrument.KEYBOARD -> keyboard(chord)

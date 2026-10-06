@@ -34,10 +34,12 @@ import com.pandulapeter.campfire.data.model.domain.UserPreferences
  *   after it too: a `6-` says nothing about the shape under it to a player who has not counted the key out yet.
  * @property spelling The chord the notes are spelled from, in the standard notation: the page's, or on a capoed
  *   keyboard the one that sounds.
- * @property defaultShape The shape [chord] is shown with where nothing else says how it is played, worked out with the
- *   rest of the song away from the main thread.
+ * @property defaultShape The shape [chord] is shown with where nothing else says how it is played, or null while
+ *   [isShapePending].
  * @property definition The shape the song itself gives the chord on the instrument, where it gives one that is drawn,
  *   see [songChordsOf].
+ * @property isShapePending The default shape has not been looked for yet, see [songChordsOf]'s `searchesShapes`; drawn
+ *   as the empty frame until it has.
  */
 @Immutable
 internal data class SongChord(
@@ -48,6 +50,7 @@ internal data class SongChord(
     val spelling: String? = null,
     val defaultShape: ChordVoicing? = null,
     val definition: ChordDefinition? = null,
+    val isShapePending: Boolean = false,
 )
 
 /** What a cell names after the chord the page shows: the chord that sounds where it differs, or else its letters. */
@@ -72,12 +75,16 @@ internal val SongChord.secondaryName get() = soundingName ?: letterName
  * whatever it asks of a hand, since asking for the unusual is what one is for; one a transposition moved only while a
  * hand can hold it, in the octave the move chose for exactly that, and otherwise the chord is drawn as if the song gave
  * it no shape.
+ *
+ * Without [searchesShapes] a chord whose default shape only the search finds is left [SongChord.isShapePending], for
+ * [withSearchedShapes] to fill in away from the main thread: what builds a page in a frame cannot wait for a search.
  */
 internal fun songChordsOf(
     song: ChordProSong,
     notation: ChordNotation,
     instrument: ChordInstrument,
     capo: Int = 0,
+    searchesShapes: Boolean = true,
 ): List<SongChord> {
     val shownNames = ChordProNotation.shownNames(song, notation)
     val parsed = shownNames.keys.mapNotNull { name -> ChordProChords.parse(name)?.let { name to it } }
@@ -90,6 +97,7 @@ internal fun songChordsOf(
         val definition = (definitions.lastOrNull { it.name == name } ?: definitions.lastOrNull { ChordProChords.parse(it.name) == chord })
             ?.takeIf { it.movedBy == 0 || (it.voicing as? ChordVoicing.Fretted)?.frets?.let(ChordVoicings::isHoldable) != false }
             ?.let { if (soundingShift == 0) it else ChordProDefinitions.transposed(it, soundingShift) { name -> name } }
+        val isShapePending = definition == null && !searchesShapes && ChordVoicings.needsSearch(sounding, instrument)
         val spelling = if (soundingShift == 0) name else ChordProChords.transposedName(name, soundingShift, preferFlats = preferFlats)
         SongChord(
             name = shownNames.getValue(name),
@@ -97,10 +105,18 @@ internal fun songChordsOf(
             soundingName = if (soundingShift == 0) null else ChordProNotation.shownName(spelling, notation),
             letterName = name.takeIf { notation.isNumbering && shownNames[name] != name },
             spelling = spelling,
-            defaultShape = if (definition == null) ChordVoicings.default(sounding, instrument) else null,
+            defaultShape = if (definition == null && !isShapePending) ChordVoicings.default(sounding, instrument) else null,
             definition = definition,
+            isShapePending = isShapePending,
         )
     }
+}
+
+/** [this] with the shapes [songChordsOf] left to be looked for filled in: the search, so never on the main thread. */
+internal fun List<SongChord>.withSearchedShapes(instrument: ChordInstrument) = if (none { it.isShapePending }) {
+    this
+} else {
+    map { if (it.isShapePending) it.copy(defaultShape = ChordVoicings.default(it.chord, instrument), isShapePending = false) else it }
 }
 
 /** `:chordpro`'s instrument for the one the preferences name. */

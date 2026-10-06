@@ -127,6 +127,7 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_section_solo
 import com.pandulapeter.campfire.presentation.resources.song_editor_section_verse
 import com.pandulapeter.campfire.presentation.ui.chords.SongChord
 import com.pandulapeter.campfire.presentation.ui.chords.songChordsOf
+import com.pandulapeter.campfire.presentation.ui.chords.withSearchedShapes
 import com.pandulapeter.campfire.presentation.ui.components.EDGE_FADE_SIZE
 import com.pandulapeter.campfire.presentation.ui.components.ExpandChevron
 import com.pandulapeter.campfire.presentation.ui.components.textResource
@@ -2258,6 +2259,7 @@ private fun maxAnimatedSectionHeight(columnWidth: Int) =
  * @param isCut Whether [sections] stop short of the end of [song], see [LayoutBudget].
  * @param shouldShowChords False for lyrics-only mode, see [prepareSongLyrics].
  * @param notation The notation [song] is written in, which decides what is a chord in the brackets of a comment.
+ * @param chordInstrument The instrument [chords] were collected for, which their pending shapes are looked for on.
  */
 internal class SongLyricsModel(
     val song: ChordProSong,
@@ -2266,7 +2268,26 @@ internal class SongLyricsModel(
     val shouldShowChords: Boolean,
     val notation: ChordNotation = ChordNotation.STANDARD,
     val chords: List<SongChord> = emptyList(),
-)
+    val chordInstrument: ChordInstrument? = null,
+) {
+
+    /** Whether some chord's shape is still to be looked for, see [withSearchedShapes]. */
+    val hasPendingShapes get() = chords.any { it.isShapePending }
+
+    /**
+     * This model with its pending shapes found: the very same song and sections, so that only the Chords section is
+     * measured again, at the size it already had.
+     */
+    fun withSearchedShapes() = SongLyricsModel(
+        song = song,
+        sections = sections,
+        isCut = isCut,
+        shouldShowChords = shouldShowChords,
+        notation = notation,
+        chords = chordInstrument?.let { chords.withSearchedShapes(it) } ?: chords,
+        chordInstrument = chordInstrument,
+    )
+}
 
 /**
  * Builds the sections of [song] the way [SongLyrics] lays them out. It touches nothing but its arguments, so it is
@@ -2281,6 +2302,8 @@ internal class SongLyricsModel(
  * which is the slow part of that section and so belongs here; null where the song has no such section.
  * @param notation The notation [song] is written in.
  * @param standardSong [song] before it was written in [notation], which its chords are read from.
+ * @param searchesShapes False to leave the shapes only the search finds for [SongLyricsModel.withSearchedShapes], for a
+ * model built on the main thread.
  */
 internal fun prepareSongLyrics(
     song: ChordProSong,
@@ -2290,6 +2313,7 @@ internal fun prepareSongLyrics(
     chordInstrument: ChordInstrument? = null,
     notation: ChordNotation = ChordNotation.STANDARD,
     standardSong: ChordProSong = song,
+    searchesShapes: Boolean = true,
 ) = LayoutBudget.fit(song.toRenderSections(shouldShowChords, labels, showsTiming)).let { (sections, isCut) ->
     SongLyricsModel(
         song = song,
@@ -2298,10 +2322,11 @@ internal fun prepareSongLyrics(
         shouldShowChords = shouldShowChords,
         notation = notation,
         chords = if (shouldShowChords && chordInstrument != null) {
-            songChordsOf(standardSong, notation, chordInstrument, standardSong.metadata.capo ?: 0)
+            songChordsOf(standardSong, notation, chordInstrument, standardSong.metadata.capo ?: 0, searchesShapes = searchesShapes)
         } else {
             emptyList()
         },
+        chordInstrument = chordInstrument,
     )
 }
 
@@ -2370,19 +2395,25 @@ internal data class SongLyricsInputs(
 
 /**
  * The model [prepare] builds of [inputs]. The first one is built right here, so that a page never opens on an empty
- * frame; every later one is built on [Dispatchers.Default], with the one before it staying on screen until it is
- * ready. A change that arrives meanwhile cancels the wait, although not the parse itself, which is not cooperative:
- * that one finishes in the background and its result is dropped.
+ * frame, but without the chord shapes only the search finds, which follow from [Dispatchers.Default] right after
+ * (see [SongLyricsModel.withSearchedShapes]); every later one is built on [Dispatchers.Default] whole, with the one
+ * before it staying on screen until it is ready. A change that arrives meanwhile cancels the wait, although not the
+ * parse or the search itself, which are not cooperative: that one finishes in the background and its result is dropped.
  */
 @Composable
 internal fun rememberSongLyricsModel(
     inputs: SongLyricsInputs,
-    prepare: (SongLyricsInputs) -> SongLyricsModel,
+    prepare: (inputs: SongLyricsInputs, searchesShapes: Boolean) -> SongLyricsModel,
 ): SongLyricsModel {
     val latestPrepare by rememberUpdatedState(prepare)
-    val state = remember { mutableStateOf(inputs to prepare(inputs)) }
+    val state = remember { mutableStateOf(inputs to prepare(inputs, false)) }
     LaunchedEffect(inputs) {
-        if (state.value.first != inputs) state.value = inputs to withContext(Dispatchers.Default) { latestPrepare(inputs) }
+        val (builtFrom, model) = state.value
+        state.value = when {
+            builtFrom != inputs -> inputs to withContext(Dispatchers.Default) { latestPrepare(inputs, true) }
+            model.hasPendingShapes -> inputs to withContext(Dispatchers.Default) { model.withSearchedShapes() }
+            else -> return@LaunchedEffect
+        }
     }
     return state.value.second
 }
