@@ -10,8 +10,11 @@
 package com.pandulapeter.campfire.data.source.local.implementation.zip
 
 /**
- * Writes zip archives with one STORED (uncompressed) entry per input. The files the app exports are tiny ChordPro and
- * JSON documents, so leaving out DEFLATE compression costs nothing and keeps the writer trivial.
+ * Writes zip archives with one STORED (uncompressed) entry per input. Storing keeps the writer to the headers - this
+ * module has no DEFLATE encoder, only the reader's `Inflater` - and keeps an archive's size equal to what an import
+ * unpacks it to (plus its headers), which is what the export's too-large-to-import warning compares with
+ * `ImportLimits.MAX_IMPORT_SIZE`. ChordPro text would deflate to about half its size, so a whole library's export is
+ * about twice the file it could be.
  */
 internal object ZipWriter {
 

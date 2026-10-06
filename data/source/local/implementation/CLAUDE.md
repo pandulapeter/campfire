@@ -198,8 +198,9 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
   provenance and remaining producer coverage in its README.
 - **`zip/`** — a dependency-free zip implementation: `ZipReader` (STORED + DEFLATE; a ZIP64 archive rejected, a ZIP64,
   encrypted or otherwise compressed entry left out),
-  `ZipWriter` (STORED only — song text compresses badly enough not to be worth it), with every entry dated by its
-  supplied DOS timestamp and more than 65,534 entries refused rather than written as ZIP64, `Inflater` (raw DEFLATE, RFC 1951,
+  `ZipWriter` (STORED only — the module has no DEFLATE encoder, and a stored archive's size is what an import unpacks,
+  which is what lets the export warn by the archive's size that it is past `ImportLimits.MAX_IMPORT_SIZE`; song text
+  would compress about 2×), with every entry dated by its supplied DOS timestamp and more than 65,534 entries refused rather than written as ZIP64, `Inflater` (raw DEFLATE, RFC 1951,
   following `puff.c`) and `Crc32`. It exists because no multiplatform zip library covers wasmJs. Sizes an archive
   declares are trusted only as far as a first guess: an entry is asked about by name before it is inflated — hidden
   files and anything an import would not look inside are never read, a song over `ImportLimits.MAX_TEXT_FILE_SIZE` is
