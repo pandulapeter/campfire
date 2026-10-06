@@ -73,6 +73,12 @@ data class ImportPlan(
          */
         val replacesFileName: String? = null,
         val isConverted: Boolean = false,
+        /**
+         * Which picked file it came out of - the place of the archive it was unpacked from among the files picked, or
+         * null for a file picked loose. File names are only unique within one archive, so a setlist's entries are
+         * resolved among the songs of its own [SetlistEntry.origin] before the rest of the batch.
+         */
+        val origin: Int? = null,
     )
 
     data class SetlistEntry(
@@ -85,6 +91,8 @@ data class ImportPlan(
         val status: Status,
         /** The name of the file it arrived in, which the setlist is planned again under once the songs are written. */
         val sourceFileName: String,
+        /** Which picked file it came out of, as [SongEntry.origin] says: the songs its entries look for first. */
+        val origin: Int? = null,
     )
 
     /** What the library already has under the name the entry wants. */

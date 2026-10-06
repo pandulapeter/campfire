@@ -40,13 +40,43 @@ internal object ImportPlanner {
         val text: String,
         val sourceFileName: String?,
         val isConverted: Boolean = false,
+        /** See [ImportPlan.SongEntry.origin]. */
+        val origin: Int? = null,
     )
 
     /** One setlist of the batch, as `SetlistRepository.parseSetlist` named it, and the name of the file it arrived in. */
     data class IncomingSetlist(
         val setlist: Setlist,
         val sourceFileName: String,
+        /** See [ImportPlan.SetlistEntry.origin]. */
+        val origin: Int? = null,
     )
+
+    /**
+     * Where each song file of the batch lands, by the name it arrived under, kept apart per picked file it came out of
+     * ([ImportPlan.SongEntry.origin]): names are only unique within one archive, and two backups picked together can
+     * each hold a different `Amazing Grace.cho`, which each one's setlists mean their own of.
+     */
+    class SongFileNames(private val byOrigin: Map<Int?, Map<String, String>>) {
+
+        private val all by lazy { byOrigin.values.fold(emptyMap<String, String>()) { names, origin -> names + origin } }
+        private val forOrigins = mutableMapOf<Int?, Map<String, String>>()
+
+        /**
+         * What a setlist from [origin] points at: its own archive's songs first, then the rest of the batch's, which is
+         * what a loose setlist picked beside loose songs, or one naming a song that arrived elsewhere, still finds.
+         */
+        fun forOrigin(origin: Int?) = forOrigins.getOrPut(origin) { byOrigin[origin]?.let { all + it } ?: all }
+
+        /** Every name of the batch, the later origin's where two share one. */
+        fun asMap() = all
+
+        companion object {
+
+            /** Every name under the origin of the files picked loose. */
+            fun ofLooseFiles(songFileNames: Map<String, String>) = SongFileNames(mapOf(null to songFileNames))
+        }
+    }
 
     /**
      * Plans each song by comparing only the library files in its collision family.
@@ -151,12 +181,19 @@ internal object ImportPlanner {
     fun planSetlists(
         incoming: List<IncomingSetlist>,
         librarySetlists: List<Setlist>,
-        songFileNames: Map<String, String>,
+        songFileNames: SongFileNames,
     ) = planInOrder(
         incoming = incoming.inArrivingOrder(SETLIST_EXTENSIONS, { it.setlist.fileName }, { it.sourceFileName }),
         librarySetlists = librarySetlists,
         songFileNames = songFileNames,
     )
+
+    /** [planSetlists] for a batch whose songs all share one origin. */
+    fun planSetlists(
+        incoming: List<IncomingSetlist>,
+        librarySetlists: List<Setlist>,
+        songFileNames: Map<String, String>,
+    ) = planSetlists(incoming = incoming, librarySetlists = librarySetlists, songFileNames = SongFileNames.ofLooseFiles(songFileNames))
 
     /**
      * Plans the setlists of [planned] again once the songs have been written and [songFileNames] holds the names they
@@ -165,23 +202,31 @@ internal object ImportPlanner {
     fun replanSetlists(
         planned: List<ImportPlan.SetlistEntry>,
         librarySetlists: List<Setlist>,
-        songFileNames: Map<String, String>,
+        songFileNames: SongFileNames,
     ) = planInOrder(
-        incoming = planned.map { IncomingSetlist(setlist = it.setlist, sourceFileName = it.sourceFileName) },
+        // The origin goes back in too, or the setlists written would point at the batch's songs rather than their own.
+        incoming = planned.map { IncomingSetlist(setlist = it.setlist, sourceFileName = it.sourceFileName, origin = it.origin) },
         librarySetlists = librarySetlists,
         songFileNames = songFileNames,
     )
 
+    /** [replanSetlists] for a batch whose songs all share one origin. */
+    fun replanSetlists(
+        planned: List<ImportPlan.SetlistEntry>,
+        librarySetlists: List<Setlist>,
+        songFileNames: Map<String, String>,
+    ) = replanSetlists(planned = planned, librarySetlists = librarySetlists, songFileNames = SongFileNames.ofLooseFiles(songFileNames))
+
     /** Where the plan expects each song file to land: its own name, the library file it already is, or its repeat's. */
-    fun plannedSongFileNames(songs: List<ImportPlan.SongEntry>): Map<String, String> {
+    fun plannedSongFileNames(songs: List<ImportPlan.SongEntry>): SongFileNames {
         val fileNames = arrayOfNulls<String>(songs.size)
-        val songFileNames = mutableMapOf<String, String>()
+        val songFileNames = mutableMapOf<Int?, MutableMap<String, String>>()
         songs.forEachIndexed { index, entry ->
             val fileName = entry.repeatedEntryIndex?.let(fileNames::getOrNull) ?: entry.fileName
             fileNames[index] = fileName
-            entry.sourceFileName?.let { songFileNames[it] = fileName }
+            entry.sourceFileName?.let { songFileNames.getOrPut(entry.origin) { mutableMapOf() }[it] = fileName }
         }
-        return songFileNames
+        return SongFileNames(songFileNames)
     }
 
     /**
@@ -197,11 +242,11 @@ internal object ImportPlanner {
     private fun planInOrder(
         incoming: List<IncomingSetlist>,
         librarySetlists: List<Setlist>,
-        songFileNames: Map<String, String>,
+        songFileNames: SongFileNames,
     ): List<ImportPlan.SetlistEntry> {
         val libraryFamilies = librarySetlists.map { it.fileName }.groupedByFamily(SETLIST_EXTENSIONS)
         val librarySetlistsByFileName = librarySetlists.associateBy { it.fileName }
-        val written = incoming.map { it.setlist.withSongFileNames(songFileNames) }
+        val written = incoming.map { it.setlist.withSongFileNames(songFileNames.forOrigin(it.origin)) }
         // See planSongs: every setlist against the library first, so that a library setlist the batch brings back
         // unchanged is known before a different one wanting its name could be made a question about replacing it.
         val identicalSetlists = incoming.mapIndexed { index, (setlist, sourceFileName) ->
@@ -214,9 +259,9 @@ internal object ImportPlanner {
         val keptLibraryFileNames = identicalSetlists.mapNotNullTo(hashSetOf()) { it?.fileName }
         val plannedSetlists = mutableMapOf<String, MutableList<Setlist>>()
         val conflictingFileNames = mutableSetOf<String>()
-        return incoming.mapIndexed { index, (setlist, sourceFileName) ->
+        return incoming.mapIndexed { index, (setlist, sourceFileName, origin) ->
             fun entry(fileName: String, status: ImportPlan.Status) =
-                ImportPlan.SetlistEntry(fileName = fileName, setlist = setlist, status = status, sourceFileName = sourceFileName)
+                ImportPlan.SetlistEntry(fileName = fileName, setlist = setlist, status = status, sourceFileName = sourceFileName, origin = origin)
             val identical = identicalSetlists[index]
             val planned = plannedSetlists.getOrPut(setlist.fileName) { mutableListOf() }
             when {
@@ -257,6 +302,7 @@ internal object ImportPlanner {
         repeatedEntryIndex = repeatedEntryIndex,
         replacesFileName = replacesFileName,
         isConverted = isConverted,
+        origin = origin,
     )
 
     private suspend fun readAll(

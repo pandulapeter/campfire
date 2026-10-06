@@ -235,7 +235,7 @@ internal class ImportPlannerTest {
         )
 
         assertEquals(listOf(ImportPlan.Status.IDENTICAL), songs.map { it.status })
-        assertEquals(mapOf("Song.cho" to "song_2.cho"), ImportPlanner.plannedSongFileNames(songs))
+        assertEquals(mapOf("Song.cho" to "song_2.cho"), ImportPlanner.plannedSongFileNames(songs).asMap())
         assertEquals(listOf(ImportPlan.Status.IDENTICAL), setlists.map { it.status })
     }
 
@@ -274,7 +274,7 @@ internal class ImportPlannerTest {
         assertEquals(listOf(ImportPlan.Status.NEW), songs.map { it.status })
         assertEquals(listOf(ImportPlan.Status.NEW), setlists.map { it.status })
         assertFalse(ImportPlan(songs = songs, setlists = setlists).hasConflicts)
-        assertEquals(listOf("song.cho"), setlists.single().setlist.withSongFileNames(songFileNames).entries.map { it.songFileName })
+        assertEquals(listOf("song.cho"), setlists.single().setlist.withSongFileNames(songFileNames.asMap()).entries.map { it.songFileName })
     }
 
     @Test
@@ -288,7 +288,7 @@ internal class ImportPlannerTest {
         assertEquals(listOf(ImportPlan.Status.IDENTICAL, ImportPlan.Status.NEW), plan.map { it.status })
         assertEquals(listOf("x.cho", "x.cho"), plan.map { it.fileName })
         assertFalse(ImportPlan(songs = plan).hasConflicts)
-        assertEquals(mapOf("x.cho" to "x.cho", "x_2.cho" to "x.cho"), ImportPlanner.plannedSongFileNames(plan))
+        assertEquals(mapOf("x.cho" to "x.cho", "x_2.cho" to "x.cho"), ImportPlanner.plannedSongFileNames(plan).asMap())
     }
 
     @Test
@@ -498,7 +498,7 @@ internal class ImportPlannerTest {
 
             assertEquals(listOf(ImportPlan.Status.IDENTICAL), plan.map { it.status })
             assertEquals(listOf("Wonderwall.cho"), plan.map { it.fileName })
-            assertEquals(mapOf("Wonderwall.cho" to "Wonderwall.cho"), ImportPlanner.plannedSongFileNames(plan))
+            assertEquals(mapOf("Wonderwall.cho" to "Wonderwall.cho"), ImportPlanner.plannedSongFileNames(plan).asMap())
         }
     }
 
@@ -623,6 +623,38 @@ internal class ImportPlannerTest {
     /** A read that ignores case and Unicode form, as macOS does. */
     private fun Map<String, String>.folding(): suspend (String) -> String? = { name ->
         entries.firstOrNull { it.key.normalizedToNfc().equals(name.normalizedToNfc(), ignoreCase = true) }?.value
+    }
+
+    @Test
+    fun aSetlistPointsAtTheSongOfItsOwnArchiveWhereTwoArrivedUnderOneName() = runTest {
+        val songs = ImportPlanner.planSongs(
+            incoming = listOf(
+                ImportPlanner.IncomingSong(fileName = "a-song.cho", text = A, sourceFileName = "Song.cho", origin = 0),
+                ImportPlanner.IncomingSong(fileName = "b-song.cho", text = B, sourceFileName = "Song.cho", origin = 1),
+            ),
+            libraryFileNames = emptyList(),
+            readLibraryText = { null },
+        )
+        val named = SONG_SETLIST.copy(entries = listOf(Setlist.Entry(songFileName = "Song.cho")))
+        val setlists = ImportPlanner.planSetlists(
+            incoming = listOf(
+                ImportPlanner.IncomingSetlist(named.copy(fileName = "one.setlist.json"), "one.setlist.json", origin = 0),
+                ImportPlanner.IncomingSetlist(named.copy(fileName = "two.setlist.json"), "two.setlist.json", origin = 1),
+                ImportPlanner.IncomingSetlist(named.copy(fileName = "loose.setlist.json"), "loose.setlist.json"),
+            ),
+            librarySetlists = emptyList(),
+            songFileNames = ImportPlanner.plannedSongFileNames(songs),
+        )
+
+        assertEquals(listOf(0, 1, null), setlists.map { it.origin })
+        val songFileNames = ImportPlanner.plannedSongFileNames(songs)
+        assertEquals(
+            listOf("a-song.cho", "b-song.cho"),
+            setlists.take(2).map { entry -> entry.setlist.withSongFileNames(songFileNames.forOrigin(entry.origin)).entries.single().songFileName },
+        )
+        // A loose setlist still finds a song that arrived in an archive.
+        val loose = ImportPlanner.SongFileNames(mapOf(0 to mapOf("Only.cho" to "only.cho"))).forOrigin(null)
+        assertEquals("only.cho", named.copy(entries = listOf(Setlist.Entry(songFileName = "Only.cho"))).withSongFileNames(loose).entries.single().songFileName)
     }
 
     private fun song(text: String, sourceFileName: String? = null) =

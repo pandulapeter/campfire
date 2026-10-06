@@ -288,6 +288,34 @@ class ImportFilesUseCaseImplTest {
     }
 
     @Test
+    fun `a setlist is written pointing at the song of its own archive where two arrived under one name`() = runTest {
+        val songs = FakeSongRepository(files = mutableMapOf())
+        val setlists = FakeSetlistRepository()
+        val songEntries = ImportPlanner.planSongs(
+            incoming = listOf(
+                ImportPlanner.IncomingSong(fileName = "a-song.cho", text = A, sourceFileName = "Song.cho", origin = 0),
+                ImportPlanner.IncomingSong(fileName = "b-song.cho", text = B, sourceFileName = "Song.cho", origin = 1),
+            ),
+            libraryFileNames = emptyList(),
+            readLibraryText = { null },
+        )
+        val setlistEntries = ImportPlanner.planSetlists(
+            incoming = listOf("one", "two").mapIndexed { origin, name ->
+                ImportPlanner.IncomingSetlist(setlist(entries = listOf("Song.cho")).copy(fileName = "$name.setlist.json", title = name), "$name.setlist.json", origin)
+            },
+            librarySetlists = emptyList(),
+            songFileNames = ImportPlanner.plannedSongFileNames(songEntries),
+        )
+
+        ImportFilesUseCaseImpl(songRepository = songs, setlistRepository = setlists).invoke(ImportPlan(songs = songEntries, setlists = setlistEntries), ImportConflictResolution.KEEP_BOTH)
+
+        assertEquals(
+            mapOf("one" to listOf("a-song.cho"), "two" to listOf("b-song.cho")),
+            setlists.files.values.associate { setlist -> setlist.title to setlist.entries.map { it.songFileName } },
+        )
+    }
+
+    @Test
     fun `a repeat of a skipped conflicting song is skipped with it rather than a duplicate of the library song`() = runTest {
         fun plan() = ImportPlan(
             songs = listOf(

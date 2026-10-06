@@ -55,9 +55,9 @@ class PrepareImportUseCaseImpl internal constructor(
     ): ImportPlan = withContext(Dispatchers.Default) { plan(files, onProgress) }
 
     private suspend fun plan(files: List<ImportedFile>, onProgress: (ImportProgress) -> Unit): ImportPlan {
-        val songFiles = mutableListOf<ImportedFile>()
-        val setlistFiles = mutableListOf<ImportedFile>()
-        val documentFiles = mutableListOf<ImportedFile>()
+        val songFiles = mutableListOf<IncomingFile>()
+        val setlistFiles = mutableListOf<IncomingFile>()
+        val documentFiles = mutableListOf<IncomingFile>()
         val unreadableDocumentFileNames = mutableListOf<String>()
         val skippedFileNames = mutableListOf<String>()
 
@@ -67,7 +67,8 @@ class PrepareImportUseCaseImpl internal constructor(
         // read its files through an ImportBudget.
         var remaining = ImportLimits.MAX_IMPORT_SIZE
 
-        fun sort(file: ImportedFile) {
+        // Loose files share the null origin, and everything unpacked from the picked file at index i has origin i.
+        fun sort(file: ImportedFile, origin: Int?) {
             val extension = file.name.substringAfterLast('.', "").lowercase()
             when {
                 // Picked along with the songs it sits next to by a "select all" on a volume macOS has written to. It
@@ -77,10 +78,11 @@ class PrepareImportUseCaseImpl internal constructor(
                 file.isTooLarge || file.bytes.size > minOf(ImportLimits.maxSizeOf(file.name), remaining) -> oversizedFileNames += file.name
                 else -> {
                     remaining -= file.bytes.size
+                    val incoming = IncomingFile(file = file, origin = origin)
                     when (extension) {
-                        SETLIST_EXTENSION -> setlistFiles += file
-                        in DOCUMENT_EXTENSIONS -> documentFiles += file
-                        else -> songFiles += file
+                        SETLIST_EXTENSION -> setlistFiles += incoming
+                        in DOCUMENT_EXTENSIONS -> documentFiles += incoming
+                        else -> songFiles += incoming
                     }
                 }
             }
@@ -94,14 +96,18 @@ class PrepareImportUseCaseImpl internal constructor(
             val isArchiveByName = LibraryFiles.isArchiveFileName(file.name)
             val isArchive = isArchiveByName || (!LibraryFiles.isImportableFileName(file.name) && LibraryFiles.isZipArchive(file.bytes))
             when {
-                !isArchive -> sort(file)
+                !isArchive -> sort(file = file, origin = null)
                 file.isTooLarge || file.bytes.size > ImportLimits.MAX_IMPORT_SIZE -> oversizedFileNames += file.name
                 else -> try {
                     val entries = archiveRepository.unpack(archive = file.bytes, maxSize = remaining)
                     // Everyday document formats are zip archives too (an OpenDocument, a spreadsheet, an e-book), and
                     // their parts are not what anybody picked: one recognised by its bytes alone that holds nothing an
                     // import reads is reported as the one file it was, rather than as the names of its insides.
-                    if (isArchiveByName || entries.any { it.isImportable() }) entries.forEach(::sort) else skippedFileNames += file.name
+                    if (isArchiveByName || entries.any { it.isImportable() }) {
+                        entries.forEach { sort(file = it, origin = index) }
+                    } else {
+                        skippedFileNames += file.name
+                    }
                 } catch (exception: CancellationException) {
                     throw exception
                 } catch (exception: Exception) {
@@ -124,19 +130,19 @@ class PrepareImportUseCaseImpl internal constructor(
 
     /** Every song of the batch under the name its own header gives it, held against the library by [ImportPlanner]. */
     private suspend fun planSongs(
-        files: List<ImportedFile>,
-        documents: List<ImportedFile>,
+        files: List<IncomingFile>,
+        documents: List<IncomingFile>,
         skippedFileNames: MutableList<String>,
         unreadableDocumentFileNames: MutableList<String>,
         oversizedFileNames: MutableList<String>,
         onProgress: (ImportProgress) -> Unit,
     ): List<ImportPlan.SongEntry> {
-        val incoming = (files + documents).flatMapIndexed { index, file ->
+        val incoming = (files + documents).flatMapIndexed { index, (file, origin) ->
             onProgress(ImportProgress(ImportProgress.Phase.READING, index, files.size + documents.size, file.name))
             // The web's default dispatcher is a queue on its only thread, so yielding between files and songs keeps
             // the page painting and lets a preparation nobody awaits any more notice cancellation.
             yield()
-            val isDocument = file in documents
+            val isDocument = index >= files.size
             val original = if (isDocument) null else file.bytes.decodeLibraryText()
             val converted = when {
                 isDocument -> {
@@ -174,6 +180,7 @@ class PrepareImportUseCaseImpl internal constructor(
                     text = text,
                     sourceFileName = file.name.takeIf { parts.size == 1 },
                     isConverted = isConverted,
+                    origin = origin,
                 )
             }
             // Formatting adds section separators and a final newline; keep the resulting text within the same
@@ -198,18 +205,18 @@ class PrepareImportUseCaseImpl internal constructor(
 
     /** Every setlist of the batch held against the library by [ImportPlanner]. */
     private suspend fun planSetlists(
-        files: List<ImportedFile>,
+        files: List<IncomingFile>,
         skippedFileNames: MutableList<String>,
-        songFileNames: Map<String, String>,
+        songFileNames: ImportPlanner.SongFileNames,
     ): List<ImportPlan.SetlistEntry> {
-        val incoming = files.mapNotNull { file ->
+        val incoming = files.mapNotNull { (file, origin) ->
             yield()
             val setlist = setlistRepository.parseSetlist(file.bytes.decodeLibraryText())
             if (setlist == null) {
                 skippedFileNames += file.name
                 return@mapNotNull null
             }
-            ImportPlanner.IncomingSetlist(setlist = setlist, sourceFileName = file.name)
+            ImportPlanner.IncomingSetlist(setlist = setlist, sourceFileName = file.name, origin = origin)
         }
         return ImportPlanner.planSetlists(
             incoming = incoming,
@@ -229,6 +236,9 @@ class PrepareImportUseCaseImpl internal constructor(
                 (bytes.isNotEmpty() || isTooLarge) &&
                 (extension in SONG_EXTENSIONS || extension in DOCUMENT_EXTENSIONS || name.endsWith(LibraryFiles.SETLIST_EXTENSION, ignoreCase = true))
     }
+
+    /** A file of the batch and which picked file it came out of, see [ImportPlan.SongEntry.origin]. */
+    private data class IncomingFile(val file: ImportedFile, val origin: Int?)
 
     private companion object {
         /** The ChordPro family plus plain text, without the dots, which is how a file name is asked for its type. */

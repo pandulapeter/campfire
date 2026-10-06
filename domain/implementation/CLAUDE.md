@@ -79,8 +79,9 @@ The ones that carry real logic:
   library setlist, with the day that one had; the demo library is imported with `isDatingUndatedSetlists` off, so its
   setlist stays undated (every installation then holds the same file, and a sync run between two of them finds
   nothing to keep side by side) and asking for it again finds it unchanged — and the entries as they will be written, each pointing where its song lands, so a setlist that
-  names an incoming song is only the library's one when the song ends up where the library's points. `ImportPlanner` is
-  covered by `commonTest`. Preparing runs on `Dispatchers.Default`, because decoding, splitting, header parsing and
+  names an incoming song is only the library's one when the song ends up where the library's points. A setlist's
+  entries are resolved among the songs of the picked file it came out of (`ImportPlan.SongEntry.origin`) before the
+  rest of the batch, since file names are only unique within one archive. `ImportPlanner` is covered by `commonTest`. Preparing runs on `Dispatchers.Default`, because decoding, splitting, header parsing and
   comparisons would otherwise occupy the view model's main thread, and yields between songs so the web can paint and
   cancellation can stop it. Applying turns each entry plus the
   `ImportConflictResolution` into write / replace / disregard / leave alone, and only `REPLACE` ever overwrites.

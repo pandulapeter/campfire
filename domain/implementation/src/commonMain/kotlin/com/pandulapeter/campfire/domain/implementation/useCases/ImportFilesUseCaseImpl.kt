@@ -50,8 +50,9 @@ class ImportFilesUseCaseImpl internal constructor(
         val duplicateFileNames = mutableListOf<String>()
         val convertedSongFileNames = mutableListOf<String>()
         // Where each imported file ended up, for the setlists below. Only files that held exactly one song are in
-        // here: a file that held several has no single name a setlist could have been pointing at.
-        val storedSongFileNames = mutableMapOf<String, String>()
+        // here: a file that held several has no single name a setlist could have been pointing at. Kept per picked file
+        // the song came out of, since names are only unique within one archive.
+        val storedSongFileNamesByOrigin = mutableMapOf<Int?, MutableMap<String, String>>()
 
         val importedSetlists = mutableListOf<Setlist>()
         val skippedConflicts = mutableListOf<String>()
@@ -135,7 +136,7 @@ class ImportFilesUseCaseImpl internal constructor(
                     }
                 }
                 storedNames[index] = storedName
-                entry.sourceFileName?.let { storedSongFileNames[it] = storedName }
+                entry.sourceFileName?.let { storedSongFileNamesByOrigin.getOrPut(entry.origin) { mutableMapOf() }[it] = storedName }
                 processedSongs++
                 currentFileName = null
             }
@@ -147,6 +148,7 @@ class ImportFilesUseCaseImpl internal constructor(
             val replacedSetlistFileNames = mutableSetOf<String>()
             // Planned again on the names the songs actually got: a song kept next to the one it collided with is
             // numbered, and a setlist pointing at it is then no longer the library's setlist it was the same as.
+            val storedSongFileNames = ImportPlanner.SongFileNames(storedSongFileNamesByOrigin)
             val setlists = ImportPlanner.replanSetlists(
                 planned = plan.setlists,
                 librarySetlists = librarySetlists,
@@ -172,7 +174,7 @@ class ImportFilesUseCaseImpl internal constructor(
                         // one.
                         val replaced = if (shouldReplace) librarySetlists.firstOrNull { it.fileName == entry.fileName } else null
                         importedSetlists += setlistRepository.importSetlist(
-                            setlist = entry.setlist.withSongFileNames(storedSongFileNames).let {
+                            setlist = entry.setlist.withSongFileNames(storedSongFileNames.forOrigin(planned.origin)).let {
                                 it.copy(
                                     date = it.date ?: replaced?.date ?: today,
                                     isCountdownShown = if (it.date == null && replaced != null) replaced.isCountdownShown else it.isCountdownShown,
