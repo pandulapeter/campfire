@@ -13,7 +13,6 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -175,20 +174,24 @@ private fun ChordShapeCell(
         selection = selection,
     )
     val description = chordCellDescription(cell)
-    Row(verticalAlignment = Alignment.Bottom) {
+    // The cell is as wide as its diagram, so a name that does not fit it, a step with its letters or a chord with the one
+    // that sounds, wraps onto a second line rather than losing the half that says what the shape is.
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+        itemVerticalAlignment = Alignment.Bottom,
+    ) {
         Text(
             text = chord.name,
             style = MaterialTheme.typography.titleMedium,
             color = LocalSecondAccentColor.current,
-            maxLines = 1,
+            textAlign = TextAlign.Center,
         )
         chord.secondaryName?.let {
             Text(
-                modifier = Modifier.padding(start = 6.dp),
                 text = it,
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
+                textAlign = TextAlign.Center,
             )
         }
     }
