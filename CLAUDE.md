@@ -470,8 +470,8 @@ localized in both languages.
   `Info.plist` by a build phase of the Xcode project, which sets no version of its own, reading `gradle.properties`
   and then `local.properties` the way Gradle does.
 - **Everything configurable is a `campfire.*` Gradle property**, declared with a default in `gradle.properties` and
-  read with `project.property("campfire.x")`: the app version, the Android version code and the iOS build number, the
-  Android release signing values, the Dropbox app key, which of its four distributions a desktop build is, the Mac App Store build number and
+  read with `project.property("campfire.x")`: the app version and the build number, the
+  Android release signing values, the Dropbox app key, the Mac App Store
   signing, the Microsoft Store package identity, and whether the web distribution is precompressed. `property`
   rather than `findProperty`, so a typo fails the build instead of writing the string "null" into an APK. Inside a `tasks.registering { }` block it has to be `project.property(...)`, or the
   lookup goes to the task.

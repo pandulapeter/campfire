@@ -11,8 +11,9 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <!--
-      The one thing Campfire ever reaches the network for: the cloud folder the user connected in Settings. Nothing
-      else in the app talks to anything, and sync is off until the user turns it on.
+      Campfire reaches the network for two things the user asks for: the cloud folder they connected in Settings, which
+      is off until they do, and the cover images their songs name and the cover search, which the Cover art switch in
+      Settings turns off. Nothing else in the app talks to anything.
     -->
     <uses-permission android:name="android.permission.INTERNET" />
 
