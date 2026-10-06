@@ -62,7 +62,12 @@ internal class DesktopAudioOutput : AudioOutput {
                     bytes[index * 2] = sample.toByte()
                     bytes[index * 2 + 1] = (sample shr 8).toByte()
                 }
-                line.write(bytes, 0, bytes.size)
+                // A write that returns short without stop() having taken the line is the device failing: the JDK does not
+                // throw for that, and a loop that went on would render the stream as fast as the processor allows.
+                if (line.write(bytes, 0, bytes.size) < bytes.size) {
+                    if (this.line === line) listener.onLost(MetronomeStopReason.OUTPUT_FAILED)
+                    break
+                }
             }
         } catch (_: Exception) {
             if (this.line === line) listener.onLost(MetronomeStopReason.OUTPUT_FAILED)
