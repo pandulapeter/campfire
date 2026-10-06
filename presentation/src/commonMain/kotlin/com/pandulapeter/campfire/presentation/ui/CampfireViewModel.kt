@@ -1781,9 +1781,13 @@ class CampfireViewModel(
      * change made just before quitting would reach the other devices only the next time this computer opens Campfire.
      * A run that is going is waited for, and so is one chained behind it, the metronome having been stopped first. Past
      * [EXIT_SYNC_GRACE] the run is stopped instead and its winding down waited for, briefly, since a stopped run writes its index and clears the marker
-     * that would otherwise have the next launch report it as interrupted and start no run of its own.
+     * that would otherwise have the next launch report it as interrupted and start no run of its own. Before any of
+     * that, the stored editor draft is brought in line with the editor, written or removed.
      */
     suspend fun settleSynchronizationBeforeExit() {
+        // The stored draft is removed by a collector a few hops after the editor lets its text go, which a process that
+        // ends now would not wait for: a Discard answered on the way out would come back as "unsaved changes restored".
+        if (!_isEditorDraftRecoveryPending.value) storeEditorDraft(currentEditorDraftToStore())
         // The window is already hidden, so a click still sounding while the run is waited for would come from nowhere.
         metronome.stop()
         val isSyncing = { state: SyncState -> state is SyncState.Connected && state.isSyncing }
@@ -2148,13 +2152,18 @@ class CampfireViewModel(
     fun onAppPaused(): SyncProgress? {
         val syncProgress = startScheduledSynchronization()
         if (!_isEditorDraftRecoveryPending.value) {
-            // Stored as the file would hold it rather than as the field shows it, so that it means the same chords
-            // whatever the notation is by the time it is reopened.
-            val draft = _editorDraft.value?.takeIf { hasUnsavedEditorText() }?.let { it.copy(text = fileTextOf(it.text)) }
+            val draft = currentEditorDraftToStore()
             viewModelScope.launch { storeEditorDraft(draft) }
         }
         return syncProgress
     }
+
+    /**
+     * The unsaved text as the file would hold it, or null when nothing is unsaved. Stored as the file would hold it
+     * rather than as the field shows it, so that it means the same chords whatever the notation is by the time it is
+     * reopened.
+     */
+    private fun currentEditorDraftToStore() = _editorDraft.value?.takeIf { hasUnsavedEditorText() }?.let { it.copy(text = fileTextOf(it.text)) }
 
     /** Not cancellable once started: a pause is often the last thing the process does. A write that fails is only a copy lost. */
     private suspend fun storeEditorDraft(draft: SongContent?) = withContext(NonCancellable) {
