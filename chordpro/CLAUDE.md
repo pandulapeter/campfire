@@ -145,7 +145,9 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   `{meta: title …}` and the other standard names the spec defines as their standalone directive
   (`subtitle`, `artist`, `composer`, `lyricist`, `album`, `year`, `key`, `capo`, `tempo`, `time`, `duration`) are read
   as that directive; a `{define}` or `{chord}` with a shape Campfire draws is read into `ChordProMetadata.definitions`
-  (see `ChordProDefinitions`), a selector naming an instrument (`{define-ukulele}`) being read rather than dropped,
+  (see `ChordProDefinitions`; a `{chord}` only where the song has no `{define}` of that chord, since the specification
+  has it show a diagram only where it stands), a selector naming an instrument (`{define-ukulele}`) being read rather
+  than dropped,
   and one inside a delegated environment left as that environment's text; fonts, colours, images and page directives
   are parsed and dropped. It also understands the Campfire 3 dialect, where `{comment: Verse 1}` outside an environment was a section heading; one that no line
   follows before a blank line, another section or the end of the file stays the comment it was, since a section with
@@ -407,8 +409,9 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   frets and the base fret stay on a 24-fret neck (`Invalid` past it), and keys past four octaves are wrapped by their
   note, as the specification says, so no file can make a diagram draw without end; the instrument is the selector's where it names one and otherwise the one with as many strings; a `copy`, a
   `display` alone or a string count no instrument has is `Other`, and what cannot be read, or gives `base-fret`,
-  `frets`, `fingers` or `keys` twice, `Invalid`. The last shape of a chord on an instrument wins, in the place of the
-  first. `line` writes one the way it is read, with no selector and the base fret a diagram would draw. `transposed`
+  `frets`, `fingers` or `keys` twice, `Invalid`. The last `{define}` of a chord on an instrument wins, in the place of the
+  first; a `{chord}`, which the specification has show a diagram only where it stands, counts only where the song
+  defines none, and `rangeOf` sends the caret to the line that counts. `line` writes one the way it is read, with no selector and the base fret a diagram would draw. `transposed`
   moves one with the song: the name renamed like any chord, a fretted shape moved along the neck, up by the rest of the
   octave where it has an open string and otherwise whichever of the two octaves a hand can hold, the lower where both or
   neither can, the fingering following a barre coming or going (and left out where it would need a fifth finger or

@@ -11,7 +11,8 @@ package com.pandulapeter.campfire.chordpro.model
 
 /**
  * A shape a song gives one of its chords, from a `{define}` or a `{chord}` directive: how that chord is played in this
- * song, on [instrument], whatever the player's habit or the app's own first shape.
+ * song, on [instrument], whatever the player's habit or the app's own first shape. A `{chord}`, which the specification
+ * has show a diagram only where it stands, gives one only where the song has no `{define}` of that chord.
  *
  * @property name The chord the shape is for, as written, in the standard notation like the rest of the model.
  * @property movedBy How many frets a transposition moved the shape by, zero for one that is as the file writes it.

@@ -140,6 +140,19 @@ class ChordProDefinitionsTest {
     }
 
     @Test
+    fun `a define outranks a chord directive, which counts only where the song defines none`() {
+        fun frets(text: String) = definitions(text).map { (it.voicing as ChordVoicing.Fretted).frets }
+        assertEquals(listOf(listOf<Int?>(3, 2, 0, 0, 0, 3)), frets("{define: G frets 3 2 0 0 0 3}\n{chord: G frets 3 x 0 0 3 3}"))
+        assertEquals(
+            listOf(listOf<Int?>(3, 2, 0, 0, 0, 3), listOf<Int?>(0, 2, 3, 2)),
+            frets("{chord: G frets 3 x 0 0 3 3}\n{define: G frets 0 2 3 2}\n{define: G frets 3 2 0 0 0 3}"),
+        )
+        assertEquals(listOf(listOf<Int?>(3, 2, 0, 0, 3, 3)), frets("{chord: G frets 3 x 0 0 3 3}\n{chord: G frets 3 2 0 0 3 3}"))
+        val text = "{define: G frets 3 2 0 0 0 3}\n{chord: G frets 3 x 0 0 3 3}"
+        assertEquals("3 2 0 0 0 3", ChordProDefinitions.rangeOf(text, "G", ChordInstrument.GUITAR)?.let { text.substring(it) })
+    }
+
+    @Test
     fun `a definition inside an environment handed to another program is that program's text`() {
         assertEquals(emptyList(), definitions("{start_of_abc}\n{define: G frets 3 2 0 0 0 3}\n{end_of_abc}"))
     }

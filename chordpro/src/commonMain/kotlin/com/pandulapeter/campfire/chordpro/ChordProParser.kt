@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.chordpro
 
 import com.pandulapeter.campfire.chordpro.model.ChordDefinition
+import com.pandulapeter.campfire.chordpro.model.ChordInstrument
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.ChordProLink
@@ -318,7 +319,9 @@ object ChordProParser {
         // device it has nothing to match against. Inside an environment handed to another program it is that
         // program's text.
         ChordProDefinitions.selectorOf(name)?.let { selector ->
-            if (!section.isDelegated) directive.value?.let { ChordProDefinitions.definitionOf(it, selector) }?.let(metadata::addDefinition)
+            if (!section.isDelegated) directive.value?.let { ChordProDefinitions.definitionOf(it, selector) }?.let { definition ->
+                metadata.addDefinition(definition, isDefine = name.substringBefore('-') == ChordProDefinitions.DEFINE)
+            }
             return
         }
         if (ChordProSyntax.hasSelectorSuffix(name)) return
@@ -852,6 +855,7 @@ object ChordProParser {
         private val languageSet = mutableSetOf<String>()
         private val links = mutableListOf<ChordProLink>()
         private val definitions = mutableListOf<ChordDefinition>()
+        private val defined = mutableSetOf<Pair<String, ChordInstrument>>()
         private val custom = mutableMapOf<String, MutableList<String>>()
 
         /** @param isInBody Whether [directive] stands in the body of the song rather than in its header. */
@@ -900,8 +904,15 @@ object ChordProParser {
             }
         }
 
-        /** A later shape of the same chord on the same instrument takes the place of the earlier one, where that stood. */
-        fun addDefinition(definition: ChordDefinition) {
+        /**
+         * A later `{define}` of the same chord on the same instrument takes the place of the earlier shape, where that
+         * stood. A `{chord}`, which the specification has show a diagram only where it stands, counts only where the song
+         * defines none: it takes the place of another `{chord}`'s shape, never of a `{define}`'s.
+         */
+        fun addDefinition(definition: ChordDefinition, isDefine: Boolean) {
+            val key = definition.name to definition.instrument
+            if (!isDefine && key in defined) return
+            if (isDefine) defined += key
             val index = definitions.indexOfFirst { it.name == definition.name && it.instrument == definition.instrument }
             if (index < 0) definitions += definition else definitions[index] = definition
         }

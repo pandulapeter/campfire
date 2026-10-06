@@ -264,14 +264,17 @@ object ChordProDefinitions {
 
     /**
      * Where the shape of [name] on [instrument] is written in [text]: its frets, or its keys, from the first to the last,
-     * on the line that defines it (the last one, which is the one that counts), or null where [text] defines no shape
-     * of it there. What an editor sends the caret to, rather than writing the chord a second line.
+     * on the line that defines it (the one that counts: the last `{define}`, or the last `{chord}` where there is none),
+     * or null where [text] defines no shape of it there. What an editor sends the caret to, rather than writing the chord
+     * a second line.
      */
     fun rangeOf(text: String, name: String, instrument: ChordInstrument): IntRange? {
         val starts = ChordProSyntax.lineStartOffsets(text)
-        return ChordProSyntax.splitLines(text).withIndex().reversed().firstNotNullOfOrNull { (index, line) ->
+        val lines = ChordProSyntax.splitLines(text).withIndex().reversed()
+        fun rangeOn(isDefine: Boolean) = lines.firstNotNullOfOrNull { (index, line) ->
             val trimmed = line.trim()
             val directive = ChordProSyntax.matchDirective(trimmed) ?: return@firstNotNullOfOrNull null
+            if ((directive.name.substringBefore('-') == DEFINE) != isDefine) return@firstNotNullOfOrNull null
             val selector = selectorOf(directive.name) ?: return@firstNotNullOfOrNull null
             val shape = directive.value?.let { read(it, selector.takeIf { selector -> selector.isNotEmpty() }) } as? Reading.Shape
             if (shape == null || shape.name != name || shape.instrument != instrument) return@firstNotNullOfOrNull null
@@ -291,6 +294,7 @@ object ChordProDefinitions {
             }
             (lineStart + start) until (lineStart + last)
         }
+        return rangeOn(isDefine = true) ?: rangeOn(isDefine = false)
     }
 
     /** What reading the value of a definition came to. */
