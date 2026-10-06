@@ -167,11 +167,13 @@ object ChordProNotation {
         val hasLowercaseMinors = names.any { ChordProChordNames.lowercaseMinorExpanded(it) != null }
         if (!german && !hasLowercaseMinors && !hasLatinName(song) && names.none { SHARP_SIGN in it || FLAT_SIGN in it }) return song
         val rename = { name: String -> read(name, german) }
-        return ChordProTransposer.rewriteChords(
-            song = song,
-            rewriteTabLines = { lines -> ChordProTabTransposer.rewriteChordNames(lines, rename) },
-            rename = rename,
-        )
+        return ChordProTransposer.rewriteChords(song) {
+            ChordProTransposer.ChordRewrite(
+                rewriteTabLines = { lines -> ChordProTabTransposer.rewriteChordNames(lines, rename) },
+                rename = rename,
+                rewriteDefinition = { ChordProDefinitions.renamedFromNotation(it, rename) },
+            )
+        }
     }
 
     /**

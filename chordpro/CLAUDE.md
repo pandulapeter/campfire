@@ -402,7 +402,8 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   counted from the `base-fret` (`base_fret` read too; `x`, `X`, `N` and `-1` muted), fingers (any value that is no
   finger number from 1 to 5, a thumb's `T` among them, is shown as none), or a keyboard's `keys` counted from the root
   (a slash chord's lowest key read back as its bass where it is written the way `line` writes it: sounding again above,
-  or no note of the chord);
+  or no note of the chord) — from the root its chord has in the notation the text is read in, which `normalized`
+  re-roots a German definition to (`renamedFromNotation`);
   frets and the base fret stay on a 24-fret neck (`Invalid` past it), and keys past four octaves are wrapped by their
   note, as the specification says, so no file can make a diagram draw without end; the instrument is the selector's where it names one and otherwise the one with as many strings; a `copy`, a
   `display` alone or a string count no instrument has is `Other`, and what cannot be read, or gives `base-fret`,

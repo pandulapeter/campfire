@@ -120,6 +120,18 @@ object ChordProDefinitions {
         return move to movedBy(move, maxFinger)
     }
 
+    /**
+     * [definition], read from a text in another notation, renamed by [rename] into the standard one: a keyboard's keys,
+     * which [read] counted from the root the name has in the standard notation, counted from the root of its new name.
+     */
+    internal fun renamedFromNotation(definition: ChordDefinition, rename: (String) -> String): ChordDefinition {
+        val name = rename(definition.name)
+        val voicing = definition.voicing as? ChordVoicing.Keys ?: return definition.copy(name = name)
+        // The same fallback [read] took, so that this undoes exactly what it assumed.
+        val root = ChordProChords.parse(definition.name)?.root ?: 0
+        return definition.copy(name = name, voicing = keysShape(name, (listOfNotNull(voicing.bass) + voicing.notes).map { it - root }))
+    }
+
     private fun ChordVoicing.Fretted.movedBy(move: Int, maxFinger: Int): ChordVoicing.Fretted {
         val moved = frets.map { it?.plus(move) }
         val fingers = fingers?.let { fingers ->

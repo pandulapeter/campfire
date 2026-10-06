@@ -48,6 +48,20 @@ class ChordProDefinitionsTest {
     }
 
     @Test
+    fun `a keyboard shape is counted from the root its chord has in the notation the song is read in`() {
+        assertEquals(ChordVoicing.Keys(listOf(10, 14, 17)), ChordProParser.parse("{define: B keys 0 4 7}\n[H]x [B]y").metadata.definitions.single().voicing)
+        assertEquals(ChordVoicing.Keys(listOf(10, 14, 17)), ChordProParser.parse("{define: B keys 0 4 7}\n[B]y", ChordNotation.GERMAN).metadata.definitions.single().voicing)
+        assertEquals(ChordVoicing.Keys(listOf(11, 15, 18)), ChordProParser.parse("{define: H keys 0 4 7}\n[H]y", ChordNotation.GERMAN).metadata.definitions.single().voicing)
+        mapOf(
+            "B" to ChordVoicing.Keys(listOf(10, 14, 17)),
+            "C/B" to ChordVoicing.Keys(listOf(12, 16, 19), bass = 10),
+        ).forEach { (name, voicing) ->
+            val line = ChordProDefinitions.line(name, voicing, ChordNotation.GERMAN)
+            assertEquals(voicing, ChordProParser.parse("$line\n[$name]x", ChordNotation.GERMAN).metadata.definitions.single().voicing, line)
+        }
+    }
+
+    @Test
     fun `a selector names the instrument, and one that contradicts the shape is unreadable`() {
         assertEquals(ChordInstrument.UKULELE, definitions("{define-ukulele: C frets 0 0 0 3}").single().instrument)
         assertEquals(ChordInstrument.KEYBOARD, definitions("{define-piano: C keys 0 4 7}").single().instrument)
