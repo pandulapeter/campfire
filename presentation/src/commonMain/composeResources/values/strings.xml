@@ -523,6 +523,16 @@
     <string name="song_details_chord_diagram">%1$s: %2$s</string>
     <string name="song_details_chord_diagram_none">%1$s: no diagram</string>
     <string name="song_details_chord_sounding">%1$s, sounding as %2$s</string>
+    <string name="song_details_chord_shapes">Chord shapes</string>
+    <string name="song_details_chord_shape_previous">Previous shape of %1$s</string>
+    <string name="song_details_chord_shape_next">Next shape of %1$s</string>
+    <string name="song_details_chord_shape_reset">Back to the first shape of %1$s</string>
+    <string name="song_details_chord_shape_position">%1$d / %2$d</string>
+    <string name="song_details_chord_defined">Defined in this song</string>
+    <plurals name="song_details_chord_defined_moved">
+        <item quantity="one">Defined in this song, moved by %1$d fret</item>
+        <item quantity="other">Defined in this song, moved by %1$d frets</item>
+    </plurals>
     <string name="song_details_timing">From here: %1$s</string>
     <string name="song_details_composer">Composer</string>
     <string name="song_details_lyricist">Lyricist</string>

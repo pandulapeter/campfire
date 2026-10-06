@@ -361,6 +361,7 @@ internal fun CampfireDialogs(
         }
 
         is CampfireViewModel.DialogType.SongInfo -> Unit
+        is CampfireViewModel.DialogType.ChordShapes -> ChordShapesSheet(viewModel = viewModel, dialog = dialog)
 
         is CampfireViewModel.DialogType.SetlistPicker -> SetlistPicker(
             viewModel = viewModel,

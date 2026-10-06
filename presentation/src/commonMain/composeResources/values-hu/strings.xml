@@ -523,6 +523,16 @@
     <string name="song_details_chord_diagram">%1$s: %2$s</string>
     <string name="song_details_chord_diagram_none">%1$s: nincs ábra</string>
     <string name="song_details_chord_sounding">%1$s, megszólalva %2$s</string>
+    <string name="song_details_chord_shapes">Akkordfogások</string>
+    <string name="song_details_chord_shape_previous">A(z) %1$s előző fogása</string>
+    <string name="song_details_chord_shape_next">A(z) %1$s következő fogása</string>
+    <string name="song_details_chord_shape_reset">Vissza a(z) %1$s első fogására</string>
+    <string name="song_details_chord_shape_position">%1$d / %2$d</string>
+    <string name="song_details_chord_defined">A dal határozza meg</string>
+    <plurals name="song_details_chord_defined_moved">
+        <item quantity="one">A dal határozza meg, %1$d bunddal eltolva</item>
+        <item quantity="other">A dal határozza meg, %1$d bunddal eltolva</item>
+    </plurals>
     <string name="song_details_timing">Innentől: %1$s</string>
     <string name="song_details_composer">Zeneszerző</string>
     <string name="song_details_lyricist">Szövegíró</string>

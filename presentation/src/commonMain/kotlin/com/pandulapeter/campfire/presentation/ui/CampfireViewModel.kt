@@ -3711,6 +3711,15 @@ class CampfireViewModel(
 
     fun toggleChordSectionFold() = changeUserPreferences { copy(isChordSectionFolded = !isChordSectionFolded) }
 
+    /**
+     * Stores [shape] as the player's own for the chord [chordId] on [instrument], in every song, or forgets their
+     * choice where it is null. Written at once, as the page's own steppers write.
+     */
+    fun setChordVoicing(instrument: UserPreferences.ChordInstrument, chordId: String, shape: String?) = changeUserPreferences {
+        val shapes = chordVoicings[instrument.id].orEmpty().let { if (shape == null) it - chordId else it + (chordId to shape) }
+        copy(chordVoicings = if (shapes.isEmpty()) chordVoicings - instrument.id else chordVoicings + (instrument.id to shapes))
+    }
+
     fun setSetlistsEnabled(value: Boolean) = changeUserPreferences { copy(areSetlistsEnabled = value) }
 
     fun setMetronomeEnabled(value: Boolean) = changeUserPreferences { copy(isMetronomeEnabled = value) }
@@ -3974,6 +3983,7 @@ class CampfireViewModel(
             is DialogType.SetlistPicker -> song.fileName
             is DialogType.DeleteSong -> song.fileName
             is DialogType.SongInfo -> song.fileName
+            is DialogType.ChordShapes -> song.fileName
             // The editor's draft is the editor's to keep, whatever became of the file it was opened on.
             is DialogType.SongEdit -> song.fileName.takeUnless { isEditorDraft }
             else -> null
@@ -4378,6 +4388,12 @@ class CampfireViewModel(
          * again.
          */
         data class SongInfo(val song: Song) : DialogType
+        /**
+         * The chords of a song and the other ways each can be played, opened from the header of its Chords section,
+         * which reads the song as the page plays it - in the setlist it was opened from, if any - and its text as it
+         * is now.
+         */
+        data class ChordShapes(val song: Song, val setlistFileName: String?) : DialogType
         /**
          * Opened from the song details overflow menu, and offers the song's own tags and
          * the rest of the library's.

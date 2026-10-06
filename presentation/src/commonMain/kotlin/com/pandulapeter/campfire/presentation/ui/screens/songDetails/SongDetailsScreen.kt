@@ -858,7 +858,15 @@ internal fun SongDetailsScreen(
                         onRetry = { viewModel.loadSongContent(song.fileName) },
                         headedOffset = { stepper.headedOffset },
                         onTimingChanged = { timing -> if (timing == null) songTimings.remove(song.fileName) else songTimings[song.fileName] = timing },
-                        chordDiagrams = chordDiagrams,
+                        // Not taken away by an archived setlist, unlike everything that edits: how a chord is fingered
+                        // is the player's, never the setlist's to keep as it was played.
+                        chordDiagrams = remember(chordDiagrams, song.fileName, destination.setlistFileName, isPerformanceModeEnabled) {
+                            chordDiagrams?.copy(
+                                onShapesClicked = if (isPerformanceModeEnabled) null else {
+                                    { viewModel.showDialog(CampfireViewModel.DialogType.ChordShapes(song = song, setlistFileName = destination.setlistFileName)) }
+                                },
+                            )
+                        },
                     )
                 }
                 // The top button starts where the song's first row does, as the bottom one ends as far above the bottom

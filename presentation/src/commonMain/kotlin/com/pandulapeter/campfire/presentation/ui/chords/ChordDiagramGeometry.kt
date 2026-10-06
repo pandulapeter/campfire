@@ -98,7 +98,7 @@ internal fun chordDiagramGeometryOf(shape: ChordVoicing, instrument: ChordInstru
                 ChordDiagramGeometry.Fretted.Dot(
                     string = string,
                     row = frets[string]!! - baseFret,
-                    finger = shape.fingers?.getOrNull(string)?.takeIf { it > 0 && string !in heldByBarre },
+                    finger = shape.fingers?.getOrNull(string)?.takeIf { it > 0 },
                     isRoot = isRootAt(instrument, string, frets[string]!!, root),
                 )
             },

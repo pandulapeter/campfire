@@ -93,7 +93,8 @@ private fun DrawScope.drawFretted(
     (0 until geometry.strings).forEach { string -> drawLine(lineColor, Offset(x(string), top), Offset(x(string), bottom), strokeWidth = thin) }
     if (geometry.baseFret > 1) {
         val label = textMeasurer.measure(geometry.baseFret.toString(), TextStyle(fontSize = (fretGap * BASE_FRET_TEXT / density / fontScale).sp, color = mutedColor))
-        drawText(label, topLeft = Offset((left - label.size.width - thin * 2).coerceAtLeast(0f), y(0) - label.size.height / 2f))
+        // Right of it the first string's dot reaches out by its radius, a barre's end included.
+        drawText(label, topLeft = Offset((left - radius - thin * 2 - label.size.width).coerceAtLeast(0f), y(0) - label.size.height / 2f))
     }
     val markerY = top / 2f
     val markerSize = min(top * 0.32f, stringGap * 0.32f)
@@ -115,7 +116,9 @@ private fun DrawScope.drawFretted(
             size = Size(x(barre.toString) - x(barre.fromString) + radius * 2, radius * 2),
             cornerRadius = CornerRadius(radius, radius),
         )
-        if (showsFingers && barre.finger != null) drawFinger(textMeasurer, barre.finger, Offset(x(barre.fromString), y(barre.row)), radius, backgroundColor)
+        // A root at the barre's end is a dot of its own, which carries the finger instead.
+        val isUnderDot = geometry.dots.any { it.string == barre.fromString && it.row == barre.row }
+        if (showsFingers && barre.finger != null && !isUnderDot) drawFinger(textMeasurer, barre.finger, Offset(x(barre.fromString), y(barre.row)), radius, backgroundColor)
     }
     geometry.dots.forEach { dot ->
         val center = Offset(x(dot.string), y(dot.row))
@@ -182,7 +185,7 @@ private fun blackKeyCenter(note: Int) = whiteKeyIndex(note + 1).toFloat()
 private val whiteKeyOrder = listOf(0, 2, 4, 5, 7, 9, 11)
 private val blackKeys = setOf(1, 3, 6, 8, 10)
 private const val WHITE_KEYS_PER_OCTAVE = 7
-private const val SIDE_BAND = 0.16f
+private const val SIDE_BAND = 0.22f
 private const val END_BAND = 0.08f
 private const val MARKER_BAND = 0.18f
 private const val LINE_WIDTH = 0.08f

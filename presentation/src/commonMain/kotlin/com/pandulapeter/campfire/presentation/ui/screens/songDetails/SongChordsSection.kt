@@ -16,9 +16,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,6 +41,8 @@ import com.pandulapeter.campfire.chordpro.model.Chord
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
 import com.pandulapeter.campfire.chordpro.model.ChordVoicing
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.ic_chord_shapes
+import com.pandulapeter.campfire.presentation.resources.song_details_chord_shapes
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_diagram
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_diagram_none
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_sounding
@@ -50,19 +56,23 @@ import com.pandulapeter.campfire.presentation.ui.chords.selectShape
 import com.pandulapeter.campfire.presentation.ui.components.ChordDiagram
 import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
+import org.jetbrains.compose.resources.painterResource
 
 /**
  * What a song's Chords section needs beyond the song: the instrument the diagrams are drawn for, the shapes the player
  * chose, whether the section is folded, and what its header does.
  *
  * @param onFoldToggled Folds the section or unfolds it, one preference for every song.
+ * @param onShapesClicked Opens the Chord shapes sheet of the song, null in read only mode, which takes the controls off
+ * the page.
  */
 @Immutable
-internal class ChordDiagrams(
+internal data class ChordDiagrams(
     val instrument: ChordInstrument,
     val storedShapes: Map<String, String>,
     val isFolded: Boolean,
     val onFoldToggled: () -> Unit,
+    val onShapesClicked: (() -> Unit)? = null,
 )
 
 /** One diagram of the Chords section: the chord as the page names it and the shape it is drawn with. */
@@ -111,20 +121,41 @@ internal fun SongChordsSection(
     fontScale: Float,
 ) = Column(modifier = modifier) {
     var hasBeenToggled by remember { mutableStateOf(false) }
-    SectionHeaderPill(
-        header = stringResource(Res.string.song_details_chords),
-        toggle = chordDiagrams?.let {
-            FoldToggle(
-                isExpanded = !section.isFolded,
-                onToggled = {
-                    hasBeenToggled = true
-                    it.onFoldToggled()
-                },
-            )
-        },
-        style = headerStyle,
-        chevronSize = FOLD_CHEVRON_SIZE * fontScale,
-    )
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        SectionHeaderPill(
+            header = stringResource(Res.string.song_details_chords),
+            toggle = chordDiagrams?.let {
+                FoldToggle(
+                    isExpanded = !section.isFolded,
+                    onToggled = {
+                        hasBeenToggled = true
+                        it.onFoldToggled()
+                    },
+                )
+            },
+            style = headerStyle,
+            chevronSize = FOLD_CHEVRON_SIZE * fontScale,
+        )
+        // As tall as the pill and growing with it, like the controls of the song's first section, and there while the
+        // section is folded too: choosing a shape is what somebody who knows the chords well enough to fold them comes
+        // back for.
+        chordDiagrams?.onShapesClicked?.let { onShapesClicked ->
+            val height = songControlHeight(headerStyle)
+            CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides height) {
+                IconButton(
+                    modifier = Modifier.size(height),
+                    onClick = onShapesClicked,
+                ) {
+                    Icon(
+                        modifier = Modifier.size(SHAPES_ICON_SIZE * fontScale),
+                        painter = painterResource(Res.drawable.ic_chord_shapes),
+                        contentDescription = stringResource(Res.string.song_details_chord_shapes),
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            }
+        }
+    }
     if (section.isFolded) return@Column
     FlowRow(
         modifier = Modifier
@@ -205,6 +236,7 @@ private fun spokenShape(shape: ChordVoicing) = when (shape) {
 }
 
 private val CELL_GAP = 6.dp
+private val SHAPES_ICON_SIZE = 20.dp
 private val FRETTED_WIDTH = 40.dp
 private val FRETTED_HEIGHT = 50.dp
 private val KEYBOARD_WIDTH = 76.dp
