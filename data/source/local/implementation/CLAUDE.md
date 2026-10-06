@@ -220,8 +220,9 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
   the archive (that app's bookkeeping) dropped unreported. `SongbookProBackup` reads SongbookPro's `dataFile.txt` — a
   version line and one JSON document of songs, sets and folders, read up to `ImportLimits.MAX_IMPORT_SIZE` rather
   than a song's limit — leniently, since the format is unpublished and writes numbers and booleans as strings as often
-  as not: the key is an index from A, a deleted or textless song or set is left out, and the files are named in the
-  batch by their titles, numbered within it, which is what the setlists point at.
+  as not: the key is an index from A, a deleted or textless song or set is left out, every value written into the
+  header is flattened onto one line with its braces turned into parentheses, since SongbookPro's fields are free text,
+  and the files are named in the batch by their titles, numbered within it, which is what the setlists point at.
 
 Tested with `commonTest` (zip round trips, reader rejections, the SongbookPro reader) and `desktopTest` (the JVM storage, what unpacking an
 archive keeps, and the inflater against archives the JVM produced), run with

@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.backup
 
+import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.data.source.local.implementation.model.SetlistDocumentFormat
 import kotlin.test.Test
@@ -46,6 +47,34 @@ internal class SongbookProBackupTest {
             """.trimIndent(),
             files.single().bytes.decodeToString(),
         )
+    }
+
+    @Test
+    fun headerValuesAreFlattenedOntoOneLineWithoutBraces() {
+        val files = read(
+            """{"Id": 1, "name": "Song", "author": "A\nB", "Copyright": "Line1\r\nLine2", "Url": "https://x.com/a b",
+            "_folders": "[1]", "_tags": ["x}"], "content": "La"}""",
+            folders = """[{"Id": 1, "Name": "Hymns}\n{title: Hijack", "Deleted": 0}]""",
+        )
+
+        val text = files.single().bytes.decodeToString()
+        assertEquals(
+            """
+            {title: Song}
+            {artist: A / B}
+            {copyright: Line1 / Line2}
+            {meta: link https://x.com/a%20b}
+            {tag: Hymns) / (title: Hijack}
+            {tag: x)}
+            La
+
+            """.trimIndent(),
+            text,
+        )
+        val metadata = ChordProParser.parseMetadata(text)
+        assertEquals("Song", metadata.title)
+        assertEquals("A / B", metadata.artist)
+        assertEquals(listOf("https://x.com/a%20b" to null), metadata.links.map { it.url to it.name })
     }
 
     @Test
