@@ -240,9 +240,10 @@ object ChordProPrettifier {
 
     /**
      * The lines of each song of [lines], by the index of the song in the file, that [prettify] moves into its header: the
-     * first readable `{tempo}` and `{time}` of the body of a song whose header has no line of that kind, empty ones
-     * included. That line is the song's own value to the parser, so where it stands it is no change at all. Not from
-     * inside an environment handed to another program, where braces are that program's text.
+     * first readable `{tempo}` and `{time}` of the body of a song whose header has no line of that kind — an empty header
+     * line counting as one. That line is the song's own value to the parser, so where it stands it is no change at all.
+     * Not from inside an environment handed to another program, where braces are that program's text. Songs are counted
+     * as [prettify] counts them, a `{new_song}` inside an open environment being that environment's text.
      */
     private fun hoistedTimings(lines: List<String>): Map<Int, List<Int>> {
         val hoisted = mutableMapOf<Int, List<Int>>()
@@ -265,7 +266,7 @@ object ChordProPrettifier {
                 if (end != null) environments.removeAt(environments.lastIndex)
                 return@forEachIndexed
             }
-            if (directive?.name == "new_song" || directive?.name == "ns") {
+            if (environments.isEmpty() && (directive?.name == "new_song" || directive?.name == "ns")) {
                 finishSong()
                 song++
                 isHeader = true

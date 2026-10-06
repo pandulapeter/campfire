@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.chordpro
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlin.time.TimeSource
 import kotlin.time.Duration.Companion.seconds
@@ -226,6 +227,15 @@ class ChordProPrettifierTest {
     }
 
     @Test
+    fun `a new song inside an open environment is not counted as one when moving tempos into headers`() {
+        val formatted = ChordProPrettifier.prettify(NEW_SONG_IN_CHORUS)
+
+        assertEquals(formatted, ChordProPrettifier.prettify(formatted))
+        assertEquals(1, formatted.lines().count { it == "{tempo: 100}" }, formatted)
+        assertFalse("{tempo" in formatted.substringAfterLast("{new_song}"), formatted)
+    }
+
+    @Test
     fun `formatting is idempotent for complete and unfinished documents`() {
         val inputs = listOf(
             "{artist: A}\n{title: T}\n{sov}\n[G]Words\n{eov}\n{soc}\n[C]Sing\n{eoc}",
@@ -233,11 +243,17 @@ class ChordProPrettifierTest {
             "{start_of_svg}\n  <svg/>  \n\n",
             "{sot}\n e|--0--  \n\n\n",
             "{title: One}\n{ns}\n{title: Two}",
+            NEW_SONG_IN_CHORUS,
         )
         for (raw in inputs) {
             val formatted = ChordProPrettifier.prettify(raw)
             assertEquals(formatted, ChordProPrettifier.prettify(formatted))
             assertTrue(formatted.endsWith("\n"))
         }
+    }
+
+    private companion object {
+        const val NEW_SONG_IN_CHORUS =
+            "{title: A}\n{start_of_chorus}\nla\n{new_song}\n{title: B}\nlb\n{tempo: 100}\n{end_of_chorus}\n{new_song}\n{title: C}\n\nlc"
     }
 }
