@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.chordpro
 import com.pandulapeter.campfire.chordpro.model.Chord
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
 import com.pandulapeter.campfire.chordpro.model.ChordVoicing
+import kotlin.concurrent.Volatile
 
 /**
  * How a chord is played: the shapes of a [Chord] on an instrument.
@@ -31,13 +32,26 @@ import com.pandulapeter.campfire.chordpro.model.ChordVoicing
  */
 object ChordVoicings {
 
+    /** The defaults worked out so far, replaced whole rather than changed, so threads reading it never see it half written. */
+    @Volatile
+    private var defaults: Map<Pair<Chord, ChordInstrument>, ChordVoicing?> = emptyMap()
+
     /**
      * The shape [chord] is shown with on [instrument], or null where there is none. A table lookup wherever the tables
-     * have the chord, so that a page never waits for the search.
+     * have the chord, and the search otherwise, whose answer is remembered for the rest of the session: the first page
+     * that names an unusual chord pays for it once.
      */
-    fun default(chord: Chord, instrument: ChordInstrument): ChordVoicing? = when (instrument) {
-        ChordInstrument.KEYBOARD -> keyboard(chord).firstOrNull()
-        else -> tableShapes(chord, instrument).firstOrNull() ?: search(chord, instrument).firstOrNull()
+    fun default(chord: Chord, instrument: ChordInstrument): ChordVoicing? {
+        val key = chord to instrument
+        val cached = defaults
+        if (key in cached) return cached[key]
+        val shape = when (instrument) {
+            ChordInstrument.KEYBOARD -> keyboard(chord).firstOrNull()
+            else -> tableShapes(chord, instrument).firstOrNull() ?: search(chord, instrument).firstOrNull()
+        }
+        // A song plays a few dozen chords; starting over when the cache is full keeps it bounded without bookkeeping.
+        defaults = (if (cached.size >= MAX_CACHED_DEFAULTS) emptyMap() else cached) + (key to shape)
+        return shape
     }
 
     /** Every shape of [chord] on [instrument], [default] first: the tables', then the search's. */
@@ -173,6 +187,8 @@ object ChordVoicings {
         val tuning = instrument.tuning
         val pitchClasses = played.pitchClasses
         val required = pitchClasses - omissions(played, tuning.size)
+        // Every string sounds one note, so a chord that needs more notes than there are strings has no shape at all.
+        if (required.size > tuning.size) return emptyList()
         val lowest = if (instrument == ChordInstrument.UKULELE) null else played.bass ?: played.root.takeIf { it in required }
         val minimumStrings = if (instrument == ChordInstrument.UKULELE) tuning.size else if (pitchClasses.size <= 2) 3 else 4
         val found = mutableSetOf<List<Int?>>()
@@ -228,17 +244,24 @@ object ChordVoicings {
 
     private fun enumerate(options: List<List<Int?>>, visit: (List<Int?>) -> Unit) {
         val current = arrayOfNulls<Int>(options.size)
-        fun step(string: Int) {
+        // 0: no string sounds yet, 1: strings sound, 2: a muted string ended them, so every string after it is muted.
+        fun step(string: Int, run: Int) {
             if (string == options.size) {
                 visit(current.toList())
                 return
             }
             options[string].forEach { fret ->
+                val next = when {
+                    fret != null && run == 2 -> return@forEach
+                    fret != null -> 1
+                    run == 1 -> 2
+                    else -> run
+                }
                 current[string] = fret
-                step(string + 1)
+                step(string + 1, next)
             }
         }
-        step(0)
+        step(0, 0)
     }
 
     private fun keyboard(chord: Chord): List<ChordVoicing.Keys> {
@@ -266,4 +289,5 @@ object ChordVoicings {
     private const val MAX_HOLDABLE_FRET = 15
     private const val MAX_FRET = 24
     private const val MAX_KEYS = 5
+    private const val MAX_CACHED_DEFAULTS = 256
 }

@@ -81,7 +81,10 @@ class ChordVoicingsTest {
     fun `the default is the first of all the shapes`() {
         corpus.forEach { name ->
             val chord = ChordProChords.parse(name)!!
-            ChordInstrument.entries.forEach { assertEquals(ChordVoicings.all(chord, it).firstOrNull(), ChordVoicings.default(chord, it), name) }
+            ChordInstrument.entries.forEach {
+                assertEquals(ChordVoicings.all(chord, it).firstOrNull(), ChordVoicings.default(chord, it), name)
+                assertEquals(ChordVoicings.all(chord, it).firstOrNull(), ChordVoicings.default(chord, it), "$name, remembered")
+            }
         }
     }
 
@@ -127,6 +130,15 @@ class ChordVoicingsTest {
         val crowded = ChordProChords.parse("C7(b9, #9, #11, b13)")!!
         assertEquals(emptyList(), ChordVoicings.all(crowded, ChordInstrument.UKULELE))
         assertNull(ChordVoicings.default(crowded, ChordInstrument.UKULELE))
+    }
+
+    @Test
+    fun `a chord with more notes than strings has no shape`() {
+        val chord = ChordProChords.parse("C(b9,9,#9,11,#11,b13,13,#13,maj7)")!!
+        listOf(ChordInstrument.GUITAR, ChordInstrument.UKULELE).forEach {
+            assertEquals(emptyList(), ChordVoicings.all(chord, it))
+            assertNull(ChordVoicings.default(chord, it))
+        }
     }
 
     @Test
