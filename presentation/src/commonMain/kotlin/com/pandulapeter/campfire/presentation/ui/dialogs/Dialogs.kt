@@ -73,6 +73,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -92,6 +93,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.focusTarget
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalWindowInfo
@@ -220,6 +222,7 @@ import com.pandulapeter.campfire.presentation.ui.components.ScrollToNewlyChecked
 import com.pandulapeter.campfire.presentation.ui.components.ChecklistOrder
 import com.pandulapeter.campfire.presentation.ui.components.checklistItems
 import com.pandulapeter.campfire.presentation.ui.components.rememberChecklistOrder
+import com.pandulapeter.campfire.presentation.ui.components.saveShortcut
 import com.pandulapeter.campfire.presentation.ui.components.sortedAlphabeticallyBy
 import com.pandulapeter.campfire.presentation.ui.components.ScrollToStartWhenChanged
 import com.pandulapeter.campfire.presentation.ui.components.SetlistSortMenu
@@ -770,27 +773,37 @@ private fun UnsavedChangesDialog(
     onCancel: () -> Unit,
     onDiscard: () -> Unit,
     onSave: () -> Unit,
-) = AlertDialog(
-    onDismissRequest = onCancel,
-    title = { Text(stringResource(Res.string.song_editor_unsaved_changes)) },
-    text = { Text(stringResource(Res.string.song_editor_unsaved_changes_confirmation)) },
-    confirmButton = {
-        TextButton(
-            enabled = !isSaving,
-            onClick = onSave,
-        ) { Text(stringResource(Res.string.save)) }
-    },
-    dismissButton = {
-        Row {
-            TextButton(onClick = onCancel) { Text(stringResource(Res.string.cancel)) }
+) {
+    // A dialog is a window of its own, which holds no focus until one of its buttons is clicked: without a target
+    // taken as it opens, Ctrl / Cmd + S, the same key the editor saves with, would go unheard.
+    val focusRequester = remember { FocusRequester() }
+    LaunchedEffect(Unit) { focusRequester.requestFocus() }
+    AlertDialog(
+        modifier = Modifier
+            .saveShortcut { if (!isSaving) onSave() }
+            .focusRequester(focusRequester)
+            .focusTarget(),
+        onDismissRequest = onCancel,
+        title = { Text(stringResource(Res.string.song_editor_unsaved_changes)) },
+        text = { Text(stringResource(Res.string.song_editor_unsaved_changes_confirmation)) },
+        confirmButton = {
             TextButton(
                 enabled = !isSaving,
-                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
-                onClick = onDiscard,
-            ) { Text(stringResource(Res.string.song_editor_discard)) }
-        }
-    },
-)
+                onClick = onSave,
+            ) { Text(stringResource(Res.string.save)) }
+        },
+        dismissButton = {
+            Row {
+                TextButton(onClick = onCancel) { Text(stringResource(Res.string.cancel)) }
+                TextButton(
+                    enabled = !isSaving,
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                    onClick = onDiscard,
+                ) { Text(stringResource(Res.string.song_editor_discard)) }
+            }
+        },
+    )
+}
 
 @Composable
 private fun ConfirmationDialog(
@@ -899,6 +912,7 @@ private fun DeleteLibraryDialog(
         confirmButton = { close ->
             BottomSheetConfirmButton(
                 enabled = canDelete,
+                isSaveShortcut = false,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.error,
                     contentColor = MaterialTheme.colorScheme.onError,
@@ -2160,6 +2174,7 @@ internal fun CampfireBottomSheet(
     }
     val cancel = { requestClose(false) }
     val close = { requestClose(true) }
+    val saveShortcut = remember { SheetSaveShortcut() }
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         // Material applies sheetMaxWidth after this modifier. First reserve the safe horizontal span, then
@@ -2197,30 +2212,46 @@ internal fun CampfireBottomSheet(
         )
         val isCompactKeyboard = windowHeight < SHORT_WINDOW_HEIGHT && isKeyboardVisible
         CompactKeyboardEffect(isEnabled = isCompactKeyboard)
+        // A sheet that opens onto none of its fields would otherwise hold no focus, and a key only travels along the
+        // focus path, so Ctrl / Cmd + S would go unheard until something in it was clicked. A bare focus target draws
+        // nothing and brings no keyboard up. It is taken a frame in, and only where nothing in the sheet has the focus
+        // by then: a form's first field asks for it from an effect of its own, and the order the two effects run in is
+        // no promise of which one ends up with it.
+        val sheetFocus = remember { FocusRequester() }
+        val sheetFocusState = remember { SheetFocusState() }
+        LaunchedEffect(Unit) {
+            withFrameNanos { }
+            if (!sheetFocusState.hasFocus) sheetFocus.requestFocus()
+        }
         // A keyboard in a short window leaves less height than the header and a field take together, so there the
         // header and the pinned controls scroll with the rest, above the keyboard, and bringing the caret into view can
         // move them out of its way. The content keeps the window's height inside that scroll, which is what bounds
         // the lists in it that would otherwise be measured against an infinite one.
         Column(
-            modifier = Modifier.fillMaxWidth().then(
-                if (isCompactKeyboard) {
-                    Modifier.heightIn(max = windowHeight).imePadding()
-                        .fadingTopEdge(scrollState)
-                        .bounceVerticalScroll(scrollState)
-                } else {
-                    // Outside the content's own scroll, so that its viewport ends at the keyboard and a field focused
-                    // with Next is scrolled above it: padded inside the scroll, the viewport ran on under the keyboard,
-                    // where the field already counted as visible.
-                    Modifier.imePadding()
-                },
-            ),
+            modifier = Modifier.fillMaxWidth()
+                .saveShortcut { saveShortcut.action?.invoke() }
+                .onFocusChanged { sheetFocusState.hasFocus = it.hasFocus }
+                .focusRequester(sheetFocus)
+                .focusTarget()
+                .then(
+                    if (isCompactKeyboard) {
+                        Modifier.heightIn(max = windowHeight).imePadding()
+                            .fadingTopEdge(scrollState)
+                            .bounceVerticalScroll(scrollState)
+                    } else {
+                        // Outside the content's own scroll, so that its viewport ends at the keyboard and a field focused
+                        // with Next is scrolled above it: padded inside the scroll, the viewport ran on under the keyboard,
+                        // where the field already counted as visible.
+                        Modifier.imePadding()
+                    },
+                ),
         ) {
             val consumedInsets = remember { MutableWindowInsets() }
             Column(
                 modifier = (if (isCompactKeyboard) Modifier.height(windowHeight) else Modifier)
                     .onConsumedWindowInsetsChanged { consumedInsets.insets = it },
             ) {
-                CompositionLocalProvider(LocalIsSheetClosing provides isClosing) {
+                CompositionLocalProvider(LocalIsSheetClosing provides isClosing, LocalSheetSaveShortcut provides saveShortcut) {
                     SheetHeader(
                         title = title,
                         subtitle = subtitle,
@@ -2260,6 +2291,23 @@ internal fun CampfireBottomSheet(
  * value, read at the tap, so that nothing recomposes on the frames of the slide.
  */
 internal val LocalIsSheetClosing = compositionLocalOf<() -> Boolean> { { false } }
+
+/**
+ * What Ctrl / Cmd + S presses in a [CampfireBottomSheet]: the [BottomSheetConfirmButton] in its header that writes
+ * what the sheet is for, which sets itself here while it is there. Null where the sheet has no such button, or one the
+ * key should not press.
+ */
+internal class SheetSaveShortcut {
+    var action: (() -> Unit)? = null
+}
+
+/** Whether anything in a [CampfireBottomSheet] has the focus, read once from an effect rather than drawn from. */
+private class SheetFocusState {
+    var hasFocus = false
+}
+
+/** The [SheetSaveShortcut] of the [CampfireBottomSheet] around it, null outside one. */
+internal val LocalSheetSaveShortcut = staticCompositionLocalOf<SheetSaveShortcut?> { null }
 
 /**
  * The column of a [CampfireBottomSheet], which its content can also close the sheet from.

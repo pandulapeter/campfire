@@ -446,11 +446,11 @@ private fun startForwardingEscapeKey() {
 }
 
 /**
- * Keeps Ctrl / Cmd + S from the browser, whose "Save page as" would otherwise open over the editor every time the
- * song is saved with it: the editor handles the key itself (see SongEditorScreen), but a key pressed in the hidden
- * `<input>` that holds the caret is handed to Compose only after the browser has already acted on it, so Compose
- * consuming it cannot stop the browser. Only the default is prevented, in the capture phase: the event still reaches
- * that input, and through it the editor. A page of this app saved as HTML is a copy of nothing.
+ * Keeps Ctrl / Cmd + S from the browser, whose "Save page as" would otherwise open over the app every time something
+ * is saved with it: the editor, the sheets and the export screen handle the key themselves (`saveShortcut`), but a key
+ * pressed in the hidden `<input>` that holds the caret is handed to Compose only after the browser has already acted on
+ * it, so Compose consuming it cannot stop the browser. Only the default is prevented, in the capture phase: the event
+ * still reaches that input, and through it Compose. A page of this app saved as HTML is a copy of nothing.
  */
 private fun startSuppressingBrowserSave() {
     js(

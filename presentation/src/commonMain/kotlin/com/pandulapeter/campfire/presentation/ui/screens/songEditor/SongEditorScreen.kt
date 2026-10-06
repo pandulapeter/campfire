@@ -75,14 +75,6 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.input.key.KeyEventType
-import androidx.compose.ui.input.key.isAltPressed
-import androidx.compose.ui.input.key.isCtrlPressed
-import androidx.compose.ui.input.key.isMetaPressed
-import androidx.compose.ui.input.key.key
-import androidx.compose.ui.input.key.onPreviewKeyEvent
-import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalWindowInfo
@@ -148,6 +140,7 @@ import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.overlappingAction
+import com.pandulapeter.campfire.presentation.ui.components.saveShortcut
 import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
@@ -434,16 +427,7 @@ private fun LoadedSongEditor(
             .fillMaxSize()
             .focusRequester(focusRequester)
             .focusable()
-            // The same save as the app bar's button, for the hand that reaches for the keyboard instead. Not with Alt
-            // held: AltGr arrives as Ctrl + Alt on Windows and the web, and AltGr + S types a character on some layouts.
-            .onPreviewKeyEvent { keyEvent ->
-                if (keyEvent.type == KeyEventType.KeyDown && keyEvent.key == Key.S && (keyEvent.isCtrlPressed || keyEvent.isMetaPressed) && !keyEvent.isAltPressed) {
-                    onSaveRequested()
-                    true
-                } else {
-                    false
-                }
-            }
+            .saveShortcut(onSaveRequested)
     ) {
         CampfireTopAppBar(
             isCompact = isTypingInShortWindow,

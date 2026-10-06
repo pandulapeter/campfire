@@ -167,8 +167,9 @@ localized in both languages.
   color. A new scrolling container gets the same treatment, not Material's scrolled-under elevation.
 - **Every modal with text inputs is a bottom sheet**, and the date picker is one too, holding only a calendar (no
   typed entry, whose strings Material draws in the system's language). Forms use `TextFieldBottomSheet` over `CampfireBottomSheet`; Save, Create, Done, Delete,
-  sorting and Add link actions sit in the header, whose close button cancels the draft. Keep each form's existing
-  first-field focus behavior. Both **Choose songs** and **Choose setlists** open with search unfocused;
+  sorting and Add link actions sit in the header, whose close button cancels the draft. Ctrl / Cmd + S presses the
+  header's Save, Create or Done (never a Delete), as it saves the editor and the export screen and answers the
+  editor's unsaved changes question with Save. Keep each form's existing first-field focus behavior. Both **Choose songs** and **Choose setlists** open with search unfocused;
   tapping their search field brings up the keyboard. New song offers subtitle, artist, album, composer, lyricist,
   year and duration alongside the required title; each optional label uses the same parenthesized marker as setlist
   description and link name. The date picker's Material container uses the shared sheet color, matching its header

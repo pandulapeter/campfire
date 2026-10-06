@@ -238,6 +238,7 @@ import com.pandulapeter.campfire.presentation.ui.components.SettingsSectionTitle
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.fadingUnderStartOverlay
 import com.pandulapeter.campfire.presentation.ui.components.fadingVerticalEdges
+import com.pandulapeter.campfire.presentation.ui.components.saveShortcut
 import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.contentEdges
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
@@ -565,16 +566,19 @@ private fun ExportScreen(
         state.source == null -> PrintScreenContent.LOADING
         else -> PrintScreenContent.LOADED
     }
+    val canSaveNow = content == PrintScreenContent.LOADED && if (isFiles) canExportFiles else hasPages
     // Drawn in the same window as the screen under it, so it does not take the focus by being there, and a key would
     // otherwise go on reaching that screen - a pedal stepping the song being exported. A bare focus target draws no
     // indication and does not hand the focus on to the first button, so it is taken on every platform, whatever the
-    // screen shows; the preview moves it further in where it takes it for its own arrows.
+    // screen shows; the preview moves it further in where it takes it for its own arrows. Holding it is also what lets
+    // Ctrl / Cmd + S press Save, which it only does while the button is there and is not counting pages.
     val rootFocus = remember { FocusRequester() }
     LaunchedEffect(Unit) { rootFocus.requestFocus() }
     // A Surface, so that nothing of the app under it can be pressed through it.
     Surface(
         modifier = Modifier
             .fillMaxSize()
+            .saveShortcut { if (canSaveNow && exportProgress == null) requestExport(ExportRequest.SAVE) }
             .focusRequester(rootFocus)
             .focusTarget(),
         color = MaterialTheme.colorScheme.background,
@@ -707,7 +711,7 @@ private fun ExportScreen(
                     .align(Alignment.BottomEnd)
                     .windowInsetsPadding(WindowInsets.contentEdges.only(WindowInsetsSides.Bottom + WindowInsetsSides.End))
                     .padding(16.dp),
-                isVisible = content == PrintScreenContent.LOADED && (exportProgress != null || if (isFiles) canExportFiles else hasPages),
+                isVisible = exportProgress != null && content == PrintScreenContent.LOADED || canSaveNow,
                 progress = exportProgress,
                 onSave = { requestExport(ExportRequest.SAVE) },
                 onCancel = viewModel::cancelPdfExport,

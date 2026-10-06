@@ -18,9 +18,11 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layout
@@ -99,15 +101,29 @@ internal fun Modifier.retainSheetContentHeight(contentPadding: PaddingValues): M
 /**
  * The filled confirmation action shared by forms in a sheet's header. It does nothing once the sheet has started
  * closing ([LocalIsSheetClosing]), and keeps its look while it slides away with it.
+ *
+ * @param isSaveShortcut Whether Ctrl / Cmd + S presses it too ([LocalSheetSaveShortcut]), which every Save, Create and
+ *   Done does; an action that destroys something is not pressed by a key that only ever means keeping it.
  */
 @Composable
 internal fun BottomSheetConfirmButton(
     onClick: () -> Unit,
     enabled: Boolean = true,
+    isSaveShortcut: Boolean = true,
     colors: ButtonColors = ButtonDefaults.buttonColors(),
     content: @Composable () -> Unit,
 ) {
     val isClosing = LocalIsSheetClosing.current
+    val saveShortcut = LocalSheetSaveShortcut.current
+    if (saveShortcut != null && isSaveShortcut) {
+        val currentOnClick by rememberUpdatedState(onClick)
+        val isEnabled by rememberUpdatedState(enabled)
+        DisposableEffect(saveShortcut) {
+            val action = { if (isEnabled && !isClosing()) currentOnClick() }
+            saveShortcut.action = action
+            onDispose { if (saveShortcut.action === action) saveShortcut.action = null }
+        }
+    }
     Button(
         modifier = Modifier.padding(start = 4.dp, end = 8.dp),
         onClick = { if (!isClosing()) onClick() },
