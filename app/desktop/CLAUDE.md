@@ -51,6 +51,23 @@ made on Linux and Windows) and the application starts with `--add-exports=java.d
 on a macOS host only, the way the Linux one gets its `--add-opens`; without it the listener is simply not there.
 Windows needs nothing of its own, since it makes a touchpad pinch into the Ctrl + wheel the screen already answers.
 
+A finger on a touchscreen reaches Compose as a touch through `TouchScreen.kt`. The JetBrains Runtime takes the
+touchscreen on Windows and X11 itself and hands a finger on as mouse wheel events of three scroll types of its own
+(`sun.awt.event.TouchEvent`: 2 down, 3 for each move past a 10 px radius with the distance as the rotation, 4 up),
+then a mouse click for a finger that never left the radius. Compose reads the moves as wheel notches — a twentieth of
+the scrolled area each on Windows, animated — so a drag scrolled screens at a time, nothing flung and nothing could
+be dragged. An `EventQueue` pushed for the window takes those events before Compose does and sends the window's
+`ComposeScene` a `PointerType.Touch` press, moves and release at the finger's position instead (the position, never
+the delta, so a move split into one event per axis is one move), and drops the move, drag, press, release and click
+that follow a tap, which the runtime posts together and marks as a touch's on Windows only. Lists, the song pager and
+sheets then drag, fling and long press as on a phone. Multitouch is out of reach: the runtime passes on the primary
+finger alone. Compose Desktop has no public way to a window's scene, so it is found by type among the fields of the
+window and the Compose objects behind it (panel, container, mediator, its lazy `scene`), following only classes
+under `androidx.compose.`, whose names the release build keeps since ProGuard does not obfuscate there; a Compose version that keeps it elsewhere
+prints that touchscreen input is left to Compose, and the window behaves as it would without this. Check it after
+every Compose update: on a Mac, posting `MouseWheelEvent`s of those scroll types from an in-app driver exercises
+the whole path, since only the runtime's source of them is platform specific.
+
 Everything the process prints is also written to `campfire.log` in the data directory (`DesktopLog`), since an
 installed build started from Finder, the Start menu or a `.desktop` entry has nowhere for standard output to go and the
 app has no crash reporting: `System.out` and `System.err` are mirrored into it line by line with a timestamp, and a

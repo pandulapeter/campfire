@@ -170,6 +170,11 @@ fun main(args: Array<String>) {
                 val stopListening = window.listenForTouchpadMagnification { factor -> viewModel.value?.magnifyByTouchpad(factor) }
                 onDispose { stopListening?.invoke() }
             }
+            // A finger on a Windows or Linux touchscreen drags and flings the way it does on a phone.
+            DisposableEffect(window) {
+                val stopTranslating = window.translateTouchScreenInput()
+                onDispose { stopTranslating() }
+            }
             // Another process was asked to open Campfire and handed over to this one, so this is the window the
             // user is looking for.
             LaunchedEffect(Unit) {
