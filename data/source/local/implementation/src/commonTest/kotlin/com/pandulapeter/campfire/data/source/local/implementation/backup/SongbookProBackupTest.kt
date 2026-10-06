@@ -135,6 +135,18 @@ internal class SongbookProBackupTest {
     }
 
     @Test
+    fun aSetWithoutANameOrADateIsTitledByItsNumber() {
+        val files = read(
+            sets = """[
+                {"details": {"Id": 7, "name": "", "Deleted": 0}, "contents": []},
+                {"details": {"name": "", "Deleted": 0}, "contents": []}
+            ]""",
+        )
+
+        assertEquals(listOf("#7", "#2"), files.map { SetlistDocumentFormat.decode(it.bytes.decodeToString()).title })
+    }
+
+    @Test
     fun anArchiveWithoutSongbookProsDocumentIsNotASongbookProLibrary() {
         assertNull(SongbookProBackup.read(listOf(ImportedFile("song.cho", "{title: A}".encodeToByteArray()))))
         assertNull(SongbookProBackup.read(listOf(ImportedFile(SongbookProBackup.DATA_FILE_NAME, "Just some notes".encodeToByteArray()))))

@@ -77,13 +77,15 @@ internal object SongbookProBackup {
             song.int("Id")?.let { id -> songFiles[id] = SongFile(name = file.name, capo = song.capo ?: 0) }
             file
         }
-        val setlists = library.array("sets").orEmpty().mapNotNull { element ->
-            val set = element as? JsonObject ?: return@mapNotNull null
-            val details = set.objectOf("details") ?: return@mapNotNull null
-            if (details.isDeleted) return@mapNotNull null
+        val setlists = library.array("sets").orEmpty().mapIndexedNotNull { index, element ->
+            val set = element as? JsonObject ?: return@mapIndexedNotNull null
+            val details = set.objectOf("details") ?: return@mapIndexedNotNull null
+            if (details.isDeleted) return@mapIndexedNotNull null
             val date = details.text("date")?.take(ISO_DATE_LENGTH)?.takeIf { runCatching { LocalDate.parse(it) }.isSuccess }
-            // SongbookPro names a set by its date as often as not, and a setlist needs a title for its file to be named by.
-            val title = details.text("name") ?: date ?: details.int("Id")?.let { "Set $it" } ?: "Set"
+            // SongbookPro names a set by its date as often as not, and a setlist needs a title for its file to be named by. One
+            // with neither is numbered rather than named: the title is written into the file, and the data layer cannot say a
+            // word in the language of whoever reads it.
+            val title = details.text("name") ?: date ?: "#${details.int("Id") ?: (index + 1)}"
             val entries = set.array("contents").orEmpty()
                 .mapNotNull { it as? JsonObject }
                 .filter { !it.isDeleted && (it.int("ItemType") ?: SONG_ITEM_TYPE) == SONG_ITEM_TYPE }
