@@ -91,12 +91,14 @@ internal fun MetronomePanel(
     val isPlaying = playback is MetronomePlayback.Playing
     val settings by viewModel.metronomeSettings.collectAsStateWithLifecycle()
     val songsByFileName by viewModel.songsByFileName.collectAsStateWithLifecycle()
+    val songsBeingRenamed by viewModel.songsBeingRenamed.collectAsStateWithLifecycle()
     // The bar the row draws is the one the click counts, which is the song's time signature where it declares one, and
     // which is what the accents it is tapped are stored under, so a song in 6/8 is accented as the tab's 6/8 is. The
-    // tempo it plays at is nothing this panel shows, so none of what overrides it is read here.
+    // tempo it plays at is nothing this panel shows, so none of what overrides it is read here. A song being renamed is
+    // still the click's song, and its bar is still its own, for the moment the library no longer has the old name.
     val timeSignature = when (val context = viewModel.metronomeContext) {
         MetronomeContext.Standalone -> settings.timeSignatureOrDefault
-        is MetronomeContext.Song -> songsByFileName[context.songFileName].timeSignatureOrDefault
+        is MetronomeContext.Song -> (songsByFileName[context.songFileName] ?: songsBeingRenamed[context.songFileName]).timeSignatureOrDefault
     }
     val layoutDirection = LocalLayoutDirection.current
     val horizontalPadding = if (isProminent) PROMINENT_PANEL_HORIZONTAL_PADDING else PANEL_PADDING
