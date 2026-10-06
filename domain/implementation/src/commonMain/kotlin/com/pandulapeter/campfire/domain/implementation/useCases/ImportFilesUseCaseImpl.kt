@@ -121,13 +121,15 @@ class ImportFilesUseCaseImpl internal constructor(
                     Action.DISREGARD -> (entry.repeatedEntryIndex?.let(storedNames::getOrNull) ?: entry.fileName).also {
                         if (entry.repeatedEntryIndex in leftAloneIndices) {
                             leftAloneIndices += index
-                            skippedConflicts += entry.fileName
+                            skippedConflicts += it
                         } else {
                             duplicateFileNames += it
                         }
                     }
 
-                    Action.LEAVE_ALONE -> entry.fileName.also {
+                    // The library's spelling of the name where it holds the file under another one (case, Unicode form),
+                    // since that is the name the song list holds and the batch's setlists are pointed at.
+                    Action.LEAVE_ALONE -> (entry.replacesFileName ?: entry.fileName).also {
                         leftAloneIndices += index
                         skippedConflicts += it
                     }

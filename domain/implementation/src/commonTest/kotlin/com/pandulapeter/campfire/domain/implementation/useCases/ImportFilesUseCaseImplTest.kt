@@ -269,6 +269,32 @@ class ImportFilesUseCaseImplTest {
     }
 
     @Test
+    fun `a skipped conflict points the batch's setlists at the library's spelling`() = runTest {
+        val songs = FakeSongRepository(files = mutableMapOf("Beatles-Yesterday.cho" to A))
+        val setlists = FakeSetlistRepository()
+        val plan = ImportPlan(
+            songs = listOf(
+                ImportPlan.SongEntry(
+                    fileName = "beatles-yesterday.cho",
+                    text = B,
+                    status = ImportPlan.Status.CONFLICTING,
+                    sourceFileName = "beatles-yesterday.cho",
+                    replacesFileName = "Beatles-Yesterday.cho",
+                ),
+            ),
+            setlists = listOf(
+                ImportPlan.SetlistEntry("set.setlist.json", setlist(listOf("beatles-yesterday.cho")), ImportPlan.Status.NEW, "set.setlist.json"),
+            ),
+        )
+
+        val result = ImportFilesUseCaseImpl(songs, setlists).invoke(plan, ImportConflictResolution.SKIP)
+
+        assertEquals(listOf("Beatles-Yesterday.cho"), setlists.files.values.single().entries.map { it.songFileName })
+        assertEquals(listOf("Beatles-Yesterday.cho"), result.skippedConflictingFileNames)
+        assertEquals(mapOf("Beatles-Yesterday.cho" to A), songs.files)
+    }
+
+    @Test
     fun `an identical song whose library file is gone by the answer is written under its own name`() = runTest {
         val text = "{title: Song}\n"
         fun plan() = ImportPlan(
