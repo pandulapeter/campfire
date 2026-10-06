@@ -404,16 +404,18 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   frets and the base fret stay on a 24-fret neck (`Invalid` past it), and keys past four octaves are wrapped by their
   note, as the specification says, so no file can make a diagram draw without end; the instrument is the selector's where it names one and otherwise the one with as many strings; a `copy`, a
   `display` alone or a string count no instrument has is `Other`, and what cannot be read, or gives `base-fret`,
-  `frets`, `fingers` or `keys` twice, `Invalid`. The last shape of
-  a chord on an instrument wins, in the place of the first. `line` writes one the way it is read, with no selector and
-  the base fret a diagram would draw. `transposed` moves one with the song: the name renamed like any chord, a fretted
-  shape moved along the neck, up by the rest of the octave where it has an open string and otherwise whichever of the
-  two octaves a hand can hold, the lower where both or neither can, the fingering following a barre coming or going
-  (and left out where it would need a fifth finger or several fingers came to rest open); `movedBy` adds up, so there
-  and back is zero. `ChordProTransposer` applies it on the model, by what the whole song is moved by, and in the text,
-  where `rewrittenLine` rewrites the name, the base fret, the frets and the fingers where they stand and keeps every
-  other character — a line with no base fret keeps counting from the nut, so that moving back writes the line it was,
-  and one that cannot be read is left byte for byte. `chordAt` and `rangeOf` are the editor's: the chord of the brackets
+  `frets`, `fingers` or `keys` twice, `Invalid`. The last shape of a chord on an instrument wins, in the place of the
+  first. `line` writes one the way it is read, with no selector and the base fret a diagram would draw. `transposed`
+  moves one with the song: the name renamed like any chord, a fretted shape moved along the neck, up by the rest of the
+  octave where it has an open string and otherwise whichever of the two octaves a hand can hold, the lower where both or
+  neither can, the fingering following a barre coming or going (and left out where it would need a fifth finger or
+  several fingers came to rest open); `movedBy` adds up, so there and back is zero. `ChordProTransposer` applies it on
+  the model, by what the whole song is moved by, and in the text, where `rewrittenLine` rewrites the name, the base
+  fret, the frets and the fingers where they stand and keeps every other character — a line with no base fret keeps
+  counting from the nut, so that moving back writes the line it was, the fingering is kept up to the five fingers the
+  specification allows (only the page leaves out a fifth, since dropping it from the file would lose it for good) and
+  goes with its keyword only where several fingers came to rest open, and one that cannot be read is left byte for
+  byte. `chordAt` and `rangeOf` are the editor's: the chord of the brackets
   the caret is in or touching, and where a chord's frets or keys are written. Prettify formats a file holding
   definitions as it always did — they anchor the header around them like any directive it does not order, which is
   why `define` is not in `metadataOrder` — and `ChordProHeader.insertDefinition` is where a new one goes: after the

@@ -112,11 +112,14 @@ class ChordDefinitionTransposerTest {
     }
 
     @Test
-    fun `a fingering the move leaves out goes with its keyword`() {
+    fun `the text keeps a fingering up to five fingers, and one the move cannot carry back goes with its keyword`() {
         assertEquals(
-            "{define: D frets 2 5 4 2 3 5}",
+            "{define: D frets 2 5 4 2 3 5 fingers 1 4 3 1 2 5}",
             ChordProTransposer.transposeText("{define: C frets 0 3 2 0 1 3 fingers 0 3 2 0 1 4}", 2),
         )
+        assertEquals("{define: C frets x 0 0 1 2 x}", ChordProTransposer.transposeText("{define: C# frets x 1 1 2 3 x fingers 0 1 2 3 4 0}", -1))
+        val moved = ChordProTransposer.transpose(ChordProParser.parse("{define: G frets 3 2 0 0 0 3 fingers 3 2 0 0 0 4}\n[G]x"), 1)
+        assertEquals(null, (moved.metadata.definitions.single().voicing as ChordVoicing.Fretted).fingers)
     }
 
     @Test
@@ -140,7 +143,8 @@ class ChordDefinitionTransposerTest {
 
     @Test
     fun `there and back in the text is the line it started as`() {
-        val text = "{define: C base-fret 1 frets x 3 2 0 1 0 fingers 0 3 2 0 1 0}\n{define-ukulele: Am frets 2 0 0 0}\n{define: G keys 0 4 7}\n[C]x [Am]y [G]z"
+        val text = "{define: C base-fret 1 frets x 3 2 0 1 0 fingers 0 3 2 0 1 0}\n{define-ukulele: Am frets 2 0 0 0}\n{define: G keys 0 4 7}\n" +
+            "{define: G frets 3 2 0 0 0 3 fingers 3 2 0 0 0 4}\n[C]x [Am]y [G]z"
         (-5..6).forEach { semitones ->
             assertEquals(text, ChordProTransposer.transposeText(ChordProTransposer.transposeText(text, semitones), -semitones), "$semitones")
         }

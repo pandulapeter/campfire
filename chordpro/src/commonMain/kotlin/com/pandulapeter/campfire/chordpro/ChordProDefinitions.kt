@@ -80,8 +80,8 @@ object ChordProDefinitions {
      *
      * The fingering follows where the move is a barre coming or going: open strings a move stops become the first
      * finger's barre and every other finger moves one on, and strings that come to rest open lose their finger while
-     * the others move one back. A shape that would need a fifth finger keeps no fingering, and nor does one whose strings
-     * coming to rest open were held by more than one finger. A keyboard's keys move with the root they are counted from.
+     * the others move one back. A shape that would need a fifth finger keeps no fingering here, on the page (the text keeps
+     * it, see [rewrittenLine]), and nor does one whose strings coming to rest open were held by more than one finger. A keyboard's keys move with the root they are counted from.
      * [ChordDefinition.movedBy] adds up, so there and back is zero.
      */
     fun transposed(definition: ChordDefinition, semitones: Int, rename: (String) -> String): ChordDefinition {
@@ -98,17 +98,27 @@ object ChordProDefinitions {
                 )
             }
             is ChordVoicing.Fretted -> {
-                val candidates = (if (voicing.frets.any { it == 0 }) listOf(shift) else listOf(shift - 12, shift))
-                    .filter { move -> voicing.frets.all { it == null || it + move in 0..MAX_FRET } }
-                val move = candidates.firstOrNull { ChordVoicings.isHoldable(voicing.frets.map { fret -> fret?.plus(it) }) }
-                    ?: candidates.firstOrNull()
-                    ?: return definition.copy(name = name)
-                definition.copy(name = name, voicing = voicing.movedBy(move), movedBy = definition.movedBy + move)
+                val (move, moved) = voicing.moved(semitones, MAX_HAND_FINGER) ?: return definition.copy(name = name)
+                definition.copy(name = name, voicing = moved, movedBy = definition.movedBy + move)
             }
         }
     }
 
-    private fun ChordVoicing.Fretted.movedBy(move: Int): ChordVoicing.Fretted {
+    /**
+     * The move along the neck [transposed] takes this shape by for [semitones], and the shape it lands on with its
+     * fingering kept up to [maxFinger] fingers, or null where no move keeps every fret on the neck.
+     */
+    private fun ChordVoicing.Fretted.moved(semitones: Int, maxFinger: Int): Pair<Int, ChordVoicing.Fretted>? {
+        val shift = semitones.mod(12)
+        val candidates = (if (frets.any { it == 0 }) listOf(shift) else listOf(shift - 12, shift))
+            .filter { move -> frets.all { it == null || it + move in 0..MAX_FRET } }
+        val move = candidates.firstOrNull { ChordVoicings.isHoldable(frets.map { fret -> fret?.plus(it) }) }
+            ?: candidates.firstOrNull()
+            ?: return null
+        return move to movedBy(move, maxFinger)
+    }
+
+    private fun ChordVoicing.Fretted.movedBy(move: Int, maxFinger: Int): ChordVoicing.Fretted {
         val moved = frets.map { it?.plus(move) }
         val fingers = fingers?.let { fingers ->
             val stoppedNow = frets.indices.filter { frets[it] == 0 }
@@ -129,7 +139,7 @@ object ChordProDefinitions {
                 }
                 else -> fingers
             }
-            adjusted.takeIf { it.all { finger -> finger in 0..MAX_HAND_FINGER } }
+            adjusted.takeIf { it.all { finger -> finger in 0..maxFinger } }
         }
         return ChordVoicing.Fretted(moved, fingers)
     }
@@ -140,8 +150,9 @@ object ChordProDefinitions {
      * moves it: the name, the base fret, the frets and the fingers each rewritten where it stands and every other
      * character of the line kept, a selector, a `display` and the spacing included. A base fret is written as a diagram
      * would draw the shape, and a line that had none counts its frets from the nut whatever they come to, so that
-     * moving it back writes the line it was; a fingering the move leaves out goes with its keyword. A keyboard's keys are counted from the root and stay as
-     * they are. A line that cannot be read is left byte for byte, as a tab that fits in no octave is.
+     * moving it back writes the line it was; a fingering is kept up to five fingers, and one the move cannot carry back
+     * (strings held by several fingers coming to rest open) goes with its keyword. A keyboard's keys are counted from the
+     * root and stay as they are. A line that cannot be read is left byte for byte, as a tab that fits in no octave is.
      */
     fun rewrittenLine(rawLine: String, selector: String, rename: (String) -> String, semitones: Int = 0): String {
         val trimmed = rawLine.trim()
@@ -173,7 +184,9 @@ object ChordProDefinitions {
         }
         val voicing = (reading as? Reading.Shape)?.voicing as? ChordVoicing.Fretted
         if (voicing != null && semitones.mod(12) != 0) {
-            val moved = transposed(ChordDefinition(reading.name, reading.instrument, voicing), semitones) { it }.voicing as ChordVoicing.Fretted
+            // The text keeps a fingering up to the five fingers the specification allows, where the page draws none past
+            // the hand's four: dropping it from the file would lose it for good, since moving back could not bring it back.
+            val moved = voicing.moved(semitones, MAX_FINGER)?.second ?: voicing
             val baseFretKeyword = keywordIndices.firstOrNull { keywordOf(value.substring(words[it])) == BASE_FRET }
             // A line with no base fret counts its frets from the nut whatever they are, so that moving it back writes
             // the line it was.
