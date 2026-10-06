@@ -9,21 +9,36 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components
 
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
 /**
- * A single choice between a handful of [options], rendered as a segmented button row.
+ * A single choice between a handful of [options], rendered as a segmented button row. A selected segment carries
+ * Material's check mark only where every label of the row would still fit beside it ([hasRoomForCheckMarks]): a row
+ * that has no room for one has none at all, its fill alone marking the choice, so that the name of the selected
+ * option is never the one cut short and picking another never takes the mark away.
+ *
+ * Measuring the labels against the row's width makes a row that is not [isInline] a `BoxWithConstraints`, which is a
+ * `SubcomposeLayout` and throws where a parent asks for its intrinsic size, so it is not to be put inside an
+ * `IntrinsicSize` layout.
  *
  * @param isEnabled False where the choice has no effect right now, in which case the row still shows which option
  *   is selected rather than disappearing: what it would go back to once it matters again is worth seeing.
@@ -41,23 +56,77 @@ internal fun <T> SegmentedChoice(
     isEnabled: Boolean = true,
     isInline: Boolean = false,
     onSelected: (T) -> Unit,
-) = SingleChoiceSegmentedButtonRow(
-    modifier = modifier.fillMaxWidth().padding(horizontal = if (shouldApplyPadding) if (isInline) 8.dp else 16.dp else 0.dp)
 ) {
+    val rowModifier = modifier.fillMaxWidth().padding(horizontal = if (shouldApplyPadding) if (isInline) 8.dp else 16.dp else 0.dp)
+    if (isInline) {
+        SegmentedRow(
+            modifier = rowModifier,
+            options = options,
+            selected = selected,
+            isEnabled = isEnabled,
+            contentPadding = INLINE_CONTENT_PADDING,
+            showsCheckMarks = false,
+            onSelected = onSelected,
+        )
+    } else {
+        BoxWithConstraints(rowModifier) {
+            val density = LocalDensity.current
+            val layoutDirection = LocalLayoutDirection.current
+            val style = MaterialTheme.typography.labelLarge
+            val textMeasurer = rememberTextMeasurer()
+            // Compared by equality, so the labels are measured again only when one of them changes (the language), or
+            // when the density does, which carries the system's font scale.
+            val labels = options.map { it.second }
+            val labelWidths = remember(labels, style, density) {
+                labels.map { textMeasurer.measure(text = it, style = style, maxLines = 1).size.width.toFloat() }
+            }
+            val contentPadding = SegmentedButtonDefaults.ContentPadding
+            val showsCheckMarks = with(density) {
+                hasRoomForCheckMarks(
+                    labelWidths = labelWidths,
+                    // Each segment's 1dp border is taken off the width its label shares.
+                    rowWidth = maxWidth.toPx() - options.size * 1.dp.toPx(),
+                    contentPadding = (contentPadding.calculateStartPadding(layoutDirection) + contentPadding.calculateEndPadding(layoutDirection)).toPx(),
+                    checkMark = (SegmentedButtonDefaults.IconSize + CHECK_MARK_SPACING).toPx(),
+                )
+            }
+            SegmentedRow(
+                modifier = Modifier.fillMaxWidth(),
+                options = options,
+                selected = selected,
+                isEnabled = isEnabled,
+                contentPadding = contentPadding,
+                showsCheckMarks = showsCheckMarks,
+                onSelected = onSelected,
+            )
+        }
+    }
+}
+
+@Composable
+private fun <T> SegmentedRow(
+    modifier: Modifier,
+    options: List<Pair<T, String>>,
+    selected: T?,
+    isEnabled: Boolean,
+    contentPadding: PaddingValues,
+    showsCheckMarks: Boolean,
+    onSelected: (T) -> Unit,
+) = SingleChoiceSegmentedButtonRow(modifier = modifier) {
     options.forEachIndexed { index, (value, label) ->
         SegmentedButton(
             selected = value == selected,
             onClick = { onSelected(value) },
             enabled = isEnabled,
             shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
-            icon = if (isInline) ({}) else ({ SegmentedButtonDefaults.Icon(value == selected) }),
-            contentPadding = if (isInline) INLINE_CONTENT_PADDING else SegmentedButtonDefaults.ContentPadding,
+            icon = if (showsCheckMarks) ({ SegmentedButtonDefaults.Icon(value == selected) }) else ({}),
+            contentPadding = contentPadding,
             label = {
                 Text(
                     // Material measures the label at the whole width of the segment and then places it after the check
                     // mark of a selected one, so a label as wide as the segment ran on under its shape instead of being
                     // ellipsized. The check mark's room is taken off the width the label is offered.
-                    modifier = if (value == selected && !isInline) Modifier.withoutCheckMarkWidth() else Modifier,
+                    modifier = if (value == selected && showsCheckMarks) Modifier.withoutCheckMarkWidth() else Modifier,
                     text = label,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -65,6 +134,21 @@ internal fun <T> SegmentedChoice(
             },
         )
     }
+}
+
+/**
+ * Whether every label of a row of segments [rowWidth] wide still fits its segment with a selected segment's check
+ * mark beside it, all in pixels. Decided for the whole row, so that picking another option never takes the mark away.
+ */
+internal fun hasRoomForCheckMarks(
+    labelWidths: List<Float>,
+    rowWidth: Float,
+    contentPadding: Float,
+    checkMark: Float,
+): Boolean {
+    if (labelWidths.isEmpty()) return true
+    val labelRoom = rowWidth / labelWidths.size - contentPadding - checkMark
+    return labelWidths.all { it <= labelRoom }
 }
 
 /**
