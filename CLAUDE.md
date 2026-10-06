@@ -290,7 +290,7 @@ localized in both languages.
   editor's preview, where the text being typed is what says them. With the chords switched off the
   key and the capo leave the line and the controls alike, and with the metronome switched off the tempo and the time
   signature do (see Features below) — everywhere but in the editor's preview, which says all four whatever the
-  switches, since it shows what is being written. What is left in the app bar is about the song rather than about how it is
+  switches and in the key it is written in, since it shows what is being written. What is left in the app bar is about the song rather than about how it is
   played — the click, the Choose setlists and the menu, the title opening the About the song sheet — with the text size, which is
   the reader's own, at the end of that menu. **The key the band actually hears is named in the app bar**, after the
   artist and the way a song card names it: the transposition *and* the capo applied, so it is the key the song sounds

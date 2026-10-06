@@ -330,7 +330,6 @@ private fun LoadedSongEditor(
     ReportDraft(viewModel = viewModel, fileName = destination.fileName, text = text, textFieldState = textFieldState)
 
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
-    val transpositions by viewModel.transpositions.collectAsStateWithLifecycle()
     val isSaving by viewModel.isSavingSong.collectAsStateWithLifecycle()
     // The bar above the text follows the text as it is typed, so retitling a song shows up there right away. It
     // comes from the parser rather than from a regex of this screen's own, so that it is the same title, artist and
@@ -564,7 +563,6 @@ private fun LoadedSongEditor(
                 viewModel = viewModel,
                 text = text,
                 scrollState = previewScrollState,
-                transposition = transpositions[destination.fileName, null],
                 fontScale = fontScale,
                 chordSpelling = chordSpelling,
                 contentPadding = contentPadding.only(start = !hasSideBySidePreview, end = true, bottom = true),
@@ -825,7 +823,6 @@ private fun SongPreview(
     viewModel: CampfireViewModel,
     text: State<String>,
     scrollState: ScrollState,
-    transposition: Int,
     fontScale: Float,
     chordSpelling: UserPreferences.ChordSpelling,
     contentPadding: PaddingValues,
@@ -834,13 +831,14 @@ private fun SongPreview(
 ) {
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val labels = rememberDefaultSectionLabels(shouldNumberSections = userPreferences?.shouldNumberSections == true)
-    val latestTransposition by rememberUpdatedState(transposition)
     val latestChordSpelling by rememberUpdatedState(chordSpelling)
     // Lyrics only mode is about how a song is read, and this preview is here to show what is being written: chords
-    // typed into the field opposite it have to appear, or the editor would answer an edit with nothing.
-    fun inputsOf(text: String, transposition: Int, spelling: UserPreferences.ChordSpelling) = SongLyricsInputs(
+    // typed into the field opposite it have to appear, or the editor would answer an edit with nothing. The reader's
+    // transposition is a way of reading it too, so the preview is in the key the field and the stepper name - the
+    // file's own {transpose} still applies, being part of the text.
+    fun inputsOf(text: String, spelling: UserPreferences.ChordSpelling) = SongLyricsInputs(
         text = text,
-        transposition = transposition,
+        transposition = 0,
         spelling = spelling,
         shouldShowChords = true,
         labels = labels,
@@ -853,9 +851,9 @@ private fun SongPreview(
     // The first rendering is built right here, so the preview never opens on an empty frame. Every later one is built
     // away from the main thread once the typing pauses, which is exactly when the next key is likely to come, and
     // the one before it stays on screen until it is ready.
-    var preview by remember(text) { mutableStateOf(inputsOf(text.value, transposition, chordSpelling).let { it to prepare(it) }) }
+    var preview by remember(text) { mutableStateOf(inputsOf(text.value, chordSpelling).let { it to prepare(it) }) }
     LaunchedEffect(text, labels) {
-        snapshotFlow { inputsOf(text.value, latestTransposition, latestChordSpelling) }
+        snapshotFlow { inputsOf(text.value, latestChordSpelling) }
             .distinctUntilChanged()
             .debounce(PREVIEW_DELAY_MILLIS)
             .filter { it != preview.first }
