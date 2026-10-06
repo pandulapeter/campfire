@@ -2172,6 +2172,8 @@ class CampfireViewModel(
      * caller to hand over there and then, rather than left to arrive through [syncState], which it would only do
      * after a hop to the main thread this callback is holding.
      */
+    private var silentClickStopJob: Job? = null
+
     fun onAppPaused(): SyncProgress? {
         val syncProgress = startScheduledSynchronization()
         if (!_isEditorDraftRecoveryPending.value) {
@@ -2179,6 +2181,32 @@ class CampfireViewModel(
             viewModelScope.launch { storeEditorDraft(draft) }
         }
         return syncProgress
+    }
+
+    /**
+     * Called whenever the app is out of sight (ON_STOP). A click that cannot sound - the volume at zero, every beat
+     * muted - is only there for the flash and the haptics, neither of which reaches a screen nobody sees, and keeping it
+     * up would keep the phone's background audio (iOS's audio mode, Android's media playback service) going for
+     * silence, which is not what either platform allows it for. A few seconds' grace, since an Android activity
+     * recreated in front (a system theme or language change) stops, and is only started again once its new composition
+     * is up, and a click playing on its own screen is not to be stopped by that.
+     */
+    fun onAppStopped() {
+        silentClickStopJob?.cancel()
+        silentClickStopJob = viewModelScope.launch {
+            delay(SILENT_CLICK_GRACE_MILLIS)
+            val playing = metronome.playback.value as? MetronomePlayback.Playing ?: return@launch
+            if (!playing.pattern.canSound) {
+                metronome.stop()
+                sendMessage(Message.SilentMetronomeStopped)
+            }
+        }
+    }
+
+    /** Called whenever the app is in sight again (ON_START), which takes back a stop [onAppStopped] has not made yet. */
+    fun onAppStarted() {
+        silentClickStopJob?.cancel()
+        silentClickStopJob = null
     }
 
     /**
@@ -4229,6 +4257,9 @@ class CampfireViewModel(
 
         /** The click stopped, or did not start, without being asked to. */
         data class MetronomeStopped(val reason: MetronomeStopReason) : Message
+
+        /** A click that could not sound was stopped as the app left the front, see [onAppStopped]. */
+        data object SilentMetronomeStopped : Message
     }
 
     /**
@@ -4506,6 +4537,7 @@ class CampfireViewModel(
         private const val FONT_SCALE_SAVE_DELAY_MILLIS = 500L
         private const val FONT_SCALE_SETTLE_MILLIS = 200L
         private const val SONG_EDIT_ATTEMPTS = 2
+        private const val SILENT_CLICK_GRACE_MILLIS = 3_000L
         private const val BACK_STACK_KEY = "backStack"
         private const val DEMO_LIBRARY_READ_TIMEOUT_MILLIS = 10_000L // Past the drawables' five seconds: it cuts short a first impression, not a frame.
         private const val MAX_SAVED_BACK_STACK_LENGTH = 100_000 // Characters of JSON, about 200 KB as the UTF-16 a Bundle writes.

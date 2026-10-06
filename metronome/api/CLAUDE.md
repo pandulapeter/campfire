@@ -21,7 +21,8 @@ The contract of the click, and nothing else: depends on nothing but coroutines (
   `Stopped(reason)`.
 - `model/` — `MetronomePattern` (complete: tempo within `BPM_RANGE` 30–300, `TimeSignature`, one `BeatLevel` per
   beat, `Subdivision`, `MetronomeSound`, volume — at 0 the click runs on silently, for the visual beat alone, which is
-  why there is no mute of its own), `TimeSignature` (1–16 beats over 1/2/4/8/16, written and
+  why there is no mute of its own; `canSound` says whether a pattern is ever heard, for the app to stop a silent click
+  it can no longer show), `TimeSignature` (1–16 beats over 1/2/4/8/16, written and
   parsed as `"7/8"`, with the default accents: one, and every group of three in a compound meter), the enums with the
   stable `id`s a stored setting uses, `MetronomeStopReason` and `MetronomeAudioIssue`. The engine keeps no notion of
   what a click is played for: it is started and stopped by the screen that holds the controls, and there are two.

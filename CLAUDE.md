@@ -827,7 +827,10 @@ Nothing about it reaches the network. The module `CLAUDE.md` files carry the det
   app taking the audio, and a click that stopped on its own says why. **A click outlives the app being sent to the
   background and not the app being left**: the screen locked or another app in front is a phone on a music stand and
   keeps it, while the app being closed — swiped away or backed out of on Android, quit on the desktop — stops it, since
-  nothing is left to look at the notification it keeps up.
+  nothing is left to look at the notification it keeps up. A click that cannot sound — the volume at zero or every
+  beat muted — is the exception: it is stopped a few seconds after the app goes out of sight, and says so, since out
+  of sight it has nothing left to show and the phones' background audio is not for silence
+  (`MetronomePattern.canSound`, `CampfireViewModel.onAppStopped`).
 - **Both are played from the same panel** (`MetronomePanel`): the least of a metronome that is still one — the bar as
   it is heard, with its accents tapped on it, since the accents are the bar's rather than one screen's, and play and
   stop at the end of the row. On the **song details screen** it is inside the app bar, under the title row, because a
@@ -846,7 +849,7 @@ Nothing about it reaches the network. The module `CLAUDE.md` files carry the det
 - Performance mode keeps the play button, and the panel has no tempo stepper to hide; the song's own line of text says
   the tempo there, as it says the transposition. The tab stays fully usable. Settings (sound, subdivision, accents per signature, volume, flash, vibrate) are
   `UserPreferences.metronomeSettings`; there is no mute of its own, since a volume of zero leaves the click running
-  with nothing sounding.
+  with nothing sounding — on screen, for the flash and the haptics.
 
 ## Cover art
 

@@ -16,7 +16,8 @@ package com.pandulapeter.campfire.metronome.api.model
  * @param beatLevels One per beat of [timeSignature]; a list of another length is padded or cut to fit it, the padding
  *   taken from the signature's defaults.
  * @param volume From 0 to 1, on top of the system's own volume; at 0 the clock and the beats go on with nothing
- *   sounding, for the visual beat alone.
+ *   sounding, for the visual beat alone - which is why such a click does not outlive the app leaving the front, see
+ *   [canSound].
  */
 data class MetronomePattern(
     val bpm: Int,
@@ -29,6 +30,13 @@ data class MetronomePattern(
 
     /** The level of the beat at [index] of the bar, whatever the length of [beatLevels]. */
     fun beatLevel(index: Int) = beatLevels.getOrNull(index) ?: timeSignature.defaultBeatLevels()[index]
+
+    /**
+     * Whether anything of this pattern is ever heard: a volume above zero and at least one beat of the bar not muted. A
+     * subdivision carries its beat's level, so it never makes a muted bar audible.
+     */
+    val canSound: Boolean
+        get() = volume > 0f && (0 until timeSignature.beats).any { beatLevel(it) != BeatLevel.MUTED }
 
     companion object {
         val BPM_RANGE = 30..300

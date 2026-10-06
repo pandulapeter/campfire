@@ -368,6 +368,7 @@
     <string name="metronome_stopped_interrupted">A metronóm egy hívás vagy egy másik alkalmazás miatt leállt.</string>
     <string name="metronome_stopped_disconnected">A metronóm leállt, mert a hangeszköz lecsatlakozott.</string>
     <string name="metronome_stopped_failed">A metronóm leállt, mert a hangkimenet hibát jelzett.</string>
+    <string name="metronome_stopped_silent">A metronóm leállt, amikor a Campfire a háttérbe került, mert nulla hangerőn vagy minden ütést elnémítva semmi sem hallatszott.</string>
     <!-- The channel of the notification a playing metronome keeps up, as the system's settings list it. -->
     <string name="metronome_notification_channel">Metronóm</string>
 

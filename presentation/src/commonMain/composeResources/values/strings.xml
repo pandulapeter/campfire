@@ -368,6 +368,7 @@
     <string name="metronome_stopped_interrupted">The metronome stopped for a call or another app.</string>
     <string name="metronome_stopped_disconnected">The metronome stopped because the audio device went away.</string>
     <string name="metronome_stopped_failed">The metronome stopped because the sound output failed.</string>
+    <string name="metronome_stopped_silent">The metronome stopped when Campfire went out of sight, since with the volume at zero or every beat muted there was nothing to hear.</string>
     <!-- The channel of the notification a playing metronome keeps up, as the system's settings list it. -->
     <string name="metronome_notification_channel">Metronome</string>
 

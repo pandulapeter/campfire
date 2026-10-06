@@ -142,6 +142,7 @@ import com.pandulapeter.campfire.presentation.resources.metronome_stopped_discon
 import com.pandulapeter.campfire.presentation.resources.metronome_stopped_failed
 import com.pandulapeter.campfire.presentation.resources.metronome_stopped_interrupted
 import com.pandulapeter.campfire.presentation.resources.metronome_stopped_refused
+import com.pandulapeter.campfire.presentation.resources.metronome_stopped_silent
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeContext
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeIcon
@@ -272,6 +273,11 @@ fun CampfireApp(
     // the app is still in front: waiting for it to reach the composition would mean waiting for a frame, and a phone
     // whose screen was just turned off pauses and stops the app with none in between.
     LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) { viewModel.onAppPaused()?.let(showSyncNotification) }
+    // A click that cannot sound is stopped once the app has been out of sight for a moment, see
+    // CampfireViewModel.onAppStopped. ON_STOP rather than ON_PAUSE: Control Center or a notification shade pulled over
+    // the app pauses it with the click still in view.
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { viewModel.onAppStopped() }
+    LifecycleEventEffect(Lifecycle.Event.ON_START) { viewModel.onAppStarted() }
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val arePreferencesLoaded by viewModel.arePreferencesLoaded.collectAsStateWithLifecycle()
     val hasLibraryToShow by viewModel.hasLibraryToShow.collectAsStateWithLifecycle()
@@ -871,6 +877,7 @@ private fun Messages(
                 MetronomeStopReason.OUTPUT_FAILED -> Res.string.metronome_stopped_failed
             }
         )
+        CampfireViewModel.Message.SilentMetronomeStopped -> stringResource(Res.string.metronome_stopped_silent)
         null -> null
     }
     val importFinished = head?.value as? CampfireViewModel.Message.ImportFinished
