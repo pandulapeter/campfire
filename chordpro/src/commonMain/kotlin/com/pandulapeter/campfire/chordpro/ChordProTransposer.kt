@@ -172,7 +172,13 @@ object ChordProTransposer {
         fun flushRun() {
             if (run.isEmpty()) return
             val tabLines = rewriteTabLines(run.filterIsInstance<ChordProLine.Tab>().map { it.text }).iterator()
-            rewritten += run.map { line -> if (line is ChordProLine.Tab) line.copy(text = tabLines.next()) else line }
+            rewritten += run.map { line ->
+                if (line is ChordProLine.Tab) {
+                    line.copy(text = tabLines.next(), label = line.label?.let { rewriteLyricsLineChords(it, rename) })
+                } else {
+                    line
+                }
+            }
             run = mutableListOf()
         }
         lines.forEach { line ->
@@ -414,10 +420,13 @@ object ChordProTransposer {
                 } else {
                     token
                 }
-            }
+            },
+            label = line.label?.let { rewriteLyricsLineChords(it, rename) },
         )
 
-        else -> line
+        is ChordProLine.Tab -> line.copy(label = line.label?.let { rewriteLyricsLineChords(it, rename) })
+
+        ChordProLine.Blank -> line
     }
 
     private fun transposeNote(part: String, semitones: Int, preferFlats: Boolean): String {

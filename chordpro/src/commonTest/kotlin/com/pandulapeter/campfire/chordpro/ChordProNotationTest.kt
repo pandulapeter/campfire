@@ -21,6 +21,17 @@ import kotlin.test.assertTrue
 class ChordProNotationTest {
 
     @Test
+    fun `a tab label inside a section is shown in the reader's notation`() {
+        val song = ChordProParser.parse("{start_of_verse}\n[G]la\n{start_of_tab: Riff [B]}\ne|--3--|\n{end_of_tab}\n{end_of_verse}")
+
+        val labels = ChordProNotation.toNotation(song, ChordNotation.GERMAN).blocks.filterIsInstance<ChordProBlock.Section>()
+            .flatMap { it.lines }
+            .mapNotNull { (it as? ChordProLine.Tab)?.label }
+
+        assertEquals(listOf("Riff [H]"), labels.distinct())
+    }
+
+    @Test
     fun `a key spelled out in words is written in German notation`() {
         assertEquals("H major", ChordProNotation.toNotation(ChordProParser.parse("{key: B major}\n[B]a"), ChordNotation.GERMAN).metadata.key)
         assertEquals("B major", ChordProParser.parse("{key: H major}\n[H]a").metadata.key)

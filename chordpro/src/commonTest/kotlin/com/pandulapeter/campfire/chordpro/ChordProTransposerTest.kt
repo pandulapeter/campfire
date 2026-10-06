@@ -23,6 +23,20 @@ import kotlin.test.assertTrue
 class ChordProTransposerTest {
 
     @Test
+    fun `a tab or grid label inside a section is transposed like the text`() {
+        val text = "{start_of_verse: V}\n[G]la\n{start_of_tab: Riff [G]}\ne|--3--|\n{end_of_tab}\n" +
+            "{start_of_grid: Bar [C]}\n| C . |\n{end_of_grid}\n{end_of_verse}"
+
+        assertEquals(listOf("Riff [A]", "Bar [D]"), ChordProTransposer.transpose(ChordProParser.parse(text), 2).environmentLabels())
+        assertEquals(listOf("Riff [A]", "Bar [D]"), ChordProParser.parse(ChordProTransposer.transposeText(text, 2)).environmentLabels())
+    }
+
+    private fun ChordProSong.environmentLabels() = blocks.filterIsInstance<ChordProBlock.Section>()
+        .flatMap { it.lines }
+        .mapNotNull { (it as? ChordProLine.Tab)?.label ?: (it as? ChordProLine.Grid)?.label }
+        .distinct()
+
+    @Test
     fun `a transposition leaves the chords a song defines where they are`() {
         assertEquals("{define: C frets x 3 2 0 1 0}\n[D]x", ChordProTransposer.transposeText("{define: C frets x 3 2 0 1 0}\n[C]x", 2))
     }
