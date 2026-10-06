@@ -27,8 +27,8 @@ import kotlin.concurrent.Volatile
  * which is all that "every shape" can honestly mean: what a hand can do is a matter of hands, and the shape a song
  * wants is often no voicing of its chord's name at all, which is what a `{define}` is for.
  *
- * The keyboard needs neither: the chord's notes from the root up, at most five, and the inversions as the variations,
- * a slash chord's bass an octave below.
+ * The keyboard needs neither: the chord's notes from the root up, the fifth and then the root left out of a chord of
+ * more than five notes, and the inversions as the variations, a slash chord's bass an octave below.
  */
 object ChordVoicings {
 
@@ -288,6 +288,8 @@ object ChordVoicings {
     private const val MAX_TABLE_POSITION = 9
     private const val MAX_HOLDABLE_FRET = 15
     private const val MAX_FRET = 24
+
+    /** How many notes a keyboard shape aims at: the fifth and the root are left out above it, never a note the name asks for. */
     private const val MAX_KEYS = 5
 
     /** The highest key a keyboard shape can press: four octaves above the diagram's C, past anything [keyboard] writes. */

@@ -97,6 +97,7 @@ class ChordVoicingsTest {
         )
         assertEquals(ChordVoicing.Keys(listOf(9, 12, 16, 19)), ChordVoicings.default(ChordProChords.parse("Am7")!!, ChordInstrument.KEYBOARD))
         assertEquals(ChordVoicing.Keys(listOf(14, 18, 21), bass = 6), ChordVoicings.default(ChordProChords.parse("D/F#")!!, ChordInstrument.KEYBOARD))
+        assertEquals(6, (ChordVoicings.default(ChordProChords.parse("C7(b9,#9,#11,b13)")!!, ChordInstrument.KEYBOARD) as ChordVoicing.Keys).notes.size)
         val thirteenth = ChordVoicings.default(ChordProChords.parse("C13#11")!!, ChordInstrument.KEYBOARD) as ChordVoicing.Keys
         assertEquals(5, thirteenth.notes.size, "the fifth goes first")
     }

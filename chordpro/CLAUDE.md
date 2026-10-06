@@ -395,15 +395,15 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   where there are more notes than strings, may go), with the bass or else the root lowest (not on the re-entrant
   ukulele, which plays a slash chord as the chord over it), no muted string between two that sound, open strings only
   with a hand in the first five frets, no more than four fingers (`fingerCount`: a barre at the lowest fret and a finger
-  laid across neighbouring strings at one fret each count as one), and no shape that is another with a string left out; a chord that needs more notes than there are strings has no shape,
-  without a search.
-  The keyboard plays the notes from the root up, at most five, and their inversions, a slash chord's bass an octave
-  below. `default` is a table lookup wherever the tables have the chord, and the search otherwise, whose answer is remembered
-  for the rest of the session (a bounded copy-on-write map, safe from any thread), so the first page that names an unusual
-  chord pays for it once; `all` runs the search. `write` and `read` are a
-  stored choice (`x 3 2 0 1 0`, `4 7 12 / 0`), and reading one back for a chord the tables know gives it their
-  fingering; `read` takes a keyboard key in four octaves and a bass as a pitch class, since a stored choice arrives
-  through sync. `ChordVoicingTablesTest` checks that every shape of the tables sounds the chord it is filed under, and the
+  laid across neighbouring strings at one fret each count as one), and no shape that is another with a string left out;
+  a chord that needs more notes than there are strings has no shape, without a search. The keyboard plays the notes from
+  the root up (the fifth, then the root, left out where there are more than five), and their inversions, a slash chord's
+  bass an octave below. `default` is a table lookup wherever the tables have the chord, and the search otherwise, whose
+  answer is remembered for the rest of the session (a bounded copy-on-write map, safe from any thread), so the first
+  page that names an unusual chord pays for it once; `all` runs the search. `write` and `read` are a stored choice
+  (`x 3 2 0 1 0`, `4 7 12 / 0`), and reading one back for a chord the tables know gives it their fingering; `read`
+  takes a keyboard key in four octaves and a bass as a pitch class, since a stored choice arrives through sync.
+  `ChordVoicingTablesTest` checks that every shape of the tables sounds the chord it is filed under, and the
   `desktopTest` contact sheet draws them all into `CAMPFIRE_CHORD_QA_DIR` where that is set, for a player to look over.
 - `ChordProDefinitions` — a song's own shapes (`model/ChordDefinition`). `read` takes a definition's value: frets
   counted from the `base-fret` (`base_fret` read too; `x`, `X`, `N` and `-1` muted), fingers (any value that is no
