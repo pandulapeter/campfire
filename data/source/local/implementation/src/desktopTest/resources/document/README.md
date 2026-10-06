@@ -69,5 +69,4 @@ the real document local source and chord-sheet converter, including omission of 
 
 Still missing from the planned producer matrix: real Microsoft Word, Google Docs, Apple Pages, Safari print and
 LaTeX exports. These fixtures do not claim to cover those producers; add their original bytes and goldens when
-available. Platform picker/drop/share and snackbar behavior is checked separately in
-`documentation/release-check.md`.
+available. Platform picker/drop/share and snackbar behavior is checked by hand before a release.
