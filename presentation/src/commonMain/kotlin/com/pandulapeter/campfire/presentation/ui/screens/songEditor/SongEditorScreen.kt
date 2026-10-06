@@ -209,7 +209,7 @@ internal fun SongEditorScreen(
     // never loaded. The empty text it opens with is only what the field is compared with, which is what the file
     // holds now.
     //
-    // The field is in the reader's notation, so every text of the file it is compared with or replaced by is too.
+    // The field is in the editor's notation, so every text of the file it is compared with or replaced by is too.
     var hasOpened by rememberSaveable(destination.fileName) { mutableStateOf(false) }
     var initialText by remember(destination.fileName) {
         mutableStateOf(
@@ -505,7 +505,7 @@ private fun LoadedSongEditor(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     TextTranspositionControls(
-                        // The summary reads the key into the standard notation, and the field is in the reader's.
+                        // The summary reads the key into the standard notation, and the field is in the editor's.
                         key = summary.metadata.key?.let(viewModel::editorKeyOf),
                         // A key is enough on its own: it says what the song is in, and moving it is a transposition
                         // even before a chord has been written under it.
@@ -859,6 +859,7 @@ private fun SongPreview(
         song = viewModel.renderSong(inputs.text, inputs.transposition, inputs.spelling, writtenIn = viewModel.editorNotation),
         shouldShowChords = inputs.shouldShowChords,
         labels = inputs.labels,
+        notation = inputs.spelling.notation.toChordNotation(),
     )
     // The first rendering is built right here, so the preview never opens on an empty frame. Every later one is built
     // away from the main thread once the typing pauses, which is exactly when the next key is likely to come, and

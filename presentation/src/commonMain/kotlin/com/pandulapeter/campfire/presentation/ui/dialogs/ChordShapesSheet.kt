@@ -54,6 +54,7 @@ import com.pandulapeter.campfire.presentation.ui.chords.SelectedShape
 import com.pandulapeter.campfire.presentation.ui.chords.SongChord
 import com.pandulapeter.campfire.presentation.ui.chords.chordDiagramGeometryOf
 import com.pandulapeter.campfire.presentation.ui.chords.emptyChordDiagramGeometryOf
+import com.pandulapeter.campfire.presentation.ui.chords.secondaryName
 import com.pandulapeter.campfire.presentation.ui.chords.selectShape
 import com.pandulapeter.campfire.presentation.ui.chords.songChordsOf
 import com.pandulapeter.campfire.presentation.ui.chords.toChordInstrument
@@ -97,7 +98,7 @@ internal fun ChordShapesSheet(
     val transposition = transpositions[song.fileName, dialog.setlistFileName]
     val capo = effectiveCapo(song = song, setlistFileName = dialog.setlistFileName, capos = capos).fret
     val chords by produceState<List<SongChord>?>(null, text, transposition, capo, spelling, instrument) {
-        value = text?.let { withContext(Dispatchers.Default) { songChordsOf(viewModel.renderSong(it, transposition, spelling), notation, instrument, capo) } }
+        value = text?.let { withContext(Dispatchers.Default) { songChordsOf(viewModel.transposedSong(it, transposition, spelling), notation, instrument, capo) } }
     }
     val storedShapes = userPreferences?.chordVoicings?.get(instrument.id).orEmpty()
     CampfireBottomSheet(
@@ -159,7 +160,14 @@ private fun ChordShapeCell(
     // that the app's default is what plays there, rather than a copy of it that nothing would ever update.
     val defaultShape = shapes?.firstOrNull()
     val select = { shape: ChordVoicing -> onShapeSelected(shape.takeUnless { defaultShape?.sameShapeAs(it) == true }) }
-    val cell = ChordCell(name = chord.name, soundingName = chord.soundingName, instrument = instrument, root = chord.chord.root, selection = selection)
+    val cell = ChordCell(
+        name = chord.name,
+        soundingName = chord.soundingName,
+        letterName = chord.letterName,
+        instrument = instrument,
+        root = chord.chord.root,
+        selection = selection,
+    )
     val description = chordCellDescription(cell)
     Row(verticalAlignment = Alignment.Bottom) {
         Text(
@@ -168,7 +176,7 @@ private fun ChordShapeCell(
             color = LocalSecondAccentColor.current,
             maxLines = 1,
         )
-        chord.soundingName?.let {
+        chord.secondaryName?.let {
             Text(
                 modifier = Modifier.padding(start = 6.dp),
                 text = it,
@@ -195,7 +203,7 @@ private fun ChordShapeCell(
     }
     Text(
         modifier = Modifier.padding(top = 4.dp),
-        text = ChordProChords.noteNames(chord.chord, notation, preferFlats = chord.name.getOrNull(1) == 'b').joinToString(" "),
+        text = ChordProChords.noteNames(chord.chord, notation, preferFlats = chord.isSpelledWithFlats).joinToString(" "),
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         textAlign = TextAlign.Center,

@@ -53,7 +53,8 @@ class ChordSheetConverterTest {
         assertEquals("A\nlong time ago\n", convert("A\nlong time ago"))
         assertEquals("A long time ago\nAm I\n", convert("A long time ago\nAm I"))
         assertEquals("[Am] [F]\n\n[A]long time ago\n", convert("Am F\n\nA\nlong time ago"))
-        assertEquals("Do Re Mi\n1 4 5\n", convert("Do Re Mi\n1 4 5"))
+        // Latin chords, which the import brings into the standard notation afterwards.
+        assertEquals("[Do]1 [Re]4 5 [Mi]\n", convert("Do Re Mi\n1 4 5"))
     }
 
     @Test

@@ -23,6 +23,7 @@ import com.pandulapeter.campfire.data.model.domain.PrintSettings
 import com.pandulapeter.campfire.presentation.ui.chords.ChordDiagramGeometry
 import com.pandulapeter.campfire.presentation.ui.chords.chordDiagramGeometryOf
 import com.pandulapeter.campfire.presentation.ui.chords.emptyChordDiagramGeometryOf
+import com.pandulapeter.campfire.presentation.ui.chords.secondaryName
 import com.pandulapeter.campfire.presentation.ui.chords.selectShape
 import com.pandulapeter.campfire.presentation.ui.chords.songChordsOf
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.DefaultSectionLabels
@@ -69,15 +70,19 @@ internal data class PrintSong(
     val chords: List<PrintChord> = emptyList(),
 )
 
-/** One chord diagram of a [PrintSong]: the chord as the page names it, the one it sounds as where that differs, and its shape. */
+/**
+ * One chord diagram of a [PrintSong]: the chord as the page names it, the one it sounds as where that differs or else
+ * its letters where the page counts it ([SongChord.secondaryName]), and its shape.
+ */
 internal data class PrintChord(
     val name: String,
-    val soundingName: String? = null,
+    val secondaryName: String? = null,
     val geometry: ChordDiagramGeometry,
 )
 
 /**
- * The chords of [song], rendered as it is printed, drawn the way the song details screen's Chords section draws them
+ * The chords of [song], transposed as it is printed and still in the standard notation, named in [notation] and drawn
+ * the way the song details screen's Chords section draws them
  * on [instrument]: the song's own definition, the player's shape from [storedShapes], or the app's own, and an empty
  * frame for a chord with none, so that the page and the screen finger every chord alike.
  */
@@ -89,7 +94,7 @@ internal fun printChordsOf(
 ): List<PrintChord> = songChordsOf(song, notation, instrument, song.metadata.capo ?: 0).map { chord ->
     PrintChord(
         name = chord.name,
-        soundingName = chord.soundingName,
+        secondaryName = chord.secondaryName,
         geometry = selectShape(chord, instrument, storedShapes).shape?.let { chordDiagramGeometryOf(it, instrument, chord.chord.root) }
             ?: emptyChordDiagramGeometryOf(instrument),
     )
@@ -401,8 +406,8 @@ private class PrintLayouter(
             val diagramWidth = options.fontSize * if (isFretted) FRETTED_DIAGRAM_WIDTH else KEYBOARD_DIAGRAM_WIDTH
             val diagramHeight = options.fontSize * if (isFretted) FRETTED_DIAGRAM_HEIGHT else KEYBOARD_DIAGRAM_HEIGHT
             val nameWidth = measure(chord.name, chordStyle)
-            val soundingWidth = chord.soundingName?.let { measure(" $it", detailStyle) } ?: 0f
-            DiagramCell(chord, diagramWidth, diagramHeight, maxOf(diagramWidth, nameWidth + soundingWidth).coerceAtMost(columnWidth), nameWidth)
+            val secondaryWidth = chord.secondaryName?.let { measure(" $it", detailStyle) } ?: 0f
+            DiagramCell(chord, diagramWidth, diagramHeight, maxOf(diagramWidth, nameWidth + secondaryWidth).coerceAtMost(columnWidth), nameWidth)
         }
         val rows = mutableListOf<List<DiagramCell>>()
         var rowWidth = 0f
@@ -421,7 +426,7 @@ private class PrintLayouter(
             val diagrams = mutableListOf<PrintDiagram>()
             row.forEach { cell ->
                 parts += Part(cell.chord.name, x = x, style = chordStyle, isSelectable = false)
-                cell.chord.soundingName?.let { parts += Part(" $it", x = x + cell.nameWidth, style = detailStyle, isSelectable = false) }
+                cell.chord.secondaryName?.let { parts += Part(" $it", x = x + cell.nameWidth, style = detailStyle, isSelectable = false) }
                 diagrams += PrintDiagram(cell.chord.geometry, x = x + (cell.width - cell.diagramWidth) / 2, y = nameHeight, width = cell.diagramWidth, height = cell.diagramHeight)
                 x += cell.width + gap
             }

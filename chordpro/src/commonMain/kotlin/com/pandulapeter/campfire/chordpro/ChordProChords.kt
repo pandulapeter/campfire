@@ -35,28 +35,25 @@ object ChordProChords {
 
     /**
      * The chord [name] stands for, as shown in [notation], or null where it is no chord name: a word in brackets,
-     * `N.C.`, an annotation. A parenthesized chord, a lowercase minor (`a`, `f#7`) and the `♯` and `♭` signs are read
-     * as well, since this is handed what a page draws.
+     * `N.C.`, an annotation. A parenthesized chord, a lowercase minor (`a`, `f#7`), a Latin name and the `♯` and `♭`
+     * signs are read as well, since this is handed what a page draws. A step of a key is not read, since it says nothing
+     * without the key: in a numbering a chord is named in letters, see [ChordProNotation.shownName].
      */
     fun parse(name: String, notation: ChordNotation = ChordNotation.STANDARD): Chord? {
-        val expanded = ChordProChordNames.lowercaseMinorExpanded(name) ?: name
-        val standard = ChordProNotation.withAsciiAccidentals(
-            if (notation == ChordNotation.GERMAN) ChordProNotation.fromGerman(expanded) else expanded,
-        )
         val reader = Reader()
-        return if (ChordProChordNames.read(standard, reader)) reader.chord() else null
+        return if (ChordProChordNames.read(ChordProNotation.read(name, isGerman = notation == ChordNotation.GERMAN), reader)) reader.chord() else null
     }
 
     /**
-     * The notes of [chord] as names in [notation], spelled with flats or sharps as [preferFlats] says: the bass of a
-     * slash chord first where it is not one of the chord's own notes, then the chord's from its root up.
+     * The notes of [chord] as names in [notation], in letters for a numbering, spelled with flats or sharps as
+     * [preferFlats] says: the bass of a slash chord first where it is not one of the chord's own notes, then the
+     * chord's from its root up.
      */
     fun noteNames(chord: Chord, notation: ChordNotation = ChordNotation.STANDARD, preferFlats: Boolean = false): List<String> {
         val pitchClasses = chord.intervals.map { (chord.root + it) % 12 }
         val bass = chord.bass?.takeIf { it !in pitchClasses }
         return (listOfNotNull(bass) + pitchClasses).map { pitchClass ->
-            val name = (if (preferFlats) flatNames else sharpNames)[pitchClass]
-            if (notation == ChordNotation.GERMAN) ChordProNotation.toGerman(name) else name
+            ChordProNotation.shownName((if (preferFlats) flatNames else sharpNames)[pitchClass], notation)
         }
     }
 
@@ -69,8 +66,18 @@ object ChordProChords {
      */
     fun namesIn(song: ChordProSong): List<String> {
         val names = LinkedHashSet<String>()
+        forEachName(song) { name, _ -> names += name }
+        return names.toList()
+    }
+
+    /**
+     * Hands every name [namesIn] reads to [action], as often as it is written, with the offset the `{transpose}` in
+     * force where it stands moved it by: 0 before the first, and a recall read where it stands.
+     */
+    internal fun forEachName(song: ChordProSong, action: (name: String, offset: Int) -> Unit) {
+        var offset = 0
         fun addBrackets(text: String?) {
-            text?.let { ChordProSyntax.brackets(it).map { bracket -> bracket.content.trim() }.filter { name -> name.isNotEmpty() && !name.startsWith("*") }.forEach(names::add) }
+            text?.let { ChordProSyntax.brackets(it).map { bracket -> bracket.content.trim() }.filter { name -> name.isNotEmpty() && !name.startsWith("*") }.forEach { action(it, offset) } }
         }
         fun addBlocks(blocks: List<ChordProBlock>) {
             blocks.forEach { block ->
@@ -79,14 +86,14 @@ object ChordProChords {
                         addBrackets(block.label)
                         block.lines.forEach { line ->
                             when (line) {
-                                is ChordProLine.Lyrics -> line.chords.filter { !it.isAnnotation }.forEach { names += it.name }
+                                is ChordProLine.Lyrics -> line.chords.filter { !it.isAnnotation }.forEach { action(it.name, offset) }
                                 is ChordProLine.Grid -> {
                                     addBrackets(line.label)
-                                    line.tokens.filterIsInstance<GridToken.Chord>().forEach { names += ChordProSyntax.cellChords(it.name) }
+                                    line.tokens.filterIsInstance<GridToken.Chord>().forEach { token -> ChordProSyntax.cellChords(token.name).forEach { action(it, offset) } }
                                 }
                                 is ChordProLine.Tab -> {
                                     addBrackets(line.label)
-                                    names += ChordProTabTransposer.chordNames(listOf(line.text))
+                                    ChordProTabTransposer.chordNames(listOf(line.text)).forEach { action(it, offset) }
                                 }
                                 ChordProLine.Blank -> Unit
                             }
@@ -97,25 +104,23 @@ object ChordProChords {
                         addBlocks(block.blocks)
                     }
                     is ChordProBlock.Comment -> addBrackets(block.text)
+                    is ChordProBlock.Transpose -> offset = block.semitones
                     else -> Unit
                 }
             }
         }
         addBlocks(song.blocks)
-        return names.toList()
     }
 
     /**
      * [name], a chord as shown in [notation], moved by [semitones] and spelled with flats or sharps as [preferFlats]
-     * says, in the same notation; a word that is no chord is returned as it is.
+     * says, in the same notation, or in letters for a numbering; a word that is no chord is returned as it is.
      */
     fun transposedName(name: String, semitones: Int, notation: ChordNotation = ChordNotation.STANDARD, preferFlats: Boolean = false): String {
-        val rename = ChordProTransposer.keepingLowercaseMinors { chord ->
-            val standard = if (notation == ChordNotation.GERMAN) ChordProNotation.fromGerman(chord) else chord
-            val moved = ChordProTransposer.transposeChord(ChordProNotation.withAsciiAccidentals(standard), semitones, preferFlats)
-            if (notation == ChordNotation.GERMAN) ChordProNotation.toGerman(moved) else moved
+        val move = { chord: String ->
+            ChordProNotation.shownName(ChordProTransposer.transposeChord(ChordProNotation.read(chord, isGerman = notation == ChordNotation.GERMAN), semitones, preferFlats), notation)
         }
-        return rename(name)
+        return if (notation == ChordNotation.LATIN) move(name) else ChordProTransposer.keepingLowercaseMinors(move)(name)
     }
 
     /** The pitch class of a note as written: a capital or lowercase letter, `H` as `B`, and an accidental or none. */

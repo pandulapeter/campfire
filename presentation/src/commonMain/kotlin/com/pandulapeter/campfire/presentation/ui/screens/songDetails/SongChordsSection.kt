@@ -54,6 +54,7 @@ import com.pandulapeter.campfire.presentation.resources.ic_edit
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_shapes
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_diagram
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_diagram_none
+import com.pandulapeter.campfire.presentation.resources.song_details_chord_letters
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_sounding
 import com.pandulapeter.campfire.presentation.resources.song_details_chords
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -89,11 +90,15 @@ internal data class ChordDiagrams(
     val notation: ChordNotation = ChordNotation.STANDARD,
 )
 
-/** One diagram of the Chords section: the chord as the page names it and the shape it is drawn with. */
+/**
+ * One diagram of the Chords section: the chord as the page names it and the shape it is drawn with, and the names
+ * [SongChord.soundingName] and [SongChord.letterName] give it after that.
+ */
 @Immutable
 internal data class ChordCell(
     val name: String,
     val soundingName: String?,
+    val letterName: String? = null,
     val instrument: ChordInstrument,
     val root: Int,
     val selection: SelectedShape,
@@ -104,13 +109,17 @@ internal fun chordCellsOf(chords: List<SongChord>, instrument: ChordInstrument, 
     ChordCell(
         name = chord.name,
         soundingName = chord.soundingName,
+        letterName = chord.letterName,
         instrument = instrument,
         root = chord.chord.root,
         selection = selectShape(chord, instrument, storedShapes),
     )
 }
 
-/** The cells of every definition [song] holds, in file order and each on its own instrument, see [ChordDiagrams.showsDefinitionsOnly]. */
+/**
+ * The cells of every definition [song] holds, in file order and each on its own instrument, see
+ * [ChordDiagrams.showsDefinitionsOnly]. A numbering leaves a song's definitions in letters, which is how they are named.
+ */
 internal fun definitionCellsOf(song: ChordProSong, notation: ChordNotation) = song.metadata.definitions.map { definition ->
     ChordCell(
         name = definition.name,
@@ -226,7 +235,7 @@ private fun ChordCellContent(
                 maxLines = 1,
                 overflow = TextOverflow.Visible,
             )
-            cell.soundingName?.let {
+            (cell.soundingName ?: cell.letterName)?.let {
                 Text(
                     modifier = Modifier.padding(start = 4.dp),
                     text = it,
@@ -251,10 +260,15 @@ private fun ChordCellContent(
     }
 }
 
-/** How a chord is read out: its name, the one it sounds as where that differs, and its shape as it would be dictated. */
+/**
+ * How a chord is read out: its name, the one it sounds as where that differs or else its letters where the page counts
+ * it, and its shape as it would be dictated.
+ */
 @Composable
 internal fun chordCellDescription(cell: ChordCell): String {
-    val name = cell.soundingName?.let { textResource(Res.string.song_details_chord_sounding, cell.name, it) } ?: cell.name
+    val name = cell.soundingName?.let { textResource(Res.string.song_details_chord_sounding, cell.name, it) }
+        ?: cell.letterName?.let { textResource(Res.string.song_details_chord_letters, cell.name, it) }
+        ?: cell.name
     val shape = cell.selection.shape ?: return textResource(Res.string.song_details_chord_diagram_none, name)
     return textResource(Res.string.song_details_chord_diagram, name, spokenShape(shape))
 }

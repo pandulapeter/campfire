@@ -131,16 +131,19 @@ object ChordProTabWrapper {
 
     /**
      * Whether [line] holds chord names and nothing else a reader would sing: a bar line, a slash or a repeat count
-     * (`x2`) may stand between them, and a name may be put in parentheses.
+     * (`x2`) may stand between them, and a name may be put in parentheses. The song has already been converted into the
+     * reader's notation, so a name is one as a page may show it (`Sol`, `6-`, `IV`); a bare `I` stands between them
+     * like a bar line but makes no row of chords on its own, since it is a word far more often than it is a chord.
      */
     private fun isChordLine(line: String): Boolean {
         val words = ChordProSyntax.words(line).map { it.value.trim('(', ')') }
-        return words.any(ChordProChordNames::isChordName) && words.all { word ->
-            word.isEmpty() || ChordProChordNames.isChordName(word) || word.none(Char::isLetterOrDigit) || repeatCountRegex.matches(word)
+        return words.any(ChordProChordNames::isDisplayedChordName) && words.all { word ->
+            word.isEmpty() || word == ROMAN_ONE || ChordProChordNames.isDisplayedChordName(word) || word.none(Char::isLetterOrDigit) || repeatCountRegex.matches(word)
         }
     }
 
     private val repeatCountRegex = Regex("[xX×]?\\d+[xX×]?")
+    private const val ROMAN_ONE = "I"
 
     /** [wrap] for the lines of one system, or null as soon as its rows hold more than [budget] lines. */
     private fun wrapSystem(lines: List<String>, isStaffLine: List<Boolean>, maxColumns: Int, budget: Int): List<List<String>>? {

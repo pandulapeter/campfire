@@ -15,10 +15,14 @@ package com.pandulapeter.campfire.chordpro
  * between the two at exactly those two boundaries.
  *
  * A text said to be in [STANDARD] is still read tolerantly: an `H` anywhere in it marks it as German, since that letter
- * is no note of the standard notation and a file written before the library had one notation may still hold it. A text
- * said to be in any other notation is read as that notation, whatever it looks like, which is what makes the
- * conversion of what somebody typed unambiguous where guessing could not be: a German chart in a flat key never needs
- * an `H`, and its `B` is a B flat all the same.
+ * is no note of the standard notation and a file written before the library had one notation may still hold it, and a
+ * Latin name is read as the chord it names wherever it stands, since no Latin name is also a standard one. A text said
+ * to be in German is read as German, whatever it looks like, which is what makes the conversion of what somebody typed
+ * unambiguous where guessing could not be: a German chart in a flat key never needs an `H`, and its `B` is a B flat all
+ * the same.
+ *
+ * [NASHVILLE] and [ROMAN] are not namings of notes at all but of the steps of a key, so they are only ever shown: a text
+ * said to be in either is read as [STANDARD], and nothing is ever converted into them but a parsed song.
  */
 enum class ChordNotation {
 
@@ -27,4 +31,23 @@ enum class ChordNotation {
 
     /** The note [STANDARD] writes `B` is written `H`, and its `Bb` is written `B`; nothing else changes. */
     GERMAN,
+
+    /** The notes are named `Do Re Mi Fa Sol La Si`, with `#` and `b`; the quality and the bass note follow as written. */
+    LATIN,
+
+    /**
+     * Every chord is the number of the step of the song's key it stands on, `1` to `7` with a `b` or a `#` for the
+     * steps between, a minor chord marked with a `-` and every other quality kept as written: `1 4 5 6-`.
+     */
+    NASHVILLE,
+
+    /**
+     * The steps of [NASHVILLE] as Roman numerals, the quality in the case of the numeral: `I IV V vi`, a diminished
+     * chord `vii°`, a half-diminished one `viiø7`, an augmented one `I+`. A bass note is still an Arabic step (`V/7`).
+     */
+    ROMAN,
+    ;
+
+    /** Whether the chords are counted from the song's key rather than named, which only a parsed song can be shown in. */
+    val isNumbering get() = this == NASHVILLE || this == ROMAN
 }

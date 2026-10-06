@@ -439,14 +439,19 @@ localized in both languages.
   (`:data:source:local:implementation`'s `backup/`). Its transpositions are not carried over. None of these is
   registered as an Open with type: they are another app's files.
 - **Every file is in the standard chord notation** (`C D E F G A B`, `#` and `b`), whatever notation its reader
-  prefers: the German one (`H` for B, `B` for B flat) is a way of showing chords and of typing them, converted on the
-  way to the screen and in and out of the editor's field (`:chordpro`'s `ChordProNotation`), so a library reads the
-  same in every app and on every device, and a notation added later (Latin, Nashville) needs no change to any file. An
-  import writes every song's chords that way, which only changes a chart that used an `H` or the `♯` and `♭` signs; a
-  file that arrives otherwise (a sync run, the library folder edited by hand) is read the same way — an `H` anywhere
-  marks it German — and brought into the standard notation the next time the editor saves it. The one chart nothing
-  can tell apart is a German one in a flat key, which never needs an `H`: it is read as standard. The editor's field
-  is in the reader's notation, so what they type is never ambiguous.
+  prefers (Settings → Songs, one choice of five): the German one (`H` for B, `B` for B flat) and the Latin one (`Do Re
+  Mi Fa Sol La Si`) are ways of showing chords and of typing them, converted on the way to the screen and in and out of
+  the editor's field (`:chordpro`'s `ChordProNotation`), so a library reads the same in every app and on every device.
+  An import writes every song's chords that way, which only changes a chart that used an `H`, a Latin name or the `♯`
+  and `♭` signs; a file that arrives otherwise (a sync run, the library folder edited by hand) is read the same way —
+  an `H` anywhere marks it German, and a Latin name is read as the chord it names wherever it stands, since none is
+  also a standard one — and brought into the standard notation the next time the editor saves it. The one chart
+  nothing can tell apart is a German one in a flat key, which never needs an `H`: it is read as standard. The editor's
+  field is in the reader's notation, so what they type is never ambiguous. **Nashville numbers and Roman numerals**
+  (`1 4 5 6-`, `I IV V vi`) are only ever shown: the page, the editor's preview and the PDF count the chords from the
+  song's key (a minor song from its own tonic), every key the app names stays in letters, a song with no key stays in
+  letters, the chord diagrams are named by the step and by their letters, and the editor's field is in letters, since
+  nothing is ever typed or stored in numbers.
 - **Every name the app writes is normalized** — lowercase words joined with underscores, Latin letters without their
   accents and letters of every other script kept as they are (`катюша.cho`), capped at 120 UTF-8 bytes per half
   (`LibraryFiles.normalizedName`), a song's `artist` and `title` folded one at a time so the dash between them

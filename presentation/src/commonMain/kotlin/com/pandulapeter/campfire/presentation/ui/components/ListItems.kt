@@ -951,13 +951,16 @@ internal fun RadioListItem(
     title: String,
     description: String? = null,
     isSelected: Boolean,
+    isEnabled: Boolean = true,
     onSelected: () -> Unit,
 ) = ListItem(
-    modifier = modifier.selectable(selected = isSelected, role = Role.RadioButton, onClick = onSelected),
+    modifier = modifier
+        .selectable(selected = isSelected, enabled = isEnabled, role = Role.RadioButton, onClick = onSelected)
+        .alpha(if (isEnabled) 1f else 0.5f),
     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
     headlineContent = { Text(title) },
     supportingContent = description?.let { { Text(it) } },
-    leadingContent = { RadioButton(selected = isSelected, onClick = null) },
+    leadingContent = { RadioButton(selected = isSelected, enabled = isEnabled, onClick = null) },
 )
 
 /**

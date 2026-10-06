@@ -82,7 +82,9 @@ paths, `Is*` for a question with a yes or no answer (`IsFirstRun`), or a verb fo
   `ConvertChordProTextNotationUseCase` is its text-level counterpart, the editor's two boundaries: a file is shown in
   the reader's notation and what is typed is written back in `UserPreferences.Notation.STANDARD`, the only notation a
   file is ever in. `ParseChordProUseCase` takes the notation its text is written in, the standard one for a file and
-  the reader's for the editor's field. See `:chordpro`'s `ChordProNotation` for how each is read.
+  the reader's for the editor's field. The two numberings (`Notation.isNumbering`, Nashville and Roman numerals) are
+  only ever the first use case's: no text is converted into them or read as written in them, which is why the editor's
+  field is in `Notation.forTyping`. See `:chordpro`'s `ChordProNotation` for how each is read.
 
 `GetEditorDraftUseCase` and `SaveEditorDraftUseCase` read and replace the editor's unsaved text kept outside the
 library, which is what reopens an editor the system ended the app under; the stored draft is a copy against the process

@@ -218,7 +218,10 @@ data class UserPreferences(
      */
     data class ChordSpelling(
         val accidentals: Accidentals,
-        /** Applied after the accidentals, on the result they produce. */
+        /**
+         * Applied after the accidentals, on the result they produce. A numbering ([Notation.isNumbering]) ignores them
+         * for the steps it writes, which are always `b2 b3 #4 b6 b7`, and they still spell the key it names in letters.
+         */
         val notation: Notation,
     ) {
 
@@ -228,12 +231,28 @@ data class UserPreferences(
     }
 
     /**
-     * The names the notes of a chord are written with. [GERMAN] writes the note [STANDARD] calls `B` as `H`, and its
-     * `Bb` as `B`, which is what a reader in Central Europe or Scandinavia grew up with.
+     * The names the chords are written with. [GERMAN] writes the note [STANDARD] calls `B` as `H`, and its `Bb` as `B`,
+     * which is what a reader in Central Europe or Scandinavia grew up with, and [LATIN] names the notes `Do Re Mi Fa Sol
+     * La Si`, as Southern Europe and Latin America do. [NASHVILLE] and [ROMAN] count the chords from the song's key
+     * instead (`1 4 5 6-`, `I IV V vi`), the way session players and worship teams read a chart.
      */
     enum class Notation(val id: String) {
         STANDARD("standard"),
         GERMAN("german"),
+        LATIN("latin"),
+        NASHVILLE("nashville"),
+        ROMAN("roman"),
+        ;
+
+        /**
+         * Whether the chords are counted from the song's key rather than named. Such a notation is only ever shown: a
+         * song with no key stays in letters, and so does every text that is typed, since a number means nothing until
+         * the key it counts from is written — so the editor's field is in [STANDARD] under one.
+         */
+        val isNumbering get() = this == NASHVILLE || this == ROMAN
+
+        /** The notation a text is typed in where this is the one read in, see [isNumbering]. */
+        val forTyping get() = if (isNumbering) STANDARD else this
     }
 
     /**

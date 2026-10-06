@@ -113,8 +113,18 @@ import com.pandulapeter.campfire.presentation.resources.settings_distributions_a
 import com.pandulapeter.campfire.presentation.resources.settings_export_all
 import com.pandulapeter.campfire.presentation.resources.settings_features
 import com.pandulapeter.campfire.presentation.resources.settings_general
-import com.pandulapeter.campfire.presentation.resources.settings_german_notation
-import com.pandulapeter.campfire.presentation.resources.settings_german_notation_description
+import com.pandulapeter.campfire.presentation.resources.settings_notation
+import com.pandulapeter.campfire.presentation.resources.settings_notation_description
+import com.pandulapeter.campfire.presentation.resources.settings_notation_german
+import com.pandulapeter.campfire.presentation.resources.settings_notation_german_description
+import com.pandulapeter.campfire.presentation.resources.settings_notation_latin
+import com.pandulapeter.campfire.presentation.resources.settings_notation_latin_description
+import com.pandulapeter.campfire.presentation.resources.settings_notation_nashville
+import com.pandulapeter.campfire.presentation.resources.settings_notation_nashville_description
+import com.pandulapeter.campfire.presentation.resources.settings_notation_roman
+import com.pandulapeter.campfire.presentation.resources.settings_notation_roman_description
+import com.pandulapeter.campfire.presentation.resources.settings_notation_standard
+import com.pandulapeter.campfire.presentation.resources.settings_notation_standard_description
 import com.pandulapeter.campfire.presentation.resources.settings_git_hub
 import com.pandulapeter.campfire.presentation.resources.settings_git_hub_description
 import com.pandulapeter.campfire.presentation.resources.settings_help
@@ -565,14 +575,13 @@ private fun SongDisplaySection(
     )
     // Both of these only decide how a chord is written, so with the chords switched off they have nothing to say. They
     // stay in the section rather than disappearing from it: what they are set to is still what the chords will look
-    // like as soon as they are shown again.
+    // like as soon as they are shown again. The accidentals stay enabled under a numbering, since they still spell the
+    // key it counts from.
     val isChordSpellingEnabled = userPreferences?.areChordsEnabled != false
-    SwitchListItem(
-        title = stringResource(Res.string.settings_german_notation),
-        description = stringResource(Res.string.settings_german_notation_description),
-        isChecked = userPreferences?.chordSpelling?.notation == UserPreferences.Notation.GERMAN,
+    NotationChoice(
+        selected = userPreferences?.chordSpelling?.notation,
         isEnabled = isChordSpellingEnabled,
-        onCheckedChange = { isChecked -> viewModel.setNotation(if (isChecked) UserPreferences.Notation.GERMAN else UserPreferences.Notation.STANDARD) },
+        onSelected = viewModel::setNotation,
     )
     SettingsSubsection(
         title = stringResource(Res.string.settings_accidentals),
@@ -606,6 +615,40 @@ private fun SongDisplaySection(
             isEnabled = isChordInstrumentEnabled,
             onSelected = viewModel::setChordInstrument,
         )
+    }
+}
+
+/**
+ * The notation chords are written in, as a list rather than a segmented control: five names with an example under each
+ * do not fit a row of segments at the width of a phone. Each example is what tells the options apart to somebody who
+ * has only ever read one of them.
+ */
+@Composable
+private fun NotationChoice(
+    selected: UserPreferences.Notation?,
+    isEnabled: Boolean,
+    onSelected: (UserPreferences.Notation) -> Unit,
+) = SettingsSubsection(
+    title = stringResource(Res.string.settings_notation),
+    description = stringResource(Res.string.settings_notation_description),
+    isEnabled = isEnabled,
+) {
+    Column(modifier = Modifier.selectableGroup()) {
+        listOf(
+            Triple(UserPreferences.Notation.STANDARD, Res.string.settings_notation_standard, Res.string.settings_notation_standard_description),
+            Triple(UserPreferences.Notation.GERMAN, Res.string.settings_notation_german, Res.string.settings_notation_german_description),
+            Triple(UserPreferences.Notation.LATIN, Res.string.settings_notation_latin, Res.string.settings_notation_latin_description),
+            Triple(UserPreferences.Notation.NASHVILLE, Res.string.settings_notation_nashville, Res.string.settings_notation_nashville_description),
+            Triple(UserPreferences.Notation.ROMAN, Res.string.settings_notation_roman, Res.string.settings_notation_roman_description),
+        ).forEach { (notation, title, description) ->
+            RadioListItem(
+                title = stringResource(title),
+                description = stringResource(description),
+                isSelected = selected == notation,
+                isEnabled = isEnabled,
+                onSelected = { onSelected(notation) },
+            )
+        }
     }
 }
 

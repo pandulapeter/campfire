@@ -16,7 +16,8 @@ interface ConvertChordProNotationUseCase {
 
     /**
      * Rewrites the chords of a parsed song, which is in [UserPreferences.Notation.STANDARD], in the notation of
-     * [spelling]; in the standard one, the song comes back untouched.
+     * [spelling]; in the standard one, the song comes back untouched. In a numbering the chords are counted from the
+     * song's key, which stays in letters, and a song whose key is not a note stays in letters altogether.
      *
      * The last step of rendering, run after [TransposeChordProUseCase], which works in the standard notation. Its
      * text-level counterpart is [ConvertChordProTextNotationUseCase].

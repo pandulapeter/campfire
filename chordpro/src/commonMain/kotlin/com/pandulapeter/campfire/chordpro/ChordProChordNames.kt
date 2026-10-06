@@ -103,6 +103,60 @@ internal object ChordProChordNames {
         return if (isParenthesized(word)) "($expanded)" else expanded
     }
 
+    /**
+     * [word] as the chord a Latin name stands for — `Lam` is `Am`, `Sib7` is `Bb7`, `DO/MI` is `C/E`, `Re/fa#` is
+     * `D/f#`, `(Sol)` is `(G)` — or null for anything else. The root is read in title case or in capitals (`Do`, `DO`,
+     * and the accented `Dó`, `Ré`, `Fá` and `Lá`), never in lowercase, which is how a word is written; the bass note
+     * after the last `/` in any case, as a standard one is (see [bassNoteEnd]).
+     *
+     * No name is a chord in both readings, which is what lets this be asked of every name a file holds: a standard
+     * chord that starts like a Latin note would need an `o`, an `e`, an `i` or an `a` right after its letter, and
+     * `ChordProChordNamesTest` sweeps every quality and alteration there is to keep it so — a sign written `o` for a
+     * diminished chord would make `Do` both C and D diminished.
+     */
+    fun latinExpanded(word: String): String? {
+        val name = unwrapped(word)
+        // A cheap refusal first, since this is asked of every name of every file that is read.
+        if (name.firstOrNull()?.let { it in LATIN_INITIALS } != true || name.getOrNull(1)?.let { it in LATIN_SECOND_LETTERS } != true) return null
+        val (letter, length) = latinNoteAt(name, 0, isAnyCase = false) ?: return null
+        var rest = name.substring(length)
+        val slash = rest.lastIndexOf('/')
+        if (slash >= 0) {
+            latinNoteAt(rest, slash + 1, isAnyCase = true)?.let { (bassLetter, bassLength) ->
+                val noteEnd = slash + 1 + bassLength
+                val end = if (rest.getOrNull(noteEnd)?.let { it in ACCIDENTALS } == true) noteEnd + 1 else noteEnd
+                if (end == rest.length) {
+                    val bass = if (rest[slash + 1].isLowerCase()) bassLetter.lowercaseChar() else bassLetter
+                    rest = rest.substring(0, slash + 1) + bass + rest.substring(noteEnd)
+                }
+            }
+        }
+        val expanded = letter + rest
+        if (!isChordName(expanded)) return null
+        return if (isParenthesized(word)) "($expanded)" else expanded
+    }
+
+    /**
+     * Whether [word] is a chord name as a page may show it once [ChordProNotation.toNotation] has written it: in the
+     * standard or the German notation, in the Latin one, or as a step of the key in either numbering. Only what reads a
+     * song that has already been converted asks this, which is the viewer cutting a tab into rows.
+     */
+    fun isDisplayedChordName(word: String) = isChordName(word) || latinExpanded(word) != null || ChordProNashville.isDegree(word)
+
+    /** The length of the Latin note [key] starts with, in title case or capitals and without its accidental, or null. */
+    fun latinNoteLength(key: String) = latinNoteAt(key, 0, isAnyCase = false)?.second
+
+    /** The standard letter of the Latin note [text] spells at [index], and its length, or null where it spells none. */
+    private fun latinNoteAt(text: String, index: Int, isAnyCase: Boolean): Pair<Char, Int>? {
+        latinNotes.forEach { (spelling, letter) ->
+            val candidate = text.substring(index, (index + spelling.length).coerceAtMost(text.length))
+            if (candidate == spelling || candidate == spelling.uppercase() || (isAnyCase && candidate.lowercase() == spelling.lowercase())) {
+                return letter to spelling.length
+            }
+        }
+        return null
+    }
+
     /** The other way: [name], a minor chord, written with a lowercase root and no `m`. */
     fun lowercaseMinorFolded(name: String): String {
         val chord = unwrapped(name)
@@ -173,6 +227,24 @@ internal object ChordProChordNames {
     private val qualities = listOf("maj", "Maj", "min", "mi", "dim", "aug", "sus", "add", "m", "M", "+", "-", "°", "ø", "Δ", "∆")
     private val alterations = listOf("maj", "Maj", "min", "mi", "dim", "aug", "sus", "add", "M", "#", "b", "♯", "♭")
     private val omissions = listOf("no", "omit")
+
+    /** Every spelling of a Latin note that is read, the longest first, and the standard letter of each. */
+    private val latinNotes = listOf(
+        "Sol" to 'G',
+        "Do" to 'C',
+        "Dó" to 'C',
+        "Re" to 'D',
+        "Ré" to 'D',
+        "Mi" to 'E',
+        "Fa" to 'F',
+        "Fá" to 'F',
+        "La" to 'A',
+        "Lá" to 'A',
+        "Si" to 'B',
+    )
+    private const val LATIN_INITIALS = "DRMFSL"
+    private const val LATIN_SECOND_LETTERS = "oeiaOEIAóéáÓÉÁ"
+    private const val ACCIDENTALS = "#b♯♭"
 }
 
 /**

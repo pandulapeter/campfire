@@ -422,6 +422,7 @@ internal fun SongLyrics(
                             is RenderSection.Comment -> SongComment(
                                 modifier = unitModifier.padding(horizontal = CARD_PADDING),
                                 comment = section,
+                                notation = model.notation,
                                 fontScale = fontScale,
                             )
 
@@ -463,6 +464,7 @@ internal fun SongLyrics(
                                         textMeasurements = textMeasurements,
                                         foldedRuns = foldedRuns,
                                         defaultLabels = defaultLabels,
+                                        notation = model.notation,
                                         fontScale = fontScale,
                                     )
                                 }
@@ -480,6 +482,7 @@ internal fun SongLyrics(
                                     textMeasurements = textMeasurements,
                                     foldedRuns = foldedRuns,
                                     defaultLabels = defaultLabels,
+                                    notation = model.notation,
                                     fontScale = fontScale,
                                 )
                             }
@@ -540,6 +543,7 @@ private fun CutSongNotice(
 private fun SongComment(
     modifier: Modifier = Modifier,
     comment: RenderSection.Comment,
+    notation: ChordNotation,
     fontScale: Float,
 ) {
     val style = MaterialTheme.typography.bodyMedium.scaled(fontScale).let {
@@ -547,10 +551,10 @@ private fun SongComment(
     }
     val chordColor = LocalSecondAccentColor.current
     // The transposition moves the brackets of a comment as it moves those of the lyrics, so they are drawn as chords.
-    val annotatedText = remember(comment.text, chordColor) {
+    val annotatedText = remember(comment.text, notation, chordColor) {
         buildAnnotatedString {
             append(comment.text)
-            ChordProHighlighter.chordsOfShownText(comment.text).forEach { addStyle(SpanStyle(color = chordColor, fontWeight = FontWeight.Bold), it.start, it.end) }
+            ChordProHighlighter.chordsOfShownText(comment.text, notation).forEach { addStyle(SpanStyle(color = chordColor, fontWeight = FontWeight.Bold), it.start, it.end) }
         }
     }
     val text = @Composable { boxModifier: Modifier ->
@@ -635,6 +639,7 @@ private fun SongSectionContent(
     textMeasurements: SongTextMeasurements,
     foldedRuns: FoldedRuns?,
     defaultLabels: DefaultSectionLabels,
+    notation: ChordNotation,
     fontScale: Float,
 ) = Column(
     modifier = modifier
@@ -736,6 +741,7 @@ private fun SongSectionContent(
                     SongComment(
                         modifier = Modifier.padding(vertical = INLINE_COMMENT_GAP),
                         comment = part,
+                        notation = notation,
                         fontScale = fontScale,
                     )
                 }
@@ -2251,12 +2257,14 @@ private fun maxAnimatedSectionHeight(columnWidth: Int) =
  *
  * @param isCut Whether [sections] stop short of the end of [song], see [LayoutBudget].
  * @param shouldShowChords False for lyrics-only mode, see [prepareSongLyrics].
+ * @param notation The notation [song] is written in, which decides what is a chord in the brackets of a comment.
  */
 internal class SongLyricsModel(
     val song: ChordProSong,
     val sections: List<RenderSection>,
     val isCut: Boolean,
     val shouldShowChords: Boolean,
+    val notation: ChordNotation = ChordNotation.STANDARD,
     val chords: List<SongChord> = emptyList(),
 )
 
@@ -2271,7 +2279,8 @@ internal class SongLyricsModel(
  * a page ([RenderSection.Timing]): false with the metronome switched off, which lays the song out as if it had none.
  * @param chordInstrument The instrument the song's chords are collected for its Chords section on (see [songChordsOf]),
  * which is the slow part of that section and so belongs here; null where the song has no such section.
- * @param notation The notation [song] is written in, which its chords are read in.
+ * @param notation The notation [song] is written in.
+ * @param standardSong [song] before it was written in [notation], which its chords are read from.
  */
 internal fun prepareSongLyrics(
     song: ChordProSong,
@@ -2280,13 +2289,19 @@ internal fun prepareSongLyrics(
     showsTiming: Boolean = true,
     chordInstrument: ChordInstrument? = null,
     notation: ChordNotation = ChordNotation.STANDARD,
+    standardSong: ChordProSong = song,
 ) = LayoutBudget.fit(song.toRenderSections(shouldShowChords, labels, showsTiming)).let { (sections, isCut) ->
     SongLyricsModel(
         song = song,
         sections = sections.withoutEmptyTimings(),
         isCut = isCut,
         shouldShowChords = shouldShowChords,
-        chords = if (shouldShowChords && chordInstrument != null) songChordsOf(song, notation, chordInstrument, song.metadata.capo ?: 0) else emptyList(),
+        notation = notation,
+        chords = if (shouldShowChords && chordInstrument != null) {
+            songChordsOf(standardSong, notation, chordInstrument, standardSong.metadata.capo ?: 0)
+        } else {
+            emptyList()
+        },
     )
 }
 

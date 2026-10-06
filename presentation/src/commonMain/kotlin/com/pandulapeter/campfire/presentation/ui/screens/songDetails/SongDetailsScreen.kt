@@ -854,7 +854,8 @@ internal fun SongDetailsScreen(
                         chordSpelling = chordSpelling,
                         settledWidth = settledWidth,
                         contentPadding = pageContentPadding,
-                        renderSong = viewModel::renderSong,
+                        transposeSong = viewModel::transposedSong,
+                        notateSong = viewModel::notatedSong,
                         onRetry = { viewModel.loadSongContent(song.fileName) },
                         headedOffset = { stepper.headedOffset },
                         onTimingChanged = { timing -> if (timing == null) songTimings.remove(song.fileName) else songTimings[song.fileName] = timing },
@@ -1056,7 +1057,8 @@ private fun SongDetailsPage(
     chordSpelling: UserPreferences.ChordSpelling,
     settledWidth: Dp,
     contentPadding: PaddingValues,
-    renderSong: (text: String, transposition: Int, spelling: UserPreferences.ChordSpelling) -> ChordProSong,
+    transposeSong: (text: String, transposition: Int, spelling: UserPreferences.ChordSpelling) -> ChordProSong,
+    notateSong: (song: ChordProSong, spelling: UserPreferences.ChordSpelling) -> ChordProSong,
     onRetry: () -> Unit,
     headedOffset: () -> Int?,
     onTimingChanged: (SongTiming?) -> Unit,
@@ -1099,8 +1101,10 @@ private fun SongDetailsPage(
                 chordInstrument = chordDiagrams?.instrument,
             ),
         ) { inputs ->
+            val transposed = transposeSong(inputs.text, inputs.transposition, inputs.spelling).withTempo(inputs.tempoOverride).withCapo(inputs.capoOverride)
             prepareSongLyrics(
-                song = renderSong(inputs.text, inputs.transposition, inputs.spelling).withTempo(inputs.tempoOverride).withCapo(inputs.capoOverride),
+                song = notateSong(transposed, inputs.spelling),
+                standardSong = transposed,
                 shouldShowChords = inputs.shouldShowChords,
                 labels = inputs.labels,
                 showsTiming = inputs.showsTiming,

@@ -66,11 +66,14 @@ object ChordProTransposer {
 
     /**
      * What [rewriteChords] does to the chords of one stretch of a song. A definition is renamed like any chord unless
-     * [rewriteDefinition] says otherwise, which is what a change of notation wants and a transposition does not.
+     * [rewriteDefinition] says otherwise, which is what a change of notation wants and a transposition does not, and so
+     * is the note of a key unless [renameInKey] does, which is what a numbering wants: a key is what the numbers are
+     * counted from, so it stays in letters.
      */
     internal class ChordRewrite(
         val rewriteTabLines: (List<String>) -> List<String>,
         val rename: (String) -> String,
+        val renameInKey: (String) -> String = rename,
         val rewriteDefinition: (ChordDefinition) -> ChordDefinition = { it.copy(name = rename(it.name)) },
     )
 
@@ -101,7 +104,7 @@ object ChordProTransposer {
         val opening = rewriteAt(0)
         return song.copy(
             metadata = song.metadata.copy(
-                key = song.metadata.key?.let { key -> renameKey(key, opening.rename) },
+                key = song.metadata.key?.let { key -> renameKey(key, opening.renameInKey) },
                 // Moved by what the whole song is moved by: a modulation further down does not move them again, and a
                 // chord after it is matched by the name it is shown under.
                 definitions = song.metadata.definitions.map(opening.rewriteDefinition),
@@ -131,13 +134,13 @@ object ChordProTransposer {
         )
         is ChordProBlock.Comment -> block.copy(text = rewriteLyricsLineChords(block.text, rewrite.rename))
         // Handed the rewrite of the stretch it starts, so the key it names is the one that stretch is in.
-        is ChordProBlock.Transpose -> block.copy(key = block.key?.let { renameKey(it, rewrite.rename) })
+        is ChordProBlock.Transpose -> block.copy(key = block.key?.let { renameKey(it, rewrite.renameInKey) })
         else -> block
     }
 
     /**
      * [rename] applied to a key: a chord name is renamed whole, and a key spelled out in words (`G major`, `A minor`,
-     * `Bb-Dur`, `C-dúr`) has its note renamed and its words kept. Anything else — `Dm (capo 2)` — is handed to [rename]
+     * `Bb-Dur`, `C-dúr`, `Sol mayor`) has its note renamed and its words kept. Anything else — `Dm (capo 2)` — is handed to [rename]
      * as it is, which leaves what is not a chord name alone.
      */
     internal fun renameKey(key: String, rename: (String) -> String): String {
@@ -147,15 +150,18 @@ object ChordProTransposer {
 
     /**
      * The length of the note a key spelled out in words starts with, or null for a key that is not one. The note has
-     * to start with a capital: a lowercase root is how a Central European chart writes a minor chord (`a` is `Am`),
-     * which the normalization would expand into an `Am-moll`, so `a-moll` is left as it is written.
+     * to start with a capital, in the standard notation or the Latin one: a lowercase root is how a Central European
+     * chart writes a minor chord (`a` is `Am`), which the normalization would expand into an `Am-moll`, so `a-moll` is
+     * left as it is written.
      */
     private fun spelledOutKeyNoteLength(key: String): Int? {
-        if (key.firstOrNull() !in 'A'..'H') return null
-        val noteLength = if (key.getOrNull(1)?.let { it in ACCIDENTAL_SIGNS } == true) 2 else 1
-        val word = key.substring(noteLength).trimStart { it.isWhitespace() || it == '-' }
-        return noteLength.takeIf { word.lowercase() in keyWords }
+        val letterLength = if (key.firstOrNull() in 'A'..'H') 1 else ChordProChordNames.latinNoteLength(key) ?: return null
+        val noteLength = if (key.getOrNull(letterLength)?.let { it in ACCIDENTAL_SIGNS } == true) letterLength + 1 else letterLength
+        return noteLength.takeIf { keyWordOf(key.substring(noteLength)) in keyWords }
     }
+
+    /** The word a key spelled out in words names its mode with, in lowercase: `minor` for `A minor`, `moll` for `a-moll`. */
+    private fun keyWordOf(suffix: String) = suffix.trimStart { it.isWhitespace() || it == '-' }.lowercase()
 
     /** Every name [rewriteChords] would hand to its rename, without rewriting anything. */
     internal fun writtenChordNames(song: ChordProSong): Sequence<String> = sequence {
@@ -400,7 +406,9 @@ object ChordProTransposer {
         val noteIndex = noteIndices[root.getOrNull(0)] ?: return null
         val accidental = accidentals[root.getOrNull(1)]
         val suffix = root.substring(if (accidental == null) 1 else 2).trimStart()
-        return Key((noteIndex + (accidental ?: 0)).mod(NOTE_COUNT), suffix.startsWith("m") && !suffix.startsWith("maj", ignoreCase = true))
+        val word = keyWordOf(suffix)
+        val isMinor = if (word in keyWords) word in minorKeyWords else suffix.startsWith("m") && !suffix.startsWith("maj", ignoreCase = true)
+        return Key((noteIndex + (accidental ?: 0)).mod(NOTE_COUNT), isMinor)
     }
 
     private class Key(val tonic: Int, val isMinor: Boolean) {
@@ -535,7 +543,8 @@ object ChordProTransposer {
     private const val GRID = "grid"
     private const val BRACKET_OPEN = '['
     private const val BRACKET_CLOSE = ']'
-    private val keyWords = setOf("major", "minor", "maj", "min", "dur", "dúr", "moll")
+    private val keyWords = setOf("major", "minor", "maj", "min", "dur", "dúr", "moll", "mayor", "menor", "majeur", "mineur", "maggiore", "minore")
+    private val minorKeyWords = setOf("minor", "min", "moll", "menor", "mineur", "minore")
     private val sharpNames = listOf("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
     private val flatNames = listOf("C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B")
     private val flatMajorKeys = setOf("C", "F", "Bb", "Eb", "Ab", "Db")

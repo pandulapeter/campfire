@@ -296,9 +296,9 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   is asked for a number of characters, and the viewer works that out from its font. A run that would wrap into more
   row lines than half its characters, which only a crafted file does, is returned whole.
 - `ChordNotation` / `ChordProNotation` — the notations a chord can be written in, and the conversion between them.
-  **Every file is in `ChordNotation.STANDARD`, and so is the model**; any other notation (German today, room for
-  Latin and Nashville) is only a way of showing that or of typing it, and is converted at exactly those two
-  boundaries: `toNotation` writes a parsed song in the reader's notation as the last step of rendering, after the
+  **Every file is in `ChordNotation.STANDARD`, and so is the model**; any other notation (German, Latin, and the two
+  numberings, Nashville and Roman numerals) is only a way of showing that or of typing it, and is converted at exactly
+  those two boundaries: `toNotation` writes a parsed song in the reader's notation as the last step of rendering, after the
   transposition, which works in the standard one; `convertText` rewrites a raw document from one notation to another,
   leaving every other character where it was (`ChordProTransposer.rewriteChordNamesInText`, with the tabs' chord rows
   renamed in their columns rather than transposed), which is how the editor shows a file in the reader's notation and
@@ -323,6 +323,29 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   transposition. The note after a `/` may be lowercase for the same reason (`D/f#`, `C/h`): it is transposed and
   respelled like any other note and folded back to the case the file used, and a lowercase `h` there marks a song as
   German as well. Only there: a lowercase root is still read as a minor chord and never as a note.
+  **Latin** (`Do Re Mi Fa Sol La Si`, read in title case, in capitals and with the accented `Dó Ré Fá Lá`, the bass
+  after a `/` in any case, written `Do Re Mi Fa Sol La Si` with `#` and `b`) needs no declaring: no Latin name is a
+  standard chord (`ChordProChordNames.latinExpanded`, whose test sweeps every quality and alteration to keep it so), so
+  a Latin chord is read as the chord it names wherever it arrives from — a file, a sync run, the editor's field in any
+  notation, a converted document's chord lines and `Key:` label, a tab's chord row, the highlighter's comment brackets,
+  a key spelled out in a Romance language (`Sol mayor`, `La minore`, whose words `keyOf` reads as major or minor by a
+  set rather than by their first letter). Every reading path asks one function for the standard chord a written name
+  stands for (`ChordProNotation.read`: Latin, then a lowercase minor, then German where the text is). A lowercase minor
+  taken into Latin comes back spelled out (`a` → `Lam` → `Am`), since Latin has no lowercase spelling of its own.
+  **The numberings** (`ChordNotation.isNumbering`) count the chords from the song's key (`ChordProNashville`): a minor
+  key from its own tonic (`Am F C G E7` is `1- b6 b3 b7 57`, or `i bVI bIII bVII V7`), the steps between always `b2 b3
+  #4 b6 b7`, a minor chord `-` in numbers and every other quality kept, the quality in the case of the numeral in Roman
+  (`vii°`, `viiø7`, `I+`), a bass note an Arabic step in both (`5/7`, `V/7`). They are only ever shown: `toNotation`
+  numbers a parsed song, keeping its key, a `{transpose}`'s key and its definitions in letters (`ChordRewrite.renameInKey`,
+  `rewriteDefinition`), numbering each stretch a modulation starts from the key it moved to, so a chorus recalled after
+  one reads the same numbers; a song whose key is not a note stays in letters. `convertText`, `parse`, `summarize` and
+  the summary cache read a numbering as the standard notation, and no text is ever converted into one, nor are number
+  charts read (`[1]` is as often an ending as a chord). `shownNames` maps every chord name a song plays to the name the
+  page shows it under, which is what the Chords section is named by, since a step of a key cannot be read back into
+  notes without the stretch it stands in. The viewer, which reads an already converted song, recognizes a chord as a
+  page may show it (`ChordProChordNames.isDisplayedChordName`), which is what keeps a row of `Sol Lam` or `1 4 5`
+  travelling with the lyrics under it in `ChordProTabWrapper` (a bare `I` stands between such names but makes no row on
+  its own), and `ChordProHighlighter.chordsOfShownText` takes the notation a comment is shown in for the same reason.
 - `ChordProHighlighter` — the typed spans an editor wants to colour (directive name, directive value, chord,
   annotation, comment, invalid line). It lives here rather than in the UI so that what counts as a chord is decided in exactly one
   place; only what those look like on screen is the caller's business. It reads the file's lines through

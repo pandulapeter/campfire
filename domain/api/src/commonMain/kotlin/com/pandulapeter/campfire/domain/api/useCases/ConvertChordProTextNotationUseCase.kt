@@ -19,10 +19,13 @@ interface ConvertChordProTextNotationUseCase {
      * which is always in [UserPreferences.Notation.STANDARD].
      *
      * A text in the standard notation is still read as German where it uses an `H` chord, which no file the app writes
-     * does but one written before every file was in one notation may; a text in any other notation is read as that
-     * notation, since that is what its writer typed it in. Converted to the standard notation, chords are written
-     * with ASCII accidentals, so converting a file from the standard notation to itself is what brings such a file
-     * into it, and leaves any other one unchanged.
+     * does but one written before every file was in one notation may; a text in German is read as German, since that
+     * is what its writer typed it in; and a Latin chord is read as the chord it names in any text, since no Latin name
+     * is a standard one. Converted to the standard notation, chords are written with ASCII accidentals, so converting a
+     * file from the standard notation to itself is what brings such a file into it, and leaves any other one unchanged.
+     *
+     * A numbering ([UserPreferences.Notation.isNumbering]) is never written into a text, nor read out of one: either
+     * side being one is the standard notation.
      */
     operator fun invoke(text: String, from: UserPreferences.Notation, to: UserPreferences.Notation): String
 }

@@ -16,4 +16,7 @@ import com.pandulapeter.campfire.data.model.domain.UserPreferences
 internal fun UserPreferences.Notation.toChordNotation() = when (this) {
     UserPreferences.Notation.STANDARD -> ChordNotation.STANDARD
     UserPreferences.Notation.GERMAN -> ChordNotation.GERMAN
+    UserPreferences.Notation.LATIN -> ChordNotation.LATIN
+    UserPreferences.Notation.NASHVILLE -> ChordNotation.NASHVILLE
+    UserPreferences.Notation.ROMAN -> ChordNotation.ROMAN
 }

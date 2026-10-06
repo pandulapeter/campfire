@@ -2358,14 +2358,27 @@ class CampfireViewModel(
         transposition: Int,
         spelling: UserPreferences.ChordSpelling,
         writtenIn: UserPreferences.Notation = UserPreferences.Notation.STANDARD,
+    ) = notatedSong(transposedSong(text, transposition, spelling, writtenIn), spelling)
+
+    /**
+     * [renderSong] up to its last step: the song moved and spelled as the viewer shows it, but still in the standard
+     * notation, which is what its chords are read from for their diagrams — in a numbering the page names a chord by a
+     * step of the key, which says nothing about the notes without the stretch of the song it stands in.
+     */
+    fun transposedSong(
+        text: String,
+        transposition: Int,
+        spelling: UserPreferences.ChordSpelling,
+        writtenIn: UserPreferences.Notation = UserPreferences.Notation.STANDARD,
     ): ChordProSong {
         val parsed = parseChordPro(text, writtenIn)
         // The file's own {transpose} (the one it opens with), the reader's, and the modulations further down: all
         // three are the transposition's to apply, and it leaves a song none of them move exactly as it is.
-        val transposed = transposeChordPro(parsed, parsed.metadata.transpose + transposition, spelling.accidentals)
-        // Last, and on the model only: the file stays in the standard notation, which the transposition works in.
-        return convertChordProNotation(transposed, spelling)
+        return transposeChordPro(parsed, parsed.metadata.transpose + transposition, spelling.accidentals)
     }
+
+    /** The last step of [renderSong], and on the model only: the file stays in the standard notation, which the transposition works in. */
+    fun notatedSong(song: ChordProSong, spelling: UserPreferences.ChordSpelling) = convertChordProNotation(song, spelling)
 
     /**
      * The key a song sounds in once everything that moves it has been applied: the file's own `{transpose}`, the
@@ -2411,8 +2424,12 @@ class CampfireViewModel(
      * The notation the editor's field is written in, the reader's own: the file is converted out of the standard one
      * as it is opened ([editorTextOf]) and back into it as it is saved ([fileTextOf]). It never changes under an open
      * editor, since Settings is only reached by selecting a top level screen, which takes the editor off the stack.
+     *
+     * Under a numbering it is the standard notation, and only the preview is in numbers: a field in numbers would make
+     * correcting a wrong `{key}` move every chord of the song at Save, the numbers staying where they are, and a key
+     * half typed would leave every number with nothing to count from (see [UserPreferences.Notation.forTyping]).
      */
-    val editorNotation get() = userPreferences.value?.chordSpelling?.notation ?: UserPreferences.Notation.STANDARD
+    val editorNotation get() = (userPreferences.value?.chordSpelling?.notation ?: UserPreferences.Notation.STANDARD).forTyping
 
     /**
      * The text of a file as the editor shows it: in [editorNotation], a file written before every file was in the
@@ -3358,11 +3375,12 @@ class CampfireViewModel(
             // file's own.
             val tempo = setlistFileName?.let { effectiveTempoOf(entry.songFileName, it).takeUnless { tempo -> tempo.isDefault }?.bpm }
             val capo = setlistFileName?.let { effectiveCapoOf(entry.songFileName, it).takeUnless { capo -> capo.isDefault }?.fret }
-            val rendered = content?.let { withContext(Dispatchers.Default) {
-                renderSong(it.text, transposition, spelling).withTempo(tempo).withCapo(capo)
+            val transposed = content?.let { withContext(Dispatchers.Default) {
+                transposedSong(it.text, transposition, spelling).withTempo(tempo).withCapo(capo)
             } }
-            val chords = if (rendered != null && chordInstrument != null) {
-                withContext(Dispatchers.Default) { printChordsOf(rendered, spelling.notation.toChordNotation(), chordInstrument, storedChordShapes) }
+            val rendered = transposed?.let { withContext(Dispatchers.Default) { notatedSong(it, spelling) } }
+            val chords = if (transposed != null && chordInstrument != null) {
+                withContext(Dispatchers.Default) { printChordsOf(transposed, spelling.notation.toChordNotation(), chordInstrument, storedChordShapes) }
             } else {
                 emptyList()
             }

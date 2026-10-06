@@ -129,6 +129,16 @@ internal class UserPreferencesMappersTest {
     }
 
     @Test
+    fun everyNotationSurvivesSavingAndReloading() {
+        UserPreferences.Notation.entries.forEach { notation ->
+            assertEquals(notation, UserPreferencesDocument(notation = notation.id).toModel().toDocument().toModel().chordSpelling.notation)
+        }
+        assertEquals("latin", UserPreferencesDocument(notation = "latin").toModel().toDocument().notation)
+        assertEquals(UserPreferences.Notation.ROMAN, UserPreferencesDocument(notation = "roman").toModel().chordSpelling.notation)
+        assertEquals(UserPreferences.Notation.STANDARD, UserPreferencesDocument(notation = "solfege").toModel().chordSpelling.notation)
+    }
+
+    @Test
     fun metronomeSettingsAndTemposSurviveSavingAndReloading() {
         val settings = MetronomeSettings(soundId = "cowbell", volume = 0.5f, subdivisionId = "triplets", isVisualBeatEnabled = false,
             isHapticBeatEnabled = true, beatLevels = mapOf("7/8" to listOf("accent", "normal", "accent", "normal", "accent", "normal", "normal")),

@@ -178,10 +178,10 @@ object ChordProHighlighter {
      * The chords of the text of a comment or a label, offsets into [text]: the brackets the transposition moves there.
      * Only a whole chord name counts (a lowercase minor included), since such a text is drawn as it is written: a
      * `[Chorus x2]` is not moved and a `[*softly]` is not lifted out of it the way an annotation is lifted out of the
-     * lyrics.
+     * lyrics. [notation] is the one the text is shown in, which in a numbering makes a step of the key a chord too.
      */
-    fun chordsOfShownText(text: String): List<Token> = ChordProSyntax.brackets(text)
-        .filter { it.content.trim().isMovedChordName() }
+    fun chordsOfShownText(text: String, notation: ChordNotation = ChordNotation.STANDARD): List<Token> = ChordProSyntax.brackets(text)
+        .filter { bracket -> bracket.content.trim().let { it.isMovedChordName() || (notation.isNumbering && ChordProNashville.isDegree(it)) } }
         .mapNotNull { it.token(0) }
 
     /**
@@ -210,9 +210,10 @@ object ChordProHighlighter {
         return tokens
     }
 
-    /** Whether the transposition moves this bracket's content, a lowercase minor (`a` for `Am`) included. */
-    private fun String.isMovedChordName() =
-        ChordProChordNames.isChordName(this) || ChordProChordNames.lowercaseMinorExpanded(this)?.let(ChordProChordNames::isChordName) == true
+    /** Whether the transposition moves this bracket's content, a lowercase minor (`a` for `Am`) and a Latin name included. */
+    private fun String.isMovedChordName() = ChordProChordNames.isChordName(this) ||
+        ChordProChordNames.lowercaseMinorExpanded(this) != null ||
+        ChordProChordNames.latinExpanded(this) != null
 
     /**
      * The token of a bracket that starts [offset] characters into the text, trimmed and with an empty one left out,

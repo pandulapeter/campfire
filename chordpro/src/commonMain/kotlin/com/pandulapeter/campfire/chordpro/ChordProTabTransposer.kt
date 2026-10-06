@@ -129,7 +129,8 @@ internal object ChordProTabTransposer {
         val chordWords = mutableListOf<ChordProSyntax.Word>()
         ChordProSyntax.words(line).forEach { word ->
             when {
-                ChordProChordNames.isChordName(word.value) -> chordWords += word
+                // A Latin name is read here so that a file written in Latin has its row read into the standard notation.
+                ChordProChordNames.isChordName(word.value) || ChordProChordNames.latinExpanded(word.value) != null -> chordWords += word
                 isMarker(word.value) -> Unit
                 else -> return null
             }

@@ -102,7 +102,7 @@ object ChordSheetConverter {
         val lines = text.lines().filter { it.isNotBlank() }
         if (lines.any { line ->
                 ChordProSyntax.isKnownDirective(line.trim()) || ChordProSyntax.brackets(line).any {
-                    it.content.none(Char::isWhitespace) && ChordProChordNames.isChordName(it.content) &&
+                    it.content.none(Char::isWhitespace) && isChordOrLatinName(it.content) &&
                         line.getOrNull(it.range.last + 1)?.let { next ->
                             next in 'A'..'Z' || next in 'a'..'z' || next in '\u00c0'..'\u024f' || next in '\u0370'..'\u04ff'
                         } == true
@@ -116,9 +116,15 @@ object ChordSheetConverter {
     private fun ascii(value: String) = value.replace('\u266f', '#').replace('\u266d', 'b')
     private fun chord(value: String): Boolean {
         val name = ascii(value).removeSurrounding("(", ")")
-        return ChordProChordNames.isChordName(name) ||
+        return isChordOrLatinName(name) ||
             name.firstOrNull() in 'a'..'h' && ChordProChordNames.isChordName(name.replaceFirstChar { it.uppercase() })
     }
+
+    /**
+     * Whether [name] is a chord in the standard notation or in the Latin one, which a Spanish, French or Italian sheet
+     * is written in; the import brings it into the standard notation afterwards, with the rest of the song.
+     */
+    private fun isChordOrLatinName(name: String) = ChordProChordNames.isChordName(name) || ChordProChordNames.latinExpanded(name) != null
     private fun furniture(value: String) = value in listOf("|", "||", "|:", ":|", "-", "/", "%", "N.C.", "NC", "(", ")") || repeat.matches(value)
     private fun chordTokens(line: Rendered): List<Token>? = tokens(line.text).takeIf { words ->
         words.any { chord(it.text) } && words.all { chord(it.text) || furniture(it.text) }
@@ -145,7 +151,7 @@ object ChordSheetConverter {
             when (it.groupValues[1].lowercase()) {
                 "capo", "tempo" -> value.first().isDigit()
                 "time" -> timeSignature.matches(value)
-                "key", "hangnem" -> ChordProChordNames.isChordName(ascii(value))
+                "key", "hangnem" -> isChordOrLatinName(ascii(value))
                 else -> true
             }
         }
@@ -187,7 +193,7 @@ object ChordSheetConverter {
                 when (name) {
                     "tempo" -> value.first().isDigit()
                     "time" -> timeSignature.matches(value)
-                    "key" -> isHeader && ChordProChordNames.isChordName(ascii(value))
+                    "key" -> isHeader && isChordOrLatinName(ascii(value))
                     "capo" -> isHeader && value.isNotEmpty()
                     TRANSPOSITION -> isHeader
                     else -> false
