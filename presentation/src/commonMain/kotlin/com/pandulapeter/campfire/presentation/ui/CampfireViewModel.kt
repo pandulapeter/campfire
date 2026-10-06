@@ -1782,7 +1782,9 @@ class CampfireViewModel(
      * A run that is going is waited for, and so is one chained behind it, the metronome having been stopped first. Past
      * [EXIT_SYNC_GRACE] the run is stopped instead and its winding down waited for, briefly, since a stopped run writes its index and clears the marker
      * that would otherwise have the next launch report it as interrupted and start no run of its own. Before any of
-     * that, the stored editor draft is brought in line with the editor, written or removed.
+     * that, the stored editor draft is brought in line with the editor, written or removed, and what is still waiting
+     * for its debounce (the text size, the metronome settings, the export options and the tempo and capo overrides)
+     * is written, since the process ends right after.
      */
     suspend fun settleSynchronizationBeforeExit() {
         // The stored draft is removed by a collector a few hops after the editor lets its text go, which a process that
@@ -1790,6 +1792,10 @@ class CampfireViewModel(
         if (!_isEditorDraftRecoveryPending.value) storeEditorDraft(currentEditorDraftToStore())
         // The window is already hidden, so a click still sounding while the run is waited for would come from nowhere.
         metronome.stop()
+        // The process ends right after this, and onCleared's detached write would race it - or, on a macOS Quit, never
+        // run. Before the sync wait, so that an override written now is in the library a run that is still to start carries.
+        writeWaitingPreferences()
+        takeWaitingOverrideWrites()()
         val isSyncing = { state: SyncState -> state is SyncState.Connected && state.isSyncing }
         val hasSettled = withTimeoutOrNull(EXIT_SYNC_GRACE) {
             // The state is the repository's own rather than syncState, which only follows it a hop to the main thread
@@ -2742,8 +2748,9 @@ class CampfireViewModel(
     }.orEmpty()
 
     /**
-     * The view model going (the activity finished) does not take a tempo or a capo still waiting to be written with it:
-     * those are written on a scope of their own, since this one is being cancelled.
+     * The view model going (the activity finished, or the desktop window disposed) does not take what is still waiting
+     * for its debounce with it - the text size, the metronome settings, the export options, a tempo or a capo: those
+     * are written on a scope of their own, since this one is being cancelled.
      *
      * It does take the click, though. This is the app being left rather than being sent to the background - the one is
      * a finished Activity, the other a paused one - and the click is kept alive across the background for a phone on a
@@ -2752,15 +2759,68 @@ class CampfireViewModel(
      */
     override fun onCleared() {
         metronome.stop()
-        val waitingTempos = tempoWriteJobs.keys.mapNotNull { key -> pendingTempos.value[key]?.let { key to it.bpm } }
-        val waitingCapos = capoWriteJobs.keys.mapNotNull { key -> pendingCapos.value[key]?.let { key to it.fret } }
+        val writeWaitingOverrides = takeWaitingOverrideWrites()
+        // Written on a scope of their own, since this one is being cancelled: each was waiting for its debounce, which
+        // this scope's cancellation would otherwise drop.
+        CoroutineScope(Dispatchers.Default + NonCancellable).launch {
+            try {
+                writeWaitingPreferences()
+                writeWaitingOverrides()
+            } catch (exception: Exception) {
+                // A bare scope has no handler, and an exception escaping it would end the process.
+                println("Could not write the waiting values: ${exception.message}")
+            }
+        }
+    }
+
+    /**
+     * Writes the text size, the metronome settings and the export options that are still waiting for their debounce, in
+     * one read-modify-write of the preferences, for a view model or a process that is about to go. Each is let go of
+     * only if nothing newer arrived meanwhile, as the collectors do.
+     */
+    private suspend fun writeWaitingPreferences() {
+        val fontScale = unsavedFontScale.value
+        val metronomeSettings = _pendingMetronomeSettings.value
+        val printSettings = _pendingPrintSettings.value
+        if (fontScale == null && metronomeSettings == null && printSettings == null) return
+        try {
+            updateUserPreferences { preferences ->
+                preferences.copy(
+                    fontScale = fontScale ?: preferences.fontScale,
+                    metronomeSettings = metronomeSettings ?: preferences.metronomeSettings,
+                    printSettings = printSettings ?: preferences.printSettings,
+                )
+            }
+            fontScale?.let { unsavedFontScale.compareAndSet(it, null) }
+            metronomeSettings?.let { _pendingMetronomeSettings.compareAndSet(it, null) }
+            printSettings?.let { _pendingPrintSettings.compareAndSet(it, null) }
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Exception) {
+            // Only what was already being lost.
+            println("Could not write the waiting preferences: ${exception.message}")
+        }
+    }
+
+    /**
+     * Takes the tempo and capo overrides still waiting for their debounce out of it - their jobs cancelled, which only
+     * ever catches one in its delay, since a job leaves its map the moment the delay ends - and returns their writes,
+     * for a view model or a process that is about to go.
+     */
+    private fun takeWaitingOverrideWrites(): suspend () -> Unit {
+        val waitingTempos = tempoWriteJobs.mapNotNull { (key, job) ->
+            job.cancel()
+            pendingTempos.value[key]?.let { key to it.bpm }
+        }
+        val waitingCapos = capoWriteJobs.mapNotNull { (key, job) ->
+            job.cancel()
+            pendingCapos.value[key]?.let { key to it.fret }
+        }
         tempoWriteJobs.clear()
         capoWriteJobs.clear()
-        if (waitingTempos.isNotEmpty() || waitingCapos.isNotEmpty()) {
-            CoroutineScope(Dispatchers.Default + NonCancellable).launch {
-                waitingTempos.forEach { (key, bpm) -> writeTempo(key, bpm) }
-                waitingCapos.forEach { (key, fret) -> writeCapo(key, fret) }
-            }
+        return {
+            waitingTempos.forEach { (key, bpm) -> writeTempo(key, bpm) }
+            waitingCapos.forEach { (key, fret) -> writeCapo(key, fret) }
         }
     }
 
