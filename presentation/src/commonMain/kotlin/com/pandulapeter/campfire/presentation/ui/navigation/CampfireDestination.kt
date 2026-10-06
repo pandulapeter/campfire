@@ -89,6 +89,7 @@ sealed interface CampfireDestination : NavKey {
      * Full screen pager of the given songs, identified by their file names. When opened from a setlist,
      * [setlistFileName] is set so that transpositions are stored in that setlist rather than in the preferences.
      *
+     * @param songFileNames Names each song once, since the pager is keyed by file name.
      * @param id What the entry is to Navigation 3, generated once per push and kept by [copy]. The file names cannot be
      *   that: renaming a song from this screen rewrites them in place, and an entry keyed on them would be a new
      *   screen sliding in over itself with its scroll position gone. Always written into the saved back stack, since

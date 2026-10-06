@@ -134,6 +134,7 @@ import com.pandulapeter.campfire.presentation.ui.metronome.withTempo
 import com.pandulapeter.campfire.presentation.ui.dialogs.SONG_METADATA_FIELDS
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.NavigationState
+import com.pandulapeter.campfire.presentation.ui.navigation.reportedSongPages
 import com.pandulapeter.campfire.presentation.ui.navigation.withoutDisabledFeatures
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.LibraryPersistence
@@ -1717,9 +1718,10 @@ class CampfireViewModel(
      * A song of the import screen's list, opened in a pager over the songs of the group it was listed in, so that what an
      * import brought can be read through one after the other and Back returns to the list.
      */
-    internal fun openReportedSong(songFileNames: List<String>, index: Int) = openSongDetails(
-        CampfireDestination.SongDetails(songFileNames = songFileNames, setlistFileName = null, initialIndex = index),
-    )
+    internal fun openReportedSong(songFileNames: List<String>, index: Int) {
+        val (pages, initialIndex) = reportedSongPages(songFileNames, index)
+        openSongDetails(CampfireDestination.SongDetails(songFileNames = pages, setlistFileName = null, initialIndex = initialIndex))
+    }
 
     /**
      * Every way out of a screen ends up here - the app bar's button, the system's back gesture and the desktop

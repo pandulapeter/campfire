@@ -215,8 +215,10 @@ internal fun SongDetailsScreen(
         // A song whose file is being renamed is still this screen's song. The library drops the old name as the file
         // moves and the back stack is rewritten a few writes later, and in between the destination names a song the
         // library does not hold: resolving it to the song as it was keeps the pages - and their count - exactly
-        // where they are, instead of this screen closing itself or a setlist settling on the next song.
-        destination.songFileNames.mapNotNull { songsByFileName[it] ?: songsBeingRenamed[it] }
+        // where they are, instead of this screen closing itself or a setlist settling on the next song. The pager's key
+        // is the file name, so a name the destination repeats - whatever built it, a saved back stack included - would
+        // be a repeated key and a crash: each song is one page.
+        destination.songFileNames.mapNotNull { songsByFileName[it] ?: songsBeingRenamed[it] }.distinctBy { it.fileName }
     }
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     LaunchedEffect(songs.isEmpty(), isLoading) {

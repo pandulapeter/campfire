@@ -581,7 +581,7 @@ private fun LazyListScope.sections(
                 count = section.rows.size,
             )
         }
-        val songFileNames = section.rows.filter { it.isSong }.map { it.fileName }
+        val songFileNames = section.rows.filter { it.isSong }.map { it.fileName }.distinct()
         items(
             items = section.rows,
             key = { row -> "${section.kind}_${row.key}" },
