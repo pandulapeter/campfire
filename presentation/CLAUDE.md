@@ -471,7 +471,13 @@ provides no effect. Foundation only applies it while there is something to scrol
 can be short — the list screens, the sheets, the settings, the song and the editor — also take
 `bounceScrollableContent` (`ui/platform/ContentOverscroll.kt`, or `bounceVerticalScroll` / `bounceHorizontalScroll`),
 which hands the drags of content that fits to the same effect, after offering them to the parents first, so a bottom
-sheet whose content fits is still dragged down by it.
+sheet whose content fits is still dragged down by it. Content that fits and is pulled up is carried to the top edge of
+its viewport, under a sheet's header or an app bar, with its scroll position still at zero, so the container's own
+`fadingTopEdge` stays off: the vertical form draws a top fade of its own over the stretched content, as strong as the
+finger has pulled it up and settling back on a spring as the effect relaxes. The two list screens fade their cards
+under the pinned header rather than at the grid's edge, so they hand their `ListTopFade`'s `OverscrollPull` in
+instead: the cards' fade then grows with the pull, and its gradient is moved down the cards by as much, since the
+stretch carries their drawing up with them.
 
 Before the first search interaction, Songs lays arriving section headers out fully expanded so loading cannot retain a collapsed first row as a scroll offset. `ListTopFade` treats leading collapsed header slots as zero scroll distance: its mask is absent at the real top and grows over the first 24dp of scrolling, including when the first card is item 1.
 

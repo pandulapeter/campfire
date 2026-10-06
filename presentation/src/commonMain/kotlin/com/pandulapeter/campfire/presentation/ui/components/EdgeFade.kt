@@ -39,6 +39,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.presentation.ui.platform.OverscrollPull
 
 /**
  * The fade the two list screens' cards go out in towards the top of the list, where the pinned section header and the
@@ -56,6 +57,11 @@ import androidx.compose.ui.unit.dp
  * A card under the gradient takes no presses there either (see [fadingUnderListTop]): what is faded out is not what a
  * tap near the header or the buttons is meant for, and a card that can barely be seen should not open on a slip of
  * the finger aimed at a pill.
+ *
+ * A list too short to scroll is still carried up under the header by the overscroll effect when it is pulled
+ * ([overscrollPull], handed to the grid's `bounceScrollableContent`), so the fade follows that pull too: as strong as
+ * the list has been pulled, and moved down the cards by as much, since the stretch carries the cards' own drawing up
+ * with them.
  */
 @Stable
 internal class ListTopFade(
@@ -64,6 +70,16 @@ internal class ListTopFade(
     val fadeHeightPx: Float,
     private val firstCardIndex: Int,
 ) {
+
+    val overscrollPull = OverscrollPull()
+
+    /**
+     * How far the cards are drawn above where they are laid out. Only a list that cannot scroll is pulled, and a pull
+     * left over by a list that has grown scrollable meanwhile, whose release was cut short with it, counts for
+     * nothing. Capped at the fade's height, which is as far below it as a card's position is followed.
+     */
+    val pullPx: Float
+        get() = if (listState.canScrollBackward || listState.canScrollForward) 0f else overscrollPull.towardsStart.coerceAtMost(heightPx)
 
     /** How far down from the top of the list the fade reaches. */
     val coveredHeightPx: Float
@@ -84,6 +100,7 @@ internal class ListTopFade(
             firstCardIndex = firstCardIndex,
             coveredHeightPx = coveredHeightPx,
             fadeHeightPx = fadeHeightPx,
+            overscrollPullPx = pullPx,
         )
 }
 
@@ -107,7 +124,10 @@ internal fun rememberListTopFade(
     }
 }
 
-/** Measures distance from the real start, including an expanded header but excluding collapsed header slots. */
+/**
+ * Measures distance from the real start, including an expanded header but excluding collapsed header slots, or, for a
+ * list at its start, how far it has been pulled up past its end.
+ */
 internal fun listTopFadeStrength(
     canScrollBackward: Boolean,
     firstVisibleItemIndex: Int,
@@ -115,8 +135,9 @@ internal fun listTopFadeStrength(
     firstCardIndex: Int,
     coveredHeightPx: Float,
     fadeHeightPx: Float,
+    overscrollPullPx: Float = 0f,
 ): Float {
-    if (!canScrollBackward) return 0f
+    if (!canScrollBackward) return (overscrollPullPx / fadeHeightPx).coerceIn(0f, 1f)
     if (firstVisibleItemIndex > firstCardIndex) return 1f
     val passedHeader = if (firstCardIndex > 0 && firstVisibleItemIndex == firstCardIndex) coveredHeightPx else 0f
     return ((passedHeader + scrollOffset) / fadeHeightPx).coerceIn(0f, 1f)
@@ -130,12 +151,13 @@ internal fun Modifier.listTopFadeViewport(fade: ListTopFade) = onPlaced { fade.v
 internal fun Modifier.fadingUnderListTop(fade: ListTopFade): Modifier {
     val position = remember { CardPosition() }
     return this
-        // Clamped to where the fade ends, so that a card below it writes the same value on every frame of a scroll and
-        // its drawing is left alone: only the one or two cards under the fade are drawn again as the list moves.
-        .onPlaced { position.top = minOf(it.positionInWindow().y - fade.viewportTop, fade.heightPx) }
+        // Clamped to where the fade ends once moved down by the most a pull moves it, so that a card below it writes the
+        // same value on every frame of a scroll and its drawing is left alone: only the one or two cards under the fade
+        // are drawn again as the list moves.
+        .onPlaced { position.top = minOf(it.positionInWindow().y - fade.viewportTop, 2 * fade.heightPx) }
         // The card's own position is read first, so that only a card under the fade reads the scroll offset at all.
         .graphicsLayer {
-            compositingStrategy = if (position.top < fade.heightPx && fade.strength > 0f) CompositingStrategy.Offscreen else CompositingStrategy.Auto
+            compositingStrategy = if (position.top - fade.pullPx < fade.heightPx && fade.strength > 0f) CompositingStrategy.Offscreen else CompositingStrategy.Auto
         }
         .drawWithCache {
             // Keep the shader in viewport coordinates and move the canvas beneath it. Rebuilding the gradient
@@ -147,7 +169,8 @@ internal fun Modifier.fadingUnderListTop(fade: ListTopFade): Modifier {
             )
             onDrawWithContent {
                 drawContent()
-                val top = position.top
+                // A pulled list draws its cards higher than they are laid out, so the gradient is drawn as much lower.
+                val top = position.top - fade.pullPx
                 if (top < fade.heightPx) {
                     val strength = fade.strength
                     if (strength > 0f) {
@@ -170,8 +193,8 @@ internal fun Modifier.fadingUnderListTop(fade: ListTopFade): Modifier {
                 // list's own scrolling does not ask whether the press was consumed, so a drag started there still
                 // scrolls it.
                 val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
-                // A card below the fade holds the fade's own height as its top, which no press inside it adds up to
-                // less than, so the clamp leaves the answer as it would be with the card's real position.
+                // A card below the fade holds twice the fade's own height as its top, which no press inside it adds up
+                // to less than the fade's height, so the clamp leaves the answer as it would be with the real position.
                 if (fade.strength > 0f && position.top + down.position.y < fade.heightPx) {
                     down.consume()
                 }
@@ -181,7 +204,7 @@ internal fun Modifier.fadingUnderListTop(fade: ListTopFade): Modifier {
 
 /**
  * Where one card is relative to the top of its list, written as it is placed and read as it is drawn. It is no further
- * down than the fade reaches, since below that the exact position makes no difference to how the card is drawn.
+ * down than a pulled fade can reach, since below that the exact position makes no difference to how the card is drawn.
  */
 private class CardPosition {
 

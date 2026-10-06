@@ -401,7 +401,7 @@ private fun SetlistList(
     Box(modifier = modifier) {
         LazyVerticalGrid(
             columns = ListColumns(columnCount),
-            modifier = gridModifier.bounceScrollableContent(listState),
+            modifier = gridModifier.bounceScrollableContent(listState, pull = topFade.overscrollPull),
             state = listState,
             contentPadding = contentPadding.only(start = true, end = true, bottom = true, extraEnd = FAST_SCROLLER_WIDTH, extraBottom = if (isReordering) 88.dp else 8.dp),
         ) {

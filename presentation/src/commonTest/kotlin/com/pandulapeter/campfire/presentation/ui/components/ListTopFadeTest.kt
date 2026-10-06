@@ -36,12 +36,20 @@ class ListTopFadeTest {
         assertEquals(1f, strength(canScrollBackward = true, index = 2, offset = 0, headerHeight = 0f))
     }
 
-    private fun strength(canScrollBackward: Boolean, index: Int, offset: Int, headerHeight: Float) = listTopFadeStrength(
+    @Test
+    fun shortListPulledUpFadesAsFarAsItIsPulled() {
+        for ((pull, expected) in listOf(0f to 0f, 6f to 0.25f, 24f to 1f, 80f to 1f)) {
+            assertEquals(expected, strength(canScrollBackward = false, index = 0, offset = 0, headerHeight = 56f, pull = pull))
+        }
+    }
+
+    private fun strength(canScrollBackward: Boolean, index: Int, offset: Int, headerHeight: Float, pull: Float = 0f) = listTopFadeStrength(
         canScrollBackward = canScrollBackward,
         firstVisibleItemIndex = index,
         scrollOffset = offset,
         firstCardIndex = 1,
         coveredHeightPx = headerHeight,
         fadeHeightPx = 24f,
+        overscrollPullPx = pull,
     )
 }
