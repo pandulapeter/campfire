@@ -47,6 +47,18 @@ internal class UserPreferencesMappersTest {
     }
 
     @Test
+    fun theKeyAndTheTempoFollowTheDetailsBoxThatPrintedThemUntilTheyAreChosen() {
+        fun printSettingsOf(text: String) = UserPreferencesDocumentFormat.decode("""{"printSettings":$text}""").document.toModel().printSettings
+
+        printSettingsOf("""{"showMetadata":false}""").let { assertEquals(false to false, it.showKey to it.showTempo) }
+        printSettingsOf("""{"showMetadata":false,"showKey":true}""").let { assertEquals(true to false, it.showKey to it.showTempo) }
+        printSettingsOf("""{}""").let { assertEquals(true to true, it.showKey to it.showTempo) }
+        val chosen = PrintSettings(showMetadata = false, showKey = true, showTempo = true)
+        val saved = UserPreferencesDocumentFormat.encode(UserPreferencesDocument().toModel().copy(printSettings = chosen).toDocument())
+        assertEquals(chosen, UserPreferencesDocumentFormat.decode(saved).document.toModel().printSettings)
+    }
+
+    @Test
     fun malformedPrintSizesAndUnknownPaperFallBackWithoutLosingOtherChoices() {
         val preferences = UserPreferencesDocument(printSettings = PrintSettingsDocument(format = "docx", paper = "tabloid", setlistMode = "unknown",
             fontSize = 400, marginMm = -1, columns = 50, showChords = false)).toModel()

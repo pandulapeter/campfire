@@ -67,8 +67,13 @@ internal data class PrintSettingsDocument(
     val columns: Int = 1,
     val showChords: Boolean = true,
     val showChordDiagrams: Boolean = true,
-    val showKey: Boolean = true,
-    val showTempo: Boolean = true,
+    /**
+     * Null in a document from before the key and the tempo had boxes of their own, when [showMetadata] printed them, so
+     * that somebody who had unticked that box does not find them printed again.
+     */
+    val showKey: Boolean? = null,
+    /** As [showKey]. */
+    val showTempo: Boolean? = null,
     val showComments: Boolean = true,
     val showMetadata: Boolean = true,
     val showPageNumbers: Boolean = true,
