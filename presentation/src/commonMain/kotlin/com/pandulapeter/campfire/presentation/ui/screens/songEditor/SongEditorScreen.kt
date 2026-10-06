@@ -11,8 +11,10 @@ package com.pandulapeter.campfire.presentation.ui.screens.songEditor
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.focusable
@@ -385,8 +387,18 @@ private fun LoadedSongEditor(
             imeHeight > 0.dp && windowHeight - imeHeight < SHORT_WINDOW_HEIGHT
         }
     }
+    // Above a phone's landscape keyboard the control row would leave the field a single line, so there it gives way
+    // and only its Shortcuts chevron stays, in the title row; transposing and switching panes wait for the keyboard
+    // to go.
+    val isControlRowHiddenState = remember(ime, density, windowHeight) {
+        derivedStateOf {
+            val imeHeight = with(density) { ime.getBottom(this).toDp() }
+            imeHeight > 0.dp && windowHeight - imeHeight < MIN_ROOM_FOR_CONTROL_ROW
+        }
+    }
     val isKeyboardVisible by isKeyboardVisibleState
     val isTypingInShortWindow by isTypingInShortWindowState
+    val isControlRowHidden by isControlRowHiddenState
     CompactKeyboardEffect(isEnabled = isTypingInShortWindow && LocalWindowInfo.current.containerDpSize.height < SHORT_WINDOW_HEIGHT)
     var isToolbarExpanded by rememberSaveable {
         mutableStateOf(!isSmallScreen)
@@ -451,6 +463,21 @@ private fun LoadedSongEditor(
                 )
             },
             actions = {
+                AnimatedVisibility(
+                    // Outside the animated width (see overlappingAction's KDoc), and at its end: it is the first action,
+                    // and the undo button after it is drawn last, so a press on the overlap still reaches undo.
+                    modifier = Modifier.overlappingAction(start = 0.dp, end = ACTION_BUTTON_OVERLAP),
+                    visible = isControlRowHidden && panes != EditorPanes.PREVIEW,
+                    enter = expandHorizontally() + fadeIn(),
+                    exit = shrinkHorizontally() + fadeOut(),
+                ) {
+                    EditorToolbarToggle(
+                        isExpanded = isToolbarExpanded,
+                        isLabeled = false,
+                        isEnabled = true,
+                        onToggled = { isToolbarExpanded = !isToolbarExpanded },
+                    )
+                }
                 IconButton(
                     enabled = textFieldState.undoState.canUndo,
                     onClick = { textFieldState.undoState.undo() },
@@ -501,47 +528,49 @@ private fun LoadedSongEditor(
             bottomContent = {
                 // Transposing, switching pane and folding the insertions away are the things here that do not write at
                 // the caret, so they are the ones that stay when the insertions leave.
-                Row(
-                    modifier = Modifier.padding(
-                        start = contentPadding.calculateStartPadding(layoutDirection) + 16.dp,
-                        end = contentPadding.calculateEndPadding(layoutDirection) + 4.dp,
-                        bottom = 8.dp,
-                    ),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    TextTranspositionControls(
-                        // The summary reads the key into the standard notation, and the field is in the editor's.
-                        key = summary.metadata.key?.let(viewModel::editorKeyOf),
-                        // A key is enough on its own: it says what the song is in, and moving it is a transposition
-                        // even before a chord has been written under it.
-                        isEnabled = summary.hasChords || !summary.metadata.key.isNullOrBlank(),
-                        onTransposed = { semitones ->
-                            textFieldState.replaceWithTransposition(viewModel.transposeText(textFieldState.text.toString(), semitones, chordSpelling.accidentals))
-                        },
-                    )
-                    SegmentedChoice(
-                        // Not the whole of a desktop window's width: the row is a pair of controls rather than a
-                        // tab bar, and the stepper next to it would be lost at the end of a metre of segments.
-                        modifier = Modifier.weight(1f, fill = false).widthIn(max = PANE_CHOICE_MAX_WIDTH),
-                        options = listOfNotNull(
-                            EditorPanes.EDIT to stringResource(Res.string.song_editor_edit),
-                            EditorPanes.PREVIEW to stringResource(Res.string.song_editor_preview),
-                            if (hasRoomForSplitPanes) EditorPanes.SPLIT to stringResource(Res.string.song_editor_split) else null,
+                AnimatedVisibility(visible = !isControlRowHidden) {
+                    Row(
+                        modifier = Modifier.padding(
+                            start = contentPadding.calculateStartPadding(layoutDirection) + 16.dp,
+                            end = contentPadding.calculateEndPadding(layoutDirection) + 4.dp,
+                            bottom = 8.dp,
                         ),
-                        selected = panes,
-                        isInline = true,
-                        shouldApplyPadding = false,
-                        onSelected = { selectedPanes = it },
-                    )
-                    // Disabled rather than hidden over a preview, so that the segments next to it do not change
-                    // width under the finger that has just picked one of them.
-                    EditorToolbarToggle(
-                        isExpanded = isToolbarExpanded,
-                        isLabeled = windowSize != WindowSize.COMPACT,
-                        isEnabled = panes != EditorPanes.PREVIEW,
-                        onToggled = { isToolbarExpanded = !isToolbarExpanded },
-                    )
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        TextTranspositionControls(
+                            // The summary reads the key into the standard notation, and the field is in the editor's.
+                            key = summary.metadata.key?.let(viewModel::editorKeyOf),
+                            // A key is enough on its own: it says what the song is in, and moving it is a transposition
+                            // even before a chord has been written under it.
+                            isEnabled = summary.hasChords || !summary.metadata.key.isNullOrBlank(),
+                            onTransposed = { semitones ->
+                                textFieldState.replaceWithTransposition(viewModel.transposeText(textFieldState.text.toString(), semitones, chordSpelling.accidentals))
+                            },
+                        )
+                        SegmentedChoice(
+                            // Not the whole of a desktop window's width: the row is a pair of controls rather than a
+                            // tab bar, and the stepper next to it would be lost at the end of a metre of segments.
+                            modifier = Modifier.weight(1f, fill = false).widthIn(max = PANE_CHOICE_MAX_WIDTH),
+                            options = listOfNotNull(
+                                EditorPanes.EDIT to stringResource(Res.string.song_editor_edit),
+                                EditorPanes.PREVIEW to stringResource(Res.string.song_editor_preview),
+                                if (hasRoomForSplitPanes) EditorPanes.SPLIT to stringResource(Res.string.song_editor_split) else null,
+                            ),
+                            selected = panes,
+                            isInline = true,
+                            shouldApplyPadding = false,
+                            onSelected = { selectedPanes = it },
+                        )
+                        // Disabled rather than hidden over a preview, so that the segments next to it do not change
+                        // width under the finger that has just picked one of them.
+                        EditorToolbarToggle(
+                            isExpanded = isToolbarExpanded,
+                            isLabeled = windowSize != WindowSize.COMPACT,
+                            isEnabled = panes != EditorPanes.PREVIEW,
+                            onToggled = { isToolbarExpanded = !isToolbarExpanded },
+                        )
+                    }
                 }
                 // Nothing below can act on a preview, so the insertions leave with the field they write into.
                 AnimatedVisibility(visible = isToolbarExpanded && panes != EditorPanes.PREVIEW) {
@@ -1191,6 +1220,13 @@ private fun String.caretInsideFirstSection(): Int {
 
 private val PANE_CHOICE_MAX_WIDTH = 400.dp
 private val SMALL_SCREEN_SIZE = 600.dp
+
+/**
+ * The least the keyboard has to leave of the window for the editor's control row to stay over the field: the 48dp
+ * compact title row, the 56dp control row and three 18sp lines with the field's padding. The smallest phone keeps
+ * about 340dp upright and so keeps the row, and about 112dp on its side and so loses it.
+ */
+private val MIN_ROOM_FOR_CONTROL_ROW = 240.dp
 private const val SECTION_START = "{start_of_"
 private const val PREVIEW_DELAY_MILLIS = 150L
 
