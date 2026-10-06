@@ -157,6 +157,43 @@ class SongRepositoryImplTest {
         assertEquals(listOf("retitled"), repository.loadSongsIfNeeded()?.map { it.title })
     }
 
+    @Test
+    fun `a save made while a refresh reads is not undone by it`() = runTest {
+        val localSource = FakeSongLocalSource(mapOf("a.cho" to "old", "b.cho" to "b"))
+        val repository = SongRepositoryImpl(localSource, SongContentRepositoryImpl(localSource), LibraryFileLock(), LibraryChanges())
+        repository.loadSongsIfNeeded()
+        val gate = CompletableDeferred<Unit>().also { localSource.loadGates["b.cho"] = it }
+
+        val refresh = launch { repository.refresh(setOf("a.cho", "b.cho")) }
+        runCurrent()
+        localSource.loadGates.clear()
+        val save = launch { repository.saveSong(SongContent("a.cho", "new")) }
+        runCurrent()
+        gate.complete(Unit)
+        refresh.join()
+        save.join()
+
+        assertEquals("new", repository.loadSongsIfNeeded()?.first { it.fileName == "a.cho" }?.title)
+    }
+
+    @Test
+    fun `a deletion made while a refresh reads is not undone by it`() = runTest {
+        val localSource = FakeSongLocalSource(mapOf("a.cho" to "a", "b.cho" to "b"))
+        val repository = SongRepositoryImpl(localSource, SongContentRepositoryImpl(localSource), LibraryFileLock(), LibraryChanges())
+        repository.loadSongsIfNeeded()
+        val gate = CompletableDeferred<Unit>().also { localSource.loadGates["b.cho"] = it }
+
+        val refresh = launch { repository.refresh(setOf("a.cho", "b.cho")) }
+        runCurrent()
+        val deletion = launch { repository.deleteSong("a.cho") }
+        runCurrent()
+        gate.complete(Unit)
+        refresh.join()
+        deletion.join()
+
+        assertEquals(listOf("b.cho"), repository.loadSongsIfNeeded()?.map { it.fileName })
+    }
+
     /** A library held in a map, with only the calls a save, a creation and a deletion make answered. */
     private class FakeSongLocalSource(files: Map<String, String>) : SongLocalSource {
 
@@ -172,7 +209,13 @@ class SongRepositoryImplTest {
 
         override suspend fun loadSongFileSizes() = files.mapValues { (_, text) -> text.length.toLong() }
 
-        override suspend fun loadSong(fileName: String) = if (fileName in files) song(fileName) else null
+        /** Awaited by a read of the file it is filed under, as a slow storage would keep a refresh reading. */
+        val loadGates = mutableMapOf<String, CompletableDeferred<Unit>>()
+
+        override suspend fun loadSong(fileName: String): Song? {
+            loadGates[fileName]?.await()
+            return if (fileName in files) song(fileName) else null
+        }
 
         override suspend fun loadSongContent(fileName: String) = files[fileName]?.let { SongContent(fileName = fileName, text = it) }
 

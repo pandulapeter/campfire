@@ -66,7 +66,9 @@ held before, plus any change that landed while it ran. A `rescan()` — the refr
 directory again; an import ends with `adoptImported`, which puts the songs and setlists it wrote into the list in one
 change, dropping the cached texts of the songs among them. `refresh(fileNames)` reads the named files alone, for a
 sync run that changed them: each is put in the list in place of its old entry or drops out, as a rescan would drop it,
-and a repository that has not been read yet rescans instead, since there is no list to put them into.
+and a repository that has not been read yet rescans instead, since there is no list to put them into. It reads them
+and updates the list under `LibraryFileLock`, which every write holds from its write to its cache update, so a save or
+a deletion of one of those files lands before its reads or after its update and is never undone by it.
 
 - `SetlistRepositoryImpl` makes every write to a setlist file — `updateSetlist`, `renameSetlist`, `saveSetlist`,
   `deleteSetlist` — under one lock, held from reading the setlist out of its **file** to having the write back in the

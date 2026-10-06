@@ -285,6 +285,28 @@ class SetlistRepositoryImplTest {
         assertFailsWith<IllegalStateException> { repository.loadSetlistFileNamesNaming("a.cho") }
     }
 
+    @Test
+    fun `a change made while a refresh reads is not undone by it`() = runTest {
+        val localSource = FakeSetlistLocalSource(listOf(setlist("a.setlist.json", "a.cho"), setlist("b.setlist.json", "a.cho")))
+        val repository = SetlistRepositoryImpl(localSource, LibraryFileLock(), LibraryChanges())
+        repository.loadSetlistsIfNeeded()
+        val gate = CompletableDeferred<Unit>().also { localSource.loadGates["b.setlist.json"] = it }
+
+        val refresh = launch { repository.refresh(setOf("a.setlist.json", "b.setlist.json")) }
+        runCurrent()
+        localSource.loadGates.clear()
+        val change = launch { repository.updateSetlist("a.setlist.json") { it.copy(entries = it.entries + Setlist.Entry("b.cho")) } }
+        runCurrent()
+        gate.complete(Unit)
+        refresh.join()
+        change.join()
+
+        assertEquals(
+            listOf("a.cho", "b.cho"),
+            repository.setlists.first().data?.first { it.fileName == "a.setlist.json" }?.entries?.map { it.songFileName },
+        )
+    }
+
     /** A setlists directory held in a map, whose writes can be held back until the test lets them through. */
     private class FakeSetlistLocalSource(setlists: List<Setlist>) : SetlistLocalSource {
 
@@ -309,7 +331,11 @@ class SetlistRepositoryImplTest {
             return files.values.filter { it.fileName !in unlistable }
         }
 
+        /** Awaited by a read of the file it is filed under, as a slow storage would keep a refresh reading. */
+        val loadGates = mutableMapOf<String, CompletableDeferred<Unit>>()
+
         override suspend fun loadSetlist(fileName: String): Setlist? {
+            loadGates[fileName]?.await()
             if (isUnreadable) throw IllegalStateException("Not a setlist.")
             return files[fileName]
         }

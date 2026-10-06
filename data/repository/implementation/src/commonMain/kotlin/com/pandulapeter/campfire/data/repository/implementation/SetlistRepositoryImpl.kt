@@ -72,17 +72,22 @@ internal class SetlistRepositoryImpl(
     override suspend fun refresh(fileNames: Set<String>) {
         if (fileNames.isEmpty()) return
         if (setlists.first().data == null) return rescan()
-        val reloaded = fileNames.mapNotNull { fileName ->
-            try {
-                setlistLocalSource.loadSetlist(fileName)
-            } catch (exception: CancellationException) {
-                throw exception
-            } catch (exception: Exception) {
-                println("Could not read the setlist \"$fileName\": ${exception.message}")
-                null
+        // Under the lock every change holds from its write to its cache update, so that a change lands either before
+        // these reads, which then see it, or after the list has been updated with them - never between, where the version
+        // read here would be put back over it. The lock alone, not writeMutex, which [writing] takes before it.
+        libraryFileLock.withLock {
+            val reloaded = fileNames.mapNotNull { fileName ->
+                try {
+                    setlistLocalSource.loadSetlist(fileName)
+                } catch (exception: CancellationException) {
+                    throw exception
+                } catch (exception: Exception) {
+                    println("Could not read the setlist \"$fileName\": ${exception.message}")
+                    null
+                }
             }
+            updateData { current -> current.orEmpty().filterNot { it.fileName in fileNames } + reloaded }
         }
-        updateData { current -> current.orEmpty().filterNot { it.fileName in fileNames } + reloaded }
     }
 
     override suspend fun createSetlist(title: String, description: String, date: LocalDate, isCountdownShown: Boolean): Setlist = writing {

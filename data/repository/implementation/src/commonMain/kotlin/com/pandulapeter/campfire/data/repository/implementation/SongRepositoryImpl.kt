@@ -58,11 +58,16 @@ internal class SongRepositoryImpl(
     override suspend fun refresh(fileNames: Set<String>) {
         if (fileNames.isEmpty()) return
         if (songs.first().data == null) return rescan()
-        val reloaded = fileNames.chunked(REFRESH_BATCH_SIZE).flatMap { batch ->
-            coroutineScope { batch.map { fileName -> async { loadSongOrNull(fileName) } }.awaitAll() }
-        }.filterNotNull()
-        songContentRepository.invalidate(fileNames)
-        updateData { current -> current.orEmpty().filterNot { it.fileName in fileNames } + reloaded }
+        // Under the lock every write holds from its write to its cache update, so that a save or a deletion lands either
+        // before these reads, which then see it, or after the list has been updated with them - never between, where the
+        // version read here would be put back over it.
+        libraryFileLock.withLock {
+            val reloaded = fileNames.chunked(REFRESH_BATCH_SIZE).flatMap { batch ->
+                coroutineScope { batch.map { fileName -> async { loadSongOrNull(fileName) } }.awaitAll() }
+            }.filterNotNull()
+            songContentRepository.invalidate(fileNames)
+            updateData { current -> current.orEmpty().filterNot { it.fileName in fileNames } + reloaded }
+        }
     }
 
     private suspend fun loadSongOrNull(fileName: String) = try {
