@@ -1078,8 +1078,11 @@ private fun SongDetailsPage(
         ) {
             val currentFontScale = fontScale()
             // A single change - a window maximised, a stepper tapped - springs the sections to their new place; a burst
-            // of them, from a pinch or a window edge being dragged, is followed, gliding only over the grid's jumps.
-            val isChangingContinuously = rememberContinuousChange(maxWidth, currentFontScale)
+            // of them, from a pinch or a window edge being dragged, is followed, gliding only over the grid's jumps. The
+            // height is one of them, since every row is padded to it: a bottom edge dragged, the short window's title
+            // row collapsing over the frames of a scroll and the metronome panel opening or closing above the pager
+            // are bursts of height changes alike.
+            val isChangingContinuously = rememberContinuousChange(maxWidth, maxHeight, currentFontScale)
             val density = LocalDensity.current
             val lyricsLineHeight = MaterialTheme.typography.bodyLarge.lineHeight
             val readingWindow = with(density) {
