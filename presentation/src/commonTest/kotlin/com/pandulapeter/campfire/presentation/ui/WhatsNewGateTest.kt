@@ -39,4 +39,19 @@ class WhatsNewGateTest {
     fun waitsForABatchStillInTheQueue() {
         assertFalse(canShowWhatsNew(hasDialog = false, isImporting = false, hasImportReport = false, queuedImportCount = 1))
     }
+
+    @Test
+    fun welcomeOpensWhenNothingIsInTheWay() {
+        assertTrue(canShowWelcome(hasDialog = false, hasImportReport = false))
+    }
+
+    @Test
+    fun welcomeStaysOffAnotherDialog() {
+        assertFalse(canShowWelcome(hasDialog = true, hasImportReport = false))
+    }
+
+    @Test
+    fun welcomeStaysOffAnImportScreen() {
+        assertFalse(canShowWelcome(hasDialog = false, hasImportReport = true))
+    }
 }

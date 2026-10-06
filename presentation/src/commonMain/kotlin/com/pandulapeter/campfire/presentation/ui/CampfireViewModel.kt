@@ -2948,15 +2948,19 @@ class CampfireViewModel(
      * Puts [DialogType.Welcome] over the app on the first run, once the launch screen has gone: the sheet is a window of
      * its own on Android and would otherwise slide up over the mark rather than over the library it introduces, which
      * is also what lets the colors picked in it be seen taking hold of the app behind it. Only onto a screen with no
-     * other dialog on it - on a first run that is a question about a file the app was opened with - since a welcome
-     * that replaced a question would leave it unanswered, and one that waited for the answer would arrive in the middle
-     * of whatever the user went on to do next. Showing it is the only time it is shown: the first run's preferences
+     * other dialog on it and no import screen ([ImportReport]) under it - on a first run that is the question about a
+     * file the app was opened with, which is a screen of its own rather than a dialog - since a welcome over a question
+     * would leave it unanswered, its Open settings taking the import screen off the stack and the import with it. It is
+     * skipped rather than put up later: one that waited for the answer would arrive in the middle of whatever the user
+     * went on to do next. Showing it is the only time it is shown: the first run's preferences
      * are written as the demo library is settled, before this, so a process that ends with the sheet still up starts
      * the next time without it.
      */
     private suspend fun showWelcomeOnFirstRun() {
         if (!isFirstLaunch.await()) return
         isAppOnScreen.first { it }
+        // A report is set before it is pushed, so this also covers one still waiting for its push.
+        if (!canShowWelcome(hasDialog = _visibleDialog.value != null, hasImportReport = _importReport.value != null)) return
         _visibleDialog.compareAndSet(null, DialogType.Welcome)
     }
 

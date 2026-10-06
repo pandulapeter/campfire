@@ -20,3 +20,6 @@ internal fun canShowWhatsNew(
     hasImportReport: Boolean,
     queuedImportCount: Int,
 ) = !hasDialog && !isImporting && !hasImportReport && queuedImportCount == 0
+
+/** Whether the first run's welcome may go up now: not over a dialog, and not over an import screen, which is a question too. */
+internal fun canShowWelcome(hasDialog: Boolean, hasImportReport: Boolean) = !hasDialog && !hasImportReport
