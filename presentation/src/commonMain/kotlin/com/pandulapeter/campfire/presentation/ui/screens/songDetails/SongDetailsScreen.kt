@@ -680,7 +680,12 @@ internal fun SongDetailsScreen(
                                 // The sheet edits what the two features show, so it goes once both are switched off.
                                 listOfNotNull(
                                     if (shouldShowChords || isMetronomeEnabled) {
-                                        songPlayingAction(viewModel = viewModel, song = song, setlistFileName = destination.setlistFileName)
+                                        songPlayingAction(
+                                            viewModel = viewModel,
+                                            song = song,
+                                            setlistFileName = destination.setlistFileName,
+                                            isEditorDraft = false,
+                                        )
                                     } else {
                                         null
                                     },

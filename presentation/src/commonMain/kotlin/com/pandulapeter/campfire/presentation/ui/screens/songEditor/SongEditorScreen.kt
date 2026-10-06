@@ -158,6 +158,7 @@ import com.pandulapeter.campfire.presentation.ui.screens.songDetails.prepareSong
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.rememberDefaultSectionLabels
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.rememberSongInfoEditing
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.songInfoEditingActions
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.songPlayingAction
 import com.pandulapeter.campfire.presentation.ui.platform.CompactKeyboardEffect
 import com.pandulapeter.campfire.presentation.ui.theme.LocalMonospaceFontFamily
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
@@ -494,6 +495,12 @@ private fun LoadedSongEditor(
                 EditorMenu(
                     modifier = Modifier.overlappingAction(start = ACTION_BUTTON_OVERLAP, end = 0.dp),
                     editingActions = songInfoEditingActions(songInfoEditing),
+                    // The sheet edits what the two features show, so it goes once both are switched off.
+                    songPlayingAction = if (userPreferences?.areChordsEnabled != false || userPreferences?.isMetronomeEnabled != false) {
+                        songPlayingAction(viewModel = viewModel, song = editorSong, setlistFileName = null, isEditorDraft = true)
+                    } else {
+                        null
+                    },
                     coverArtAction = if (userPreferences?.isCoverArtEnabled == true) {
                         coverArtAction(viewModel = viewModel, song = editorSong, isEditorDraft = true)
                     } else {
@@ -937,6 +944,7 @@ private fun SongPreview(
 private fun EditorMenu(
     modifier: Modifier = Modifier,
     editingActions: List<ActionsMenuItem>,
+    songPlayingAction: ActionsMenuItem?,
     coverArtAction: ActionsMenuItem?,
     canPrettify: Boolean,
     onPrettify: () -> Unit,
@@ -945,8 +953,9 @@ private fun EditorMenu(
     onOpenChordProReference: () -> Unit,
 ) = ActionsMenu(
     modifier = modifier,
-    // The cover art is put next to Edit metadata, the other editor of the song's header, ahead of the chip groups.
-    items = editingActions.take(1) + listOfNotNull(coverArtAction) + editingActions.drop(1) + listOf(
+    // Song defaults and the cover art are put next to Edit metadata, the other editors of the song's header, ahead of
+    // the chip groups, in the order the song details editing menu has them.
+    items = editingActions.take(1) + listOfNotNull(songPlayingAction, coverArtAction) + editingActions.drop(1) + listOf(
         ActionsMenuItem(
             title = stringResource(Res.string.song_editor_prettify),
             icon = painterResource(Res.drawable.ic_prettify),

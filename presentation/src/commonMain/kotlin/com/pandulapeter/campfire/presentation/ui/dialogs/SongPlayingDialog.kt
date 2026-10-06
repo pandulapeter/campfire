@@ -78,7 +78,8 @@ import kotlin.math.absoluteValue
 /**
  * "Song defaults": what the song's own file declares for the four values it is played by — its key, its capo, its
  * tempo and its time signature — opened from the song details editing menu and from the About the song sheet's Song
- * defaults group, edited as a draft and written on Save, the fields changed and only those.
+ * defaults group, edited as a draft and written on Save, the fields changed and only those. Opened from the editor's
+ * overflow menu it writes into the text being typed instead, like the editor's other metadata sheets.
  *
  * The song's first section has a stepper for three of them, and those never touch the file: they override it for the
  * setlist the song is read through, or in the preferences for a song opened from the library. That difference is the
@@ -86,7 +87,8 @@ import kotlin.math.absoluteValue
  * own words among the song's, so it is explained here, where the two meet: the sheet opens with a line saying which
  * is which, and where the song is being played differently from its file, a card names how and takes it back. An
  * override equal to a value set here is no longer shown or named, since it plays what the file says; it is kept, so a
- * setlist that was told 100 still says 100 if the file later moves to 110.
+ * setlist that was told 100 still says 100 if the file later moves to 110. The editor has no steppers and reads the
+ * song through no setlist, so there the sheet is the fields alone.
  *
  * Every field may be left empty, which declares nothing and lets the default stand — no key, no capo, the click's
  * [MetronomePattern.DEFAULT_BPM] and [TimeSignature.COMMON_TIME] — and the placeholders say what that default is.
@@ -151,21 +153,23 @@ internal fun SongPlayingDialog(
                 modifier = Modifier.fillMaxWidth().fadingTopEdge(scrollState).bounceVerticalScroll(scrollState).padding(contentPadding),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Text(
-                    text = stringResource(
-                        if (dialog.setlistFileName == null) {
-                            Res.string.song_details_playing_description_library
-                        } else {
-                            Res.string.song_details_playing_description_setlist
-                        },
-                    ),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                SongPlayingOverridesCard(
-                    viewModel = viewModel,
-                    song = dialog.song,
-                    setlistFileName = dialog.setlistFileName,
-                )
+                if (!dialog.isEditorDraft) {
+                    Text(
+                        text = stringResource(
+                            if (dialog.setlistFileName == null) {
+                                Res.string.song_details_playing_description_library
+                            } else {
+                                Res.string.song_details_playing_description_setlist
+                            },
+                        ),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    SongPlayingOverridesCard(
+                        viewModel = viewModel,
+                        song = dialog.song,
+                        setlistFileName = dialog.setlistFileName,
+                    )
+                }
                 // A field of a feature switched off is left out rather than shown: the value it holds is kept as the
                 // file has it, since only the fields changed are written.
                 if (shouldShowChords) {
@@ -197,7 +201,12 @@ internal fun SongPlayingDialog(
             BottomSheetConfirmButton(
                 enabled = isValid && SONG_PLAYING_FIELDS.any { values[it].orEmpty().trim() != offeredValues[it].orEmpty().trim() },
                 onClick = {
-                    viewModel.setSongPlaying(fileName = dialog.song.fileName, values = values, offeredValues = offeredValues)
+                    viewModel.setSongPlaying(
+                        fileName = dialog.song.fileName,
+                        isEditorDraft = dialog.isEditorDraft,
+                        values = values,
+                        offeredValues = offeredValues,
+                    )
                     close()
                 },
             ) { Text(stringResource(Res.string.save)) }

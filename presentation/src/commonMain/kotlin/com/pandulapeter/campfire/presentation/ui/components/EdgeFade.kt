@@ -62,6 +62,10 @@ import com.pandulapeter.campfire.presentation.ui.platform.OverscrollPull
  * ([overscrollPull], handed to the grid's `bounceScrollableContent`), so the fade follows that pull too: as strong as
  * the list has been pulled, and moved down the cards by as much, since the stretch carries the cards' own drawing up
  * with them.
+ *
+ * A list whose sections each start with a header of [sectionHeaderContentType] measures the fade from the start of the
+ * section being read instead (see [sectionStartDistance]), so a list brought to one of its headers - which is where a
+ * tap on a header takes it - shows that section's first card whole, as it shows the first section's at the top.
  */
 @Stable
 internal class ListTopFade(
@@ -69,6 +73,7 @@ internal class ListTopFade(
     private val coveredHeight: () -> Float,
     val fadeHeightPx: Float,
     private val firstCardIndex: Int,
+    private val sectionHeaderContentType: Any?,
 ) {
 
     val overscrollPull = OverscrollPull()
@@ -93,15 +98,26 @@ internal class ListTopFade(
 
     /** How strong the fade is, which grows with how far the list has been scrolled from its top. */
     val strength: Float
-        get() = listTopFadeStrength(
-            canScrollBackward = listState.canScrollBackward,
-            firstVisibleItemIndex = listState.firstVisibleItemIndex,
-            scrollOffset = listState.firstVisibleItemScrollOffset,
-            firstCardIndex = firstCardIndex,
-            coveredHeightPx = coveredHeightPx,
-            fadeHeightPx = fadeHeightPx,
-            overscrollPullPx = pullPx,
-        )
+        get() {
+            val strength = listTopFadeStrength(
+                canScrollBackward = listState.canScrollBackward,
+                firstVisibleItemIndex = listState.firstVisibleItemIndex,
+                scrollOffset = listState.firstVisibleItemScrollOffset,
+                firstCardIndex = firstCardIndex,
+                coveredHeightPx = coveredHeightPx,
+                fadeHeightPx = fadeHeightPx,
+                overscrollPullPx = pullPx,
+            )
+            if (sectionHeaderContentType == null || strength == 0f) return strength
+            val distance = sectionStartDistance(
+                firstVisibleItemIndex = listState.firstVisibleItemIndex,
+                scrollOffset = listState.firstVisibleItemScrollOffset,
+                headerPositions = listState.layoutInfo.visibleItemsInfo.mapNotNull { item ->
+                    if (item.contentType == sectionHeaderContentType) item.index to item.offset.y else null
+                },
+            ) ?: return strength
+            return minOf(strength, (distance / fadeHeightPx).coerceIn(0f, 1f))
+        }
 }
 
 /** The covered row recedes as the app bar takes its place; headerless lists fade directly below the bar. */
@@ -110,15 +126,17 @@ internal fun rememberListTopFade(
     listState: LazyGridState,
     coveredHeightFraction: () -> Float = { 1f },
     firstCardIndex: Int = 0,
+    sectionHeaderContentType: Any? = null,
 ): ListTopFade {
     val density = LocalDensity.current
-    return remember(listState, density, coveredHeightFraction, firstCardIndex) {
+    return remember(listState, density, coveredHeightFraction, firstCardIndex, sectionHeaderContentType) {
         with(density) {
             ListTopFade(
                 listState = listState,
                 coveredHeight = { LIST_APP_BAR_HEIGHT.toPx() * coveredHeightFraction().coerceIn(0f, 1f) },
                 fadeHeightPx = EDGE_FADE_SIZE.toPx(),
                 firstCardIndex = firstCardIndex,
+                sectionHeaderContentType = sectionHeaderContentType,
             )
         }
     }
@@ -142,6 +160,27 @@ internal fun listTopFadeStrength(
     val passedHeader = if (firstCardIndex > 0 && firstVisibleItemIndex == firstCardIndex) coveredHeightPx else 0f
     return ((passedHeader + scrollOffset) / fadeHeightPx).coerceIn(0f, 1f)
 }
+
+/**
+ * How far the list is from the start of a section, in pixels: scrolled into the header at its top, or short of the
+ * next header coming up from below - whichever is nearer, so the fade thins out as the next header reaches the top
+ * and comes back as it is scrolled past, rather than dropping away in the frame that header becomes the first item.
+ * Null where no section header is on screen but a pinned one, which is a section being read well past its start.
+ *
+ * @param headerPositions The index and the laid out top of every section header on screen, the pinned one included.
+ */
+internal fun sectionStartDistance(
+    firstVisibleItemIndex: Int,
+    scrollOffset: Int,
+    headerPositions: List<Pair<Int, Int>>,
+): Int? = headerPositions.mapNotNull { (index, top) ->
+    when {
+        // A pinned header is drawn at the top whatever its place, so only how far the list is scrolled into it counts.
+        index == firstVisibleItemIndex -> scrollOffset
+        index > firstVisibleItemIndex -> top.coerceAtLeast(0)
+        else -> null
+    }
+}.minOrNull()
 
 /** Marks the list whose top [fade] is measured from. */
 internal fun Modifier.listTopFadeViewport(fade: ListTopFade) = onPlaced { fade.viewportTop = it.positionInWindow().y }

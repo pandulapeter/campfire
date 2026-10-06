@@ -322,7 +322,7 @@ private fun SetlistList(
     val labelsOnEverySong by viewModel.labelsOnEverySong.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val hasLoadedLibrary = rememberHasLoadedLibrary(isLoading)
-    val topFade = rememberListTopFade(listState)
+    val topFade = rememberListTopFade(listState, sectionHeaderContentType = SETLIST_HEADER_CONTENT_TYPE)
     // Remembered, since a new modifier every time the list recomposes would recompose the grid with it.
     val gridModifier = remember(topFade) { Modifier.fillMaxSize().listTopFadeViewport(topFade) }
     val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
@@ -456,7 +456,7 @@ private fun SetlistList(
                 else -> shownSetlists.forEach { setlistWithSongs ->
                     stickyHeader(
                         key = "setlist_${setlistWithSongs.setlist.fileName}",
-                        contentType = "setlist_header",
+                        contentType = SETLIST_HEADER_CONTENT_TYPE,
                     ) { headerIndex ->
                         val headerState = rememberSectionHeaderState(listState, headerIndex)
                         SectionHeader(
@@ -798,6 +798,9 @@ private fun CampfireViewModel.SetlistWithSongs.rows(dragOrder: List<String>?): L
         }
     }
 }
+
+/** What a setlist's header is to the grid, and to the cards' fade, which is measured from the setlist being read. */
+private const val SETLIST_HEADER_CONTENT_TYPE = "setlist_header"
 
 /**
  * The index the grid holds a setlist's header at, counted the way [SetlistList] emits the items of the setlists before

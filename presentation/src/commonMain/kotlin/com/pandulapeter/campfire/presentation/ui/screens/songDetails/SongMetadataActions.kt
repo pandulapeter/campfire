@@ -177,20 +177,21 @@ internal fun songInfoEditingActions(editing: SongInfoEditing): List<ActionsMenuI
 )
 
 /**
- * Opens the "Song defaults" sheet from the song details editing menu (the About the song sheet's Song defaults group
- * opens it too): what the file declares for the four values the song is played by, next to what [setlistFileName] (or
- * the library) overrides of them.
+ * Opens the "Song defaults" sheet from the song details editing menu or the editor's (the About the song sheet's Song
+ * defaults group opens it too): what the file declares for the four values the song is played by, next to what
+ * [setlistFileName] (or the library) overrides of them, or what the editor's draft declares for them.
  */
 @Composable
 internal fun songPlayingAction(
     viewModel: CampfireViewModel,
     song: Song,
     setlistFileName: String?,
+    isEditorDraft: Boolean,
 ) = ActionsMenuItem(
     title = stringResource(Res.string.song_details_playing_edit),
     icon = painterResource(Res.drawable.ic_tune),
     isAlwaysInMenu = true,
-    onClick = { viewModel.showSongPlayingDialog(song = song, setlistFileName = setlistFileName) },
+    onClick = { viewModel.showSongPlayingDialog(song = song, setlistFileName = setlistFileName, isEditorDraft = isEditorDraft) },
 )
 
 /**

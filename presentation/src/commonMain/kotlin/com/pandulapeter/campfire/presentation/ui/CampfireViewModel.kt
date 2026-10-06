@@ -2772,14 +2772,18 @@ class CampfireViewModel(
     /**
      * Opens the "Song defaults" sheet on what the file declares for the four values the song is played by, the key in
      * the reader's notation (the way the editor's field shows it) and the tempo as the number the click reads out of it.
-     * [setlistFileName] is where the song is being read, whose overrides the sheet names and can take back.
+     * [setlistFileName] is where the song is being read, whose overrides the sheet names and can take back. Opened from
+     * the editor, it reads and changes the text being typed there instead, which is read through no setlist.
      */
-    fun showSongPlayingDialog(song: Song, setlistFileName: String?) {
-        val metadata = parseChordPro(songTextOf(song.fileName, isEditorDraft = false) ?: return).metadata
+    fun showSongPlayingDialog(song: Song, setlistFileName: String?, isEditorDraft: Boolean = false) {
+        val metadata = parseChordPro(songTextOf(song.fileName, isEditorDraft) ?: return).metadata
         showDialog(
             DialogType.SongPlaying(
-                song = song,
-                setlistFileName = setlistFileName,
+                // The sheet's key field notes a {transpose} the text opens with, which the draft may have changed since
+                // the editor last read it.
+                song = if (isEditorDraft) song.copy(transpose = metadata.transpose) else song,
+                setlistFileName = setlistFileName.takeUnless { isEditorDraft },
+                isEditorDraft = isEditorDraft,
                 values = mapOf(
                     ChordProMetadataFields.Field.KEY to metadata.key?.takeIf { it.isNotBlank() }?.let(::editorKeyOf).orEmpty(),
                     ChordProMetadataFields.Field.CAPO to metadata.capo?.toString().orEmpty(),
@@ -2797,13 +2801,14 @@ class CampfireViewModel(
      */
     fun setSongPlaying(
         fileName: String,
+        isEditorDraft: Boolean,
         values: Map<ChordProMetadataFields.Field, String>,
         offeredValues: Map<ChordProMetadataFields.Field, String>,
     ) {
         val changed = values
             .filter { (field, value) -> value.trim() != offeredValues[field]?.trim() }
             .mapValues { (field, value) -> if (field == ChordProMetadataFields.Field.KEY) fileKeyOf(value) else value }
-        if (changed.isNotEmpty()) editSong(fileName = fileName, isEditorDraft = false) { text -> setChordProMetadata(text = text, values = changed) }
+        if (changed.isNotEmpty()) editSong(fileName = fileName, isEditorDraft = isEditorDraft) { text -> setChordProMetadata(text = text, values = changed) }
     }
 
     /** A key typed in the editor's notation, as the file is to hold it; the inverse of [editorKeyOf]. */
@@ -4472,19 +4477,16 @@ class CampfireViewModel(
 
         /**
          * What the song's file declares for the four values it is played by, opened from the song details editing
-         * menu: a snapshot of each as the sheet offers it, blank for nothing (see
+         * menu or from the editor's: a snapshot of each as the sheet offers it, blank for nothing (see
          * [showSongPlayingDialog]). [setlistFileName] is the setlist the song is read through, whose overrides the
-         * sheet names, or null for the library's on this device.
+         * sheet names, or null for the library's on this device, and always null for the editor's draft.
          */
         data class SongPlaying(
             override val song: Song,
             val setlistFileName: String?,
+            override val isEditorDraft: Boolean = false,
             val values: Map<ChordProMetadataFields.Field, String>,
-        ) : SongEdit {
-
-            /** The song's own file: the editor's preview line is not interactive, so this is never a draft's. */
-            override val isEditorDraft = false
-        }
+        ) : SongEdit
         /** The records the song may have come out on, whose front cover can be made the song's, see [searchCoverArt]. */
         data class CoverArtSearch(override val song: Song, override val isEditorDraft: Boolean = false) : SongEdit
         /** Removing a cover rewrites the file, so the cover art sheet asks before doing it. */
