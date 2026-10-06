@@ -334,16 +334,7 @@ object ChordProDefinitions {
                 FINGERS -> fingers = arguments().takeIf { it.isNotEmpty() }?.map { word ->
                     word.toIntOrNull()?.takeIf { it in 1..MAX_FINGER } ?: 0
                 } ?: return Reading.Invalid
-                // Keys past the diagram are wrapped by their note rather than refused, as the specification says, which also keeps
-                // what a diagram draws to four octaves however large a number the file holds.
-                KEYS -> keys = arguments().takeIf { it.isNotEmpty() }?.map { word ->
-                    val key = word.toIntOrNull() ?: return Reading.Invalid
-                    when {
-                        key > MAX_KEY -> MAX_KEY - 11 + key.mod(12)
-                        key < MIN_KEY -> MIN_KEY + key.mod(12)
-                        else -> key
-                    }
-                } ?: return Reading.Invalid
+                KEYS -> keys = arguments().takeIf { it.isNotEmpty() }?.map { it.toIntOrNull() ?: return Reading.Invalid } ?: return Reading.Invalid
                 // A copy declares the shape of another chord, which is that chord's to draw.
                 COPY, COPY_ALL -> {
                     arguments()
@@ -360,11 +351,7 @@ object ChordProDefinitions {
         val voicing = when {
             keys != null -> {
                 if (selected != null && selected != ChordInstrument.KEYBOARD) return Reading.Invalid
-                val root = ChordProChords.parse(name)?.root ?: 0
-                val absolute = keys.map { root + it }
-                val octaves = absolute.min().let { lowest -> if (lowest < 0) (-lowest + 11) / 12 else 0 }
-                val notes = absolute.map { it + octaves * 12 }.map { if (it > MAX_KEY) MAX_KEY - 11 + it.mod(12) else it }
-                return Reading.Shape(name, ChordInstrument.KEYBOARD, ChordVoicing.Keys(notes.distinct().sorted()))
+                return Reading.Shape(name, ChordInstrument.KEYBOARD, keysShape(name, keys))
             }
             // Both operands are already on the neck, so the sum cannot overflow; past the last fret is off it.
             frets != null -> ChordVoicing.Fretted(
@@ -376,6 +363,35 @@ object ChordProDefinitions {
         val instrument = selected ?: ChordInstrument.entries.firstOrNull { it.isFretted && it.tuning.size == frets.size } ?: return Reading.Other(name)
         if (instrument.tuning.size != frets.size) return Reading.Invalid
         return Reading.Shape(name, instrument, voicing)
+    }
+
+    /**
+     * The keyboard shape of [name] whose [keys] are counted from its root. Keys past the diagram are wrapped by their
+     * note rather than refused, as the specification says, which also keeps what a diagram draws to four octaves however
+     * large a number the file holds. A slash chord's lowest key is its bass, drawn apart from the chord, where it is
+     * written the way [line] writes one: its note sounding again above it, or no note of the chord without it. A
+     * one-hand inversion written by hand (`{define: C/E keys 4 7 12}`) stays three keys played together.
+     */
+    private fun keysShape(name: String, keys: List<Int>): ChordVoicing.Keys {
+        val chord = ChordProChords.parse(name)
+        val root = chord?.root ?: 0
+        val absolute = keys.map { key ->
+            root + when {
+                key > MAX_KEY -> MAX_KEY - 11 + key.mod(12)
+                key < MIN_KEY -> MIN_KEY + key.mod(12)
+                else -> key
+            }
+        }
+        val octaves = absolute.min().let { lowest -> if (lowest < 0) (-lowest + 11) / 12 else 0 }
+        val notes = absolute.map { it + octaves * 12 }.map { if (it > MAX_KEY) MAX_KEY - 11 + it.mod(12) else it }.distinct().sorted()
+        val bass = chord?.bass
+        val lowest = notes.first()
+        if (bass != null && notes.size > 1 && lowest.mod(12) == bass) {
+            val above = notes.drop(1)
+            val chordNotes = chord.intervals.map { (chord.root + it) % 12 }
+            if (above.any { it.mod(12) == bass } || bass !in chordNotes) return ChordVoicing.Keys(above, bass = lowest)
+        }
+        return ChordVoicing.Keys(notes)
     }
 
     /** The keyword [word] is, with the specification's `base_fret` read as the `base-fret` it spells too. */

@@ -139,16 +139,14 @@ class ChordProDefinitionsTest {
             "C" to ChordVoicing.Fretted(listOf(0, 0, 0, 3)),
             "D" to ChordVoicing.Keys(listOf(2, 6, 9)),
             "D/F#" to ChordVoicing.Keys(listOf(14, 18, 21), bass = 6),
+            "C/D" to ChordVoicing.Keys(listOf(12, 16, 19), bass = 2),
         ).forEach { (name, voicing) ->
             val line = ChordProDefinitions.line(name, voicing)
             val read = definitions(line).single()
             assertEquals(name, read.name, line)
-            if (voicing is ChordVoicing.Keys) {
-                assertEquals((listOfNotNull(voicing.bass) + voicing.notes).sorted(), (read.voicing as ChordVoicing.Keys).notes, line)
-            } else {
-                assertEquals(voicing, read.voicing, line)
-            }
+            assertEquals(voicing, read.voicing, line)
         }
+        assertEquals(ChordVoicing.Keys(listOf(4, 7, 12)), definitions("{define: C/E keys 4 7 12}").single().voicing)
         assertEquals("{define: G base-fret 1 frets 3 2 0 0 0 3 fingers 2 1 0 0 0 3}", ChordProDefinitions.line("G", ChordVoicing.Fretted(listOf(3, 2, 0, 0, 0, 3), listOf(2, 1, 0, 0, 0, 3))))
         assertEquals("{define: Bb base-fret 6 frets x 1 3 3 3 1}", ChordProDefinitions.line("Bb", ChordVoicing.Fretted(listOf(null, 6, 8, 8, 8, 6))))
         assertEquals("{define: D keys 0 4 7}", ChordProDefinitions.line("D", ChordVoicing.Keys(listOf(2, 6, 9))))
