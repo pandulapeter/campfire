@@ -43,7 +43,7 @@ import org.koin.compose.viewmodel.koinViewModel
  * Android shell of the shared UI: keeps the system bar icons in sync with the selected theme (which can differ from
  * the system theme) and lets the URL opener follow it too.
  *
- * @param urlOpener Opens the given URL, styled for the given theme.
+ * @param urlOpener Opens the given URL, styled for the given theme, and says whether anything could open it.
  * @param filesToImport Files from an "open with" or a share, read by the activity that received the intent; the files
  *   of a pick that outlived its process join them here.
  * @param syncNotifier Starts and stops the foreground service a running sync needs, which lives in the application
@@ -58,7 +58,7 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun CampfireAndroidApp(
     viewModel: CampfireViewModel = koinViewModel(),
-    urlOpener: (url: String, isDarkTheme: Boolean) -> Unit,
+    urlOpener: (url: String, isDarkTheme: Boolean) -> Boolean,
     filesToImport: Flow<List<ImportedFile>> = emptyFlow(),
     syncNotifier: SyncNotifier = SyncNotifier { },
     metronomeNotifier: MetronomeNotifier = MetronomeNotifier { },
@@ -96,7 +96,7 @@ fun CampfireAndroidApp(
     ) {
         CampfireApp(
             viewModel = viewModel,
-            urlOpener = { urlOpener(it, isDarkTheme) },
+            urlOpener = { url -> if (!urlOpener(url, isDarkTheme)) viewModel.onLinkNotOpened(url) },
             filesToImport = allFilesToImport,
             onAppReady = onAppReady,
         )
