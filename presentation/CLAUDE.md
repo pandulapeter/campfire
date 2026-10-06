@@ -471,7 +471,8 @@ The PDF pipeline has four steps, each its own:
   reads it back in bands of rows, checking for cancellation between them. `selectableText` takes each shaped character
   or cluster's selection rectangle from that same `TextLayoutResult`, preserving surrogate pairs and combining
   characters. Layout-only zero-width wrap opportunities are omitted and non-breaking padding copies as ordinary spaces. Diagrams are drawn by the screen's own `drawChordDiagram` (`components/ChordDiagram.kt`) in black, with the
-  root in a mid gray in place of the accent.
+  root in a mid gray in place of the accent, and their thinnest line one pixel of the page image (`minimumStroke`, `1 /
+  scale`) rather than one point, which would be three of them.
 - **Writer.** `PrintPdfWriter` turns each page into a 4-bit gray image (luminance rounded to sixteen levels, which print
   no differently from 256), compressed by `PrintDeflater`, a pure-Kotlin zlib encoder of one fixed-Huffman block, since
   no platform offers common code a compressor. The streams go straight into one growing buffer, and the file carries a

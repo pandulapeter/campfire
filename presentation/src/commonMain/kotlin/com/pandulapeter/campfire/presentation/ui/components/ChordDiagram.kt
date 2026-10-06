@@ -66,7 +66,11 @@ internal fun ChordDiagram(
  * Draws [geometry] into the [area] at the origin, which the screen's diagram fills and a PDF page's is a box of, in
  * whatever the drawing's units are: its numbers are sized from the frets and measured at the scope's own density
  * rather than at [textMeasurer]'s, so they are the same part of the diagram on a screen and on a page drawn in points
- * under a scale, whose measurer counts a point as a pixel.
+ * under a scale, whose measurer counts a point as a pixel. Its thinnest line is [minimumStroke], one pixel of the
+ * device it ends up on.
+ *
+ * @param minimumStroke The thinnest a line is drawn, in the drawing's units: 1 on a screen, and under a scale one pixel
+ *   of whatever the drawing ends up on.
  */
 internal fun DrawScope.drawChordDiagram(
     geometry: ChordDiagramGeometry,
@@ -77,9 +81,10 @@ internal fun DrawScope.drawChordDiagram(
     backgroundColor: Color,
     textMeasurer: TextMeasurer,
     showsFingers: Boolean = false,
+    minimumStroke: Float = 1f,
 ) = when (geometry) {
-    is ChordDiagramGeometry.Fretted -> drawFretted(geometry, area, lineColor, mutedColor, rootColor, backgroundColor, textMeasurer, showsFingers)
-    is ChordDiagramGeometry.Keyboard -> drawKeyboard(geometry, area, lineColor, rootColor, backgroundColor)
+    is ChordDiagramGeometry.Fretted -> drawFretted(geometry, area, lineColor, mutedColor, rootColor, backgroundColor, textMeasurer, showsFingers, minimumStroke)
+    is ChordDiagramGeometry.Keyboard -> drawKeyboard(geometry, area, lineColor, rootColor, backgroundColor, minimumStroke)
 }
 
 private fun DrawScope.drawFretted(
@@ -91,6 +96,7 @@ private fun DrawScope.drawFretted(
     backgroundColor: Color,
     textMeasurer: TextMeasurer,
     showsFingers: Boolean,
+    minimumStroke: Float,
 ) {
     // The left band is kept whether or not a base fret is named in it, so that every diagram of a row lines up.
     val left = size.width * SIDE_BAND
@@ -99,7 +105,7 @@ private fun DrawScope.drawFretted(
     val bottom = size.height - size.height * END_BAND
     val stringGap = (right - left) / (geometry.strings - 1).coerceAtLeast(1)
     val fretGap = (bottom - top) / geometry.fretCount
-    val thin = (min(stringGap, fretGap) * LINE_WIDTH).coerceAtLeast(1f)
+    val thin = (min(stringGap, fretGap) * LINE_WIDTH).coerceAtLeast(minimumStroke)
     val radius = min(stringGap * DOT_RADIUS, fretGap * DOT_ROW_RADIUS)
     fun x(string: Int) = left + string * stringGap
     fun y(row: Int) = top + (row + 0.5f) * fretGap
@@ -166,6 +172,7 @@ private fun DrawScope.drawKeyboard(
     lineColor: Color,
     rootColor: Color,
     backgroundColor: Color,
+    minimumStroke: Float,
 ) {
     val isDarkTheme = backgroundColor.luminance() < lineColor.luminance()
     val light = if (isDarkTheme) lineColor else backgroundColor
@@ -175,7 +182,7 @@ private fun DrawScope.drawKeyboard(
     fun colorOf(note: Int) = if (note in geometry.roots) rootColor else pressedColor
     val whiteKeys = geometry.octaves * WHITE_KEYS_PER_OCTAVE
     val keyWidth = size.width / whiteKeys
-    val thin = (keyWidth * KEY_LINE_WIDTH).coerceAtLeast(1f)
+    val thin = (keyWidth * KEY_LINE_WIDTH).coerceAtLeast(minimumStroke)
     val blackHeight = size.height * BLACK_KEY_HEIGHT
     drawRect(light, size = size)
     pressed.filter { it % 12 !in blackKeys }.forEach { note ->

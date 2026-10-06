@@ -103,6 +103,8 @@ internal class PrintRenderer(
                         rootColor = DIAGRAM_ROOT_COLOR,
                         backgroundColor = Color.White,
                         textMeasurer = measurer,
+                        // One pixel of the page image rather than one point, which would be three of them.
+                        minimumStroke = 1f / scale,
                     )
                 }
             }
