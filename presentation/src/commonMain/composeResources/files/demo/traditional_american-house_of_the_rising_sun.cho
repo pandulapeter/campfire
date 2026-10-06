@@ -2,7 +2,7 @@
 {artist: Traditional American}
 {meta: cover https://raw.githubusercontent.com/pandulapeter/campfire/refs/heads/master/app/android/appIcon.png}
 {key: Am}
-{tempo: 76}
+{tempo: 236}
 {time: 6/8}
 {tag: Demo}
 {tag: Fingerpicking}
@@ -22,7 +22,10 @@ E|-------------|-------------|-------------|-------------|-0-----------|
 {end_of_tab}
 
 {start_of_intro: Intro}
-[Am] [C] [D] [F] [Am] [E7] [Am] [E7]
+{start_of_grid}
+| Am | C  | D  | F  |
+| Am | E7 | Am | E7 |
+{end_of_grid}
 {end_of_intro}
 
 {start_of_verse: Verse 1}

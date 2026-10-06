@@ -7,26 +7,36 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
 -->
-# Latin and Nashville notations — implementation plan
+# Latin, Nashville and Roman numeral notations — implementation plan
 
 Written 2026-10-06 against `5550057cb`. German notation was built as the first of several: every file and the model
 are in `ChordNotation.STANDARD`, and a notation is converted at two boundaries only (the page, and the editor's field).
-This plan adds the two that were left room for. They are not the same kind of thing, and the plan treats them
+This plan adds the ones that were left room for. They are not the same kind of thing, and the plan treats them
 differently on purpose:
 
 - **Latin** (`Do Re Mi Fa Sol La Si`) is German's sibling: other names for the same seven notes. It is shown and typed.
-- **Nashville** (`1 4 5 6m`) is not a naming of notes at all: a number means nothing without the song's key. It is
+- **Nashville** (`1 4 5 6-`) is not a naming of notes at all: a number means nothing without the song's key. It is
   shown, and never typed or stored.
+- **Roman numerals** (`I IV V vi`) are Nashville written another way: the same degrees counted from the same tonic,
+  the quality carried by the case of the numeral rather than by a sign. Everything said of Nashville below holds for
+  them, and wherever this plan says "the numberings" it means the two of them. Which one a reader gets is theirs to
+  choose: Nashville is the session player's, Roman numerals the classroom's and the worship team's.
+
+Revised 2026-10-06 after the algorithm's output for a short minor song was read by a musician's eye: a minor song is
+numbered from its own tonic (`1-`, not `6m`), and a minor chord is written with a `-` (defaults 4 and 5). The aim
+throughout is the chart a working musician would write by hand, not the one an algorithm finds simplest.
 
 ## 1. What is being built
 
-1. **Settings → Songs offers four notations** in place of the German switch: Standard, German, Latin, Nashville numbers.
+1. **Settings → Songs offers five notations** in place of the German switch: Standard, German, Latin, Nashville
+   numbers, Roman numerals.
 2. **Latin is a full notation**: the page, the lists' keys, the stepper, the PDF, the editor's field and the Song
    defaults key field are all in it, and the file stays in the standard one.
 3. **Latin chords are read wherever they arrive from**, whatever the reader's notation is: an imported ChordPro file, a
    chord-over-lyrics text, a PDF or Word document, a file a sync run brought. `[Lam]` is never anything but A minor.
 4. **Nashville numbers the chords of a song from its key** on the page, in the editor's preview and in the PDF. Keys
    stay letters, a song with no key stays letters, and the editor's field is in letters.
+5. **Roman numerals do the same in their own spelling** (§3.3), wherever Nashville does.
 
 ### What is already there
 
@@ -43,19 +53,29 @@ differently on purpose:
 
 ### Defaults this plan assumes — veto any of them before the work starts
 
-1. **One choice of four**, not a note naming plus a "numbers" switch. Under Nashville every absolute name — the key in
-   the app bar, on the cards, on the stepper, in the Song defaults sheet — is in standard letters.
+1. **One choice of five**, not a note naming plus a "numbers" switch. Under either numbering every absolute name —
+   the key in the app bar, on the cards, on the stepper, in the Song defaults sheet — is in standard letters.
 2. **Under Nashville the editor's field is in letters**, and its preview in numbers. A field in numbers would make
    correcting a wrong `{key}` line move every chord of the song at Save (the numbers stay, so the letters change),
    which is the opposite of what the Song defaults sheet does with the same edit; and a key half typed would leave
    every number unresolvable. So `editorNotation` is `STANDARD` there and nothing ever converts text *out of* numbers.
 3. **A song that declares no readable `{key}` is shown in letters** under Nashville. The first chord is a guess the
    transposer may make for choosing flats; as the meaning of every number on the page it is not good enough.
-4. **A minor key is numbered from its relative major**: in A minor, `Am` is `6m` and `E7` is `37`. That is the
-   Nashville system's own convention and the one that leaves the diatonic chords without accidentals.
-5. **Numbers are plain text**: `57`, `6m7`, `1sus4`, `5/7`. The chromatic degrees are `b2 b3 #4 b6 b7`, whatever the
-   Accidentals preference says (it still spells the key). No superscripts in this version: that would reach into the
-   chord measuring of the viewer, the print layout and the PDF's text layer.
+4. **A minor key is numbered from its own tonic**: in A minor, `Am` is `1-`, `Dm` is `4-`, `E7` is `57`, `C` is `b3`,
+   `F` is `b6`, `G` is `b7` and `G#°` is `7°`. Numbering from the relative major (`Am` as `6-`) is also found in
+   session charts, but it hides what the chords do: the chord the song resolves to should read as home, and the
+   `b3 b6 b7` of a minor song are what its players already call those chords. The degree table is the same in both
+   modes (`1 b2 2 b3 3 4 #4 5 b6 6 b7 7`); only the tonic differs. A song whose `{key}` names the relative minor of
+   what it really plays in is numbered as its file says — the key line is the author's word, and the Song defaults
+   sheet is where it is corrected.
+5. **A minor chord is written with a `-`**, the number alone is major, and every other quality is kept as written:
+   `1`, `6-`, `2-7`, `7-7b5`, `4maj7`, `5sus4`, `7°`, `5/7`. The minor spellings `m`, `mi` and `min` (and a lowercase
+   minor, already expanded on reading) become `-`; `M`, `maj` and `Maj` are major sevenths, not minor, and stay. The
+   chromatic degrees are `b2 b3 #4 b6 b7`, whatever the Accidentals preference says (it still spells the key).
+   **Extensions are plain text in this version** (`57`, not `5` with a raised `7`): a hand-written chart raises them,
+   and `57` reads as fifty-seven to a newcomer, but raising them reaches into the chord measuring of the viewer, the
+   print layout and the PDF's text layer. It is the first follow-up (§9), and the one thing this plan knowingly leaves
+   less readable than a hand-written chart.
 6. **Number charts are not read.** A `[1]` or `[2]` in a file is as often an ending or a verse marker as a chord, and
    `b7` is already B minor seven in the lowercase-minor spelling, so no file is taken for a number chart on its own.
    See §9 for the explicit action that could follow.
@@ -64,6 +84,15 @@ differently on purpose:
    with `#` and `b`, the quality untouched (`Sim`, `Sib`, `Dom7`, `Solsus4`, `La/Do#`).
 8. **A lowercase minor that goes through a Latin editor comes back spelled out** (`a` → `Lam` → `Am`): there is no
    lowercase Latin spelling to keep it in.
+9. **Roman numerals spell the quality in the numeral**, as pop and worship charts do: capitals for major, small
+   letters for minor, `°` after a small numeral for diminished, `ø` for half-diminished, `+` after a capital for
+   augmented, and everything else kept as written after it. In C: `C F G Am` is `I IV V vi`, `G7` is `V7`, `Dm7` is
+   `ii7`, `Bdim` is `vii°`, `Bm7b5` is `viiø7`, `Caug` is `I+`, `Fmaj7` is `IVmaj7`, `Gsus4` is `Vsus4`; in A minor,
+   `Am F C G E7` is `i bVI bIII bVII V7` — the same flats as Nashville's, before the numeral, rather than the
+   classroom's unflatted `VI III VII` for a minor key, which would make one numeral mean two chords depending on the
+   key. **A bass note is an Arabic scale degree** (`G/B` is `V/7`, `C/E` is `I/3`), never a numeral: in Roman
+   analysis a numeral after a slash is an applied chord (`V/V`, the dominant of the dominant), and a reader who knows
+   that would read `V/VII` as one. No figured-bass inversions (`V6`): the ones a band reads are the slash ones.
 
 ## 2. `:chordpro` — Latin
 
@@ -149,13 +178,17 @@ chord-over-lyrics sheet; `La la la la` stays a lyric line; `LA LA LA` is the kno
 
 ### 3.1 `ChordProNashville` (new, internal)
 
-- `tonicOf(key: String): Int?` — the pitch class the numbers count from: the key's note, moved up three semitones
-  for a minor key (default 4). Reads what `keyOf` reads (`Am`, `F#m`, `A minor`, `a-moll`, `Dm (capo 2)`), on the
-  shared set of minor words; null where the key starts with no note.
+- `tonicOf(key: String): Int?` — the pitch class the numbers count from: the key's note, whether the key is major or
+  minor (default 4). Reads what `keyOf` reads (`Am`, `F#m`, `A minor`, `a-moll`, `Dm (capo 2)`); null where the key
+  starts with no note. The mode decides nothing about the numbers, since the chord on the tonic carries its own `-`.
 - `number(name: String, tonic: Int): String` — `isChordName` or unchanged, then `rewriteNotes`, each note becoming
-  `degrees[(pitch - tonic).mod(12)]` with whatever followed it kept: `1 b2 2 b3 3 4 #4 5 b6 6 b7 7`.
+  `degrees[(pitch - tonic).mod(12)]` with whatever followed it kept: `1 b2 2 b3 3 4 #4 5 b6 6 b7 7`. The root's
+  quality is then rewritten where it is a minor one (`m`, `mi`, `min` → `-`, default 5), found with the same
+  `ChordProChordNames.read` walk that `ChordProChords.parse` uses, so `maj7` and `mmaj7` (→ `-maj7`) are never
+  confused by a string match. A bass note is a degree alone (`5/7`); it has no quality to rewrite.
 - `isNumber(word: String): Boolean` for §2.4: an optional `b`/`#`, a digit 1–7, and a remainder that is a chord's
-  (checked by putting a `C` where the degree was).
+  (checked by putting a `C` where the degree was — `C-7` is a chord name already, `-` being one of the grammar's minor
+  qualities).
 
 ### 3.2 `ChordProNotation.toNotation(song, NASHVILLE)`
 
@@ -174,27 +207,46 @@ return ChordProTransposer.rewriteChords(song) { offset -> numbering(tonic + offs
 - `convertText` never writes numbers (default 2): `to = NASHVILLE` is treated as `STANDARD`, and says so.
 - `parse`, `summarize` and `ChordProSummaryCache` given `NASHVILLE` read as `STANDARD` (default 6).
 
+### 3.3 Roman numerals
+
+- `ChordNotation.ROMAN`, handled everywhere `NASHVILLE` is: `toNotation` numbers it the same way with another
+  `number`, and `convertText`, `parse`, `summarize` and the summary cache treat it as `STANDARD`.
+- `ChordProNashville.number` takes the style: the degree comes from one table (`I bII II bIII III IV #IV V bVI VI
+  bVII VII`), lowercased where the root's quality is minor or diminished, and the quality the walk found is then
+  rewritten by default 9 — `m`, `mi`, `min`, `-` dropped; `dim` and `°` written `°`; `m7b5`, `mi7b5`, `-7b5` and `ø`
+  written `ø7` / `ø`; `aug` and `+` written `+`; anything else (`maj7`, `M7`, `sus4`, `add9`, `7`) kept. A `dim7` is
+  `°7`. The bass is the Arabic degree of §3.1.
+- `isNumber` (renamed `isDegree`, since it now answers for both) also accepts a numeral: an optional `b`/`#`, one of
+  the seven numerals in one case, an optional `°`/`ø`/`+`, and a remainder checked as before. Its check is the one
+  that keeps `I` and `V` written as prose from being taken for a chord row in §2.4: only a row of words that are all
+  degrees, as today.
+
 ### Tests (`ChordProNashvilleTest`, `ChordProNotationTest`, `ChordProTransposerTest`)
 
-Every degree in C and in a flat and a sharp key; `G/B` → `5/7`, `C6/9` → `16/9`, `D/f#`; a minor key, spelled `Am`,
-`A minor` and `a-moll`; no key, an unreadable key; a modulation and a recall after it; a transposed song numbering
+Every degree in C and in a flat and a sharp key; `G/B` → `5/7`, `C6/9` → `16/9`, `D/f#`; the minor sign (`Am` → `6-`,
+`Am7` → `6-7`, `Amin7b5`, `Ammaj7` → `6-maj7`, `Cmaj7` → `1maj7`, `CM7` → `1M7`, `Bdim` → `7dim`); a minor key,
+spelled `Am`, `A minor` and `a-moll`, numbering `Am F C G E7` as `1- b6 b3 b7 57`; no key, an unreadable key; a modulation and a recall after it; a transposed song numbering
 the same; the key and `Transpose.key` left in letters; a grid; a tab's chord row; `N.C.` and `[Chorus 2x]` untouched.
+For Roman numerals, every example of default 9; every degree in both cases; `Cdim7` in C → `i°7`
+(diminished is small whatever the degree); `Am6` → `vi6`, `AmMaj7` → `viMaj7`; a minor key; `V/7`; and `isDegree`
+taking `bVII`, `viiø7` and `IV/3` but not `Iv`, `IIII` or a lyric line of `I I I`, which §2.4 would otherwise move with
+a tab's columns.
 
 ## 4. `:data:model`, `:data:source:local`, `:domain`
 
-- `UserPreferences.Notation` gains `LATIN("latin")` and `NASHVILLE("nashville")`, and
-  `val isTyped get() = this != NASHVILLE` (or the equivalent `forTyping: Notation`), so the rule of default 2 is
+- `UserPreferences.Notation` gains `LATIN("latin")`, `NASHVILLE("nashville")` and `ROMAN("roman")`, and
+  `val isTyped get() = this != NASHVILLE && this != ROMAN` (or the equivalent `forTyping: Notation`), so the rule of default 2 is
   stated once, next to the enum, rather than in the view model.
 - `UserPreferencesMappers` needs nothing; `UserPreferencesMappersTest` gets both ids and an unknown one. The legacy
   `isGermanNotationEnabled` stays what it is, read only for a document with no `notation` yet.
-- `NotationMappers.toChordNotation`: two branches. The three use cases are unchanged. `ChordSpelling`'s KDoc
-  ("applied after the accidentals") gets a line saying that Nashville ignores them for the numbers.
+- `NotationMappers.toChordNotation`: three branches. The three use cases are unchanged. `ChordSpelling`'s KDoc
+  ("applied after the accidentals") gets a line saying that Nashville ignores them for the numbers and the numerals.
 
 ## 5. `:presentation`
 
 ### 5.1 The view model
 
-- `editorNotation` is the reader's notation, or `STANDARD` where that is Nashville. `editorTextOf`, `fileTextOf`,
+- `editorNotation` is the reader's notation, or `STANDARD` where that is a numbering. `editorTextOf`, `fileTextOf`,
   `transposeText`, `editorKeyOf`, `fileKeyOf` all follow it and need no change.
 - `editorSummaryCache` maps through one function instead of its own `when` over the enum.
 - `renderSong` and `renderKey` are unchanged: the preview parses the field in `editorNotation` and renders it with the
@@ -204,23 +256,24 @@ the same; the key and `Transpose.key` left in letters; a grid; a tab's chord row
 ### 5.2 Settings → Songs
 
 The switch becomes a `SettingsSubsection` ("Chord notation", with the sentence about files always being saved in the
-standard one) holding four `RadioListItem`s, each with its example as the description — a list, as the language
-choice is, since four names do not fit a row of segments at 360dp:
+standard one) holding five `RadioListItem`s, each with its example as the description — a list, as the language
+choice is, since five names do not fit a row of segments at 360dp:
 
 | Option | Description |
 | --- | --- |
 | Standard | `C D E F G A B` |
 | German | `H` for B, and `B` for B flat |
 | Latin | `Do Re Mi Fa Sol La Si` |
-| Nashville numbers | `1 4 5 6m`, counted from the song's key. A song with no key keeps its letters, and the editor is always in letters. |
+| Nashville numbers | `1 4 5 6-`, counted from the song's key, a minor song from its own tonic. A song with no key keeps its letters, and the editor is always in letters. |
+| Roman numerals | `I IV V vi`, counted from the song's key: capitals for major chords, small letters for minor. A song with no key keeps its letters, and the editor is always in letters. |
 
-Disabled with the Chords feature off, as today. The Accidentals subsection stays enabled under Nashville, since it
+Disabled with the Chords feature off, as today. The Accidentals subsection stays enabled under either numbering, since it
 still spells the key. Strings in both languages; `settings_german_notation` and its description are removed.
 
 ### 5.3 Width
 
 Nothing on a screen measures a chord by its letter count, but a few places were sized by eye for the standard
-notation and now meet `Sol#m`, two characters wider than `G#m`: the stepper's key, the app bar's and the cards' key,
+notation and now meet `Sol#m`, two characters wider than `G#m`, and `bVIImaj7` or `viiø7` over a chord written `Bbmaj7`: the stepper's key, the app bar's and the cards' key,
 the read only line, the Song defaults key field (`C#m7b5` is its stated worst case). Check each at 360dp rather than
 changing any up front.
 
@@ -233,11 +286,15 @@ changing any up front.
 | `[Do]`, `[La]`, `[Si]` meant as a word | Read as a chord, as `[A]` is today. `[Solo]`, `[Refrain]`, `[Fade]`, `[La la la]` are not chords in either reading. |
 | `{define: Lam …}` | Renamed with the chords by a change of notation, the fingering untouched. Under Nashville there is nothing to do: the model carries no definitions and no text is ever written in numbers. |
 | Latin, Accidentals set to flats | `La#` is shown `Sib`: the accidentals are applied first, in the standard notation. |
-| Nashville, a chord outside the key | Its number with its own quality: `E` in C is `3`, `Bb` is `b7`. |
+| Nashville, a chord outside the key | Its number with its own quality: `E` in C is `3`, `Bb` is `b7`, `Fm` is `4-`. |
 | Nashville, `C7` in C | `17`. Plain text (default 5). |
+| Nashville, a minor song | Counted from its own tonic: `{key: Em}` makes `Em C G D` read `1- b6 b3 b7`. |
+| Nashville, a song that moves between a minor verse and its relative major chorus | Numbered from the declared key throughout, so the chorus reads `b3 b7 b6`; a `{transpose}` is what would renumber it, and nothing guesses. |
+| Nashville, `[Am]` written `[a]` or `[A-]` in the file | Read as A minor as today, numbered `-` like any other. |
 | Nashville, `{key}` given a second time further down | Read past, as today; only `{transpose}` moves the tonic. |
 | Nashville, Chords feature off | Nothing to number; the key leaves the page with the chords as today. |
 | Nashville, performance mode | The read only line names the key in letters, the chords are numbers. |
+| Roman numerals, `I` or `V` written as a word in a bracket or a comment | Only a chord's position is ever numbered, so a `[V]` the file meant as a verse marker was never a chord and stays as it is; numerals are only ever output. |
 | PDF export | Prints what the page shows. A Latin PDF comes back as chords on re-import; a Nashville one comes back as lines of numbers, which nothing reads (default 6). |
 | Export, sync, setlists, search | Untouched: files are in the standard notation and nothing else carries a chord. |
 | Editor draft restored after the notation changed | Already stored in the file's notation, so it means the same chords. |
@@ -245,7 +302,7 @@ changing any up front.
 
 ## 7. Order of work
 
-Each step builds and tests green on its own, one commit each. Steps 1–3 are Latin and shippable without 4.
+Each step builds and tests green on its own, one commit each. Steps 1–3 are Latin and shippable without 4–6, and Roman numerals (6) need only Nashville (4).
 
 1. §2.1–2.2: `latinExpanded`, `read`, and every reading path. No setting yet: after this step a Latin file imports
    and reads correctly for every existing user.
@@ -253,7 +310,8 @@ Each step builds and tests green on its own, one commit each. Steps 1–3 are La
 3. §4 and §5 for Latin: the enum, the mappers, the Settings list (three options).
 4. §3: `ChordProNashville`, `ChordRewrite.renameKey`, `toNotation`.
 5. §4 and §5 for Nashville: the fourth option, `editorNotation`.
-6. Docs: the root `CLAUDE.md` ("Every file is in the standard chord notation": Latin is self-identifying, Nashville
+6. §3.3, §4 and §5 for Roman numerals: the style in `number`, `isDegree`, the fifth option.
+7. Docs: the root `CLAUDE.md` ("Every file is in the standard chord notation": Latin is self-identifying, Nashville
    is shown only); `chordpro/CLAUDE.md` (`ChordNotation` / `ChordProNotation`, chord names, the tab wrapper, the
    converter); `domain/api` and `domain/implementation`; `presentation/CLAUDE.md` (the editor's notation, Settings);
    the What's new message at release time.
@@ -266,7 +324,8 @@ Each step builds and tests green on its own, one commit each. Steps 1–3 are La
   defaults key field typed in Latin.
 - Nashville: a song in a major and in a minor key, one with a `{transpose}` modulation and a recalled chorus, one
   with no key; stepping the transposition and the capo (numbers stay, key moves); the editor's split pane.
-- Switching between all four with a song open behind Settings, on a setlist's pager.
+- Roman numerals: the same songs as Nashville, read against default 9; a tab with a chord row.
+- Switching between all five with a song open behind Settings, on a setlist's pager.
 - PDF export in both, and the Latin one imported back.
 
 ## 9. Not in this plan
@@ -274,8 +333,15 @@ Each step builds and tests green on its own, one commit each. Steps 1–3 are La
 - **Typing or importing number charts.** The safe form is an explicit action rather than a guess: an editor overflow
   entry that resolves the numbers of the text against its `{key}` once, and the same question asked by an import that
   finds a file full of them.
-- Roman numerals (`I IV V vi`), which are Nashville with another table and a case rule.
-- Superscript qualities for numbers, and `-` for minor.
-- Nashville numbers with German or Latin key names.
+- **Raised extensions for numbers** (`5` with a small `7` above its right shoulder), the first follow-up, since it is
+  what still separates the output from a hand-written chart. A styled span in the viewer's chord drawing, measured by
+  `PrintLayout` like the rest of a chord and written into the PDF's text layer as the plain `57`. Unicode superscript
+  digits (`5⁷`) would be cheaper but only cover digits (`sus4`, `add9` and `maj7` would stay on the line, mixing two
+  styles in one name), and would need every bundled and system font checked for the glyphs.
+- A choice between the minor-tonic and the relative-major numbering of a minor song, if anybody asks for the latter.
+- Triangles and circles for other qualities (`Δ7` for `maj7`): kept as the file writes them.
+- Either numbering with German or Latin key names.
+- Figured-bass inversions (`V6`, `I64`) and applied-chord analysis (`V/V`): a chart says which chord is played, not
+  why.
 - Cyrillic or Greek solfège, `Ut`, and the classical German `Cis` / `Es`.
 - Examples in the Accidentals description that follow the notation.

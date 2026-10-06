@@ -253,7 +253,7 @@ Everything else is `commonMain`:
   named after the page's. `SongLyrics`, handed `ChordDiagrams`, puts `RenderSection.Chords` after the metadata
   section, whole and uncuttable like it and keyed as one section whatever it holds, so a shape chosen or the fold lays
   nothing out again: a pill folding it (`UserPreferences.isChordSectionFolded`, one fold for every song, in read only
-  mode too) followed outside performance mode by the Chord shapes button, an icon as tall as the pill, and a `FlowRow` of
+  mode too) followed outside performance mode by the Chord shapes button, a pencil as tall as the pill like the About the song groups' edit buttons, and a `FlowRow` of
   cells — the name in the chords' style and accent over its diagram, growing with the text size, wrapping rather than
   scrolling sideways, taking no press. Which shape a cell draws is `selectShape` (`ChordSelection.kt`, tested): the
   song's definition, then the player's stored shape for the chord's id (`UserPreferences.chordVoicings`, where it still
@@ -263,7 +263,7 @@ Everything else is `commonMain`:
   in it too, barres from the fingering or from the lowest fret, `×` and `○` above the nut; a keyboard of two octaves or
   as many as its keys reach, white keys the lighter of the two theme colours in either theme, every pressed key filled
   whole — the root in the second accent, the rest (a slash chord's bass included) in a paler shade of it. The **Chord shapes sheet** (`DialogType.ChordShapes`, closed with the song) reads the song as the page plays
-  it and lists its chords about twice the size with their fingers and notes, each with a `Stepper` through
+  it and lists its chords larger, with their fingers and notes, each with a `Stepper` through
   `ChordVoicings.all` (searched per cell off the main thread), written at once by `setChordVoicing`, highlighted while
   the shape is the player's own and reset by a tap on its value; a chord the song defines has "Defined in this song"
   (and by how many frets it was moved) in its place. The **editor**'s first toolbar row ends in Chord shape

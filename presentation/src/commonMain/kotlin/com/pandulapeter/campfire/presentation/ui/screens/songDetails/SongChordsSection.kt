@@ -43,7 +43,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordInstrument
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.chordpro.model.ChordVoicing
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.ic_chord_shapes
+import com.pandulapeter.campfire.presentation.resources.ic_edit
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_shapes
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_diagram
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_diagram_none
@@ -166,7 +166,7 @@ internal fun SongChordsSection(
                 ) {
                     Icon(
                         modifier = Modifier.size(SHAPES_ICON_SIZE * fontScale),
-                        painter = painterResource(Res.drawable.ic_chord_shapes),
+                        painter = painterResource(Res.drawable.ic_edit),
                         contentDescription = stringResource(Res.string.song_details_chord_shapes),
                         tint = MaterialTheme.colorScheme.primary,
                     )
@@ -254,8 +254,8 @@ private fun spokenShape(shape: ChordVoicing) = when (shape) {
 }
 
 private val CELL_GAP = 6.dp
-private val SHAPES_ICON_SIZE = 20.dp
-private val FRETTED_WIDTH = 40.dp
-private val FRETTED_HEIGHT = 50.dp
+private val SHAPES_ICON_SIZE = 18.dp
+private val FRETTED_WIDTH = 56.dp
+private val FRETTED_HEIGHT = 70.dp
 private val KEYBOARD_WIDTH = 76.dp
 private val KEYBOARD_HEIGHT = 40.dp

@@ -10,14 +10,15 @@
 # To do
 ## Short-term (in this version)
 ### Bugs / issues
+- Alternative tuning support for chord diagrams?
 
 ### Improvements
-- Implement support for chord diagrams (guitar, ukulele, keyboard): documentation/plans/chord-diagrams.md. Answer this question before starting: How would {define} work with ukulele / keyboard? What if we have definitions for guitar, but the user prefers another instrument?
 - Add support for Latin and Nashville notations: documentation/plans/latin-nashville-notation.md - don't forget to apply the changes to the chord diagrams feature too
 
 ## Mid-term (in the next versions)
 - Multi-select for songs: documentation/plans/multi-select.md
 - Duplicate song button
+- Search field for tags / languages
 - Find a way to allow entering tempo using the keyboard
 - Haptic effects, especially for the fast scroller
 - Tuner: documentation/plans/tuner.md (question - do we want to add it to the toolbar?)
