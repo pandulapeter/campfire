@@ -417,6 +417,7 @@
     <string name="song_editor_transpose_text_down">Szöveg transzponálása le</string>
     <string name="song_editor_prettify">ChordPro formázása</string>
     <string name="song_editor_revert">Minden módosítás visszavonása</string>
+    <string name="song_editor_chordpro_reference">ChordPro dokumentáció</string>
     <string name="song_editor_revert_confirmation">Szeretnél visszatérni a dal utoljára mentett változatához? Minden, amit azóta írtál, elveszik.</string>
     <string name="song_editor_unsaved_changes">Nem mentett módosítások</string>
     <string name="song_editor_unsaved_changes_confirmation">Szeretnéd menteni, amit írtál, mielőtt kilépsz a szerkesztőből?</string>

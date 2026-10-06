@@ -107,6 +107,7 @@ import com.pandulapeter.campfire.presentation.resources.ic_clear
 import com.pandulapeter.campfire.presentation.resources.ic_error
 import com.pandulapeter.campfire.presentation.resources.ic_redo
 import com.pandulapeter.campfire.presentation.resources.ic_refresh
+import com.pandulapeter.campfire.presentation.resources.ic_open_in_new
 import com.pandulapeter.campfire.presentation.resources.ic_prettify
 import com.pandulapeter.campfire.presentation.resources.ic_save
 import com.pandulapeter.campfire.presentation.resources.ic_undo
@@ -119,6 +120,7 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_prettify
 import com.pandulapeter.campfire.presentation.resources.song_editor_preview
 import com.pandulapeter.campfire.presentation.resources.song_editor_redo
 import com.pandulapeter.campfire.presentation.resources.song_editor_revert
+import com.pandulapeter.campfire.presentation.resources.song_editor_chordpro_reference
 import com.pandulapeter.campfire.presentation.resources.song_editor_split
 import com.pandulapeter.campfire.presentation.resources.song_editor_hide_shortcuts
 import com.pandulapeter.campfire.presentation.resources.song_editor_shortcuts
@@ -194,6 +196,7 @@ internal fun SongEditorScreen(
     destination: CampfireDestination.SongEditor,
     windowSize: WindowSize,
     contentPadding: PaddingValues,
+    urlOpener: (String) -> Unit,
     onBack: () -> Unit,
 ) {
     val songTexts by viewModel.songTexts.collectAsStateWithLifecycle()
@@ -244,6 +247,7 @@ internal fun SongEditorScreen(
                 hasSavedText = songTexts[destination.fileName] != null,
                 windowSize = windowSize,
                 contentPadding = contentPadding,
+                urlOpener = urlOpener,
                 onBack = onBack,
             )
         }
@@ -288,6 +292,7 @@ private fun LoadedSongEditor(
     hasSavedText: Boolean,
     windowSize: WindowSize,
     contentPadding: PaddingValues,
+    urlOpener: (String) -> Unit,
     onBack: () -> Unit,
 ) {
     // Keyed on the file name so that opening another song starts a new field with its own undo history, and saved
@@ -490,6 +495,7 @@ private fun LoadedSongEditor(
                     },
                     canRevert = hasUnsavedChanges && hasSavedText && !isSaving,
                     onRevert = { viewModel.showDialog(CampfireViewModel.DialogType.RevertChanges) },
+                    onOpenChordProReference = { urlOpener(CHORDPRO_REFERENCE_URL) },
                 )
             },
             bottomContent = {
@@ -903,7 +909,8 @@ private fun SongPreview(
  * The actions of the editor that are neither writing the file nor undoing a keystroke, behind the same overflow button
  * the song details screen uses: the metadata editors of [editingActions] — in every pane, so they are a tap away also
  * while the preview's card that has them as buttons is out of sight — with cover art next to Edit song details where
- * covers are on, then prettifying and the revert. They stay in the menu however much room the bar has ([ActionsMenuItem.isAlwaysInMenu]), since throwing away everything typed since the last save is not
+ * covers are on, then prettifying, the revert and the ChordPro reference, the one place that explains every directive
+ * the Shortcuts write (a `{define}` above all, which is not something to guess the shape of). They stay in the menu however much room the bar has ([ActionsMenuItem.isAlwaysInMenu]), since throwing away everything typed since the last save is not
  * something to end up in by mistapping the button next to Save.
  */
 @Composable
@@ -915,6 +922,7 @@ private fun EditorMenu(
     onPrettify: () -> Unit,
     canRevert: Boolean,
     onRevert: () -> Unit,
+    onOpenChordProReference: () -> Unit,
 ) = ActionsMenu(
     modifier = modifier,
     // The cover art is put next to Edit metadata, the other editor of the song's header, ahead of the chip groups.
@@ -933,8 +941,16 @@ private fun EditorMenu(
             isAlwaysInMenu = true,
             onClick = onRevert,
         ),
+        ActionsMenuItem(
+            title = stringResource(Res.string.song_editor_chordpro_reference),
+            icon = painterResource(Res.drawable.ic_open_in_new),
+            isAlwaysInMenu = true,
+            onClick = onOpenChordProReference,
+        ),
     ),
 )
+
+private const val CHORDPRO_REFERENCE_URL = "https://www.chordpro.org/chordpro/chordpro-directives/"
 
 /**
  * Keeps the view model's copy of the text in step with the field, without writing any of it. It is what tells the

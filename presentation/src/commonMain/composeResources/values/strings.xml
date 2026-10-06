@@ -417,6 +417,7 @@
     <string name="song_editor_transpose_text_down">Transpose text down</string>
     <string name="song_editor_prettify">Prettify ChordPro</string>
     <string name="song_editor_revert">Revert all changes</string>
+    <string name="song_editor_chordpro_reference">ChordPro reference</string>
     <string name="song_editor_revert_confirmation">Would you like to go back to the last saved version of this song? Everything you have written since will be lost.</string>
     <string name="song_editor_unsaved_changes">Unsaved changes</string>
     <string name="song_editor_unsaved_changes_confirmation">Would you like to save what you have written before leaving the editor?</string>
