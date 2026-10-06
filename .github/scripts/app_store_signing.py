@@ -47,6 +47,7 @@ Reads ASC_KEY_ID, ASC_ISSUER_ID and ASC_KEY_PATH (the .p8 file), and APPLE_SIGNI
 
 import base64
 import glob
+import http.client
 import json
 import os
 import subprocess
@@ -75,6 +76,10 @@ AWAITING_STATES = {
 # and left for screenshots, or one rejected and sent again as it is. Its build is submitted later, by hand, and is
 # refused if its certificate was revoked in between.
 UNSUBMITTED_STATES = {"PREPARE_FOR_SUBMISSION", "DEVELOPER_REJECTED", "REJECTED", "METADATA_REJECTED"}
+# How often a GET is asked before its failure is final, and how long any request may take: a connection that hangs
+# would otherwise hold the job until GitHub's six-hour limit.
+REQUEST_ATTEMPTS = 4
+REQUEST_TIMEOUT_SECONDS = 60
 
 
 def fail(message):
@@ -105,25 +110,54 @@ def token():
     return (message + b"." + encode(signature)).decode()
 
 
+def should_retry(method, error, attempt, attempts):
+    """Whether a failed request is asked again: only a GET, only a failure the service or the network may not repeat."""
+    if method != "GET" or attempt >= attempts:
+        return False
+    if isinstance(error, urllib.error.HTTPError):
+        return error.code == 429 or error.code >= 500
+    return isinstance(error, (OSError, http.client.HTTPException))
+
+
 def request(method, path, body=None, missing_ok=False, conflict_ok=False):
+    """
+    One call of the API. A GET is asked again where the service or the network failed it, since one bad answer among
+    the polls that follow an upload would otherwise fail a job that cannot simply be run again: App Store Connect
+    refuses the build number it has already seen.
+    """
     data = json.dumps(body).encode() if body is not None else None
-    headers = {"Authorization": f"Bearer {token()}", "Content-Type": "application/json"}
-    try:
-        with urllib.request.urlopen(urllib.request.Request(API + path, data=data, headers=headers, method=method)) as response:
-            content = response.read()
-            return json.loads(content) if content else None
-    except urllib.error.HTTPError as error:
-        details = error.read().decode()
+    for attempt in range(1, REQUEST_ATTEMPTS + 1):
+        # Asked for on every attempt, since a token lasts minutes and the attempts wait between them.
+        headers = {"Authorization": f"Bearer {token()}", "Content-Type": "application/json"}
         try:
-            details = "; ".join(item.get("detail") or item.get("title", "") for item in json.loads(details)["errors"])
-        except (ValueError, KeyError):
-            pass
-        if missing_ok and error.code == 404:
-            return None
-        if conflict_ok and error.code == 409:
-            print(f"{method} {path} answered 409: {details}", file=sys.stderr)
-            return None
-        fail(f"{method} {path} answered {error.code}: {details}")
+            call = urllib.request.Request(API + path, data=data, headers=headers, method=method)
+            with urllib.request.urlopen(call, timeout=REQUEST_TIMEOUT_SECONDS) as response:
+                content = response.read()
+                return json.loads(content) if content else None
+        except urllib.error.HTTPError as error:
+            if should_retry(method, error, attempt, REQUEST_ATTEMPTS):
+                print(f"{method} {path} failed ({error.code}), asking again in {10 * attempt} s.")
+                time.sleep(10 * attempt)
+                continue
+            details = error.read().decode()
+            try:
+                details = "; ".join(item.get("detail") or item.get("title", "") for item in json.loads(details)["errors"])
+            except (ValueError, KeyError):
+                pass
+            if missing_ok and error.code == 404:
+                return None
+            if conflict_ok and error.code == 409:
+                print(f"{method} {path} answered 409: {details}", file=sys.stderr)
+                return None
+            fail(f"{method} {path} answered {error.code}: {details}")
+        # urllib wraps only the errors of sending a request in URLError: a connection dropped while the answer is
+        # awaited or read arrives as it was raised.
+        except (OSError, http.client.HTTPException) as error:
+            if should_retry(method, error, attempt, REQUEST_ATTEMPTS):
+                print(f"{method} {path} failed ({error}), asking again in {10 * attempt} s.")
+                time.sleep(10 * attempt)
+                continue
+            fail(f"{method} {path} failed: {error}")
 
 
 def run(*command, input=None):
