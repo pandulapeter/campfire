@@ -78,6 +78,22 @@ internal class SongbookProBackupTest {
     }
 
     @Test
+    fun onlyATimeSignatureTheAppReadsIsWritten() {
+        val files = read(
+            """{"Id": 1, "name": "A", "timeSig": "4/0", "content": "a"}""",
+            """{"Id": 2, "name": "B", "timeSig": "17/8", "content": "b"}""",
+            """{"Id": 3, "name": "C", "timeSig": "0/0", "content": "c"}""",
+            """{"Id": 4, "name": "D", "timeSig": "C", "content": "d"}""",
+            """{"Id": 5, "name": "E", "timeSig": "6/8", "content": "e"}""",
+        )
+
+        assertEquals(
+            listOf(null, null, null, "{time: C}", "{time: 6/8}"),
+            files.map { file -> file.bytes.decodeToString().lines().singleOrNull { it.startsWith("{time") } },
+        )
+    }
+
+    @Test
     fun whatTheTextDeclaresItselfIsNotDeclaredAgain() {
         val files = read("""{"Id": 1, "name": "Title", "key": 3, "Capo": 0, "TempoInt": 0, "content": "{t: Own title}\n{key: Am}\n[Am]La"}""")
 

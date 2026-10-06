@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.data.source.local.implementation.backup
 
 import com.pandulapeter.campfire.chordpro.ChordProDuration
 import com.pandulapeter.campfire.chordpro.ChordProLinks
+import com.pandulapeter.campfire.chordpro.ChordProTime
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.data.model.domain.LibraryFiles
 import com.pandulapeter.campfire.data.model.domain.MetronomeSettings
@@ -121,7 +122,7 @@ internal object SongbookProBackup {
             directive("key", song.int("key")?.let(KEYS::getOrNull))
             directive("capo", song.capo?.takeIf { it > 0 }?.toString())
             directive("tempo", song.int("TempoInt")?.takeIf { it in MetronomeSettings.TEMPO_RANGE }?.toString())
-            directive("time", song.text("timeSig")?.takeIf { TIME_SIGNATURE.matches(it) })
+            directive("time", song.text("timeSig")?.takeIf { ChordProTime.parse(it) != null })
             directive("duration", song.int("Duration")?.takeIf { it > 0 }?.let { ChordProDuration.format(it.seconds) })
             directive("copyright", song.text("Copyright"))
             song.text("Url")?.let(::linkUrl)?.let { add("{meta: link $it}") }
@@ -206,8 +207,6 @@ internal object SongbookProBackup {
 
     /** The name of every directive the text declares, `{title: …}` and `{t:…}` alike. */
     private val DIRECTIVE = Regex("""\{\s*([A-Za-z_]+)\s*[:}\s]""")
-
-    private val TIME_SIGNATURE = Regex("""\d{1,2}/\d{1,2}""")
 
     private val LINE_BREAK = Regex("[\\r\\n\\u2028\\u2029]+")
 
