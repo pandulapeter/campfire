@@ -9,6 +9,13 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -65,8 +72,8 @@ import org.jetbrains.compose.resources.painterResource
  * chose, whether the section is folded, and what its header does.
  *
  * @param onFoldToggled Folds the section or unfolds it, one preference for every song; null where nothing folds.
- * @param onShapesClicked Opens the Chord shapes sheet of the song, null in read only mode, which takes the controls off
- * the page.
+ * @param onShapesClicked Opens the Chord shapes sheet of the song, null in read only mode (performance mode, or a song
+ * read from an archived setlist), which takes the controls off the page. Offered only while the section is unfolded.
  * @param showsDefinitionsOnly Whether the section holds the song's own definitions and nothing else, each on the
  * instrument it is written for, which is the editor's preview: it shows what is being written, and the app's own shapes
  * are not written. [notation] is what their names are read in.
@@ -154,22 +161,29 @@ internal fun SongChordsSection(
             style = headerStyle,
             chevronSize = FOLD_CHEVRON_SIZE * fontScale,
         )
-        // As tall as the pill and growing with it, like the controls of the song's first section, and there while the
-        // section is folded too: choosing a shape is what somebody who knows the chords well enough to fold them comes
-        // back for.
+        // As tall as the pill and growing with it, like the controls of the song's first section. It comes and goes with
+        // the diagrams, since choosing a shape is choosing between the diagrams it would be drawn next to.
         chordDiagrams?.onShapesClicked?.let { onShapesClicked ->
-            val height = songControlHeight(headerStyle)
-            CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides height) {
-                IconButton(
-                    modifier = Modifier.size(height),
-                    onClick = onShapesClicked,
-                ) {
-                    Icon(
-                        modifier = Modifier.size(SHAPES_ICON_SIZE * fontScale),
-                        painter = painterResource(Res.drawable.ic_edit),
-                        contentDescription = stringResource(Res.string.song_details_chord_shapes),
-                        tint = MaterialTheme.colorScheme.primary,
-                    )
+            AnimatedVisibility(
+                visible = !section.isFolded,
+                // Unclipped, since a clip cuts the round button off while the room for it opens and closes: the scale is
+                // what shows it arriving instead.
+                enter = fadeIn() + scaleIn() + expandHorizontally(clip = false),
+                exit = fadeOut() + scaleOut() + shrinkHorizontally(clip = false),
+            ) {
+                val height = songControlHeight(headerStyle)
+                CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides height) {
+                    IconButton(
+                        modifier = Modifier.size(height),
+                        onClick = onShapesClicked,
+                    ) {
+                        Icon(
+                            modifier = Modifier.size(SHAPES_ICON_SIZE * fontScale),
+                            painter = painterResource(Res.drawable.ic_edit),
+                            contentDescription = stringResource(Res.string.song_details_chord_shapes),
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
+                    }
                 }
             }
         }

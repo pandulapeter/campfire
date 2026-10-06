@@ -11,12 +11,13 @@ package com.pandulapeter.campfire.presentation.ui.print
 
 import com.pandulapeter.campfire.chordpro.model.*
 import com.pandulapeter.campfire.data.model.domain.PrintSettings
+import com.pandulapeter.campfire.presentation.ui.chords.ChordDiagramGeometry
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.DefaultSectionLabels
 import kotlinx.coroutines.test.runTest
 import kotlin.test.*
 
 internal class PrintLayoutTest {
-    private val labels = PrintLabels("Key", "Capo", "Tempo", "Time", "Missing", DefaultSectionLabels(verse = "Verse", chorus = "Chorus", bridge = "Bridge", tab = "Tab", grid = "Grid", intro = "Intro", preChorus = "Pre-chorus", solo = "Solo", outro = "Outro"))
+    private val labels = PrintLabels("Key", "Transposition", "Capo", "Tempo", "$TEMPO_VALUE BPM", "Time", "Missing", DefaultSectionLabels(verse = "Verse", chorus = "Chorus", bridge = "Bridge", tab = "Tab", grid = "Grid", intro = "Intro", preChorus = "Pre-chorus", solo = "Solo", outro = "Outro"))
     private fun measure(text: String, style: PrintStyle) = text.count { it != '\u200B' } * style.size * 0.6f
     private suspend fun layout(source: PrintSource, settings: PrintSettings = PrintSettings()) = layoutPrintDocument(source, settings, labels, ::measure)
     private fun song(lines: List<ChordProLine>, blocks: List<ChordProBlock>? = null) = PrintSong("song.cho", "A song", "Artist", song = ChordProSong(
@@ -80,7 +81,7 @@ internal class PrintLayoutTest {
         val texts = layout(source(entry)).pages.single().texts
         val keyChange = texts.single { it.text == "Key: E" }
         assertTrue(keyChange.y > texts.first { it.text == "Line 1" }.y && keyChange.y < texts.first { it.text == "End 1" }.y)
-        assertTrue(layout(source(entry), PrintSettings(showChords = false)).pages.single().texts.none { it.text == "Key: E" })
+        assertTrue(layout(source(entry), PrintSettings(showKey = false)).pages.single().texts.none { it.text == "Key: E" })
     }
 
     @Test fun aTimingChangeIsPrintedWhereItStandsAndKeptWithWhatFollows() = runTest {
@@ -91,10 +92,10 @@ internal class PrintLayoutTest {
             ChordProBlock.Timing(tempo = "60", time = "3/4"),
         ))
         val texts = layout(source(entry)).pages.single().texts
-        val timing = texts.single { it.text == "Tempo: 90   Time: 3/4" }
+        val timing = texts.single { it.text == "Tempo: 90 BPM   Time: 3/4" }
         assertTrue(timing.y > texts.first { it.text == "Line 1" }.y && timing.y < texts.first { it.text == "End 1" }.y)
         assertTrue(texts.none { it.text.startsWith("Tempo: 60") })
-        assertTrue(layout(source(entry), PrintSettings(showMetadata = false)).pages.single().texts.none { it.text.startsWith("Tempo") })
+        assertTrue(layout(source(entry), PrintSettings(showTempo = false)).pages.single().texts.none { it.text.startsWith("Tempo") })
     }
 
     @Test fun aTimingChangeIsNotLeftAtTheEndOfAColumn() = runTest {
@@ -102,7 +103,7 @@ internal class PrintLayoutTest {
             listOf(ChordProBlock.Timing(tempo = "${60 + index}", time = null), ChordProBlock.Section(SectionType.Verse, "Verse $index", lyrics(3, prefix = "V$index")))
         })))
         (1..80).forEach { index ->
-            assertEquals(document.placeOf("Tempo: ${60 + index}"), document.placeOf("Verse $index"))
+            assertEquals(document.placeOf("Tempo: ${60 + index} BPM"), document.placeOf("Verse $index"))
         }
     }
 
@@ -114,7 +115,7 @@ internal class PrintLayoutTest {
                 ChordProLine.Tab("e|--0--2--|"), ChordProLine.Grid(listOf(GridToken.Chord("D"))),
             )),
         ))
-        val text = layout(source(entry), PrintSettings(showChords = false, showComments = false, showMetadata = false)).pages.flatMap { it.texts }.map { it.text }
+        val text = layout(source(entry), PrintSettings(showChords = false, showKey = false, showComments = false, showMetadata = false)).pages.flatMap { it.texts }.map { it.text }
         assertTrue("Sung words" in text)
         assertFalse(text.any { it.contains("comment") || it.contains("Capo") || it.contains("Artist") || it == "D" || it.contains("e|") })
     }
@@ -508,5 +509,56 @@ internal class PrintLayoutTest {
         // One bar from the label to the last line, with no gap where the comment cuts the chorus.
         val bars = page.rules.sortedBy { it.y }
         bars.zipWithNext().forEach { (upper, lower) -> assertEquals(upper.y + upper.height, lower.y, 0.01f) }
+    }
+
+    private fun guitarChord(name: String) = PrintChord(name, geometry = ChordDiagramGeometry.Fretted(6, 1, 4, List(6) { null }, emptyList(), emptyList()))
+
+    @Test fun chordDiagramsArePrintedUnderTheHeadingOnlyWhenAskedForAndWithTheChords() = runTest {
+        val entry = song(lyrics(2)).copy(chords = listOf(guitarChord("D"), guitarChord("G")))
+        assertTrue(layout(source(entry), PrintSettings(showChordDiagrams = false)).pages.single().diagrams.isEmpty())
+        assertTrue(layout(source(entry), PrintSettings(showChordDiagrams = true, showChords = false)).pages.single().diagrams.isEmpty())
+        val page = layout(source(entry), PrintSettings(showChordDiagrams = true)).pages.single()
+        assertEquals(2, page.diagrams.size)
+        val names = page.texts.filter { it.text == "D" || it.text == "G" }
+        assertEquals(2, names.size)
+        assertTrue(names.none { it.isSelectable })
+        assertTrue(page.texts.single { it.text == "A song" }.y < names.first().y)
+        assertTrue(page.diagrams.all { diagram -> diagram.y + diagram.height <= page.texts.first { it.text == "Line 1" }.y })
+    }
+
+    @Test fun chordDiagramsWrapIntoRowsInsideTheColumn() = runTest {
+        val settings = PrintSettings(showChordDiagrams = true, columns = 4)
+        val document = layout(source(song(lyrics(1)).copy(chords = (1..12).map { guitarChord("C$it") })), settings)
+        val diagrams = document.pages.single().diagrams
+        val margin = settings.marginMm * 72f / 25.4f
+        val columnWidth = (document.width - 2 * margin - 18 * 3) / 4
+        assertEquals(12, diagrams.size)
+        assertTrue(diagrams.map { it.y }.distinct().size > 1)
+        diagrams.forEach { assertTrue(it.x >= margin && it.x + it.width <= margin + columnWidth + 0.01f, it.toString()) }
+    }
+
+    @Test fun aMissingSongPrintsNoDiagrams() = runTest {
+        val entry = PrintSong("gone.cho", "Gone", null, song = null, chords = listOf(guitarChord("D")))
+        assertTrue(layout(source(entry), PrintSettings(showChordDiagrams = true)).pages.single().diagrams.isEmpty())
+    }
+
+    @Test fun howASongIsPlayedIsARowOfItsOwnUnderTheHeadingWithItsTransposition() = runTest {
+        val entry = PrintSong("song.cho", "A song", "Artist", transposition = -3, song = ChordProSong(
+            ChordProMetadata(key = "B", capo = 2, tempo = "96", time = "3/4"), listOf(ChordProBlock.Section(SectionType.Verse, "Verse", lyrics(1)))))
+        val texts = layout(source(entry)).pages.single().texts
+        assertEquals("Key: B   Transposition: -3   Capo: 2   Tempo: 96 BPM   Time: 3/4", texts.single { it.text.startsWith("Key:") }.text)
+        assertTrue(texts.any { it.text == "Artist" })
+        val withoutDetails = layout(source(entry), PrintSettings(showMetadata = false)).pages.single().texts
+        assertTrue(withoutDetails.none { it.text == "Artist" } && withoutDetails.any { it.text.startsWith("Key: B") })
+        assertEquals("Tempo: 96 BPM   Time: 3/4", layout(source(entry), PrintSettings(showKey = false)).pages.single().texts.single { it.text.startsWith("Tempo") }.text)
+        assertEquals("Key: B   Transposition: -3   Capo: 2", layout(source(entry), PrintSettings(showTempo = false)).pages.single().texts.single { it.text.startsWith("Key") }.text)
+        assertTrue(layout(source(entry.copy(transposition = 0, song = entry.song!!.copy(metadata = ChordProMetadata(capo = 0))))).pages.single().texts.none { it.style == PrintStyle(11, gray = 90) })
+    }
+
+    @Test fun theFeatureSwitchesLeaveOutWhatTheyTakeAwayWhateverTheOptionsSay() {
+        val chosen = PrintSettings(showChords = true, showChordDiagrams = true, showKey = true, showTempo = true)
+        assertEquals(chosen.copy(showChords = false, showChordDiagrams = false, showKey = false), chosen.withinFeatures(areChordsEnabled = false, isMetronomeEnabled = true))
+        assertEquals(chosen.copy(showTempo = false), chosen.withinFeatures(areChordsEnabled = true, isMetronomeEnabled = false))
+        assertEquals(chosen, chosen.withinFeatures(areChordsEnabled = true, isMetronomeEnabled = true))
     }
 }

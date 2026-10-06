@@ -253,7 +253,9 @@ Everything else is `commonMain`:
   named after the page's. `SongLyrics`, handed `ChordDiagrams`, puts `RenderSection.Chords` after the metadata
   section, whole and uncuttable like it and keyed as one section whatever it holds, so a shape chosen or the fold lays
   nothing out again: a pill folding it (`UserPreferences.isChordSectionFolded`, one fold for every song, in read only
-  mode too) followed outside performance mode by the Chord shapes button, a pencil as tall as the pill like the About the song groups' edit buttons, and a `FlowRow` of
+  mode too) followed by the Chord shapes button, a pencil as tall as the pill like the About the song groups' edit buttons,
+  fading, scaling and expanding in and out (unclipped) with the diagrams, since it is there only while the section is unfolded and never in read
+  only mode (performance mode, or a song read from an archived setlist), and a `FlowRow` of
   cells — the name in the chords' style and accent over its diagram, growing with the text size, wrapping rather than
   scrolling sideways, taking no press. Which shape a cell draws is `selectShape` (`ChordSelection.kt`, tested): the
   song's definition, then the player's stored shape for the chord's id (`UserPreferences.chordVoicings`, where it still
@@ -432,7 +434,10 @@ The PDF pipeline has four steps, each its own:
 - **Source.** `CampfireViewModel.preparePrintSource` reads a `PrintSource` once, when the screen opens: every song as the
   viewer reads it (rendered, in the transposition and chord spelling the song details screen shows), a missing or
   unreadable file as a `PrintSong` with no song, which keeps its slot. The screen leaves out the songs that are unticked
-  and adds the setlist's date, formatted with the date picker's formatter in the app's language (`calendarLocale`).
+  and adds the setlist's date, formatted with the date picker's formatter in the app's language (`calendarLocale`). Each song also carries its chords (`PrintSong.chords`, `printChordsOf`: `songChordsOf` and `selectShape`
+  turned into `ChordDiagramGeometry`, the song details screen's Chords section on the reader's instrument), collected
+  whether or not they are asked for, so that the Chord diagrams box lays out again rather than reading again, and none
+  at all while the chords or the diagrams are switched off in the app, which is also what hides the box.
 - **Layout.** `layoutPrintDocument` is pure: a `PrintDocument` of `PrintText`s and `PrintRule`s in PDF points, measured
   by a function it is handed, so the tests measure with arithmetic. A private `PrintLayouter` holds the cursor and
   `place`s rows, the unit it never splits; one function per kind of block or line builds them (`lyricsRows`, `tabRows`,
@@ -443,12 +448,21 @@ The PDF pipeline has four steps, each its own:
   annotations and comments italic, a boxed comment framed by rules. A chorus is indented behind a bar, drawn as a
   `PrintRule` on each of its rows so that it carries on across a column or page. Wrapping (`wrapPrintText`) breaks at a
   word where the next word fits and never inside a grapheme cluster. Only strings of up to eight characters are cached,
-  and the layout yields after each song and every 50 placed blocks: on the web it shares the page's one thread.
+  and the layout yields after each song and every 50 placed blocks: on the web it shares the page's one thread. With `PrintSettings.showChordDiagrams` and the chords, a song's diagrams follow its heading as rows of cells
+  sized by the text size (the chord's name over its diagram, a `PrintDiagram` in the page), kept with the heading the
+  way a first block is; their names are `PrintText`s that are not `isSelectable`, since read back by the importer they
+  would be a line of chords above the song. Under the heading a row of what the song names of how it is played (`playingDetails`): the key, the
+  `PrintSong.transposition` the viewer prints it in and a capo other than 0 with `showKey`, and the tempo (through
+  `PrintLabels.tempoValue`, "96 BPM") and the time signature with `showTempo`, which also prints a change of either
+  further down; `showMetadata` is the artist and a setlist's date and description alone. The values are set three
+  spaces apart, which is what lets the importer read them back one by one. The screen lays out
+  `PrintSettings.withinFeatures` rather than the options as chosen, and offers no option whose feature is off.
 - **Renderer.** `PrintRenderer` draws a page for the preview and for the file alike, and measures for the layout with the
   same fonts, so the file is the preview at 216 dpi. An export draws every page into one reused bitmap and
   reads it back in bands of rows, checking for cancellation between them. `selectableText` takes each shaped character
   or cluster's selection rectangle from that same `TextLayoutResult`, preserving surrogate pairs and combining
-  characters. Layout-only zero-width wrap opportunities are omitted and non-breaking padding copies as ordinary spaces.
+  characters. Layout-only zero-width wrap opportunities are omitted and non-breaking padding copies as ordinary spaces. Diagrams are drawn by the screen's own `drawChordDiagram` (`components/ChordDiagram.kt`) in black, with the
+  root in a mid gray in place of the accent.
 - **Writer.** `PrintPdfWriter` turns each page into a 4-bit gray image (luminance rounded to sixteen levels, which print
   no differently from 256), compressed by `PrintDeflater`, a pure-Kotlin zlib encoder of one fixed-Huffman block, since
   no platform offers common code a compressor. The streams go straight into one growing buffer, and the file carries a

@@ -26,7 +26,10 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   field's shape (`Capo 2`, `Key G`, `Time 4/4`), since "By the rivers…" and "Time after time" are lyrics; repeated
   titled page starts can split a songbook. The first `Tempo:` and `Time:` label are the header's; a later one, or a
   row of both (`Tempo: 90   Time: 3/4`, the line Campfire's PDF prints a change as, anywhere in the song but only with
-  a colon and a value of the field's shape), is a change written in place, before the section it heads. A text is passed through as ChordPro when any line is a directive ChordPro
+  a colon and a value of the field's shape), is a change written in place, before the section it heads. Near the top a
+  row of several such values set apart by gaps (`Key: B   Transposition: +2   Capo: 2   Tempo: 96 BPM   Time: 3/4`,
+  the row the PDF heads a song with, in English or Hungarian labels) is read as each of them, the tempo without its
+  `BPM`; the transposition is dropped, since the chords under it are already in the key it names. A text is passed through as ChordPro when any line is a directive ChordPro
   defines (`ChordProSyntax.isKnownDirective`) or holds a chord bracketed against a syllable (`[G]Hello`), and
   otherwise only when most of its lines hold bracketed chords. The caller
   supplies NFC normalization. `ChordProLiteralText` rewrites prose brackets, directive braces and a leading hash so

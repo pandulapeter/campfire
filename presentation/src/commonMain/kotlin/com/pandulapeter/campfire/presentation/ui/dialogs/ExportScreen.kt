@@ -188,7 +188,9 @@ import com.pandulapeter.campfire.presentation.resources.print_margin
 import com.pandulapeter.campfire.presentation.resources.print_margin_decrease
 import com.pandulapeter.campfire.presentation.resources.print_margin_increase
 import com.pandulapeter.campfire.presentation.resources.print_margins
+import com.pandulapeter.campfire.presentation.resources.print_key
 import com.pandulapeter.campfire.presentation.resources.print_metadata
+import com.pandulapeter.campfire.presentation.resources.print_metadata_setlist
 import com.pandulapeter.campfire.presentation.resources.print_missing
 import com.pandulapeter.campfire.presentation.resources.print_new_page
 import com.pandulapeter.campfire.presentation.resources.print_next
@@ -207,6 +209,7 @@ import com.pandulapeter.campfire.presentation.resources.print_setlist_empty
 import com.pandulapeter.campfire.presentation.resources.print_share
 import com.pandulapeter.campfire.presentation.resources.print_song_sheets
 import com.pandulapeter.campfire.presentation.resources.print_songs
+import com.pandulapeter.campfire.presentation.resources.print_tempo
 import com.pandulapeter.campfire.presentation.resources.print_time
 import com.pandulapeter.campfire.presentation.resources.print_zip_contents
 import com.pandulapeter.campfire.presentation.resources.print_zip_manifest
@@ -215,9 +218,12 @@ import com.pandulapeter.campfire.presentation.resources.print_zip_missing
 import com.pandulapeter.campfire.presentation.resources.print_zip_song_description
 import com.pandulapeter.campfire.presentation.resources.retry
 import com.pandulapeter.campfire.presentation.resources.setlists_export
+import com.pandulapeter.campfire.presentation.resources.settings_chord_diagrams
+import com.pandulapeter.campfire.presentation.resources.song_details_tempo
 import com.pandulapeter.campfire.presentation.resources.song_details_text_size
 import com.pandulapeter.campfire.presentation.resources.song_details_text_size_decrease
 import com.pandulapeter.campfire.presentation.resources.song_details_text_size_increase
+import com.pandulapeter.campfire.presentation.resources.song_details_transposition
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_capo
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_key
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_tempo
@@ -248,8 +254,10 @@ import com.pandulapeter.campfire.presentation.ui.print.PrintPage
 import com.pandulapeter.campfire.presentation.ui.print.PrintRenderer
 import com.pandulapeter.campfire.presentation.ui.print.PrintSong
 import com.pandulapeter.campfire.presentation.ui.print.PrintSource
+import com.pandulapeter.campfire.presentation.ui.print.TEMPO_VALUE
 import com.pandulapeter.campfire.presentation.ui.print.layoutPrintDocument
 import com.pandulapeter.campfire.presentation.ui.print.pdfFileName
+import com.pandulapeter.campfire.presentation.ui.print.withinFeatures
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.Stepper
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.rememberDefaultSectionLabels
 import com.pandulapeter.campfire.presentation.ui.slideFractionSpec
@@ -379,8 +387,10 @@ private fun ExportScreen(
     val renderer = remember(fontResolver, fontFamily, textFontFamily) { newRenderer() }
     val labels = PrintLabels(
         key = stringResource(Res.string.song_editor_insert_key),
+        transposition = stringResource(Res.string.song_details_transposition),
         capo = stringResource(Res.string.song_editor_insert_capo),
         tempo = stringResource(Res.string.song_editor_insert_tempo),
+        tempoValue = textResource(Res.string.song_details_tempo, TEMPO_VALUE),
         time = stringResource(Res.string.print_time),
         missing = stringResource(Res.string.print_missing),
         sections = rememberDefaultSectionLabels(shouldNumberSections = preferences?.shouldNumberSections == true),
@@ -412,10 +422,15 @@ private fun ExportScreen(
     // The last document stays on screen while the next one is laid out, so that a step of an option fades from one
     // page to the next instead of blanking the preview to a spinner each time.
     // Retry is keyed too: the source it reads again equals the one that failed to lay out, so without it nothing would.
-    val laidOut by produceState<LaidOutDocument?>(null, chosenSource, state.settings, labels, renderer, state.attempt) {
+    // What the Features tab switched off is left out of the file whatever the options say, the options themselves being
+    // kept for the switch to be turned back on.
+    val areChordsEnabled = preferences?.areChordsEnabled != false
+    val isMetronomeEnabled = preferences?.isMetronomeEnabled != false
+    val printedSettings = state.settings.withinFeatures(areChordsEnabled = areChordsEnabled, isMetronomeEnabled = isMetronomeEnabled)
+    val laidOut by produceState<LaidOutDocument?>(null, chosenSource, printedSettings, labels, renderer, state.attempt) {
         state.layoutFailed = false
         val input = chosenSource
-        val inputSettings = state.settings
+        val inputSettings = printedSettings
         if (input == null || input.songs.isEmpty()) {
             value = null
             return@produceState
@@ -431,7 +446,7 @@ private fun ExportScreen(
                 val measurements = newRenderer()
                 layoutPrintDocument(
                     source = input,
-                    settings = state.settings,
+                    settings = inputSettings,
                     labels = labels,
                     measureText = measurements::width,
                 )
@@ -452,7 +467,7 @@ private fun ExportScreen(
     // Only a document laid out from what the screen shows now may be saved: the producer restarts a frame after an option
     // changes, and a Save in that frame would otherwise export the old options. The source is compared by identity,
     // since it is remembered and an equality check would walk every song in it.
-    val isCurrent = laidOut.let { it != null && it.source === chosenSource && it.settings == state.settings && it.labels == labels }
+    val isCurrent = laidOut.let { it != null && it.source === chosenSource && it.settings == printedSettings && it.labels == labels }
     // The screen stays composed while it slides away, after its settings were flushed and its drawing cancelled, so
     // nothing tapped in that moment may change an option or start an export. Equality, since an equal export opened
     // again during the slide is this one.
@@ -646,6 +661,8 @@ private fun ExportScreen(
                                         modifier = modifier,
                                         source = state.source!!,
                                         settings = state.settings,
+                                        areChordsEnabled = areChordsEnabled,
+                                        isMetronomeEnabled = isMetronomeEnabled,
                                         selected = state.selected.orEmpty(),
                                         // Scroll under the controls, with enough trailing space to bring the last option above them.
                                         bottomPadding = bottomInset + if (isSideBySide) 8.dp else SAVE_BUTTON_CLEARANCE,
@@ -900,6 +917,8 @@ private fun PrintOptions(
     modifier: Modifier,
     source: PrintSource,
     settings: PrintSettings,
+    areChordsEnabled: Boolean,
+    isMetronomeEnabled: Boolean,
     selected: Set<Int>,
     bottomPadding: Dp,
     header: (@Composable () -> Unit)? = null,
@@ -977,18 +996,46 @@ private fun PrintOptions(
                     onSelected = { onSettings(settings.copy(columns = it)) },
                 )
                 Spacer(Modifier.height(8.dp))
-                CheckboxListItem(
-                    title = stringResource(Res.string.print_chords),
-                    isChecked = settings.showChords,
-                    onCheckedChange = { onSettings(settings.copy(showChords = it)) },
-                )
+                // Each of what is printed is offered only while its feature is on in Settings, so that somebody who switched
+                // off the chords or the metronome is not asked about them here either.
+                if (areChordsEnabled) {
+                    CheckboxListItem(
+                        title = stringResource(Res.string.print_chords),
+                        isChecked = settings.showChords,
+                        onCheckedChange = { onSettings(settings.copy(showChords = it)) },
+                    )
+                }
+                // Only where a song has a chord to draw, which none has with the diagrams switched off in the app; and like
+                // the chord spelling in Settings, disabled rather than hidden with the chords, which it fingers.
+                if (areChordsEnabled && source.songs.any { it.chords.isNotEmpty() }) {
+                    CheckboxListItem(
+                        title = stringResource(Res.string.settings_chord_diagrams),
+                        isChecked = settings.showChordDiagrams,
+                        isEnabled = settings.showChords,
+                        onCheckedChange = { onSettings(settings.copy(showChordDiagrams = it)) },
+                    )
+                }
+                if (areChordsEnabled) {
+                    CheckboxListItem(
+                        title = stringResource(Res.string.print_key),
+                        isChecked = settings.showKey,
+                        onCheckedChange = { onSettings(settings.copy(showKey = it)) },
+                    )
+                }
+                if (isMetronomeEnabled) {
+                    CheckboxListItem(
+                        title = stringResource(Res.string.print_tempo),
+                        isChecked = settings.showTempo,
+                        onCheckedChange = { onSettings(settings.copy(showTempo = it)) },
+                    )
+                }
                 CheckboxListItem(
                     title = stringResource(Res.string.print_comments),
                     isChecked = settings.showComments,
                     onCheckedChange = { onSettings(settings.copy(showComments = it)) },
                 )
                 CheckboxListItem(
-                    title = stringResource(Res.string.print_metadata),
+                    title = stringResource(if (source.isSetlist) Res.string.print_metadata_setlist else Res.string.print_metadata),
                     isChecked = settings.showMetadata,
                     onCheckedChange = { onSettings(settings.copy(showMetadata = it)) },
                 )

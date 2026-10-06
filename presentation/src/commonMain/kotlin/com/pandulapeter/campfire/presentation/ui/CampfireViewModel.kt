@@ -51,9 +51,11 @@ import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
 import com.pandulapeter.campfire.data.model.domain.SyncState
 import com.pandulapeter.campfire.data.model.domain.PrintSettings
+import com.pandulapeter.campfire.presentation.ui.chords.toChordInstrument
 import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.print.PrintSource
 import com.pandulapeter.campfire.presentation.ui.print.PrintSong
+import com.pandulapeter.campfire.presentation.ui.print.printChordsOf
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.domain.api.models.ScreenData
 import com.pandulapeter.campfire.domain.api.models.SongFilter
@@ -3342,6 +3344,11 @@ class CampfireViewModel(
         // Read the way the viewer reads it, so that the page is in the key the screen shows: wrapped, and for a song a
         // setlist names more than once, the one amount the viewer settles on rather than whichever entry comes first.
         val setlistFileName = setlist?.fileName ?: dialog.songSetlistFileName
+        val spelling = preferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
+        // Collected whether or not the export asks for the diagrams, so that ticking them lays the pages out again rather
+        // than reading the songs again; with the feature switched off the export does not offer them at all.
+        val chordInstrument = preferences?.takeIf { it.areChordsEnabled && it.areChordDiagramsEnabled }?.chordInstrument?.toChordInstrument()
+        val storedChordShapes = chordInstrument?.let { preferences?.chordVoicings?.get(it.id) }.orEmpty()
         val printSongs = entries.mapIndexed { index, entry ->
             val song = songs[entry.songFileName] ?: dialog.song
             val content = getSongContent(entry.songFileName)
@@ -3352,10 +3359,15 @@ class CampfireViewModel(
             val tempo = setlistFileName?.let { effectiveTempoOf(entry.songFileName, it).takeUnless { tempo -> tempo.isDefault }?.bpm }
             val capo = setlistFileName?.let { effectiveCapoOf(entry.songFileName, it).takeUnless { capo -> capo.isDefault }?.fret }
             val rendered = content?.let { withContext(Dispatchers.Default) {
-                renderSong(it.text, transposition, preferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default).withTempo(tempo).withCapo(capo)
+                renderSong(it.text, transposition, spelling).withTempo(tempo).withCapo(capo)
             } }
+            val chords = if (rendered != null && chordInstrument != null) {
+                withContext(Dispatchers.Default) { printChordsOf(rendered, spelling.notation.toChordNotation(), chordInstrument, storedChordShapes) }
+            } else {
+                emptyList()
+            }
             PrintSong(entry.songFileName, song?.title ?: entry.songFileName.substringBeforeLast('.'), song?.artist,
-                index = if (setlist == null) null else index + 1, song = rendered, text = content?.text)
+                index = if (setlist == null) null else index + 1, transposition = transposition, song = rendered, text = content?.text, chords = chords)
         }
         return PrintSource(title = setlist?.title ?: requireNotNull(dialog.song).title,
             description = setlist?.description.orEmpty(), isSetlist = setlist != null, songs = printSongs)

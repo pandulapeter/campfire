@@ -152,11 +152,18 @@ object ChordSheetConverter {
         if (match != null) {
             val name = when (match.groupValues[1].lowercase()) {
                 "hangnem" -> "key"
+                "temp\u00f3" -> "tempo"
+                "\u00fctemmutat\u00f3" -> "time"
                 "el\u0151ad\u00f3", "by", "words and music by" -> "artist"
                 else -> match.groupValues[1].lowercase()
             }
             val value = match.groupValues[2].trim()
-            return name to if (name == "capo") Regex("[0-9]+").find(value)?.value.orEmpty() else value
+            // A tempo is a number of beats, which Campfire's PDF prints with its unit: "96 BPM".
+            return name to when (name) {
+                "capo" -> Regex("[0-9]+").find(value)?.value.orEmpty()
+                "tempo" -> Regex("^[0-9]+").find(value)?.value ?: value
+                else -> value
+            }
         }
         bpm.matchEntire(text.trim())?.let { return "tempo" to it.groupValues[1] }
         if (text.trim().startsWith('\u00a9')) return "copyright" to text.trim().removePrefix("\u00a9").trim()
@@ -164,17 +171,25 @@ object ChordSheetConverter {
     }
 
     /**
-     * The tempo and the time signature a line names, where it names nothing else: `Tempo: 90`, or the row
-     * `Tempo: 90   Time: 3/4` Campfire's PDF prints a change as. Labelled with a colon and with a value of the field's
-     * shape, since anywhere in a song a line starting with "Time" is far more likely sung than credited.
+     * The values a line names, where it names nothing else, each set apart from the next by a gap: the row
+     * `Key: A   Transposition: +2   Capo: 2   Tempo: 96 BPM   Time: 3/4` Campfire's PDF heads a song with ([isHeader]),
+     * or `Tempo: 90   Time: 3/4`, which anywhere in a song is the change the PDF prints one as. Labelled with a colon
+     * and with a value of the field's shape, since anywhere in a song a line starting with "Time" is far more likely sung
+     * than credited. A transposition is among them for the caller to leave out rather than write: the chords it is
+     * printed over are already in the key it took them to.
      */
-    private fun timingChange(text: String): List<Pair<String, String>>? {
+    private fun labelledRow(text: String, isHeader: Boolean): List<Pair<String, String>>? {
         val parts = text.trim().split(labelGap)
-        return parts.mapNotNull { part -> metadata.matchEntire(part)?.let { metadata(part) } }.takeIf { entries ->
+        return parts.mapNotNull { part ->
+            transposition.matchEntire(part)?.let { TRANSPOSITION to it.groupValues[2] } ?: metadata.matchEntire(part)?.let { metadata(part) }
+        }.takeIf { entries ->
             entries.size == parts.size && entries.all { (name, value) ->
                 when (name) {
                     "tempo" -> value.first().isDigit()
                     "time" -> timeSignature.matches(value)
+                    "key" -> isHeader && ChordProChordNames.isChordName(ascii(value))
+                    "capo" -> isHeader && value.isNotEmpty()
+                    TRANSPOSITION -> isHeader
                     else -> false
                 }
             }
@@ -238,7 +253,8 @@ object ChordSheetConverter {
                 tab.matches(line.text.trim()) && (lines.getOrNull(index - 1)?.let { tab.matches(it.text.trim()) } == true ||
                     lines.getOrNull(index + 1)?.let { tab.matches(it.text.trim()) } == true) -> Kind.TAB
                 section(line.text) != null -> Kind.SECTION
-                index < 15 && metadata(line.text) != null || timingChange(line.text) != null -> Kind.METADATA
+                index < 15 && (metadata(line.text) != null || labelledRow(line.text, isHeader = true) != null) ||
+                    labelledRow(line.text, isHeader = false) != null -> Kind.METADATA
                 candidates[index] != null && (candidates[index]!!.count { chord(it.text) } > 1 ||
                     candidates[index]!!.count { chord(it.text) } == 1 &&
                     candidates[index]!!.filter { chord(it.text) }.all { it.text.first().isUpperCase() } &&
@@ -260,9 +276,9 @@ object ChordSheetConverter {
         val changes = mutableMapOf<Int, List<String>>()
         val declared = mutableSetOf<String>()
         kinds.forEachIndexed { index, kind -> if (kind == Kind.METADATA) {
-            (timingChange(lines[index].text) ?: listOf(metadata(lines[index].text)!!)).forEach { (name, value) ->
+            (labelledRow(lines[index].text, isHeader = index < 15) ?: listOf(metadata(lines[index].text)!!)).forEach { (name, value) ->
                 when {
-                    value.isBlank() -> Unit
+                    value.isBlank() || name == TRANSPOSITION -> Unit
                     name in timingNames && !declared.add(name) -> changes[index] = changes[index].orEmpty() + "{$name: ${headerValue(value)}}"
                     else -> header += "{$name: ${headerValue(value)}}"
                 }
@@ -482,7 +498,8 @@ object ChordSheetConverter {
     private val parentheses = Regex("\\(([^()]+)\\)")
     private val repeat = Regex("\\(?([0-9]+x|x[0-9]+)\\)?", RegexOption.IGNORE_CASE)
     private val section = Regex("^(Verse|Chorus|Refrain|Bridge|Pre-Chorus|Intro|Outro|Solo|Interlude|Instrumental|Versszak|Refr\u00e9n|Ref\\.|R\\.)(?:\\s*[0-9]+)?$", RegexOption.IGNORE_CASE)
-    private val metadata = Regex("^(Capo|Key|Hangnem|Tempo|Time|Artist|El\u0151ad\u00f3|words and music by|by)\\s*:\\s*(.+)$", RegexOption.IGNORE_CASE)
+    private val metadata = Regex("^(Capo|Key|Hangnem|Tempo|Temp\u00f3|Time|\u00dctemmutat\u00f3|Artist|El\u0151ad\u00f3|words and music by|by)\\s*:\\s*(.+)$", RegexOption.IGNORE_CASE)
+    private val transposition = Regex("^(Transposition|Transzpon\u00e1l\u00e1s)\\s*:\\s*([+-]?[0-9]+)$", RegexOption.IGNORE_CASE)
     private val unlabelledMetadata = Regex("^(Capo|Key|Hangnem|Tempo|Time|words and music by)\\s+(.+)$", RegexOption.IGNORE_CASE)
     private val timeSignature = Regex("[0-9]+/[0-9]+")
     private val timingNames = setOf("tempo", "time")
@@ -490,4 +507,7 @@ object ChordSheetConverter {
     private val credit = Regex("^(?:words and music )?by\\s+(.+)$", RegexOption.IGNORE_CASE)
     private val bpm = Regex("^([0-9]+)\\s+BPM$", RegexOption.IGNORE_CASE)
     private val tab = Regex("^[eEaAbBdDgG](?:[#b])?\\s*\\|[-0-9|hpbrx/\\\\~(). :]+$")
+
+    /** What [labelledRow] names a transposition, which no directive is written for. */
+    private const val TRANSPOSITION = "transposition"
 }

@@ -16,7 +16,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordVoicing
 
 /**
  * What a chord diagram draws, in the diagram's own units rather than in pixels: strings, frets and keys counted from
- * the top left. It is pure so that it can be tested, and so that a PDF could draw from it as well as the screen.
+ * the top left. It is pure so that it can be tested, and so that the PDF export draws from it as well as the screen.
  */
 @Immutable
 internal sealed interface ChordDiagramGeometry {

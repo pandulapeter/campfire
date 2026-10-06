@@ -9,7 +9,9 @@
  */
 package com.pandulapeter.campfire.presentation.ui.print
 
+import com.pandulapeter.campfire.chordpro.ChordNotation
 import com.pandulapeter.campfire.chordpro.ChordProTabWrapper
+import com.pandulapeter.campfire.chordpro.model.ChordInstrument
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
@@ -18,6 +20,11 @@ import com.pandulapeter.campfire.chordpro.model.CommentStyle
 import com.pandulapeter.campfire.chordpro.model.GridToken
 import com.pandulapeter.campfire.chordpro.model.SectionType
 import com.pandulapeter.campfire.data.model.domain.PrintSettings
+import com.pandulapeter.campfire.presentation.ui.chords.ChordDiagramGeometry
+import com.pandulapeter.campfire.presentation.ui.chords.chordDiagramGeometryOf
+import com.pandulapeter.campfire.presentation.ui.chords.emptyChordDiagramGeometryOf
+import com.pandulapeter.campfire.presentation.ui.chords.selectShape
+import com.pandulapeter.campfire.presentation.ui.chords.songChordsOf
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.DefaultSectionLabels
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.header
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.withNumber
@@ -41,17 +48,52 @@ internal data class PrintSource(
     val songs: List<PrintSong>,
 )
 
-/** One song of a [PrintSource], [index] being its one-based slot in a setlist, kept when songs are left out. */
+/**
+ * One song of a [PrintSource], [index] being its one-based slot in a setlist, kept when songs are left out, and
+ * [transposition] the semitones the viewer moves it by, which [song] is already rendered in.
+ */
 internal data class PrintSong(
     val fileName: String,
     val title: String,
     val artist: String?,
     val index: Int? = null,
+    val transposition: Int = 0,
     /** Null for an unreadable or missing file; its place remains visible in the running order. */
     val song: ChordProSong?,
     /** The file as it is stored, which the export screen shows for a song exported as ChordPro, and null when it could not be read. */
     val text: String? = null,
+    /**
+     * Every chord the song plays, in the order it is first played, with the shape its Chords section draws it with on
+     * the reader's instrument; empty where the chord diagrams are switched off in the app, whatever the export asks for.
+     */
+    val chords: List<PrintChord> = emptyList(),
 )
+
+/** One chord diagram of a [PrintSong]: the chord as the page names it, the one it sounds as where that differs, and its shape. */
+internal data class PrintChord(
+    val name: String,
+    val soundingName: String? = null,
+    val geometry: ChordDiagramGeometry,
+)
+
+/**
+ * The chords of [song], rendered as it is printed, drawn the way the song details screen's Chords section draws them
+ * on [instrument]: the song's own definition, the player's shape from [storedShapes], or the app's own, and an empty
+ * frame for a chord with none, so that the page and the screen finger every chord alike.
+ */
+internal fun printChordsOf(
+    song: ChordProSong,
+    notation: ChordNotation,
+    instrument: ChordInstrument,
+    storedShapes: Map<String, String>,
+): List<PrintChord> = songChordsOf(song, notation, instrument, song.metadata.capo ?: 0).map { chord ->
+    PrintChord(
+        name = chord.name,
+        soundingName = chord.soundingName,
+        geometry = selectShape(chord, instrument, storedShapes).shape?.let { chordDiagramGeometryOf(it, instrument, chord.chord.root) }
+            ?: emptyChordDiagramGeometryOf(instrument),
+    )
+}
 
 /**
  * How a text is set: [size] in PDF points, [monospace] for the tablature and grids whose characters have to line up
@@ -65,12 +107,18 @@ internal data class PrintStyle(
     val gray: Int = 0,
 )
 
-/** Coordinates and sizes are PDF points (1/72 inch), independent of screen density and accessibility text size. */
+/**
+ * Coordinates and sizes are PDF points (1/72 inch), independent of screen density and accessibility text size.
+ *
+ * @property isSelectable False for the names over the chord diagrams, which are left out of the file's selectable text:
+ *   read back by an import, a row of them would be a line of chords above the song's first line.
+ */
 internal data class PrintText(
     val text: String,
     val x: Float,
     val y: Float,
     val style: PrintStyle,
+    val isSelectable: Boolean = true,
 )
 
 /** A filled rectangle, the way frames and bars are drawn; in PDF points like the texts, [gray] from 0 (black) to 255. */
@@ -82,10 +130,20 @@ internal data class PrintRule(
     val gray: Int = 0,
 )
 
-/** Everything on one page, in PDF points from its top left corner; the rules are drawn under the texts. */
+/** A chord diagram drawn into the [width] by [height] box at [x], [y], in PDF points like the texts. */
+internal data class PrintDiagram(
+    val geometry: ChordDiagramGeometry,
+    val x: Float,
+    val y: Float,
+    val width: Float,
+    val height: Float,
+)
+
+/** Everything on one page, in PDF points from its top left corner; the rules are drawn under the texts and the diagrams. */
 internal data class PrintPage(
     val texts: List<PrintText>,
     val rules: List<PrintRule> = emptyList(),
+    val diagrams: List<PrintDiagram> = emptyList(),
 )
 
 /** The pages of one export, all of one size, which is the paper's in PDF points turned for the orientation. */
@@ -101,8 +159,11 @@ internal data class PrintDocument(
  */
 internal data class PrintLabels(
     val key: String,
+    val transposition: String,
     val capo: String,
     val tempo: String,
+    /** A tempo's value as the app writes it, [TEMPO_VALUE] standing for the number: "96 BPM". */
+    val tempoValue: String,
     val time: String,
     val missing: String,
     /** The headings of the sections the file leaves unnamed, the viewer's own. */
@@ -117,6 +178,18 @@ internal data class PrintLabels(
  * It suspends between songs and every few dozen blocks: on the web the layout shares the page's one thread, and only
  * while it is suspended can the page paint and a newer choice of options cancel a stale layout.
  */
+/**
+ * [this] with what the app's own feature switches take away left out too: the chords, their diagrams and the key with
+ * the Chords switch, the tempo and the time signature with the Metronome one. The options themselves are kept as they
+ * were chosen, since a switch only hides, and switched back on the export prints them again.
+ */
+internal fun PrintSettings.withinFeatures(areChordsEnabled: Boolean, isMetronomeEnabled: Boolean) = copy(
+    showChords = showChords && areChordsEnabled,
+    showChordDiagrams = showChordDiagrams && areChordsEnabled,
+    showKey = showKey && areChordsEnabled,
+    showTempo = showTempo && isMetronomeEnabled,
+)
+
 internal suspend fun layoutPrintDocument(
     source: PrintSource,
     settings: PrintSettings,
@@ -222,8 +295,9 @@ private class PrintLayouter(
         rows.forEach { row ->
             if (y + row.height > bottom) nextColumn()
             val x = margin + column * (columnWidth + gutter)
-            row.parts.forEach { part -> pages.last().texts.add(PrintText(part.text, x + part.x, y + part.y, part.style)) }
+            row.parts.forEach { part -> pages.last().texts.add(PrintText(part.text, x + part.x, y + part.y, part.style, part.isSelectable)) }
             row.rules.forEach { rule -> pages.last().rules.add(rule.copy(x = x + rule.x, y = y + rule.y)) }
+            row.diagrams.forEach { diagram -> pages.last().diagrams.add(diagram.copy(x = x + diagram.x, y = y + diagram.y)) }
             y += row.height
         }
     }
@@ -237,7 +311,7 @@ private class PrintLayouter(
         }
         space(options.fontSize.toFloat())
         source.songs.forEach { entry ->
-            val detail = entry.song?.metadata?.key?.takeIf { options.showChords }?.let { " (${labels.key}: $it)" }.orEmpty()
+            val detail = entry.song?.metadata?.key?.takeIf { options.showKey }?.let { " (${labels.key}: $it)" }.orEmpty()
             val missing = if (entry.song == null) " [${labels.missing}]" else ""
             val title = wrapped("${entry.index}. ${entry.title}$detail$missing", chordStyle)
             val artist = if (options.showMetadata && !entry.artist.isNullOrBlank()) {
@@ -250,35 +324,39 @@ private class PrintLayouter(
         }
     }
 
-    /** One song sheet: its heading, then its blocks. */
+    /** One song sheet: its heading, how it is played, its chord diagrams, then its blocks. */
     private suspend fun song(entry: PrintSong) {
         val title = entry.index?.let { "$it. ${entry.title}" } ?: entry.title
         val heading = wrapped(title, titleStyle).toMutableList()
-        if (options.showMetadata) {
-            entry.artist?.takeIf { it.isNotBlank() }?.let { heading += wrapped(it) }
-            entry.song?.let { metadata(it).takeIf(String::isNotBlank)?.let { heading += wrapped(it, detailStyle) } }
-        }
-        // The heading travels with the first block that prints anything (a missing song's notice standing in for it):
-        // that block whole where heading and block fit a column together, otherwise its first two rows, after which the
-        // block flows on from under its heading. A break before that block is ignored, since the heading has just
-        // started the song where it is.
+        if (options.showMetadata) entry.artist?.takeIf { it.isNotBlank() }?.let { heading += wrapped(it) }
+        entry.song?.let { playingDetails(entry, it).takeIf(String::isNotBlank)?.let { heading += wrapped(it, detailStyle) } }
+        // The heading travels with the first block that prints anything (a missing song's notice standing in for it), or
+        // with the chord diagrams where the song has them: that block whole where heading and block fit a column
+        // together, otherwise its first two rows, after which the block flows on from under its heading. A break before
+        // the first block is ignored, since the heading has just started the song where it is.
         val blocks = entry.song?.blocks.orEmpty().withNumberedSections(labels.sections)
+        val diagramRows = entry.song?.let { chordDiagramRows(entry.chords) }.orEmpty()
         var firstIndex = -1
-        var firstRows = if (entry.song == null) wrapped(labels.missing) else emptyList()
+        var firstBlockRows = if (entry.song == null) wrapped(labels.missing) else emptyList()
         blocks.forEachIndexed { index, block ->
             if (firstIndex < 0 && block != ChordProBlock.Break) {
                 blockRowsAt(blocks, index).takeIf { it.isNotEmpty() }?.let {
                     firstIndex = index
-                    firstRows = it
+                    firstBlockRows = it
                 }
             }
         }
+        val firstRows = diagramRows.ifEmpty { firstBlockRows }
         val headingHeight = heading.height()
         val keepFirstWhole = headingHeight + headingGap + firstRows.height() <= capacity
         val together = headingHeight + headingGap + if (keepFirstWhole) firstRows.height() else firstRows.take(2).height()
         if (firstRows.isNotEmpty() && together <= capacity && y + together > bottom) nextColumn()
         place(heading)
         space(headingGap)
+        if (diagramRows.isNotEmpty()) {
+            place(diagramRows, keepWhole = keepFirstWhole)
+            space(options.fontSize * 0.65f)
+        }
         if (entry.song == null) {
             place(firstRows, keepWhole = keepFirstWhole)
         } else if (firstIndex >= 0) {
@@ -288,7 +366,7 @@ private class PrintLayouter(
                 when {
                     index < firstIndex -> Unit
                     index == firstIndex -> {
-                        place(firstRows, keepWhole = keepFirstWhole)
+                        if (diagramRows.isEmpty()) place(firstBlockRows, keepWhole = keepFirstWhole) else place(firstBlockRows)
                         spaceAfter(blocks, index)
                     }
                     block == ChordProBlock.Break -> if (y > margin) nextColumn()
@@ -309,12 +387,69 @@ private class PrintLayouter(
         space(options.fontSize.toFloat())
     }
 
-    private fun metadata(song: ChordProSong): String = listOfNotNull(
-        song.metadata.key?.takeIf { options.showChords }?.let { "${labels.key}: $it" },
-        song.metadata.capo?.takeIf { options.showChords }?.let { "${labels.capo}: $it" },
-        song.metadata.tempo?.let { "${labels.tempo}: $it" },
-        song.metadata.time?.let { "${labels.time}: $it" },
-    ).joinToString(METADATA_SEPARATOR)
+    /**
+     * The song's chord diagrams as the song details screen's Chords section has them, in rows of cells each holding the
+     * chord's name over its diagram, sized by the text so that they grow with it, a row being one unit [place] keeps
+     * together. Only with the chords, since the diagrams finger chords the page would otherwise not print.
+     */
+    private fun chordDiagramRows(chords: List<PrintChord>): List<Row> {
+        if (!options.showChords || !options.showChordDiagrams || chords.isEmpty()) return emptyList()
+        val gap = options.fontSize * DIAGRAM_GAP
+        val nameHeight = chordStyle.size * 1.45f
+        val cells = chords.map { chord ->
+            val isFretted = chord.geometry is ChordDiagramGeometry.Fretted
+            val diagramWidth = options.fontSize * if (isFretted) FRETTED_DIAGRAM_WIDTH else KEYBOARD_DIAGRAM_WIDTH
+            val diagramHeight = options.fontSize * if (isFretted) FRETTED_DIAGRAM_HEIGHT else KEYBOARD_DIAGRAM_HEIGHT
+            val nameWidth = measure(chord.name, chordStyle)
+            val soundingWidth = chord.soundingName?.let { measure(" $it", detailStyle) } ?: 0f
+            DiagramCell(chord, diagramWidth, diagramHeight, maxOf(diagramWidth, nameWidth + soundingWidth).coerceAtMost(columnWidth), nameWidth)
+        }
+        val rows = mutableListOf<List<DiagramCell>>()
+        var rowWidth = 0f
+        cells.forEach { cell ->
+            if (rows.isEmpty() || rowWidth + gap + cell.width > columnWidth) {
+                rows += listOf(cell)
+                rowWidth = cell.width
+            } else {
+                rows[rows.lastIndex] = rows.last() + cell
+                rowWidth += gap + cell.width
+            }
+        }
+        return rows.mapIndexed { index, row ->
+            var x = 0f
+            val parts = mutableListOf<Part>()
+            val diagrams = mutableListOf<PrintDiagram>()
+            row.forEach { cell ->
+                parts += Part(cell.chord.name, x = x, style = chordStyle, isSelectable = false)
+                cell.chord.soundingName?.let { parts += Part(" $it", x = x + cell.nameWidth, style = detailStyle, isSelectable = false) }
+                diagrams += PrintDiagram(cell.chord.geometry, x = x + (cell.width - cell.diagramWidth) / 2, y = nameHeight, width = cell.diagramWidth, height = cell.diagramHeight)
+                x += cell.width + gap
+            }
+            val height = nameHeight + row.maxOf { it.diagramHeight } + if (index < rows.lastIndex) gap else 0f
+            Row(parts, height, diagrams = diagrams)
+        }
+    }
+
+    /**
+     * How [song] is played, in the key it is printed in: the key, the transposition that took it there and the capo
+     * where there is one, then the tempo and the time signature — each only where the song names it, since a value the
+     * file never gave would come back from an import as the song's own. The transposition is named rather than undone,
+     * so that a band reading from the page knows the chords are not the ones the song was written in.
+     */
+    private fun playingDetails(entry: PrintSong, song: ChordProSong): String = listOfNotNull(
+        song.metadata.key?.takeIf { options.showKey && it.isNotBlank() }?.let { "${labels.key}: $it" },
+        entry.transposition.takeIf { options.showKey && it != 0 }?.let { "${labels.transposition}: ${if (it > 0) "+$it" else it}" },
+        song.metadata.capo?.takeIf { options.showKey && it != 0 }?.let { "${labels.capo}: $it" },
+    ).plus(tempoDetails(song.metadata.tempo, song.metadata.time)).joinToString(METADATA_SEPARATOR)
+
+    private fun tempoDetails(tempo: String?, time: String?) = if (options.showTempo) {
+        listOfNotNull(
+            tempo?.takeIf { it.isNotBlank() }?.let { "${labels.tempo}: ${if (it.all(Char::isDigit)) labels.tempoValue.replace(TEMPO_VALUE, it) else it}" },
+            time?.takeIf { it.isNotBlank() }?.let { "${labels.time}: $it" },
+        )
+    } else {
+        emptyList()
+    }
 
     /** Between two blocks of one chorus the gap carries the chorus's bar, so that a comment does not cut it in two. */
     private fun blockRowsAt(blocks: List<ChordProBlock>, index: Int): List<Row> {
@@ -520,21 +655,15 @@ private class PrintLayouter(
 
     /** The key a `{transpose}` further down takes the song to, for a song that declares one, as the heading names its first. */
     private fun keyChangeRows(keyChange: ChordProBlock.Transpose, width: Float): List<Row> =
-        keyChange.key?.takeIf { options.showChords && it.isNotBlank() }?.let { wrapped("${labels.key}: $it", detailStyle, width) }.orEmpty()
+        keyChange.key?.takeIf { options.showKey && it.isNotBlank() }?.let { wrapped("${labels.key}: $it", detailStyle, width) }.orEmpty()
 
     /**
      * How the song is played from a `{tempo}` or a `{time}` further down on, in the words and the type the heading names
      * the opening values in, so that an import of the PDF reads it back as the change it is. Only what the song names is
      * printed, since a time signature the file never gave would come back as the song's own.
      */
-    private fun timingRows(timing: ChordProBlock.Timing, width: Float): List<Row> = if (options.showMetadata) {
-        listOfNotNull(
-            timing.tempo?.let { "${labels.tempo}: $it" },
-            timing.time?.let { "${labels.time}: $it" },
-        ).joinToString(METADATA_SEPARATOR).takeIf { it.isNotEmpty() }?.let { wrapped(it, detailStyle, width) }.orEmpty()
-    } else {
-        emptyList()
-    }
+    private fun timingRows(timing: ChordProBlock.Timing, width: Float): List<Row> =
+        tempoDetails(timing.tempo, timing.time).joinToString(METADATA_SEPARATOR).takeIf { it.isNotEmpty() }?.let { wrapped(it, detailStyle, width) }.orEmpty()
 
     private fun commentRows(comment: ChordProBlock.Comment, width: Float, isInChorus: Boolean): List<Row> = when {
         !options.showComments || (comment.isInTabOrGrid && !options.showChords) -> emptyList()
@@ -630,7 +759,7 @@ private class PrintLayouter(
                 } else {
                     page.texts
                 }
-                PrintPage(texts, page.rules)
+                PrintPage(texts, page.rules, page.diagrams)
             },
         )
     }
@@ -642,29 +771,55 @@ private data class Part(
     val x: Float = 0f,
     val y: Float = 0f,
     val style: PrintStyle,
+    val isSelectable: Boolean = true,
 )
 
-/** The unit [PrintLayouter.place] never splits: a lyric line with its chords, a tab system, a label with its gap. */
+/** The unit [PrintLayouter.place] never splits: a lyric line with its chords, a tab system, a row of chord diagrams. */
 private data class Row(
     val parts: List<Part>,
     val height: Float,
     val rules: List<PrintRule> = emptyList(),
+    val diagrams: List<PrintDiagram> = emptyList(),
+)
+
+/** One chord of a row of diagrams, [width] wide: its diagram's, or its name's where that is wider. */
+private data class DiagramCell(
+    val chord: PrintChord,
+    val diagramWidth: Float,
+    val diagramHeight: Float,
+    val width: Float,
+    val nameWidth: Float,
 )
 
 /** A page while it is being filled. */
 private class PageContent {
     val texts = mutableListOf<PrintText>()
     val rules = mutableListOf<PrintRule>()
+    val diagrams = mutableListOf<PrintDiagram>()
 }
 
 private fun List<Row>.height() = sumOf { it.height.toDouble() }.toFloat()
 
-/** What stands between two values on the line that says how a song is played. */
+/**
+ * What stands between two values on the line that says how a song is played: wide enough a gap for the importer to read
+ * each as a value of its own.
+ */
 private const val METADATA_SEPARATOR = "   "
+
+/** What [PrintLabels.tempoValue] holds in place of the number. */
+internal const val TEMPO_VALUE = "\u0001"
 
 private const val CHORUS_INDENT = 8f
 private const val CHORUS_BAR_WIDTH = 1.5f
 private const val FRAME_WIDTH = 0.75f
+
+// The sizes of a diagram and the gap between two, in multiples of the text size: at 12 pt a guitar diagram is about the
+// one the song details screen draws at its own text size, and the cells keep that proportion as the text grows.
+private const val FRETTED_DIAGRAM_WIDTH = 3.5f
+private const val FRETTED_DIAGRAM_HEIGHT = 4.4f
+private const val KEYBOARD_DIAGRAM_WIDTH = 4.75f
+private const val KEYBOARD_DIAGRAM_HEIGHT = 2.5f
+private const val DIAGRAM_GAP = 0.75f
 
 private fun ChordProBlock?.isChorus() = this is ChordProBlock.Section && type == SectionType.Chorus
 

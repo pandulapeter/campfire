@@ -88,6 +88,18 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun theRowCampfiresPdfHeadsASongWithIsReadAsItsValues() {
+        val text = "Shapes\nSomeone\nKey: B   Transposition: +2   Capo: 2   Tempo: 96 BPM   Time: 3/4\nVerse 1\nB E\nHello world"
+        val result = convert(text)
+        assertTrue(result.contains("{key: B}\n{capo: 2}\n{tempo: 96}\n{time: 3/4}\n"), result)
+        assertFalse(result.contains("Transposition"), result)
+        assertTrue(convert("Hangnem: B   Transzpon\u00e1l\u00e1s: -3   Temp\u00f3: 96 BPM   \u00dctemmutat\u00f3: 3/4\nVerse 1\nB E\nHello world")
+            .startsWith("{key: B}\n{tempo: 96}\n{time: 3/4}\n"))
+        // Further down only a change of tempo or time is a row of values; a key there is not the song's.
+        assertFalse(convert("Verse 1\nAm C\nHello world\n" + "Am C\nla la\n".repeat(8) + "Key: A   Capo: 2\nAm C\nla la").contains("{key"))
+    }
+
+    @Test
     fun headingDecorationIsLeftOutOfSectionNames() {
         val result = convert("[Verse 1]\nC   G\nHello world\n\n[Intro]\nC G\n\n[Chorus]\nAm F\nLa la")
         assertTrue(result.contains("{start_of_verse: Verse 1}"))

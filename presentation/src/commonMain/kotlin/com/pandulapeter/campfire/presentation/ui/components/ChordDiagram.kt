@@ -58,17 +58,33 @@ internal fun ChordDiagram(
     Spacer(
         modifier = modifier
             .semantics { contentDescription = description }
-            .drawBehind {
-                when (geometry) {
-                    is ChordDiagramGeometry.Fretted -> drawFretted(geometry, lineColor, mutedColor, rootColor, backgroundColor, textMeasurer, showsFingers)
-                    is ChordDiagramGeometry.Keyboard -> drawKeyboard(geometry, lineColor, rootColor, backgroundColor)
-                }
-            },
+            .drawBehind { drawChordDiagram(geometry, size, lineColor, mutedColor, rootColor, backgroundColor, textMeasurer, showsFingers) },
     )
+}
+
+/**
+ * Draws [geometry] into the [area] at the origin, which the screen's diagram fills and a PDF page's is a box of, in
+ * whatever the drawing's units are: its numbers are sized from the frets and measured at the scope's own density
+ * rather than at [textMeasurer]'s, so they are the same part of the diagram on a screen and on a page drawn in points
+ * under a scale, whose measurer counts a point as a pixel.
+ */
+internal fun DrawScope.drawChordDiagram(
+    geometry: ChordDiagramGeometry,
+    area: Size,
+    lineColor: Color,
+    mutedColor: Color,
+    rootColor: Color,
+    backgroundColor: Color,
+    textMeasurer: TextMeasurer,
+    showsFingers: Boolean = false,
+) = when (geometry) {
+    is ChordDiagramGeometry.Fretted -> drawFretted(geometry, area, lineColor, mutedColor, rootColor, backgroundColor, textMeasurer, showsFingers)
+    is ChordDiagramGeometry.Keyboard -> drawKeyboard(geometry, area, lineColor, rootColor, backgroundColor)
 }
 
 private fun DrawScope.drawFretted(
     geometry: ChordDiagramGeometry.Fretted,
+    size: Size,
     lineColor: Color,
     mutedColor: Color,
     rootColor: Color,
@@ -93,7 +109,7 @@ private fun DrawScope.drawFretted(
     }
     (0 until geometry.strings).forEach { string -> drawLine(lineColor, Offset(x(string), top), Offset(x(string), bottom), strokeWidth = thin) }
     if (geometry.baseFret > 1) {
-        val label = textMeasurer.measure(geometry.baseFret.toString(), TextStyle(fontSize = (fretGap * BASE_FRET_TEXT / density / fontScale).sp, color = mutedColor))
+        val label = textMeasurer.measure(geometry.baseFret.toString(), TextStyle(fontSize = (fretGap * BASE_FRET_TEXT / density / fontScale).sp, color = mutedColor), density = this)
         // Right of it the first string's dot reaches out by its radius, a barre's end included.
         drawText(label, topLeft = Offset((left - radius - thin * 2 - label.size.width).coerceAtLeast(0f), y(0) - label.size.height / 2f))
     }
@@ -129,7 +145,7 @@ private fun DrawScope.drawFretted(
 }
 
 private fun DrawScope.drawFinger(textMeasurer: TextMeasurer, finger: Int, center: Offset, radius: Float, color: Color) {
-    val label = textMeasurer.measure(finger.toString(), TextStyle(fontSize = (radius * FINGER_TEXT / density / fontScale).sp, fontWeight = FontWeight.Bold, color = color))
+    val label = textMeasurer.measure(finger.toString(), TextStyle(fontSize = (radius * FINGER_TEXT / density / fontScale).sp, fontWeight = FontWeight.Bold, color = color), density = this)
     drawText(label, topLeft = Offset(center.x - label.size.width / 2f, center.y - label.size.height / 2f))
 }
 
@@ -146,6 +162,7 @@ private fun DrawScope.drawFinger(textMeasurer: TextMeasurer, finger: Int, center
  */
 private fun DrawScope.drawKeyboard(
     geometry: ChordDiagramGeometry.Keyboard,
+    size: Size,
     lineColor: Color,
     rootColor: Color,
     backgroundColor: Color,
@@ -160,12 +177,12 @@ private fun DrawScope.drawKeyboard(
     val keyWidth = size.width / whiteKeys
     val thin = (keyWidth * KEY_LINE_WIDTH).coerceAtLeast(1f)
     val blackHeight = size.height * BLACK_KEY_HEIGHT
-    drawRect(light)
+    drawRect(light, size = size)
     pressed.filter { it % 12 !in blackKeys }.forEach { note ->
         drawRect(colorOf(note), topLeft = Offset(whiteKeyIndex(note) * keyWidth, 0f), size = Size(keyWidth, size.height))
     }
     (0..whiteKeys).forEach { key -> drawLine(dark, Offset(key * keyWidth, 0f), Offset(key * keyWidth, size.height), strokeWidth = thin) }
-    drawRect(dark, style = Stroke(thin))
+    drawRect(dark, size = size, style = Stroke(thin))
     (0 until geometry.octaves * 12).filter { it % 12 in blackKeys }.forEach { note ->
         val topLeft = Offset(blackKeyCenter(note) * keyWidth - keyWidth * BLACK_KEY_WIDTH / 2, 0f)
         val keySize = Size(keyWidth * BLACK_KEY_WIDTH, blackHeight)

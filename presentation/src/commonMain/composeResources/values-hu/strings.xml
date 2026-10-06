@@ -660,7 +660,10 @@
     <string name="print_columns">Oszlopok</string>
     <string name="print_chords">Akkordok, tabulatúrák és akkordrácsok</string>
     <string name="print_comments">Megjegyzések</string>
-    <string name="print_metadata">Előadó és daladatok</string>
+    <string name="print_key">Hangnem, transzponálás és capo</string>
+    <string name="print_tempo">Tempó és ütemmutató</string>
+    <string name="print_metadata">Előadó</string>
+    <string name="print_metadata_setlist">Előadók, dátum és leírás</string>
     <string name="print_page_numbers">Oldalszámok</string>
     <string name="print_setlist_content">A lista tartalma</string>
     <string name="print_song_sheets">Dallapok</string>

@@ -858,11 +858,9 @@ internal fun SongDetailsScreen(
                         onRetry = { viewModel.loadSongContent(song.fileName) },
                         headedOffset = { stepper.headedOffset },
                         onTimingChanged = { timing -> if (timing == null) songTimings.remove(song.fileName) else songTimings[song.fileName] = timing },
-                        // Not taken away by an archived setlist, unlike everything that edits: how a chord is fingered
-                        // is the player's, never the setlist's to keep as it was played.
-                        chordDiagrams = remember(chordDiagrams, song.fileName, destination.setlistFileName, isPerformanceModeEnabled) {
+                        chordDiagrams = remember(chordDiagrams, song.fileName, destination.setlistFileName, isReadOnly) {
                             chordDiagrams?.copy(
-                                onShapesClicked = if (isPerformanceModeEnabled) null else {
+                                onShapesClicked = if (isReadOnly) null else {
                                     { viewModel.showDialog(CampfireViewModel.DialogType.ChordShapes(song = song, setlistFileName = destination.setlistFileName)) }
                                 },
                             )

@@ -660,7 +660,10 @@
     <string name="print_columns">Columns</string>
     <string name="print_chords">Chords, tablature and grids</string>
     <string name="print_comments">Comments</string>
-    <string name="print_metadata">Artist and song details</string>
+    <string name="print_key">Key, transposition and capo</string>
+    <string name="print_tempo">Tempo and time signature</string>
+    <string name="print_metadata">Artist</string>
+    <string name="print_metadata_setlist">Artists, date and description</string>
     <string name="print_page_numbers">Page numbers</string>
     <string name="print_setlist_content">Setlist content</string>
     <string name="print_song_sheets">Song sheets</string>

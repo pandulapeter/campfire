@@ -11,7 +11,9 @@ package com.pandulapeter.campfire.data.model.domain
 
 /**
  * The export screen's choices, local preferences independent of how a song is read on screen: the [format] the file is
- * written in, and the rest for how a PDF is laid out, which an export of the library's own files has no use for.
+ * written in, and the rest for how a PDF is laid out, which an export of the library's own files has no use for. Every
+ * box of what is printed starts ticked, so that a new user's first PDF holds everything and what they untick is
+ * remembered from then on.
  */
 data class PrintSettings(
     val format: Format = Format.PDF,
@@ -21,6 +23,12 @@ data class PrintSettings(
     val marginMm: Int = 15,
     val columns: Int = 1,
     val showChords: Boolean = true,
+    /** The diagram of every chord a song plays under its heading, with [showChords] only, since it fingers chords that are printed. */
+    val showChordDiagrams: Boolean = true,
+    /** The key, the transposition it is printed in and the capo, on a line of their own under a song's heading. */
+    val showKey: Boolean = true,
+    /** The tempo and the time signature, under a song's heading and where the song changes them. */
+    val showTempo: Boolean = true,
     val showComments: Boolean = true,
     val showMetadata: Boolean = true,
     val showPageNumbers: Boolean = true,

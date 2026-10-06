@@ -112,7 +112,13 @@ them) are local user preferences, mapped through
 `PrintSettingsDocument`, saved once the options have settled and whatever way the screen closes, independent of the
 viewer's text size and folded sections. A setlist can export its running order or the selected song sheets, retaining
 the original slot numbers and the transposition of each entry; a lone song reached through a setlist uses that entry's
-key too. Missing or unreadable songs retain a visibly marked place. The source is a snapshot read when the screen
+key too. Under each song's heading a row says how it is played — the key it is printed in, the transposition that
+took it there and the capo, then the tempo in BPM and the time signature — each half an option of its own (**Key,
+transposition and capo**, **Tempo and time signature**) beside the chords, the chord diagrams, the comments and the
+artist. **The Features tab reaches the export screen**: an option whose feature is switched off (the chords, which take
+the chord diagrams and the key with them, or the metronome, which takes the tempo) is not offered and not printed,
+whatever was chosen before (`PrintSettings.withinFeatures`), the choice itself kept for the switch to be turned back
+on. Missing or unreadable songs retain a visibly marked place. The source is a snapshot read when the screen
 opens. `presentation/ui/print/PrintLayout.kt` lays out PDF points using the same font measurements as the preview —
 lyrics in the app's text font, tablature and grids in its monospace one — keeping lyric/chord pairs and guitar systems
 together, and flowing long songs across columns and pages. `PrintRenderer` draws both the preview and the page images
@@ -335,7 +341,9 @@ localized in both languages.
   rewrites the line in place — along the neck, in whichever octave a hand can hold it, and one a transposition left
   needing a fifth finger gives way to the player's shape. On the keyboard a capoed song draws the chords that sound.
   The editor writes definitions (its Chord shape button), marks one it cannot read and draws every one in its preview.
-  The PDF has no diagrams.
+  The PDF prints them under each song's heading where the export screen's Chord diagrams box is ticked (as every
+  option is for a new user; offered only while the feature is on and a song has a chord, and only with the chords printed), drawn as the song
+  details screen draws them, their names left out of the file's selectable text.
 - **The app is shipped with two songs and one setlist**, in
   `presentation/src/commonMain/composeResources/files/demo`: public domain campfire standards, bundled as the plain
   ChordPro and setlist files they are and reaching the library through the ordinary import, so they collide, are

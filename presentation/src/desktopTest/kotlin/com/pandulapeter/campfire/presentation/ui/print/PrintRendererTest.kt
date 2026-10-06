@@ -22,7 +22,9 @@ import androidx.compose.ui.text.font.createFontFamilyResolver
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.sp
+import com.pandulapeter.campfire.chordpro.ChordNotation
 import com.pandulapeter.campfire.chordpro.ChordProParser
+import com.pandulapeter.campfire.chordpro.model.ChordInstrument
 import com.pandulapeter.campfire.data.model.domain.PrintSettings
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.DefaultSectionLabels
 import kotlinx.coroutines.runBlocking
@@ -86,7 +88,7 @@ internal class PrintRendererTest {
         """.trimIndent())
         val document = layoutPrintDocument(PrintSource("Árvíztűrő dal", songs = listOf(
             PrintSong("round-trip.cho", "Árvíztűrő dal", "Péter", song = parsed))),
-            PrintSettings(columns = 2), PrintLabels("Key", "Capo", "Tempo", "Time", "Missing",
+            PrintSettings(columns = 2), PrintLabels("Key", "Transposition", "Capo", "Tempo", "$TEMPO_VALUE BPM", "Time", "Missing",
                 DefaultSectionLabels(verse = "Verse", chorus = "Chorus", bridge = "Bridge", tab = "Tab", grid = "Grid",
                     intro = "Intro", preChorus = "Pre-chorus", solo = "Solo", outro = "Outro")), renderer::width)
         val glyphs = renderer.selectableText(document.pages.single())
@@ -110,7 +112,7 @@ internal class PrintRendererTest {
             (1..30).joinToString("\n") { "[Am]Line ${it.toString().padStart(2, '0')} singing [F]together." } + "\n{end_of_verse}")
         val document = layoutPrintDocument(PrintSource("Column song", songs = listOf(
             PrintSong("columns.cho", "Column song", null, song = parsed))), PrintSettings(columns = 2),
-            PrintLabels("Key", "Capo", "Tempo", "Time", "Missing", DefaultSectionLabels(verse = "Verse", chorus = "Chorus",
+            PrintLabels("Key", "Transposition", "Capo", "Tempo", "$TEMPO_VALUE BPM", "Time", "Missing", DefaultSectionLabels(verse = "Verse", chorus = "Chorus",
                 bridge = "Bridge", tab = "Tab", grid = "Grid", intro = "Intro", preChorus = "Pre-chorus", solo = "Solo", outro = "Outro")), renderer::width)
         val page = document.pages.single()
         assertTrue(page.texts.first { it.text.startsWith("Line 01") }.x < document.width / 2)
@@ -137,7 +139,7 @@ internal class PrintRendererTest {
                 (1..lineCount).joinToString("\n") { "[Am]Line ${it.toString().padStart(3, '0')} [F]sung." } + "\n{end_of_verse}")
             val document = layoutPrintDocument(PrintSource("Column song", songs = listOf(
                 PrintSong("$name.cho", "Column song", null, song = parsed))), PrintSettings(isLandscape = isLandscape, columns = columns),
-                PrintLabels("Key", "Capo", "Tempo", "Time", "Missing", DefaultSectionLabels(verse = "Verse", chorus = "Chorus",
+                PrintLabels("Key", "Transposition", "Capo", "Tempo", "$TEMPO_VALUE BPM", "Time", "Missing", DefaultSectionLabels(verse = "Verse", chorus = "Chorus",
                     bridge = "Bridge", tab = "Tab", grid = "Grid", intro = "Intro", preChorus = "Pre-chorus", solo = "Solo", outro = "Outro")), renderer::width)
             val page = document.pages.single()
             assertEquals(columns, page.texts.filter { it.text.startsWith("Line ") }.map { it.x }.distinct().size, name)
@@ -155,7 +157,7 @@ internal class PrintRendererTest {
             (1..40).joinToString("\n") { "[Am]Line ${it.toString().padStart(3, '0')} singing all the [F]words of a long line together" } + "\n{end_of_verse}")
         val document = layoutPrintDocument(PrintSource("Dense", songs = listOf(PrintSong("dense.cho", "Dense", null, song = parsed))),
             PrintSettings(columns = 4, fontSize = 20, marginMm = 10),
-            PrintLabels("Key", "Capo", "Tempo", "Time", "Missing", DefaultSectionLabels(verse = "Verse", chorus = "Chorus",
+            PrintLabels("Key", "Transposition", "Capo", "Tempo", "$TEMPO_VALUE BPM", "Time", "Missing", DefaultSectionLabels(verse = "Verse", chorus = "Chorus",
                 bridge = "Bridge", tab = "Tab", grid = "Grid", intro = "Intro", preChorus = "Pre-chorus", solo = "Solo", outro = "Outro")), renderer::width)
         assertTrue(document.pages.size > 1)
         val bytes = renderer.pdf(document, "Dense")
@@ -198,7 +200,7 @@ internal class PrintRendererTest {
         val second = first.copy(fileName = "two.cho", title = "Under the stars", index = 2,
             song = parsed.copy(blocks = parsed.blocks + List(90) { ChordProParser.parse("[D]Another line of music [A7]to keep on the next page.").blocks.single() }))
         val document = layoutPrintDocument(PrintSource("Campfire concert", "Rehearsal with friends", "2026-10-01", true, listOf(first, second)),
-            PrintSettings(columns = 2), PrintLabels("Key", "Capo", "Tempo", "Time", "Missing", DefaultSectionLabels(verse = "Verse", chorus = "Chorus", bridge = "Bridge", tab = "Tab", grid = "Grid", intro = "Intro", preChorus = "Pre-chorus", solo = "Solo", outro = "Outro")), renderer::width)
+            PrintSettings(columns = 2), PrintLabels("Key", "Transposition", "Capo", "Tempo", "$TEMPO_VALUE BPM", "Time", "Missing", DefaultSectionLabels(verse = "Verse", chorus = "Chorus", bridge = "Bridge", tab = "Tab", grid = "Grid", intro = "Intro", preChorus = "Pre-chorus", solo = "Solo", outro = "Outro")), renderer::width)
         assertTrue(document.pages.size >= 4)
         val bytes = renderer.pdf(document, "Campfire concert")
         val contents = bytes.decodeToString()
@@ -280,7 +282,7 @@ internal class PrintRendererTest {
         val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr))
         val song = ChordProParser.parse("{title: Gray}\n{key: D}\n{tempo: 96}\nWords that are sung in black")
         val document = layoutPrintDocument(PrintSource("Gray", songs = listOf(PrintSong("gray.cho", "Gray", "Artist", song = song))),
-            PrintSettings(), PrintLabels("Key", "Capo", "Tempo", "Time", "Missing", DefaultSectionLabels(verse = "Verse", chorus = "Chorus", bridge = "Bridge", tab = "Tab", grid = "Grid", intro = "Intro", preChorus = "Pre-chorus", solo = "Solo", outro = "Outro")), renderer::width)
+            PrintSettings(), PrintLabels("Key", "Transposition", "Capo", "Tempo", "$TEMPO_VALUE BPM", "Time", "Missing", DefaultSectionLabels(verse = "Verse", chorus = "Chorus", bridge = "Bridge", tab = "Tab", grid = "Grid", intro = "Intro", preChorus = "Pre-chorus", solo = "Solo", outro = "Outro")), renderer::width)
         val page = document.pages.first()
         val scale = 3f
         val width = ceil(document.width * scale).toInt()
@@ -300,5 +302,43 @@ internal class PrintRendererTest {
         }
         assertTrue(darkest(page.texts.first { it.text.startsWith("Key:") }) >= 70)
         assertTrue(darkest(page.texts.first { it.text.startsWith("Words") }) <= 30)
+    }
+
+    @Test fun chordDiagramsAreDrawnInTheirBoxesAndLeftOutOfTheSelectableText() = runBlocking {
+        val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr))
+        val song = ChordProParser.parse("{title: Shapes}\n{define: F base-fret 1 frets 1 3 3 2 1 1 fingers 1 3 4 2 1 1}\n[G]Words [C]sung [D]over [F]chords and [Bm]a barre")
+        val labels = PrintLabels("Key", "Transposition", "Capo", "Tempo", "$TEMPO_VALUE BPM", "Time", "Missing", DefaultSectionLabels(verse = "Verse", chorus = "Chorus", bridge = "Bridge", tab = "Tab", grid = "Grid", intro = "Intro", preChorus = "Pre-chorus", solo = "Solo", outro = "Outro"))
+        suspend fun page(chords: List<PrintChord>, settings: PrintSettings) = layoutPrintDocument(
+            PrintSource("Shapes", songs = listOf(PrintSong("shapes.cho", "Shapes", "Artist", song = song, chords = chords))), settings, labels, renderer::width,
+        ).pages.single()
+        val withoutDiagrams = renderer.selectableText(page(emptyList(), PrintSettings())).joinToString("") { it.text }
+        val pages = ChordInstrument.entries.map { instrument ->
+            val chords = printChordsOf(song, ChordNotation.STANDARD, instrument, emptyMap())
+            assertEquals(listOf("G", "C", "D", "F", "Bm"), chords.map { it.name })
+            page(chords, PrintSettings(showChordDiagrams = true))
+        }
+        pages.forEach { page ->
+            assertEquals(5, page.diagrams.size)
+            assertEquals(withoutDiagrams, renderer.selectableText(page).joinToString("") { it.text })
+            val scale = 3f
+            val width = ceil(595.276f * scale).toInt()
+            val height = ceil(841.89f * scale).toInt()
+            val bitmap = ImageBitmap(width, height)
+            CanvasDrawScope().draw(Density(1f), LayoutDirection.Ltr, Canvas(bitmap), Size(width.toFloat(), height.toFloat())) {
+                renderer.draw(this, page, scale)
+            }
+            page.diagrams.forEach { diagram ->
+                val left = (diagram.x * scale).toInt()
+                val top = (diagram.y * scale).toInt()
+                val pixels = IntArray((diagram.width * scale).toInt() * (diagram.height * scale).toInt())
+                bitmap.readPixels(pixels, startX = left, startY = top, width = (diagram.width * scale).toInt(), height = (diagram.height * scale).toInt())
+                assertTrue(pixels.count { (it shr 16 and 255) < 60 } > pixels.size / 50, diagram.toString())
+            }
+        }
+        System.getenv("CAMPFIRE_PRINT_QA_DIR")?.let { directory ->
+            File(directory).mkdirs()
+            File(directory, "chord-diagrams.pdf").writeBytes(renderer.pdf(PrintDocument(595.276f, 841.89f, pages), "Chord diagrams"))
+        }
+        Unit
     }
 }

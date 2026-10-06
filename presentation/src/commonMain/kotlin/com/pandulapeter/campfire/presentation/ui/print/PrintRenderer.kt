@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
@@ -28,6 +29,7 @@ import androidx.compose.ui.text.style.ResolvedTextDirection
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.sp
+import com.pandulapeter.campfire.presentation.ui.components.drawChordDiagram
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.yield
 import kotlin.coroutines.coroutineContext
@@ -91,6 +93,19 @@ internal class PrintRenderer(
                 )
             }
             page.texts.forEach { item -> drawText(text(item.text, item.style), topLeft = Offset(item.x, item.y)) }
+            page.diagrams.forEach { diagram ->
+                translate(diagram.x, diagram.y) {
+                    drawChordDiagram(
+                        geometry = diagram.geometry,
+                        area = Size(diagram.width, diagram.height),
+                        lineColor = Color.Black,
+                        mutedColor = DIAGRAM_MUTED_COLOR,
+                        rootColor = DIAGRAM_ROOT_COLOR,
+                        backgroundColor = Color.White,
+                        textMeasurer = measurer,
+                    )
+                }
+            }
         }
     }
 
@@ -98,6 +113,7 @@ internal class PrintRenderer(
     internal suspend fun selectableText(page: PrintPage): List<PrintPdfText> = buildList {
         var characters = 0
         for ((run, item) in page.texts.withIndex()) {
+            if (!item.isSelectable) continue
             val layout = text(item.text, item.style)
             var offset = 0
             while (offset < item.text.length) {
@@ -160,6 +176,11 @@ internal class PrintRenderer(
         return writer.finish()
     }
 }
+
+// The page is gray, so the root a diagram draws in the accent on screen is a mid gray here, darker than the paler shade a
+// keyboard's other pressed keys are mixed from it and white, and lighter than the black of every other dot.
+private val DIAGRAM_ROOT_COLOR = Color(110, 110, 110)
+private val DIAGRAM_MUTED_COLOR = Color(90, 90, 90)
 
 /** The rows of a page read out of the bitmap at a time, which is as often as an export checks whether it was cancelled. */
 private const val PDF_BAND_ROWS = 64

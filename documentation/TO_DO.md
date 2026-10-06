@@ -14,7 +14,7 @@
 ### Improvements
 - Add support for Latin and Nashville notations: documentation/plans/latin-nashville-notation.md - don't forget to apply the changes to the chord diagrams feature too
 
-## Mid-term (in the next versions)
+## Midterm (in the next versions)
 - Multi-select for songs: documentation/plans/multi-select.md
 - Duplicate song button
 - Search field for tags / languages
