@@ -45,7 +45,8 @@ internal class ChordProOutputTransformation(
                     ChordProHighlighter.TokenType.CHORD -> chord
                     ChordProHighlighter.TokenType.ANNOTATION -> annotation
                     ChordProHighlighter.TokenType.COMMENT -> comment
-                    ChordProHighlighter.TokenType.INVALID -> invalid
+                    ChordProHighlighter.TokenType.INVALID,
+                    ChordProHighlighter.TokenType.DUPLICATE -> invalid
                 },
                 token.start,
                 token.end,
@@ -57,7 +58,8 @@ internal class ChordProOutputTransformation(
 
         /**
          * The same colours the viewer uses, so that the editor and the preview next to it agree, and the error colour
-         * for a line whose value cannot be read, which the song then comes out without.
+         * for a line whose value cannot be read, which the song then comes out without, and for a second line of what
+         * a song can only say once.
          */
         fun of(
             tokenCache: ChordProTokenCache,

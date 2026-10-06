@@ -816,21 +816,36 @@ object ChordProParser {
         }
     }
 
+    /**
+     * The value of a field a song can only say once — its title, its year, its capo — which is the first line of it
+     * that says anything, wherever in the file it stands: a later one contradicts it, and the editor marks it so. An
+     * empty line or one the song cannot read is as good as missing, and the next one that says something stands in.
+     */
+    private class OnceValue(private val isReadable: (String) -> Boolean = { true }) {
+        var value: String? = null
+            private set
+
+        fun consume(written: String) {
+            val current = value
+            if (current.isNullOrEmpty() || (!isReadable(current) && isReadable(written))) value = written
+        }
+    }
+
     private class MetadataBuilder {
 
-        private var title: String? = null
-        private var subtitle: String? = null
-        private var artist: String? = null
-        private var composer: String? = null
-        private var lyricist: String? = null
-        private var album: String? = null
-        private var year: String? = null
+        private val title = OnceValue()
+        private val subtitle = OnceValue()
+        private val artist = OnceValue()
+        private val composer = OnceValue()
+        private val lyricist = OnceValue()
+        private val album = OnceValue()
+        private val year = OnceValue()
         private var coverArt: String? = null
         private val key = ChangeableValue()
         private var capo: Int? = null
         val tempo = ChangeableValue { ChordProTempo.parse(it) != null }
         val time = ChangeableValue { ChordProTime.parse(it) != null }
-        private var duration: String? = null
+        private val duration = OnceValue { ChordProDuration.parse(it) != null }
         private val tags = mutableListOf<String>()
         private val tagKeys = mutableSetOf<String>()
         private val languages = mutableListOf<String>()
@@ -843,18 +858,18 @@ object ChordProParser {
         fun consume(directive: ChordProSyntax.Directive, isInBody: Boolean) {
             val value = directive.value?.trim().orEmpty()
             when (directive.name) {
-                "title", "t" -> title = value
-                "subtitle", "st" -> subtitle = value
-                "artist" -> artist = value
-                "composer" -> composer = value
-                "lyricist" -> lyricist = value
-                "album" -> album = value
-                "year" -> year = value
+                "title", "t" -> title.consume(value)
+                "subtitle", "st" -> subtitle.consume(value)
+                "artist" -> artist.consume(value)
+                "composer" -> composer.consume(value)
+                "lyricist" -> lyricist.consume(value)
+                "album" -> album.consume(value)
+                "year" -> year.consume(value)
                 "key" -> key.consume(value, isInBody)
-                "capo" -> value.toIntOrNull()?.takeIf { it >= 0 }?.let { capo = it }
+                "capo" -> if (capo == null) capo = value.toIntOrNull()?.takeIf { it >= 0 }
                 "tempo" -> tempo.consume(value, isInBody)
                 "time" -> time.consume(value, isInBody)
-                "duration" -> duration = value
+                "duration" -> duration.consume(value)
                 "tag" -> ChordProSyntax.tag(directive)?.let(::addTag)
                 "language", "lang" -> ChordProSyntax.language(directive)?.let(::addLanguage)
                 "meta" -> {
@@ -902,19 +917,19 @@ object ChordProParser {
         }
 
         fun build(transpose: Int) = ChordProMetadata(
-            title = title,
-            subtitle = subtitle,
-            artist = artist,
-            composer = composer,
-            lyricist = lyricist,
-            album = album,
-            year = year,
+            title = title.value,
+            subtitle = subtitle.value,
+            artist = artist.value,
+            composer = composer.value,
+            lyricist = lyricist.value,
+            album = album.value,
+            year = year.value,
             coverArt = coverArt,
             key = key.value,
             capo = capo,
             tempo = tempo.value,
             time = time.value,
-            duration = duration,
+            duration = duration.value,
             transpose = transpose,
             tags = tags.toList(),
             languages = languages.toList(),

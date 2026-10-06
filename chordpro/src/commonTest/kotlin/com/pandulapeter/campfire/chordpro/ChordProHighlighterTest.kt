@@ -371,6 +371,39 @@ class ChordProHighlighterTest {
     }
 
     @Test
+    fun `a second line of what a song only says once is marked whole`() {
+        val duplicates = { text: String -> spans(text).filter { it.first == TokenType.DUPLICATE }.map { it.second } }
+        assertEquals(listOf("{t: B}"), duplicates("{title: A}\n{artist: X}\n{t: B}"))
+        assertEquals(listOf("{year: 1999}", "  {meta: year 2000}"), duplicates("{year: 1998}\n{year: 1999}\n  {meta: year 2000}"))
+        assertEquals(listOf("{key: G}"), duplicates("{key: }\n\nla\n{key: G}"))
+        assertEquals(emptyList(), duplicates("{key: }\n{key: G}\n\nla"))
+        assertEquals(listOf("{title: }"), duplicates("{title: }\n{title: A}\n{title: }"))
+        assertEquals(listOf("{meta: cover https://b.com/b.jpg}"), duplicates("{meta: cover https://a.com/a.jpg}\n{meta: cover https://b.com/b.jpg}"))
+    }
+
+    @Test
+    fun `what a song may say again is not marked as a second line`() {
+        listOf(
+            "{tag: A}\n{tag: B}\n{meta: tag C}",
+            "{meta: language en}\n{language: hu}",
+            "{meta: link https://a.com}\n{meta: link https://b.com}",
+            "{tempo: 90}\n{time: 3/4}\nla\n{tempo: 120}\n{time: 4/4}",
+            "{define: C base-fret 1 frets x 3 2 0 1 0}\n{define: C base-fret 1 frets x 3 2 0 1 0}",
+            "{title: A}\n{start_of_abc}\n{title: B}\n{end_of_abc}",
+        ).forEach { text ->
+            assertEquals(false, spans(text).any { it.first == TokenType.DUPLICATE }, text)
+        }
+    }
+
+    @Test
+    fun `an unreadable line leaves its kind free for the next one`() {
+        assertEquals(
+            listOf(TokenType.INVALID to "{capo: second}", TokenType.DIRECTIVE_NAME to "{capo:", TokenType.DIRECTIVE_VALUE to " 2", TokenType.DIRECTIVE_NAME to "}"),
+            spans("{capo: second}\n{capo: 2}"),
+        )
+    }
+
+    @Test
     fun `empty text has nothing to highlight`() {
         assertEquals(emptyList(), ChordProHighlighter.tokenize(""))
     }

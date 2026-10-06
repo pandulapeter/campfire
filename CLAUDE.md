@@ -787,7 +787,7 @@ Nothing about it reaches the network. The module `CLAUDE.md` files carry the det
   but synced (see Sync); neither reads the other, and the song file's `{tempo}` (`Song.tempo`, read at scan time with `{time}` and
   `{capo}`) is only changed in the editor and the Song defaults sheet. The capo is kept the same way (`Setlist.Entry.capo`, `UserPreferences.capos`,
   0 to 12 frets, a stored 0 being a capo this setlist takes off rather than no override at all), since one set is
-  played capoed and the next in another key without. The first `{tempo}` and `{time}` are the song's own (the capo is the song's as a whole, so its last `{capo}` counts, as for any other header field); the tempo counts the
+  played capoed and the next in another key without. The first `{tempo}` and `{time}` are the song's own (the capo is the song's as a whole, so its first readable `{capo}` counts, as for any other field a song says once, a later one being marked as a contradiction in the editor); the tempo counts the
   clicks of the bar (6/8 at 120 is six clicks a bar at 120 a minute), within 30–300.
 - **A later `{tempo}` or `{time}` is a change from where it stands** (`ChordProBlock.Timing`), and the page is what
   says where the band is: on the song details screen a change starts a page of its own (one written before the song's

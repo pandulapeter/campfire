@@ -12,8 +12,6 @@
 ### Bugs / issues
 
 ### Improvements
-- Rearrange the chips in the Editor's Shortcuts section: one-shot tags in first row. Tempo and Time signature might be better off with Key change
-- Editor: Add link to ChordPro specs - chord shape for example is not intuitive at all
 
 ## Midterm (in the next versions)
 - Multi-select for songs: documentation/plans/multi-select.md

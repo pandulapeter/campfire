@@ -88,9 +88,10 @@ import com.pandulapeter.campfire.presentation.ui.platform.bounceHorizontalScroll
  * heart.
  *
  * There are two of them because the two halves are reached for at different moments: the first writes what the song
- * *is* (its title, its key, its tempo), which is what a file opens with and what is usually filled in once, and the
- * second writes the song itself (its chords, its sections, its comments), which is the rest of the work. Keeping
- * them apart means the row being scrolled through is always the short one.
+ * *is* (its title, its key, its tags), which is what a file opens with and what is usually filled in once, and the
+ * second writes the song itself (its chords, its sections, its comments, and the changes of key, tempo and time
+ * signature further down), which is the rest of the work. Keeping them apart means the row being scrolled through is
+ * always the short one.
  *
  * Each row scrolls horizontally rather than wrapping, because the alternative on a phone is four rows of buttons
  * over an editor that is two lines tall. The buttons take no focus ([Modifier.focusProperties]): a toolbar that
@@ -186,7 +187,8 @@ private fun EditorToolbarRow(
 
 /**
  * What goes into the song itself: what is written inside a line, every section the app has a name for, the two ways
- * of writing lines down, the three kinds of comment, and a key change.
+ * of writing lines down, the three kinds of comment, and the changes a song makes from where they stand — of key, of
+ * tempo and of time signature.
  *
  * Tablature and grids are a group of their own rather than two more sections, because that is what they are: a
  * `{start_of_tab}` says how the next few lines are written and can open inside a solo or a verse without breaking
@@ -199,6 +201,10 @@ private fun EditorToolbarRow(
  * The key change is `{transpose}`, which from the caret on moves the chords by the semitones typed into it, counted
  * from the song as it is written, and which the viewer names the new key by. It goes to the caret like the rest, so
  * one written above the song's first line is what the directive means there: the transposition of all of it.
+ *
+ * The tempo and the time signature stand next to it although they are metadata, since after the header has named them
+ * once, every further tap writes a change at the caret's line, which is what the row is reached for while the song is
+ * being written; the first one still goes into the header, see [metadataInsertions].
  */
 @Composable
 private fun contentInsertions(): List<List<EditorInsertion>> = listOf(
@@ -227,6 +233,8 @@ private fun contentInsertions(): List<List<EditorInsertion>> = listOf(
     ),
     listOf(
         EditorInsertion.directive(stringResource(Res.string.song_editor_insert_key_change), name = "transpose"),
+        EditorInsertion.metadata(stringResource(Res.string.song_editor_insert_tempo), name = "tempo"),
+        EditorInsertion.metadata(stringResource(Res.string.song_editor_insert_time), name = "time"),
     ),
 )
 
@@ -234,13 +242,14 @@ private fun contentInsertions(): List<List<EditorInsertion>> = listOf(
  * What the song says about itself: every metadata directive the parser reads and the app then shows somewhere, in
  * the order the header of a file tends to list them.
  *
- * This is also the order they are written in, since none of these goes to the caret on its own: they belong to the
- * header and are put there, see [insertIntoHeader]. A directive that can only be true once — a song has one title and came out
- * in one year — is offered until the file carries it and then no longer, which leaves the tags, the languages and the
- * links of a song as the three that can be added again and again. The tempo and the time signature are offered again
- * too, though they are not repeated: the first goes into the header as the song's own, and every later one at the
- * caret's line, as a change from there on that the song details screen starts a page with. A `{key}` is not offered
- * that way, since nothing in the app follows a key change written as one; that is what the key change below is for.
+ * None of these goes to the caret: they belong to the header and are put there, see [insertIntoHeader]. The directives
+ * that can only be true once — a song has one title and came out in one year — come first, each offered until the file
+ * carries it and then no longer, so the start of the row empties as the header fills in. The tags, the languages and
+ * the links of a song, which can be added again and again, are a group of their own after them. The tempo and the time
+ * signature are not here, though they are header directives too: only the first of each goes into the header, and
+ * every later one at the caret's line, as a change from there on that the song details screen starts a page with, so
+ * they are among the [contentInsertions], next to the key change. A `{key}` is not offered that way, since nothing in
+ * the app follows a key change written as one; that is what the key change is for.
  *
  * `{new_song}` is left out, since it splits an imported file into several songs and the editor is only ever looking
  * at one of them. `{transpose}` is not here either: at the top of a file it shifts every chord away from what the file
@@ -260,9 +269,9 @@ private fun metadataInsertions(): List<List<EditorInsertion>> = listOf(
         EditorInsertion.metadata(stringResource(Res.string.song_editor_insert_year), name = "year"),
         EditorInsertion.metadata(stringResource(Res.string.song_editor_insert_key), name = "key"),
         EditorInsertion.metadata(stringResource(Res.string.song_editor_insert_capo), name = "capo"),
-        EditorInsertion.metadata(stringResource(Res.string.song_editor_insert_tempo), name = "tempo"),
-        EditorInsertion.metadata(stringResource(Res.string.song_editor_insert_time), name = "time"),
         EditorInsertion.metadata(stringResource(Res.string.song_editor_insert_duration), name = "duration"),
+    ),
+    listOf(
         EditorInsertion.metadata(stringResource(Res.string.song_editor_insert_tag), name = "tag"),
         EditorInsertion.meta(stringResource(Res.string.song_editor_insert_language), key = "language"),
         EditorInsertion.meta(stringResource(Res.string.song_editor_insert_link), key = "link"),

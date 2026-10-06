@@ -122,7 +122,10 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   file on disk is the user's and half of it may be under the caret. Unknown directives are ignored; a directive with a
   selector suffix (`{title-guitar}`) is dropped, since there is nothing to match it against, and one with a negated
   selector (`{title-guitar!}`) is read as the directive it is on for the same reason; an environment with a selector is
-  the environment it selects, since its lines are the song itself; a song that changes key, tempo or time signature is in
+  the environment it selects, since its lines are the song itself; a field a song can only say once (its title,
+  subtitle, artist, composer, lyricist, album, year, capo, duration, cover) is the first line of it that says something
+  readable, wherever it stands, an empty or unreadable one leaving the place to the next and every later one read past
+  (the highlighter marks it `DUPLICATE`); a song that changes key, tempo or time signature is in
   the one its first `{key}`, `{tempo}` or `{time}` names — the first one it can read, a `{tempo}` or `{time}` the
   highlighter marks invalid counting as missing, and so does a negative `{capo}` — the first in the header (before the body begins, by the rule
   `{transpose}` is read with, `ChordProSyntax.bodyStartIndex`), a line in the body counting only for a song whose header
@@ -207,8 +210,9 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   `lyricist`, `album`, `year`, `duration`), for the song details' metadata dialog, plus the four of how it is played
   (`key`, `capo`, `tempo`, `time`), which the Song defaults sheet writes as the values the song itself declares and a
   setlist or a device may override where it is read (see `:presentation`). `set` rewrites the line the parser reads
-  each value from — the last one that says anything, or for `key`, `tempo` and `time` the first of the header, since a
-  later one is a change mid-song, and the first of the body where the header has none; an empty line, the new song
+  each value from — the first one that says anything it can read, then the first that says anything at all, which for
+  `key`, `tempo` and `time` is the first of the header, since a later one is a change mid-song, and the first of the
+  body where the header has none; an empty line, the new song
   template's, where none does — where it stands and in its own spelling (`{t: …}`, a `{meta: title …}`), drops the
   other lines of the same field (but never a `{key}`, `{tempo}` or `{time}` in the body), writes a field the file lacks
   into the header by `metadataInsertionIndex`, and removes it for a blank value — except a header `{key}`, `{tempo}` or
@@ -347,7 +351,7 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   travelling with the lyrics under it in `ChordProTabWrapper` (a bare `I` stands between such names but makes no row on
   its own), and `ChordProHighlighter.chordsOfShownText` takes the notation a comment is shown in for the same reason.
 - `ChordProHighlighter` — the typed spans an editor wants to colour (directive name, directive value, chord,
-  annotation, comment, invalid line). It lives here rather than in the UI so that what counts as a chord is decided in exactly one
+  annotation, comment, invalid line, a second line of what is said once). It lives here rather than in the UI so that what counts as a chord is decided in exactly one
   place; only what those look like on screen is the caller's business. It reads the file's lines through
   `ChordProSyntax` rather than walking them itself, so it agrees with the parser about where a line ends whichever of
   the three endings the file uses, and reads a bracket trimmed the way the parser does, so a `[ *softly]` is an
@@ -364,7 +368,13 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   into the header for the value to be typed into. A definition is coloured the same way: the chord it names is a
   `CHORD` token inside its value, and one whose shape cannot be read (`ChordProDefinitions.Reading.Invalid`: a fret
   that is no number, fingers that do not match the frets, a selector naming an instrument the shape is not for) is one
-  `INVALID` token; one that is only not Campfire's to draw (a `copy`, a banjo's five strings) is neither.
+  `INVALID` token; one that is only not Campfire's to draw (a `copy`, a banjo's five strings) is neither. A directive
+  that says again what a song can only say once — every metadata kind but `ChordProHeader.repeatableMetadata` and
+  `changeableMetadata`, counted by `ChordProSyntax.metadataKind`, so a `{t}` after a `{title}` counts — is one
+  `DUPLICATE` token from the line after the first that says something on, an empty one included — exactly the lines
+  the parser reads past — which the editor draws in the error colour too; an empty or `INVALID` line before it counts
+  for nothing, a body `{key}` is one wherever the header has a key line at all, and inside a delegated environment
+  nothing is counted.
 - `ChordProChords` — what a chord name means: `parse` reads the notes a name stands for (`model/Chord`: the root, the
   intervals above it in one octave, the bass of a slash chord) in the notation it is shown in, a lowercase minor and a
   parenthesized chord included. It walks the name through `ChordProChordNames.read`, the same walk `isChordName` is,

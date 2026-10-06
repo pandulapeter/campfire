@@ -87,17 +87,13 @@ object ChordProMetadataFields {
         val (header, body) = indices.partition { it < bodyStart }
         fun List<Int>.declaring() = filter { !lines[it].value().isNullOrEmpty() }
         fun List<Int>.readable() = declaring().filter { field.canRead(lines[it].value().orEmpty()) }
-        // The line the parser takes the value from: the first one of the header that names one for a key, tempo or time
-        // signature, since a later one is a change mid-song, and the last one of every other field — one it can read
-        // before one it cannot. An empty line of the template stands in where none says anything, so that filling a
-        // field in fills the line the new song was created with, and the body stands in for a header that has no line of
-        // the field at all.
-        val effectiveIndex = if (field.isChangedInTheBody) {
-            header.readable().firstOrNull() ?: header.declaring().firstOrNull() ?: header.firstOrNull()
-                ?: body.readable().firstOrNull() ?: body.declaring().firstOrNull() ?: body.firstOrNull()
-        } else {
-            header.readable().lastOrNull() ?: header.declaring().lastOrNull() ?: header.lastOrNull()
-        }
+        // The line the parser takes the value from: the first one that names one it can read, since a later one is a
+        // change mid-song for a key, tempo or time signature and a contradiction for every other field, then the first
+        // one it cannot read. An empty line of the template stands in where none says anything, so that filling a field
+        // in fills the line the new song was created with, and the body stands in for a header that has no line of the
+        // field at all.
+        val effectiveIndex = header.readable().firstOrNull() ?: header.declaring().firstOrNull() ?: header.firstOrNull()
+            ?: body.readable().firstOrNull() ?: body.declaring().firstOrNull() ?: body.firstOrNull()
         // Clearing the header's value while the body still changes it keeps an empty line in the header, which is what
         // tells the parser the song declares nothing rather than starting in the body's first change.
         val isKeptEmpty = newValue == null && effectiveIndex in header && body.declaring().isNotEmpty()
@@ -121,6 +117,7 @@ object ChordProMetadataFields {
         Field.TEMPO -> ChordProTempo.parse(value) != null
         Field.TIME -> ChordProTime.parse(value) != null
         Field.CAPO -> value.toIntOrNull()?.let { it >= 0 } == true
+        Field.DURATION -> ChordProDuration.parse(value) != null
         else -> true
     }
 

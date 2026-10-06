@@ -56,6 +56,12 @@ class ChordProMetadataFieldsTest {
     }
 
     @Test
+    fun `the first line that says something is the one rewritten`() {
+        assertEquals("{title: C}\nLa", ChordProMetadataFields.set("{title: }\n{title: A}\n{t: B}\nLa", mapOf(Field.TITLE to "C")))
+        assertEquals("{duration: 3:00}\nLa", ChordProMetadataFields.set("{duration: long}\n{duration: 4:28}\nLa", mapOf(Field.DURATION to "3:00")))
+    }
+
+    @Test
     fun `an unchanged text is returned as it is`() {
         val text = "{title:   T  }\r\n{artist: A}\r\n"
 

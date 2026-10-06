@@ -43,6 +43,18 @@ object ChordProHighlighter {
          * missing from the song. A key is never one: whatever it says is kept and shown as written. It takes the place of the directive's own tokens rather than lying over them.
          */
         INVALID,
+
+        /**
+         * A whole directive line that says again what the song can only say once — a second title, a second year, a
+         * second key — counted by the one name the directive is known by (see [ChordProSyntax.metadataKind]), so a
+         * `{t}` after a `{title}` is one too. The parser takes the first line of the kind that says anything and reads
+         * past the rest, so every line after that one is marked, an empty one included; an empty line or an [INVALID]
+         * one before it says nothing and leaves the kind free. A `{key}` in the body is also one wherever the header
+         * has a line of it, empty or not, since the song starts in the header's. The
+         * [repeatable][ChordProHeader.repeatableMetadata] and the [changeable][ChordProHeader.changeableMetadata] kinds
+         * are never one. It takes the place of the directive's own tokens.
+         */
+        DUPLICATE,
     }
 
     /** [start] is inclusive and [end] exclusive, both offsets into the whole text. */
@@ -61,10 +73,15 @@ object ChordProHighlighter {
         var isInTab = false
         var isInGrid = false
         var isInDelegate = false
+        // The kinds a line has said something for, and whether the header has a key line, which the parser takes the
+        // song's key from even where it is empty.
+        val saidOnce = mutableSetOf<String>()
+        var hasHeaderKey = false
         // The lines and their offsets come from ChordProSyntax rather than from a walk of their own, so that a file
         // written with any of the three line endings is highlighted the way it is parsed.
         val lines = ChordProSyntax.splitLines(text)
         val lineStarts = ChordProSyntax.lineStartOffsets(text)
+        val bodyStart = ChordProSyntax.bodyStartIndex(lines)
         lines.forEachIndexed { index, line ->
             val lineStart = lineStarts[index]
             val trimmed = line.trim()
@@ -85,10 +102,16 @@ object ChordProHighlighter {
                         isInGrid = false
                         isInDelegate = false
                     }
-                    tokens += if (!isInDelegate && directive.isUnreadable()) {
-                        listOf(Token(TokenType.INVALID, lineStart, lineStart + line.length))
-                    } else {
-                        directive.tokens(
+                    val isUnreadable = !isInDelegate && directive.isUnreadable()
+                    val onceOnlyKind = if (isInDelegate || isUnreadable) null else directive.onceOnlyKind()
+                    val isReadPast = onceOnlyKind != null &&
+                        (onceOnlyKind in saidOnce || (onceOnlyKind == KEY && index >= bodyStart && hasHeaderKey))
+                    if (onceOnlyKind == KEY && index < bodyStart) hasHeaderKey = true
+                    if (onceOnlyKind != null && directive.valueText().isNotEmpty()) saidOnce += onceOnlyKind
+                    tokens += when {
+                        isUnreadable -> listOf(Token(TokenType.INVALID, lineStart, lineStart + line.length))
+                        isReadPast -> listOf(Token(TokenType.DUPLICATE, lineStart, lineStart + line.length))
+                        else -> directive.tokens(
                             line = line,
                             lineStart = lineStart,
                             valueStart = ChordProSyntax.directiveValueStart(trimmed),
@@ -144,9 +167,7 @@ object ChordProHighlighter {
      */
     private fun ChordProSyntax.Directive.isUnreadable(): Boolean {
         val directive = ChordProSyntax.standardMeta(this) ?: this
-        val value = directive.value?.trim()
-            ?.let { if (directive.name == META) it.substringAfter(' ', missingDelimiterValue = "").trim() else it }
-            .orEmpty()
+        val value = valueText()
         if (value.isEmpty()) return false
         ChordProDefinitions.selectorOf(directive.name)?.let { selector ->
             return ChordProDefinitions.read(value, selector.takeIf { it.isNotEmpty() }) == ChordProDefinitions.Reading.Invalid
@@ -163,6 +184,18 @@ object ChordProHighlighter {
             else -> false
         }
     }
+
+    /** What the directive is set to, trimmed, a `{meta: …}` item's without its name. */
+    private fun ChordProSyntax.Directive.valueText(): String {
+        val directive = ChordProSyntax.standardMeta(this) ?: this
+        return directive.value?.trim()
+            ?.let { if (directive.name == META) it.substringAfter(' ', missingDelimiterValue = "").trim() else it }
+            .orEmpty()
+    }
+
+    /** The kind of metadata this directive declares where a song can only be one of it, see [TokenType.DUPLICATE]. */
+    private fun ChordProSyntax.Directive.onceOnlyKind() = ChordProSyntax.metadataKind(this)
+        ?.takeIf { it !in ChordProHeader.repeatableMetadata && it !in ChordProHeader.changeableMetadata }
 
     /**
      * The chord cells of a grid line, read the way the parser reads them, so that a margin label or a `/` is left
@@ -237,5 +270,6 @@ object ChordProHighlighter {
     private const val ANNOTATION_PREFIX = "*"
     private const val TRANSPOSE = "transpose"
     private const val META = "meta"
+    private const val KEY = "key"
     private val LANGUAGE_NAMES = setOf(ChordProSyntax.LANGUAGE_NAME, "lang")
 }

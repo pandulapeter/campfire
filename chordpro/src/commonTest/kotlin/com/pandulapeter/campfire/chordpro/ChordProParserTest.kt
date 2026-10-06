@@ -1030,7 +1030,7 @@ class ChordProParserTest {
         """.trimIndent()
 
         assertEquals(ChordProParser.parse(text).metadata, ChordProParser.parseMetadata(text))
-        assertEquals("Overridden Title", ChordProParser.parseMetadata(text).title)
+        assertEquals("The Title", ChordProParser.parseMetadata(text).title)
     }
 
     @Test
@@ -1081,15 +1081,28 @@ class ChordProParserTest {
     }
 
     @Test
-    fun `a song is played at the tempo and time signature it starts in, and with its last capo`() {
+    fun `a song is played at the tempo and time signature it starts in, and with its first capo`() {
         val text = "{title: T}\n{time: 4/4}\n{tempo: 90}\n{capo: 1}\n[C]la\n{time: 3/4}\n{tempo: 140}\n{capo: 3}\n[G]la"
 
         listOf(ChordProParser.parse(text).metadata, ChordProParser.summarize(text).metadata, ChordProParser.parseMetadata(text)).forEach {
             assertEquals("4/4", it.time)
             assertEquals("90", it.tempo)
-            assertEquals(3, it.capo)
+            assertEquals(1, it.capo)
         }
         assertEquals("96", ChordProParser.parseMetadata("{tempo: }\n{tempo: 96}").tempo)
+    }
+
+    @Test
+    fun `a field said once is the first line of it that says something`() {
+        val text = "{title: }\n{title: A}\n{t: B}\n{meta: title C}\n{year: 1999}\n{year: }\n{duration: long}\n{duration: 4:28}\n{duration: 3:00}\n[C]la"
+
+        listOf(ChordProParser.parse(text).metadata, ChordProParser.summarize(text).metadata, ChordProParser.parseMetadata(text)).forEach {
+            assertEquals("A", it.title)
+            assertEquals("1999", it.year)
+            assertEquals("4:28", it.duration)
+        }
+        assertEquals("", ChordProParser.parseMetadata("{title: }").title)
+        assertEquals("long", ChordProParser.parseMetadata("{duration: long}").duration)
     }
 
     @Test
