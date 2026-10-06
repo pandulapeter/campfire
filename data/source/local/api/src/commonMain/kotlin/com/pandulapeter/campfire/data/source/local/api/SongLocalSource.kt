@@ -18,8 +18,8 @@ interface SongLocalSource {
      * Every `.cho` file in the library, with the metadata parsed out of it. Unreadable files are skipped.
      *
      * Reading a whole library is the slowest thing the app does at start, so the songs arrive in batches rather than
-     * all at the end: [onProgress] is called with everything read so far, once per batch and never with the last one
-     * (which is the returned list). An implementation is free to hand over one batch of everything, but not to leave
+     * all at the end: [onProgress] is called with everything read so far after the first batch and then whenever the list
+     * has doubled, never with the last one (which is the returned list). An implementation is free to hand over one batch of everything, but not to leave
      * the caller with nothing until it has finished.
      */
     suspend fun loadSongs(onProgress: (List<Song>) -> Unit): List<Song>

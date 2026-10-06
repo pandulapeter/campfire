@@ -21,9 +21,9 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
   and a buffer awaited in turn for every name, while the other storages keep the default, their reads in parallel.
   The OPFS listing opens its files in parallel too. The Koin definition
   is a `@Single` class in each platform source set, found by the module's component scan: `AndroidFileStorage` and
-  `DesktopFileStorage`, both delegating to `JvmFileStorage` over `java.io.File` (shared between `androidMain` and
-  `desktopMain`, one copy each because they are separate source sets), `IosFileStorage` over `NSFileManager` and
-  `OpfsFileStorage` over the browser's Origin Private File System. The Android one takes the `Context` the app shell
+  `DesktopFileStorage`, both delegating to `JvmFileStorage` over `java.io.File` (the same class in `androidMain` and
+  `desktopMain`, one copy each because the `campfire-library` convention plugin declares no source set the two share),
+  `IosFileStorage` over `NSFileManager` and `OpfsFileStorage` over the browser's Origin Private File System. The Android one takes the `Context` the app shell
   hands to Koin, marked `@Provided` since no shared module declares it. Everything above this line is `commonMain`.
   - The directories are `library/songs`, `library/setlists`, `preferences` and `covers` — songs and setlists sit next
     to each other so that the library exports as one archive, and the preferences and the covers sit outside it so
