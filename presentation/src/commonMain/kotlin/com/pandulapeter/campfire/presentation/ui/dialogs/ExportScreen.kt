@@ -598,6 +598,14 @@ private fun ExportScreen(
                 ) {
                     val bodyWidth = maxWidth
                     val bodyHeight = maxHeight
+                    val optionsWidth = when {
+                        bodyWidth >= 760.dp && bodyHeight >= 480.dp -> 330.dp
+                        // A phone on its side: too short to stack the two, wide enough to put them side by side.
+                        bodyWidth >= 520.dp -> 260.dp
+                        else -> null
+                    }
+                    val isSideBySide = optionsWidth != null
+                    val turnPage: (Int) -> Unit = { target -> pageScope.launch { pagerState.animateScrollToPage(target.coerceIn(0, pageCount - 1)) } }
                     AnimatedContent(content, Modifier.fillMaxSize(), transitionSpec = { fadeIn() togetherWith fadeOut() }) { shown ->
                         when (shown) {
                             PrintScreenContent.FAILED -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -610,13 +618,6 @@ private fun ExportScreen(
                                 DelayedLoadingIndicator()
                             }
                             PrintScreenContent.LOADED -> if (state.source != null) {
-                                val optionsWidth = when {
-                                    bodyWidth >= 760.dp && bodyHeight >= 480.dp -> 330.dp
-                                    // A phone on its side: too short to stack the two, wide enough to put them side by side.
-                                    bodyWidth >= 520.dp -> 260.dp
-                                    else -> null
-                                }
-                                val isSideBySide = optionsWidth != null
                                 val preview: @Composable (Modifier) -> Unit = { modifier ->
                                     AnimatedContent(isFiles, modifier, transitionSpec = { fadeIn() togetherWith fadeOut() }) { showsFiles ->
                                         if (showsFiles) {
@@ -635,24 +636,37 @@ private fun ExportScreen(
                                                 state.selected.orEmpty().isEmpty() -> stringResource(Res.string.print_no_songs)
                                                 else -> null
                                             }
-                                            PrintPreview(
-                                                modifier = Modifier.fillMaxSize(),
-                                                laidOut = laidOut,
-                                                isCurrent = isCurrent,
-                                                renderer = renderer,
-                                                emptyMessage = emptyMessage,
-                                                // Only the full-height preview needs room to fit a page above the floating controls.
-                                                bottomInset = if (isSideBySide) bottomInset else 0.dp,
-                                                areOptionsBelow = !isSideBySide,
-                                                pagerState = pagerState,
-                                                magnifications = viewModel.printPreviewMagnifications,
-                                                pageView = { state.pageView },
-                                                onPageViewChanged = {
-                                                    // A new zoom or pan gesture takes over from the automatic reset.
-                                                    pageResetAnimation?.cancel()
-                                                    state.pageView = it
-                                                },
-                                            )
+                                            // Stacked, the preview is the first item of the options' list, so the pill turning its pages
+                                            // is drawn inside it and scrolls away with it rather than staying over the options.
+                                            Box(Modifier.fillMaxSize()) {
+                                                PrintPreview(
+                                                    modifier = Modifier.fillMaxSize(),
+                                                    laidOut = laidOut,
+                                                    isCurrent = isCurrent,
+                                                    renderer = renderer,
+                                                    emptyMessage = emptyMessage,
+                                                    // Only the full-height preview needs room to fit a page above the floating controls.
+                                                    bottomInset = if (isSideBySide) bottomInset else 0.dp,
+                                                    areOptionsBelow = !isSideBySide,
+                                                    pagerState = pagerState,
+                                                    magnifications = viewModel.printPreviewMagnifications,
+                                                    pageView = { state.pageView },
+                                                    onPageViewChanged = {
+                                                        // A new zoom or pan gesture takes over from the automatic reset.
+                                                        pageResetAnimation?.cancel()
+                                                        state.pageView = it
+                                                    },
+                                                )
+                                                if (!isSideBySide) {
+                                                    PageButtons(
+                                                        modifier = Modifier.align(Alignment.TopEnd).padding(PAGE_MARGIN),
+                                                        isVisible = hasPages,
+                                                        page = pagerState.currentPage,
+                                                        pageCount = pageCount,
+                                                        onTurn = turnPage,
+                                                    )
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -681,10 +695,10 @@ private fun ExportScreen(
                     }
                     PageButtons(
                         modifier = Modifier.align(Alignment.TopEnd).padding(PAGE_MARGIN),
-                        isVisible = content == PrintScreenContent.LOADED && !isFiles && hasPages,
+                        isVisible = isSideBySide && content == PrintScreenContent.LOADED && !isFiles && hasPages,
                         page = pagerState.currentPage,
                         pageCount = pageCount,
-                        onTurn = { target -> pageScope.launch { pagerState.animateScrollToPage(target.coerceIn(0, pageCount - 1)) } },
+                        onTurn = turnPage,
                     )
                 }
             }

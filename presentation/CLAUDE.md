@@ -503,8 +503,8 @@ change), and Save only takes a document laid out from what the screen shows now 
 floating action button has no disabled look to refuse, is kept and carried out once it is (`ExportRequest`). Options are written to the view model's
 `pendingPrintSettings` as they change and saved to the preferences once they have settled for half a second; whatever
 is still pending is saved as the screen goes, however it goes (`setVisibleDialog`). On phones the preview is the first item of the options' list, 360dp tall — large enough to judge a page by — and scrolls away with them, and the list ends above the save button (`SAVE_BUTTON_CLEARANCE`) rather than under it, so the button never rests on an option. From 520dp of width (a phone on its side) the options are 260dp beside the preview instead, 330dp on a window that is also tall, and the button floats over the preview. **The preview is the whole of its pane** and its controls float over it: the page
-buttons are a raised pill at the top end of the pane, under the app bar, fading in and out with the PDF format, and at a
-zoom of 1 the page fits the pane less its margin and the save button's clearance (`fitArea`), so a zoomed page grows out
+buttons are a raised pill at the top end of the preview — under the app bar where the preview is a pane, and inside the
+preview item on a phone, scrolling away with it — fading in and out with the PDF format, and at a zoom of 1 the page fits the pane less its margin and the save button's clearance (`fitArea`), so a zoomed page grows out
 to the pane's edges and under them, which is what says that the sheet of paper is what grew.
 Pages are turned by a swipe, the buttons, or the arrow, Page Up / Down, Home and End keys, and zoomed by a pinch (around
 its centroid), a double tap, on a touch screen the second tap held and dragged (`doubleTapZoom`: down zooms in, up out,
