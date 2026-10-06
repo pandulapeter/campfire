@@ -420,6 +420,12 @@ object ChordProParser {
         private val lines = mutableListOf<ChordProLine>()
 
         /**
+         * Whether [lines] holds anything but blank lines, kept as they are added: an environment keeps its blank lines,
+         * and scanning them again for every block that follows would make a file of blanks and comments quadratic.
+         */
+        private var hasContentLine = false
+
+        /**
          * The `{comment}` a legacy heading section was opened by, which is what is left of it if no line ever
          * follows: a comment that happens to start with a section name is still a line of the user's file, and a
          * section with nothing in it has nowhere to show it.
@@ -480,6 +486,7 @@ object ChordProParser {
             isOpenedByLineMode = false
             openingComments.clear()
             lines.clear()
+            hasContentLine = false
         }
 
         /**
@@ -537,6 +544,7 @@ object ChordProParser {
             hasEmittedLines = false
             headingText = null
             lines.clear()
+            hasContentLine = false
         }
 
         /**
@@ -564,7 +572,7 @@ object ChordProParser {
         fun addBlock(block: ChordProBlock) {
             // Blank lines alone are not a part of the section yet: flushed, they would be trimmed away, and the lines
             // after the block would be the continuation of a section that never started.
-            val isCut = type != null && lines.any { it != ChordProLine.Blank }
+            val isCut = type != null && hasContentLine
             val placedBlock = if (block is ChordProBlock.Comment) block.placed(isCut) else block
             if (isCut) {
                 val type = this.type!!
@@ -627,6 +635,7 @@ object ChordProParser {
                 LineMode.VERBATIM -> ChordProLine.Lyrics(text = rawLine, chords = emptyList())
                 null -> parseLyrics(rawLine)
             }
+            hasContentLine = true
         }
     }
 

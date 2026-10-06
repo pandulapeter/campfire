@@ -22,6 +22,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeSource
 
 class ChordProParserTest {
 
@@ -282,6 +284,18 @@ class ChordProParserTest {
 
         assertEquals(20, recalls.size)
         recalls.forEach { recall -> assertEquals(40, recall.blocks.sumOf { (it as ChordProBlock.Section).lines.size }) }
+    }
+
+    @Test
+    fun `blank lines before a run of comments do not slow the parse down`() {
+        val text = "{soc}\n" + "\n".repeat(150_000) + "{c:x}\n".repeat(150_000) + "{eoc}"
+        val start = TimeSource.Monotonic.markNow()
+
+        val blocks = ChordProParser.parse(text).blocks
+
+        assertTrue(start.elapsedNow() < 2.seconds, start.elapsedNow().toString())
+        assertEquals(150_000, blocks.count { it is ChordProBlock.Comment })
+        assertTrue(blocks.none { it is ChordProBlock.Section })
     }
 
     @Test
