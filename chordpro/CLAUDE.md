@@ -110,7 +110,8 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   selector suffix (`{title-guitar}`) is dropped, since there is nothing to match it against, and one with a negated
   selector (`{title-guitar!}`) is read as the directive it is on for the same reason; an environment with a selector is
   the environment it selects, since its lines are the song itself; a song that changes key, tempo or time signature is in
-  the one its first `{key}`, `{tempo}` or `{time}` names — the first in the header (before the body begins, by the rule
+  the one its first `{key}`, `{tempo}` or `{time}` names — the first one it can read, a `{tempo}` or `{time}` the
+  highlighter marks invalid counting as missing, and so does a negative `{capo}` — the first in the header (before the body begins, by the rule
   `{transpose}` is read with, `ChordProSyntax.bodyStartIndex`), a line in the body counting only for a song whose header
   has no line of that field at all, an empty one included, which is how a cleared value stays cleared; an empty `{key}`,
   `{capo}`, `{tempo}` or `{time}` (the new song template's) declares nothing and takes back nothing another header line

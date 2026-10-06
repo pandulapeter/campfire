@@ -86,14 +86,17 @@ object ChordProMetadataFields {
         val bodyStart = if (field.isChangedInTheBody) ChordProSyntax.bodyStartIndex(lines) else lines.size
         val (header, body) = indices.partition { it < bodyStart }
         fun List<Int>.declaring() = filter { !lines[it].value().isNullOrEmpty() }
+        fun List<Int>.readable() = declaring().filter { field.canRead(lines[it].value().orEmpty()) }
         // The line the parser takes the value from: the first one of the header that names one for a key, tempo or time
-        // signature, since a later one is a change mid-song, and the last one of every other field. An empty line of the
-        // template stands in where none says anything, so that filling a field in fills the line the new song was
-        // created with, and the body stands in for a header that has no line of the field at all.
+        // signature, since a later one is a change mid-song, and the last one of every other field — one it can read
+        // before one it cannot. An empty line of the template stands in where none says anything, so that filling a
+        // field in fills the line the new song was created with, and the body stands in for a header that has no line of
+        // the field at all.
         val effectiveIndex = if (field.isChangedInTheBody) {
-            header.declaring().firstOrNull() ?: header.firstOrNull() ?: body.declaring().firstOrNull() ?: body.firstOrNull()
+            header.readable().firstOrNull() ?: header.declaring().firstOrNull() ?: header.firstOrNull()
+                ?: body.readable().firstOrNull() ?: body.declaring().firstOrNull() ?: body.firstOrNull()
         } else {
-            header.declaring().lastOrNull() ?: header.lastOrNull()
+            header.readable().lastOrNull() ?: header.declaring().lastOrNull() ?: header.lastOrNull()
         }
         // Clearing the header's value while the body still changes it keeps an empty line in the header, which is what
         // tells the parser the song declares nothing rather than starting in the body's first change.
@@ -111,6 +114,14 @@ object ChordProMetadataFields {
             kept.add(ChordProSyntax.metadataInsertionIndex(kept, field.directiveName), "{${field.directiveName}: $newValue}")
         }
         return if (kept == lines) text else ChordProSyntax.joinLines(kept, text)
+    }
+
+    /** Whether the parser can use [value] for this field, which it reads past where it cannot, as the editor marks it. */
+    private fun Field.canRead(value: String) = when (this) {
+        Field.TEMPO -> ChordProTempo.parse(value) != null
+        Field.TIME -> ChordProTime.parse(value) != null
+        Field.CAPO -> value.toIntOrNull()?.let { it >= 0 } == true
+        else -> true
     }
 
     /** Whether a later line of this field is a change from where it stands rather than a duplicate the parser reads past. */

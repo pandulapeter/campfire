@@ -648,7 +648,7 @@ object ChordProParser {
      * whose header has no line of that field at all, so that a file that writes its metadata at the bottom is still
      * read.
      */
-    private class ChangeableValue {
+    private class ChangeableValue(private val isReadable: (String) -> Boolean = { true }) {
         var value: String? = null
             private set
         private var hasHeaderLine = false
@@ -656,7 +656,9 @@ object ChordProParser {
         fun consume(written: String, isInBody: Boolean) {
             if (isInBody && hasHeaderLine) return
             if (!isInBody) hasHeaderLine = true
-            if (value.isNullOrEmpty()) value = written
+            val current = value
+            // A value the song cannot read is as good as missing (the editor marks it so), and the next readable one stands in.
+            if (current.isNullOrEmpty() || (!isReadable(current) && isReadable(written))) value = written
         }
     }
 
@@ -672,8 +674,8 @@ object ChordProParser {
         private var coverArt: String? = null
         private val key = ChangeableValue()
         private var capo: Int? = null
-        private val tempo = ChangeableValue()
-        private val time = ChangeableValue()
+        private val tempo = ChangeableValue { ChordProTempo.parse(it) != null }
+        private val time = ChangeableValue { ChordProTime.parse(it) != null }
         private var duration: String? = null
         private val tags = mutableListOf<String>()
         private val tagKeys = mutableSetOf<String>()
@@ -694,7 +696,7 @@ object ChordProParser {
                 "album" -> album = value
                 "year" -> year = value
                 "key" -> key.consume(value, isInBody)
-                "capo" -> value.toIntOrNull()?.let { capo = it }
+                "capo" -> value.toIntOrNull()?.takeIf { it >= 0 }?.let { capo = it }
                 "tempo" -> tempo.consume(value, isInBody)
                 "time" -> time.consume(value, isInBody)
                 "duration" -> duration = value

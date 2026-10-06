@@ -208,6 +208,30 @@ class ChordProParserTest {
     }
 
     @Test
+    fun `an unreadable tempo or time signature does not hide a readable one`() {
+        listOf(
+            "{tempo: Moderato}\n{tempo: 96}\n\nLa" to "96",
+            "{tempo: fast}\n\nLa" to "fast",
+            "{tempo:}\n{tempo: 96}\n\nLa" to "96",
+            "{tempo:}\n\nLa\n{tempo: 96}" to "",
+        ).forEach { (text, tempo) ->
+            assertEquals(tempo, ChordProParser.parse(text).metadata.tempo, text)
+            assertEquals(tempo, ChordProParser.summarize(text).metadata.tempo, text)
+        }
+        val text = "{time: waltz}\n{time: 3/4}\n\nLa"
+        assertEquals("3/4", ChordProParser.parse(text).metadata.time)
+        assertEquals("3/4", ChordProParser.summarize(text).metadata.time)
+    }
+
+    @Test
+    fun `a negative capo is ignored`() {
+        assertEquals(2, ChordProParser.parse("{capo: 2}\n{capo: -1}").metadata.capo)
+        assertEquals(2, ChordProParser.summarize("{capo: 2}\n{capo: -1}").metadata.capo)
+        assertNull(ChordProParser.parse("{capo: -1}").metadata.capo)
+        assertNull(ChordProParser.summarize("{capo: -1}").metadata.capo)
+    }
+
+    @Test
     fun `chorus recall is a block of its own`() {
         val blocks = ChordProParser.parse("{start_of_chorus}\n[C]a\n{end_of_chorus}\n\n{chorus}\n\n{chorus: Chorus 2}").blocks
 

@@ -41,6 +41,13 @@ class ChordProMetadataFieldsTest {
     }
 
     @Test
+    fun `the readable line is the one rewritten`() {
+        val result = ChordProMetadataFields.set("{tempo: Moderato}\n{title: T}\n{tempo: 96}\n\nLa", mapOf(Field.TEMPO to "100"))
+
+        assertEquals("{title: T}\n{tempo: 100}\n\nLa", result)
+    }
+
+    @Test
     fun `the lines the parser reads past are dropped`() {
         val result = ChordProMetadataFields.set("{title: A}\n{title: B}\nLa", mapOf(Field.TITLE to "C"))
 
