@@ -45,7 +45,7 @@ internal fun metronomeContextOf(
  * another screen than the one that was on top - a song opened over the Metronome tab, or over another song.
  */
 internal fun isMetronomeScreenLeft(previousTop: CampfireDestination?, top: CampfireDestination?) =
-    (top !is CampfireDestination.SongDetails && top != CampfireDestination.Metronome) || top?.contentKey != previousTop?.contentKey
+    (top !is CampfireDestination.SongDetails && top != CampfireDestination.Metronome) || top.contentKey != previousTop?.contentKey
 
 /** Whether [context] is another song than [last] rather than the same one under the name a rename gave it. */
 internal fun isMetronomeContextMoved(last: MetronomeContext, context: MetronomeContext, renames: Map<String, String>) =

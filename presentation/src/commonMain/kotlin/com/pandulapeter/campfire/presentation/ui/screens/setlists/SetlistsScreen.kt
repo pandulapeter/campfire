@@ -40,9 +40,9 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalWindowInfo
@@ -50,6 +50,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.CustomAccessibilityAction
@@ -142,8 +143,11 @@ import com.pandulapeter.campfire.presentation.ui.screens.songDetails.effectiveCa
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.localization.pluralStringResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import org.jetbrains.compose.resources.painterResource
 import sh.calvin.reorderable.ReorderableItem
@@ -263,32 +267,51 @@ private fun SetlistList(
     onReorderingSetlistChanged: (String?) -> Unit,
 ) {
     val setlistsWithSongs by viewModel.setlistsWithSongs.collectAsStateWithLifecycle()
-    // Keep validation and writes tied to the full library; only the rendered list is narrowed by this mode, and only
-    // once the setlist being reordered is the pinned one (see below), which can be a scroll later than the mode starts.
+    // Keep validation and writes tied to the full library; only the rendered list is narrowed by this mode.
     var narrowedSetlistFileName by remember { mutableStateOf<String?>(null) }
     val shownSetlists = remember(setlistsWithSongs, narrowedSetlistFileName) {
         if (narrowedSetlistFileName != null) setlistsWithSongs.filter { it.setlist.fileName == narrowedSetlistFileName }
         else setlistsWithSongs
     }
+    // Room after the end of the list for the setlist being brought to the top, held only until the other setlists
+    // have left: a setlist near the end has too little of the list after it to be scrolled up there otherwise.
+    var bringToTopPadding by remember { mutableStateOf(0.dp) }
+    val density = LocalDensity.current
     LaunchedEffect(isReordering, reorderingSetlistFileName) {
         if (!isReordering) {
             narrowedSetlistFileName = null
+            bringToTopPadding = 0.dp
             return@LaunchedEffect
         }
-        // The list is never scrolled for the mode: it waits for the setlist to be the one the list starts at, already
-        // or after the user's own scroll, and narrows then. The grid keeps its first visible item by key, so the other
-        // setlists leave without anything on screen moving, where narrowing a setlist that starts lower down would take
-        // everything above it away and drop its header into the pinned place in one frame. One too close to the end
-        // to be pinned is reordered in the full list.
-        snapshotFlow {
-            listState.layoutInfo.visibleItemsInfo.firstOrNull { it.index == listState.firstVisibleItemIndex }?.key
-        }.first { key ->
-            key == "setlist_$reorderingSetlistFileName" ||
+        // The other setlists only leave once the setlist is the one the list starts at, already or after scrolling it
+        // there: the grid keeps its first visible item by key as they go, so nothing on screen moves. Narrowed
+        // anywhere else, the grid would lose that item and fall back to its index somewhere inside the setlist.
+        fun isSetlistAtTop(): Boolean {
+            val key = listState.layoutInfo.visibleItemsInfo.firstOrNull { it.index == listState.firstVisibleItemIndex }?.key
+            return key == "setlist_$reorderingSetlistFileName" ||
                 key == "description_$reorderingSetlistFileName" ||
                 key == "choose_songs_$reorderingSetlistFileName" ||
                 SetlistItemKey(key as? String).setlistFileName == reorderingSetlistFileName
         }
+        if (!isSetlistAtTop()) {
+            val headerIndex = setlistsWithSongs.headerIndexOf(reorderingSetlistFileName)
+            if (headerIndex != null) {
+                val viewportHeight = listState.layoutInfo.viewportSize.height
+                bringToTopPadding = with(density) { viewportHeight.toDp() }
+                snapshotFlow { listState.layoutInfo.afterContentPadding }.first { it >= viewportHeight }
+                try {
+                    listState.animateScrollToItem(headerIndex)
+                } catch (exception: CancellationException) {
+                    // A scroll of the user's own interrupts the animation, and the mode still narrows the list after
+                    // it; only the mode itself ending cancels the rest.
+                    currentCoroutineContext().ensureActive()
+                }
+            }
+        }
+        val isSetlistAtTop = isSetlistAtTop()
         narrowedSetlistFileName = reorderingSetlistFileName
+        bringToTopPadding = 0.dp
+        if (!isSetlistAtTop) listState.requestScrollToItem(0)
     }
     val setlists by viewModel.setlists.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
@@ -403,7 +426,7 @@ private fun SetlistList(
             columns = ListColumns(columnCount),
             modifier = gridModifier.bounceScrollableContent(listState, pull = topFade.overscrollPull),
             state = listState,
-            contentPadding = contentPadding.only(start = true, end = true, bottom = true, extraEnd = FAST_SCROLLER_WIDTH, extraBottom = if (isReordering) 88.dp else 8.dp),
+            contentPadding = contentPadding.only(start = true, end = true, bottom = true, extraEnd = FAST_SCROLLER_WIDTH, extraBottom = (if (isReordering) 88.dp else 8.dp) + bringToTopPadding),
         ) {
             // The setlists are what this screen is about, and they are listed whenever there are any - an empty library
             // included, where they are simply empty and each offers to be filled. The library's own empty state belongs
@@ -773,6 +796,19 @@ private fun CampfireViewModel.SetlistWithSongs.rows(dragOrder: List<String>?): L
             SetlistRow(entry = entry, index = entries.getOrNull(position)?.index ?: entry.index)
         }
     }
+}
+
+/**
+ * The index the grid holds a setlist's header at, counted the way [SetlistList] emits the items of the setlists before
+ * it while performance mode is off, which it is whenever a setlist is being reordered.
+ */
+private fun List<CampfireViewModel.SetlistWithSongs>.headerIndexOf(setlistFileName: String?): Int? {
+    var index = 0
+    forEach { setlistWithSongs ->
+        if (setlistWithSongs.setlist.fileName == setlistFileName) return index
+        index += 2 + setlistWithSongs.entries.size + if (setlistWithSongs.setlist.description.isNotBlank()) 1 else 0
+    }
+    return null
 }
 
 /** Swap the row at [from] with its neighbor in the already checked direction. */
