@@ -12,6 +12,7 @@
 ### Bugs / issues
 
 ### Improvements
+- Chord diagrams (guitar, ukulele, keyboard): documentation/plans/chord-diagrams.md
 - Multi-select for songs: documentation/plans/multi-select.md
 - Duplicate song button
 - Find a way to allow entering tempo using the keyboard
@@ -19,8 +20,7 @@
 ## Mid-term (in the next versions)
 - Haptic effects, especially for the fast scroller
 - Add support for Latin and Nashville notations: documentation/plans/latin-nashville-notation.md
-- Chord diagrams (guitar, ukulele, keyboard): documentation/plans/?.md
-- Tuner: documentation/plans/tuner.md
+- Tuner: documentation/plans/tuner.md (question - do we want to add it to the toolbar?)
 - Comments in setlists (between songs)
 - Simplify adding comments / annotations to songs
 - Optional close confirmation dialog on relevant platforms

@@ -22,6 +22,15 @@ class ChordProTabTransposerTest {
     }
 
     @Test
+    fun `a tab with an open string moves up by the rest of the octave whenever it is transposed down`() {
+        (1..11).forEach { semitones ->
+            val transposed = ChordProTabTransposer.transpose(listOf("e|--0--3--|"), -semitones) { it }.single()
+
+            assertEquals(listOf(12 - semitones, 15 - semitones), Regex("\\d+").findAll(transposed).map { it.value.toInt() }.toList())
+        }
+    }
+
+    @Test
     fun `a chord row with no chord in it is still transposed`() {
         val text = "{sot}\nAm   N.C.  G\ne|--0--3--|\n{eot}"
 

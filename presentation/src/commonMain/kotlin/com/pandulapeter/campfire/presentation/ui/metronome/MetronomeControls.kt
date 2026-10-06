@@ -371,8 +371,11 @@ internal fun TimeSignaturePicker(
 private const val TIME_SIGNATURE_SLASH = "/"
 private val TIME_SIGNATURE_SLASH_GAP = 12.dp
 
-/** What the steppers of [TimeSignaturePicker] keep free under the chips, whose own touch targets pad them already. */
-private val TIME_SIGNATURE_STEPPERS_GAP = 4.dp
+/**
+ * What the steppers of [TimeSignaturePicker] keep free under the chips: more than the [CHIP_GAP] between two rows of
+ * them, so that the pair reads as a control of its own rather than as one more row of chips.
+ */
+private val TIME_SIGNATURE_STEPPERS_GAP = 12.dp
 
 /** The bars most songs are in, offered as chips so that the two steppers are only needed for the rest. */
 private val COMMON_TIME_SIGNATURES = listOf(
