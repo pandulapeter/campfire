@@ -45,7 +45,7 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   (never from inside a delegated environment); every other one is a change, and the changes outside every environment
   with only blank lines between them are written as one group, the tempo first, after a blank line and straight before
   the line they head — except inside a running implicit paragraph or legacy heading section, which a blank line would
-  close. It preserves unsupported directives and delegated
+  close, a blank line that closed that paragraph after the group being kept after it. It preserves unsupported directives and delegated
   notation instead of serializing a parsed model. The editor overflow action and every import use it. `prettifiedOffset` keeps the editor's caret and selection on
   their matched lines through header reordering and spacing changes, accounting for the original line endings.
 

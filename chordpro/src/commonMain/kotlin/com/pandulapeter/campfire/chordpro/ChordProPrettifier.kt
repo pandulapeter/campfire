@@ -22,7 +22,8 @@ object ChordProPrettifier {
      * in the body of a song whose header has none is the song's own value (see [ChordProParser]), so it is moved into
      * the header, where it means the same and every file then states its main values. The others are changes from
      * where they stand, and the ones outside every environment with only blank lines between them are written as one
-     * group, the tempo first, heading what follows it the way a section's own first line does.
+     * group, the tempo first, heading what follows it the way a section's own first line does — unless a blank line
+     * after a group that cut a running paragraph closed that paragraph in the source, which is then kept after it.
      */
     fun prettify(text: String): String {
         val lines = ChordProSyntax.splitLines(text)
@@ -39,21 +40,27 @@ object ChordProPrettifier {
         val timings = mutableListOf<String>()
         // The line after a group of changes follows it directly, since the group is what that line starts with.
         var isHeadedByTimings = false
+        // A group written without a blank line before it only cuts the paragraph it stands in, and a blank line after
+        // it in the source still closes that paragraph, so it is written after the group rather than swallowed by it.
+        var doesGroupCutSection = false
+        var doesBlankLineCloseGroup = false
+
+        fun gap() {
+            if (output.isNotEmpty() && output.last().isNotBlank()) output += ""
+        }
 
         fun flushTimings() {
             if (timings.isEmpty()) return
             output += timings.sortedBy { ChordProSyntax.matchDirective(it)?.let(ChordProSyntax::metadataKind) != TEMPO }
             timings.clear()
-            isHeadedByTimings = true
+            if (doesBlankLineCloseGroup) gap() else isHeadedByTimings = true
+            doesGroupCutSection = false
+            doesBlankLineCloseGroup = false
         }
 
         fun flushMetadata() {
             output += metadata.sortedBy { it.first }.map { it.second }
             metadata.clear()
-        }
-
-        fun gap() {
-            if (output.isNotEmpty() && output.last().isNotBlank()) output += ""
         }
 
         for ((index, rawLine) in lines.withIndex()) {
@@ -114,13 +121,22 @@ object ChordProPrettifier {
 
             if (directive != null && ChordProSyntax.metadataKind(directive) in ChordProHeader.changeableMetadata) {
                 // A blank line before the group would close a paragraph the change only cuts, see cutsRunningSection.
-                if (timings.isEmpty() && (gapBeforeNext || !isImplicitSectionRunning)) gap()
+                if (timings.isEmpty()) {
+                    doesGroupCutSection = isImplicitSectionRunning && !gapBeforeNext
+                    if (!doesGroupCutSection) gap()
+                }
                 gapBeforeNext = false
                 timings += trimmed
                 continue
             }
             if (timings.isNotEmpty()) {
-                if (trimmed.isEmpty()) continue
+                if (trimmed.isEmpty()) {
+                    if (doesGroupCutSection) {
+                        doesBlankLineCloseGroup = true
+                        isImplicitSectionRunning = false
+                    }
+                    continue
+                }
                 flushTimings()
             }
             if (trimmed.isEmpty()) {
