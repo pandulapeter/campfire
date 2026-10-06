@@ -81,6 +81,7 @@ import com.pandulapeter.campfire.presentation.resources.setlists_countdown_today
 import com.pandulapeter.campfire.presentation.resources.setlists_countdown_tomorrow
 import com.pandulapeter.campfire.presentation.resources.setlists_countdown_yesterday
 import com.pandulapeter.campfire.presentation.resources.setlists_header_subtitle
+import com.pandulapeter.campfire.presentation.resources.setlists_total_duration
 import com.pandulapeter.campfire.presentation.resources.setlists_total_duration_minimum
 import com.pandulapeter.campfire.presentation.resources.setlists_create_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_done_reordering
@@ -924,15 +925,18 @@ private class SetlistItemKey(val string: String?) {
 }
 
 /**
- * The subtitle of a setlist's header: its countdown where the user asked for one, then how long its songs take to play
- * where any of them says, with a `+` where some do not ([SetlistTotalDuration.isMinimum]).
+ * The subtitle of a setlist's header: its countdown where the user asked for one, then its running time, how long its songs
+ * take to play, where any of them says, with a `+` where some do not ([SetlistTotalDuration.isMinimum]).
  */
 @Composable
 private fun CampfireViewModel.SetlistWithSongs.headerSubtitle(today: LocalDate): String? {
     val countdown = setlist.countdownText(today)
     val duration = remember(entries) { totalDuration }?.let { duration ->
         val total = ChordProDuration.format(duration.total)
-        if (duration.isMinimum) stringResource(Res.string.setlists_total_duration_minimum, total) else total
+        stringResource(
+            Res.string.setlists_total_duration,
+            if (duration.isMinimum) stringResource(Res.string.setlists_total_duration_minimum, total) else total,
+        )
     }
     return when {
         countdown != null && duration != null -> stringResource(Res.string.setlists_header_subtitle, countdown, duration)

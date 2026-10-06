@@ -20,11 +20,11 @@
 - Reorder songs should hide the other setlists while trying to persist the focused song
 
 ## Improvements
-- Setlist total duration should be prefixed as such
 - Support importing libraries from other apps
 - Rename master branch to main
 - Onboarding: integrate feature toggle-presets (singers, drummers, etc)
 - Settings: promote Dropbox sign-in
+- New song template should include default values for capo, tempo and time signature. The artist tag should also be included with no value
 
 ## Features
 - Comments in setlists (between songs)
