@@ -59,10 +59,10 @@ internal val SongChord.secondaryName get() = soundingName ?: letterName
 
 /**
  * The chords of [song], which is already transposed but still in the standard notation, each once by the name the page
- * shows in [notation] and in the order they are first played, as the song's Chords section lists them. Annotations,
- * `N.C.` and anything else [ChordProChords] does not read are not chords. A song of more than [MAX_SONG_CHORDS] chords
- * is a songbook rather than a song, and gets none: a section of fifty diagrams would be a page of its own before the
- * first line.
+ * shows in [notation] for the one it is first written with, however else the song spells it, and in the order they are
+ * first played, as the song's Chords section lists them. Annotations, `N.C.` and anything else [ChordProChords] does
+ * not read are not chords. A song of more than [MAX_SONG_CHORDS] chords is a songbook rather than a song, and gets none:
+ * a section of fifty diagrams would be a page of its own before the first line.
  *
  * The chords are read before the notation is applied rather than out of what the page shows, since in a numbering a step
  * of the key says nothing about the notes without the stretch of the song it stands in; a chord played on both sides of
@@ -88,17 +88,22 @@ internal fun songChordsOf(
     searchesShapes: Boolean = true,
 ): List<SongChord> {
     val shownNames = ChordProNotation.shownNames(song, notation)
-    val parsed = shownNames.keys.mapNotNull { name -> ChordProChords.parse(name)?.let { name to it } }
-    if (parsed.size > MAX_SONG_CHORDS) return emptyList()
+    val definitions = song.metadata.definitions.filter { it.instrument == instrument }
+    fun definitionOf(name: String, chord: Chord) =
+        (definitions.lastOrNull { it.name == name } ?: definitions.lastOrNull { ChordProChords.parse(it.name) == chord })
+            ?.takeIf { it.movedBy == 0 || (it.voicing as? ChordVoicing.Fretted)?.frets?.let(ChordVoicings::isHoldable) != false }
+    // One chord written two ways - (G) and G, a and Am, A# and Bb - is one diagram, under the name it is first written
+    // with, unless the song defines the two spellings differently.
+    val entries = shownNames.keys
+        .mapNotNull { name -> ChordProChords.parse(name)?.let { chord -> Triple(name, chord, definitionOf(name, chord)) } }
+        .distinctBy { (_, chord, definition) -> chord to definition?.let { it.voicing to it.movedBy } }
+    if (entries.size > MAX_SONG_CHORDS) return emptyList()
     // A file may say any capo, but the app's capo stops at the twelfth fret, as its control and the sheet read it.
     val soundingShift = if (instrument == ChordInstrument.KEYBOARD) capo.coerceIn(Song.CAPO_RANGE) % 12 else 0
     val preferFlats = soundingShift != 0 && ChordProTransposer.prefersFlats(song, soundingShift)
-    val definitions = song.metadata.definitions.filter { it.instrument == instrument }
-    return parsed.map { (name, chord) ->
+    return entries.map { (name, chord, written) ->
         val sounding = if (soundingShift == 0) chord else chord.copy(root = (chord.root + soundingShift) % 12, bass = chord.bass?.let { (it + soundingShift) % 12 })
-        val definition = (definitions.lastOrNull { it.name == name } ?: definitions.lastOrNull { ChordProChords.parse(it.name) == chord })
-            ?.takeIf { it.movedBy == 0 || (it.voicing as? ChordVoicing.Fretted)?.frets?.let(ChordVoicings::isHoldable) != false }
-            ?.let { if (soundingShift == 0) it else ChordProDefinitions.transposed(it, soundingShift) { name -> name } }
+        val definition = written?.let { if (soundingShift == 0) it else ChordProDefinitions.transposed(it, soundingShift) { name -> name } }
         val isShapePending = definition == null && !searchesShapes && ChordVoicings.needsSearch(sounding, instrument)
         val spelling = if (soundingShift == 0) name else ChordProChords.transposedName(name, soundingShift, preferFlats = preferFlats)
         SongChord(

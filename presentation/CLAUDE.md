@@ -249,8 +249,9 @@ Everything else is `commonMain`:
   model of a page, built in place, leaves out the shapes only the search finds (`searchesShapes`, a chord
   `isShapePending`), which follow from `Dispatchers.Default` (`SongLyricsModel.withSearchedShapes`, the same sections, so
   only the Chords section is measured again, at the size it had: the cell is drawn as the empty frame until then) —
-  a chord the tables lack shows its frame alone for a moment the first time it is seen in a session (`songChordsOf`, tested: every chord the page names once, in the order it is first played, read from
-  the song before its notation is applied — `CampfireViewModel.transposedSong`, which `renderSong` is followed by
+  a chord the tables lack shows its frame alone for a moment the first time it is seen in a session (`songChordsOf`,
+  tested: every chord once, however the page spells it, under the name it is first played with, in the order it is
+  first played, read from the song before its notation is applied — `CampfireViewModel.transposedSong`, which `renderSong` is followed by
   `notatedSong` — since a step of a key says nothing about the notes without the stretch it stands in, and named as the
   page names it (`ChordProNotation.shownNames`), a numbered chord with its letters after it in the cell, with its
   `Chord`, the shape the app shows it with on the instrument in `SongLyricsInputs`, and the song's own definition of it
