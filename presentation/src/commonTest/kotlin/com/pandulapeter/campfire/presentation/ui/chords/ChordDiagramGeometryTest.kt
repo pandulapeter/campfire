@@ -9,10 +9,13 @@
  */
 package com.pandulapeter.campfire.presentation.ui.chords
 
+import com.pandulapeter.campfire.chordpro.ChordProChords
+import com.pandulapeter.campfire.chordpro.ChordVoicings
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
 import com.pandulapeter.campfire.chordpro.model.ChordVoicing
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class ChordDiagramGeometryTest {
 
@@ -56,8 +59,39 @@ class ChordDiagramGeometryTest {
             listOf(ChordDiagramGeometry.Fretted.Barre(row = 0, fromString = 1, toString = 5, finger = null)),
             fretted(listOf(null, 1, 3, 3, 3, 1)).barres,
         )
-        assertEquals(emptyList(), fretted(listOf(null, null, 3, 2, 1, 1)).barres.filter { it.fromString != 4 })
+        assertEquals(
+            listOf(ChordDiagramGeometry.Fretted.Barre(row = 0, fromString = 4, toString = 5, finger = null)),
+            fretted(listOf(null, null, 3, 2, 1, 1)).barres,
+        )
         assertEquals(emptyList(), fretted(listOf(1, 0, 3, 2, 1, 1)).barres.filter { it.fromString == 0 }, "an open string under it breaks the barre")
+        val d = fretted(listOf(null, null, 0, 2, 3, 2))
+        assertEquals(emptyList(), d.barres)
+        assertEquals(listOf(3, 4, 5), d.dots.map { it.string })
+        assertEquals(emptyList(), fretted(listOf(0, 2, 2, 0, 0, 0)).barres)
+        assertEquals(emptyList(), fretted(listOf(null, 0, 2, 2, 2, 0)).barres)
+        assertEquals(emptyList(), (chordDiagramGeometryOf(ChordVoicing.Fretted(listOf(0, 2, 3, 2)), ChordInstrument.UKULELE, root = 7) as ChordDiagramGeometry.Fretted).barres)
+        assertEquals(
+            listOf(ChordDiagramGeometry.Fretted.Barre(row = 0, fromString = 2, toString = 3, finger = null)),
+            (chordDiagramGeometryOf(ChordVoicing.Fretted(listOf(3, 2, 1, 1)), ChordInstrument.UKULELE, root = 10) as ChordDiagramGeometry.Fretted).barres,
+        )
+    }
+
+    @Test
+    fun `a shape without fingers gets no barre its table fingering lacks`() {
+        val roots = listOf("C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B")
+        val qualities = listOf("", "m", "7", "m7", "maj7", "sus2", "sus4", "6", "9", "dim7", "aug", "m7b5", "add9", "5")
+        roots.forEach { root ->
+            qualities.forEach { quality ->
+                val chord = ChordProChords.parse(root + quality)!!
+                listOf(ChordInstrument.GUITAR, ChordInstrument.UKULELE).forEach { instrument ->
+                    ChordVoicings.all(chord, instrument).filterIsInstance<ChordVoicing.Fretted>().filter { it.fingers != null }.forEach { shape ->
+                        val fingered = (chordDiagramGeometryOf(shape, instrument, chord.root) as ChordDiagramGeometry.Fretted).barres.map { it.copy(finger = null) }
+                        val bare = (chordDiagramGeometryOf(shape.copy(fingers = null), instrument, chord.root) as ChordDiagramGeometry.Fretted).barres
+                        bare.forEach { barre -> assertTrue(barre.copy(finger = null) in fingered, "$root$quality $instrument ${shape.frets}") }
+                    }
+                }
+            }
+        }
     }
 
     @Test

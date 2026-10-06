@@ -67,7 +67,8 @@ internal sealed interface ChordDiagramGeometry {
  * A fretted shape is drawn in four frets, or as many as it spans, from the nut where it fits there and otherwise from
  * its lowest stopped fret ([ChordVoicings.baseFret], which a written definition agrees with). A barre is a finger
  * the fingering names on several strings at one fret, or, for a shape that names no fingers, the lowest stopped fret
- * where two strings or more are held at it with no open or muted string between them.
+ * where the shape takes more than four fingers without one, or where the index finger lies across the thin strings
+ * under a higher fretted one, with no open or muted string under it.
  */
 internal fun chordDiagramGeometryOf(shape: ChordVoicing, instrument: ChordInstrument, root: Int): ChordDiagramGeometry = when (shape) {
     is ChordVoicing.Keys -> ChordDiagramGeometry.Keyboard(
@@ -128,6 +129,10 @@ private fun barresOf(frets: List<Int?>, fingers: List<Int>?): List<ChordDiagramG
     if (atLowest.size < 2) return emptyList()
     val from = atLowest.first()
     val to = atLowest.last()
+    // The index finger laid flat across the thin strings under a higher fretted one, as in a small F; anything else that
+    // four fingers can hold one string each is drawn as dots, as the table fingers an Em or an A.
+    val isShortBarre = to - from + 1 == atLowest.size && to == frets.lastIndex && from > 0 && (frets[from - 1] ?: 0) > lowest
+    if (stopped.size <= MAX_FINGERS && !isShortBarre) return emptyList()
     if ((from..to).any { (frets[it] ?: 0) < lowest }) return emptyList()
     return listOf(ChordDiagramGeometry.Fretted.Barre(row = lowest - baseFret, fromString = from, toString = to, finger = null))
 }
@@ -147,4 +152,5 @@ internal fun emptyChordDiagramGeometryOf(instrument: ChordInstrument): ChordDiag
 }
 
 private const val MIN_FRETS = 4
+private const val MAX_FINGERS = 4
 private const val MIN_OCTAVES = 2

@@ -269,7 +269,7 @@ Everything else is `commonMain`:
   reads as a shape of that instrument), then the app's own. `ChordDiagram` draws a `ChordDiagramGeometry`
   (`ChordDiagramGeometry.kt`, pure and tested): strings and four frets or as many as the shape spans, the nut or the
   base fret's number, a dot per stopped string with the root in the second accent, an open string on the root ringed
-  in it too, barres from the fingering or from the lowest fret, `×` and `○` above the nut; a keyboard of two octaves or
+  in it too, barres from the fingering or from the lowest fret where the shape needs one, `×` and `○` above the nut; a keyboard of two octaves or
   as many as its keys reach, white keys the lighter of the two theme colours in either theme, every pressed key filled
   whole — the root in the second accent, the rest (a slash chord's bass included) in a paler shade of it. The **Chord shapes sheet** (`DialogType.ChordShapes`, closed with the song) reads the song as the page plays
   it and lists its chords larger, with their fingers and notes, each with a `Stepper` through
