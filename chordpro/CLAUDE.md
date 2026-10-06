@@ -117,7 +117,8 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   `{capo}`, `{tempo}` or `{time}` (the new song template's `{key}`) declares nothing and takes back nothing another header line
   said; a `{transpose}` before the song's first line transposes the whole of it (`ChordProMetadata.transpose`,
   the last one there winning), and one further down is a modulation — a `ChordProBlock.Transpose` holding the offset
-  from the whole-song value for everything after it, cutting the section it stands in the way a comment does — each
+  from the whole-song value for everything after it, and the song's `{key}` for a viewer to name the change by, as
+  the file writes it and wherever the file names it, cutting the section it stands in the way a comment does — each
   value being the transposition of the rest of the song and a valueless one going back to the one before, as the spec
   has it; `{meta: title …}` and the other standard names the spec defines as their standalone directive
   (`subtitle`, `artist`, `composer`, `lyricist`, `album`, `year`, `key`, `capo`, `tempo`, `time`, `duration`) are read
@@ -230,7 +231,8 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   worth running for no semitones at all, so only `semitones == 0` *and* no forced spelling short-circuits. Its walk
   over the model is `rewriteChords`, which takes the rename as a function so that `ChordProNotation` can reuse it;
   the two differ only in what a tab is, a fingerboard to one and a page of chord names to the other. A modulation
-  moves the stretch after it by its offset on top of the transposition asked for, spelled for the key it lands in, and
+  moves the stretch after it by its offset on top of the transposition asked for, spelled for the key it lands in — its
+  own `key` with it, which makes that the key the song is in from there on — and
   a recall is moved by the offset where it stands; the text transposition leaves the `{transpose}` directives alone,
   which keeps them right, since each is relative to the song as written.
   `transposedOffset` maps a caret through a text transposition (same line, same place between the brackets), which

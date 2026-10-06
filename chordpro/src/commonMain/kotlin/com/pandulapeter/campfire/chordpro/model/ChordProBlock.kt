@@ -65,9 +65,13 @@ sealed interface ChordProBlock {
     /**
      * `{transpose: N}` somewhere after the song has begun: from here on the chords are read [semitones] away from
      * where the song's own transposition ([ChordProMetadata.transpose], the `{transpose}` it opens with) puts them —
-     * a key change written as a directive. 0 is back to that. It shows nothing; the transposition applies it.
+     * a key change written as a directive. 0 is back to that. The transposition applies it.
+     *
+     * [key] is the song's `{key}` for a viewer to name the change by, null where the song declares none: as the file
+     * writes it in a parsed song, like the chords after it, and moved with them by the transposition, which makes it the
+     * key the song is in from here on.
      */
-    data class Transpose(val semitones: Int) : ChordProBlock
+    data class Transpose(val semitones: Int, val key: String? = null) : ChordProBlock
 
     /** {column_break} / {new_page} and friends: a hint that the layout may break here. */
     data object Break : ChordProBlock

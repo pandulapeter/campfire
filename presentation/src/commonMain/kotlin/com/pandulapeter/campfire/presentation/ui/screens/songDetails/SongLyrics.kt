@@ -101,6 +101,7 @@ import com.pandulapeter.campfire.chordpro.model.SectionType
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_details_cut
+import com.pandulapeter.campfire.presentation.resources.song_details_key_change
 import com.pandulapeter.campfire.presentation.resources.song_details_grid_collapse
 import com.pandulapeter.campfire.presentation.resources.song_details_grid_expand
 import com.pandulapeter.campfire.presentation.resources.song_details_section_bridge
@@ -391,6 +392,12 @@ internal fun SongLyrics(
                                 fontScale = fontScale,
                             )
 
+                            is RenderSection.KeyChange -> SongKeyChange(
+                                modifier = unitModifier.padding(horizontal = CARD_PADDING),
+                                keyChange = section,
+                                chordStyle = chordStyle,
+                            )
+
                             is RenderSection.Lines -> if (section.isOnCard) {
                                 // The card is drawn by the layout behind the chunks of every piece; the chunk only takes
                                 // the card's corners, so that a press on its title row is drawn inside them.
@@ -531,6 +538,22 @@ private fun SongComment(
         text(modifier)
     }
 }
+
+/**
+ * The key a `{transpose}` further down the song takes it to, set as the chords are: it is what they are in from there on,
+ * and the line the song's first section reads its opening key in is set the same way.
+ */
+@Composable
+private fun SongKeyChange(
+    modifier: Modifier = Modifier,
+    keyChange: RenderSection.KeyChange,
+    chordStyle: TextStyle,
+) = Text(
+    modifier = modifier,
+    text = textResource(Res.string.song_details_key_change, keyChange.key),
+    style = chordStyle,
+    color = LocalSecondAccentColor.current,
+)
 
 /**
  * The optional header of a section followed by its lines, with the chords drawn above the lyrics.
@@ -675,6 +698,14 @@ private fun SongSectionContent(
                         modifier = Modifier.padding(vertical = INLINE_COMMENT_GAP),
                         comment = part,
                         fontScale = fontScale,
+                    )
+                }
+
+                is RenderSection.KeyChange -> if (item++ in items) {
+                    SongKeyChange(
+                        modifier = Modifier.padding(vertical = INLINE_COMMENT_GAP),
+                        keyChange = part,
+                        chordStyle = chordStyle,
                     )
                 }
 
@@ -2271,7 +2302,8 @@ internal sealed interface RenderSection {
          */
         val itemKinds = parts.flatMap { part ->
             when (part) {
-                is Comment -> listOf(SectionItemKind.COMMENT)
+                // A key change is kept with the line it is written above, as a comment is.
+                is Comment, is KeyChange -> listOf(SectionItemKind.COMMENT)
                 is SectionPart.Lines -> part.runs.flatMap { run ->
                     val kind = run.first().foldableKind()
                     if (kind != null) {
@@ -2300,6 +2332,13 @@ internal sealed interface RenderSection {
         val text: String,
         val style: CommentStyle,
     ) : RenderSection, SectionPart
+
+    /**
+     * Where a `{transpose}` further down the song changes its key, naming the [key] it is in from there on: between two
+     * sections, or inside the one it was written in as one of its [SectionPart]s, the way a comment stands in either.
+     */
+    @Immutable
+    data class KeyChange(val key: String) : RenderSection, SectionPart
 }
 
 /** A piece of a [RenderSection.Lines]: a run of its lines, or a comment standing between two of them. */
@@ -2321,12 +2360,14 @@ internal sealed interface SectionPart {
  * free to land in different columns or rows. The comments a section opens or ends with are put inside it too
  * (`ChordProBlock.Comment.placement`), so that every comment written in a section folds away with it, while one written
  * between two sections stays a unit of its own that nothing folds. Breaks and `{transpose}` directives cut a section
- * the same way and draw nothing, so they are joined over as well; a `{chorus}` recall is a section of its own and is not.
+ * the same way, so they are joined over as well, a `{transpose}` leaving a line that names the new key where it stood,
+ * for a song that declares one ([RenderSection.KeyChange]); a `{chorus}` recall is a section of its own and is not.
  *
  * A `{chorus}` recall repeats the chorus the parser found for it (`ChordProBlock.ChorusRecall.blocks`), every piece of
  * it and the comments inside it, headed once. In lyrics-only mode the chords go away with the sections that consist
  * of nothing else: tabs and grids say nothing without them, and a line that was only chords would leave a blank behind.
- * A comment written inside a tab or a grid goes with it, since it is a note about what is no longer there.
+ * A comment written inside a tab or a grid goes with it, since it is a note about what is no longer there, and so does
+ * the line of a key change, the key being the chords' own.
  */
 private fun ChordProSong.toRenderSections(
     shouldShowChords: Boolean,
@@ -2357,8 +2398,9 @@ private fun ChordProSong.toRenderSections(
                 is ChordProBlock.Section -> {
                     val lines = piece.lines.prepareForDisplay(shouldShowChords)
                     if (lines.isEmpty()) return@forEach
-                    // What cut the section there drew nothing (a break, a transposition), so the halves are one run of
-                    // lines again, and a tab on either side of the cut is folded and wrapped as the one run it is.
+                    // What cut the section there drew nothing (a break, a transposition of a song with no key to
+                    // name), so the halves are one run of lines again, and a tab on either side of the cut is folded and
+                    // wrapped as the one run it is.
                     val previous = parts.lastOrNull()
                     if (previous is SectionPart.Lines) {
                         parts[parts.lastIndex] = SectionPart.Lines(previous.lines + lines)
@@ -2368,6 +2410,8 @@ private fun ChordProSong.toRenderSections(
                 }
 
                 is ChordProBlock.Comment -> piece.toRenderSection(shouldShowChords)?.let { parts += it }
+
+                is ChordProBlock.Transpose -> piece.toRenderSection(shouldShowChords)?.let { parts += it }
 
                 else -> Unit
             }
@@ -2390,7 +2434,7 @@ private fun ChordProSong.toRenderSections(
         when (val block = pieces.firstSection()) {
             is ChordProBlock.Break -> Unit // The column layout makes its own breaks.
 
-            is ChordProBlock.Transpose -> Unit // It moved the chords; there is nothing to draw.
+            is ChordProBlock.Transpose -> block.toRenderSection(shouldShowChords)?.let { sections += it }
 
             is ChordProBlock.Comment -> block.toRenderSection(shouldShowChords)?.let { sections += it }
 
@@ -2473,6 +2517,10 @@ private fun ChordProBlock.isCommentPlaced(placement: CommentPlacement) = this is
 /** What a comment is drawn as, or null where lyrics-only mode leaves out the tab or grid it is a note about. */
 private fun ChordProBlock.Comment.toRenderSection(shouldShowChords: Boolean) =
     if (isInTabOrGrid && !shouldShowChords) null else RenderSection.Comment(text = text, style = style)
+
+/** The line naming the key a modulation takes the song to, or null where the song declares none or the chords are not shown. */
+private fun ChordProBlock.Transpose.toRenderSection(shouldShowChords: Boolean) =
+    key?.takeIf { shouldShowChords && it.isNotBlank() }?.let(RenderSection::KeyChange)
 
 /** Whether the block is one that cuts a section in two without being a section itself (see `ChordProParser`). */
 private fun ChordProBlock.isSectionCut() = this is ChordProBlock.Comment || this is ChordProBlock.Break || this is ChordProBlock.Transpose

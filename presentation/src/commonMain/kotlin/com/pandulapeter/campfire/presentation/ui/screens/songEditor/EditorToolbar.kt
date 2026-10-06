@@ -57,6 +57,7 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_insert_compo
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_cover_art
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_duration
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_key
+import com.pandulapeter.campfire.presentation.resources.song_editor_insert_key_change
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_language
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_link
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_lyricist
@@ -168,7 +169,7 @@ private fun EditorToolbarRow(
 
 /**
  * What goes into the song itself: what is written inside a line, every section the app has a name for, the two ways
- * of writing lines down, and the three kinds of comment.
+ * of writing lines down, the three kinds of comment, and a key change.
  *
  * Tablature and grids are a group of their own rather than two more sections, because that is what they are: a
  * `{start_of_tab}` says how the next few lines are written and can open inside a solo or a verse without breaking
@@ -177,6 +178,10 @@ private fun EditorToolbarRow(
  * `{new_page}` and `{column_break}` would belong here and are deliberately missing, though the parser still reads
  * them without complaint: they belong to a renderer that paginates, and Campfire flows the sections into columns
  * itself at whatever size the window happens to be, so a break written by hand would decide nothing.
+ *
+ * The key change is `{transpose}`, which from the caret on moves the chords by the semitones typed into it, counted
+ * from the song as it is written, and which the viewer names the new key by. It goes to the caret like the rest, so
+ * one written above the song's first line is what the directive means there: the transposition of all of it.
  */
 @Composable
 private fun contentInsertions(): List<List<EditorInsertion>> = listOf(
@@ -203,6 +208,9 @@ private fun contentInsertions(): List<List<EditorInsertion>> = listOf(
         EditorInsertion.directive(stringResource(Res.string.song_editor_insert_comment_italic), name = "comment_italic"),
         EditorInsertion.directive(stringResource(Res.string.song_editor_insert_comment_box), name = "comment_box"),
     ),
+    listOf(
+        EditorInsertion.directive(stringResource(Res.string.song_editor_insert_key_change), name = "transpose"),
+    ),
 )
 
 /**
@@ -215,9 +223,9 @@ private fun contentInsertions(): List<List<EditorInsertion>> = listOf(
  * links of a song as the three that can be added again and again.
  *
  * `{new_song}` is left out, since it splits an imported file into several songs and the editor is only ever looking
- * at one of them. `{transpose}` is left out on purpose too: the renderer does honor it, but transposition here is
- * something the reader picks on the details screen or writes into the chords with the editor's own transpose action,
- * and a directive that silently shifts every chord away from what the file says is not worth offering a shortcut to.
+ * at one of them. `{transpose}` is not here either: at the top of a file it shifts every chord away from what the file
+ * says, which the reader does on the details screen or writes into the chords with the editor's own transpose action.
+ * It is among the [contentInsertions] instead, as the key change it is once it stands further down.
  */
 @Composable
 private fun metadataInsertions(): List<List<EditorInsertion>> = listOf(

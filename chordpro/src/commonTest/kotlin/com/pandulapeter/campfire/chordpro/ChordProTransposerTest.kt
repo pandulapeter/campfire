@@ -221,6 +221,27 @@ class ChordProTransposerTest {
     }
 
     @Test
+    fun `a modulation names the key the song is in from there on`() {
+        val text = "{key: G}\n[G]a\n{transpose: 2}\n[G]b\n{transpose: -2}\n[G]c\n{transpose}\n[G]d"
+        fun keysAt(semitones: Int, notation: ChordNotation = ChordNotation.STANDARD) =
+            ChordProNotation.toNotation(ChordProTransposer.transpose(ChordProParser.parse(text), semitones), notation)
+                .blocks.filterIsInstance<ChordProBlock.Transpose>().map { it.key }
+
+        assertEquals(listOf("A", "F", "A"), keysAt(0))
+        assertEquals(listOf("B", "G", "B"), keysAt(2))
+        assertEquals(listOf("H", "G", "H"), keysAt(2, ChordNotation.GERMAN))
+    }
+
+    @Test
+    fun `a modulation of a transposed song names its key on top of the whole song's`() {
+        val parsed = ChordProParser.parse("{key: G}\n{transpose: 2}\n[G]a\n{transpose: 3}\n[G]b")
+        val song = ChordProTransposer.transpose(parsed, parsed.metadata.transpose)
+
+        assertEquals("A", song.metadata.key)
+        assertEquals(listOf("Bb"), song.blocks.filterIsInstance<ChordProBlock.Transpose>().map { it.key })
+    }
+
+    @Test
     fun `a chorus recalled after a modulation is in the new key`() {
         val song = ChordProTransposer.transpose(ChordProParser.parse("{soc}\n[C]a\n{eoc}\n{transpose: 2}\n{chorus}"), 0)
 

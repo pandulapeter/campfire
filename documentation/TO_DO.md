@@ -10,6 +10,7 @@
 # To do
 ## Bugs / issues
 - No way to enter BPM using the keyboard
+- Per-section tempo support: documentation/plans/per-section-tempo.md
 
 ## Improvements
 - Rename master branch to main
@@ -23,12 +24,13 @@
 - Duplicate song button
 
 ## Ideas
+- Tuner: documentation/plans/tuner.md
+- Chord diagrams (guitar, ukulele, keyboard) - user library, variations
 - Global sync status display ?
 - Fast scroller on the song details screen ?
 - Simplify adding comments / annotations
 - Optional close confirmation dialog on relevant platforms
 - Add support for Latin and Nashville notations
-- Chord diagrams (guitar, ukulele, keyboard) - user library, variations
 - Grid formatting could be improved
 - External monitor support for lyrics only...? Maybe as a new window on desktop, lyric projection via AirPlay / Chromecast, etc
 - Streaming zip writer on all platforms

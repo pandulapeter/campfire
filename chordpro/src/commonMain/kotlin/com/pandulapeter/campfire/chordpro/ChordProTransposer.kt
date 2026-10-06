@@ -115,6 +115,8 @@ object ChordProTransposer {
             blocks = block.blocks.map { rewriteBlock(it, rewrite) },
         )
         is ChordProBlock.Comment -> block.copy(text = rewriteLyricsLineChords(block.text, rewrite.rename))
+        // Handed the rewrite of the stretch it starts, so the key it names is the one that stretch is in.
+        is ChordProBlock.Transpose -> block.copy(key = block.key?.let { renameKey(it, rewrite.rename) })
         else -> block
     }
 

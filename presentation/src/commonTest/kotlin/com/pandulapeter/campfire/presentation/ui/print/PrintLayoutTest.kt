@@ -70,6 +70,19 @@ internal class PrintLayoutTest {
         assertTrue(chord.y < lyrics.y)
     }
 
+    @Test fun aKeyChangeIsPrintedWhereItStandsAndOnlyWithTheChords() = runTest {
+        val entry = song(emptyList(), listOf(
+            ChordProBlock.Section(SectionType.Verse, "Verse", lyrics(1)),
+            ChordProBlock.Transpose(2, key = "E"),
+            ChordProBlock.Section(SectionType.Verse, "Last", lyrics(1, prefix = "End")),
+            ChordProBlock.Transpose(0),
+        ))
+        val texts = layout(source(entry)).pages.single().texts
+        val keyChange = texts.single { it.text == "Key: E" }
+        assertTrue(keyChange.y > texts.first { it.text == "Line 1" }.y && keyChange.y < texts.first { it.text == "End 1" }.y)
+        assertTrue(layout(source(entry), PrintSettings(showChords = false)).pages.single().texts.none { it.text == "Key: E" })
+    }
+
     @Test fun lyricsOnlyOmitsChordsTabsGridsAndCommentsWhenRequested() = runTest {
         val entry = song(emptyList(), listOf(
             ChordProBlock.Comment("A comment", CommentStyle.PLAIN),

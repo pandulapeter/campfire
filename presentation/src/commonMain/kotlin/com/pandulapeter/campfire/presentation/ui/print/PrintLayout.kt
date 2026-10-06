@@ -335,7 +335,8 @@ private class PrintLayouter(
         is ChordProBlock.Section -> sectionRows(block, width, labelOverride)
         is ChordProBlock.Comment -> commentRows(block, width, isInChorus)
         is ChordProBlock.ChorusRecall -> recallRows(block, width)
-        is ChordProBlock.Transpose, ChordProBlock.Break -> emptyList()
+        is ChordProBlock.Transpose -> keyChangeRows(block, width)
+        ChordProBlock.Break -> emptyList()
     }
 
     private fun sectionRows(section: ChordProBlock.Section, width: Float, labelOverride: String?): List<Row> {
@@ -510,6 +511,10 @@ private class PrintLayouter(
         }
         if (row.isNotEmpty()) addAll(wrapped(row.trimEnd(), gridStyle, lineWidth))
     }
+
+    /** The key a `{transpose}` further down takes the song to, for a song that declares one, as the heading names its first. */
+    private fun keyChangeRows(keyChange: ChordProBlock.Transpose, width: Float): List<Row> =
+        keyChange.key?.takeIf { options.showChords && it.isNotBlank() }?.let { wrapped("${labels.key}: $it", detailStyle, width) }.orEmpty()
 
     private fun commentRows(comment: ChordProBlock.Comment, width: Float, isInChorus: Boolean): List<Row> = when {
         !options.showComments || (comment.isInTabOrGrid && !options.showChords) -> emptyList()

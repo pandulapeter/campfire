@@ -40,6 +40,7 @@ internal object LayoutBudget {
             val sectionCharacters = when (section) {
                 is RenderSection.Lines -> section.lines.sumOf { it.characterCount() }
                 is RenderSection.Comment -> section.text.length
+                is RenderSection.KeyChange -> section.key.length
                 is RenderSection.Metadata -> 0
             }
             if (lines + sectionLines > MAX_LINES || characters + sectionCharacters > MAX_CHARACTERS) {
@@ -60,6 +61,11 @@ internal object LayoutBudget {
             when (part) {
                 is RenderSection.Comment -> {
                     characters += part.text.length
+                    if (characters > MAX_CHARACTERS) break
+                    keptParts += part
+                }
+                is RenderSection.KeyChange -> {
+                    characters += part.key.length
                     if (characters > MAX_CHARACTERS) break
                     keptParts += part
                 }

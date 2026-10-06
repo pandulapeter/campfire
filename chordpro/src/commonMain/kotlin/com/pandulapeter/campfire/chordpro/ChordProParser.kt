@@ -62,7 +62,11 @@ object ChordProParser {
         }
         section.close()
         transposition.finish()
-        return ChordProSong(metadata = metadata.build(transpose = transposition.wholeSong), blocks = withChorusesRecalled(blocks))
+        val declared = metadata.build(transpose = transposition.wholeSong)
+        // Only known once the whole file has been read, since a song may name its key under its last line.
+        val key = declared.key?.takeIf { it.isNotBlank() }
+        val keyedBlocks = if (key == null) blocks else blocks.map { block -> if (block is ChordProBlock.Transpose) block.copy(key = key) else block }
+        return ChordProSong(metadata = declared, blocks = withChorusesRecalled(keyedBlocks))
     }
 
     /**

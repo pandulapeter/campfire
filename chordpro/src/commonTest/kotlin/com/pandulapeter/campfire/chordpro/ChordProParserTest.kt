@@ -91,6 +91,19 @@ class ChordProParserTest {
     }
 
     @Test
+    fun `a modulation carries the key the song declares, wherever the file names it`() {
+        listOf(
+            "{key: G}\n[G]a\n{transpose: 2}\n[G]b" to "G",
+            "[G]a\n{transpose: 2}\n[G]b\n{key: G}" to "G",
+            "{key: H-moll}\n[Hm]a\n{transpose: 2}\n[Hm]b" to "B-moll",
+            "{key}\n[G]a\n{transpose: 2}\n[G]b" to null,
+            "[G]a\n{transpose: 2}\n[G]b" to null,
+        ).forEach { (text, expected) ->
+            assertEquals(expected, ChordProParser.parse(text).blocks.filterIsInstance<ChordProBlock.Transpose>().single().key, text)
+        }
+    }
+
+    @Test
     fun `a transpose in the header is the whole song's, the last one winning`() {
         listOf(
             "{transpose: 2}\n{transpose: 3}\n[C]a" to 3,

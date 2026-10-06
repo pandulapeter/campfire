@@ -378,6 +378,7 @@
     <string name="song_editor_insert_comment">Megjegyzés</string>
     <string name="song_editor_insert_comment_italic">Dőlt megjegyzés</string>
     <string name="song_editor_insert_comment_box">Keretes megjegyzés</string>
+    <string name="song_editor_insert_key_change">Hangnemváltás</string>
     <string name="song_editor_insert_title">Cím</string>
     <string name="song_editor_insert_subtitle">Alcím</string>
     <string name="song_editor_insert_artist">Előadó</string>
@@ -510,6 +511,7 @@
     <string name="song_details_capo">Capo %1$d</string>
     <string name="song_details_tempo">%1$s BPM</string>
     <string name="song_details_time">%1$s</string>
+    <string name="song_details_key_change">Hangnem: %1$s</string>
     <string name="song_details_composer">Zeneszerző</string>
     <string name="song_details_lyricist">Szövegíró</string>
     <string name="song_details_album">Album</string>

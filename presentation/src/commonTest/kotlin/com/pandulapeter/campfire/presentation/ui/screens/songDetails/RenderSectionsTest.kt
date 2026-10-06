@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import com.pandulapeter.campfire.chordpro.ChordProParser
+import com.pandulapeter.campfire.chordpro.ChordProTransposer
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -30,17 +31,53 @@ class RenderSectionsTest {
         outro = "Levezetés",
     )
 
-    /** Each section as the comments it holds, or as its own text where it is a comment between sections. */
-    private fun shape(text: String, shouldShowChords: Boolean = true) = prepareSongLyrics(
-        song = ChordProParser.parse(text),
+    /**
+     * Each section as the comments and key changes it holds, or as its own text where it is one of those between sections.
+     *
+     * @param isTransposed Whether the song's own `{transpose}` directives are applied, as they are on the page.
+     */
+    private fun shape(text: String, shouldShowChords: Boolean = true, isTransposed: Boolean = false) = prepareSongLyrics(
+        song = ChordProParser.parse(text).let { if (isTransposed) ChordProTransposer.transpose(it, 0) else it },
         shouldShowChords = shouldShowChords,
         labels = labels,
     ).sections.map { section ->
         when (section) {
             is RenderSection.Comment -> "comment ${section.text}"
-            is RenderSection.Lines -> "${section.header}: " + section.parts.joinToString { (it as? RenderSection.Comment)?.text ?: "lines" }
+            is RenderSection.KeyChange -> "key ${section.key}"
+            is RenderSection.Lines -> "${section.header}: " + section.parts.joinToString { part ->
+                when (part) {
+                    is RenderSection.Comment -> part.text
+                    is RenderSection.KeyChange -> "key ${part.key}"
+                    is SectionPart.Lines -> "lines"
+                }
+            }
             is RenderSection.Metadata -> "metadata"
         }
+    }
+
+    @Test
+    fun `a key change is named where it stands, between two sections or inside one`() {
+        assertEquals(
+            listOf("Verse: lines, key A, lines", "key Bb", "Refrén: lines"),
+            shape("{key: G}\n{sov: Verse}\n[G]la\n{transpose: 2}\n[G]la\n{eov}\n{transpose: 3}\n{soc}\n[G]la\n{eoc}", isTransposed = true),
+        )
+    }
+
+    @Test
+    fun `a key change before a recall names the key the chorus is repeated in`() {
+        assertEquals(
+            listOf("Refrén: lines", "key A", "Refrén: lines"),
+            shape("{key: G}\n{soc}\n[G]la\n{eoc}\n{transpose: 2}\n{chorus}", isTransposed = true),
+        )
+    }
+
+    @Test
+    fun `a key change says nothing in a song that declares no key, and nothing without the chords`() {
+        assertEquals(listOf("Verse: lines"), shape("{sov: Verse}\n[G]la\n{transpose: 2}\n[G]la\n{eov}", isTransposed = true))
+        assertEquals(
+            listOf("Verse: lines"),
+            shape("{key: G}\n{sov: Verse}\n[G]la\n{transpose: 2}\n[G]la\n{eov}", shouldShowChords = false, isTransposed = true),
+        )
     }
 
     @Test
