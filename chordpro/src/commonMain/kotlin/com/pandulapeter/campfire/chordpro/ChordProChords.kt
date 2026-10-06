@@ -18,8 +18,9 @@ import com.pandulapeter.campfire.chordpro.model.Chord
  * read exactly where it is recognized. The reading is the one chord charts agree on, with the choices a chart leaves
  * open made once here:
  *
- * - `11` leaves out the major third it would clash with (`C11` is `C9sus4` with the fifth, the way it is fingered), a
- *   minor one stays (`Cm11`), and `13` leaves out the eleventh.
+ * - `11` leaves out the major third it would clash with (`C11` is `C9sus4`, the way it is fingered), a minor one
+ *   stays (`Cm11`), and `13` is the seventh with the thirteenth, leaving out the ninth and the eleventh, which no
+ *   chart's `13` shape holds.
  * - `dim` and `°` are the triad and `dim7` and `°7` the diminished seventh; `ø` is the half diminished seventh.
  * - `2` alone adds the second (`C2` is `Cadd2`), `4` alone is `sus4`, `5` alone is the power chord.
  * - `alt` is the seventh with a flat ninth's neighbor, the sharp ninth, and the flat thirteenth, and no fifth: the
@@ -188,7 +189,7 @@ object ChordProChords {
             return Chord(root = root, intervals = intervals.sorted(), bass = bass?.takeIf { it != root })
         }
 
-        /** A number that stacks up to itself: `7`, `9`, `11` and `13` each bring the sevenths and ninths under them. */
+        /** A number that stacks up to itself: `9` and `11` bring the seventh and the ninth under them, `13` the seventh. */
         private fun extend(number: String) {
             when (number) {
                 "6" -> added += MAJOR_SIXTH
@@ -205,7 +206,7 @@ object ChordProChords {
                 }
                 "13" -> {
                     seventh = seventhOfQuality()
-                    added += setOf(MAJOR_SECOND, MAJOR_SIXTH)
+                    added += MAJOR_SIXTH
                 }
                 else -> add(number)
             }
