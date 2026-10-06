@@ -53,7 +53,8 @@ app:android / app:desktop / app:ios / app:web   entry points, platform chrome, "
                                              engine with one audio output per platform (see Metronome below). Depends
                                              on nothing of the app's; used by :presentation, :app:android and :app:ios
   chordpro                                   dependency-free ChordPro model, parser, serializer, transposer, tab
-                                             wrapper, tag editor, highlighter and positioned chord-sheet converter. Depends on nothing; used by
+                                             wrapper, tag editor, highlighter, positioned chord-sheet converter, and
+                                             what a chord name means and how it is played. Depends on nothing; used by
                                              :data:source:local:implementation (metadata for the song list),
                                              :domain:api and :presentation
 ```
@@ -305,7 +306,8 @@ localized in both languages.
   of the app is still allowed to do, and called performance mode in the code); **Chords** (`areChordsEnabled`, stored
   as the inverse `isLyricsOnlyModeEnabled` the lyrics only switch was), off taking with the chords the key, the
   transposition and the capo wherever a song is read, and leaving the chord spelling rows of the Songs tab disabled;
-  **Metronome** (`isMetronomeEnabled`), off taking its tab, the song details screen's click button and panel, its M key
+  **Chord diagrams** (`areChordDiagramsEnabled`), disabled while the chords are off, off taking the Chords section off
+  every song and leaving the Songs tab's Instrument row disabled, the chosen shapes kept; **Metronome** (`isMetronomeEnabled`), off taking its tab, the song details screen's click button and panel, its M key
   and the tempo and the time signature wherever a song is read; **Setlists** (`areSetlistsEnabled`), off taking their tab and every way of putting a song into one, while
   setlist files still travel through an import, an export and a sync run; and **Cover art**, last since it is the one
   that decides whether the app reaches the network on its own. A switch cleans the interface up rather than locking
@@ -316,6 +318,23 @@ localized in both languages.
   (`components/NavigationItemPresence.kt`), and a back stack restored or an address opened is cut short at the first
   screen that belongs to one (`NavigationState.withoutDisabledFeatures`), a song read from a setlist included — so on
   the web `/metronome` with the metronome off opens the songs, and the address is written over with theirs.
+- **How every chord of a song is fingered is shown at its top**, on the guitar, the ukulele or the keyboard (the
+  Songs tab's Instrument): a Chords section after the controls of how it is played, one diagram per chord in the order
+  they are first played, folded by one preference for every song and scrolling away with the song's first page. Nothing
+  is shipped for it and nothing is fetched: `:chordpro` reads what notes a chord name stands for (`ChordProChords`) and
+  finds its shapes (`ChordVoicings`) — a hand-typed table of the shapes everybody knows first, a search for every other
+  one after it. Which shape a chord is drawn with is, in order, the song's own `{define}` (or `{chord}`) for that
+  instrument, which ChordPro has for "in this song the G is played this way" and which travels with the file; the
+  player's own choice from the Chord shapes sheet, **one per chord and instrument for the whole library**, since which F
+  somebody plays is a habit of their hands rather than a reading of one song, stored as the shape rather than its
+  number and keyed by the chord's notes so every spelling shares it (`UserPreferences.chordVoicings`, synced, see Sync);
+  and the app's first shape. A definition for another instrument is not used on the page, nor translated: a guitar
+  shape's fingers make another chord on a ukulele, and a keyboard plays the chord's own notes. A definition follows its
+  chord through every transposition — the reader's, the file's `{transpose}` and the editor's transpose action, which
+  rewrites the line in place — along the neck, in whichever octave a hand can hold it, and one a transposition left
+  needing a fifth finger gives way to the player's shape. On the keyboard a capoed song draws the chords that sound.
+  The editor writes definitions (its Chord shape button), marks one it cannot read and draws every one in its preview.
+  The PDF has no diagrams.
 - **The app is shipped with two songs and one setlist**, in
   `presentation/src/commonMain/composeResources/files/demo`: public domain campfire standards, bundled as the plain
   ChordPro and setlist files they are and reaching the library through the ordinary import, so they collide, are
@@ -456,13 +475,14 @@ localized in both languages.
 - A rename reaches **sync** as a deletion and a new file, since `SyncPlanner` is keyed by name and knows no moves. The
   "an edit beats a deletion" rule then applies: a device that edited the file under its old name since the last run
   puts that file back, leaving both.
-- Only pure logic is tested: `commonTest` unit tests in `:chordpro` (including chord-sheet conversion), `:domain:implementation` (`ImportPlanner` and conversion import plumbing),
+- Only pure logic is tested: `commonTest` unit tests in `:chordpro` (including chord-sheet conversion, and chord names, shapes and definitions, every shape of the tables checked against the chord it is filed under), `:domain:implementation` (`ImportPlanner` and conversion import plumbing),
   `:data:source:local:implementation` (zip, bounded PDF/Word readers and the JVM file storage, with independent-producer document goldens in `desktopTest`), `:data:source:remote:*` (hashing, encoders,
   the OAuth authorization URL, the cover search's queries, its `User-Agent` and its pace, the cover download),
-  `:data:repository:implementation` (`SyncPlanner`, which decides what happens to every file in a sync run, and the
-  cover cache), `:metronome:*` (the sequencer, the synthesizer, the mixer, tap tempo and time signatures) and
+  `:data:repository:implementation` (`SyncPlanner`, which decides what happens to every file in a sync run, the
+  synced preferences and the cover cache), `:metronome:*` (the sequencer, the synthesizer, the mixer, tap tempo and time signatures) and
   `:presentation` (the pure helpers behind its screens: the search index and ranking, the song picker's filter chips, the fast scroller's section
-  index, the setlist slots, stepper labels, section grid and the cutting of sections into columns, row snapping and section measurements of the details screen, the editor's token cache, where a song's tempo comes from and what a click plays for), run on
+  index, the setlist slots, stepper labels, section grid and the cutting of sections into columns, row snapping and section measurements of the details screen, the editor's token cache, where a song's tempo comes from and what a click plays for, which chords a song plays and which
+  shape each is drawn with, the diagrams' geometry and what the editor's Chord shape button writes), run on
   the desktop target with
   `./gradlew :chordpro:desktopTest :domain:implementation:desktopTest :data:source:local:implementation:desktopTest :data:source:remote:api:desktopTest :data:source:remote:implementation:desktopTest :data:repository:implementation:desktopTest :metronome:api:desktopTest :metronome:implementation:desktopTest :presentation:desktopTest`.
   The web build's JavaScript — its storage worker, its service worker's routing and the page's decisions about the
@@ -728,8 +748,12 @@ the only possible one. The per-module `CLAUDE.md` files carry the detail; the sh
   a document that is missing or cannot be read is taken as unchanged and replaced with this device's values, never
   read as one that removed everything, and one whose `version` is newer than this one's is left alone.
   A song no longer in the library after the run takes its entry with it, here and in the folder, unless the run
-  failed to move it or it reached the folder after the run listed it. A change to those three maps schedules a run like a change to a file does; the run's own write
-  does not.
+  failed to move it or it reached the folder after the run listed it. **The player's chord shapes travel the same way**
+  (`UserPreferences.chordVoicings`): a `chords` member beside `songs`, by instrument and then by the chord's notes
+  (`{"guitar": {"F:0.4.7": "x x 3 2 1 1"}}`), merged value by value, so two devices that chose for different chords both
+  keep their choice and two choices for one chord keep this device's; an instrument this version does not know passes
+  through, and no entry is ever dropped with a song, since none belongs to one. A change to those three maps or to the
+  chord shapes schedules a run like a change to a file does; the run's own write does not.
 - Authorization is OAuth 2.0 with PKCE and no client secret, which is what lets this work with no backend. The four
   platforms get back from the consent page in four different ways, all behind `SyncAuthenticator`.
 

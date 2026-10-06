@@ -268,7 +268,12 @@ a deletion of one of those files lands before its reads or after its update and 
   conflict merges again against the document it lost to, once; a document that still cannot be settled, or any
   failure but the authorization's, is reported as `SyncSummary.havePreferencesFailed` (which, like a failed file, keeps
   the run from counting as the last successful one) and leaves the base where it was.
-  `localChanges` is what schedules a run when the three maps change, filtering out the values the step wrote itself.
+  The player's chord shapes (`UserPreferences.chordVoicings`) are a `chords` member beside `songs`, by instrument and
+  then by the chord's id, merged the same way value by value; a shape is any string and an instrument this version does
+  not know is kept, a non-string value passes through, nothing in it is ever dropped with a song, and the member is only
+  written once there is something in it, so a document from before it stays the same bytes.
+  `localChanges` is what schedules a run when the three maps or the chord shapes change, filtering out the values the
+  step wrote itself.
   `SyncedPreferencesTest` covers the merge, the document and the step against the fakes.
   `cancelConnection` is the way out of `Connecting` that does not need the `connect()` that got there to be running
   still — on the web it never is, and a page restored from the back/forward cache is otherwise connecting for good.

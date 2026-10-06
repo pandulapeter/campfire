@@ -49,7 +49,9 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   notation instead of serializing a parsed model. The editor overflow action and every import use it. `prettifiedOffset` keeps the editor's caret and selection on
   their matched lines through header reordering and spacing changes, accounting for the original line endings.
 
-- `model/` — `ChordProSong` (metadata + blocks), `ChordProBlock` (`Section`, `ChorusRecall`, `Comment`, `Break`,
+- `model/` — `Chord` (the notes a chord name stands for), `ChordInstrument` and `ChordVoicing` (a shape on a fretted
+  instrument, or keys), `ChordDefinition` (a song's own shape of a chord, in `ChordProMetadata.definitions`),
+  `ChordProSong` (metadata + blocks), `ChordProBlock` (`Section`, `ChorusRecall`, `Comment`, `Break`,
   `Transpose`, `Timing`),
   `ChordProLine` (`Lyrics` with positioned chords and annotations, `Tab`, `Grid`, `Blank`) and `ChordProMetadata`,
   whose `displayTitle(fallback)` is the one rule for naming a song: `{title}` with `{subtitle}` after it in
@@ -136,13 +138,16 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   was in force before it is no change at all; a recalled chorus leaves its changes out, as it does a `{transpose}`;
   `{meta: title …}` and the other standard names the spec defines as their standalone directive
   (`subtitle`, `artist`, `composer`, `lyricist`, `album`, `year`, `key`, `capo`, `tempo`, `time`, `duration`) are read
-  as that directive; `{define}`, fonts, colours, images and page directives are parsed and dropped. It also understands
-  the Campfire 3 dialect, where `{comment: Verse 1}` outside an environment was a section heading; one that no line
+  as that directive; a `{define}` or `{chord}` with a shape Campfire draws is read into `ChordProMetadata.definitions`
+  (see `ChordProDefinitions`), a selector naming an instrument (`{define-ukulele}`) being read rather than dropped,
+  and one inside a delegated environment left as that environment's text; fonts, colours, images and page directives
+  are parsed and dropped. It also understands the Campfire 3 dialect, where `{comment: Verse 1}` outside an environment was a section heading; one that no line
   follows before a blank line, another section or the end of the file stays the comment it was, since a section with
   nothing in it is not drawn.
 - `ChordProSerializer` — writes the model back as canonical ChordPro. The editor works on raw text, so the user's own
   formatting does not have to survive this; `parse(serialize(parse(x))) == parse(x)` does. A `Timing` is written as
-  the `{tempo}` and `{time}` it changes against the ones in force, starting from the header's.
+  the `{tempo}` and `{time}` it changes against the ones in force, starting from the header's, and the definitions
+  after the rest of the header, as `ChordProDefinitions.line` writes them.
 - `ChordProTags` — the tags of a song. ChordPro's own `{tag: Needs study}` directive, one tag per directive and as
   many of them as the song has; `{meta: tag Needs study}`, which the spec documents as the same thing, is read as
   well but never written. The value is taken whole, commas included, because the spec calls a tag arbitrary text — arbitrary text on one line: a line break in a value handed to `addTag` or `removeTag` is read as a space, since it would otherwise end the directive and leave the rest of it in the song as lyrics.
@@ -295,9 +300,9 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   leaving every other character where it was (`ChordProTransposer.rewriteChordNamesInText`, with the tabs' chord rows
   renamed in their columns rather than transposed), which is how the editor shows a file in the reader's notation and
   writes what was typed back. `{define}` / `{chord}` names are converted with the chords (outside an environment
-  handed to another program); the fingerings are never transposed and a real transposition leaves the definitions
-  alone. Definitions do not vote on the notation, so a file whose only `H` is in a `{define: H …}` is read as
-  standard. German notation writes the standard `B` as `H` and its `Bb` as `B`, and nothing else
+  handed to another program, a selector's instrument included), and a transposition moves their shapes as well (see
+  `ChordProDefinitions.transposed`). Definitions do not vote on the notation, so a file whose only `H` is in a
+  `{define: H …}` is read as standard. German notation writes the standard `B` as `H` and its `Bb` as `B`, and nothing else
   moves — not the other letters, not the `#` and `b` signs, not the quality. (The classical German names spell every
   accidental out as `Cis` or `Es`; chord charts in those countries stop at the two letters, and so does this.) **A
   text is read in the notation it is declared to be in**, `parse`, `summarize`, `ChordProSummaryCache` and
@@ -330,7 +335,50 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   `{transpose}` it cannot make sense of, a cover or a link that is no web address, a language that names none — is one
   `INVALID` token over the whole line instead, decided by the same functions that read it (`ChordProTime`,
   `ChordProDuration`, `ChordProSyntax.cover`…); one with no value at all is not, since that is what the editor writes
-  into the header for the value to be typed into.
+  into the header for the value to be typed into. A definition is coloured the same way: the chord it names is a
+  `CHORD` token inside its value, and one whose shape cannot be read (`ChordProDefinitions.Reading.Invalid`: a fret
+  that is no number, fingers that do not match the frets, a selector naming an instrument the shape is not for) is one
+  `INVALID` token; one that is only not Campfire's to draw (a `copy`, a banjo's five strings) is neither.
+- `ChordProChords` — what a chord name means: `parse` reads the notes a name stands for (`model/Chord`: the root, the
+  intervals above it in one octave, the bass of a slash chord) in the notation it is shown in, a lowercase minor and a
+  parenthesized chord included. It walks the name through `ChordProChordNames.read`, the same walk `isChordName` is,
+  handing each part to a `ChordNameReader`, so a name is read exactly where it is recognized. `Chord.id` (`C#:0.3.7.10`)
+  is one string for every spelling of a chord, which is what a player's choice of shape is stored under. The
+  readings a chart leaves open are made once here (`11` without the major third, `13` without the ninth and the
+  eleventh, `dim` the triad, `C2` an added second). `namesIn` lists the chords a song plays in order, once each — the
+  lyrics, the grids, the tabs' chord rows, the brackets of comments and labels, never the key — and `transposedName`
+  moves one name in its own notation.
+- `ChordVoicings` / `ChordVoicingTables` — how a chord is played on the guitar, the ukulele and the keyboard
+  (`model/ChordInstrument`, `model/ChordVoicing`). The tables are the shapes everybody knows, typed by hand in a
+  `{define}`'s syntax, and always come first; a shape with no open string stands for its quality on every root and is
+  moved to it. A search finds the rest: every way to stop the strings within four frets up to the twelfth that sounds
+  only notes of the chord and all of the ones that make it (the fifth of a chord of four notes or more, and the root
+  where there are more notes than strings, may go), with the bass or else the root lowest (not on the re-entrant
+  ukulele, which plays a slash chord as the chord over it), no muted string between two that sound, open strings only
+  with a hand in the first five frets, no more than four fingers (`fingerCount`: a barre at the lowest fret and a finger
+  laid across neighbouring strings at one fret each count as one), and no shape that is another with a string left out.
+  The keyboard plays the notes from the root up, at most five, and their inversions, a slash chord's bass an octave
+  below. `default` is a table lookup wherever the tables have the chord; `all` runs the search. `write` and `read` are a
+  stored choice (`x 3 2 0 1 0`, `4 7 12 / 0`), and reading one back for a chord the tables know gives it their
+  fingering. `ChordVoicingTablesTest` checks that every shape of the tables sounds the chord it is filed under, and the
+  `desktopTest` contact sheet draws them all into `CAMPFIRE_CHORD_QA_DIR` where that is set, for a player to look over.
+- `ChordProDefinitions` — a song's own shapes (`model/ChordDefinition`). `read` takes a definition's value: frets
+  counted from the `base-fret` (`x`, `X`, `N` and `-1` muted), fingers, or a keyboard's `keys` counted from the root;
+  the instrument is the selector's where it names one and otherwise the one with as many strings; a `copy`, a
+  `display` alone or a string count no instrument has is `Other`, and what cannot be read `Invalid`. The last shape of
+  a chord on an instrument wins, in the place of the first. `line` writes one the way it is read, with no selector and
+  the base fret a diagram would draw. `transposed` moves one with the song: the name renamed like any chord, a fretted
+  shape moved along the neck, up by the rest of the octave where it has an open string and otherwise whichever of the
+  two octaves a hand can hold, the lower where both or neither can, the fingering following a barre coming or going
+  (and left out where it would need a fifth finger or several fingers came to rest open); `movedBy` adds up, so there
+  and back is zero. `ChordProTransposer` applies it on the model, by what the whole song is moved by, and in the text,
+  where `rewrittenLine` rewrites the name, the base fret, the frets and the fingers where they stand and keeps every
+  other character — a line with no base fret keeps counting from the nut, so that moving back writes the line it was,
+  and one that cannot be read is left byte for byte. `chordAt` and `rangeOf` are the editor's: the chord of the brackets
+  the caret is in or touching, and where a chord's frets or keys are written. Prettify formats a file holding
+  definitions as it always did — they anchor the header around them like any directive it does not order, which is
+  why `define` is not in `metadataOrder` — and `ChordProHeader.insertDefinition` is where a new one goes: after the
+  header's last definition, or at its end.
 
 Everything here is pure, so everything here is tested: `commonTest`, run with `./gradlew :chordpro:desktopTest`. A
 change to the dialect belongs in a test first.
