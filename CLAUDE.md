@@ -950,9 +950,11 @@ start, which is what the rest of `app/web` is about — see its `CLAUDE.md`.
   for the folder it lives in, which every relative URL of the page and the app depends on.
 - **The page keeps a copy of the app in the browser**, so that the address opens without a connection after one
   visit with it, on the songs or on a bookmarked screen. Every launch asks the deployment's `build.json` which build
-  is current (past every cache, for three seconds): the page's own build tops up whatever the cache lacks and starts,
-  another build is downloaded, checked file by file against its SHA-256, stored with its page last and loaded once,
-  and no answer, or an update that fails anywhere, starts the build that is kept. A `service-worker.js` at an address
+  is current (past every cache, for three seconds, or 0.8 s where the kept build is whole, the cache being checked
+  meanwhile; an answer that comes later than that and names another build makes the next launch wait the full three
+  seconds, so a slow network gets a release one launch late): the page's own build tops up whatever the cache lacks
+  and starts, another build is downloaded, checked file by file against its SHA-256, stored with its page last and
+  loaded once, and no answer, or an update that fails anywhere, starts the build that is kept. A `service-worker.js` at an address
   that never changes only answers the folder from that one cache and decides nothing; it is the way out of a kept page
   that turned out broken, so it is never deleted. Nothing else changes for the user: no manifest, no install prompt,
   no update dialog, and a build published while the app is open arrives on the next launch. The loading screen's

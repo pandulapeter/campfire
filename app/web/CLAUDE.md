@@ -105,8 +105,12 @@ direction.
 - **The page keeps a copy of the app in the browser, so the address opens without a connection.** One Cache Storage
   cache, `campfire-web-app`, holds every file of a build under its versioned address and the page under the folder's
   address. Once the page holds the library's Web Lock (so only one tab ever writes the cache) it registers
-  `src/wasmJsMain/resources/service-worker.js` and asks for `build.json` with `no-store` and an address of its own, for
-  at most three seconds — `navigator.onLine` is not asked, since it says yes on a network that leads nowhere:
+  `src/wasmJsMain/resources/service-worker.js` and asks for `build.json` with `no-store` and an address of its own —
+  `navigator.onLine` is not asked, since it says yes on a network that leads nowhere. While the question is out the
+  cache is looked at once (its addresses, whether the kept page is this build's, whether the worker is active), and
+  what that finds is all `keep()` and `update()` go by, the cache being asked again only after a download. The answer is
+  waited for at most three seconds, or only until 0.8 s into the launch where the kept build is whole and no late answer
+  named another build last time (`answerWindow` in `campfire-launch`):
   - its own build id: whatever the cache lacks of the page's own build is downloaded (all of it on a first visit,
     and even without an answer, since a slow first visit is still online), the page itself kept if it is not yet, and
     the app started;
@@ -114,7 +118,11 @@ direction.
     entry for) are downloaded, the page stored **last**, and the page reloaded at the same address — a Dropbox answer
     in the query string included — once per build id per tab (`campfire-reloaded-for` in session storage), so a
     deployment that keeps failing its check cannot loop;
-  - no answer, or an update that failed anywhere: the kept build starts, and the next launch tries again.
+  - no answer, or an update that failed anywhere: the kept build starts, and the next launch tries again. The
+    request is left to run to its three seconds, and an answer it brings after the kept build started that names
+    another build is noted (`campfire-update-waiting` in local storage), so the next launch waits the full time for
+    it: a network that is always slower than 0.8 s gets a release, or the fix of a broken one, one launch later
+    than a fast one rather than never. An answer in time, or the launch of the build it named, crosses the note off.
 
   Storing the page last is the whole commit: a kept build is the kept page plus every file its map names, so an
   interrupted update leaves the previous build whole, with some of the next one's files beside it for the next

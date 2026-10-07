@@ -47,6 +47,9 @@
         window.campfireLaunch = (function () {
             'use strict';
 
+            var ANSWER_TIMEOUT = 3000;
+            var ANSWER_TIMEOUT_WHEN_KEPT = 800;
+
             /** The address a file of a build is asked for and kept under: its path, versioned by its own content. */
             function addressOf(path, entry, folder) {
                 var url = new URL(path, folder);
@@ -98,13 +101,35 @@
                 return answer && answer.id !== ownId && answer.id !== reloadedFor ? 'update' : 'keep';
             }
 
+            /**
+             * Whether the kept build of [files] is whole: its page kept, the worker that answers with it active and
+             * every file of its map among [kept].
+             */
+            function isComplete(files, kept, folder, isPageKept, isWorkerActive) {
+                return !!isPageKept && !!isWorkerActive && missingFiles(files, kept, folder).length === 0;
+            }
+
+            /**
+             * How long after the launch began the answer of build.json is waited for. A whole kept build only waits
+             * briefly, since without an answer it starts all the same - unless an answer that came too late on a
+             * previous launch named another build ([updateWaiting]), which this launch then waits the full time for,
+             * so that a network that is always slow still gets a release, or the fix of a broken one, one launch
+             * later. A waiting id that is the page's own is a release that has already arrived.
+             */
+            function answerWindow(isComplete, updateWaiting, ownId) {
+                return isComplete && (!updateWaiting || updateWaiting === ownId) ? ANSWER_TIMEOUT_WHEN_KEPT : ANSWER_TIMEOUT;
+            }
+
             return {
+                ANSWER_TIMEOUT: ANSWER_TIMEOUT,
                 addressOf: addressOf,
                 missingFiles: missingFiles,
                 staleAddresses: staleAddresses,
                 isPageOf: isPageOf,
                 parseAnswer: parseAnswer,
-                nextStep: nextStep
+                nextStep: nextStep,
+                isComplete: isComplete,
+                answerWindow: answerWindow
             };
         })();
     </script>
@@ -639,7 +664,12 @@
         // The app keeps a copy of itself in the browser, so that this address opens without a connection: a service
         // worker answers the page's folder from one cache (see service-worker.js for its layout, which is a contract
         // with every page ever kept), and this page decides what goes into it. Every launch, wherever the page came
-        // from, first asks the deployment which build is current (build.json, past every cache, for three seconds):
+        // from, first asks the deployment which build is current (build.json, past every cache), and looks at what the
+        // cache holds while the question is out. The answer is waited for three seconds, or only until 0.8 s into the
+        // launch where the kept build turns out to be whole, since that one starts without an answer all the same. An
+        // answer that comes after the kept build started is not lost: one naming another build is noted
+        // (campfire-update-waiting in local storage), and the next launch waits the full three seconds for it, so a
+        // network that is always slow gets a release, or the fix of a broken one, one launch later rather than never:
         //
         // - The page's own build: whatever the cache is missing of it is downloaded - all of it on a first visit -
         //   and the app starts.
@@ -657,7 +687,8 @@
         // windows): there the app starts from the network as it always has.
         var CACHE_NAME = 'campfire-web-app';
         var RELOADED_FOR = 'campfire-reloaded-for';
-        var ANSWER_TIMEOUT = 3000;
+        var UPDATE_WAITING = 'campfire-update-waiting';
+        var ANSWER_TIMEOUT = window.campfireLaunch.ANSWER_TIMEOUT;
         // A download gives up when nothing has arrived for this long rather than after a total time, which a slow
         // connection could never meet for sixteen megabytes.
         var STALL_TIMEOUT = 15000;
@@ -673,30 +704,96 @@
                 startApp();
                 return;
             }
+            var launchedAt = Date.now();
             registerWorker();
-            Promise.all([
-                window.caches.open(CACHE_NAME).catch(function () {
-                    return null;
-                }),
-                askDeployment()
-            ]).then(function (results) {
-                cache = results[0];
+            var updateWaiting = readUpdateWaiting();
+            if (updateWaiting === BUILD.id) {
+                forgetUpdateWaiting();
+            }
+            var answered = askDeployment();
+            window.caches.open(CACHE_NAME).catch(function () {
+                return null;
+            }).then(function (opened) {
+                cache = opened;
                 if (!cache) {
                     startApp();
                     return undefined;
                 }
                 isKeeping = true;
                 expected = 0;
-                var answer = results[1];
-                if (window.campfireLaunch.nextStep(BUILD.id, answer, readReloadedFor()) === 'update') {
-                    return update(answer).catch(function () {
-                        return keep(null);
+                return inspect().then(function (inspection) {
+                    var isComplete = window.campfireLaunch.isComplete(
+                        BUILD.files, inspection.kept, folder, inspection.isPageKept, inspection.isWorkerActive
+                    );
+                    var wait = window.campfireLaunch.answerWindow(isComplete, updateWaiting, BUILD.id) - (Date.now() - launchedAt);
+                    return answerWithin(answered, wait).then(function (answer) {
+                        if (window.campfireLaunch.nextStep(BUILD.id, answer, readReloadedFor()) === 'update') {
+                            return update(answer, inspection).catch(function () {
+                                return keep(null, inspection);
+                            });
+                        }
+                        return keep(answer && answer.id === BUILD.id ? answer : null, inspection);
                     });
-                }
-                return keep(answer && answer.id === BUILD.id ? answer : null);
+                });
             }).catch(function () {
                 isSaved = false;
             }).then(startApp);
+        }
+
+        /**
+         * The answer of [answered] if it comes within [wait] milliseconds, or null. A request still out is left to run
+         * to its own time limit, and an answer it brings after this launch moved on that names another build is noted
+         * for the next launch; one that came in time crosses the note off.
+         */
+        function answerWithin(answered, wait) {
+            var isLate = false;
+            answered.then(function (answer) {
+                if (!answer) {
+                    return;
+                }
+                if (!isLate) {
+                    forgetUpdateWaiting();
+                } else if (window.campfireLaunch.nextStep(BUILD.id, answer, null) === 'update') {
+                    try {
+                        window.localStorage.setItem(UPDATE_WAITING, answer.id);
+                    } catch (e) {
+                    }
+                }
+            });
+            return Promise.race([
+                answered,
+                new Promise(function (resolve) {
+                    setTimeout(function () {
+                        isLate = true;
+                        resolve(null);
+                    }, Math.max(0, wait));
+                })
+            ]);
+        }
+
+        /**
+         * What the cache holds of the page's own build, looked at once per launch: the addresses it keeps, whether the
+         * page kept is this one, and whether the worker that answers with it is active.
+         */
+        function inspect() {
+            return Promise.all([cachedAddresses(), isPageKept(), isWorkerActive()]).then(function (checks) {
+                return { kept: checks[0], isPageKept: checks[1], isWorkerActive: checks[2] };
+            });
+        }
+
+        function readUpdateWaiting() {
+            try {
+                return window.localStorage.getItem(UPDATE_WAITING);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function forgetUpdateWaiting() {
+            try {
+                window.localStorage.removeItem(UPDATE_WAITING);
+            } catch (e) {
+            }
         }
 
         /**
@@ -740,20 +837,26 @@
          * an answer from the deployment, since a slow first visit is still online; the page itself can only be kept
          * with one, which is what its digest comes from. A file that cannot be had is not a failure here: the app
          * still starts, asks the network for it, and fails the ordinary way if that cannot answer either.
+         *
+         * The cache is only asked again where this launch wrote to it. The worker is asked again wherever it was not
+         * active yet, since it was registered at the start of this very launch and a first visit finds it installing.
          */
-        function keep(answer) {
-            return cachedAddresses().then(function (kept) {
-                return download(window.campfireLaunch.missingFiles(BUILD.files, kept, folder));
-            }).catch(function () {
+        function keep(answer, inspection) {
+            var missing = window.campfireLaunch.missingFiles(BUILD.files, inspection.kept, folder);
+            var isKept = inspection.isPageKept;
+            return download(missing).catch(function () {
             }).then(function () {
-                return isPageKept().then(function (isKept) {
-                    return isKept || !answer ? undefined : keepPage(answer.page).catch(function () {
-                    });
+                return isKept || !answer ? undefined : keepPage(answer.page).then(function () {
+                    isKept = true;
+                }, function () {
                 });
             }).then(function () {
-                return Promise.all([isWorkerActive(), isPageKept(), cachedAddresses()]);
+                return Promise.all([
+                    inspection.isWorkerActive || isWorkerActive(),
+                    missing.length === 0 ? inspection.kept : cachedAddresses()
+                ]);
             }).then(function (checks) {
-                isSaved = checks[0] && checks[1] && window.campfireLaunch.missingFiles(BUILD.files, checks[2], folder).length === 0;
+                isSaved = window.campfireLaunch.isComplete(BUILD.files, checks[1], folder, isKept, checks[0]);
             });
         }
 
@@ -762,10 +865,8 @@
          * an authorization answer in the query string included, which the new build reads once as this one would
          * have. The reload is noted for this tab, so a page that comes back as this one is not sent round again.
          */
-        function update(answer) {
-            return cachedAddresses().then(function (kept) {
-                return download(window.campfireLaunch.missingFiles(answer.files, kept, folder));
-            }).then(function () {
+        function update(answer, inspection) {
+            return download(window.campfireLaunch.missingFiles(answer.files, inspection.kept, folder)).then(function () {
                 return keepPage(answer.page);
             }).then(function () {
                 try {

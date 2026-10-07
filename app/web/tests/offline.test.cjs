@@ -137,3 +137,19 @@ test('another build is downloaded once per tab, and nothing else is', () => {
     assert.equal(launch.nextStep('a', { id: 'b' }, 'c'), 'update');
     assert.equal(launch.nextStep('a', { id: 'b' }, 'b'), 'keep');
 });
+
+test('a kept build is whole only with its page, its worker and every file of its map', () => {
+    const everything = Object.keys(FILES).map(file => launch.addressOf(file, FILES[file], SCOPE));
+    assert.equal(launch.isComplete(FILES, [SCOPE, ...everything], SCOPE, true, true), true);
+    assert.equal(launch.isComplete(FILES, [SCOPE, ...everything], SCOPE, false, true), false);
+    assert.equal(launch.isComplete(FILES, [SCOPE, ...everything], SCOPE, true, false), false);
+    assert.equal(launch.isComplete(FILES, [SCOPE, ...everything.slice(1)], SCOPE, true, true), false);
+});
+
+test('build.json is waited for briefly only for a whole kept build that no late answer has overtaken', () => {
+    assert.equal(launch.answerWindow(true, null, 'a'), 800);
+    assert.equal(launch.answerWindow(false, null, 'a'), 3000);
+    assert.equal(launch.answerWindow(true, 'other', 'a'), 3000);
+    assert.equal(launch.answerWindow(false, 'other', 'a'), 3000);
+    assert.equal(launch.answerWindow(true, 'a', 'a'), 800);
+});
