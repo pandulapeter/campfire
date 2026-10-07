@@ -53,12 +53,12 @@ internal val websiteShots: List<Triple<String, Device, Shot>> by lazy {
                 drive = { viewModel.selectTopLevelDestination(CampfireDestination.Metronome) },
             ),
         ),
-        Triple("tablet-song", Device.IPAD, song("tablet-song", "jonathan_coulton-still_alive.cho")),
+        Triple("tablet-song", Device.IPAD, song("tablet-song", "jonathan_coulton-still_alive.cho", fontScale = 0.9f)),
         // A song with the metronome panel open under its title, not playing.
         Triple(
             "tablet-song-metronome",
             Device.IPAD,
-            song("tablet-song-metronome", "counting_crows-accidentally_in_love.cho", extra = metronome(isSongPanelShown = true)),
+            song("tablet-song-metronome", "counting_crows-accidentally_in_love.cho", fontScale = 0.9f, extra = metronome(isSongPanelShown = true)),
         ),
         // A song exported as a two-column A4 PDF, every option ticked.
         Triple(
@@ -71,25 +71,11 @@ internal val websiteShots: List<Triple<String, Device, Shot>> by lazy {
                 drive = { viewModel.showDialog(CampfireViewModel.DialogType.Export(song = song("barenaked_ladies-big_bang_theory_theme.cho"))) },
             ),
         ),
-        Triple("laptop-song", Device.LAPTOP, song("laptop-song", "the_rembrandts-ill_be_there_for_you.cho")),
+        Triple("laptop-song", Device.LAPTOP, song("laptop-song", "the_rembrandts-ill_be_there_for_you.cho", fontScale = 1.05f)),
         Triple("laptop-import", Device.LAPTOP, editor("laptop-import", "ed_sheeran-thinking_out_loud.cho")),
         Triple("laptop-editor", Device.LAPTOP, editor("laptop-editor", "the_proclaimers-im_gonna_be_500_miles.cho")),
         Triple("laptop-setlists", Device.LAPTOP, setlists),
-    ).let { list ->
-        val sweep = System.getenv("FS_SWEEP")?.split(',')?.map(String::toFloat) ?: return@let list
-        val songs = listOf(
-            Triple("still", Device.IPAD, "jonathan_coulton-still_alive.cho"),
-            Triple("rembrandts", Device.LAPTOP, "the_rembrandts-ill_be_there_for_you.cho"),
-            Triple("accidentally", Device.IPAD, "counting_crows-accidentally_in_love.cho"),
-        )
-        return@lazy songs.flatMap { (name, device, file) ->
-            sweep.flatMap { value ->
-                listOf(false, true).map { panel ->
-                    Triple("$name-$value-${if (panel) "panel" else "plain"}", device, song("sweep", file, value, metronome(panel)))
-                }
-            }
-        }
-    }.flatMap { (name, device, shot) ->
+    ).flatMap { (name, device, shot) ->
         listOf(UserPreferences.UiMode.LIGHT, UserPreferences.UiMode.DARK).map { uiMode ->
             Triple("$name-${uiMode.id}", device, shot.inTheme(uiMode))
         }
@@ -114,8 +100,10 @@ private fun metronome(isSongPanelShown: Boolean): Map<String, JsonElement> = map
 )
 
 /**
- * A song from the library, at the text size that lays it out in three columns on both the tablet and the laptop, so no
- * section is cut at the bottom where a column ends.
+ * A song from the library at [fontScale], chosen per song by trying every size from 80% to 130% in steps of 2.5%: a
+ * song longer than a page is cut wherever a column ends, so the size is one at which the page ends exactly where a
+ * section does, never inside one (and, for Still Alive, Verse 2 stays in one column). A change to the song, the device
+ * or the layout calls for trying again. The Chords section is never folded to make room.
  */
 private fun song(id: String, fileName: String, fontScale: Float = 1f, extra: Map<String, JsonElement> = emptyMap()) = Shot(
     id = id,
