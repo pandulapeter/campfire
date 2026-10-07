@@ -11,7 +11,7 @@ package com.pandulapeter.campfire.data.source.remote.implementation.coverArt
 
 import com.pandulapeter.campfire.data.source.remote.api.CoverArtRemoteSource
 import com.pandulapeter.campfire.data.source.remote.api.model.CoverArtDownload
-import io.ktor.client.HttpClient
+import com.pandulapeter.campfire.data.source.remote.implementation.network.HttpClientHolder
 import io.ktor.client.request.prepareGet
 import io.ktor.client.statement.bodyAsChannel
 import io.ktor.http.ContentType
@@ -34,13 +34,13 @@ import org.koin.core.annotation.Single
  */
 @Single
 internal class CoverArtRemoteSourceImpl(
-    private val httpClient: HttpClient,
+    private val httpClientHolder: HttpClientHolder,
 ) : CoverArtRemoteSource {
 
     override suspend fun downloadCoverArt(url: String): CoverArtDownload {
         if (parseUrl(url) == null) return CoverArtDownload.Missing
         return try {
-            httpClient.prepareGet(url).execute { response ->
+            httpClientHolder.client().prepareGet(url).execute { response ->
                 when {
                     response.status.isTransient -> CoverArtDownload.Unreachable
                     !response.status.isSuccess() -> CoverArtDownload.Missing

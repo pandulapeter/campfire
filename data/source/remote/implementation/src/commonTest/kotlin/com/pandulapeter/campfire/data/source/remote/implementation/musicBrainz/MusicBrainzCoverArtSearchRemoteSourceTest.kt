@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.data.source.remote.implementation.musicBrainz
 
 import com.pandulapeter.campfire.data.model.domain.CoverArtQuery
 import com.pandulapeter.campfire.data.source.remote.api.CoverArtSearchException
+import com.pandulapeter.campfire.data.source.remote.implementation.network.HttpClientHolder
 import com.pandulapeter.campfire.data.source.remote.implementation.network.USER_AGENT
 import com.pandulapeter.campfire.data.source.remote.implementation.network.userAgent
 import io.ktor.client.HttpClient
@@ -147,14 +148,16 @@ class MusicBrainzCoverArtSearchRemoteSourceTest {
     }
 
     private fun TestScope.source(handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData) = MusicBrainzCoverArtSearchRemoteSource(
-        httpClient = HttpClient(MockEngine.create {
-            // The handler records virtual time, so it must run on that clock's scheduler too. An I/O thread can
-            // reach it only after runTest has already advanced to the next request's turn.
-            dispatcher = StandardTestDispatcher(testScheduler)
-            addHandler(handler)
-        }) {
-            expectSuccess = false
-            install(UserAgent) { agent = USER_AGENT }
+        httpClientHolder = HttpClientHolder {
+            HttpClient(MockEngine.create {
+                // The handler records virtual time, so it must run on that clock's scheduler too. An I/O thread can
+                // reach it only after runTest has already advanced to the next request's turn.
+                dispatcher = StandardTestDispatcher(testScheduler)
+                addHandler(handler)
+            }) {
+                expectSuccess = false
+                install(UserAgent) { agent = USER_AGENT }
+            }
         },
         rateLimiter = MusicBrainzRateLimiter(timeSource = testScheduler.timeSource, interval = 1_100.milliseconds),
     )

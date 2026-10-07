@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.data.model.domain.CoverArtCandidate
 import com.pandulapeter.campfire.data.model.domain.CoverArtQuery
 import com.pandulapeter.campfire.data.model.domain.CoverArtService
 import com.pandulapeter.campfire.data.source.remote.api.CoverArtSearchException
+import com.pandulapeter.campfire.data.source.remote.implementation.network.HttpClientHolder
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -103,7 +104,7 @@ class ITunesSearchTest {
     fun `a refusal is a failure rather than something to wait out`() = runTest {
         var requestCount = 0
         val source = ITunesCoverArtSearchRemoteSource(
-            httpClient = HttpClient(MockEngine { requestCount++; respond("", HttpStatusCode.Forbidden) }) { expectSuccess = false },
+            httpClientHolder = HttpClientHolder { HttpClient(MockEngine { requestCount++; respond("", HttpStatusCode.Forbidden) }) { expectSuccess = false } },
         )
 
         assertFailsWith<CoverArtSearchException> { source.searchCoverArt(CoverArtQuery(artist = "", album = "Nimrod", title = ""), onBusy = {}) }

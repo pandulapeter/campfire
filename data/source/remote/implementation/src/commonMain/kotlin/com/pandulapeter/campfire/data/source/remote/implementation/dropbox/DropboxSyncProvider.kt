@@ -29,9 +29,9 @@ import com.pandulapeter.campfire.data.source.remote.implementation.auth.SyncCred
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.SyncCredentialsStore
 import com.pandulapeter.campfire.data.source.remote.implementation.crypto.Pkce
 import com.pandulapeter.campfire.data.source.remote.implementation.crypto.dropboxContentHash
+import com.pandulapeter.campfire.data.source.remote.implementation.network.HttpClientHolder
 import com.pandulapeter.campfire.data.source.remote.implementation.network.toAsciiJsonString
 import com.pandulapeter.campfire.data.source.remote.implementation.network.urlEncode
-import io.ktor.client.HttpClient
 import io.ktor.client.network.sockets.ConnectTimeoutException
 import io.ktor.client.network.sockets.SocketTimeoutException
 import io.ktor.client.plugins.HttpRequestTimeoutException
@@ -71,7 +71,7 @@ import kotlinx.serialization.json.JsonPrimitive
  * Campfire's own anywhere in the picture.
  */
 internal class DropboxSyncProvider(
-    private val httpClient: HttpClient,
+    private val httpClientHolder: HttpClientHolder,
     private val credentialsStore: SyncCredentialsStore,
     private val appKey: String,
 ) : SyncProvider {
@@ -150,7 +150,7 @@ internal class DropboxSyncProvider(
         // Best effort: the local credentials are already gone, and a token that cannot be revoked simply expires.
         try {
             withTimeoutOrNull(REVOKE_TIMEOUT_MILLIS) {
-                transport { httpClient.post(REVOKE_URL) { header("Authorization", "Bearer $accessToken") } }
+                transport { httpClientHolder.client().post(REVOKE_URL) { header("Authorization", "Bearer $accessToken") } }
             }
         } catch (exception: CancellationException) {
             throw exception
@@ -247,7 +247,7 @@ internal class DropboxSyncProvider(
     }?.rev ?: throw DropboxApiException(response.status.value, "the download named no revision")
 
     private suspend fun downloadResponse(path: String) = request { accessToken ->
-        httpClient.post(DOWNLOAD_URL) {
+        httpClientHolder.client().post(DOWNLOAD_URL) {
             header("Authorization", "Bearer $accessToken")
             header("Dropbox-API-Arg", """{"path":${path.toAsciiJsonString()}}""")
         }
@@ -281,7 +281,7 @@ internal class DropboxSyncProvider(
             """{".tag":"update","update":${expectedRevision.toAsciiJsonString()}}"""
         }
         val response = request { accessToken ->
-            httpClient.post(UPLOAD_URL) {
+            httpClientHolder.client().post(UPLOAD_URL) {
                 header("Authorization", "Bearer $accessToken")
                 header(
                     "Dropbox-API-Arg",
@@ -397,7 +397,7 @@ internal class DropboxSyncProvider(
     /** A Dropbox "RPC" call: JSON in, JSON out, everything above the transport reported in the body. */
     private suspend fun rpc(url: String, body: String?): String {
         val response = request { accessToken ->
-            httpClient.post(url) {
+            httpClientHolder.client().post(url) {
                 header("Authorization", "Bearer $accessToken")
                 if (body != null) {
                     contentType(ContentType.Application.Json)
@@ -567,7 +567,7 @@ internal class DropboxSyncProvider(
 
     private suspend fun exchange(form: String): DropboxTokenResponse {
         val response = transport {
-            httpClient.post(TOKEN_URL) {
+            httpClientHolder.client().post(TOKEN_URL) {
                 contentType(ContentType.Application.FormUrlEncoded)
                 setBody(form)
             }

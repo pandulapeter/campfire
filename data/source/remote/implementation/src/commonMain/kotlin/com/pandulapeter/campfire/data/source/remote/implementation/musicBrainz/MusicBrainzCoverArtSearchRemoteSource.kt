@@ -16,7 +16,7 @@ import com.pandulapeter.campfire.data.source.remote.api.CoverArtSearchException
 import com.pandulapeter.campfire.data.source.remote.api.CoverArtSearchRemoteSource
 import com.pandulapeter.campfire.data.source.remote.implementation.coverArt.coverArtSearchTransport
 import com.pandulapeter.campfire.data.source.remote.implementation.coverArt.parseCoverArtSearchAnswer
-import io.ktor.client.HttpClient
+import com.pandulapeter.campfire.data.source.remote.implementation.network.HttpClientHolder
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
@@ -33,7 +33,7 @@ import kotlin.math.min
  * wait through `onBusy`, since a search that takes ten seconds without saying why looks broken.
  */
 internal class MusicBrainzCoverArtSearchRemoteSource(
-    private val httpClient: HttpClient,
+    private val httpClientHolder: HttpClientHolder,
     private val rateLimiter: MusicBrainzRateLimiter,
 ) : CoverArtSearchRemoteSource {
 
@@ -50,7 +50,7 @@ internal class MusicBrainzCoverArtSearchRemoteSource(
         while (true) {
             val (status, retryAfterSeconds, body) = coverArtSearchTransport(SERVICE_NAME) {
                 rateLimiter.awaitTurn()
-                val response = httpClient.get(url)
+                val response = httpClientHolder.client().get(url)
                 Triple(response.status, response.headers[HttpHeaders.RetryAfter]?.trim()?.toLongOrNull(), response.bodyAsText())
             }
             when {

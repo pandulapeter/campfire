@@ -16,8 +16,8 @@ import com.pandulapeter.campfire.data.source.remote.implementation.dropbox.Dropb
 import com.pandulapeter.campfire.data.source.remote.implementation.iTunes.ITunesCoverArtSearchRemoteSource
 import com.pandulapeter.campfire.data.source.remote.implementation.musicBrainz.MusicBrainzCoverArtSearchRemoteSource
 import com.pandulapeter.campfire.data.source.remote.implementation.musicBrainz.MusicBrainzRateLimiter
+import com.pandulapeter.campfire.data.source.remote.implementation.network.HttpClientHolder
 import com.pandulapeter.campfire.data.source.remote.implementation.network.createHttpClient
-import io.ktor.client.HttpClient
 import org.koin.core.annotation.ComponentScan
 import org.koin.core.annotation.Module
 import org.koin.core.annotation.Single
@@ -29,7 +29,7 @@ import kotlin.time.TimeSource
 object DataRemoteSourceModule {
 
     @Single
-    internal fun httpClient(): HttpClient = createHttpClient()
+    internal fun httpClientHolder(): HttpClientHolder = HttpClientHolder(::createHttpClient)
 
     /**
      * A list rather than a single binding: adding a provider is adding one line here, and nothing above this module
@@ -41,12 +41,12 @@ object DataRemoteSourceModule {
      */
     @Single
     internal fun syncProviders(
-        httpClient: HttpClient,
+        httpClientHolder: HttpClientHolder,
         credentialsStore: SyncCredentialsStore,
     ): SyncProviders = SyncProviders(
         all = buildList {
             if (DROPBOX_APP_KEY.isNotEmpty()) {
-                add(DropboxSyncProvider(httpClient = httpClient, credentialsStore = credentialsStore, appKey = DROPBOX_APP_KEY))
+                add(DropboxSyncProvider(httpClientHolder = httpClientHolder, credentialsStore = credentialsStore, appKey = DROPBOX_APP_KEY))
             }
         },
     )
@@ -58,13 +58,13 @@ object DataRemoteSourceModule {
      * at once its release groups, one for every edition of a record, are the tidier list to start with.
      */
     @Single
-    internal fun coverArtSearchRemoteSources(httpClient: HttpClient): CoverArtSearchRemoteSources = CoverArtSearchRemoteSources(
+    internal fun coverArtSearchRemoteSources(httpClientHolder: HttpClientHolder): CoverArtSearchRemoteSources = CoverArtSearchRemoteSources(
         all = listOf(
             MusicBrainzCoverArtSearchRemoteSource(
-                httpClient = httpClient,
+                httpClientHolder = httpClientHolder,
                 rateLimiter = MusicBrainzRateLimiter(timeSource = TimeSource.Monotonic, interval = MUSIC_BRAINZ_REQUEST_INTERVAL),
             ),
-            ITunesCoverArtSearchRemoteSource(httpClient = httpClient),
+            ITunesCoverArtSearchRemoteSource(httpClientHolder = httpClientHolder),
         ),
     )
 

@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.source.remote.implementation.coverArt
 
 import com.pandulapeter.campfire.data.source.remote.api.model.CoverArtDownload
+import com.pandulapeter.campfire.data.source.remote.implementation.network.HttpClientHolder
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockRequestHandleScope
@@ -63,7 +64,7 @@ class CoverArtRemoteSourceTest {
     }
 
     private fun source(handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData) = CoverArtRemoteSourceImpl(
-        httpClient = HttpClient(MockEngine(handler)) { expectSuccess = false },
+        httpClientHolder = HttpClientHolder { HttpClient(MockEngine(handler)) { expectSuccess = false } },
     )
 
     private companion object {

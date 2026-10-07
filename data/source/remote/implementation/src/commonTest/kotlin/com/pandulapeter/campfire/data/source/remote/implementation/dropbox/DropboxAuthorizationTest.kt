@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.data.source.local.api.SyncStateLocalSource
 import com.pandulapeter.campfire.data.source.remote.api.hashing.Sha256
 import com.pandulapeter.campfire.data.source.remote.api.model.redirectParameters
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.SyncCredentialsStore
+import com.pandulapeter.campfire.data.source.remote.implementation.network.HttpClientHolder
 import com.pandulapeter.campfire.data.source.remote.implementation.network.createHttpClient
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
@@ -82,7 +83,7 @@ class DropboxAuthorizationTest {
         assertTrue(provider().buildAuthorizationRequest(redirectUri = null).authorizationUrl.contains("redirect_uri").not())
 
     private fun provider() = DropboxSyncProvider(
-        httpClient = createHttpClient(),
+        httpClientHolder = HttpClientHolder(::createHttpClient),
         credentialsStore = SyncCredentialsStore(NoStorage),
         appKey = APP_KEY,
     )

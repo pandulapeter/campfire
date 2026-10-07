@@ -133,7 +133,9 @@ redirect URIs character for character, which is why the desktop port is fixed.
   allows about twenty requests a minute, so it is asked without a pace of its own and a refusal is a failure.
 - `crypto/` — `Pkce` (verifier, S256 challenge, state) and `dropboxContentHash` (SHA-256 of each 4 MB block,
   concatenated, hashed again), both on the `Sha256` in `:data:source:remote:api`.
-- `network/` — the `HttpClient` factory, one engine per target (OkHttp, CIO, Darwin, `fetch`), `UserAgent.kt` — the
+- `network/` — the `HttpClient` factory, one engine per target (OkHttp, CIO, Darwin, `fetch`), `HttpClientHolder` —
+  the one client, built on the first request and on `Dispatchers.Default`, so a user who never syncs or searches for
+  a cover never builds it and the view model's construction never does on the main thread —, `UserAgent.kt` — the
   `Campfire/<version> ( https://github.com/pandulapeter/campfire )` every request names the app with, which MusicBrainz
   asks of every client and throttles hardest without, sent on every request since it names the app and nothing about
   the user; not in the browser, where a script cannot set it and where a header the host does not expect would turn

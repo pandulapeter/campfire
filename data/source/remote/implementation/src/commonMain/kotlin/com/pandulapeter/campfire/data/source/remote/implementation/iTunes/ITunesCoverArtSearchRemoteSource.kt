@@ -16,7 +16,7 @@ import com.pandulapeter.campfire.data.source.remote.api.CoverArtSearchException
 import com.pandulapeter.campfire.data.source.remote.api.CoverArtSearchRemoteSource
 import com.pandulapeter.campfire.data.source.remote.implementation.coverArt.coverArtSearchTransport
 import com.pandulapeter.campfire.data.source.remote.implementation.coverArt.parseCoverArtSearchAnswer
-import io.ktor.client.HttpClient
+import com.pandulapeter.campfire.data.source.remote.implementation.network.HttpClientHolder
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.isSuccess
@@ -28,7 +28,7 @@ import io.ktor.http.isSuccess
  * other rather than something to wait out: the other service's candidates are still there meanwhile.
  */
 internal class ITunesCoverArtSearchRemoteSource(
-    private val httpClient: HttpClient,
+    private val httpClientHolder: HttpClientHolder,
 ) : CoverArtSearchRemoteSource {
 
     override val service = CoverArtService.ITUNES
@@ -36,7 +36,7 @@ internal class ITunesCoverArtSearchRemoteSource(
     override suspend fun searchCoverArt(query: CoverArtQuery, onBusy: () -> Unit): List<CoverArtCandidate> {
         val url = ITunesSearch.url(query) ?: return emptyList()
         val body = coverArtSearchTransport(SERVICE_NAME) {
-            val response = httpClient.get(url)
+            val response = httpClientHolder.client().get(url)
             if (!response.status.isSuccess()) throw CoverArtSearchException("$SERVICE_NAME answered ${response.status.value}.")
             response.bodyAsText()
         }

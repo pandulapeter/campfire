@@ -19,6 +19,7 @@ import com.pandulapeter.campfire.data.source.remote.api.SyncRemoteStorageFullExc
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteDeletion
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteWriteResult
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.SyncCredentialsStore
+import com.pandulapeter.campfire.data.source.remote.implementation.network.HttpClientHolder
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.mock.MockEngine
@@ -399,7 +400,7 @@ class DropboxRequestTest {
         storage: SyncStateLocalSource = ConnectedStorage(),
         handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData,
     ) = DropboxSyncProvider(
-        httpClient = HttpClient(MockEngine(handler), configure),
+        httpClientHolder = HttpClientHolder { HttpClient(MockEngine(handler), configure) },
         credentialsStore = SyncCredentialsStore(storage),
         appKey = APP_KEY,
     )
