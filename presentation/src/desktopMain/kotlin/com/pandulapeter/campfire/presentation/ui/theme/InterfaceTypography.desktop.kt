@@ -12,6 +12,9 @@ package com.pandulapeter.campfire.presentation.ui.theme
 import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import com.pandulapeter.campfire.presentation.ui.platform.PlatformImpersonation
 
 @Composable
-internal actual fun interfaceTypography(): Typography? = remember { Typography() }
+internal actual fun interfaceTypography(): Typography? = remember {
+    PlatformImpersonation.fontFamily?.let { Typography(fontFamily = it) } ?: Typography()
+}

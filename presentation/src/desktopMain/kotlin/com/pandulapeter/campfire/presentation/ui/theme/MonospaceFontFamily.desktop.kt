@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.theme
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontFamily
+import com.pandulapeter.campfire.presentation.ui.platform.PlatformImpersonation
 
 @Composable
-internal actual fun monospaceFontFamily(): FontFamily = FontFamily.Monospace
+internal actual fun monospaceFontFamily(): FontFamily = PlatformImpersonation.monospaceFontFamily ?: FontFamily.Monospace

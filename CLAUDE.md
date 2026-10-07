@@ -52,6 +52,8 @@ app:android / app:desktop / app:ios / app:web   entry points, platform chrome, "
   metronome:api / :implementation            the click: the Metronome contract, its patterns and tap tempo, and the
                                              engine with one audio output per platform (see Metronome below). Depends
                                              on nothing of the app's; used by :presentation, :app:android and :app:ios
+  tools:screenshots                          the store screenshots, rendered offscreen from the desktop build drawn as
+                                             each platform (see tools/screenshots); nothing depends on it
   chordpro                                   dependency-free ChordPro model, parser, serializer, transposer, tab
                                              wrapper, tag editor, highlighter, positioned chord-sheet converter, and
                                              what a chord name means and how it is played. Depends on nothing; used by
@@ -567,6 +569,10 @@ localized in both languages.
   Xcode (`app/ios/iosApp/iosApp.xcodeproj`) or with
   `xcodebuild -project app/ios/iosApp/iosApp.xcodeproj -target iosApp -sdk iphonesimulator -arch arm64 SYMROOT=<dir> OBJROOT=<dir> build`,
   then `xcrun simctl install/launch`.
+- `./gradlew :tools:screenshots:run` — the store screenshots for every platform, into the gitignored
+  `tools/screenshots/renders`, from a library copied into the gitignored `tools/screenshots/library`; the
+  `store-screenshots` skill runs it, frames the images in Screenshot Bro and exports the store images to the Desktop
+  and the README's banners to `documentation/screenshots`
 - `./gradlew :app:web:wasmJsBrowserDevelopmentRun` — web app on a dev server; `:app:web:wasmJsBrowserDistribution` writes
   the deployable site to `app/web/build/dist/wasmJs/productionExecutable`.
 - **Publishing a GitHub release is the release.** `publish-all.yml` answers it (a pre-release is left alone) by checking

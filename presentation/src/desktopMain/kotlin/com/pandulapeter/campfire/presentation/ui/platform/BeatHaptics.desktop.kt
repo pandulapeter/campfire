@@ -11,5 +11,12 @@ package com.pandulapeter.campfire.presentation.ui.platform
 
 import androidx.compose.runtime.Composable
 
+/**
+ * None on a desktop, which has nothing to tap the hand with. Drawn as a phone, a beat goes nowhere, but the Metronome
+ * tab offers the switch it offers there.
+ */
 @Composable
-internal actual fun rememberBeatHaptics(): BeatHaptics? = null
+internal actual fun rememberBeatHaptics(): BeatHaptics? = when (PlatformImpersonation.platform) {
+    ImpersonatedPlatform.ANDROID, ImpersonatedPlatform.IOS -> BeatHaptics {}
+    ImpersonatedPlatform.MACOS, ImpersonatedPlatform.WINDOWS, null -> null
+}

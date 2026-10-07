@@ -82,7 +82,8 @@ internal fun TempoSetting(
         }
         TempoStepper(
             bpm = bpm,
-            isDefault = bpm == MetronomePattern.DEFAULT_BPM,
+            // The tab's tempo is nobody's override of anything, so no value of it is set apart or reset.
+            isDefault = true,
             valueKey = pillChanges,
             onStep = { delta ->
                 pillChanges++
@@ -92,10 +93,7 @@ internal fun TempoSetting(
                 pillChanges++
                 onBpmChanged(tapped)
             },
-            onReset = {
-                pillChanges++
-                onBpmChanged(MetronomePattern.DEFAULT_BPM)
-            },
+            onReset = null,
         )
     }
     val sliderDescription = stringResource(Res.string.metronome_tempo_slider)

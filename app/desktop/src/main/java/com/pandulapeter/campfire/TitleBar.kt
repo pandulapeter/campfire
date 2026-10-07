@@ -141,11 +141,12 @@ internal fun TitleBarInsets(
     isFullscreen: Boolean,
     content: @Composable () -> Unit,
 ) {
-    if (titleBar == null || isFullscreen) return content()
+    // The content is composed from this one call site whatever the insets are, since one composed from two would be
+    // thrown away and built again at every change into or out of full screen, every scroll position with it.
     val platformInsets = LocalPlatformWindowInsets.current
-    val titleBarHeight = with(LocalDensity.current) { titleBar.height.roundToPx() }
+    val titleBarHeight = titleBar?.takeUnless { isFullscreen }?.let { with(LocalDensity.current) { it.height.roundToPx() } }
     val insets = remember(platformInsets, titleBarHeight) {
-        object : PlatformWindowInsets by platformInsets {
+        if (titleBarHeight == null) platformInsets else object : PlatformWindowInsets by platformInsets {
             override val captionBar = PlatformInsets(top = titleBarHeight)
             override val systemBars = PlatformInsets(top = titleBarHeight)
 

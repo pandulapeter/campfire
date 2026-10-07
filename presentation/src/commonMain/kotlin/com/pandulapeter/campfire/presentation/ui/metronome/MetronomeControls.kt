@@ -215,7 +215,7 @@ private fun metronomePanelLabel(isPanelShown: Boolean, bpm: Int) = if (isPanelSh
  * The tempo stepper of a song, the transposition's twin gesture for gesture: highlighted while the song plays at a
  * tempo of its own here, and one tap on the value puts it back to the file's. Its buttons repeat while held, since a
  * tempo is often far from where it starts. The Metronome tab steps its own tempo with the same pill, so that a tempo is
- * set the same way wherever it is set.
+ * set the same way wherever it is set — always plainly and with no reset there, since that tempo is nobody's override.
  *
  * @param isDefault Whether [bpm] is the one a tap on the value would put back, which is when the value is drawn plainly.
  * @param valueKey What a new tempo cross-fades in for, see [Stepper]: every change by default, and something that stays
@@ -234,7 +234,7 @@ internal fun TempoStepper(
     valueKey: Any = bpm,
     onStep: (delta: Int) -> Unit,
     onTapped: ((bpm: Int) -> Unit)? = null,
-    onReset: () -> Unit,
+    onReset: (() -> Unit)?,
 ) = Stepper(
     modifier = modifier,
     value = bpm.toString(),
@@ -250,7 +250,7 @@ internal fun TempoStepper(
     increaseLabel = stringResource(Res.string.song_details_tempo_increase),
     canIncrease = bpm < MetronomePattern.BPM_RANGE.last,
     onIncrease = { onStep(1) },
-    resetLabel = stringResource(Res.string.song_details_tempo_reset),
+    resetLabel = onReset?.let { stringResource(Res.string.song_details_tempo_reset) },
     onReset = onReset,
     repeatsOnHold = true,
     trailing = onTapped?.let { onTempo -> { TapTempoSegment(fontScale = fontScale, onTempo = onTempo) } },

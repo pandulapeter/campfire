@@ -12,28 +12,46 @@ package com.pandulapeter.campfire.presentation.ui.platform
 import androidx.compose.ui.input.pointer.PointerEvent
 import java.io.File
 
-internal actual val isDesktopPlatform = true
+internal actual val isDesktopPlatform
+    get() = when (PlatformImpersonation.platform) {
+        null, ImpersonatedPlatform.MACOS, ImpersonatedPlatform.WINDOWS -> true
+        ImpersonatedPlatform.ANDROID, ImpersonatedPlatform.IOS -> false
+    }
 
 internal actual val isLaunchScreenWholeStartup = true
 
 internal actual val isStartupScreenHeldUntilAppReady = false
 
 // The library is in the platform's application data folder, which the user can open and edit files in.
-internal actual val isLibraryEditableOutsideApp = true
+internal actual val isLibraryEditableOutsideApp get() = PlatformImpersonation.platform != ImpersonatedPlatform.ANDROID
 
-internal actual val appIconSurface = when {
-    isMacOs -> AppIconSurface.DOCK
-    isWindows -> AppIconSurface.TASKBAR
-    else -> AppIconSurface.WINDOW
-}
+internal actual val appIconSurface
+    get() = when (PlatformImpersonation.platform) {
+        ImpersonatedPlatform.ANDROID -> AppIconSurface.LAUNCHER
+        ImpersonatedPlatform.IOS -> AppIconSurface.HOME_SCREEN
+        ImpersonatedPlatform.MACOS -> AppIconSurface.DOCK
+        ImpersonatedPlatform.WINDOWS -> AppIconSurface.TASKBAR
+        null -> when {
+            isMacOs -> AppIconSurface.DOCK
+            isWindows -> AppIconSurface.TASKBAR
+            else -> AppIconSurface.WINDOW
+        }
+    }
 
 // The store of the machine, not of the build: a Mac build made by hand answers to the Mac App Store's rules and sends
 // a review there like the one the store hands out. Linux has no store.
-internal actual val platformStore: Distribution? = when {
-    isMacOs -> Distribution.MAC_APP_STORE
-    isWindows -> Distribution.MICROSOFT_STORE
-    else -> null
-}
+internal actual val platformStore: Distribution?
+    get() = when (PlatformImpersonation.platform) {
+        ImpersonatedPlatform.ANDROID -> Distribution.PLAY_STORE
+        ImpersonatedPlatform.IOS -> Distribution.APP_STORE
+        ImpersonatedPlatform.MACOS -> Distribution.MAC_APP_STORE
+        ImpersonatedPlatform.WINDOWS -> Distribution.MICROSOFT_STORE
+        null -> when {
+            isMacOs -> Distribution.MAC_APP_STORE
+            isWindows -> Distribution.MICROSOFT_STORE
+            else -> null
+        }
+    }
 
 internal actual fun PointerEvent.verticalWheelNotches() = changes.fold(0f) { total, change -> total + change.scrollDelta.y }
 

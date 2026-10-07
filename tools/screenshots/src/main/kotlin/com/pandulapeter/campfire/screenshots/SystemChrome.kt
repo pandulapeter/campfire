@@ -1,0 +1,617 @@
+/*
+ * This file is part of Campfire.
+ * Copyright (c) Pandula Péter 2017-2026.
+ * https://github.com/pandulapeter/campfire
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * https://mozilla.org/MPL/2.0/.
+ */
+package com.pandulapeter.campfire.screenshots
+
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicText
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+
+/**
+ * What a platform draws around an app, which the desktop build being rendered has none of: where the app's window is
+ * on the screen ([windowTop], [windowBottom], the room a menu bar, a shelf or a taskbar keeps), which of its edges the
+ * system draws over ([statusBar], [navigationBar] and, on the desktops, [captionBar], each reported to the app as
+ * the inset the platform would report), and the drawing itself, laid over the whole screen once the app is in place.
+ *
+ * Every shot is taken at the same moment, 9:41 on Wednesday, October 7, with a full battery and a strong signal, as
+ * the stores' own screenshots are. The phones' and tablets' bars are laid out to the dp and the point as the current
+ * Android and iOS draw them, measured on their emulators and simulators.
+ */
+internal sealed interface SystemChrome {
+    val windowTop: Dp get() = 0.dp
+    val windowBottom: Dp get() = 0.dp
+    val statusBar: Dp get() = 0.dp
+    val navigationBar: Dp get() = 0.dp
+    val captionBar: Dp get() = 0.dp
+
+    @Composable
+    fun Overlay(appearance: ChromeAppearance)
+
+    /** The status bar Android makes as tall as the Pixel's camera cutout, and the gesture handle under the app. */
+    /** No system at all around the app, for an image that is framed by whatever shows it. */
+    data object None : SystemChrome {
+        @Composable
+        override fun Overlay(appearance: ChromeAppearance) = Unit
+    }
+
+    data object AndroidPhone : SystemChrome {
+        override val statusBar = 53.dp
+        override val navigationBar = 24.dp
+
+        @Composable
+        override fun Overlay(appearance: ChromeAppearance) = AndroidBars(
+            appearance = appearance,
+            statusBar = statusBar,
+            navigationBar = navigationBar,
+            metrics = AndroidBarMetrics(
+                timeSize = 15.sp,
+                startPadding = 16.dp,
+                endPadding = 24.dp,
+                iconHeight = 14.dp,
+                batteryWidth = 28.dp,
+                handleWidth = 108.dp,
+                hasCellular = true,
+            ),
+        )
+    }
+
+    /** A Wi-Fi tablet's slimmer status bar, and the handle of the taskbar stashed under the app. */
+    data object AndroidTablet : SystemChrome {
+        override val statusBar = 24.dp
+        override val navigationBar = 32.dp
+
+        @Composable
+        override fun Overlay(appearance: ChromeAppearance) = AndroidBars(
+            appearance = appearance,
+            statusBar = statusBar,
+            navigationBar = navigationBar,
+            metrics = AndroidBarMetrics(
+                timeSize = 14.sp,
+                startPadding = 12.dp,
+                endPadding = 16.dp,
+                iconHeight = 12.dp,
+                batteryWidth = 24.dp,
+                handleWidth = 220.dp,
+                hasCellular = false,
+            ),
+        )
+    }
+
+    data object ChromeOs : SystemChrome {
+        override val windowTop = SCREEN_BAR_UNDER_CAMERA_COVER_14
+        override val windowBottom = 48.dp
+
+        @Composable
+        override fun Overlay(appearance: ChromeAppearance) = Box(Modifier.fillMaxSize()) {
+            CameraCoverBand(height = windowTop)
+            Row(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .height(windowBottom)
+                    .background(if (appearance.isDark) Color(0xFF202124) else Color(0xFFDDE3EA))
+                    .padding(horizontal = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(appearance.content.copy(alpha = 0.12f)),
+                    contentAlignment = Alignment.Center,
+                ) { Box(Modifier.size(10.dp).clip(CircleShape).background(appearance.content)) }
+                Spacer(Modifier.weight(1f))
+                AppIcon(appearance = appearance, size = 32.dp)
+                Spacer(Modifier.weight(1f))
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(appearance.content.copy(alpha = 0.12f))
+                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    ChromeText(text = "9:41", appearance = appearance, size = 13.sp, weight = FontWeight.Medium)
+                    Canvas(Modifier.size(16.dp)) { drawWifi(appearance.content) }
+                    Canvas(Modifier.size(width = 18.dp, height = 10.dp)) { drawBattery(appearance.content, hasNub = false) }
+                }
+            }
+        }
+    }
+
+    data object IPhone : SystemChrome {
+        override val statusBar = 62.dp
+        override val navigationBar = 34.dp
+
+        @Composable
+        override fun Overlay(appearance: ChromeAppearance) = Box(Modifier.fillMaxSize()) {
+            // The time and the icons are centered in what the Dynamic Island leaves of the bar at either side of it,
+            // 32.5pt down, level with the island's middle, which the device frame draws.
+            Row(
+                modifier = Modifier.fillMaxWidth().height(65.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                    ChromeText(text = "9:41", appearance = appearance, size = 17.sp, weight = FontWeight.SemiBold)
+                }
+                Spacer(Modifier.width(111.dp))
+                Row(
+                    modifier = Modifier.weight(1f).padding(end = 6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Canvas(Modifier.size(width = 21.dp, height = 13.dp)) { drawCellular(appearance.content) }
+                    Canvas(Modifier.size(width = 19.dp, height = 13.dp)) { drawWifi(appearance.content) }
+                    Canvas(Modifier.size(width = 28.dp, height = 13.dp)) { drawBattery(appearance.content, hasNub = true) }
+                }
+            }
+            HomeIndicator(appearance = appearance, width = 144.dp, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 8.dp))
+        }
+    }
+
+    data object IPad : SystemChrome {
+        override val statusBar = 24.dp
+        override val navigationBar = 20.dp
+
+        @Composable
+        override fun Overlay(appearance: ChromeAppearance) = Box(Modifier.fillMaxSize()) {
+            Row(
+                modifier = Modifier.fillMaxWidth().height(statusBar).padding(start = 26.dp, end = 24.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                ChromeText(text = "9:41 AM  Wed Oct 7", appearance = appearance, size = 14.sp, weight = FontWeight.SemiBold)
+                Spacer(Modifier.weight(1f))
+                Canvas(Modifier.size(width = 15.dp, height = 10.dp)) { drawWifi(appearance.content) }
+                Spacer(Modifier.width(7.dp))
+                Canvas(Modifier.size(width = 26.dp, height = 12.dp)) { drawBattery(appearance.content, hasNub = true) }
+            }
+            HomeIndicator(appearance = appearance, width = 320.dp, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 8.dp))
+        }
+    }
+
+    /**
+     * A window zoomed to fill the screen under the menu bar, which on a MacBook with a camera housing is black whatever
+     * the theme and as tall as the housing. The Screenshot Bro rows cover the housing itself with a black strip. The
+     * window's buttons are where the desktop app's own are, measured from its window: 12pt across, 20pt apart, the first
+     * centered 14pt from the window's top and left edges.
+     */
+    data object MacOs : SystemChrome {
+        override val windowTop = 37.dp
+        override val captionBar = 28.dp
+
+        @Composable
+        override fun Overlay(appearance: ChromeAppearance) = Box(Modifier.fillMaxSize()) {
+            val menuBar = ChromeAppearance(isDark = true, fontFamily = appearance.fontFamily, appIcon = appearance.appIcon)
+            Row(
+                modifier = Modifier.fillMaxWidth().height(windowTop).background(Color.Black).padding(start = 20.dp, end = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                ChromeText(text = "\uF8FF", appearance = menuBar, size = 16.sp)
+                Spacer(Modifier.width(22.dp))
+                ChromeText(text = "Campfire", appearance = menuBar, size = 13.sp, weight = FontWeight.Bold)
+                Spacer(Modifier.weight(1f))
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(18.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Canvas(Modifier.size(width = 25.dp, height = 12.dp)) { drawBattery(menuBar.content, hasNub = true) }
+                    Canvas(Modifier.size(width = 16.dp, height = 12.dp)) { drawWifi(menuBar.content) }
+                    Canvas(Modifier.size(14.dp)) { drawMagnifier(menuBar.content) }
+                    Canvas(Modifier.size(width = 16.dp, height = 13.dp)) { drawControlCenter(menuBar.content) }
+                    ChromeText(text = "Wed Oct 7  9:41 AM", appearance = menuBar, size = 13.sp)
+                }
+            }
+            Row(
+                modifier = Modifier.padding(top = windowTop).height(captionBar).padding(start = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                listOf(Color(0xFFFF5F57), Color(0xFFFEBC2E), Color(0xFF28C840)).forEach { color ->
+                    Box(Modifier.size(12.dp).clip(CircleShape).background(color))
+                }
+            }
+        }
+    }
+
+    /**
+     * A maximized window above a Windows 11 taskbar, sized in the effective pixels Windows lays both out in: caption
+     * buttons of 46 by 32 with 10 wide glyphs (Restore rather than Maximize, the window being maximized), and a taskbar
+     * of 48 whose 40 wide buttons hold 24 wide icons, centered - Start and the app, marked as the one in front - with
+     * the system tray at its end.
+     */
+    data object Windows : SystemChrome {
+        override val windowTop = SCREEN_BAR_UNDER_CAMERA_COVER_16
+        override val windowBottom = 48.dp
+        override val captionBar = 32.dp
+
+        @Composable
+        override fun Overlay(appearance: ChromeAppearance) = Box(Modifier.fillMaxSize()) {
+            CameraCoverBand(height = windowTop)
+            val glyph = 1.dp
+            Row(Modifier.align(Alignment.TopEnd).padding(top = windowTop).height(captionBar)) {
+                CaptionButton { drawLine(appearance.content, Offset(0f, size.height / 2), Offset(size.width, size.height / 2), glyph.toPx()) }
+                CaptionButton {
+                    val back = size.width * 0.2f
+                    val stroke = Stroke(glyph.toPx())
+                    drawRoundRect(appearance.content, topLeft = Offset(back, 0f), size = Size(size.width - back, size.height - back), cornerRadius = CornerRadius(glyph.toPx() * 1.5f), style = stroke)
+                    drawRoundRect(
+                        color = if (appearance.isDark) Color(0xFF1C1B22) else Color(0xFFF7F2FA),
+                        topLeft = Offset(0f, back),
+                        size = Size(size.width - back, size.height - back),
+                        cornerRadius = CornerRadius(glyph.toPx() * 1.5f),
+                    )
+                    drawRoundRect(appearance.content, topLeft = Offset(0f, back), size = Size(size.width - back, size.height - back), cornerRadius = CornerRadius(glyph.toPx() * 1.5f), style = stroke)
+                }
+                CaptionButton {
+                    drawLine(appearance.content, Offset.Zero, Offset(size.width, size.height), glyph.toPx())
+                    drawLine(appearance.content, Offset(size.width, 0f), Offset(0f, size.height), glyph.toPx())
+                }
+            }
+            val taskbar = if (appearance.isDark) Color(0xFF1C1C1C) else Color(0xFFEEF0F3)
+            Column(Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(windowBottom)) {
+                Box(Modifier.fillMaxWidth().height(1.dp).background(appearance.content.copy(alpha = if (appearance.isDark) 0.08f else 0.1f)))
+                Box(Modifier.fillMaxWidth().weight(1f).background(taskbar)) {
+                    Row(Modifier.align(Alignment.Center), verticalAlignment = Alignment.CenterVertically) {
+                        TaskbarButton { Canvas(Modifier.size(24.dp)) { drawWindowsLogo(appearance.isDark) } }
+                        TaskbarButton(
+                            indicator = {
+                                Box(
+                                    Modifier.size(width = 16.dp, height = 3.dp).clip(CircleShape)
+                                        .background(if (appearance.isDark) Color(0xFF4CC2FF) else Color(0xFF005FB8)),
+                                )
+                            },
+                            isActive = true,
+                            isDark = appearance.isDark,
+                        ) { AppIcon(appearance = appearance, size = 24.dp) }
+                    }
+                    Row(
+                        modifier = Modifier.align(Alignment.CenterEnd),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Canvas(Modifier.size(width = 32.dp, height = 12.dp)) { drawChevronUp(appearance.content) }
+                        Row(
+                            modifier = Modifier.padding(horizontal = 4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Canvas(Modifier.size(width = 16.dp, height = 12.dp)) { drawWifi(appearance.content) }
+                            Canvas(Modifier.size(16.dp)) { drawSpeaker(appearance.content) }
+                            Canvas(Modifier.size(width = 18.dp, height = 9.dp)) { drawBattery(appearance.content, hasNub = true) }
+                        }
+                        Column(modifier = Modifier.padding(horizontal = 10.dp), horizontalAlignment = Alignment.End) {
+                            ChromeText(text = "9:41 AM", appearance = appearance, size = 12.sp)
+                            ChromeText(text = "10/7/2026", appearance = appearance, size = 12.sp)
+                        }
+                        Canvas(Modifier.size(16.dp)) { drawBell(appearance.content) }
+                        Spacer(Modifier.width(20.dp))
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * The Chromebook and Windows shots are framed in MacBook Pros, whose camera housing the Screenshot Bro rows hide under a
+ * black bar across the top of the screen. The window starts under that bar instead of behind it - a black band of its
+ * height on top, the image keeping the frame's size - so nothing of the app is covered and nothing is stretched. The
+ * heights are the bars' as measured in the rows (about 66 and 70 px of the 16" and 14" screens), rounded up, since
+ * band running past a bar is black against black.
+ */
+private val SCREEN_BAR_UNDER_CAMERA_COVER_16 = 36.dp
+private val SCREEN_BAR_UNDER_CAMERA_COVER_14 = 38.dp
+
+@Composable
+private fun CameraCoverBand(height: Dp) = Box(Modifier.fillMaxWidth().height(height).background(Color.Black))
+
+/**
+ * How the chrome is drawn for one shot: in the light or the dark appearance of the app's theme, in the platform's
+ * own font, and with the app's icon where the system shows it (a shelf, a taskbar).
+ */
+internal data class ChromeAppearance(
+    val isDark: Boolean,
+    val fontFamily: FontFamily,
+    val appIcon: ImageBitmap?,
+) {
+    val content: Color get() = if (isDark) Color.White else Color(0xFF1B1B1F)
+}
+
+/** What sets a phone's Android bars apart from a tablet's. */
+private class AndroidBarMetrics(
+    val timeSize: TextUnit,
+    val startPadding: Dp,
+    val endPadding: Dp,
+    val iconHeight: Dp,
+    val batteryWidth: Dp,
+    val handleWidth: Dp,
+    val hasCellular: Boolean,
+)
+
+/** The status bar of Android 16 and later - cellular, Wi-Fi and the battery as a pill, in that order - and the handle. */
+@Composable
+private fun AndroidBars(
+    appearance: ChromeAppearance,
+    statusBar: Dp,
+    navigationBar: Dp,
+    metrics: AndroidBarMetrics,
+) = Box(Modifier.fillMaxSize()) {
+    Row(
+        modifier = Modifier.fillMaxWidth().height(statusBar).padding(start = metrics.startPadding, end = metrics.endPadding),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        ChromeText(text = "9:41", appearance = appearance, size = metrics.timeSize, weight = FontWeight.Medium)
+        Spacer(Modifier.weight(1f))
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(7.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (metrics.hasCellular) {
+                Canvas(Modifier.size(width = metrics.iconHeight * 1.25f, height = metrics.iconHeight)) { drawCellular(appearance.content) }
+            }
+            Canvas(Modifier.size(width = metrics.iconHeight * 1.3f, height = metrics.iconHeight)) { drawWifi(appearance.content) }
+            Box(
+                Modifier
+                    .size(width = metrics.batteryWidth, height = metrics.iconHeight)
+                    .clip(RoundedCornerShape(metrics.iconHeight * 0.32f))
+                    .background(appearance.content),
+            )
+        }
+    }
+    Box(
+        modifier = Modifier
+            .align(Alignment.BottomCenter)
+            .padding(bottom = (navigationBar - 4.dp) / 2)
+            .size(width = metrics.handleWidth, height = 4.dp)
+            .clip(CircleShape)
+            .background(appearance.content.copy(alpha = 0.75f)),
+    )
+}
+
+@Composable
+private fun HomeIndicator(
+    appearance: ChromeAppearance,
+    width: Dp,
+    modifier: Modifier = Modifier,
+) = Box(
+    modifier = modifier
+        .size(width = width, height = 5.dp)
+        .clip(CircleShape)
+        .background(appearance.content),
+)
+
+@Composable
+private fun CaptionButton(drawGlyph: DrawScope.() -> Unit) = Box(
+    modifier = Modifier.width(46.dp).fillMaxHeight(),
+    contentAlignment = Alignment.Center,
+) { Canvas(Modifier.size(10.dp), onDraw = drawGlyph) }
+
+/** A 40 by 40 button of the Windows taskbar, with the pill under it that marks a running app. */
+@Composable
+private fun TaskbarButton(
+    indicator: (@Composable () -> Unit)? = null,
+    isActive: Boolean = false,
+    isDark: Boolean = false,
+    icon: @Composable () -> Unit,
+) = Box(
+    modifier = Modifier
+        .padding(horizontal = 2.dp)
+        .size(40.dp)
+        .clip(RoundedCornerShape(4.dp))
+        .background(if (isActive) (if (isDark) Color.White.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.7f)) else Color.Transparent),
+    contentAlignment = Alignment.Center,
+) {
+    icon()
+    indicator?.let { Box(Modifier.align(Alignment.BottomCenter).padding(bottom = 1.dp)) { it() } }
+}
+
+@Composable
+private fun AppIcon(
+    appearance: ChromeAppearance,
+    size: Dp,
+) = appearance.appIcon?.let { icon ->
+    Image(bitmap = icon, contentDescription = null, modifier = Modifier.size(size))
+} ?: Unit
+
+@Composable
+private fun ChromeText(
+    text: String,
+    appearance: ChromeAppearance,
+    size: TextUnit,
+    weight: FontWeight = FontWeight.Normal,
+) = BasicText(
+    text = text,
+    style = TextStyle(
+        color = appearance.content,
+        fontFamily = appearance.fontFamily,
+        fontSize = size,
+        fontWeight = weight,
+        textAlign = TextAlign.Center,
+    ),
+)
+
+/** The three arcs and the dot of a full Wi-Fi signal, opening upwards from the bottom middle of the area. */
+private fun DrawScope.drawWifi(color: Color) {
+    val stroke = size.height * 0.16f
+    val center = Offset(size.width / 2, size.height * 0.95f)
+    listOf(0.95f, 0.62f, 0.3f).forEach { fraction ->
+        val radius = size.height * fraction - stroke / 2
+        drawArc(
+            color = color,
+            startAngle = 225f,
+            sweepAngle = 90f,
+            useCenter = false,
+            topLeft = Offset(center.x - radius, center.y - radius),
+            size = Size(radius * 2, radius * 2),
+            style = Stroke(width = stroke, cap = StrokeCap.Round),
+        )
+    }
+    drawCircle(color = color, radius = stroke * 0.8f, center = Offset(center.x, center.y - stroke * 0.6f))
+}
+
+/** Four bars of a full cellular signal, each taller than the last. */
+private fun DrawScope.drawCellular(color: Color) {
+    val gap = size.width * 0.1f
+    val barWidth = (size.width - gap * 3) / 4
+    repeat(4) { index ->
+        val height = size.height * (0.4f + 0.2f * index)
+        drawRoundRect(
+            color = color,
+            topLeft = Offset(index * (barWidth + gap), size.height - height),
+            size = Size(barWidth, height),
+            cornerRadius = CornerRadius(barWidth / 3),
+        )
+    }
+}
+
+/** A full battery lying on its side, with the terminal at its end where the platform draws one. */
+private fun DrawScope.drawBattery(color: Color, hasNub: Boolean) {
+    val nub = if (hasNub) size.width * 0.08f else 0f
+    val body = Size(size.width - nub, size.height)
+    val stroke = size.height * 0.09f
+    drawRoundRect(
+        color = color.copy(alpha = 0.4f),
+        size = body,
+        cornerRadius = CornerRadius(size.height * 0.3f),
+        style = Stroke(stroke),
+    )
+    val inset = stroke * 2
+    drawRoundRect(
+        color = color,
+        topLeft = Offset(inset, inset),
+        size = Size(body.width - inset * 2, body.height - inset * 2),
+        cornerRadius = CornerRadius(size.height * 0.18f),
+    )
+    if (hasNub) {
+        drawRoundRect(
+            color = color.copy(alpha = 0.4f),
+            topLeft = Offset(body.width + nub * 0.25f, size.height * 0.33f),
+            size = Size(nub * 0.75f, size.height * 0.34f),
+            cornerRadius = CornerRadius(nub / 2),
+        )
+    }
+}
+
+/** A magnifier, its lens at the top left and its handle running to the bottom right. */
+private fun DrawScope.drawMagnifier(color: Color) {
+    val stroke = size.minDimension * 0.12f
+    val radius = size.minDimension * 0.33f
+    val center = Offset(radius + stroke / 2, radius + stroke / 2)
+    drawCircle(color = color, radius = radius, center = center, style = Stroke(stroke))
+    val start = center + Offset(radius * 0.72f, radius * 0.72f)
+    drawLine(color, start, Offset(size.width - stroke / 2, size.height - stroke / 2), stroke, cap = StrokeCap.Round)
+}
+
+/** macOS' Control Center: two switches, one over the other. */
+private fun DrawScope.drawControlCenter(color: Color) {
+    val stroke = size.height * 0.09f
+    val pill = Size(size.width - stroke, size.height * 0.42f - stroke)
+    listOf(0f, size.height * 0.58f).forEachIndexed { index, top ->
+        drawRoundRect(color, topLeft = Offset(stroke / 2, top + stroke / 2), size = pill, cornerRadius = CornerRadius(pill.height / 2), style = Stroke(stroke))
+        val knob = Offset(if (index == 0) stroke / 2 + pill.height / 2 else size.width - stroke / 2 - pill.height / 2, top + stroke / 2 + pill.height / 2)
+        drawCircle(color, radius = pill.height / 2 - stroke, center = knob)
+    }
+}
+
+/** The Windows 11 logo, four panes in the system's light blue gradient. */
+private fun DrawScope.drawWindowsLogo(isDark: Boolean) {
+    val gap = size.width * 0.06f
+    val pane = (size.width - gap) / 2
+    val top = if (isDark) Color(0xFF6DD3FF) else Color(0xFF3CC4FF)
+    val bottom = if (isDark) Color(0xFF2C9BF0) else Color(0xFF0078D4)
+    listOf(Offset.Zero, Offset(pane + gap, 0f), Offset(0f, pane + gap), Offset(pane + gap, pane + gap)).forEach { origin ->
+        drawRoundRect(
+            brush = Brush.verticalGradient(listOf(top, bottom), startY = 0f, endY = size.height),
+            topLeft = origin,
+            size = Size(pane, pane),
+            cornerRadius = CornerRadius(size.width * 0.03f),
+        )
+    }
+}
+
+
+/** The chevron that opens the hidden icons of the system tray. */
+private fun DrawScope.drawChevronUp(color: Color) {
+    val stroke = 1.dp.toPx()
+    val half = size.height * 0.3f
+    val center = Offset(size.width / 2, size.height / 2)
+    drawLine(color, center + Offset(-half, half / 2), center + Offset(0f, -half / 2), stroke, cap = StrokeCap.Round)
+    drawLine(color, center + Offset(0f, -half / 2), center + Offset(half, half / 2), stroke, cap = StrokeCap.Round)
+}
+
+/** A speaker at full volume. */
+private fun DrawScope.drawSpeaker(color: Color) {
+    val stroke = size.width * 0.07f
+    val path = Path().apply {
+        moveTo(size.width * 0.08f, size.height * 0.38f)
+        lineTo(size.width * 0.26f, size.height * 0.38f)
+        lineTo(size.width * 0.48f, size.height * 0.18f)
+        lineTo(size.width * 0.48f, size.height * 0.82f)
+        lineTo(size.width * 0.26f, size.height * 0.62f)
+        lineTo(size.width * 0.08f, size.height * 0.62f)
+        close()
+    }
+    drawPath(path, color, style = Stroke(stroke))
+    listOf(0.16f, 0.3f).forEach { radius ->
+        val r = size.width * radius
+        drawArc(color, -45f, 90f, false, topLeft = Offset(size.width * 0.52f - r, size.height / 2 - r), size = Size(r * 2, r * 2), style = Stroke(stroke, cap = StrokeCap.Round))
+    }
+}
+
+/** The notification bell at the end of the Windows 11 taskbar. */
+private fun DrawScope.drawBell(color: Color) {
+    val stroke = size.width * 0.07f
+    val path = Path().apply {
+        moveTo(size.width * 0.18f, size.height * 0.72f)
+        lineTo(size.width * 0.26f, size.height * 0.6f)
+        lineTo(size.width * 0.26f, size.height * 0.42f)
+        cubicTo(size.width * 0.26f, size.height * 0.1f, size.width * 0.74f, size.height * 0.1f, size.width * 0.74f, size.height * 0.42f)
+        lineTo(size.width * 0.74f, size.height * 0.6f)
+        lineTo(size.width * 0.82f, size.height * 0.72f)
+        close()
+    }
+    drawPath(path, color, style = Stroke(stroke))
+    drawArc(color, 0f, 180f, false, topLeft = Offset(size.width * 0.4f, size.height * 0.72f), size = Size(size.width * 0.2f, size.height * 0.16f), style = Stroke(stroke))
+}
