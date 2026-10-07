@@ -231,15 +231,16 @@ internal val shots = listOf(
             tapIfPresent(string("song_editor_show_shortcuts"))
         },
     ),
-    // Home on the Range exported as a PDF, from the library's own song menu: A4 in landscape, two columns and every
-    // option ticked, so the preview shows the chord diagrams, the key, the tempo, the comments and the details. Share
-    // stands next to Save on the phones and tablets, as the platforms' file pickers offer it there and not on a desktop.
+    // Home on the Range exported as a PDF, from the library's own song menu: A4 in landscape (in portrait on the small
+    // Android tablet, whose upright window shows a portrait page larger), two columns and every option ticked, so the
+    // preview shows the chord diagrams, the key, the tempo, the comments and the details. Share stands next to Save on
+    // the phones and tablets, as the platforms' file pickers offer it there and not on a desktop.
     Shot(
         id = "06-export",
         uiMode = UserPreferences.UiMode.DARK,
-        preferences = {
+        preferences = { device ->
             mapOf(
-                "printSettings" to printSettings(isLandscape = true),
+                "printSettings" to printSettings(isLandscape = device != Device.ANDROID_SMALL_TABLET),
             )
         },
         drive = { viewModel.showDialog(CampfireViewModel.DialogType.Export(song = song(HOME_ON_THE_RANGE))) },
