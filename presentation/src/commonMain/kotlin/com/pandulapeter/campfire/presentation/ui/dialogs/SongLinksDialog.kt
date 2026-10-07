@@ -88,7 +88,10 @@ internal fun SongLinksDialog(
     }
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
-    fun move(index: Int, target: Int) {
+    fun move(id: Int, offset: Int) {
+        val index = rows.indexOfFirst { it.id == id }
+        val target = index + offset
+        if (index == -1 || target !in rows.indices) return
         val row = rows[index]
         val size = listState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == row.id }?.size ?: 0
         rows = rows.swapped(index, target)
@@ -100,15 +103,17 @@ internal fun SongLinksDialog(
         rows = rows + row
         coroutineScope.launch { listState.reveal(key = row.id, index = rows.lastIndex + ROWS_START_INDEX, size = size) }
     }
-    val links = rows.map { it.link }
-    val urls = links.map { ChordProLinks.usableUrl(it.url) }
-    val linksToSave = songLinksToSave(draft = links, offered = dialog.links)
     TextFieldBottomSheet(
         onDismissRequest = { viewModel.dismissSheet(dialog) },
         title = stringResource(Res.string.song_details_links_edit),
         subtitle = songLabel(dialog.song),
         retainHeight = true,
         text = { contentPadding ->
+            // The sheet is a composition of its own, so it can recompose with new rows before this function does: what
+            // is derived from the rows is derived here, from the same read the list is built from, or an added row would
+            // be looked up in a list of addresses that does not have it yet.
+            val currentRows = rows
+            val urls = currentRows.map { ChordProLinks.usableUrl(it.link.url) }
             LazyColumn(
                 modifier = Modifier.bounceScrollableContent(listState).fillMaxWidth().fadingTopEdge(listState, sheetContainerColor()),
                 state = listState,
@@ -123,7 +128,7 @@ internal fun SongLinksDialog(
                     )
                 }
                 itemsIndexed(
-                    items = rows,
+                    items = currentRows,
                     key = { _, row -> row.id },
                 ) { index, row ->
                     SongLinkFields(
@@ -131,8 +136,8 @@ internal fun SongLinksDialog(
                         link = row.link,
                         isDuplicate = urls[index] != null && urls.count { it == urls[index] } > 1,
                         onChange = { updated -> rows = rows.map { if (it.id == row.id) it.copy(link = updated) else it } },
-                        onMoveUp = if (index > 0) ({ move(index, index - 1) }) else null,
-                        onMoveDown = if (index < rows.lastIndex) ({ move(index, index + 1) }) else null,
+                        onMoveUp = if (index > 0) ({ move(row.id, -1) }) else null,
+                        onMoveDown = if (index < currentRows.lastIndex) ({ move(row.id, 1) }) else null,
                         onRemove = { rows = rows.filterNot { it.id == row.id } },
                     )
                 }
@@ -148,6 +153,7 @@ internal fun SongLinksDialog(
             }
         },
         confirmButton = { close ->
+            val linksToSave = songLinksToSave(draft = rows.map { it.link }, offered = dialog.links)
             BottomSheetConfirmButton(
                 enabled = linksToSave != null,
                 onClick = {
