@@ -48,8 +48,8 @@ data class UserPreferences(
     val themeColor: ThemeColor,
     /**
      * How far the backgrounds, the surfaces and the text on them are turned towards the warm brown of old paper, from
-     * none at all to [MAX_BACKGROUND_WARMTH], in whichever palette [themeColor] picks. Only their hue moves, never
-     * their lightness, so no contrast of the palette changes with it.
+     * none at all to [MAX_BACKGROUND_WARMTH], in whichever palette [themeColor] picks, the light theme dimmed a little
+     * with it. No contrast ratio of the palette changes with it.
      */
     val backgroundWarmth: Int = 0,
     /**

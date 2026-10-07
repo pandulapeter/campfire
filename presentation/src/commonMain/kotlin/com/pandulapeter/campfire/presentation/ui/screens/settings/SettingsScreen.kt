@@ -660,7 +660,7 @@ private fun NotationChoice(
 
 /**
  * How far the palette's neutrals are turned towards sepia. A slider of a few steps rather than a picker of tints, since
- * the one thing that moves is the hue at a fixed lightness (see `withBackgroundWarmth`), so no step can cost contrast,
+ * every step keeps every contrast ratio of the palette (see `withBackgroundWarmth`), so no step can cost legibility,
  * and a step is a whole theme change that recomposes the app: a continuous slider would do that on every frame of a
  * drag. Each step reaches the theme as it is crossed, so the app behind the settings shows where the thumb is.
  */

@@ -38,41 +38,50 @@ class BackgroundWarmthTest {
     fun noWarmthIsThePaletteItself() = palettes.forEach { assertSame(it, it.withBackgroundWarmth(0)) }
 
     @Test
-    fun everyLevelKeepsTheLuminanceOfEveryNeutral() = palettes.forEach { palette ->
+    fun theDarkHalfKeepsTheLuminanceOfEveryNeutral() = palettes.forEach { palette ->
+        (1..UserPreferences.MAX_BACKGROUND_WARMTH).forEach { level ->
+            palette.dark.neutrals().zip(palette.withBackgroundWarmth(level).dark.neutrals()).forEach { (before, after) ->
+                // Eight bits a channel is all a color is stored in, which is all the difference allowed.
+                assertTrue(abs(before.luminance() - after.luminance()) < 0.004f, "$before became $after at level $level")
+            }
+        }
+    }
+
+    @Test
+    fun everyLevelKeepsEveryContrastOfTheScheme() = palettes.forEach { palette ->
         (1..UserPreferences.MAX_BACKGROUND_WARMTH).forEach { level ->
             val warmed = palette.withBackgroundWarmth(level)
-            listOf(palette.light to warmed.light, palette.dark to warmed.dark).forEach { (original, changed) ->
-                original.neutrals().zip(changed.neutrals()).forEach { (before, after) ->
-                    // Eight bits a channel is all a color is stored in, which is all the difference allowed.
-                    assertTrue(abs(before.luminance() - after.luminance()) < 0.004f, "$before became $after at level $level")
+            listOf(
+                palette.light.withSecondAccent(palette.lightSecondAccent) to warmed.light.withSecondAccent(warmed.lightSecondAccent),
+                palette.dark.withSecondAccent(palette.darkSecondAccent) to warmed.dark.withSecondAccent(warmed.darkSecondAccent),
+            ).forEach { (original, changed) ->
+                original.indices.forEach { first ->
+                    original.indices.forEach { second ->
+                        // Within two percent, which is what rounding a near-black to eight bits a channel can move it by.
+                        val ratio = contrast(changed[first], changed[second]) / contrast(original[first], original[second])
+                        assertEquals(1f, ratio, 0.02f, "${original[first]} on ${original[second]} at level $level")
+                    }
                 }
             }
         }
     }
 
     @Test
-    fun everyLevelKeepsTheContrastOfTextOnTheBackground() = palettes.forEach { palette ->
-        val warmed = palette.withBackgroundWarmth(UserPreferences.MAX_BACKGROUND_WARMTH)
-        listOf(palette.light to warmed.light, palette.dark to warmed.dark).forEach { (original, changed) ->
-            // Within a percent, which is what rounding a near-black text color to eight bits a channel moves it by.
-            assertEquals(1f, contrast(changed.onSurface, changed.surface) / contrast(original.onSurface, original.surface), 0.01f)
-            assertEquals(1f, contrast(changed.onSurfaceVariant, changed.surfaceContainerHigh) / contrast(original.onSurfaceVariant, original.surfaceContainerHigh), 0.01f)
-        }
-    }
-
-    @Test
-    fun theAccentsAreLeftAlone() {
+    fun theAccentsKeepTheirColor() {
         val warmed = CampfireColorScheme.withBackgroundWarmth(UserPreferences.MAX_BACKGROUND_WARMTH)
-        assertEquals(CampfireColorScheme.light.primary, warmed.light.primary)
         assertEquals(CampfireColorScheme.dark.tertiary, warmed.dark.tertiary)
-        assertEquals(CampfireColorScheme.lightSecondAccent, warmed.lightSecondAccent)
         assertEquals(CampfireColorScheme.darkSecondAccent, warmed.darkSecondAccent)
+        // In the light half they come out a shade deeper, and stay the hue that was picked.
+        val primary = warmed.light.primary
+        assertTrue(primary.luminance() < CampfireColorScheme.light.primary.luminance())
+        assertTrue(primary.blue > primary.red && primary.red > primary.green, "$primary is no longer the purple")
     }
 
     @Test
     fun fullWarmthIsSepia() {
         val background = CampfireColorScheme.withBackgroundWarmth(UserPreferences.MAX_BACKGROUND_WARMTH).light.background
         assertTrue(background.red >= background.green && background.green > background.blue, "$background is not a warm paper")
+        assertTrue(background.red - background.blue > 0.05f, "$background is all but white")
         val gray = Color(0xFF808080).warmed(1.0)
         assertTrue(gray.red > gray.blue, "$gray is not warm")
     }
@@ -82,6 +91,13 @@ class BackgroundWarmthTest {
         outline, outlineVariant, surfaceBright, surfaceDim, surfaceContainerLowest, surfaceContainerLow, surfaceContainer,
         surfaceContainerHigh, surfaceContainerHighest,
     )
+
+    /** The roles a foreground or a background is drawn in, with the second accent, which the scheme has no role for. */
+    private fun ColorScheme.withSecondAccent(secondAccent: Color) = listOf(
+        primary, onPrimary, primaryContainer, onPrimaryContainer, secondary, onSecondary, secondaryContainer,
+        onSecondaryContainer, tertiary, onTertiary, tertiaryContainer, onTertiaryContainer, error, onError, errorContainer,
+        onErrorContainer, secondAccent,
+    ) + neutrals()
 
     private fun contrast(first: Color, second: Color): Float {
         val lighter = maxOf(first.luminance(), second.luminance())

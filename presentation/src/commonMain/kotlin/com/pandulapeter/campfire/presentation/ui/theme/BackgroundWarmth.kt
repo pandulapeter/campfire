@@ -22,19 +22,32 @@ import kotlin.math.sqrt
 /**
  * The palette with its neutral roles - the backgrounds and surfaces, and the text, outlines and inverse surfaces drawn
  * with them - turned towards the warm brown of old paper by [level] steps out of
- * [UserPreferences.MAX_BACKGROUND_WARMTH], in both halves. The accents are left as the palette has them, since they are
- * what the color choice picked.
+ * [UserPreferences.MAX_BACKGROUND_WARMTH], in both halves, and the light half dimmed as a whole on the way.
  *
- * Only the hue and the chroma of a color are moved, in CIELAB, and never its lightness: CIELAB's L* is a function of
- * relative luminance alone, which is all a contrast ratio is worked out from, so every contrast the palette was built
- * around - text on the surfaces, the second accent's 4.5:1 on every surface a chord is drawn on - is the same at every
- * level. That is what lets this be a slider rather than a list of hand-checked palettes. A color the shift would take
- * out of sRGB loses chroma at the same lightness until it fits, rather than being clipped, which would change the
- * lightness too: the white of the lightest container stays nearly white.
+ * What keeps this from costing contrast is that a WCAG contrast ratio is `(Y1 + 0.05) / (Y2 + 0.05)` of the two
+ * relative luminances and nothing else, so two changes leave every ratio of the palette where it was:
+ * - The sepia moves only the hue and the chroma of a neutral, in CIELAB, at its own L*, which is a function of relative
+ *   luminance alone. A color it would take out of sRGB loses chroma at the same lightness until it fits, rather than
+ *   being clipped, which would change the lightness too.
+ * - The dimming multiplies `Y + 0.05` of every role of the light half by the same factor, the accents, the second
+ *   accent and the white on them included, so every ratio between two of them stays as it is - the chords' 4.5:1 on the
+ *   cards and the text's on the paper alike. It is what makes room for the paper: near white, sRGB holds almost no
+ *   chroma, so a light background warmed at its own lightness stays all but white, while the same tint at the lightness
+ *   of a page of an old book is a sepia. The accents keep their hue and come out a shade deeper, as they would on that
+ *   page. The dark half needs none of it, and its accents are left as the palette has them.
+ *
+ * That is what lets this be a slider rather than a list of hand-checked palettes.
  */
 internal fun ColorSchemePair.withBackgroundWarmth(level: Int): ColorSchemePair {
     val amount = level.coerceIn(0, UserPreferences.MAX_BACKGROUND_WARMTH) / UserPreferences.MAX_BACKGROUND_WARMTH.toDouble()
-    return if (amount == 0.0) this else copy(light = light.warmed(amount), dark = dark.warmed(amount))
+    if (amount == 0.0) return this
+    val dimming = 1 - (1 - MIN_LIGHT_LUMINANCE_SCALE) * amount
+    // Dimmed before it is warmed, so that the sepia is worked out at the lightness the color ends up at.
+    return copy(
+        light = light.mapColors { it.dimmed(dimming) }.warmed(amount),
+        dark = dark.warmed(amount),
+        lightSecondAccent = lightSecondAccent.dimmed(dimming),
+    )
 }
 
 private fun ColorScheme.warmed(amount: Double) = copy(
@@ -57,6 +70,57 @@ private fun ColorScheme.warmed(amount: Double) = copy(
     surfaceContainerHighest = surfaceContainerHighest.warmed(amount),
 )
 
+private fun ColorScheme.mapColors(transform: (Color) -> Color) = copy(
+    primary = transform(primary),
+    onPrimary = transform(onPrimary),
+    primaryContainer = transform(primaryContainer),
+    onPrimaryContainer = transform(onPrimaryContainer),
+    inversePrimary = transform(inversePrimary),
+    secondary = transform(secondary),
+    onSecondary = transform(onSecondary),
+    secondaryContainer = transform(secondaryContainer),
+    onSecondaryContainer = transform(onSecondaryContainer),
+    tertiary = transform(tertiary),
+    onTertiary = transform(onTertiary),
+    tertiaryContainer = transform(tertiaryContainer),
+    onTertiaryContainer = transform(onTertiaryContainer),
+    background = transform(background),
+    onBackground = transform(onBackground),
+    surface = transform(surface),
+    onSurface = transform(onSurface),
+    surfaceVariant = transform(surfaceVariant),
+    onSurfaceVariant = transform(onSurfaceVariant),
+    surfaceTint = transform(surfaceTint),
+    inverseSurface = transform(inverseSurface),
+    inverseOnSurface = transform(inverseOnSurface),
+    error = transform(error),
+    onError = transform(onError),
+    errorContainer = transform(errorContainer),
+    onErrorContainer = transform(onErrorContainer),
+    outline = transform(outline),
+    outlineVariant = transform(outlineVariant),
+    scrim = transform(scrim),
+    surfaceBright = transform(surfaceBright),
+    surfaceDim = transform(surfaceDim),
+    surfaceContainer = transform(surfaceContainer),
+    surfaceContainerHigh = transform(surfaceContainerHigh),
+    surfaceContainerHighest = transform(surfaceContainerHighest),
+    surfaceContainerLow = transform(surfaceContainerLow),
+    surfaceContainerLowest = transform(surfaceContainerLowest),
+    primaryFixed = transform(primaryFixed),
+    primaryFixedDim = transform(primaryFixedDim),
+    onPrimaryFixed = transform(onPrimaryFixed),
+    onPrimaryFixedVariant = transform(onPrimaryFixedVariant),
+    secondaryFixed = transform(secondaryFixed),
+    secondaryFixedDim = transform(secondaryFixedDim),
+    onSecondaryFixed = transform(onSecondaryFixed),
+    onSecondaryFixedVariant = transform(onSecondaryFixedVariant),
+    tertiaryFixed = transform(tertiaryFixed),
+    tertiaryFixedDim = transform(tertiaryFixedDim),
+    onTertiaryFixed = transform(onTertiaryFixed),
+    onTertiaryFixedVariant = transform(onTertiaryFixedVariant),
+)
+
 /**
  * The color moved [amount] of the way from its own tint to sepia at its own lightness. The sepia grows less saturated
  * the darker it is (with the square root of L*), so that the light half is a paper and the dark half a brown that is
@@ -65,20 +129,39 @@ private fun ColorScheme.warmed(amount: Double) = copy(
 internal fun Color.warmed(amount: Double): Color {
     val lab = toLab()
     val chroma = SEPIA_MAX_CHROMA * sqrt(lab.l.coerceIn(0.0, 100.0) / 100.0)
-    val a = lab.a + (chroma * cos(SEPIA_HUE) - lab.a) * amount
-    val b = lab.b + (chroma * sin(SEPIA_HUE) - lab.b) * amount
+    return inGamut(
+        l = lab.l,
+        a = lab.a + (chroma * cos(SEPIA_HUE) - lab.a) * amount,
+        b = lab.b + (chroma * sin(SEPIA_HUE) - lab.b) * amount,
+        alpha = alpha,
+    )
+}
+
+/**
+ * The color with `Y + 0.05` of its relative luminance multiplied by [scale], at its own hue and chroma where they still
+ * fit. A role so dark that the product would be below black is held at black, which only a near-black of under 1%
+ * luminance at the deepest dimming is.
+ */
+private fun Color.dimmed(scale: Double): Color {
+    val lab = toLab()
+    val luminance = (scale * (labFInverse((lab.l + 16) / 116) + 0.05) - 0.05).coerceAtLeast(0.0)
+    return inGamut(l = 116 * labF(luminance) - 16, a = lab.a, b = lab.b, alpha = alpha)
+}
+
+/** The color at [l], [a] and [b], with as much of its chroma as fits in sRGB at that lightness. */
+private fun inGamut(l: Double, a: Double, b: Double, alpha: Float): Color {
     // Neutral is in gamut at every lightness, so the largest share of the chroma that still fits is always found.
     var scale = 1.0
-    if (!isInGamut(lab.l, a, b)) {
+    if (!isInGamut(l, a, b)) {
         var low = 0.0
         var high = 1.0
         repeat(GAMUT_SEARCH_STEPS) {
             val middle = (low + high) / 2
-            if (isInGamut(lab.l, a * middle, b * middle)) low = middle else high = middle
+            if (isInGamut(l, a * middle, b * middle)) low = middle else high = middle
         }
         scale = low
     }
-    return labToColor(lab.l, a * scale, b * scale, alpha)
+    return labToColor(l, a * scale, b * scale, alpha)
 }
 
 private class Lab(val l: Double, val a: Double, val b: Double)
@@ -131,6 +214,12 @@ private fun labFInverse(t: Double) = if (t > LAB_DELTA) t * t * t else 3 * LAB_D
  * holds far less chroma near white at a redder hue, so the background itself would stay all but white.
  */
 private const val SEPIA_HUE = 85 * PI / 180
+
+/**
+ * How far the light half is dimmed at full warmth, as the factor on `Y + 0.05`: it takes the light backgrounds from
+ * about L* 98 to about 92, the lightness of an old book's page, where they can hold the sepia.
+ */
+private const val MIN_LIGHT_LUMINANCE_SCALE = 0.86
 
 /** The chroma of the sepia at full lightness, about that of a paper-colored reading mode at its most yellow. */
 private const val SEPIA_MAX_CHROMA = 13.0
