@@ -57,6 +57,7 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.NavigationRail
+import androidx.compose.material3.NavigationRailDefaults
 import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.NavigationRailItemDefaults
 import androidx.compose.material3.Snackbar
@@ -67,6 +68,7 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.WideNavigationRail
+import androidx.compose.material3.WideNavigationRailDefaults
 import androidx.compose.material3.WideNavigationRailItem
 import androidx.compose.material3.WideNavigationRailItemDefaults
 import androidx.compose.material3.WideNavigationRailValue
@@ -489,6 +491,17 @@ private class KeyboardAwarePadding(
  */
 internal val WindowInsets.Companion.contentEdges: WindowInsets
     @Composable get() = systemBars.union(displayCutout)
+
+/**
+ * The least room the navigation rail and the top level screens keep above what they hold. A status bar or the desktop
+ * title bar's strip already leaves more than this, but a window with neither - the web, Linux, a desktop window in full
+ * screen - would have the rail's first indicator and the list app bar's pill start 4dp from its top edge, closer than
+ * either is to the window's sides. The rail and the screens take the same amount, so the two stay level.
+ */
+private val MIN_TOP_EDGE = 8.dp
+
+private val WindowInsets.withMinTopEdge: WindowInsets
+    get() = union(WindowInsets(top = MIN_TOP_EDGE))
 
 @Composable
 private fun CampfireContent(
@@ -1140,6 +1153,7 @@ private fun NavigationChrome(
         // state is only ever the expanded one.
         WideNavigationRail(
             state = rememberWideNavigationRailState(initialValue = WideNavigationRailValue.Expanded),
+            windowInsets = WideNavigationRailDefaults.windowInsets.withMinTopEdge,
             // The default leaves room above the items for a header this rail does not have, which would drop them
             // 40dp lower than the collapsed rail's as the window crosses from the one to the other.
             contentPadding = PaddingValues(top = EXPANDED_NAVIGATION_RAIL_TOP_PADDING),
@@ -1169,7 +1183,7 @@ private fun NavigationChrome(
             }
         }
     } else if (kind == NavigationChromeKind.RAIL) {
-        NavigationRail {
+        NavigationRail(windowInsets = NavigationRailDefaults.windowInsets.withMinTopEdge) {
             CampfireDestination.TopLevel.entries.forEach { destination ->
                 NavigationItemPresence(isShown = destination in destinations) { presence ->
                     NavigationRailItem(
@@ -1300,7 +1314,7 @@ private fun TopLevelScreenSurface(
                 .consumeWindowInsets(PaddingValues(start = railWidth, bottom = navigationBarHeight)),
             color = MaterialTheme.colorScheme.background,
         ) {
-            Box(modifier = Modifier.windowInsetsPadding(WindowInsets.contentEdges.only(WindowInsetsSides.Top))) {
+            Box(modifier = Modifier.windowInsetsPadding(WindowInsets.contentEdges.only(WindowInsetsSides.Top).withMinTopEdge)) {
                 content()
             }
         }
