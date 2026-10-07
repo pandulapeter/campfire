@@ -94,7 +94,8 @@ class CampfireMainActivity : ComponentActivity() {
      * user leaves. A stop that only recreates the activity is not leaving, and neither is one caused by another app's
      * screen coming up inside this task - the document picker, the share sheet, the consent page of sync - which the
      * switch would close along with it, nor is a stop with a click playing, which is the screen being locked over a song
-     * on a music stand: closing the task would silence it. Every later switch is made as the color is picked.
+     * on a music stand: closing the task would silence it. Every later switch is made as the color is picked. Whether to
+     * switch is decided here; the package manager's work runs on the switcher's own thread a moment after this returns.
      */
     override fun onStop() {
         super.onStop()

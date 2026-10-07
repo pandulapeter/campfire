@@ -15,6 +15,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.platform.appIconColor
+import java.util.concurrent.Executors
 
 /**
  * Makes the launcher icon the one of a theme color, by enabling the launcher entry of that color - one of the
@@ -35,7 +36,8 @@ import com.pandulapeter.campfire.presentation.ui.platform.appIconColor
  * its background is the wallpaper's accent color (`values-v31`), from the same Android version that offers the option.
  *
  * The switch is asked for on every composition and every stop, so the color this process last applied in full is
- * remembered and asks the package manager nothing; the first call of a process still reads the real state once.
+ * remembered and asks the package manager nothing; the first call of a process still reads the real state once, on the
+ * switcher's own thread.
  */
 internal object AppIconSwitcher {
 
@@ -48,10 +50,27 @@ internal object AppIconSwitcher {
     private var appliedTarget: UserPreferences.ThemeColor? = null
 
     /**
+     * Every switch runs here, one after another: the package manager answers each call over binder, and the first call
+     * of a process asks about every launcher entry - thirteen round trips the main thread would make around the first
+     * frame. One thread, so that a switch asked for as the color is picked and the one asked for as the user leaves
+     * never interleave, and [appliedTarget] is only ever touched from it.
+     */
+    private val executor = Executors.newSingleThreadExecutor { runnable -> Thread(runnable, "AppIconSwitcher").apply { isDaemon = true } }
+
+    /**
+     * Queues the switch and returns at once. The application context is what is kept, since the activity that asked
+     * may be gone by the time the switch runs; a process killed before then is a switch that was not made, which the
+     * next stop tries again.
+     *
      * @param isLeaving Whether the user is on the way out of the app. Only the first switch waits for that, since it
      *   is the one that closes the task the user is in.
      */
     fun apply(context: Context, themeColor: UserPreferences.ThemeColor, isLeaving: Boolean) {
+        val applicationContext = context.applicationContext
+        executor.execute { applyNow(context = applicationContext, themeColor = themeColor, isLeaving = isLeaving) }
+    }
+
+    private fun applyNow(context: Context, themeColor: UserPreferences.ThemeColor, isLeaving: Boolean) {
         val target = if (themeColor == UserPreferences.ThemeColor.SYSTEM && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             themeColor
         } else {
@@ -80,8 +99,8 @@ internal object AppIconSwitcher {
             appliedTarget = target
         } catch (exception: Exception) {
             // A device policy (a managed or work profile, some OEM launchers) may refuse a component switch, and this
-            // runs in onStop, where a crash would come back every time the app is left. The icon stays as it was, and
-            // with the target not recorded as applied, the next color change or the next stop tries again.
+            // is asked for on every stop, where a crash would come back every time the app is left. The icon stays as it
+            // was, and with the target not recorded as applied, the next color change or the next stop tries again.
             println("Could not change the launcher icon: ${exception.message}")
         }
     }
