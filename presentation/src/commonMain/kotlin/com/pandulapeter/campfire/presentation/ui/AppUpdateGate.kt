@@ -83,7 +83,8 @@ internal fun AppUpdateGate(
     viewModel: CampfireViewModel,
     content: @Composable () -> Unit,
 ) {
-    val controller = rememberAppUpdateController()
+    val isAppOnScreen by viewModel.isAppOnScreen.collectAsStateWithLifecycle()
+    val controller = rememberAppUpdateController(isAppOnScreen = isAppOnScreen)
     val state = controller.state
     val hasUnsavedEditorChanges by viewModel.hasUnsavedEditorChanges.collectAsStateWithLifecycle()
     val isSyncing by viewModel.isSyncing.collectAsStateWithLifecycle()

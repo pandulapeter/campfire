@@ -94,6 +94,9 @@ internal object NoAppUpdates : AppUpdateController {
 /**
  * Provides the controller [AppUpdateGate] renders, tied to the composition it is called from: the Android one
  * registers an activity result launcher and watches the lifecycle, neither of which outlives the screen.
+ *
+ * @param isAppOnScreen Whether the launch screen has given way to the app. The store is not asked anything while the
+ *   launch screen is up; the first check is made as the app appears.
  */
 @Composable
-internal expect fun rememberAppUpdateController(): AppUpdateController
+internal expect fun rememberAppUpdateController(isAppOnScreen: Boolean): AppUpdateController

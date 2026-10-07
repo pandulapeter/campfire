@@ -19,4 +19,4 @@ import androidx.compose.runtime.Composable
  * is worth more than the hint would be. iOS also updates apps by itself unless the user turns that off.
  */
 @Composable
-internal actual fun rememberAppUpdateController(): AppUpdateController = NoAppUpdates
+internal actual fun rememberAppUpdateController(isAppOnScreen: Boolean): AppUpdateController = NoAppUpdates

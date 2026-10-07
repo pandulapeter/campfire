@@ -12,4 +12,4 @@ package com.pandulapeter.campfire.presentation.ui.platform
 import androidx.compose.runtime.Composable
 
 @Composable
-internal actual fun rememberAppUpdateController(): AppUpdateController = NoAppUpdates
+internal actual fun rememberAppUpdateController(isAppOnScreen: Boolean): AppUpdateController = NoAppUpdates

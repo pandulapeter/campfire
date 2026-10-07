@@ -567,11 +567,15 @@ class CampfireViewModel(
     internal var hasShownApp = false
         set(value) {
             field = value
-            if (value) isAppOnScreen.value = true
+            if (value) _isAppOnScreen.value = true
         }
 
-    /** [hasShownApp] as something to wait for, which the welcome sheet does, see [showWelcomeOnFirstRun]. */
-    private val isAppOnScreen = MutableStateFlow(false)
+    /**
+     * [hasShownApp] as something to wait for, which the welcome sheet does, see [showWelcomeOnFirstRun], and as
+     * something to watch, which the store's update check does, see `rememberAppUpdateController`.
+     */
+    private val _isAppOnScreen = MutableStateFlow(false)
+    internal val isAppOnScreen: StateFlow<Boolean> = _isAppOnScreen.asStateFlow()
 
     /**
      * Read straight from its own repository rather than out of [screenData], which only has anything once every

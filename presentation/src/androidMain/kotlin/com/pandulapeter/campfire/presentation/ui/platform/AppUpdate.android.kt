@@ -18,12 +18,14 @@ import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.Lifecycle
@@ -49,7 +51,7 @@ import com.google.android.play.core.install.model.UpdateAvailability
  * APK, in a sideloaded release, or on a device without Play. The flow can only be exercised from a Play track.
  */
 @Composable
-internal actual fun rememberAppUpdateController(): AppUpdateController {
+internal actual fun rememberAppUpdateController(isAppOnScreen: Boolean): AppUpdateController {
     val activity = LocalActivity.current as? ComponentActivity ?: return NoAppUpdates
     // Kept outside the controller so that a rotation does not undo them: the activity, and with it everything
     // remembered against it, is recreated, while a "later" the user already gave should still stand, an
@@ -74,7 +76,19 @@ internal actual fun rememberAppUpdateController(): AppUpdateController {
     // Play answers with what it knows at the moment it is asked, and what it knows mostly changes while the app is
     // not the thing on screen: an immediate update the user walked out of is still in progress, and a flexible
     // download that finished in the background has nothing else to announce itself with.
-    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { controller.checkForUpdate() }
+    // A cold start's first resume comes while the splash is still up, where binding to Play's service can start the
+    // Play Store's own process alongside this one's start; that check is made as the app appears instead. An activity
+    // recreated in a running process has the app on screen from its first frame, so its resume checks at once, which
+    // is what picks up a flexible download that was in progress.
+    val isAppOnScreenNow by rememberUpdatedState(isAppOnScreen)
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { if (isAppOnScreenNow) controller.checkForUpdate() }
+    var hasMadeFirstCheck by remember { mutableStateOf(isAppOnScreen) }
+    LaunchedEffect(isAppOnScreen) {
+        if (isAppOnScreen && !hasMadeFirstCheck) {
+            hasMadeFirstCheck = true
+            controller.checkForUpdate()
+        }
+    }
     DisposableEffect(controller) { onDispose(controller::release) }
     return controller
 }
