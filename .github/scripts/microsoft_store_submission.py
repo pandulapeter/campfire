@@ -17,9 +17,12 @@ A new submission is a copy of the last published one: this replaces its package 
 notes as its "What's new in this version", sets it to be published as soon as it passes certification, uploads the
 package and commits it, then waits until Partner Center has accepted the commit (which is where a package that does
 not match the product's identity is refused). A green run means submitted, not certified: certification answers by
-email, usually within a few days. With --prepare it stops before the commit, leaving the submission as a draft in
-Partner Center for somebody to add the release's screenshots to and submit it there; since this made it, a later run
-can still take it up and commit it.
+email, usually within a few days. With --prepare it writes the release notes and the publish mode and leaves the
+packages alone, leaving the submission as a draft in Partner Center for somebody to add the release's screenshots to,
+replace the package by hand with the one the run keeps, and submit it there. The package is not uploaded then, because
+Partner Center only takes in a package uploaded through the API when the API commits the submission: one sent from
+Partner Center's own Submit button goes out with whatever package Partner Center shows, which for a copy is the last
+release's. A draft that nobody has changed in Partner Center can still be taken up and committed by a later run.
 
 A draft this script made and did not get through - one whose commit failed - is used instead of a new copy: its package
 is replaced with the new one and its "What's new in this version" with the notes, everything else in it is kept exactly
@@ -243,6 +246,14 @@ def blob_request(url, data, attempts=3):
         time.sleep(5 * attempt)
 
 
+def run_url():
+    """Where the run's artifacts are, as a clause of a sentence, or nothing outside GitHub Actions."""
+    if not os.environ.get("GITHUB_RUN_ID"):
+        return ""
+    return (f" ({os.environ.get('GITHUB_SERVER_URL', 'https://github.com')}/{os.environ.get('GITHUB_REPOSITORY')}"
+            f"/actions/runs/{os.environ['GITHUB_RUN_ID']})")
+
+
 def wait_for_commit(app_id, submission_id):
     deadline = time.time() + COMMIT_TIMEOUT_SECONDS
     # The status repeats its warnings on every poll, and a warning in the run's summary should be there once.
@@ -309,14 +320,18 @@ def main(identity_name, version, package, notes_file, prepare_only):
              "submission it did not create. Either finish it there - upload the package this run keeps as its "
              f"campfire-msix artifact ({os.path.basename(package)}), write the release notes and submit it - or delete "
              "it there and run this again, which submits a copy of the last published submission instead.")
-    replace_package(submission, os.path.basename(package))
     write_release_notes(submission, notes)
+    if prepare_only:
+        # The package is left as it is: an upload is only taken in by the API's own commit, so Partner Center would show
+        # the last release's package next to a new one that never arrives.
+        request("PUT", f"/applications/{app['id']}/submissions/{submission_id}", submission)
+        print(f"::warning::Prepared submission {submission_id} without its package: in Partner Center, replace the "
+              f"package with {os.path.basename(package)} from this run's campfire-msix artifact{run_url()}, add the "
+              "screenshots and submit it there.")
+        return
+    replace_package(submission, os.path.basename(package))
     request("PUT", f"/applications/{app['id']}/submissions/{submission_id}", submission)
     upload(upload_url, package)
-    if prepare_only:
-        print(f"Prepared submission {submission_id} with version {version} without submitting it: add the screenshots in "
-              "Partner Center and submit it there.")
-        return
     request("POST", f"/applications/{app['id']}/submissions/{submission_id}/commit")
     status = wait_for_commit(app["id"], submission_id)
     print(f"Submitted version {version} for certification ({status}), to be published "

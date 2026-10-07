@@ -247,7 +247,8 @@ all of them are always written:
   something serious can be raised before it is published.
 - **`<store> submit`** says, per store, whether the release is sent for review / certification (`true`) or
   only uploaded and left as a draft there (`false`) — for new screenshots, say, which the pipeline cannot
-  add, to be put in by hand before sending it from the store's console. Always write all four, **`true`**
+  add, to be put in by hand before sending it from the store's console (the Microsoft Store's draft keeps the
+  last release's package, which is replaced there with the Windows run's `.msix` artifact). Always write all four, **`true`**
   unless the user asked otherwise, so they can see them and flip one before publishing; anything but
   `true` or `false` stops the release. Mention them when reporting back.
 - **Nothing misspelt is taken as absent.** `.github/scripts/release_description.py` stops the release on a

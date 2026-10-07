@@ -29,7 +29,8 @@
 # the "What's new in this version" of the submission the Windows job makes; the priority is Play's alone (see the
 # Updates section of CLAUDE.md for what the number decides). A store's "submit: false" is its workflow's submit input
 # turned off: the release is uploaded and left there as a draft - a draft Play release, a version prepared in App Store
-# Connect, an uncommitted Partner Center submission - for whatever it needs by hand, new screenshots say, and is sent
+# Connect, an uncommitted Partner Center submission (which still holds the last release's package, for the run's
+# .msix artifact to be uploaded into by hand) - for whatever it needs by hand, new screenshots say, and is sent
 # from there. All of them are optional. Without the notes the visible description stands in for them, with its
 # markdown taken out, and where that is empty too, "Bug fixes and improvements.", without the priority it is 0, and
 # without a store's submit it is true. What is there has to be readable, though (.github/scripts/release_description.py):

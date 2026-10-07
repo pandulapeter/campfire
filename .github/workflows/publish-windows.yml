@@ -10,9 +10,11 @@
 # release's notes as its "What's new in this version", to be published as soon as it passes
 # (.github/scripts/microsoft_store_submission.py). The package is kept as an artifact of the run as well, for an upload
 # made by hand. A green run means submitted, not certified - certification answers by email. With "submit" off - the box
-# of a hand dispatch, or a release whose description says <!-- microsoft-store submit: false --> - it stops short of the
-# commit and leaves the submission as a draft in Partner Center, for the release's screenshots to be added to and the
-# submission sent from there: Partner Center takes screenshots from nowhere else.
+# of a hand dispatch, or a release whose description says <!-- microsoft-store submit: false --> - it leaves the
+# submission as a draft in Partner Center with the notes written but the last release's package still in it, for the
+# package to be replaced with the run's campfire-msix artifact, the release's screenshots to be added and the submission
+# sent from there: Partner Center takes screenshots from nowhere else, and only takes in a package the API uploaded when
+# the API commits the submission, so an upload would never reach a draft sent from Partner Center.
 #
 # The package is unsigned, because Partner Center signs what it certifies, so nothing here signs anything. What it
 # needs is a Microsoft Entra application with the Manager role in Partner Center, named by MICROSOFT_STORE_TENANT_ID and
@@ -48,7 +50,7 @@ on:
         type: string
         required: false
       submit:
-        description: 'Submit for certification (off: leave the submission as a draft in Partner Center, to add screenshots to)'
+        description: 'Submit for certification (off: leave a draft in Partner Center, to upload the run''s .msix artifact and add screenshots to by hand)'
         type: boolean
         default: true
 
@@ -219,7 +221,7 @@ jobs:
           RELEASE_NOTES: ${{ inputs.release_notes }}
           SUBMIT: ${{ inputs.submit }}
         run: |
-          # Without the submission the run leaves everything ready but the screenshots, which are added by hand.
+          # Without the submission the run writes the notes and leaves the package and the screenshots to be put in by hand.
           PREPARE=()
           [ "$SUBMIT" = true ] || PREPARE=(--prepare)
           # A single-line text box has no other way to ask for a line break; the notes publish-all.yml passes on are

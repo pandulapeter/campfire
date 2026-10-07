@@ -115,7 +115,7 @@ account, "Connected as Péter Pandula"; only public domain songs are opened full
 | 3 | A metronome that knows each song | Metronome tab playing 6/8 at 236, beats 1 and 4 accented, caught on beat 1 |
 | 4 | Setlists ready for the gig | Setlists by date: Frey-Tully Nuptials "In 2 days", Friday Night by the Lake "Tomorrow" |
 | 5 | ChordPro editor with live preview | Home on the Range in the editor; Split wherever the app offers it, Edit otherwise; Shortcuts always open |
-| 6 | Print a song or the whole set | Home on the Range exported: PDF, A4, landscape, two columns, every option on |
+| 6 | Print a song or the whole set | Home on the Range exported: PDF, A4, landscape (portrait on the small Android tablet), two columns, every option on |
 | 7 | Offline first, synced across devices | Settings → Library, sync connected |
 | 8 | Make it yours, down to the icon | Settings → General |
 

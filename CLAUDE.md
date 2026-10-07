@@ -620,8 +620,11 @@ localized in both languages.
     is, and it is committed. **A draft started in Partner Center stops the run**, untouched: the API refuses to change a
     submission it did not create, so one prepared there is finished there with the run's `.msix` artifact, or deleted
     so that the run can make its own. **A release with new screenshots is dispatched by hand with `submit` off**
-    instead: the run stops short of the commit, leaving a draft of its own making in Partner Center for the screenshots
-    to be added to and submitted there.
+    instead: the run writes the notes into a draft of its own making and leaves its package alone, since Partner Center
+    only takes in a package the API uploaded when the API commits the submission — one sent from Partner Center goes
+    out with whatever package it shows, which for a copy is the last release's. So the package is replaced there with
+    the run's `.msix` artifact, the screenshots are added and it is submitted there; the run ends green with a warning
+    that says so.
     A submission past its commit with this version is left alone, so a repeated run succeeds; one past its commit with
     anything else stops the run, since a product has only one in progress at a time. It signs in as a Microsoft Entra application with the
     Manager role in Partner Center (`MICROSOFT_STORE_TENANT_ID` and `_CLIENT_ID`) and **with no secret**: the
