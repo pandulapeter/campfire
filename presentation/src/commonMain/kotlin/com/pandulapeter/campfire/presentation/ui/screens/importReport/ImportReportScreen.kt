@@ -453,16 +453,19 @@ private fun ReportList(
     LazyColumn(
         modifier = Modifier.bounceScrollableContent(listState)
             .fillMaxSize()
-            .fadingTopEdge {
-                val field = searchFieldIndex?.let { index -> listState.layoutInfo.visibleItemsInfo.firstOrNull { it.index == index } }
-                when {
-                    searchFieldIndex != null && listState.firstVisibleItemIndex >= searchFieldIndex -> 0
-                    // The fade is as strong as the field is far from the top, so it is gone by the time the field pins.
-                    field != null && field.offset < fadeHeight -> field.offset.coerceAtLeast(0)
-                    listState.firstVisibleItemIndex > 0 -> Int.MAX_VALUE
-                    else -> listState.firstVisibleItemScrollOffset
-                }
-            },
+            .fadingTopEdge(
+                scrolled = {
+                    val field = searchFieldIndex?.let { index -> listState.layoutInfo.visibleItemsInfo.firstOrNull { it.index == index } }
+                    when {
+                        searchFieldIndex != null && listState.firstVisibleItemIndex >= searchFieldIndex -> 0
+                        // The fade is as strong as the field is far from the top, so it is gone by the time the field pins.
+                        field != null && field.offset < fadeHeight -> field.offset.coerceAtLeast(0)
+                        listState.firstVisibleItemIndex > 0 -> Int.MAX_VALUE
+                        else -> listState.firstVisibleItemScrollOffset
+                    }
+                },
+                backgroundColor = MaterialTheme.colorScheme.background,
+            ),
         state = listState,
         contentPadding = contentPadding,
         horizontalAlignment = Alignment.CenterHorizontally,

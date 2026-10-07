@@ -235,6 +235,8 @@ internal fun PaddingValues.besideSidePanel(isSidePanelVisible: Boolean) =
  *
  * @param uncoveredTopInset The sheet's `BottomSheetContentScope.uncoveredTopInset`, for the height of the sheet at
  *   its tallest rather than at the offset it happens to be at.
+ * @param fadeBackgroundColor The opaque color the filters stand on, the screen's or the sheet's, which their top edge
+ *   fades into.
  */
 @Composable
 internal fun SongFilters(
@@ -242,6 +244,7 @@ internal fun SongFilters(
     viewModel: CampfireViewModel,
     contentPadding: PaddingValues = PaddingValues(),
     uncoveredTopInset: () -> Dp = { 0.dp },
+    fadeBackgroundColor: Color,
 ) = BoxWithConstraints(
     modifier = modifier.fillMaxWidth(),
 ) {
@@ -252,7 +255,7 @@ internal fun SongFilters(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .fadingTopEdge(scrollState)
+            .fadingTopEdge(scrollState, fadeBackgroundColor)
             .bounceVerticalScroll(scrollState)
             .padding(contentPadding),
     ) {

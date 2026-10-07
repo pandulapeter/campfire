@@ -150,7 +150,7 @@ internal fun SongPlayingDialog(
         subtitle = songLabel(dialog.song),
         text = { contentPadding ->
             Column(
-                modifier = Modifier.fillMaxWidth().fadingTopEdge(scrollState).bounceVerticalScroll(scrollState).padding(contentPadding),
+                modifier = Modifier.fillMaxWidth().fadingTopEdge(scrollState, sheetContainerColor()).bounceVerticalScroll(scrollState).padding(contentPadding),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 if (!dialog.isEditorDraft) {

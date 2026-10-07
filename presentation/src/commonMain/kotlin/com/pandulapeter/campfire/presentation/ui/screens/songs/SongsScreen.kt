@@ -244,6 +244,7 @@ internal fun SongsScreen(
                     modifier = panelModifier,
                     viewModel = viewModel,
                     contentPadding = panelContentPadding,
+                    fadeBackgroundColor = MaterialTheme.colorScheme.background,
                 )
             }
         }

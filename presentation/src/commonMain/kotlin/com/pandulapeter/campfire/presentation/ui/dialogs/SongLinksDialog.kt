@@ -110,7 +110,7 @@ internal fun SongLinksDialog(
         retainHeight = true,
         text = { contentPadding ->
             LazyColumn(
-                modifier = Modifier.bounceScrollableContent(listState).fillMaxWidth().fadingTopEdge(listState),
+                modifier = Modifier.bounceScrollableContent(listState).fillMaxWidth().fadingTopEdge(listState, sheetContainerColor()),
                 state = listState,
                 contentPadding = contentPadding,
                 verticalArrangement = Arrangement.spacedBy(12.dp),

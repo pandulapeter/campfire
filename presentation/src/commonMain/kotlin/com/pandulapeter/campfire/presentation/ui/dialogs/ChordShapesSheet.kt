@@ -111,7 +111,7 @@ internal fun ChordShapesSheet(
             modifier = Modifier
                 .weight(1f, fill = false)
                 .fillMaxWidth()
-                .fadingTopEdge(scrollState)
+                .fadingTopEdge(scrollState, sheetContainerColor())
                 .bounceVerticalScroll(scrollState)
                 .padding(contentPadding)
                 .padding(horizontal = 16.dp, vertical = 8.dp),

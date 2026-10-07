@@ -945,7 +945,7 @@ private fun PrintOptions(
 ) {
     val state = rememberLazyListState()
     val isPdf = settings.format == PrintSettings.Format.PDF
-    LazyColumn(modifier.bounceScrollableContent(state).fadingTopEdge(state), state = state, contentPadding = PaddingValues(top = 8.dp, bottom = bottomPadding)) {
+    LazyColumn(modifier.bounceScrollableContent(state).fadingTopEdge(state, MaterialTheme.colorScheme.background), state = state, contentPadding = PaddingValues(top = 8.dp, bottom = bottomPadding)) {
         if (header != null) {
             item(key = "preview") { header() }
         }
@@ -1277,7 +1277,11 @@ private fun ZipContents(
     val state = rememberLazyListState()
     // Beside the options the list ends at the window's bottom, where nothing fades; above more options it is a list in
     // the middle of something, which says it goes on at both ends.
-    val edgeFade = if (isBottomAnchored) Modifier.fadingTopEdge(state) else Modifier.fadingVerticalEdges(state)
+    val edgeFade = if (isBottomAnchored) {
+        Modifier.fadingTopEdge(state, MaterialTheme.colorScheme.background)
+    } else {
+        Modifier.fadingVerticalEdges(state, MaterialTheme.colorScheme.background)
+    }
     LazyColumn(modifier.bounceScrollableContent(state).then(edgeFade), state = state, contentPadding = PaddingValues(top = 8.dp, bottom = bottomPadding)) {
         item {
             SettingsSectionTitle(text = stringResource(Res.string.print_zip_contents))
@@ -1521,6 +1525,7 @@ private fun PrintPages(
                 .fadingVerticalEdges(
                     scrolledFromTop = ::pastTop,
                     scrolledFromBottom = { if (areOptionsBelow) pastBottom() else 0 },
+                    backgroundColor = MaterialTheme.colorScheme.background,
                 )
                 .then(if (areOptionsBelow) Modifier else Modifier.fadingUnderStartOverlay(scrolledFromStart = ::pastStart, overlayWidth = 0.dp)),
             pageSpacing = PAGE_MARGIN,

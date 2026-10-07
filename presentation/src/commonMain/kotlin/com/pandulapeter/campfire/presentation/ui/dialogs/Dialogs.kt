@@ -361,6 +361,7 @@ internal fun CampfireDialogs(
                 viewModel = viewModel,
                 contentPadding = contentPadding,
                 uncoveredTopInset = uncoveredTopInset,
+                fadeBackgroundColor = sheetContainerColor(),
             )
         }
 
@@ -874,7 +875,7 @@ private fun DeleteLibraryDialog(
             val closeSheet = { close() }
             val isClosing = LocalIsSheetClosing.current
             Column(
-                modifier = Modifier.fadingTopEdge(scrollState).bounceVerticalScroll(scrollState).padding(contentPadding),
+                modifier = Modifier.fadingTopEdge(scrollState, sheetContainerColor()).bounceVerticalScroll(scrollState).padding(contentPadding),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 Text(stringResource(Res.string.settings_library_delete_confirmation))
@@ -1030,7 +1031,7 @@ private fun SetlistDetailsDialog(
         title = title,
         subtitle = subtitle,
         text = { contentPadding ->
-            Column(modifier = Modifier.fadingTopEdge(scrollState).bounceVerticalScroll(scrollState).padding(contentPadding)) {
+            Column(modifier = Modifier.fadingTopEdge(scrollState, sheetContainerColor()).bounceVerticalScroll(scrollState).padding(contentPadding)) {
                 OutlinedTextField(
                     modifier = Modifier.fillMaxWidth().focusRequester(focusRequester).onFocusChanged {
                         if (it.isFocused && !hasTitleBeenFocused) {
@@ -1242,12 +1243,12 @@ private fun SetlistDatePickerSheet(
         DatePicker(
             modifier = Modifier
                 .weight(1f, fill = false)
-                .fadingTopEdge(calendarScrollState)
+                .fadingTopEdge(calendarScrollState, sheetContainerColor())
                 .bounceVerticalScroll(calendarScrollState)
                 .padding(contentPadding.only(bottom = true)),
             state = state,
             dateFormatter = dateFormatter,
-            colors = DatePickerDefaults.colors(containerColor = campfireBottomSheetContainerColor()),
+            colors = DatePickerDefaults.colors(containerColor = sheetContainerColor()),
             title = null,
             // Typed entry is left out: its field's label, pattern and errors are Material's own strings, read in the
             // system's language rather than the app's, and there is no parameter for any of them.
@@ -1313,7 +1314,7 @@ private fun NewSongDialog(
                 )
             }
             Column(
-                modifier = Modifier.fadingTopEdge(scrollState).bounceVerticalScroll(scrollState).padding(contentPadding),
+                modifier = Modifier.fadingTopEdge(scrollState, sheetContainerColor()).bounceVerticalScroll(scrollState).padding(contentPadding),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 field(Modifier.fillMaxWidth().focusRequester(focusRequester), Field.TITLE)
@@ -1456,7 +1457,7 @@ private fun SongTagsDialog(
                             .padding(top = 8.dp)
                             .reachingDialogEdges()
                             .weight(1f, fill = false)
-                            .fadingTopEdge(listState),
+                            .fadingTopEdge(listState, sheetContainerColor()),
                         contentPadding = contentPadding,
                         state = listState,
                     ) {
@@ -1607,7 +1608,7 @@ private fun SongLanguagesDialog(
                             .padding(top = 8.dp)
                             .reachingDialogEdges()
                             .weight(1f, fill = false)
-                            .fadingTopEdge(listState),
+                            .fadingTopEdge(listState, sheetContainerColor()),
                         contentPadding = contentPadding,
                         state = listState,
                     ) {
@@ -2055,7 +2056,7 @@ private fun ColumnScope.PickerList(
             .retainSheetContentHeight(contentPadding)
             // The rows fade out as they scroll up under the search field, which is the edge between the two
             // everywhere else in the app too.
-            .fadingTopEdge(listState),
+            .fadingTopEdge(listState, sheetContainerColor()),
         state = listState,
         // The gap under the search field is the list's own content padding rather than a padding around the list, so
         // that a scrolled row goes under the field itself instead of being cut off a few pixels short of it.
@@ -2082,10 +2083,13 @@ private fun ColumnScope.PickerList(
     }
 }
 
-/** The same surface color for every sheet and any Material container drawn inside it, including the calendar. */
+/**
+ * The same surface color for every sheet and any Material container drawn inside it, including the calendar, and so
+ * the color the edge fades of a sheet's scrolling content are painted in.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun campfireBottomSheetContainerColor() = MaterialTheme.colorScheme.background.let { background ->
+internal fun sheetContainerColor() = MaterialTheme.colorScheme.background.let { background ->
     // Dark sheets keep Material's lighter surface so they remain visible against the scrim.
     if (background.luminance() < 0.5f) BottomSheetDefaults.ContainerColor else background
 }
@@ -2197,7 +2201,7 @@ internal fun CampfireBottomSheet(
         sheetMaxWidth = sheetMaxWidth,
         // Off for the slide of a final close, so that the second press of a double tap does not take hold of it.
         sheetGesturesEnabled = !isCloseFinal,
-        containerColor = campfireBottomSheetContainerColor(),
+        containerColor = sheetContainerColor(),
         dragHandle = null,
         contentWindowInsets = { WindowInsets.safeDrawing.only(WindowInsetsSides.Top) },
     ) {
@@ -2244,7 +2248,7 @@ internal fun CampfireBottomSheet(
                 .then(
                     if (isCompactKeyboard) {
                         Modifier.heightIn(max = windowHeight).imePadding()
-                            .fadingTopEdge(scrollState)
+                            .fadingTopEdge(scrollState, sheetContainerColor())
                             .bounceVerticalScroll(scrollState)
                     } else {
                         // Outside the content's own scroll, so that its viewport ends at the keyboard and a field focused
@@ -2503,7 +2507,7 @@ private fun SongInfoSheet(
             SongInfoBody(
                 modifier = Modifier
                     .weight(1f, fill = false)
-                    .fadingTopEdge(scrollState)
+                    .fadingTopEdge(scrollState, sheetContainerColor())
                     .bounceVerticalScroll(scrollState)
                     .padding(contentPadding)
                     .padding(vertical = 8.dp),

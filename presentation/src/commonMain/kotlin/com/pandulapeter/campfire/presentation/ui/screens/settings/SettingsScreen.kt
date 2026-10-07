@@ -424,14 +424,14 @@ private fun SettingsTabPager(
             },
         )
         ImportProgress(isImporting = isImporting)
-        val fadeAlpha = animateFloatAsState(
-            if (isNavigationRailVisible && (pagerState.isScrollInProgress || pagerState.currentPageOffsetFraction != 0f)) 1f else 0f
-        )
+        // Derived, so that a swipe recomposes this when it starts and when it ends rather than on every frame of it.
+        val isSwiping by remember(pagerState) { derivedStateOf { pagerState.isScrollInProgress || pagerState.currentPageOffsetFraction != 0f } }
+        val fadeAlpha = animateFloatAsState(if (isNavigationRailVisible && isSwiping) 1f else 0f)
         HorizontalPager(
             modifier = Modifier.bounceScrollableContent(pagerState, Orientation.Horizontal)
                 .weight(1f)
                 .fillMaxWidth()
-                .fadingLeftEdge(fadeAlpha.value),
+                .fadingLeftEdge(alpha = { fadeAlpha.value }, backgroundColor = MaterialTheme.colorScheme.background),
             state = pagerState,
             beyondViewportPageCount = SettingsTab.entries.size - 1,
             key = { SettingsTab.entries[it] },

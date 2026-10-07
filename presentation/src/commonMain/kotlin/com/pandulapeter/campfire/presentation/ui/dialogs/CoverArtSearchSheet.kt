@@ -404,9 +404,10 @@ private fun CoverArtResults(
             Box(modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 16.dp)) { fields() }
         }
         LazyVerticalGrid(
-            modifier = Modifier.bounceScrollableContent(gridState).weight(1f).fillMaxWidth().nestedScroll(keyboardDismissal).fadingTopEdge {
-                if (gridState.firstVisibleItemIndex > 0) Int.MAX_VALUE else gridState.firstVisibleItemScrollOffset
-            },
+            modifier = Modifier.bounceScrollableContent(gridState).weight(1f).fillMaxWidth().nestedScroll(keyboardDismissal).fadingTopEdge(
+                scrolled = { if (gridState.firstVisibleItemIndex > 0) Int.MAX_VALUE else gridState.firstVisibleItemScrollOffset },
+                backgroundColor = sheetContainerColor(),
+            ),
             state = gridState,
             columns = GridCells.Adaptive(TILE_MIN_WIDTH),
             contentPadding = contentPadding.only(bottom = true, extraStart = 16.dp, extraEnd = 16.dp, extraTop = 16.dp),
@@ -552,7 +553,7 @@ private fun CoverArtAddress(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
-                .fadingTopEdge(scrollState)
+                .fadingTopEdge(scrollState, sheetContainerColor())
                 .bounceVerticalScroll(scrollState)
                 .padding(start = 16.dp, end = 16.dp, top = 16.dp)
                 .padding(contentPadding),
