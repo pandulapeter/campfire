@@ -3914,6 +3914,8 @@ class CampfireViewModel(
 
     fun setThemeColor(value: UserPreferences.ThemeColor) = changeUserPreferences { copy(themeColor = value) }
 
+    fun setBackgroundWarmth(value: Int) = changeUserPreferences { copy(backgroundWarmth = value) }
+
     fun setAppIconThemed(value: Boolean) = changeUserPreferences { copy(isAppIconThemed = value) }
 
     fun setCoverArtEnabled(value: Boolean) = changeUserPreferences { copy(isCoverArtEnabled = value) }

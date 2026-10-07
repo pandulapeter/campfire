@@ -35,6 +35,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.appIconThemeColor
 import com.pandulapeter.campfire.presentation.ui.platform.droppedFiles
 import com.pandulapeter.campfire.presentation.ui.theme.colorSchemePair
 import com.pandulapeter.campfire.presentation.ui.theme.isDarkTheme
+import com.pandulapeter.campfire.presentation.ui.theme.withBackgroundWarmth
 import kotlinx.browser.window
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -215,7 +216,9 @@ private fun isTypingTarget(event: KeyboardEvent): Boolean = js("event.target && 
 private fun BrowserThemeColorEffect(viewModel: CampfireViewModel) {
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val isDarkTheme = userPreferences?.uiMode.isDarkTheme()
-    val colorSchemePair = colorSchemePair(userPreferences?.themeColor)
+    val baseColorSchemePair = colorSchemePair(userPreferences?.themeColor)
+    val backgroundWarmth = userPreferences?.backgroundWarmth ?: 0
+    val colorSchemePair = remember(baseColorSchemePair, backgroundWarmth) { baseColorSchemePair.withBackgroundWarmth(backgroundWarmth) }
     val toolbarColor = if (isDarkTheme) colorSchemePair.dark.background else colorSchemePair.light.surfaceContainerHigh
     // Nothing is known until the preferences are, and index.html's own tags are the better guess until then.
     if (userPreferences != null) {

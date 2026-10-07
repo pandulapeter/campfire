@@ -33,6 +33,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -45,6 +46,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -90,6 +93,8 @@ import com.pandulapeter.campfire.presentation.resources.settings_app_icon_launch
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_launcher_description
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_taskbar
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_taskbar_description
+import com.pandulapeter.campfire.presentation.resources.settings_background_warmth
+import com.pandulapeter.campfire.presentation.resources.settings_background_warmth_description
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_window
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_window_description
 import com.pandulapeter.campfire.presentation.resources.settings_chords
@@ -193,6 +198,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.isAppAvailableOffline
 import com.pandulapeter.campfire.presentation.ui.platform.platformStore
 import com.pandulapeter.campfire.presentation.ui.theme.CampfireColorScheme
 import com.pandulapeter.campfire.presentation.ui.theme.colorSchemePair
+import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
@@ -652,6 +658,30 @@ private fun NotationChoice(
     }
 }
 
+/**
+ * How far the palette's neutrals are turned towards sepia. A slider of a few steps rather than a picker of tints, since
+ * the one thing that moves is the hue at a fixed lightness (see `withBackgroundWarmth`), so no step can cost contrast,
+ * and a step is a whole theme change that recomposes the app: a continuous slider would do that on every frame of a
+ * drag. Each step reaches the theme as it is crossed, so the app behind the settings shows where the thumb is.
+ */
+@Composable
+private fun BackgroundWarmthSlider(
+    warmth: Int,
+    onWarmthChanged: (Int) -> Unit,
+) = SettingsSubsection(
+    title = stringResource(Res.string.settings_background_warmth),
+    description = stringResource(Res.string.settings_background_warmth_description),
+) {
+    val sliderDescription = stringResource(Res.string.settings_background_warmth)
+    Slider(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).semantics { contentDescription = sliderDescription },
+        value = warmth.toFloat(),
+        onValueChange = { value -> value.roundToInt().let { if (it != warmth) onWarmthChanged(it) } },
+        valueRange = 0f..UserPreferences.MAX_BACKGROUND_WARMTH.toFloat(),
+        steps = UserPreferences.MAX_BACKGROUND_WARMTH - 1,
+    )
+}
+
 @Composable
 private fun GeneralSection(
     viewModel: CampfireViewModel,
@@ -684,6 +714,10 @@ private fun GeneralSection(
         isChecked = !canColorAppIcon || userPreferences?.isAppIconThemed == true,
         isEnabled = canColorAppIcon,
         onCheckedChange = viewModel::setAppIconThemed,
+    )
+    BackgroundWarmthSlider(
+        warmth = userPreferences?.backgroundWarmth ?: 0,
+        onWarmthChanged = viewModel::setBackgroundWarmth,
     )
     // A list rather than a segmented control, since it is the one choice here that grows with every translation,
     // and a row of segments runs out of width after the third. Every language the app is not set to also carries its

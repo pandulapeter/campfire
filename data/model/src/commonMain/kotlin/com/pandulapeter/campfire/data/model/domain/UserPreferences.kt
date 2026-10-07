@@ -47,6 +47,12 @@ data class UserPreferences(
     val uiMode: UiMode,
     val themeColor: ThemeColor,
     /**
+     * How far the backgrounds, the surfaces and the text on them are turned towards the warm brown of old paper, from
+     * none at all to [MAX_BACKGROUND_WARMTH], in whichever palette [themeColor] picks. Only their hue moves, never
+     * their lightness, so no contrast of the palette changes with it.
+     */
+    val backgroundWarmth: Int = 0,
+    /**
      * Whether the app icon is in [themeColor] wherever the platform lets the app change it, rather than the app's own
      * icon of [ThemeColor.CAMPFIRE] whatever the theme is.
      */
@@ -146,6 +152,9 @@ data class UserPreferences(
          */
         const val MIN_FONT_SCALE = 0.8f
         const val MAX_FONT_SCALE = 2.5f
+
+        /** The warmest [backgroundWarmth], full sepia; the steps below it are what the settings slider stops at. */
+        const val MAX_BACKGROUND_WARMTH = 4
     }
 
     /**

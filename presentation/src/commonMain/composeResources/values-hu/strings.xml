@@ -284,6 +284,8 @@
     <string name="settings_user_interface_theme_dark">Sötét</string>
     <string name="settings_user_interface_theme_light">Világos</string>
     <string name="settings_user_interface_theme_color">Szín</string>
+    <string name="settings_background_warmth">Szépia</string>
+    <string name="settings_background_warmth_description">A hátteret a régi papír meleg színe felé hangolja, ami kíméletesebb lehet a szemnek. A kontraszt minden fokozatban ugyanaz marad.</string>
     <string name="settings_app_icon_launcher">Indítóikon színezése</string>
     <string name="settings_app_icon_launcher_description">A kezdőképernyő ikonja felveszi a fenti színt. Az első változtatás akkor lép életbe, amikor kilépsz a Campfire-ből, és egyes indítók ilyenkor leveszik az ikont a kezdőképernyőről.</string>
     <string name="settings_app_icon_home_screen">Alkalmazásikon színezése</string>

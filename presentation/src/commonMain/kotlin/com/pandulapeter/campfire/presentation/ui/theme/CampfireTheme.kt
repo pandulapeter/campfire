@@ -32,8 +32,9 @@ import com.pandulapeter.campfire.presentation.ui.platform.isStartupScreenHeldUnt
 import kotlin.math.roundToInt
 
 /**
- * Material 3 Expressive theme of the app. The two preferences behind it are independent - [themeColor] picks the
- * palette and [uiMode] picks which of its two halves is shown - and a change to either is animated the same way.
+ * Material 3 Expressive theme of the app. The three preferences behind it are independent - [themeColor] picks the
+ * palette, [backgroundWarmth] how far its neutrals are turned towards sepia (see [withBackgroundWarmth]) and [uiMode]
+ * which of its two halves is shown - and a change to any of them is animated the same way.
  *
  * The schemes are cross faded with a single progress value rather than by animating the color roles one by one:
  * a spring reaches its visibility threshold sooner the shorter the distance it has to cover, so the roles that
@@ -61,10 +62,14 @@ import kotlin.math.roundToInt
 fun CampfireTheme(
     uiMode: UserPreferences.UiMode?,
     themeColor: UserPreferences.ThemeColor?,
+    backgroundWarmth: Int,
     content: @Composable (isThemeSettled: Boolean, launchScreenColors: LaunchScreenColors) -> Unit,
 ) {
     val isDarkTheme = uiMode.isDarkTheme()
-    val colorSchemePair = colorSchemePair(themeColor)
+    val baseColorSchemePair = colorSchemePair(themeColor)
+    // Remembered, so that the scheme is the same instance for as long as neither choice changes: the effect below
+    // tells a change from a recomposition by identity.
+    val colorSchemePair = remember(baseColorSchemePair, backgroundWarmth) { baseColorSchemePair.withBackgroundWarmth(backgroundWarmth) }
     val targetColorScheme = if (isDarkTheme) colorSchemePair.dark else colorSchemePair.light
     val targetSecondAccentColor = if (isDarkTheme) colorSchemePair.darkSecondAccent else colorSchemePair.lightSecondAccent
     val progress = remember { Animatable(1f) }
@@ -96,7 +101,7 @@ fun CampfireTheme(
         )
     }
     // The preferences rather than the scheme itself, which has no equality of its own to key an animation on.
-    LaunchedEffect(isDarkTheme to themeColor) {
+    LaunchedEffect(isDarkTheme, themeColor, backgroundWarmth) {
         // Noted before the identity check below, so that a stored theme equal to the guess still counts as the first
         // resolution and a later change is not taken for it.
         val isFirstResolution = isResolved && !hasResolved
@@ -105,7 +110,8 @@ fun CampfireTheme(
         }
         // Two preferences can ask for the same palette - an unread one and the app's own color, a color the device
         // cannot honor and the app's own it falls back to - and arriving at the scheme that is already on screen is
-        // not a change to animate. The schemes are the constants of ColorSchemes.kt, so this is identity.
+        // not a change to animate. The schemes are the constants of ColorSchemes.kt, or the one warmed copy of them
+        // remembered above, so this is identity.
         if (targetColorScheme === stop) {
             // A change of the preferences that leaves the scheme where it is has still cancelled the launch screen's
             // own fade, if it was running, and that fade carries on from where it stopped.

@@ -31,6 +31,7 @@ internal data class UserPreferencesDocument(
     val setlistSortingMode: String = "",
     val uiMode: String = "",
     val themeColor: String = "",
+    val backgroundWarmth: Int = 0,
     val isAppIconThemed: Boolean = true,
     val isCoverArtEnabled: Boolean = true,
     val shouldNumberSections: Boolean = true,

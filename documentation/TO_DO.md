@@ -12,7 +12,6 @@
 ### Bugs / issues
 
 ### Improvements
-- Custom background for song details
 
 ## Midterm (in the next versions)
 - Multi-select for songs: documentation/plans/multi-select.md

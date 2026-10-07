@@ -284,6 +284,8 @@
     <string name="settings_user_interface_theme_dark">Dark</string>
     <string name="settings_user_interface_theme_light">Light</string>
     <string name="settings_user_interface_theme_color">Color</string>
+    <string name="settings_background_warmth">Sepia</string>
+    <string name="settings_background_warmth_description">Turns the background towards the warm color of old paper, which can be easier on the eyes. The contrast stays the same at every step.</string>
     <string name="settings_app_icon_launcher">Color the launcher icon</string>
     <string name="settings_app_icon_launcher_description">The home screen icon takes the color above. The first change takes effect once you leave Campfire, and some launchers take the icon off the home screen when it changes.</string>
     <string name="settings_app_icon_home_screen">Color the app icon</string>
