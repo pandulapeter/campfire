@@ -49,6 +49,24 @@ sealed interface BatchRead {
     class Failed(val cause: Exception) : BatchRead
 }
 
+/** A file a library scan is going to read, and what the listing already knew about it, where it asked. */
+data class ScanEntry(val name: String, val info: StoredFileInfo?)
+
+/** What [FileStorage.readScan] answers about one file. */
+sealed interface ScannedFile {
+
+    data class Text(val info: StoredFileInfo, val text: String) : ScannedFile
+
+    /** There, and larger than the scan reads, so never read. */
+    data class TooLarge(val info: StoredFileInfo) : ScannedFile
+
+    /** The file is not there, or is not a file: what leaving it out of [FileStorage.list] says. */
+    data object Missing : ScannedFile
+
+    /** The file is there and could not be read; the exception is what [FileStorage.readText] would have thrown. */
+    class Failed(val cause: Exception) : ScannedFile
+}
+
 /**
  * Flat file access inside the app-private data directory. No sub-directories, no paths: every operation is
  * (directory, file name). Names are validated by the callers, the storage itself only refuses names that contain a
@@ -99,6 +117,37 @@ interface FileStorage {
                     throw exception
                 } catch (exception: Exception) {
                     BatchRead.Failed(exception)
+                }
+            }
+        }.awaitAll()
+    }
+
+    /**
+     * The files a library scan reads, in [list]'s order and with its filtering. Where the platform can say more about a
+     * file without asking each one, the entries carry it; otherwise [readScan] asks each file as it reads it, so that
+     * the first batch of a scan does not wait for every file of the directory to be asked about first.
+     */
+    suspend fun listForScan(directory: StorageDirectory): List<ScanEntry> = list(directory).map { ScanEntry(name = it.name, info = it) }
+
+    /**
+     * Every one of [entries] read at once, one answer each and in the same order, with its size and date. A file larger
+     * than [maxSize] is reported as [ScannedFile.TooLarge] without being read, and a file that fails is its own answer,
+     * never the batch's, as for [readTexts].
+     */
+    suspend fun readScan(directory: StorageDirectory, entries: List<ScanEntry>, maxSize: Long): List<ScannedFile> = coroutineScope {
+        entries.map { entry ->
+            async {
+                try {
+                    val info = entry.info ?: info(directory, entry.name)
+                    when {
+                        info == null -> ScannedFile.Missing
+                        info.size > maxSize -> ScannedFile.TooLarge(info)
+                        else -> readText(directory, entry.name)?.let { ScannedFile.Text(info = info, text = it) } ?: ScannedFile.Missing
+                    }
+                } catch (exception: CancellationException) {
+                    throw exception
+                } catch (exception: Exception) {
+                    ScannedFile.Failed(exception)
                 }
             }
         }.awaitAll()

@@ -11,8 +11,12 @@ package com.pandulapeter.campfire.data.source.local.implementation.storage.file
 
 import com.pandulapeter.campfire.data.model.domain.decodeLibraryText
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -22,6 +26,7 @@ import java.nio.file.AccessDeniedException
 import java.nio.file.AtomicMoveNotSupportedException
 import java.nio.file.Files
 import java.nio.file.NoSuchFileException
+import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 import java.nio.file.StandardOpenOption
 import java.nio.file.attribute.BasicFileAttributes
@@ -55,18 +60,7 @@ internal class JvmFileStorage(
      * [File] for the three is three calls into the file system each.
      */
     override suspend fun list(directory: StorageDirectory) = withContext(Dispatchers.IO) {
-        val directoryFile = directoryFile(directory)
-        // A directory that is not there yet is the same as an empty one. One that is there but cannot be listed is a
-        // failure and has to be reported as one: passing it off as an empty library would invite the user to create
-        // songs in a folder the app cannot read.
-        val paths = try {
-            Files.newDirectoryStream(directoryFile.toPath()).use { it.toList() }
-        } catch (_: NoSuchFileException) {
-            emptyList()
-        } catch (exception: IOException) {
-            throw LibraryStorageException("Could not read \"${directoryFile.absolutePath}\".", exception)
-        }
-        paths.filterNot { it.fileName.toString().endsWith(TEMPORARY_FILE_SUFFIX) }
+        listPaths(directory)
             .mapNotNull { path ->
                 // Gone since the listing, or not something the attributes can be read of: left out, as File.isFile
                 // leaves it out.
@@ -84,6 +78,65 @@ internal class JvmFileStorage(
                 }
             }
             .sortedBy { it.name }
+    }
+
+    /** Names only: the attributes are read with each file, by [readScan], rather than all of them before the first read. */
+    override suspend fun listForScan(directory: StorageDirectory) = withContext(Dispatchers.IO) {
+        listPaths(directory)
+            .map { path -> ScanEntry(name = path.fileName.toString().toLibraryName(), info = null) }
+            .sortedBy { it.name }
+    }
+
+    /**
+     * One attribute read and one read of the content per file, in parallel; the caller's batch is what bounds how many
+     * are open at once. Something under the name that is not a regular file is missing, as [list] leaves it out.
+     */
+    override suspend fun readScan(directory: StorageDirectory, entries: List<ScanEntry>, maxSize: Long) = withContext(Dispatchers.IO) {
+        coroutineScope {
+            entries.map { entry ->
+                async {
+                    try {
+                        scan(directory, entry, maxSize)
+                    } catch (exception: CancellationException) {
+                        throw exception
+                    } catch (exception: Exception) {
+                        ScannedFile.Failed(exception)
+                    }
+                }
+            }.awaitAll()
+        }
+    }
+
+    private fun scan(directory: StorageDirectory, entry: ScanEntry, maxSize: Long): ScannedFile {
+        val file = file(directory, entry.name)
+        val attributes = try {
+            Files.readAttributes(file.toPath(), BasicFileAttributes::class.java)
+        } catch (_: NoSuchFileException) {
+            return ScannedFile.Missing
+        } catch (exception: IOException) {
+            throw LibraryStorageException("Could not access \"${entry.name}\".", exception)
+        }
+        if (!attributes.isRegularFile) return ScannedFile.Missing
+        val info = StoredFileInfo(name = entry.name, size = attributes.size(), lastModified = attributes.lastModifiedTime().toMillis())
+        if (info.size > maxSize) return ScannedFile.TooLarge(info)
+        return file.readIfFile(entry.name)?.decodeLibraryText()?.let { ScannedFile.Text(info = info, text = it) } ?: ScannedFile.Missing
+    }
+
+    /**
+     * Every entry of the directory but the temporary files of writes in progress. A directory that is not there yet is
+     * the same as an empty one. One that is there but cannot be listed is a failure and has to be reported as one:
+     * passing it off as an empty library would invite the user to create songs in a folder the app cannot read.
+     */
+    private fun listPaths(directory: StorageDirectory): List<Path> {
+        val directoryFile = directoryFile(directory)
+        val paths = try {
+            Files.newDirectoryStream(directoryFile.toPath()).use { it.toList() }
+        } catch (_: NoSuchFileException) {
+            emptyList()
+        } catch (exception: IOException) {
+            throw LibraryStorageException("Could not read \"${directoryFile.absolutePath}\".", exception)
+        }
+        return paths.filterNot { it.fileName.toString().endsWith(TEMPORARY_FILE_SUFFIX) }
     }
 
     override suspend fun listNames(directory: StorageDirectory) = withContext(Dispatchers.IO) {

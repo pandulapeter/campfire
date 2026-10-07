@@ -129,6 +129,67 @@ internal class OpfsFileStorage : FileStorage {
         }
     }
 
+    /** Names only, which opens no file: [readScan] asks each file for its size and date as it reads it. */
+    override suspend fun listForScan(directory: StorageDirectory) = listNames(directory).sorted().map { ScanEntry(name = it, info = null) }
+
+    /**
+     * [readTexts] with each file's size and date, which the browser hands over with the same `getFile()` the read needs
+     * anyway, so a scan asks every song for its file once rather than once to list it and once again to read it. Its
+     * listing names directories too, which are answered as missing, as [list] leaves them out.
+     */
+    override suspend fun readScan(directory: StorageDirectory, entries: List<ScanEntry>, maxSize: Long): List<ScannedFile> = withContext(Dispatchers.Default) {
+        val validNames = entries.map { it.name }.filter(::isValidFileName)
+        val answers = try {
+            if (validNames.isEmpty()) {
+                emptyList()
+            } else {
+                failingAsStorage(directory.displayName) {
+                    readFileScans(directoryHandle(directory), validNames.joinToString(ENTRY_SEPARATOR), maxSize.toDouble()).await<JsArray<JsString?>>()
+                }.let { array -> List(array.length) { array[it]?.toString() } }
+            }
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Exception) {
+            return@withContext entries.map { ScannedFile.Failed(exception) }
+        }
+        val remainingAnswers = answers.iterator()
+        entries.map { entry ->
+            val name = entry.name
+            if (!isValidFileName(name)) {
+                ScannedFile.Failed(IllegalArgumentException("Invalid file name: \"$name\"."))
+            } else {
+                val answer = remainingAnswers.next()
+                when {
+                    answer == null -> ScannedFile.Missing
+                    answer.startsWith(READ_FAILED) -> ScannedFile.Failed(
+                        LibraryStorageException("Could not access \"$name\".", Exception(answer.substring(1))),
+                    )
+                    else -> {
+                        // The size and the date come first, each followed by a space, and the text, where there is one, after them.
+                        val sizeEnd = answer.indexOf(' ', startIndex = 1)
+                        val dateEnd = answer.indexOf(' ', startIndex = sizeEnd + 1).let { if (it < 0) answer.length else it }
+                        val info = StoredFileInfo(
+                            name = name,
+                            size = answer.substring(1, sizeEnd).toDoubleOrNull()?.toLong() ?: 0L,
+                            lastModified = answer.substring(sizeEnd + 1, dateEnd).toDoubleOrNull()?.toLong() ?: 0L,
+                        )
+                        when (answer.first()) {
+                            DECODED_TEXT -> ScannedFile.Text(info = info, text = answer.substring(dateEnd + 1).trimStart(BYTE_ORDER_MARK))
+                            TOO_LARGE -> ScannedFile.TooLarge(info)
+                            else -> try {
+                                readBytes(directory, name)?.decodeLibraryText()?.let { ScannedFile.Text(info = info, text = it) } ?: ScannedFile.Missing
+                            } catch (exception: CancellationException) {
+                                throw exception
+                            } catch (exception: Exception) {
+                                ScannedFile.Failed(exception)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     override suspend fun readBytes(directory: StorageDirectory, name: String) = withContext(Dispatchers.Default) {
         failingAsStorage(name) {
             fileHandle(directory, name)?.let { handle -> readFileLatin1(handle).await<JsString?>()?.toString()?.latin1Bytes() }
@@ -228,6 +289,7 @@ internal class OpfsFileStorage : FileStorage {
         const val BYTE_ORDER_MARK = '\uFEFF'
         const val DECODED_TEXT = '\u0000'
         const val READ_FAILED = '\u0002'
+        const val TOO_LARGE = '\u0003'
 
         // Control characters, because they are the only thing a file name is guaranteed not to contain.
         val ENTRY_SEPARATOR = Char(ENTRY_SEPARATOR_CODE).toString()
@@ -315,6 +377,31 @@ private fun readFileTexts(directory: JsAny, names: String): Promise<JsArray<JsSt
             return text.indexOf(String.fromCharCode(0)) >= 0 ? String.fromCharCode(1) : String.fromCharCode(0) + text;
         }).catch(function (error) {
             if (error && error.name === 'NotFoundError') return null;
+            return String.fromCharCode(2) + ((error && error.name) || 'Error') + ': ' + ((error && error.message) || String(error));
+        });
+    }))"""
+)
+
+/**
+ * `readFileTexts` for a library scan, which also answers each file's size and last modification time from the one
+ * `getFile()` per name: behind the leading character come the size and the date, each followed by a space, and then
+ * the text where the browser could decode it. ETX with the size and the date is a file larger than [maxSize], which is
+ * never read. A name that is a directory (`listEntryNames` lists every kind of entry) resolves to `null` like a file
+ * that is not there, since leaving it out of the listing is what `listEntries` does.
+ */
+private fun readFileScans(directory: JsAny, names: String, maxSize: Double): Promise<JsArray<JsString?>> = js(
+    """Promise.all((names.length === 0 ? [] : names.split(String.fromCharCode(1))).map(function (name) {
+        return directory.getFileHandle(name).then(function (handle) { return handle.getFile(); }).then(function (file) {
+            var head = file.size + ' ' + file.lastModified;
+            if (file.size > maxSize) return String.fromCharCode(3) + head;
+            return file.arrayBuffer().then(function (buffer) {
+                var text;
+                try { text = new TextDecoder('utf-8', { fatal: true }).decode(buffer); }
+                catch (error) { return String.fromCharCode(1) + head; }
+                return text.indexOf(String.fromCharCode(0)) >= 0 ? String.fromCharCode(1) + head : String.fromCharCode(0) + head + ' ' + text;
+            });
+        }).catch(function (error) {
+            if (error && (error.name === 'NotFoundError' || error.name === 'TypeMismatchError')) return null;
             return String.fromCharCode(2) + ((error && error.name) || 'Error') + ': ' + ((error && error.message) || String(error));
         });
     }))"""

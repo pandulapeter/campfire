@@ -24,8 +24,9 @@ import com.pandulapeter.campfire.data.source.local.implementation.knownExtension
 import com.pandulapeter.campfire.data.source.local.implementation.moveFile
 import com.pandulapeter.campfire.data.source.local.implementation.songFileName
 import com.pandulapeter.campfire.data.source.local.implementation.uniqueName
-import com.pandulapeter.campfire.data.source.local.implementation.storage.file.BatchRead
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileStorage
+import com.pandulapeter.campfire.data.source.local.implementation.storage.file.ScanEntry
+import com.pandulapeter.campfire.data.source.local.implementation.storage.file.ScannedFile
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StorageDirectory
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StoredFileInfo
 import kotlinx.coroutines.CancellationException
@@ -62,7 +63,7 @@ internal class SongLocalSourceImpl(
      */
     override suspend fun loadSongs(onProgress: (List<Song>) -> Unit): List<Song> = withContext(Dispatchers.Default) {
         val songs = mutableListOf<Song>()
-        val batches = fileStorage.list(StorageDirectory.SONGS).filter { LibraryFiles.isSongFileName(it.name) }.chunked(BATCH_SIZE)
+        val batches = fileStorage.listForScan(StorageDirectory.SONGS).filter { LibraryFiles.isSongFileName(it.name) }.chunked(BATCH_SIZE)
         var publishedCount = 0
         batches.forEachIndexed { index, batch ->
             songs += readSongs(batch)
@@ -143,27 +144,28 @@ internal class SongLocalSourceImpl(
     override suspend fun exists(fileName: String) = fileStorage.exists(StorageDirectory.SONGS, fileName)
 
     /**
-     * One [FileStorage.readTexts] call for the whole batch, which on the web is one call into the browser rather than
-     * several per file. A file that fails to read or to parse is skipped with a log line, as [readSong] skips it.
+     * One [FileStorage.readScan] call for the whole batch, which on the web is one call into the browser rather than
+     * several per file, and which answers each file's size and date with its text rather than after a pass over the
+     * whole directory. A file too large to be a song is never read, and one that fails to read or to parse is skipped
+     * with a log line, as [readSong] skips it.
      */
-    private suspend fun readSongs(batch: List<StoredFileInfo>): List<Song> = coroutineScope {
-        val readable = batch.filter { file ->
-            (file.size <= ImportLimits.MAX_TEXT_FILE_SIZE).also { isReadable ->
-                if (!isReadable) println("Skipped the song \"${file.name}\": ${file.size} bytes is more than a song file can hold.")
-            }
-        }
-        readable.zip(fileStorage.readTexts(StorageDirectory.SONGS, readable.map { it.name })).map { (file, answer) ->
+    private suspend fun readSongs(batch: List<ScanEntry>): List<Song> = coroutineScope {
+        batch.zip(fileStorage.readScan(StorageDirectory.SONGS, batch, ImportLimits.MAX_TEXT_FILE_SIZE)).map { (entry, answer) ->
             async {
                 try {
                     when (answer) {
-                        is BatchRead.Text -> file.toSong(ChordProParser.summarize(answer.text))
-                        BatchRead.Missing -> null
-                        is BatchRead.Failed -> throw answer.cause
+                        is ScannedFile.Text -> answer.info.toSong(ChordProParser.summarize(answer.text))
+                        is ScannedFile.TooLarge -> {
+                            println("Skipped the song \"${entry.name}\": ${answer.info.size} bytes is more than a song file can hold.")
+                            null
+                        }
+                        ScannedFile.Missing -> null
+                        is ScannedFile.Failed -> throw answer.cause
                     }
                 } catch (exception: CancellationException) {
                     throw exception
                 } catch (exception: Exception) {
-                    println("Could not read the song \"${file.name}\": ${exception.message}")
+                    println("Could not read the song \"${entry.name}\": ${exception.message}")
                     null
                 }
             }

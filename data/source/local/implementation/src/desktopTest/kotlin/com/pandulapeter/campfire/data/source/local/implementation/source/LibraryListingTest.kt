@@ -78,6 +78,22 @@ class LibraryListingTest {
     }
 
     @Test
+    fun `a scan skips a song file larger than any song and reads the rest with what the listing reports`() = runBlocking {
+        fileStorage.writeText(StorageDirectory.SONGS, "a.cho", "{title: A}\n")
+        fileStorage.writeText(StorageDirectory.SONGS, "c.cho", "{title: C}\nLonger text\n")
+        fileStorage.writeBytes(StorageDirectory.SONGS, "b.cho", tooLarge())
+        val listed = fileStorage.list(StorageDirectory.SONGS).associateBy { it.name }
+
+        val songs = SongLocalSourceImpl(fileStorage).loadSongs {}
+
+        assertEquals(listOf("a.cho", "c.cho"), songs.map { it.fileName })
+        songs.forEach { song ->
+            assertEquals(listed.getValue(song.fileName).size, song.size)
+            assertEquals(listed.getValue(song.fileName).lastModified, song.lastModified)
+        }
+    }
+
+    @Test
     fun `a setlist file larger than any setlist is left out of the scan`() = runBlocking {
         val setlistLocalSource = SetlistLocalSourceImpl(fileStorage)
         writeSetlists(setlistLocalSource)

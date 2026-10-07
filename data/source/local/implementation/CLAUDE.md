@@ -16,10 +16,13 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
   data directory, addressed as `(StorageDirectory, file name)` — no paths, no sub-directories. `info` is what `list`
   would say about one file, and `listNames` returns unfiltered names without opening them, so that saving a song (or writing one file of an import) does not list the directory
   — on OPFS a listing opens every file for its size and date, which made an import quadratic. `readTexts` reads a
-  batch of files with one answer per file (text, missing or failed, a failure never the batch's): the song and setlist
-  scans read through it, and OPFS answers the whole batch with one call into the browser rather than a handle, a file
+  batch of files with one answer per file (text, missing or failed, a failure never the batch's): the setlist scan
+  reads through it, and OPFS answers the whole batch with one call into the browser rather than a handle, a file
   and a buffer awaited in turn for every name, while the other storages keep the default, their reads in parallel.
-  The OPFS listing opens its files in parallel too. The Koin definition
+  The OPFS listing opens its files in parallel too. The song scan uses `listForScan` / `readScan` instead: it lists
+  names only and reads each file's size and date with its text (a file over the size limit reported and never read),
+  so the first batch waits for 64 files rather than a stat of every one of them — on the web one `getFile()` per song
+  instead of two. iOS lists with its attributes prefetched and goes through the defaults, which carry them. The Koin definition
   is a `@Single` class in each platform source set, found by the module's component scan: `AndroidFileStorage` and
   `DesktopFileStorage`, both delegating to `JvmFileStorage` over `java.io.File` (the same class in `androidMain` and
   `desktopMain`, one copy each because the `campfire-library` convention plugin declares no source set the two share),

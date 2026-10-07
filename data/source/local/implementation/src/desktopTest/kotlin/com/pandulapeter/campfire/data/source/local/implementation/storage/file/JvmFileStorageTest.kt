@@ -222,6 +222,65 @@ class JvmFileStorageTest {
     }
 
     @Test
+    fun `lists the files of a scan by name alone, sorted and without the temporary files of a write`() = runBlocking {
+        fileStorage.writeText(StorageDirectory.SONGS, "b.cho", "{title: B}")
+        fileStorage.writeText(StorageDirectory.SONGS, "a.cho", "{title: A}")
+        File(root.resolve("library/songs"), ".campfire-123.tmp").writeText("leftover")
+
+        assertEquals(listOf(ScanEntry("a.cho", null), ScanEntry("b.cho", null)), fileStorage.listForScan(StorageDirectory.SONGS))
+        assertEquals(emptyList(), fileStorage.listForScan(StorageDirectory.SETLISTS))
+    }
+
+    @Test
+    fun `reports a directory a scan cannot list as a storage failure`() = runBlocking {
+        fileStorage.writeText(StorageDirectory.SONGS, "a.cho", "content")
+        val directory = root.walk().first { it.name == "songs" && it.isDirectory }
+        directory.setReadable(false)
+        // Permissions mean nothing to a superuser or on Windows, and the case cannot be set up there.
+        if (directory.list() != null) {
+            directory.setReadable(true)
+            return@runBlocking
+        }
+
+        assertFailsWith<LibraryStorageException> { fileStorage.listForScan(StorageDirectory.SONGS) }
+        directory.setReadable(true)
+    }
+
+    @Test
+    fun `reads each file of a scan with what the listing reports about it`() = runBlocking {
+        fileStorage.writeText(StorageDirectory.SONGS, "a.cho", "{title: A}")
+        fileStorage.writeText(StorageDirectory.SONGS, "large.cho", "{title: Large}")
+        fileStorage.writeText(StorageDirectory.SONGS, "gone.cho", "{title: Gone}")
+        val entries = fileStorage.listForScan(StorageDirectory.SONGS)
+        val listed = fileStorage.list(StorageDirectory.SONGS).associateBy { it.name }
+        fileStorage.delete(StorageDirectory.SONGS, "gone.cho")
+        root.resolve("library/songs/folder.cho").mkdirs()
+
+        val answers = fileStorage.readScan(StorageDirectory.SONGS, entries + ScanEntry("folder.cho", null), maxSize = 12L)
+
+        assertEquals(
+            listOf(
+                ScannedFile.Text(listed.getValue("a.cho"), "{title: A}"),
+                ScannedFile.Missing,
+                ScannedFile.TooLarge(listed.getValue("large.cho")),
+                ScannedFile.Missing,
+            ),
+            answers,
+        )
+    }
+
+    @Test
+    fun `scans a Windows device name under the name it was given`() = runBlocking {
+        val storage = JvmFileStorage(root, isWindows = true)
+        storage.writeText(StorageDirectory.SONGS, "con.cho", "content")
+
+        val entries = storage.listForScan(StorageDirectory.SONGS)
+
+        assertEquals(listOf("con.cho"), entries.map { it.name })
+        assertEquals("content", (storage.readScan(StorageDirectory.SONGS, entries, maxSize = 100L).single() as ScannedFile.Text).text)
+    }
+
+    @Test
     fun `skips a name that is taken elsewhere`() = runBlocking {
         fileStorage.writeText(StorageDirectory.SONGS, "a.cho", "content")
 
