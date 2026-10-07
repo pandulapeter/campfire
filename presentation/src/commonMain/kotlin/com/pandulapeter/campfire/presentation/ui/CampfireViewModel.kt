@@ -1157,6 +1157,13 @@ class CampfireViewModel(
     private var isPreparationCancelled = false
 
     /**
+     * Set once the desktop process is on its way out ([settleSynchronizationBeforeExit]) and never cleared, so that the
+     * import queue's consumer starts no batch the exit would cut off halfway. Touched only on the main thread, like
+     * [preparation].
+     */
+    private var isLeaving = false
+
+    /**
      * Every batch of files waiting to be imported, taken one at a time by the consumer launched in `init`. Files are
      * handed over whenever the system or the user feels like it - a second archive dropped while the first is still
      * being written, a file opened with the app while the conflicts question is up - and an import can only run while
@@ -1304,6 +1311,9 @@ class CampfireViewModel(
                     // left, not against a library half gone. Checked again after every wait, so that nothing can start
                     // a deletion between the check and import claiming the import flag.
                     while (isDeletingLibrary.value) isDeletingLibrary.first { !it }
+                    // Checked after the deletion wait rather than before it, so that a batch that waited one out does not
+                    // start once the exit has begun. Skipping it still settles it in the finally below.
+                    if (isLeaving) continue
                     import(request)
                     // The next batch waits for this one's conflicts question too: it would have nowhere to be asked.
                     awaitImportSettled()
@@ -1813,8 +1823,12 @@ class CampfireViewModel(
     /**
      * Lets the sync runs the library still owes the cloud folder happen before a desktop process ends, which is where
      * a quit leads once [requestExit] has let it through - the shell hides the window first, so the quit looks as
-     * immediate as it is. The automatic run that is waiting for the library to settle is started now: dropped, the
-     * change made just before quitting would reach the other devices only the next time this computer opens Campfire.
+     * immediate as it is. An import that is being written is let finish first, for up to [EXIT_IMPORT_GRACE], since
+     * its songs are written before its setlists and the progress dialog asked for Campfire to be kept open; one that is
+     * still being read is cancelled, having written nothing, and no further batch is started. Waited for before the
+     * sync run, so that the run carries the whole import. The automatic run that is waiting for the library to settle
+     * is started next: dropped, the change made just before quitting would reach the other devices only the next time
+     * this computer opens Campfire.
      * A run that is going is waited for, and so is one chained behind it, the metronome having been stopped first. Past
      * [EXIT_SYNC_GRACE] the run is stopped instead and its winding down waited for, briefly, since a stopped run writes its index and clears the marker
      * that would otherwise have the next launch report it as interrupted and start no run of its own. Before any of
@@ -1823,6 +1837,11 @@ class CampfireViewModel(
      * is written, since the process ends right after.
      */
     suspend fun settleSynchronizationBeforeExit() {
+        isLeaving = true
+        cancelImportPreparation()
+        // A conflicts question that is up has written nothing and has already let the import flag go, so it is dropped
+        // here rather than waited for.
+        withTimeoutOrNull(EXIT_IMPORT_GRACE) { _isImporting.first { !it } }
         // The stored draft is removed by a collector a few hops after the editor lets its text go, which a process that
         // ends now would not wait for: a Discard answered on the way out would come back as "unsaved changes restored".
         if (!_isEditorDraftRecoveryPending.value) storeEditorDraft(currentEditorDraftToStore())
@@ -4585,11 +4604,14 @@ class CampfireViewModel(
         private val MIN_RESCAN_INTERVAL = 10.seconds
         /**
          * Long enough for the run an edit asks for, short enough to never look hung. The desktop's `SingleInstance.kt`
-         * waits `CLOSING_INSTANCE_WAIT_MILLIS` for a closing process, which has to stay above this and
-         * [EXIT_SYNC_STOP_GRACE] together, so raising either means raising that too.
+         * waits `CLOSING_INSTANCE_WAIT_MILLIS` for a closing process, which has to stay above this, [EXIT_SYNC_STOP_GRACE]
+         * and [EXIT_IMPORT_GRACE] together, so raising any of them means raising that too.
          */
         private val EXIT_SYNC_GRACE = 15.seconds
         private val EXIT_SYNC_STOP_GRACE = 2.seconds
+
+        /** Long enough for a few hundred songs to be written; only a stalled disk reaches it. */
+        private val EXIT_IMPORT_GRACE = 30.seconds
         private const val SEMITONES_PER_OCTAVE = 12
 
         /**

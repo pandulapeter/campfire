@@ -145,6 +145,10 @@ fun CampfireViewModel.handleKeyEvent(keyEvent: KeyEvent, onExit: () -> Unit): Bo
         // back stack behind an open dialog, bottom sheet or overflow menu. Those register their own back handlers:
         // leaving the event unconsumed lets the top one dismiss itself (with its exit animation).
         if (visibleDialog.value != null || isAnyOverflowMenuOpen) return false
+        // The import's progress dialog is modal but no visibleDialog, and its back handling comes after this handler,
+        // so the key is consumed here: it would otherwise go back behind the dialog, or ask to close the app midway
+        // through the import. Under the same condition the dialog host shows it.
+        if (importProgress.value != null && importReport.value == null) return true
         // The search of whichever list screen is up comes before the back stack, and not only because closing it
         // is the smaller step: selecting a tab rebuilds the stack around it, so the setlists screen is reached with
         // the songs screen still under it and every Escape there would otherwise leave the tab with the search
