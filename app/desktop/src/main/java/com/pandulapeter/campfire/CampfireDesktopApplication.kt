@@ -50,11 +50,16 @@ import java.awt.Toolkit
 import java.awt.event.WindowEvent
 import java.awt.event.WindowFocusListener
 import java.io.File
+import java.lang.management.ManagementFactory
+import java.time.Duration
+import java.time.Instant
 import javax.swing.SwingUtilities
 import kotlin.system.exitProcess
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -93,6 +98,9 @@ fun main(args: Array<String>) {
     // are what would read the library a second time.
     if (!isFirstInstance) exitProcess(0)
     DesktopLog.install(desktopDataDirectory())
+    // skiko says nothing about the renderer it settled on unless asked, and a software fallback is the first thing a
+    // slow desktop's log has to rule out. It prints the API and the graphics adapter once a context is up.
+    if (System.getProperty("skiko.hardwareInfo.enabled") == null) System.setProperty("skiko.hardwareInfo.enabled", "true")
     OpenedFiles.listenForSystemRequests()
     OpenedFiles.open(args.toList())
     startCampfireDependencyGraph()
@@ -177,6 +185,22 @@ fun main(args: Array<String>) {
             DisposableEffect(window) {
                 val stopTranslating = window.translateTouchScreenInput()
                 onDispose { stopTranslating() }
+            }
+            // One line a desktop bug report can be read by: how the window is drawn, on what, and how long the start took.
+            LaunchedEffect(window) {
+                withFrameNanos { }
+                val sinceStart = ProcessHandle.current().info().startInstant().map { Duration.between(it, Instant.now()).toMillis() }
+                // A Swing component's state, so read on the event thread rather than inside the IO block below.
+                val renderApi = window.renderApi
+                withContext(Dispatchers.IO) {
+                    val runtime = Runtime.getRuntime()
+                    println(
+                        "Started in ${sinceStart.map { "$it ms" }.orElse("an unknown time")}: $renderApi rendering, " +
+                            "Java ${System.getProperty("java.runtime.version")} (${System.getProperty("java.vm.info")}), " +
+                            "${ManagementFactory.getGarbageCollectorMXBeans().joinToString { it.name }}, " +
+                            "${runtime.availableProcessors()} processors, ${runtime.maxMemory() / (1024 * 1024)} MB heap at most",
+                    )
+                }
             }
             if (isTrainingRun) {
                 LaunchedEffect(Unit) {
