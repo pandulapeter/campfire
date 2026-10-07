@@ -82,18 +82,21 @@ jobs:
         run: sudo apt-get update && sudo apt-get install --yes fakeroot xvfb libegl1 libgl1
       # The app image is asked for by name: the Compose plugin hands jpackage the jars and the runtime directly, and the
       # package would be the only thing left on disk. Both tasks are made of the same ProGuard output, so the image
-      # is what the package holds.
+      # is what the package holds. The packaging starts the image once to record its class data sharing archive
+      # (recordClassDataArchive), which needs a display, and the runner has no GPU to draw it on.
       - name: Build the package
         env:
           DROPBOX_APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
         run: |
           printf 'campfire.dropbox.appKey=%s\n' "${DROPBOX_APP_KEY//\\/\\\\}" > local.properties
-          ./gradlew :app:desktop:createReleaseDistributable :app:desktop:packageReleaseDeb
+          SKIKO_RENDER_API=SOFTWARE_FAST xvfb-run --auto-servernum ./gradlew :app:desktop:createReleaseDistributable :app:desktop:packageReleaseDeb
           ./gradlew --stop
       # ProGuard breaks an application in ways that only starting it shows - a VerifyError on the first frame is how
       # the last one looked - so the app image is started once before anybody downloads the package. The demo
       # library appearing in an empty data directory proves that Koin started, the window composed and the library
-      # was written; the process still being there a while later proves the first frames did not kill it.
+      # was written; the process still being there a while later proves the first frames did not kill it. The classes
+      # it loads are logged too, and most of them have to come from the archive the packaging recorded: a start that
+      # does not map it is as slow as one without it, and says so only in a warning.
       - name: Start the release build once
         run: |
           APP="app/desktop/build/compose/binaries/main-release/app/Campfire/bin/Campfire"
@@ -101,7 +104,8 @@ jobs:
           DATA="$HOME_DIRECTORY/.local/share/campfire"
           LOG="$RUNNER_TEMP/campfire.log"
           mkdir -p "$HOME_DIRECTORY"
-          export JAVA_TOOL_OPTIONS="-Duser.home=$HOME_DIRECTORY"
+          # A relative name, resolved against the checkout this step runs in.
+          export JAVA_TOOL_OPTIONS="-Duser.home=$HOME_DIRECTORY -Xlog:class+load=info:file=class-load.txt"
           unset XDG_DATA_HOME
           # Xvfb has no OpenGL. Skiko would fall back to software rendering on its own, but it logs the failed attempt
           # as a RenderException first, which the check below would take for a crash.
@@ -131,6 +135,10 @@ jobs:
           grep -q "Exception" "$LOG" && fail "The release build logged an exception."
           stop
           cat "$LOG"
+          LOADED=$(wc -l < class-load.txt)
+          SHARED=$(grep -c 'source: shared objects file' class-load.txt || true)
+          echo "$SHARED of $LOADED classes came from the class data sharing archives."
+          [ $((SHARED * 100)) -ge $((LOADED * 80)) ] || fail "The release build did not use its class data sharing archive."
           echo "The release build started and wrote: $(ls "$DATA/library/songs")"
       - name: Attach the package to the GitHub release
         env:

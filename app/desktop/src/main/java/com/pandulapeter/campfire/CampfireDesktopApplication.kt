@@ -18,6 +18,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.awt.ComposeWindow
 import androidx.compose.ui.awt.SwingWindow
@@ -52,7 +53,9 @@ import java.io.File
 import javax.swing.SwingUtilities
 import kotlin.system.exitProcess
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
@@ -175,6 +178,20 @@ fun main(args: Array<String>) {
                 val stopTranslating = window.translateTouchScreenInput()
                 onDispose { stopTranslating() }
             }
+            if (isTrainingRun) {
+                LaunchedEffect(Unit) {
+                    val data = desktopDataDirectory()
+                    // The demo library being written means Koin started, the preferences were read and the songs scanned.
+                    while (!File(data, "preferences/preferences.json").isFile ||
+                        File(data, "library/songs").listFiles { file -> file.extension == "cho" }.isNullOrEmpty()
+                    ) delay(100)
+                    // Enough frames for the song cards, the welcome sheet and their animations to have been composed and
+                    // drawn - bounded in time too, so a session that produces no frames still ends normally (and so still
+                    // writes the archive) instead of being killed by the build's timeout.
+                    withTimeoutOrNull(15_000) { repeat(120) { withFrameNanos { } } }
+                    exit()
+                }
+            }
             // Another process was asked to open Campfire and handed over to this one, so this is the window the
             // user is looking for.
             LaunchedEffect(Unit) {
@@ -203,6 +220,12 @@ fun main(args: Array<String>) {
         }
     }
 }
+
+/**
+ * Set by the build's training run (`recordClassDataArchive`), which needs the process to end on its own: a killed JVM
+ * writes no archive.
+ */
+private val isTrainingRun = System.getProperty("campfire.trainingRun") == "true"
 
 /**
  * The initial size is in AWT's units, which are the scaled ones the platform's dp map to, so it looks the same at any

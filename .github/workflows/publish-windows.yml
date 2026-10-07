@@ -115,12 +115,14 @@ jobs:
           cache: 'gradle'
       # makeappx and makepri come from the Windows SDK the runner image carries. The daemon is stopped afterwards because
       # the Gradle cache is saved when the job ends, and on Windows the lock files a running daemon holds cannot be read
-      # into the archive, which fails the save.
+      # into the archive, which fails the save. The packaging starts the image once to record its class data sharing
+      # archive (recordClassDataArchive), and the runner has no GPU, for the same reason as the start check below.
       - name: Build the package
         env:
           DROPBOX_APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
         run: |
           printf 'campfire.dropbox.appKey=%s\n' "${DROPBOX_APP_KEY//\\/\\\\}" > local.properties
+          export SKIKO_RENDER_API=SOFTWARE_FAST
           ./gradlew :app:desktop:packageReleaseMsix
           ./gradlew --stop
       # A package whose identity or version does not match Partner Center is refused only after it has been uploaded.
@@ -149,7 +151,9 @@ jobs:
       # The demo library appearing in an empty data directory proves that Koin started, the window composed and the
       # library was written; the process still being there a while later proves the first frames did not kill it. The
       # app writes everything it prints to campfire.log in the data directory, which is read for an exception the way
-      # the Linux and macOS legs read theirs.
+      # the Linux and macOS legs read theirs. The classes it loads are logged too, and most of them have to come from the
+      # archive the packaging recorded: a start that does not map it is as slow as one without it, and says so only in
+      # a warning.
       - name: Start the release build once
         run: |
           APP="app/desktop/build/compose/binaries/main-release/app/Campfire/Campfire.exe"
@@ -157,7 +161,9 @@ jobs:
           DATA="$HOME_DIRECTORY/AppData/Roaming/Campfire"
           LOG="$DATA/campfire.log"
           mkdir -p "$HOME_DIRECTORY"
-          export JAVA_TOOL_OPTIONS="-Duser.home=$(cygpath -w "$HOME_DIRECTORY")"
+          # The log is a relative name, resolved against the checkout this step runs in: a drive letter's colon is a
+          # separator to -Xlog.
+          export JAVA_TOOL_OPTIONS="-Duser.home=$(cygpath -w "$HOME_DIRECTORY") -Xlog:class+load=info:file=class-load.txt"
           export APPDATA="$(cygpath -w "$HOME_DIRECTORY/AppData/Roaming")"
           # The runner has no GPU. Skiko would fall back to software rendering on its own, but it logs the failed
           # attempt as a RenderException first, which the check below would take for a crash.
@@ -189,6 +195,10 @@ jobs:
           grep -q "Exception" "$LOG" && fail "The release build logged an exception."
           stop
           cat "$LOG"
+          LOADED=$(wc -l < class-load.txt)
+          SHARED=$(grep -c 'source: shared objects file' class-load.txt || true)
+          echo "$SHARED of $LOADED classes came from the class data sharing archives."
+          [ $((SHARED * 100)) -ge $((LOADED * 80)) ] || fail "The release build did not use its class data sharing archive."
           echo "The release build started and wrote: $(ls "$DATA/library/songs")"
       - name: Keep the package
         uses: actions/upload-artifact@v7

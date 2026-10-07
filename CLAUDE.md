@@ -598,10 +598,13 @@ localized in both languages.
     cancel each other. ProGuard breaks an app in ways only starting it shows (see `app/desktop`), so each leg also
     builds the app image (`createReleaseDistributable`; the plugin packages the jars directly and leaves no image
     behind on its own) and starts it under Xvfb with an empty data directory, and attaches nothing unless the demo
-    library appears, the process is still there after that, and its log names no exception.
+    library appears, the process is still there after that, its log names no exception and at least 80% of the
+    classes it loaded came from the class data sharing archives. The packaging itself runs under Xvfb too, since it
+    starts the image once to record the archive of the app's own classes that the package ships (see `app/desktop`).
   - `publish-windows.yml` builds `packageReleaseMsix` on a Windows runner (whose image has the SDK's makeappx),
     checks the identity and the version in the package's manifest against `gradle.properties`, starts the app image it
-    was made of the way the Linux legs do (and reads the `campfire.log` the app writes into its data directory for an exception), keeps
+    was made of the way the Linux legs do (and reads the `campfire.log` the app writes into its data directory for an
+    exception, and requires the class data sharing archive the packaging's training start recorded to be used), keeps
     the `.msix` as an artifact of the run and submits it with `.github/scripts/microsoft_store_submission.py`. That finds the app by its package identity name,
     so no Store ID is kept anywhere, creates a submission — a copy of the last published one — swaps its package for
     the new one, writes the release's `whats-new` notes as its "What's new in this version", sets it to be published

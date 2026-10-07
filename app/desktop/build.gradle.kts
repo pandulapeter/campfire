@@ -13,6 +13,7 @@ import java.io.ByteArrayOutputStream
 import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.security.MessageDigest
+import java.util.concurrent.TimeUnit
 import javax.imageio.ImageIO
 import javax.inject.Inject
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
@@ -181,10 +182,7 @@ compose.desktop {
  * - the image is jlinked from that same JDK - is put into the image for as long as the archive takes to write. A JVM
  * that finds the archive does not match ignores it without a word, so the worst it can do is nothing.
  *
- * The app's own classes are not archived. Only a JVM that runs the app can write that archive
- * (`-XX:+AutoCreateSharedArchive`), and on JDK 21 the start that records it takes about six times as long, the file
- * would be written into the install folder, where no uninstaller knows about it, and a JVM that finds one written for
- * other jars neither uses it nor replaces it - which after an update is every one of them.
+ * The app's own classes are archived on top of it by `recordClassDataArchive`, below.
  */
 tasks.withType<AbstractJLinkTask>().configureEach {
     val runtimeImage = destinationDir
@@ -206,6 +204,37 @@ tasks.withType<AbstractJLinkTask>().configureEach {
         // The JVM writes it read-only, which on Windows stops the next jlink run from clearing its output directory.
         runtimeImage.get().asFile.walkTopDown().filter { it.extension == "jsa" }.forEach { it.setWritable(true) }
     }
+}
+
+/**
+ * Records a dynamic class data sharing archive of the app's own classes into the release image on Windows and Linux,
+ * and points the launcher at it. A start loads about eleven thousand classes, and only a sixth of them come from the
+ * JDK's archive above; the rest are read and verified one by one out of the joined jar, which on a small machine is
+ * most of the time it takes to show the library. With this archive nearly all of them are mapped instead.
+ *
+ * The archive is recorded once, here, by a training run of the image (`-XX:ArchiveClassesAtExit`) that the app ends
+ * by itself once the demo library is on screen (`campfire.trainingRun` in `CampfireDesktopApplication.kt`), since a
+ * killed JVM writes nothing. It is shipped inside the image, so the package installs and removes it with everything
+ * else, and it is recorded again with every image: the JVM checks the jar's size and the base archive it was recorded
+ * on, so an archive written for other jars is never used - it prints a warning and starts without it, as it does on
+ * any other mismatch, and never fails. The run gets a throwaway home and data directory, so nothing of it lands in the
+ * image or in the builder's profile, and it trains the image `createReleaseDistributable` wrote, never `PackageMsix`'s
+ * copy, whose launcher names the Store package's data folder.
+ *
+ * Not on macOS: the only Mac build that ships is the Mac App Store `.pkg`, signed inside `createReleaseDistributable`,
+ * so a file added to the bundle afterwards breaks its seal, and the store-signed bundle starts nowhere but TestFlight,
+ * so it cannot be trained. Doing it would mean training a copy signed ad hoc and signing the bundle a second time, for
+ * the one build that runs on Apple silicon alone, where the start is already under a second.
+ */
+val recordClassDataArchive = tasks.register<RecordClassDataArchive>("recordClassDataArchive") {
+    onlyIf { isWindowsHost || isLinuxHost }
+    dependsOn("createReleaseDistributable")
+    doNotTrackState("Edits the release app image in place")
+    appImage = layout.buildDirectory.dir("compose/binaries/main-release/app/Campfire")
+    targetsWindows = isWindowsHost
+}
+tasks.matching { it.name == "packageReleaseDeb" || it.name == "packageReleaseMsi" || it.name == "packageReleaseMsix" }.configureEach {
+    dependsOn(recordClassDataArchive)
 }
 
 /**
@@ -332,6 +361,90 @@ val isMacHost get() = System.getProperty("os.name").orEmpty().lowercase().contai
 
 /** Whether this build runs on Windows, which is the only host jpackage builds the .msi on. */
 val isWindowsHost get() = System.getProperty("os.name").orEmpty().lowercase().contains("windows")
+
+/**
+ * Starts the release image once with `-XX:ArchiveClassesAtExit` and adds the archive it writes to the launcher's
+ * configuration. The process is started with `ProcessBuilder` rather than `ExecOperations`, which has no timeout, and
+ * its output goes to a file, so that a chatty run never blocks on a full pipe.
+ */
+abstract class RecordClassDataArchive : DefaultTask() {
+
+    @get:Internal
+    abstract val appImage: DirectoryProperty
+
+    @get:Input
+    abstract val targetsWindows: Property<Boolean>
+
+    @TaskAction
+    fun record() {
+        val image = appImage.get().asFile
+        val launcher = if (targetsWindows.get()) image.resolve("Campfire.exe") else image.resolve("bin/Campfire")
+        val appDirectory = if (targetsWindows.get()) image.resolve("app") else image.resolve("lib/app")
+        val configuration = appDirectory.resolve("Campfire.cfg")
+        val archive = appDirectory.resolve("campfire.jsa")
+        if (!launcher.isFile || !configuration.isFile) throw GradleException("There is no release app image in $image to train.")
+        // JBR 21's AWT speaks X11 alone, so without a display the run would only wait for its timeout.
+        if (!targetsWindows.get() && System.getenv("DISPLAY").isNullOrEmpty()) {
+            throw GradleException("Recording the class data sharing archive starts the app, which needs a display: run the packaging under xvfb-run.")
+        }
+        // The image may be up to date from an earlier run, and a JVM given a dynamic archive cannot record another on
+        // top of it. A run that failed after the dump leaves the archive read-only, which on Windows refuses the delete.
+        val lines = configuration.readLines().filterNot { it.startsWith(ARCHIVE_OPTION) }
+        configuration.writeText(lines.joinToString(System.lineSeparator(), postfix = System.lineSeparator()))
+        if (archive.exists()) {
+            archive.setWritable(true)
+            if (!archive.delete()) throw GradleException("Could not delete the previous $archive.")
+        }
+        val home = temporaryDir.resolve("home")
+        home.deleteRecursively()
+        home.mkdirs()
+        val output = temporaryDir.resolve("training.log")
+        try {
+            val process = ProcessBuilder(launcher.absolutePath).apply {
+                val environment = environment()
+                // Quoted, which HotSpot's reading of the variable honours, so a checkout under a folder with a space in
+                // its name still trains.
+                environment["JAVA_TOOL_OPTIONS"] =
+                    "-XX:ArchiveClassesAtExit=\"${archive.absolutePath}\" -Dcampfire.trainingRun=true -Duser.home=\"${home.absolutePath}\""
+                if (targetsWindows.get()) {
+                    // The data directory comes from %APPDATA% on Windows, not from user.home.
+                    environment["APPDATA"] = home.resolve("AppData/Roaming").absolutePath
+                    environment["LOCALAPPDATA"] = home.resolve("AppData/Local").absolutePath
+                } else {
+                    environment.remove("XDG_DATA_HOME")
+                }
+                redirectErrorStream(true)
+                redirectOutput(output)
+            }.start()
+            if (!process.waitFor(3, TimeUnit.MINUTES)) {
+                process.destroyForcibly()
+                throw GradleException("The training run did not end in three minutes:\n${output.readTextOrEmpty()}")
+            }
+            if (process.exitValue() != 0) {
+                throw GradleException("The training run exited with ${process.exitValue()}:\n${output.readTextOrEmpty()}")
+            }
+            // The dump also prints a few dozen warnings about JFR and proxy classes it skips, which are expected.
+            if (!archive.isFile || archive.length() < 10L * 1024 * 1024) {
+                throw GradleException("The training run wrote no class data sharing archive:\n${output.readTextOrEmpty()}")
+            }
+        } finally {
+            home.deleteRecursively()
+        }
+        // The JVM writes it read-only, which on Windows stops the next jlink or jpackage run from clearing the image.
+        archive.setWritable(true)
+        val section = lines.indexOf("[JavaOptions]")
+        if (section < 0) throw GradleException("There is no [JavaOptions] section in $configuration to add the archive to.")
+        val option = "$ARCHIVE_OPTION\$APPDIR/${archive.name}"
+        configuration.writeText((lines.take(section + 1) + option + lines.drop(section + 1)).joinToString(System.lineSeparator(), postfix = System.lineSeparator()))
+        logger.lifecycle("Recorded ${archive.length() / (1024 * 1024)} MB of class data sharing archive into $archive")
+    }
+
+    private fun File.readTextOrEmpty() = takeIf { it.isFile }?.readText().orEmpty()
+
+    private companion object {
+        const val ARCHIVE_OPTION = "java-options=-XX:SharedArchiveFile="
+    }
+}
 
 /** Runs `add-launch-after-install.ps1` over each .msi, which fails the build rather than leave an installer without it. */
 abstract class AddLaunchAfterInstallToMsi : DefaultTask() {
