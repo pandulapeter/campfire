@@ -17,6 +17,7 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.PaddingValues
@@ -542,6 +543,12 @@ private fun SetlistList(
                         // Explicit move actions remain available while browsing; only drag gestures require the mode.
                         val canMove = !isPerformanceModeEnabled && !setlistWithSongs.setlist.isArchived && setlistWithSongs.entries.size > 1
                         val isReorderable = canMove && isReordering && reorderingSetlistFileName == setlistWithSongs.setlist.fileName
+                        // Above the branch below, which composes the row anew whenever reorder mode starts or ends: a
+                        // visibility composed anew starts where its target is, so the grip would appear and vanish in one
+                        // frame. A row that scrolls in while the mode is on starts with its grip already there, which is
+                        // the list being shown rather than changed.
+                        val handleVisibility = remember { MutableTransitionState(isReorderable) }
+                        handleVisibility.targetState = isReorderable
                         // The drag written as two steps, for whoever cannot drag: a screen reader, a keyboard. Each is the
                         // same single write a finished drag makes, and a row with nowhere to go in a direction is offered
                         // no step that way.
@@ -562,11 +569,24 @@ private fun SetlistList(
                             )
                         }
                         val onDragStarted: (Offset) -> Unit = { draggingSetlistFileName = setlistWithSongs.setlist.fileName }
+                        // The setlist's own transposition and capo for this song, which is why the same song can be
+                        // listed in one key here and in another one two setlists down. Remembered as on the songs
+                        // screen, and above the branch below so that reorder mode starting or ending does not work it
+                        // out again: the row is composed again as every scroll starts and ends, and it is a whole
+                        // transposition to work out.
+                        val renderedKey = (entry as? CampfireViewModel.SetlistWithSongs.Entry.Present)?.let { present ->
+                            val transposition = transpositions[present.song.fileName, setlistWithSongs.setlist.fileName]
+                            val capo = effectiveCapo(song = present.song, setlistFileName = setlistWithSongs.setlist.fileName, capos = capos).fret
+                            remember(present.song.key, present.song.transpose, transposition, capo, chordSpelling) {
+                                viewModel.renderKey(song = present.song, transposition = transposition, capo = capo, spelling = chordSpelling)
+                            }
+                        }
                         // ReorderableItem's drag tracking, and the elevation and color it animates while a row is
-                        // lifted, are only worth paying for while this setlist is actually being reordered - which,
-                        // since reorder mode narrows the grid to that one setlist, is exactly when isReordering is
-                        // true here. Outside it every row would otherwise carry an Animatable that never leaves
-                        // its rest value for as long as the row is on screen, which is the very per-row coroutine
+                        // lifted, are only paid for while reorder mode is on. Every row of every setlist is wrapped
+                        // until the grid has been narrowed to the one being reordered, which is what keeps the other
+                        // setlists' rows out of the drag's drop targets during the scroll that brings it to the top.
+                        // Outside the mode every row would otherwise carry an Animatable that never leaves its rest
+                        // value for as long as the row is on screen, which is the very per-row coroutine
                         // draggedListItemContainerColor's own documentation says a list of this size cannot afford.
                         // scope is the ReorderableItem content's own receiver, which draggableHandle and
                         // longPressDraggableHandle are members of; it is null outside reorder mode, where isReorderable
@@ -603,7 +623,7 @@ private fun SetlistList(
                                             // The grip goes in front of the overflow button rather than after it, so that
                                             // the button lands exactly where the songs screen has its own.
                                             AnimatedVisibility(
-                                                visible = isReorderable,
+                                                visibleState = handleVisibility,
                                                 enter = fadeIn() + expandHorizontally(),
                                                 exit = fadeOut() + shrinkHorizontally(),
                                             ) {
@@ -630,21 +650,12 @@ private fun SetlistList(
                             when (entry) {
                                 is CampfireViewModel.SetlistWithSongs.Entry.Present -> {
                                     val setlistFileName = setlistWithSongs.setlist.fileName
-                                    // The setlist's own transposition and capo for this song, which is why the same
-                                    // song can be listed in one key here and in another one two setlists down.
-                                    val transposition = transpositions[entry.song.fileName, setlistFileName]
-                                    val capo = effectiveCapo(song = entry.song, setlistFileName = setlistFileName, capos = capos).fret
-                                    // Remembered as on the songs screen: the row is composed again as every scroll starts
-                                    // and ends, and it is a whole transposition to work out again.
-                                    val key = remember(entry.song.key, entry.song.transpose, transposition, capo, chordSpelling) {
-                                        viewModel.renderKey(song = entry.song, transposition = transposition, capo = capo, spelling = chordSpelling)
-                                    }
                                     SongListItem(
                                         modifier = cardModifier,
                                         song = entry.song,
                                         index = row.index,
                                         cardPadding = songCardPadding(rowIndex, columnCount),
-                                        key = key,
+                                        key = renderedKey,
                                         // And the setlist's own tempo, for the same reason.
                                         tempo = effectiveTempo(
                                             song = entry.song,

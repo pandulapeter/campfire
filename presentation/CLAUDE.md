@@ -564,9 +564,11 @@ rather than rebuilding a shader for every card position. `FastScroller` consumes
 the frame wait or a scroll in progress; animation values are read while drawing. `SongStepper` scans offsets without
 sorting or allocating lists per scroll update and derives button availability independently from the target position.
 
-A setlist row only goes through `ReorderableItem` while that setlist is actually being reordered (`SetlistsScreen.kt`):
-reorder mode narrows the grid to the one setlist being dragged, so `isReordering` already says whether this row's
-`ReorderableItem` wrapper, its `longPressDraggableHandle` / `draggableHandle` and the elevation and color it animates
-while a row is lifted are needed at all. Outside it a row is placed with a plain `listItemAnimation` instead, with
+A setlist row only goes through `ReorderableItem` while reorder mode is on (`SetlistsScreen.kt`) — every row of every
+setlist while the setlist is being brought to the top, which keeps the other setlists' rows out of the drag's drop
+targets for that scroll, then only the narrowed setlist's — so `isReordering` says whether this row's `ReorderableItem`
+wrapper, its `longPressDraggableHandle` / `draggableHandle` and the elevation and color it animates while a row is
+lifted are needed at all. The switch composes the row anew, so the grip's `MutableTransitionState` (and the row's
+rendered key) is remembered above it, and the grip still slides in and out. Outside the mode a row is placed with a plain `listItemAnimation` instead, with
 none of that — the per-row coroutine `draggedListItemContainerColor`'s own documentation warns a list this size
 cannot afford is exactly what every setlist row was paying for, reordered or not.
