@@ -13,7 +13,8 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Easing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
-import androidx.compose.material3.Icon
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -23,10 +24,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.metronome.api.model.BeatLevel
 import com.pandulapeter.campfire.metronome.api.model.MetronomeBeat
@@ -57,28 +65,43 @@ internal fun MetronomeIcon(
     beat: MetronomeIconBeat,
     contentDescription: String?,
     tint: Color = LocalContentColor.current,
-) = Box(
-    modifier = modifier.graphicsLayer {
-        val scale = 1f + beat.pulse * PULSE_SCALE
-        scaleX = scale
-        scaleY = scale
-    },
 ) {
-    val color = lerp(tint, MaterialTheme.colorScheme.primary, beat.pulse.coerceIn(0f, 1f))
-    Icon(
-        painter = painterResource(Res.drawable.ic_metronome_body),
-        contentDescription = contentDescription,
-        tint = color,
-    )
-    Icon(
-        modifier = Modifier.graphicsLayer {
-            rotationZ = -beat.swing * PENDULUM_ARC
-            transformOrigin = PENDULUM_PIVOT
-        },
-        painter = painterResource(Res.drawable.ic_metronome_pendulum),
-        contentDescription = null,
-        tint = color,
-    )
+    val body = painterResource(Res.drawable.ic_metronome_body)
+    val pendulum = painterResource(Res.drawable.ic_metronome_pendulum)
+    val pulseColor = MaterialTheme.colorScheme.primary
+    // Read while drawing rather than while composing, so that a pulse repaints the mark instead of recomposing it on
+    // every frame. The two layers stand in for Material's Icon, which takes the tint as a composition parameter.
+    val colorFilter = { ColorFilter.tint(lerp(tint, pulseColor, beat.pulse.coerceIn(0f, 1f))) }
+    Box(
+        modifier = modifier
+            .graphicsLayer {
+                val scale = 1f + beat.pulse * PULSE_SCALE
+                scaleX = scale
+                scaleY = scale
+            }
+            .size(ICON_SIZE)
+            .then(
+                if (contentDescription == null) Modifier else Modifier.semantics {
+                    this.contentDescription = contentDescription
+                    role = Role.Image
+                },
+            ),
+    ) {
+        Spacer(
+            modifier = Modifier
+                .matchParentSize()
+                .drawBehind { with(body) { draw(size = size, colorFilter = colorFilter()) } },
+        )
+        Spacer(
+            modifier = Modifier
+                .matchParentSize()
+                .graphicsLayer {
+                    rotationZ = -beat.swing * PENDULUM_ARC
+                    transformOrigin = PENDULUM_PIVOT
+                }
+                .drawBehind { with(pendulum) { draw(size = size, colorFilter = colorFilter()) } },
+        )
+    }
 }
 
 /**
@@ -146,6 +169,9 @@ internal fun rememberMetronomeIconBeat(
     }
     return remember(swing, pulse) { MetronomeIconBeat(swingState = swing, pulseState = pulse) }
 }
+
+/** The size Material's `Icon` gives a 24-unit drawable, which both of the mark's drawables are. */
+private val ICON_SIZE = 24.dp
 
 /** How much larger the mark is at the height of an accent's pulse. */
 private const val PULSE_SCALE = 0.25f
