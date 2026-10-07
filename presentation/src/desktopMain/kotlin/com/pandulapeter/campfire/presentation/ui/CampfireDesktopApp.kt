@@ -48,9 +48,9 @@ import java.io.File
 
 /**
  * Desktop shell of the shared UI. Desktop has no back gesture, so the Escape key (see [handleKeyEvent]) dismisses
- * whatever is open on top of the app - a dialog, a bottom sheet or an overflow menu - pops the back stack when there
- * is none, clears the Songs search query on the root screen if it's not already empty, and otherwise asks whether to
- * close the application ([CampfireViewModel.confirmExit]).
+ * whatever is open on top of the app - a dialog, a bottom sheet or an overflow menu - and otherwise leaves the setlist
+ * reorder mode, closes the search of the list screen on top, or pops the back stack, in that order; with nothing left
+ * to go back from it asks whether to close the application ([CampfireViewModel.confirmExit]).
  *
  * @param onBackgroundColorChanged See [CampfireApp].
  */
