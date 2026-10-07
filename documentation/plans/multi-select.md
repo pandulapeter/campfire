@@ -19,8 +19,9 @@ is stored: the selection lives for as long as the mode does.
    that counts what is ticked, by Back, Escape or the web's Back, and by leaving the screen.
 2. **Every card carries a box in the mode** in place of its star and its menu, and a tap ticks it instead of opening
    the song.
-3. **What is ticked leads the list**, the way it does in the Choose songs sheet: a **Selection** section on top, the
-   newest tick first, an unticked song staying there until the search, the sorting or a filter next changes.
+3. **What is ticked leads the list**, the way it does in the Choose songs sheet: a **Selection** section on top — what
+   was ticked when the search, the sorting or a filter last changed, in the list's order, and every later tick after
+   it in the order it was ticked — an unticked song staying there until the next such change.
 4. **The search, the sorting and the filters keep working**, since "search, tick, search again, tick" is how a
    selection is put together. The selection is by file name and survives all three.
 5. **A selection menu in the bar**, where New stands outside the mode: Select all, Deselect all, then **Choose
@@ -32,9 +33,10 @@ is stored: the selection lives for as long as the mode does.
   snapshot state in the view model, ended in `updateBackStack` when its screen stops being on top, answered first by
   `navigateBack` and by the desktop Escape handler, a history entry of its own in `BrowserRoutes.paths`, a
   `NavigationBackHandler` in the screen and an `ExtendedFloatingActionButton` at the list's bottom end.
-- **`ChecklistOrder` is the ordering asked for**, pure and tested (`components/ChecklistOrder.kt`): ticked and recently
-  unticked keys share a leading group, a new tick goes before all of it, and a refresh key reseeds the group in the
-  list's own order. The Choose songs sheet's refresh key is the sorting, the query and its chips; the songs list
+- **`ChecklistOrder` is the ordering asked for**, pure and tested (`components/ChecklistOrder.kt`): the keys ticked at the
+  last refresh lead in the list's own order, a later tick joins the end of the group and an untick leaves its row there
+  until the next refresh (`selectedGroup`); the choosers also keep a ticked row where it was tapped (`remainingRows`),
+  and a chip row, with no room for copies, leaves it there until the refresh (`ordered`). The Choose songs sheet's refresh key is the sorting, the query and its chips; the songs list
   already carries the same thing as one value, `SongGroups.filterKey`.
 - **`ExportSongsUseCase` already takes a list**: one song leaves as its `.cho`, several as `campfire_songs.zip`.
 - **`PrintLayout` already lays out any number of songs that are not a setlist**: no overview, unnumbered titles
@@ -105,8 +107,11 @@ is stored: the selection lives for as long as the mode does.
 ### 3.1 The Selection section — `SongSelectionGroups.kt`, pure and tested
 
 `fun List<SongGroup>.withSelectionLeading(order: ChecklistOrder): List<SongGroup>`: the songs whose keys the order
-holds are taken out of their sections and put into one group in front, in `ChecklistOrder.ordered`'s order; a section
-left empty goes, header and all. With nothing held the list is the one it was given, the same instance.
+holds are taken out of their sections and put into one group in front, in `ChecklistOrder.selectedGroup`'s order, and
+taken out of their sections — not left in place as `remainingRows` leaves them, since here the card moving is the signal
+(decision 2); a section left empty goes, header and all. The sections then hold the songs whose keys are in neither
+`heldKeys` nor `addedKeys`, which `ChecklistOrder` has no function for yet: add one (or filter by `selectedGroup`'s
+keys), with its test. With nothing held the list is the one it was given, the same instance.
 
 `SongList` calls `rememberChecklistOrder(checkedKeys = selection, refreshKey = songGroups.filterKey)` inside
 `key(songSelectionSession)` and only while the mode is on, and builds its groups from the result. Outside the mode none

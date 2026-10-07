@@ -1921,9 +1921,11 @@ private fun SongPicker(
  * phone, the header, the field and two rows of chips held still left the list itself no room at all, and a chip is
  * picked once where the field is typed into throughout. A library with nothing to filter by gets neither row.
  *
- * Selected chips lead each row, newest first, with an animated scroll to the start. Deselected chips remain in
- * that group until search or sorting changes. A divider separates it from the remaining chips in the selected
- * sorting order, and each row starts with the toggle that switches that order ([SortableChipRow]).
+ * The chips selected when the search or the sorting last changed lead each row, in its sorting order, and a divider
+ * separates them from the rest. A chip tapped since stays where it is - a sideways row has no room for a copy - and
+ * joins them at the next change, as one deselected there stays among them until then ([ChecklistOrder.ordered]). Only
+ * that change sends the row back to its start; each row starts with the toggle that switches its order
+ * ([SortableChipRow]).
  */
 @Composable
 private fun PickerFilters(
