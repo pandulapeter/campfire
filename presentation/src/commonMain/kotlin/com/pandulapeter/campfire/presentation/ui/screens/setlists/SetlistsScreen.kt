@@ -151,6 +151,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import org.jetbrains.compose.resources.painterResource
+import sh.calvin.reorderable.ReorderableCollectionItemScope
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyGridState
 import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableContent
@@ -560,22 +561,30 @@ private fun SetlistList(
                             )
                         }
                         val onDragStarted: (Offset) -> Unit = { draggingSetlistFileName = setlistWithSongs.setlist.fileName }
-                        // The placement animation goes to ReorderableItem rather than onto the item itself, because it
-                        // is what decides which rows may have one: the row under the finger is placed by the drag's own
-                        // translation, and a placement animation on top of that animates it back towards the slot it is
-                        // being dragged out of, which is the jumping. Every other row still slides into place.
-                        ReorderableItem(
-                            state = reorderableState,
-                            key = key.string.orEmpty(),
-                            enabled = draggingSetlistFileName.let { it == null || it == setlistWithSongs.setlist.fileName },
-                            animateItemModifier = listItemAnimation(
-                                listState = listState,
-                                isEnabled = hasLoadedLibrary,
-                                isRearranging = draggedSetlist != null,
-                            ),
-                        ) { isBeingDragged ->
-                            val elevation by animateDpAsState(if (isBeingDragged) 8.dp else 0.dp)
-                            val containerColor = draggedListItemContainerColor(isBeingDragged)
+                        // ReorderableItem's drag tracking, and the elevation and color it animates while a row is
+                        // lifted, are only worth paying for while this setlist is actually being reordered - which,
+                        // since reorder mode narrows the grid to that one setlist, is exactly when isReordering is
+                        // true here. Outside it every row would otherwise carry an Animatable that never leaves
+                        // its rest value for as long as the row is on screen, which is the very per-row coroutine
+                        // draggedListItemContainerColor's own documentation says a list of this size cannot afford.
+                        // scope is the ReorderableItem content's own receiver, which draggableHandle and
+                        // longPressDraggableHandle are members of; it is null outside reorder mode, where isReorderable
+                        // is always false and neither is ever called.
+                        val rowContent: @Composable (scope: ReorderableCollectionItemScope?, isBeingDragged: Boolean, itemModifier: Modifier) -> Unit = { scope, isBeingDragged, itemModifier ->
+                            val elevation = if (isReordering) {
+                                val animated by animateDpAsState(if (isBeingDragged) 8.dp else 0.dp)
+                                animated
+                            } else {
+                                0.dp
+                            }
+                            val containerColor = if (isReordering) {
+                                draggedListItemContainerColor(isBeingDragged)
+                            } else {
+                                MaterialTheme.colorScheme.surfaceContainerLow
+                            }
+                            val cardModifier = itemModifier.then(moveActions).fadingUnderListTop(topFade).let { base ->
+                                if (scope == null) base else with(scope) { base.longPressDraggableHandle(enabled = isReorderable, onDragStarted = onDragStarted, onDragStopped = onDragStopped) }
+                            }
                             // Keep the overflow button available on touch platforms too, including while a
                             // long press belongs to reordering rather than the song's actions.
                             val actions: (@Composable () -> Unit)? = if (isPerformanceModeEnabled) {
@@ -598,8 +607,11 @@ private fun SetlistList(
                                                 exit = fadeOut() + shrinkHorizontally(),
                                             ) {
                                                 DragHandle(
-                                                    modifier = if (isReorderable) Modifier.draggableHandle(onDragStarted = onDragStarted, onDragStopped = onDragStopped)
-                                                    else Modifier,
+                                                    modifier = if (isReorderable && scope != null) {
+                                                        with(scope) { Modifier.draggableHandle(onDragStarted = onDragStarted, onDragStopped = onDragStopped) }
+                                                    } else {
+                                                        Modifier
+                                                    },
                                                 )
                                             }
                                             SetlistEntryActions(
@@ -627,7 +639,7 @@ private fun SetlistList(
                                         viewModel.renderKey(song = entry.song, transposition = transposition, capo = capo, spelling = chordSpelling)
                                     }
                                     SongListItem(
-                                        modifier = moveActions.fadingUnderListTop(topFade).longPressDraggableHandle(enabled = isReorderable, onDragStarted = onDragStarted, onDragStopped = onDragStopped),
+                                        modifier = cardModifier,
                                         song = entry.song,
                                         index = row.index,
                                         cardPadding = songCardPadding(rowIndex, columnCount),
@@ -652,7 +664,7 @@ private fun SetlistList(
 
                                 // Nothing to open, but it still takes its place in the order and can be removed.
                                 is CampfireViewModel.SetlistWithSongs.Entry.Missing -> MissingSongListItem(
-                                    modifier = moveActions.fadingUnderListTop(topFade).longPressDraggableHandle(enabled = isReorderable, onDragStarted = onDragStarted, onDragStopped = onDragStopped),
+                                    modifier = cardModifier,
                                     index = row.index,
                                     songFileName = entry.songFileName,
                                     cardPadding = songCardPadding(rowIndex, columnCount),
@@ -661,6 +673,20 @@ private fun SetlistList(
                                     actions = actions,
                                 )
                             }
+                        }
+                        if (isReordering) {
+                            ReorderableItem(
+                                state = reorderableState,
+                                key = key.string.orEmpty(),
+                                enabled = draggingSetlistFileName.let { it == null || it == setlistWithSongs.setlist.fileName },
+                                animateItemModifier = listItemAnimation(
+                                    listState = listState,
+                                    isEnabled = hasLoadedLibrary,
+                                    isRearranging = draggedSetlist != null,
+                                ),
+                            ) { isBeingDragged -> rowContent(this, isBeingDragged, Modifier) }
+                        } else {
+                            rowContent(null, false, listItemAnimation(listState = listState, isEnabled = hasLoadedLibrary))
                         }
                     }
                     // Every setlist ends in the way to more songs, which for an empty one is also all there is under its
