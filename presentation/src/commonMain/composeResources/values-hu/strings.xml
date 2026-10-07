@@ -19,6 +19,8 @@
     <string name="save">Mentés</string>
     <string name="retry">Újra</string>
     <string name="add_demo_songs">Bemutató dalok hozzáadása</string>
+    <string name="confirm_exit_title">Bezárod a Campfire-t?</string>
+    <string name="confirm_exit_message">Az Escape bezárja az alkalmazást, ha már nincs hová visszalépni.</string>
 
     <!-- Import and export -->
     <string name="import_progress_title">Fájlok importálása</string>

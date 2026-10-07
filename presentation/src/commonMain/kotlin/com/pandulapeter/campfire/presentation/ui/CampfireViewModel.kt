@@ -1789,6 +1789,28 @@ class CampfireViewModel(
     }
 
     /**
+     * Closing the application with the key that is otherwise only ever a step back - the desktop's Escape, pressed
+     * once more than there were screens to leave. That is a habit of the hand rather than a decision, and on a music
+     * stand it ends a song and a click mid-performance, so it asks first; the window's close button and the system's
+     * quit are deliberate and go straight to [requestExit]. A second press while the question is up dismisses it.
+     */
+    fun confirmExit(onExit: () -> Unit) {
+        confirmedExit = onExit
+        showDialog(DialogType.ConfirmExit)
+    }
+
+    /** The answer to [DialogType.ConfirmExit] that leaves. */
+    fun exitConfirmed() {
+        val exit = confirmedExit ?: return
+        confirmedExit = null
+        dismissDialog()
+        requestExit(exit)
+    }
+
+    /** The exit [DialogType.ConfirmExit] is asking about, kept only while that question is the one on screen. */
+    private var confirmedExit: (() -> Unit)? = null
+
+    /**
      * Lets the sync runs the library still owes the cloud folder happen before a desktop process ends, which is where
      * a quit leads once [requestExit] has let it through - the shell hides the window first, so the quit looks as
      * immediate as it is. The automatic run that is waiting for the library to settle is started now: dropped, the
@@ -3998,6 +4020,7 @@ class CampfireViewModel(
         // An exit the question was asked for and that is not being run is an exit that was cancelled: its caller
         // may be waiting to hear so (the macOS quit request is).
         if (dialogType != DialogType.UnsavedChanges) takePendingExit()?.onCancelled?.invoke()
+        if (dialogType != DialogType.ConfirmExit) confirmedExit = null
         // Nothing but the sheet reads it, and a search nobody is waiting for any more still counts against the
         // service's one request a second.
         if (dialogType !is DialogType.CoverArtSearch) clearCoverArtSearch()
@@ -4524,6 +4547,8 @@ class CampfireViewModel(
         data object DeleteLibrary : DialogType
         /** Asked before the editor is left with something in it that has not been written yet, see [navigateBack]. */
         data object UnsavedChanges : DialogType
+        /** Asked before a key that otherwise only goes back closes the application, see [confirmExit]. */
+        data object ConfirmExit : DialogType
 
         /**
          * Asked over the import screen before its answer overwrites [count] files of the library, which is the one

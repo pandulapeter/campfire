@@ -49,8 +49,8 @@ import java.io.File
 /**
  * Desktop shell of the shared UI. Desktop has no back gesture, so the Escape key (see [handleKeyEvent]) dismisses
  * whatever is open on top of the app - a dialog, a bottom sheet or an overflow menu - pops the back stack when there
- * is none, clears the Songs search query on the root screen if it's not already empty, and closes the application
- * otherwise.
+ * is none, clears the Songs search query on the root screen if it's not already empty, and otherwise asks whether to
+ * close the application ([CampfireViewModel.confirmExit]).
  *
  * @param onBackgroundColorChanged See [CampfireApp].
  */
@@ -112,8 +112,9 @@ fun CampfireDesktopApp(
  * metronome ([CampfireViewModel.toggleMetronomeByKey]), which a focused button or field takes first, since only what
  * nothing focused took reaches this handler.
  *
- * @param onExit Closes the application, called when there is nothing left to navigate back from, and only once a save
- *   that is still being written has finished, see [CampfireViewModel.requestExit].
+ * @param onExit Closes the application, called when there is nothing left to navigate back from and the question that
+ *   follows has been answered with Close, and only once a save that is still being written has finished, see
+ *   [CampfireViewModel.confirmExit] and [CampfireViewModel.requestExit].
  */
 fun CampfireViewModel.handleKeyEvent(keyEvent: KeyEvent, onExit: () -> Unit): Boolean {
     if (keyEvent.type == KeyEventType.KeyDown && keyEvent.key == Key.F && (keyEvent.isCtrlPressed || keyEvent.isMetaPressed) && !keyEvent.isAltPressed) {
@@ -154,7 +155,7 @@ fun CampfireViewModel.handleKeyEvent(keyEvent: KeyEvent, onExit: () -> Unit): Bo
             isSetlistReordering -> navigateBack()
             search?.isOpen?.value == true -> search.close()
             backStack.size > 1 -> navigateBack()
-            else -> requestExit(onExit)
+            else -> confirmExit(onExit)
         }
         return true
     }

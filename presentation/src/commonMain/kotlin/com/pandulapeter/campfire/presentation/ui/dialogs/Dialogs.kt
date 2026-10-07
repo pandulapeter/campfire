@@ -136,6 +136,8 @@ import com.pandulapeter.campfire.presentation.resources.cover_art_search_remove
 import com.pandulapeter.campfire.presentation.resources.song_details_remove_cover_art_confirmation
 import com.pandulapeter.campfire.presentation.resources.cancel
 import com.pandulapeter.campfire.presentation.resources.close
+import com.pandulapeter.campfire.presentation.resources.confirm_exit_message
+import com.pandulapeter.campfire.presentation.resources.confirm_exit_title
 import com.pandulapeter.campfire.presentation.resources.create
 import com.pandulapeter.campfire.presentation.resources.delete
 import com.pandulapeter.campfire.presentation.resources.done
@@ -505,6 +507,15 @@ internal fun CampfireDialogs(
             },
         )
 
+        CampfireViewModel.DialogType.ConfirmExit -> ConfirmationDialog(
+            title = stringResource(Res.string.confirm_exit_title),
+            text = stringResource(Res.string.confirm_exit_message),
+            confirmLabel = stringResource(Res.string.close),
+            isDestructive = false,
+            onDismiss = viewModel::dismissDialog,
+            onConfirm = viewModel::exitConfirmed,
+        )
+
         CampfireViewModel.DialogType.UnsavedChanges -> UnsavedChangesDialog(
             isSaving = viewModel.isSavingSong.collectAsStateWithLifecycle().value,
             onCancel = viewModel::dismissDialog,
@@ -828,13 +839,14 @@ private fun ConfirmationDialog(
     confirmLabel: String,
     onDismiss: () -> Unit,
     onConfirm: () -> Unit,
+    isDestructive: Boolean = true,
 ) = AlertDialog(
     onDismissRequest = onDismiss,
     title = { Text(title) },
     text = { Text(text) },
     confirmButton = {
         TextButton(
-            colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+            colors = if (isDestructive) ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error) else ButtonDefaults.textButtonColors(),
             onClick = onConfirm,
         ) { Text(confirmLabel) }
     },

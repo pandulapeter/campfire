@@ -19,6 +19,8 @@
     <string name="save">Save</string>
     <string name="retry">Retry</string>
     <string name="add_demo_songs">Add the demo songs</string>
+    <string name="confirm_exit_title">Close Campfire?</string>
+    <string name="confirm_exit_message">Escape closes the app once there is nothing left to go back from.</string>
 
     <!-- Import and export -->
     <string name="import_progress_title">Importing files</string>
