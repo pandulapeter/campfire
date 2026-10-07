@@ -29,6 +29,7 @@ kotlin {
             // The start function takes and returns Koin's own types, which the entry points calling it have to see.
             api(libs.koin.core)
             implementation(libs.koin.annotations)
+            implementation(libs.kotlin.coroutines)
         }
     }
 }

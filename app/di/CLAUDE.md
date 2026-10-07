@@ -23,4 +23,7 @@ each `:app:*` module.
   additions: Android passes `androidContext`, which is what its file storage, authenticator and audio output take as
   `@Provided`;
   the other three pass nothing. It starts Koin globally rather than through the `KoinApplication` composable, since
-  the graph belongs to the process and `koinViewModel()` reaches the global instance on its own.
+  the graph belongs to the process and `koinViewModel()` reaches the global instance on its own. It also starts the
+  first read of the preferences, the songs and the setlists (`LoadScreenDataUseCase`) on `Dispatchers.Default`, so
+  the read the launch screen waits for overlaps the platform bringing its window up; the view model's own read joins
+  it (a repository holds its lock for its whole read) and reads again only where this one failed.
