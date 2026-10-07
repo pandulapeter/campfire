@@ -52,6 +52,7 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -73,6 +74,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalWindowInfo
@@ -211,7 +213,6 @@ internal fun SongDetailsScreen(
     val songsByFileName by viewModel.songsByFileName.collectAsStateWithLifecycle()
     val setlists by viewModel.setlists.collectAsStateWithLifecycle()
     val songTexts by viewModel.songTexts.collectAsStateWithLifecycle()
-    val failedSongFileNames by viewModel.failedSongFileNames.collectAsStateWithLifecycle()
     val transpositions by viewModel.transpositions.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     // Only what is drawn over the screen, which the keys are then meant for instead.
@@ -219,7 +220,6 @@ internal fun SongDetailsScreen(
     val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     val isReadOnly = isPerformanceModeEnabled || setlists.any { it.fileName == destination.setlistFileName && it.isArchived }
     val songsBeingRenamed by viewModel.songsBeingRenamed.collectAsStateWithLifecycle()
-    val songFileNamesInSetlists by viewModel.songFileNamesInSetlists.collectAsStateWithLifecycle()
     val songs = remember(destination, songsByFileName, songsBeingRenamed) {
         // A song whose file is being renamed is still this screen's song. The library drops the old name as the file
         // moves and the back stack is rewritten a few writes later, and in between the destination names a song the
@@ -238,41 +238,16 @@ internal fun SongDetailsScreen(
         if (songs.isEmpty() && !isLoading && viewModel.backStack.lastOrNull() == destination) onBack()
     }
     val pagerState = rememberPagerState(initialPage = destination.initialIndex.coerceIn(0, maxOf(0, songs.lastIndex))) { songs.size }
-    // The initial page is only read when the pager is created. If the library had not been read by then, the pager
-    // was created with no pages and its first page is page zero: the song that was tapped is scrolled to once the
-    // songs are there, exactly once.
-    var isInitialPageSettled by rememberSaveable { mutableStateOf(songs.isNotEmpty()) }
-    LaunchedEffect(songs.size) {
-        if (!isInitialPageSettled && songs.isNotEmpty()) {
-            isInitialPageSettled = true
-            pagerState.scrollToPage(destination.initialIndex.coerceIn(0, songs.lastIndex))
-        }
-    }
     // The stretch every composed page is headed for, by its song's file name, where the song changes its tempo or time
     // signature further down: what the click and the app bar's tempo follow, see SongDetailsPage's onTimingChanged.
     val songTimings = remember { mutableStateMapOf<String, SongTiming>() }
-    // Where the pager has come to rest is where the user is, which the web build's address names. Not before the
-    // initial page has been scrolled to, or the first page of a pager created before the library was read would be
-    // reported on its way to the song that was tapped.
-    val latestSongs by rememberUpdatedState(songs)
-    val latestDestination by rememberUpdatedState(destination)
-    LaunchedEffect(pagerState, isInitialPageSettled) {
-        if (isInitialPageSettled) {
-            snapshotFlow { latestSongs.getOrNull(pagerState.settledPage)?.fileName }.collect { fileName ->
-                if (fileName != null) viewModel.onSongDetailsPageSettled(latestDestination, fileName)
-            }
-        }
-    }
-    // The page being headed for rather than the one settled on, so that a click paged on to the next song has its tempo
-    // while the page is still sliding in, and the stretch of it that page is headed for. A song paged back to is put at
-    // its end first (stepBack), so the click lands on its last stretch rather than on its opening.
-    LaunchedEffect(pagerState, isInitialPageSettled) {
-        if (isInitialPageSettled) {
-            snapshotFlow { latestSongs.getOrNull(pagerState.targetPage)?.fileName?.let { it to songTimings[it] } }.collect { target ->
-                if (target != null) viewModel.onSongDetailsPageChanged(latestDestination, target.first, target.second)
-            }
-        }
-    }
+    FollowPager(
+        viewModel = viewModel,
+        destination = destination,
+        songs = songs,
+        pagerState = pagerState,
+        songTimings = songTimings,
+    )
     val currentSong = songs.getOrNull(pagerState.currentPage)
     val canPage = songs.size > 1
     // A setlist of one song is still a setlist being played, so it keeps the bar that names it; only a song opened
@@ -286,21 +261,7 @@ internal fun SongDetailsScreen(
     // caught up with a change to it yet - so that two numberings are never mixed in one bar.
     val setlistSlots = remember(setlist, songs) { setlist?.let { buildSetlistSlots(it.entries, songs.map { song -> song.fileName }) } }
     val shouldShowChords = userPreferences?.areChordsEnabled != false
-    // One for the whole pager, since nothing in it belongs to one song: the instrument, the player's shapes and whether
-    // the section is folded are the same wherever a song is read.
-    val chordInstrument = userPreferences?.takeIf { shouldShowChords && it.areChordDiagramsEnabled }?.chordInstrument?.toChordInstrument()
-    val storedChordShapes = chordInstrument?.let { userPreferences?.chordVoicings?.get(it.id) }.orEmpty()
-    val isChordSectionFolded = userPreferences?.isChordSectionFolded == true
-    val chordDiagrams = remember(chordInstrument, storedChordShapes, isChordSectionFolded) {
-        chordInstrument?.let {
-            ChordDiagrams(
-                instrument = it,
-                storedShapes = storedChordShapes,
-                isFolded = isChordSectionFolded,
-                onFoldToggled = viewModel::toggleChordSectionFold,
-            )
-        }
-    }
+    val chordDiagrams = rememberChordDiagrams(viewModel = viewModel, userPreferences = userPreferences, shouldShowChords = shouldShowChords)
     val isMetronomeEnabled = userPreferences?.isMetronomeEnabled != false
     val areSetlistsEnabled = userPreferences?.areSetlistsEnabled != false
     val isCoverArtEnabled = userPreferences?.isCoverArtEnabled == true
@@ -316,47 +277,13 @@ internal fun SongDetailsScreen(
     }
     val chordSpelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
     val layoutDirection = LocalLayoutDirection.current
-    val appBarWidth = settledWidth - contentPadding.calculateStartPadding(layoutDirection) - contentPadding.calculateEndPadding(layoutDirection)
-    // Decided from the settled width and for every song of the pager at once, like the song actions below, so that the
-    // cover and the steppers do not come and go during a navigation transition or a page change. The cover's room is
-    // reserved for every song of the pager, so that paging to a song without one does not move the star in and out of
-    // the menu.
-    val appBarButtons = appBarButtons(appBarWidth = appBarWidth, hasCover = isCoverArtEnabled && songs.any { it.coverArtUrl != null })
-    val showsCoverInBar = isCoverArtEnabled && if (isReadOnly) showsCoverInPerformanceMode(appBarWidth) else appBarButtons.isCoverShown
-    val showsFontScaleInBar = isReadOnly && showsFontScaleInPerformanceBar(appBarWidth)
-    val showsSetlistAssignmentsInBar = !isReadOnly && areSetlistsEnabled && appBarButtons.isSetlistAssignmentsShown
-    // Read only, the button stands next to the text size stepper, which is all that bar holds; otherwise it is always
-    // in the bar, see appBarButtons.
-    val showsMetronomeInBar = !isReadOnly || showsMetronomeInPerformanceBar(appBarWidth)
-    val tempos by viewModel.tempos.collectAsStateWithLifecycle()
-    val capos by viewModel.capos.collectAsStateWithLifecycle()
     val metronomePlayback by viewModel.metronomePlayback.collectAsStateWithLifecycle()
     val metronomeSettings by viewModel.metronomeSettings.collectAsStateWithLifecycle()
     val isMetronomePlaying = metronomePlayback is MetronomePlayback.Playing
-    val currentTempo = currentSong?.let { effectiveTempo(song = it, setlistFileName = destination.setlistFileName, tempos = tempos) }
     // A click can only play here while the panel is up, which is what starts and stops it; the preference is read
     // beside it anyway, since a click stopped from the panel leaves it where it was, see
     // CampfireViewModel.toggleMetronomePanel.
     val isMetronomePanelShown = metronomeSettings.isSongPanelShown || isMetronomePlaying
-    val metronomeButton: @Composable () -> Unit = {
-        MetronomeButton(
-            isPanelShown = isMetronomePanelShown,
-            playback = viewModel.metronomePlayback,
-            bpm = currentTempo?.bpm ?: MetronomePattern.DEFAULT_BPM,
-            beats = viewModel.metronomeBeats,
-            isFlashEnabled = metronomeSettings.isVisualBeatEnabled,
-            onClick = viewModel::toggleMetronomePanel,
-        )
-    }
-    val metronomeAction = if (isMetronomeEnabled) {
-        metronomeAction(
-            isPanelShown = isMetronomePanelShown,
-            bpm = currentTempo?.bpm ?: MetronomePattern.DEFAULT_BPM,
-            onClick = viewModel::toggleMetronomePanel,
-        )
-    } else {
-        null
-    }
 
     val coroutineScope = rememberCoroutineScope()
     val pageStepper = remember(pagerState, coroutineScope) { PageStepper(pagerState, coroutineScope) }
@@ -392,15 +319,10 @@ internal fun SongDetailsScreen(
         val stepper = currentPageStepper
         if (stepper?.canStep(1, from) == true) coroutineScope.launch { stepper.step(1, from) } else if (pagerState.targetPage < songs.lastIndex) pageStepper.step(1)
     }
+    val stepBackAction: (from: Int?) -> Unit = ::stepBack
+    val stepForwardAction: (from: Int?) -> Unit = ::stepForward
 
-    LaunchedEffect(currentSong?.fileName) { currentSong?.fileName?.let(viewModel::loadSongContent) }
-    // The pages next to the current one are composed ahead of time (beyondViewportPageCount), so their text is read
-    // ahead of time too: a swipe then lands on lyrics rather than on a loading indicator.
-    LaunchedEffect(pagerState.currentPage, songs) {
-        listOfNotNull(songs.getOrNull(pagerState.currentPage - 1), songs.getOrNull(pagerState.currentPage + 1))
-            .filter { it.fileName !in songTexts && it.fileName !in failedSongFileNames }
-            .forEach { viewModel.loadSongContent(it.fileName) }
-    }
+    LoadSongTexts(viewModel = viewModel, songs = songs, currentPage = pagerState.currentPage, songTexts = songTexts)
 
     val isCompactHeight = LocalWindowInfo.current.containerDpSize.height < SHORT_WINDOW_HEIGHT
     val appBarScrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(canScroll = { isCompactHeight })
@@ -414,341 +336,43 @@ internal fun SongDetailsScreen(
             .fillMaxSize()
             .nestedScroll(appBarScrollBehavior.nestedScrollConnection)
             .keepScreenOn()
-            .songKeyboardShortcuts(
-                onScrollUp = { currentPageScrollState?.let { coroutineScope.launch { it.scrollByKeyStep(-1f) } } },
-                onScrollDown = { currentPageScrollState?.let { coroutineScope.launch { it.scrollByKeyStep(1f) } } },
-                // Whatever the step buttons would do where they are there, so that a pedal pressing Up and Down reads the
-                // song the way the buttons do; where they are not, the keys scroll.
-                onStepBack = if (canStepBackInSong || hasPreviousSongToStepTo) {
-                    { stepBack() }
-                } else {
-                    null
-                },
-                onStepForward = if (canStepForwardInSong || hasNextSongToStepTo) {
-                    { stepForward() }
-                } else {
-                    null
-                },
+            .songDetailsKeyboardShortcuts(
+                currentPageScrollState = { currentPageScrollState },
+                coroutineScope = coroutineScope,
+                pageStepper = pageStepper,
+                canStepBack = canStepBackInSong || hasPreviousSongToStepTo,
+                canStepForward = canStepForwardInSong || hasNextSongToStepTo,
+                hasPreviousSong = canPage && pagerState.targetPage > 0,
+                hasNextSong = canPage && pagerState.targetPage < songs.lastIndex,
                 isUncovered = visibleDialog == null && viewModel.backStack.lastOrNull() is CampfireDestination.SongDetails,
-                // The target page only decides whether the key does anything; the step itself is decided at the time of
-                // the press.
-                onPreviousSong = if (canPage && pagerState.targetPage > 0) {
-                    { pageStepper.step(-1) }
-                } else {
-                    null
-                },
-                onNextSong = if (canPage && pagerState.targetPage < songs.lastIndex) {
-                    { pageStepper.step(1) }
-                } else {
-                    null
-                },
-            )
+                stepBack = stepBackAction,
+                stepForward = stepForwardAction,
+            ),
     ) {
-        CampfireTopAppBar(
+        SongDetailsAppBar(
+            viewModel = viewModel,
+            destination = destination,
+            currentSong = currentSong,
+            isReadOnly = isReadOnly,
+            isPerformanceModeEnabled = isPerformanceModeEnabled,
+            shouldShowChords = shouldShowChords,
+            isMetronomeEnabled = isMetronomeEnabled,
+            areSetlistsEnabled = areSetlistsEnabled,
+            isCoverArtEnabled = isCoverArtEnabled,
+            chordSpelling = chordSpelling,
+            songTimings = songTimings,
+            currentPageScrollState = { currentPageScrollState },
+            openCurrentSongInfo = openCurrentSongInfo,
+            songs = songs,
+            settledWidth = settledWidth,
+            isMetronomePanelShown = isMetronomePanelShown,
+            isBeatFlashEnabled = metronomeSettings.isVisualBeatEnabled,
+            isMetronomePanelVisible = isMetronomePanelVisible,
+            metronomePanelState = metronomePanelState,
             scrollBehavior = if (isCompactHeight) appBarScrollBehavior else null,
-            navigationIcon = {
-                IconButton(onClick = onBack) {
-                    Icon(
-                        painter = painterResource(Res.drawable.ic_back),
-                        contentDescription = stringResource(Res.string.back),
-                    )
-                }
-            },
-            title = {
-                // The title and the cover are the heading of the sheet of what the song is, so a tap on them opens it
-                // once there is nothing left to scroll back to. The scroll is read here rather than in the screen's
-                // own body, so that passing the top recomposes the bar's title alone.
-                val isScrolledToTop by remember { derivedStateOf { (currentPageScrollState?.value ?: 0) == 0 } }
-                val openSongInfoAtTop = openCurrentSongInfo?.takeIf { isScrolledToTop }
-                val titleInteractionSource = remember { MutableInteractionSource() }
-                val isTitlePressed by titleInteractionSource.collectIsPressedAsState()
-                val titleAlpha by animateFloatAsState(if (isTitlePressed) PRESSED_HEADING_ALPHA else 1f)
-                AnimatedContent(
-                    modifier = Modifier
-                        .titleTouchTarget(
-                            isEnabled = currentSong != null && (openSongInfoAtTop != null || !isScrolledToTop),
-                            interactionSource = titleInteractionSource,
-                            onClickLabel = stringResource(if (openSongInfoAtTop == null) Res.string.song_details_scroll_to_top else Res.string.song_details_song_info),
-                            onClick = {
-                                if (openSongInfoAtTop == null) {
-                                    currentPageScrollState?.let { coroutineScope.launch { it.animateScrollTo(0) } }
-                                } else {
-                                    openSongInfoAtTop()
-                                }
-                            },
-                        )
-                        .graphicsLayer { alpha = titleAlpha },
-                    targetState = currentSong,
-                    // Keyed by the file, so that only paging to another song cross-fades the block: the same song
-                    // arriving again (a tag added, a tempo set, a sync run) is recomposed in place, and what changed in
-                    // it animates on its own below.
-                    contentKey = { it?.fileName },
-                    transitionSpec = { fadeIn() togetherWith fadeOut() },
-                ) { song ->
-                    // What the song sounds like where it is being read, the way a song card says it: the key with the
-                    // transposition and the capo applied, so this is the key the band hears rather than the one the
-                    // chords on the page spell, and the tempo the click would play at. Worked out for the song this
-                    // content was composed for rather than for the current one, since a crossfade between two songs
-                    // draws both at once. Lyrics only mode says nothing about either, as it says nothing in a row.
-                    val headerKey = song?.takeIf { shouldShowChords && it.hasChords }?.let {
-                        viewModel.renderKey(
-                            song = it,
-                            transposition = transpositions[it.fileName, destination.setlistFileName],
-                            capo = effectiveCapo(song = it, setlistFileName = destination.setlistFileName, capos = capos).fret,
-                            spelling = chordSpelling,
-                        )
-                    }
-                    // The stretch the page is on where the song changes its tempo further down, as the click plays it.
-                    val headerTempo = song
-                        ?.takeIf { isMetronomeEnabled }
-                        ?.let { songTimings[it.fileName]?.bpm ?: effectiveTempo(song = it, setlistFileName = destination.setlistFileName, tempos = tempos).displayedBpm }
-                        ?.let { stringResource(Res.string.song_details_tempo, it.toString()) }
-                    // The duration only inside a setlist, as the song's card there says it, since a set is what is
-                    // timed by its songs; and, as there, with the chords switched off too, since the singer is timed by it alike.
-                    val headerDuration = song?.takeIf { destination.setlistFileName != null }?.duration?.let(ChordProDuration::format)
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        // Only a window resized across the width that makes room for it, or a cover set or removed, animates:
-                        // one that opens the screen with the cover out or in shows it that way from its first frame. The
-                        // last address is kept while a removed cover leaves, and is the page's own, since this is
-                        // composed afresh for every song.
-                        val coverUrl = song?.coverArtUrl
-                        var lastCoverUrl by remember { mutableStateOf(coverUrl) }
-                        if (coverUrl != null) lastCoverUrl = coverUrl
-                        AnimatedVisibility(
-                            visible = showsCoverInBar && coverUrl != null,
-                            enter = fadeIn() + expandHorizontally(),
-                            exit = fadeOut() + shrinkHorizontally(),
-                        ) {
-                            lastCoverUrl?.let { url ->
-                                Crossfade(targetState = url) {
-                                    CoverArtImage(
-                                        modifier = Modifier.padding(end = APP_BAR_COVER_GAP).size(APP_BAR_COVER_SIZE),
-                                        url = it,
-                                    )
-                                }
-                            }
-                        }
-                        Column {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                // Edited in place (Edit song details) rather than paged to, so it fades in place.
-                                AnimatedContent(
-                                    modifier = Modifier.weight(1f, fill = false),
-                                    targetState = song?.title.orEmpty(),
-                                    transitionSpec = { fadeIn() togetherWith fadeOut() },
-                                ) { title ->
-                                    Text(
-                                        text = title,
-                                        style = MaterialTheme.typography.titleMedium,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                    )
-                                }
-                                // What says that the title opens the sheet, shown only while a tap does: scrolled down,
-                                // a tap scrolls back to the top instead. Its room is kept while it is hidden wherever the
-                                // sheet is offered at all, so that a long title is not cut off afresh every time the
-                                // song passes its top.
-                                if (openCurrentSongInfo != null) {
-                                    val chevronAlpha by animateFloatAsState(if (openSongInfoAtTop != null) 1f else 0f)
-                                    Icon(
-                                        modifier = Modifier
-                                            .padding(start = APP_BAR_TITLE_CHEVRON_GAP)
-                                            .size(APP_BAR_TITLE_CHEVRON_SIZE)
-                                            .graphicsLayer {
-                                                alpha = chevronAlpha
-                                                scaleX = chevronAlpha
-                                                scaleY = chevronAlpha
-                                            },
-                                        painter = painterResource(Res.drawable.ic_expand),
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    )
-                                }
-                            }
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                // Drawn for every song, blank or not, so that the bar is two lines tall whatever the
-                                // song says about itself: the whole title block is what the cover beside it is as tall
-                                // as, and a bar that changed height as the pager moved from a song with an artist to
-                                // one without would take the lyrics with it.
-                                AnimatedContent(
-                                    modifier = Modifier.weight(1f, fill = false),
-                                    targetState = song?.artist.orEmpty(),
-                                    transitionSpec = { fadeIn() togetherWith fadeOut() },
-                                ) { artist ->
-                                    Text(
-                                        text = artist,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                    )
-                                }
-                                SongHeaderNote(
-                                    text = headerKey,
-                                    description = headerKey?.let { textResource(Res.string.songs_key, it) },
-                                    isEmphasized = true,
-                                    hasPrecedingContent = song?.artist?.isNotBlank() == true,
-                                )
-                                SongHeaderNote(
-                                    text = headerTempo,
-                                    isEmphasized = false,
-                                    hasPrecedingContent = song?.artist?.isNotBlank() == true || headerKey != null,
-                                )
-                                SongHeaderNote(
-                                    text = headerDuration,
-                                    isEmphasized = false,
-                                    hasPrecedingContent = song?.artist?.isNotBlank() == true || headerKey != null || headerTempo != null,
-                                )
-                            }
-                        }
-                    }
-                }
-            },
-            actions = {
-                // Performance mode leaves the bar with nothing else in it, and the text size is the one setting left
-                // to it, so it is in the bar wherever the title leaves it the room, and alone in a menu where not.
-                // Both are there, one leaving as the other arrives, so that a window resized across the width that
-                // decides it hands the stepper over the way the song's actions move in and out of their menu.
-                AnimatedVisibility(
-                    visible = isReadOnly && showsFontScaleInBar,
-                    enter = fadeIn() + expandHorizontally(),
-                    exit = fadeOut() + shrinkHorizontally(),
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        ActionsMenu(items = listOfNotNull(metronomeAction?.takeUnless { showsMetronomeInBar || !isPerformanceModeEnabled }))
-                        AnimatedVisibility(
-                            visible = showsMetronomeInBar && isMetronomeEnabled,
-                            enter = fadeIn() + expandHorizontally(),
-                            exit = fadeOut() + shrinkHorizontally(),
-                        ) {
-                            metronomeButton()
-                        }
-                        LiveFontScaleControls(
-                            modifier = Modifier.padding(end = APP_BAR_STEPPER_END_PADDING),
-                            viewModel = viewModel,
-                        )
-                    }
-                }
-                // A song read from an archived setlist keeps its own menu, so there the song's Edit and Export take these in
-                // rather than a second overflow button standing next to this one.
-                AnimatedVisibility(
-                    visible = isPerformanceModeEnabled && !showsFontScaleInBar,
-                    enter = fadeIn() + expandHorizontally(),
-                    exit = fadeOut() + shrinkHorizontally(),
-                ) {
-                    ActionsMenu(
-                        items = listOfNotNull(metronomeAction),
-                        menuFooter = {
-                            MenuStepperRow(label = stringResource(Res.string.song_details_text_size)) {
-                                LiveFontScaleControls(viewModel = viewModel)
-                            }
-                        },
-                    )
-                }
-                currentSong?.takeIf { !isPerformanceModeEnabled }?.let { song ->
-                    val editingActions = songInfoEditingActions(rememberSongInfoEditing(viewModel = viewModel, song = song, isEditorDraft = false))
-                    val coverArtAction = if (isCoverArtEnabled) coverArtAction(viewModel = viewModel, song = song, isEditorDraft = false) else null
-                    val isInSetlist = song.fileName in songFileNamesInSetlists
-                    AnimatedVisibility(
-                        visible = !isReadOnly && isMetronomeEnabled,
-                        enter = fadeIn() + expandHorizontally(),
-                        exit = fadeOut() + shrinkHorizontally(),
-                    ) {
-                        metronomeButton()
-                    }
-                    AnimatedVisibility(
-                        modifier = Modifier.overlappingAction(start = ACTION_BUTTON_OVERLAP, end = 0.dp),
-                        visible = showsSetlistAssignmentsInBar,
-                        enter = fadeIn() + expandHorizontally(),
-                        exit = fadeOut() + shrinkHorizontally(),
-                    ) {
-                        SetlistAssignmentsButton(
-                            viewModel = viewModel,
-                            song = song,
-                            isInSetlist = isInSetlist,
-                            setlistFileName = destination.setlistFileName,
-                        )
-                    }
-                    // An archived setlist's song keeps the editor alone, which is no menu of its own, so it stays in
-                    // the one menu next to Export.
-                    AnimatedVisibility(
-                        modifier = Modifier.overlappingAction(start = ACTION_BUTTON_OVERLAP, end = 0.dp),
-                        visible = !isReadOnly,
-                        enter = fadeIn() + expandHorizontally(),
-                        exit = fadeOut() + shrinkHorizontally(),
-                    ) {
-                        SongEditingActions(
-                            viewModel = viewModel,
-                            song = song,
-                            fileEditItems = editingActions.take(1) +
-                                // The sheet edits what the two features show, so it goes once both are switched off.
-                                listOfNotNull(
-                                    if (shouldShowChords || isMetronomeEnabled) {
-                                        songPlayingAction(
-                                            viewModel = viewModel,
-                                            song = song,
-                                            setlistFileName = destination.setlistFileName,
-                                            isEditorDraft = false,
-                                        )
-                                    } else {
-                                        null
-                                    },
-                                ) +
-                                listOfNotNull(coverArtAction) +
-                                editingActions.drop(1),
-                        )
-                    }
-                    SongActions(
-                        modifier = Modifier.overlappingAction(start = ACTION_BUTTON_OVERLAP, end = 0.dp),
-                        viewModel = viewModel,
-                        song = song,
-                        isDeletable = destination.setlistFileName == null,
-                        isEditAndExportOnly = isReadOnly,
-                        isEditShown = isReadOnly,
-                        setlistFileName = destination.setlistFileName,
-                        leadingItems = when {
-                            !isReadOnly -> listOfNotNull(
-                                if (showsSetlistAssignmentsInBar || !areSetlistsEnabled) {
-                                    null
-                                } else {
-                                    setlistAssignmentsAction(
-                                        viewModel = viewModel,
-                                        song = song,
-                                        isInSetlist = isInSetlist,
-                                        setlistFileName = destination.setlistFileName,
-                                    )
-                                },
-                            )
-                            showsFontScaleInBar -> listOfNotNull(metronomeAction?.takeUnless { showsMetronomeInBar })
-                            else -> listOfNotNull(metronomeAction)
-                        },
-                        // The transposition, the capo and the tempo are set in the song's own first section now; what
-                        // is left for the menu is the text size, which belongs to the reader rather than to the song.
-                        menuFooter = if (showsFontScaleInBar) {
-                            null
-                        } else {
-                            {
-                                MenuStepperRow(label = stringResource(Res.string.song_details_text_size)) {
-                                    LiveFontScaleControls(viewModel = viewModel)
-                                }
-                            }
-                        },
-                    )
-                }
-            },
-            bottomContent = {
-                MetronomePanel(
-                    viewModel = viewModel,
-                    isVisible = isMetronomePanelVisible,
-                    contentPadding = contentPadding,
-                    visibleState = metronomePanelState,
-                )
-            },
+            contentPadding = contentPadding,
+            coroutineScope = coroutineScope,
+            onBack = onBack,
         )
         // The paging bar sits below the pager and covers the bottom inset for it, so the pages only keep the
         // padding that is still theirs to apply.
@@ -760,180 +384,38 @@ internal fun SongDetailsScreen(
         } else {
             contentPadding
         }
-        if (songs.isEmpty()) {
-            // The library has not been read yet (or the screen is on its way out, see above), so there is nothing to page
-            // through; a pager with no pages would leave the screen blank under an app bar with no title in it.
-            Box(
-                modifier = Modifier.weight(1f).fillMaxWidth().padding(contentPadding),
-                contentAlignment = Alignment.Center,
-            ) {
-                DelayedLoadingIndicator()
-            }
-        } else {
-            // The step buttons are drawn over the pager rather than over each page, so there is one pair of them that
-            // stays where it is while the songs slide past under it.
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .stepOnTap(
-                        pagerState = pagerState,
-                        isMovingFreely = {
-                            currentPageScrollState?.isScrollInProgress == true && currentPageStepper?.isStepping != true ||
-                                pagerState.isScrollInProgress && !pageStepper.isStepping
-                        },
-                        isStepping = { currentPageStepper?.isStepping == true },
-                        stepOrigin = { currentPageStepper?.origin },
-                        onStep = { direction, from -> if (direction < 0) stepBack(from) else stepForward(from) },
-                    ),
-            ) {
-                HorizontalPager(
-                    modifier = Modifier.bounceScrollableContent(pagerState, Orientation.Horizontal)
-                        .fillMaxSize()
-                        .fontScaleGestures(
-                            fontScale = { viewModel.fontScale },
-                            onFontScaleChanged = viewModel::setFontScale,
-                        ),
-                    state = pagerState,
-                    key = { songs[it].fileName },
-                    beyondViewportPageCount = 1,
-                ) { page ->
-                    val song = songs[page]
-                    val scrollState = rememberScrollState()
-                    DisposableEffect(page, scrollState) {
-                        pageScrollStates[page] = scrollState
-                        onDispose { if (pageScrollStates[page] === scrollState) pageScrollStates.remove(page) }
-                    }
-                    val flingBehavior = rememberRowSnapFlingBehavior(scrollState)
-                    val stepper = remember(scrollState, flingBehavior) { SongStepper(scrollState, flingBehavior) }
-                    DisposableEffect(song.fileName) {
-                        onDispose { songTimings.remove(song.fileName) }
-                    }
-                    if (page == pagerState.currentPage) SideEffect {
-                        currentPageScrollState = scrollState
-                        currentPageStepper = stepper
-                    }
-                    // Only the song being read follows a pinch frame by frame; the pages beside it are composed and laid out
-                    // too, and take the scale once it has settled. A swipe makes its page the target, which follows at once.
-                    val isFollowingGesture = page == pagerState.currentPage || page == pagerState.targetPage
-                    // Derived, so that a swipe recomposes the page only when the answer flips rather than on every frame.
-                    val buildsInPlace by remember(pagerState, page) {
-                        derivedStateOf {
-                            buildsModelInPlace(
-                                page = page,
-                                currentPage = pagerState.currentPage,
-                                targetPage = pagerState.targetPage,
-                                isVisible = pagerState.layoutInfo.visiblePagesInfo.any { it.index == page },
-                            )
-                        }
-                    }
-                    val text = songTexts[song.fileName]
-                    // The first swap of a page from loading to its lyrics lays the whole song out in one frame, so a page
-                    // that is neither on screen nor being swiped to is held back from it until the pager has come to rest,
-                    // or it would land in the middle of the settle animation. A page shows its lyrics once and keeps them,
-                    // a newer text included; only that first swap waits.
-                    var hasShownLyrics by remember { mutableStateOf(text != null) }
-                    val shownText = if (!hasShownLyrics && !isFollowingGesture && pagerState.isScrollInProgress) null else text
-                    if (shownText != null && !hasShownLyrics) SideEffect { hasShownLyrics = true }
-                    val tempo = effectiveTempo(song = song, setlistFileName = destination.setlistFileName, tempos = tempos)
-                    val capo = effectiveCapo(song = song, setlistFileName = destination.setlistFileName, capos = capos)
-                    SongDetailsPage(
-                        // Chords and annotations are drawn rather than measured, so this is what keeps anything a line
-                        // draws past its end off the page of the next song. The page's own padding holds the cards'
-                        // shadows, the header pills and the fade, so nothing that belongs to it is cut.
-                        modifier = Modifier.clipToBounds(),
-                        song = song,
-                        scrollState = scrollState,
-                        flingBehavior = flingBehavior,
-                        text = shownText,
-                        buildsModelInPlace = buildsInPlace,
-                        isViewportSettled = isViewportSettled,
-                        hasFailed = song.fileName in failedSongFileNames,
-                        transposition = transpositions[song.fileName, destination.setlistFileName],
-                        tempoOverride = tempo.takeUnless { it.isDefault }?.bpm,
-                        capoOverride = capo.takeUnless { it.isDefault }?.fret,
-                        // Read only, the four playing values are read rather than set, so the page draws them as the
-                        // line of text they have always been.
-                        playingControls = if (isReadOnly) {
-                            null
-                        } else {
-                            rememberSongPlayingControls(
-                                viewModel = viewModel,
-                                song = song,
-                                setlistFileName = destination.setlistFileName,
-                                transposition = transpositions[song.fileName, destination.setlistFileName],
-                                chordSpelling = chordSpelling,
-                                tempo = tempo,
-                                capo = capo,
-                                shouldShowChords = shouldShowChords,
-                                shouldShowTempo = isMetronomeEnabled,
-                            )
-                        },
-                        shouldShowChords = shouldShowChords,
-                        shouldShowTempo = isMetronomeEnabled,
-                        shouldNumberSections = userPreferences?.shouldNumberSections == true,
-                        fontScale = if (isFollowingGesture) ({ viewModel.fontScale }) else ({ viewModel.settledFontScale }),
-                        // In a setlist the step buttons page to the songs beside every song, whether it scrolls or not.
-                        keepsStepButtonInset = canPage,
-                        // One set per song, wherever it is opened from: folding is how this reader reads it, not how the
-                        // setlist has the band play it.
-                        foldedSections = userPreferences?.foldedSections?.get(song.fileName).orEmpty(),
-                        onFoldToggled = { key -> viewModel.toggleSectionFold(songFileName = song.fileName, key = key) },
-                        chordSpelling = chordSpelling,
-                        settledWidth = settledWidth,
-                        contentPadding = pageContentPadding,
-                        transposeSong = viewModel::transposedSong,
-                        notateSong = viewModel::notatedSong,
-                        onRetry = { viewModel.loadSongContent(song.fileName) },
-                        headedOffset = { stepper.headedOffset },
-                        onTimingChanged = { timing -> if (timing == null) songTimings.remove(song.fileName) else songTimings[song.fileName] = timing },
-                        chordDiagrams = remember(chordDiagrams, song.fileName, destination.setlistFileName, isReadOnly) {
-                            chordDiagrams?.copy(
-                                onShapesClicked = if (isReadOnly) null else {
-                                    { viewModel.showDialog(CampfireViewModel.DialogType.ChordShapes(song = song, setlistFileName = destination.setlistFileName)) }
-                                },
-                            )
-                        },
-                    )
-                }
-                // The top button starts where the song's first row does, as the bottom one ends as far above the bottom
-                // edge as the end ones are from the end of the screen.
-                val stepButtonsTop = PAGE_TOP_PADDING
-                val stepButtonsEnd = pageContentPadding.calculateEndPadding(layoutDirection) + PAGE_HORIZONTAL_PADDING
-                val stepButtonsBottom = pageContentPadding.calculateBottomPadding() + STEP_BUTTON_EDGE_MARGIN
-                // The dots take the room between the two buttons whether or not the buttons are there, so that neither
-                // arriving nor leaving moves them. That column is the one the song leaves the buttons, so no dot is ever
-                // drawn over a line of it.
-                StepProgressIndicator(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(
-                            top = stepButtonsTop + STEP_BUTTON_SIZE + STEP_BUTTON_GAP,
-                            end = stepButtonsEnd,
-                            bottom = stepButtonsBottom + STEP_BUTTON_SIZE + STEP_BUTTON_GAP,
-                        )
-                        .width(STEP_BUTTON_SIZE)
-                        .fillMaxHeight(),
-                    stepper = currentPageStepper,
-                )
-                StepButtons(
-                    isSteppedByRow = currentPageStepper?.isSteppedByRow == true,
-                    isPagingBack = currentPageStepper?.isPagingBack == true,
-                    isPagingForward = currentPageStepper?.isPagingForward == true,
-                    canStepBackInSong = canStepBackInSong,
-                    canStepForwardInSong = canStepForwardInSong,
-                    hasPreviousSong = hasPreviousSongToStepTo,
-                    hasNextSong = hasNextSongToStepTo,
-                    contentPadding = PaddingValues(
-                        top = stepButtonsTop,
-                        end = stepButtonsEnd,
-                        bottom = stepButtonsBottom,
-                    ),
-                    onStepBack = { stepBack() },
-                    onStepForward = { stepForward() },
-                )
-            }
-        }
+        SongDetailsPager(
+            modifier = Modifier.weight(1f).fillMaxWidth(),
+            contentPadding = contentPadding,
+            viewModel = viewModel,
+            destination = destination,
+            songs = songs,
+            pagerState = pagerState,
+            pageStepper = pageStepper,
+            pageScrollStates = pageScrollStates,
+            songTimings = songTimings,
+            isReadOnly = isReadOnly,
+            chordSpelling = chordSpelling,
+            shouldShowChords = shouldShowChords,
+            isMetronomeEnabled = isMetronomeEnabled,
+            canPage = canPage,
+            settledWidth = settledWidth,
+            pageContentPadding = pageContentPadding,
+            chordDiagrams = chordDiagrams,
+            isViewportSettled = isViewportSettled,
+            currentPageScrollState = { currentPageScrollState },
+            currentPageStepper = { currentPageStepper },
+            canStepBackInSong = canStepBackInSong,
+            canStepForwardInSong = canStepForwardInSong,
+            hasPreviousSongToStepTo = hasPreviousSongToStepTo,
+            hasNextSongToStepTo = hasNextSongToStepTo,
+            stepBack = stepBackAction,
+            stepForward = stepForwardAction,
+            onCurrentPage = { scrollState, stepper ->
+                currentPageScrollState = scrollState
+                currentPageStepper = stepper
+            },
+        )
         if (hasPagerControls) {
             SongPagerControls(
                 setlistTitle = setlistTitle,
@@ -1040,6 +522,788 @@ private fun SongPagerControls(
             )
         }
     }
+}
+
+/**
+ * The songs of the song details screen and the step buttons drawn over them, which are drawn over the pager rather
+ * than over each page, so there is one pair of them that stays where it is while the songs slide past under it. A
+ * composable of its own for the same reason as [SongDetailsAppBar]; the current page's scroll and stepper are read
+ * through lambdas, since the screen keeps them in state that only the reads here and in its keys should follow.
+ */
+@Composable
+private fun SongDetailsPager(
+    modifier: Modifier,
+    contentPadding: PaddingValues,
+    viewModel: CampfireViewModel,
+    destination: CampfireDestination.SongDetails,
+    songs: List<Song>,
+    pagerState: PagerState,
+    pageStepper: PageStepper,
+    pageScrollStates: SnapshotStateMap<Int, ScrollState>,
+    songTimings: SnapshotStateMap<String, SongTiming>,
+    isReadOnly: Boolean,
+    chordSpelling: UserPreferences.ChordSpelling,
+    shouldShowChords: Boolean,
+    isMetronomeEnabled: Boolean,
+    canPage: Boolean,
+    settledWidth: Dp,
+    pageContentPadding: PaddingValues,
+    chordDiagrams: ChordDiagrams?,
+    isViewportSettled: () -> Boolean,
+    currentPageScrollState: () -> ScrollState?,
+    currentPageStepper: () -> SongStepper?,
+    canStepBackInSong: Boolean,
+    canStepForwardInSong: Boolean,
+    hasPreviousSongToStepTo: Boolean,
+    hasNextSongToStepTo: Boolean,
+    stepBack: (from: Int?) -> Unit,
+    stepForward: (from: Int?) -> Unit,
+    onCurrentPage: (ScrollState, SongStepper) -> Unit,
+) = if (songs.isEmpty()) {
+    // The library has not been read yet (or the screen is on its way out, see SongDetailsScreen), so there is nothing to
+    // page through; a pager with no pages would leave the screen blank under an app bar with no title in it.
+    Box(
+        modifier = modifier.padding(contentPadding),
+        contentAlignment = Alignment.Center,
+    ) {
+        DelayedLoadingIndicator()
+    }
+} else Box(
+    modifier = modifier
+        .stepOnTap(
+            pagerState = pagerState,
+            isMovingFreely = {
+                currentPageScrollState()?.isScrollInProgress == true && currentPageStepper()?.isStepping != true ||
+                    pagerState.isScrollInProgress && !pageStepper.isStepping
+            },
+            isStepping = { currentPageStepper()?.isStepping == true },
+            stepOrigin = { currentPageStepper()?.origin },
+            onStep = { direction, from -> if (direction < 0) stepBack(from) else stepForward(from) },
+        ),
+) {
+    val layoutDirection = LocalLayoutDirection.current
+    SongPages(
+        viewModel = viewModel,
+        destination = destination,
+        songs = songs,
+        pagerState = pagerState,
+        pageScrollStates = pageScrollStates,
+        songTimings = songTimings,
+        isReadOnly = isReadOnly,
+        chordSpelling = chordSpelling,
+        shouldShowChords = shouldShowChords,
+        isMetronomeEnabled = isMetronomeEnabled,
+        canPage = canPage,
+        settledWidth = settledWidth,
+        pageContentPadding = pageContentPadding,
+        chordDiagrams = chordDiagrams,
+        isViewportSettled = isViewportSettled,
+        onCurrentPage = onCurrentPage,
+    )
+    // The top button starts where the song's first row does, as the bottom one ends as far above the bottom
+    // edge as the end ones are from the end of the screen.
+    val stepButtonsTop = PAGE_TOP_PADDING
+    val stepButtonsEnd = pageContentPadding.calculateEndPadding(layoutDirection) + PAGE_HORIZONTAL_PADDING
+    val stepButtonsBottom = pageContentPadding.calculateBottomPadding() + STEP_BUTTON_EDGE_MARGIN
+    // The dots take the room between the two buttons whether or not the buttons are there, so that neither
+    // arriving nor leaving moves them. That column is the one the song leaves the buttons, so no dot is ever
+    // drawn over a line of it.
+    StepProgressIndicator(
+        modifier = Modifier
+            .align(Alignment.TopEnd)
+            .padding(
+                top = stepButtonsTop + STEP_BUTTON_SIZE + STEP_BUTTON_GAP,
+                end = stepButtonsEnd,
+                bottom = stepButtonsBottom + STEP_BUTTON_SIZE + STEP_BUTTON_GAP,
+            )
+            .width(STEP_BUTTON_SIZE)
+            .fillMaxHeight(),
+        stepper = currentPageStepper(),
+    )
+    StepButtons(
+        isSteppedByRow = currentPageStepper()?.isSteppedByRow == true,
+        isPagingBack = currentPageStepper()?.isPagingBack == true,
+        isPagingForward = currentPageStepper()?.isPagingForward == true,
+        canStepBackInSong = canStepBackInSong,
+        canStepForwardInSong = canStepForwardInSong,
+        hasPreviousSong = hasPreviousSongToStepTo,
+        hasNextSong = hasNextSongToStepTo,
+        contentPadding = PaddingValues(
+            top = stepButtonsTop,
+            end = stepButtonsEnd,
+            bottom = stepButtonsBottom,
+        ),
+        onStepBack = { stepBack(null) },
+        onStepForward = { stepForward(null) },
+    )
+}
+
+/**
+ * The pages of [SongDetailsPager], one song each, with the one beside the current page on either side composed ahead of
+ * time. What only the pages read is collected here, so that it is still read only inside the page that uses it.
+ *
+ * @param pageScrollStates The scroll of every page that is composed, by page, which a step back from the top of a song
+ *   puts at the end of the one before it.
+ * @param onCurrentPage Handed the scroll and the stepper of the page being read, which the keys and the step buttons
+ *   drive.
+ */
+@Composable
+private fun SongPages(
+    viewModel: CampfireViewModel,
+    destination: CampfireDestination.SongDetails,
+    songs: List<Song>,
+    pagerState: PagerState,
+    pageScrollStates: SnapshotStateMap<Int, ScrollState>,
+    songTimings: SnapshotStateMap<String, SongTiming>,
+    isReadOnly: Boolean,
+    chordSpelling: UserPreferences.ChordSpelling,
+    shouldShowChords: Boolean,
+    isMetronomeEnabled: Boolean,
+    canPage: Boolean,
+    settledWidth: Dp,
+    pageContentPadding: PaddingValues,
+    chordDiagrams: ChordDiagrams?,
+    isViewportSettled: () -> Boolean,
+    onCurrentPage: (ScrollState, SongStepper) -> Unit,
+) {
+    val songTexts by viewModel.songTexts.collectAsStateWithLifecycle()
+    val failedSongFileNames by viewModel.failedSongFileNames.collectAsStateWithLifecycle()
+    val transpositions by viewModel.transpositions.collectAsStateWithLifecycle()
+    val tempos by viewModel.tempos.collectAsStateWithLifecycle()
+    val capos by viewModel.capos.collectAsStateWithLifecycle()
+    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    HorizontalPager(
+        modifier = Modifier.bounceScrollableContent(pagerState, Orientation.Horizontal)
+            .fillMaxSize()
+            .fontScaleGestures(
+                fontScale = { viewModel.fontScale },
+                onFontScaleChanged = viewModel::setFontScale,
+            ),
+        state = pagerState,
+        key = { songs[it].fileName },
+        beyondViewportPageCount = 1,
+    ) { page ->
+        val song = songs[page]
+        val scrollState = rememberScrollState()
+        DisposableEffect(page, scrollState) {
+            pageScrollStates[page] = scrollState
+            onDispose { if (pageScrollStates[page] === scrollState) pageScrollStates.remove(page) }
+        }
+        val flingBehavior = rememberRowSnapFlingBehavior(scrollState)
+        val stepper = remember(scrollState, flingBehavior) { SongStepper(scrollState, flingBehavior) }
+        DisposableEffect(song.fileName) {
+            onDispose { songTimings.remove(song.fileName) }
+        }
+        if (page == pagerState.currentPage) SideEffect { onCurrentPage(scrollState, stepper) }
+        // Only the song being read follows a pinch frame by frame; the pages beside it are composed and laid out
+        // too, and take the scale once it has settled. A swipe makes its page the target, which follows at once.
+        val isFollowingGesture = page == pagerState.currentPage || page == pagerState.targetPage
+        // Derived, so that a swipe recomposes the page only when the answer flips rather than on every frame.
+        val buildsInPlace by remember(pagerState, page) {
+            derivedStateOf {
+                buildsModelInPlace(
+                    page = page,
+                    currentPage = pagerState.currentPage,
+                    targetPage = pagerState.targetPage,
+                    isVisible = pagerState.layoutInfo.visiblePagesInfo.any { it.index == page },
+                )
+            }
+        }
+        val text = songTexts[song.fileName]
+        // The first swap of a page from loading to its lyrics lays the whole song out in one frame, so a page
+        // that is neither on screen nor being swiped to is held back from it until the pager has come to rest,
+        // or it would land in the middle of the settle animation. A page shows its lyrics once and keeps them,
+        // a newer text included; only that first swap waits.
+        var hasShownLyrics by remember { mutableStateOf(text != null) }
+        val shownText = if (!hasShownLyrics && !isFollowingGesture && pagerState.isScrollInProgress) null else text
+        if (shownText != null && !hasShownLyrics) SideEffect { hasShownLyrics = true }
+        val tempo = effectiveTempo(song = song, setlistFileName = destination.setlistFileName, tempos = tempos)
+        val capo = effectiveCapo(song = song, setlistFileName = destination.setlistFileName, capos = capos)
+        SongDetailsPage(
+            // Chords and annotations are drawn rather than measured, so this is what keeps anything a line
+            // draws past its end off the page of the next song. The page's own padding holds the cards'
+            // shadows, the header pills and the fade, so nothing that belongs to it is cut.
+            modifier = Modifier.clipToBounds(),
+            song = song,
+            scrollState = scrollState,
+            flingBehavior = flingBehavior,
+            text = shownText,
+            buildsModelInPlace = buildsInPlace,
+            isViewportSettled = isViewportSettled,
+            hasFailed = song.fileName in failedSongFileNames,
+            transposition = transpositions[song.fileName, destination.setlistFileName],
+            tempoOverride = tempo.takeUnless { it.isDefault }?.bpm,
+            capoOverride = capo.takeUnless { it.isDefault }?.fret,
+            // Read only, the four playing values are read rather than set, so the page draws them as the
+            // line of text they have always been.
+            playingControls = if (isReadOnly) {
+                null
+            } else {
+                rememberSongPlayingControls(
+                    viewModel = viewModel,
+                    song = song,
+                    setlistFileName = destination.setlistFileName,
+                    transposition = transpositions[song.fileName, destination.setlistFileName],
+                    chordSpelling = chordSpelling,
+                    tempo = tempo,
+                    capo = capo,
+                    shouldShowChords = shouldShowChords,
+                    shouldShowTempo = isMetronomeEnabled,
+                )
+            },
+            shouldShowChords = shouldShowChords,
+            shouldShowTempo = isMetronomeEnabled,
+            shouldNumberSections = userPreferences?.shouldNumberSections == true,
+            fontScale = if (isFollowingGesture) ({ viewModel.fontScale }) else ({ viewModel.settledFontScale }),
+            // In a setlist the step buttons page to the songs beside every song, whether it scrolls or not.
+            keepsStepButtonInset = canPage,
+            // One set per song, wherever it is opened from: folding is how this reader reads it, not how the
+            // setlist has the band play it.
+            foldedSections = userPreferences?.foldedSections?.get(song.fileName).orEmpty(),
+            onFoldToggled = { key -> viewModel.toggleSectionFold(songFileName = song.fileName, key = key) },
+            chordSpelling = chordSpelling,
+            settledWidth = settledWidth,
+            contentPadding = pageContentPadding,
+            transposeSong = viewModel::transposedSong,
+            notateSong = viewModel::notatedSong,
+            onRetry = { viewModel.loadSongContent(song.fileName) },
+            headedOffset = { stepper.headedOffset },
+            onTimingChanged = { timing -> if (timing == null) songTimings.remove(song.fileName) else songTimings[song.fileName] = timing },
+            chordDiagrams = remember(chordDiagrams, song.fileName, destination.setlistFileName, isReadOnly) {
+                chordDiagrams?.copy(
+                    onShapesClicked = if (isReadOnly) null else {
+                        { viewModel.showDialog(CampfireViewModel.DialogType.ChordShapes(song = song, setlistFileName = destination.setlistFileName)) }
+                    },
+                )
+            },
+        )
+    }
+}
+
+/**
+ * Reads the text of the song being read, and of the songs beside it: the pages next to the current one are composed
+ * ahead of time (beyondViewportPageCount), so their text is read ahead of time too, and a swipe then lands on lyrics
+ * rather than on a loading indicator.
+ */
+@Composable
+private fun LoadSongTexts(
+    viewModel: CampfireViewModel,
+    songs: List<Song>,
+    currentPage: Int,
+    songTexts: Map<String, String>,
+) {
+    val failedSongFileNames by viewModel.failedSongFileNames.collectAsStateWithLifecycle()
+    val currentFileName = songs.getOrNull(currentPage)?.fileName
+    LaunchedEffect(currentFileName) { currentFileName?.let(viewModel::loadSongContent) }
+    LaunchedEffect(currentPage, songs) {
+        listOfNotNull(songs.getOrNull(currentPage - 1), songs.getOrNull(currentPage + 1))
+            .filter { it.fileName !in songTexts && it.fileName !in failedSongFileNames }
+            .forEach { viewModel.loadSongContent(it.fileName) }
+    }
+}
+
+/**
+ * What the Chords section of every page is drawn with, null where the diagrams are off. One for the whole pager, since
+ * nothing in it belongs to one song: the instrument, the player's shapes and whether the section is folded are the same
+ * wherever a song is read.
+ */
+@Composable
+private fun rememberChordDiagrams(
+    viewModel: CampfireViewModel,
+    userPreferences: UserPreferences?,
+    shouldShowChords: Boolean,
+): ChordDiagrams? {
+    val chordInstrument = userPreferences?.takeIf { shouldShowChords && it.areChordDiagramsEnabled }?.chordInstrument?.toChordInstrument()
+    val storedChordShapes = chordInstrument?.let { userPreferences.chordVoicings[it.id] }.orEmpty()
+    val isChordSectionFolded = userPreferences?.isChordSectionFolded == true
+    return remember(chordInstrument, storedChordShapes, isChordSectionFolded) {
+        chordInstrument?.let {
+            ChordDiagrams(
+                instrument = it,
+                storedShapes = storedChordShapes,
+                isFolded = isChordSectionFolded,
+                onFoldToggled = viewModel::toggleChordSectionFold,
+            )
+        }
+    }
+}
+
+/**
+ * [songKeyboardShortcuts] as the song details screen sets them up: the arrows scroll the song being read, and Up and
+ * Down do whatever the step buttons would do where they are there, so that a pedal pressing them reads the song the way
+ * the buttons do; where they are not, the keys scroll. Not part of [SongDetailsScreen] itself, which has to stay small
+ * enough for HotSpot to compile.
+ *
+ * @param hasPreviousSong Whether there is a song before the one being headed for. The target page only decides whether
+ *   the key does anything; the step itself is decided at the time of the press.
+ */
+@Composable
+private fun Modifier.songDetailsKeyboardShortcuts(
+    currentPageScrollState: () -> ScrollState?,
+    coroutineScope: CoroutineScope,
+    pageStepper: PageStepper,
+    canStepBack: Boolean,
+    canStepForward: Boolean,
+    hasPreviousSong: Boolean,
+    hasNextSong: Boolean,
+    isUncovered: Boolean,
+    stepBack: (from: Int?) -> Unit,
+    stepForward: (from: Int?) -> Unit,
+) = songKeyboardShortcuts(
+    onScrollUp = { currentPageScrollState()?.let { coroutineScope.launch { it.scrollByKeyStep(-1f) } } },
+    onScrollDown = { currentPageScrollState()?.let { coroutineScope.launch { it.scrollByKeyStep(1f) } } },
+    onStepBack = if (canStepBack) {
+        { stepBack(null) }
+    } else {
+        null
+    },
+    onStepForward = if (canStepForward) {
+        { stepForward(null) }
+    } else {
+        null
+    },
+    isUncovered = isUncovered,
+    onPreviousSong = if (hasPreviousSong) {
+        { pageStepper.step(-1) }
+    } else {
+        null
+    },
+    onNextSong = if (hasNextSong) {
+        { pageStepper.step(1) }
+    } else {
+        null
+    },
+)
+
+/**
+ * Scrolls a pager created before the library was read to the song that was tapped, and tells the view model where the
+ * pager is: the page it has come to rest on and the page it is headed for. Not part of [SongDetailsScreen] itself,
+ * which has to stay small enough for HotSpot to compile.
+ */
+@Composable
+private fun FollowPager(
+    viewModel: CampfireViewModel,
+    destination: CampfireDestination.SongDetails,
+    songs: List<Song>,
+    pagerState: PagerState,
+    songTimings: SnapshotStateMap<String, SongTiming>,
+) {
+    // The initial page is only read when the pager is created. If the library had not been read by then, the pager
+    // was created with no pages and its first page is page zero: the song that was tapped is scrolled to once the
+    // songs are there, exactly once.
+    var isInitialPageSettled by rememberSaveable { mutableStateOf(songs.isNotEmpty()) }
+    LaunchedEffect(songs.size) {
+        if (!isInitialPageSettled && songs.isNotEmpty()) {
+            isInitialPageSettled = true
+            pagerState.scrollToPage(destination.initialIndex.coerceIn(0, songs.lastIndex))
+        }
+    }
+    // Where the pager has come to rest is where the user is, which the web build's address names. Not before the
+    // initial page has been scrolled to, or the first page of a pager created before the library was read would be
+    // reported on its way to the song that was tapped.
+    val latestSongs by rememberUpdatedState(songs)
+    val latestDestination by rememberUpdatedState(destination)
+    LaunchedEffect(pagerState, isInitialPageSettled) {
+        if (isInitialPageSettled) {
+            snapshotFlow { latestSongs.getOrNull(pagerState.settledPage)?.fileName }.collect { fileName ->
+                if (fileName != null) viewModel.onSongDetailsPageSettled(latestDestination, fileName)
+            }
+        }
+    }
+    // The page being headed for rather than the one settled on, so that a click paged on to the next song has its tempo
+    // while the page is still sliding in, and the stretch of it that page is headed for. A song paged back to is put at
+    // its end first (stepBack), so the click lands on its last stretch rather than on its opening.
+    LaunchedEffect(pagerState, isInitialPageSettled) {
+        if (isInitialPageSettled) {
+            snapshotFlow { latestSongs.getOrNull(pagerState.targetPage)?.fileName?.let { it to songTimings[it] } }.collect { target ->
+                if (target != null) viewModel.onSongDetailsPageChanged(latestDestination, target.first, target.second)
+            }
+        }
+    }
+}
+
+/**
+ * The song details screen's app bar: the way back, the title block that opens the sheet of what the song is, the song's
+ * actions and the metronome panel under them. A composable of its own so that [SongDetailsScreen] stays small enough
+ * for HotSpot to compile, which it never does for a method of more than 8,000 bytes of bytecode, and that one runs on
+ * every page change. What only the bar reads is collected and decided here, so that a change of it recomposes the bar
+ * rather than the whole screen.
+ *
+ * @param currentPageScrollState Read where it is used rather than handed down as a value, so that passing the top
+ *   recomposes the title alone.
+ * @param metronomePanelState Created by the screen, whose pages read whether the panel is at rest, see
+ *   SongDetailsPage's isViewportSettled.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SongDetailsAppBar(
+    viewModel: CampfireViewModel,
+    destination: CampfireDestination.SongDetails,
+    currentSong: Song?,
+    isReadOnly: Boolean,
+    isPerformanceModeEnabled: Boolean,
+    shouldShowChords: Boolean,
+    isMetronomeEnabled: Boolean,
+    areSetlistsEnabled: Boolean,
+    isCoverArtEnabled: Boolean,
+    chordSpelling: UserPreferences.ChordSpelling,
+    songTimings: SnapshotStateMap<String, SongTiming>,
+    currentPageScrollState: () -> ScrollState?,
+    openCurrentSongInfo: (() -> Unit)?,
+    songs: List<Song>,
+    settledWidth: Dp,
+    isMetronomePanelShown: Boolean,
+    isBeatFlashEnabled: Boolean,
+    isMetronomePanelVisible: Boolean,
+    metronomePanelState: MutableTransitionState<Boolean>,
+    scrollBehavior: TopAppBarScrollBehavior?,
+    contentPadding: PaddingValues,
+    coroutineScope: CoroutineScope,
+    onBack: () -> Unit,
+) {
+    val transpositions by viewModel.transpositions.collectAsStateWithLifecycle()
+    val tempos by viewModel.tempos.collectAsStateWithLifecycle()
+    val capos by viewModel.capos.collectAsStateWithLifecycle()
+    val songFileNamesInSetlists by viewModel.songFileNamesInSetlists.collectAsStateWithLifecycle()
+    val layoutDirection = LocalLayoutDirection.current
+    val appBarWidth = settledWidth - contentPadding.calculateStartPadding(layoutDirection) - contentPadding.calculateEndPadding(layoutDirection)
+    // Decided from the settled width and for every song of the pager at once, like the song actions, so that the
+    // cover and the steppers do not come and go during a navigation transition or a page change. The cover's room is
+    // reserved for every song of the pager, so that paging to a song without one does not move the star in and out of
+    // the menu.
+    val appBarButtons = appBarButtons(appBarWidth = appBarWidth, hasCover = isCoverArtEnabled && songs.any { it.coverArtUrl != null })
+    val showsCoverInBar = isCoverArtEnabled && if (isReadOnly) showsCoverInPerformanceMode(appBarWidth) else appBarButtons.isCoverShown
+    val showsFontScaleInBar = isReadOnly && showsFontScaleInPerformanceBar(appBarWidth)
+    val showsSetlistAssignmentsInBar = !isReadOnly && areSetlistsEnabled && appBarButtons.isSetlistAssignmentsShown
+    // Read only, the button stands next to the text size stepper, which is all that bar holds; otherwise it is always
+    // in the bar, see appBarButtons.
+    val showsMetronomeInBar = !isReadOnly || showsMetronomeInPerformanceBar(appBarWidth)
+    val currentTempo = currentSong?.let { effectiveTempo(song = it, setlistFileName = destination.setlistFileName, tempos = tempos) }
+    val metronomeButton: @Composable () -> Unit = {
+        MetronomeButton(
+            isPanelShown = isMetronomePanelShown,
+            playback = viewModel.metronomePlayback,
+            bpm = currentTempo?.bpm ?: MetronomePattern.DEFAULT_BPM,
+            beats = viewModel.metronomeBeats,
+            isFlashEnabled = isBeatFlashEnabled,
+            onClick = viewModel::toggleMetronomePanel,
+        )
+    }
+    val metronomeAction = if (isMetronomeEnabled) {
+        metronomeAction(
+            isPanelShown = isMetronomePanelShown,
+            bpm = currentTempo?.bpm ?: MetronomePattern.DEFAULT_BPM,
+            onClick = viewModel::toggleMetronomePanel,
+        )
+    } else {
+        null
+    }
+    CampfireTopAppBar(
+        scrollBehavior = scrollBehavior,
+        navigationIcon = {
+            IconButton(onClick = onBack) {
+                Icon(
+                    painter = painterResource(Res.drawable.ic_back),
+                    contentDescription = stringResource(Res.string.back),
+                )
+            }
+        },
+        title = {
+            // The title and the cover are the heading of the sheet of what the song is, so a tap on them opens it
+            // once there is nothing left to scroll back to. The scroll is read here rather than in the screen's
+            // own body, so that passing the top recomposes the bar's title alone.
+            val isScrolledToTop by remember { derivedStateOf { (currentPageScrollState()?.value ?: 0) == 0 } }
+            val openSongInfoAtTop = openCurrentSongInfo?.takeIf { isScrolledToTop }
+            val titleInteractionSource = remember { MutableInteractionSource() }
+            val isTitlePressed by titleInteractionSource.collectIsPressedAsState()
+            val titleAlpha by animateFloatAsState(if (isTitlePressed) PRESSED_HEADING_ALPHA else 1f)
+            AnimatedContent(
+                modifier = Modifier
+                    .titleTouchTarget(
+                        isEnabled = currentSong != null && (openSongInfoAtTop != null || !isScrolledToTop),
+                        interactionSource = titleInteractionSource,
+                        onClickLabel = stringResource(if (openSongInfoAtTop == null) Res.string.song_details_scroll_to_top else Res.string.song_details_song_info),
+                        onClick = {
+                            if (openSongInfoAtTop == null) {
+                                currentPageScrollState()?.let { coroutineScope.launch { it.animateScrollTo(0) } }
+                            } else {
+                                openSongInfoAtTop()
+                            }
+                        },
+                    )
+                    .graphicsLayer { alpha = titleAlpha },
+                targetState = currentSong,
+                // Keyed by the file, so that only paging to another song cross-fades the block: the same song
+                // arriving again (a tag added, a tempo set, a sync run) is recomposed in place, and what changed in
+                // it animates on its own below.
+                contentKey = { it?.fileName },
+                transitionSpec = { fadeIn() togetherWith fadeOut() },
+            ) { song ->
+                // What the song sounds like where it is being read, the way a song card says it: the key with the
+                // transposition and the capo applied, so this is the key the band hears rather than the one the
+                // chords on the page spell, and the tempo the click would play at. Worked out for the song this
+                // content was composed for rather than for the current one, since a crossfade between two songs
+                // draws both at once. Lyrics only mode says nothing about either, as it says nothing in a row.
+                val headerKey = song?.takeIf { shouldShowChords && it.hasChords }?.let {
+                    viewModel.renderKey(
+                        song = it,
+                        transposition = transpositions[it.fileName, destination.setlistFileName],
+                        capo = effectiveCapo(song = it, setlistFileName = destination.setlistFileName, capos = capos).fret,
+                        spelling = chordSpelling,
+                    )
+                }
+                // The stretch the page is on where the song changes its tempo further down, as the click plays it.
+                val headerTempo = song
+                    ?.takeIf { isMetronomeEnabled }
+                    ?.let { songTimings[it.fileName]?.bpm ?: effectiveTempo(song = it, setlistFileName = destination.setlistFileName, tempos = tempos).displayedBpm }
+                    ?.let { stringResource(Res.string.song_details_tempo, it.toString()) }
+                // The duration only inside a setlist, as the song's card there says it, since a set is what is
+                // timed by its songs; and, as there, with the chords switched off too, since the singer is timed by it alike.
+                val headerDuration = song?.takeIf { destination.setlistFileName != null }?.duration?.let(ChordProDuration::format)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    // Only a window resized across the width that makes room for it, or a cover set or removed, animates:
+                    // one that opens the screen with the cover out or in shows it that way from its first frame. The
+                    // last address is kept while a removed cover leaves, and is the page's own, since this is
+                    // composed afresh for every song.
+                    val coverUrl = song?.coverArtUrl
+                    var lastCoverUrl by remember { mutableStateOf(coverUrl) }
+                    if (coverUrl != null) lastCoverUrl = coverUrl
+                    AnimatedVisibility(
+                        visible = showsCoverInBar && coverUrl != null,
+                        enter = fadeIn() + expandHorizontally(),
+                        exit = fadeOut() + shrinkHorizontally(),
+                    ) {
+                        lastCoverUrl?.let { url ->
+                            Crossfade(targetState = url) {
+                                CoverArtImage(
+                                    modifier = Modifier.padding(end = APP_BAR_COVER_GAP).size(APP_BAR_COVER_SIZE),
+                                    url = it,
+                                )
+                            }
+                        }
+                    }
+                    Column {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            // Edited in place (Edit song details) rather than paged to, so it fades in place.
+                            AnimatedContent(
+                                modifier = Modifier.weight(1f, fill = false),
+                                targetState = song?.title.orEmpty(),
+                                transitionSpec = { fadeIn() togetherWith fadeOut() },
+                            ) { title ->
+                                Text(
+                                    text = title,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            }
+                            // What says that the title opens the sheet, shown only while a tap does: scrolled down,
+                            // a tap scrolls back to the top instead. Its room is kept while it is hidden wherever the
+                            // sheet is offered at all, so that a long title is not cut off afresh every time the
+                            // song passes its top.
+                            if (openCurrentSongInfo != null) {
+                                val chevronAlpha by animateFloatAsState(if (openSongInfoAtTop != null) 1f else 0f)
+                                Icon(
+                                    modifier = Modifier
+                                        .padding(start = APP_BAR_TITLE_CHEVRON_GAP)
+                                        .size(APP_BAR_TITLE_CHEVRON_SIZE)
+                                        .graphicsLayer {
+                                            alpha = chevronAlpha
+                                            scaleX = chevronAlpha
+                                            scaleY = chevronAlpha
+                                        },
+                                    painter = painterResource(Res.drawable.ic_expand),
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            // Drawn for every song, blank or not, so that the bar is two lines tall whatever the
+                            // song says about itself: the whole title block is what the cover beside it is as tall
+                            // as, and a bar that changed height as the pager moved from a song with an artist to
+                            // one without would take the lyrics with it.
+                            AnimatedContent(
+                                modifier = Modifier.weight(1f, fill = false),
+                                targetState = song?.artist.orEmpty(),
+                                transitionSpec = { fadeIn() togetherWith fadeOut() },
+                            ) { artist ->
+                                Text(
+                                    text = artist,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            }
+                            SongHeaderNote(
+                                text = headerKey,
+                                description = headerKey?.let { textResource(Res.string.songs_key, it) },
+                                isEmphasized = true,
+                                hasPrecedingContent = song?.artist?.isNotBlank() == true,
+                            )
+                            SongHeaderNote(
+                                text = headerTempo,
+                                isEmphasized = false,
+                                hasPrecedingContent = song?.artist?.isNotBlank() == true || headerKey != null,
+                            )
+                            SongHeaderNote(
+                                text = headerDuration,
+                                isEmphasized = false,
+                                hasPrecedingContent = song?.artist?.isNotBlank() == true || headerKey != null || headerTempo != null,
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        actions = {
+            // Performance mode leaves the bar with nothing else in it, and the text size is the one setting left
+            // to it, so it is in the bar wherever the title leaves it the room, and alone in a menu where not.
+            // Both are there, one leaving as the other arrives, so that a window resized across the width that
+            // decides it hands the stepper over the way the song's actions move in and out of their menu.
+            AnimatedVisibility(
+                visible = isReadOnly && showsFontScaleInBar,
+                enter = fadeIn() + expandHorizontally(),
+                exit = fadeOut() + shrinkHorizontally(),
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    ActionsMenu(items = listOfNotNull(metronomeAction?.takeUnless { showsMetronomeInBar || !isPerformanceModeEnabled }))
+                    AnimatedVisibility(
+                        visible = showsMetronomeInBar && isMetronomeEnabled,
+                        enter = fadeIn() + expandHorizontally(),
+                        exit = fadeOut() + shrinkHorizontally(),
+                    ) {
+                        metronomeButton()
+                    }
+                    LiveFontScaleControls(
+                        modifier = Modifier.padding(end = APP_BAR_STEPPER_END_PADDING),
+                        viewModel = viewModel,
+                    )
+                }
+            }
+            // A song read from an archived setlist keeps its own menu, so there the song's Edit and Export take these in
+            // rather than a second overflow button standing next to this one.
+            AnimatedVisibility(
+                visible = isPerformanceModeEnabled && !showsFontScaleInBar,
+                enter = fadeIn() + expandHorizontally(),
+                exit = fadeOut() + shrinkHorizontally(),
+            ) {
+                ActionsMenu(
+                    items = listOfNotNull(metronomeAction),
+                    menuFooter = {
+                        MenuStepperRow(label = stringResource(Res.string.song_details_text_size)) {
+                            LiveFontScaleControls(viewModel = viewModel)
+                        }
+                    },
+                )
+            }
+            currentSong?.takeIf { !isPerformanceModeEnabled }?.let { song ->
+                val editingActions = songInfoEditingActions(rememberSongInfoEditing(viewModel = viewModel, song = song, isEditorDraft = false))
+                val coverArtAction = if (isCoverArtEnabled) coverArtAction(viewModel = viewModel, song = song, isEditorDraft = false) else null
+                val isInSetlist = song.fileName in songFileNamesInSetlists
+                AnimatedVisibility(
+                    visible = !isReadOnly && isMetronomeEnabled,
+                    enter = fadeIn() + expandHorizontally(),
+                    exit = fadeOut() + shrinkHorizontally(),
+                ) {
+                    metronomeButton()
+                }
+                AnimatedVisibility(
+                    modifier = Modifier.overlappingAction(start = ACTION_BUTTON_OVERLAP, end = 0.dp),
+                    visible = showsSetlistAssignmentsInBar,
+                    enter = fadeIn() + expandHorizontally(),
+                    exit = fadeOut() + shrinkHorizontally(),
+                ) {
+                    SetlistAssignmentsButton(
+                        viewModel = viewModel,
+                        song = song,
+                        isInSetlist = isInSetlist,
+                        setlistFileName = destination.setlistFileName,
+                    )
+                }
+                // An archived setlist's song keeps the editor alone, which is no menu of its own, so it stays in
+                // the one menu next to Export.
+                AnimatedVisibility(
+                    modifier = Modifier.overlappingAction(start = ACTION_BUTTON_OVERLAP, end = 0.dp),
+                    visible = !isReadOnly,
+                    enter = fadeIn() + expandHorizontally(),
+                    exit = fadeOut() + shrinkHorizontally(),
+                ) {
+                    SongEditingActions(
+                        viewModel = viewModel,
+                        song = song,
+                        fileEditItems = editingActions.take(1) +
+                            // The sheet edits what the two features show, so it goes once both are switched off.
+                            listOfNotNull(
+                                if (shouldShowChords || isMetronomeEnabled) {
+                                    songPlayingAction(
+                                        viewModel = viewModel,
+                                        song = song,
+                                        setlistFileName = destination.setlistFileName,
+                                        isEditorDraft = false,
+                                    )
+                                } else {
+                                    null
+                                },
+                            ) +
+                            listOfNotNull(coverArtAction) +
+                            editingActions.drop(1),
+                    )
+                }
+                SongActions(
+                    modifier = Modifier.overlappingAction(start = ACTION_BUTTON_OVERLAP, end = 0.dp),
+                    viewModel = viewModel,
+                    song = song,
+                    isDeletable = destination.setlistFileName == null,
+                    isEditAndExportOnly = isReadOnly,
+                    isEditShown = isReadOnly,
+                    setlistFileName = destination.setlistFileName,
+                    leadingItems = when {
+                        !isReadOnly -> listOfNotNull(
+                            if (showsSetlistAssignmentsInBar || !areSetlistsEnabled) {
+                                null
+                            } else {
+                                setlistAssignmentsAction(
+                                    viewModel = viewModel,
+                                    song = song,
+                                    isInSetlist = isInSetlist,
+                                    setlistFileName = destination.setlistFileName,
+                                )
+                            },
+                        )
+                        showsFontScaleInBar -> listOfNotNull(metronomeAction?.takeUnless { showsMetronomeInBar })
+                        else -> listOfNotNull(metronomeAction)
+                    },
+                    // The transposition, the capo and the tempo are set in the song's own first section now; what
+                    // is left for the menu is the text size, which belongs to the reader rather than to the song.
+                    menuFooter = if (showsFontScaleInBar) {
+                        null
+                    } else {
+                        {
+                            MenuStepperRow(label = stringResource(Res.string.song_details_text_size)) {
+                                LiveFontScaleControls(viewModel = viewModel)
+                            }
+                        }
+                    },
+                )
+            }
+        },
+        bottomContent = {
+            MetronomePanel(
+                viewModel = viewModel,
+                isVisible = isMetronomePanelVisible,
+                contentPadding = contentPadding,
+                visibleState = metronomePanelState,
+            )
+        },
+    )
 }
 
 /**
