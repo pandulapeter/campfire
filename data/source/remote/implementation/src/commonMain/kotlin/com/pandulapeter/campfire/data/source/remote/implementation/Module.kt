@@ -29,7 +29,7 @@ import kotlin.time.TimeSource
 object DataRemoteSourceModule {
 
     @Single
-    internal fun httpClientHolder(): HttpClientHolder = HttpClientHolder(::createHttpClient)
+    internal fun httpClientHolder(): HttpClientHolder = HttpClientHolder(create = ::createHttpClient)
 
     /**
      * A list rather than a single binding: adding a provider is adding one line here, and nothing above this module

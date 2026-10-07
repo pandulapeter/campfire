@@ -83,7 +83,7 @@ class DropboxAuthorizationTest {
         assertTrue(provider().buildAuthorizationRequest(redirectUri = null).authorizationUrl.contains("redirect_uri").not())
 
     private fun provider() = DropboxSyncProvider(
-        httpClientHolder = HttpClientHolder(::createHttpClient),
+        httpClientHolder = HttpClientHolder(create = ::createHttpClient),
         credentialsStore = SyncCredentialsStore(NoStorage),
         appKey = APP_KEY,
     )

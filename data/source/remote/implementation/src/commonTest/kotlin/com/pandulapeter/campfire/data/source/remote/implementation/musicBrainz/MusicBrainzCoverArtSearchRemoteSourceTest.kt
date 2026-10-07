@@ -148,7 +148,7 @@ class MusicBrainzCoverArtSearchRemoteSourceTest {
     }
 
     private fun TestScope.source(handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData) = MusicBrainzCoverArtSearchRemoteSource(
-        httpClientHolder = HttpClientHolder {
+        httpClientHolder = HttpClientHolder(dispatcher = StandardTestDispatcher(testScheduler)) {
             HttpClient(MockEngine.create {
                 // The handler records virtual time, so it must run on that clock's scheduler too. An I/O thread can
                 // reach it only after runTest has already advanced to the next request's turn.

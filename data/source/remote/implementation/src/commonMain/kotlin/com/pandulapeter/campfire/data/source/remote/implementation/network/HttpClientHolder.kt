@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.source.remote.implementation.network
 
 import io.ktor.client.HttpClient
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -17,11 +18,15 @@ import kotlinx.coroutines.withContext
  * The app's one HttpClient, built the first time a request needs it rather than when the dependency graph is: building
  * it loads a few hundred classes, which the view model's construction would otherwise pay for on the main thread in the
  * first composition, for users who never connect sync or search for a cover. Built on Dispatchers.Default for the same
- * reason, whoever asks first.
+ * reason, whoever asks first. A test whose engine records virtual time builds it on its own scheduler instead, since a
+ * real thread lets that clock run ahead before the first request reaches the engine.
  */
-internal class HttpClientHolder(create: () -> HttpClient) {
+internal class HttpClientHolder(
+    private val dispatcher: CoroutineDispatcher = Dispatchers.Default,
+    create: () -> HttpClient,
+) {
 
     private val client = lazy(create)
 
-    suspend fun client(): HttpClient = if (client.isInitialized()) client.value else withContext(Dispatchers.Default) { client.value }
+    suspend fun client(): HttpClient = if (client.isInitialized()) client.value else withContext(dispatcher) { client.value }
 }
