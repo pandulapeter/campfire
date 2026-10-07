@@ -219,7 +219,7 @@ private const val SEPIA_HUE = 85 * PI / 180
  * How far the light half is dimmed at full warmth, as the factor on `Y + 0.05`: it takes the light backgrounds from
  * about L* 98 to about 92, the lightness of an old book's page, where they can hold the sepia.
  */
-private const val MIN_LIGHT_LUMINANCE_SCALE = 0.86
+internal const val MIN_LIGHT_LUMINANCE_SCALE = 0.86
 
 /** The chroma of the sepia at full lightness, about that of a paper-colored reading mode at its most yellow. */
 private const val SEPIA_MAX_CHROMA = 13.0
