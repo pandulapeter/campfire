@@ -69,12 +69,18 @@ internal data class ChecklistOrder(
 
     /** The rows [checklistItems] draws before [remainingRows]: the heading, the selected group and the divider. */
     fun <T> layout(items: List<T>, key: (T) -> String): ChecklistLayout {
+        val remainingRows = remainingRows(items, key)
         val leadingRowCount = if (hasHeading(items, key)) {
-            1 + selectedGroup(items, key).size + if (remainingRows(items, key).isEmpty()) 0 else 1
+            1 + selectedGroup(items, key).size + if (remainingRows.isEmpty()) 0 else 1
         } else {
             0
         }
-        return ChecklistLayout(heldKeys = heldKeys, leadingRowCount = leadingRowCount)
+        return ChecklistLayout(
+            heldKeys = heldKeys,
+            addedKeys = addedKeys,
+            leadingRowCount = leadingRowCount,
+            remainingKeys = remainingRows.map(key),
+        )
     }
 
     /** A sideways row of chips has no room for copies: the held chips lead it, and a chip that is tapped stays put. */
@@ -86,11 +92,37 @@ internal data class ChecklistOrder(
     fun <T> leadingCount(items: List<T>, key: (T) -> String) = items.count { key(it) in heldKeys }
 }
 
-/** What [KeepChecklistRowsInPlace] compares between two compositions; [heldKeys] changing is a refresh. */
+/**
+ * What [KeepChecklistRowsInPlace] compares between two compositions. A tick is what grows [addedKeys] with the same
+ * [heldKeys]; a refresh never does, since it reseeds the order with no [addedKeys] at all, even where it leaves
+ * [heldKeys] as they were and only changes how many of them [leadingRowCount] still counts.
+ */
 internal data class ChecklistLayout(
     val heldKeys: Set<String>,
+    val addedKeys: List<String>,
     val leadingRowCount: Int,
+    val remainingKeys: List<String>,
 )
+
+/**
+ * Where the row [anchorKey], at [anchorIndex] in [previous], has to be put to stay under the finger, or null when nothing
+ * has to move.
+ *
+ * Only a tick is answered: a refresh is the list going back to its start, and a sync that changes the rows without a
+ * tick is data arriving, which the lazy list's own keyed anchoring is left to. The new index is counted from where the
+ * checklist starts, so items before it (a filter header) are left out of the arithmetic, plus the anchor's new place
+ * among the remaining rows, so a checked row arriving above it (a setlist created with the song in it) is accounted
+ * for. A key can join [addedKeys] without being listed (a sync putting the song into a setlist the search hides), and
+ * the anchor's own index is null too, since requesting it again from the last measured layout would only fight a
+ * scroll in progress.
+ */
+internal fun ChecklistLayout.anchorIndexAfter(previous: ChecklistLayout, anchorKey: String, anchorIndex: Int): Int? {
+    if (heldKeys != previous.heldKeys || addedKeys.size <= previous.addedKeys.size) return null
+    val previousPosition = previous.remainingKeys.indexOf(anchorKey)
+    val position = remainingKeys.indexOf(anchorKey)
+    if (previousPosition == -1 || position == -1) return null
+    return (anchorIndex - previous.leadingRowCount - previousPosition + leadingRowCount + position).takeIf { it != anchorIndex }
+}
 
 /**
  * The selected group under a heading that counts everything checked, the rows a search or a filter hides included, so
@@ -163,13 +195,13 @@ internal fun rememberChecklistOrder(checkedKeys: Set<String>, refreshKey: Any?):
 internal fun KeepChecklistRowsInPlace(listState: LazyListState, layout: ChecklistLayout) {
     val previous = remember(listState) { PreviousChecklistLayout(layout) }
     SideEffect {
-        val delta = layout.leadingRowCount - previous.layout.leadingRowCount
-        if (delta != 0 && layout.heldKeys == previous.layout.heldKeys) {
-            // The layout info is still the last measured one, from before the group grew.
-            listState.layoutInfo.visibleItemsInfo
-                .firstOrNull { (it.key as? String)?.startsWith(ROW_KEY_PREFIX) == true }
-                ?.let { anchor -> listState.requestScrollToItem(index = anchor.index + delta, scrollOffset = -anchor.offset) }
-        }
+        // The layout info is still the last measured one, from before the group grew.
+        listState.layoutInfo.visibleItemsInfo
+            .firstOrNull { (it.key as? String)?.startsWith(ROW_KEY_PREFIX) == true }
+            ?.let { anchor ->
+                layout.anchorIndexAfter(previous.layout, (anchor.key as String).removePrefix(ROW_KEY_PREFIX), anchor.index)
+                    ?.let { listState.requestScrollToItem(index = it, scrollOffset = -anchor.offset) }
+            }
         previous.layout = layout
     }
 }

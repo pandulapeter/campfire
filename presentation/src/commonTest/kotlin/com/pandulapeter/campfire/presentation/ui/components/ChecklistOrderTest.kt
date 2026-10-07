@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.components
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 class ChecklistOrderTest {
     private val rows = listOf("a", "b", "c", "d")
@@ -79,5 +80,54 @@ class ChecklistOrderTest {
         val order = ChecklistOrder(setOf("d", "b")).withCheckedKeys(setOf("d", "b", "a"))
         assertEquals(listOf("b", "d", "a", "c"), order.ordered(rows) { it })
         assertEquals(2, order.leadingCount(rows) { it })
+    }
+
+    @Test
+    fun aRefreshWithNothingTickedIsNotReanchored() {
+        val order = ChecklistOrder(setOf("b", "d"))
+        assertNull(order.layout(listOf("a", "b")) { it }.anchorIndexAfter(order.layout(rows) { it }, anchorKey = "a", anchorIndex = 4))
+    }
+
+    @Test
+    fun aTickKeepsTheAnchorUnderTheFinger() {
+        val order = ChecklistOrder(setOf("b"))
+        val after = order.withCheckedKeys(setOf("b", "c")).layout(rows) { it }
+        // One header item comes before the list.
+        assertEquals(6, after.anchorIndexAfter(order.layout(rows) { it }, anchorKey = "c", anchorIndex = 5))
+    }
+
+    @Test
+    fun theFirstTickWithNothingHeldMovesTheAnchorPastTheHeadingTheGroupAndTheDivider() {
+        val order = ChecklistOrder(emptySet())
+        val after = order.withCheckedKeys(setOf("c")).layout(rows) { it }
+        assertEquals(3, after.anchorIndexAfter(order.layout(rows) { it }, anchorKey = "a", anchorIndex = 0))
+    }
+
+    @Test
+    fun aCheckedRowArrivingAboveTheAnchorIsCounted() {
+        val order = ChecklistOrder(setOf("b"))
+        val after = order.withCheckedKeys(setOf("b", "aa")).layout(listOf("a", "aa", "b", "c", "d")) { it }
+        assertEquals(6, after.anchorIndexAfter(order.layout(rows) { it }, anchorKey = "c", anchorIndex = 4))
+    }
+
+    @Test
+    fun tickingARowThatAlreadyHasACopyMovesNothing() {
+        val previous = ChecklistOrder(setOf("b")).withCheckedKeys(setOf("b", "c")).withCheckedKeys(setOf("b"))
+        val after = previous.withCheckedKeys(setOf("b", "c")).layout(rows) { it }
+        assertNull(after.anchorIndexAfter(previous.layout(rows) { it }, anchorKey = "a", anchorIndex = 4))
+    }
+
+    @Test
+    fun anAnchorNoLongerListedMovesNothing() {
+        val order = ChecklistOrder(setOf("b"))
+        val after = order.withCheckedKeys(setOf("b", "c")).layout(rows) { it }
+        assertNull(after.anchorIndexAfter(order.layout(rows) { it }, anchorKey = "gone", anchorIndex = 4))
+    }
+
+    @Test
+    fun aKeyAddedThatTheListDoesNotShowMovesNothing() {
+        val order = ChecklistOrder(setOf("b"))
+        val after = order.withCheckedKeys(setOf("b", "zz")).layout(rows) { it }
+        assertNull(after.anchorIndexAfter(order.layout(rows) { it }, anchorKey = "c", anchorIndex = 4))
     }
 }
