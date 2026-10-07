@@ -330,7 +330,8 @@ private fun LoadedSongEditor(
     // The text as one string, copied once per edit and shared by everything that follows it: the draft, the summary
     // in the bar, the toolbar and the preview would otherwise each copy and scan the whole song on every keystroke.
     val text = remember(textFieldState) { derivedStateOf { textFieldState.text.toString() } }
-    // Compare with the same formatted draft the action applies, so the option follows typing, undo and revert.
+    // Compare with the same formatted draft the action applies, so the option follows typing, undo and revert. Only the
+    // open menu reads it (ActionsMenuItem.isEnabledInMenu), so typing never prettifies the whole song.
     val prettifiedText = remember(textFieldState, viewModel) { derivedStateOf { viewModel.prettifyText(text.value) } }
     ReportDraft(viewModel = viewModel, fileName = destination.fileName, text = text, textFieldState = textFieldState)
 
@@ -506,7 +507,7 @@ private fun LoadedSongEditor(
                     } else {
                         null
                     },
-                    canPrettify = !isSaving && text.value.isNotBlank() && prettifiedText.value != text.value,
+                    canPrettify = { !isSaving && text.value.isNotBlank() && prettifiedText.value != text.value },
                     onPrettify = {
                         val prettified = prettifiedText.value
                         if (prettified != text.value) textFieldState.replaceWithPrettification(prettified)
@@ -946,7 +947,7 @@ private fun EditorMenu(
     editingActions: List<ActionsMenuItem>,
     songPlayingAction: ActionsMenuItem?,
     coverArtAction: ActionsMenuItem?,
-    canPrettify: Boolean,
+    canPrettify: () -> Boolean,
     onPrettify: () -> Unit,
     canRevert: Boolean,
     onRevert: () -> Unit,
@@ -959,7 +960,7 @@ private fun EditorMenu(
         ActionsMenuItem(
             title = stringResource(Res.string.song_editor_prettify),
             icon = painterResource(Res.drawable.ic_prettify),
-            isEnabled = canPrettify,
+            isEnabledInMenu = canPrettify,
             isAlwaysInMenu = true,
             onClick = onPrettify,
         ),

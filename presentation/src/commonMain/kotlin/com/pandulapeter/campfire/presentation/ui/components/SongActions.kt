@@ -192,7 +192,7 @@ internal fun ActionsMenu(
                         DropdownMenuItem(
                             text = { Text(item.title) },
                             leadingIcon = { ActionIcon(icon = item.icon, contentDescription = null, animateIconChange = item.animateIconChange) },
-                            enabled = item.isEnabled,
+                            enabled = item.isEnabledInMenu?.invoke() ?: item.isEnabled,
                             onClick = { select(item.onClick) },
                         )
                     }
@@ -211,6 +211,10 @@ internal fun ActionsMenu(
  * @param animateIconChange Crossfades icon changes while preserving the button's position.
  * @param isAlwaysInMenu Keeps the action in the menu however much room there is: one that deletes or throws something
  *   away, and one that is rarely wanted (archiving, duplicating, exporting), which a button would only advertise.
+ * @param isEnabledInMenu Read only while the menu is open, in place of [isEnabled], for an item whose answer is expensive
+ *   to work out: the open menu is all that subscribes to what it reads, so nothing works it out while the menu is
+ *   closed (the editor's Prettify, which would otherwise prettify the whole song on every keystroke). A button never
+ *   reads it, so an item that sets it is [isAlwaysInMenu] as well.
  */
 @Immutable
 internal class ActionsMenuItem(
@@ -221,6 +225,7 @@ internal class ActionsMenuItem(
     val isVisible: Boolean = true,
     val key: String = title,
     val animateIconChange: Boolean = false,
+    val isEnabledInMenu: (() -> Boolean)? = null,
     val onClick: () -> Unit,
 )
 
