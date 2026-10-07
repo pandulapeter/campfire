@@ -810,14 +810,15 @@ class CampfireViewModel(
             all = data?.unfilteredSongs.orEmpty(),
             filtered = data?.songs.orEmpty(),
             sections = data?.songSections.orEmpty(),
+            sorted = data?.sortedSongs.orEmpty(),
             filterKey = data?.let {
                 "${it.sortingMode.name}|${it.songFilter.selectedTags.sorted()}|${it.tagMatchMode.name}|" +
                     "${it.songFilter.selectedLanguages.sorted()}|${it.languageMatchMode.name}"
             }.orEmpty(),
         )
     }.distinctUntilChanged().map { input ->
-        IndexedSongs(input.sections, songSearchIndex.update(input.all, input.filtered), input.filterKey)
-    }.flowOn(Dispatchers.Default).asState(IndexedSongs(emptyList(), SongSearchSnapshot.Empty, ""))
+        IndexedSongs(input.sections, songSearchIndex.update(input.all, input.filtered), input.filterKey, input.sorted)
+    }.flowOn(Dispatchers.Default).asState(IndexedSongs(emptyList(), SongSearchSnapshot.Empty, "", emptyList()))
 
     /** Shared file-name lookup for screens that resolve songs from a destination or a setlist. */
     val songsByFileName = indexedSongs.map { it.search.songsByFileName }.asState(emptyMap())
@@ -912,21 +913,11 @@ class CampfireViewModel(
     /**
      * Every song of the library in the order the songs screen is sorted by, with its search and filter keys, as the song
      * picker lists and searches it. Built here rather than as the sheet opens, where the first frame of the sheet would
-     * wait for a whole library to be sorted and folded, and sorted by keys folded once per song rather than on both
-     * sides of every comparison.
+     * wait for a whole library to be folded. The order is the domain layer's (`ScreenData.sortedSongs`), which sorts
+     * the library once for the songs screen and the picker alike, and comes with the search index of the same value.
      */
-    internal val pickerSongs = combine(
-        indexedSongs,
-        userPreferences.map { it?.sortingMode ?: UserPreferences.SortingMode.BY_ARTIST }.distinctUntilChanged(),
-    ) { indexed, sortingMode ->
-        val list = indexed.search.byFileName.values
-            .map { song ->
-                val title = normalizeText(song.song.title)
-                val artist = normalizeText(song.song.artist)
-                if (sortingMode == UserPreferences.SortingMode.BY_ARTIST) Triple(song, artist, title) else Triple(song, title, artist)
-            }
-            .sortedWith(compareBy({ it.second }, { it.third }, { it.first.song.fileName }))
-            .map { it.first.toPickableSong() }
+    internal val pickerSongs = indexedSongs.map { indexed ->
+        val list = indexed.sorted.mapNotNull { indexed.search.byFileName[it.fileName] }.map { it.toPickableSong() }
         PickerSongs(list = list, byFileName = list.associateBy { it.song.fileName })
     }
         .flowOn(Dispatchers.Default)
@@ -4344,13 +4335,16 @@ class CampfireViewModel(
         val all: List<Song>,
         val filtered: List<Song>,
         val sections: List<SongSection>,
+        val sorted: List<Song>,
         val filterKey: String,
     )
 
+    /** @param sorted The whole library in the songs screen's order, see [pickerSongs]. */
     private data class IndexedSongs(
         val sections: List<SongSection>,
         val search: SongSearchSnapshot,
         val filterKey: String,
+        val sorted: List<Song>,
     )
 
     /**

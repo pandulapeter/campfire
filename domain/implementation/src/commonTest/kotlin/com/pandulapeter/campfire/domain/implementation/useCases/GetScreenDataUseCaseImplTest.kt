@@ -277,6 +277,39 @@ class GetScreenDataUseCaseImplTest {
         assertSame(complete, latest.first { it is DataState.Failure }?.data)
     }
 
+    @Test
+    fun `the whole library comes sorted the way the song list is, in both orders`() = runTest {
+        songs.value = DataState.Idle(
+            listOf(song("Yesterday"), song("1999", artist = "Prince"), song("¿Quién será?", artist = "Pedro Infante"), song("Hey Jude")),
+        )
+        val latest = collectScreenData()
+
+        val byTitle = latest.idle()
+        assertEquals(listOf("1999", "¿Quién será?", "Hey Jude", "Yesterday"), byTitle.sortedSongs.map { it.title })
+        assertEquals(byTitle.songs, byTitle.sortedSongs)
+
+        preferences.value = DataState.Idle(PREFERENCES.copy(sortingMode = UserPreferences.SortingMode.BY_ARTIST))
+        val byArtist = latest.first { it?.data?.sortingMode == UserPreferences.SortingMode.BY_ARTIST }?.data
+        assertEquals(byArtist?.songs, byArtist?.sortedSongs)
+        assertEquals(listOf("¿Quién será?", "1999", "Hey Jude", "Yesterday"), byArtist?.sortedSongs?.map { it.title })
+    }
+
+    @Test
+    fun `a filter narrows the sorted library without sorting it again`() = runTest {
+        songs.value = DataState.Idle(
+            listOf(song("Yesterday", tags = listOf("Folk")), song("Kalinka"), song("Hey Jude", tags = listOf("Folk")), song("Bésame mucho")),
+        )
+        val latest = collectScreenData()
+        val first = latest.idle()
+
+        filter.value = SongFilter(selectedTags = setOf("Folk"))
+        val narrowed = latest.first { it?.data?.songFilter?.selectedTags == setOf("Folk") }?.data
+
+        assertEquals(listOf("Hey Jude", "Yesterday"), narrowed?.songs?.map { it.title })
+        assertEquals(first.sortedSongs.filter { "Folk" in it.tags }, narrowed?.songs)
+        assertSame(first.sortedSongs, narrowed?.sortedSongs)
+    }
+
     /**
      * One collection for the whole test, since what is under test is what a collection reuses from one emission to
      * the next. The use case builds on [kotlinx.coroutines.Dispatchers.Default], so the emissions are awaited rather

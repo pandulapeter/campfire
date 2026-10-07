@@ -21,7 +21,9 @@ The ones that carry real logic:
   the view model collects it on the main thread. Applies the tag and language filters and
   the sorting and the sections it is listed under (by title or artist, through
   `NormalizeTextUseCase`, so accents are ignored; one key decides both, and whatever starts with no letter comes
-  first), and keeps a `cache` so that a `Loading` or `Failure` state can still
+  first; the whole library is sorted once per change of the library or the sorting mode, kept in `sortMemo`, and the
+  filters only narrow that order, which travels on as `ScreenData.sortedSongs` for the song picker), and keeps a
+  `cache` so that a `Loading` or `Failure` state can still
   carry the last good data — and where there is none yet, a part whose first read failed stands in empty (songs,
   setlists) or at the defaults (preferences), so the part that was read is still shown; such a value says so
   (`ScreenData.isWholeLibrary`) and is never cached. A part that is merely still loading is never filled in. It also

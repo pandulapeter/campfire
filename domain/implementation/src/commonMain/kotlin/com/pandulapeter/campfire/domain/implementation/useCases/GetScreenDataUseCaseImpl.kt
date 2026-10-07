@@ -50,6 +50,15 @@ class GetScreenDataUseCaseImpl internal constructor(
     private var cache: ScreenData? = null
 
     /**
+     * The library sorted for the last list of songs and sorting mode it was asked for, so that a change of the filters
+     * sorts nothing. One reference to one immutable holder rather than a field per value: the view model collects this
+     * use case twice at once, on [Dispatchers.Default] threads, and two fields written one after the other could be
+     * read torn from another thread - one library paired with another library's order.
+     */
+    @Volatile
+    private var sortMemo: SortMemo? = null
+
+    /**
      * Built on [Dispatchers.Default] rather than wherever it is collected, which for the view model is the main thread:
      * normalizing, filtering, sorting and counting the whole library is one full pass per emission, and the first scan
      * of a large library publishes a partial list as it goes, each of which would be one more pass before the first
@@ -97,6 +106,7 @@ class GetScreenDataUseCaseImpl internal constructor(
                     tags = songPart.tags,
                     languages = songPart.languages,
                     unfilteredSongs = songPart.unfilteredSongs,
+                    sortedSongs = songPart.sortedSongs,
                     songFilter = songPart.songFilter,
                     sortingMode = songPart.sortingMode,
                     tagMatchMode = songPart.tagMatchMode,
@@ -129,6 +139,7 @@ class GetScreenDataUseCaseImpl internal constructor(
             tags = songPart.tags,
             languages = songPart.languages,
             unfilteredSongs = songPart.unfilteredSongs,
+            sortedSongs = songPart.sortedSongs,
             isWholeLibrary = false,
             songFilter = songPart.songFilter,
             sortingMode = songPart.sortingMode,
@@ -147,17 +158,21 @@ class GetScreenDataUseCaseImpl internal constructor(
         // one would quietly switch the other one off.
         val availableTags = toTags()
         val availableLanguages = toLanguages()
-        val songsByTag = filterTags(filter, songListPreferences.tagMatchMode, availableTags)
-        val songsByLanguage = filterLanguages(filter, songListPreferences.languageMatchMode, availableLanguages)
+        // The filters are predicates over the library in its order, so what they leave is already sorted.
+        val sorted = sorted(songListPreferences.sortingMode)
+        val songsByTag = sorted.songs.filterTags(filter, songListPreferences.tagMatchMode, availableTags)
+        val songsByLanguage = sorted.songs.filterLanguages(filter, songListPreferences.languageMatchMode, availableLanguages)
         val songSections = songsByTag
             .filterLanguages(filter, songListPreferences.languageMatchMode, availableLanguages)
-            .sortIntoSections(songListPreferences)
+            .map { sorted.byFileName.getValue(it.fileName) }
+            .cutIntoSections(songListPreferences.sortingMode)
         return SongPart(
             songs = songSections.flatMap { it.songs },
             songSections = songSections,
             tags = availableTags.recountedTagsOver(songsByLanguage),
             languages = availableLanguages.recountedLanguagesOver(songsByTag),
             unfilteredSongs = this,
+            sortedSongs = sorted.songs,
             songFilter = filter,
             sortingMode = songListPreferences.sortingMode,
             tagMatchMode = songListPreferences.tagMatchMode,
@@ -172,6 +187,7 @@ class GetScreenDataUseCaseImpl internal constructor(
         val tags: List<Tag>,
         val languages: List<SongLanguage>,
         val unfilteredSongs: List<Song>,
+        val sortedSongs: List<Song>,
         val songFilter: SongFilter,
         val sortingMode: UserPreferences.SortingMode,
         val tagMatchMode: UserPreferences.MatchMode,
@@ -325,22 +341,42 @@ class GetScreenDataUseCaseImpl internal constructor(
     )
 
     /**
-     * The songs in the order the preferences ask for, cut into the sections that order is listed under.
+     * The whole library in the order [sortingMode] asks for, sorted again only when the library or the mode has changed
+     * (see [sortMemo]). The keys are computed once per song, since the selector of a comparator runs on every
+     * comparison.
+     */
+    private fun List<Song>.sorted(sortingMode: UserPreferences.SortingMode): SortMemo =
+        sortMemo?.takeIf { it.input === this && it.sortingMode == sortingMode } ?: run {
+            val sortable = map { SortableSong(song = it, sortingMode = sortingMode, artist = normalizeText(it.artist), title = normalizeText(it.title)) }
+                .sortedWith(SortableSong.ORDER)
+            SortMemo(input = this, sortingMode = sortingMode, songs = sortable.map { it.song }, byFileName = sortable.associateBy { it.song.fileName })
+        }.also { sortMemo = it }
+
+    /**
+     * The library [input] sorted by [sortingMode]: [songs] in that order, and the sort keys of each song by its file
+     * name, which is unique in the library.
+     */
+    private class SortMemo(
+        val input: List<Song>,
+        val sortingMode: UserPreferences.SortingMode,
+        val songs: List<Song>,
+        val byFileName: Map<String, SortableSong>,
+    )
+
+    /**
+     * Songs already in the order [sortingMode] asks for, cut into the sections that order is listed under.
      *
      * Both come from [SortableSong.sectionKey]: it is what the songs are ordered by before anything else and the only
      * thing they are filed by, so a section is one run of the list, and collecting the runs in a map keyed by it means
-     * that no header can come up twice whatever a title starts with. The keys are computed once per song, since the
-     * selector of a comparator runs on every comparison.
+     * that no header can come up twice whatever a title starts with.
      */
-    private fun List<Song>.sortIntoSections(songListPreferences: SongListPreferences): List<SongSection> {
+    private fun List<SortableSong>.cutIntoSections(sortingMode: UserPreferences.SortingMode): List<SongSection> {
         val sections = linkedMapOf<String, MutableList<SortableSong>>()
-        map { SortableSong(song = it, sortingMode = songListPreferences.sortingMode, artist = normalizeText(it.artist), title = normalizeText(it.title)) }
-            .sortedWith(SortableSong.ORDER)
-            .forEach { sections.getOrPut(it.sectionKey) { mutableListOf() } += it }
+        forEach { sections.getOrPut(it.sectionKey) { mutableListOf() } += it }
         return sections.map { (key, songs) ->
             val first = songs.first()
             SongSection(
-                header = when (songListPreferences.sortingMode) {
+                header = when (sortingMode) {
                     UserPreferences.SortingMode.BY_ARTIST -> SongSection.Header.Artist(name = first.song.artist, initial = first.initial, key = key)
                     UserPreferences.SortingMode.BY_TITLE -> first.initial?.let { SongSection.Header.Letter(it) } ?: SongSection.Header.Symbols
                 },
@@ -419,6 +455,7 @@ class GetScreenDataUseCaseImpl internal constructor(
             tags = emptyList(),
             languages = emptyList(),
             unfilteredSongs = emptyList(),
+            sortedSongs = emptyList(),
             songFilter = SongFilter(),
             sortingMode = DEFAULT_SONG_LIST_PREFERENCES.sortingMode,
             tagMatchMode = DEFAULT_SONG_LIST_PREFERENCES.tagMatchMode,

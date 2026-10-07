@@ -51,6 +51,11 @@ data class ScreenData(
      */
     val unfilteredSongs: List<Song>,
     /**
+     * The whole library in the order [songs] is sorted in, the filters left out: what the song picker lists, which
+     * would otherwise sort the library a second time on every change.
+     */
+    val sortedSongs: List<Song> = emptyList(),
+    /**
      * False when the songs or the setlists could not be read at all and stand in here as empty, so that the part that
      * was read can still be shown - the state this arrives in is then a failure. Nothing that decides something from
      * what the library holds (whether it is empty, what it counts, whether the demo songs are in it) may take such a
