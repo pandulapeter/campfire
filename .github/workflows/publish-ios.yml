@@ -139,6 +139,12 @@ jobs:
           distribution: 'jetbrains'
           java-version: 21
           cache: 'gradle'
+      # The release framework is linked inside the Gradle daemon, which runs out of the 4 GB gradle.properties gives
+      # it; the user's gradle.properties overrides the project's, so a developer's machine keeps its own setting.
+      - name: Give the Gradle daemon more memory
+        run: |
+          mkdir -p ~/.gradle
+          echo 'org.gradle.jvmargs=-Xmx6g -Dfile.encoding=UTF-8' >> ~/.gradle/gradle.properties
       # Gradle is started by a build phase of the Xcode project here, which passes it no properties, and the version
       # build phase reads local.properties after gradle.properties with the last value winning — so both the sync key
       # and a build number override go where a developer's own machine keeps them.
