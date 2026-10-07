@@ -135,6 +135,15 @@ internal class UserPreferencesMappersTest {
     }
 
     @Test
+    fun aStoredBackgroundWarmthOutsideTheRangeIsClampedToIt() {
+        assertEquals(UserPreferences.MAX_BACKGROUND_WARMTH, UserPreferencesDocument(backgroundWarmth = 40).toModel().backgroundWarmth)
+        assertEquals(0, UserPreferencesDocument(backgroundWarmth = -1).toModel().backgroundWarmth)
+        assertEquals(0, UserPreferencesDocumentFormat.decode("{}").document.toModel().backgroundWarmth)
+        val saved = UserPreferencesDocumentFormat.encode(UserPreferencesDocument().toModel().copy(backgroundWarmth = 3).toDocument())
+        assertEquals(3, UserPreferencesDocumentFormat.decode(saved).document.toModel().backgroundWarmth)
+    }
+
+    @Test
     fun aStoredFontScaleThatIsNotANumberFallsBackToTheDefault() {
         assertEquals(UserPreferences.DEFAULT_FONT_SCALE, UserPreferencesDocument(fontScale = Float.NaN).toModel().fontScale)
         assertEquals(UserPreferences.DEFAULT_FONT_SCALE, UserPreferencesDocument(fontScale = Float.POSITIVE_INFINITY).toModel().fontScale)
