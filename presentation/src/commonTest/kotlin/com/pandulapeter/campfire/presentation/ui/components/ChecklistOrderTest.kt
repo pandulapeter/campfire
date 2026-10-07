@@ -11,80 +11,73 @@ package com.pandulapeter.campfire.presentation.ui.components
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNull
 
 class ChecklistOrderTest {
     private val rows = listOf("a", "b", "c", "d")
 
     @Test
-    fun checkedRowsLeadInTheRequestedSortingOrder() {
+    fun heldRowsLeadInTheRequestedSortingOrderAndAreNotRepeated() {
         val order = ChecklistOrder(setOf("d", "b"))
-        assertEquals(listOf("b", "d", "a", "c"), order.ordered(rows) { it })
-        assertEquals(listOf("d", "b", "c", "a"), order.ordered(rows.reversed()) { it })
+        assertEquals(listOf("b", "d"), order.selectedGroup(rows) { it })
+        assertEquals(listOf("a", "c"), order.remainingRows(rows) { it })
+        assertEquals(listOf("d", "b"), order.selectedGroup(rows.reversed()) { it })
     }
 
     @Test
-    fun checkingPromotesAndUncheckingKeepsTheRowInPlace() {
-        val initial = ChecklistOrder(setOf("b"))
-        val checked = initial.withCheckedKeys(setOf("b", "d"))
-        val unchecked = checked.withCheckedKeys(setOf("d"))
-        assertEquals(listOf("d", "b", "a", "c"), checked.ordered(rows) { it })
-        assertEquals(checked.ordered(rows) { it }, unchecked.ordered(rows) { it })
+    fun checkedRowsJoinTheGroupInTickOrderAndStayInPlace() {
+        val order = ChecklistOrder(setOf("b")).withCheckedKeys(setOf("b", "d")).withCheckedKeys(setOf("b", "d", "a"))
+        assertEquals(listOf("b", "d", "a"), order.selectedGroup(rows) { it })
+        assertEquals(listOf("a", "c", "d"), order.remainingRows(rows) { it })
+    }
+
+    @Test
+    fun theGroupOnlyGrowsUntilARefresh() {
+        val checked = ChecklistOrder(setOf("b")).withCheckedKeys(setOf("b", "d"))
+        val unchecked = checked.withCheckedKeys(emptySet())
+        assertEquals(listOf("b", "d"), unchecked.selectedGroup(rows) { it })
+        assertEquals(checked.remainingRows(rows) { it }, unchecked.remainingRows(rows) { it })
+        // Checking a row again does not add a second copy or move the first.
+        assertEquals(listOf("b", "d"), unchecked.withCheckedKeys(setOf("d", "b")).selectedGroup(rows) { it })
         // Search, sorting and filter changes reseed the order with only the currently checked keys.
         val refreshed = ChecklistOrder(setOf("d"))
-        assertEquals(listOf("d", "a", "b", "c"), refreshed.ordered(rows) { it })
+        assertEquals(listOf("d"), refreshed.selectedGroup(rows) { it })
+        assertEquals(listOf("a", "b", "c"), refreshed.remainingRows(rows) { it })
     }
 
     @Test
-    fun newlyCheckedRowsLeadAndRecheckingReturnsTheRowToPositionZero() {
-        val first = ChecklistOrder(setOf("b")).withCheckedKeys(setOf("b", "d"))
-        val second = first.withCheckedKeys(setOf("b", "d", "a"))
-        assertEquals(listOf("a", "d", "b", "c"), second.ordered(rows) { it })
-        val unchecked = second.withCheckedKeys(setOf("b", "a"))
-        assertEquals(second.ordered(rows) { it }, unchecked.ordered(rows) { it })
-        val rechecked = unchecked.withCheckedKeys(setOf("b", "a", "d"))
-        assertEquals(listOf("d", "a", "b", "c"), rechecked.ordered(rows) { it })
-        // A refresh removes the temporary recency order as well as retaining only the checked rows.
-        assertEquals(listOf("a", "b", "d", "c"), ChecklistOrder(setOf("b", "a", "d")).ordered(rows) { it })
+    fun layoutCountsTheHeadingTheGroupAndTheDivider() {
+        assertEquals(0, ChecklistOrder(emptySet()).layout(rows) { it }.leadingRowCount)
+        assertEquals(3, ChecklistOrder(setOf("b")).layout(rows) { it }.leadingRowCount)
+        assertEquals(4, ChecklistOrder(setOf("b")).withCheckedKeys(setOf("b", "c")).layout(rows) { it }.leadingRowCount)
+        // With nothing left under the group there is no divider.
+        assertEquals(5, ChecklistOrder(rows.toSet()).layout(rows) { it }.leadingRowCount)
     }
 
     @Test
-    fun dividerBoundaryCountsOnlyVisibleLeadingRows() {
-        val order = ChecklistOrder(setOf("b", "d", "hidden")).withCheckedKeys(setOf("b", "d", "hidden", "a"))
-        assertEquals(3, order.leadingCount(rows) { it })
-        assertEquals(1, order.leadingCount(listOf("c", "d")) { it })
-        assertEquals(0, order.leadingCount(listOf("c")) { it })
-        assertEquals(0, order.leadingCount(emptyList<String>()) { it })
-        assertEquals(2, order.leadingCount(listOf("b", "d")) { it })
+    fun theHeadingStaysWhileEverythingCheckedIsFilteredOut() {
+        val order = ChecklistOrder(setOf("b", "d"))
+        val filtered = listOf("a", "c")
+        assertEquals(true, order.hasHeading(filtered) { it })
+        assertEquals(emptyList(), order.selectedGroup(filtered) { it })
+        // The heading and the divider under it.
+        assertEquals(2, order.layout(filtered) { it }.leadingRowCount)
+        assertEquals(false, ChecklistOrder(emptySet()).hasHeading(filtered) { it })
+        // A row unchecked since the refresh keeps the heading over it, at a count of nothing.
+        assertEquals(true, ChecklistOrder(setOf("a")).withCheckedKeys(emptySet()).hasHeading(rows) { it })
     }
 
     @Test
     fun filteredOutAndDeletedRowsNeverAppearInTheResults() {
-        val order = ChecklistOrder(setOf("b", "d", "deleted"))
-        assertEquals(listOf("d", "a"), order.ordered(listOf("a", "d")) { it })
-        assertEquals(emptyList(), order.ordered(emptyList<String>()) { it })
+        val order = ChecklistOrder(setOf("b", "d", "deleted")).withCheckedKeys(setOf("b", "d", "deleted", "hidden"))
+        assertEquals(listOf("d"), order.selectedGroup(listOf("a", "d")) { it })
+        assertEquals(listOf("a"), order.remainingRows(listOf("a", "d")) { it })
+        assertEquals(emptyList(), order.selectedGroup(emptyList<String>()) { it })
     }
 
     @Test
-    fun checkingScrollsToThePromotedRowIncludingLeadingActions() {
-        val selection = ChecklistSelection(setOf("b"))
-        assertEquals(1, selection.newlyCheckedIndex(setOf("b", "d"), listOf("d", "b", "a", "c"), rowOffset = 1))
-        assertNull(selection.newlyCheckedIndex(setOf("b", "d"), listOf("d", "b", "a", "c"), rowOffset = 1))
-    }
-
-    @Test
-    fun openingRefreshingAndUncheckingNeverRequestAScroll() {
-        val selection = ChecklistSelection(setOf("b", "d"))
-        assertNull(selection.newlyCheckedIndex(setOf("b", "d"), rows))
-        assertNull(selection.newlyCheckedIndex(setOf("b", "d"), rows.reversed()))
-        assertNull(selection.newlyCheckedIndex(setOf("d"), listOf("b", "d", "a", "c")))
-        assertEquals(0, selection.newlyCheckedIndex(setOf("b", "d"), listOf("b", "d", "a", "c")))
-    }
-
-    @Test
-    fun asyncSelectionUpdatesScrollOnlyWhenTheCheckedRowIsVisible() {
-        val selection = ChecklistSelection(emptySet())
-        assertEquals(0, selection.newlyCheckedIndex(setOf("new-setlist"), listOf("new-setlist", "a")))
-        assertNull(selection.newlyCheckedIndex(setOf("new-setlist", "hidden"), listOf("new-setlist", "a")))
+    fun chipsLeadWithTheHeldOnesAndStayPut() {
+        val order = ChecklistOrder(setOf("d", "b")).withCheckedKeys(setOf("d", "b", "a"))
+        assertEquals(listOf("b", "d", "a", "c"), order.ordered(rows) { it })
+        assertEquals(2, order.leadingCount(rows) { it })
     }
 }

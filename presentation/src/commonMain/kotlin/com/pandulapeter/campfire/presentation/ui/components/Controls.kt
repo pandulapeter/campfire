@@ -727,13 +727,11 @@ internal fun <T : Any> SortableChipRow(
     val scrollState = rememberScrollState()
     val orderedItems = remember(items, order) { order.ordered(items, key) }
     val leadingCount = order.leadingCount(orderedItems, key)
-    val selection = remember { ChecklistSelection(order.checkedKeys) }
     val scrollRefreshKey = sortingMode to refreshKey
-    // Opening/restoring the row leaves its scroll position alone; selecting or refreshing animates to the start.
+    // Opening/restoring the row and selecting a chip leave its scroll position alone; refreshing animates to the start.
     var scrolledToStartFor by remember { mutableStateOf(scrollRefreshKey) }
-    LaunchedEffect(scrollRefreshKey, order.checkedKeys) {
-        val hasNewSelection = selection.newlyCheckedIndex(order.checkedKeys, orderedItems.map(key)) != null
-        if (scrollRefreshKey != scrolledToStartFor || hasNewSelection) {
+    LaunchedEffect(scrollRefreshKey) {
+        if (scrollRefreshKey != scrolledToStartFor) {
             scrolledToStartFor = scrollRefreshKey
             scrollState.animateScrollTo(0)
         }

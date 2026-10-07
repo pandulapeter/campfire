@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.LazyListScope
@@ -20,71 +21,124 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.mapSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.presentation.localization.stringResource
+import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.checklist_selected
 
 /**
- * Checked and recently unchecked rows share the leading group. Newly checked rows go before that whole group,
- * most recent first, and stay there after unchecking. Refreshing reseeds the group in the caller's sorting order.
+ * The order of a checklist in a sheet: a selected group at the top, and under it every other row in the caller's
+ * sorting order.
+ *
+ * The group starts as the rows that were checked when the list was last refreshed ([heldKeys]), in the sorting order.
+ * A row checked after that joins the end of the group as a copy ([addedKeys], in the order they were ticked) while it
+ * also stays where it was tapped, so the list never moves under the finger and the whole selection can still be read
+ * at the top. The group only grows until the next refresh: a row unchecked there stays, unchecked, rather than taking
+ * the rows after it up into its place. Opening the sheet, searching, sorting or filtering again reseeds it from what
+ * is checked by then.
  */
 internal data class ChecklistOrder(
     val heldKeys: Set<String>,
-    val promotedKeys: List<String> = emptyList(),
+    val addedKeys: List<String> = emptyList(),
     val checkedKeys: Set<String> = heldKeys,
 ) {
     fun withCheckedKeys(checkedKeys: Set<String>): ChecklistOrder {
-        val newlyChecked = checkedKeys - this.checkedKeys
-        return ChecklistOrder(
-            heldKeys = heldKeys + checkedKeys,
-            promotedKeys = newlyChecked.toList().asReversed() + promotedKeys.filterNot { it in newlyChecked },
-            checkedKeys = checkedKeys,
-        )
+        val added = (checkedKeys - this.checkedKeys).filterNot { it in heldKeys || it in addedKeys }
+        return copy(addedKeys = addedKeys + added, checkedKeys = checkedKeys)
     }
 
-    fun <T> ordered(items: List<T>, key: (T) -> String): List<T> {
+    /** The rows of the selected group that [items] still holds. */
+    fun <T> selectedGroup(items: List<T>, key: (T) -> String): List<T> {
         val byKey = items.associateBy(key)
-        val promoted = promotedKeys.toSet()
-        val (leading, remaining) = items.filterNot { key(it) in promoted }.partition { key(it) in heldKeys }
-        return promotedKeys.mapNotNull { byKey[it] } + leading + remaining
+        return items.filter { key(it) in heldKeys } + addedKeys.mapNotNull { key -> byKey[key]?.takeIf { key !in heldKeys } }
+    }
+
+    /** Every row outside the held group, the ones added to the group since the last refresh included. */
+    fun <T> remainingRows(items: List<T>, key: (T) -> String) = items.filterNot { key(it) in heldKeys }
+
+    /**
+     * Whether [checklistItems] draws its heading: while anything is checked, filtered out of [items] or not, so that
+     * the count does not come and go with the search, and while the group still holds a row that was unchecked.
+     */
+    fun <T> hasHeading(items: List<T>, key: (T) -> String) = checkedKeys.isNotEmpty() || selectedGroup(items, key).isNotEmpty()
+
+    /** The rows [checklistItems] draws before [remainingRows]: the heading, the selected group and the divider. */
+    fun <T> layout(items: List<T>, key: (T) -> String): ChecklistLayout {
+        val leadingRowCount = if (hasHeading(items, key)) {
+            1 + selectedGroup(items, key).size + if (remainingRows(items, key).isEmpty()) 0 else 1
+        } else {
+            0
+        }
+        return ChecklistLayout(heldKeys = heldKeys, leadingRowCount = leadingRowCount)
+    }
+
+    /** A sideways row of chips has no room for copies: the held chips lead it, and a chip that is tapped stays put. */
+    fun <T> ordered(items: List<T>, key: (T) -> String): List<T> {
+        val (leading, remaining) = items.partition { key(it) in heldKeys }
+        return leading + remaining
     }
 
     fun <T> leadingCount(items: List<T>, key: (T) -> String) = items.count { key(it) in heldKeys }
 }
 
-/** A divider appears only where the promoted group meets rows that follow the selected sorting order. */
+/** What [KeepChecklistRowsInPlace] compares between two compositions; [heldKeys] changing is a refresh. */
+internal data class ChecklistLayout(
+    val heldKeys: Set<String>,
+    val leadingRowCount: Int,
+)
+
+/**
+ * The selected group under a heading that counts everything checked, the rows a search or a filter hides included, so
+ * the number only changes with the selection; then a divider, then the rest of the rows ([ChecklistOrder]). The keys are namespaced so that a user-created tag cannot collide with the heading, the divider
+ * or another action of the list, and so that a row's copy in the group is a different item from the row itself.
+ */
 internal fun <T> LazyListScope.checklistItems(
     items: List<T>,
     order: ChecklistOrder,
     key: (T) -> String,
+    listState: LazyListState,
+    horizontalInset: Dp = 0.dp,
     itemContent: @Composable LazyItemScope.(T) -> Unit,
 ) {
-    val leadingCount = order.leadingCount(items, key)
-    // Namespace row keys so a user-created tag cannot collide with the divider or other list actions.
-    val rowKey: (T) -> String = { "checklist:${key(it)}" }
-    items(items.take(leadingCount), key = rowKey, itemContent = itemContent)
-    if (leadingCount > 0 && leadingCount < items.size) {
-        item(key = "checklist_divider") { HorizontalDivider(modifier = Modifier.fillMaxWidth()) }
+    val group = order.selectedGroup(items, key)
+    val remaining = order.remainingRows(items, key)
+    if (order.hasHeading(items, key)) {
+        item(key = "checklist_heading") {
+            SettingsSectionTitle(
+                modifier = listItemAnimation(listState),
+                text = stringResource(Res.string.checklist_selected, order.checkedKeys.size),
+                contentPadding = PaddingValues(
+                    start = horizontalInset + LIST_ITEM_KEYLINE,
+                    end = horizontalInset + LIST_ITEM_KEYLINE,
+                    top = 8.dp,
+                    bottom = 4.dp,
+                ),
+            )
+        }
+        items(group, key = { "$SELECTED_ROW_KEY_PREFIX${key(it)}" }, itemContent = itemContent)
+        if (remaining.isNotEmpty()) {
+            item(key = "checklist_divider") { HorizontalDivider(modifier = Modifier.fillMaxWidth()) }
+        }
     }
-    items(items.drop(leadingCount), key = rowKey, itemContent = itemContent)
+    items(remaining, key = { "$ROW_KEY_PREFIX${key(it)}" }, itemContent = itemContent)
 }
 
-/** Retains unchecked rows across selection edits and Activity recreation, until search, sorting or filters change. */
+/** Keeps the selected group across selection edits and Activity recreation, until search, sorting or filters change. */
 @Composable
 internal fun rememberChecklistOrder(checkedKeys: Set<String>, refreshKey: Any?): ChecklistOrder {
     var savedOrder by rememberSaveable(
         refreshKey,
         stateSaver = mapSaver(
-            save = { mapOf("held" to it.heldKeys.toList(), "promoted" to it.promotedKeys, "checked" to it.checkedKeys.toList()) },
+            save = { mapOf("held" to it.heldKeys.toList(), "added" to it.addedKeys, "checked" to it.checkedKeys.toList()) },
             restore = { saved ->
                 ChecklistOrder(
                     heldKeys = (saved.getValue("held") as List<*>).filterIsInstance<String>().toSet(),
-                    promotedKeys = (saved.getValue("promoted") as List<*>).filterIsInstance<String>(),
+                    addedKeys = (saved.getValue("added") as List<*>).filterIsInstance<String>(),
                     checkedKeys = (saved.getValue("checked") as List<*>).filterIsInstance<String>().toSet(),
                 )
             },
@@ -96,40 +150,32 @@ internal fun rememberChecklistOrder(checkedKeys: Set<String>, refreshKey: Any?):
 }
 
 /**
- * Keep the viewport at its old position through the reorder, then animate to the newly checked first row.
- * Otherwise lazy-list key anchoring would follow the moved row immediately and leave no distance to animate.
- * Headers and the tag-creation action are accounted for by [rowOffset].
+ * Holds the rows below the selected group where they are on screen while the group above them grows, so the row that
+ * was just tapped stays under the finger when its copy joins the group. A lazy list keeps its first visible item in
+ * place by key, which only helps while that item is below the group; with the group or its heading at the top of the
+ * viewport, everything after it would be pushed down by a row. So the first visible row of the rest is pinned at its
+ * offset instead, by index, the content above it moving up out of the way.
+ *
+ * Call it after any other effect that positions the same list ([ScrollToStartWhenChanged]): the last request of a
+ * frame is the one the list measures with.
  */
 @Composable
-internal fun ScrollToNewlyCheckedItem(
-    listState: LazyListState,
-    checkedKeys: Set<String>,
-    orderedKeys: List<String>,
-    rowOffset: Int = 0,
-) {
-    val selection = remember(listState) { ChecklistSelection(checkedKeys) }
-    val scope = rememberCoroutineScope()
-    val scroll = remember(listState) { ChecklistScroll() }
+internal fun KeepChecklistRowsInPlace(listState: LazyListState, layout: ChecklistLayout) {
+    val previous = remember(listState) { PreviousChecklistLayout(layout) }
     SideEffect {
-        selection.newlyCheckedIndex(checkedKeys, orderedKeys, rowOffset)?.let { index ->
-            scroll.job?.cancel()
-            listState.requestScrollToItem(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset)
-            scroll.job = scope.launch {
-                // Let the new ordering be measured before the scroll uses its indices.
-                withFrameNanos { }
-                listState.animateScrollToItem(index)
-            }
+        val delta = layout.leadingRowCount - previous.layout.leadingRowCount
+        if (delta != 0 && layout.heldKeys == previous.layout.heldKeys) {
+            // The layout info is still the last measured one, from before the group grew.
+            listState.layoutInfo.visibleItemsInfo
+                .firstOrNull { (it.key as? String)?.startsWith(ROW_KEY_PREFIX) == true }
+                ?.let { anchor -> listState.requestScrollToItem(index = anchor.index + delta, scrollOffset = -anchor.offset) }
         }
+        previous.layout = layout
     }
 }
 
-private class ChecklistScroll(var job: Job? = null)
+/** What [KeepChecklistRowsInPlace] last saw, which is not state: it is only read and written by its side effect. */
+private class PreviousChecklistLayout(var layout: ChecklistLayout)
 
-/** Tracks selection changes independently of sorting and filtering; an uncheck never requests a scroll. */
-internal class ChecklistSelection(private var keys: Set<String>) {
-    fun newlyCheckedIndex(checkedKeys: Set<String>, orderedKeys: List<String>, rowOffset: Int = 0): Int? {
-        val newlyChecked = checkedKeys - keys
-        keys = checkedKeys
-        return orderedKeys.indexOfFirst { it in newlyChecked }.takeIf { it >= 0 }?.plus(rowOffset)
-    }
-}
+private const val ROW_KEY_PREFIX = "checklist_row:"
+private const val SELECTED_ROW_KEY_PREFIX = "checklist_selected:"

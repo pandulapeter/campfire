@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.dialogs
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
@@ -32,6 +34,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.onConsumedWindowInsetsChanged
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
@@ -90,6 +93,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.focus.focusRequester
@@ -109,6 +113,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.offset
@@ -218,8 +223,9 @@ import com.pandulapeter.campfire.presentation.ui.components.LabelSortingToggle
 import com.pandulapeter.campfire.presentation.ui.components.MAX_SEARCH_QUERY_LENGTH
 import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.components.SortableChipRow
-import com.pandulapeter.campfire.presentation.ui.components.ScrollToNewlyCheckedItem
+import com.pandulapeter.campfire.presentation.ui.components.ChecklistLayout
 import com.pandulapeter.campfire.presentation.ui.components.ChecklistOrder
+import com.pandulapeter.campfire.presentation.ui.components.KeepChecklistRowsInPlace
 import com.pandulapeter.campfire.presentation.ui.components.checklistItems
 import com.pandulapeter.campfire.presentation.ui.components.rememberChecklistOrder
 import com.pandulapeter.campfire.presentation.ui.components.saveShortcut
@@ -250,6 +256,7 @@ import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongInfoBod
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.rememberSongInfoEditing
 import com.pandulapeter.campfire.presentation.ui.components.ACTION_BUTTON_OVERLAP
 import com.pandulapeter.campfire.presentation.ui.components.overlappingAction
+import kotlin.math.roundToInt
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
@@ -1336,8 +1343,8 @@ private fun NewSongDialog(
  * Every tag of a song, managed in one place: the library's tags as a checklist with the song's own ticked and at the
  * top, and a field that narrows the list and creates a tag the library does not have yet. As with the languages
  * ([SongLanguagesDialog]), the whole set is written when the dialog is confirmed, so a file the user owns is rewritten
- * once rather than once per checkbox. Checked rows move to the leading group and are scrolled into view; unchecked
- * rows stay in that group until the search or sorting changes.
+ * once rather than once per checkbox. The checked tags lead the list as a selected group ([ChecklistOrder]), which a
+ * tag checked later joins as a copy while the row itself stays where it was tapped.
  *
  * Offering the library's tags before anything is typed is the point of the list, because a library where the same idea
  * is filed under "christmas", "Christmas" and "xmas" is a library whose tags filter nothing. For the same reason what is
@@ -1374,7 +1381,7 @@ private fun SongTagsDialog(
     }
     val checkedTagKeys = selectedTags.toSet()
     val tagOrder = rememberChecklistOrder(checkedTagKeys, sortingMode to query)
-    val orderedMatches = remember(matches, tagOrder) { tagOrder.ordered(matches) { it } }
+    val tagLayout = remember(matches, tagOrder) { tagOrder.layout(matches) { it } }
     val typedTag = query.trim()
     val spelledTag = offeredTags.firstOrNull { it.equals(typedTag, ignoreCase = true) }
     // Include a tag still in the field, since Save commits it too.
@@ -1444,20 +1451,16 @@ private fun SongTagsDialog(
                     ScrollToStartWhenChanged(
                         listState = listState,
                         key = sortingMode to query,
-                        contents = orderedMatches,
+                        contents = matches,
                     )
-                    ScrollToNewlyCheckedItem(
-                        listState = listState,
-                        checkedKeys = checkedTagKeys,
-                        orderedKeys = orderedMatches,
-                        rowOffset = if (isCreatable) 1 else 0,
-                    )
+                    KeepChecklistRowsInPlace(listState, tagLayout)
                     LazyColumn(
                         modifier = Modifier.bounceScrollableContent(listState)
                             .padding(top = 8.dp)
                             .reachingDialogEdges()
                             .weight(1f, fill = false)
-                            .fadingTopEdge(listState, sheetContainerColor()),
+                            .fadingTopEdge(listState, sheetContainerColor())
+                            .followSheetGrowth(),
                         contentPadding = contentPadding,
                         state = listState,
                     ) {
@@ -1473,9 +1476,11 @@ private fun SongTagsDialog(
                             }
                         }
                         checklistItems(
-                            items = orderedMatches,
+                            items = matches,
                             order = tagOrder,
                             key = { it },
+                            listState = listState,
+                            horizontalInset = DIALOG_CHECKLIST_ROW_INSET,
                         ) { tag ->
                             CheckboxListItem(
                                 modifier = listItemAnimation(listState),
@@ -1508,8 +1513,8 @@ private fun SongTagsDialog(
  * file the user owns is rewritten once rather than once per checkbox.
  *
  * The list is ordered by the name the platform gives each language in the language the app is set to (see
- * [languageName]), with checked rows first. Newly checked rows are scrolled into view, and unchecked rows stay in
- * the leading group until search or sorting changes.
+ * [languageName]), under a selected group of the checked ones ([ChecklistOrder]), which a language checked later joins
+ * as a copy while the row itself stays where it was tapped.
  *
  * What is listed before anything is typed is what can be named, plus the languages the song and the library already
  * use. Ordered by usage, the library's come first, most used first: the next song to be filed is far likelier to be in
@@ -1558,7 +1563,7 @@ private fun SongLanguagesDialog(
         }
     }
     val languageOrder = rememberChecklistOrder(selectedCodes, listOf(sortingMode, query, appLanguageCode))
-    val orderedMatches = remember(matches, languageOrder) { languageOrder.ordered(matches) { it.code } }
+    val languageLayout = remember(matches, languageOrder) { languageOrder.layout(matches) { it.code } }
     TextFieldBottomSheet(
         onDismissRequest = { viewModel.dismissSheet(dialog) },
         title = stringResource(Res.string.song_details_languages_edit),
@@ -1596,26 +1601,25 @@ private fun SongLanguagesDialog(
                     ScrollToStartWhenChanged(
                         listState = listState,
                         key = sortingMode to query,
-                        contents = orderedMatches,
+                        contents = matches,
                     )
-                    ScrollToNewlyCheckedItem(
-                        listState = listState,
-                        checkedKeys = selectedCodes,
-                        orderedKeys = orderedMatches.map { it.code },
-                    )
+                    KeepChecklistRowsInPlace(listState, languageLayout)
                     LazyColumn(
                         modifier = Modifier.bounceScrollableContent(listState)
                             .padding(top = 8.dp)
                             .reachingDialogEdges()
                             .weight(1f, fill = false)
-                            .fadingTopEdge(listState, sheetContainerColor()),
+                            .fadingTopEdge(listState, sheetContainerColor())
+                            .followSheetGrowth(),
                         contentPadding = contentPadding,
                         state = listState,
                     ) {
                         checklistItems(
-                            items = orderedMatches,
+                            items = matches,
                             order = languageOrder,
                             key = { it.code },
+                            listState = listState,
+                            horizontalInset = DIALOG_CHECKLIST_ROW_INSET,
                         ) { language ->
                             CheckboxListItem(
                                 modifier = listItemAnimation(listState),
@@ -1671,7 +1675,7 @@ private fun SetlistPicker(
     val setlistOrder = rememberChecklistOrder(checkedSetlistKeys, refreshKey)
     // Archived setlists are offered only while checked or retained after an uncheck. A refresh drops the latter,
     // just as it returns the other unchecked rows to the regular sorting order.
-    val pickableSetlists = remember(setlists, setlistOrder) {
+    val pickableSetlists = remember(setlists, setlistOrder.heldKeys) {
         setlists.filter { setlist -> !setlist.isArchived || setlist.fileName in setlistOrder.heldKeys }
     }
     // Answered by the title or the description, the way the setlists screen's own search answers, but not by the
@@ -1682,7 +1686,6 @@ private fun SetlistPicker(
             normalizedQuery in viewModel.normalizeForSearch(setlist.title) || normalizedQuery in viewModel.normalizeForSearch(setlist.description)
         }
     }
-    val orderedMatches = remember(matches, setlistOrder) { setlistOrder.ordered(matches) { it.fileName } }
     val isSkippingToNewSetlist = rememberSaveable { !hasListableSetlist(setlists, dialog.song.fileName) }
     var isNamingNewSetlist by rememberSaveable { mutableStateOf(isSkippingToNewSetlist) }
     val closeNamingDialog = { if (isSkippingToNewSetlist) viewModel.dismissSheet(dialog) else isNamingNewSetlist = false }
@@ -1701,15 +1704,15 @@ private fun SetlistPicker(
             PickerList(
                 contentPadding = contentPadding,
                 refreshKey = refreshKey,
-                contents = orderedMatches,
-                checkedKeys = checkedSetlistKeys,
-                orderedKeys = orderedMatches.map { it.fileName },
+                contents = matches,
+                checklistLayout = remember(matches, setlistOrder) { setlistOrder.layout(matches) { it.fileName } },
                 noResultsText = if (matches.isEmpty() && query.isNotBlank()) stringResource(Res.string.setlists_no_search_results) else null,
             ) { listState ->
                 checklistItems(
-                    items = orderedMatches,
+                    items = matches,
                     order = setlistOrder,
                     key = { it.fileName },
+                    listState = listState,
                 ) { setlist ->
                     CheckboxListItem(
                         modifier = listItemAnimation(listState),
@@ -1767,9 +1770,9 @@ private fun SetlistPicker(
  * here goes to the end of the setlist, so a setlist built from nothing is in the order its songs were picked, and an
  * entry whose file has gone missing stays in it, since it is not listed here to be unticked.
  *
- * Checked songs come first, with newly checked rows at the very start, most recent first, and an animated scroll
- * bringing them into view. A divider separates that group from songs in the selected sorting order. Unchecked
- * rows stay in the leading group until a search, sorting or filter change refreshes the order.
+ * The songs in the setlist lead the list as a selected group, a divider separating them from the rest in the selected
+ * sorting order ([ChecklistOrder]). A song ticked here joins the end of the group as a copy, in the order it was
+ * ticked, which is the order it goes into the setlist in, while the row itself stays where it was tapped.
  *
  * The list can be narrowed by the library's languages and tags as well as by the search ([PickerFilters]). Those are
  * the picker's own rather than following the songs screen's filters. Tag and language selections survive reopening
@@ -1817,7 +1820,10 @@ private fun SongPicker(
             activeLanguages = activeLanguages,
         )
     }
-    val checkedSongKeys = selectedSongFileNames.toSet()
+    // An entry whose file has gone missing is not listed, so it is neither unticked here nor counted as ticked.
+    val checkedSongKeys = remember(selectedSongFileNames, pickerSongs) {
+        selectedSongFileNames.filterTo(mutableSetOf()) { it in pickerSongs.byFileName }
+    }
     val refreshKey = listOf(userPreferences?.sortingMode, query, activeTags, activeLanguages)
     val songOrder = rememberChecklistOrder(checkedSongKeys, refreshKey)
     // Keep chip retention outside the lazy header, so changes reset it even while the header is off screen.
@@ -1827,7 +1833,6 @@ private fun SongPicker(
         activeLanguages,
         listOf(chipRefreshKey, userPreferences?.languageSortingMode, currentLanguage.value.code),
     )
-    val orderedMatches = remember(matches, songOrder) { songOrder.ordered(matches) { it.song.fileName } }
     CampfireBottomSheet(
         title = stringResource(Res.string.setlists_choose_songs),
         subtitle = setlist.title,
@@ -1842,9 +1847,8 @@ private fun SongPicker(
         PickerList(
             contentPadding = contentPadding,
             refreshKey = refreshKey,
-            contents = orderedMatches,
-            checkedKeys = checkedSongKeys,
-            orderedKeys = orderedMatches.map { it.song.fileName },
+            contents = matches,
+            checklistLayout = remember(matches, songOrder) { songOrder.layout(matches) { it.song.fileName } },
             noResultsText = when {
                 // Reached from an empty setlist's "Choose songs" in an empty library, which the setlists screen lists as well.
                 songs.isEmpty() -> stringResource(Res.string.songs_empty_title)
@@ -1872,9 +1876,10 @@ private fun SongPicker(
             },
         ) { listState ->
             checklistItems(
-                items = orderedMatches,
+                items = matches,
                 order = songOrder,
                 key = { it.song.fileName },
+                listState = listState,
             ) { pickableSong ->
                 val fileName = pickableSong.song.fileName
                 CheckboxListItem(
@@ -2013,6 +2018,8 @@ private fun PickerSearchField(
  *   rows pass under the navigation bar and the keyboard on their way up.
  * @param refreshKey Search, sorting and filters; a change sends the list back to its first row once the
  *   refreshed [contents] arrive ([ScrollToStartWhenChanged]).
+ * @param checklistLayout Where the rows of the checklist in the content start, which keeps them in place as its
+ *   selected group grows ([KeepChecklistRowsInPlace]).
  * @param noResultsText What to say in place of the rows, null while there is nothing to say.
  * @param header What the list starts with and scrolls away with the rows, above what it says in their place, so that a
  *   filter that left nothing can still be turned off.
@@ -2024,8 +2031,7 @@ private fun ColumnScope.PickerList(
     contentPadding: PaddingValues,
     refreshKey: Any?,
     contents: Any?,
-    checkedKeys: Set<String>,
-    orderedKeys: List<String>,
+    checklistLayout: ChecklistLayout,
     noResultsText: String?,
     revealRowsKey: Any? = null,
     header: (@Composable () -> Unit)? = null,
@@ -2044,19 +2050,15 @@ private fun ColumnScope.PickerList(
         key = refreshKey,
         contents = contents,
     )
-    ScrollToNewlyCheckedItem(
-        listState = listState,
-        checkedKeys = checkedKeys,
-        orderedKeys = orderedKeys,
-        rowOffset = (if (hasHeader) 1 else 0) + (if (noResultsText != null) 1 else 0),
-    )
+    KeepChecklistRowsInPlace(listState, checklistLayout)
     LazyColumn(
         modifier = Modifier.bounceScrollableContent(listState)
             .weight(1f, fill = false)
             .retainSheetContentHeight(contentPadding)
             // The rows fade out as they scroll up under the search field, which is the edge between the two
             // everywhere else in the app too.
-            .fadingTopEdge(listState, sheetContainerColor()),
+            .fadingTopEdge(listState, sheetContainerColor())
+            .followSheetGrowth(),
         state = listState,
         // The gap under the search field is the list's own content padding rather than a padding around the list, so
         // that a scrolled row goes under the field itself instead of being cut off a few pixels short of it.
@@ -2259,11 +2261,17 @@ internal fun CampfireBottomSheet(
                 ),
         ) {
             val consumedInsets = remember { MutableWindowInsets() }
+            val heightAnimation = remember { SheetHeightAnimation() }
             Column(
                 modifier = (if (isCompactKeyboard) Modifier.height(windowHeight) else Modifier)
+                    .animateSheetContentHeight(heightAnimation)
                     .onConsumedWindowInsetsChanged { consumedInsets.insets = it },
             ) {
-                CompositionLocalProvider(LocalIsSheetClosing provides isClosing, LocalSheetSaveShortcut provides saveShortcut) {
+                CompositionLocalProvider(
+                    LocalIsSheetClosing provides isClosing,
+                    LocalSheetSaveShortcut provides saveShortcut,
+                    LocalSheetPendingGrowth provides heightAnimation::pendingGrowth,
+                ) {
                     SheetHeader(
                         title = title,
                         subtitle = subtitle,
@@ -2294,6 +2302,87 @@ internal fun CampfireBottomSheet(
             }
         }
     }
+}
+
+/**
+ * Grows and shrinks a sheet to its content's new height rather than in one frame, when rows are added to a list in it or
+ * taken away, a field's error appears, or the content is swapped for another. The sheet's top edge follows the height,
+ * since Material anchors the sheet by it.
+ *
+ * Only the content's own changes are animated. A change of the room offered (the keyboard sliding, which arrives as a
+ * new maximum on every frame of its own animation, or the window being resized) is followed at once, or the sheet
+ * would trail behind the keyboard and leave a gap over it. While the sheet is growing the content is already measured
+ * at its new height and placed under the animated one, so the content is uncovered from the sheet's bottom edge, which
+ * the sheet's shape clips, and how much of it is still covered is [SheetHeightAnimation.pendingGrowth].
+ */
+@Composable
+private fun Modifier.animateSheetContentHeight(state: SheetHeightAnimation): Modifier {
+    val coroutineScope = rememberCoroutineScope()
+    val spec = MaterialTheme.motionScheme.defaultSpatialSpec<Float>()
+    return layout { measurable, constraints ->
+        val placeable = measurable.measure(constraints)
+        val targetHeight = placeable.height
+        val animatable = state.animatable
+        val snappedHeight = state.snappedHeight
+        val height = if (animatable == null || constraints.maxHeight != state.maxHeight) {
+            // The first measure opens the sheet at its full height, which Material slides in on its own.
+            if (animatable == null) {
+                state.animatable = Animatable(targetHeight.toFloat())
+            } else {
+                // A snap is a coroutine that only lands after this frame, so the height is held here until it has.
+                state.snappedHeight = targetHeight
+                coroutineScope.launch { animatable.snapTo(targetHeight.toFloat()) }
+            }
+            state.maxHeight = constraints.maxHeight
+            targetHeight
+        } else if (snappedHeight == targetHeight && animatable.value.roundToInt() != snappedHeight) {
+            snappedHeight
+        } else {
+            state.snappedHeight = null
+            if (animatable.targetValue != targetHeight.toFloat()) {
+                coroutineScope.launch { animatable.animateTo(targetHeight.toFloat(), spec) }
+            }
+            animatable.value.roundToInt().coerceIn(constraints.minHeight, constraints.maxHeight)
+        }
+        state.pendingGrowthState.intValue = (targetHeight - height).coerceAtLeast(0)
+        layout(placeable.width, height) { placeable.placeRelative(0, 0) }
+    }
+}
+
+/**
+ * What [animateSheetContentHeight] animates, the maximum height it was offered last and the height it snapped to for
+ * that, which is not state: it is only read and written by its measure pass. [pendingGrowth] is, since the content
+ * reads it as it is placed ([followSheetGrowth]), in the same frame.
+ */
+private class SheetHeightAnimation {
+    var animatable: Animatable<Float, AnimationVector1D>? = null
+    var maxHeight = 0
+    var snappedHeight: Int? = null
+    val pendingGrowthState = mutableIntStateOf(0)
+
+    fun pendingGrowth() = pendingGrowthState.intValue
+}
+
+/**
+ * How many pixels the [CampfireBottomSheet] around it still has to grow to its content's height, 0 while it is not
+ * growing.
+ */
+private val LocalSheetPendingGrowth = staticCompositionLocalOf<() -> Int> { { 0 } }
+
+/**
+ * Keeps the rows of a list in a growing [CampfireBottomSheet] where they are on screen. The sheet's top edge rises as it
+ * grows, and the list, measured at its new height already and hanging from that edge, would carry the rows below a
+ * newly inserted one a row lower than where they end up and bring them back up as the sheet grows - away from under the
+ * finger that ticked the row and back. Shifted up by what the sheet still has to grow, inside the list's own bounds,
+ * the rows stay put and what was inserted slides in from under the controls above the list, as it would in a list
+ * already scrolled to its end.
+ *
+ * Goes after the list's edge fades, so that they stay at the edges of its bounds rather than travel with the rows.
+ */
+@Composable
+private fun Modifier.followSheetGrowth(): Modifier {
+    val pendingGrowth = LocalSheetPendingGrowth.current
+    return clipToBounds().offset { IntOffset(0, -pendingGrowth()) }
 }
 
 /**

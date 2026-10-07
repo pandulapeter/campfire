@@ -57,10 +57,9 @@ is stored: the selection lives for as long as the mode does.
    fifth one would leave a pinned artist about 135dp on a 360dp phone for something that is rarely wanted. The
    alternative is the long press starting the mode directly, which is what most apps do and what the row's menu was
    given the gesture for before there was a mode.
-2. **A ticked card moves to the Selection section at once, and the list does not follow it there.** The sheet scrolls
-   to every new tick (`ScrollToNewlyCheckedItem`), which suits a list that is searched; a library that is being read
-   through and ticked along the way would be thrown back to its top by every tick. One call restores the sheet's
-   behaviour if that is preferred.
+2. **A ticked card moves to the Selection section at once, and the list does not follow it there.** The choosers
+   leave a ticked row where it was tapped and never scroll on a tick, since a list being read through and ticked
+   along the way would otherwise be thrown about by every tick; the card moving is this mode's own signal.
 3. **Back closes an open search first, then ends the mode.** Ending the mode is the step that loses something.
 4. **No action ends the mode.** The same selection can be tagged, then put into a setlist, then exported; Done is what
    lets go of it.
