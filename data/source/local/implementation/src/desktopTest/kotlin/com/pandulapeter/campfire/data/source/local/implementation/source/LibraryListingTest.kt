@@ -152,6 +152,16 @@ class LibraryListingTest {
         assertEquals(1000, songs.size)
     }
 
+    @Test
+    fun `a scan of several batches reads every song as reading it alone does`() = runBlocking {
+        (1..150).forEach { fileStorage.writeText(StorageDirectory.SONGS, "song_$it.cho", "{title: Song $it}\n{artist: Artist $it}\n") }
+        val songLocalSource = SongLocalSourceImpl(fileStorage)
+
+        val songs = songLocalSource.loadSongs {}
+
+        assertEquals(fileStorage.list(StorageDirectory.SONGS).map { it.name }.mapNotNull { songLocalSource.loadSong(it) }, songs)
+    }
+
     private fun tooLarge() = ByteArray((ImportLimits.MAX_TEXT_FILE_SIZE + 1).toInt()) { 'x'.code.toByte() }
 
     private suspend fun writeSongs() {

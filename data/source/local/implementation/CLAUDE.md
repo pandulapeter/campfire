@@ -140,8 +140,8 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
   is stored as the `.cho` it is written back as — and gets a song's title, artist, key, the `{transpose}` it opens with (which
   travels with the key, since the key a list names is the one the song sounds in), tags (composed to NFC and merged, the way file names are) and "has chords" from a single
   `:chordpro` `summarize` call, so that neither the file nor the text is walked twice. The scan reads a batch of
-  files at a time rather than all of them at once: that is what bounds the concurrency on a library of thousands,
-  and the list is handed to the caller after the first batch and then whenever it has doubled, so that the song list
+  files at a time rather than all of them at once: that is what bounds the concurrency on a library of thousands.
+  The next batch is read while the current one is parsed, so the storage and the parser never take turns, and the list is handed to the caller after the first batch and then whenever it has doubled, so that the song list
   fills up while the rest is still being read and the screen is rebuilt a handful of times rather than once per batch.
   A file that cannot be read is skipped, and so is one larger than `ImportLimits.MAX_TEXT_FILE_SIZE`, which only the
   user can have put there (the folder is the Files app's on iOS and a plain folder on the desktop); a *directory* that

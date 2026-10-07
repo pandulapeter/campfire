@@ -51,8 +51,9 @@ internal class SongLocalSourceImpl(
 
     /**
      * Reading and parsing every file is the slowest thing the app does at start, so the files are read in parallel,
-     * [BATCH_SIZE] of them at a time. The batching is what bounds the concurrency - a library of thousands of songs
-     * would otherwise have every one of its files open at once. The list is handed to the caller after the first batch
+     * [BATCH_SIZE] of them at a time, with at most one batch being read while the previous one is parsed, so that the
+     * storage and the parser do not take turns. The batching is what bounds the concurrency - a library of thousands
+     * of songs would otherwise have every one of its files open at once. The list is handed to the caller after the first batch
      * and then each time it has doubled, so that a long scan fills the list as it goes instead of showing nothing until
      * the last file is parsed. Doubling rather than every batch because each hand-over has the whole list filtered and
      * sorted again downstream: once per batch, that is quadratic in the size of the library, and on the web it shares
@@ -62,19 +63,26 @@ internal class SongLocalSourceImpl(
      * gets in), must not empty the whole list, so a failure skips that song instead of propagating.
      */
     override suspend fun loadSongs(onProgress: (List<Song>) -> Unit): List<Song> = withContext(Dispatchers.Default) {
-        val songs = mutableListOf<Song>()
-        val batches = fileStorage.listForScan(StorageDirectory.SONGS).filter { LibraryFiles.isSongFileName(it.name) }.chunked(BATCH_SIZE)
-        var publishedCount = 0
-        batches.forEachIndexed { index, batch ->
-            songs += readSongs(batch)
-            // The last batch is what the return value already says, and publishing it would only have everything
-            // downstream sort and group the same list a second time.
-            if (index < batches.lastIndex && songs.size >= publishedCount * 2) {
-                publishedCount = songs.size
-                onProgress(songs.toList())
+        coroutineScope {
+            val songs = mutableListOf<Song>()
+            val batches = fileStorage.listForScan(StorageDirectory.SONGS).filter { LibraryFiles.isSongFileName(it.name) }.chunked(BATCH_SIZE)
+            var publishedCount = 0
+            // One batch read ahead: the storage reads the next files while these are parsed. Both reads are children of
+            // this scope, so a cancelled scan cancels the one ahead too.
+            var nextRead = batches.firstOrNull()?.let { batch -> async { readBatch(batch) } }
+            batches.forEachIndexed { index, batch ->
+                val read = checkNotNull(nextRead).await()
+                nextRead = batches.getOrNull(index + 1)?.let { next -> async { readBatch(next) } }
+                songs += parseBatch(batch, read)
+                // The last batch is what the return value already says, and publishing it would only have everything
+                // downstream sort and group the same list a second time.
+                if (index < batches.lastIndex && songs.size >= publishedCount * 2) {
+                    publishedCount = songs.size
+                    onProgress(songs.toList())
+                }
             }
+            songs
         }
-        songs
     }
 
     override suspend fun loadSongFileSizes() = fileStorage.list(StorageDirectory.SONGS)
@@ -146,11 +154,13 @@ internal class SongLocalSourceImpl(
     /**
      * One [FileStorage.readScan] call for the whole batch, which on the web is one call into the browser rather than
      * several per file, and which answers each file's size and date with its text rather than after a pass over the
-     * whole directory. A file too large to be a song is never read, and one that fails to read or to parse is skipped
-     * with a log line, as [readSong] skips it.
+     * whole directory. A file too large to be a song is never read.
      */
-    private suspend fun readSongs(batch: List<ScanEntry>): List<Song> = coroutineScope {
-        batch.zip(fileStorage.readScan(StorageDirectory.SONGS, batch, ImportLimits.MAX_TEXT_FILE_SIZE)).map { (entry, answer) ->
+    private suspend fun readBatch(batch: List<ScanEntry>) = fileStorage.readScan(StorageDirectory.SONGS, batch, ImportLimits.MAX_TEXT_FILE_SIZE)
+
+    /** A file that could not be read or fails to parse is skipped with a log line, as [readSong] skips it. */
+    private suspend fun parseBatch(batch: List<ScanEntry>, read: List<ScannedFile>): List<Song> = coroutineScope {
+        batch.zip(read).map { (entry, answer) ->
             async {
                 try {
                     when (answer) {
