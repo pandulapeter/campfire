@@ -306,8 +306,11 @@ internal fun SongDetailsScreen(
     val currentSongText = currentSong?.let { songTexts[it.fileName] }
     // The sheet of what the song is, opened from the app bar's title. Performance mode edits nothing, so there it is only
     // offered where it has something in it, and it is read from the song's text, so nowhere before that is at hand.
+    // Outside performance mode it is offered wherever the text is, so nothing of the text needs to be read for it.
+    val hasSongInfo = remember(currentSongText, isReadOnly) {
+        isReadOnly && currentSongText?.let(viewModel::hasSongInfo) == true
+    }
     val openCurrentSongInfo = currentSong?.let { song ->
-        val hasSongInfo = remember(currentSongText) { currentSongText?.let(viewModel::songMetadataOf)?.hasSongInfo == true }
         if (currentSongText == null || (isReadOnly && !hasSongInfo)) null else { { viewModel.showDialog(CampfireViewModel.DialogType.SongInfo(song)) } }
     }
     val chordSpelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default

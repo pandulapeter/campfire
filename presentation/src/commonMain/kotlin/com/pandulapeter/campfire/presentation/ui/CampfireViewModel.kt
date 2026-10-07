@@ -25,6 +25,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pandulapeter.campfire.chordpro.ChordProMetadataFields
+import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.ChordProSummaryCache
 import com.pandulapeter.campfire.chordpro.ChordProTempo
 import com.pandulapeter.campfire.chordpro.model.ChordProLink
@@ -150,6 +151,7 @@ import com.pandulapeter.campfire.presentation.ui.screens.songDetails.Capos
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.FontScaleAccumulator
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.PINCH_SENSITIVITY
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.effectiveCapo
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.hasSongInfo
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.withCapo
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
@@ -2010,8 +2012,15 @@ class CampfireViewModel(
         showDialog(DialogType.SongLinks(song = song, links = parseChordPro(text).metadata.links, isEditorDraft = isEditorDraft))
     }
 
-    /** What [text] says about the song beyond its lines, for the sheet of what the song is and the button opening it. */
+    /** What [text] says about the song beyond its lines, for the sheet of what the song is (see [hasSongInfo] for the button opening it). */
     fun songMetadataOf(text: String): ChordProMetadata = parseChordPro(text).metadata
+
+    /**
+     * Whether the sheet of what the song is has anything to show for [text], from a scan of its directives alone: none
+     * of what the sheet shows is changed by the notation a full parse brings the chords into, and the scan is a
+     * fraction of the parse, which matters on the frame of a swipe that makes another song the current one.
+     */
+    fun hasSongInfo(text: String): Boolean = ChordProParser.parseMetadata(text).hasSongInfo
 
     /**
      * Writes the link dialog's changes together. Links added by sync while it was open and never offered there stay

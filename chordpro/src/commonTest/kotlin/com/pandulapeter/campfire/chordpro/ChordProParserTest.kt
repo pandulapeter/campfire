@@ -1034,6 +1034,81 @@ class ChordProParserTest {
     }
 
     @Test
+    fun `parseMetadata reads what the About the song sheet offers the same as a full parse`() {
+        val texts = listOf(
+            """
+            {title: Body first}
+            {album: The Album}
+            {tag: Folk}
+
+            {start_of_chorus}
+            [G]la la
+            {end_of_chorus}
+            [C]verse
+            {year: 1999}
+            {composer: Late Composer}
+            {tag: Late}
+            {meta: language hu}
+            {meta: link https://example.com After the body}
+            """.trimIndent(),
+            """
+            {meta: album Meta Album}
+            {meta: year 2001}
+            {meta: composer Meta Composer}
+            {meta: lyricist Meta Lyricist}
+            {meta: duration 3:45}
+            {meta: tag Meta}
+            {meta: language eng}
+            {meta: link https://example.org}
+            """.trimIndent(),
+            """
+            {title: Notes}
+            {start_of_abc}
+            {album: Inside abc}
+            {tag: Inside}
+            X:1
+            {end_of_abc}
+            {lyricist: After abc}
+            """.trimIndent(),
+            """
+            {title: First}
+            {tag: One}
+            [D]a
+            {new_song}
+            {title: Second}
+            {album: Second Album}
+            {tag: Two}
+            """.trimIndent(),
+            """
+            # {tag: commented}
+              {tag: indented}
+            {tag-guitar: selected}
+            {album-piano: Selected Album}
+            {start_of_tab}
+            {year: 1970}
+            e|---0---|
+            {end_of_tab}
+            {duration: 4:00}
+            """.trimIndent(),
+            "{year:}\n{album:}\n{composer: }\n{tag:}\n{meta: language}\n{meta: link}",
+            "",
+        )
+
+        texts.forEach { text ->
+            val parsed = ChordProParser.parse(text).metadata
+            val scanned = ChordProParser.parseMetadata(text)
+            assertEquals(parsed.album, scanned.album, text)
+            assertEquals(parsed.year, scanned.year, text)
+            assertEquals(parsed.composer, scanned.composer, text)
+            assertEquals(parsed.lyricist, scanned.lyricist, text)
+            assertEquals(parsed.duration, scanned.duration, text)
+            assertEquals(parsed.tags, scanned.tags, text)
+            assertEquals(parsed.languages, scanned.languages, text)
+            assertEquals(parsed.links, scanned.links, text)
+        }
+    }
+
+    @Test
     fun `directives written with whitespace instead of a colon are read`() {
         val song = ChordProParser.parse(
             "{title Wonderwall}\n{artist Oasis}\n{tag Needs study}\n{meta language en}\n\n{start_of_verse Verse 1}\n[Am]a\n{end_of_verse}\n\n" +
