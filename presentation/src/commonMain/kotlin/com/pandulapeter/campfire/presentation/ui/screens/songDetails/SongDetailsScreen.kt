@@ -809,6 +809,17 @@ internal fun SongDetailsScreen(
                     // Only the song being read follows a pinch frame by frame; the pages beside it are composed and laid out
                     // too, and take the scale once it has settled. A swipe makes its page the target, which follows at once.
                     val isFollowingGesture = page == pagerState.currentPage || page == pagerState.targetPage
+                    // Derived, so that a swipe recomposes the page only when the answer flips rather than on every frame.
+                    val buildsInPlace by remember(pagerState, page) {
+                        derivedStateOf {
+                            buildsModelInPlace(
+                                page = page,
+                                currentPage = pagerState.currentPage,
+                                targetPage = pagerState.targetPage,
+                                isVisible = pagerState.layoutInfo.visiblePagesInfo.any { it.index == page },
+                            )
+                        }
+                    }
                     val text = songTexts[song.fileName]
                     // The first swap of a page from loading to its lyrics lays the whole song out in one frame, so a page
                     // that is neither on screen nor being swiped to is held back from it until the pager has come to rest,
@@ -828,6 +839,7 @@ internal fun SongDetailsScreen(
                         scrollState = scrollState,
                         flingBehavior = flingBehavior,
                         text = shownText,
+                        buildsModelInPlace = buildsInPlace,
                         hasFailed = song.fileName in failedSongFileNames,
                         transposition = transpositions[song.fileName, destination.setlistFileName],
                         tempoOverride = tempo.takeUnless { it.isDefault }?.bpm,
@@ -1024,6 +1036,8 @@ private fun SongPagerControls(
 
 /**
  * @param text The ChordPro text of the song, null while it is still being read.
+ * @param buildsModelInPlace Whether the first rendering of the text is built while composing rather than in the
+ *   background, see [buildsModelInPlace] and [rememberSongLyricsModel].
  * @param hasFailed Whether the file could not be read. The page then offers a retry rather than a loading indicator
  *   that has nothing left to wait for.
  * @param scrollState Owned by the pager rather than by the page, so that the arrow keys can reach the scroll of the
@@ -1050,6 +1064,7 @@ private fun SongDetailsPage(
     scrollState: ScrollState,
     flingBehavior: RowSnapFlingBehavior,
     text: String?,
+    buildsModelInPlace: Boolean,
     hasFailed: Boolean,
     transposition: Int,
     tempoOverride: Int?,
@@ -1108,6 +1123,7 @@ private fun SongDetailsPage(
                 showsTiming = shouldShowTempo,
                 chordInstrument = chordDiagrams?.instrument,
             ),
+            buildsInPlace = buildsModelInPlace,
         ) { inputs, searchesShapes ->
             val transposed = transposeSong(inputs.text, inputs.transposition, inputs.spelling).withTempo(inputs.tempoOverride).withCapo(inputs.capoOverride)
             prepareSongLyrics(
@@ -1120,6 +1136,17 @@ private fun SongDetailsPage(
                 notation = inputs.spelling.notation.toChordNotation(),
                 searchesShapes = searchesShapes,
             )
+        }
+        if (model == null) {
+            // A page beside the one being read whose first rendering is still being built in the background. Nobody is
+            // looking at it, so it appears in one frame once it is there, the way data arriving does.
+            Box(
+                modifier = Modifier.fillMaxSize().padding(contentPadding),
+                contentAlignment = Alignment.Center,
+            ) {
+                DelayedLoadingIndicator()
+            }
+            return@AnimatedContent
         }
         if (model.song.blocks.isEmpty()) {
             // The file exists and could be read, it just has nothing in it yet - a newly created song, typically.

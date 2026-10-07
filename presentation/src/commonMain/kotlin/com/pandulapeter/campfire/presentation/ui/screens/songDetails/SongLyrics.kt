@@ -2427,28 +2427,54 @@ internal data class SongLyricsInputs(
 )
 
 /**
- * The model [prepare] builds of [inputs]. The first one is built right here, so that a page never opens on an empty
- * frame, but without the chord shapes only the search finds, which follow from [Dispatchers.Default] right after
- * (see [SongLyricsModel.withSearchedShapes]); every later one is built on [Dispatchers.Default] whole, with the one
- * before it staying on screen until it is ready. A change that arrives meanwhile cancels the wait, although not the
+ * Whether a page's first model is built in place, so that it never shows an empty frame: the page is on screen or
+ * headed for, or it is the one before the target page, which a step back from the top of a song scrolls to its end
+ * at the moment of the press - a page with no model yet has no end to scroll to.
+ */
+internal fun buildsModelInPlace(page: Int, currentPage: Int, targetPage: Int, isVisible: Boolean) =
+    page == currentPage || page == targetPage || page == targetPage - 1 || isVisible
+
+/**
+ * The model [prepare] builds of [inputs], null until there is one. Where [buildsInPlace] (see [buildsModelInPlace]) the
+ * first one is built right here - for the page being read, headed for or stepped back to, so that it never opens on an
+ * empty frame - but without the chord shapes only the search finds, which follow from [Dispatchers.Default] right after
+ * (see [SongLyricsModel.withSearchedShapes]). The page beside it on the other side builds its first one on
+ * [Dispatchers.Default], whole, since nobody is looking at it; should it become one that builds in place before that
+ * is done, it builds in place after all, and the background result for the same inputs then takes over, carrying the
+ * searched shapes the in-place one went without. Every later model is built on [Dispatchers.Default] whole, with the
+ * one before it staying on screen until it is ready. A change that arrives meanwhile cancels the wait, although not the
  * parse or the search itself, which are not cooperative: that one finishes in the background and its result is dropped.
  */
 @Composable
 internal fun rememberSongLyricsModel(
     inputs: SongLyricsInputs,
+    buildsInPlace: Boolean,
     prepare: (inputs: SongLyricsInputs, searchesShapes: Boolean) -> SongLyricsModel,
-): SongLyricsModel {
+): SongLyricsModel? {
     val latestPrepare by rememberUpdatedState(prepare)
-    val state = remember { mutableStateOf(inputs to prepare(inputs, false)) }
+    val state = remember { mutableStateOf(if (buildsInPlace) inputs to prepare(inputs, false) else null) }
+    // Not snapshot state: it is written while composing, and only ever read in the same composition that wrote it.
+    val inPlace = remember { InPlaceSongLyricsModel() }
+    if (state.value != null) {
+        inPlace.built = null
+    } else if (buildsInPlace && inPlace.built?.first != inputs) {
+        inPlace.built = inputs to prepare(inputs, false)
+    }
     LaunchedEffect(inputs) {
-        val (builtFrom, model) = state.value
+        val built = state.value
         state.value = when {
-            builtFrom != inputs -> inputs to withContext(Dispatchers.Default) { latestPrepare(inputs, true) }
-            model.hasPendingShapes -> inputs to withContext(Dispatchers.Default) { model.withSearchedShapes() }
+            built == null || built.first != inputs -> inputs to withContext(Dispatchers.Default) { latestPrepare(inputs, true) }
+            built.second.hasPendingShapes -> inputs to withContext(Dispatchers.Default) { built.second.withSearchedShapes() }
             else -> return@LaunchedEffect
         }
     }
-    return state.value.second
+    return state.value?.second ?: inPlace.built?.second
+}
+
+/** The model a page built in place while its first one was still being built in the background. */
+private class InPlaceSongLyricsModel {
+
+    var built: Pair<SongLyricsInputs, SongLyricsModel>? = null
 }
 
 /** The fallback labels of the environments that have one, read here since they are string resources. */
