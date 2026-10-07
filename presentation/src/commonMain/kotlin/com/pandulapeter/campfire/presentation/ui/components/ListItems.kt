@@ -438,7 +438,7 @@ private fun CenteredSongCardContent(
                 modifier = Modifier
                     .heightIn(min = if (supportingContent == null && labelsContent == null) SONG_CARD_ONE_LINE_MIN_HEIGHT else SONG_CARD_TWO_LINE_MIN_HEIGHT)
                     .padding(
-                        horizontal = if (isNarrowSongCardWindow) NARROW_SONG_CARD_CONTENT_PADDING else LIST_ITEM_KEYLINE,
+                        horizontal = songCardContentPadding,
                         vertical = SONG_CARD_VERTICAL_CONTENT_PADDING,
                     ),
                 contentAlignment = Alignment.CenterStart,
@@ -530,6 +530,17 @@ private fun ListItemHeadline(
 /** Whether the window is a phone held upright, whose song cards give their text every dp they can spare. */
 private val isNarrowSongCardWindow: Boolean
     @Composable get() = LocalWindowInfo.current.containerDpSize.width < NARROW_SONG_CARD_WINDOW_WIDTH
+
+/** How far a song card's text starts from the card's edge, which a narrow window brings closer. */
+private val songCardContentPadding: Dp
+    @Composable get() = if (isNarrowSongCardWindow) NARROW_SONG_CARD_CONTENT_PADDING else LIST_ITEM_KEYLINE
+
+/**
+ * Where the text of a song card starts, measured from the edge of the list: what a list's own rows between the cards (a
+ * section header, a setlist's description) start their text at too, so the list reads down one line.
+ */
+internal val songCardTextKeyline: Dp
+    @Composable get() = SONG_CARD_OUTER_PADDING + songCardContentPadding
 
 /** A setlist's zero-based position is shown to players as a one-based prefix. */
 private fun songCardTitle(title: String, index: Int?): String = if (index == null) title else "${index + 1} - $title"
@@ -744,7 +755,7 @@ internal fun SectionHeader(
                         },
                     )
                     .graphicsLayer { alpha = nameAlpha }
-                    .padding(start = SECTION_HEADER_PILL_START_PADDING, end = if (hasAction) SECTION_HEADER_TEXT_GAP else SECTION_HEADER_PILL_START_PADDING),
+                    .padding(start = songCardContentPadding, end = if (hasAction) SECTION_HEADER_TEXT_GAP else songCardContentPadding),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 // Keep the painter through its exit animation when a setlist is archived from this row's own menu.
@@ -1341,9 +1352,6 @@ private val SECTION_HEADER_TEXT_GAP = 4.dp
 
 /** As tall as the pill behind the app bar's buttons, which it stands next to once pinned. */
 private val SECTION_HEADER_PILL_HEIGHT = 48.dp
-
-/** Puts a header's text on the cards' keyline, the pill starting at their edge. */
-private val SECTION_HEADER_PILL_START_PADDING = 16.dp
 
 /**
  * What the pill leaves after an action at its end. The pill ends at the cards' edge and a card's overflow button stops

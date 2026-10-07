@@ -122,6 +122,7 @@ import com.pandulapeter.campfire.presentation.ui.components.allowsNewItemMenu
 import com.pandulapeter.campfire.presentation.ui.components.animateAppBarReveal
 import com.pandulapeter.campfire.presentation.ui.components.belowAppBarOverlap
 import com.pandulapeter.campfire.presentation.ui.components.draggedListItemContainerColor
+import com.pandulapeter.campfire.presentation.ui.components.songCardTextKeyline
 import com.pandulapeter.campfire.presentation.ui.components.listItemAnimation
 import com.pandulapeter.campfire.presentation.ui.components.rememberListTopFade
 import com.pandulapeter.campfire.presentation.ui.components.listTopFadeViewport
@@ -519,7 +520,7 @@ private fun SetlistList(
                             Text(
                                 modifier = listItemAnimation(listState, hasLoadedLibrary).fadingUnderListTop(topFade)
                                     .animateContentSize().clickable(enabled = isCompactHeight) { isExpanded = !isExpanded }
-                                    .padding(horizontal = 24.dp, vertical = 8.dp),
+                                    .padding(horizontal = songCardTextKeyline, vertical = 8.dp),
                                 maxLines = if (isCompactHeight && !isExpanded) 2 else Int.MAX_VALUE,
                                 overflow = TextOverflow.Ellipsis,
                                 text = setlistWithSongs.setlist.description,
