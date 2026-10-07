@@ -110,6 +110,7 @@ import com.pandulapeter.campfire.presentation.ui.components.NewItemMenu
 import com.pandulapeter.campfire.presentation.ui.components.HideKeyboardWhenScrolledDown
 import com.pandulapeter.campfire.presentation.ui.components.ListLayout
 import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
+import com.pandulapeter.campfire.presentation.ui.components.SONG_CARD_VERTICAL_PADDING
 import com.pandulapeter.campfire.presentation.ui.components.ScrollToTopWhenChanged
 import com.pandulapeter.campfire.presentation.ui.components.SearchableTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.SectionHeader
@@ -140,6 +141,7 @@ import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedLazy
 import com.pandulapeter.campfire.presentation.ui.components.rememberSectionHeaderState
 import com.pandulapeter.campfire.presentation.ui.components.setlistAssignmentsAction
 import com.pandulapeter.campfire.presentation.ui.components.songCardPadding
+import com.pandulapeter.campfire.presentation.ui.components.sectionHeaderBottomGap
 import com.pandulapeter.campfire.presentation.ui.components.underAppBar
 import com.pandulapeter.campfire.presentation.ui.metronome.effectiveTempo
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.effectiveCapo
@@ -518,10 +520,19 @@ private fun SetlistList(
                             val isCompactHeight by remember(windowInfo, contentPadding) {
                                 derivedStateOf { windowInfo.containerDpSize.height - contentPadding.calculateBottomPadding() < SHORT_WINDOW_HEIGHT }
                             }
+                            // The description stands as far from the first card as from the header's text above it,
+                            // which is centered in a row of a fixed height, so the room above depends on whether the
+                            // header has a subtitle and on the text size. The card's own padding counts towards it.
+                            val gap = sectionHeaderBottomGap(hasSubtitle = setlistWithSongs.headerSubtitle(today) != null) + DESCRIPTION_TOP_PADDING
                             Text(
                                 modifier = listItemAnimation(listState, hasLoadedLibrary).fadingUnderListTop(topFade)
                                     .animateContentSize().clickable(enabled = isCompactHeight) { isExpanded = !isExpanded }
-                                    .padding(horizontal = songCardTextKeyline, vertical = 8.dp),
+                                    .padding(
+                                        start = songCardTextKeyline,
+                                        end = songCardTextKeyline,
+                                        top = DESCRIPTION_TOP_PADDING,
+                                        bottom = (gap - SONG_CARD_VERTICAL_PADDING).coerceAtLeast(0.dp),
+                                    ),
                                 maxLines = if (isCompactHeight && !isExpanded) 2 else Int.MAX_VALUE,
                                 overflow = TextOverflow.Ellipsis,
                                 text = setlistWithSongs.setlist.description,
@@ -839,6 +850,9 @@ private fun CampfireViewModel.SetlistWithSongs.rows(dragOrder: List<String>?): L
 
 /** What a setlist's header is to the grid, and to the cards' fade, which is measured from the setlist being read. */
 private const val SETLIST_HEADER_CONTENT_TYPE = "setlist_header"
+
+/** The room between a setlist's description and the text of the header above it, on top of what the header leaves. */
+private val DESCRIPTION_TOP_PADDING = 8.dp
 
 /**
  * The index the grid holds a setlist's header at, counted the way [SetlistList] emits the items of the setlists before

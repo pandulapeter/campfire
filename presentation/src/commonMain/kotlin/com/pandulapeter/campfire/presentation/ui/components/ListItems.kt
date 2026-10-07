@@ -74,6 +74,7 @@ import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -871,6 +872,20 @@ private fun Modifier.extendIntoEndPadding(endPadding: Dp) = layout { measurable,
 }
 
 /**
+ * The room a [SectionHeader] leaves between its text and the bottom of its row, where an item under it starts: the text
+ * is centered in a row at least [LIST_APP_BAR_HEIGHT] tall, so the room is whatever its lines leave of that, at the
+ * text size the system asks for.
+ */
+@Composable
+internal fun sectionHeaderBottomGap(hasSubtitle: Boolean): Dp {
+    val typography = MaterialTheme.typography
+    val textHeight = with(LocalDensity.current) {
+        typography.titleSmall.lineHeight.toDp() + if (hasSubtitle) typography.bodyMedium.lineHeight.toDp() else 0.dp
+    }
+    return ((LIST_APP_BAR_HEIGHT - textHeight) / 2).coerceAtLeast(0.dp)
+}
+
+/**
  * Title of a group of controls: the label above a [SegmentedChoice] or a set of switches, in the same color as a
  * [SectionHeader] pill but without the pill, since it names a part of a section rather than a section.
  *
@@ -1339,7 +1354,9 @@ private val SONG_CARD_VERTICAL_CONTENT_PADDING = 12.dp
 /** The room between a card and the edge of the list, or the [FastScroller]'s column, on its outer side. */
 internal val SONG_CARD_OUTER_PADDING = 8.dp
 private val SONG_CARD_INNER_PADDING = 4.dp
-private val SONG_CARD_VERTICAL_PADDING = 4.dp
+
+/** The room a card keeps above and below itself, half of the gap between two rows of cards. */
+internal val SONG_CARD_VERTICAL_PADDING = 4.dp
 
 /**
  * The most lines the text of a pinned [SectionHeader] runs to before it is cut short.
