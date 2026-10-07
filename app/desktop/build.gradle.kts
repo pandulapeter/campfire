@@ -31,7 +31,7 @@ plugins {
  * the jar, from which skiko would unpack them into the user's home on every new version. They are copied next to
  * skiko's own library instead (see `createReleaseDistributable` below).
  */
-val angleRuntime by configurations.creating
+val angleRuntime: Configuration = configurations.create("angleRuntime")
 
 dependencies {
     implementation(project(":app:di"))
@@ -60,17 +60,48 @@ val isMacAppStoreBuild = gradle.startParameter.taskNames.any { it.substringAfter
 /** Empty for an unsigned store build, which on Apple silicon still gets the ad hoc signature it needs to start at all. */
 val macSigningIdentity = project.property("campfire.mac.signingIdentity").toString()
 
+/** The runtime every build that is handed out is made with, see [toolchainLauncher]. */
+val jetBrainsRuntimeLauncher: Provider<JavaLauncher> = javaToolchains.launcherFor {
+    languageVersion = JavaLanguageVersion.of(libs.versions.jvmTarget.get().toInt())
+    vendor = JvmVendorSpec.JETBRAINS
+}
+
+/** Whether [toolchainLauncher] is a stand-in, with which a debug build works and a release build is never made. */
+val isJetBrainsRuntimeMissing = runCatching { jetBrainsRuntimeLauncher.get() }.isFailure
+
 /**
  * The JDK whose runtime image, `jpackage` and `java` the packaging and `run` use. It is the JetBrains Runtime rather
  * than whichever JDK of that version is installed, because only it lets the content be laid out under a title bar
  * that still behaves as one (its custom title bar, see TitleBar.kt) and lets a window follow the app's own light or
  * dark theme on macOS (`apple.awt.windowAppearance`), without which the window buttons disappear into the app's
  * background.
- * Gradle downloads it where it is missing.
+ * Foojay, which Gradle provisions toolchains from, lists no JetBrains Runtime of this version, so Gradle cannot download
+ * it: it has to be installed where Gradle looks for JDKs, which the workflows do with `setup-java` and which the IDE's
+ * own runtime is when it starts Gradle. Where there is none, any JDK of the version stands in, so that a fresh clone
+ * still builds every module - `javaHome` below asks for the toolchain while every project of the build is configured -
+ * and only the release builds, which are what is handed out, refuse to be made with it.
  */
-val toolchainLauncher = javaToolchains.launcherFor {
-    languageVersion = JavaLanguageVersion.of(libs.versions.jvmTarget.get().toInt())
-    vendor = JvmVendorSpec.JETBRAINS
+val toolchainLauncher: Provider<JavaLauncher> = if (isJetBrainsRuntimeMissing) {
+    logger.warn(
+        "No JetBrains Runtime ${libs.versions.jvmTarget.get()} was found, so :app:desktop runs on another JDK, without its " +
+            "custom title bar, and its release builds cannot be made.",
+    )
+    javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(libs.versions.jvmTarget.get().toInt()) }
+} else {
+    jetBrainsRuntimeLauncher
+}
+
+/**
+ * Every build that leaves the machine is a release one - the `.deb`, the `.msix` and the Mac App Store `.pkg` are all
+ * made of `createReleaseDistributable` - so a stand-in runtime stops each of them before it starts, rather than
+ * shipping a window that keeps the system's title bar and draws its buttons for the wrong theme.
+ */
+tasks.matching { it.name.startsWith("createRelease") || it.name.startsWith("packageRelease") || it.name == "runRelease" }.configureEach {
+    doFirst {
+        if (isJetBrainsRuntimeMissing) {
+            throw GradleException("$path is a release build, which has to bundle the JetBrains Runtime, and none was found.")
+        }
+    }
 }
 
 compose.desktop {
@@ -82,10 +113,13 @@ compose.desktop {
         if (isLinuxHost) {
             jvmArgs("--add-opens=java.desktop/sun.awt.X11=ALL-UNNAMED")
         }
-        // The package the JDK hands a trackpad pinch to only exists on macOS, and is not exported either (see
-        // TouchpadMagnification.kt).
+        // The packages the JDK hands a trackpad pinch and the full screen notifications to only exist on macOS, and
+        // are not exported either (see TouchpadMagnification.kt and TitleBar.kt).
         if (isMacHost) {
-            jvmArgs("--add-exports=java.desktop/com.apple.eawt.event=ALL-UNNAMED")
+            jvmArgs(
+                "--add-exports=java.desktop/com.apple.eawt=ALL-UNNAMED",
+                "--add-exports=java.desktop/com.apple.eawt.event=ALL-UNNAMED",
+            )
         }
         buildTypes.release.proguard {
             configurationFiles.from(project.file("proguard-rules.pro"))

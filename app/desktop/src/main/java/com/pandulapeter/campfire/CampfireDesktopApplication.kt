@@ -29,7 +29,6 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
-import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
@@ -235,7 +234,7 @@ fun main(args: Array<String>) {
             ) {
                 TitleBarInsets(
                     titleBar = titleBar,
-                    isFullscreen = windowState.placement == WindowPlacement.Fullscreen,
+                    isFullscreen = rememberIsFullscreen(window = window, windowState = windowState),
                 ) {
                     val currentViewModel = koinViewModel<CampfireViewModel>()
                     SideEffect { viewModel.value = currentViewModel }

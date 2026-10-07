@@ -132,7 +132,7 @@ jobs:
       - name: Set up JDK 21
         uses: actions/setup-java@v5
         with:
-          distribution: 'zulu'
+          distribution: 'jetbrains'
           java-version: 21
           cache: 'gradle'
       # Gradle is started by a build phase of the Xcode project here, which passes it no properties, and the version

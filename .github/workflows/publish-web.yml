@@ -33,7 +33,7 @@ jobs:
       - name: Set up JDK 21
         uses: actions/setup-java@v5
         with:
-          distribution: 'zulu'
+          distribution: 'jetbrains'
           java-version: 21
           cache: 'gradle'
       # A published build with an empty key has no sync provider at all, and nothing downstream would notice: the

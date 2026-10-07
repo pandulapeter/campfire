@@ -26,7 +26,6 @@
 - Tuner: documentation/plans/tuner.md (question - do we want to add it to the toolbar?)
 - Comments in setlists (between songs)
 - Simplify adding comments / annotations to songs
-- Optional close confirmation dialog on relevant platforms
 - Improve test coverage
 - Refactor, improve architecture, each top-level Composable should be defined in a separate file
 

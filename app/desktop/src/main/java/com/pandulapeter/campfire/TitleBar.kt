@@ -11,9 +11,13 @@ package com.pandulapeter.campfire
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.InternalComposeUiApi
 import androidx.compose.ui.awt.ComposeWindow
 import androidx.compose.ui.platform.LocalDensity
@@ -23,13 +27,16 @@ import androidx.compose.ui.platform.PlatformWindowInsets
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.WindowPlacement
+import androidx.compose.ui.window.WindowState
 import com.jetbrains.JBR
 import com.jetbrains.WindowDecorations
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.theme.isDarkTheme
 import java.awt.AWTEvent
 import java.awt.Toolkit
+import java.awt.Window
 import java.awt.event.MouseEvent
+import java.lang.reflect.Proxy
 import javax.swing.SwingUtilities
 
 /**
@@ -149,6 +156,64 @@ internal fun TitleBarInsets(
     CompositionLocalProvider(LocalPlatformWindowInsets provides insets, content = content)
 }
 
+/**
+ * Whether the window is in full screen, which [TitleBarInsets] drops the strip for.
+ *
+ * Compose reads its window's placement again only when the window is resized or AWT reports a change of its state, and
+ * macOS full screen is neither of the second: from a zoomed window - which on a screen with a camera housing and a
+ * hidden Dock is already the size of the full screen one - the window changes into full screen without a single
+ * resize, and `WindowState.placement` stays `Maximized`, keeping the strip at the top of a window that has no title
+ * bar. So on macOS the system's own full screen notifications decide, once the first of them has arrived; until then,
+ * and elsewhere, the window state does.
+ */
+@Composable
+internal fun rememberIsFullscreen(
+    window: ComposeWindow,
+    windowState: WindowState,
+): Boolean {
+    var isMacFullScreen by remember(window) { mutableStateOf<Boolean?>(null) }
+    DisposableEffect(window) {
+        val stopListening = window.listenForMacFullScreen { isFullScreen -> isMacFullScreen = isFullScreen }
+        onDispose { stopListening?.invoke() }
+    }
+    return isMacFullScreen ?: (windowState.placement == WindowPlacement.Fullscreen)
+}
+
+/**
+ * Hears the window entering and leaving macOS full screen through `com.apple.eawt`, which, like the trackpad's gestures
+ * (see `TouchpadMagnification.kt`), exists only in a JDK built for macOS and is not exported by `java.desktop`, so it is
+ * reached through reflection and the macOS build starts with the `--add-exports` that opens it. The change is reported
+ * as the animation starts rather than once it is over, so that the content moves with the window instead of jumping
+ * after it.
+ *
+ * @return What unregisters the listener, or null where none was registered.
+ */
+private fun Window.listenForMacFullScreen(onChanged: (Boolean) -> Unit): (() -> Unit)? {
+    if (!isMacOs) return null
+    return try {
+        val utilities = Class.forName("$EAWT_PACKAGE.FullScreenUtilities")
+        val listenerClass = Class.forName("$EAWT_PACKAGE.FullScreenListener")
+        val listener = Proxy.newProxyInstance(listenerClass.classLoader, arrayOf(listenerClass)) { proxy, method, arguments ->
+            when (method.name) {
+                "windowEnteringFullScreen" -> onChanged(true)
+                "windowExitingFullScreen" -> onChanged(false)
+                // The JDK keeps its listeners in a list, which finds the one to remove by equals.
+                "equals" -> return@newProxyInstance proxy === arguments[0]
+                "hashCode" -> return@newProxyInstance System.identityHashCode(proxy)
+                "toString" -> return@newProxyInstance "FullScreenListener"
+            }
+            null
+        }
+        val window = this
+        utilities.getMethod("addFullScreenListenerTo", Window::class.java, listenerClass).invoke(null, window, listener)
+        val removeListener = utilities.getMethod("removeFullScreenListenerFrom", Window::class.java, listenerClass)
+        return { removeListener.invoke(null, window, listener) }
+    } catch (exception: Exception) {
+        println("Full screen notifications are not available: $exception")
+        null
+    }
+}
+
 internal val isMacOs = System.getProperty("os.name").orEmpty().lowercase().contains("mac")
 
 internal val isWindows = System.getProperty("os.name").orEmpty().lowercase().contains("windows")
@@ -162,6 +227,8 @@ private val MAC_TITLE_BAR_HEIGHT = 28.dp
  * The height of a Windows 11 title bar and its caption buttons, in the scaled pixels a dp is at the window's density.
  */
 private val WINDOWS_TITLE_BAR_HEIGHT = 32.dp
+
+private const val EAWT_PACKAGE = "com.apple.eawt"
 
 /** Whether the caption buttons are drawn for a dark background (light icons) or a light one. */
 private const val WINDOWS_DARK_CONTROLS = "controls.dark"
