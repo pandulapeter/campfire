@@ -16,6 +16,7 @@ import androidx.compose.animation.EnterExitState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
@@ -403,6 +404,11 @@ internal fun SongDetailsScreen(
 
     val isCompactHeight = LocalWindowInfo.current.containerDpSize.height < SHORT_WINDOW_HEIGHT
     val appBarScrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(canScroll = { isCompactHeight })
+    val isMetronomePanelVisible = isMetronomePanelShown && isMetronomeEnabled
+    val metronomePanelState = remember { MutableTransitionState(isMetronomePanelVisible) }
+    // The room above the pages changes on every frame the bar collapses or comes back and the panel opens or closes, so
+    // the pages decide their grid only once both are at rest, see SongDetailsPage's isViewportSettled.
+    val isViewportSettled = { (!isCompactHeight || isAppBarSettled(appBarScrollBehavior.state.collapsedFraction)) && metronomePanelState.isIdle }
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -738,8 +744,9 @@ internal fun SongDetailsScreen(
             bottomContent = {
                 MetronomePanel(
                     viewModel = viewModel,
-                    isVisible = isMetronomePanelShown && isMetronomeEnabled,
+                    isVisible = isMetronomePanelVisible,
                     contentPadding = contentPadding,
+                    visibleState = metronomePanelState,
                 )
             },
         )
@@ -840,6 +847,7 @@ internal fun SongDetailsScreen(
                         flingBehavior = flingBehavior,
                         text = shownText,
                         buildsModelInPlace = buildsInPlace,
+                        isViewportSettled = isViewportSettled,
                         hasFailed = song.fileName in failedSongFileNames,
                         transposition = transpositions[song.fileName, destination.setlistFileName],
                         tempoOverride = tempo.takeUnless { it.isDefault }?.bpm,
@@ -1038,6 +1046,8 @@ private fun SongPagerControls(
  * @param text The ChordPro text of the song, null while it is still being read.
  * @param buildsModelInPlace Whether the first rendering of the text is built while composing rather than in the
  *   background, see [buildsModelInPlace] and [rememberSongLyricsModel].
+ * @param isViewportSettled Whether the app bar and the metronome panel above the pager are at rest, read while
+ *   composing: the grid is decided against the height the page has then, see [settledHeight].
  * @param hasFailed Whether the file could not be read. The page then offers a retry rather than a loading indicator
  *   that has nothing left to wait for.
  * @param scrollState Owned by the pager rather than by the page, so that the arrow keys can reach the scroll of the
@@ -1065,6 +1075,7 @@ private fun SongDetailsPage(
     flingBehavior: RowSnapFlingBehavior,
     text: String?,
     buildsModelInPlace: Boolean,
+    isViewportSettled: () -> Boolean,
     hasFailed: Boolean,
     transposition: Int,
     tempoOverride: Int?,
@@ -1180,11 +1191,17 @@ private fun SongDetailsPage(
             modifier = Modifier.fillMaxSize()
         ) {
             val currentFontScale = fontScale()
+            // The grid is decided against the height the page has with the app bar and the metronome panel at rest,
+            // since every pixel either moves would otherwise search it again, on all three composed pages; the rows
+            // are still padded to the live height, so what is on screen follows the bar frame by frame. Reading whether
+            // they are at rest is what recomposes this once they come to rest.
+            val settled = remember { SettledHeight(maxHeight) }
+            settled.height = settledHeight(previous = settled.height, live = maxHeight, isSettled = isViewportSettled())
             // A single change - a window maximised, a stepper tapped - springs the sections to their new place; a burst
             // of them, from a pinch or a window edge being dragged, is followed, gliding only over the grid's jumps. The
-            // height is one of them, since every row is padded to it: a bottom edge dragged, the short window's title
-            // row collapsing over the frames of a scroll and the metronome panel opening or closing above the pager
-            // are bursts of height changes alike.
+            // live height is one of them, since every row is padded to it: a bottom edge dragged, the short window's
+            // title row collapsing over the frames of a scroll and the metronome panel opening or closing above the
+            // pager are bursts of height changes alike, and the grid they settle into glides too.
             val isChangingContinuously = rememberContinuousChange(maxWidth, maxHeight, currentFontScale)
             val density = LocalDensity.current
             val lyricsLineHeight = MaterialTheme.typography.bodyLarge.lineHeight
@@ -1214,7 +1231,7 @@ private fun SongDetailsPage(
                         bottom = bottomPadding,
                     ),
                 model = model,
-                availableHeight = maxHeight - topPadding - bottomPadding,
+                availableHeight = settled.height - topPadding - bottomPadding,
                 // The pages fill the screen, so whatever the screen is still missing this layout is missing too.
                 extraWidth = (settledWidth - maxWidth).coerceAtLeast(0.dp),
                 sectionMotion = if (isChangingContinuously) SectionMotion.GLIDE else SectionMotion.SPRING,
@@ -1376,6 +1393,21 @@ private fun rememberContinuousChange(vararg values: Any): Boolean {
     }
     return isContinuous
 }
+
+/**
+ * Whether the app bar is at rest: Material's own snap leaves it fully expanded or fully collapsed, and below 1% it does
+ * not snap at all (`settleAppBar`).
+ */
+internal fun isAppBarSettled(collapsedFraction: Float) = collapsedFraction < 0.01f || collapsedFraction == 1f
+
+/** The height a page's grid is decided against: the [live] one while the viewport is settled, the [previous] one otherwise. */
+internal fun settledHeight(previous: Dp, live: Dp, isSettled: Boolean) = if (isSettled) live else previous
+
+/**
+ * The page's height when the viewport was last at rest. Not state: it is written while composing, and that composition
+ * is the one that reads it.
+ */
+private class SettledHeight(var height: Dp)
 
 /** What [rememberContinuousChange] remembers between changes. Not state, since only its effect reads it. */
 private class ContinuousChangeTracker {

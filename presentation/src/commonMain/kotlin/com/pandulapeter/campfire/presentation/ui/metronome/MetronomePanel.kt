@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.metronome
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterExitState
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
@@ -28,6 +29,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.TransformOrigin
@@ -59,6 +61,9 @@ import com.pandulapeter.campfire.presentation.ui.screens.metronome.BeatRow
  *
  * @param isProminent Draws the row and the button at the size of an instrument rather than of a bar's own row, and at
  * a settings page's margins: the tab's, where the panel is what the screen is for and heads the rows under it.
+ * @param visibleState Where the panel's showing and hiding is followed, for a caller that has to know when it has
+ *   come to rest: the song details screen, whose pages decide their grid only once the room the panel leaves them has
+ *   stopped changing. Its target is kept at [isVisible] here.
  */
 @Composable
 internal fun MetronomePanel(
@@ -67,9 +72,10 @@ internal fun MetronomePanel(
     isVisible: Boolean,
     isProminent: Boolean = false,
     contentPadding: PaddingValues,
+    visibleState: MutableTransitionState<Boolean>? = null,
 ) = AnimatedVisibility(
     modifier = modifier,
-    visible = isVisible,
+    visibleState = rememberPanelVisibleState(given = visibleState, isVisible = isVisible),
     // The bar grows a row rather than something sliding out from behind it, and its edge never passes over the
     // controls: they are squashed towards the top on the very spec the height follows, so at every frame they are
     // exactly as tall as the room the bar has for them. A spring would not do here, since the size's and the scale's
@@ -148,6 +154,14 @@ internal fun MetronomePanel(
             )
         }
     }
+}
+
+/** The [given] state, or one of the panel's own where there is none, either way headed for [isVisible]. */
+@Composable
+private fun rememberPanelVisibleState(given: MutableTransitionState<Boolean>?, isVisible: Boolean): MutableTransitionState<Boolean> {
+    // Remembered whether or not it is used, so that the slots stay the same whichever state is given.
+    val own = remember { MutableTransitionState(isVisible) }
+    return (given ?: own).apply { targetState = isVisible }
 }
 
 private const val PANEL_ANIMATION_DURATION = 250

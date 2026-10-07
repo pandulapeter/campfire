@@ -157,7 +157,8 @@ import kotlin.math.roundToInt
  *
  * @param model The song and its sections, built away from the main thread by [rememberSongLyricsModel].
  * @param availableHeight The height the song can occupy without scrolling; the column count is picked so that it
- * fits into this if it can.
+ * fits into this if it can. It is the height the page has at rest, which may differ from [rowViewportHeight] for the
+ * frames an app bar or a panel above it is moving, so that the grid is not searched again on every one of them.
  * @param extraWidth How much wider this layout is going to be once the animation that is currently resizing it has
  * finished (see [SongDetailsScreen]'s settled width). The column count is decided for that final width, so that the
  * sections do not flow into a different number of columns for the duration of a navigation transition and then jump
@@ -188,7 +189,8 @@ import kotlin.math.roundToInt
  * @param rowViewportHeight The height of the viewport the song is scrolled in, where that scroll comes to rest on the
  * dividers between the rows: every row is then followed by empty space down to the bottom of that viewport, so that
  * a scroll resting on a divider shows no row but the one under it, in the middle of the screen, and the last one can be
- * brought to the top like the others. Unspecified where nothing snaps, which is the editor's preview.
+ * brought to the top like the others. Unspecified where nothing snaps, which is the editor's preview. It is the live
+ * height, followed frame by frame, where [availableHeight] waits for the viewport to settle.
  * @param rowViewportBottomPadding How much the scroll holds under this composable, which is part of the room the last
  * row needs to be brought to the top of the viewport.
  * @param stepButtonInset How much of the end edge a song that has to be scrolled leaves to what is drawn over it there:
