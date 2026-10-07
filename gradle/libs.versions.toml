@@ -34,6 +34,7 @@ kotlin-coroutines = "1.11.0" # https://github.com/Kotlin/kotlinx.coroutines/rele
 kotlin-datetime = "0.8.0" # https://github.com/Kotlin/kotlinx-datetime/releases
 kotlin-serialization = "1.11.0" # https://github.com/Kotlin/kotlinx.serialization/releases
 ktor = "3.6.0" # https://github.com/ktorio/ktor/releases
+skiko = "0.150.1" # Must equal the skiko version Compose brings in: ./gradlew :app:desktop:dependencies --configuration runtimeClasspath | grep skiko
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity" }
@@ -77,6 +78,7 @@ ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "kto
 ktor-client-js = { module = "io.ktor:ktor-client-js", version.ref = "ktor" }
 ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
+skiko-angle-windows-x64 = { module = "org.jetbrains.skiko:skiko-awt-runtime-angle-windows-x64", version.ref = "skiko" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "gradle" }

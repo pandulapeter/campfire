@@ -101,6 +101,12 @@ fun main(args: Array<String>) {
     // skiko says nothing about the renderer it settled on unless asked, and a software fallback is the first thing a
     // slow desktop's log has to rule out. It prints the API and the graphics adapter once a context is up.
     if (System.getProperty("skiko.hardwareInfo.enabled") == null) System.setProperty("skiko.hardwareInfo.enabled", "true")
+    // ANGLE draws through Direct3D 11 the way a browser does, a path far more drivers of the integrated GPUs in small
+    // Windows machines are tested against than skiko's Direct3D 12. Only where the build put its libraries next to
+    // skiko's, and never over a renderer somebody chose; a failed start falls back to Direct3D 12 on its own.
+    if (isWindows && System.getenv("SKIKO_RENDER_API") == null && System.getProperty("skiko.renderApi") == null &&
+        File(System.getProperty("skiko.library.path").orEmpty(), "libEGL.dll").isFile
+    ) System.setProperty("skiko.rendering.angle.enabled", "true")
     OpenedFiles.listenForSystemRequests()
     OpenedFiles.open(args.toList())
     startCampfireDependencyGraph()

@@ -14,6 +14,7 @@ import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.security.MessageDigest
 import java.util.concurrent.TimeUnit
+import java.util.zip.ZipFile
 import javax.imageio.ImageIO
 import javax.inject.Inject
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
@@ -25,6 +26,13 @@ plugins {
     alias(libs.plugins.compose.compiler)
 }
 
+/**
+ * The ANGLE libraries skiko renders through on Windows, kept off the runtime classpath: ProGuard would join them into
+ * the jar, from which skiko would unpack them into the user's home on every new version. They are copied next to
+ * skiko's own library instead (see `createReleaseDistributable` below).
+ */
+val angleRuntime by configurations.creating
+
 dependencies {
     implementation(project(":app:di"))
     implementation(project(":data:model"))
@@ -34,6 +42,7 @@ dependencies {
     implementation(libs.jbr.api)
     implementation(libs.koin.compose.viewmodel)
     runtimeOnly(libs.kotlin.coroutines.swing) // Provides Dispatchers.Main for viewModelScope.
+    angleRuntime(libs.skiko.angle.windows.x64)
 }
 
 val versionName = project.property("campfire.versionName").toString()
@@ -203,6 +212,30 @@ tasks.withType<AbstractJLinkTask>().configureEach {
         }
         // The JVM writes it read-only, which on Windows stops the next jlink run from clearing its output directory.
         runtimeImage.get().asFile.walkTopDown().filter { it.extension == "jsa" }.forEach { it.setWritable(true) }
+    }
+}
+
+/**
+ * Puts the ANGLE libraries into the Windows release image's `$APPDIR`, which is the `skiko.library.path` the launcher
+ * sets, so `main` finds them there and turns ANGLE on (see `CampfireDesktopApplication.kt`). The packaging only moves
+ * skiko's own library and its ICU data out of the jar, and the `.msi` and the `.msix` are both made of this image. A
+ * `doLast` of the image's own task, so the libraries are already there when `recordClassDataArchive` trains it.
+ */
+tasks.matching { isWindowsHost && it.name == "createReleaseDistributable" }.configureEach {
+    val libraries = angleRuntime
+    val appDirectory = layout.buildDirectory.dir("compose/binaries/main-release/app/Campfire/app")
+    inputs.files(libraries)
+    doLast {
+        val names = setOf("libEGL.dll", "libGLESv2.dll")
+        val copied = libraries.files.flatMap { jar ->
+            ZipFile(jar).use { zip ->
+                zip.entries().asSequence().filter { it.name in names }.map { entry ->
+                    zip.getInputStream(entry).use { input -> appDirectory.get().asFile.resolve(entry.name).outputStream().use { input.copyTo(it) } }
+                    entry.name
+                }.toList()
+            }
+        }
+        if (copied.toSet() != names) throw GradleException("Expected $names in the ANGLE runtime, found $copied.")
     }
 }
 
