@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.data.repository
+package com.pandulapeter.campfire.data.repository.implementation
 
 import org.koin.core.annotation.ComponentScan
 import org.koin.core.annotation.Module

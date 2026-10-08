@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.di
 
-import com.pandulapeter.campfire.data.repository.DataRepositoryModule
+import com.pandulapeter.campfire.data.repository.implementation.DataRepositoryModule
 import com.pandulapeter.campfire.data.source.local.implementation.DataLocalSourceModule
 import com.pandulapeter.campfire.data.source.remote.implementation.DataRemoteSourceModule
 import com.pandulapeter.campfire.domain.api.useCases.LoadScreenDataUseCase
