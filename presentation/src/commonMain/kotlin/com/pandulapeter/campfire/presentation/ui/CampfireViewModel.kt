@@ -133,6 +133,7 @@ import com.pandulapeter.campfire.presentation.ui.firstRun.canShowWhatsNew
 import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeContext
 import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
+import com.pandulapeter.campfire.presentation.ui.playing.PendingOverrides
 import com.pandulapeter.campfire.presentation.ui.playing.SongPlace
 import com.pandulapeter.campfire.presentation.ui.playing.withEntry
 import com.pandulapeter.campfire.presentation.ui.playing.Tempos
@@ -867,35 +868,52 @@ class CampfireViewModel(
         SongOverrides.of(userPreferences?.tempos.orEmpty(), setlists) { it.tempo }
     }.asState(Tempos())
 
-    /**
-     * The overrides set here whose writes are waiting or still on their way back from the repository, by song as it was
-     * opened, see [changeTempo]. A held stepper sets one on every step and writes once it lets go, so for as long as one
-     * is here it is what the stepper, the page and the click read.
-     */
-    private val pendingTempos = MutableStateFlow<Map<SongPlace, PendingTempo>>(emptyMap())
-
-    /** The debounced writes of [pendingTempos] that have not started yet; one that has started is out of reach of a cancel. */
-    private val tempoWriteJobs = mutableMapOf<SongPlace, Job>()
+    /** The tempos set here whose writes are waiting or still on their way back, see [changeTempo]. */
+    private val tempoOverrides = PendingOverrides(
+        scope = viewModelScope,
+        delayMillis = PREFERENCE_WRITE_DEBOUNCE_MILLIS,
+        stored = storedTempos,
+        name = "tempo",
+        write = { place, bpm ->
+            writeOverride(
+                place = place,
+                value = bpm,
+                library = { it.tempos },
+                withLibrary = { preferences, tempos -> preferences.copy(tempos = tempos) },
+                withEntry = { entry, value -> entry.copy(tempo = value) },
+            )
+        },
+        onFailed = { sendMessage(Message.OperationFailed) },
+    )
 
     /** Every song's tempo override, as the screens and the click read it. */
-    internal val tempos = combine(storedTempos, pendingTempos) { stored, pending ->
-        pending.entries.fold(stored) { tempos, (key, value) -> tempos.with(key, value.bpm) }
-    }.asState(Tempos())
+    internal val tempos = tempoOverrides.effective.asState(Tempos())
 
     /** The capo overrides as the preferences and the setlists hold them, folded the way [tempos] are. */
     private val storedCapos = combine(userPreferences, setlists) { userPreferences, setlists ->
         SongOverrides.of(userPreferences?.capos.orEmpty(), setlists) { it.capo }
     }.asState(Capos())
 
-    /** The capos set here whose writes are waiting or still on their way back, exactly as [pendingTempos] are. */
-    private val pendingCapos = MutableStateFlow<Map<SongPlace, PendingCapo>>(emptyMap())
-
-    private val capoWriteJobs = mutableMapOf<SongPlace, Job>()
+    /** The capos set here whose writes are waiting or still on their way back, exactly as [tempoOverrides] are. */
+    private val capoOverrides = PendingOverrides(
+        scope = viewModelScope,
+        delayMillis = PREFERENCE_WRITE_DEBOUNCE_MILLIS,
+        stored = storedCapos,
+        name = "capo",
+        write = { place, fret ->
+            writeOverride(
+                place = place,
+                value = fret,
+                library = { it.capos },
+                withLibrary = { preferences, capos -> preferences.copy(capos = capos) },
+                withEntry = { entry, value -> entry.copy(capo = value) },
+            )
+        },
+        onFailed = { sendMessage(Message.OperationFailed) },
+    )
 
     /** Every song's capo override, as the song details screen and the lists that name a sounding key read it. */
-    internal val capos = combine(storedCapos, pendingCapos) { stored, pending ->
-        pending.entries.fold(stored) { capos, (key, value) -> capos.with(key, value.fret) }
-    }.asState(Capos())
+    internal val capos = capoOverrides.effective.asState(Capos())
 
     /** Saved like [pendingPrintSettings]: a dragged slider is a new value every frame. */
     private val metronomeSettingsPreference = DebouncedPreference<MetronomeSettings> { copy(metronomeSettings = it) }
@@ -1396,18 +1414,8 @@ class CampfireViewModel(
         fontScalePreference.start(viewModelScope, PREFERENCE_WRITE_DEBOUNCE_MILLIS, updateUserPreferences::invoke)
         printSettingsPreference.start(viewModelScope, PREFERENCE_WRITE_DEBOUNCE_MILLIS, updateUserPreferences::invoke)
         metronomeSettingsPreference.start(viewModelScope, PREFERENCE_WRITE_DEBOUNCE_MILLIS, updateUserPreferences::invoke)
-        viewModelScope.launch {
-            // A pending tempo is let go of once its write has landed and the store says the same, so that the value on
-            // screen never steps back to the stored one for the frames in between.
-            combine(storedTempos, pendingTempos) { stored, pending ->
-                pending.filter { (key, value) -> value.isWritten && stored[key.songFileName, key.setlistFileName] == value.bpm }.keys
-            }.collect { settled -> if (settled.isNotEmpty()) pendingTempos.update { it - settled } }
-        }
-        viewModelScope.launch {
-            combine(storedCapos, pendingCapos) { stored, pending ->
-                pending.filter { (key, value) -> value.isWritten && stored[key.songFileName, key.setlistFileName] == value.fret }.keys
-            }.collect { settled -> if (settled.isNotEmpty()) pendingCapos.update { it - settled } }
-        }
+        tempoOverrides.start()
+        capoOverrides.start()
         viewModelScope.launch {
             // One collector for everything that changes what a playing click plays, so that a context change and the
             // pattern it brings are one update: paging to another song moves the click to it from beat one, and
@@ -2684,10 +2692,7 @@ class CampfireViewModel(
      * land after the reset.
      */
     fun resetTempo(songFileName: String, setlistFileName: String?) {
-        val key = SongPlace(songFileName = songFileName, setlistFileName = setlistFileName)
-        tempoWriteJobs.remove(key)?.cancel()
-        pendingTempos.update { it + (key to PendingTempo(bpm = null)) }
-        viewModelScope.launch { writeTempo(key, null) }
+        tempoOverrides.reset(SongPlace(songFileName = songFileName, setlistFileName = setlistFileName))
     }
 
     /**
@@ -2697,49 +2702,37 @@ class CampfireViewModel(
      * the song's own removes the override.
      */
     private fun changeTempo(songFileName: String, setlistFileName: String?, change: (Int) -> Int) {
-        val key = SongPlace(songFileName = songFileName, setlistFileName = setlistFileName)
         val effective = effectiveTempoOf(songFileName, setlistFileName)
         val bpm = MetronomePattern.coerceBpm(change(effective.bpm))
-        val override = bpm.takeIf { it != effective.songBpm }
-        pendingTempos.update { it + (key to PendingTempo(bpm = override)) }
-        tempoWriteJobs.remove(key)?.cancel()
-        tempoWriteJobs[key] = viewModelScope.launch {
-            delay(PREFERENCE_WRITE_DEBOUNCE_MILLIS)
-            tempoWriteJobs.remove(key)
-            writeTempo(key, override)
-        }
+        tempoOverrides.set(SongPlace(songFileName = songFileName, setlistFileName = setlistFileName), bpm.takeIf { it != effective.songBpm })
     }
 
-    private suspend fun writeTempo(key: SongPlace, bpm: Int?) {
-        try {
-            val setlistFileName = key.setlistFileName
-            val isWritten = if (setlistFileName == null) {
-                updateUserPreferences { preferences ->
-                    preferences.copy(tempos = if (bpm == null) preferences.tempos - key.songFileName else preferences.tempos + (key.songFileName to bpm))
-                }
-                true
-            } else {
-                // A song a sync run took out of the setlist while its screen stayed open has no entry to hold the value,
-                // and nothing would ever settle it. A reset has nothing left to clear there, so that one still counts.
-                var hasEntry = false
-                updateEditableSetlist(setlistFileName) { setlist ->
-                    setlist.withEntry(key.songFileName) { it.copy(tempo = bpm) }.also { hasEntry = it != null } ?: setlist
-                }?.takeUnless { it.isArchived } != null && (hasEntry || bpm == null)
+    /**
+     * Writes a tempo or capo override, null removing it: into the setlist the song was opened from, or into the
+     * preferences for one opened from the library. Answers whether it was written and is expected to come back from the
+     * store, see [PendingOverrides].
+     */
+    private suspend fun writeOverride(
+        place: SongPlace,
+        value: Int?,
+        library: (UserPreferences) -> Map<String, Int>,
+        withLibrary: (UserPreferences, Map<String, Int>) -> UserPreferences,
+        withEntry: (Setlist.Entry, Int?) -> Setlist.Entry,
+    ): Boolean {
+        val setlistFileName = place.setlistFileName
+        return if (setlistFileName == null) {
+            updateUserPreferences { preferences ->
+                val overrides = library(preferences)
+                withLibrary(preferences, if (value == null) overrides - place.songFileName else overrides + (place.songFileName to value))
             }
-            if (isWritten) {
-                pendingTempos.update { pending ->
-                    pending[key]?.takeIf { it.bpm == bpm && !it.isWritten }?.let { pending + (key to it.copy(isWritten = true)) } ?: pending
-                }
-            } else {
-                pendingTempos.update { it - key }
-                sendMessage(Message.OperationFailed)
-            }
-        } catch (exception: CancellationException) {
-            throw exception
-        } catch (exception: Exception) {
-            println("The tempo could not be written: ${exception.message}")
-            pendingTempos.update { it - key }
-            sendMessage(Message.OperationFailed)
+            true
+        } else {
+            // A song a sync run took out of the setlist while its screen stayed open has no entry to hold the value,
+            // and nothing would ever settle it. A reset has nothing left to clear there, so that one still counts.
+            var hasEntry = false
+            updateEditableSetlist(setlistFileName) { setlist ->
+                setlist.withEntry(place.songFileName) { withEntry(it, value) }.also { hasEntry = it != null } ?: setlist
+            }?.takeUnless { it.isArchived } != null && (hasEntry || value == null)
         }
     }
 
@@ -2756,58 +2749,14 @@ class CampfireViewModel(
      * later shows through, and a step still waiting to be written is dropped, exactly as [resetTempo] does it.
      */
     fun resetCapo(songFileName: String, setlistFileName: String?) {
-        val key = SongPlace(songFileName = songFileName, setlistFileName = setlistFileName)
-        capoWriteJobs.remove(key)?.cancel()
-        pendingCapos.update { it + (key to PendingCapo(fret = null)) }
-        viewModelScope.launch { writeCapo(key, null) }
+        capoOverrides.reset(SongPlace(songFileName = songFileName, setlistFileName = setlistFileName))
     }
 
     /** [changeTempo] for a fret: absolute, debounced, and a value equal to the song's own removing the override. */
     private fun changeCapo(songFileName: String, setlistFileName: String?, change: (Int) -> Int) {
-        val key = SongPlace(songFileName = songFileName, setlistFileName = setlistFileName)
         val effective = effectiveCapoOf(songFileName, setlistFileName)
         val fret = change(effective.fret).coerceIn(Song.CAPO_RANGE)
-        val override = fret.takeIf { it != effective.songFret }
-        pendingCapos.update { it + (key to PendingCapo(fret = override)) }
-        capoWriteJobs.remove(key)?.cancel()
-        capoWriteJobs[key] = viewModelScope.launch {
-            delay(PREFERENCE_WRITE_DEBOUNCE_MILLIS)
-            capoWriteJobs.remove(key)
-            writeCapo(key, override)
-        }
-    }
-
-    private suspend fun writeCapo(key: SongPlace, fret: Int?) {
-        try {
-            val setlistFileName = key.setlistFileName
-            val isWritten = if (setlistFileName == null) {
-                updateUserPreferences { preferences ->
-                    preferences.copy(capos = if (fret == null) preferences.capos - key.songFileName else preferences.capos + (key.songFileName to fret))
-                }
-                true
-            } else {
-                // A song a sync run took out of the setlist while its screen stayed open has no entry to hold the value,
-                // and nothing would ever settle it. A reset has nothing left to clear there, so that one still counts.
-                var hasEntry = false
-                updateEditableSetlist(setlistFileName) { setlist ->
-                    setlist.withEntry(key.songFileName) { it.copy(capo = fret) }.also { hasEntry = it != null } ?: setlist
-                }?.takeUnless { it.isArchived } != null && (hasEntry || fret == null)
-            }
-            if (isWritten) {
-                pendingCapos.update { pending ->
-                    pending[key]?.takeIf { it.fret == fret && !it.isWritten }?.let { pending + (key to it.copy(isWritten = true)) } ?: pending
-                }
-            } else {
-                pendingCapos.update { it - key }
-                sendMessage(Message.OperationFailed)
-            }
-        } catch (exception: CancellationException) {
-            throw exception
-        } catch (exception: Exception) {
-            println("The capo could not be written: ${exception.message}")
-            pendingCapos.update { it - key }
-            sendMessage(Message.OperationFailed)
-        }
+        capoOverrides.set(SongPlace(songFileName = songFileName, setlistFileName = setlistFileName), fret.takeIf { it != effective.songFret })
     }
 
     /**
@@ -2896,24 +2845,15 @@ class CampfireViewModel(
     )
 
     /**
-     * Takes the tempo and capo overrides still waiting for their debounce out of it - their jobs cancelled, which only
-     * ever catches one in its delay, since a job leaves its map the moment the delay ends - and returns their writes,
-     * for a view model or a process that is about to go.
+     * Takes the tempo and capo overrides still waiting for their debounce out of it and returns their writes, for a view
+     * model or a process that is about to go, see [PendingOverrides.takeWaiting].
      */
     private fun takeWaitingOverrideWrites(): suspend () -> Unit {
-        val waitingTempos = tempoWriteJobs.mapNotNull { (key, job) ->
-            job.cancel()
-            pendingTempos.value[key]?.let { key to it.bpm }
-        }
-        val waitingCapos = capoWriteJobs.mapNotNull { (key, job) ->
-            job.cancel()
-            pendingCapos.value[key]?.let { key to it.fret }
-        }
-        tempoWriteJobs.clear()
-        capoWriteJobs.clear()
+        val waitingTempos = tempoOverrides.takeWaiting()
+        val waitingCapos = capoOverrides.takeWaiting()
         return {
-            waitingTempos.forEach { (key, bpm) -> writeTempo(key, bpm) }
-            waitingCapos.forEach { (key, fret) -> writeCapo(key, fret) }
+            waitingTempos()
+            waitingCapos()
         }
     }
 
@@ -4209,22 +4149,6 @@ class CampfireViewModel(
 
     /** [text] is [fileText] as an editor showing [notation] shows it, see [editorTextOf]. */
     private class EditorText(val fileText: String, val notation: UserPreferences.Notation, val text: String)
-
-    /**
-     * A tempo override set on this device. [bpm] null removes the override.
-     *
-     * @param isWritten Whether its write has landed, after which it is let go of as soon as the store says the same.
-     */
-    private data class PendingTempo(
-        val bpm: Int?,
-        val isWritten: Boolean = false,
-    )
-
-    /** [PendingTempo] for a capo override set on this device. [fret] null removes the override. */
-    private data class PendingCapo(
-        val fret: Int?,
-        val isWritten: Boolean = false,
-    )
 
     /**
      * What an empty list has in its place: it is only an error once the load that would have filled it has actually

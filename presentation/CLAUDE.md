@@ -323,14 +323,16 @@ reads `playback` and `beats` back (`metronomePlayback`, `metronomeBeats`); `ui/m
 shared controls.
 
 - **Where a capo lives** (`playing/SongCapo.kt`, tested): the tempo's twin in every way, down to the
-  pending writes — `Capos`, `effectiveCapo` (the setlist's entry, then the library's override, then the file's
+  pending writes — `Capos` (the same `SongOverrides<Int>`), a `PendingOverrides` of its own, `effectiveCapo` (the setlist's entry, then the library's override, then the file's
   `{capo}`, then no capo, an override equal to the song's own counting as none, within `Song.CAPO_RANGE`), `stepCapo`,
   `resetCapo` and `withCapo`, which is what puts an override on the page's capo line and in a setlist's PDF. Zero is a
   value rather than nothing there: a capo this setlist takes off a song whose file asks for one.
-- **Where a tempo lives** (`playing/SongTempo.kt`, tested): `Tempos` is the twin of `Transpositions` — a song opened from a
-  setlist reads that setlist's entry, one opened from the library `UserPreferences.tempos`, never the other — and
+- **Where a tempo lives** (`playing/SongTempo.kt`, tested): `Tempos` is a `SongOverrides<Int>`
+  (`playing/SongOverrides.kt`, tested, which `Capos` and `Transpositions` are too, keyed by a `SongPlace`) — a song opened
+  from a setlist reads that setlist's entry, one opened from the library `UserPreferences.tempos`, never the other — and
   `effectiveTempo` is entry, then override, then the file's `{tempo}` (`Song.tempo`, held within 30–300), then 120,
-  an override equal to the song's own counting as none. `changeTempo` sets an absolute override in `pendingTempos`,
+  an override equal to the song's own counting as none. `changeTempo` sets an absolute override in its `PendingOverrides`
+  (`playing/PendingOverrides.kt`, tested, the pending, debounced, settled and flushed half of every such override),
   which overlays `tempos` for the stepper, the page and the click, and writes it once the stepper has held still for
   half a second (a setlist write is a sync run, and a held stepper steps every few frames); a pending value is let go of
   once its write has landed and the store says the same, and the writes still waiting are made on a scope of their own
