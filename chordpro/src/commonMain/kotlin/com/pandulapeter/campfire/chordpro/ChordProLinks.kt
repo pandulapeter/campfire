@@ -10,6 +10,10 @@
 package com.pandulapeter.campfire.chordpro
 
 import com.pandulapeter.campfire.chordpro.model.ChordProLink
+import com.pandulapeter.campfire.chordpro.syntax.ChordProDirectives
+import com.pandulapeter.campfire.chordpro.syntax.ChordProHeaderLayout
+import com.pandulapeter.campfire.chordpro.syntax.ChordProLines
+import com.pandulapeter.campfire.chordpro.syntax.ChordProMetaItems
 
 /**
  * Adds and removes the links of a song directly in its text, leaving every other byte of it exactly as it was, for the

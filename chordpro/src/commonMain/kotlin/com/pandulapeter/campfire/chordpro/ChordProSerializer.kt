@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.chordpro.model.CommentPlacement
 import com.pandulapeter.campfire.chordpro.model.CommentStyle
 import com.pandulapeter.campfire.chordpro.model.GridToken
 import com.pandulapeter.campfire.chordpro.model.SectionType
+import com.pandulapeter.campfire.chordpro.syntax.ChordProMetaItems
 
 /**
  * Writes a [ChordProSong] back as canonical ChordPro. The editor works on raw text, so the user's own formatting does

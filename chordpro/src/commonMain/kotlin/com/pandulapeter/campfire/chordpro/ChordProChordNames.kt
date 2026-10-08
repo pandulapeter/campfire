@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.chordpro
 
-import com.pandulapeter.campfire.chordpro.ChordProVocabulary.ACCIDENTALS
+import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.ACCIDENTALS
 
 /** Linear recognition and rewriting of the notes in a chord name. */
 internal object ChordProChordNames {

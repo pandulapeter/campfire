@@ -9,6 +9,9 @@
  */
 package com.pandulapeter.campfire.chordpro
 
+import com.pandulapeter.campfire.chordpro.syntax.ChordProDirectives
+import com.pandulapeter.campfire.chordpro.syntax.ChordProLineScanner
+
 /**
  * Splits a file that contains several songs separated by `{new_song}` / `{ns}` directives.
  */

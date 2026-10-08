@@ -9,6 +9,12 @@
  */
 package com.pandulapeter.campfire.chordpro
 
+import com.pandulapeter.campfire.chordpro.syntax.ChordProDirectives
+import com.pandulapeter.campfire.chordpro.syntax.ChordProHeaderLayout
+import com.pandulapeter.campfire.chordpro.syntax.ChordProLines
+import com.pandulapeter.campfire.chordpro.syntax.ChordProMetaItems
+import com.pandulapeter.campfire.chordpro.syntax.MetadataKind
+
 /**
  * The block of directives a song opens with, for an editor that writes into it while the caret is somewhere else
  * entirely.

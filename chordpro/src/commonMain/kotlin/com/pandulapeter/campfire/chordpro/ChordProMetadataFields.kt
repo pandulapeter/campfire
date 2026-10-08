@@ -9,8 +9,13 @@
  */
 package com.pandulapeter.campfire.chordpro
 
-import com.pandulapeter.campfire.chordpro.ChordProVocabulary.META
 import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
+import com.pandulapeter.campfire.chordpro.syntax.ChordProDirectives
+import com.pandulapeter.campfire.chordpro.syntax.ChordProHeaderLayout
+import com.pandulapeter.campfire.chordpro.syntax.ChordProLines
+import com.pandulapeter.campfire.chordpro.syntax.ChordProMetaItems
+import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.META
+import com.pandulapeter.campfire.chordpro.syntax.MetadataKind
 
 /**
  * The directives that say what a song is — what it is called, who made it, what record it came out on — set directly in

@@ -7,18 +7,19 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.chordpro
+package com.pandulapeter.campfire.chordpro.syntax
 
-import com.pandulapeter.campfire.chordpro.ChordProEnvironments.END_OF_PREFIX
-import com.pandulapeter.campfire.chordpro.ChordProEnvironments.START_OF_PREFIX
-import com.pandulapeter.campfire.chordpro.ChordProEnvironments.endOfEnvironment
-import com.pandulapeter.campfire.chordpro.ChordProEnvironments.endShortNames
-import com.pandulapeter.campfire.chordpro.ChordProEnvironments.startOfEnvironment
-import com.pandulapeter.campfire.chordpro.ChordProEnvironments.startShortNames
-import com.pandulapeter.campfire.chordpro.ChordProHeaderLayout.metadataAliases
-import com.pandulapeter.campfire.chordpro.ChordProVocabulary.BRACKET_CLOSE
-import com.pandulapeter.campfire.chordpro.ChordProVocabulary.BRACKET_OPEN
-import com.pandulapeter.campfire.chordpro.ChordProVocabulary.CUSTOM_PREFIX
+import com.pandulapeter.campfire.chordpro.ChordProParser
+import com.pandulapeter.campfire.chordpro.syntax.ChordProEnvironments.END_OF_PREFIX
+import com.pandulapeter.campfire.chordpro.syntax.ChordProEnvironments.START_OF_PREFIX
+import com.pandulapeter.campfire.chordpro.syntax.ChordProEnvironments.endOfEnvironment
+import com.pandulapeter.campfire.chordpro.syntax.ChordProEnvironments.endShortNames
+import com.pandulapeter.campfire.chordpro.syntax.ChordProEnvironments.startOfEnvironment
+import com.pandulapeter.campfire.chordpro.syntax.ChordProEnvironments.startShortNames
+import com.pandulapeter.campfire.chordpro.syntax.ChordProHeaderLayout.metadataAliases
+import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.BRACKET_CLOSE
+import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.BRACKET_OPEN
+import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.CUSTOM_PREFIX
 
 /** How a line is read as a directive and where the chords in brackets are, see [matchDirective]. */
 internal object ChordProDirectives {

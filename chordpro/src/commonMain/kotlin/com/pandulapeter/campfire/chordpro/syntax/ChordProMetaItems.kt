@@ -7,10 +7,10 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.chordpro
+package com.pandulapeter.campfire.chordpro.syntax
 
-import com.pandulapeter.campfire.chordpro.ChordProDirectives.Directive
-import com.pandulapeter.campfire.chordpro.ChordProVocabulary.META
+import com.pandulapeter.campfire.chordpro.syntax.ChordProDirectives.Directive
+import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.META
 import com.pandulapeter.campfire.chordpro.model.ChordProLink
 
 /**

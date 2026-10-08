@@ -9,10 +9,6 @@
  */
 package com.pandulapeter.campfire.chordpro
 
-import com.pandulapeter.campfire.chordpro.ChordProVocabulary.ANNOTATION_MARKER
-import com.pandulapeter.campfire.chordpro.ChordProVocabulary.GRID
-import com.pandulapeter.campfire.chordpro.ChordProVocabulary.TAB
-import com.pandulapeter.campfire.chordpro.ChordProVocabulary.TRANSPOSE
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
@@ -20,6 +16,22 @@ import com.pandulapeter.campfire.chordpro.model.ChordProSummary
 import com.pandulapeter.campfire.chordpro.model.CommentStyle
 import com.pandulapeter.campfire.chordpro.model.GridToken
 import com.pandulapeter.campfire.chordpro.model.SectionType
+import com.pandulapeter.campfire.chordpro.syntax.ChordProChordRewriter
+import com.pandulapeter.campfire.chordpro.syntax.ChordProChorusRecalls
+import com.pandulapeter.campfire.chordpro.syntax.ChordProDirectives
+import com.pandulapeter.campfire.chordpro.syntax.ChordProEnvironments
+import com.pandulapeter.campfire.chordpro.syntax.ChordProHeaderLayout
+import com.pandulapeter.campfire.chordpro.syntax.ChordProLineScanner
+import com.pandulapeter.campfire.chordpro.syntax.ChordProTokens
+import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.ANNOTATION_MARKER
+import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.GRID
+import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.TAB
+import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.TRANSPOSE
+import com.pandulapeter.campfire.chordpro.syntax.LineMode
+import com.pandulapeter.campfire.chordpro.syntax.MetadataBuilder
+import com.pandulapeter.campfire.chordpro.syntax.SectionBuilder
+import com.pandulapeter.campfire.chordpro.syntax.TimingChanges
+import com.pandulapeter.campfire.chordpro.syntax.Transposition
 
 /**
  * Turns ChordPro text into a [ChordProSong].

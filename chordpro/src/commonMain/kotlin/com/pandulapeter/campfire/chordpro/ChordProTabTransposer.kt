@@ -9,7 +9,10 @@
  */
 package com.pandulapeter.campfire.chordpro
 
-import com.pandulapeter.campfire.chordpro.ChordProVocabulary.SOURCE_COMMENT
+import com.pandulapeter.campfire.chordpro.syntax.ChordProChordRewriter
+import com.pandulapeter.campfire.chordpro.syntax.ChordProDirectives
+import com.pandulapeter.campfire.chordpro.syntax.ChordProTokens
+import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.SOURCE_COMMENT
 
 /**
  * Moves the contents of one tab environment by a number of semitones, on the raw lines, for [ChordProTransposer].

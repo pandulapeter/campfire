@@ -7,9 +7,9 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.chordpro
+package com.pandulapeter.campfire.chordpro.syntax
 
-import com.pandulapeter.campfire.chordpro.ChordProVocabulary.SOURCE_COMMENT
+import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.SOURCE_COMMENT
 
 /**
  * The one walk over the lines of a ChordPro text that every reader of raw text shares: which environment each line

@@ -7,23 +7,25 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.chordpro
+package com.pandulapeter.campfire.chordpro.syntax
 
-import com.pandulapeter.campfire.chordpro.ChordProDirectives.Directive
-import com.pandulapeter.campfire.chordpro.ChordProDirectives.hasSelectorSuffix
-import com.pandulapeter.campfire.chordpro.ChordProDirectives.matchDirective
-import com.pandulapeter.campfire.chordpro.ChordProEnvironments.endOfEnvironment
-import com.pandulapeter.campfire.chordpro.ChordProEnvironments.startOfEnvironment
-import com.pandulapeter.campfire.chordpro.ChordProMetaItems.COVER_NAME
-import com.pandulapeter.campfire.chordpro.ChordProMetaItems.LANGUAGE_NAME
-import com.pandulapeter.campfire.chordpro.ChordProMetaItems.LINK_NAME
-import com.pandulapeter.campfire.chordpro.ChordProMetaItems.TAG_NAME
-import com.pandulapeter.campfire.chordpro.ChordProMetaItems.isCoverMeta
-import com.pandulapeter.campfire.chordpro.ChordProMetaItems.isLanguageMeta
-import com.pandulapeter.campfire.chordpro.ChordProMetaItems.isLinkMeta
-import com.pandulapeter.campfire.chordpro.ChordProMetaItems.isTagMeta
-import com.pandulapeter.campfire.chordpro.ChordProMetaItems.standardMeta
-import com.pandulapeter.campfire.chordpro.ChordProVocabulary.SOURCE_COMMENT
+import com.pandulapeter.campfire.chordpro.ChordProHeader
+import com.pandulapeter.campfire.chordpro.ChordProParser
+import com.pandulapeter.campfire.chordpro.syntax.ChordProDirectives.Directive
+import com.pandulapeter.campfire.chordpro.syntax.ChordProDirectives.hasSelectorSuffix
+import com.pandulapeter.campfire.chordpro.syntax.ChordProDirectives.matchDirective
+import com.pandulapeter.campfire.chordpro.syntax.ChordProEnvironments.endOfEnvironment
+import com.pandulapeter.campfire.chordpro.syntax.ChordProEnvironments.startOfEnvironment
+import com.pandulapeter.campfire.chordpro.syntax.ChordProMetaItems.COVER_NAME
+import com.pandulapeter.campfire.chordpro.syntax.ChordProMetaItems.LANGUAGE_NAME
+import com.pandulapeter.campfire.chordpro.syntax.ChordProMetaItems.LINK_NAME
+import com.pandulapeter.campfire.chordpro.syntax.ChordProMetaItems.TAG_NAME
+import com.pandulapeter.campfire.chordpro.syntax.ChordProMetaItems.isCoverMeta
+import com.pandulapeter.campfire.chordpro.syntax.ChordProMetaItems.isLanguageMeta
+import com.pandulapeter.campfire.chordpro.syntax.ChordProMetaItems.isLinkMeta
+import com.pandulapeter.campfire.chordpro.syntax.ChordProMetaItems.isTagMeta
+import com.pandulapeter.campfire.chordpro.syntax.ChordProMetaItems.standardMeta
+import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.SOURCE_COMMENT
 
 /** Where the header of a song ends, where its body begins and where a metadata directive added to it goes, see [metadataInsertionIndex]. */
 internal object ChordProHeaderLayout {

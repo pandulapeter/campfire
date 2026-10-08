@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.chordpro
+package com.pandulapeter.campfire.chordpro.syntax
 
 /** The `{start_of_…}` and `{end_of_…}` environments and the labels they give their sections, see [startOfEnvironment]. */
 internal object ChordProEnvironments {

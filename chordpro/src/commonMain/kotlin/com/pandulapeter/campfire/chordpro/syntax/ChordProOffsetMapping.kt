@@ -7,7 +7,9 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.chordpro
+package com.pandulapeter.campfire.chordpro.syntax
+
+import com.pandulapeter.campfire.chordpro.ChordProTransposer
 
 /** Where a caret stands in a document after a transposition rewrote it, see [ChordProTransposer.transposedOffset]. */
 internal object ChordProOffsetMapping {

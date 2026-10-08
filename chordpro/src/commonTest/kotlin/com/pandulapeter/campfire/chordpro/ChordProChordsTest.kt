@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.chordpro
 
 import com.pandulapeter.campfire.chordpro.model.Chord
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
+import com.pandulapeter.campfire.chordpro.syntax.ChordProChordRewriter
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull

@@ -9,13 +9,20 @@
  */
 package com.pandulapeter.campfire.chordpro
 
-import com.pandulapeter.campfire.chordpro.ChordProVocabulary.ANNOTATION_MARKER
-import com.pandulapeter.campfire.chordpro.ChordProVocabulary.GRID
-import com.pandulapeter.campfire.chordpro.ChordProVocabulary.KEY
-import com.pandulapeter.campfire.chordpro.ChordProVocabulary.META
-import com.pandulapeter.campfire.chordpro.ChordProVocabulary.TAB
-import com.pandulapeter.campfire.chordpro.ChordProVocabulary.TRANSPOSE
 import com.pandulapeter.campfire.chordpro.model.GridToken
+import com.pandulapeter.campfire.chordpro.syntax.ChordProDirectives
+import com.pandulapeter.campfire.chordpro.syntax.ChordProHeaderLayout
+import com.pandulapeter.campfire.chordpro.syntax.ChordProLineScanner
+import com.pandulapeter.campfire.chordpro.syntax.ChordProLines
+import com.pandulapeter.campfire.chordpro.syntax.ChordProMetaItems
+import com.pandulapeter.campfire.chordpro.syntax.ChordProTokens
+import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.ANNOTATION_MARKER
+import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.GRID
+import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.KEY
+import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.META
+import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.TAB
+import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.TRANSPOSE
+import com.pandulapeter.campfire.chordpro.syntax.MetadataKind
 
 /**
  * Finds the parts of a ChordPro document an editor wants to colour. It lives next to the parser rather than in the

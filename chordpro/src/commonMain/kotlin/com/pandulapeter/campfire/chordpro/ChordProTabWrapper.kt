@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.chordpro
 
+import com.pandulapeter.campfire.chordpro.syntax.ChordProTokens
+
 /**
  * Cuts one run of tablature into rows that fit a width, the way a tab book breaks a long staff into systems.
  *

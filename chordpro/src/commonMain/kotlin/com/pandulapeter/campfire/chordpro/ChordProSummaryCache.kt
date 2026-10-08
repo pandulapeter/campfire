@@ -10,6 +10,8 @@
 package com.pandulapeter.campfire.chordpro
 
 import com.pandulapeter.campfire.chordpro.model.ChordProSummary
+import com.pandulapeter.campfire.chordpro.syntax.ChordProDirectives
+import com.pandulapeter.campfire.chordpro.syntax.ChordProEnvironments
 
 /**
  * [ChordProParser.summarize] for a text that is edited one keystroke at a time, which is how the editor keeps its title,

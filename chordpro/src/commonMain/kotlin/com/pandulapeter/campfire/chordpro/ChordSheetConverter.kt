@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.chordpro
 
+import com.pandulapeter.campfire.chordpro.syntax.ChordProDirectives
 import kotlin.math.abs
 import kotlin.math.roundToInt
 

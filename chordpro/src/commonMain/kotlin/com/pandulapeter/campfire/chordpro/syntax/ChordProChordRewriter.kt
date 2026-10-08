@@ -7,21 +7,26 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.chordpro
+package com.pandulapeter.campfire.chordpro.syntax
 
-import com.pandulapeter.campfire.chordpro.ChordProVocabulary.ACCIDENTALS
-import com.pandulapeter.campfire.chordpro.ChordProVocabulary.ANNOTATION_MARKER
-import com.pandulapeter.campfire.chordpro.ChordProVocabulary.BRACKET_CLOSE
-import com.pandulapeter.campfire.chordpro.ChordProVocabulary.BRACKET_OPEN
-import com.pandulapeter.campfire.chordpro.ChordProVocabulary.GRID
-import com.pandulapeter.campfire.chordpro.ChordProVocabulary.KEY
-import com.pandulapeter.campfire.chordpro.ChordProVocabulary.TAB
-import com.pandulapeter.campfire.chordpro.ChordProVocabulary.TRANSPOSE
+import com.pandulapeter.campfire.chordpro.ChordProChordNames
+import com.pandulapeter.campfire.chordpro.ChordProChords
+import com.pandulapeter.campfire.chordpro.ChordProDefinitions
+import com.pandulapeter.campfire.chordpro.ChordProNotation
+import com.pandulapeter.campfire.chordpro.ChordProTransposer
 import com.pandulapeter.campfire.chordpro.model.ChordDefinition
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.chordpro.model.GridToken
+import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.ACCIDENTALS
+import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.ANNOTATION_MARKER
+import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.BRACKET_CLOSE
+import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.BRACKET_OPEN
+import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.GRID
+import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.KEY
+import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.TAB
+import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.TRANSPOSE
 
 /**
  * The engine both [ChordProTransposer] and [ChordProNotation] rewrite chords with: it finds every chord of a song or of a

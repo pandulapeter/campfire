@@ -16,6 +16,8 @@ import com.pandulapeter.campfire.chordpro.model.CommentPlacement
 import com.pandulapeter.campfire.chordpro.model.CommentStyle
 import com.pandulapeter.campfire.chordpro.model.GridToken
 import com.pandulapeter.campfire.chordpro.model.SectionType
+import com.pandulapeter.campfire.chordpro.syntax.ChordProDirectives
+import com.pandulapeter.campfire.chordpro.syntax.ChordProTokens
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals

@@ -9,17 +9,18 @@
  */
 package com.pandulapeter.campfire.chordpro
 
-import com.pandulapeter.campfire.chordpro.ChordProChordRewriter.ChordRewrite
-import com.pandulapeter.campfire.chordpro.ChordProChordRewriter.anyWrittenChordName
-import com.pandulapeter.campfire.chordpro.ChordProChordRewriter.keepingLowercaseMinors
-import com.pandulapeter.campfire.chordpro.ChordProChordRewriter.keyWordOf
-import com.pandulapeter.campfire.chordpro.ChordProChordRewriter.keyWords
-import com.pandulapeter.campfire.chordpro.ChordProChordRewriter.rewriteChordNamesInText
-import com.pandulapeter.campfire.chordpro.ChordProChordRewriter.rewriteChords
-import com.pandulapeter.campfire.chordpro.ChordProChordRewriter.writtenChordNames
-import com.pandulapeter.campfire.chordpro.ChordProVocabulary.NOTE_COUNT
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
+import com.pandulapeter.campfire.chordpro.syntax.ChordProChordRewriter.ChordRewrite
+import com.pandulapeter.campfire.chordpro.syntax.ChordProChordRewriter.anyWrittenChordName
+import com.pandulapeter.campfire.chordpro.syntax.ChordProChordRewriter.keepingLowercaseMinors
+import com.pandulapeter.campfire.chordpro.syntax.ChordProChordRewriter.keyWordOf
+import com.pandulapeter.campfire.chordpro.syntax.ChordProChordRewriter.keyWords
+import com.pandulapeter.campfire.chordpro.syntax.ChordProChordRewriter.rewriteChordNamesInText
+import com.pandulapeter.campfire.chordpro.syntax.ChordProChordRewriter.rewriteChords
+import com.pandulapeter.campfire.chordpro.syntax.ChordProChordRewriter.writtenChordNames
+import com.pandulapeter.campfire.chordpro.syntax.ChordProOffsetMapping
+import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.NOTE_COUNT
 
 /**
  * Moves chords up or down by a number of semitones, either on the model or directly on the raw text.

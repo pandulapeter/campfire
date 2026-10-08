@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.chordpro.ChordProHighlighter.TokenType
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
+import com.pandulapeter.campfire.chordpro.syntax.MetadataKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse

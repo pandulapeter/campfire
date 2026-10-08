@@ -12,6 +12,8 @@ package com.pandulapeter.campfire.chordpro
 import com.pandulapeter.campfire.chordpro.model.ChordDefinition
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
 import com.pandulapeter.campfire.chordpro.model.ChordVoicing
+import com.pandulapeter.campfire.chordpro.syntax.ChordProDirectives
+import com.pandulapeter.campfire.chordpro.syntax.ChordProLines
 
 /**
  * A song's own chord shapes: ChordPro's `{define}` and `{chord}` directives.

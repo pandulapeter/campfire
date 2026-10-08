@@ -7,7 +7,12 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.chordpro
+package com.pandulapeter.campfire.chordpro.syntax
+
+import com.pandulapeter.campfire.chordpro.ChordProDuration
+import com.pandulapeter.campfire.chordpro.ChordProHeader
+import com.pandulapeter.campfire.chordpro.ChordProTempo
+import com.pandulapeter.campfire.chordpro.ChordProTime
 
 /**
  * Every metadata directive a song describes itself with, described once: the parser, the highlighter, the prettifier

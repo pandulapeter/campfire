@@ -9,6 +9,11 @@
  */
 package com.pandulapeter.campfire.chordpro
 
+import com.pandulapeter.campfire.chordpro.syntax.ChordProDirectives
+import com.pandulapeter.campfire.chordpro.syntax.ChordProHeaderLayout
+import com.pandulapeter.campfire.chordpro.syntax.ChordProLines
+import com.pandulapeter.campfire.chordpro.syntax.ChordProMetaItems
+
 /**
  * Sets the cover image of a song directly in its text, leaving every other byte of it exactly as it was, for the same
  * reason [ChordProTags] does: what comes out of here is written back to the user's own file.

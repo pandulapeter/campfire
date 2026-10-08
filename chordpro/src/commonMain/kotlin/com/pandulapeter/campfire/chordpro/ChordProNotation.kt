@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.chordpro
 
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
+import com.pandulapeter.campfire.chordpro.syntax.ChordProChordRewriter
 
 /**
  * Converts chords between [ChordNotation.STANDARD], which every file is stored in and the model works in, and the

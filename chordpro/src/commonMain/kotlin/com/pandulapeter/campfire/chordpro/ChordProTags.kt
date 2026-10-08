@@ -9,6 +9,11 @@
  */
 package com.pandulapeter.campfire.chordpro
 
+import com.pandulapeter.campfire.chordpro.syntax.ChordProDirectives
+import com.pandulapeter.campfire.chordpro.syntax.ChordProHeaderLayout
+import com.pandulapeter.campfire.chordpro.syntax.ChordProLines
+import com.pandulapeter.campfire.chordpro.syntax.ChordProMetaItems
+
 /**
  * Adds and removes the tags of a song directly in its text, leaving every other byte of it exactly as it was. The
  * same reasoning as [ChordProTransposer.transposeText]: what comes out of here is written back to the user's own

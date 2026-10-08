@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.chordpro
 
-import com.pandulapeter.campfire.chordpro.ChordProVocabulary.NOTE_COUNT
+import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.NOTE_COUNT
 
 /**
  * The chords of a song counted from its key, as [ChordNotation.NASHVILLE] and [ChordNotation.ROMAN] show them. The aim
