@@ -35,9 +35,8 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ActionsMenuItem
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
-import com.pandulapeter.campfire.presentation.ui.playing.EffectiveCapo
-import com.pandulapeter.campfire.presentation.ui.playing.EffectiveTempo
 import com.pandulapeter.campfire.presentation.ui.metronome.timeSignatureOrDefault
+import com.pandulapeter.campfire.presentation.ui.playing.SongPlayback
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -45,7 +44,7 @@ import org.jetbrains.compose.resources.painterResource
  * is drawn, so that each song of a setlist sets its own. The caller leaves them out in read only mode, where the
  * values are read rather than set.
  *
- * @param tempo Passed in rather than read here, since the screen already holds it for the app bar's metronome button.
+ * @param playback Passed in rather than read here, since the screen already holds it for the page.
  * @param shouldShowChords False with the chords switched off, which takes the transposition and the capo with them.
  * @param shouldShowTempo False with the metronome switched off, which takes the tempo and the time signature with it.
  * @return Null where both are switched off, which leaves the song nothing to set.
@@ -55,14 +54,13 @@ internal fun rememberSongPlayingControls(
     viewModel: CampfireViewModel,
     song: Song,
     setlistFileName: String?,
-    transposition: Int,
+    playback: SongPlayback,
     chordSpelling: UserPreferences.ChordSpelling,
-    tempo: EffectiveTempo,
-    capo: EffectiveCapo,
     shouldShowChords: Boolean,
     shouldShowTempo: Boolean,
 ): SongPlayingControls? {
     if (!shouldShowChords && !shouldShowTempo) return null
+    val (transposition, capo, tempo) = playback
     val canTranspose = shouldShowChords && song.hasChords
     // The key the transposition alone takes the song to, which is what the chords on the page spell: the capo is the
     // stepper next to this one and moves the sounding key without moving a chord, so counting it in here would have

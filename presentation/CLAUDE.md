@@ -336,7 +336,9 @@ shared controls.
   (`playing/SongOverrides.kt`, tested, which `Capos` and `Transpositions` are too, keyed by a `SongPlace`) — a song opened
   from a setlist reads that setlist's entry, one opened from the library `UserPreferences.tempos`, never the other — and
   `effectiveTempo` is entry, then override, then the file's `{tempo}` (`Song.tempo`, held within 30–300), then 120,
-  an override equal to the song's own counting as none. `changeTempo` sets an absolute override in its `PendingOverrides`
+  an override equal to the song's own counting as none. A screen that reads the transposition, the capo and the tempo
+  together collects them as one `playingOverrides` and asks `songPlaybackOf` (`playing/SongPlayback.kt`, tested).
+  `changeTempo` sets an absolute override in its `PendingOverrides`
   (`playing/PendingOverrides.kt`, tested, the pending, debounced, settled and flushed half of every such override),
   which overlays `tempos` for the stepper, the page and the click, and writes it once the stepper has held still for
   half a second (a setlist write is a sync run, and a held stepper steps every few frames); a pending value is let go of

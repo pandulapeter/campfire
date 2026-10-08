@@ -71,11 +71,10 @@ import com.pandulapeter.campfire.presentation.ui.components.songCardPadding
 import com.pandulapeter.campfire.presentation.ui.components.searchTravelSpec
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
-import com.pandulapeter.campfire.presentation.ui.playing.effectiveTempo
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableContent
 import com.pandulapeter.campfire.presentation.ui.platform.isDesktopPlatform
-import com.pandulapeter.campfire.presentation.ui.playing.effectiveCapo
+import com.pandulapeter.campfire.presentation.ui.playing.songPlaybackOf
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.songLabelActions
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
@@ -133,9 +132,7 @@ internal fun SongList(
     val itemPlacementSpec = searchTravelSpec(visibilityThreshold = IntOffset.VisibilityThreshold)
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val songFilter by viewModel.songFilter.collectAsStateWithLifecycle()
-    val transpositions by viewModel.transpositions.collectAsStateWithLifecycle()
-    val capos by viewModel.capos.collectAsStateWithLifecycle()
-    val tempos by viewModel.tempos.collectAsStateWithLifecycle()
+    val playingOverrides by viewModel.playingOverrides.collectAsStateWithLifecycle()
     val labelsOnEverySong by viewModel.labelsOnEverySong.collectAsStateWithLifecycle()
     val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     val songFileNamesInSetlists by viewModel.songFileNamesInSetlists.collectAsStateWithLifecycle()
@@ -280,9 +277,7 @@ internal fun SongList(
                     // the only values this list knows about: the setlists each hold their own. The key is remembered,
                     // since the row is composed again as every scroll starts and ends and it is a whole transposition
                     // to work out again.
-                    val transposition = transpositions[song.fileName, null]
-                    val capo = effectiveCapo(song = song, setlistFileName = null, capos = capos)
-                    val tempo = effectiveTempo(song = song, setlistFileName = null, tempos = tempos)
+                    val (transposition, capo, tempo) = songPlaybackOf(song = song, setlistFileName = null, overrides = playingOverrides)
                     val key = remember(song.key, song.transpose, transposition, capo, chordSpelling) {
                         viewModel.songRenderer.renderKey(song = song, transposition = transposition, capo = capo.fret, spelling = chordSpelling)
                     }

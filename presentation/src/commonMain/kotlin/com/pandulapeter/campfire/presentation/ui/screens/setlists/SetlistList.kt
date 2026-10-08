@@ -99,10 +99,9 @@ import com.pandulapeter.campfire.presentation.ui.components.rememberSectionHeade
 import com.pandulapeter.campfire.presentation.ui.components.songCardPadding
 import com.pandulapeter.campfire.presentation.ui.components.sectionHeaderBottomGap
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
-import com.pandulapeter.campfire.presentation.ui.playing.effectiveTempo
-import com.pandulapeter.campfire.presentation.ui.playing.effectiveCapo
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.localization.stringResource
+import com.pandulapeter.campfire.presentation.ui.playing.songPlaybackOf
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
@@ -176,9 +175,7 @@ internal fun SetlistList(
     }
     val setlists by viewModel.setlists.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
-    val transpositions by viewModel.transpositions.collectAsStateWithLifecycle()
-    val capos by viewModel.capos.collectAsStateWithLifecycle()
-    val tempos by viewModel.tempos.collectAsStateWithLifecycle()
+    val playingOverrides by viewModel.playingOverrides.collectAsStateWithLifecycle()
     val labelsOnEverySong by viewModel.labelsOnEverySong.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val hasLoadedLibrary = rememberHasLoadedLibrary(isLoading)
@@ -441,8 +438,9 @@ internal fun SetlistList(
                         // out again: the row is composed again as every scroll starts and ends, and it is a whole
                         // transposition to work out.
                         val renderedKey = (entry as? SetlistWithSongs.Entry.Present)?.let { present ->
-                            val transposition = transpositions[present.song.fileName, setlistWithSongs.setlist.fileName]
-                            val capo = effectiveCapo(song = present.song, setlistFileName = setlistWithSongs.setlist.fileName, capos = capos).fret
+                            val playback = songPlaybackOf(song = present.song, setlistFileName = setlistWithSongs.setlist.fileName, overrides = playingOverrides)
+                            val transposition = playback.transposition
+                            val capo = playback.capo.fret
                             remember(present.song.key, present.song.transpose, transposition, capo, chordSpelling) {
                                 viewModel.songRenderer.renderKey(song = present.song, transposition = transposition, capo = capo, spelling = chordSpelling)
                             }
@@ -523,11 +521,11 @@ internal fun SetlistList(
                                         cardPadding = songCardPadding(rowIndex, columnCount),
                                         key = renderedKey,
                                         // And the setlist's own tempo, for the same reason.
-                                        tempo = effectiveTempo(
+                                        tempo = songPlaybackOf(
                                             song = entry.song,
                                             setlistFileName = setlistFileName,
-                                            tempos = tempos,
-                                        ).displayedBpm.takeIf { isMetronomeEnabled },
+                                            overrides = playingOverrides,
+                                        ).tempo.displayedBpm.takeIf { isMetronomeEnabled },
                                         shouldShowChords = shouldShowChords,
                                         duration = entry.song.duration,
                                         coverArtUrl = entry.song.coverArtUrl?.takeIf { isCoverArtEnabled },

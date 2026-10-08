@@ -89,10 +89,9 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeButton
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomePanel
 import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
-import com.pandulapeter.campfire.presentation.ui.playing.effectiveCapo
-import com.pandulapeter.campfire.presentation.ui.playing.effectiveTempo
 import com.pandulapeter.campfire.presentation.ui.metronome.metronomeAction
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
+import com.pandulapeter.campfire.presentation.ui.playing.songPlaybackOf
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
@@ -136,9 +135,7 @@ internal fun SongDetailsAppBar(
     coroutineScope: CoroutineScope,
     onBack: () -> Unit,
 ) {
-    val transpositions by viewModel.transpositions.collectAsStateWithLifecycle()
-    val tempos by viewModel.tempos.collectAsStateWithLifecycle()
-    val capos by viewModel.capos.collectAsStateWithLifecycle()
+    val playingOverrides by viewModel.playingOverrides.collectAsStateWithLifecycle()
     val songFileNamesInSetlists by viewModel.songFileNamesInSetlists.collectAsStateWithLifecycle()
     val layoutDirection = LocalLayoutDirection.current
     val appBarWidth = settledWidth - contentPadding.calculateStartPadding(layoutDirection) - contentPadding.calculateEndPadding(layoutDirection)
@@ -153,7 +150,7 @@ internal fun SongDetailsAppBar(
     // Read only, the button stands next to the text size stepper, which is all that bar holds; otherwise it is always
     // in the bar, see appBarButtons.
     val showsMetronomeInBar = !isReadOnly || showsMetronomeInPerformanceBar(appBarWidth)
-    val currentTempo = currentSong?.let { effectiveTempo(song = it, setlistFileName = destination.setlistFileName, tempos = tempos) }
+    val currentTempo = currentSong?.let { songPlaybackOf(song = it, setlistFileName = destination.setlistFileName, overrides = playingOverrides).tempo }
     val metronomeButton: @Composable () -> Unit = {
         MetronomeButton(
             isPanelShown = isMetronomePanelShown,
@@ -220,17 +217,18 @@ internal fun SongDetailsAppBar(
                 // content was composed for rather than for the current one, since a crossfade between two songs
                 // draws both at once. Lyrics only mode says nothing about either, as it says nothing in a row.
                 val headerKey = song?.takeIf { shouldShowChords && it.hasChords }?.let {
+                    val playback = songPlaybackOf(song = it, setlistFileName = destination.setlistFileName, overrides = playingOverrides)
                     viewModel.songRenderer.renderKey(
                         song = it,
-                        transposition = transpositions[it.fileName, destination.setlistFileName],
-                        capo = effectiveCapo(song = it, setlistFileName = destination.setlistFileName, capos = capos).fret,
+                        transposition = playback.transposition,
+                        capo = playback.capo.fret,
                         spelling = chordSpelling,
                     )
                 }
                 // The stretch the page is on where the song changes its tempo further down, as the click plays it.
                 val headerTempo = song
                     ?.takeIf { isMetronomeEnabled }
-                    ?.let { songTimings[it.fileName]?.bpm ?: effectiveTempo(song = it, setlistFileName = destination.setlistFileName, tempos = tempos).displayedBpm }
+                    ?.let { songTimings[it.fileName]?.bpm ?: songPlaybackOf(song = it, setlistFileName = destination.setlistFileName, overrides = playingOverrides).tempo.displayedBpm }
                     ?.let { stringResource(Res.string.song_details_tempo, it.toString()) }
                 // The duration only inside a setlist, as the song's card there says it, since a set is what is
                 // timed by its songs; and, as there, with the chords switched off too, since the singer is timed by it alike.

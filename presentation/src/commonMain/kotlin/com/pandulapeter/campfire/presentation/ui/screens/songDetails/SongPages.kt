@@ -34,10 +34,9 @@ import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
-import com.pandulapeter.campfire.presentation.ui.playing.effectiveCapo
-import com.pandulapeter.campfire.presentation.ui.playing.effectiveTempo
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableContent
+import com.pandulapeter.campfire.presentation.ui.playing.songPlaybackOf
 
 /**
  * The pages of [SongDetailsPager], one song each, with the one beside the current page on either side composed ahead of
@@ -69,9 +68,7 @@ internal fun SongPages(
 ) {
     val songTexts by viewModel.songTexts.collectAsStateWithLifecycle()
     val failedSongFileNames by viewModel.failedSongFileNames.collectAsStateWithLifecycle()
-    val transpositions by viewModel.transpositions.collectAsStateWithLifecycle()
-    val tempos by viewModel.tempos.collectAsStateWithLifecycle()
-    val capos by viewModel.capos.collectAsStateWithLifecycle()
+    val playingOverrides by viewModel.playingOverrides.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     HorizontalPager(
         modifier = Modifier.bounceScrollableContent(pagerState, Orientation.Horizontal)
@@ -118,8 +115,9 @@ internal fun SongPages(
         var hasShownLyrics by remember { mutableStateOf(text != null) }
         val shownText = if (!hasShownLyrics && !isFollowingGesture && pagerState.isScrollInProgress) null else text
         if (shownText != null && !hasShownLyrics) SideEffect { hasShownLyrics = true }
-        val tempo = effectiveTempo(song = song, setlistFileName = destination.setlistFileName, tempos = tempos)
-        val capo = effectiveCapo(song = song, setlistFileName = destination.setlistFileName, capos = capos)
+        val playback = songPlaybackOf(song = song, setlistFileName = destination.setlistFileName, overrides = playingOverrides)
+        val tempo = playback.tempo
+        val capo = playback.capo
         SongDetailsPage(
             // Chords and annotations are drawn rather than measured, so this is what keeps anything a line
             // draws past its end off the page of the next song. The page's own padding holds the cards'
@@ -132,7 +130,7 @@ internal fun SongPages(
             buildsModelInPlace = buildsInPlace,
             isViewportSettled = isViewportSettled,
             hasFailed = song.fileName in failedSongFileNames,
-            transposition = transpositions[song.fileName, destination.setlistFileName],
+            transposition = playback.transposition,
             tempoOverride = tempo.takeUnless { it.isDefault }?.bpm,
             capoOverride = capo.takeUnless { it.isDefault }?.fret,
             // Read only, the four playing values are read rather than set, so the page draws them as the
@@ -144,10 +142,8 @@ internal fun SongPages(
                     viewModel = viewModel,
                     song = song,
                     setlistFileName = destination.setlistFileName,
-                    transposition = transpositions[song.fileName, destination.setlistFileName],
+                    playback = playback,
                     chordSpelling = chordSpelling,
-                    tempo = tempo,
-                    capo = capo,
                     shouldShowChords = shouldShowChords,
                     shouldShowTempo = isMetronomeEnabled,
                 )

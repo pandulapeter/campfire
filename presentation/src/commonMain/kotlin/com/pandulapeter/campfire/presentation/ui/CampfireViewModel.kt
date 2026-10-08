@@ -128,6 +128,7 @@ import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeContext
 import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
 import com.pandulapeter.campfire.presentation.ui.playing.PendingOverrides
+import com.pandulapeter.campfire.presentation.ui.playing.PlayingOverridesSnapshot
 import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
 import com.pandulapeter.campfire.presentation.ui.playing.SongPlace
 import com.pandulapeter.campfire.presentation.ui.playing.withEntry
@@ -906,6 +907,9 @@ class CampfireViewModel(
 
     /** Every song's capo override, as the song details screen and the lists that name a sounding key read it. */
     internal val capos = capoOverrides.effective.asState(Capos())
+
+    /** The three overrides of how a song is played as one value, for the screens that read all three. */
+    internal val playingOverrides = combine(transpositions, capos, tempos, ::PlayingOverridesSnapshot).asState(PlayingOverridesSnapshot())
 
     /** Saved like [pendingPrintSettings]: a dragged slider is a new value every frame. */
     private val metronomeSettingsPreference = DebouncedPreference<MetronomeSettings> { copy(metronomeSettings = it) }
