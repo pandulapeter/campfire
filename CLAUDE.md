@@ -43,8 +43,9 @@ app:android / app:desktop / app:ios / app:web   entry points, platform chrome, "
                                              desktop key handling) are its platform source sets
   domain:api / :implementation               use cases (single-method interfaces)
     data:repository:api / :implementation
-      data:source:local:api  -> :implementation   files on Android/desktop/iOS, OPFS on web (see Web below);
-                                                  also holds the pure-Kotlin zip reader/writer and PDF/Word text extractors
+      data:source:local:api  -> :implementation   files on Android/desktop/iOS, OPFS on web (see Web below)
+        data:formats                         the pure-Kotlin zip reader/writer and PDF/Word text extractors; depends on
+                                             :data:model and :chordpro, used by :data:source:local:implementation
       data:source:remote:api -> :implementation   the sync contracts and the Dropbox provider, the cover download
                                                   and the MusicBrainz and iTunes searches; the only module in the project that
                                                   makes a network call (see Sync and Cover art below)
@@ -500,7 +501,7 @@ localized in both languages.
   puts that file back, leaving both.
 - Only pure logic is tested: `commonTest` unit tests in `:data:model` (the library name identity rule and the tag
   normalization), `:chordpro` (including chord-sheet conversion, and chord names, shapes and definitions, every shape of the tables checked against the chord it is filed under), `:domain:implementation` (`ImportPlanner` and conversion import plumbing),
-  `:data:source:local:implementation` (zip, bounded PDF/Word readers and the JVM file storage, with independent-producer document goldens in `desktopTest`), `:data:source:remote:*` (hashing, encoders,
+  `:data:formats` (zip, bounded PDF/Word readers), `:data:source:local:implementation` (the JVM file storage, with independent-producer document goldens in `desktopTest`), `:data:source:remote:*` (hashing, encoders,
   the OAuth authorization URL, the cover search's queries, its `User-Agent` and its pace, the cover download),
   `:data:repository:implementation` (`SyncPlanner`, which decides what happens to every file in a sync run, the
   synced preferences and the cover cache), `:metronome:*` (the sequencer, the synthesizer, the mixer, tap tempo and time signatures) and
@@ -508,7 +509,7 @@ localized in both languages.
   index, the setlist slots, stepper labels, section grid and the cutting of sections into columns, row snapping and section measurements of the details screen, the editor's token cache, where a song's tempo comes from and what a click plays for, which chords a song plays and which
   shape each is drawn with, the diagrams' geometry and what the editor's Chord shape button writes), run on
   the desktop target with
-  `./gradlew :data:model:desktopTest :chordpro:desktopTest :domain:implementation:desktopTest :data:source:local:implementation:desktopTest :data:source:remote:api:desktopTest :data:source:remote:implementation:desktopTest :data:repository:implementation:desktopTest :metronome:api:desktopTest :metronome:implementation:desktopTest :presentation:desktopTest`.
+  `./gradlew :data:model:desktopTest :data:formats:desktopTest :chordpro:desktopTest :domain:implementation:desktopTest :data:source:local:implementation:desktopTest :data:source:remote:api:desktopTest :data:source:remote:implementation:desktopTest :data:repository:implementation:desktopTest :metronome:api:desktopTest :metronome:implementation:desktopTest :presentation:desktopTest`.
   The web build's JavaScript — its storage worker, its service worker's routing and the page's decisions about the
   build it keeps — has Node tests of its own (see `app/web`), and the parser of a
   release's description, which is Python, a `unittest` next to it in `.github/scripts`.
