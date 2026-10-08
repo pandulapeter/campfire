@@ -219,6 +219,8 @@ localized in both languages.
   `:chordpro` has none of this: it is a set of stateless objects, reached
   through use cases.
 - Implementation classes are `internal` and named `<Interface>Impl`. Use cases are `operator fun invoke`.
+- `:chordpro` and `:metronome:api` build in explicit API mode (`explicitApi()`), so a new public declaration is written
+  `public`, with its type, on purpose; what nothing outside the module calls is `internal`.
 - Repositories extend `BaseLocalDataRepository`, which holds the cached `DataState` and the read-once logic.
 - Layer boundaries are crossed via mappers (`mapper/` packages), never by leaking document/entity types.
 - **A setlist shows every song it names**, whatever the Songs screen is filtered to: the filters narrow a view of the

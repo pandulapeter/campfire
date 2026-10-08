@@ -12,13 +12,13 @@ package com.pandulapeter.campfire.chordpro.model
 /**
  * One top-level element of a song body.
  */
-sealed interface ChordProBlock {
+public sealed interface ChordProBlock {
 
     /**
      * An environment or an implicit paragraph. Its [lines] may switch between lyrics, tablature and grids as the
      * song does, since those are ways of writing a line down rather than sections of their own.
      */
-    data class Section(
+    public data class Section(
         val type: SectionType,
         val label: String?, // "Verse 1" from {start_of_verse: Verse 1} or {sov: label="Verse 1"}
         val lines: List<ChordProLine>,
@@ -41,7 +41,7 @@ sealed interface ChordProBlock {
      * first section, and where something cut it, whatever stood inside it and the continuations after — or empty where
      * no chorus came before. The renderer decides how to show it.
      */
-    data class ChorusRecall(
+    public data class ChorusRecall(
         val label: String?,
         val blocks: List<ChordProBlock> = emptyList(),
     ) : ChordProBlock
@@ -51,7 +51,7 @@ sealed interface ChordProBlock {
      * the section's lines are cut around it, so where it stood is recorded with it: a viewer folds it away with its
      * section and leaves the ones between sections alone.
      */
-    data class Comment(
+    public data class Comment(
         val text: String,
         val style: CommentStyle,
         val placement: CommentPlacement = CommentPlacement.BETWEEN_SECTIONS,
@@ -71,7 +71,7 @@ sealed interface ChordProBlock {
      * writes it in a parsed song, like the chords after it, and moved with them by the transposition, which makes it the
      * key the song is in from here on.
      */
-    data class Transpose(val semitones: Int, val key: String? = null) : ChordProBlock
+    public data class Transpose(val semitones: Int, val key: String? = null) : ChordProBlock
 
     /**
      * `{tempo}` or `{time}` after the song has begun: from here on it is played at [tempo] in [time], both as the file
@@ -79,10 +79,10 @@ sealed interface ChordProBlock {
      * further down. Complete rather than a change of one value, so that a reader of any one stretch needs no walk back
      * to the start. Like [Transpose] it cuts the section it stands in.
      */
-    data class Timing(val tempo: String?, val time: String?) : ChordProBlock
+    public data class Timing(val tempo: String?, val time: String?) : ChordProBlock
 
     /** {column_break} / {new_page} and friends: a hint that the layout may break here. */
-    data object Break : ChordProBlock
+    public data object Break : ChordProBlock
 }
 
 /**
@@ -91,25 +91,25 @@ sealed interface ChordProBlock {
  * than a part of the song, and they are carried by [ChordProLine.Tab] and [ChordProLine.Grid] instead. A solo can
  * then be one section holding a line of chords and the tablature under it, rather than three sections in a row.
  */
-sealed interface SectionType {
+public sealed interface SectionType {
 
-    data object Verse : SectionType
+    public data object Verse : SectionType
 
-    data object Chorus : SectionType
+    public data object Chorus : SectionType
 
-    data object Bridge : SectionType
+    public data object Bridge : SectionType
 
     /** {start_of_<name>} for any other name, e.g. "intro", "solo", "outro", "pre-chorus". */
-    data class Custom(val name: String) : SectionType
+    public data class Custom(val name: String) : SectionType
 
     /** Lines outside any environment, grouped by blank lines. Rendered like a verse without a label. */
-    data object Paragraph : SectionType
+    public data object Paragraph : SectionType
 }
 
-enum class CommentStyle { PLAIN, ITALIC, BOX }
+public enum class CommentStyle { PLAIN, ITALIC, BOX }
 
 /** Which section a [ChordProBlock.Comment] was written in. */
-enum class CommentPlacement {
+public enum class CommentPlacement {
 
     /**
      * Outside every environment, or among lines that are in none, where it belongs to no section; also inside a

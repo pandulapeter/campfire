@@ -21,7 +21,7 @@ import com.pandulapeter.campfire.chordpro.syntax.ChordProMetaItems
  * ChordPro has no directive for a cover, so this is `{meta: cover https://…}`, a custom metadata item like the
  * language of a song (see [ChordProLanguages]), which any other ChordPro program keeps and ignores.
  */
-object ChordProCoverArt {
+public object ChordProCoverArt {
 
     /**
      * Makes [url] the song's cover: the first cover line the file has is rewritten in place and every other one
@@ -29,7 +29,7 @@ object ChordProCoverArt {
      * `http` or `https` address, removes every cover line instead. A text that already says exactly that returns
      * unchanged.
      */
-    fun set(text: String, url: String?): String {
+    public fun set(text: String, url: String?): String {
         val cover = url?.let(ChordProMetaItems::webUrl)
         val lines = ChordProLines.splitLines(text)
         val newLine = cover?.let { "{meta: ${ChordProMetaItems.COVER_NAME} $it}" }
@@ -56,7 +56,7 @@ object ChordProCoverArt {
      * way a link's is ([ChordProMetaItems.typedWebUrl]), and [set] is handed the completed address. What a field the user
      * types an address into checks against, so that it never offers to save something the file would not keep.
      */
-    fun usableUrl(value: String): String? = ChordProMetaItems.typedWebUrl(value)
+    public fun usableUrl(value: String): String? = ChordProMetaItems.typedWebUrl(value)
 
     /** Whether the line is a `{meta: cover …}` directive, usable or not. */
     private fun String.isCover() = ChordProDirectives.matchDirective(trim())?.let(ChordProMetaItems::isCoverMeta) == true

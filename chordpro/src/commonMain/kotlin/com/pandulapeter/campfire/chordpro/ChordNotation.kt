@@ -26,7 +26,7 @@ import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
  * [NASHVILLE] and [ROMAN] are not namings of notes at all but of the steps of a key, so they are only ever shown: a text
  * said to be in either is read as [STANDARD], and nothing is ever converted into them but a parsed song.
  */
-enum class ChordNotation {
+public enum class ChordNotation {
 
     /** `C D E F G A B`, with `#` and `b`: the notation of the ChordPro format, and of every file the app writes. */
     STANDARD,
@@ -51,5 +51,5 @@ enum class ChordNotation {
     ;
 
     /** Whether the chords are counted from the song's key rather than named, which only a parsed song can be shown in. */
-    val isNumbering get() = this == NASHVILLE || this == ROMAN
+    public val isNumbering: Boolean get() = this == NASHVILLE || this == ROMAN
 }

@@ -17,22 +17,22 @@ package com.pandulapeter.campfire.chordpro.model
  *   on the guitar, the fourth string first on the ukulele, which is re-entrant and so not the lowest); empty for an
  *   instrument with no strings.
  */
-enum class ChordInstrument(val id: String, val tuning: List<Int>) {
+public enum class ChordInstrument(public val id: String, public val tuning: List<Int>) {
     GUITAR("guitar", listOf(40, 45, 50, 55, 59, 64)),
     UKULELE("ukulele", listOf(67, 60, 64, 69)),
     KEYBOARD("keyboard", emptyList());
 
-    val isFretted get() = tuning.isNotEmpty()
+    public val isFretted: Boolean get() = tuning.isNotEmpty()
 
-    companion object {
+    internal companion object {
 
         /** The instrument [id] names, or null for one this version does not know. */
-        fun fromId(id: String) = entries.firstOrNull { it.id == id }
+        internal fun fromId(id: String) = entries.firstOrNull { it.id == id }
     }
 }
 
 /** One way of playing a chord. */
-sealed interface ChordVoicing {
+public sealed interface ChordVoicing {
 
     /**
      * A shape on a fretted instrument.
@@ -42,7 +42,7 @@ sealed interface ChordVoicing {
      * @property fingers The finger on each string where the shape says (1 the index finger to 4 the little one, 0 for
      *   a string no finger stops), or null for a shape that does not say. A finger named on several strings is a barre.
      */
-    data class Fretted(
+    public data class Fretted(
         val frets: List<Int?>,
         val fingers: List<Int>? = null,
     ) : ChordVoicing
@@ -53,7 +53,7 @@ sealed interface ChordVoicing {
      * @property notes The keys, in semitones above the C the diagram starts at, sorted.
      * @property bass The bass of a slash chord, below [notes] and drawn apart from them, or null.
      */
-    data class Keys(
+    public data class Keys(
         val notes: List<Int>,
         val bass: Int? = null,
     ) : ChordVoicing

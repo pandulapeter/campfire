@@ -20,7 +20,7 @@ import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.TEMPO
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.TIME
 
 /** Formats raw ChordPro without a model round trip, which would discard unsupported directives and comments. */
-object ChordProPrettifier {
+public object ChordProPrettifier {
 
     /**
      * Orders the opening metadata by the toolbar's header order, separates the header and sections, and uses LF
@@ -35,7 +35,7 @@ object ChordProPrettifier {
      * group, the tempo first, heading what follows it the way a section's own first line does — unless a blank line
      * after a group that cut a running paragraph closed that paragraph in the source, which is then kept after it.
      */
-    fun prettify(text: String): String {
+    public fun prettify(text: String): String {
         val lines = ChordProLines.splitLines(text)
         val hoisted = hoistedTimings(lines)
         var song = 0
@@ -198,7 +198,7 @@ object ChordProPrettifier {
      * the end of it, while a removed blank line or an offset inside a CRLF break moves to the next surviving line, or the
      * end of the document.
      */
-    fun prettifiedOffset(before: String, after: String, offset: Int): Int {
+    public fun prettifiedOffset(before: String, after: String, offset: Int): Int {
         val caret = offset.coerceIn(0, before.length)
         if (before == after) return caret
         val oldLines = ChordProLines.splitLines(before)

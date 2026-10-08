@@ -14,12 +14,12 @@ import com.pandulapeter.campfire.chordpro.edit.ChordProTabWrapper
 /**
  * One line inside a [ChordProBlock.Section].
  */
-sealed interface ChordProLine {
+public sealed interface ChordProLine {
 
     /** A lyrics line: text with chords anchored at character offsets. */
-    data class Lyrics(val text: String, val chords: List<Chord>) : ChordProLine {
+    public data class Lyrics(val text: String, val chords: List<Chord>) : ChordProLine {
 
-        data class Chord(
+        public data class Chord(
             val position: Int, // offset into text where the chord sits
             val name: String, // "Am7", "N.C.", ...
             val isAnnotation: Boolean, // [*text] annotations: shown like a chord, never transposed
@@ -31,7 +31,7 @@ sealed interface ChordProLine {
      * too wide (see [com.pandulapeter.campfire.chordpro.ChordProTabWrapper]); transposed on the frets, not on the
      * notes. A run of them can sit anywhere inside a section, with lyrics before and after it.
      */
-    data class Tab(
+    public data class Tab(
         val text: String,
         /**
          * Whether the tab line before this one in the section was written in the same `{start_of_tab}` environment.
@@ -44,25 +44,25 @@ sealed interface ChordProLine {
     ) : ChordProLine
 
     /** One line inside {start_of_grid}: tokens separated by whitespace. */
-    data class Grid(
+    public data class Grid(
         val tokens: List<GridToken>,
         /** The label of the `{start_of_grid}` the line was written in, on every line of it. */
         val label: String? = null,
     ) : ChordProLine
 
     /** An empty line inside an environment. */
-    data object Blank : ChordProLine
+    public data object Blank : ChordProLine
 }
 
-sealed interface GridToken {
+public sealed interface GridToken {
 
-    data class Bar(val text: String) : GridToken // "|", "||", "|.", "|:", ":|", ":|:", voltas such as "|1" and ":|2>"
+    public data class Bar(val text: String) : GridToken // "|", "||", "|.", "|:", ":|", ":|:", voltas such as "|1" and ":|2>"
 
-    data class Chord(val name: String) : GridToken // "Am", or "C~G" for several chords in one cell
+    public data class Chord(val name: String) : GridToken // "Am", or "C~G" for several chords in one cell
 
-    data object Beat : GridToken // "."
+    public data object Beat : GridToken // "."
 
-    data class Repeat(val text: String) : GridToken // "%" (repeat previous cell), "%%"
+    public data class Repeat(val text: String) : GridToken // "%" (repeat previous cell), "%%"
 
-    data class Text(val text: String) : GridToken // a margin label before the first bar, a comment after the last one, or a "/" chord position
+    public data class Text(val text: String) : GridToken // a margin label before the first bar, a comment after the last one, or a "/" chord position
 }

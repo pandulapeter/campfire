@@ -24,7 +24,7 @@ import com.pandulapeter.campfire.chordpro.syntax.ChordProMetaItems
  * cover (see [ChordProCoverArt]), which any other ChordPro program keeps and ignores. Any page is taken, whatever site
  * it is on: the library is the user's, and so are the addresses written into it.
  */
-object ChordProLinks {
+public object ChordProLinks {
 
     /**
      * Writes a link line for [url], after the last link the file already has or, where it has none, into the header.
@@ -54,7 +54,7 @@ object ChordProLinks {
      * are omitted, and braces and line breaks are removed from names so a label cannot write another directive into
      * the file.
      */
-    fun setLinks(text: String, links: List<ChordProLink>): String {
+    public fun setLinks(text: String, links: List<ChordProLink>): String {
         val wanted = links.mapNotNull { link ->
             usableUrl(link.url)?.let { ChordProLink(url = it, name = cleanName(link.name)) }
         }.distinctBy { it.url }
@@ -104,5 +104,5 @@ object ChordProLinks {
      * art's address shares). What a field the user types an address into checks against, so that it never offers to
      * save something the file would not keep.
      */
-    fun usableUrl(value: String): String? = ChordProMetaItems.typedWebUrl(value)
+    public fun usableUrl(value: String): String? = ChordProMetaItems.typedWebUrl(value)
 }

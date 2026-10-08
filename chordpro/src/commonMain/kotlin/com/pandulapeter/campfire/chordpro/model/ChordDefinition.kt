@@ -17,7 +17,7 @@ package com.pandulapeter.campfire.chordpro.model
  * @property name The chord the shape is for, as written, in the standard notation like the rest of the model.
  * @property movedBy How many frets a transposition moved the shape by, zero for one that is as the file writes it.
  */
-data class ChordDefinition(
+public data class ChordDefinition(
     val name: String,
     val instrument: ChordInstrument,
     val voicing: ChordVoicing,

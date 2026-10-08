@@ -24,6 +24,8 @@ chord name means, how it is spelled, moved and played (`ChordProChords`, `ChordP
 `syntax` the internal rules every reader and writer of ChordPro text shares — the lines, the directives, the
 environments, the metadata kinds and spellings, the line scanner, the parser's builders, the chord rewrite engine —
 which nothing outside the module can see.
+The module builds in explicit API mode (`explicitApi()`): every public declaration says `public` and its type, and
+what nothing outside the module calls is `internal`.
 
 - `ChordSheet` / `ChordSheetConverter` — the dependency-free input model and deterministic conversion shared by
   plain text, PDF and Word imports. The positions may be columns, exact PDF points or Word width estimates;

@@ -19,7 +19,7 @@ package com.pandulapeter.campfire.chordpro.model
  * @property bass The pitch class of the note after the slash of a slash chord, or null where there is none or it is
  *   the root.
  */
-data class Chord(
+public data class Chord(
     val root: Int,
     val intervals: List<Int>,
     val bass: Int? = null,
@@ -29,10 +29,10 @@ data class Chord(
      * The chord as one string, the same for every spelling of it: the root as a sharp, the intervals and the bass
      * (`C#:0.3.7.10`, `D:0.4.7/F#`). What a player's choice of shape is stored under, so it has to stay stable.
      */
-    val id get() = sharpNames[root] + ":" + intervals.joinToString(".") + (bass?.let { "/" + sharpNames[it] } ?: "")
+    val id: String get() = sharpNames[root] + ":" + intervals.joinToString(".") + (bass?.let { "/" + sharpNames[it] } ?: "")
 
     /** Every pitch class the chord sounds, the bass included. */
-    val pitchClasses get() = (intervals.map { (root + it) % 12 } + listOfNotNull(bass)).toSet()
+    val pitchClasses: Set<Int> get() = (intervals.map { (root + it) % 12 } + listOfNotNull(bass)).toSet()
 
     private companion object {
         val sharpNames = listOf("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")

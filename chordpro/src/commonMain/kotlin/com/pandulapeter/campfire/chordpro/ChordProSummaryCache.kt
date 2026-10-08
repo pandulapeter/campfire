@@ -25,11 +25,11 @@ import com.pandulapeter.campfire.chordpro.syntax.ChordProEnvironments
  *
  * One instance follows one text; it is not safe to share between threads.
  */
-class ChordProSummaryCache internal constructor(
+public class ChordProSummaryCache internal constructor(
     private val summarize: (String) -> ChordProSummary,
 ) {
     /** Follows a text written in [notation], see [ChordProParser.summarize]. */
-    constructor(notation: ChordNotation = ChordNotation.STANDARD) : this({ text -> ChordProParser.summarize(text, notation) })
+    public constructor(notation: ChordNotation = ChordNotation.STANDARD) : this({ text -> ChordProParser.summarize(text, notation) })
 
     private var previousText: String? = null
     private var previousSummary: ChordProSummary? = null
@@ -37,14 +37,14 @@ class ChordProSummaryCache internal constructor(
     private var safeLine: IntRange? = null
 
     /** Forgets the text followed so far, so that the next [summaryOf] is a full parse. */
-    fun clear() {
+    public fun clear() {
         previousText = null
         previousSummary = null
         safeLine = null
     }
 
     /** The summary of [text], equal to what [ChordProParser.summarize] returns for it. */
-    fun summaryOf(text: String): ChordProSummary {
+    public fun summaryOf(text: String): ChordProSummary {
         val oldText = previousText
         val oldSummary = previousSummary
         if (oldText != null && oldSummary != null) {

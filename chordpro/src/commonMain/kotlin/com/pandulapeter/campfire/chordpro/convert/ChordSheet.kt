@@ -10,10 +10,10 @@
 package com.pandulapeter.campfire.chordpro.convert
 
 /** Positioned text in arbitrary, consistent units. No document format crosses this boundary. */
-data class ChordSheet(val pages: List<Page>, val originalText: String? = null) {
-    data class Page(val lines: List<Line>)
-    data class Line(val spans: List<Span>, val isHeading: Boolean = false)
-    data class Span(
+public data class ChordSheet(val pages: List<Page>, val originalText: String? = null) {
+    public data class Page(val lines: List<Line>)
+    public data class Line(val spans: List<Span>, val isHeading: Boolean = false)
+    public data class Span(
         val text: String,
         val start: Double,
         val end: Double,
@@ -23,8 +23,8 @@ data class ChordSheet(val pages: List<Page>, val originalText: String? = null) {
         val isRaised: Boolean = false,
     )
 
-    companion object {
-        fun ofPlainText(text: String): ChordSheet = ChordSheet(
+    public companion object {
+        public fun ofPlainText(text: String): ChordSheet = ChordSheet(
             pages = listOf(Page(text.replace("\r\n", "\n").replace('\r', '\n').split('\n').map { line ->
                 var column = 0
                 val spans = mutableListOf<Span>()

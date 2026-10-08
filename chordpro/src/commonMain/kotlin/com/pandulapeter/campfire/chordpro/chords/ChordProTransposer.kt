@@ -26,7 +26,7 @@ import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.NOTE_COUNT
 /**
  * Moves chords up or down by a number of semitones, either on the model or directly on the raw text.
  */
-object ChordProTransposer {
+public object ChordProTransposer {
 
     /**
      * Transposes a chord name, keeping an optional chord's parentheses and its bass note.
@@ -48,7 +48,7 @@ object ChordProTransposer {
      *   song itself asks for. Forced, it is worth doing even for no semitones at all: respelling the chords of a song
      *   that is not transposed is exactly what a reader who always wants flats (or sharps) is asking for.
      */
-    fun transpose(song: ChordProSong, semitones: Int, preferFlats: Boolean? = null): ChordProSong {
+    public fun transpose(song: ChordProSong, semitones: Int, preferFlats: Boolean? = null): ChordProSong {
         val isModulated = song.blocks.any { it is ChordProBlock.Transpose }
         if (semitones == 0 && preferFlats == null && !isModulated) return song
         val rewrites = mutableMapOf<Int, ChordRewrite>()
@@ -73,7 +73,7 @@ object ChordProTransposer {
     }
 
     /** Transposes raw ChordPro text in place, keeping its formatting and original notation. */
-    fun transposeText(text: String, semitones: Int, preferFlats: Boolean? = null): String {
+    public fun transposeText(text: String, semitones: Int, preferFlats: Boolean? = null): String {
         if (semitones == 0 && preferFlats == null) return text
         val written = ChordProNotation.withLowercaseMinorsExpanded(ChordProParser.parseAsWritten(text))
         val isGermanNotated = ChordProNotation.isGermanNotated(written)
@@ -103,7 +103,7 @@ object ChordProTransposer {
      * keeps its line, and inside the line it keeps its place between the brackets; a line with no brackets to go by
      * (a `{key}`, a grid or a tab line) keeps the text in front of its first change and behind its last one.
      */
-    fun transposedOffset(before: String, after: String, offset: Int): Int = ChordProOffsetMapping.transposedOffset(before, after, offset)
+    public fun transposedOffset(before: String, after: String, offset: Int): Int = ChordProOffsetMapping.transposedOffset(before, after, offset)
 
     private fun rewriteText(text: String, semitones: Int, rename: (String) -> String) = rewriteChordNamesInText(
         text = text,
@@ -113,7 +113,7 @@ object ChordProTransposer {
     )
 
     /** Whether flats should be preferred for the key this song arrives in after the transposition. */
-    fun prefersFlats(song: ChordProSong, semitones: Int): Boolean {
+    public fun prefersFlats(song: ChordProSong, semitones: Int): Boolean {
         val names = writtenChordNames(song)
         val key = song.metadata.key?.let(::keyOf)
             ?: names.firstNotNullOfOrNull { name -> name.takeIf(ChordProChordNames::isChordName)?.let(::keyOf) }

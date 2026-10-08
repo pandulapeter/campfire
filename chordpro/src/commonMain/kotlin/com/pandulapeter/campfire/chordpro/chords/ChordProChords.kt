@@ -38,7 +38,7 @@ import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary
  *   altered notes a hand can hold at once.
  * - A bare `+` after the number raises the fifth, as `C7+` is written for an augmented seventh.
  */
-object ChordProChords {
+public object ChordProChords {
 
     /**
      * The chord [name] stands for, as shown in [notation], or null where it is no chord name: a word in brackets,
@@ -46,7 +46,7 @@ object ChordProChords {
      * signs are read as well, since this is handed what a page draws. A step of a key is not read, since it says nothing
      * without the key: in a numbering a chord is named in letters, see [ChordProNotation.shownName].
      */
-    fun parse(name: String, notation: ChordNotation = ChordNotation.STANDARD): Chord? {
+    public fun parse(name: String, notation: ChordNotation = ChordNotation.STANDARD): Chord? {
         val reader = Reader()
         return if (ChordProChordNames.read(ChordProNotation.read(name, isGerman = notation == ChordNotation.GERMAN), reader)) reader.chord() else null
     }
@@ -56,7 +56,7 @@ object ChordProChords {
      * [preferFlats] says: the bass of a slash chord first where it is not one of the chord's own notes, then the
      * chord's from its root up.
      */
-    fun noteNames(chord: Chord, notation: ChordNotation = ChordNotation.STANDARD, preferFlats: Boolean = false): List<String> {
+    public fun noteNames(chord: Chord, notation: ChordNotation = ChordNotation.STANDARD, preferFlats: Boolean = false): List<String> {
         val pitchClasses = chord.intervals.map { (chord.root + it) % 12 }
         val bass = chord.bass?.takeIf { it !in pitchClasses }
         return (listOfNotNull(bass) + pitchClasses).map { pitchClass ->
@@ -73,7 +73,7 @@ object ChordProChords {
      * chord as the name writes it. [name] is in the standard notation, its notes named in [notation]. Null where [name]
      * is no chord.
      */
-    fun spelledNoteNames(name: String, notation: ChordNotation = ChordNotation.STANDARD): List<String>? {
+    public fun spelledNoteNames(name: String, notation: ChordNotation = ChordNotation.STANDARD): List<String>? {
         val reader = Reader()
         // The standard notation always, since in German the standard `B` this is handed would be read as B flat.
         if (!ChordProChordNames.read(ChordProNotation.read(name, isGerman = false), reader)) return null
@@ -206,7 +206,7 @@ object ChordProChords {
      * [name], a chord as shown in [notation], moved by [semitones] and spelled with flats or sharps as [preferFlats]
      * says, in the same notation, or in letters for a numbering; a word that is no chord is returned as it is.
      */
-    fun transposedName(name: String, semitones: Int, notation: ChordNotation = ChordNotation.STANDARD, preferFlats: Boolean = false): String {
+    public fun transposedName(name: String, semitones: Int, notation: ChordNotation = ChordNotation.STANDARD, preferFlats: Boolean = false): String {
         val move = { chord: String ->
             ChordProNotation.shownName(ChordProTransposer.transposeChord(ChordProNotation.read(chord, isGerman = notation == ChordNotation.GERMAN), semitones, preferFlats), notation)
         }

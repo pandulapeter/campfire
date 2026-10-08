@@ -13,7 +13,7 @@ package com.pandulapeter.campfire.chordpro.model
  * A page about a song, carried as `{meta: link https://… Optional name}`. [name] is null for an unnamed link, whose
  * display label belongs to the caller; [url] alone identifies a link, so two names for one address are one link.
  */
-data class ChordProLink(
+public data class ChordProLink(
     val url: String,
     val name: String? = null,
 )

@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
 import com.pandulapeter.campfire.chordpro.chords.ChordProTabTransposer
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
+import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.chordpro.model.ChordProSummary
 import com.pandulapeter.campfire.chordpro.model.CommentStyle
@@ -39,7 +40,7 @@ import com.pandulapeter.campfire.chordpro.syntax.Transposition
 /**
  * Turns ChordPro text into a [ChordProSong].
  */
-object ChordProParser {
+public object ChordProParser {
 
     /** The section names the Campfire 3 dialect used as `{comment}` headings. */
     private val legacyHeadings = mapOf(
@@ -56,7 +57,7 @@ object ChordProParser {
      * The song in the notation the app works in, [text] being written in [notation]: a file is in the standard one,
      * which an `H` chord anywhere in it overrules (see [ChordNotation]), and the editor's field in the reader's own.
      */
-    fun parse(text: String, notation: ChordNotation = ChordNotation.STANDARD) = ChordProNotation.normalized(parseAsWritten(text), notation)
+    public fun parse(text: String, notation: ChordNotation = ChordNotation.STANDARD): ChordProSong = ChordProNotation.normalized(parseAsWritten(text), notation)
 
     /** The song with every chord spelled the way its file spells it. */
     internal fun parseAsWritten(text: String): ChordProSong {
@@ -105,14 +106,14 @@ object ChordProParser {
         .toIntOrNull()
 
     /** Only scans directive lines, so that it is cheap enough for a caller that has no interest in the body. */
-    fun parseMetadata(text: String) = scan(text, shouldDetectChords = false, notation = ChordNotation.STANDARD).metadata
+    public fun parseMetadata(text: String): ChordProMetadata = scan(text, shouldDetectChords = false, notation = ChordNotation.STANDARD).metadata
 
     /**
      * The directives of a song and whether it has any chords, from a single walk over the text. The library scan
      * wants both for every file it reads, and asking for them separately walks each file twice. [notation] is the one
      * [text] is written in, as for [parse].
      */
-    fun summarize(text: String, notation: ChordNotation = ChordNotation.STANDARD) = scan(text, shouldDetectChords = true, notation = notation)
+    public fun summarize(text: String, notation: ChordNotation = ChordNotation.STANDARD): ChordProSummary = scan(text, shouldDetectChords = true, notation = notation)
 
     /**
      * @param shouldDetectChords Whether the lines that are not directives are looked at as well. A real chord (not an

@@ -14,7 +14,7 @@ package com.pandulapeter.campfire.chordpro.model
  * whether there is a chord anywhere in it. The two travel together because they are read together — a library scan
  * walks each file once, and that walk is the slowest thing the app does at start.
  */
-data class ChordProSummary(
+public data class ChordProSummary(
     val metadata: ChordProMetadata,
     val hasChords: Boolean,
 )

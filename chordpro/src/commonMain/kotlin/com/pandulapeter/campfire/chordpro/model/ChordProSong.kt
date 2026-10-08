@@ -15,7 +15,7 @@ import com.pandulapeter.campfire.chordpro.syntax.ChordProTokens
 /**
  * A parsed ChordPro song: the directives that describe it plus the blocks that make up its body.
  */
-data class ChordProSong(
+public data class ChordProSong(
     val metadata: ChordProMetadata,
     val blocks: List<ChordProBlock>,
 ) {

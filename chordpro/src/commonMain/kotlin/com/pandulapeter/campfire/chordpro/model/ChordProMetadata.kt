@@ -13,7 +13,7 @@ package com.pandulapeter.campfire.chordpro.model
  * The metadata directives of a song. Everything is optional; fallbacks (such as the file name becoming the title) are
  * the caller's job, not the parser's.
  */
-data class ChordProMetadata(
+public data class ChordProMetadata(
     val title: String? = null, // {title} / {t}
     val subtitle: String? = null, // {subtitle} / {st}
     val artist: String? = null, // {artist}
@@ -67,7 +67,7 @@ data class ChordProMetadata(
  * song by it, so a list, an app bar and a dialog all have to carry it. A subtitle that only repeats the title is
  * dropped, since half the files in the wild spell the same name into both.
  */
-fun ChordProMetadata.displayTitle(fallback: String): String {
+public fun ChordProMetadata.displayTitle(fallback: String): String {
     val name = title?.takeIf { it.isNotBlank() } ?: fallback
     val suffix = subtitle?.takeIf { it.isNotBlank() && !it.equals(name, ignoreCase = true) } ?: return name
     return "$name ($suffix)"

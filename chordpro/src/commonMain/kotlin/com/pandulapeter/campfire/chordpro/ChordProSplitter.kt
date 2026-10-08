@@ -16,9 +16,9 @@ import com.pandulapeter.campfire.chordpro.syntax.ChordProLineScanner
 /**
  * Splits a file that contains several songs separated by `{new_song}` / `{ns}` directives.
  */
-object ChordProSplitter {
+public object ChordProSplitter {
 
-    fun split(text: String): List<String> {
+    public fun split(text: String): List<String> {
         val parts = mutableListOf<MutableList<String>>(mutableListOf())
         // Inside an environment handed to another program a `{ns}` is that program's text, as the parser reads it.
         ChordProLineScanner.scan(text.withoutByteOrderMarks()).forEach { line ->
@@ -43,7 +43,7 @@ object ChordProSplitter {
      * ([ChordProDirectives.canonicalDirective]): a short name, a missing space or a capital is how a file was typed, not
      * what it says.
      */
-    fun comparable(text: String): String =
+    public fun comparable(text: String): String =
         ChordProLineScanner.scan(ChordProNotation.convertText(text.withoutByteOrderMarks(), ChordNotation.STANDARD, ChordNotation.STANDARD))
             .map { line ->
                 // LilyPond's `{ c d e }` or an ABC line is never read as a directive and respelled, and neither is a

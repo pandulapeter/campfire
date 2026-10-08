@@ -33,7 +33,7 @@ import kotlin.concurrent.Volatile
  * The keyboard needs neither: the chord's notes from the root up, the fifth and then the root left out of a chord of
  * more than five notes, and the inversions as the variations, a slash chord's bass an octave below.
  */
-object ChordVoicings {
+public object ChordVoicings {
 
     /** The defaults worked out so far, replaced whole rather than changed, so threads reading it never see it half written. */
     @Volatile
@@ -44,7 +44,7 @@ object ChordVoicings {
      * have the chord, and the search otherwise, whose answer is remembered for the rest of the session: the first page
      * that names an unusual chord pays for it once.
      */
-    fun default(chord: Chord, instrument: ChordInstrument): ChordVoicing? {
+    public fun default(chord: Chord, instrument: ChordInstrument): ChordVoicing? {
         val key = chord to instrument
         val cached = defaults
         if (key in cached) return cached[key]
@@ -66,11 +66,11 @@ object ChordVoicings {
      * Whether [default] would have to run the search for [chord] on [instrument]: a fretted chord the tables do not
      * hold and nothing has looked for yet this session. What builds a page in a frame asks this first.
      */
-    fun needsSearch(chord: Chord, instrument: ChordInstrument): Boolean =
+    public fun needsSearch(chord: Chord, instrument: ChordInstrument): Boolean =
         instrument != ChordInstrument.KEYBOARD && (chord to instrument) !in defaults && tableShapes(chord, instrument).isEmpty()
 
     /** Every shape of [chord] on [instrument], [default] first: the tables', then the search's. */
-    fun all(chord: Chord, instrument: ChordInstrument): List<ChordVoicing> = when (instrument) {
+    public fun all(chord: Chord, instrument: ChordInstrument): List<ChordVoicing> = when (instrument) {
         ChordInstrument.KEYBOARD -> keyboard(chord)
         else -> {
             val table = tableShapes(chord, instrument)
@@ -83,7 +83,7 @@ object ChordVoicings {
      * A shape [write] wrote, read back for [instrument], or null where it is no shape of that instrument. With
      * [chord], a fretted shape the tables know for it gets their fingering back, which a stored shape does not keep.
      */
-    fun read(shape: String, instrument: ChordInstrument, chord: Chord? = null): ChordVoicing? {
+    public fun read(shape: String, instrument: ChordInstrument, chord: Chord? = null): ChordVoicing? {
         val words = shape.trim().split(' ').filter { it.isNotEmpty() }
         if (instrument == ChordInstrument.KEYBOARD) {
             val separator = words.indexOf(BASS_SEPARATOR)
@@ -98,7 +98,7 @@ object ChordVoicings {
     }
 
     /** [voicing] as one string, which is how a player's choice of shape is stored: `x 3 2 0 1 0`, `4 7 12 / 0`. */
-    fun write(voicing: ChordVoicing) = when (voicing) {
+    public fun write(voicing: ChordVoicing): String = when (voicing) {
         is ChordVoicing.Fretted -> voicing.frets.joinToString(" ") { it?.toString() ?: MUTED }
         is ChordVoicing.Keys -> voicing.notes.joinToString(" ") + (voicing.bass?.let { " $BASS_SEPARATOR $it" } ?: "")
     }
@@ -107,10 +107,10 @@ object ChordVoicings {
      * The fret a diagram of [frets] starts at: the nut where the shape fits into the first four frets, and otherwise
      * its lowest stopped fret, see [ChordShapeGeometry.baseFret].
      */
-    fun baseFret(frets: List<Int?>) = ChordShapeGeometry.baseFret(frets)
+    public fun baseFret(frets: List<Int?>): Int = ChordShapeGeometry.baseFret(frets)
 
     /** Whether a hand can hold [frets], see [ChordShapeGeometry.isHoldable]. */
-    fun isHoldable(frets: List<Int?>) = ChordShapeGeometry.isHoldable(frets)
+    public fun isHoldable(frets: List<Int?>): Boolean = ChordShapeGeometry.isHoldable(frets)
 
     private const val MUTED = "x"
     private const val BASS_SEPARATOR = "/"

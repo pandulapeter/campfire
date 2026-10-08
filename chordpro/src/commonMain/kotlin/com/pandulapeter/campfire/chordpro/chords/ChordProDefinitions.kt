@@ -26,7 +26,7 @@ import com.pandulapeter.campfire.chordpro.syntax.ChordProLines
  * directive's selector where it names one (`{define-ukulele: …}`, `-guitar`, `-keyboard`, `-piano`), and otherwise the
  * one with as many strings as the shape has frets.
  */
-object ChordProDefinitions {
+public object ChordProDefinitions {
 
     /**
      * The line that defines [voicing] as the shape of [name], the way [read] reads it back:
@@ -34,7 +34,7 @@ object ChordProDefinitions {
      * selector, since the number of frets already says which instrument a shape is for. A keyboard's keys are counted
      * from the root of [name] as it is spelled in [notation].
      */
-    fun line(name: String, voicing: ChordVoicing, notation: ChordNotation = ChordNotation.STANDARD) = "{$DEFINE: $name ${shapeOf(name, voicing, notation)}}"
+    public fun line(name: String, voicing: ChordVoicing, notation: ChordNotation = ChordNotation.STANDARD): String = "{$DEFINE: $name ${shapeOf(name, voicing, notation)}}"
 
     /** The part of a definition after the chord's name, as [line] writes it. */
     internal fun shapeOf(name: String, voicing: ChordVoicing, notation: ChordNotation = ChordNotation.STANDARD) = when (voicing) {
@@ -88,7 +88,7 @@ object ChordProDefinitions {
      * it, see [rewrittenLine]), and nor does one whose strings coming to rest open were held by more than one finger. A keyboard's keys move with the root they are counted from.
      * [ChordDefinition.movedBy] adds up, so there and back is zero.
      */
-    fun transposed(definition: ChordDefinition, semitones: Int, rename: (String) -> String): ChordDefinition {
+    public fun transposed(definition: ChordDefinition, semitones: Int, rename: (String) -> String): ChordDefinition {
         val name = rename(definition.name)
         val shift = semitones.mod(12)
         if (shift == 0) return definition.copy(name = name)
@@ -256,7 +256,7 @@ object ChordProDefinitions {
      * The chord of the brackets [offset] is in or touching on its line of [text] — the caret right after `[G]` or right
      * before it included — or null where it is in none, or in one that holds an annotation or nothing.
      */
-    fun chordAt(text: String, offset: Int): String? {
+    public fun chordAt(text: String, offset: Int): String? {
         val starts = ChordProLines.lineStartOffsets(text)
         val line = starts.indexOfLast { it <= offset }.coerceAtLeast(0)
         val column = offset - starts[line]
@@ -271,7 +271,7 @@ object ChordProDefinitions {
      * or null where [text] defines no shape of it there. What an editor sends the caret to, rather than writing the chord
      * a second line.
      */
-    fun rangeOf(text: String, name: String, instrument: ChordInstrument): IntRange? {
+    public fun rangeOf(text: String, name: String, instrument: ChordInstrument): IntRange? {
         val starts = ChordProLines.lineStartOffsets(text)
         val lines = ChordProLines.splitLines(text).withIndex().reversed()
         fun rangeOn(isDefine: Boolean) = lines.firstNotNullOfOrNull { (index, line) ->

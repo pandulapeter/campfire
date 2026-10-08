@@ -22,14 +22,14 @@ import kotlin.time.Duration.Companion.seconds
  * durations honest: a value that is one of those shapes is used, and anything else (`about 4 min`, `4:5`, `0`) is
  * treated as no duration at all, never guessed at. The text itself is left in the file as it is.
  */
-object ChordProDuration {
+public object ChordProDuration {
 
     private val SECONDS = Regex("""(\d{1,6})""")
     private val MINUTES_SECONDS = Regex("""(\d{1,4}):([0-5]\d)""")
     private val HOURS_MINUTES_SECONDS = Regex("""(\d{1,3}):([0-5]\d):([0-5]\d)""")
 
     /** The duration [text] declares, or null where it is missing, zero or not one of the shapes above. */
-    fun parse(text: String?): Duration? {
+    public fun parse(text: String?): Duration? {
         val value = text?.trim() ?: return null
         val duration = SECONDS.matchEntire(value)?.let { match ->
             match.groupValues[1].toInt().seconds
@@ -42,7 +42,7 @@ object ChordProDuration {
     }
 
     /** [duration] as `m:ss`, or `h:mm:ss` from an hour on, whole seconds only; what the app writes and shows. */
-    fun format(duration: Duration): String {
+    public fun format(duration: Duration): String {
         val totalSeconds = duration.inWholeSeconds.coerceAtLeast(0)
         val hours = totalSeconds / 3600
         val minutes = totalSeconds % 3600 / 60

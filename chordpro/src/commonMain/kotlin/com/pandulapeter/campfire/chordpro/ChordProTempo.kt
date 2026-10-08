@@ -17,11 +17,11 @@ import kotlin.math.roundToInt
  * no number, or one that is not positive, is no tempo. Holding it within what a metronome plays is the caller's, since
  * the page shows what the file says.
  */
-object ChordProTempo {
+public object ChordProTempo {
 
     private val NUMBER = Regex("""\d+(?:[.,]\d+)?""")
 
-    fun parse(text: String?): Int? {
+    public fun parse(text: String?): Int? {
         val number = NUMBER.find(text ?: return null)?.value ?: return null
         return number.replace(',', '.').toDoubleOrNull()?.roundToInt()?.takeIf { it > 0 }
     }

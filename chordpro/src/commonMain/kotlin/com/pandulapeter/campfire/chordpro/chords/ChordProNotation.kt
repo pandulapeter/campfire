@@ -34,7 +34,7 @@ import com.pandulapeter.campfire.chordpro.syntax.ChordProChordRewriter
  * a notation: they are read as the minor chord they stand for in every one, and a conversion keeps them lowercase where
  * the notation has a lowercase spelling, which the Latin one does not.
  */
-object ChordProNotation {
+public object ChordProNotation {
 
     /**
      * Rewrites every chord of a parsed song, which is in [ChordNotation.STANDARD], in [notation]: its key, the chords
@@ -46,14 +46,14 @@ object ChordProNotation {
      * key it moved to, so that a chorus reads `1 4 5` before it and after it. A song whose key is not a note is left in
      * letters, since the first chord is too weak a guess to give every number on the page its meaning.
      */
-    fun toNotation(song: ChordProSong, notation: ChordNotation) = rewriteAt(song, notation)?.let { ChordProChordRewriter.rewriteChords(song, it) } ?: song
+    public fun toNotation(song: ChordProSong, notation: ChordNotation): ChordProSong = rewriteAt(song, notation)?.let { ChordProChordRewriter.rewriteChords(song, it) } ?: song
 
     /**
      * Every name [ChordProChords.namesIn] lists for [song], which is in [ChordNotation.STANDARD], mapped to the name
      * [toNotation] shows it under in [notation] where it is first played: in a numbering, a chord played on both sides of
      * a modulation is named by the step it is first played on.
      */
-    fun shownNames(song: ChordProSong, notation: ChordNotation): Map<String, String> {
+    public fun shownNames(song: ChordProSong, notation: ChordNotation): Map<String, String> {
         val rewriteAt = rewriteAt(song, notation)
         val names = LinkedHashMap<String, String>()
         ChordProChords.forEachName(song) { name, offset -> names.getOrPut(name) { rewriteAt?.invoke(offset)?.rename?.invoke(name) ?: name } }
@@ -64,7 +64,7 @@ object ChordProNotation {
      * One chord name in the standard notation as [notation] writes it where it is no step of a key: in a numbering the
      * letters it is written in, which is what a note on its own, or a chord with no song around it, is named by.
      */
-    fun shownName(name: String, notation: ChordNotation) = when (notation) {
+    public fun shownName(name: String, notation: ChordNotation): String = when (notation) {
         ChordNotation.STANDARD, ChordNotation.NASHVILLE, ChordNotation.ROMAN -> name
         ChordNotation.GERMAN -> toGerman(name)
         ChordNotation.LATIN -> toLatin(name)
@@ -83,7 +83,7 @@ object ChordProNotation {
      * German `Bb`, which is read as the B flat its writer meant rather than as a double flat, and a lowercase minor
      * taken through the Latin notation, which has no lowercase spelling to keep it in (`a` comes back as `Am`).
      */
-    fun convertText(text: String, from: ChordNotation, to: ChordNotation): String {
+    public fun convertText(text: String, from: ChordNotation, to: ChordNotation): String {
         val written = if (from == ChordNotation.GERMAN) null else ChordProParser.parseAsWritten(text)
         val isGerman = written == null || isGermanNotated(written)
         val isWrittenInStandard = to == ChordNotation.STANDARD || to.isNumbering

@@ -37,9 +37,9 @@ import com.pandulapeter.campfire.chordpro.syntax.MetadataKind
  * Unlike [ChordProParser] this never rejects anything - a document being typed is malformed most of the time, and
  * the half written line under the caret still has to look like what it is becoming.
  */
-object ChordProHighlighter {
+public object ChordProHighlighter {
 
-    enum class TokenType {
+    public enum class TokenType {
         /** `{title` and the colon after it, plus the `}` that closes the directive: everything that is not the value. */
         DIRECTIVE_NAME,
 
@@ -76,13 +76,13 @@ object ChordProHighlighter {
     }
 
     /** [start] is inclusive and [end] exclusive, both offsets into the whole text. */
-    data class Token(
+    public data class Token(
         val type: TokenType,
         val start: Int,
         val end: Int,
     )
 
-    fun tokenize(text: String): List<Token> {
+    public fun tokenize(text: String): List<Token> {
         val tokens = mutableListOf<Token>()
         // The kinds a line has said something for, and whether the header has a key line, which the parser takes the
         // song's key from even where it is empty.
@@ -214,7 +214,7 @@ object ChordProHighlighter {
      * `[Chorus x2]` is not moved and a `[*softly]` is not lifted out of it the way an annotation is lifted out of the
      * lyrics. [notation] is the one the text is shown in, which in a numbering makes a step of the key a chord too.
      */
-    fun chordsOfShownText(text: String, notation: ChordNotation = ChordNotation.STANDARD): List<Token> = ChordProDirectives.brackets(text)
+    public fun chordsOfShownText(text: String, notation: ChordNotation = ChordNotation.STANDARD): List<Token> = ChordProDirectives.brackets(text)
         .filter { bracket -> bracket.content.trim().let { it.isMovedChordName() || (notation.isNumbering && ChordProNashville.isDegree(it)) } }
         .mapNotNull { it.token(0) }
 

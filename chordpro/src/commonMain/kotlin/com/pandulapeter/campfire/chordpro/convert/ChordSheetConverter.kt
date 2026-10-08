@@ -16,9 +16,9 @@ import kotlin.math.abs
 import kotlin.math.roundToInt
 
 /** Deterministic, conservative conversion of positioned chord sheets to ordinary ChordPro. */
-object ChordSheetConverter {
+public object ChordSheetConverter {
     /** Single-chord cells are unambiguous in alternating rows of a Word chord grid. */
-    fun isChordLine(text: String): Boolean = tokens(text).let { words ->
+    public fun isChordLine(text: String): Boolean = tokens(text).let { words ->
         words.any { chord(it.text) } && words.all { chord(it.text) || furniture(it.text) }
     }
     /**
@@ -26,7 +26,7 @@ object ChordSheetConverter {
      * [ChordSheet.originalText] where supplied. Other prose is escaped so it cannot become ChordPro markup.
      * The caller supplies Unicode NFC normalization; this dependency-free module has no platform normalizer.
      */
-    fun convert(sheet: ChordSheet, normalize: (String) -> String = { it }): List<String> {
+    public fun convert(sheet: ChordSheet, normalize: (String) -> String = { it }): List<String> {
         sheet.originalText?.takeIf(::isChordPro)?.let { return listOf(it) }
         val pages = sheet.pages.map { page -> page.lines.map { render(it, normalize) } }
         val all = pages.flatten()

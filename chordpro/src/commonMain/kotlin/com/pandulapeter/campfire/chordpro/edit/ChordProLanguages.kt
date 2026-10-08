@@ -23,14 +23,14 @@ import com.pandulapeter.campfire.chordpro.syntax.ChordProMetaItems
  * which the spec leaves free for exactly this. The other spellings a file may use are read, see
  * [ChordProMetaItems.language], but never written.
  */
-object ChordProLanguages {
+public object ChordProLanguages {
 
     /**
      * Rewrites the song's language directives to be exactly [codes], in one pass: the ones no longer wanted are
      * dropped wherever they sit, whichever spelling they use, and the new ones are written after the last language
      * the file already declares. A set that is already what the file says returns the text unchanged.
      */
-    fun setLanguages(text: String, codes: List<String>): String {
+    public fun setLanguages(text: String, codes: List<String>): String {
         val wanted = codes.mapNotNull(ChordProMetaItems::languageCode).distinct()
         val lines = ChordProLines.splitLines(text)
         val kept = mutableListOf<String>()
@@ -62,7 +62,7 @@ object ChordProLanguages {
      * somebody may well type `HUN` or `en-US` — can ask the question a file would be answered with, and find the
      * language under the one code everything above this module knows it by.
      */
-    fun code(value: String) = ChordProMetaItems.languageCode(value)
+    public fun code(value: String): String? = ChordProMetaItems.languageCode(value)
 
     /** The language of a line that is a language directive, null for every other line. */
     private fun String.language() = ChordProDirectives.matchDirective(trim())?.let { ChordProMetaItems.language(it) }

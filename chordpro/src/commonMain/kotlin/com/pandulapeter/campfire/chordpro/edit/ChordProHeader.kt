@@ -29,7 +29,7 @@ import com.pandulapeter.campfire.chordpro.syntax.MetadataKind
  * user's own formatting — their line endings, their blank lines, the order they chose to list a header in —
  * survives a button being tapped, for the same reason [ChordProTags] edits the text rather than the model.
  */
-object ChordProHeader {
+public object ChordProHeader {
 
     /**
      * The metadata directives a song may declare more than once, and so the ones an editor keeps offering after the
@@ -37,14 +37,14 @@ object ChordProHeader {
      * words for, and has as many pages about it as somebody linked. Every other directive in [declaredMetadata] says one thing about the song, and a file that
      * says it twice is a file with a contradiction in it rather than a richer one.
      */
-    val repeatableMetadata = MetadataKind.entries.filter { it.isRepeatable }.map { it.longName }.toSet()
+    public val repeatableMetadata: Set<String> = MetadataKind.entries.filter { it.isRepeatable }.map { it.longName }.toSet()
 
     /**
      * The metadata directives a song may say again further down, each later one a change from where it stands rather
      * than a second value (see `ChordProBlock.Timing`): the header's line is the song's own value, and every line of the
      * body is a change. An editor keeps offering them, through [insertChangeable].
      */
-    val changeableMetadata = MetadataKind.entries.filter { it.isTimingChange }.map { it.longName }.toSet()
+    public val changeableMetadata: Set<String> = MetadataKind.entries.filter { it.isTimingChange }.map { it.longName }.toSet()
 
     /**
      * The metadata directives [text] already declares, each under the one name the app knows it by (`{t}` and
@@ -53,7 +53,7 @@ object ChordProHeader {
      * It is the directives that are counted and not what they are worth, so a `{title: }` waiting to be typed into
      * counts as a title: what this answers is whether writing another one would be writing a second of the same.
      */
-    fun declaredMetadata(text: String): Set<String> = ChordProLines.splitLines(text)
+    internal fun declaredMetadata(text: String): Set<String> = ChordProLines.splitLines(text)
         .mapNotNullTo(mutableSetOf()) { line -> ChordProDirectives.matchDirective(line.trim())?.let(ChordProHeaderLayout::metadataKind) }
 
     /**
@@ -67,12 +67,12 @@ object ChordProHeader {
      *
      * One instance follows one text; it is not safe to share between threads.
      */
-    class DeclaredMetadataCache {
+    public class DeclaredMetadataCache {
         private var previousText: String? = null
         private var previous: Set<String> = emptySet()
 
         /** The metadata directives [text] declares, equal to what [declaredMetadata] returns for it. */
-        fun declaredMetadataOf(text: String): Set<String> {
+        public fun declaredMetadataOf(text: String): Set<String> {
             val oldText = previousText
             if (oldText != null) {
                 if (text === oldText || text == oldText) return previous
@@ -114,7 +114,7 @@ object ChordProHeader {
      * insertion at [Insertion.offset] and a caret at [Insertion.caretOffset]; the two are only valid for the text
      * they were computed from.
      */
-    fun insert(text: String, name: String, prefix: String, suffix: String): Insertion {
+    public fun insert(text: String, name: String, prefix: String, suffix: String): Insertion {
         val lines = ChordProLines.splitLines(text)
         val index = ChordProHeaderLayout.metadataInsertionIndex(lines, name)
         val separator = ChordProLines.lineSeparatorOf(text)
@@ -138,7 +138,7 @@ object ChordProHeader {
      * has to come out of it as it always did; this only decides where a new one is added. The caret goes to the start
      * of the chord's name, where one with no name yet is typed.
      */
-    fun insertDefinition(text: String, line: String): Insertion {
+    public fun insertDefinition(text: String, line: String): Insertion {
         val nameStart = line.indexOf(':') + 2
         if (text.isEmpty()) return Insertion(offset = 0, text = line, caretOffset = nameStart)
         val lines = ChordProLines.splitLines(text)
@@ -171,7 +171,7 @@ object ChordProHeader {
      *   song with no such line yet, get nothing written and the header line's value selected, since a change before
      *   anything is played is the song's own value.
      */
-    fun insertChangeable(text: String, name: String, caretOffset: Int, prefix: String, suffix: String): Insertion {
+    public fun insertChangeable(text: String, name: String, caretOffset: Int, prefix: String, suffix: String): Insertion {
         val lines = ChordProLines.splitLines(text)
         val bodyStart = ChordProHeaderLayout.bodyStartIndex(lines)
         val headerIndex = (0 until bodyStart).firstOrNull { index ->
@@ -215,7 +215,7 @@ object ChordProHeader {
      * @param replacedLength How much of the text at [offset] the [text] takes the place of.
      * @param selectionEnd The end of what is selected once it has been, which is [caretOffset] for no selection.
      */
-    data class Insertion(
+    public data class Insertion(
         val offset: Int,
         val text: String,
         val caretOffset: Int,

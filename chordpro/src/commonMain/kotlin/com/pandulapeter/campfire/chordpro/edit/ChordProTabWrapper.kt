@@ -30,13 +30,13 @@ import com.pandulapeter.campfire.chordpro.syntax.ChordProTokens
  * with nothing between them, where the string names start over, all of them in the same order: a name that recurs
  * inside one system, `E|` for both E strings or DADGAD's three `D|`, does not start one.
  */
-object ChordProTabWrapper {
+public object ChordProTabWrapper {
 
     /**
      * Whether the lines are tablature at all: a run inside `{start_of_tab}` that holds no staff line is preformatted
      * text (chord names over lyrics, most often), which has no staff to cut by and is cut by [wrapPreformatted] instead.
      */
-    fun isTablature(lines: List<String>) = lines.any(ChordProTokens::isStaffLine)
+    public fun isTablature(lines: List<String>): Boolean = lines.any(ChordProTokens::isStaffLine)
 
     /**
      * Cuts [lines], the lines of one run of tablature, into rows of at most [maxColumns] characters. Every row is a
@@ -52,7 +52,7 @@ object ChordProTabWrapper {
      * wider than [maxColumns] unless even that leaves fewer than [MIN_CAPACITY] columns, at which point the strings are
      * shown that wide anyway, since a staff cut into pieces of two characters is not a staff any more.
      */
-    fun wrap(lines: List<String>, maxColumns: Int): List<List<String>> {
+    public fun wrap(lines: List<String>, maxColumns: Int): List<List<String>> {
         val isStaffLine = lines.map(ChordProTokens::isStaffLine)
         val length = lines.maxOfOrNull { it.length } ?: 0
         if (isStaffLine.none { it } || length <= maxColumns) return listOf(lines)
@@ -88,7 +88,7 @@ object ChordProTabWrapper {
      * The run comes back as a single row whenever it fits as it is, and so does one that would wrap into more row lines
      * than half its characters, for the reason [wrap] gives.
      */
-    fun wrapPreformatted(lines: List<String>, maxColumns: Int): List<List<String>> {
+    public fun wrapPreformatted(lines: List<String>, maxColumns: Int): List<List<String>> {
         if ((lines.maxOfOrNull { it.length } ?: 0) <= maxColumns) return listOf(lines)
         val capacity = maxColumns.coerceAtLeast(1)
         val budget = lines.size + lines.sumOf { it.length } / 2

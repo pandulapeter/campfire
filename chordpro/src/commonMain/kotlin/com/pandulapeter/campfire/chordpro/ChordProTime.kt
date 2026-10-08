@@ -15,13 +15,13 @@ package com.pandulapeter.campfire.chordpro
  * else is none. Plain numbers rather than a type of its own, since `:chordpro` depends on nothing and the metronome
  * that plays it lives elsewhere.
  */
-object ChordProTime {
+public object ChordProTime {
 
     private val FRACTION = Regex("""(\d{1,2})\s*/\s*(\d{1,2})""")
     private val UNITS = setOf(1, 2, 4, 8, 16)
 
     /** The beats of a bar and the note each beat is, or null where [text] is not one of the shapes above. */
-    fun parse(text: String?): Pair<Int, Int>? {
+    public fun parse(text: String?): Pair<Int, Int>? {
         val value = text?.trim() ?: return null
         return when (value) {
             "C" -> 4 to 4

@@ -22,7 +22,7 @@ import com.pandulapeter.campfire.chordpro.syntax.MetadataKind
  * its text and leaving every other byte of it as it was, for the same reason [ChordProTags] does: what comes out of here
  * is written back to the user's own file.
  */
-object ChordProMetadataFields {
+public object ChordProMetadataFields {
 
     /**
      * One directive a song says one thing with, under the name the app knows it by (see
@@ -34,7 +34,7 @@ object ChordProMetadataFields {
      * `{tempo}` or `{time}` is a change in the body rather than a second value of its field, so [KEY], [TEMPO] and [TIME]
      * edit the header line the song starts in and leave their lines in the body where they stand.
      */
-    enum class Field(internal val kind: MetadataKind) {
+    public enum class Field(internal val kind: MetadataKind) {
         TITLE(MetadataKind.TITLE),
         SUBTITLE(MetadataKind.SUBTITLE),
         ARTIST(MetadataKind.ARTIST),
@@ -50,11 +50,11 @@ object ChordProMetadataFields {
         ;
 
         /** The long name of the directive the field is written with. */
-        val directiveName get() = kind.longName
+        internal val directiveName get() = kind.longName
     }
 
     /** What [metadata] says for [field], as text, or null where the song declares nothing for it. */
-    fun valueOf(metadata: ChordProMetadata, field: Field): String? = when (field) {
+    public fun valueOf(metadata: ChordProMetadata, field: Field): String? = when (field) {
         Field.TITLE -> metadata.title
         Field.SUBTITLE -> metadata.subtitle
         Field.ARTIST -> metadata.artist
@@ -83,7 +83,7 @@ object ChordProMetadataFields {
      * a value is read as a space, since it would otherwise end the directive and leave the rest in the song as lyrics. A
      * text that already says all of it returns unchanged.
      */
-    fun set(text: String, values: Map<Field, String?>): String = values.entries.fold(text) { current, (field, value) ->
+    public fun set(text: String, values: Map<Field, String?>): String = values.entries.fold(text) { current, (field, value) ->
         set(text = current, field = field, value = value)
     }
 

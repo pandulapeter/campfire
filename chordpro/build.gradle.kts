@@ -10,3 +10,8 @@
 plugins {
     id("campfire-library")
 }
+
+kotlin {
+    // The public surface of a module every other one sees is written on purpose: a declaration says it is public.
+    explicitApi()
+}

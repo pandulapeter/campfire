@@ -24,7 +24,7 @@ import com.pandulapeter.campfire.chordpro.syntax.ChordProMetaItems
  * Two spellings of the same word are the same tag, here as everywhere else, so a tag is matched without regard to
  * case and adding one the song already carries changes nothing.
  */
-object ChordProTags {
+public object ChordProTags {
 
     /**
      * Writes a `{tag}` directive for [tag], after the last tag the file already has or, if it has none, at the end of
@@ -33,7 +33,7 @@ object ChordProTags {
      * @param fold What two spellings of a tag are compared as, besides their case — the caller's Unicode normalization,
      *   which this module has none of. The tag is written as it was given.
      */
-    fun addTag(text: String, tag: String, fold: (String) -> String = { it }): String {
+    public fun addTag(text: String, tag: String, fold: (String) -> String = { it }): String {
         val trimmedTag = tag.asTag()
         val key = fold(trimmedTag)
         if (trimmedTag.isEmpty() || ChordProParser.parseMetadata(text).tags.any { fold(it).equals(key, ignoreCase = true) }) return text
@@ -48,7 +48,7 @@ object ChordProTags {
      *
      * @param fold As for [addTag]: every spelling it folds to the same key is dropped, a decomposed one included.
      */
-    fun removeTag(text: String, tag: String, fold: (String) -> String = { it }): String {
+    public fun removeTag(text: String, tag: String, fold: (String) -> String = { it }): String {
         val trimmedTag = tag.asTag()
         if (trimmedTag.isEmpty()) return text
         val key = fold(trimmedTag)
