@@ -50,7 +50,6 @@ import com.pandulapeter.campfire.presentation.ui.chords.toChordInstrument
 import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.components.LabelsOnEverySong
 import com.pandulapeter.campfire.presentation.ui.components.Placeholder
-import com.pandulapeter.campfire.presentation.ui.dialogs.CoverArtSearchState
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.firstRun.DemoLibrary
@@ -164,6 +163,7 @@ import com.pandulapeter.campfire.presentation.ui.screens.songDetails.hasSongInfo
 import com.pandulapeter.campfire.presentation.ui.fontScale.FontScaleAccumulator
 import com.pandulapeter.campfire.presentation.ui.fontScale.PINCH_SENSITIVITY
 import com.pandulapeter.campfire.presentation.ui.songInfo.hasSongInfo
+import com.pandulapeter.campfire.presentation.ui.state.CoverArtSearchController
 import com.pandulapeter.campfire.presentation.ui.state.DebouncedPreference
 import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
@@ -919,12 +919,17 @@ class CampfireViewModel(
         }
         .asState(null)
 
-    /**
-     * The bytes the copies of the covers take up, null until they have been listed. Eager like every other state, so
-     * that the settings screen opens on the number rather than fading it in; the repository lists the folder once per
-     * change at most, and only one listing at a time.
-     */
-    val coverArtCacheSize = getCoverArtCacheSize().asState(null)
+    private val coverArtSearchController = CoverArtSearchController(
+        scope = viewModelScope,
+        searchCoverArt = searchCoverArt,
+        getCoverArtCacheSize = getCoverArtCacheSize,
+        clearCoverArtCache = clearCoverArtCache,
+        parseChordPro = parseChordPro,
+        songTextOf = { songTextOf(it) },
+    )
+
+    /** See [CoverArtSearchController.coverArtCacheSize]. */
+    val coverArtCacheSize get() = coverArtSearchController.coverArtCacheSize
 
     // The sections arrive cut, from the same pass that sorted them. Cutting them here would take the sorting mode
     // from the preferences, which change before the list sorted by them arrives.
@@ -1183,14 +1188,8 @@ class CampfireViewModel(
 
     // Dialogs
 
-    /**
-     * The state of the cover search sheet ([DialogType.CoverArtSearch]). Held here rather than by the sheet so that a
-     * search survives the Android activity being recreated under it, and cleared with its search cancelled whenever
-     * the sheet stops being the dialog on screen, see [setVisibleDialog].
-     */
-    private val _coverArtSearch = MutableStateFlow<CoverArtSearchState>(CoverArtSearchState.Idle)
-    val coverArtSearch = _coverArtSearch.asStateFlow()
-    private var coverArtSearchJob: Job? = null
+    /** See [CoverArtSearchController.coverArtSearch]. */
+    val coverArtSearch get() = coverArtSearchController.coverArtSearch
 
     /** See [DialogHost.visibleDialog]. */
     val visibleDialog: StateFlow<DialogType?> get() = dialogHost.visibleDialog
@@ -1947,39 +1946,11 @@ class CampfireViewModel(
         setChordProCoverArt(text = text, url = url)
     }
 
-    /**
-     * What the cover search sheet is prefilled with for [song]: its artist, album and title as the file writes them,
-     * read from the text the details screen holds, and from the library's entry where that is not at hand, which has
-     * no album and a title with the subtitle after it.
-     */
-    fun coverArtQueryOf(song: Song, target: SongEditTarget) = songTextOf(target)?.let { text ->
-        val metadata = parseChordPro(text).metadata
-        CoverArtQuery(
-            artist = metadata.artist.orEmpty(),
-            album = metadata.album.orEmpty(),
-            title = metadata.title ?: song.title,
-        )
-    } ?: CoverArtQuery(artist = song.artist, album = "", title = song.title)
+    fun coverArtQueryOf(song: Song, target: SongEditTarget) = coverArtSearchController.coverArtQueryOf(song, target)
 
-    /** Searches for [query], cancelling the search still running: only the question asked last is still being asked. */
-    fun searchCoverArt(query: CoverArtQuery) {
-        coverArtSearchJob?.cancel()
-        if (!query.isSearchable) {
-            _coverArtSearch.value = CoverArtSearchState.Idle
-            return
-        }
-        coverArtSearchJob = viewModelScope.launch {
-            searchCoverArt.invoke(query = query).collect { results ->
-                _coverArtSearch.value = CoverArtSearchState.Active(query = query, results = results)
-            }
-        }
-    }
+    fun searchCoverArt(query: CoverArtQuery) = coverArtSearchController.searchCoverArt(query)
 
-    private fun clearCoverArtSearch() {
-        coverArtSearchJob?.cancel()
-        coverArtSearchJob = null
-        _coverArtSearch.value = CoverArtSearchState.Idle
-    }
+    private fun clearCoverArtSearch() = coverArtSearchController.clearCoverArtSearch()
 
     /**
      * The text a metadata dialog is built on: the editor's own while it is the editor's draft the dialog edits, since
@@ -2996,9 +2967,7 @@ class CampfireViewModel(
         }
     }
 
-    fun clearCoverArtCache() {
-        viewModelScope.launch { clearCoverArtCache.invoke() }
-    }
+    fun clearCoverArtCache() = coverArtSearchController.clearCoverArtCache()
 
     /** The transposition of the song travels in the entry, so removing it takes the transposition with it. */
     fun removeSongFromSetlist(songFileName: String, setlistFileName: String) = launchLibraryChange {
