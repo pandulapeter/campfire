@@ -135,42 +135,66 @@ object ChordProChords {
      * Hands every name [namesIn] reads to [action], as often as it is written, with the offset the `{transpose}` in
      * force where it stands moved it by: 0 before the first, and a recall read where it stands.
      */
-    internal fun forEachName(song: ChordProSong, action: (name: String, offset: Int) -> Unit) {
-        var offset = 0
-        fun addBrackets(text: String?) {
-            text?.let { ChordProDirectives.brackets(it).map { bracket -> bracket.content.trim() }.filter { name -> name.isNotEmpty() && !name.startsWith("*") }.forEach { action(it, offset) } }
+    internal fun forEachName(song: ChordProSong, action: (name: String, offset: Int) -> Unit) =
+        visitChordNames(song, includeKey = false, includeBracketedText = true, includeRecalls = true) { name, offset ->
+            action(name, offset)
+            true
         }
-        fun addBlocks(blocks: List<ChordProBlock>) {
-            blocks.forEach { block ->
-                when (block) {
-                    is ChordProBlock.Section -> {
-                        addBrackets(block.label)
-                        block.lines.forEach { line ->
-                            when (line) {
-                                is ChordProLine.Lyrics -> line.chords.filter { !it.isAnnotation }.forEach { action(it.name, offset) }
-                                is ChordProLine.Grid -> {
-                                    addBrackets(line.label)
-                                    line.tokens.filterIsInstance<GridToken.Chord>().forEach { token -> ChordProTokens.cellChords(token.name).forEach { action(it, offset) } }
-                                }
-                                is ChordProLine.Tab -> {
-                                    addBrackets(line.label)
-                                    ChordProTabTransposer.chordNames(listOf(line.text)).forEach { action(it, offset) }
-                                }
-                                ChordProLine.Blank -> Unit
-                            }
-                        }
-                    }
-                    is ChordProBlock.ChorusRecall -> {
-                        addBrackets(block.label)
-                        addBlocks(block.blocks)
-                    }
-                    is ChordProBlock.Comment -> addBrackets(block.text)
-                    is ChordProBlock.Transpose -> offset = block.semitones
-                    else -> Unit
+
+    /**
+     * The one walk over the chord names of a parsed song: the chords over its lyrics (never an annotation), the cells of
+     * its grids and the rows of chord names above its tabs, each with the offset the `{transpose}` in force where it
+     * stands moved it by. [includeKey] adds the song's key first, [includeBracketedText] the brackets of its comments and
+     * of its section, grid and tab labels, and [includeRecalls] the chorus a recall repeats, read where the recall stands.
+     * [visit] answers whether to go on, so a caller looking for one name stops at the first that is.
+     */
+    internal fun visitChordNames(
+        song: ChordProSong,
+        includeKey: Boolean,
+        includeBracketedText: Boolean,
+        includeRecalls: Boolean,
+        visit: (name: String, offset: Int) -> Boolean,
+    ) {
+        var offset = 0
+        fun visitAll(names: List<String>) = names.all { visit(it, offset) }
+        fun visitBrackets(text: String?) = !includeBracketedText || text == null || visitAll(bracketedNames(text))
+        fun visitBlocks(blocks: List<ChordProBlock>): Boolean = blocks.all { block ->
+            when (block) {
+                is ChordProBlock.Section -> visitBrackets(block.label) && block.lines.all { line ->
+                    visitBrackets(line.environmentLabel) && visitAll(line.chordNames())
                 }
+                is ChordProBlock.ChorusRecall -> !includeRecalls || (visitBrackets(block.label) && visitBlocks(block.blocks))
+                is ChordProBlock.Comment -> visitBrackets(block.text)
+                is ChordProBlock.Transpose -> {
+                    offset = block.semitones
+                    true
+                }
+                else -> true
             }
         }
-        addBlocks(song.blocks)
+        if (includeKey) song.metadata.key?.let { if (!visit(it, 0)) return }
+        visitBlocks(song.blocks)
+    }
+
+    /** The chord names in the brackets of a comment or a label, where an intro is written down as a row of chords. */
+    private fun bracketedNames(text: String) = ChordProDirectives.brackets(text)
+        .map { bracket -> bracket.content.trim() }
+        .filter { name -> name.isNotEmpty() && !name.startsWith(ChordProVocabulary.ANNOTATION_MARKER) }
+
+    /** The label of the tab or grid environment a line stands in, see [ChordProLine.Tab.label]. */
+    private val ChordProLine.environmentLabel
+        get() = when (this) {
+            is ChordProLine.Grid -> label
+            is ChordProLine.Tab -> label
+            else -> null
+        }
+
+    /** The chord names one line plays, by what kind of line it is. */
+    private fun ChordProLine.chordNames(): List<String> = when (this) {
+        is ChordProLine.Lyrics -> chords.filter { !it.isAnnotation }.map { it.name }
+        is ChordProLine.Grid -> tokens.filterIsInstance<GridToken.Chord>().flatMap { ChordProTokens.cellChords(it.name) }
+        is ChordProLine.Tab -> ChordProTabTransposer.chordNames(listOf(text))
+        ChordProLine.Blank -> emptyList()
     }
 
     /**

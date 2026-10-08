@@ -404,7 +404,10 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   readings a chart leaves open are made once here (`11` without the major third, `13` without the ninth and the
   eleventh, `dim` the triad, `C2` an added second, a `5` after a quality the fifth the quality has — `C+5` is `Caug`,
   `Cdim5` is `Cdim` — and `C-5` the flat five `C7-5` writes). `namesIn` lists the chords a song plays in order, once each — the
-  lyrics, the grids, the tabs' chord rows, the brackets of comments and labels, never the key — and `transposedName`
+  lyrics, the grids, the tabs' chord rows, the brackets of comments and labels, never the key; it and
+  `ChordProChordRewriter.writtenChordNames` (the key and the lines of the sections alone, which decide the notation and the
+  spelling) are both one internal walk, `visitChordNames`, whose flags say whether the key, the bracketed text and the
+  recalled choruses are read and which a test holds against every name the chord rewrite renames — and `transposedName`
   moves one name in its own notation. `spelledNoteNames` spells a chord's notes by degree from the root's letter (`Cm` is
   `C Eb G`, a white-key enharmonic or a double accidental falling back to the plain name), which the Chord shapes sheet
   shows under each diagram.

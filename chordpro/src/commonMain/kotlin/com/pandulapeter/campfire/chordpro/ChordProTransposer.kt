@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.chordpro
 
 import com.pandulapeter.campfire.chordpro.ChordProChordRewriter.ChordRewrite
+import com.pandulapeter.campfire.chordpro.ChordProChordRewriter.anyWrittenChordName
 import com.pandulapeter.campfire.chordpro.ChordProChordRewriter.keepingLowercaseMinors
 import com.pandulapeter.campfire.chordpro.ChordProChordRewriter.keyWordOf
 import com.pandulapeter.campfire.chordpro.ChordProChordRewriter.keyWords
@@ -78,7 +79,7 @@ object ChordProTransposer {
         val flats = preferFlats ?: prefersFlats(song, semitones)
         val transposeName = { name: String -> transposeChord(name, semitones, flats) }
         if (!isGermanNotated) return rewriteText(text, semitones, keepingLowercaseMinors(transposeName))
-        val staysGermanNotated = writtenChordNames(song).any { name ->
+        val staysGermanNotated = anyWrittenChordName(song) { name ->
             ChordProNotation.isGermanName(ChordProNotation.toGerman(transposeName(name)))
         }
         return rewriteText(
@@ -111,7 +112,7 @@ object ChordProTransposer {
 
     /** Whether flats should be preferred for the key this song arrives in after the transposition. */
     fun prefersFlats(song: ChordProSong, semitones: Int): Boolean {
-        val names = writtenChordNames(song).toList()
+        val names = writtenChordNames(song)
         val key = song.metadata.key?.let(::keyOf)
             ?: names.firstNotNullOfOrNull { name -> name.takeIf(ChordProChordNames::isChordName)?.let(::keyOf) }
         return key?.transposedBy(semitones)?.prefersFlats ?: isWrittenInFlats(names)

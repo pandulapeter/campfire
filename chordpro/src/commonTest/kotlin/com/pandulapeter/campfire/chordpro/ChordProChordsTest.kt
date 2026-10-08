@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.chordpro
 
 import com.pandulapeter.campfire.chordpro.model.Chord
+import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -228,5 +229,87 @@ class ChordProChordsTest {
         assertEquals("B", ChordProChords.transposedName("A", 1, ChordNotation.GERMAN, preferFlats = true))
         assertEquals("d/f#", ChordProChords.transposedName("c/e", 2))
         assertEquals("N.C.", ChordProChords.transposedName("N.C.", 2))
+    }
+
+    private val chordNameFixture = """
+        {title: Fixture}
+        {key: G}
+        {start_of_verse: Verse [C]}
+        [G]Hello [*softly]world [Em]there
+        {end_of_verse}
+        {start_of_grid: Grid [D]}
+        | G . | C~D . |
+        {end_of_grid}
+        {start_of_verse}
+        {start_of_tab: Riff [A]}
+        [Am]      [F]
+        e|---0---|
+        {end_of_tab}
+        {end_of_verse}
+        {comment: Intro: [G] [Em]}
+        {start_of_chorus}
+        [F]La [Bb]la
+        {end_of_chorus}
+        {transpose: 2}
+        {chorus}
+    """.trimIndent()
+
+    @Test
+    fun `every chord name is read with the transposition in force where it stands, recalls and brackets included`() {
+        val names = mutableListOf<Pair<String, Int>>()
+        ChordProChords.forEachName(ChordProParser.parseAsWritten(chordNameFixture)) { name, offset -> names += name to offset }
+        assertEquals(
+            listOf(
+                "C" to 0, "G" to 0, "Em" to 0, "D" to 0, "D" to 0, "G" to 0, "C" to 0, "D" to 0, "A" to 0, "Am" to 0, "F" to 0,
+                "A" to 0, "G" to 0, "Em" to 0, "F" to 0, "Bb" to 0, "F" to 2, "Bb" to 2,
+            ),
+            names,
+        )
+    }
+
+    @Test
+    fun `the written chord names are the key and the lines of the sections alone`() {
+        assertEquals(
+            listOf("G", "G", "Em", "G", "C", "D", "Am", "F", "F", "Bb"),
+            ChordProChordRewriter.writtenChordNames(ChordProParser.parseAsWritten(chordNameFixture)),
+        )
+    }
+
+    @Test
+    fun `the visitor stops where it is told to`() {
+        val visited = mutableListOf<String>()
+        ChordProChords.visitChordNames(
+            song = ChordProParser.parseAsWritten(chordNameFixture),
+            includeKey = true,
+            includeBracketedText = true,
+            includeRecalls = true,
+        ) { name, _ ->
+            visited += name
+            name != "Em"
+        }
+        assertEquals(listOf("G", "C", "G", "Em"), visited)
+    }
+
+    @Test
+    fun `the visitor reads every name the chord rewrite renames`() {
+        val song = ChordProParser.parseAsWritten(chordNameFixture)
+        val renamed = mutableSetOf<String>()
+        val tabLines = mutableListOf<String>()
+        ChordProChordRewriter.rewriteChords(song) {
+            ChordProChordRewriter.ChordRewrite(
+                rewriteTabLines = { lines -> lines.also { tabLines += it } },
+                rename = { name -> name.also { renamed += it } },
+                renameInKey = { name -> name.also { renamed += it } },
+                rewriteDefinition = { it },
+            )
+        }
+        val visited = mutableSetOf<String>()
+        ChordProChords.visitChordNames(song, includeKey = true, includeBracketedText = true, includeRecalls = true) { name, _ ->
+            visited += name
+            true
+        }
+        // A modulation names the key it reaches, which the rewrite renames and which is no chord anybody plays.
+        val transposeKeys = song.blocks.filterIsInstance<ChordProBlock.Transpose>().mapNotNull { it.key }
+        assertEquals(visited + transposeKeys, renamed + ChordProTabTransposer.chordNames(tabLines))
     }
 }

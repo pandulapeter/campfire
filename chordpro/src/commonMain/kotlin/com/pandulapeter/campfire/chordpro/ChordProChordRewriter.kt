@@ -128,18 +128,30 @@ internal object ChordProChordRewriter {
     /** The word a key spelled out in words names its mode with, in lowercase: `minor` for `A minor`, `moll` for `a-moll`. */
     internal fun keyWordOf(suffix: String) = suffix.trimStart { it.isWhitespace() || it == '-' }.lowercase()
 
-    /** Every name [rewriteChords] would hand to its rename, without rewriting anything. */
-    internal fun writtenChordNames(song: ChordProSong): Sequence<String> = sequence {
-        song.metadata.key?.let { yield(it) }
-        song.blocks.asSequence().filterIsInstance<ChordProBlock.Section>().flatMap { it.lines }.forEach { line ->
-            when (line) {
-                is ChordProLine.Lyrics -> yieldAll(line.chords.filter { !it.isAnnotation }.map { it.name })
-                is ChordProLine.Grid -> yieldAll(line.tokens.filterIsInstance<GridToken.Chord>().flatMap { ChordProTokens.cellChords(it.name) })
-                is ChordProLine.Tab -> yieldAll(ChordProTabTransposer.chordNames(listOf(line.text)))
-                ChordProLine.Blank -> Unit
-            }
+    /**
+     * The names [rewriteChords] hands to its rename that decide how a song is written — its key and the chords of the lines
+     * of its sections, without rewriting anything. The brackets of comments and labels and the chorus a recall repeats are
+     * left out, for the reason [rewriteBlock] gives, and so are the definitions, which follow their chords.
+     */
+    internal fun writtenChordNames(song: ChordProSong): List<String> = buildList {
+        visitWrittenChordNames(song) { name ->
+            add(name)
+            true
         }
     }
+
+    /** Whether any of the [writtenChordNames] of [song] is one [predicate] holds for, stopping at the first that is. */
+    internal fun anyWrittenChordName(song: ChordProSong, predicate: (String) -> Boolean): Boolean {
+        var isFound = false
+        visitWrittenChordNames(song) { name ->
+            isFound = predicate(name)
+            !isFound
+        }
+        return isFound
+    }
+
+    private fun visitWrittenChordNames(song: ChordProSong, visit: (String) -> Boolean) =
+        ChordProChords.visitChordNames(song, includeKey = true, includeBracketedText = false, includeRecalls = false) { name, _ -> visit(name) }
 
     /**
      * Splits the lines into runs of tablature and everything else, and rewrites each the way it has to be.

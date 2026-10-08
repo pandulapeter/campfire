@@ -137,7 +137,7 @@ object ChordProNotation {
     }
 
     /** Whether a file's song was written in German notation, which it says by using an `H` chord anywhere. */
-    internal fun isGermanNotated(song: ChordProSong) = ChordProChordRewriter.writtenChordNames(song).any(::isGermanName)
+    internal fun isGermanNotated(song: ChordProSong) = ChordProChordRewriter.anyWrittenChordName(song, ::isGermanName)
 
     /** Reads a German-notated chord into the notation the rest of the app works in. */
     internal fun fromGerman(name: String): String {
@@ -164,7 +164,7 @@ object ChordProNotation {
 
     /** [song], its file written in [notation], in the app's own: English note names and ASCII accidentals. */
     internal fun normalized(song: ChordProSong, notation: ChordNotation): ChordProSong {
-        val names = ChordProChordRewriter.writtenChordNames(song).toList()
+        val names = ChordProChordRewriter.writtenChordNames(song)
         val german = notation == ChordNotation.GERMAN || names.any(::isGermanName)
         val hasLowercaseMinors = names.any { ChordProChordNames.lowercaseMinorExpanded(it) != null }
         if (!german && !hasLowercaseMinors && !hasLatinName(song) && names.none { SHARP_SIGN in it || FLAT_SIGN in it }) return song
@@ -183,7 +183,7 @@ object ChordProNotation {
      * `H`, a Latin name in a comment or a label only counts where another one does: they do not vote, see
      * [ChordProChordRewriter.rewriteChords]. A definition's name is no prose, so it counts on its own.
      */
-    private fun hasLatinName(song: ChordProSong) = ChordProChordRewriter.writtenChordNames(song).any { ChordProChordNames.latinExpanded(it) != null } ||
+    private fun hasLatinName(song: ChordProSong) = ChordProChordRewriter.anyWrittenChordName(song) { ChordProChordNames.latinExpanded(it) != null } ||
         song.metadata.definitions.any { ChordProChordNames.latinExpanded(it.name) != null } ||
         song.metadata.key?.let { key -> ChordProChordRewriter.renameKey(key) { ChordProChordNames.latinExpanded(it) ?: it } != key } == true
 
