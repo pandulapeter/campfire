@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.dialogs
+package com.pandulapeter.campfire.presentation.ui.screens.export
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.BoundsTransform
@@ -91,6 +91,8 @@ import com.pandulapeter.campfire.presentation.ui.components.DelayedLoadingIndica
 import com.pandulapeter.campfire.presentation.ui.components.saveShortcut
 import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.contentEdges
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
+import com.pandulapeter.campfire.presentation.ui.dialogs.songLabel
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.calendarLocale
 import com.pandulapeter.campfire.presentation.ui.print.PrintLabels

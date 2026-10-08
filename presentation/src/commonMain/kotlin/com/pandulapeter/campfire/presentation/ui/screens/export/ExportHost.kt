@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.dialogs
+package com.pandulapeter.campfire.presentation.ui.screens.export
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.layout.Box
@@ -29,6 +29,7 @@ import androidx.navigationevent.NavigationEventTransitionState
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.slideFractionSpec
 import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.collectLatest

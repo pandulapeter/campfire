@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.dialogs
+package com.pandulapeter.campfire.presentation.ui.screens.export
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableIntState
@@ -20,6 +20,7 @@ import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import com.pandulapeter.campfire.data.model.domain.PrintSettings
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.print.PrintDocument
 import com.pandulapeter.campfire.presentation.ui.print.PrintLabels
 import com.pandulapeter.campfire.presentation.ui.print.PrintSource

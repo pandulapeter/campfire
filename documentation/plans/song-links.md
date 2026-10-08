@@ -34,7 +34,7 @@ import. There is no server, no upload and no new request: the page the link open
 
 ### What is already there, and what is not
 
-- The export screen (`ui/dialogs/ExportScreen.kt`) already has the format as its first option (`FormatChoice`, a
+- The export screen (`ui/screens/export/ExportScreen.kt`) already has the format as its first option (`FormatChoice`, a
   `SegmentedChoice` over `PrintSettings.Format`), a preview that crossfades to what the library's own files write
   (`FilesPreview`, `ZipContents`), a setlist's song ticks shared by both formats (`chosenSongFileNames`), Save as its
   floating action button (`SaveButton`) and Share in its app bar on the phones (`PrintTopAppBar`, `canShare`).

@@ -54,8 +54,8 @@ import com.pandulapeter.campfire.presentation.ui.screens.metronome.MetronomeScre
 import com.pandulapeter.campfire.presentation.ui.components.ListLayout
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
 import com.pandulapeter.campfire.presentation.ui.dialogs.CampfireDialogs
-import com.pandulapeter.campfire.presentation.ui.dialogs.ExportHost
-import com.pandulapeter.campfire.presentation.ui.dialogs.ExportTransition
+import com.pandulapeter.campfire.presentation.ui.screens.export.ExportHost
+import com.pandulapeter.campfire.presentation.ui.screens.export.ExportTransition
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.SetlistsScreen
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportReportScreen

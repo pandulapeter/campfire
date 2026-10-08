@@ -426,7 +426,7 @@ shared controls.
 
 ## Export
 
-`ui/dialogs/ExportScreen.kt` and `ui/print/`, opened as `DialogType.Export` from the one export entry of a song's actions ("Export song", which also titles the screen) (with the
+`ui/screens/export/ExportScreen.kt` and `ui/print/`, opened as `DialogType.Export` from the one export entry of a song's actions ("Export song", which also titles the screen) (with the
 setlist it was reached through, whose key it then prints in) and a setlist's ("Export setlist"). It is a dialog to the view model and a
 screen to the user: `ExportHost`, composed by `CampfireScreens` after the `NavDisplay` and before the dialogs and
 the snackbars, deals it in over everything and takes it away again however the dialog goes, exactly as a destination is

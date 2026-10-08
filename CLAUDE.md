@@ -98,7 +98,7 @@ uninstall and nothing else does.
 ## Printing
 
 Song and setlist action menus have one export entry each (**Export song**, **Export setlist**), which opens the export
-screen titled the same (`presentation/ui/dialogs/ExportScreen.kt`), full screen over the app with Save as its floating
+screen titled the same (`presentation/ui/screens/export/ExportScreen.kt`), full screen over the app with Save as its floating
 action button (on a phone the options end above it and the preview is their first item, scrolling away with them; from
 520dp of width it stands beside them) and, on Android and iOS, Share in the app bar: there is no separate share or
 file export entry. Its first option is the format, with a line saying what each is for — a **PDF**, for printing, or
