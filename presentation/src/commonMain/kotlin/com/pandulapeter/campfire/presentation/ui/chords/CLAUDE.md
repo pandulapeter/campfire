@@ -57,3 +57,25 @@ Chord diagrams.
   the shape the player would be shown and its frets selected, or sends the caret to the frets of the line already
   there; the preview's Chords section holds every definition of the text and nothing else, each on its own
   instrument, whatever the switches say.
+
+## Which shape a chord is drawn with
+
+- **How every chord of a song is fingered is shown at its top**, on the guitar, the ukulele or the keyboard (the
+  Songs tab's Instrument): a Chords section after the controls of how it is played, one diagram per chord in the order
+  they are first played, folded by one preference for every song and cut between its rows of diagrams wherever a page
+  ends inside it, like any other section. Nothing is shipped for it and nothing is fetched: `:chordpro` reads what
+  notes a chord name stands for (`ChordProChords`) and finds its shapes (`ChordVoicings`) — a hand-typed table of the
+  shapes everybody knows first, a search for every other one after it. Which shape a chord is drawn with is, in order, the song's own `{define}` (or `{chord}`) for that
+  instrument, which ChordPro has for "in this song the G is played this way" and which travels with the file; the
+  player's own choice from the Chord shapes sheet, **one per chord and instrument for the whole library**, since which F
+  somebody plays is a habit of their hands rather than a reading of one song, stored as the shape rather than its
+  number and keyed by the chord's notes so every spelling shares it (`UserPreferences.chordVoicings`, synced, see Sync);
+  and the app's first shape. A definition for another instrument is not used on the page, nor translated: a guitar
+  shape's fingers make another chord on a ukulele, and a keyboard plays the chord's own notes. A definition follows its
+  chord through every transposition — the reader's, the file's `{transpose}` and the editor's transpose action, which
+  rewrites the line in place — along the neck, in whichever octave a hand can hold it, and one a transposition left
+  needing a fifth finger gives way to the player's shape. On the keyboard a capoed song draws the chords that sound.
+  The editor writes definitions (its Chord shape button), marks one it cannot read and draws every one in its preview.
+  The PDF prints them under each song's heading where the export screen's Chord diagrams box is ticked (as every
+  option is for a new user; offered only while the feature is on and a song has a chord, and only with the chords printed), drawn as the song
+  details screen draws them, their names left out of the file's selectable text.

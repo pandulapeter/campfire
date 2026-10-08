@@ -30,7 +30,7 @@ The notes on it are split by directory, each in the `CLAUDE.md` of the package i
 `src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/`:
 
 - `ui/` — the view model facade and its holders, `CampfireApp` and the navigation chrome, performance mode, and the
-  rules every screen follows.
+  product rules that span modules: what a song carries in its file, how it is played, the Features switches.
 - `ui/navigation/` — `CampfireDestination` and the back stack.
 - `ui/firstRun/` — the demo library.
 - `ui/screens/` — what every screen shares (insets, padding, the list screens' common behaviour).

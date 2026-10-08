@@ -24,3 +24,23 @@ lifted are needed at all. The switch composes the row anew, so the grip's `Mutab
 rendered key) is remembered above it, and the grip still slides in and out. Outside the mode a row is placed with a plain `listItemAnimation` instead, with
 none of that — the per-row coroutine `draggedListItemContainerColor`'s own documentation warns a list this size
 cannot afford is exactly what every setlist row was paying for, reordered or not.
+
+## Setlist files
+
+- **A setlist shows every song it names**, whatever the Songs screen is filtered to: the filters narrow a view of the
+  library, while a setlist is the list somebody wrote down. What the Setlists screen's own controls ask is the order
+  the setlists come in and whether the archived ones are among them. Archiving is how a setlist that has been played
+  is put away without the songs in it being lost; it is a field of the `*.setlist.json` file rather than a
+  preference, so it travels through an export, an import or a sync run the way a tag does. The **description** — an
+  optional sentence about what a setlist is for, shown under its header and read by the screen's search — lives in
+  the file for the same reason, and so does the **date**: the day the setlist is for, an ISO date that starts as the
+  day it was created here and is moved with a calendar sheet opened from the sheet that names the setlist. **Every
+  setlist has one**: an import dates a setlist that carries none the same way (the bundled demo one included), unless
+  it replaces a library setlist, whose day it keeps, and a file in the library that names none — written before there
+  were dates, by hand, or by an older version on another device — is given the day it is first read on and saved with
+  it right after that read, through the repository's locks but announcing nothing, so the next sync run carries it.
+  The setlist details sheet's **Countdown** checkbox, off by default and in the file too, puts a subtitle under the setlist's
+  sticky header that says how far that day is ("In 5 days", "Today", "Yesterday") — the only place the date shows
+  outside the sheet, so the one way it can be seen in performance mode. The same subtitle carries how long the setlist's songs take ("42:30 running time", the label after the number so that a narrow header cuts off the label rather than the time), after the countdown or in its place,
+  added up from their `{duration}`s and marked with a `+` where some songs have none that can be read. Sorting by date puts the latest day on top, the setlists
+  of one day by their title.

@@ -480,3 +480,21 @@ ChordPro, the round-trip oracle `parse(serialize(parse(x))) == parse(x)` the par
 to (the editor works on raw text, so nothing in the app writes a model back). A `Timing` is written as the `{tempo}`
 and `{time}` it changes against the ones in force, starting from the header's, and the definitions after the rest of
 the header, as `ChordProDefinitions.line` writes them.
+
+## Chord notation in the library
+
+- **Every file is in the standard chord notation** (`C D E F G A B`, `#` and `b`), whatever notation its reader
+  prefers (Settings → Songs, one choice of five): the German one (`H` for B, `B` for B flat) and the Latin one (`Do Re
+  Mi Fa Sol La Si`) are ways of showing chords and of typing them, converted on the way to the screen and in and out of
+  the editor's field (`:chordpro`'s `ChordProNotation`), so a library reads the same in every app and on every device.
+  An import writes every song's chords that way, which only changes a chart that used an `H`, a Latin name or the `♯`
+  and `♭` signs; a file that arrives otherwise (a sync run, the library folder edited by hand) is read the same way —
+  an `H` anywhere marks it German, and a Latin name is read as the chord it names wherever it stands, since none is
+  also a standard one — and brought into the standard notation the next time the editor saves it. The one chart
+  nothing can tell apart is a German one in a flat key, which never needs an `H`: it is read as standard. The editor's
+  field is in the reader's notation, so what they type is never ambiguous. **Nashville numbers and Roman numerals**
+  (`1 4 5 6-`, `I IV V vi`, an extension that starts with a digit set off in parentheses in numbers: `5(7)`, never
+  `57`) are only ever shown: the page, the editor's preview and the PDF count the chords from the
+  song's key (a minor song from its own tonic), every key the app names stays in letters, a song with no key stays in
+  letters, the chord diagrams are named by the step and by their letters, and the editor's field is in letters, since
+  nothing is ever typed or stored in numbers.

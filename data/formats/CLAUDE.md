@@ -76,3 +76,19 @@ it could not read.
 Tested with `commonTest` (syntax, filters, encodings, geometry and rejections of the readers, zip round trips, reader
 rejections, the inflater's limit) and `desktopTest` (the inflater and the zip reader against archives the JVM produced),
 run with `./gradlew :data:formats:desktopTest`.
+
+## Documents as the import sees them
+
+- **Documents are converted locally**, never rendered, uploaded or kept: `.pdf` and `.docx` pass through
+  `DocumentRepository` to pure-Kotlin extractors, then `ChordSheetConverter` to ordinary ChordPro. Plain `.txt`
+  and text shared on Android use the same converter; the ChordPro extension family never does. Recognized ChordPro
+  text keeps its content, with chords written in the standard notation (see below) and raw formatting standardized
+  by `ChordProPrettifier`, also available from the editor overflow menu. All imported songs use that formatter after
+  conversion and splitting. Import comparisons format both sides so older library files still match. Documents with no readable text (scans, encrypted PDFs and legacy `.doc`) are
+  reported separately from unsupported files. The input limit is 16 MiB per document, 8 MiB for the text produced,
+  within the selection's existing 24 MiB budget. Positioned chords, English/Hungarian sections and styled headers
+  are best attempts, and clearly titled page starts can split a songbook. Converted songs are named by the header
+  the converter wrote, with the ordinary filename fallback when it wrote none; duplicate and conflict rules are
+  unchanged. The result counts only converted songs actually written and offers **Open** for a single converted
+  song, without navigating automatically. No new document Open with association is registered; Android adds only
+  PDF and Word share MIME types.

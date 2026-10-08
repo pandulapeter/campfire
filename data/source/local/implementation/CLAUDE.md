@@ -193,3 +193,30 @@ or cannot read is written to the injected `Logger` (`:data:model`, provided by `
 Tested with `commonTest` (the SongbookPro reader, the import budget) and `desktopTest` (the JVM storage, what unpacking an
 archive keeps, the document goldens), run with
 `./gradlew :data:source:local:implementation:desktopTest`.
+
+## Other apps' libraries
+
+- **Other apps' libraries are archives under names of their own.** A file whose extension the import does not know
+  is read anyway (`ImportBudget`, within the selection's budget) and kept only where its bytes start like a zip
+  archive's, which is then unpacked like a `.zip` (or, where it holds nothing an import reads — an OpenDocument, an
+  e-book — reported as the one unsupported file it was) — anything else is reported as unsupported and gives its share
+  of the budget back. SongbookPro's `.sbpbackup` and `.sbp` are also named (`LibraryFiles.LIBRARY_BACKUP_EXTENSIONS`), so that
+  the pickers offer them and an archive is looked inside when it holds one. An archive that turns out to be a
+  SongbookPro library (`dataFile.txt`, one JSON document) is translated into the files an export of Campfire's own
+  would carry — a ChordPro song per song, its title, artist, key, capo, tempo, time, duration, copyright, link and
+  folders (as tags) written into the header where the text does not declare them, and a setlist per set, with the
+  capo a set plays a song with where it differs — and goes through the ordinary import from there
+  (`:data:source:local:implementation`'s `backup/`). Its transpositions are not carried over. None of these is
+  registered as an Open with type: they are another app's files.
+
+## A song is named by its header
+
+- **A song is named by its own header, wherever it came from**: `{artist}`, `{title}` and `{subtitle}`, the subtitle
+  joining the title half (`green_day-good_riddance_time_of_your_life.cho`) because it is part of the title everywhere
+  else in the app. That holds for a song written in the editor, one that arrives through an import
+  (`SongLocalSource.importFileName`) and one handed out by an export (`ExportFileNames.kt`) alike — the name a file
+  arrives under counts for nothing except where the song inside it declares no `{title}`, in which case it stands in
+  as the title, since that is what would title the song in the library anyway. So the invariant worth stating plainly
+  is that **a file name is reproducible from its header alone**, and `Song.canUpdateFileName` is what notices where
+  that has stopped being true. Inside an exported archive the entries keep their library names, since a setlist points
+  at its songs by file name.

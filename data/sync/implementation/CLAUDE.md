@@ -305,3 +305,9 @@ Tested with `commonTest`, run with `./gradlew :data:sync:implementation:desktopT
   chord shapes schedules a run like a change to a file does; the run's own write does not.
 - Authorization is OAuth 2.0 with PKCE and no client secret, which is what lets this work with no backend. The four
   platforms get back from the consent page in four different ways, all behind `SyncAuthenticator`.
+
+## Renames
+
+- A rename reaches **sync** as a deletion and a new file, since `SyncPlanner` is keyed by name and knows no moves. The
+  "an edit beats a deletion" rule then applies: a device that edited the file under its old name since the last run
+  puts that file back, leaving both.

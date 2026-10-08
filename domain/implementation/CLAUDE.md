@@ -166,3 +166,39 @@ The ones that carry real logic:
   at startup does the same, but only when the stored credentials actually came back connected. Both start the run at
   once rather than through the debounce the edits go through (`scheduleSynchronization`). Neither waits for the run —
   `synchronize()` returns immediately and the repository rescans the library when it is done.
+
+## Renames
+
+- **A file is only ever renamed by the app when the user asks for it, or when nothing is lost by it.** A setlist's
+  file follows its title, because that title is written inside the document and the file name records nothing
+  (`EditSetlistUseCase`, which is also where the description is written, since the two are the whole of what the
+  user gets to say about a setlist). A song's does not: its name is what titles it wherever the file declares no `{title}`, it
+  is what a setlist points at, and on the platforms where the library is a folder the user may have chosen it — an
+  import is not one of those cases, since nothing has pointed at the incoming name yet. Where
+  a song's name and its metadata have drifted apart (by more than case or Unicode form), `Song.canUpdateFileName` puts an **Update file name** entry in
+  its menu, and taking it moves the file and everything that named it — every setlist entry, the saved transposition,
+  the open screens (`RenameSongFileUseCase`), a setlist that already named the file under its new name keeping the one
+  entry it had. Files that were named before any of this keep their names until one of those two things happens to
+  them.
+
+## An import decides before it writes
+
+- An **import decides before it writes**: every incoming
+  file is held against the name it wants (`PrepareImportUseCase` -> `ImportPlan`), a song the library already holds
+  under that name or a numbered sibling of it (`x_2.cho`) — or under the very name it arrived with, which is what an
+  export of a file named by an older rule carries — is disregarded rather than copied (for a song, comparing both
+  sides after `ChordProPrettifier`, notation normalization and with every directive in one spelling — `{t:X}` is
+  `{title: X}`), and two different files of one
+  batch that want the same name are never a question: the second is numbered like any other collision — the
+  library's own file among them: a song or setlist the batch brings back unchanged is never offered up for
+  replacement, so a different one wanting its name is numbered next to it. The names
+  taken by something *different* are put to the user as one question about the whole batch — keep both, replace,
+  skip, or cancel the import. Replacing is the
+  only thing in the app that ever overwrites a library file, and it takes an answer to that question and a
+  confirmation after it. An import that takes a moment shows its phase and a processed-entry count in a dialog, and
+  can be cancelled until it starts writing; one that went the one happy way — everything written or already there, nothing left out — ends in a snackbar (with
+  **Details** for a batch of more than one file). **Anything else is a screen of its own** (`CampfireDestination.ImportReport`),
+  pushed on the back stack rather than told in dialogs following one another: the question, then the import it decides
+  on being written, then every file of what it came to, grouped by what became of it and searchable, a song opened from
+  it coming back to it. A write failure stops the batch and reports its partial success, the failed source and every
+  unprocessed entry there; an import that could not be read at all is one "Import failed" snackbar.
