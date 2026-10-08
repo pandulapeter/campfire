@@ -174,6 +174,7 @@ import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.Companion
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.Companion.SONG_PICKER_LANGUAGES_KEY
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.Companion.SONG_PICKER_TAGS_KEY
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.SavedSongFilter
+import com.pandulapeter.campfire.presentation.ui.state.SyncController
 import com.pandulapeter.campfire.presentation.ui.state.asState
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.EditorTextEdit
 import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroups
@@ -203,8 +204,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelAndJoin
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -639,17 +640,28 @@ class CampfireViewModel(
     /** See [PreferencesController.libraryPersistence]. */
     internal val libraryPersistence: StateFlow<LibraryPersistence?> get() = preferencesController.libraryPersistence
 
-    /**
-     * Read straight from its own repository, like the preferences and for the same reason: sync runs on its own
-     * schedule, and a settings screen must not wait for a scan of the library to say whether an account is on.
-     */
-    val syncState = getSyncState().asState(SyncState.Disconnected)
+    private val syncController = SyncController(
+        scope = viewModelScope,
+        messageSink = messageSink,
+        getSyncState = getSyncState,
+        getSyncProviders = getSyncProviders,
+        connectSyncProvider = connectSyncProvider,
+        disconnectSyncProvider = disconnectSyncProvider,
+        cancelSyncConnection = cancelSyncConnection,
+        forgetSyncConnection = forgetSyncConnection,
+        restoreSync = restoreSync,
+        synchronizeLibrary = synchronizeLibrary,
+        cancelSynchronization = cancelSynchronization,
+    )
 
-    /** True while a sync run is going. Acted on rather than drawn: a restart the app offers by itself waits for it. */
-    val isSyncing = syncState.map { it is SyncState.Connected && it.isSyncing }.asState(false)
+    /** See [SyncController.syncState]. */
+    val syncState get() = syncController.syncState
 
-    /** Fixed for the life of the build, so it is a value rather than a flow. Empty means sync is not configured. */
-    val syncProviders: List<SyncProviderId> = getSyncProviders()
+    /** See [SyncController.isSyncing]. */
+    val isSyncing get() = syncController.isSyncing
+
+    /** See [SyncController.syncProviders]. */
+    val syncProviders get() = syncController.syncProviders
 
     val setlists = screenData.map { it.data?.setlists.orEmpty() }.asState(emptyList())
 
@@ -1221,27 +1233,7 @@ class CampfireViewModel(
         viewModelScope.launch { plantDemoLibraryOnFirstRun() }
         viewModelScope.launch { showWelcomeOnFirstRun() }
         viewModelScope.launch { showWhatsNewOnVersionChange() }
-        // Picks a connected account back up, finishes a consent the app was closed in the middle of, and runs a
-        // first sync. Its own coroutine, so that a slow network never holds up the library appearing on screen.
-        viewModelScope.launch {
-            // On the web the consent page replaces the app, so this start up is the second half of a tap on
-            // Settings: whether it ended up connected or not, that is the screen the answer is on. The page load forgot
-            // which tab the tap was made on, so the one holding the sync section is opened rather than the first.
-            try {
-                // A reinstall is the one case where credentials outlive the library: iOS leaves the Keychain item
-                // behind while everything else goes, so a fresh installation would find itself connected to an
-                // account nobody connected here, and its first run would upload the demo library into the user's
-                // folder. In this coroutine rather than beside it, because it is the one thing that must happen
-                // before restore() reads those credentials.
-                if (isFirstLaunch.await()) forgetSyncConnection()
-                if (restoreSync()) openSyncSettingsAfterConsent()
-            } catch (exception: CancellationException) {
-                throw exception
-            } catch (exception: Exception) {
-                // Sync is something the app does on the side: nothing about it may keep the library from appearing.
-                println("Could not restore the sync connection: ${exception.message}")
-            }
-        }
+        syncController.startRestoring(isFirstLaunch = isFirstLaunch, onConsentAnswered = ::openSyncSettingsAfterConsent)
         // A sync run, a rescan or a save replaces files underneath the texts held here, and the details header builds
         // its writes on them: without this, toggling a tag would write the text that was open over the version sync
         // had just brought in. The texts are read again rather than only dropped, so a song that is on screen changes
@@ -3126,52 +3118,16 @@ class CampfireViewModel(
 
     // Sync
 
-    /**
-     * Kept so that it can be cancelled: an authorization waits on a browser that may never come back, and the
-     * cancellation is what closes the sheet on iOS and releases the desktop's socket. While an attempt is being
-     * given up on, this is the job doing that, so that the next attempt waits for it.
-     */
-    private var syncConnectionJob: Job? = null
+    fun connectSyncProvider(providerId: SyncProviderId, completionPage: AuthorizationCompletionPage) =
+        syncController.connectSyncProvider(providerId, completionPage)
 
-    /**
-     * @param completionPage The words the desktop's redirect page shows, resolved by the screen because that is
-     *   where the translations and the language the user picked are, see `AuthorizationCompletionPage`.
-     */
-    fun connectSyncProvider(providerId: SyncProviderId, completionPage: AuthorizationCompletionPage) {
-        if (syncConnectionJob?.isActive == true) return
-        // Connecting writes the credentials, and a storage that refuses them is reported by the repository as a
-        // failed connection. This is for the exception that one day is not: it must cost a message, not the app.
-        syncConnectionJob = launchLibraryChange { connectSyncProvider.invoke(providerId, completionPage) }
-    }
+    fun cancelSyncConnection() = syncController.cancelSyncConnection()
 
-    /**
-     * Gives up on an authorization that is waiting, which is the way out of a browser the user closed. Cancelling
-     * the job is what ends the platform's half of the wait; the repository is asked as well because on the web the
-     * job is over as soon as the page starts to navigate away, and a page the browser hands back as it was left is
-     * still connecting with nothing to cancel.
-     */
-    fun cancelSyncConnection() {
-        val connection = syncConnectionJob
-        syncConnectionJob = viewModelScope.launch {
-            // Joined first, so that the clean up of an attempt that is being given up on cannot land on the next
-            // one: until it is over this job is the active one, and connectSyncProvider() refuses to start another.
-            connection?.cancelAndJoin()
-            cancelSyncConnection.invoke()
-        }
-    }
+    fun disconnectSyncProvider() = syncController.disconnectSyncProvider()
 
-    fun disconnectSyncProvider() = launchLibraryChange {
-        disconnectSyncProvider.invoke()
-    }
+    fun synchronizeLibrary(deletionPolicy: SyncDeletionPolicy = SyncDeletionPolicy.ASK) = syncController.synchronizeLibrary(deletionPolicy)
 
-    /**
-     * Not launched in [viewModelScope]: a run belongs to the app rather than to this screen, and carries on while
-     * the user moves around it or leaves it entirely. The repository refuses a second run while one is going, so a
-     * second tap costs nothing.
-     */
-    fun synchronizeLibrary(deletionPolicy: SyncDeletionPolicy = SyncDeletionPolicy.ASK) = synchronizeLibrary.invoke(deletionPolicy)
-
-    fun cancelSynchronization() = cancelSynchronization.invoke()
+    fun cancelSynchronization() = syncController.cancelSynchronization()
 
     // Dialogs
 
