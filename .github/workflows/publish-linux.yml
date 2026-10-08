@@ -76,11 +76,7 @@ jobs:
       - name: Check the sync credentials
         env:
           DROPBOX_APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
-        run: |
-          if [ -z "$DROPBOX_APP_KEY" ]; then
-            echo "::error::DROPBOX_APP_KEY is empty or not visible to this workflow. The published app would have no sync provider at all." >&2
-            exit 1
-          fi
+        run: python3 .github/scripts/require_secrets.py --why "The published app would have no sync provider at all." DROPBOX_APP_KEY
       # jpackage builds the .deb with dpkg-deb under fakeroot, and the runner image only promises the former. Xvfb is
       # the display the release build is started on before it is attached, and the GL libraries are what Skiko's
       # native library is linked against - every desktop has them, but the arm64 runner image does not.

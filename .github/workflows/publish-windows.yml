@@ -70,28 +70,6 @@ jobs:
         # Git Bash, so the steps read like the other workflows' scripts.
         shell: bash
     steps:
-      # `gh secret set` stores an empty value without complaint when it has no terminal to prompt on, and an empty
-      # secret would only surface after a twenty minute build, as a refused sign-in.
-      - name: Check the secrets
-        env:
-          DROPBOX_APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
-          TENANT_ID: ${{ secrets.MICROSOFT_STORE_TENANT_ID }}
-          CLIENT_ID: ${{ secrets.MICROSOFT_STORE_CLIENT_ID }}
-        run: |
-          PROBLEMS=0
-          problem() {
-            echo "::error::$1: $2" >&2
-            PROBLEMS=$((PROBLEMS + 1))
-          }
-          # The empty string is the checked-in default, because a fresh clone has to build without a secret, so
-          # nothing downstream would notice a published build that has no sync provider at all.
-          [ -n "$DROPBOX_APP_KEY" ] || problem DROPBOX_APP_KEY "empty or not visible to this workflow"
-          [[ "$TENANT_ID" =~ ^[0-9a-fA-F-]{36}$ ]] || problem MICROSOFT_STORE_TENANT_ID "expected a GUID, found ${#TENANT_ID} characters"
-          [[ "$CLIENT_ID" =~ ^[0-9a-fA-F-]{36}$ ]] || problem MICROSOFT_STORE_CLIENT_ID "expected a GUID, found ${#CLIENT_ID} characters"
-          if [ "$PROBLEMS" -gt 0 ]; then
-            echo "Set them from a terminal that can prompt for hidden input: gh secret set <name> --repo $GITHUB_REPOSITORY" >&2
-            exit 1
-          fi
       # Git for Windows checks text files out with CRLF line endings unless told otherwise, and a gradlew that has
       # them is not a script Bash can run.
       - name: Keep line endings as they are
@@ -110,6 +88,32 @@ jobs:
         run: |
           git fetch --depth 1 origin "$WORKFLOW_SHA"
           git checkout FETCH_HEAD -- .github/scripts .github/actions
+      # `gh secret set` stores an empty value without complaint when it has no terminal to prompt on, and an empty
+      # secret would only surface after a twenty minute build, as a refused sign-in. After the checkout, which is what
+      # brings the script, and before anything is built.
+      - name: Check the secrets
+        env:
+          DROPBOX_APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
+          MICROSOFT_STORE_TENANT_ID: ${{ secrets.MICROSOFT_STORE_TENANT_ID }}
+          MICROSOFT_STORE_CLIENT_ID: ${{ secrets.MICROSOFT_STORE_CLIENT_ID }}
+        run: |
+          PROBLEMS=0
+          problem() {
+            echo "::error::$1: $2" >&2
+            PROBLEMS=$((PROBLEMS + 1))
+          }
+          python .github/scripts/require_secrets.py DROPBOX_APP_KEY MICROSOFT_STORE_TENANT_ID MICROSOFT_STORE_CLIENT_ID \
+            || PROBLEMS=$((PROBLEMS + 1))
+          if [ -n "$MICROSOFT_STORE_TENANT_ID" ] && ! [[ "$MICROSOFT_STORE_TENANT_ID" =~ ^[0-9a-fA-F-]{36}$ ]]; then
+            problem MICROSOFT_STORE_TENANT_ID "expected a GUID, found ${#MICROSOFT_STORE_TENANT_ID} characters"
+          fi
+          if [ -n "$MICROSOFT_STORE_CLIENT_ID" ] && ! [[ "$MICROSOFT_STORE_CLIENT_ID" =~ ^[0-9a-fA-F-]{36}$ ]]; then
+            problem MICROSOFT_STORE_CLIENT_ID "expected a GUID, found ${#MICROSOFT_STORE_CLIENT_ID} characters"
+          fi
+          if [ "$PROBLEMS" -gt 0 ]; then
+            echo "Set them from a terminal that can prompt for hidden input: gh secret set <name> --repo $GITHUB_REPOSITORY" >&2
+            exit 1
+          fi
       - name: Set up JDK 21 and Gradle
         uses: ./.github/actions/setup-jdk
       # makeappx and makepri come from the Windows SDK the runner image carries. The daemon is stopped afterwards because

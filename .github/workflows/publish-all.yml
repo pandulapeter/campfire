@@ -111,11 +111,7 @@ jobs:
       - name: Check the sync credentials
         env:
           DROPBOX_APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
-        run: |
-          if [ -z "$DROPBOX_APP_KEY" ]; then
-            echo "::error::DROPBOX_APP_KEY is empty or not visible to this workflow. A release built without it would have no sync provider at all." >&2
-            exit 1
-          fi
+        run: python3 .github/scripts/require_secrets.py --why "A release built without it would have no sync provider at all." DROPBOX_APP_KEY
       # The parser is a script of its own so that it is tested; it stops the release on a comment it cannot read,
       # and on notes a store would refuse, before any build starts.
       - name: Read the release notes

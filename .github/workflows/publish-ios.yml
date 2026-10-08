@@ -74,48 +74,6 @@ jobs:
     # Named rather than "latest", so that the Xcode the project was last saved with is the one that opens it.
     runs-on: macos-26
     steps:
-      # `gh secret set` stores an empty value without complaint when it has no terminal to prompt on, and an empty or
-      # base64-encoded-by-mistake secret only surfaces much later as a cryptic codesign or xcodebuild failure.
-      - name: Check the secrets
-        env:
-          DROPBOX_APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
-          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
-          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-          ASC_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
-          APPLE_SIGNING_KEY: ${{ secrets.APPLE_SIGNING_KEY }}
-        run: |
-          PROBLEMS=0
-          problem() {
-            echo "::error::$1: $2" >&2
-            PROBLEMS=$((PROBLEMS + 1))
-          }
-          # The empty string is the checked-in default, because a fresh clone has to build without a secret, so
-          # nothing downstream would notice a published build that has no sync provider at all.
-          [ -n "$DROPBOX_APP_KEY" ] || problem DROPBOX_APP_KEY "empty or not visible to this workflow"
-          if [ -z "$ASC_KEY_ID" ]; then
-            problem APP_STORE_CONNECT_KEY_ID "empty or unset"
-          elif ! [[ "$ASC_KEY_ID" =~ ^[A-Z0-9]{10}$ ]]; then
-            problem APP_STORE_CONNECT_KEY_ID "expected 10 upper case letters and digits, as in the AuthKey_<id>.p8 file name"
-          fi
-          if [ -z "$ASC_ISSUER_ID" ]; then
-            problem APP_STORE_CONNECT_ISSUER_ID "empty or unset"
-          elif ! [[ "$ASC_ISSUER_ID" =~ ^[0-9a-fA-F-]{36}$ ]]; then
-            problem APP_STORE_CONNECT_ISSUER_ID "expected a UUID, found ${#ASC_ISSUER_ID} characters"
-          fi
-          if [ -z "$ASC_PRIVATE_KEY" ]; then
-            problem APP_STORE_CONNECT_PRIVATE_KEY "empty or unset"
-          elif ! printf '%s' "$ASC_PRIVATE_KEY" | grep -q 'BEGIN PRIVATE KEY'; then
-            problem APP_STORE_CONNECT_PRIVATE_KEY "expected the text of the AuthKey_<id>.p8 file, BEGIN PRIVATE KEY line included, not base64"
-          fi
-          if [ -z "$APPLE_SIGNING_KEY" ]; then
-            problem APPLE_SIGNING_KEY "empty or unset"
-          elif ! printf '%s' "$APPLE_SIGNING_KEY" | grep -q -- '-----BEGIN \(RSA \)\{0,1\}PRIVATE KEY-----'; then
-            problem APPLE_SIGNING_KEY "expected an unencrypted RSA private key as PEM text, BEGIN PRIVATE KEY line included"
-          fi
-          if [ "$PROBLEMS" -gt 0 ]; then
-            echo "Set them from a terminal that can prompt for hidden input: gh secret set <name> --repo $GITHUB_REPOSITORY" >&2
-            exit 1
-          fi
       - name: Check out repository
         uses: actions/checkout@v5
         with:
@@ -130,6 +88,40 @@ jobs:
         run: |
           git fetch --depth 1 origin "$WORKFLOW_SHA"
           git checkout FETCH_HEAD -- .github/scripts .github/actions
+      # `gh secret set` stores an empty value without complaint when it has no terminal to prompt on, and an empty or
+      # base64-encoded-by-mistake secret only surfaces much later as a cryptic codesign or xcodebuild failure.
+      # Checked after the checkout, which is what brings the script, and before anything is built.
+      - name: Check the secrets
+        env:
+          DROPBOX_APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+          APPLE_SIGNING_KEY: ${{ secrets.APPLE_SIGNING_KEY }}
+        run: |
+          PROBLEMS=0
+          problem() {
+            echo "::error::$1: $2" >&2
+            PROBLEMS=$((PROBLEMS + 1))
+          }
+          python3 .github/scripts/require_secrets.py DROPBOX_APP_KEY APP_STORE_CONNECT_KEY_ID APP_STORE_CONNECT_ISSUER_ID \
+            APP_STORE_CONNECT_PRIVATE_KEY APPLE_SIGNING_KEY || PROBLEMS=$((PROBLEMS + 1))
+          if [ -n "$APP_STORE_CONNECT_KEY_ID" ] && ! [[ "$APP_STORE_CONNECT_KEY_ID" =~ ^[A-Z0-9]{10}$ ]]; then
+            problem APP_STORE_CONNECT_KEY_ID "expected 10 upper case letters and digits, as in the AuthKey_<id>.p8 file name"
+          fi
+          if [ -n "$APP_STORE_CONNECT_ISSUER_ID" ] && ! [[ "$APP_STORE_CONNECT_ISSUER_ID" =~ ^[0-9a-fA-F-]{36}$ ]]; then
+            problem APP_STORE_CONNECT_ISSUER_ID "expected a UUID, found ${#APP_STORE_CONNECT_ISSUER_ID} characters"
+          fi
+          if [ -n "$APP_STORE_CONNECT_PRIVATE_KEY" ] && ! printf '%s' "$APP_STORE_CONNECT_PRIVATE_KEY" | grep -q 'BEGIN PRIVATE KEY'; then
+            problem APP_STORE_CONNECT_PRIVATE_KEY "expected the text of the AuthKey_<id>.p8 file, BEGIN PRIVATE KEY line included, not base64"
+          fi
+          if [ -n "$APPLE_SIGNING_KEY" ] && ! printf '%s' "$APPLE_SIGNING_KEY" | grep -q -- '-----BEGIN \(RSA \)\{0,1\}PRIVATE KEY-----'; then
+            problem APPLE_SIGNING_KEY "expected an unencrypted RSA private key as PEM text, BEGIN PRIVATE KEY line included"
+          fi
+          if [ "$PROBLEMS" -gt 0 ]; then
+            echo "Set them from a terminal that can prompt for hidden input: gh secret set <name> --repo $GITHUB_REPOSITORY" >&2
+            exit 1
+          fi
       - name: Set up JDK 21 and Gradle
         uses: ./.github/actions/setup-jdk
       # The release framework is linked inside the Gradle daemon, which runs out of the 4 GB gradle.properties gives
