@@ -12,8 +12,11 @@ package com.pandulapeter.campfire.chordpro
 import com.pandulapeter.campfire.chordpro.ChordProHighlighter.TokenType
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
+import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
 
 class ChordProHighlighterTest {
 
@@ -406,5 +409,79 @@ class ChordProHighlighterTest {
     @Test
     fun `empty text has nothing to highlight`() {
         assertEquals(emptyList(), ChordProHighlighter.tokenize(""))
+    }
+
+    /**
+     * Every spelling the parser reads for each metadata kind, as the only line of a song: the twelve `{meta}` standard
+     * names in both forms, the short title and subtitle, the tag, the four spellings of a language, and the cover and the
+     * link, which are only ever read as `{meta}` items.
+     */
+    private val metadataSpellings: Map<String, List<(String) -> String>> = buildMap {
+        listOf("title", "subtitle", "artist", "composer", "lyricist", "album", "year", "key", "capo", "tempo", "time", "duration").forEach { name ->
+            put(name, listOf({ value: String -> "{$name: $value}" }, { value: String -> "{meta: $name $value}" }))
+        }
+        put("title", getValue("title") + { value: String -> "{t: $value}" })
+        put("subtitle", getValue("subtitle") + { value: String -> "{st: $value}" })
+        put("tag", listOf({ value: String -> "{tag: $value}" }, { value: String -> "{meta: tag $value}" }))
+        put(
+            "language",
+            listOf(
+                { value: String -> "{language: $value}" },
+                { value: String -> "{lang: $value}" },
+                { value: String -> "{meta: language $value}" },
+                { value: String -> "{meta: lang $value}" },
+            ),
+        )
+        put("cover", listOf { value: String -> "{meta: cover $value}" })
+        put("link", listOf { value: String -> "{meta: link $value}" })
+    }
+
+    private val metadataValues = listOf(
+        "", "fast", "-1", "3/5", "1:2:3", "abc", "120", "3/4", "2", "3:30", "en", "https://example.com/cover.jpg",
+    )
+
+    /** What the song comes out with for [kind], read the way the app reads it, or null where it says nothing usable. */
+    private fun ChordProMetadata.readValue(kind: String): Any? = when (kind) {
+        "title" -> title
+        "subtitle" -> subtitle
+        "artist" -> artist
+        "composer" -> composer
+        "lyricist" -> lyricist
+        "album" -> album
+        "year" -> year
+        "key" -> key
+        "capo" -> capo
+        "tempo" -> ChordProTempo.parse(tempo)
+        "time" -> ChordProTime.parse(time)
+        "duration" -> ChordProDuration.parse(duration)
+        "tag" -> tags.firstOrNull()
+        "language" -> languages.firstOrNull()
+        "cover" -> coverArt
+        "link" -> links.firstOrNull()
+        else -> error("Unknown kind $kind")
+    }?.takeIf { it.toString().isNotEmpty() }
+
+    @Test
+    fun `a metadata line is marked unreadable exactly where the song comes out without what it says`() {
+        metadataSpellings.forEach { (kind, spellings) ->
+            spellings.forEach { spelling ->
+                metadataValues.forEach { value ->
+                    val line = spelling(value)
+                    val isInvalid = ChordProHighlighter.tokenize(line).any { it.type == TokenType.INVALID }
+                    val isDropped = value.isNotEmpty() && ChordProParser.parse(line).metadata.readValue(kind) == null
+                    assertEquals(isDropped, isInvalid, "$kind: $line")
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `a standalone cover or link directive is read by neither the parser nor the highlighter`() {
+        listOf("{cover: https://example.com/cover.jpg}", "{link: https://example.com}", "{cover: abc}", "{link: abc}").forEach { line ->
+            assertFalse(ChordProHighlighter.tokenize(line).any { it.type == TokenType.INVALID }, line)
+            val metadata = ChordProParser.parse(line).metadata
+            assertNull(metadata.coverArt, line)
+            assertEquals(emptyList(), metadata.links, line)
+        }
     }
 }
