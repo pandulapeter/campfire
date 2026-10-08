@@ -25,7 +25,7 @@ object ChordProLinks {
      * Writes a link line for [url], after the last link the file already has or, where it has none, into the header.
      * An address [usableUrl] does not take, or one the song already links to, returns the text unchanged.
      */
-    fun addLink(text: String, url: String): String {
+    internal fun addLink(text: String, url: String): String {
         val link = usableUrl(url) ?: return text
         if (ChordProParser.parseMetadata(text).links.any { it.url == link }) return text
         val lines = ChordProLines.splitLines(text).toMutableList()
@@ -34,7 +34,7 @@ object ChordProLinks {
     }
 
     /** Drops every link line naming [url], which is more than one only in a file written by hand. */
-    fun removeLink(text: String, url: String): String {
+    internal fun removeLink(text: String, url: String): String {
         val link = ChordProMetaItems.webUrl(url) ?: return text
         val lines = ChordProLines.splitLines(text)
         val kept = lines.filterNot { line -> ChordProDirectives.matchDirective(line.trim())?.let(ChordProMetaItems::link)?.url == link }

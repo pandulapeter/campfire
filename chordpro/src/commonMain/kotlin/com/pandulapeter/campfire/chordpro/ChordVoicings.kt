@@ -112,7 +112,7 @@ object ChordVoicings {
      * ring finger holds the three strings of an A shaped barre chord. Every other stopped string takes a finger of its
      * own.
      */
-    fun fingerCount(frets: List<Int?>): Int {
+    internal fun fingerCount(frets: List<Int?>): Int {
         val stopped = frets.indices.filter { (frets[it] ?: 0) > 0 }
         if (stopped.isEmpty()) return 0
         val lowest = stopped.minOf { frets[it]!! }
@@ -132,7 +132,7 @@ object ChordVoicings {
     fun isHoldable(frets: List<Int?>) = fingerCount(frets) <= MAX_FINGERS && frets.all { it == null || it in 0..MAX_HOLDABLE_FRET }
 
     /** The pitch classes [voicing] sounds on [instrument]. */
-    fun pitchClasses(voicing: ChordVoicing, instrument: ChordInstrument): Set<Int> = when (voicing) {
+    internal fun pitchClasses(voicing: ChordVoicing, instrument: ChordInstrument): Set<Int> = when (voicing) {
         is ChordVoicing.Fretted -> voicing.frets.mapIndexedNotNull { string, fret -> fret?.let { (instrument.tuning[string] + it) % 12 } }.toSet()
         is ChordVoicing.Keys -> (voicing.notes + listOfNotNull(voicing.bass)).map { it % 12 }.toSet()
     }

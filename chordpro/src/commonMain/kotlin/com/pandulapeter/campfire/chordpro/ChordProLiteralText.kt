@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.chordpro
 
 /** ChordPro has no literal escape. Keep extracted prose visible without introducing parser syntax. */
-object ChordProLiteralText {
+internal object ChordProLiteralText {
     fun escape(line: String): String {
         var result = line.replace('[', '(').replace(']', ')')
         val trimmed = result.trim()

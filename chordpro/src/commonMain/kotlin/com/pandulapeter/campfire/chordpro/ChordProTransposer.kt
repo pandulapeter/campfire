@@ -33,7 +33,7 @@ object ChordProTransposer {
      * would otherwise be moved, with the `b` after an `E` eaten as a flat sign. [ChordProNotation.toGerman] has
      * asked the same question of the same names since it was written.
      */
-    fun transposeChord(name: String, semitones: Int, preferFlats: Boolean): String {
+    internal fun transposeChord(name: String, semitones: Int, preferFlats: Boolean): String {
         if (!ChordProChordNames.isChordName(name)) return name
         return ChordProChordNames.rewriteNotes(name) { note -> transposeNote(note, semitones, preferFlats) }
     }

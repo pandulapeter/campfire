@@ -169,7 +169,7 @@ object ChordProDefinitions {
      * root and stay as they are. A line that cannot be read is left byte for byte, as a tab that fits in no octave is, and
      * so is one whose shape no move keeps on the neck.
      */
-    fun rewrittenLine(rawLine: String, selector: String, rename: (String) -> String, semitones: Int = 0): String {
+    internal fun rewrittenLine(rawLine: String, selector: String, rename: (String) -> String, semitones: Int = 0): String {
         val trimmed = rawLine.trim()
         val indent = rawLine.length - rawLine.trimStart().length
         val valueStart = ChordProDirectives.directiveValueStart(trimmed)?.let { it + indent } ?: return rawLine

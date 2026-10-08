@@ -125,7 +125,7 @@ object ChordProChords {
      * key aside, since a key is no chord anybody plays. A recalled chorus is read where it stands, which only matters
      * for a chorus whose chords appear nowhere else. Whether a name is a chord is [parse]'s to say.
      */
-    fun namesIn(song: ChordProSong): List<String> {
+    internal fun namesIn(song: ChordProSong): List<String> {
         val names = LinkedHashSet<String>()
         forEachName(song) { name, _ -> names += name }
         return names.toList()
