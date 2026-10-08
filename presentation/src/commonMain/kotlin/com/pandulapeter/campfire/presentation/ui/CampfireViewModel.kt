@@ -49,6 +49,23 @@ import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.model.domain.AuthorizationCompletionPage
 import com.pandulapeter.campfire.data.model.domain.SongContent
 import com.pandulapeter.campfire.data.model.domain.SyncState
+import com.pandulapeter.campfire.presentation.ui.chords.toChordInstrument
+import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
+import com.pandulapeter.campfire.presentation.ui.components.LabelsOnEverySong
+import com.pandulapeter.campfire.presentation.ui.components.Placeholder
+import com.pandulapeter.campfire.presentation.ui.dialogs.CoverArtSearchState
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
+import com.pandulapeter.campfire.presentation.ui.firstRun.DemoLibrary
+import com.pandulapeter.campfire.presentation.ui.firstRun.canShowWelcome
+import com.pandulapeter.campfire.presentation.ui.firstRun.canShowWhatsNew
+import com.pandulapeter.campfire.presentation.ui.messages.Message
+import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
+import com.pandulapeter.campfire.presentation.ui.playing.Transpositions
+import com.pandulapeter.campfire.presentation.ui.playing.wrapTransposition
+import com.pandulapeter.campfire.presentation.ui.print.PdfExportProgress
+import com.pandulapeter.campfire.presentation.ui.print.PrintSource
+import com.pandulapeter.campfire.presentation.ui.print.PrintSong
+import com.pandulapeter.campfire.presentation.ui.print.printChordsOf
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.domain.api.models.ScreenData
 import com.pandulapeter.campfire.domain.api.models.SongFilter
@@ -113,18 +130,8 @@ import com.pandulapeter.campfire.metronome.api.model.BeatLevel
 import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
 import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
 import com.pandulapeter.campfire.metronome.api.model.MetronomeSound
-import com.pandulapeter.campfire.presentation.ui.chords.toChordInstrument
-import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
-import com.pandulapeter.campfire.presentation.ui.components.LabelsOnEverySong
-import com.pandulapeter.campfire.presentation.ui.components.Placeholder
 import com.pandulapeter.campfire.presentation.ui.components.isAnyOverflowMenuOpen
-import com.pandulapeter.campfire.presentation.ui.dialogs.CoverArtSearchState
-import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.SONG_METADATA_FIELDS
-import com.pandulapeter.campfire.presentation.ui.firstRun.DemoLibrary
-import com.pandulapeter.campfire.presentation.ui.firstRun.canShowWelcome
-import com.pandulapeter.campfire.presentation.ui.firstRun.canShowWhatsNew
-import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeContext
 import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
 import com.pandulapeter.campfire.presentation.ui.playing.PendingOverrides
@@ -151,14 +158,8 @@ import com.pandulapeter.campfire.presentation.ui.platform.requestLibraryPersiste
 import com.pandulapeter.campfire.presentation.ui.playing.CapoKey
 import com.pandulapeter.campfire.presentation.ui.playing.Capos
 import com.pandulapeter.campfire.presentation.ui.playing.TempoKey
-import com.pandulapeter.campfire.presentation.ui.playing.Transpositions
 import com.pandulapeter.campfire.presentation.ui.playing.effectiveCapo
 import com.pandulapeter.campfire.presentation.ui.playing.withCapo
-import com.pandulapeter.campfire.presentation.ui.playing.wrapTransposition
-import com.pandulapeter.campfire.presentation.ui.print.PdfExportProgress
-import com.pandulapeter.campfire.presentation.ui.print.PrintSong
-import com.pandulapeter.campfire.presentation.ui.print.PrintSource
-import com.pandulapeter.campfire.presentation.ui.print.printChordsOf
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportReport
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.followingLibraryFileNames
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.SetlistDetails
@@ -179,6 +180,7 @@ import com.pandulapeter.campfire.presentation.ui.fontScale.FontScaleAccumulator
 import com.pandulapeter.campfire.presentation.ui.fontScale.PINCH_SENSITIVITY
 import com.pandulapeter.campfire.presentation.ui.songInfo.hasSongInfo
 import com.pandulapeter.campfire.presentation.ui.state.DebouncedPreference
+import com.pandulapeter.campfire.presentation.ui.state.asState
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.EditorTextEdit
 import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroups
 import com.pandulapeter.campfire.presentation.ui.search.PickerFilterOptions
@@ -1248,23 +1250,15 @@ class CampfireViewModel(
     private val _isSavingSong = MutableStateFlow(false)
     val isSavingSong: StateFlow<Boolean> = _isSavingSong.asStateFlow()
 
-    /**
-     * Messages waiting for the snackbar, oldest first, each with a number of its own so that two identical results in
-     * a row are still two messages. Held here rather than by the screen that shows them: Android recreates that screen
-     * whenever it recreates its activity, and a message it had already taken would go with it unshown. A message
-     * leaves the queue once it has been shown, see [onMessageShown].
-     */
-    private val _messageQueue = MutableStateFlow(emptyList<IndexedValue<Message>>())
-    val messageQueue: StateFlow<List<IndexedValue<Message>>> = _messageQueue.asStateFlow()
-    private var messageCount = 0
+    private val messageSink = MessageSink(viewModelScope)
 
-    private fun sendMessage(message: Message) {
-        val indexedMessage = IndexedValue(messageCount++, message)
-        _messageQueue.update { it + indexedMessage }
-    }
+    /** See [MessageSink.messageQueue]. */
+    val messageQueue: StateFlow<List<IndexedValue<Message>>> get() = messageSink.messageQueue
+
+    private fun sendMessage(message: Message) = messageSink.sendMessage(message)
 
     /** Called by the snackbar host once [message] has been on screen for its whole duration, or dismissed. */
-    fun onMessageShown(message: IndexedValue<Message>) = _messageQueue.update { queue -> queue.filterNot { it.index == message.index } }
+    fun onMessageShown(message: IndexedValue<Message>) = messageSink.onMessageShown(message)
 
     // Dialogs
 
@@ -3925,46 +3919,11 @@ class CampfireViewModel(
         }
     }
 
-    /**
-     * [viewModelScope.launch] for the intents that write to the library. A write that fails throws out of the
-     * repository, and an exception nobody catches in a launched coroutine takes the whole app down on Android: here
-     * it becomes one line at the bottom of the screen instead, and the library stays what it was.
-     */
-    private fun launchLibraryChange(block: suspend () -> Unit) = viewModelScope.launch {
-        try {
-            block()
-        } catch (exception: CancellationException) {
-            throw exception
-        } catch (exception: Exception) {
-            println("The change could not be written: ${exception.message}")
-            sendMessage(Message.OperationFailed)
-        }
-    }
+    /** See [MessageSink.launchLibraryChange]. */
+    private fun launchLibraryChange(block: suspend () -> Unit) = messageSink.launchLibraryChange(block)
 
-    /**
-     * Every state of this view model is kept up to date from the moment it is created, rather than only while a screen
-     * collects it, and that is the one way states are made here.
-     *
-     * A state that is started by its first collector hands that collector [initialValue] first and its real value a
-     * moment later, and a screen answers the difference as a change: the song list's rows fade in, the "New" button
-     * expands into the app bar and pushes the search action aside, a settings row is inserted while the screen is still
-     * fading in, the lyrics reflow into a different number of columns. Some of the states are also acted on rather than
-     * drawn - the writes build what they save out of the preferences and the setlists, leaving the editor asks whether
-     * anything is unsaved, the Android shell stops the sync service when it sees no run - and those have to be right
-     * whether or not a screen happens to be looking. Letting a state stop only moves the problem: one that keeps its
-     * last value comes back with an answer the library may have outgrown meanwhile (a first sync fills it from the
-     * settings screen), and one that forgets it comes back to [initialValue].
-     *
-     * What it costs is that the states doing real work - normalizing every title, artist and tag, grouping the song list,
-     * matching the setlists against the library - also do it for changes to the library made while their screen is not
-     * showing, which is work those screens would otherwise do the moment they were opened. Those states do it on
-     * [Dispatchers.Default] (a `flowOn` before this), since [viewModelScope] would otherwise run it on the main thread.
-     */
-    private fun <T> Flow<T>.asState(initialValue: T) = distinctUntilChanged().stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.Eagerly,
-        initialValue = initialValue,
-    )
+    /** See the top-level [asState], in [viewModelScope]. */
+    private fun <T> Flow<T>.asState(initialValue: T) = asState(viewModelScope, initialValue)
 
     /**
      * Whether a setlist answers the setlists screen's search. The songs are looked up in the library that was
