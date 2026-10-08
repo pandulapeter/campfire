@@ -176,17 +176,37 @@ private fun DeletableSettingsRow(
  */
 @Composable
 private fun formattedSize(bytes: Long): String {
+    val size = byteSizeOf(bytes)
+    val number = when (val tenths = size.tenths) {
+        null -> size.whole.toString()
+        else -> "${size.whole}${stringResource(Res.string.settings_library_size_decimal_separator)}$tenths"
+    }
+    return stringResource(SIZE_UNITS[size.unit], number)
+}
+
+/**
+ * The number [formattedSize] writes: [whole] of the unit at [unit] in [SIZE_UNITS], and [tenths] after the separator
+ * where it writes a decimal.
+ */
+internal data class ByteSize(
+    val unit: Int,
+    val whole: Long,
+    val tenths: Long? = null,
+)
+
+/** [bytes] rounded the way [formattedSize] writes them. */
+internal fun byteSizeOf(bytes: Long): ByteSize {
+    if (bytes < SIZE_STEP) return ByteSize(unit = 0, whole = bytes)
     // The unit is settled on the rounded number, so that 999 960 bytes read as 1.0 MB rather than as 1000 KB.
     val unit = (1..SIZE_UNITS.lastIndex).firstOrNull { unit -> (bytes + SIZE_STEP.pow(unit) / 2) / SIZE_STEP.pow(unit + 1) == 0L }
         ?: SIZE_UNITS.lastIndex
     val divisor = SIZE_STEP.pow(unit)
     val tenths = (bytes * 10 + divisor / 2) / divisor
-    val number = when {
-        bytes < SIZE_STEP -> bytes.toString()
-        tenths < 100 -> "${tenths / 10}${stringResource(Res.string.settings_library_size_decimal_separator)}${tenths % 10}"
-        else -> ((bytes + divisor / 2) / divisor).toString()
+    return if (tenths < 100) {
+        ByteSize(unit = unit, whole = tenths / 10, tenths = tenths % 10)
+    } else {
+        ByteSize(unit = unit, whole = (bytes + divisor / 2) / divisor)
     }
-    return stringResource(if (bytes < SIZE_STEP) SIZE_UNITS.first() else SIZE_UNITS[unit], number)
 }
 
 private fun Long.pow(exponent: Int) = (1..exponent).fold(1L) { result, _ -> result * this }
