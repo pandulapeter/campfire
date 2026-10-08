@@ -7,14 +7,12 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.theme
+package com.pandulapeter.campfire.presentation.localization
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.text.intl.Locale
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
-import com.pandulapeter.campfire.presentation.localization.AppLocale
-import com.pandulapeter.campfire.presentation.localization.currentLanguage
 
 /**
  * Keeps the language of the generated string tables in sync with the user preference. The tables are switched at

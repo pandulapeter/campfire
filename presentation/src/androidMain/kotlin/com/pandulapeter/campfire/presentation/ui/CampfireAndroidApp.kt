@@ -29,7 +29,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.LocalSyncNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.MetronomeNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.SyncNotificationPermissionEffect
 import com.pandulapeter.campfire.presentation.ui.platform.SyncNotifier
-import com.pandulapeter.campfire.presentation.ui.platform.appIconThemeColor
+import com.pandulapeter.campfire.presentation.ui.theme.appIconThemeColor
 import com.pandulapeter.campfire.presentation.ui.platform.rememberAndroidFilePicker
 import com.pandulapeter.campfire.presentation.ui.theme.isDarkTheme
 import kotlinx.coroutines.flow.Flow

@@ -15,8 +15,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.graphics.painter.Painter
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.platform.appIconColor
-import com.pandulapeter.campfire.presentation.ui.platform.appIconThemeColor
+import com.pandulapeter.campfire.presentation.ui.theme.appIconColor
+import com.pandulapeter.campfire.presentation.ui.theme.appIconThemeColor
 import com.pandulapeter.campfire.resources.Res
 import com.pandulapeter.campfire.resources.app_icon
 import com.pandulapeter.campfire.resources.app_icon_blue

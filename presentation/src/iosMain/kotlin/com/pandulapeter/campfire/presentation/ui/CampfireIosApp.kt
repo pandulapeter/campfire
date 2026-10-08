@@ -25,8 +25,8 @@ import com.pandulapeter.campfire.presentation.ui.platform.LocalMetronomeNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.LocalSyncNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.MetronomeNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.SyncNotifier
-import com.pandulapeter.campfire.presentation.ui.platform.appIconColor
-import com.pandulapeter.campfire.presentation.ui.platform.appIconThemeColor
+import com.pandulapeter.campfire.presentation.ui.theme.appIconColor
+import com.pandulapeter.campfire.presentation.ui.theme.appIconThemeColor
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow

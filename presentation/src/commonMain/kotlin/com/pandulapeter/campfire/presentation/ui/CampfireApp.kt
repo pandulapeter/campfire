@@ -70,7 +70,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.isDesktopPlatform
 import com.pandulapeter.campfire.presentation.ui.platform.isLaunchScreenWholeStartup
 import com.pandulapeter.campfire.presentation.ui.platform.isLibraryEditableOutsideApp
 import com.pandulapeter.campfire.presentation.ui.platform.isStartupScreenHeldUntilAppReady
-import com.pandulapeter.campfire.presentation.ui.theme.ApplyLanguagePreference
+import com.pandulapeter.campfire.presentation.localization.ApplyLanguagePreference
 import com.pandulapeter.campfire.presentation.ui.theme.CampfireTheme
 import com.pandulapeter.campfire.presentation.ui.theme.LaunchScreenColors
 import com.pandulapeter.campfire.presentation.ui.theme.ProvideInterfaceScale

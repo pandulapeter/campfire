@@ -15,8 +15,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.pandulapeter.campfire.presentation.ui.platform.appIconColor
-import com.pandulapeter.campfire.presentation.ui.platform.appIconThemeColor
+import com.pandulapeter.campfire.presentation.ui.theme.appIconColor
+import com.pandulapeter.campfire.presentation.ui.theme.appIconThemeColor
 import kotlinx.browser.window
 import kotlin.js.ExperimentalWasmJsInterop
 

@@ -14,7 +14,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
-import com.pandulapeter.campfire.presentation.ui.platform.appIconColor
+import com.pandulapeter.campfire.presentation.ui.theme.appIconColor
 import java.util.concurrent.Executors
 
 /**
