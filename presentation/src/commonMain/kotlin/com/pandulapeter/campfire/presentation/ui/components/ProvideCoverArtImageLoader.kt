@@ -23,10 +23,10 @@ import coil3.request.Options
 import coil3.request.crossfade
 import com.pandulapeter.campfire.domain.api.useCases.GetCoverArtUseCase
 import okio.Buffer
-import org.koin.mp.KoinPlatform
+import org.koin.compose.koinInject
 
 /**
- * Makes Coil load [CoverArt] through [GetCoverArtUseCase] and nothing else, once for the whole app.
+ * Makes Coil load [CoverArt] through [getCoverArt] and nothing else, once for the whole app.
  *
  * Coil has no network artifact here: the bytes come from the use case, which keeps the offline copy and goes through
  * the one HTTP client the app has, so Coil only decodes them, keeps what it decoded in its memory cache for scrolling,
@@ -35,12 +35,13 @@ import org.koin.mp.KoinPlatform
  * and does not exist in the browser.
  */
 @Composable
-internal fun ProvideCoverArtImageLoader() = setSingletonImageLoaderFactory { context -> createCoverArtImageLoader(context) }
+internal fun ProvideCoverArtImageLoader(getCoverArt: GetCoverArtUseCase = koinInject()) =
+    setSingletonImageLoaderFactory { context -> createCoverArtImageLoader(context, getCoverArt) }
 
-private fun createCoverArtImageLoader(context: PlatformContext) = ImageLoader.Builder(context)
+private fun createCoverArtImageLoader(context: PlatformContext, getCoverArt: GetCoverArtUseCase) = ImageLoader.Builder(context)
     .components {
         add(CoverArtKeyer())
-        add(CoverArtFetcher.Factory(getCoverArt = KoinPlatform.getKoin().get()))
+        add(CoverArtFetcher.Factory(getCoverArt = getCoverArt))
     }
     .diskCache(null)
     .crossfade(true)
