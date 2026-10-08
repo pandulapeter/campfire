@@ -94,8 +94,8 @@ The metronome resolves through it too, and holds a playing click's changes while
 (`metronomeRenames`, until the click's context names the new file), so the click follows the rename on its tempo and
 without a restarted bar. It is a state rather than a wait — there is no emission that says it is the last one. A
 reference that could not follow does not undo any of that: the screens follow the file, and a snackbar then says what
-still names the old one. Tagging a song (`setSongTags`, `removeSongTag`) rewrites the file through
-`SetChordProTagUseCase` rather than touching the list entry, so the tag is in the song wherever that song goes. The tag
+still names the old one. Tagging a song (`setSongTags`) rewrites the file through `SetChordProTagUseCase` rather
+than touching the list entry, so the tag is in the song wherever that song goes. The tag
 dialog ("Manage tags") is a checklist of the library's tags with the song's own ticked and first, whose field narrows it
 and creates a tag the library lacks; Done writes the whole set in one rewrite, as the languages are written, taking off
 only the tags it offered and left unticked; the tag *filter* is neither a file nor a preference: `songFilter` holds the
@@ -155,16 +155,17 @@ held by the composition would go with it, unshown; a message leaves the queue on
 laid out above the chrome and above the keyboard wherever it reaches higher (the same `KeyboardAwarePadding` the screens
 use, so the keyboard's animation only relayouts it), and the collection of `filesToImport`.
 
-`SyncNotificationEffect` only ever reports "nothing to show" after it has shown something: reported on the first frame
-of every composition it would reach the Android shell as "stop the service" whenever the app was opened onto a run
-already going in the background. It also rescans the library when the app comes back to the front (`ON_START`: iOS
-entering the foreground, the desktop window restored — not `ON_RESUME`, which iOS also sends after Control Center or a
-system alert), and on the desktop when the window regains the focus too, but there only once the last rescan is ten
-seconds old (`refreshIfStale`), so that switching between the app and a text editor next to it does not re-read the
-library every time. Only where the folder is one somebody else can edit (`isLibraryEditableOutsideApp`, i.e. iOS and
-desktop): on Android the library is app-private, and on the web a tab focus says nothing, since OPFS cannot change
-behind the app's back. A rescan of a library that has been read once is no loading state (`isLoading` is latched once a
-read has completed), since it publishes no partial data and the complete library stays on screen meanwhile.
+`rememberSyncNotifications` (in `CampfireApp.kt`) only ever reports "nothing to show" after it has shown something:
+reported on the first frame of every composition it would reach the Android shell as "stop the service" whenever the
+app was opened onto a run already going in the background. `CampfireApp` also rescans the library when the app comes
+back to the front (`ON_START`: iOS entering the foreground, the desktop window restored — not `ON_RESUME`, which iOS
+also sends after Control Center or a system alert), and on the desktop when the window regains the focus too, but there
+only once the last rescan is ten seconds old (`refreshIfStale`), so that switching between the app and a text editor
+next to it does not re-read the library every time. Only where the folder is one somebody else can edit
+(`isLibraryEditableOutsideApp`, i.e. iOS and desktop): on Android the library is app-private, and on the web a tab focus
+says nothing, since OPFS cannot change behind the app's back. A rescan of a library that has been read once is no
+loading state (`isLoading` is latched once a read has completed), since it publishes no partial data and the complete
+library stays on screen meanwhile.
 
 That return to the front, the read the app starts with and the retry of a list that failed to load are the only things
 that ever re-read the library: no screen has a pull to refresh or a refresh button, settings included, because the

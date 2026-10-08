@@ -196,7 +196,7 @@ or a title tapped to edit), and not before: a sheet opened to be looked over has
 without a caret reads as a glitch: that text is there to be replaced, so the first key typed writes the new name instead
 of appending to the old one. The description opens with the caret at the end of it instead, since it is opened on to be
 edited rather than replaced. Every sheet goes through `CampfireBottomSheet`, which draws it **edge to edge** and uses
-`campfireBottomSheetContainerColor` for its background (the app background in light themes, Material's lighter sheet
+`sheetContainerColor()` for its background (the app background in light themes, Material's lighter sheet
 container in dark themes).
 
 The date picker passes this same color to `DatePickerDefaults.colors(containerColor = …)` so its calendar and

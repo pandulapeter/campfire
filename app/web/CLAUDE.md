@@ -16,8 +16,9 @@ direction.
   `CampfireWebApp` inside a `ComposeViewport`. The modules are named in `:app:di`, not here.
 - `src/wasmJsMain/resources/index.html` — the page itself, and the loading screen the app is handed over from: the
   icon, the name and a **determinate** progress bar, on the same background the first composed frame paints (the
-  `CampfireColorSchemes` palettes, picked by `prefers-color-scheme`), because the binaries are sixteen megabytes and
-  an empty page for that long looks broken. The bar is real: where the build is kept in the browser (below) it
+  light and dark backgrounds of `:presentation`'s `CampfireColorScheme`, picked by `prefers-color-scheme`), because
+  the binaries are sixteen megabytes and an empty page for that long looks broken. The bar is real: where the build
+  is kept in the browser (below) it
   measures the download of whatever the kept build is missing, against the sizes in the build manifest, before
   anything starts; where nothing can be kept, an inline script wraps `fetch` before `campfire.js` runs and counts the
   `.wasm` bodies on a clone of each response, against the total the build wrote into the page. That response goes back
@@ -37,9 +38,11 @@ direction.
   button. The exception-handling probe and the named browser versions have to follow the compiler if it moves to
   `try_table`, checked in `campfire.wasm` after a Kotlin upgrade.
   Compose empties the element it is given, so it gets `#app` and the loading screen is a sibling that outlives the
-  handover. `DismissLoadingScreen` in `CampfireWebApplication.kt` waits two frames before reporting ready —
-  `withFrameNanos` resumes while its own frame is still being assembled — so the fade uncovers the app rather than an
-  empty page. The webpack output is named `campfire.js` (`outputModuleName` + `commonWebpackConfig`).
+  handover. `CampfireApp` waits two frames after the launch screen is taken away before it calls `onAppReady` —
+  `withFrameNanos` resumes while its own frame is still being assembled — and `CampfireWebApp`
+  (`presentation/src/wasmJsMain`) passes `dismissLoadingScreen()`, which calls `window.campfireReady()`, so the fade
+  uncovers the app rather than an empty page. The webpack output is named `campfire.js` (`outputModuleName` +
+  `commonWebpackConfig`).
 - **Every touch gesture is the app's**: `index.html` gives `#app` `touch-action: none`, overriding the `pan-x pan-y`
   Compose puts on its canvas for a page it is nested in. With that, the browser takes over any drag Compose has not
   consumed a move of by the first `touchmove` — one still inside Compose's touch slop, such as a drag starting on a

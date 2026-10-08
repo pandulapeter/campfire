@@ -19,8 +19,9 @@ The destinations and the back stack.
 by its file names, so renaming a song from the details screen rewrites the entry without Navigation 3 taking it for a
 new one) `SongEditor(fileName, shouldStartInsideFirstSection)` and `ImportReport`, which carries nothing since there is
 only ever one import to report on, and is never restored (the view model's report is gone with the process).
-`SongEditor` also answers `isContentKey` so that `CampfireApp`'s transitions can pick the editor out of a scene. Top
-level selection resets the stack to `[Songs, tab?]` so back always returns to Songs. Every destination is
+`SongEditor`'s `contentKey` is its file name behind a prefix of its own, leaving `shouldStartInsideFirstSection` out,
+since that says how the editor opens rather than which editor it is. Top level selection resets the stack to
+`[Songs, tab?]` so back always returns to Songs. Every destination is
 `@Serializable`, because `CampfireViewModel` writes the whole stack into its `SavedStateHandle` as JSON on every change
 (`updateBackStack`, and the rename that rewrites entries in place) and reads it back when it is created: a process
 Android killed in the background comes back on the screen it was showing, and Navigation 3's per-entry saved state —

@@ -14,11 +14,12 @@ rest of the shared code, because all four platform entry points call into it, an
 allowed to depend on the `implementation` modules — it exists so that the list of them is written once rather than in
 each `:app:*` module.
 
-- `CampfireDependencyGraph` is the `@KoinApplication`, naming the six module objects (`DataLocalSourceModule`,
-  `DataRemoteSourceModule`, `DataRepositoryModule`, `DomainModule`, `MetronomeModule`, `PresentationModule`). Adding a Koin module to
-  the app is adding it to that list. The compiler plugin validates the whole graph at this declaration, so a
-  definition that asks for something no module declares fails this module's build; the plugin also recompiles this
-  module on every build for that reason, which is what the `strictSafety` line in the Gradle output is about.
+- `CampfireDependencyGraph` is the `@KoinApplication`, naming the seven module objects (`DataLocalSourceModule`,
+  `DataRemoteSourceModule`, `DataRepositoryModule`, `DataSyncModule`, `DomainModule`, `MetronomeModule`,
+  `PresentationModule`). Adding a Koin module to the app is adding it to that list. The compiler plugin validates the
+  whole graph at this declaration, so a definition that asks for something no module declares fails this module's build;
+  the plugin also recompiles this module on every build for that reason, which is what the `strictSafety` line in the
+  Gradle output is about.
 - `startCampfireDependencyGraph(configuration)` is `startKoin<CampfireDependencyGraph>` with the platform's own
   additions: Android passes `androidContext`, which is what its file storage, authenticator and audio output take as
   `@Provided`;

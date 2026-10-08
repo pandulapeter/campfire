@@ -15,7 +15,8 @@ import kotlinx.coroutines.flow.asSharedFlow
 
 /**
  * Says that the app itself has changed a song or setlist file - a save, a creation, an import, a rename, a deletion -
- * which is what schedules an automatic sync run (see `SyncRepositoryImpl.scheduleSynchronization`).
+ * which is what schedules an automatic sync run (see `SyncRunScheduler.schedule` in `:data:sync:implementation`, which
+ * collects it).
  *
  * Its own type rather than a flow on the song and setlist repositories, because the sync repository reads the library
  * through those two and they cannot know about it in turn. Only the two repositories announce anything: the files a

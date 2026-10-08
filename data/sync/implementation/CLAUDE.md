@@ -66,7 +66,7 @@ one that still hashes to what `UserPreferences.demoLibraryContentHashes` recorde
 index entry (the first time this device compares that name with this folder), takes the folder's version the same
 way, since it is another version's demo; the record is written by `DemoLibraryRepositoryImpl`, under the same
 `SyncKey.path` and `localContentHash` the engine looks it up by, and the engine asks for it through the lookup
-`DataRepositoryModule.syncEngine` builds it with — a `@Single` function rather than an annotated class, since the
+`DataSyncModule.syncEngine` builds it with — a `@Single` function rather than an annotated class, since the
 Koin compiler plugin would hand an annotated constructor its `{ null }` default instead — and one with an index entry that is back at its planted bytes was changed back on purpose and keeps its copy. A
 device that planted before the record existed has none and still makes copies. A download is decided about twice — before its request, so that a file already in step is
 not transferred, and again just before the write, so that a save made while the request was in flight is resolved
