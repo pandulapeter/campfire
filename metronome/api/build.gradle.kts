@@ -17,8 +17,5 @@ kotlin {
             // The engine's state is a StateFlow and its beats a SharedFlow; nothing else is depended on.
             api(libs.kotlin.coroutines)
         }
-        commonTest.dependencies {
-            implementation(kotlin("test"))
-        }
     }
 }

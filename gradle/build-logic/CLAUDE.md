@@ -36,6 +36,8 @@ platform-wide compiler setting belongs — never in a module's own `build.gradle
 - The Android namespace is derived from the same path, so a module only declares one when it wants something else.
 - The Android target has host tests enabled (`withHostTest {}`), which is what makes it compile `commonTest` rather
   than warn about every module that has one. The tests are still run on the desktop target (root `CLAUDE.md`).
+- `commonTest` depends on `kotlin("test")` in every module, so a module adds only what its tests need beyond it
+  (`kotlin-coroutines-test`, `ktor-client-mock`); a module with no tests carries a dependency nothing compiles.
 - Every version number comes from the catalog through `extensions/VersionCatalog.kt` (`jvmTarget` for the toolchain,
   `android-minSdk` / `android-compileSdk` for the Android target). Nothing here hardcodes a version; bumping one is
   an edit to `gradle/libs.versions.toml` alone.

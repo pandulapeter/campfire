@@ -16,8 +16,5 @@ kotlin {
         commonMain.dependencies {
             api(project(":data:model"))
         }
-        commonTest.dependencies {
-            implementation(kotlin("test"))
-        }
     }
 }

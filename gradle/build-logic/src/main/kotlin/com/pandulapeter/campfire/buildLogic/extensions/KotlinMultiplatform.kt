@@ -61,5 +61,8 @@ internal fun Project.configureKotlinMultiplatform(
         wasmJs {
             browser()
         }
+        sourceSets.commonTest.dependencies {
+            implementation(kotlin("test"))
+        }
     }
 }
