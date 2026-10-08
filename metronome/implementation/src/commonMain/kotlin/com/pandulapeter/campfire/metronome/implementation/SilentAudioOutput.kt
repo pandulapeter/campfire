@@ -39,7 +39,7 @@ internal class SilentAudioOutput(
         val aheadFrames = (AudioOutput.QUEUED_SECONDS * SAMPLE_RATE).toLong()
         job = scope.launch(dispatcher) {
             while (isActive) {
-                val now = mark.elapsedNow().inWholeMicroseconds * SAMPLE_RATE / 1_000_000
+                val now = AudioClock.framesIn(mark.elapsedNow().inWholeMicroseconds, SAMPLE_RATE)
                 stream.schedule(nowFrame = now, untilFrame = now + aheadFrames) { _, _, _, _ -> }
                 delay((AudioOutput.CHUNK_SECONDS * 1000).toLong())
             }
@@ -47,7 +47,7 @@ internal class SilentAudioOutput(
         return AudioOutputStart.Started()
     }
 
-    override fun heardFrame() = startMark?.elapsedNow()?.inWholeMicroseconds?.let { it * SAMPLE_RATE / 1_000_000 } ?: -1L
+    override fun heardFrame() = startMark?.elapsedNow()?.inWholeMicroseconds?.let { AudioClock.framesIn(it, SAMPLE_RATE) } ?: -1L
 
     override fun stop() {
         job?.cancel()

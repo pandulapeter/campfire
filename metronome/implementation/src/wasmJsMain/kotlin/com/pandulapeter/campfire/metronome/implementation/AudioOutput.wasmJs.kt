@@ -59,7 +59,7 @@ internal class WebAudioOutput : AudioOutput {
         var isRunning = isContextRunning()
         job = scope.launch {
             while (isActive) {
-                val nowFrame = ((contextTime() - startTime) * sampleRate).toLong()
+                val nowFrame = AudioClock.framesSince(contextTime(), startTime, sampleRate)
                 stream.schedule(nowFrame = nowFrame, untilFrame = nowFrame + aheadFrames) { frame, sound, voice, gain ->
                     val key = voiceKey(sound, voice)
                     if (loadedVoices.add(key)) loadVoice(key, stream.samplesOf(sound, voice))
@@ -77,7 +77,7 @@ internal class WebAudioOutput : AudioOutput {
         return AudioOutputStart.Started(if (isRunning) null else MetronomeAudioIssue.WAITING_FOR_GESTURE)
     }
 
-    override fun heardFrame() = if (job == null) -1L else ((contextTime() - contextOutputLatency() - startTime) * sampleRate).toLong()
+    override fun heardFrame() = if (job == null) -1L else AudioClock.framesSince(contextTime() - contextOutputLatency(), startTime, sampleRate)
 
     override fun stop() {
         job?.cancel() ?: return

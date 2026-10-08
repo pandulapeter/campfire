@@ -73,7 +73,7 @@ internal class IosAudioOutput : AudioOutput {
     private var player: AVAudioPlayerNode? = null
 
     @Volatile
-    private var silentFrames: SilentFrames? = null
+    private var gapTracker: PlaybackGapTracker? = null
     private var sampleRate = DEFAULT_SAMPLE_RATE
     private var observers = emptyList<NSObjectProtocol>()
 
@@ -101,9 +101,9 @@ internal class IosAudioOutput : AudioOutput {
             deactivateSession()
             return AudioOutputStart.Unavailable
         }
-        val silentFrames = SilentFrames()
+        val gapTracker = PlaybackGapTracker()
         this.engine = engine
-        this.silentFrames = silentFrames
+        this.gapTracker = gapTracker
         this.player = player
         observers = observe(engine, listener)
         val stream = createStream(sampleRate)
@@ -121,7 +121,7 @@ internal class IosAudioOutput : AudioOutput {
         buffers.forEach { buffer -> scheduleNext(player, stream, samples, buffer, frames, freeBuffers) }
         player.play()
         NSThread {
-            feed(player, stream, buffers, samples, frames, freeBuffers, silentFrames)
+            feed(player, stream, buffers, samples, frames, freeBuffers, gapTracker)
         }.apply {
             qualityOfService = NSQualityOfServiceUserInteractive
             name = "Metronome"
@@ -137,20 +137,16 @@ internal class IosAudioOutput : AudioOutput {
         samples: ShortArray,
         frames: Int,
         freeBuffers: dispatch_semaphore_t,
-        silentFrames: SilentFrames,
+        gapTracker: PlaybackGapTracker,
     ) {
         var next = 0
         var scheduledFrames = buffers.size.toLong() * frames
         while (true) {
             dispatch_semaphore_wait(freeBuffers, DISPATCH_TIME_FOREVER)
             if (this.player !== player) return
-            // The player's time runs on while nothing is queued, and a buffer scheduled with no time of its own starts
-            // at once rather than at its frame of the stream: a queue that ran dry adds its gap to the player's time for
-            // the rest of the session, which heardFrame takes back out. Read a render cycle late, so a gap can come out a
-            // few milliseconds short - a beat released a little early at worst, never late.
-            val expectedTime = scheduledFrames + silentFrames.count
-            val now = playerSampleTime(player)
-            if (now != null && now > expectedTime) silentFrames.count += now - expectedTime
+            // A queue that ran dry adds its gap to the player's time (see PlaybackGapTracker). Read a render cycle late,
+            // so a gap can come out a few milliseconds short - a beat released a little early at worst, never late.
+            gapTracker.onBufferFreed(scheduledFrames, playerSampleTime(player))
             scheduleNext(player, stream, samples, buffers[next], frames, freeBuffers)
             scheduledFrames += frames
             next = (next + 1) % buffers.size
@@ -174,9 +170,9 @@ internal class IosAudioOutput : AudioOutput {
 
     override fun heardFrame(): Long {
         val player = player ?: return -1L
-        val silentFrames = silentFrames ?: return -1L
+        val gapTracker = gapTracker ?: return -1L
         val sampleTime = playerSampleTime(player) ?: return -1L
-        return sampleTime - silentFrames.count - (AVAudioSession.sharedInstance().outputLatency * sampleRate).toLong()
+        return gapTracker.heardFrame(sampleTime, AudioClock.latencyFrames(AVAudioSession.sharedInstance().outputLatency, sampleRate))
     }
 
     private fun playerSampleTime(player: AVAudioPlayerNode): Long? {
@@ -187,7 +183,7 @@ internal class IosAudioOutput : AudioOutput {
     override fun stop() {
         val player = player ?: return
         this.player = null
-        silentFrames = null
+        gapTracker = null
         observers.forEach(NSNotificationCenter.defaultCenter::removeObserver)
         observers = emptyList()
         // Stopping the player drops what is scheduled and calls every buffer's completion handler, which is what wakes
@@ -226,16 +222,6 @@ internal class IosAudioOutput : AudioOutput {
             val error = alloc<ObjCObjectVar<NSError?>>()
             AVAudioSession.sharedInstance().setActive(false, AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation, error.ptr)
         }
-    }
-
-    /**
-     * The frames the player ran with nothing queued in one session. An object of each session's own rather than a field
-     * reset by start: the previous session's feed thread can be between its check and its write while stop and the next
-     * start run, and then adds its gap only to a count nobody reads any more.
-     */
-    private class SilentFrames {
-        @Volatile
-        var count = 0L
     }
 
     private companion object {

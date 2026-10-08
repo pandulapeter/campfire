@@ -28,6 +28,11 @@ chunked), reusing every buffer. `ClickStream` is one session: the sequencer, the
 non-suspending ends are safe from any thread) for the changes going in and the rendered ticks coming out. The volume is
 squared on its way to a gain.
 
+How each output turns its platform's clock into a frame of the stream (`heardFrame`) is `AudioClock`'s arithmetic in
+`commonMain` — microseconds, an extrapolated `AudioTimestamp`, an `AudioContext`'s seconds, a latency — and the iOS
+player's gaps, the frames it ran with nothing queued, are counted by a `PlaybackGapTracker` of each session's own; both
+are tested, the platform outputs only call them.
+
 `MetronomeEngine` runs every call on one confined coroutine (`limitedParallelism(1)`), so calls from the UI, platform
 callbacks and media buttons apply in order without a lock, and each start is a session whose late listener callbacks
 are ignored. **`beats` are released when heard**: a coroutine polls the output's `heardFrame()` (the reported playback
@@ -67,5 +72,5 @@ locked phone, a busy desktop or a Kotlin/Native collection needs; a stop flushes
 
 Tests (`desktopTest`): `MetronomeSequencerTest`, `ClickSynthesizerTest`, `ClickMixerTest`, `MetronomeEngineTest` (the
 state machine on virtual time, against a `FakeAudioOutput`: starts, refusals, the silent fallback, stale sessions, beats
-released as they are heard, the preview's hold) and `SilentAudioOutputTest`; `TapTempoTest` and `TimeSignatureTest` in
+released as they are heard, the preview's hold), `SilentAudioOutputTest` and `AudioClockTest`; `TapTempoTest` and `TimeSignatureTest` in
 `:metronome:api`.

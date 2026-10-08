@@ -136,7 +136,7 @@ internal class AndroidAudioOutput(
         val track = track ?: return -1L
         return try {
             if (track.getTimestamp(timestamp)) {
-                timestamp.framePosition + (System.nanoTime() - timestamp.nanoTime) * sampleRate / NANOSECONDS_PER_SECOND
+                AudioClock.extrapolatedFrame(timestamp.framePosition, timestamp.nanoTime, System.nanoTime(), sampleRate)
             } else {
                 track.playbackHeadPosition.toLong() and 0xFFFFFFFFL
             }
@@ -183,6 +183,5 @@ internal class AndroidAudioOutput(
     private companion object {
         const val DEFAULT_SAMPLE_RATE = 48_000
         const val BYTES_PER_FRAME = 2
-        const val NANOSECONDS_PER_SECOND = 1_000_000_000L
     }
 }
