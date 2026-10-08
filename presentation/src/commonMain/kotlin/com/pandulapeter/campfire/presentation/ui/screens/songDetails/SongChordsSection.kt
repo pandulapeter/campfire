@@ -27,7 +27,6 @@ import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -51,22 +50,16 @@ import androidx.compose.ui.layout.MeasureScope
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Constraints
-import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import com.pandulapeter.campfire.chordpro.ChordNotation
 import com.pandulapeter.campfire.chordpro.ChordProChords
 import com.pandulapeter.campfire.chordpro.ChordVoicings
 import com.pandulapeter.campfire.chordpro.model.Chord
-import com.pandulapeter.campfire.chordpro.model.ChordInstrument
-import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.chordpro.model.ChordVoicing
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_edit
@@ -77,181 +70,11 @@ import com.pandulapeter.campfire.presentation.resources.song_details_chord_lette
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_sounding
 import com.pandulapeter.campfire.presentation.resources.song_details_chords
 import com.pandulapeter.campfire.presentation.localization.stringResource
-import com.pandulapeter.campfire.presentation.ui.chords.SelectedShape
-import com.pandulapeter.campfire.presentation.ui.chords.SongChord
-import com.pandulapeter.campfire.presentation.ui.chords.chordDiagramGeometryOf
-import com.pandulapeter.campfire.presentation.ui.chords.emptyChordDiagramGeometryOf
-import com.pandulapeter.campfire.presentation.ui.chords.selectShape
 import com.pandulapeter.campfire.presentation.ui.components.drawChordDiagram
 import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 import org.jetbrains.compose.resources.painterResource
 import kotlin.math.roundToInt
-
-/**
- * What a song's Chords section needs beyond the song: the instrument the diagrams are drawn for, the shapes the player
- * chose, whether the section is folded, and what its header does.
- *
- * @param onFoldToggled Folds the section or unfolds it, one preference for every song; null where nothing folds.
- * @param onShapesClicked Opens the Chord shapes sheet of the song, null in read only mode (performance mode, or a song
- * read from an archived setlist), which takes the controls off the page. Offered only while the section is unfolded.
- * @param showsDefinitionsOnly Whether the section holds the song's own definitions and nothing else, each on the
- * instrument it is written for, which is the editor's preview: it shows what is being written, and the app's own shapes
- * are not written. [notation] is what their names are read in.
- */
-@Immutable
-internal data class ChordDiagrams(
-    val instrument: ChordInstrument,
-    val storedShapes: Map<String, String> = emptyMap(),
-    val isFolded: Boolean = false,
-    val onFoldToggled: (() -> Unit)? = null,
-    val onShapesClicked: (() -> Unit)? = null,
-    val showsDefinitionsOnly: Boolean = false,
-    val notation: ChordNotation = ChordNotation.STANDARD,
-)
-
-/**
- * One diagram of the Chords section: the chord as the page names it and the shape it is drawn with, and the names
- * [SongChord.soundingName] and [SongChord.letterName] give it after that.
- */
-@Immutable
-internal data class ChordCell(
-    val name: String,
-    val soundingName: String?,
-    val letterName: String? = null,
-    val instrument: ChordInstrument,
-    val root: Int,
-    val selection: SelectedShape,
-)
-
-/** The cells of [chords], each with the shape [selectShape] picks for it. */
-internal fun chordCellsOf(chords: List<SongChord>, instrument: ChordInstrument, storedShapes: Map<String, String>) = chords.map { chord ->
-    ChordCell(
-        name = chord.name,
-        soundingName = chord.soundingName,
-        letterName = chord.letterName,
-        instrument = instrument,
-        root = chord.chord.root,
-        selection = selectShape(chord, instrument, storedShapes),
-    )
-}
-
-/**
- * The cells of every definition [song] holds, in file order and each on its own instrument, see
- * [ChordDiagrams.showsDefinitionsOnly]. A numbering leaves a song's definitions in letters, which is how they are named.
- */
-internal fun definitionCellsOf(song: ChordProSong, notation: ChordNotation) = song.metadata.definitions.map { definition ->
-    ChordCell(
-        name = definition.name,
-        soundingName = null,
-        instrument = definition.instrument,
-        root = ChordProChords.parse(definition.name, notation)?.root ?: 0,
-        selection = SelectedShape(definition.voicing, SelectedShape.Source.DEFINED, definition.movedBy),
-    )
-}
-
-/**
- * [sections] with the Chords section after the metadata section, or first where there is none: the diagrams are part of
- * how the song is played, which the metadata section starts with. None where there is no chord to draw.
- */
-internal fun withChordsSection(sections: List<RenderSection>, cells: List<ChordCell>, isFolded: Boolean): List<RenderSection> {
-    if (cells.isEmpty()) return sections
-    val index = if (sections.firstOrNull() is RenderSection.Metadata) 1 else 0
-    return sections.take(index) + RenderSection.Chords(cells = cells, isFolded = isFolded) + sections.drop(index)
-}
-
-/**
- * The cells of a Chords section as its slots measure and draw them: every name laid out once, every cell's width and
- * height, and the rows they wrap into at the last few widths the layout asked about ([MAX_CHORD_ROW_WIDTHS], as
- * `TabRows` keeps them), shared by every slot of the section so that a width is broken into rows once. Everything is
- * measured as the composed cell was: the names in [chordStyle] on one line, the second one 4dp after the first, over a
- * diagram growing with [fontScale], the cells [CELL_GAP] apart.
- *
- * None of this is state: it is filled in by whoever asks first, and the answers never change.
- */
-internal class ChordCellLayouts(
-    val cells: List<ChordCell>,
-    chordStyle: TextStyle,
-    textMeasurer: TextMeasurer,
-    density: Density,
-    fontScale: Float,
-) {
-
-    val names by lazy(LazyThreadSafetyMode.NONE) {
-        cells.map { textMeasurer.measure(AnnotatedString(it.name), chordStyle, maxLines = 1, softWrap = false) }
-    }
-    val secondNames by lazy(LazyThreadSafetyMode.NONE) {
-        cells.map { cell ->
-            (cell.soundingName ?: cell.letterName)?.let { textMeasurer.measure(AnnotatedString(it), chordStyle, maxLines = 1, softWrap = false) }
-        }
-    }
-    val nameGap = with(density) { NAME_GAP.roundToPx() }
-    val gap = with(density) { (CELL_GAP * fontScale).roundToPx() }
-    val diagramSizes = with(density) {
-        cells.map { cell ->
-            IntSize(
-                width = ((if (cell.instrument.isFretted) FRETTED_WIDTH else KEYBOARD_WIDTH) * fontScale).roundToPx(),
-                height = ((if (cell.instrument.isFretted) FRETTED_HEIGHT else KEYBOARD_HEIGHT) * fontScale).roundToPx(),
-            )
-        }
-    }
-
-    /** How wide the names of each cell are together, the second one after its gap where there is one. */
-    val nameRowWidths by lazy(LazyThreadSafetyMode.NONE) {
-        IntArray(cells.size) { cell -> names[cell].size.width + (secondNames[cell]?.let { nameGap + it.size.width } ?: 0) }
-    }
-
-    /** How tall the names of each cell are, the taller of the two, which share a style. */
-    val nameRowHeights by lazy(LazyThreadSafetyMode.NONE) {
-        IntArray(cells.size) { cell -> maxOf(names[cell].size.height, secondNames[cell]?.size?.height ?: 0) }
-    }
-    val cellWidths by lazy(LazyThreadSafetyMode.NONE) { IntArray(cells.size) { cell -> maxOf(diagramSizes[cell].width, nameRowWidths[cell]) } }
-    val cellHeights by lazy(LazyThreadSafetyMode.NONE) { IntArray(cells.size) { cell -> nameRowHeights[cell] + diagramSizes[cell].height } }
-
-    /** Every cell on one line, which is what a slot answers for the widest it would be. */
-    val lineWidth by lazy(LazyThreadSafetyMode.NONE) { cellWidths.sum() + gap * (cells.size - 1).coerceAtLeast(0) }
-    val widestCell by lazy(LazyThreadSafetyMode.NONE) { cellWidths.maxOrNull() ?: 0 }
-    val geometries by lazy(LazyThreadSafetyMode.NONE) {
-        cells.map { cell ->
-            cell.selection.shape?.let { chordDiagramGeometryOf(it, cell.instrument, cell.root) } ?: emptyChordDiagramGeometryOf(cell.instrument)
-        }
-    }
-    private val rowStartsByWidth = mutableMapOf<Int, IntArray>()
-    private val recentWidths = ArrayDeque<Int>()
-
-    /** Where each row starts at [width] (see [chordRowStarts]); an unbounded width is one row. */
-    fun rowStartsAt(width: Int): IntArray {
-        recentWidths.remove(width)
-        recentWidths.addLast(width)
-        if (recentWidths.size > MAX_CHORD_ROW_WIDTHS) rowStartsByWidth.remove(recentWidths.removeFirst())
-        return rowStartsByWidth.getOrPut(width) { chordRowStarts(cellWidths, gap, width) }
-    }
-
-    /** The cells of row [row] when the rows start at [starts]. */
-    fun cellsOfRow(starts: IntArray, row: Int) = starts[row] until (starts.getOrNull(row + 1) ?: cells.size)
-
-    /** How tall row [row] is: its tallest cell, since the editor preview's definitions may mix a fretted and a keyboard one. */
-    fun rowHeight(starts: IntArray, row: Int) = cellsOfRow(starts, row).maxOf { cellHeights[it] }
-
-    /**
-     * How tall the slots from [firstSlot] to [lastSlot] are at [width]: their rows [gap] apart, and one more [gap] after
-     * the last of them where a row follows, so that the slots stacked uncut are exactly as tall as the rows were in one
-     * piece, and a cut leaves the gap at the bottom of a page rather than at the top of the next.
-     */
-    fun height(width: Int, firstSlot: Int, lastSlot: Int, isLastSlot: Boolean): Int {
-        val starts = rowStartsAt(width)
-        val rows = chordSlotRows(starts.size, firstSlot, lastSlot, isLastSlot)
-        if (rows.isEmpty()) return 0
-        return rows.sumOf { rowHeight(starts, it) } + gap * (rows.last - rows.first) + if (rows.last < starts.size - 1) gap else 0
-    }
-
-    /** The cells the slots from [firstSlot] to [lastSlot] show at [width], which a screen reader is told about. */
-    fun cellsAt(width: Int, firstSlot: Int, lastSlot: Int, isLastSlot: Boolean): IntRange {
-        val starts = rowStartsAt(width)
-        val rows = chordSlotRows(starts.size, firstSlot, lastSlot, isLastSlot)
-        return if (rows.isEmpty()) IntRange.EMPTY else starts[rows.first] until (starts.getOrNull(rows.last + 1) ?: cells.size)
-    }
-}
 
 /**
  * One chunk of the song's chords as diagrams: the slots [items] names (counted as [RenderSection.Chords.itemCount]),
@@ -510,13 +333,4 @@ private fun spokenShape(shape: ChordVoicing) = when (shape) {
     }
 }
 
-private val CELL_GAP = 6.dp
-private val NAME_GAP = 4.dp
 private val SHAPES_ICON_SIZE = 18.dp
-private val FRETTED_WIDTH = 56.dp
-private val FRETTED_HEIGHT = 70.dp
-private val KEYBOARD_WIDTH = 76.dp
-private val KEYBOARD_HEIGHT = 40.dp
-
-/** How many widths a section's rows are kept for, see [ChordCellLayouts.rowStartsAt]. */
-private const val MAX_CHORD_ROW_WIDTHS = 8
