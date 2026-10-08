@@ -27,15 +27,16 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.domain.SyncState
 import com.pandulapeter.campfire.domain.api.useCases.CancelSynchronizationUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetSyncStateUseCase
+import com.pandulapeter.campfire.presentation.ui.platform.SyncNotificationScheduler
 import com.pandulapeter.campfire.presentation.ui.platform.withSyncCounts
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.mp.KoinPlatform
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Keeps the process alive for as long as a sync run lasts, and shows the run as a notification.
@@ -59,8 +60,14 @@ class CampfireSyncService : Service() {
     private var words: Words? = null
     private var completed = 0
     private var total = 0
-    private var notificationUpdateJob: Job? = null
-    private var stopJob: Job? = null
+    private val scheduler = SyncNotificationScheduler(
+        scope = scope,
+        updateInterval = 500.milliseconds,
+        handoverGrace = 2.seconds,
+        postUpdate = ::updateNotification,
+        release = ::stop,
+        isRunGoing = { latestSyncState.progress != null },
+    )
 
     /** The translated words of one run, kept for as long as it lasts. See the note on the class. */
     private data class Words(
@@ -89,8 +96,7 @@ class CampfireSyncService : Service() {
                     scheduleStop()
                     return@collect
                 }
-                stopJob?.cancel()
-                stopJob = null
+                scheduler.cancelRelease()
                 // A run chained right behind the one this notification was showing: it starts from preparing rather
                 // than from the numbers the last one ended on.
                 val isChainedRun = isInForeground && !hadRun
@@ -103,7 +109,7 @@ class CampfireSyncService : Service() {
                 total = progress.total
                 // The counts are this service's own business: the activity hands them over only when it starts the
                 // service, and once it is gone this is the only thing still talking.
-                scheduleNotificationUpdate(isCountingStarted = isChainedRun || (wasPreparing && total != 0))
+                scheduler.requestUpdate(immediately = isChainedRun || (wasPreparing && total != 0))
             }
         }
     }
@@ -161,44 +167,14 @@ class CampfireSyncService : Service() {
     }
 
     /**
-     * Stops the service once no run has been going for [RUN_HANDOVER_GRACE_MILLIS]. A run asked for while another one
-     * was going starts within milliseconds of that one ending, and by then the app is often in the background: a
-     * service that let go the moment the first run ended could not be started again from there (Android 12 refuses a
-     * foreground service started from the background), and the run carrying the user's latest change would go on in a
-     * process nothing keeps alive. A run that starts within the grace cancels it.
+     * Stops the service once no run has been going for the scheduler's handover grace, for a run chained behind this
+     * one to start in (see [SyncNotificationScheduler.scheduleRelease]).
      *
      * Only once the service is in the foreground: stopping before then would leave the system waiting for the
      * `startForeground` that `startForegroundService` promised it, which it treats as a crash of the app.
      */
     private fun scheduleStop() {
-        if (!isInForeground || stopJob?.isActive == true) return
-        stopJob = scope.launch {
-            delay(RUN_HANDOVER_GRACE_MILLIS)
-            if (latestSyncState.progress == null) {
-                stopJob = null
-                stop()
-            }
-        }
-    }
-
-    /**
-     * Posts the latest counts at most once per [NOTIFICATION_UPDATE_INTERVAL_MILLIS], from one delayed job that reads
-     * them when it fires, since files finish several times a second and Android sheds whatever goes over five
-     * notification updates a second per package - an arbitrary one of them, not the stale ones. A rate is what the
-     * limit is, so a rate is what this is. The step from preparing to counting is posted at once, as it changes the
-     * notification's shape rather than one of its numbers.
-     */
-    private fun scheduleNotificationUpdate(isCountingStarted: Boolean) {
-        if (isCountingStarted) {
-            notificationUpdateJob?.cancel()
-            notificationUpdateJob = null
-            updateNotification()
-        } else if (notificationUpdateJob?.isActive != true) {
-            notificationUpdateJob = scope.launch {
-                delay(NOTIFICATION_UPDATE_INTERVAL_MILLIS)
-                updateNotification()
-            }
-        }
+        if (isInForeground) scheduler.scheduleRelease()
     }
 
     /**
@@ -215,10 +191,8 @@ class CampfireSyncService : Service() {
     private fun stop() {
         isInForeground = false
         isRunning = false
-        stopJob?.cancel()
-        stopJob = null
-        notificationUpdateJob?.cancel()
-        notificationUpdateJob = null
+        scheduler.cancelRelease()
+        scheduler.cancelUpdate()
         ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
@@ -291,10 +265,6 @@ class CampfireSyncService : Service() {
         var isRunning = false
             private set
 
-        private const val NOTIFICATION_UPDATE_INTERVAL_MILLIS = 500L
-
-        /** How long the service outlives a run, for the one chained behind it to start in, see [scheduleStop]. */
-        private const val RUN_HANDOVER_GRACE_MILLIS = 2_000L
         private const val CHANNEL_ID = "sync"
         private const val NOTIFICATION_ID = 1
         private const val ACTION_STOP = "com.pandulapeter.campfire.action.STOP_SYNC"
