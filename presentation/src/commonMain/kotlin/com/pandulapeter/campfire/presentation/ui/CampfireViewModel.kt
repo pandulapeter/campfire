@@ -134,6 +134,7 @@ import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeContext
 import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
 import com.pandulapeter.campfire.presentation.ui.playing.SongPlace
+import com.pandulapeter.campfire.presentation.ui.playing.withEntry
 import com.pandulapeter.campfire.presentation.ui.playing.Tempos
 import com.pandulapeter.campfire.presentation.ui.playing.effectiveTempo
 import com.pandulapeter.campfire.presentation.ui.metronome.isMetronomeContextMoved
@@ -2583,15 +2584,7 @@ class CampfireViewModel(
             }
         } else {
             updateEditableSetlist(setlistFileName) { setlist ->
-                setlist.copy(
-                    entries = setlist.entries.map { entry ->
-                        if (entry.songFileName == songFileName) {
-                            entry.copy(transposition = wrapTransposition(change(entry.transposition)))
-                        } else {
-                            entry
-                        }
-                    }
-                )
+                setlist.withEntry(songFileName) { it.copy(transposition = wrapTransposition(change(it.transposition))) } ?: setlist
             } ?: sendMessage(Message.OperationFailed)
         }
     }
@@ -2730,12 +2723,7 @@ class CampfireViewModel(
                 // and nothing would ever settle it. A reset has nothing left to clear there, so that one still counts.
                 var hasEntry = false
                 updateEditableSetlist(setlistFileName) { setlist ->
-                    hasEntry = setlist.entries.any { it.songFileName == key.songFileName }
-                    if (hasEntry) {
-                        setlist.copy(entries = setlist.entries.map { entry -> if (entry.songFileName == key.songFileName) entry.copy(tempo = bpm) else entry })
-                    } else {
-                        setlist
-                    }
+                    setlist.withEntry(key.songFileName) { it.copy(tempo = bpm) }.also { hasEntry = it != null } ?: setlist
                 }?.takeUnless { it.isArchived } != null && (hasEntry || bpm == null)
             }
             if (isWritten) {
@@ -2802,12 +2790,7 @@ class CampfireViewModel(
                 // and nothing would ever settle it. A reset has nothing left to clear there, so that one still counts.
                 var hasEntry = false
                 updateEditableSetlist(setlistFileName) { setlist ->
-                    hasEntry = setlist.entries.any { it.songFileName == key.songFileName }
-                    if (hasEntry) {
-                        setlist.copy(entries = setlist.entries.map { entry -> if (entry.songFileName == key.songFileName) entry.copy(capo = fret) else entry })
-                    } else {
-                        setlist
-                    }
+                    setlist.withEntry(key.songFileName) { it.copy(capo = fret) }.also { hasEntry = it != null } ?: setlist
                 }?.takeUnless { it.isArchived } != null && (hasEntry || fret == null)
             }
             if (isWritten) {
