@@ -25,8 +25,8 @@ import androidx.lifecycle.viewModelScope
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.ChordProTempo
 import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields
+import com.pandulapeter.campfire.chordpro.ChordProMetadataFields
 import com.pandulapeter.campfire.chordpro.model.ChordProLink
-import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.CoverArtQuery
 import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution
@@ -167,6 +167,7 @@ import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.Companion
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.SavedSongFilter
 import com.pandulapeter.campfire.presentation.ui.state.SetlistsController
 import com.pandulapeter.campfire.presentation.ui.state.SongListState
+import com.pandulapeter.campfire.presentation.ui.state.SongMetadataEditing
 import com.pandulapeter.campfire.presentation.ui.state.SongPickerState
 import com.pandulapeter.campfire.presentation.ui.state.SongTextStore
 import com.pandulapeter.campfire.presentation.ui.state.SyncController
@@ -274,10 +275,10 @@ class CampfireViewModel(
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
-    private val savedStateStore = SavedStateStore(savedStateHandle, viewModelScope)
+    private val savedStateStore: SavedStateStore = SavedStateStore(savedStateHandle, viewModelScope)
 
     /** Read by holders built before the snackbar's own members, so built first; it starts nothing. */
-    private val messageSink = MessageSink(viewModelScope)
+    private val messageSink: MessageSink = MessageSink(viewModelScope)
 
     /**
      * The tags and languages the song list is narrowed to. Held here and in [savedStateStore] only, so it lasts
@@ -292,7 +293,7 @@ class CampfireViewModel(
             ?: SongFilter()
     )
 
-    private val libraryState = LibraryState(
+    private val libraryState: LibraryState = LibraryState(
         scope = viewModelScope,
         getScreenData = getScreenData,
         songFilter = _songFilter,
@@ -414,7 +415,7 @@ class CampfireViewModel(
             else -> null
         }
 
-    private val dialogHost = DialogHost(viewModelScope).apply {
+    private val dialogHost: DialogHost = DialogHost(viewModelScope).apply {
         addBeforeDialogChange { _, dialogType ->
             // Editing can rename the setlist's file, which is what the mode is keyed by, so it ends the mode as the other
             // ways of leaving the rows do rather than losing it to a name that has stopped existing.
@@ -477,7 +478,7 @@ class CampfireViewModel(
         return true
     }
 
-    private val fontScaleController = FontScaleController(
+    private val fontScaleController: FontScaleController = FontScaleController(
         scope = viewModelScope,
         backStack = backStack,
         dialogHost = dialogHost,
@@ -585,7 +586,7 @@ class CampfireViewModel(
     private val _isAppOnScreen = MutableStateFlow(false)
     internal val isAppOnScreen: StateFlow<Boolean> = _isAppOnScreen.asStateFlow()
 
-    private val preferencesController = PreferencesController(
+    private val preferencesController: PreferencesController = PreferencesController(
         scope = viewModelScope,
         getUserPreferences = getUserPreferences,
         updateUserPreferences = updateUserPreferences,
@@ -610,7 +611,7 @@ class CampfireViewModel(
     /** See [PreferencesController.libraryPersistence]. */
     internal val libraryPersistence: StateFlow<LibraryPersistence?> get() = preferencesController.libraryPersistence
 
-    private val syncController = SyncController(
+    private val syncController: SyncController = SyncController(
         scope = viewModelScope,
         messageSink = messageSink,
         getSyncState = getSyncState,
@@ -633,7 +634,7 @@ class CampfireViewModel(
     /** See [SyncController.syncProviders]. */
     val syncProviders get() = syncController.syncProviders
 
-    private val songTextStore = SongTextStore(
+    private val songTextStore: SongTextStore = SongTextStore(
         scope = viewModelScope,
         backStack = backStack,
         editorDraftFileName = { _editorDraft.value?.fileName },
@@ -641,6 +642,23 @@ class CampfireViewModel(
         getSongContent = getSongContent,
         saveSongContent = saveSongContent,
         getSongContentInvalidations = getSongContentInvalidations,
+    )
+
+    private val songMetadataEditing: SongMetadataEditing = SongMetadataEditing(
+        dialogHost = dialogHost,
+        messageSink = messageSink,
+        songTextStore = songTextStore,
+        songRenderer = songRenderer,
+        editorNotation = { editorNotation },
+        retainedEditorField = { retainedEditorField(it) },
+        editorDraft = { _editorDraft.value },
+        emitEditorTextEdit = { _editorTextEdits.tryEmit(it) },
+        parseChordPro = parseChordPro,
+        setChordProCoverArt = setChordProCoverArt,
+        setChordProLanguages = setChordProLanguages,
+        setChordProTag = setChordProTag,
+        setChordProLinks = setChordProLinks,
+        setChordProMetadata = setChordProMetadata,
     )
 
     /** See [SongTextStore.songTexts]. */
@@ -698,7 +716,7 @@ class CampfireViewModel(
         draft != null && draft.text != songTexts[draft.fileName]?.let(::editorTextOf)
     }.asState(false)
 
-    private val overrides = PlayingOverrides(
+    private val overrides: PlayingOverrides = PlayingOverrides(
         scope = viewModelScope,
         userPreferences = userPreferences,
         setlists = setlists,
@@ -723,7 +741,7 @@ class CampfireViewModel(
 
     // Metronome
 
-    private val metronomeController = MetronomeController(
+    private val metronomeController: MetronomeController = MetronomeController(
         scope = viewModelScope,
         metronome = metronome,
         backStack = backStack,
@@ -756,7 +774,7 @@ class CampfireViewModel(
     /** See [MetronomeController.metronomeContext]. */
     internal val metronomeContext get() = metronomeController.metronomeContext
 
-    private val songPickerState = SongPickerState(
+    private val songPickerState: SongPickerState = SongPickerState(
         scope = viewModelScope,
         savedStateStore = savedStateStore,
         indexedSongs = indexedSongs,
@@ -775,7 +793,7 @@ class CampfireViewModel(
     /** See [SongPickerState.songPickerFilters]. */
     internal val songPickerFilters get() = songPickerState.songPickerFilters
 
-    private val coverArtSearchController = CoverArtSearchController(
+    private val coverArtSearchController: CoverArtSearchController = CoverArtSearchController(
         scope = viewModelScope,
         searchCoverArt = searchCoverArt,
         getCoverArtCacheSize = getCoverArtCacheSize,
@@ -840,7 +858,7 @@ class CampfireViewModel(
         }
     }.asState(null)
 
-    private val songListState = SongListState(
+    private val songListState: SongListState = SongListState(
         scope = viewModelScope,
         savedStateStore = savedStateStore,
         mutableSongFilter = _songFilter,
@@ -874,7 +892,7 @@ class CampfireViewModel(
     /** See [SongListState.songsPlaceholder]. */
     val songsPlaceholder get() = songListState.songsPlaceholder
 
-    private val setlistsController = SetlistsController(
+    private val setlistsController: SetlistsController = SetlistsController(
         scope = viewModelScope,
         savedStateStore = savedStateStore,
         backStack = backStack,
@@ -1573,121 +1591,33 @@ class CampfireViewModel(
         if (!haveReferencesBeenRemoved) sendMessage(Message.SongDeletedPartly)
     }
 
-    /**
-     * Makes [tags] the tags a song carries, from the tag dialog: every one of [offeredTags] the dialog left unticked is
-     * taken off and every ticked one put on, compared without regard to case, as the file's tags always are. The file
-     * is rewritten once for the whole set, as [setSongLanguages] writes one. What it carries is read from the text the
-     * edit is built on rather than from the list entry the dialog was opened with, so a tag another device synced in
-     * while the dialog was open, and which it therefore never offered, is left on.
-     */
-    fun setSongTags(target: SongEditTarget, tags: List<String>, offeredTags: List<String>) {
-        val keptKeys = tags.mapTo(mutableSetOf()) { it.lowercase() }
-        val offeredKeys = offeredTags.mapTo(mutableSetOf()) { it.lowercase() }
-        editSong(target) { text ->
-            val removed = parseChordPro(text).metadata.tags.filter { it.lowercase() in offeredKeys && it.lowercase() !in keptKeys }
-            val withoutRemoved = removed.fold(text) { current, tag -> setChordProTag(text = current, tag = tag, isSelected = false) }
-            tags.fold(withoutRemoved) { current, tag -> setChordProTag(text = current, tag = tag, isSelected = true) }
-        }
-    }
+    fun setSongTags(target: SongEditTarget, tags: List<String>, offeredTags: List<String>) = songMetadataEditing.setSongTags(target, tags, offeredTags)
 
-    /**
-     * Declares the languages of a song, from the header of the screen that is playing it. The whole set arrives at
-     * once rather than one language at a time, because the picker asks for all of them before it is closed and a
-     * file the user owns is better rewritten once than once per checkbox.
-     */
-    fun setSongLanguages(target: SongEditTarget, codes: List<String>) = editSong(target) { text ->
-        setChordProLanguages(text = text, codes = codes)
-    }
+    fun setSongLanguages(target: SongEditTarget, codes: List<String>) = songMetadataEditing.setSongLanguages(target, codes)
 
-    /** Opens the label pickers on the current draft when invoked from the editor. */
-    fun showSongTagsDialog(song: Song, target: SongEditTarget) {
-        val currentSong = songForLabelEditing(song, target) ?: return
-        showDialog(DialogType.SongTags(song = currentSong, target = target))
-    }
+    fun showSongTagsDialog(song: Song, target: SongEditTarget) = songMetadataEditing.showSongTagsDialog(song, target)
 
-    fun showSongLanguagesDialog(song: Song, target: SongEditTarget) {
-        val currentSong = songForLabelEditing(song, target) ?: return
-        showDialog(DialogType.SongLanguages(song = currentSong, target = target))
-    }
+    fun showSongLanguagesDialog(song: Song, target: SongEditTarget) = songMetadataEditing.showSongLanguagesDialog(song, target)
 
-    private fun songForLabelEditing(song: Song, target: SongEditTarget): Song? {
-        if (target is SongEditTarget.File) return song
-        val metadata = parseChordPro(songTextOf(target) ?: return null).metadata
-        return song.copy(tags = normalizedTags(metadata.tags), languages = metadata.languages)
-    }
+    fun showSongMetadataDialog(song: Song, target: SongEditTarget) = songMetadataEditing.showSongMetadataDialog(song, target)
 
-    /**
-     * Opens the metadata editor on the source text, since the album, the composer and the rest are not part of the
-     * song list's lighter metadata, and the title there already has the subtitle in it.
-     */
-    fun showSongMetadataDialog(song: Song, target: SongEditTarget) {
-        val metadata = parseChordPro(songTextOf(target) ?: return).metadata
-        showDialog(
-            DialogType.SongMetadata(
-                song = song,
-                values = SONG_METADATA_FIELDS.associateWith { ChordProMetadataFields.valueOf(metadata, it).orEmpty() },
-                target = target,
-            )
-        )
-    }
-
-    /**
-     * Writes the fields of the metadata dialog that were changed there, and only those: a field another device changed
-     * while the dialog was open, and which the user left as it was offered, keeps the other device's value.
-     */
     fun setSongMetadata(
         target: SongEditTarget,
         values: Map<ChordProMetadataFields.Field, String>,
         offeredValues: Map<ChordProMetadataFields.Field, String>,
-    ) {
-        val changed = values.filter { (field, value) -> value.trim() != offeredValues[field]?.trim() }
-        if (changed.isNotEmpty()) editSong(target) { text -> setChordProMetadata(text = text, values = changed) }
-    }
+    ) = songMetadataEditing.setSongMetadata(target, values, offeredValues)
 
-    /** Opens the link editor on the source text, since links are not part of the song list's lighter metadata. */
-    fun showSongLinksDialog(song: Song, target: SongEditTarget) {
-        val text = songTextOf(target) ?: return
-        showDialog(DialogType.SongLinks(song = song, links = parseChordPro(text).metadata.links, target = target))
-    }
+    fun showSongLinksDialog(song: Song, target: SongEditTarget) = songMetadataEditing.showSongLinksDialog(song, target)
 
-    /** What [text] says about the song beyond its lines, for the sheet of what the song is (see [hasSongInfo] for the button opening it). */
-    fun songMetadataOf(text: String): ChordProMetadata = parseChordPro(text).metadata
+    fun songMetadataOf(text: String) = songMetadataEditing.songMetadataOf(text)
 
-    /**
-     * Whether the sheet of what the song is has anything to show for [text], from a scan of its directives alone: none
-     * of what the sheet shows is changed by the notation a full parse brings the chords into, and the scan is a
-     * fraction of the parse, which matters on the frame of a swipe that makes another song the current one.
-     */
-    fun hasSongInfo(text: String): Boolean = ChordProParser.parseMetadata(text).hasSongInfo
+    fun hasSongInfo(text: String) = songMetadataEditing.hasSongInfo(text)
 
-    /**
-     * Writes the link dialog's changes together. Links added by sync while it was open and never offered there stay
-     * in the file, as tags do: a snapshot of one dialog is not a request to erase another device's additions.
-     */
-    fun setSongLinks(target: SongEditTarget, links: List<ChordProLink>, offeredLinks: List<ChordProLink>) {
-        val offeredUrls = offeredLinks.mapTo(mutableSetOf()) { it.url }
-        editSong(target) { text ->
-            val addedElsewhere = parseChordPro(text).metadata.links.filterNot { it.url in offeredUrls }
-            setChordProLinks(text = text, links = links + addedElsewhere)
-        }
-    }
+    fun setSongLinks(target: SongEditTarget, links: List<ChordProLink>, offeredLinks: List<ChordProLink>) = songMetadataEditing.setSongLinks(target, links, offeredLinks)
 
-    /** Opens the cover sheet with the cover currently declared in the editor's text. */
-    fun showSongCoverArtDialog(song: Song, target: SongEditTarget) {
-        val currentSong = when (target) {
-            is SongEditTarget.File -> song
-            is SongEditTarget.EditorDraft -> song.copy(coverArtUrl = parseChordPro(songTextOf(target) ?: return).metadata.coverArt)
-        }
-        showDialog(DialogType.CoverArtSearch(song = currentSong, target = target))
-    }
+    fun showSongCoverArtDialog(song: Song, target: SongEditTarget) = songMetadataEditing.showSongCoverArtDialog(song, target)
 
-    /**
-     * Makes [url] the song's cover, or takes the cover off for null, from the cover search sheet. Written into the
-     * file like a tag is, so that the cover travels with the song wherever it goes.
-     */
-    fun setSongCoverArt(target: SongEditTarget, url: String?) = editSong(target) { text ->
-        setChordProCoverArt(text = text, url = url)
-    }
+    fun setSongCoverArt(target: SongEditTarget, url: String?) = songMetadataEditing.setSongCoverArt(target, url)
 
     fun coverArtQueryOf(song: Song, target: SongEditTarget) = coverArtSearchController.coverArtQueryOf(song, target)
 
@@ -1695,24 +1625,7 @@ class CampfireViewModel(
 
     private fun clearCoverArtSearch() = coverArtSearchController.clearCoverArtSearch()
 
-    /**
-     * The text a metadata dialog is built on: the editor's own while it is the editor's draft the dialog edits, since
-     * that is what its edit is applied to, and the file's otherwise.
-     */
-    private fun songTextOf(target: SongEditTarget) = when (target) {
-        // Read the field itself: draft reporting runs asynchronously and can still be one edit behind a tap.
-        is SongEditTarget.EditorDraft ->
-            retainedEditorField(target.fileName)?.text?.toString() ?: _editorDraft.value?.takeIf { it.fileName == target.fileName }?.text
-        is SongEditTarget.File -> songTexts.value[target.fileName]
-    }
-
-    /** Writes [edit] into the file, or hands it to the editor where the dialog asking for it edits the editor's draft. */
-    private fun editSong(target: SongEditTarget, edit: (String) -> String) {
-        when (target) {
-            is SongEditTarget.EditorDraft -> _editorTextEdits.tryEmit(EditorTextEdit(fileName = target.fileName, edit = edit))
-            is SongEditTarget.File -> launchLibraryChange { editSongText(target.fileName, edit) }
-        }
-    }
+    private fun songTextOf(target: SongEditTarget) = songMetadataEditing.songTextOf(target)
 
     private suspend fun editSongText(fileName: String, edit: (String) -> String) = songTextStore.editSongText(fileName, edit)
 
@@ -1977,51 +1890,13 @@ class CampfireViewModel(
 
     fun resetCapo(songFileName: String, setlistFileName: String?) = overrides.resetCapo(songFileName, setlistFileName)
 
-    /**
-     * Opens the "Song defaults" sheet on what the file declares for the four values the song is played by, the key in
-     * the reader's notation (the way the editor's field shows it) and the tempo as the number the click reads out of it.
-     * [setlistFileName] is where the song is being read, whose overrides the sheet names and can take back. Opened from
-     * the editor, it reads and changes the text being typed there instead, which is read through no setlist.
-     */
-    fun showSongPlayingDialog(song: Song, setlistFileName: String?, target: SongEditTarget) {
-        val metadata = parseChordPro(songTextOf(target) ?: return).metadata
-        showDialog(
-            DialogType.SongPlaying(
-                // The sheet's key field notes a {transpose} the text opens with, which the draft may have changed since
-                // the editor last read it.
-                song = if (target is SongEditTarget.EditorDraft) song.copy(transpose = metadata.transpose) else song,
-                setlistFileName = setlistFileName.takeIf { target is SongEditTarget.File },
-                target = target,
-                values = mapOf(
-                    ChordProMetadataFields.Field.KEY to metadata.key?.takeIf { it.isNotBlank() }?.let { songRenderer.editorKeyOf(it, editorNotation) }.orEmpty(),
-                    ChordProMetadataFields.Field.CAPO to metadata.capo?.toString().orEmpty(),
-                    ChordProMetadataFields.Field.TEMPO to ChordProTempo.parse(metadata.tempo)?.toString().orEmpty(),
-                    ChordProMetadataFields.Field.TIME to metadata.time?.takeIf { it.isNotBlank() }.orEmpty(),
-                ),
-            )
-        )
-    }
+    fun showSongPlayingDialog(song: Song, setlistFileName: String?, target: SongEditTarget) = songMetadataEditing.showSongPlayingDialog(song, setlistFileName, target)
 
-    /**
-     * Writes the fields of the "Song defaults" sheet that were changed there, and only those, as [setSongMetadata]
-     * does. The key is typed in the reader's notation and written in the standard one, converted on its own rather
-     * than with the file around it, which is already in the standard notation; a blank value takes a directive off.
-     */
     fun setSongPlaying(
         target: SongEditTarget,
         values: Map<ChordProMetadataFields.Field, String>,
         offeredValues: Map<ChordProMetadataFields.Field, String>,
-    ) {
-        val changed = values
-            .filter { (field, value) -> value.trim() != offeredValues[field]?.trim() }
-            .mapValues { (field, value) -> if (field == ChordProMetadataFields.Field.KEY) fileKeyOf(value) else value }
-        if (changed.isNotEmpty()) editSong(target) { text -> setChordProMetadata(text = text, values = changed) }
-    }
-
-    /** A key typed in the editor's notation, as the file is to hold it; the inverse of [SongRenderer.editorKeyOf]. */
-    private fun fileKeyOf(key: String) = key.trim().takeIf { it.isNotEmpty() }?.let { typed ->
-        parseChordPro(fileTextOf("{key: $typed}")).metadata.key ?: typed
-    }.orEmpty()
+    ) = songMetadataEditing.setSongPlaying(target, values, offeredValues)
 
     /**
      * The view model going (the activity finished, or the desktop window disposed) does not take what is still waiting
