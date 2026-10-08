@@ -82,7 +82,6 @@ skiko-angle-windows-x64 = { module = "org.jetbrains.skiko:skiko-awt-runtime-angl
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "gradle" }
-android-library = { id = "com.android.library", version.ref = "gradle" }
 android-multiplatformLibrary = { id = "com.android.kotlin.multiplatform.library", version.ref = "gradle" }
 android-test = { id = "com.android.test", version.ref = "gradle" }
 androidx-baselineprofile = { id = "androidx.baselineprofile", version.ref = "androidx-benchmark" }
