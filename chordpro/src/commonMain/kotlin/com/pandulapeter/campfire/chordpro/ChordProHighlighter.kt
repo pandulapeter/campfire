@@ -188,9 +188,7 @@ object ChordProHighlighter {
     /** What the directive is set to, trimmed, a `{meta: …}` item's without its name. */
     private fun ChordProDirectives.Directive.valueText(): String {
         val directive = ChordProMetaItems.standardMeta(this) ?: this
-        return directive.value?.trim()
-            ?.let { if (directive.name == META) it.substringAfter(' ', missingDelimiterValue = "").trim() else it }
-            .orEmpty()
+        return (if (directive.name == META) ChordProMetaItems.metaValue(directive) else directive.value)?.trim().orEmpty()
     }
 
     /** The kind of metadata this directive declares where a song can only be one of it, see [TokenType.DUPLICATE]. */

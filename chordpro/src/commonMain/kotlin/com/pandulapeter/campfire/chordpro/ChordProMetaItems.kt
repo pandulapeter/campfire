@@ -46,10 +46,7 @@ internal object ChordProMetaItems {
      */
     fun tag(directive: Directive): String? = when (directive.name) {
         TAG_NAME -> directive.value?.trim()
-        META -> directive.value?.trim()
-            ?.takeIf { it.substringBefore(' ').trim().equals(TAG_NAME, ignoreCase = true) }
-            ?.substringAfter(' ', missingDelimiterValue = "")
-            ?.trim()
+        META -> directive.takeIf(::isTagMeta)?.let(::metaValue)?.trim()
 
         else -> null
     }?.takeIf { it.isNotEmpty() }
@@ -88,9 +85,7 @@ internal object ChordProMetaItems {
      */
     fun language(directive: Directive): String? = when (directive.name) {
         LANGUAGE_NAME, LANGUAGE_SHORT_NAME -> directive.value
-        META -> directive.value?.trim()
-            ?.takeIf { it.substringBefore(' ').trim().isLanguageKey }
-            ?.substringAfter(' ', missingDelimiterValue = "")
+        META -> directive.takeIf(::isLanguageMeta)?.let(::metaValue)
 
         else -> null
     }?.let(::languageCode)
@@ -113,21 +108,16 @@ internal object ChordProMetaItems {
         .takeIf { it.isNotEmpty() && it !in absentLanguageCodes }
 
     /** True for a `{meta}` directive whose key names the language, whatever its value then turns out to be worth. */
-    fun isLanguageMeta(directive: Directive) = directive.name == META && directive.value?.trim()?.substringBefore(' ')?.trim()?.isLanguageKey == true
+    fun isLanguageMeta(directive: Directive) = metaKey(directive)?.isLanguageKey == true
 
     /** The same for a `{meta}` directive whose key names a tag, which is the spelling ChordPro documents next to `{tag}`. */
-    internal fun isTagMeta(directive: Directive) = directive.name == META &&
-            directive.value?.trim()?.substringBefore(' ')?.trim()?.equals(TAG_NAME, ignoreCase = true) == true
+    internal fun isTagMeta(directive: Directive) = metaKey(directive)?.equals(TAG_NAME, ignoreCase = true) == true
 
     /**
      * The cover image a directive names, or null if it is not a `{meta: cover …}` one or names nothing the app can load.
      * Any `http` or `https` URL is taken: the library is the user's, and so are the addresses written into it.
      */
-    fun cover(directive: Directive): String? = directive.takeIf(::isCoverMeta)
-        ?.value
-        ?.trim()
-        ?.substringAfter(' ', missingDelimiterValue = "")
-        ?.let(::webUrl)
+    fun cover(directive: Directive): String? = directive.takeIf(::isCoverMeta)?.let(::metaValue)?.let(::webUrl)
 
     /**
      * [value] as a web address, or null where it is not one: trimmed, and taken only when it is an `http` or `https`
@@ -165,22 +155,29 @@ internal object ChordProMetaItems {
     }
 
     /** True for a `{meta}` directive whose key names the cover image, whatever its value then turns out to be worth. */
-    fun isCoverMeta(directive: Directive) = directive.name == META &&
-            directive.value?.trim()?.substringBefore(' ')?.trim()?.equals(COVER_NAME, ignoreCase = true) == true
+    fun isCoverMeta(directive: Directive) = metaKey(directive)?.equals(COVER_NAME, ignoreCase = true) == true
 
     /**
      * The address and optional name a `{meta: link …}` directive holds, or null if it is not one or names nothing a browser opens. Any
      * `http` or `https` URL is taken, for the same reason as a cover's.
      */
     fun link(directive: Directive): ChordProLink? {
-        val value = directive.takeIf(::isLinkMeta)?.value?.trim()?.substringAfter(' ', missingDelimiterValue = "")?.trim() ?: return null
+        val value = directive.takeIf(::isLinkMeta)?.let(::metaValue)?.trim() ?: return null
         val url = webUrl(value.takeWhile { !it.isWhitespace() }) ?: return null
         return ChordProLink(url = url, name = value.drop(url.length).trim().takeIf { it.isNotEmpty() })
     }
 
     /** True for a `{meta}` directive whose key names a link, whatever its value then turns out to be worth. */
-    fun isLinkMeta(directive: Directive) = directive.name == META &&
-            directive.value?.trim()?.substringBefore(' ')?.trim()?.equals(LINK_NAME, ignoreCase = true) == true
+    fun isLinkMeta(directive: Directive) = metaKey(directive)?.equals(LINK_NAME, ignoreCase = true) == true
+
+    /** The key of a `{meta}` directive, the first word of its value, or null for every other directive. */
+    private fun metaKey(directive: Directive) = if (directive.name == META) directive.value?.trim()?.substringBefore(' ')?.trim() else null
+
+    /**
+     * What a `{meta}` directive holds after its key, with the spaces that separate the two left in front of it, or an empty
+     * string where it holds only the key; null where it has no value at all. Meant for a directive whose key has been checked.
+     */
+    internal fun metaValue(directive: Directive) = directive.value?.trim()?.substringAfter(' ', missingDelimiterValue = "")
 
     private val String.isLanguageKey get() = equals(LANGUAGE_NAME, ignoreCase = true) || equals(LANGUAGE_SHORT_NAME, ignoreCase = true)
 }
