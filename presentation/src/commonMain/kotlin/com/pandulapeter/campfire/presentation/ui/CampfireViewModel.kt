@@ -145,12 +145,14 @@ import com.pandulapeter.campfire.presentation.ui.screens.songDetails.PINCH_SENSI
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.hasSongInfo
 import com.pandulapeter.campfire.presentation.ui.fontScale.FontScaleAccumulator
 import com.pandulapeter.campfire.presentation.ui.fontScale.PINCH_SENSITIVITY
+import com.pandulapeter.campfire.presentation.ui.screens.songEditor.EditorSession
 import com.pandulapeter.campfire.presentation.ui.songInfo.hasSongInfo
 import com.pandulapeter.campfire.presentation.ui.state.CoverArtSearchController
 import com.pandulapeter.campfire.presentation.ui.state.DebouncedPreference
 import com.pandulapeter.campfire.presentation.ui.state.ImportController
 import com.pandulapeter.campfire.presentation.ui.state.ImportController.ImportRequest
 import com.pandulapeter.campfire.presentation.ui.state.LibraryState
+import com.pandulapeter.campfire.presentation.ui.state.PendingExit
 import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.Companion.BACK_STACK_KEY
@@ -181,7 +183,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelAndJoin
@@ -194,16 +195,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.Json
@@ -487,16 +482,6 @@ class CampfireViewModel(
     /** See [FontScaleController.settledFontScale]. */
     val settledFontScale: Float get() = fontScaleController.settledFontScale
 
-    /**
-     * True until the draft a previous run left behind has been read and, where there was one, the editor reopened on
-     * it (see [recoverEditorDraft]). The launch screen waits for it, so that the app is uncovered on the editor rather
-     * than on the songs a moment before the editor slides in over them.
-     */
-    private val _isEditorDraftRecoveryPending = MutableStateFlow(true)
-
-    /** Completed with whether the editor was reopened on a stored draft, which the other start-up navigations defer to. */
-    private val editorDraftRecovery = CompletableDeferred<Boolean>()
-
     private val preferencesController: PreferencesController = PreferencesController(
         scope = viewModelScope,
         getUserPreferences = getUserPreferences,
@@ -548,7 +533,7 @@ class CampfireViewModel(
     private val songTextStore: SongTextStore = SongTextStore(
         scope = viewModelScope,
         backStack = backStack,
-        editorDraftFileName = { _editorDraft.value?.fileName },
+        editorDraftFileName = { editorSession.editorDraft.value?.fileName },
         messageSink = messageSink,
         getSongContent = getSongContent,
         saveSongContent = saveSongContent,
@@ -562,8 +547,8 @@ class CampfireViewModel(
         songRenderer = songRenderer,
         editorNotation = { editorNotation },
         retainedEditorField = { retainedEditorField(it) },
-        editorDraft = { _editorDraft.value },
-        emitEditorTextEdit = { _editorTextEdits.tryEmit(it) },
+        editorDraft = { editorSession.editorDraft.value },
+        emitEditorTextEdit = { editorSession.emitEditorTextEdit(it) },
         parseChordPro = parseChordPro,
         setChordProCoverArt = setChordProCoverArt,
         setChordProLanguages = setChordProLanguages,
@@ -583,49 +568,42 @@ class CampfireViewModel(
     /** See [SongTextStore.failedSongFileNames]. */
     val failedSongFileNames: StateFlow<Set<String>> get() = songTextStore.failedSongFileNames
 
-    /**
-     * What the open editor currently has in it, reported by the screen as it is typed but never written until the
-     * user asks for it. The text itself still lives in the field's own state; this copy exists so that leaving the
-     * screen can be stopped ([navigateBack]) and the save finished from the confirmation dialog without the screen
-     * that holds the field being there any more. Null whenever no editor is open.
-     */
-    private val _editorDraft = MutableStateFlow<SongContent?>(null)
+    private val editorSession: EditorSession = EditorSession(
+        scope = viewModelScope,
+        dialogHost = dialogHost,
+        messageSink = messageSink,
+        songTextStore = songTextStore,
+        songRenderer = songRenderer,
+        backStack = backStack,
+        userPreferences = userPreferences,
+        arePreferencesLoaded = arePreferencesLoaded,
+        getSongContent = getSongContent,
+        getEditorDraft = getEditorDraft,
+        saveEditorDraft = saveEditorDraft,
+        updateBackStack = { updateBackStack(update = it) },
+        popBackStack = { popBackStack() },
+        takePendingExit = { takePendingExit() },
+        requestExit = { onExit, onCancelled -> requestExit(onExit = onExit, onCancelled = onCancelled) },
+    )
 
-    /**
-     * The draft as it was last put on disk, so that a pause that finds the same text writes nothing. Only read or written
-     * under [editorDraftStoreMutex], and only once [recoverEditorDraft] has read what a previous run left.
-     */
-    private var storedEditorDraft: SongContent? = null
-    private val editorDraftStoreMutex = Mutex()
+    /** See [EditorSession.editorRevertRequests]. */
+    val editorRevertRequests get() = editorSession.editorRevertRequests
 
-    /**
-     * The open editor's field as its screen last saved it, by file name. The screen's saved state only holds the text,
-     * and not even that for a long document (see the editor's saver); this holds the field itself, for the
-     * restorations this object lives through - a rotation, the system changing its theme or language - where the
-     * undo history and a draft of any length can simply be handed back.
-     */
-    private var retainedEditorField: Pair<String, TextFieldState>? = null
+    /** See [EditorSession.editorTextEdits]. */
+    val editorTextEdits get() = editorSession.editorTextEdits
+
+    /** See [EditorSession.hasUnsavedEditorChanges]. */
+    val hasUnsavedEditorChanges: StateFlow<Boolean> get() = editorSession.hasUnsavedEditorChanges
+
+    /** See [EditorSession.isSavingSong]. */
+    val isSavingSong: StateFlow<Boolean> get() = editorSession.isSavingSong
+
+    /** See [EditorSession.editorNotation]. */
+    val editorNotation get() = editorSession.editorNotation
 
     /** Emitted when the item of the top level screen that is already open is pressed; that screen scrolls to its top. */
     private val _scrollToTopRequests = MutableSharedFlow<CampfireDestination.TopLevel>(extraBufferCapacity = 1)
     val scrollToTopRequests = _scrollToTopRequests.asSharedFlow()
-
-    /** Asked for by the confirmation dialog and answered by the editor screen, see [revertEditorChanges]. */
-    private val _editorRevertRequests = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
-    val editorRevertRequests = _editorRevertRequests.asSharedFlow()
-
-    /**
-     * The metadata dialogs' changes to the editor's text, opened from its own overflow menu. Answered by the screen,
-     * like [editorRevertRequests], since the field is the screen's and a change made through its own editing is one
-     * more step of its undo history that Save writes with everything else typed.
-     */
-    private val _editorTextEdits = MutableSharedFlow<EditorTextEdit>(extraBufferCapacity = 1)
-    val editorTextEdits = _editorTextEdits.asSharedFlow()
-
-    /** True while the editor's text differs from what is on disk, which is what [navigateBack] asks before it leaves. */
-    val hasUnsavedEditorChanges = combine(_editorDraft, songTexts, userPreferences) { draft, songTexts, _ ->
-        draft != null && draft.text != songTexts[draft.fileName]?.let(::editorTextOf)
-    }.asState(false)
 
     private val overrides: PlayingOverrides = PlayingOverrides(
         scope = viewModelScope,
@@ -723,7 +701,7 @@ class CampfireViewModel(
         backStack = backStack,
         updateBackStack = { updateBackStack(update = it) },
         songTexts = songTexts,
-        editorDraft = _editorDraft,
+        editorDraft = editorSession.editorDraft,
         hasUnsavedEditorText = { hasUnsavedEditorText() },
         openImportedSong = { openImportedSong(it) },
         launchFileTransfer = { launchFileTransfer(it) },
@@ -862,36 +840,17 @@ class CampfireViewModel(
     private var isLeaving = false
 
     /**
-     * The last write of the editor's text, from its Save action or from the `UnsavedChanges` dialog, which closing the
-     * application waits for, see [requestExit].
-     */
-    private var currentSaveJob: Job? = null
-
-    /** The save the `UnsavedChanges` dialog is waiting for, so that a second press of its Save does not start another. */
-    private var editorLeaveJob: Job? = null
-
-    /**
      * The exit that asked the `UnsavedChanges` question, run once it is answered with Save or Discard. Any other way
      * the dialog goes away is staying, and that is reported too: on macOS the exit may be the system's own quit
      * request, which has to be answered either way (see the desktop app module).
      */
     private var pendingExit: PendingExit? = null
 
-    /** An exit that is waiting for an answer, and what to tell the caller if the answer is staying. */
-    private class PendingExit(
-        val exit: () -> Unit,
-        val onCancelled: () -> Unit,
-    )
-
     /**
      * Taken rather than read, so that exactly one of an exit's two callbacks can ever run: the branch that is about to
      * run the exit holds it before [leaveEditor] dismisses the dialog, which would otherwise report it as cancelled.
      */
     private fun takePendingExit() = pendingExit.also { pendingExit = null }
-
-    /** True while the editor's text is being written, which it shows in place of its "Saved" label. */
-    private val _isSavingSong = MutableStateFlow(false)
-    val isSavingSong: StateFlow<Boolean> = _isSavingSong.asStateFlow()
 
     /** See [MessageSink.messageQueue]. */
     val messageQueue: StateFlow<List<IndexedValue<Message>>> get() = messageSink.messageQueue
@@ -940,8 +899,8 @@ class CampfireViewModel(
         backStack = backStack,
         screenData = screenData,
         userPreferencesState = userPreferencesState,
-        isEditorDraftRecoveryPending = _isEditorDraftRecoveryPending,
-        editorDraftRecovery = editorDraftRecovery,
+        isEditorDraftRecoveryPending = editorSession.isEditorDraftRecoveryPending,
+        editorDraftRecovery = editorSession.editorDraftRecovery,
         syncProviders = syncProviders,
         songFilter = _songFilter,
         getScreenData = getScreenData,
@@ -979,20 +938,7 @@ class CampfireViewModel(
         songTextStore.startFollowingFiles()
         importController.startQueue(firstRunController.demoLibraryDecision)
         dialogHost.startClosingWithSong(allSongs = allSongs, isLoading = isLoading, songsBeingRenamed = songsBeingRenamed)
-        // The editor's unsaved text as a previous run left it, when the process ended in the background (see
-        // onAppPaused). Once that is settled, whatever leaves the editor with nothing unsaved takes the stored
-        // draft with it - a save, a discard, a revert, the song deleted - so a crash after a save never brings back
-        // text that was saved. Asked of the draft itself rather than of hasUnsavedEditorChanges alone, which may not
-        // have caught up yet with a draft this has just reopened.
-        viewModelScope.launch {
-            try {
-                editorDraftRecovery.complete(recoverEditorDraft())
-            } finally {
-                editorDraftRecovery.complete(false)
-                _isEditorDraftRecoveryPending.value = false
-            }
-            hasUnsavedEditorChanges.collect { if (!it && !hasUnsavedEditorText()) storeEditorDraft(null) }
-        }
+        editorSession.startRecovery()
         savedStateStore.startPersisting(
             songFilter = _songFilter,
             songPickerSelectedTags = songPickerSelectedTags,
@@ -1036,7 +982,7 @@ class CampfireViewModel(
         // metronome but not the one that was started. The panel the click was played from is a preference and stays
         // where the user put it, so the next song is read to a click without asking for the instrument again.
         if (isMetronomeScreenLeft(previousTop = previousTop, top = backStack.lastOrNull())) metronome.stop()
-        if (backStack.none { it is CampfireDestination.SongEditor }) retainedEditorField = null
+        editorSession.onBackStackChanged()
         backStack.mapNotNullTo(mutableSetOf()) { (it as? CampfireDestination.SongDetails)?.id }.let { ids ->
             songDetailsCurrentSongs.keys.retainAll(ids)
             songDetailsTargetSongs.keys.retainAll(ids)
@@ -1259,7 +1205,7 @@ class CampfireViewModel(
      */
     fun requestExit(onExit: () -> Unit, onCancelled: () -> Unit = {}) {
         viewModelScope.launch {
-            currentSaveJob?.join()
+            editorSession.currentSaveJob?.join()
             // A second request - Cmd+Q pressed again while the question is up - answers the first one, which is
             // still waiting for something.
             takePendingExit()?.onCancelled?.invoke()
@@ -1318,7 +1264,7 @@ class CampfireViewModel(
         withTimeoutOrNull(EXIT_IMPORT_GRACE) { isImporting.first { !it } }
         // The stored draft is removed by a collector a few hops after the editor lets its text go, which a process that
         // ends now would not wait for: a Discard answered on the way out would come back as "unsaved changes restored".
-        if (!_isEditorDraftRecoveryPending.value) storeEditorDraft(currentEditorDraftToStore())
+        if (!editorSession.isEditorDraftRecoveryPending.value) storeEditorDraft(currentEditorDraftToStore())
         // The window is already hidden, so a click still sounding while the run is waited for would come from nowhere.
         metronome.stop()
         // The process ends right after this, and onCleared's detached write would race it - or, on a macOS Quit, never
@@ -1339,8 +1285,7 @@ class CampfireViewModel(
         }
     }
 
-    /** [hasUnsavedEditorChanges] as of this moment, for a decision taken right after a write rather than drawn. */
-    private fun hasUnsavedEditorText() = _editorDraft.value?.let { it.text != songTexts.value[it.fileName]?.let(::editorTextOf) } == true
+    private fun hasUnsavedEditorText() = editorSession.hasUnsavedEditorText()
 
     private fun popBackStack(isPredictiveBackCompleted: Boolean = false) {
         if (backStack.size > 1) {
@@ -1420,7 +1365,7 @@ class CampfireViewModel(
     fun deleteSong(fileName: String) = launchLibraryChange {
         val haveReferencesBeenRemoved = deleteSong.invoke(fileName)
         // Nobody is asked to save a file that has just been deleted, so the draft goes before the screens holding it.
-        _editorDraft.update { null }
+        editorSession.clearEditorDraft()
         // A screen showing the file that has just gone is closed first, or it would sit there on nothing. The editor
         // goes before the details screen underneath it, so both have to be checked rather than only the top one.
         while (backStack.lastOrNull().let { it is CampfireDestination.SongEditor && it.fileName == fileName || it is CampfireDestination.SongDetails && fileName in it.songFileNames }) {
@@ -1472,43 +1417,17 @@ class CampfireViewModel(
 
     // The editor
 
-    fun openEditor(fileName: String, shouldStartInsideFirstSection: Boolean = false) {
-        if (backStack.lastOrNull() !is CampfireDestination.SongEditor) {
-            updateBackStack { add(CampfireDestination.SongEditor(fileName = fileName, shouldStartInsideFirstSection = shouldStartInsideFirstSection)) }
-        }
-    }
+    fun openEditor(fileName: String, shouldStartInsideFirstSection: Boolean = false) = editorSession.openEditor(fileName, shouldStartInsideFirstSection)
 
-    /** Reported by the editor on every change, see [_editorDraft]. Nothing is written here. */
-    fun onEditorTextChanged(fileName: String, text: String) = _editorDraft.update { SongContent(fileName = fileName, text = text) }
+    fun onEditorTextChanged(fileName: String, text: String) = editorSession.onEditorTextChanged(fileName, text)
 
-    /**
-     * Reported by the editor once it is gone, whatever became of the text it had. An editor that is still on the
-     * stack is only being composed again - a rotation, the system changing its theme - and its draft stands until the
-     * new composition reports it: dropped in between, the moment would read as "nothing unsaved" to everything that
-     * asks, the update gate and the way out of the editor included.
-     */
-    fun onEditorClosed(fileName: String) {
-        if (backStack.none { it is CampfireDestination.SongEditor && it.fileName == fileName }) {
-            _editorDraft.update { draft -> draft?.takeUnless { it.fileName == fileName } }
-        }
-    }
+    fun onEditorClosed(fileName: String) = editorSession.onEditorClosed(fileName)
 
-    /**
-     * Called by the editor whenever its state is saved. That includes one last time as the screen leaves for good,
-     * by which time the stack has let go of it - and then there is nothing to keep the field for.
-     */
-    fun retainEditorField(fileName: String, textFieldState: TextFieldState) {
-        if (backStack.any { it is CampfireDestination.SongEditor && it.fileName == fileName }) {
-            retainedEditorField = fileName to textFieldState
-        }
-    }
+    fun retainEditorField(fileName: String, textFieldState: TextFieldState) = editorSession.retainEditorField(fileName, textFieldState)
 
-    fun retainedEditorField(fileName: String) = retainedEditorField?.takeIf { it.first == fileName }?.second
+    fun retainedEditorField(fileName: String) = editorSession.retainedEditorField(fileName)
 
-    /** Reported by the editor when it came back from a saved state that could not hold its unsaved text. */
-    fun onEditorDraftLost() {
-        sendMessage(Message.EditorDraftLost)
-    }
+    fun onEditorDraftLost() = editorSession.onEditorDraftLost()
 
     /**
      * Called by the app whenever it stops being the one in front (ON_PAUSE), which is the last moment it is certainly
@@ -1524,7 +1443,7 @@ class CampfireViewModel(
      */
     fun onAppPaused(): SyncProgress? {
         val syncProgress = startScheduledSynchronization()
-        if (!_isEditorDraftRecoveryPending.value) {
+        if (!editorSession.isEditorDraftRecoveryPending.value) {
             val draft = currentEditorDraftToStore()
             viewModelScope.launch { storeEditorDraft(draft) }
         }
@@ -1535,169 +1454,22 @@ class CampfireViewModel(
 
     fun onAppStarted() = metronomeController.onAppStarted()
 
-    /**
-     * The unsaved text as the file would hold it, or null when nothing is unsaved. Stored as the file would hold it
-     * rather than as the field shows it, so that it means the same chords whatever the notation is by the time it is
-     * reopened.
-     */
-    private fun currentEditorDraftToStore() = _editorDraft.value?.takeIf { hasUnsavedEditorText() }?.let { it.copy(text = fileTextOf(it.text)) }
+    private fun currentEditorDraftToStore() = editorSession.currentEditorDraftToStore()
 
-    /** Not cancellable once started: a pause is often the last thing the process does. A write that fails is only a copy lost. */
-    private suspend fun storeEditorDraft(draft: SongContent?) = withContext(NonCancellable) {
-        editorDraftStoreMutex.withLock {
-            if (draft == storedEditorDraft) return@withLock
-            try {
-                saveEditorDraft(draft)
-                storedEditorDraft = draft
-            } catch (exception: CancellationException) {
-                throw exception
-            } catch (exception: Exception) {
-                println("Could not store the editor's draft: ${exception::class.simpleName}")
-            }
-        }
-    }
+    private suspend fun storeEditorDraft(draft: SongContent?) = editorSession.storeEditorDraft(draft)
 
-    /**
-     * Reopens the editor on the draft a previous run left, answering whether it did. Not over a stack that already has
-     * an editor - an Android process restored on the editor has its text from the saved state - and not for a draft the
-     * file already holds. A file that is gone is reopened all the same: the draft is all there is, and saving puts the
-     * file back, which is what an editor whose file goes while it is open does too.
-     */
-    private suspend fun recoverEditorDraft(): Boolean {
-        val draft = try {
-            getEditorDraft()
-        } catch (exception: CancellationException) {
-            throw exception
-        } catch (exception: Exception) {
-            println("Could not read the editor's draft: ${exception::class.simpleName}")
-            null
-        }
-        editorDraftStoreMutex.withLock { storedEditorDraft = draft }
-        if (draft == null || backStack.any { it is CampfireDestination.SongEditor }) return false
-        val content = getSongContent(draft.fileName)
-        // The draft is in the file's notation and the field shows the reader's, which only the preferences can say.
-        arePreferencesLoaded.first { it }
-        val text = editorTextOf(draft.text)
-        if (content != null && editorTextOf(content.text) == text) {
-            storeEditorDraft(null)
-            return false
-        }
-        content?.let { songTextStore.updateSongTexts { texts -> texts + (it.fileName to it.text) } }
-        // The draft is the editor's before the editor exists, so that nothing asking whether there is unsaved text in
-        // the moments before it composes - a pause, the update gate - hears "no".
-        onEditorTextChanged(fileName = draft.fileName, text = text)
-        updateBackStack { add(CampfireDestination.SongEditor(fileName = draft.fileName)) }
-        // Taken by the editor as its field, see LoadedSongEditor, the same way a field it retained across a rotation is.
-        retainedEditorField = draft.fileName to TextFieldState(initialText = text)
-        sendMessage(Message.EditorDraftRestored)
-        if (content == null) sendMessage(Message.EditedSongFileGone)
-        return true
-    }
+    fun saveEditorChangesAndLeave() = editorSession.saveEditorChangesAndLeave()
 
-    /**
-     * The "Save" answer of the unsaved changes dialog. The editor holds the only copy of the text until the file
-     * does, so leaving - and, where the dialog was asked by [requestExit], ending the process - is what a write that
-     * succeeded earns, not what follows one that was started. The dialog stays up while the file is written. A write
-     * that fails takes the dialog away and leaves the editor as it was, which is what the same failure does behind
-     * the editor's own Save button; a dialog dismissed in the meantime still means staying, with the text saved.
-     */
-    fun saveEditorChangesAndLeave() {
-        if (editorLeaveJob?.isActive == true) return
-        val draft = _editorDraft.value ?: return leaveEditorWithoutSaving()
-        editorLeaveJob = viewModelScope.launch {
-            val isSaved = writeEditorText(fileName = draft.fileName, text = draft.text)
-            when {
-                !isSaved -> dismissDialog()
-                visibleDialog.value == DialogType.UnsavedChanges -> {
-                    // Taken before leaving, which dismisses the dialog and would otherwise report this exit as
-                    // cancelled.
-                    val exit = takePendingExit()
-                    leaveEditor()
-                    exit?.exit?.invoke()
-                }
-            }
-        }.also { currentSaveJob = it }
-    }
+    fun leaveEditorWithoutSaving() = editorSession.leaveEditorWithoutSaving()
 
-    /** The "Discard" answer of the unsaved changes dialog, and the only way typed text is ever thrown away. */
-    fun leaveEditorWithoutSaving() {
-        val exit = takePendingExit()
-        leaveEditor()
-        exit?.let { requestExit(onExit = it.exit, onCancelled = it.onCancelled) }
-    }
+    fun revertEditorChanges() = editorSession.revertEditorChanges()
 
-    /**
-     * The confirmed "Revert" action of the editor. Answered by the screen rather than here, because the text field
-     * belongs to it and putting the saved text back has to go through the field's own editing (and its undo
-     * history); what the text goes back to is [songTexts], which is the file as it was last read or written.
-     */
-    fun revertEditorChanges() {
-        dismissDialog()
-        _editorRevertRequests.tryEmit(Unit)
-    }
-
-    private fun leaveEditor() {
-        // The draft goes first: with it still there, popping the editor would only ask the same question again.
-        _editorDraft.update { null }
-        dismissDialog()
-        popBackStack()
-    }
-
-    /** The editor's Save action. Fire and forget: the outcome reaches the user as the editor's own state. */
-    fun saveSongContent(fileName: String, text: String) = viewModelScope.launch {
-        writeEditorText(fileName = fileName, text = text)
-    }.also { currentSaveJob = it }
-
-    /**
-     * Writes the edited text, keeps the copy the viewer renders from in step, and answers whether the file now holds
-     * it. A failure is reported from here as [Message.SaveFailed], so that every way of saving says the same thing.
-     * Runs on [NonCancellable] because the last save of an editing session can be started as the screen is going
-     * away, which cancels its scope.
-     */
-    private suspend fun writeEditorText(fileName: String, text: String) = try {
-        _isSavingSong.update { true }
-        val fileText = fileTextOf(text)
-        withContext(NonCancellable) {
-            songWriteMutex.withLock { writeSongContent(fileName = fileName, text = fileText) }
-        }.also { isWritten ->
-            // A chord typed in a spelling the notation has a second one for (a German Bb, a ♭) is written the one way
-            // the file holds it, so the field is brought to what was written, or it would never stop being unsaved.
-            val writtenText = editorTextOf(fileText)
-            if (isWritten && writtenText != text) {
-                _editorTextEdits.tryEmit(EditorTextEdit(fileName = fileName) { current -> if (current == text) writtenText else current })
-            }
-        }
-    } catch (exception: CancellationException) {
-        throw exception
-    } catch (exception: Exception) {
-        println("Could not save the song \"$fileName\": ${exception.message}")
-        sendMessage(Message.SaveFailed)
-        false
-    } finally {
-        _isSavingSong.update { false }
-    }
+    fun saveSongContent(fileName: String, text: String) = editorSession.saveSongContent(fileName, text)
 
     private suspend fun writeSongContent(fileName: String, text: String, expectedText: String? = null) =
         songTextStore.writeSongContent(fileName, text, expectedText)
 
     fun loadSongContent(fileName: String) = songTextStore.loadSongContent(fileName)
-
-    /**
-     * The notation the editor's field is written in, the reader's own: the file is converted out of the standard one
-     * as it is opened ([SongRenderer.editorTextOf]) and back into it as it is saved ([SongRenderer.fileTextOf]). It never changes under an open
-     * editor, since Settings is only reached by selecting a top level screen, which takes the editor off the stack.
-     *
-     * Under a numbering it is the standard notation, and only the preview is in numbers: a field in numbers would make
-     * correcting a wrong `{key}` move every chord of the song at Save, the numbers staying where they are, and a key
-     * half typed would leave every number with nothing to count from (see [UserPreferences.Notation.forTyping]).
-     */
-    val editorNotation get() = (userPreferences.value?.chordSpelling?.notation ?: UserPreferences.Notation.STANDARD).forTyping
-
-    /** The text of a file as the editor shows it, see [SongRenderer.editorTextOf]. */
-    private fun editorTextOf(fileText: String) = songRenderer.editorTextOf(fileText, editorNotation)
-
-    /** The editor's text as the file is to hold it, in the standard notation. */
-    private fun fileTextOf(editorText: String) = songRenderer.fileTextOf(editorText, editorNotation)
 
     fun stepTransposition(songFileName: String, setlistFileName: String?, semitones: Int) = overrides.stepTransposition(songFileName, setlistFileName, semitones)
 

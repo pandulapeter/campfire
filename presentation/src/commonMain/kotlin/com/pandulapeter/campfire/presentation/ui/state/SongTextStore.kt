@@ -171,16 +171,18 @@ internal class SongTextStore(
         }
     }
 
-    // A sync run, a rescan or a save replaces files underneath the texts held here, and the details header builds
-    // its writes on them: without this, toggling a tag would write the text that was open over the version sync
-    // had just brought in. The texts are read again rather than only dropped, so a song that is on screen changes
-    // in place instead of flashing a loading indicator. An editor with nothing typed in it follows its file (see
-    // the editor's FollowFileWhileUntouched); one with text of its own now has unsaved changes, which is what asks
-    // the user before their draft replaces the new version — an editor whose file is gone included, where the
-    // draft is all there is.
-    // Every text held here is read again, not only the one that was named: the invalidations are a state, so that
-    // none of them can be lost while this is busy reading, and that state names no file. The texts are few (the
-    // screens on the back stack), and those that did not change come out of the repository's cache.
+    /**
+     * A sync run, a rescan or a save replaces files underneath the texts held here, and the details header builds
+     * its writes on them: without this, toggling a tag would write the text that was open over the version sync
+     * had just brought in. The texts are read again rather than only dropped, so a song that is on screen changes
+     * in place instead of flashing a loading indicator. An editor with nothing typed in it follows its file (see
+     * the editor's FollowFileWhileUntouched); one with text of its own now has unsaved changes, which is what asks
+     * the user before their draft replaces the new version — an editor whose file is gone included, where the
+     * draft is all there is.
+     * Every text held here is read again, not only the one that was named: the invalidations are a state, so that
+     * none of them can be lost while this is busy reading, and that state names no file. The texts are few (the
+     * screens on the back stack), and those that did not change come out of the repository's cache.
+     */
     fun startFollowingFiles() = scope.launch {
         getSongContentInvalidations().drop(1).collect { rereadSongTexts() }
     }
