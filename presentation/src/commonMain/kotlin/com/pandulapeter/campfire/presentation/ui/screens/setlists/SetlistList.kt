@@ -648,7 +648,7 @@ private val DESCRIPTION_TOP_PADDING = 8.dp
  * The index the grid holds a setlist's header at, counted the way [SetlistList] emits the items of the setlists before
  * it while performance mode is off, which it is whenever a setlist is being reordered.
  */
-private fun List<SetlistWithSongs>.headerIndexOf(setlistFileName: String?): Int? {
+internal fun List<SetlistWithSongs>.headerIndexOf(setlistFileName: String?): Int? {
     var index = 0
     forEach { setlistWithSongs ->
         if (setlistWithSongs.setlist.fileName == setlistFileName) return index
@@ -658,7 +658,7 @@ private fun List<SetlistWithSongs>.headerIndexOf(setlistFileName: String?): Int?
 }
 
 /** Swap the row at [from] with its neighbor in the already checked direction. */
-private fun List<String>.movedOnePlace(from: Int, by: Int): List<String> {
+internal fun List<String>.movedOnePlace(from: Int, by: Int): List<String> {
     val result = toMutableList()
     val to = from + by
     val neighbor = result[to]

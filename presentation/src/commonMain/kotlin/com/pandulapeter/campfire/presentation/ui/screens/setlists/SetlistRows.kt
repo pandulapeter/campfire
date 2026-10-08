@@ -18,7 +18,7 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
  * already occupied, the numbers do not change again when [CampfireViewModel.reorderSetlist] writes the same
  * dealing out to the file.
  */
-private fun SetlistWithSongs.rows(dragOrder: List<String>?): List<SetlistRow> {
+internal fun SetlistWithSongs.rows(dragOrder: List<String>?): List<SetlistRow> {
     val songFileNames = dragOrder ?: return entries.map { SetlistRow(entry = it, index = it.index) }
     val entriesBySongFileName = entries.associateBy { it.songFileName }
     return songFileNames.mapIndexedNotNull { position, songFileName ->

@@ -483,7 +483,7 @@ private const val CHORDPRO_REFERENCE_URL = "https://www.chordpro.org/chordpro/ch
  * art sheet of the editor's menu are opened on: the library's entry describes the file, which the text may already
  * have moved away from.
  */
-private fun ChordProSummary.toEditorSong(fileName: String) = Song(
+internal fun ChordProSummary.toEditorSong(fileName: String) = Song(
     fileName = fileName,
     title = metadata.displayTitle(fileName.removeSuffix(LibraryFiles.SONG_EXTENSION)),
     artist = metadata.artist?.takeIf { it.isNotBlank() }.orEmpty(),
@@ -502,7 +502,7 @@ private fun ChordProSummary.toEditorSong(fileName: String) = Song(
  * The start of the line after the first `{start_of_…}`, which in a freshly created song is the blank line its
  * template leaves for the first verse.
  */
-private fun String.caretInsideFirstSection(): Int {
+internal fun String.caretInsideFirstSection(): Int {
     val sectionStart = indexOf(SECTION_START)
     if (sectionStart == -1) return length
     val lineBreak = indexOf('\n', sectionStart)

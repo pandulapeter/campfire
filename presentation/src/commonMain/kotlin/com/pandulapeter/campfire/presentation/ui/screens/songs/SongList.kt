@@ -383,10 +383,10 @@ internal fun SongList(
     }
 }
 
-private fun songItemKey(song: Song) = "song_${song.fileName}"
+internal fun songItemKey(song: Song) = "song_${song.fileName}"
 
 /** The grid index of the item with [key], counted the way [SongList] emits its items. */
-private fun List<SongGroup>.itemIndexOf(key: Any, hasPlaceholder: Boolean): Int? {
+internal fun List<SongGroup>.itemIndexOf(key: Any, hasPlaceholder: Boolean): Int? {
     var index = if (hasPlaceholder) 1 else 0
     forEach { group ->
         if (group.header != null) index++
