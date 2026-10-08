@@ -155,7 +155,11 @@ import com.pandulapeter.campfire.presentation.ui.platform.LibraryPersistence
 import com.pandulapeter.campfire.presentation.ui.platform.requestLibraryPersistence
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportReport
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.followingLibraryFileNames
+import com.pandulapeter.campfire.presentation.ui.screens.setlists.SetlistDetails
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.SetlistWithSongs
+import com.pandulapeter.campfire.presentation.ui.screens.setlists.details
+import com.pandulapeter.campfire.presentation.ui.screens.setlists.mergedSetlistDetails
+import com.pandulapeter.campfire.presentation.ui.screens.setlists.withSongTicked
 import com.pandulapeter.campfire.presentation.ui.screens.settings.DemoLibraryOffer
 import com.pandulapeter.campfire.presentation.ui.screens.settings.LibrarySummary
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsTab
@@ -458,8 +462,8 @@ class CampfireViewModel(
 
     /**
      * Answers the zoom shortcuts the way the browser answers them for a page: [steps] of [FONT_SCALE_STEP] in or out,
-     * or back to [UserPreferences.DEFAULT_FONT_SCALE] for null. Answers whether it did, so that everywhere but the song details screen
-     * the key is left to whoever else wants it.
+     * or back to [UserPreferences.DEFAULT_FONT_SCALE] for null. Answers whether it did, so that everywhere but the song
+     * details screen the key is left to whoever else wants it.
      */
     internal fun zoomSongText(steps: Int?): Boolean {
         if (!isSongTextZoomable) return false
