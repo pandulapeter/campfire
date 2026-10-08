@@ -20,6 +20,8 @@ import com.pandulapeter.campfire.data.model.domain.SyncOutcome
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.model.domain.SyncState
 import com.pandulapeter.campfire.data.repository.api.SyncRepository
+import com.pandulapeter.campfire.data.repository.implementation.base.TEST_NOW
+import com.pandulapeter.campfire.data.repository.implementation.base.testEnvironment
 import com.pandulapeter.campfire.data.repository.implementation.sync.FakeLibraryFileLocalSource
 import com.pandulapeter.campfire.data.repository.implementation.sync.FakePendingAuthorizationStore
 import com.pandulapeter.campfire.data.repository.implementation.sync.FakeSyncAuthenticator
@@ -44,18 +46,17 @@ import com.pandulapeter.campfire.data.source.remote.api.SyncRemoteStorageFullExc
 import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
 import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
@@ -143,8 +144,9 @@ class SyncRepositoryImplTest {
         gate.complete(Unit)
 
         assertEquals(1, progress?.total)
+        automaticRunStarted.await()
         // Well inside the ten seconds an automatic run would otherwise wait for.
-        withContext(Dispatchers.Default) { withTimeout(5_000) { automaticRunStarted.await() } }
+        assertTrue(testScheduler.currentTime < 10_000)
         assertIs<SyncOutcome.Success>(repository.awaitOutcome().lastOutcome)
     }
 
@@ -155,11 +157,87 @@ class SyncRepositoryImplTest {
 
         repository.restore()
         val progress = repository.startScheduledSynchronization()
-        withContext(Dispatchers.Default) { delay(200) }
+        // Well past the ten seconds an automatic run waits for. Not advanceUntilIdle, which leaves the repository's
+        // scope - background work of the test - waiting.
+        advanceTimeBy(20_000)
 
         assertNull(progress)
         assertNull((repository.syncState.value as SyncState.Connected).progress)
         assertEquals(0, provider.listCount)
+    }
+
+    @Test
+    fun `an automatic run starts ten seconds after the latest change`() = runTest {
+        val provider = FakeSyncProvider(account = ACCOUNT)
+        val repository = repository(provider = provider)
+        runCurrent()
+
+        repository.restore()
+        repository.scheduleSynchronization()
+        advanceTimeBy(6_000)
+        repository.scheduleSynchronization()
+        advanceTimeBy(9_900)
+        assertEquals(0, provider.listCount)
+        advanceTimeBy(200)
+
+        assertTrue(provider.listCount > 0)
+        assertIs<SyncOutcome.Success>(repository.awaitOutcome().lastOutcome)
+    }
+
+    @Test
+    fun `a change during a run is carried out after it`() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        val runs = RunCounter()
+        val repository = repository(
+            provider = FakeSyncProvider(
+                files = mapOf(song(1) to "One".encodeToByteArray()),
+                onDownload = { gate.await() },
+                account = ACCOUNT,
+            ),
+            stateLocalSource = FakeSyncStateLocalSource(onSaveIndex = runs::onSaveIndex),
+        )
+        runCurrent()
+
+        repository.restore()
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        repository.syncState.first { (it as? SyncState.Connected)?.progress?.total == 1 }
+        repository.scheduleSynchronization()
+        gate.complete(Unit)
+        repository.awaitOutcome()
+        assertEquals(1, runs.count)
+        advanceTimeBy(10_100)
+
+        assertEquals(2, runs.count)
+    }
+
+    @Test
+    fun `Sync now takes the place of the waiting automatic run`() = runTest {
+        val runs = RunCounter()
+        val repository = repository(
+            provider = FakeSyncProvider(account = ACCOUNT),
+            stateLocalSource = FakeSyncStateLocalSource(onSaveIndex = runs::onSaveIndex),
+        )
+        runCurrent()
+
+        repository.restore()
+        repository.scheduleSynchronization()
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        repository.awaitOutcome()
+        advanceTimeBy(20_000)
+
+        assertEquals(1, runs.count)
+    }
+
+    @Test
+    fun `lastSyncedAt is the clock's time`() = runTest {
+        val repository = repository(provider = FakeSyncProvider(account = ACCOUNT))
+
+        repository.restore()
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        val state = repository.awaitOutcome()
+
+        assertIs<SyncOutcome.Success>(state.lastOutcome)
+        assertEquals(TEST_NOW.toEpochMilliseconds(), state.lastSyncedAt)
     }
 
     @Test
@@ -183,8 +261,9 @@ class SyncRepositoryImplTest {
         repository.scheduleSynchronization()
         repository.cancelSynchronization()
         repository.startScheduledSynchronization()
-        // The run would start on the repository's own dispatcher, so the test waits in real time for one that must not.
-        withContext(Dispatchers.Default) { delay(200) }
+        // Well past the ten seconds an automatic run waits for. Not advanceUntilIdle, which leaves the repository's
+        // scope - background work of the test - waiting.
+        advanceTimeBy(20_000)
 
         assertEquals(0, provider.listCount)
     }
@@ -1073,7 +1152,7 @@ class SyncRepositoryImplTest {
         return { if (++writeCount > 1) throw LibraryStorageException("Full") }
     }
 
-    private fun repository(
+    private fun TestScope.repository(
         provider: FakeSyncProvider,
         authenticator: FakeSyncAuthenticator = FakeSyncAuthenticator(),
         pendingAuthorizationStore: FakePendingAuthorizationStore = FakePendingAuthorizationStore(),
@@ -1094,12 +1173,23 @@ class SyncRepositoryImplTest {
         libraryFileLock = LibraryFileLock(),
         setlistComparison = NoSetlistComparison,
         libraryChanges = LibraryChanges(),
+        environment = testEnvironment(),
     )
 
-    /**
-     * The run is on the repository's own dispatcher rather than the test's, so it is waited for through the state it
-     * reports; a run that never reports is failed by `runTest`'s own timeout.
-     */
+    /** Counts the runs by their opening index write, the one that marks a run as going in an index that said none was. */
+    private class RunCounter {
+        var count = 0
+            private set
+        private var isRunning = false
+
+        fun onSaveIndex(document: String?) {
+            val isMarkedAsRunning = document != null && "\"isRunInProgress\": true" in document
+            if (isMarkedAsRunning && !isRunning) count++
+            isRunning = isMarkedAsRunning
+        }
+    }
+
+    /** Waits for the state a run reports at its end; a run that never reports is failed by `runTest`'s own timeout. */
     private suspend fun SyncRepositoryImpl.awaitOutcome() = syncState.first {
         it is SyncState.Connected && !it.isSyncing && it.lastOutcome != null
     } as SyncState.Connected

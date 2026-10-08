@@ -15,18 +15,15 @@ import com.pandulapeter.campfire.data.model.domain.CoverArtSearchResults
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.repository.api.CoverArtRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
+import com.pandulapeter.campfire.data.repository.implementation.base.RepositoryEnvironment
 import com.pandulapeter.campfire.data.repository.implementation.base.recovering
 import com.pandulapeter.campfire.data.source.local.api.CoverArtLocalSource
 import com.pandulapeter.campfire.data.source.remote.api.CoverArtRemoteSource
 import com.pandulapeter.campfire.data.source.remote.api.CoverArtSearchRemoteSources
 import com.pandulapeter.campfire.data.source.remote.api.hashing.Sha256
 import com.pandulapeter.campfire.data.source.remote.api.model.CoverArtDownload
-import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -44,7 +41,6 @@ import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Single
 import kotlin.time.ComparableTimeMark
 import kotlin.time.Duration.Companion.minutes
-import kotlin.time.TimeSource
 
 /**
  * The copies are named after the SHA-256 of their address, which is a name every storage can hold whatever the
@@ -69,14 +65,11 @@ internal class CoverArtRepositoryImpl(
     private val coverArtRemoteSource: CoverArtRemoteSource,
     private val coverArtSearchRemoteSources: CoverArtSearchRemoteSources,
     songRepository: SongRepository,
+    private val environment: RepositoryEnvironment,
 ) : CoverArtRepository {
 
-    /** Nothing launched here has anybody to throw to, see `SyncRepositoryImpl`. */
-    private val scope = CoroutineScope(
-        SupervisorJob() + Dispatchers.Default + CoroutineExceptionHandler { _, throwable ->
-            println("A cover art job ended in an exception nothing caught: $throwable")
-        },
-    )
+    /** Nothing launched here has anybody to throw to, see [RepositoryEnvironment.scopeFor]. */
+    private val scope = environment.scopeFor("cover art")
     private val mutex = Mutex()
     private val downloads = mutableMapOf<String, Download>()
     private val downloadSlots = Semaphore(MAX_CONCURRENT_DOWNLOADS)
@@ -191,7 +184,7 @@ internal class CoverArtRepositoryImpl(
             cacheChanges.update { changes -> changes + 1 }
         }
         CoverArtDownload.Missing -> null.also { mutex.withLock { failures[url] = null } }
-        CoverArtDownload.Unreachable -> null.also { mutex.withLock { failures[url] = TimeSource.Monotonic.markNow() + UNREACHABLE_RETRY_DELAY } }
+        CoverArtDownload.Unreachable -> null.also { mutex.withLock { failures[url] = environment.timeSource.markNow() + UNREACHABLE_RETRY_DELAY } }
     }
 
     private fun keyOf(url: String) = Sha256.hashToHex(url.encodeToByteArray())

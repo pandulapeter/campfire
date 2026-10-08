@@ -191,7 +191,12 @@ a deletion of one of those files lands before its reads or after its update and 
   that opens a run and the one that completes it do, which is how a device that cannot write ends a run as
   `SyncFailureReason.STORAGE`. Reading it is the same: an index that is there and cannot be read ends the run as
   `STORAGE` before anything is written, and start up and a new connection leave such a file alone. Only one that reads
-  and does not decode is taken for none. The repository's scope carries a `CoroutineExceptionHandler` that logs, since nothing
+  and does not decode is taken for none. The scope, the time source, the wall clock and the dispatcher documents are
+  coded on come from `base/RepositoryEnvironment` (a `@Single` function of `DataRepositoryModule`, shared with
+  `CoverArtRepositoryImpl`), which is what lets `SyncRepositoryImplTest` and `CoverArtRepositoryImplTest` run every
+  launched job, the ten-second debounce and the retry minute on the test scheduler's virtual time — the scope being
+  background work there, so a test advances it with `runCurrent` or `advanceTimeBy`, never `advanceUntilIdle`. The
+  repository's scope carries a `CoroutineExceptionHandler` that logs, since nothing
   launched there has anyone to throw to, and a run that ends in a throwable that is not an `Exception` (a synchronous
   `js(...)` failure on the web, a real `Error`) is finished and reported like a failed one rather than left to it. The failures that are only worth a line in the
   log — a clean-up, a quiet index write, a file that could not be read — go through `base/recovering`, which rethrows a

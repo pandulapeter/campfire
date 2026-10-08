@@ -23,6 +23,7 @@ import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.data.repository.api.SyncRepository
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
+import com.pandulapeter.campfire.data.repository.implementation.base.RepositoryEnvironment
 import com.pandulapeter.campfire.data.repository.implementation.base.recovering
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncEngine
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncIndexDocument
@@ -49,21 +50,15 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlin.concurrent.Volatile
 import kotlin.concurrent.atomics.AtomicReference
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
-import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.ExperimentalTime
 import kotlin.time.TimeMark
-import kotlin.time.TimeSource
 import kotlin.time.measureTime
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -103,6 +98,7 @@ internal class SyncRepositoryImpl(
     private val libraryFileLock: LibraryFileLock,
     setlistComparison: SetlistComparison,
     libraryChanges: LibraryChanges,
+    private val environment: RepositoryEnvironment,
 ) : SyncRepository {
 
     private val providers = syncProviders.all
@@ -119,15 +115,10 @@ internal class SyncRepositoryImpl(
      * carries on while the user moves around the app, and on Android it survives the activity being destroyed -
      * which is what lets a foreground service keep it going after the app has been left.
      *
-     * Nothing launched here has anybody to throw to, and an exception that leaves a job with no handler ends the
-     * process on Android and iOS. Every job is written not to throw; the handler is there for the one that one day
-     * does, because sync is something the app does on the side and must never be what closes it.
+     * Nothing launched here may close the app, see [RepositoryEnvironment.scopeFor]: sync is something the app does
+     * on the side.
      */
-    private val scope = CoroutineScope(
-        SupervisorJob() + Dispatchers.Default + CoroutineExceptionHandler { _, throwable ->
-            println("A sync job ended in an exception nothing caught: $throwable")
-        },
-    )
+    private val scope = environment.scopeFor("sync")
 
     /**
      * The run that is going, or the last one. Swapped atomically rather than assigned: the buttons start and stop runs
@@ -448,7 +439,7 @@ internal class SyncRepositoryImpl(
 
     override fun scheduleSynchronization() {
         if (_syncState.value !is SyncState.Connected) return
-        scheduledRunDueAt.value = TimeSource.Monotonic.markNow() + AUTOMATIC_RUN_DELAY
+        scheduledRunDueAt.value = environment.timeSource.markNow() + AUTOMATIC_RUN_DELAY
     }
 
     override fun startScheduledSynchronization(): SyncProgress? {
@@ -456,13 +447,13 @@ internal class SyncRepositoryImpl(
         when {
             dueAt == null -> Unit
             // The debounce chains the waiting run right behind the one that is going, as it would have in ten seconds.
-            syncJob.load()?.isActive == true -> scheduledRunDueAt.compareAndSet(dueAt, TimeSource.Monotonic.markNow())
+            syncJob.load()?.isActive == true -> scheduledRunDueAt.compareAndSet(dueAt, environment.timeSource.markNow())
             // Started here rather than left to the debounce, which would start it on another thread a moment later:
             // the caller is the app leaving the front, and it can only hand a run to the platform's keep-alive while
             // it still is in front - which is what the progress this returns is for.
             scheduledRunDueAt.compareAndSet(dueAt, null) -> if (!startRun(SyncDeletionPolicy.ASK, isAutomatic = true)) {
                 // A run started on another thread in between, and the one asked for now follows it.
-                scheduledRunDueAt.compareAndSet(null, TimeSource.Monotonic.markNow())
+                scheduledRunDueAt.compareAndSet(null, environment.timeSource.markNow())
             }
         }
         return (_syncState.value as? SyncState.Connected)?.progress
@@ -592,7 +583,7 @@ internal class SyncRepositoryImpl(
                         // One with failures keeps the time of the last run that was, which is also what "Last synced
                         // successfully" goes on saying while the next run is going.
                         val syncedAt = if (summary.isComplete) {
-                            Clock.System.now().toEpochMilliseconds()
+                            environment.clock.now().toEpochMilliseconds()
                         } else {
                             result.index.lastSyncedAt
                         }
@@ -685,9 +676,9 @@ internal class SyncRepositoryImpl(
         if (liveRefreshJob?.isActive == true) return
         if (lastLiveRescanEnd?.let { it.elapsedNow() < liveRescanPause } == true) return
         liveRefreshJob = scope.launch {
-            val duration = measureTime { refreshChangedFiles() }
+            val duration = environment.timeSource.measureTime { refreshChangedFiles() }
             liveRescanPause = liveRescanPauseAfter(duration)
-            lastLiveRescanEnd = TimeSource.Monotonic.markNow()
+            lastLiveRescanEnd = environment.timeSource.markNow()
         }
     }
 
@@ -700,7 +691,7 @@ internal class SyncRepositoryImpl(
     private fun scheduleIndexWrite(snapshot: () -> SyncIndexDocument) {
         if (indexWriteJob?.isActive == true) return
         if (lastIndexWrite?.let { it.elapsedNow() < INDEX_WRITE_INTERVAL } == true) return
-        lastIndexWrite = TimeSource.Monotonic.markNow()
+        lastIndexWrite = environment.timeSource.markNow()
         // Taken here and not in the job: the engine's lock is what makes reading its map safe, and it is only held
         // for as long as this call runs.
         val document = snapshot()
@@ -911,7 +902,7 @@ internal class SyncRepositoryImpl(
     private suspend fun loadIndex(): SyncIndexDocument {
         val text = syncStateLocalSource.loadSyncIndex() ?: return SyncIndexDocument()
         // Off the caller's thread, which for restore() is the main one: the index has an entry per library file.
-        return withContext(Dispatchers.Default) {
+        return withContext(environment.computation) {
             recovering(
                 describe = { "Could not decode the sync index: ${it.message}" },
                 fallback = { SyncIndexDocument() },
@@ -926,7 +917,7 @@ internal class SyncRepositoryImpl(
     ) { loadIndex() }
 
     private suspend fun saveIndex(document: SyncIndexDocument) =
-        syncStateLocalSource.saveSyncIndex(withContext(Dispatchers.Default) { json.encodeToString(document) })
+        syncStateLocalSource.saveSyncIndex(withContext(environment.computation) { json.encodeToString(document) })
 
     /**
      * For the writes nobody is waiting on the result of - the periodic one and the ones made on the way out of a run.

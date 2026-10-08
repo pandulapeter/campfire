@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.data.model.domain.CoverArtQuery
 import com.pandulapeter.campfire.data.model.domain.CoverArtSearchResults
 import com.pandulapeter.campfire.data.model.domain.CoverArtService
 import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.data.repository.implementation.base.testEnvironment
 import com.pandulapeter.campfire.data.repository.implementation.sync.RecordingSongRepository
 import com.pandulapeter.campfire.data.source.local.api.CoverArtLocalSource
 import com.pandulapeter.campfire.data.source.remote.api.CoverArtRemoteSource
@@ -24,7 +25,6 @@ import com.pandulapeter.campfire.data.source.remote.api.CoverArtSearchRemoteSour
 import com.pandulapeter.campfire.data.source.remote.api.hashing.Sha256
 import com.pandulapeter.campfire.data.source.remote.api.model.CoverArtDownload
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
@@ -34,9 +34,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeout
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -67,12 +68,11 @@ class CoverArtRepositoryImplTest {
         }
         val repository = repository(remote = remote)
 
-        val results = withContext(Dispatchers.Default) {
-            val callers = List(5) { async { repository.getCoverArt(URL) } }
-            withTimeout(5_000) { while (remote.requestCount == 0) delay(1) }
-            gate.complete(Unit)
-            callers.awaitAll()
-        }
+        val callers = List(5) { async { repository.getCoverArt(URL) } }
+        runCurrent()
+        assertEquals(1, remote.requestCount)
+        gate.complete(Unit)
+        val results = callers.awaitAll()
 
         results.forEach { assertContentEquals(IMAGE, it) }
         assertEquals(1, remote.requestCount)
@@ -88,14 +88,11 @@ class CoverArtRepositoryImplTest {
         val repository = repository(remote = remote)
         val urls = List(CoverArtRepositoryImpl.MAX_CONCURRENT_DOWNLOADS + 3) { "https://example.com/$it" }
 
-        val results = withContext(Dispatchers.Default) {
-            val callers = urls.map { url -> async { repository.getCoverArt(url) } }
-            withTimeout(5_000) { while (remote.requestCount < CoverArtRepositoryImpl.MAX_CONCURRENT_DOWNLOADS) delay(1) }
-            delay(50)
-            assertEquals(CoverArtRepositoryImpl.MAX_CONCURRENT_DOWNLOADS, remote.requestCount)
-            gate.complete(Unit)
-            callers.awaitAll()
-        }
+        val callers = urls.map { url -> async { repository.getCoverArt(url) } }
+        runCurrent()
+        assertEquals(CoverArtRepositoryImpl.MAX_CONCURRENT_DOWNLOADS, remote.requestCount)
+        gate.complete(Unit)
+        val results = callers.awaitAll()
 
         results.forEach { assertContentEquals(IMAGE, it) }
         assertEquals(urls.toSet(), remote.requestedUrls.toSet())
@@ -113,18 +110,17 @@ class CoverArtRepositoryImplTest {
         val inFlight = List(CoverArtRepositoryImpl.MAX_CONCURRENT_DOWNLOADS) { "https://example.com/$it" }
         val queued = List(3) { "https://example.com/queued/$it" }
 
-        withContext(Dispatchers.Default) {
-            val inFlightCallers = inFlight.map { url -> async { repository.getCoverArt(url) } }
-            withTimeout(5_000) { while (remote.requestCount < inFlight.size) delay(1) }
-            val queuedCallers = queued.map { url -> async { repository.getCoverArt(url) } }
-            delay(50)
-            (inFlightCallers + queuedCallers).forEach { it.cancel() }
-            (inFlightCallers + queuedCallers).joinAll()
-            gate.complete(Unit)
-            // The downloads that had started carry on without anybody waiting for them, and their copies are kept.
-            withTimeout(5_000) { while (local.copies.size < inFlight.size) delay(1) }
-            delay(50)
-        }
+        val inFlightCallers = inFlight.map { url -> async { repository.getCoverArt(url) } }
+        runCurrent()
+        assertEquals(inFlight.size, remote.requestCount)
+        val queuedCallers = queued.map { url -> async { repository.getCoverArt(url) } }
+        runCurrent()
+        (inFlightCallers + queuedCallers).forEach { it.cancel() }
+        (inFlightCallers + queuedCallers).joinAll()
+        gate.complete(Unit)
+        // The downloads that had started carry on without anybody waiting for them, and their copies are kept. Run with
+        // runCurrent: the repository's scope is background work of the test, which advanceUntilIdle does not wait for.
+        runCurrent()
 
         assertEquals(inFlight.toSet(), remote.requestedUrls.toSet())
         assertEquals(inFlight.map(::keyOf).toSet(), local.copies.keys)
@@ -155,6 +151,21 @@ class CoverArtRepositoryImplTest {
     }
 
     @Test
+    fun `an unreachable address is asked again after a minute`() = runTest {
+        val remote = FakeCoverArtRemoteSource { CoverArtDownload.Unreachable }
+        val repository = repository(remote = remote)
+
+        assertNull(repository.getCoverArt(URL))
+        advanceTimeBy(59_000)
+        assertNull(repository.getCoverArt(URL))
+        assertEquals(1, remote.requestCount)
+        advanceTimeBy(2_000)
+        assertNull(repository.getCoverArt(URL))
+
+        assertEquals(2, remote.requestCount)
+    }
+
+    @Test
     fun `copies no song names are deleted once the library has been read whole`() = runTest {
         val local = FakeCoverArtLocalSource()
         local.copies[keyOf(URL)] = IMAGE
@@ -163,11 +174,11 @@ class CoverArtRepositoryImplTest {
         repository(local = local, songs = songs)
 
         // Half a library is not a reason to delete anything.
-        withContext(Dispatchers.Default) { delay(50) }
+        runCurrent()
         assertEquals(setOf(keyOf(URL), keyOf(OTHER_URL)), local.copies.keys)
 
         songs.value = DataState.Idle(listOf(song(URL), song(null)))
-        withContext(Dispatchers.Default) { withTimeout(5_000) { while (local.copies.size != 1) delay(1) } }
+        runCurrent()
         assertEquals(setOf(keyOf(URL)), local.copies.keys)
     }
 
@@ -179,13 +190,14 @@ class CoverArtRepositoryImplTest {
         val repository = repository(local = local, remote = FakeCoverArtRemoteSource { CoverArtDownload.Image(IMAGE) }, songs = songs)
         val sizes = MutableStateFlow<Long?>(null)
         backgroundScope.launch { repository.coverArtCacheSize.collect { sizes.value = it } }
-        suspend fun awaitSize(size: Long) = withContext(Dispatchers.Default) { withTimeout(5_000) { while (sizes.value != size) delay(1) } }
-
-        awaitSize(5)
+        runCurrent()
+        assertEquals(5, sizes.value)
         repository.getCoverArt(URL)
-        awaitSize(8)
+        runCurrent()
+        assertEquals(8, sizes.value)
         songs.value = DataState.Idle(listOf(song(URL)))
-        awaitSize(3)
+        runCurrent()
+        assertEquals(3, sizes.value)
     }
 
     @Test
@@ -233,7 +245,7 @@ class CoverArtRepositoryImplTest {
         assertEquals(listOf(candidate(CoverArtService.ITUNES, "b")), last.candidates)
     }
 
-    private fun repository(
+    private fun TestScope.repository(
         local: FakeCoverArtLocalSource = FakeCoverArtLocalSource(),
         remote: FakeCoverArtRemoteSource = FakeCoverArtRemoteSource { CoverArtDownload.Missing },
         songs: MutableStateFlow<DataState<List<Song>>> = MutableStateFlow(DataState.Loading(null)),
@@ -243,6 +255,7 @@ class CoverArtRepositoryImplTest {
         coverArtRemoteSource = remote,
         coverArtSearchRemoteSources = CoverArtSearchRemoteSources(all = searchSources),
         songRepository = RecordingSongRepository(songs = songs),
+        environment = testEnvironment(),
     )
 
     private class FakeCoverArtSearchRemoteSource(
