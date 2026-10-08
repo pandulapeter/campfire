@@ -9,29 +9,35 @@
  */
 package com.pandulapeter.campfire.metronome.implementation
 
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlin.time.TimeMark
 import kotlin.time.TimeSource
 
 /**
- * What a click runs on where no output can be opened: the same stream and the same sequencer, clocked by the
- * monotonic time source, with nothing played. The UI therefore has one source of beats whether or not there is sound.
+ * What a click runs on where no output can be opened: the same stream and the same sequencer, clocked by
+ * [timeSource] (the monotonic one outside tests), with nothing played. The UI therefore has one source of beats whether or not there is sound.
  */
-internal class SilentAudioOutput(private val scope: CoroutineScope) : AudioOutput {
+internal class SilentAudioOutput(
+    private val scope: CoroutineScope,
+    private val timeSource: TimeSource = TimeSource.Monotonic,
+    private val dispatcher: CoroutineDispatcher = Dispatchers.Default,
+) : AudioOutput {
 
     private var job: Job? = null
-    private var startMark: TimeSource.Monotonic.ValueTimeMark? = null
+    private var startMark: TimeMark? = null
 
     override fun start(isPreview: Boolean, createStream: (sampleRate: Int) -> ClickStream, listener: AudioOutputListener): AudioOutputStart {
         stop()
         val stream = createStream(SAMPLE_RATE)
-        val mark = TimeSource.Monotonic.markNow().also { startMark = it }
+        val mark = timeSource.markNow().also { startMark = it }
         val aheadFrames = (AudioOutput.QUEUED_SECONDS * SAMPLE_RATE).toLong()
-        job = scope.launch(Dispatchers.Default) {
+        job = scope.launch(dispatcher) {
             while (isActive) {
                 val now = mark.elapsedNow().inWholeMicroseconds * SAMPLE_RATE / 1_000_000
                 stream.schedule(nowFrame = now, untilFrame = now + aheadFrames) { _, _, _, _ -> }
