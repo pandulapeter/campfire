@@ -10,7 +10,11 @@
 package com.pandulapeter.campfire.presentation.ui.print
 
 import kotlinx.coroutines.test.runTest
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertContentEquals
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
 
 internal class PrintPdfWriterTest {
     @Test fun packsTwoRoundedGraysABytePaddingAnOddRowWithWhite() {

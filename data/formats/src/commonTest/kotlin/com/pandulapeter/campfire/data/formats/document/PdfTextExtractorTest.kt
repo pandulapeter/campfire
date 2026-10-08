@@ -455,6 +455,7 @@ class PdfTextExtractorTest {
         assertEquals("Form text", spans.joinToString("") { it.text })
         assertEquals(50.0, spans.first().start)
     }
+
     @Test
     fun extractsPositionedStringsInBaselineOrderAndRecoversBrokenXrefOffsets() = runTest {
         val content = "BT /F1 10 Tf 1 0 0 1 50 700 Tm (Am) Tj 1 0 0 1 92 700 Tm (C) Tj 1 0 0 1 50 688 Tm (Hello world) Tj ET"

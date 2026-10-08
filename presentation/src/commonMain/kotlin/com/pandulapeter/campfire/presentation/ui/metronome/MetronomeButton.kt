@@ -63,7 +63,6 @@ internal fun MetronomeButton(
     }
 }
 
-
 /** [MetronomeButton] as an entry of the song details overflow menu, for a bar that has no room for the button. */
 @Composable
 internal fun metronomeAction(

@@ -93,7 +93,6 @@ internal fun TagPill(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-
         }
     }
     CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {

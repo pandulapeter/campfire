@@ -58,7 +58,6 @@ internal data class UserPreferencesDocument(
     val demoLibraryContentHashes: Map<String, String> = emptyMap(),
 )
 
-
 @Serializable
 internal data class PrintSettingsDocument(
     val format: String = "pdf",

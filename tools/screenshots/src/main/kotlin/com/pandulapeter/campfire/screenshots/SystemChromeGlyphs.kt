@@ -122,7 +122,6 @@ internal fun DrawScope.drawWindowsLogo(isDark: Boolean) {
     }
 }
 
-
 /** The chevron that opens the hidden icons of the system tray. */
 internal fun DrawScope.drawChevronUp(color: Color) {
     val stroke = 1.dp.toPx()

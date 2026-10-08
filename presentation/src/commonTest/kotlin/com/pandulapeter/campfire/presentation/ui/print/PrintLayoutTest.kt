@@ -9,12 +9,22 @@
  */
 package com.pandulapeter.campfire.presentation.ui.print
 
-import com.pandulapeter.campfire.chordpro.model.*
+import com.pandulapeter.campfire.chordpro.model.ChordProBlock
+import com.pandulapeter.campfire.chordpro.model.ChordProLine
+import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
+import com.pandulapeter.campfire.chordpro.model.ChordProSong
+import com.pandulapeter.campfire.chordpro.model.CommentPlacement
+import com.pandulapeter.campfire.chordpro.model.CommentStyle
+import com.pandulapeter.campfire.chordpro.model.GridToken
+import com.pandulapeter.campfire.chordpro.model.SectionType
 import com.pandulapeter.campfire.data.model.domain.PrintSettings
 import com.pandulapeter.campfire.presentation.ui.chords.ChordDiagramGeometry
 import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
 import kotlinx.coroutines.test.runTest
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 internal class PrintLayoutTest {
     private val labels = PrintLabels("Key", "Transposition", "Capo", "Tempo", "$TEMPO_VALUE BPM", "Time", "Missing", DefaultSectionLabels(verse = "Verse", chorus = "Chorus", bridge = "Bridge", tab = "Tab", grid = "Grid", intro = "Intro", preChorus = "Pre-chorus", solo = "Solo", outro = "Outro"))
@@ -229,7 +239,7 @@ internal class PrintLayoutTest {
     }
 
     @Test fun aWrappedPreformattedRunHasNoGapBetweenItsSystems() = runTest {
-        val lines = listOf("G" + " ".repeat(60) + "C", "Words " .repeat(12)).mapIndexed { i, text -> ChordProLine.Tab(text, continuesEnvironment = i > 0) }
+        val lines = listOf("G" + " ".repeat(60) + "C", "Words ".repeat(12)).mapIndexed { i, text -> ChordProLine.Tab(text, continuesEnvironment = i > 0) }
         val page = layout(source(song(lines)), PrintSettings(columns = 2, fontSize = 16)).pages.single().texts
         val texts = page.filter { it.style.size == 16 && it.y > page.first { label -> label.text == "Verse" }.y }
         assertTrue(texts.size > 2)
@@ -299,7 +309,7 @@ internal class PrintLayoutTest {
 
     @Test fun anAnnotationWiderThanTheColumnNeitherOpensWithAnEmptyRowNorPushesTheLyricsAway() = runTest {
         val settings = PrintSettings(columns = 2)
-        val annotation = "Slowly, with the whole room singing along, " .repeat(3).trim()
+        val annotation = "Slowly, with the whole room singing along, ".repeat(3).trim()
         val entry = song(listOf(ChordProLine.Lyrics("Lyrics here follow", listOf(
             ChordProLine.Lyrics.Chord(0, annotation, true),
             ChordProLine.Lyrics.Chord(12, "G", false),

@@ -3842,7 +3842,6 @@ class CampfireViewModel(
 
     // User preferences
 
-
     fun setShouldShowArchivedSetlists(value: Boolean) = changeUserPreferences { copy(shouldShowArchivedSetlists = value) }
 
     fun setPerformanceModeEnabled(value: Boolean) = changeUserPreferences { copy(isPerformanceModeEnabled = value) }

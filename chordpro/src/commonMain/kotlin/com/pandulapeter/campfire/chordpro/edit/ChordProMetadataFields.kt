@@ -133,5 +133,4 @@ public object ChordProMetadataFields {
         val name = directive()?.name ?: field.directiveName
         return if (name == META) "$indentation{$META: ${field.directiveName} $value}" else "$indentation{$name: $value}"
     }
-
 }

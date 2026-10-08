@@ -62,5 +62,4 @@ internal class LibraryFileLocalSourceImpl(
             LibraryFileKind.SONG -> StorageDirectory.SONGS
             LibraryFileKind.SETLIST -> StorageDirectory.SETLISTS
         }
-
 }

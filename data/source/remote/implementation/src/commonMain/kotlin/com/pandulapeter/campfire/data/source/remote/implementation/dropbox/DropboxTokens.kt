@@ -107,4 +107,3 @@ internal class DropboxTokens(
         const val EXPIRY_MARGIN_MILLIS = 60_000L
     }
 }
-

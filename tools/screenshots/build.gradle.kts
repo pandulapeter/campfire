@@ -79,4 +79,3 @@ tasks.named<JavaExec>("run") {
     systemProperty("campfire.screenshots.appIcon", rootProject.file("app/desktop/src/main/composeResources/drawable/app_icon.png").absolutePath)
     systemProperty("campfire.screenshots.versionName", project.property("campfire.versionName").toString())
 }
-

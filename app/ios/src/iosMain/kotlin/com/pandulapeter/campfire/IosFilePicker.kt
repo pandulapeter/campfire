@@ -168,7 +168,6 @@ internal class IosFilePicker(
         controller.presentationController?.delegate = pickerDelegate
         host.presentViewController(controller, animated = true, completion = null)
     }
-
 }
 
 /**

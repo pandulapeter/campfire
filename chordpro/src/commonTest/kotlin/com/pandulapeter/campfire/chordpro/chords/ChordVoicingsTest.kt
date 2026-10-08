@@ -173,5 +173,4 @@ class ChordVoicingsTest {
         listOf("", "m", "7", "m7", "maj7", "sus2", "sus4", "7sus4", "6", "m6", "9", "add9", "dim", "dim7", "m7b5", "aug", "5", "/E", "13", "m9", "11")
             .map { root + it }
     }.filter { ChordProChords.parse(it) != null }
-
 }

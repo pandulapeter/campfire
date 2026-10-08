@@ -102,7 +102,6 @@ fun CampfireDesktopApp(
     }
 }
 
-
 /**
  * To be wired into the window's key event handler. Returns true if the event was consumed. Ctrl / Cmd + F opens the
  * search of the list screen that is on top ([CampfireViewModel.openCurrentSearch]); it is answered here because this
