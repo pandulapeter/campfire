@@ -19,6 +19,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -87,7 +89,8 @@ internal fun TempoStepper(
 
 /**
  * Tap tempo as the last segment of the tempo stepper's own pill, see [TempoStepper]. It is as tall as the pill and
- * takes the press over its whole padding, so that the segment and the stepper's buttons are hit the same way.
+ * takes the press over its whole padding, so that the segment and the stepper's buttons are hit the same way. Every tap
+ * is felt, like a key: it is tapped along with music rather than looked at, so the hand is where it is confirmed.
  */
 @Composable
 private fun TapTempoSegment(
@@ -95,11 +98,15 @@ private fun TapTempoSegment(
     onTempo: (bpm: Int) -> Unit,
 ) {
     val tapTempo = remember { TapTempo() }
+    val hapticFeedback = LocalHapticFeedback.current
     val description = stringResource(Res.string.metronome_tap_description)
     Box(
         modifier = Modifier
             .fillMaxHeight()
-            .clickable(role = Role.Button) { tapTempo.tap()?.let(onTempo) }
+            .clickable(role = Role.Button) {
+                hapticFeedback.performHapticFeedback(HapticFeedbackType.VirtualKey)
+                tapTempo.tap()?.let(onTempo)
+            }
             .padding(horizontal = TAP_SEGMENT_PADDING)
             .semantics { contentDescription = description },
         contentAlignment = Alignment.Center,

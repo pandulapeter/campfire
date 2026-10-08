@@ -257,6 +257,8 @@ What the app does, one line each; the full text is in the file named (`:presenta
   `ui/CLAUDE.md`.
 - Features are switched on and off as a whole in Settings → Features; a switch only hides, never writes or deletes:
   `:presentation`'s `ui/CLAUDE.md`.
+- Haptics tell the hand only what the eye cannot easily follow (the fast scroller above all), through the platform's
+  own feedback and its setting: `:presentation`'s `ui/CLAUDE.md`.
 - Every chord of a song is shown fingered at its top; the shape is the song's own `{define}`, then the player's
   library-wide choice, then the app's first: `:presentation`'s `ui/chords/CLAUDE.md`.
 - The app is shipped with two demo songs and one setlist, planted once through the ordinary import on a fresh

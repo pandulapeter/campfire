@@ -43,7 +43,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -157,7 +159,8 @@ internal fun Stepper(
 /**
  * One end of a [Stepper]. Held down with [repeatsOnHold] it steps on its own after a moment, faster and faster, and the
  * release that ends a hold is not one more step: a tap still steps once, on its release, like any button, which is
- * also what a keyboard or a screen reader activating it does.
+ * also what a keyboard or a screen reader activating it does. Each step of a hold is felt as a tick, since the value
+ * runs too fast to be read and the finger holding the button is what tells it to stop; a tap is not, like any button.
  */
 @Composable
 private fun StepperButton(
@@ -175,14 +178,18 @@ private fun StepperButton(
     if (repeatsOnHold) {
         val isPressed by interactionSource.collectIsPressedAsState()
         val currentOnClick by rememberUpdatedState(onClick)
+        val currentIsEnabled by rememberUpdatedState(isEnabled)
+        val hapticFeedback = LocalHapticFeedback.current
         LaunchedEffect(isPressed) {
             if (!isPressed) return@LaunchedEffect
             holdState.hasRepeated = false
             delay(HOLD_REPEAT_DELAY_MILLIS)
             var interval = HOLD_REPEAT_FIRST_INTERVAL_MILLIS.toFloat()
-            while (true) {
+            // Ends at the end of the range rather than ticking on against it for as long as the button is held.
+            while (currentIsEnabled) {
                 holdState.hasRepeated = true
                 currentOnClick()
+                hapticFeedback.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
                 delay(interval.toLong())
                 interval = maxOf(HOLD_REPEAT_FASTEST_INTERVAL_MILLIS.toFloat(), interval * HOLD_REPEAT_ACCELERATION)
             }

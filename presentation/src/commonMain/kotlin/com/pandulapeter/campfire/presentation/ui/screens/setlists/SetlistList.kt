@@ -51,7 +51,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.customActions
@@ -214,6 +216,9 @@ internal fun SetlistList(
     // below, but only after the reorderable state has locked itself for up to a second waiting for the list to answer
     // it, which froze the rows under the finger.
     var draggingSetlistFileName by remember { mutableStateOf<String?>(null) }
+    // A row lifted, every place it moves to and the row set down are felt: the row is under the finger moving it, which
+    // covers the slot number that would otherwise say where it has got to.
+    val hapticFeedback = LocalHapticFeedback.current
     val reorderableState = rememberReorderableLazyGridState(listState) { from, to ->
         val fromKey = SetlistItemKey(from.key as? String)
         val toKey = SetlistItemKey(to.key as? String)
@@ -230,12 +235,14 @@ internal fun SetlistList(
                         if (fromIndex >= 0 && toIndex >= 0) add(toIndex, removeAt(fromIndex))
                     },
                 )
+                hapticFeedback.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
             }
         }
     }
     // Written once the finger lifts rather than on every move, so that one drag is one write.
     val onDragStopped = {
         draggingSetlistFileName = null
+        hapticFeedback.performHapticFeedback(HapticFeedbackType.GestureEnd)
         draggedSetlist?.let { dragged ->
             viewModel.reorderSetlist(
                 setlistFileName = dragged.setlistFileName,
@@ -435,7 +442,10 @@ internal fun SetlistList(
                                 onMoveDown?.let { CustomAccessibilityAction(moveDownLabel) { it(); true } },
                             )
                         }
-                        val onDragStarted: (Offset) -> Unit = { draggingSetlistFileName = setlistWithSongs.setlist.fileName }
+                        val onDragStarted: (Offset) -> Unit = {
+                            draggingSetlistFileName = setlistWithSongs.setlist.fileName
+                            hapticFeedback.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
+                        }
                         // The setlist's own transposition and capo for this song, which is why the same song can be
                         // listed in one key here and in another one two setlists down. Remembered as on the songs
                         // screen, and above the branch below so that reorder mode starting or ending does not work it

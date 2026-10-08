@@ -17,9 +17,9 @@ internal fun interface BeatHaptics {
 }
 
 /**
- * The device's beat haptics, or null where there are none - no vibrator, or a desktop or a browser - which is also what
- * decides whether the Metronome tab offers them at all. Used while the app is in front everywhere, and out of sight too
- * where [areBeatHapticsFeltInBackground].
+ * The device's beat haptics, or null where there are none - no vibrator, a desktop, or a browser that has no Vibration
+ * API or is not on a phone or a tablet - which is also what decides whether the Metronome tab offers them at all. Used
+ * while the app is in front everywhere, and out of sight too where [areBeatHapticsFeltInBackground].
  */
 @Composable
 internal expect fun rememberBeatHaptics(): BeatHaptics?

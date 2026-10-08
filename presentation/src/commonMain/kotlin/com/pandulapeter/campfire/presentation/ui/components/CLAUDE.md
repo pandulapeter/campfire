@@ -408,7 +408,10 @@ the alpha they are drawn with rather than through a `graphicsLayer`: an offscree
 cut the bubble off, and the web build does not redraw a `ModulateAlpha` layer whose alpha alone changed, so the thumb
 stayed invisible there until a hover redrew it. Scroll position is estimated from the average visible item size; the
 pinned sticky header is excluded from that estimate, since it is listed among the visible items out of order. Visible on
-every platform for as long as the list is scrollable. The list screens' app bars have fixed color and elevation, so
+every platform for as long as the list is scrollable. A finger dragging it feels it (a mouse does not): a tap as the thumb
+is taken, and a notch for every section letter that comes to the top and at either end of the track — the end decided by
+where the finger asked the thumb to be, since the estimated range moves under a thumb pushed into it
+(`FastScrollerDetent.kt`, `isDetentReached`). The list screens' app bars have fixed color and elevation, so
 scrolling the fast scroller does not alter them.
 
 ### `ui/components/CampfireTopAppBar.kt`

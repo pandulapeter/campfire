@@ -145,7 +145,9 @@ nothing.
 **The platform's side**: `ui/platform/BackgroundMetronome.kt`'s `MetronomeNotifier`, provided like `SyncNotifier` (the
 Android service, iOS's Now Playing, the web's media session in `BackgroundMetronome.wasmJs.kt`, nothing on the desktop),
 told about a click from `CampfireApp` in the language chosen in the app and only told it ended once it was shown;
-`BeatHaptics.kt` (Android's predefined clicks, iOS's impact generators, null elsewhere), driven from the heard beats
+`BeatHaptics.kt` (Android's predefined clicks, iOS's impact generators, the web's `navigator.vibrate` pulses where the
+page is on a phone or a tablet that has the Vibration API — Chrome on Android, never Safari, and never a desktop
+browser, which defines it with nothing to vibrate — and null on the desktop), driven from the heard beats
 while the app is resumed, and on Android while it is composed at all (`areBeatHapticsFeltInBackground`: the metronome's
 foreground service lets the process vibrate). The flexible update's Restart waits for a playing click like it waits for
 a sync run. `CampfireApp`'s `ON_STOP` / `ON_START` effects stop a click that cannot sound (`MetronomePattern.canSound`:

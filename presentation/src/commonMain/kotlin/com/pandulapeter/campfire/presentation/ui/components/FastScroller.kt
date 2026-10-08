@@ -44,6 +44,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -54,6 +55,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.hapticfeedback.HapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.AwaitPointerEventScope
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.PointerType
@@ -61,6 +64,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
@@ -82,6 +86,10 @@ import kotlin.math.roundToInt
  * with a mouse moves the thumb under the pointer, and so does a finger tapped, held or swiped vertically there - a
  * horizontal swipe is left to the system's back gesture. A track fades in behind the thumb while it is pointed at or
  * dragged. Only the bubble extends beyond the column, and nothing about it can be pressed.
+ *
+ * A finger is told what the eye is: the thumb taken gives a tap of its own, and every section that comes to the top of
+ * the list while it is dragged, and either end of the track, is felt as a notch. A mouse is told nothing, since the
+ * device under it is not the one being held.
  *
  * @param labelForItem Returns the label of the section the item at the given index belongs to, or null if none. A
  *   list whose sections have no single character to go by (the setlists, named by whatever somebody called them)
@@ -130,7 +138,24 @@ internal fun FastScroller(
     )
     val idleColor = MaterialTheme.colorScheme.onSurfaceVariant
     val activeColor = MaterialTheme.colorScheme.primary
-    val label by remember(gridState, labelForItem) { derivedStateOf { labelForItem(gridState.firstVisibleItemIndex) } }
+    val labelState = remember(gridState, labelForItem) { derivedStateOf { labelForItem(gridState.firstVisibleItemIndex) } }
+    val label by labelState
+    val hapticFeedback = LocalHapticFeedback.current
+    // Collected rather than decided where the thumb is moved, since the label only changes once the list has scrolled
+    // to it, a frame or more after the move that asked for it.
+    LaunchedEffect(state, labelState, hapticFeedback) {
+        var previous: FastScrollerDetent? = null
+        snapshotFlow {
+            if (state.isDragging && state.isDraggedByTouch) FastScrollerDetent(label = labelState.value, end = state.draggedEnd) else null
+        }
+            .collect { current ->
+                val last = previous
+                if (last != null && current != null && isDetentReached(previous = last, current = current)) {
+                    hapticFeedback.performHapticFeedback(HapticFeedbackType.SegmentTick)
+                }
+                previous = current
+            }
+    }
 
     Box(
         modifier = modifier
@@ -214,7 +239,7 @@ internal fun FastScroller(
                 modifier = Modifier
                     .fillMaxSize()
                     .hoverable(interactionSource)
-                    .thumbDragGestures(state = state)
+                    .thumbDragGestures(state = state, hapticFeedback = hapticFeedback)
             )
         }
     }
@@ -233,7 +258,8 @@ private fun bubbleTop(desiredTop: Float, trackHeight: Int, bubbleHeight: Float):
  */
 private fun Modifier.thumbDragGestures(
     state: FastScrollerState,
-) = pointerInput(state) {
+    hapticFeedback: HapticFeedback,
+) = pointerInput(state, hapticFeedback) {
     awaitEachGesture {
         val down = awaitFirstDown()
         val press = if (down.type == PointerType.Mouse) ThumbPress.GRAB else awaitThumbPress(down)
@@ -243,10 +269,14 @@ private fun Modifier.thumbDragGestures(
         // which cancels the gesture in the middle of a drag - the keyboard going down under a search results list is
         // enough - and a drag that never ends leaves the bubble up and the thumb frozen the next time it comes back.
         try {
-            state.startDrag(pressY = down.position.y)?.let { fraction ->
+            val isTouch = down.type != PointerType.Mouse
+            state.startDrag(pressY = down.position.y, isTouch = isTouch)?.let { fraction ->
                 state.scrollRequests.trySend(fraction)
             }
             if (press == ThumbPress.GRAB) {
+                // Only a grab is felt: a tap jumps the thumb and lets go of it in the same moment, so there is nothing
+                // in the hand for it to have taken.
+                if (isTouch) hapticFeedback.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
                 // The finger may have travelled up to the touch slop while the gesture was being told apart. Only a
                 // move that happened is followed, since grabbing the thumb must not scroll the list by itself.
                 currentEvent.changes.firstOrNull { it.id == down.id && it.position.y != down.position.y }?.let { change ->
@@ -307,7 +337,17 @@ private class FastScrollerState(
     var trackHeight by mutableIntStateOf(0)
     var isDragging by mutableStateOf(false)
         private set
+    var isDraggedByTouch by mutableStateOf(false)
+        private set
     private var draggedThumbTop by mutableFloatStateOf(0f)
+
+    /**
+     * The end of the track the dragged thumb is held against, decided by where the finger asked it to be rather than by
+     * where it was drawn: the thumb's range follows the estimated size of the list, which changes as rows of another
+     * height scroll in, and a thumb pushed into the bottom would otherwise leave it and come back to it on every frame.
+     */
+    var draggedEnd by mutableStateOf<TrackEnd?>(null)
+        private set
 
     /** Only the newest pointer position matters before a frame; receiving it consumes that request exactly once. */
     val scrollRequests = Channel<Float>(Channel.CONFLATED)
@@ -345,8 +385,10 @@ private class FastScrollerState(
      * lands just above or below a mark this narrow about as often as on it. Returns the scroll fraction to follow the
      * jump with, or null if there was none.
      */
-    fun startDrag(pressY: Float): Float? {
+    fun startDrag(pressY: Float, isTouch: Boolean): Float? {
         draggedThumbTop = thumbTop
+        draggedEnd = trackEnd(draggedThumbTop)
+        isDraggedByTouch = isTouch
         isDragging = true
         return if (pressY in thumbTop - touchSlack..thumbTop + thumbHeight + touchSlack) null else dragBy(pressY - thumbCenter)
     }
@@ -355,8 +397,17 @@ private class FastScrollerState(
     fun dragBy(delta: Float): Float {
         val range = thumbRange
         if (range <= 0f) return 0f
-        draggedThumbTop = (draggedThumbTop + delta).coerceIn(0f, range)
+        val requestedTop = draggedThumbTop + delta
+        draggedEnd = trackEnd(requestedTop)
+        draggedThumbTop = requestedTop.coerceIn(0f, range)
         return draggedThumbTop / range
+    }
+
+    private fun trackEnd(top: Float) = when {
+        thumbRange <= 0f -> null
+        top <= 0f -> TrackEnd.TOP
+        top >= thumbRange -> TrackEnd.BOTTOM
+        else -> null
     }
 
     fun endDrag() {

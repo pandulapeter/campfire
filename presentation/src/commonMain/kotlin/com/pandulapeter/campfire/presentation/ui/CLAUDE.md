@@ -394,6 +394,16 @@ band actually hears is named in the app bar**, after the artist and the way a so
 the Transposition control's — the two read differently wherever the capo is not zero. The tempo the click would play at
 follows it there, as it does on a card, and inside a setlist the song's duration after that, as its card there has it.
 
+## Haptics
+
+**The hand is told only what the eye cannot easily follow**, through Compose's `LocalHapticFeedback`, which is the
+platform's own on Android and iOS (and `navigator.vibrate` in a phone's browser) and nothing on the desktop, so it
+follows the system's touch feedback setting and needs no switch of the app's. What is felt: the fast scroller (see
+`components/`), a setlist row lifted, moved past another and set down in reorder mode, every step of a stepper button
+held down (not a tap), every tap of Tap tempo, and a `SwitchListItem` flipped. A long press on a song row is felt
+through Foundation's `combinedClickable`. Plain buttons, menus, sheets and checkboxes are not: a buzz on every tap
+stops saying anything. The metronome's Vibrate on the beat is a feature rather than feedback, see `ui/platform/`.
+
 ## Features
 
 ### Features are switched on and off as a whole

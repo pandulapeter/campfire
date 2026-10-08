@@ -22,9 +22,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 
+/**
+ * A row that is one switch. Flipping it is felt, on and off alike, as a switch of the platform's own is on both phone
+ * platforms - Material's draws the change and leaves the hand out of it.
+ */
 @Composable
 internal fun SwitchListItem(
     modifier: Modifier = Modifier,
@@ -33,22 +39,28 @@ internal fun SwitchListItem(
     isChecked: Boolean,
     isEnabled: Boolean = true,
     onCheckedChange: (Boolean) -> Unit,
-) = Row(
-    modifier = modifier
-        .toggleable(value = isChecked, enabled = isEnabled, role = Role.Switch, onValueChange = onCheckedChange)
-        .alpha(if (isEnabled) 1f else 0.5f)
-        .defaultMinSize(minHeight = if (description == null) 56.dp else 72.dp)
-        .padding(horizontal = LIST_ITEM_KEYLINE, vertical = 8.dp),
-    verticalAlignment = Alignment.CenterVertically,
-    horizontalArrangement = Arrangement.spacedBy(LIST_ITEM_KEYLINE),
 ) {
-    // Not a ListItem: it top-aligns its trailing content once the description takes a third line, which left the
-    // switch hanging at the top of the tallest rows instead of in the middle of them.
-    Column(modifier = Modifier.weight(1f)) {
-        Text(text = title, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
-        if (description != null) {
-            Text(text = description, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    val hapticFeedback = LocalHapticFeedback.current
+    Row(
+        modifier = modifier
+            .toggleable(value = isChecked, enabled = isEnabled, role = Role.Switch) { value ->
+                hapticFeedback.performHapticFeedback(if (value) HapticFeedbackType.ToggleOn else HapticFeedbackType.ToggleOff)
+                onCheckedChange(value)
+            }
+            .alpha(if (isEnabled) 1f else 0.5f)
+            .defaultMinSize(minHeight = if (description == null) 56.dp else 72.dp)
+            .padding(horizontal = LIST_ITEM_KEYLINE, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(LIST_ITEM_KEYLINE),
+    ) {
+        // Not a ListItem: it top-aligns its trailing content once the description takes a third line, which left the
+        // switch hanging at the top of the tallest rows instead of in the middle of them.
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = title, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
+            if (description != null) {
+                Text(text = description, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
         }
+        Switch(checked = isChecked, enabled = isEnabled, onCheckedChange = null)
     }
-    Switch(checked = isChecked, enabled = isEnabled, onCheckedChange = null)
 }
