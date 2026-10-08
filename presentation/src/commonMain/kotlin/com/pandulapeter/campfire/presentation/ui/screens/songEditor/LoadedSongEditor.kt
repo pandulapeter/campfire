@@ -65,7 +65,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordProSummary
 import com.pandulapeter.campfire.chordpro.model.displayTitle
 import com.pandulapeter.campfire.data.model.domain.LibraryFiles
 import com.pandulapeter.campfire.data.model.domain.Song
-import com.pandulapeter.campfire.data.model.domain.normalizedToNfc
+import com.pandulapeter.campfire.data.model.domain.normalizedTags
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -489,7 +489,7 @@ internal fun ChordProSummary.toEditorSong(fileName: String) = Song(
     artist = metadata.artist?.takeIf { it.isNotBlank() }.orEmpty(),
     key = metadata.key?.takeIf { it.isNotBlank() },
     transpose = metadata.transpose,
-    tags = metadata.tags.map { it.normalizedToNfc() }.distinctBy { it.lowercase() },
+    tags = normalizedTags(metadata.tags),
     languages = metadata.languages,
     coverArtUrl = metadata.coverArt,
     hasChords = hasChords,

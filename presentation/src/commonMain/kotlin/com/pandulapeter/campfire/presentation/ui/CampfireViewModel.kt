@@ -44,7 +44,7 @@ import com.pandulapeter.campfire.data.model.domain.MetronomeSettings
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.SongContent
 import com.pandulapeter.campfire.data.model.domain.Song
-import com.pandulapeter.campfire.data.model.domain.normalizedToNfc
+import com.pandulapeter.campfire.data.model.domain.normalizedTags
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.domain.SyncProgress
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
@@ -2043,7 +2043,7 @@ class CampfireViewModel(
     private fun songForLabelEditing(song: Song, isEditorDraft: Boolean): Song? {
         if (!isEditorDraft) return song
         val metadata = parseChordPro(songTextOf(song.fileName, isEditorDraft = true) ?: return null).metadata
-        return song.copy(tags = metadata.tags.map { it.normalizedToNfc() }.distinctBy { it.lowercase() }, languages = metadata.languages)
+        return song.copy(tags = normalizedTags(metadata.tags), languages = metadata.languages)
     }
 
     /**

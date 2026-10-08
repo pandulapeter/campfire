@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.chordpro.ChordProTempo
 import com.pandulapeter.campfire.chordpro.model.ChordProSummary
 import com.pandulapeter.campfire.chordpro.model.displayTitle
 import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.data.model.domain.normalizedTags
 import com.pandulapeter.campfire.data.model.domain.normalizedToNfc
 import com.pandulapeter.campfire.data.source.local.implementation.isNamed
 import com.pandulapeter.campfire.data.source.local.implementation.knownExtension
@@ -36,7 +37,7 @@ internal fun StoredFileInfo.toSong(summary: ChordProSummary): Song {
         transpose = summary.metadata.transpose,
         // Composed, so that a tag written on a Mac and the same tag typed anywhere else are one tag to the filter:
         // the two forms look the same and every comparison above this is by case only. See normalizedToNfc.
-        tags = summary.metadata.tags.map { it.normalizedToNfc() }.distinctBy { it.lowercase() },
+        tags = normalizedTags(summary.metadata.tags),
         languages = summary.metadata.languages,
         coverArtUrl = summary.metadata.coverArt,
         hasChords = summary.hasChords,
