@@ -156,9 +156,13 @@ compose.desktop {
                 minimumSystemVersion = "12.0"
                 packageBuildVersion = project.property("campfire.buildNumber").toString()
                 // Not fileAssociation(): the plugin writes its own document type with the "****" OS type, which claims
-                // every kind of file, and with no rank or content type. These are the iOS app's document types.
+                // every kind of file, and with no rank or content type. These are the iOS app's document types, and the
+                // answer to the export compliance question the iOS app's Info.plist gives; anything that adds encryption
+                // of its own has to change both. The fragments carry no comment, since every line of them lands in the
+                // bundle's Info.plist.
                 infoPlist {
-                    extraKeysRawXml = macChordProDocumentTypes() + "\n" + nonExemptEncryptionKey()
+                    extraKeysRawXml = listOf("document-types.plist", "export-compliance.plist")
+                        .joinToString("\n") { project.file("macos/$it").readText().trim() }
                 }
                 if (isMacAppStoreBuild) {
                     // Only the store build is signed. A real signature enforces the hardened runtime, under which the
@@ -442,94 +446,3 @@ fun org.jetbrains.compose.desktop.application.dsl.AbstractPlatformSettings.chord
     listOf("cho", "chopro", "chordpro").forEach { extension ->
         fileAssociation(mimeType = "text/plain", extension = extension, description = "ChordPro song")
     }
-
-/**
- * Tells App Store Connect that the app's only cryptography is the system's HTTPS and hashing, which is exempt, so that
- * no upload stops to ask the export compliance questions. The iOS app's `Info.plist` gives the same answer; anything
- * that adds encryption of its own has to change both.
- */
-fun nonExemptEncryptionKey() = """
-    <key>ITSAppUsesNonExemptEncryption</key>
-    <false/>
-""".trimIndent()
-
-/**
- * The macOS document types, the same as the iOS app's (`app/ios/iosApp/iosApp/Info.plist`): ".cho" claimed as the
- * default, the rest of the family as an alternate, since those extensions are shared with other kinds of file, all
- * of them imported as types that conform to plain text. Kept in step with `LibraryFiles.SONG_EXTENSIONS` in
- * `:data:model`, which the build file cannot see.
- */
-fun macChordProDocumentTypes() = """
-    <key>UTImportedTypeDeclarations</key>
-    <array>
-        <dict>
-            <key>UTTypeIdentifier</key>
-            <string>org.chordpro.cho</string>
-            <key>UTTypeDescription</key>
-            <string>ChordPro song</string>
-            <key>UTTypeConformsTo</key>
-            <array>
-                <string>public.plain-text</string>
-            </array>
-            <key>UTTypeTagSpecification</key>
-            <dict>
-                <key>public.filename-extension</key>
-                <array>
-                    <string>cho</string>
-                </array>
-            </dict>
-        </dict>
-        <dict>
-            <key>UTTypeIdentifier</key>
-            <string>org.chordpro.chordpro</string>
-            <key>UTTypeDescription</key>
-            <string>ChordPro song</string>
-            <key>UTTypeConformsTo</key>
-            <array>
-                <string>public.plain-text</string>
-            </array>
-            <key>UTTypeTagSpecification</key>
-            <dict>
-                <key>public.filename-extension</key>
-                <array>
-                    <string>chopro</string>
-                    <string>chordpro</string>
-                    <string>crd</string>
-                    <string>chord</string>
-                    <string>pro</string>
-                </array>
-            </dict>
-        </dict>
-    </array>
-    <key>CFBundleDocumentTypes</key>
-    <array>
-        <dict>
-            <key>CFBundleTypeName</key>
-            <string>ChordPro song</string>
-            <key>CFBundleTypeRole</key>
-            <string>Editor</string>
-            <key>CFBundleTypeIconFile</key>
-            <string>Campfire.icns</string>
-            <key>LSHandlerRank</key>
-            <string>Default</string>
-            <key>LSItemContentTypes</key>
-            <array>
-                <string>org.chordpro.cho</string>
-            </array>
-        </dict>
-        <dict>
-            <key>CFBundleTypeName</key>
-            <string>ChordPro song</string>
-            <key>CFBundleTypeRole</key>
-            <string>Editor</string>
-            <key>CFBundleTypeIconFile</key>
-            <string>Campfire.icns</string>
-            <key>LSHandlerRank</key>
-            <string>Alternate</string>
-            <key>LSItemContentTypes</key>
-            <array>
-                <string>org.chordpro.chordpro</string>
-            </array>
-        </dict>
-    </array>
-""".trimIndent()

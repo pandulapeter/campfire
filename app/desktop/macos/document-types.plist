@@ -1,0 +1,72 @@
+<key>UTImportedTypeDeclarations</key>
+<array>
+    <dict>
+        <key>UTTypeIdentifier</key>
+        <string>org.chordpro.cho</string>
+        <key>UTTypeDescription</key>
+        <string>ChordPro song</string>
+        <key>UTTypeConformsTo</key>
+        <array>
+            <string>public.plain-text</string>
+        </array>
+        <key>UTTypeTagSpecification</key>
+        <dict>
+            <key>public.filename-extension</key>
+            <array>
+                <string>cho</string>
+            </array>
+        </dict>
+    </dict>
+    <dict>
+        <key>UTTypeIdentifier</key>
+        <string>org.chordpro.chordpro</string>
+        <key>UTTypeDescription</key>
+        <string>ChordPro song</string>
+        <key>UTTypeConformsTo</key>
+        <array>
+            <string>public.plain-text</string>
+        </array>
+        <key>UTTypeTagSpecification</key>
+        <dict>
+            <key>public.filename-extension</key>
+            <array>
+                <string>chopro</string>
+                <string>chordpro</string>
+                <string>crd</string>
+                <string>chord</string>
+                <string>pro</string>
+            </array>
+        </dict>
+    </dict>
+</array>
+<key>CFBundleDocumentTypes</key>
+<array>
+    <dict>
+        <key>CFBundleTypeName</key>
+        <string>ChordPro song</string>
+        <key>CFBundleTypeRole</key>
+        <string>Editor</string>
+        <key>CFBundleTypeIconFile</key>
+        <string>Campfire.icns</string>
+        <key>LSHandlerRank</key>
+        <string>Default</string>
+        <key>LSItemContentTypes</key>
+        <array>
+            <string>org.chordpro.cho</string>
+        </array>
+    </dict>
+    <dict>
+        <key>CFBundleTypeName</key>
+        <string>ChordPro song</string>
+        <key>CFBundleTypeRole</key>
+        <string>Editor</string>
+        <key>CFBundleTypeIconFile</key>
+        <string>Campfire.icns</string>
+        <key>LSHandlerRank</key>
+        <string>Alternate</string>
+        <key>LSItemContentTypes</key>
+        <array>
+            <string>org.chordpro.chordpro</string>
+        </array>
+    </dict>
+</array>
