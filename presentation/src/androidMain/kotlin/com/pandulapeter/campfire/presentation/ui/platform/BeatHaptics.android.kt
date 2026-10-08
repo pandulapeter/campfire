@@ -18,6 +18,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 
+internal actual val areBeatHapticsFeltInBackground = true
+
 @Composable
 internal actual fun rememberBeatHaptics(): BeatHaptics? {
     val context = LocalContext.current

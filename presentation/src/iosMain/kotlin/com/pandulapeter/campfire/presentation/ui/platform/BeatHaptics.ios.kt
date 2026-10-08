@@ -15,6 +15,8 @@ import platform.UIKit.UIImpactFeedbackGenerator
 import platform.UIKit.UIImpactFeedbackStyle
 
 /** Prepared ahead, so that the first beat is not late by the time the engine takes to wake up. */
+internal actual val areBeatHapticsFeltInBackground = false
+
 @Composable
 internal actual fun rememberBeatHaptics(): BeatHaptics? = remember {
     val heavy = UIImpactFeedbackGenerator(style = UIImpactFeedbackStyle.UIImpactFeedbackStyleHeavy).apply { prepare() }

@@ -11,5 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.platform
 
 import androidx.compose.runtime.Composable
 
+internal actual val areBeatHapticsFeltInBackground = false
+
 @Composable
 internal actual fun rememberBeatHaptics(): BeatHaptics? = null

@@ -2230,18 +2230,21 @@ class CampfireViewModel(
 
     /**
      * Called whenever the app is out of sight (ON_STOP). A click that cannot sound - the volume at zero, every beat
-     * muted - is only there for the flash and the haptics, neither of which reaches a screen nobody sees, and keeping it
-     * up would keep the phone's background audio (iOS's audio mode, Android's media playback service) going for
-     * silence, which is not what either platform allows it for. A few seconds' grace, since an Android activity
-     * recreated in front (a system theme or language change) stops, and is only started again once its new composition
-     * is up, and a click playing on its own screen is not to be stopped by that.
+     * muted - is only there for the flash and the haptics. The flash never reaches a screen nobody sees, and keeping the
+     * click up for nothing would keep the phone's background audio (iOS's audio mode, Android's media playback service)
+     * going for silence, which is not what either platform allows it for. The haptics do reach a pocket where
+     * [areBeatsFeltInBackground] (Android, with a vibrator) and the Vibrate switch is on, so a click with a beat left to
+     * feel is kept there. A few seconds' grace, since an Android activity recreated in front (a system theme or language
+     * change) stops, and is only started again once its new composition is up, and a click playing on its own screen
+     * is not to be stopped by that.
      */
-    fun onAppStopped() {
+    fun onAppStopped(areBeatsFeltInBackground: Boolean) {
         silentClickStopJob?.cancel()
         silentClickStopJob = viewModelScope.launch {
             delay(SILENT_CLICK_GRACE_MILLIS)
             val playing = metronome.playback.value as? MetronomePlayback.Playing ?: return@launch
-            if (!playing.pattern.canSound) {
+            val isFelt = areBeatsFeltInBackground && metronomeSettings.value.isHapticBeatEnabled && playing.pattern.hasUnmutedBeat
+            if (!playing.pattern.canSound && !isFelt) {
                 metronome.stop()
                 sendMessage(Message.SilentMetronomeStopped)
             }

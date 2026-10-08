@@ -44,6 +44,14 @@ class MetronomePatternTest {
     }
 
     @Test
+    fun playsABeatAtZeroVolume() {
+        assertTrue(MetronomePattern(bpm = 120, volume = 0f).hasUnmutedBeat)
+        assertFalse(
+            MetronomePattern(bpm = 120, timeSignature = TimeSignature(4, 4), beatLevels = listOf(MUTED, MUTED, MUTED, MUTED)).hasUnmutedBeat,
+        )
+    }
+
+    @Test
     fun soundsWithOneAudibleBeatAtAnyVolume() = assertTrue(
         MetronomePattern(
             bpm = 120,

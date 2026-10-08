@@ -417,11 +417,12 @@ shared controls.
   (the Android service, iOS's Now Playing, the web's media session in `BackgroundMetronome.wasmJs.kt`, nothing on the
   desktop), told about a click from `CampfireApp` in the language chosen in the app and only told it ended once it was
   shown; `BeatHaptics.kt` (Android's predefined clicks, iOS's impact generators, null elsewhere), driven from the heard
-  beats while the app is resumed. The flexible update's Restart waits for a playing click like it waits for a sync run.
+  beats while the app is resumed, and on Android while it is composed at all (`areBeatHapticsFeltInBackground`: the
+  metronome's foreground service lets the process vibrate). The flexible update's Restart waits for a playing click like it waits for a sync run.
   `CampfireApp`'s `ON_STOP` / `ON_START` effects stop a click that cannot sound (`MetronomePattern.canSound`: the
   volume at zero, or every beat muted) once the app has been out of sight for three seconds, on every platform
   (`CampfireViewModel.onAppStopped`, the grace covering an Android activity recreated in front), with a snackbar
-  waiting for the return.
+  waiting for the return — but not one still felt there, with Vibrate on and a beat not muted, on Android.
 
 ## Export
 

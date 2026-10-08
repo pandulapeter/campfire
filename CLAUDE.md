@@ -842,7 +842,8 @@ Nothing about it reaches the network. The module `CLAUDE.md` files carry the det
   nothing is left to look at the notification it keeps up. A click that cannot sound — the volume at zero or every
   beat muted — is the exception: it is stopped a few seconds after the app goes out of sight, and says so, since out
   of sight it has nothing left to show and the phones' background audio is not for silence
-  (`MetronomePattern.canSound`, `CampfireViewModel.onAppStopped`).
+  (`MetronomePattern.canSound`, `CampfireViewModel.onAppStopped`) — except on Android with Vibrate on and a beat not
+  muted, where the click is still felt in a pocket and plays on (iOS has no background haptics).
 - **Both are played from the same panel** (`MetronomePanel`): the least of a metronome that is still one — the bar as
   it is heard, with its accents tapped on it, since the accents are the bar's rather than one screen's, and play and
   stop at the end of the row. On the **song details screen** it is inside the app bar, under the title row, because a

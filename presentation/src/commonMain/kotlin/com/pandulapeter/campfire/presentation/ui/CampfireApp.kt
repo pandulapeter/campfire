@@ -152,6 +152,7 @@ import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeIconBeat
 import com.pandulapeter.campfire.presentation.ui.metronome.rememberMetronomeIconBeat
 import com.pandulapeter.campfire.presentation.ui.platform.LocalMetronomeNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.MetronomeNotification
+import com.pandulapeter.campfire.presentation.ui.platform.areBeatHapticsFeltInBackground
 import com.pandulapeter.campfire.presentation.ui.platform.rememberBeatHaptics
 import com.pandulapeter.campfire.presentation.ui.screens.metronome.MetronomeScreen
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.KEY_SEPARATOR
@@ -278,7 +279,8 @@ fun CampfireApp(
     // A click that cannot sound is stopped once the app has been out of sight for a moment, see
     // CampfireViewModel.onAppStopped. ON_STOP rather than ON_PAUSE: Control Center or a notification shade pulled over
     // the app pauses it with the click still in view.
-    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { viewModel.onAppStopped() }
+    val areBeatsFeltInBackground = areBeatHapticsFeltInBackground && rememberBeatHaptics() != null
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { viewModel.onAppStopped(areBeatsFeltInBackground = areBeatsFeltInBackground) }
     LifecycleEventEffect(Lifecycle.Event.ON_START) { viewModel.onAppStarted() }
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val arePreferencesLoaded by viewModel.arePreferencesLoaded.collectAsStateWithLifecycle()
@@ -1704,8 +1706,8 @@ private fun MetronomeNotificationEffect(viewModel: CampfireViewModel) {
 }
 
 /**
- * The beat in the hand, from the heard beats, only while the app is resumed (see [rememberBeatHaptics]) and only where
- * the user asked for it.
+ * The beat in the hand, from the heard beats, only where the user asked for it: while the app is resumed, or for as long
+ * as it is composed where [areBeatHapticsFeltInBackground].
  */
 @Composable
 private fun MetronomeHapticsEffect(viewModel: CampfireViewModel) {
@@ -1714,7 +1716,7 @@ private fun MetronomeHapticsEffect(viewModel: CampfireViewModel) {
     if (!settings.isHapticBeatEnabled) return
     val lifecycleOwner = LocalLifecycleOwner.current
     LaunchedEffect(haptics, lifecycleOwner) {
-        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+        lifecycleOwner.repeatOnLifecycle(if (areBeatHapticsFeltInBackground) Lifecycle.State.CREATED else Lifecycle.State.RESUMED) {
             viewModel.metronomeBeats.collect { beat ->
                 if (!beat.isSubdivision && beat.level != BeatLevel.MUTED) haptics.onBeat(isAccent = beat.level == BeatLevel.ACCENT)
             }
