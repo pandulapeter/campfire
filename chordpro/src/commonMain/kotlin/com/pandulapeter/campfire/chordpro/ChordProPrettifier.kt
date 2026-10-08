@@ -34,6 +34,8 @@ object ChordProPrettifier {
         var song = 0
         val output = mutableListOf<String>()
         val metadata = mutableListOf<Pair<Int, String>>()
+        // A stack rather than ChordProLineScanner's one open environment: an end closes only the innermost one it
+        // names, which decides where a gap goes and keeps a nested environment verbatim.
         val environments = mutableListOf<String>()
         var isHeader = true
         var gapBeforeNext = false
@@ -254,6 +256,7 @@ object ChordProPrettifier {
         var isHeader = true
         val headerKinds = mutableSetOf<String>()
         val found = mutableMapOf<String, Int>()
+        // The same stack as prettify's, not ChordProLineScanner's rule, so the two agree about where a song is in an environment.
         val environments = mutableListOf<String>()
         fun finishSong() {
             found.filterKeys { it !in headerKinds }.values.sorted().takeIf { it.isNotEmpty() }?.let { hoisted[song] = it }

@@ -80,6 +80,8 @@ class ChordProSummaryCache internal constructor(
         var end = position
         while (end < text.length && text[end] != '\n' && text[end] != '\r') end++
         if (!isLyricLine(text, start, end)) return null
+        // ChordProLineScanner's rule, walked over the offsets before the line instead of over a list of every line, since
+        // it runs on each keystroke and only needs the environment the line stands in.
         var environment: String? = null
         var offset = 0
         while (offset < start) {

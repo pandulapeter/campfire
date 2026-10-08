@@ -102,7 +102,12 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   The model is immutable, and the Compose compiler is told so (`gradle/compose-stability.conf`): never hand it a
   collection that is mutated afterwards, and add a new model class to that file only once that holds for it.
 - The shared low-level rules, one `internal object` per concern: `ChordProLines` (splitting a file into lines and
-  joining them back with its own separator), `ChordProDirectives` (the directive and chord bracket walks, long/short
+  joining them back with its own separator), `ChordProLineScanner` (the one walk over a text's lines that the parser,
+  the summary, the chord rewrite, the highlighter, the splitter and the import comparison share: the environment each
+  line stands in, whether it is a `#` source comment and which directive it is, any `{end_of_…}` closing whatever is
+  open; two readers keep a walk of their own on purpose — `ChordProSummaryCache.safeLineAt` follows the same rule over
+  character offsets, so as not to split the text on every keystroke, and `ChordProPrettifier` keeps a stack, an end
+  closing only the innermost environment it names, which decides where its gaps go), `ChordProDirectives` (the directive and chord bracket walks, long/short
   directive names, a value separated from a known directive name by a colon or by whitespace alone — the spec allows
   both, and a line in braces whose name the app does not know stays the lyrics it has always been shown as),
   `ChordProEnvironments` (the `start_of_` / `end_of_` prefixes, `label` attributes in either quotes, and no label at
