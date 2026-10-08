@@ -51,7 +51,7 @@ import com.pandulapeter.campfire.data.source.remote.api.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.SyncProviders
 import com.pandulapeter.campfire.data.source.remote.api.SyncRemoteStorageFullException
 import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
-import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
+import com.pandulapeter.campfire.data.model.domain.AuthorizationCompletionPage
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancelAndJoin

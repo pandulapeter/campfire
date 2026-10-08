@@ -11,7 +11,7 @@ package com.pandulapeter.campfire.domain.implementation.useCases
 
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
-import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
+import com.pandulapeter.campfire.data.model.domain.AuthorizationCompletionPage
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.data.repository.api.SyncRepository

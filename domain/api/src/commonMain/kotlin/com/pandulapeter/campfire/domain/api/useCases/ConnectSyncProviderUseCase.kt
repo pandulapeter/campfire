@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.domain.api.useCases
 
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
-import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
+import com.pandulapeter.campfire.data.model.domain.AuthorizationCompletionPage
 
 interface ConnectSyncProviderUseCase {
 

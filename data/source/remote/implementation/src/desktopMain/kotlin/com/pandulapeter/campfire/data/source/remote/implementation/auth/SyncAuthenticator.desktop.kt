@@ -10,8 +10,8 @@
 package com.pandulapeter.campfire.data.source.remote.implementation.auth
 
 import com.pandulapeter.campfire.data.source.remote.api.SyncAuthenticator
-import com.pandulapeter.campfire.data.source.remote.api.SystemBrowser
-import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
+import com.pandulapeter.campfire.data.model.domain.SystemBrowser
+import com.pandulapeter.campfire.data.model.domain.AuthorizationCompletionPage
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.net.InetAddress

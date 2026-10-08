@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.data.source.remote.api
+package com.pandulapeter.campfire.data.model.domain
 
 /**
  * Opening a URL in the user's own browser, which on the desktop is something the application shell knows how to do
@@ -15,9 +15,10 @@ package com.pandulapeter.campfire.data.source.remote.api
  * other half needs is the operating system's own command. The app already has that one implementation, for the
  * links in Settings, and this is how the consent page reaches it.
  *
- * Declared here next to [SyncAuthenticator] for the same reason that one is: the platform's half of the
- * authorization flow belongs in the contracts, and each platform provides its own. Only the desktop needs it - the
- * other three authenticators open their own browser through an API of their own.
+ * Declared in `:data:model`, which everything sees and which this needs nothing of, so that the shell that implements
+ * it (`:presentation`'s desktop source set) and the desktop authenticator that consumes it meet without the UI seeing
+ * the remote source's contracts. Only the desktop needs it - the other three authenticators open their own browser
+ * through an API of their own.
  */
 fun interface SystemBrowser {
 

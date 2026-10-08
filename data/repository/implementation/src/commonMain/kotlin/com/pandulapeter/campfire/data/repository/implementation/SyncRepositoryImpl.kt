@@ -18,7 +18,7 @@ import com.pandulapeter.campfire.data.repository.implementation.sync.SyncEngine
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncRunScheduler
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncStateHolder
 import com.pandulapeter.campfire.data.source.remote.api.SyncProviders
-import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
+import com.pandulapeter.campfire.data.model.domain.AuthorizationCompletionPage
 import org.koin.core.annotation.Single
 
 /**

@@ -22,7 +22,7 @@ import com.pandulapeter.campfire.data.source.remote.api.PendingAuthorizationStor
 import com.pandulapeter.campfire.data.source.remote.api.SyncAuthenticator
 import com.pandulapeter.campfire.data.source.remote.api.SyncProvider
 import com.pandulapeter.campfire.data.source.remote.api.SyncProviders
-import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
+import com.pandulapeter.campfire.data.model.domain.AuthorizationCompletionPage
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteAuthorizationResponse
 import com.pandulapeter.campfire.data.source.remote.api.model.redirectParameters
 import kotlinx.coroutines.CancellationException

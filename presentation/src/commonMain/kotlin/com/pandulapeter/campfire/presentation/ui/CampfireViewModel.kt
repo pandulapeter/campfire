@@ -48,7 +48,7 @@ import com.pandulapeter.campfire.data.model.domain.normalizedToNfc
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.domain.SyncProgress
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
-import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
+import com.pandulapeter.campfire.data.model.domain.AuthorizationCompletionPage
 import com.pandulapeter.campfire.data.model.domain.SyncState
 import com.pandulapeter.campfire.data.model.domain.PrintSettings
 import com.pandulapeter.campfire.presentation.ui.chords.toChordInstrument

@@ -85,7 +85,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_sync_redirect_p
 import com.pandulapeter.campfire.presentation.resources.settings_sync_remote_deletions_pending
 import com.pandulapeter.campfire.presentation.resources.settings_sync_unavailable
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
+import com.pandulapeter.campfire.data.model.domain.AuthorizationCompletionPage
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
 import com.pandulapeter.campfire.presentation.ui.components.Elapsed
 import com.pandulapeter.campfire.presentation.ui.components.pluralTextResource

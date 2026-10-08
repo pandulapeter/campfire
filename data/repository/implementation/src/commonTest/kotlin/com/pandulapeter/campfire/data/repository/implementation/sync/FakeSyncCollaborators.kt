@@ -24,7 +24,7 @@ import com.pandulapeter.campfire.data.source.local.api.SyncIndexLocalSource
 import com.pandulapeter.campfire.data.source.remote.api.PendingAuthorization
 import com.pandulapeter.campfire.data.source.remote.api.PendingAuthorizationStore
 import com.pandulapeter.campfire.data.source.remote.api.SyncAuthenticator
-import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
+import com.pandulapeter.campfire.data.model.domain.AuthorizationCompletionPage
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteAuthorizationRequest
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
