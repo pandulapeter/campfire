@@ -173,7 +173,8 @@ a deletion of one of those files lands before its reads or after its update and 
   in memory. A setlist is the exception: one whose two versions differ only in the day they name — which every device
   gives an undated setlist on its own, the day it first reads it — or where this device's only change is the day its
   read gave an undated file (the index version, re-encoded with no day, is the local one's), takes the cloud folder's
-  version with no copy, written only over the bytes it was compared with (`resolveWith`, `takeRemote`). The engine
+  version with no copy, written only over the bytes it was compared with (`ConflictResolver.resolveWith`, `takeRemote`,
+  built by the engine with its own collaborators and never by Koin). The engine
   never sees the setlist format for it: `SetlistComparison` (`:data:source:local:api`) answers both questions. A day
   set on purpose on two devices offline loses to the folder's. A demo file this device planted is the other exception:
   one that still hashes to what `UserPreferences.demoLibraryContentHashes` recorded when it was planted, met with no
@@ -247,7 +248,10 @@ a deletion of one of those files lands before its reads or after its update and 
   that was interrupted, and its marker would be cleared under it.
   `commonTest` runs the engine against an in-memory `SyncProvider` and `LibraryFileLocalSource` for the behaviour the
   planner's tests cannot show, and `SyncRepositoryImplTest` runs the repository against the same fakes plus the ones
-  in `FakeSyncCollaborators.kt`. A plan whose deletions on one side are more than half of the index (at least
+  in `FakeSyncCollaborators.kt`. The pure parts of a run are tested on their own: `preparePass` (`PassListing.kt`,
+  `PassListingTest`) works out what one pass may touch from the two listings and the index, and `DeletionGuard`
+  (`DeletionGuardTest`) is the question below; the engine threads one `SyncRun` and one `SyncPass` (`SyncRun.kt`)
+  through its steps instead of their values one by one. A plan whose deletions on one side are more than half of the index (at least
   `DeletionGuard.MIN_DELETIONS_TO_ASK` of them) or the whole of it is not applied under `SyncDeletionPolicy.ASK`, and neither is one
   that would delete anything remotely while the local listing is empty and the index is not — a library folder that
   went missing lists as empty on every platform, however small the library was. The engine returns
