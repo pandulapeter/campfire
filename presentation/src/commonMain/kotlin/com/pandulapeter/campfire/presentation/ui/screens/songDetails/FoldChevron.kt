@@ -22,6 +22,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_section_exp
 import com.pandulapeter.campfire.presentation.resources.song_details_tab_collapse
 import com.pandulapeter.campfire.presentation.resources.song_details_tab_expand
 import com.pandulapeter.campfire.presentation.ui.components.ExpandChevron
+import com.pandulapeter.campfire.presentation.ui.songLayout.FoldableKind
 
 /**
  * The app's fold chevron, named for what pressing it does to a tab, a grid, or a whole section where [kind] is null, or

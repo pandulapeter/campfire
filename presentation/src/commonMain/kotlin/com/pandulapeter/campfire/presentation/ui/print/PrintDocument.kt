@@ -18,7 +18,7 @@ import com.pandulapeter.campfire.presentation.ui.chords.emptyChordDiagramGeometr
 import com.pandulapeter.campfire.presentation.ui.chords.secondaryName
 import com.pandulapeter.campfire.presentation.ui.chords.selectShape
 import com.pandulapeter.campfire.presentation.ui.chords.songChordsOf
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.DefaultSectionLabels
+import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
 
 /**
  * What a PDF is made of, read once when the export screen opens: a snapshot, so that the preview and the file agree even

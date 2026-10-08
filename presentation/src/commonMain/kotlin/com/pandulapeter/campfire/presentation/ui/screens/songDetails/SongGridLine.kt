@@ -20,6 +20,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import com.pandulapeter.campfire.chordpro.model.GridToken
+import com.pandulapeter.campfire.presentation.ui.songLayout.GridCell
+import com.pandulapeter.campfire.presentation.ui.songLayout.alignedGridBars
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 
 /**

@@ -16,6 +16,7 @@ import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.TextUnit
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
+import com.pandulapeter.campfire.presentation.ui.songLayout.PADDING
 
 /**
  * What the chorded lines of one page have had measured, shared between them because they keep asking for the
@@ -77,5 +78,3 @@ internal class SongTextMeasurements(
 internal const val LINE_HEIGHT_SAMPLE = "X"
 
 private const val MAX_MEASURED_TEXTS = 4096
-
-internal const val PADDING = '\u00A0' // Non-breaking space, so that the padding never gets trimmed or wrapped.

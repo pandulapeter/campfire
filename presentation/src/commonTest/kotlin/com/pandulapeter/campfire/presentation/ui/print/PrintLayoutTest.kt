@@ -12,7 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.print
 import com.pandulapeter.campfire.chordpro.model.*
 import com.pandulapeter.campfire.data.model.domain.PrintSettings
 import com.pandulapeter.campfire.presentation.ui.chords.ChordDiagramGeometry
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.DefaultSectionLabels
+import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
 import kotlinx.coroutines.test.runTest
 import kotlin.test.*
 

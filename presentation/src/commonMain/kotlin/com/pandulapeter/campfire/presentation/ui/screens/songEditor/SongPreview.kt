@@ -43,7 +43,7 @@ import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongInfoEdi
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongLyrics
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongLyricsInputs
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.prepareSongLyrics
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.rememberDefaultSectionLabels
+import com.pandulapeter.campfire.presentation.ui.songLayout.rememberDefaultSectionLabels
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview

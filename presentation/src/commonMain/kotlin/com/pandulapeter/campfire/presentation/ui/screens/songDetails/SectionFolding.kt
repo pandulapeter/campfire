@@ -19,12 +19,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
-
-/** The two ways of writing lines down that can be folded away: neither says anything to somebody who only sings. */
-internal enum class FoldableKind {
-    TAB,
-    GRID,
-}
+import com.pandulapeter.campfire.presentation.ui.songLayout.FoldableKind
+import com.pandulapeter.campfire.presentation.ui.songLayout.areAll
 
 internal fun ChordProLine.foldableKind() = when (this) {
     is ChordProLine.Tab -> FoldableKind.TAB

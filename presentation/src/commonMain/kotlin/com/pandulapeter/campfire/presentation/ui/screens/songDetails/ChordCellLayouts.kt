@@ -19,6 +19,8 @@ import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.ui.chords.ChordCell
 import com.pandulapeter.campfire.presentation.ui.chords.chordDiagramGeometryOf
 import com.pandulapeter.campfire.presentation.ui.chords.emptyChordDiagramGeometryOf
+import com.pandulapeter.campfire.presentation.ui.songLayout.chordRowStarts
+import com.pandulapeter.campfire.presentation.ui.songLayout.chordSlotRows
 
 /**
  * The cells of a Chords section as its slots measure and draw them: every name laid out once, every cell's width and

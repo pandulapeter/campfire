@@ -19,6 +19,12 @@ import com.pandulapeter.campfire.chordpro.model.CommentPlacement
 import com.pandulapeter.campfire.chordpro.model.SectionType
 import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
 import com.pandulapeter.campfire.metronome.api.model.TimeSignature
+import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
+import com.pandulapeter.campfire.presentation.ui.songLayout.FoldableKind
+import com.pandulapeter.campfire.presentation.ui.songLayout.UNNAMED_SECTION_HEADER
+import com.pandulapeter.campfire.presentation.ui.songLayout.areAll
+import com.pandulapeter.campfire.presentation.ui.songLayout.header
+import com.pandulapeter.campfire.presentation.ui.songLayout.withNumberedSections
 
 /**
  * Flattens the parsed song into the sections the layout places.
@@ -251,10 +257,6 @@ private val SectionType.foldName
 
 /** What joins the fold key of a section to the number of the stretch a change of tempo or time cut it into. */
 private const val TIMING_CONTINUATION_SEPARATOR = "~"
-
-/** True when every line that says anything is of the given kind, blank lines inside the run notwithstanding. */
-internal inline fun <reified T : ChordProLine> List<ChordProLine>.areAll() =
-    any { it is T } && all { it is T || it == ChordProLine.Blank }
 
 /**
  * Drops the chords when they are not wanted, along with the lines that were nothing but chords, and trims the blank

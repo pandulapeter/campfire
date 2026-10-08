@@ -62,6 +62,7 @@ import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
 import com.pandulapeter.campfire.presentation.ui.playing.withCapo
 import com.pandulapeter.campfire.presentation.ui.playing.withTempo
 import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
+import com.pandulapeter.campfire.presentation.ui.songLayout.rememberDefaultSectionLabels
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull

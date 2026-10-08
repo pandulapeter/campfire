@@ -26,7 +26,7 @@ import com.pandulapeter.campfire.chordpro.ChordNotation
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
 import com.pandulapeter.campfire.data.model.domain.PrintSettings
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.DefaultSectionLabels
+import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
 import kotlinx.coroutines.runBlocking
 import java.io.ByteArrayOutputStream
 import java.io.File

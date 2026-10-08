@@ -20,14 +20,14 @@ import com.pandulapeter.campfire.chordpro.model.SectionType
 import com.pandulapeter.campfire.data.model.domain.PrintSettings
 import com.pandulapeter.campfire.presentation.ui.chords.ChordDiagramGeometry
 import com.pandulapeter.campfire.presentation.ui.chords.secondaryName
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.balancedRowStarts
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.header
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.withNumber
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.withNumberedSections
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.alignedGridBars
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.areAll
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.labelOf
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.padLyricsToFitChords
+import com.pandulapeter.campfire.presentation.ui.songLayout.balancedRowStarts
+import com.pandulapeter.campfire.presentation.ui.songLayout.header
+import com.pandulapeter.campfire.presentation.ui.songLayout.withNumber
+import com.pandulapeter.campfire.presentation.ui.songLayout.withNumberedSections
+import com.pandulapeter.campfire.presentation.ui.songLayout.alignedGridBars
+import com.pandulapeter.campfire.presentation.ui.songLayout.areAll
+import com.pandulapeter.campfire.presentation.ui.songLayout.labelOf
+import com.pandulapeter.campfire.presentation.ui.songLayout.padLyricsToFitChords
 import kotlinx.coroutines.yield
 import kotlin.math.roundToInt
 

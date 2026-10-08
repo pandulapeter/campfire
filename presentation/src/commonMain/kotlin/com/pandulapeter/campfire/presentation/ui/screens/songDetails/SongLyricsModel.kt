@@ -22,6 +22,7 @@ import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.chords.SongChord
 import com.pandulapeter.campfire.presentation.ui.chords.songChordsOf
 import com.pandulapeter.campfire.presentation.ui.chords.withSearchedShapes
+import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 

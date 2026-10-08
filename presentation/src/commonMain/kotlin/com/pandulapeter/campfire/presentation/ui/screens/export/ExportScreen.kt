@@ -101,7 +101,7 @@ import com.pandulapeter.campfire.presentation.ui.print.TEMPO_VALUE
 import com.pandulapeter.campfire.presentation.ui.print.layoutPrintDocument
 import com.pandulapeter.campfire.presentation.ui.print.pdfFileName
 import com.pandulapeter.campfire.presentation.ui.print.withinFeatures
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.rememberDefaultSectionLabels
+import com.pandulapeter.campfire.presentation.ui.songLayout.rememberDefaultSectionLabels
 import com.pandulapeter.campfire.presentation.ui.theme.LocalMonospaceFontFamily
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CancellationException

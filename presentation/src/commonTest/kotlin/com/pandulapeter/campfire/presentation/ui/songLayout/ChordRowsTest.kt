@@ -7,12 +7,13 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.screens.songDetails
+package com.pandulapeter.campfire.presentation.ui.songLayout
 
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
 import com.pandulapeter.campfire.presentation.ui.chords.ChordCell
 import com.pandulapeter.campfire.presentation.ui.chords.MAX_SONG_CHORDS
 import com.pandulapeter.campfire.presentation.ui.chords.SelectedShape
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.RenderSection
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals

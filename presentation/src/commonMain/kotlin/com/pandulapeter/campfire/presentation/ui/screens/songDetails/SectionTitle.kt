@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.presentation.ui.songLayout.UNNAMED_SECTION_HEADER
 
 /**
  * A section's name, followed by the chevron that folds it where it can be folded; only the chevron for a section with

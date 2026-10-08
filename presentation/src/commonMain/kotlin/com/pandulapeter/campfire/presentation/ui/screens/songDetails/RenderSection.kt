@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 import com.pandulapeter.campfire.chordpro.model.CommentStyle
 import com.pandulapeter.campfire.presentation.ui.chords.ChordCell
+import com.pandulapeter.campfire.presentation.ui.songLayout.chordSlotCount
 
 /**
  * [text] with its runs of whitespace collapsed into single spaces and cut to [DESCRIPTION_LENGTH] characters, an ellipsis
