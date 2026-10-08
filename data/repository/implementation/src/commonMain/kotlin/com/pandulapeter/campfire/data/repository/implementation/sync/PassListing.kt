@@ -10,8 +10,8 @@
 package com.pandulapeter.campfire.data.repository.implementation.sync
 
 import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
+import com.pandulapeter.campfire.data.model.domain.LibraryFiles
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
-import com.pandulapeter.campfire.data.model.domain.normalizedToNfc
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteFile
 import kotlinx.serialization.json.JsonObject
 
@@ -97,13 +97,13 @@ internal fun preparePass(
         val remoteKeys = remote.mapTo(mutableSetOf()) { it.key }
         val forgottenSongs = index.keys
             .filter { it.kind == LibraryFileKind.SONG && it in localKeys && it !in remoteKeys }
-            .mapTo(mutableSetOf()) { it.name.normalizedToNfc().lowercase() }
+            .mapTo(mutableSetOf()) { LibraryFiles.identityKey(it.name) }
         index = index.filterKeys { it !in localKeys || it in remoteKeys }
         // The same for what is set for those songs in preferences.json: with the base still naming them, the
         // preferences step would read the folder's document, which another device emptied with its library,
         // as removing their overrides, while this device was asked to keep the songs and so keeps those too.
         syncedPreferences = syncedPreferences?.let { base ->
-            SyncedPreferencesDocument.withSongsWhere(base) { it.normalizedToNfc().lowercase() !in forgottenSongs }
+            SyncedPreferencesDocument.withSongsWhere(base) { LibraryFiles.identityKey(it) !in forgottenSongs }
         }
     }
     if (deletionPolicy == SyncDeletionPolicy.KEEP_AND_DOWNLOAD) {

@@ -13,9 +13,9 @@ import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution
 import com.pandulapeter.campfire.data.model.domain.ImportProgress
 import com.pandulapeter.campfire.data.model.domain.ImportPlan
 import com.pandulapeter.campfire.data.model.domain.ImportResult
+import com.pandulapeter.campfire.data.model.domain.LibraryFiles
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song
-import com.pandulapeter.campfire.data.model.domain.normalizedToNfc
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.domain.api.useCases.ImportFilesUseCase
@@ -108,9 +108,10 @@ class ImportFilesUseCaseImpl internal constructor(
                 .mapTo(hashSetOf()) { it.fileName }
             // A plan is held against the library as it was when the question was asked; a sync run may have deleted, since
             // then, the file an identical song was going to be left as. The names come from the same list the planner used,
-            // folded the way the storage layer compares names, so a file another device re-spelt in case only is still there.
+            // folded the way the storage layer compares names (LibraryFiles.identityKey), so a file another device re-spelt in
+            // case only is still there.
             val libraryNames = if (plan.songs.any { it.isIdenticalToLibraryFile }) {
-                songRepository.loadSongsIfNeeded()?.mapTo(hashSetOf()) { it.fileName.normalizedToNfc().lowercase() }
+                songRepository.loadSongsIfNeeded()?.mapTo(hashSetOf()) { LibraryFiles.identityKey(it.fileName) }
             } else {
                 null
             }
@@ -119,7 +120,7 @@ class ImportFilesUseCaseImpl internal constructor(
                 onProgress(ImportProgress(ImportProgress.Phase.IMPORTING, processedSongs, total, currentFileName))
                 yield()
                 val isLibraryFileGone = entry.isIdenticalToLibraryFile && libraryNames != null &&
-                    entry.fileName.normalizedToNfc().lowercase() !in libraryNames
+                    LibraryFiles.identityKey(entry.fileName) !in libraryNames
                 val storedName = when (val action = if (isLibraryFileGone) Action.WRITE else entry.action(resolution)) {
                     Action.WRITE, Action.REPLACE -> {
                         // A replacement goes over the file as the library lists it; anything else is written under the

@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.data.repository.implementation.sync
 
 import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
-import com.pandulapeter.campfire.data.model.domain.normalizedToNfc
+import com.pandulapeter.campfire.data.model.domain.LibraryFiles
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
 import com.pandulapeter.campfire.data.source.remote.api.SyncFolder
@@ -172,7 +172,7 @@ internal class SyncedPreferencesSync(
     }
 
     /** See `foldRemoteNamesOntoLocal`: a song's entry is the same song's under any spelling of its file. */
-    private fun String.folded() = normalizedToNfc().lowercase()
+    private fun String.folded() = LibraryFiles.identityKey(this)
 
     private companion object {
         const val MAXIMUM_ATTEMPTS = 2

@@ -14,7 +14,6 @@ import com.pandulapeter.campfire.chordpro.ChordProSplitter
 import com.pandulapeter.campfire.data.model.domain.ImportPlan
 import com.pandulapeter.campfire.data.model.domain.LibraryFiles
 import com.pandulapeter.campfire.data.model.domain.Setlist
-import com.pandulapeter.campfire.data.model.domain.normalizedToNfc
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -398,7 +397,7 @@ internal object ImportPlanner {
     /** The desired name and the unnumbered name a numbered sibling belongs to, without an extension. */
     private fun String.familyKeys(extensions: List<String>): List<String> {
         val extension = extensions.firstOrNull { endsWith(it, ignoreCase = true) } ?: return emptyList()
-        val name = dropLast(extension.length).normalizedToNfc().lowercase()
+        val name = LibraryFiles.identityKey(dropLast(extension.length))
         return listOfNotNull(name, LibraryFiles.withoutCollisionSuffix(name))
     }
 

@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.repository.implementation.sync
 
-import com.pandulapeter.campfire.data.model.domain.normalizedToNfc
+import com.pandulapeter.campfire.data.model.domain.LibraryFiles
 import com.pandulapeter.campfire.data.source.remote.api.SyncProvider
 
 /**
@@ -64,4 +64,4 @@ internal fun foldIndexNamesOntoListings(
  * Two spellings a service takes for one file: case, which Dropbox ignores, and Unicode form, which the file systems
  * disagree about - a name an iPhone hands out decomposed is the same file as the composed one the service holds.
  */
-internal fun SyncKey.folded() = copy(name = name.normalizedToNfc().lowercase())
+internal fun SyncKey.folded() = copy(name = LibraryFiles.identityKey(name))
