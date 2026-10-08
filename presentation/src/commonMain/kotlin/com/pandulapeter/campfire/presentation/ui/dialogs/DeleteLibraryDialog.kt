@@ -37,7 +37,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.domain.SyncState
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.close
 import com.pandulapeter.campfire.presentation.resources.delete
 import com.pandulapeter.campfire.presentation.resources.settings_library_delete
 import com.pandulapeter.campfire.presentation.resources.settings_library_delete_confirmation

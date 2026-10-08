@@ -64,7 +64,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.cancel
 import com.pandulapeter.campfire.presentation.resources.print_page
 import com.pandulapeter.campfire.presentation.ui.components.DelayedLoadingIndicator
 import com.pandulapeter.campfire.presentation.ui.components.fadingUnderStartOverlay

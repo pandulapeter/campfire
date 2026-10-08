@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -39,7 +38,6 @@ import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.currentLanguage
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.close
 import com.pandulapeter.campfire.presentation.resources.done
 import com.pandulapeter.campfire.presentation.resources.save
 import com.pandulapeter.campfire.presentation.resources.song_details_languages_edit

@@ -39,7 +39,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.close
 import com.pandulapeter.campfire.presentation.resources.welcome_get_started
 import com.pandulapeter.campfire.presentation.resources.welcome_message
 import com.pandulapeter.campfire.presentation.resources.welcome_open_settings

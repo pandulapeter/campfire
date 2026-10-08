@@ -9,7 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.dialogs
 
-import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf

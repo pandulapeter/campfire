@@ -73,8 +73,6 @@ import com.pandulapeter.campfire.data.model.domain.PrintSettings
 import com.pandulapeter.campfire.presentation.localization.currentLanguage
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.cancel
-import com.pandulapeter.campfire.presentation.resources.close
 import com.pandulapeter.campfire.presentation.resources.print_load_failed
 import com.pandulapeter.campfire.presentation.resources.print_missing
 import com.pandulapeter.campfire.presentation.resources.print_no_songs

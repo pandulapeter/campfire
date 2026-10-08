@@ -58,7 +58,6 @@ import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.localization.currentLanguage
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.close
 import com.pandulapeter.campfire.presentation.resources.ic_calendar
 import com.pandulapeter.campfire.presentation.resources.save
 import com.pandulapeter.campfire.presentation.resources.setlists_countdown
