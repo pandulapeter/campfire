@@ -176,6 +176,7 @@ import com.pandulapeter.campfire.presentation.ui.navigation.SettingsTab
 import com.pandulapeter.campfire.presentation.ui.fontScale.FontScaleAccumulator
 import com.pandulapeter.campfire.presentation.ui.fontScale.PINCH_SENSITIVITY
 import com.pandulapeter.campfire.presentation.ui.songInfo.hasSongInfo
+import com.pandulapeter.campfire.presentation.ui.state.DebouncedPreference
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.EditorTextEdit
 import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroups
 import com.pandulapeter.campfire.presentation.ui.search.PickerFilterOptions
@@ -909,9 +910,9 @@ class CampfireViewModel(
     }.asState(Capos())
 
     /** Saved like [pendingPrintSettings]: a dragged slider is a new value every frame. */
-    private val _pendingMetronomeSettings = MutableStateFlow<MetronomeSettings?>(null)
+    private val metronomeSettingsPreference = DebouncedPreference<MetronomeSettings> { copy(metronomeSettings = it) }
 
-    val metronomeSettings = combine(userPreferences, _pendingMetronomeSettings) { userPreferences, pending ->
+    val metronomeSettings = combine(userPreferences, metronomeSettingsPreference.pending) { userPreferences, pending ->
         pending ?: userPreferences?.metronomeSettings ?: MetronomeSettings()
     }.asState(MetronomeSettings())
 
@@ -1154,16 +1155,16 @@ class CampfireViewModel(
      * The value set on this device and not yet written to the preferences. For as long as there is one it wins over
      * the stored value; once it is saved, whatever the preferences hold wins again.
      */
-    private val unsavedFontScale = MutableStateFlow<Float?>(null)
+    private val fontScalePreference = DebouncedPreference<Float> { copy(fontScale = it) }
 
     /**
      * The export screen's options as it last set them and not saved yet. A step of its size or its margins is a new
      * value, and saving each one would publish the preferences to every screen once a step, so they are saved the way
-     * [unsavedFontScale] is: once they have held still, or at once when the screen goes (see [setVisibleDialog]). A
+     * [fontScalePreference] is: once they have held still, or at once when the screen goes (see [setVisibleDialog]). A
      * screen composed again within that moment, as a rotation does, starts from this rather than a step back.
      */
-    private val _pendingPrintSettings = MutableStateFlow<PrintSettings?>(null)
-    val pendingPrintSettings = _pendingPrintSettings.asStateFlow()
+    private val printSettingsPreference = DebouncedPreference<PrintSettings> { copy(printSettings = it) }
+    val pendingPrintSettings = printSettingsPreference.pending
 
     private val settledFontScaleState = mutableFloatStateOf(UserPreferences.DEFAULT_FONT_SCALE)
 
@@ -1404,23 +1405,9 @@ class CampfireViewModel(
                     .collect { persist(key, it) }
             }
         }
-        viewModelScope.launch {
-            unsavedFontScale.filterNotNull().debounce(PREFERENCE_WRITE_DEBOUNCE_MILLIS).collect { fontScale ->
-                updateUserPreferences { it.copy(fontScale = fontScale) }
-                // Only if nothing newer arrived while this one was being saved, or that one would never be.
-                unsavedFontScale.compareAndSet(fontScale, null)
-            }
-        }
-        viewModelScope.launch {
-            _pendingPrintSettings.filterNotNull().debounce(PREFERENCE_WRITE_DEBOUNCE_MILLIS).collect { savePrintSettings(it) }
-        }
-        viewModelScope.launch {
-            _pendingMetronomeSettings.filterNotNull().debounce(PREFERENCE_WRITE_DEBOUNCE_MILLIS).collect { settings ->
-                updateUserPreferences { it.copy(metronomeSettings = settings) }
-                // Only if nothing newer arrived while this one was being saved, or that one would never be.
-                _pendingMetronomeSettings.compareAndSet(settings, null)
-            }
-        }
+        fontScalePreference.start(viewModelScope, PREFERENCE_WRITE_DEBOUNCE_MILLIS, updateUserPreferences::invoke)
+        printSettingsPreference.start(viewModelScope, PREFERENCE_WRITE_DEBOUNCE_MILLIS, updateUserPreferences::invoke)
+        metronomeSettingsPreference.start(viewModelScope, PREFERENCE_WRITE_DEBOUNCE_MILLIS, updateUserPreferences::invoke)
         viewModelScope.launch {
             // A pending tempo is let go of once its write has landed and the store says the same, so that the value on
             // screen never steps back to the stored one for the frames in between.
@@ -1483,7 +1470,7 @@ class CampfireViewModel(
             // The first read at launch, a read again, a restore, a sync run: whatever wrote the preference wins
             // whenever nothing set here is still waiting to be saved. The echo of our own save equals the live value.
             userPreferences.filterNotNull().map { it.fontScale }.distinctUntilChanged().collect { stored ->
-                if (unsavedFontScale.value == null) {
+                if (fontScalePreference.pending.value == null) {
                     liveFontScale.floatValue = stored
                     settleFontScale()
                 }
@@ -2697,7 +2684,7 @@ class CampfireViewModel(
     fun previewMetronomeSound(sound: MetronomeSound) = metronome.preview(sound, BeatLevel.ACCENT)
 
     fun updateMetronomeSettings(change: MetronomeSettings.() -> MetronomeSettings) =
-        _pendingMetronomeSettings.update { (it ?: metronomeSettings.value).change() }
+        metronomeSettingsPreference.update { (it ?: metronomeSettings.value).change() }
 
     /** The tempo a song plays at where it is opened, the override waiting to be written included. */
     internal fun effectiveTempoOf(songFileName: String, setlistFileName: String?) =
@@ -2931,29 +2918,12 @@ class CampfireViewModel(
      * one read-modify-write of the preferences, for a view model or a process that is about to go. Each is let go of
      * only if nothing newer arrived meanwhile, as the collectors do.
      */
-    private suspend fun writeWaitingPreferences() {
-        val fontScale = unsavedFontScale.value
-        val metronomeSettings = _pendingMetronomeSettings.value
-        val printSettings = _pendingPrintSettings.value
-        if (fontScale == null && metronomeSettings == null && printSettings == null) return
-        try {
-            updateUserPreferences { preferences ->
-                preferences.copy(
-                    fontScale = fontScale ?: preferences.fontScale,
-                    metronomeSettings = metronomeSettings ?: preferences.metronomeSettings,
-                    printSettings = printSettings ?: preferences.printSettings,
-                )
-            }
-            fontScale?.let { unsavedFontScale.compareAndSet(it, null) }
-            metronomeSettings?.let { _pendingMetronomeSettings.compareAndSet(it, null) }
-            printSettings?.let { _pendingPrintSettings.compareAndSet(it, null) }
-        } catch (exception: CancellationException) {
-            throw exception
-        } catch (exception: Exception) {
-            // Only what was already being lost.
-            println("Could not write the waiting preferences: ${exception.message}")
-        }
-    }
+    private suspend fun writeWaitingPreferences() = DebouncedPreference.flushAll(
+        fontScalePreference,
+        metronomeSettingsPreference,
+        printSettingsPreference,
+        write = updateUserPreferences::invoke,
+    )
 
     /**
      * Takes the tempo and capo overrides still waiting for their debounce out of it - their jobs cancelled, which only
@@ -3517,13 +3487,7 @@ class CampfireViewModel(
             description = setlist?.description.orEmpty(), isSetlist = setlist != null, songs = printSongs)
     }
 
-    fun setPrintSettings(value: PrintSettings) = _pendingPrintSettings.update { value.normalized() }
-
-    private suspend fun savePrintSettings(value: PrintSettings) {
-        updateUserPreferences { it.copy(printSettings = value) }
-        // Only if nothing newer arrived while this one was being saved, or that one would never be.
-        _pendingPrintSettings.compareAndSet(value, null)
-    }
+    fun setPrintSettings(value: PrintSettings) = printSettingsPreference.set(value.normalized())
 
     /**
      * [create] draws the pages and reports each one drawn to the callback it is given. Whatever it throws, an
@@ -3893,7 +3857,7 @@ class CampfireViewModel(
         val clamped = (value.coerceIn(UserPreferences.MIN_FONT_SCALE, UserPreferences.MAX_FONT_SCALE) * 100).roundToInt() / 100f
         if (clamped == liveFontScale.floatValue) return
         liveFontScale.floatValue = clamped
-        unsavedFontScale.value = clamped
+        fontScalePreference.set(clamped)
     }
 
     /**
@@ -4100,7 +4064,7 @@ class CampfireViewModel(
         // here, a screen opened again in the next moment finds the options it left, and its Save, Share and options do
         // nothing once it is no longer the dialog on screen.
         if (previousDialog is DialogType.Export && dialogType != previousDialog) {
-            _pendingPrintSettings.value?.let { viewModelScope.launch { savePrintSettings(it) } }
+            viewModelScope.launch { printSettingsPreference.flush(updateUserPreferences::invoke) }
             // An export nobody is looking at any more would put its picker up over whatever is on screen by then.
             cancelPdfExport()
         }
