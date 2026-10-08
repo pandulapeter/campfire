@@ -180,6 +180,14 @@ import com.pandulapeter.campfire.presentation.ui.fontScale.FontScaleAccumulator
 import com.pandulapeter.campfire.presentation.ui.fontScale.PINCH_SENSITIVITY
 import com.pandulapeter.campfire.presentation.ui.songInfo.hasSongInfo
 import com.pandulapeter.campfire.presentation.ui.state.DebouncedPreference
+import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
+import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.Companion.BACK_STACK_KEY
+import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.Companion.SETLISTS_SEARCH_KEY
+import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.Companion.SONGS_SEARCH_KEY
+import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.Companion.SONG_FILTER_KEY
+import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.Companion.SONG_PICKER_LANGUAGES_KEY
+import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.Companion.SONG_PICKER_TAGS_KEY
+import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.SavedSongFilter
 import com.pandulapeter.campfire.presentation.ui.state.asState
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.EditorTextEdit
 import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroups
@@ -238,8 +246,6 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.datetime.LocalDate
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import org.koin.core.annotation.KoinViewModel
 
@@ -294,16 +300,14 @@ class CampfireViewModel(
     /** What the screens draw a song, a key and a search with, see [SongRenderer]. */
     internal val songRenderer: SongRenderer,
     private val metronome: Metronome,
-    /**
-     * What survives the system killing the process while the app is in the background, which Android does whenever it
-     * needs the memory: the back stack, the song filter and the two searches. Empty on every real start, and on the
-     * platforms that have no such thing as a process being restored.
-     */
-    private val savedStateHandle: SavedStateHandle,
+    /** What survives the system killing the process while the app is in the background, see [SavedStateStore]. */
+    savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
+    private val savedStateStore = SavedStateStore(savedStateHandle, viewModelScope)
+
     /**
-     * The tags and languages the song list is narrowed to. Held here and in [savedStateHandle] only, so it lasts
+     * The tags and languages the song list is narrowed to. Held here and in [savedStateStore] only, so it lasts
      * exactly as long as the app does - a process killed in the background and restored is still the same run of the
      * app as far as the user can tell: a filter is a question asked of the library for the moment, and one that came
      * back on the next launch would read as songs having gone missing. Declared before [screenData], which is built
@@ -341,7 +345,7 @@ class CampfireViewModel(
     )
 
     // Navigation
-    /** Written into [savedStateHandle] on every change, see [persistBackStack], and read back from it here. */
+    /** Written into [savedStateStore] on every change, see [persistBackStack], and read back from it here. */
     val backStack: SnapshotStateList<CampfireDestination> = mutableStateListOf<CampfireDestination>().apply {
         // The import screen shows what an import running in this process is doing or did, so a new process has
         // nothing to put on it and comes back on the screen under it.
@@ -1386,21 +1390,13 @@ class CampfireViewModel(
             }
             hasUnsavedEditorChanges.collect { if (!it && !hasUnsavedEditorText()) storeEditorDraft(null) }
         }
-        viewModelScope.launch {
-            _songFilter.collect { persist(SONG_FILTER_KEY, SavedSongFilter(selectedTags = it.selectedTags.toList(), selectedLanguages = it.selectedLanguages.toList())) }
-        }
-        viewModelScope.launch {
-            _songPickerSelectedTags.collect { persist(SONG_PICKER_TAGS_KEY, it.toList()) }
-        }
-        viewModelScope.launch {
-            _songPickerSelectedLanguages.collect { persist(SONG_PICKER_LANGUAGES_KEY, it.toList()) }
-        }
-        listOf(SONGS_SEARCH_KEY to songsSearch, SETLISTS_SEARCH_KEY to setlistsSearch).forEach { (key, search) ->
-            viewModelScope.launch {
-                combine(search.isOpen, snapshotFlow { search.textFieldState.text.toString() }) { isOpen, query -> SavedSearch(isOpen = isOpen, query = query) }
-                    .collect { persist(key, it) }
-            }
-        }
+        savedStateStore.startPersisting(
+            songFilter = _songFilter,
+            songPickerSelectedTags = _songPickerSelectedTags,
+            songPickerSelectedLanguages = _songPickerSelectedLanguages,
+            songsSearch = songsSearch,
+            setlistsSearch = setlistsSearch,
+        )
         fontScalePreference.start(viewModelScope, PREFERENCE_WRITE_DEBOUNCE_MILLIS, updateUserPreferences::invoke)
         printSettingsPreference.start(viewModelScope, PREFERENCE_WRITE_DEBOUNCE_MILLIS, updateUserPreferences::invoke)
         metronomeSettingsPreference.start(viewModelScope, PREFERENCE_WRITE_DEBOUNCE_MILLIS, updateUserPreferences::invoke)
@@ -1577,10 +1573,13 @@ class CampfireViewModel(
         val stack = backStack.toList()
         // The stack is a few screens deep at most, so encoding it once per screen is nothing, and the first one fits
         // in every case but the pathological one.
-        savedStateHandle[BACK_STACK_KEY] = (stack.size downTo 1).asSequence()
-            .map { Json.encodeToString<List<CampfireDestination>>(stack.subList(0, it)) }
-            .firstOrNull { it.length <= MAX_SAVED_BACK_STACK_LENGTH }
-            ?: Json.encodeToString<List<CampfireDestination>>(listOf(CampfireDestination.Songs))
+        savedStateStore.persistJson(
+            BACK_STACK_KEY,
+            (stack.size downTo 1).asSequence()
+                .map { Json.encodeToString<List<CampfireDestination>>(stack.subList(0, it)) }
+                .firstOrNull { it.length <= MAX_SAVED_BACK_STACK_LENGTH }
+                ?: Json.encodeToString<List<CampfireDestination>>(listOf(CampfireDestination.Songs)),
+        )
     }
 
     /** Reported by the song details screen whenever its pager comes to rest, see [songDetailsCurrentSongs]. */
@@ -3900,24 +3899,9 @@ class CampfireViewModel(
             else -> null
         }
 
-    private fun restoreSearch(key: String) = restore<SavedSearch>(key).let { saved ->
-        SearchState(isInitiallyOpen = saved?.isOpen == true, initialQuery = saved?.query.orEmpty())
-    }
+    private fun restoreSearch(key: String) = savedStateStore.restoreSearch(key)
 
-    /** JSON rather than the values themselves, because a saved state only takes the handful of types a Bundle does. */
-    private inline fun <reified T> persist(key: String, value: T) {
-        savedStateHandle[key] = Json.encodeToString(value)
-    }
-
-    /** Null for nothing saved, and for something saved by a build whose destinations no longer read the same way. */
-    private inline fun <reified T> restore(key: String): T? = savedStateHandle.get<String>(key)?.let { saved ->
-        try {
-            Json.decodeFromString<T>(saved)
-        } catch (exception: SerializationException) {
-            println("Could not restore \"$key\": ${exception.message}")
-            null
-        }
-    }
+    private inline fun <reified T> restore(key: String): T? = savedStateStore.restore(key)
 
     /** See [MessageSink.launchLibraryChange]. */
     private fun launchLibraryChange(block: suspend () -> Unit) = messageSink.launchLibraryChange(block)
@@ -3982,20 +3966,6 @@ class CampfireViewModel(
         val request: ImportRequest,
     )
 
-    /** The part of a [SearchState] that is worth restoring, see [savedStateHandle]. */
-    @Serializable
-    private data class SavedSearch(
-        val isOpen: Boolean,
-        val query: String,
-    )
-
-    /** [SongFilter] as it is saved, see [savedStateHandle]; the domain model is not serializable, and has no reason to be. */
-    @Serializable
-    private data class SavedSongFilter(
-        val selectedTags: List<String>,
-        val selectedLanguages: List<String>,
-    )
-
     /**
      * What an empty list has in its place: it is only an error once the load that would have filled it has actually
      * failed, and only [whenEmpty] once a load has finished - until then it is still loading, and saying anything
@@ -4035,14 +4005,8 @@ class CampfireViewModel(
         private const val FONT_SCALE_SETTLE_MILLIS = 200L
         private const val SONG_EDIT_ATTEMPTS = 2
         private const val SILENT_CLICK_GRACE_MILLIS = 3_000L
-        private const val BACK_STACK_KEY = "backStack"
         private const val DEMO_LIBRARY_READ_TIMEOUT_MILLIS = 10_000L // Past the drawables' five seconds: it cuts short a first impression, not a frame.
         private const val MAX_SAVED_BACK_STACK_LENGTH = 100_000 // Characters of JSON, about 200 KB as the UTF-16 a Bundle writes.
-        private const val SONG_FILTER_KEY = "songFilter"
-        private const val SONG_PICKER_TAGS_KEY = "songPickerTags"
-        private const val SONG_PICKER_LANGUAGES_KEY = "songPickerLanguages"
-        private const val SONGS_SEARCH_KEY = "songsSearch"
-        private const val SETLISTS_SEARCH_KEY = "setlistsSearch"
         private val MIN_RESCAN_INTERVAL = 10.seconds
         /**
          * Long enough for the run an edit asks for, short enough to never look hung. The desktop's `SingleInstance.kt`
