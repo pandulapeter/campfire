@@ -20,7 +20,7 @@ import com.pandulapeter.campfire.presentation.resources.ic_add
 import com.pandulapeter.campfire.presentation.resources.ic_edit
 import com.pandulapeter.campfire.presentation.resources.ic_import
 import com.pandulapeter.campfire.presentation.resources.import_files
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import org.jetbrains.compose.resources.painterResource
 
@@ -40,13 +40,14 @@ import org.jetbrains.compose.resources.painterResource
  * @param createLabel The entry that makes the new thing here rather than importing it.
  * @param onItemSelected Called before either menu action starts.
  * @param onCreate Opens the dialog of [createLabel], called once the menu is closed.
+ * @param onImport Imports what is picked with the file picker it is handed, called once the menu is closed.
  */
 @Composable
 internal fun NewItemMenu(
-    viewModel: CampfireViewModel,
     contentDescription: String,
     createLabel: String,
     onCreate: () -> Unit,
+    onImport: (FilePicker) -> Unit,
     onItemSelected: () -> Unit = {},
     isEnabled: Boolean = true,
 ) {
@@ -77,7 +78,7 @@ internal fun NewItemMenu(
             onClick = {
                 select {
                     onItemSelected()
-                    viewModel.importFiles(filePicker)
+                    onImport(filePicker)
                 }
             },
         )

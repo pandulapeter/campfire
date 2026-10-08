@@ -154,10 +154,10 @@ internal fun SongsScreen(
                     areClosedSearchActionsShown = !isPerformanceModeEnabled && placeholder.allowsNewItemMenu,
                     closedSearchActions = {
                         NewItemMenu(
-                            viewModel = viewModel,
                             contentDescription = stringResource(Res.string.songs_new_song),
                             createLabel = stringResource(Res.string.songs_create_song),
                             onCreate = { viewModel.showDialog(DialogType.NewSong) },
+                            onImport = viewModel::importFiles,
                         )
                     },
                     actions = {

@@ -119,10 +119,10 @@ internal fun SetlistsScreen(
             areClosedSearchActionsShown = !isPerformanceModeEnabled && setlistsPlaceholder.allowsNewItemMenu,
             closedSearchActions = {
                 NewItemMenu(
-                    viewModel = viewModel,
                     contentDescription = stringResource(Res.string.setlists_new_setlist),
                     createLabel = stringResource(Res.string.setlists_create_setlist),
                     onCreate = { viewModel.showDialog(DialogType.NewSetlist) },
+                    onImport = viewModel::importFiles,
                     onItemSelected = { viewModel.reorderingSetlistFileName = null },
                     isEnabled = !isReordering,
                 )
