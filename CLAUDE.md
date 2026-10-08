@@ -43,6 +43,8 @@ app:android / app:desktop / app:ios / app:web   entry points, platform chrome, "
                                              desktop key handling) are its platform source sets
   domain:api / :implementation               use cases (single-method interfaces)
     data:repository:api / :implementation
+    data:sync:implementation                 sync: the engine, the planner, the index, the synced preferences and the
+                                             SyncRepository implementation, over the repositories' API and both sources
       data:source:local:api  -> :implementation   files on Android/desktop/iOS, OPFS on web (see Web below)
         data:formats                         the pure-Kotlin zip reader/writer and PDF/Word text extractors; depends on
                                              :data:model and :chordpro, used by :data:source:local:implementation
@@ -207,7 +209,7 @@ localized in both languages.
   annotate themselves and holding a `@Single` function where a definition is built rather than constructed (the
   HTTP client, the list of sync providers). Platform definitions are ordinary annotated classes in the platform
   source sets (`AndroidFileStorage`, `IosSyncAuthenticator`, …), found by the same scan, so there is no
-  `expect`/`actual` factory between a platform and its Koin definition. `:app:di` names the six module objects in
+  `expect`/`actual` factory between a platform and its Koin definition. `:app:di` names the seven module objects in
   the one `@KoinApplication`, and `startCampfireDependencyGraph()` is what the four entry points start Koin with;
   the plugin checks the whole graph there at compile time, so a definition asking for something nobody declares
   fails the build. A dependency only a platform shell provides — the Android `Context` — is marked `@Provided`,
@@ -503,13 +505,13 @@ localized in both languages.
   normalization), `:chordpro` (including chord-sheet conversion, and chord names, shapes and definitions, every shape of the tables checked against the chord it is filed under), `:domain:implementation` (`ImportPlanner` and conversion import plumbing),
   `:data:formats` (zip, bounded PDF/Word readers), `:data:source:local:implementation` (the JVM file storage, with independent-producer document goldens in `desktopTest`), `:data:source:remote:*` (hashing, encoders,
   the OAuth authorization URL, the cover search's queries, its `User-Agent` and its pace, the cover download),
-  `:data:repository:implementation` (`SyncPlanner`, which decides what happens to every file in a sync run, the
-  synced preferences and the cover cache), `:metronome:*` (the sequencer, the synthesizer, the mixer, tap tempo and time signatures) and
+  `:data:repository:implementation` (the caches and the cover cache), `:data:sync:implementation` (`SyncPlanner`, which
+  decides what happens to every file in a sync run, the engine and the synced preferences), `:metronome:*` (the sequencer, the synthesizer, the mixer, tap tempo and time signatures) and
   `:presentation` (the pure helpers behind its screens: the search index and ranking, the song picker's filter chips, the fast scroller's section
   index, the setlist slots, stepper labels, section grid and the cutting of sections into columns, row snapping and section measurements of the details screen, the editor's token cache, where a song's tempo comes from and what a click plays for, which chords a song plays and which
   shape each is drawn with, the diagrams' geometry and what the editor's Chord shape button writes), run on
   the desktop target with
-  `./gradlew :data:model:desktopTest :data:formats:desktopTest :chordpro:desktopTest :domain:implementation:desktopTest :data:source:local:implementation:desktopTest :data:source:remote:api:desktopTest :data:source:remote:implementation:desktopTest :data:repository:implementation:desktopTest :metronome:api:desktopTest :metronome:implementation:desktopTest :presentation:desktopTest`.
+  `./gradlew :data:model:desktopTest :data:formats:desktopTest :chordpro:desktopTest :domain:implementation:desktopTest :data:source:local:implementation:desktopTest :data:source:remote:api:desktopTest :data:source:remote:implementation:desktopTest :data:repository:implementation:desktopTest :data:sync:implementation:desktopTest :metronome:api:desktopTest :metronome:implementation:desktopTest :presentation:desktopTest`.
   The web build's JavaScript — its storage worker, its service worker's routing and the page's decisions about the
   build it keeps — has Node tests of its own (see `app/web`), and the parser of a
   release's description, which is Python, a `unittest` next to it in `.github/scripts`.
