@@ -15,15 +15,15 @@ package com.pandulapeter.campfire.metronome.api.model
  *
  * @param id What a stored setting calls it; never changes once released.
  */
-enum class BeatLevel(val id: String) {
+public enum class BeatLevel(public val id: String) {
     ACCENT("accent"),
     NORMAL("normal"),
     MUTED("muted");
 
     /** The level a tap on the beat moves it on to, round in a circle. */
-    fun next() = entries[(ordinal + 1) % entries.size]
+    public fun next(): BeatLevel = entries[(ordinal + 1) % entries.size]
 
-    companion object {
-        fun fromId(id: String) = entries.firstOrNull { it.id == id }
+    public companion object {
+        public fun fromId(id: String): BeatLevel? = entries.firstOrNull { it.id == id }
     }
 }

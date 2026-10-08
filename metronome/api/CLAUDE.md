@@ -11,6 +11,7 @@
 
 The contract of the click, and nothing else: depends on nothing but coroutines (for `StateFlow` / `SharedFlow`), like
 `:chordpro` depends on nothing, so that no data or domain type leaks into it and the engine reads no settings of its own.
+It builds in explicit API mode (`explicitApi()`), so every public declaration says `public` and its type on purpose.
 
 - `Metronome` — the one stateful interface: `playback` (`Stopped(reason?)` or `Playing(pattern, audioIssue?)`),
   `beats` (one `MetronomeBeat` per click, emitted when it is *heard*, subdivisions flagged), `start`, `update` (timing

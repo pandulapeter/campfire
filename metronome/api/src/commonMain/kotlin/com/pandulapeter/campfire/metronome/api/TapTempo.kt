@@ -22,13 +22,13 @@ import kotlin.time.TimeSource
  * one late or early tap does not move it, and a pause longer than [RESET_GAP] starts a new series, since nobody taps
  * a beat that slow and the previous series was about something else.
  */
-class TapTempo(private val timeSource: TimeSource = TimeSource.Monotonic) {
+public class TapTempo(private val timeSource: TimeSource = TimeSource.Monotonic) {
 
     private val intervals = ArrayDeque<Duration>()
     private var lastTap: TimeMark? = null
 
     /** Records a tap now and returns the tempo it makes, from the second tap of a series on, within the range. */
-    fun tap(): Int? {
+    public fun tap(): Int? {
         val gap = lastTap?.elapsedNow()
         lastTap = timeSource.markNow()
         if (gap == null || gap > RESET_GAP || !gap.isPositive()) {
@@ -43,7 +43,7 @@ class TapTempo(private val timeSource: TimeSource = TimeSource.Monotonic) {
     }
 
     /** Forgets the series, so that the next tap is a first one. */
-    fun reset() {
+    public fun reset() {
         intervals.clear()
         lastTap = null
     }

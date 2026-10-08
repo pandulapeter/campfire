@@ -18,7 +18,7 @@ package com.pandulapeter.campfire.metronome.api.model
  *   subdivisions too.
  * @param isSubdivision Whether it is one of the clicks between the beats rather than the beat itself.
  */
-data class MetronomeBeat(
+public data class MetronomeBeat(
     val beatIndex: Int,
     val barIndex: Long,
     val level: BeatLevel,

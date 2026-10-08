@@ -19,7 +19,7 @@ package com.pandulapeter.campfire.metronome.api.model
  *   sounding, for the visual beat and the haptics alone - which is why such a click only outlives the app leaving the
  *   front where the haptics do, see [canSound].
  */
-data class MetronomePattern(
+public data class MetronomePattern(
     val bpm: Int,
     val timeSignature: TimeSignature = TimeSignature.COMMON_TIME,
     val beatLevels: List<BeatLevel> = timeSignature.defaultBeatLevels(),
@@ -29,7 +29,7 @@ data class MetronomePattern(
 ) {
 
     /** The level of the beat at [index] of the bar, whatever the length of [beatLevels]. */
-    fun beatLevel(index: Int) = beatLevels.getOrNull(index) ?: timeSignature.defaultBeatLevels()[index]
+    public fun beatLevel(index: Int): BeatLevel = beatLevels.getOrNull(index) ?: timeSignature.defaultBeatLevels()[index]
 
     /**
      * Whether at least one beat of the bar is not muted, which is what a click is heard or felt by. A subdivision carries
@@ -42,10 +42,10 @@ data class MetronomePattern(
     val canSound: Boolean
         get() = volume > 0f && hasUnmutedBeat
 
-    companion object {
-        val BPM_RANGE = 30..300
-        const val DEFAULT_BPM = 120
+    public companion object {
+        public val BPM_RANGE: IntRange = 30..300
+        public const val DEFAULT_BPM: Int = 120
 
-        fun coerceBpm(bpm: Int) = bpm.coerceIn(BPM_RANGE)
+        public fun coerceBpm(bpm: Int): Int = bpm.coerceIn(BPM_RANGE)
     }
 }

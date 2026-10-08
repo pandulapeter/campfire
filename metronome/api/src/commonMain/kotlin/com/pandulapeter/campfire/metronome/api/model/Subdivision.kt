@@ -15,16 +15,16 @@ package com.pandulapeter.campfire.metronome.api.model
  * @param id What a stored setting calls it; never changes once released.
  * @param clicksPerBeat How many clicks a beat is cut into, the beat's own included.
  */
-enum class Subdivision(
-    val id: String,
-    val clicksPerBeat: Int,
+public enum class Subdivision(
+    public val id: String,
+    public val clicksPerBeat: Int,
 ) {
     NONE("none", 1),
     EIGHTHS("eighths", 2),
     TRIPLETS("triplets", 3),
     SIXTEENTHS("sixteenths", 4);
 
-    companion object {
-        fun fromId(id: String) = entries.firstOrNull { it.id == id }
+    public companion object {
+        public fun fromId(id: String): Subdivision? = entries.firstOrNull { it.id == id }
     }
 }

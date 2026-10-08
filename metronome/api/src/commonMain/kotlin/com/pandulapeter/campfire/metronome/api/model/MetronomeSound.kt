@@ -15,14 +15,14 @@ package com.pandulapeter.campfire.metronome.api.model
  *
  * @param id What a stored setting calls it; never changes once released.
  */
-enum class MetronomeSound(val id: String) {
+public enum class MetronomeSound(public val id: String) {
     CLICK("click"),
     WOODBLOCK("woodblock"),
     BEEP("beep"),
     HI_HAT("hi_hat"),
     COWBELL("cowbell");
 
-    companion object {
-        fun fromId(id: String) = entries.firstOrNull { it.id == id }
+    public companion object {
+        public fun fromId(id: String): MetronomeSound? = entries.firstOrNull { it.id == id }
     }
 }

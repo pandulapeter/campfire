@@ -10,23 +10,23 @@
 package com.pandulapeter.campfire.metronome.api.model
 
 /** What the click is doing. */
-sealed interface MetronomePlayback {
+public sealed interface MetronomePlayback {
 
     /** @param reason Why the click stopped (or never started) on its own; null when it was stopped on purpose. */
-    data class Stopped(val reason: MetronomeStopReason? = null) : MetronomePlayback
+    public data class Stopped(val reason: MetronomeStopReason? = null) : MetronomePlayback
 
     /**
      * @param audioIssue Set where nothing can be heard although the click runs, the beats included: no output could
      *   be opened, or the browser has not let the page start its audio yet.
      */
-    data class Playing(
+    public data class Playing(
         val pattern: MetronomePattern,
         val audioIssue: MetronomeAudioIssue? = null,
     ) : MetronomePlayback
 }
 
 /** Why a click ended without being asked to. */
-enum class MetronomeStopReason {
+public enum class MetronomeStopReason {
 
     /** The audio could not be taken (on a phone, usually a call in progress), so the click did not start. */
     AUDIO_REFUSED,
@@ -42,7 +42,7 @@ enum class MetronomeStopReason {
 }
 
 /** Why a running click cannot be heard. */
-enum class MetronomeAudioIssue {
+public enum class MetronomeAudioIssue {
 
     /** There is no audio output to open, or it refused to open. */
     UNAVAILABLE,
