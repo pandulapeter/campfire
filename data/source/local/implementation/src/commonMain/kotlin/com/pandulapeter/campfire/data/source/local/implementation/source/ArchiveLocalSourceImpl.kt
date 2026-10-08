@@ -13,6 +13,7 @@ package com.pandulapeter.campfire.data.source.local.implementation.source
 import com.pandulapeter.campfire.data.model.domain.ImportLimits
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.data.model.domain.LibraryFiles
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.source.local.api.ArchiveLocalSource
 import com.pandulapeter.campfire.data.source.local.implementation.backup.SongbookProBackup
 import com.pandulapeter.campfire.data.source.local.implementation.zip.ZipEntry
@@ -34,7 +35,9 @@ import org.koin.core.annotation.Single
  * inflating and packing in memory, and a big archive would otherwise block whichever thread asked for it.
  */
 @Single
-internal class ArchiveLocalSourceImpl : ArchiveLocalSource {
+internal class ArchiveLocalSourceImpl(
+    private val logger: Logger,
+) : ArchiveLocalSource {
 
     override suspend fun unpack(archive: ByteArray, maxSize: Long): List<ImportedFile> = withContext(Dispatchers.Default) {
         unpack(archive = archive, depth = 1, inflated = InflatedBytes(limit = maxSize))
@@ -96,7 +99,7 @@ internal class ArchiveLocalSourceImpl : ArchiveLocalSource {
                 try {
                     unpack(archive = file.bytes, depth = depth + 1, inflated = inflated)
                 } catch (exception: Exception) {
-                    println("Could not unpack \"${file.name}\": ${exception.message}")
+                    logger.log("Could not unpack \"${file.name}\": ${exception.message}")
                     listOf(ImportedFile.unread(file.name))
                 }
             } else {

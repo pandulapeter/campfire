@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.data.source.local.implementation.source
 import com.pandulapeter.campfire.data.model.domain.ExtractedDocument
 import com.pandulapeter.campfire.data.model.domain.ImportLimits
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.source.local.api.DocumentLocalSource
 import com.pandulapeter.campfire.data.source.local.implementation.document.DocxTextExtractor
 import com.pandulapeter.campfire.data.source.local.implementation.document.PdfTextExtractor
@@ -21,7 +22,9 @@ import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Single
 
 @Single
-internal class DocumentLocalSourceImpl : DocumentLocalSource {
+internal class DocumentLocalSourceImpl(
+    private val logger: Logger,
+) : DocumentLocalSource {
     override suspend fun extract(file: ImportedFile): ExtractedDocument? = withContext(Dispatchers.Default) {
         if (file.isTooLarge || file.bytes.size > ImportLimits.MAX_DOCUMENT_FILE_SIZE) return@withContext null
         try {
@@ -34,7 +37,7 @@ internal class DocumentLocalSourceImpl : DocumentLocalSource {
         } catch (exception: CancellationException) {
             throw exception
         } catch (exception: Exception) {
-            println("Could not read document \"${file.name}\": ${exception.message}")
+            logger.log("Could not read document \"${file.name}\": ${exception.message}")
             null
         }
     }

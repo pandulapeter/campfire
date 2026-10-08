@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.source
 
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.JvmFileStorage
 import kotlinx.coroutines.runBlocking
 import java.io.File
@@ -23,7 +24,7 @@ import kotlin.test.assertTrue
 class CoverArtLocalSourceImplTest {
 
     private val root: File = Files.createTempDirectory("campfire-cover-art").toFile()
-    private val localSource = CoverArtLocalSourceImpl(JvmFileStorage(root))
+    private val localSource = CoverArtLocalSourceImpl(JvmFileStorage(root), Logger.Standard)
 
     @AfterTest
     fun tearDown() {

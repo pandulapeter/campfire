@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.source.local.implementation.source
 
 import com.pandulapeter.campfire.data.model.domain.ImportLimits
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.JvmFileStorage
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StorageDirectory
@@ -36,14 +37,14 @@ class LibraryListingTest {
     fun `a hidden companion of a song is not a song`() = runBlocking {
         writeSongs()
 
-        val songs = SongLocalSourceImpl(fileStorage).loadSongs {}
+        val songs = SongLocalSourceImpl(fileStorage, Logger.Standard).loadSongs {}
 
         assertEquals(listOf("a.cho"), songs.map { it.fileName })
     }
 
     @Test
     fun `a hidden companion of a setlist is not a setlist`() = runBlocking {
-        val setlistLocalSource = SetlistLocalSourceImpl(fileStorage)
+        val setlistLocalSource = SetlistLocalSourceImpl(fileStorage, Logger.Standard)
         writeSetlists(setlistLocalSource)
 
         assertEquals(1, setlistLocalSource.loadSetlists().size)
@@ -52,7 +53,7 @@ class LibraryListingTest {
     @Test
     fun `sync does not see hidden files`() = runBlocking {
         writeSongs()
-        writeSetlists(SetlistLocalSourceImpl(fileStorage))
+        writeSetlists(SetlistLocalSourceImpl(fileStorage, Logger.Standard))
 
         val files = LibraryFileLocalSourceImpl(fileStorage).loadLibraryFiles()
 
@@ -64,7 +65,7 @@ class LibraryListingTest {
         fileStorage.writeText(StorageDirectory.SONGS, "a.cho", "abc")
         fileStorage.writeText(StorageDirectory.SONGS, "notes.txt", "Not a song.")
 
-        assertEquals(mapOf("a.cho" to 3L), SongLocalSourceImpl(fileStorage).loadSongFileSizes())
+        assertEquals(mapOf("a.cho" to 3L), SongLocalSourceImpl(fileStorage, Logger.Standard).loadSongFileSizes())
     }
 
     @Test
@@ -72,7 +73,7 @@ class LibraryListingTest {
         writeSongs()
         fileStorage.writeBytes(StorageDirectory.SONGS, "b.cho", tooLarge())
 
-        val songs = SongLocalSourceImpl(fileStorage).loadSongs {}
+        val songs = SongLocalSourceImpl(fileStorage, Logger.Standard).loadSongs {}
 
         assertEquals(listOf("a.cho"), songs.map { it.fileName })
     }
@@ -84,7 +85,7 @@ class LibraryListingTest {
         fileStorage.writeBytes(StorageDirectory.SONGS, "b.cho", tooLarge())
         val listed = fileStorage.list(StorageDirectory.SONGS).associateBy { it.name }
 
-        val songs = SongLocalSourceImpl(fileStorage).loadSongs {}
+        val songs = SongLocalSourceImpl(fileStorage, Logger.Standard).loadSongs {}
 
         assertEquals(listOf("a.cho", "c.cho"), songs.map { it.fileName })
         songs.forEach { song ->
@@ -95,7 +96,7 @@ class LibraryListingTest {
 
     @Test
     fun `a setlist file larger than any setlist is left out of the scan`() = runBlocking {
-        val setlistLocalSource = SetlistLocalSourceImpl(fileStorage)
+        val setlistLocalSource = SetlistLocalSourceImpl(fileStorage, Logger.Standard)
         writeSetlists(setlistLocalSource)
         fileStorage.writeBytes(StorageDirectory.SETLISTS, "winter.setlist.json", tooLarge())
 
@@ -107,7 +108,7 @@ class LibraryListingTest {
         fileStorage.writeText(StorageDirectory.SONGS, "a.cho", "{title: A}\n")
         fileStorage.writeText(StorageDirectory.SONGS, "b.cho", "{title: Bé}\nLonger text\n")
 
-        val songs = SongLocalSourceImpl(fileStorage).loadSongs {}
+        val songs = SongLocalSourceImpl(fileStorage, Logger.Standard).loadSongs {}
 
         songs.forEach { song -> assertEquals(File(root, "library/songs/${song.fileName}").length(), song.size) }
         assertEquals(2, songs.size)
@@ -115,7 +116,7 @@ class LibraryListingTest {
 
     @Test
     fun `a saved setlist carries the size of its file`() = runBlocking {
-        val setlistLocalSource = SetlistLocalSourceImpl(fileStorage)
+        val setlistLocalSource = SetlistLocalSourceImpl(fileStorage, Logger.Standard)
         fun sizeOf(fileName: String) = File(root, "library/setlists/$fileName").length()
 
         val saved = setlistLocalSource.saveSetlist(
@@ -146,7 +147,7 @@ class LibraryListingTest {
         (1..1000).forEach { fileStorage.writeText(StorageDirectory.SONGS, "song_$it.cho", "{title: Song $it}\n") }
         val published = mutableListOf<Int>()
 
-        val songs = SongLocalSourceImpl(fileStorage).loadSongs { published += it.size }
+        val songs = SongLocalSourceImpl(fileStorage, Logger.Standard).loadSongs { published += it.size }
 
         assertEquals(listOf(64, 128, 256, 512), published)
         assertEquals(1000, songs.size)
@@ -155,7 +156,7 @@ class LibraryListingTest {
     @Test
     fun `a scan of several batches reads every song as reading it alone does`() = runBlocking {
         (1..150).forEach { fileStorage.writeText(StorageDirectory.SONGS, "song_$it.cho", "{title: Song $it}\n{artist: Artist $it}\n") }
-        val songLocalSource = SongLocalSourceImpl(fileStorage)
+        val songLocalSource = SongLocalSourceImpl(fileStorage, Logger.Standard)
 
         val songs = songLocalSource.loadSongs {}
 

@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.source
 
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import com.pandulapeter.campfire.data.source.local.implementation.mapper.toModel
 import com.pandulapeter.campfire.data.source.local.implementation.model.UserPreferencesDocument
@@ -34,7 +35,7 @@ class UserPreferencesLocalSourceTest {
 
     private val root: File = Files.createTempDirectory("campfire-preferences").toFile()
     private val fileStorage = JvmFileStorage(root)
-    private val localSource = UserPreferencesLocalSourceImpl(fileStorage)
+    private val localSource = UserPreferencesLocalSourceImpl(fileStorage, Logger.Standard)
 
     @AfterTest
     fun tearDown() {

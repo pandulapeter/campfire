@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.source
 
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.normalizedToNfc
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
@@ -34,8 +35,8 @@ class RenameTest {
 
     private val root: File = Files.createTempDirectory("campfire-rename").toFile()
     private val fileStorage = JvmFileStorage(root)
-    private val songLocalSource = SongLocalSourceImpl(fileStorage)
-    private val setlistLocalSource = SetlistLocalSourceImpl(fileStorage)
+    private val songLocalSource = SongLocalSourceImpl(fileStorage, Logger.Standard)
+    private val setlistLocalSource = SetlistLocalSourceImpl(fileStorage, Logger.Standard)
 
     @AfterTest
     fun tearDown() {
@@ -106,7 +107,7 @@ class RenameTest {
         fileStorage.writeText(StorageDirectory.SONGS, "Old name.cho", "{title: Bar}\n")
         val song = songLocalSource.loadSong("Old name.cho")!!
 
-        val renamed = SongLocalSourceImpl(storage).renameSong(song)
+        val renamed = SongLocalSourceImpl(storage, Logger.Standard).renameSong(song)
 
         assertEquals("bar.cho", renamed?.fileName)
         assertEquals("Bar", renamed?.title)

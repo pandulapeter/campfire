@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.data.source.local.implementation.source
 
 import com.pandulapeter.campfire.data.model.domain.ImportLimits
 import com.pandulapeter.campfire.data.model.domain.LibraryFiles
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.model.domain.ParsedSetlist
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
@@ -40,6 +41,7 @@ import kotlin.time.Clock
 @Single
 internal class SetlistLocalSourceImpl(
     private val fileStorage: FileStorage,
+    private val logger: Logger,
 ) : SetlistLocalSource {
 
     override suspend fun loadSetlists(): List<ParsedSetlist> = withContext(Dispatchers.Default) {
@@ -49,7 +51,7 @@ internal class SetlistLocalSourceImpl(
                 (file.size <= ImportLimits.MAX_TEXT_FILE_SIZE).also { isReadable ->
                     // Nothing the app writes is that large, so it was put there from outside, and reading it whole is
                     // what would take the app down.
-                    if (!isReadable) println("Skipped the setlist \"${file.name}\": ${file.size} bytes is more than a setlist can hold.")
+                    if (!isReadable) logger.log("Skipped the setlist \"${file.name}\": ${file.size} bytes is more than a setlist can hold.")
                 }
             }
         // Setlists are few, so they are read in one batch rather than in the song scan's bounded ones.
@@ -66,7 +68,7 @@ internal class SetlistLocalSourceImpl(
                 throw exception
             } catch (exception: Exception) {
                 // Left on disk rather than deleted: a setlist the user hand-edited into invalid JSON is theirs to fix.
-                println("Could not read the setlist \"${file.name}\": ${exception.message}")
+                logger.log("Could not read the setlist \"${file.name}\": ${exception.message}")
                 null
             }
         }
@@ -95,7 +97,7 @@ internal class SetlistLocalSourceImpl(
         } catch (exception: CancellationException) {
             throw exception
         } catch (exception: Exception) {
-            println("Could not write the day into the setlist \"$fileName\": ${exception.message}")
+            logger.log("Could not write the day into the setlist \"$fileName\": ${exception.message}")
             setlist
         }
     }
@@ -156,7 +158,7 @@ internal class SetlistLocalSourceImpl(
             .takeIf { it.title.isNotBlank() }
             ?.let { ParsedSetlist(setlist = it.toModel(setlistFileName(it.title), size = 0, undatedDay = today()), isDated = it.isDated) }
     } catch (exception: Exception) {
-        println("Could not parse an imported setlist: ${exception.message}")
+        logger.log("Could not parse an imported setlist: ${exception.message}")
         null
     }
 

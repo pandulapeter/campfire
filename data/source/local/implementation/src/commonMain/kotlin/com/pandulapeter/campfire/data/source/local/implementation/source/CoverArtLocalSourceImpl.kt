@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.source
 
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.source.local.api.CoverArtLocalSource
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileStorage
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StorageDirectory
@@ -18,6 +19,7 @@ import org.koin.core.annotation.Single
 @Single
 internal class CoverArtLocalSourceImpl(
     private val fileStorage: FileStorage,
+    private val logger: Logger,
 ) : CoverArtLocalSource {
 
     override suspend fun loadCoverArt(key: String) = quietly { fileStorage.readBytes(StorageDirectory.COVERS, key) }
@@ -58,7 +60,7 @@ internal class CoverArtLocalSourceImpl(
     } catch (exception: CancellationException) {
         throw exception
     } catch (exception: Exception) {
-        println("Could not access the cover art cache: ${exception::class.simpleName}")
+        logger.log("Could not access the cover art cache: ${exception::class.simpleName}")
         null
     }
 

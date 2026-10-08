@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.source
 
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.JvmFileStorage
 import com.pandulapeter.campfire.data.source.local.implementation.storage.secret.SecretStore
@@ -32,14 +33,14 @@ class SyncCredentialsLocalSourceTest {
 
     @Test
     fun `credentials the secret store refuses for now are reported as a storage failure`() = runBlocking<Unit> {
-        val localSource = SyncCredentialsLocalSourceImpl(JvmFileStorage(root), FailingSecretStore(LibraryStorageException("Keystore busy")))
+        val localSource = SyncCredentialsLocalSourceImpl(JvmFileStorage(root), FailingSecretStore(LibraryStorageException("Keystore busy")), Logger.Standard)
 
         assertFailsWith<LibraryStorageException> { localSource.loadSyncCredentials() }
     }
 
     @Test
     fun `credentials that fail to read in any other way are read as none`() = runBlocking {
-        val localSource = SyncCredentialsLocalSourceImpl(JvmFileStorage(root), FailingSecretStore(IllegalStateException("Broken")))
+        val localSource = SyncCredentialsLocalSourceImpl(JvmFileStorage(root), FailingSecretStore(IllegalStateException("Broken")), Logger.Standard)
 
         assertNull(localSource.loadSyncCredentials())
     }

@@ -10,7 +10,9 @@
 # :data:source:local:implementation
 
 File-backed multiplatform implementation of `:data:source:local:api`, on all four platforms. Koin wiring: `Module.kt`
-holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local source is a `@Single`.
+holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local source is a `@Single`. A file it skips
+or cannot read is written to the injected `Logger` (`:data:model`, provided by `DataRepositoryModule`); only `ZipReader`,
+an object with no constructor, still prints its one line.
 
 - **`storage/file/FileStorage.kt`** is the only thing that differs per platform: flat file access inside the app's own
   data directory, addressed as `(StorageDirectory, file name)` — no paths, no sub-directories. `info` is what `list`

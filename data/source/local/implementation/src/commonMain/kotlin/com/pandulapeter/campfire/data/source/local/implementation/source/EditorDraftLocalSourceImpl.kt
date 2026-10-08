@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.source
 
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.model.domain.SongContent
 import com.pandulapeter.campfire.data.source.local.api.EditorDraftLocalSource
 import com.pandulapeter.campfire.data.source.local.implementation.mapper.toEditorDraftDocument
@@ -23,6 +24,7 @@ import org.koin.core.annotation.Single
 @Single
 internal class EditorDraftLocalSourceImpl(
     private val fileStorage: FileStorage,
+    private val logger: Logger,
 ) : EditorDraftLocalSource {
 
     private val json = Json { ignoreUnknownKeys = true }
@@ -34,7 +36,7 @@ internal class EditorDraftLocalSourceImpl(
     } catch (exception: Exception) {
         // Only the kind of failure goes into the log: a message is free to quote what it failed on, which here is
         // somebody's unfinished song.
-        println("Could not read the editor's draft: ${exception::class.simpleName}")
+        logger.log("Could not read the editor's draft: ${exception::class.simpleName}")
         null
     }
 

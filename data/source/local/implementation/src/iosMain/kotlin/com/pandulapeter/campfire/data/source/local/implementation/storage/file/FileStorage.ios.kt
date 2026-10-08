@@ -11,6 +11,7 @@
 
 package com.pandulapeter.campfire.data.source.local.implementation.storage.file
 
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.model.domain.decodeLibraryText
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import kotlinx.cinterop.BetaInteropApi
@@ -58,7 +59,9 @@ import platform.posix.memcpy
  * which are app state rather than user documents - go to the application support directory, out of the user's way.
  */
 @Single
-internal class IosFileStorage : FileStorage {
+internal class IosFileStorage(
+    private val logger: Logger,
+) : FileStorage {
 
     private val fileManager = NSFileManager.defaultManager
 
@@ -161,7 +164,7 @@ internal class IosFileStorage : FileStorage {
     override suspend fun keepOutOfDeviceBackup(directory: StorageDirectory, name: String) = withContext(Dispatchers.IO) {
         val path = filePath(directory, name)
         if (fileManager.fileExistsAtPath(path) && !NSURL.fileURLWithPath(path).setResourceValue(true, NSURLIsExcludedFromBackupKey, null)) {
-            println("Could not keep \"$name\" out of the device backup.")
+            logger.log("Could not keep \"$name\" out of the device backup.")
         }
     }
 

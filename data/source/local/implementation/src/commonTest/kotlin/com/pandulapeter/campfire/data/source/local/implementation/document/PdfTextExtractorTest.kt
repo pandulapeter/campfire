@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.source.local.implementation.document
 
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.source.local.implementation.source.DocumentLocalSourceImpl
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.cancel
@@ -28,7 +29,7 @@ import kotlin.time.measureTime
 class PdfTextExtractorTest {
     @Test
     fun oversizedShownStringsStopAtTheGlyphBudgetAndCancellationPropagates() = runTest {
-        val source = DocumentLocalSourceImpl()
+        val source = DocumentLocalSourceImpl(Logger.Standard)
         assertNull(source.extract(ImportedFile("huge.pdf", PdfTestWriter.song("BT /F1 10 Tf (" + "a".repeat(PdfTextExtractor.MAX_GLYPHS + 1) + ") Tj ET"))))
         val cancelled = launch(start = CoroutineStart.UNDISPATCHED) {
             coroutineContext.cancel()
@@ -48,7 +49,7 @@ class PdfTextExtractorTest {
             append("ET")
         }
         val bytes = PdfTestWriter.song(content)
-        val elapsed = measureTime { assertNull(DocumentLocalSourceImpl().extract(ImportedFile("padded.pdf", bytes))) }
+        val elapsed = measureTime { assertNull(DocumentLocalSourceImpl(Logger.Standard).extract(ImportedFile("padded.pdf", bytes))) }
         assertTrue(elapsed < 2.seconds, "Took $elapsed")
     }
 
@@ -377,7 +378,7 @@ class PdfTextExtractorTest {
             writer.add("<< /Type /Catalog /Pages 2 0 R >>")
             writer.add("<< /Type /Pages $tree >>")
             writer.add("<< /Type /Page >>")
-            assertNull(DocumentLocalSourceImpl().extract(ImportedFile("invalid.pdf", writer.write())))
+            assertNull(DocumentLocalSourceImpl(Logger.Standard).extract(ImportedFile("invalid.pdf", writer.write())))
         }
     }
 
@@ -510,7 +511,7 @@ class PdfTextExtractorTest {
 
     @Test
     fun protectedScannedMalformedAndUnmappedDocumentsAreUnreadable() = runTest {
-        val source = DocumentLocalSourceImpl()
+        val source = DocumentLocalSourceImpl(Logger.Standard)
         assertNull(source.extract(ImportedFile("scan.pdf", PdfTestWriter.song("q Q"))))
         assertNull(source.extract(ImportedFile("bad.pdf", "not a pdf".encodeToByteArray())))
         assertNull(source.extract(ImportedFile("unknown.pdf", PdfTestWriter.song("BT /F1 10 Tf (abc) Tj ET", "/Type /Font /Subtype /Type1 /BaseFont /Unknown"))))

@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.model.displayTitle
 import com.pandulapeter.campfire.data.model.domain.ImportLimits
 import com.pandulapeter.campfire.data.model.domain.LibraryFiles
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.SongContent
 import com.pandulapeter.campfire.data.source.local.api.SongLocalSource
@@ -47,6 +48,7 @@ import kotlin.time.ExperimentalTime
 @Single
 internal class SongLocalSourceImpl(
     private val fileStorage: FileStorage,
+    private val logger: Logger,
 ) : SongLocalSource {
 
     /**
@@ -141,7 +143,7 @@ internal class SongLocalSourceImpl(
         } catch (exception: CancellationException) {
             throw exception
         } catch (exception: Exception) {
-            println("Could not read the song \"$fileName\" back after the rename: ${exception.message}")
+            logger.log("Could not read the song \"$fileName\" back after the rename: ${exception.message}")
             null
         }
         return moved ?: song.copy(fileName = fileName, canUpdateFileName = false)
@@ -166,7 +168,7 @@ internal class SongLocalSourceImpl(
                     when (answer) {
                         is ScannedFile.Text -> answer.info.toSong(ChordProParser.summarize(answer.text))
                         is ScannedFile.TooLarge -> {
-                            println("Skipped the song \"${entry.name}\": ${answer.info.size} bytes is more than a song file can hold.")
+                            logger.log("Skipped the song \"${entry.name}\": ${answer.info.size} bytes is more than a song file can hold.")
                             null
                         }
                         ScannedFile.Missing -> null
@@ -175,7 +177,7 @@ internal class SongLocalSourceImpl(
                 } catch (exception: CancellationException) {
                     throw exception
                 } catch (exception: Exception) {
-                    println("Could not read the song \"${entry.name}\": ${exception.message}")
+                    logger.log("Could not read the song \"${entry.name}\": ${exception.message}")
                     null
                 }
             }
@@ -184,7 +186,7 @@ internal class SongLocalSourceImpl(
 
     private suspend fun StoredFileInfo.readSong(): Song? = try {
         if (size > ImportLimits.MAX_TEXT_FILE_SIZE) {
-            println("Skipped the song \"$name\": $size bytes is more than a song file can hold.")
+            logger.log("Skipped the song \"$name\": $size bytes is more than a song file can hold.")
             null
         } else {
             fileStorage.readText(StorageDirectory.SONGS, name)?.let { text ->
@@ -195,7 +197,7 @@ internal class SongLocalSourceImpl(
         // A library scan that was cancelled is not a library of unreadable songs.
         throw exception
     } catch (exception: Exception) {
-        println("Could not read the song \"$name\": ${exception.message}")
+        logger.log("Could not read the song \"$name\": ${exception.message}")
         null
     }
 

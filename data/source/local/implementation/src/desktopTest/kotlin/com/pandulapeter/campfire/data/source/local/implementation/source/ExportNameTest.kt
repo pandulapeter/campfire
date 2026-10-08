@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.source
 
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.JvmFileStorage
 import java.io.File
 import java.nio.file.Files
@@ -23,7 +24,7 @@ import kotlin.test.assertEquals
 class ExportNameTest {
 
     private val root: File = Files.createTempDirectory("campfire-export-name").toFile()
-    private val songLocalSource = SongLocalSourceImpl(JvmFileStorage(root))
+    private val songLocalSource = SongLocalSourceImpl(JvmFileStorage(root), Logger.Standard)
 
     @AfterTest
     fun tearDown() {

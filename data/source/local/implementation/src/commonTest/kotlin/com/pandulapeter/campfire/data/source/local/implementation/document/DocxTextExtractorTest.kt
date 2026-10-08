@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.source.local.implementation.document
 
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.source.local.implementation.source.DocumentLocalSourceImpl
 import com.pandulapeter.campfire.data.source.local.implementation.zip.ZipEntry
 import com.pandulapeter.campfire.data.source.local.implementation.zip.ZipWriter
@@ -94,7 +95,7 @@ class DocxTextExtractorTest {
             ZipEntry("word/header1.xml", "not XML and never opened".encodeToByteArray()),
             ZipEntry("word/footnotes.xml", "not XML and never opened".encodeToByteArray()),
         ))
-        val source = DocumentLocalSourceImpl()
+        val source = DocumentLocalSourceImpl(Logger.Standard)
         assertNotNull(source.extract(ImportedFile("song.docx", bytes)))
         assertNull(source.extract(ImportedFile("song.docx", "%PDF-1.7".encodeToByteArray())))
         assertNull(source.extract(ImportedFile("song.docx", ZipWriter.write(listOf(ZipEntry("other.xml", byteArrayOf(1)))))))

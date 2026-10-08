@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.source
 
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.data.source.local.api.UserPreferencesLocalSource
 import com.pandulapeter.campfire.data.source.local.implementation.mapper.toDocument
@@ -25,6 +26,7 @@ import org.koin.core.annotation.Single
 @Single
 internal class UserPreferencesLocalSourceImpl(
     private val fileStorage: FileStorage,
+    private val logger: Logger,
 ) : UserPreferencesLocalSource {
 
     /**
@@ -63,7 +65,7 @@ internal class UserPreferencesLocalSourceImpl(
     } catch (exception: CancellationException) {
         throw exception
     } catch (exception: Exception) {
-        println("Could not keep a copy of the preferences: ${exception.message}")
+        logger.log("Could not keep a copy of the preferences: ${exception.message}")
     }
 
     private companion object {

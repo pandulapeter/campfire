@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.data.source.local.implementation.source
 
 import com.pandulapeter.campfire.data.model.domain.ImportLimits
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.source.local.implementation.zip.ZipEntry
 import com.pandulapeter.campfire.data.source.local.implementation.zip.ZipWriter
 import kotlinx.coroutines.runBlocking
@@ -23,7 +24,7 @@ import kotlin.test.assertTrue
 /** What comes out of an archive, against the archives the desktops actually produce. */
 class ArchiveLocalSourceTest {
 
-    private val archiveLocalSource = ArchiveLocalSourceImpl()
+    private val archiveLocalSource = ArchiveLocalSourceImpl(Logger.Standard)
 
     @Test
     fun `documents retain their bytes and docx is not unpacked as a nested archive`() = runBlocking {

@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.source
 
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.JvmFileStorage
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StorageDirectory
@@ -35,7 +36,7 @@ class SetlistLocalSourceTest {
 
     private val root: File = Files.createTempDirectory("campfire-setlist").toFile()
     private val fileStorage = JvmFileStorage(root)
-    private val setlistLocalSource = SetlistLocalSourceImpl(fileStorage)
+    private val setlistLocalSource = SetlistLocalSourceImpl(fileStorage, Logger.Standard)
 
     @AfterTest
     fun tearDown() {

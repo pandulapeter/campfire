@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.source
 
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import com.pandulapeter.campfire.data.source.local.api.SyncCredentialsLocalSource
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileStorage
@@ -21,6 +22,7 @@ import org.koin.core.annotation.Single
 internal class SyncCredentialsLocalSourceImpl(
     private val fileStorage: FileStorage,
     private val secretStore: SecretStore,
+    private val logger: Logger,
 ) : SyncCredentialsLocalSource {
 
     /**
@@ -34,11 +36,11 @@ internal class SyncCredentialsLocalSourceImpl(
     } catch (exception: CancellationException) {
         throw exception
     } catch (exception: LibraryStorageException) {
-        println("Could not read the sync credentials for now: ${exception::class.simpleName}")
+        logger.log("Could not read the sync credentials for now: ${exception::class.simpleName}")
         throw exception
     } catch (exception: Exception) {
         // The message of a failure is free to quote what it failed on, which here would be a token.
-        println("Could not read the sync credentials: ${exception::class.simpleName}")
+        logger.log("Could not read the sync credentials: ${exception::class.simpleName}")
         null
     }
 
@@ -53,7 +55,7 @@ internal class SyncCredentialsLocalSourceImpl(
         val document = read(CREDENTIALS_FILE_NAME) ?: return null
         secretStore.save(CREDENTIALS_FILE_NAME, document)
         fileStorage.delete(StorageDirectory.PREFERENCES, CREDENTIALS_FILE_NAME)
-        println("Moved the sync credentials into the platform's secret store.")
+        logger.log("Moved the sync credentials into the platform's secret store.")
         return document
     }
 
@@ -65,7 +67,7 @@ internal class SyncCredentialsLocalSourceImpl(
     } catch (exception: Exception) {
         // The credentials hold tokens, and a message is free to quote what it failed on, so only the kind of failure
         // goes into the log.
-        println("Could not read \"$name\": ${exception::class.simpleName}")
+        logger.log("Could not read \"$name\": ${exception::class.simpleName}")
         null
     }
 

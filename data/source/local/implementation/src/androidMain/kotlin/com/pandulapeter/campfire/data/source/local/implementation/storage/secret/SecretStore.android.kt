@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.data.source.local.implementation.storage.secre
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyPermanentlyInvalidatedException
 import android.security.keystore.KeyProperties
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileStorage
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StorageDirectory
@@ -37,6 +38,7 @@ import javax.crypto.spec.GCMParameterSpec
 @Single
 internal class AndroidSecretStore(
     private val fileStorage: FileStorage,
+    private val logger: Logger,
 ) : SecretStore {
 
     override suspend fun load(key: String): String? = withContext(Dispatchers.IO) {
@@ -57,7 +59,7 @@ internal class AndroidSecretStore(
             // correctly a second later. Deleting the key for one of those destroys a refresh token that was never
             // lost, so it is reported as a storage failure instead and the next launch reads the same file again.
             if (!exception.isPermanent) throw LibraryStorageException("Could not read the stored secret.", exception)
-            println("Could not decrypt the stored secret: ${exception::class.simpleName}")
+            logger.log("Could not decrypt the stored secret: ${exception::class.simpleName}")
             fileStorage.delete(StorageDirectory.PREFERENCES, fileName)
             keyStore().deleteEntry(KEY_ALIAS)
             null

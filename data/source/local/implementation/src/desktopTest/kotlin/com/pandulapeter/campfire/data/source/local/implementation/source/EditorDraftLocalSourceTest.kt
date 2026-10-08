@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.source
 
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.model.domain.SongContent
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.JvmFileStorage
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StorageDirectory
@@ -27,7 +28,7 @@ class EditorDraftLocalSourceTest {
 
     private val root: File = Files.createTempDirectory("campfire-editor-draft").toFile()
     private val fileStorage = JvmFileStorage(root)
-    private val localSource = EditorDraftLocalSourceImpl(fileStorage)
+    private val localSource = EditorDraftLocalSourceImpl(fileStorage, Logger.Standard)
 
     @AfterTest
     fun tearDown() {
