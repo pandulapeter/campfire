@@ -130,7 +130,8 @@ internal fun SetlistsScreen(
             actions = {
                 SetlistSortMenu(
                     modifier = Modifier.overlappingAction(),
-                    viewModel = viewModel,
+                    selected = userPreferences?.setlistSortingMode,
+                    onSelected = viewModel::setSetlistSortingMode,
                     onSortingModeChanged = { viewModel.reorderingSetlistFileName = null },
                     isEnabled = !isReordering,
                 )

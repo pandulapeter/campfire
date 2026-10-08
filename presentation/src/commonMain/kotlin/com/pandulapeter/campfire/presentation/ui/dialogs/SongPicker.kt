@@ -124,7 +124,7 @@ internal fun SongPicker(
     CampfireBottomSheet(
         title = stringResource(Res.string.setlists_choose_songs),
         subtitle = setlist.title,
-        actions = { SongSortMenu(viewModel = viewModel) },
+        actions = { SongSortMenu(selected = userPreferences?.sortingMode, onSelected = viewModel::setSortingMode) },
         onDismiss = { viewModel.dismissSheet(dialog) },
     ) { contentPadding ->
         PickerSearchField(

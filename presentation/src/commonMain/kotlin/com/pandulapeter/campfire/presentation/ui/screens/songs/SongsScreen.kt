@@ -161,9 +161,13 @@ internal fun SongsScreen(
                         )
                     },
                     actions = {
+                        // Read here rather than by the screen, so that a preference changing recomposes the bar's
+                        // actions alone.
+                        val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
                         SongSortMenu(
                             modifier = Modifier.overlappingAction(),
-                            viewModel = viewModel,
+                            selected = userPreferences?.sortingMode,
+                            onSelected = viewModel::setSortingMode,
                         )
                         // The last tag leaving the library takes the filters with it while the list is being looked at.
                         AnimatedVisibility(
