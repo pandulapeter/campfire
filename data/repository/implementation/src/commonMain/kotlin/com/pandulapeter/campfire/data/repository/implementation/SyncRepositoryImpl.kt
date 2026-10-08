@@ -27,6 +27,7 @@ import com.pandulapeter.campfire.data.repository.implementation.base.recovering
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncEngine
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncIndexDocument
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncKey
+import com.pandulapeter.campfire.data.repository.implementation.sync.SyncStateHolder
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncedPreferencesDocument
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncedPreferencesSync
 import com.pandulapeter.campfire.data.repository.implementation.sync.indexKey
@@ -57,10 +58,8 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -88,6 +87,7 @@ internal class SyncRepositoryImpl(
      */
     private val songRepository: SongRepository,
     private val setlistRepository: SetlistRepository,
+    private val stateHolder: SyncStateHolder,
     private val engine: SyncEngine,
     private val syncedPreferencesSync: SyncedPreferencesSync,
     libraryChanges: LibraryChanges,
@@ -95,8 +95,7 @@ internal class SyncRepositoryImpl(
 ) : SyncRepository {
 
     private val providers = syncProviders.all
-    private val _syncState = MutableStateFlow<SyncState>(SyncState.Disconnected)
-    override val syncState = _syncState.asStateFlow()
+    override val syncState = stateHolder.state
     override val availableProviders = providers.map { it.id }
 
     /**
@@ -192,7 +191,7 @@ internal class SyncRepositoryImpl(
         // Already answered in this process. The connection, a run that may be going and whatever the last one ended in
         // all live in the state, and reading them again from the disk would replace them with what the index said when
         // that run started - "a run is going", which read at start up means "a run was interrupted".
-        (_syncState.value as? SyncState.Connected)?.let { connected ->
+        (stateHolder.value as? SyncState.Connected)?.let { connected ->
             return SyncRepository.RestoreResult(
                 isConnected = true,
                 didReturnFromAuthorization = false,
@@ -206,11 +205,11 @@ internal class SyncRepositoryImpl(
             // connect again and the new authorization would be written over tokens that still work; this says
             // what happened, starts no run, and the next start - or the next attempt - reads them again.
             println("Could not read the stored sync credentials: ${exception.message}")
-            _syncState.update { SyncState.ConnectionFailed(providers.first().id, SyncFailureReason.STORAGE) }
+            stateHolder.update { SyncState.ConnectionFailed(providers.first().id, SyncFailureReason.STORAGE) }
             return disconnectedResult
         }
         if (connected == null) {
-            _syncState.update { SyncState.Disconnected }
+            stateHolder.update { SyncState.Disconnected }
             return disconnectedResult
         }
         // What this device already knows about the account goes on screen before the service is asked anything: on a
@@ -226,7 +225,7 @@ internal class SyncRepositoryImpl(
         if (account == null) {
             // The credentials are there but the service will not say who they belong to, which only happens once
             // they have been revoked. Nothing is deleted here: the user is told, and disconnecting is their call.
-            _syncState.update { SyncState.ConnectionFailed(connected.id, SyncFailureReason.AUTHORIZATION) }
+            stateHolder.update { SyncState.ConnectionFailed(connected.id, SyncFailureReason.AUTHORIZATION) }
             return disconnectedResult
         }
         val document = loadIndexOrNull() ?: SyncIndexDocument()
@@ -235,7 +234,7 @@ internal class SyncRepositoryImpl(
         // user asked for a run - for the sake of a message about a run nobody asked for, which the launch run that
         // carries the same changes makes pointless anyway.
         val wasInterrupted = document.isRunInProgress && !document.isAutomaticRunInProgress
-        _syncState.update {
+        stateHolder.update {
             SyncState.Connected(
                 account = account,
                 progress = null,
@@ -262,8 +261,8 @@ internal class SyncRepositoryImpl(
         // Asked before the pending authorization is written, so that the answer is about the credentials the failure
         // left. A failure with none stored - a first connection that never got that far - is disconnected at the next
         // launch, so backing out of retrying it must say disconnected too rather than repeat the old failure.
-        stateBeforeConnecting = _syncState.value.takeIf { it is SyncState.ConnectionFailed && hasStoredCredentials(provider) }
-        _syncState.update { SyncState.Connecting(providerId) }
+        stateBeforeConnecting = stateHolder.value.takeIf { it is SyncState.ConnectionFailed && hasStoredCredentials(provider) }
+        stateHolder.update { SyncState.Connecting(providerId) }
         return try {
             val redirectUri = authenticator.prepareRedirectUri()
             val request = provider.buildAuthorizationRequest(redirectUri)
@@ -279,7 +278,7 @@ internal class SyncRepositoryImpl(
                     discardPendingAuthorization()
                     // A message is the authenticator saying something went wrong on the way; without one, the user
                     // simply closed the page, which needs no explaining.
-                    _syncState.update {
+                    stateHolder.update {
                         if (outcome.message == null) {
                             stateAfterBackingOut()
                         } else {
@@ -294,21 +293,21 @@ internal class SyncRepositoryImpl(
             // The user gave up, which the UI offers while an authorization is waiting. The clean up still has to
             // happen, so it runs outside the cancellation before the exception carries on unswallowed.
             withContext(NonCancellable) { discardPendingAuthorization() }
-            _syncState.update { stateAfterBackingOut() }
+            stateHolder.update { stateAfterBackingOut() }
             stateBeforeConnecting = null
             throw exception
         } catch (exception: Exception) {
             println("Could not connect to $providerId: ${exception.message}")
             discardPendingAuthorization()
-            _syncState.update { SyncState.ConnectionFailed(providerId, exception.toFailureReason()) }
+            stateHolder.update { SyncState.ConnectionFailed(providerId, exception.toFailureReason()) }
             false
         }
     }
 
     override suspend fun cancelConnection() {
-        if (_syncState.value !is SyncState.Connecting) return
+        if (stateHolder.value !is SyncState.Connecting) return
         discardPendingAuthorization()
-        _syncState.update { if (it is SyncState.Connecting) stateAfterBackingOut() else it }
+        stateHolder.update { if (it is SyncState.Connecting) stateAfterBackingOut() else it }
         stateBeforeConnecting = null
     }
 
@@ -356,7 +355,7 @@ internal class SyncRepositoryImpl(
             mutex.withLock {
                 syncIndexLocalSource.saveSyncIndex(null)
                 stateBeforeConnecting = null
-                _syncState.update { SyncState.Disconnected }
+                stateHolder.update { SyncState.Disconnected }
             }
         }
     }
@@ -386,7 +385,7 @@ internal class SyncRepositoryImpl(
         // There cannot be an index on a fresh installation, and one that is somehow there describes a folder
         // this installation has never looked at.
         quietly("clear the sync index") { syncIndexLocalSource.saveSyncIndex(null) }
-        _syncState.update { SyncState.Disconnected }
+        stateHolder.update { SyncState.Disconnected }
         if (haveCredentialsGone) {
             quietly("note that the sync credentials are forgotten") { syncIndexLocalSource.setForgettingCredentialsOwed(false) }
         }
@@ -411,7 +410,7 @@ internal class SyncRepositoryImpl(
     }
 
     override fun scheduleSynchronization() {
-        if (_syncState.value !is SyncState.Connected) return
+        if (stateHolder.value !is SyncState.Connected) return
         scheduledRunDueAt.value = environment.timeSource.markNow() + AUTOMATIC_RUN_DELAY
     }
 
@@ -429,7 +428,7 @@ internal class SyncRepositoryImpl(
                 scheduledRunDueAt.compareAndSet(null, environment.timeSource.markNow())
             }
         }
-        return (_syncState.value as? SyncState.Connected)?.progress
+        return (stateHolder.value as? SyncState.Connected)?.progress
     }
 
     /** Stops a run where it is. What has already moved stays moved, and the next run picks up from there. */
@@ -457,12 +456,12 @@ internal class SyncRepositoryImpl(
         // returns: see startScheduledSynchronization for the caller that depends on it. The run puts the same value
         // there again once it holds the lock, and clears it on every way out of its body - and the handler clears it
         // for a run that is cancelled before its body clears anything, waiting for the lock or not started yet.
-        updateConnected { it.copy(progress = SyncProgress(), lastOutcome = null) }
+        stateHolder.updateConnected { it.copy(progress = SyncProgress(), lastOutcome = null) }
         run.invokeOnCompletion { cause ->
             if (cause == null) return@invokeOnCompletion
             val current = syncJob.load()
             if (current == null || current === run || !current.isActive) {
-                updateConnected { if (it.progress == null) it else it.copy(progress = null) }
+                stateHolder.updateConnected { if (it.progress == null) it else it.copy(progress = null) }
             }
         }
         run.start()
@@ -485,16 +484,16 @@ internal class SyncRepositoryImpl(
                 // Outside the run's own try below, so a failure here would reach the scope's handler with nothing on
                 // screen. A successful read is cached, but a failed credentials write clears it for the next one.
                 println("Could not read the stored sync credentials: ${exception.message}")
-                updateConnected { it.copy(progress = null, lastOutcome = SyncOutcome.Failure(SyncFailureReason.STORAGE)) }
+                stateHolder.updateConnected { it.copy(progress = null, lastOutcome = SyncOutcome.Failure(SyncFailureReason.STORAGE)) }
                 return@withLock
             } ?: run {
                 // The credentials are gone while the screen still shows the account - a disconnect that did not get to
                 // the end, a storage that lost them. Saying so is the only way the user gets a button that works.
-                updateConnected { SyncState.ConnectionFailed(it.account.providerId, SyncFailureReason.AUTHORIZATION) }
+                stateHolder.updateConnected { SyncState.ConnectionFailed(it.account.providerId, SyncFailureReason.AUTHORIZATION) }
                 return@withLock
             }
-            val connected = _syncState.value as? SyncState.Connected ?: return@withLock
-            _syncState.update { connected.copy(progress = SyncProgress(), lastOutcome = null) }
+            val connected = stateHolder.value as? SyncState.Connected ?: return@withLock
+            stateHolder.update { connected.copy(progress = SyncProgress(), lastOutcome = null) }
             // What the engine has reported so far, which is what an interrupted run writes on its way out: the files
             // it did transfer stay known, and only the rest look unsynced next time.
             var latestIndex: (() -> SyncIndexDocument)? = null
@@ -517,7 +516,7 @@ internal class SyncRepositoryImpl(
                     document = document,
                     accountId = connected.account.indexKey(),
                     onProgress = { progress ->
-                        updateConnected { it.copy(progress = progress) }
+                        stateHolder.updateConnected { it.copy(progress = progress) }
                         scheduleLiveRefresh()
                     },
                     onIndexChanged = { snapshot ->
@@ -537,7 +536,7 @@ internal class SyncRepositoryImpl(
                         // are on disk whether the question is answered.
                         saveIndexQuietly(latestIndex().markedAsFinished())
                         refreshLibraryAfterRun()
-                        updateConnected {
+                        stateHolder.updateConnected {
                             it.copy(
                                 progress = null,
                                 lastOutcome = SyncOutcome.DeletionsNeedConfirmation(
@@ -568,7 +567,7 @@ internal class SyncRepositoryImpl(
                         )
                         // Reads only what the run changed, which for most runs is nothing.
                         refreshLibraryAfterRun()
-                        updateConnected {
+                        stateHolder.updateConnected {
                             it.copy(
                                 progress = null,
                                 lastSyncedAt = syncedAt.takeIf { at -> at > 0 },
@@ -580,12 +579,12 @@ internal class SyncRepositoryImpl(
             } catch (exception: CancellationException) {
                 // Stopped rather than broken: nothing is wrong and nothing needs fixing, so this is its own outcome.
                 withContext(NonCancellable) { finishRunCutShort(latestIndex) }
-                updateConnected { it.copy(progress = null, lastOutcome = SyncOutcome.Interrupted) }
+                stateHolder.updateConnected { it.copy(progress = null, lastOutcome = SyncOutcome.Interrupted) }
                 throw exception
             } catch (exception: Exception) {
                 println("The sync run failed: ${exception.message}")
                 withContext(NonCancellable) { finishRunCutShort(latestIndex) }
-                updateConnected {
+                stateHolder.updateConnected {
                     if (exception is SyncAuthorizationException) {
                         // Refused after a renewal was tried, so only a new authorization can answer it, and that
                         // is what ConnectionFailed offers. Kept Connected, the one way on would be Disconnect, which
@@ -607,11 +606,11 @@ internal class SyncRepositoryImpl(
                     // changed: the whole library is read again.
                     if (hasFinishedOperations) rescanLibrary()
                 }
-                updateConnected { it.copy(progress = null, lastOutcome = SyncOutcome.Failure(SyncFailureReason.UNKNOWN)) }
+                stateHolder.updateConnected { it.copy(progress = null, lastOutcome = SyncOutcome.Failure(SyncFailureReason.UNKNOWN)) }
             } finally {
                 // The one thing that has to be true on every way out, including any added later: no progress means
                 // the settings screen offers to start a run again instead of offering to stop one that is over.
-                updateConnected { if (it.progress == null) it else it.copy(progress = null) }
+                stateHolder.updateConnected { if (it.progress == null) it else it.copy(progress = null) }
             }
         }
     }
@@ -684,7 +683,7 @@ internal class SyncRepositoryImpl(
                 describe = { "Could not refresh the ${provider.id} account: ${it.message}" },
                 fallback = { return@launch },
             ) { provider.loadAccount() }
-            updateConnected { connected ->
+            stateHolder.updateConnected { connected ->
                 when {
                     connected.account.providerId != provider.id -> connected
                     account == null -> SyncState.ConnectionFailed(provider.id, SyncFailureReason.AUTHORIZATION)
@@ -692,15 +691,6 @@ internal class SyncRepositoryImpl(
                 }
             }
         }
-    }
-
-    /**
-     * Changes the state only while it is still [SyncState.Connected]. A run reports how it went when it ends, and if
-     * the account was disconnected in the meantime that report has nothing to attach itself to: rebuilding the
-     * connected state from what the run remembers would put the account back on screen.
-     */
-    private inline fun updateConnected(transform: (SyncState.Connected) -> SyncState) = _syncState.update {
-        if (it is SyncState.Connected) transform(it) else it
     }
 
     private suspend fun rescanLibrary() {
@@ -775,7 +765,7 @@ internal class SyncRepositoryImpl(
         val pending = pendingAuthorizationStore.loadPendingAuthorization()
         if (pending == null) {
             println("A redirect arrived that no authorization was waiting for.")
-            _syncState.update { SyncState.Disconnected }
+            stateHolder.update { SyncState.Disconnected }
             return false
         }
         pendingAuthorizationStore.clearPendingAuthorization()
@@ -784,18 +774,18 @@ internal class SyncRepositoryImpl(
         val code = parameters["code"]
         val state = parameters["state"]
         return when {
-            provider == null -> fail(
+            provider == null -> stateHolder.fail(
                 providerId = pending.providerId,
                 reason = SyncFailureReason.UNKNOWN,
                 message = "The redirect names a provider this build does not have.",
             )
-            code == null -> fail(
+            code == null -> stateHolder.fail(
                 providerId = pending.providerId,
                 reason = SyncFailureReason.AUTHORIZATION,
                 message = "The service refused the authorization: ${parameters["error"].orEmpty()}",
             )
             // The value the app generated has to come back untouched, or this redirect was not asked for by it.
-            state != pending.state -> fail(
+            state != pending.state -> stateHolder.fail(
                 providerId = pending.providerId,
                 reason = SyncFailureReason.UNKNOWN,
                 message = "The redirect does not belong to the authorization that was started.",
@@ -819,7 +809,7 @@ internal class SyncRepositoryImpl(
                     saveIndex(SyncIndexDocument())
                 }
                 stateBeforeConnecting = null
-                _syncState.update {
+                stateHolder.update {
                     SyncState.Connected(account = account, progress = null, lastSyncedAt = null, lastOutcome = null)
                 }
                 true
@@ -832,7 +822,7 @@ internal class SyncRepositoryImpl(
                 throw exception
             } catch (exception: Exception) {
                 withContext(NonCancellable) { forgetCredentialsOf(provider) }
-                fail(
+                stateHolder.fail(
                     providerId = pending.providerId,
                     reason = exception.toFailureReason(),
                     message = "The authorization could not be completed: ${exception.message}",
@@ -850,12 +840,6 @@ internal class SyncRepositoryImpl(
         describe = { "Could not forget the ${provider.id} credentials: ${it.message}" },
         fallback = {},
     ) { provider.forgetStoredCredentials() }
-
-    private fun fail(providerId: SyncProviderId, reason: SyncFailureReason, message: String): Boolean {
-        println(message)
-        _syncState.update { SyncState.ConnectionFailed(providerId, reason) }
-        return false
-    }
 
     private fun Throwable.toFailureReason() = when (this) {
         is SyncRunEndingException -> reason
