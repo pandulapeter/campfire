@@ -13,9 +13,12 @@ The sync contracts and the two cover art ones. Consumed by `:data:repository:imp
 repository) and implemented by `:data:source:remote:implementation`. Depends only on `:data:model`.
 
 Everything here is shaped so that a second provider is one new class rather than a change to the engine — the rules,
-and why each of them is load bearing, are spelled out in the KDoc of `SyncProvider`.
+and why each of them is load bearing, are spelled out in the KDoc of `SyncFolder` and `SyncConnection`.
 
-- `SyncProvider` — one cloud service, seen as a single flat folder addressed by `(LibraryFileKind, name)`, which is
+- `SyncProvider` — one cloud service, the two halves of it named apart: `SyncConnection`, the account (`isConnected`,
+  the authorization, `disconnect`, `forgetStoredCredentials`, `loadAccount`, `storedAccount`), and `SyncFolder`, the
+  files a run reads and writes, which is all the engine and `SyncedPreferencesSync` are handed — so a run's type says
+  it never connects or re-authorizes anything. The folder is a single flat one addressed by `(LibraryFileKind, name)`,
   exactly the shape the library has. Revisions are **opaque strings**: the engine stores them and hands them back,
   and never parses one, so a Dropbox `rev` and a Drive `headRevisionId` are equally fine. Every run lists the whole
   folder rather than asking what changed — one request for a library of songs, and right even after a run that was

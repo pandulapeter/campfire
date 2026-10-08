@@ -13,7 +13,7 @@ import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
 import com.pandulapeter.campfire.data.model.domain.normalizedToNfc
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
-import com.pandulapeter.campfire.data.source.remote.api.SyncProvider
+import com.pandulapeter.campfire.data.source.remote.api.SyncFolder
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteWriteResult
 import kotlin.concurrent.Volatile
 import kotlinx.coroutines.flow.Flow
@@ -76,7 +76,7 @@ internal class SyncedPreferencesSync(
      * @param keptFileNames The files this run could not move, whose songs keep their preferences although they are not
      *   in the library on this device.
      */
-    suspend fun synchronize(provider: SyncProvider, base: JsonObject?, keptFileNames: Collection<String>): JsonObject? {
+    suspend fun synchronize(provider: SyncFolder, base: JsonObject?, keptFileNames: Collection<String>): JsonObject? {
         if (userPreferencesRepository.loadUserPreferencesIfNeeded() == null) return null
         // Folded name to this device's spelling, which is the one its screens read the preferences under. Two names of
         // one song only exist on a file system that tells case apart, and the service refuses one of them anyway; the

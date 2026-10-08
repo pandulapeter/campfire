@@ -22,7 +22,7 @@ import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
 import com.pandulapeter.campfire.data.source.local.api.SetlistComparison
 import com.pandulapeter.campfire.data.source.remote.api.SyncAuthorizationException
 import com.pandulapeter.campfire.data.source.remote.api.SyncNetworkException
-import com.pandulapeter.campfire.data.source.remote.api.SyncProvider
+import com.pandulapeter.campfire.data.source.remote.api.SyncFolder
 import com.pandulapeter.campfire.data.source.remote.api.SyncRemoteStorageFullException
 import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteDeletion
@@ -74,7 +74,7 @@ internal class SyncEngine(
 ) {
 
     suspend fun synchronize(
-        provider: SyncProvider,
+        provider: SyncFolder,
         document: SyncIndexDocument,
         accountId: String,
         onProgress: (SyncProgress) -> Unit,
@@ -310,7 +310,7 @@ internal class SyncEngine(
      * to that map any more. Never from a coroutine launched out of [onIndexChanged].
      */
     private suspend fun apply(
-        provider: SyncProvider,
+        provider: SyncFolder,
         plan: List<SyncOperation>,
         index: Map<SyncKey, SyncIndexEntry>,
         remoteFiles: Map<SyncKey, RemoteFileState>,
@@ -362,7 +362,7 @@ internal class SyncEngine(
     }
 
     private suspend fun runOperation(
-        provider: SyncProvider,
+        provider: SyncFolder,
         operation: SyncOperation,
         index: Map<SyncKey, SyncIndexEntry>,
         remoteFiles: Map<SyncKey, RemoteFileState>,
@@ -388,10 +388,10 @@ internal class SyncEngine(
      * All of a pass's remote deletions go to the provider in one call rather than [CONCURRENT_TRANSFERS] at a time:
      * another device that lists the folder while they are under way decides from what it sees gone whether to ask
      * before following, so the shorter they take, the less of a large deletion reaches it unasked (see
-     * [SyncProvider.delete]). What ends a run ends it here too; anything else fails the files it was about.
+     * [SyncFolder.delete]). What ends a run ends it here too; anything else fails the files it was about.
      */
     private suspend fun deleteRemotely(
-        provider: SyncProvider,
+        provider: SyncFolder,
         operations: List<SyncOperation.DeleteRemote>,
     ): List<Pair<SyncOperation, OperationOutcome>> {
         val deletions = operations.associateBy { RemoteDeletion(kind = it.key.kind, name = it.key.name, expectedRevision = it.revision) }
@@ -435,7 +435,7 @@ internal class SyncEngine(
      * [libraryFileLock], so that a save lands either before that check, which then sees it, or after the write.
      */
     private suspend fun download(
-        provider: SyncProvider,
+        provider: SyncFolder,
         operation: SyncOperation.Download,
         index: Map<SyncKey, SyncIndexEntry>,
         remoteFiles: Map<SyncKey, RemoteFileState>,
@@ -497,7 +497,7 @@ internal class SyncEngine(
      * under [libraryFileLock], so that a save cannot land between them.
      */
     private suspend fun deleteLocally(
-        provider: SyncProvider,
+        provider: SyncFolder,
         operation: SyncOperation.DeleteLocal,
         index: Map<SyncKey, SyncIndexEntry>,
         caseCollisions: Set<SyncKey>,
@@ -520,7 +520,7 @@ internal class SyncEngine(
     }
 
     private suspend fun upload(
-        provider: SyncProvider,
+        provider: SyncFolder,
         operation: SyncOperation.Upload,
         caseCollisions: Set<SyncKey>,
     ): OperationOutcome {
@@ -562,7 +562,7 @@ internal class SyncEngine(
      * worst that follows is a second identical copy.
      */
     private suspend fun resolve(
-        provider: SyncProvider,
+        provider: SyncFolder,
         operation: SyncOperation.Resolve,
         indexEntry: SyncIndexEntry?,
         remoteFiles: Map<SyncKey, RemoteFileState>,
@@ -603,7 +603,7 @@ internal class SyncEngine(
      * folder.
      */
     private suspend fun resolveWith(
-        provider: SyncProvider,
+        provider: SyncFolder,
         key: SyncKey,
         revision: String,
         localBytes: ByteArray,
@@ -730,7 +730,7 @@ internal class SyncEngine(
         }
     }
 
-    private fun isSameContent(provider: SyncProvider, local: ByteArray, remoteContentHash: String?) =
+    private fun isSameContent(provider: SyncFolder, local: ByteArray, remoteContentHash: String?) =
         remoteContentHash != null && provider.contentHashOf(local) == remoteContentHash
 
     /**
@@ -740,7 +740,7 @@ internal class SyncEngine(
      * like any other - logged, the index left alone, tried again by the next run.
      */
     private suspend fun downloadWithinLimit(
-        provider: SyncProvider,
+        provider: SyncFolder,
         key: SyncKey,
         remoteFiles: Map<SyncKey, RemoteFileState>,
     ): RemoteDocument {
