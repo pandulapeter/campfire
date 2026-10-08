@@ -10,30 +10,25 @@
 package com.pandulapeter.campfire
 
 import android.app.ActivityManager
-import android.content.ActivityNotFoundException
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.view.ViewTreeObserver
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.browser.customtabs.CustomTabsIntent
-import androidx.core.content.ContextCompat
-import androidx.core.net.toUri
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.isSyncRedirect
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.onSyncRedirectReceived
 import com.pandulapeter.campfire.presentation.ui.CampfireAndroidApp
-import com.pandulapeter.campfire.presentation.ui.platform.SyncNotification
 import com.pandulapeter.campfire.metronome.CampfireMetronomeService
-import com.pandulapeter.campfire.presentation.ui.platform.MetronomeNotification
-import com.pandulapeter.campfire.sync.CampfireSyncService
+import com.pandulapeter.campfire.sync.SyncServiceStarter
 
 class CampfireMainActivity : ComponentActivity() {
 
     private var isAppReady = false
+
+    private val syncServiceStarter = SyncServiceStarter(this)
 
     /** The theme color the launcher icon is to be in, known once the preferences have been read. */
     private var appIconColor: UserPreferences.ThemeColor? = null
@@ -56,10 +51,14 @@ class CampfireMainActivity : ComponentActivity() {
         }
         setContent {
             CampfireAndroidApp(
-                urlOpener = ::openUrl,
+                urlOpener = this::openUrl,
                 filesToImport = filesToImport,
-                syncNotifier = ::onSyncNotificationChanged,
-                metronomeNotifier = ::onMetronomeNotificationChanged,
+                syncNotifier = syncServiceStarter::onSyncNotificationChanged,
+                metronomeNotifier = { notification ->
+                    // Nothing is done for a click that ended: the service follows the engine itself, since this activity
+                    // may be gone by then.
+                    if (notification != null) CampfireMetronomeService.start(context = this, notification = notification)
+                },
                 onAppReady = { isAppReady = true },
                 onAppIconChanged = { themeColor ->
                     appIconColor = themeColor
@@ -132,76 +131,15 @@ class CampfireMainActivity : ComponentActivity() {
     }
 
     /**
-     * The run the composition last said is going, or null when none is. Kept rather than acted on while the app is in
-     * front, see [onSyncNotificationChanged].
-     */
-    private var syncNotification: SyncNotification? = null
-
-    /**
-     * The words the service was last started with. The counts need no forwarding - the service renders them from the
-     * sync state itself - so a run's progress starts it again only when it is not running (it stops itself when it
-     * sees a run end, which the activity may not have been watching) or when the words changed (a language switch).
-     */
-    private var lastSyncServiceWords: List<String>? = null
-
-    /** Between a pause that was the user leaving - not a rotation - and the next resume. */
-    private var isLeaving = false
-
-    /**
-     * Whether the service has been asked to start since the app was last left. [CampfireSyncService.isRunning] only
-     * turns true once the service has got the intent, and the same run may be handed over again before that.
-     */
-    private var hasStartedSyncServiceSinceLeaving = false
-
-    /**
-     * The service is only started once the app is being left: in front, the activity keeps the process alive anyway,
-     * and a foreground service shows its notification - Stop button and all - at once, which for the run every edit
-     * starts ten seconds later would be a notification after nearly every change the user makes. What arrives while the
-     * app is in front is kept for [onPause]; what arrives after it starts the service there and then.
-     */
-    private fun onSyncNotificationChanged(notification: SyncNotification?) {
-        syncNotification = notification
-        if (notification == null) {
-            dismissSyncService()
-        } else if (isLeaving) {
-            startSyncService(notification)
-        }
-    }
-
-    /**
-     * Starts the metronome's service as a click starts, which is always a tap with the app in front, and hands it new
-     * words as they change. Nothing is done for a click that ended: the service follows the engine itself, since this
-     * activity may be gone by then.
-     */
-    private fun onMetronomeNotificationChanged(notification: MetronomeNotification?) {
-        if (notification == null) return
-        val intent = CampfireMetronomeService.intent(
-            context = this,
-            channelName = notification.channelName,
-            title = notification.title,
-            body = notification.body,
-            stopLabel = notification.stopLabel,
-        )
-        try {
-            if (CampfireMetronomeService.isRunning) startService(intent) else ContextCompat.startForegroundService(this, intent)
-        } catch (exception: Exception) {
-            // A notification that cannot be shown must never take the click down with it: it plays on, and only stops
-            // surviving the app being left.
-            println("Could not start the metronome service: ${exception.message}")
-        }
-    }
-
-    /**
      * The last moment the service may be started - Android 12 refuses a foreground service started from the
      * background, and the activity is still visible here. A run that leaving the app has just started is already in
-     * [syncNotification]: the composition hands it over from its own ON_PAUSE observer, which is told before this.
+     * [syncServiceStarter]: the composition hands it over from its own ON_PAUSE observer, which is told before this.
      * A pause on the way to a rotation is not leaving, and the activity that follows takes over.
      */
     override fun onPause() {
         super.onPause()
         if (isChangingConfigurations) return
-        isLeaving = true
-        syncNotification?.let(::startSyncService)
+        syncServiceStarter.onLeaving()
     }
 
     /**
@@ -210,59 +148,7 @@ class CampfireMainActivity : ComponentActivity() {
      */
     override fun onResume() {
         super.onResume()
-        isLeaving = false
-        hasStartedSyncServiceSinceLeaving = false
-        dismissSyncService()
-    }
-
-    /**
-     * Starts the service that keeps a sync run alive once the user has left the app. Building the notification is the
-     * service's job; what arrives here is only what it should say.
-     */
-    private fun startSyncService(notification: SyncNotification) {
-        val words = listOf(
-            notification.channelName,
-            notification.title,
-            notification.preparingBody,
-            notification.progressBodyFormat,
-            notification.stopLabel,
-        )
-        if (words == lastSyncServiceWords && (CampfireSyncService.isRunning || hasStartedSyncServiceSinceLeaving)) return
-        try {
-            ContextCompat.startForegroundService(
-                this,
-                CampfireSyncService.intent(
-                    context = this,
-                    channelName = notification.channelName,
-                    title = notification.title,
-                    preparingBody = notification.preparingBody,
-                    progressBodyFormat = notification.progressBodyFormat,
-                    stopLabel = notification.stopLabel,
-                    completed = notification.progress.completed,
-                    total = notification.progress.total,
-                ),
-            )
-            lastSyncServiceWords = words
-            hasStartedSyncServiceSinceLeaving = true
-        } catch (exception: Exception) {
-            // A notification that cannot be shown must never take the sync down with it: the run carries on, it
-            // just stops surviving the app being left.
-            println("Could not start the sync service: ${exception.message}")
-        }
-    }
-
-    /**
-     * Takes the service down, if this activity or an earlier one in the process started it. Never stops the run:
-     * see [CampfireSyncService.dismissIntent].
-     */
-    private fun dismissSyncService() {
-        if (lastSyncServiceWords == null && !CampfireSyncService.isRunning) return
-        lastSyncServiceWords = null
-        try {
-            startService(CampfireSyncService.dismissIntent(this))
-        } catch (exception: Exception) {
-            println("Could not stop the sync service: ${exception.message}")
-        }
+        syncServiceStarter.onReturned()
     }
 
     /**
@@ -283,55 +169,4 @@ class CampfireMainActivity : ComponentActivity() {
                 importSharedTexts(texts = intent.sharedTexts(), subject = intent.getStringExtra(Intent.EXTRA_SUBJECT))
         }
     }
-
-    /**
-     * `EXTRA_TEXT` is one text for a `SEND` and a list of them for a `SEND_MULTIPLE`, asked for in that order
-     * because the platform logs a warning for an extra asked for as the wrong type. Some senders fill in only the
-     * clip data.
-     */
-    private fun Intent.sharedTexts(): List<String> {
-        val single = { getCharSequenceExtra(Intent.EXTRA_TEXT)?.let { listOf(it) } }
-        val several = { getCharSequenceArrayListExtra(Intent.EXTRA_TEXT) }
-        val texts = if (action == Intent.ACTION_SEND) single() ?: several() else several() ?: single()
-        return (texts ?: clipData?.let { clip -> (0 until clip.itemCount).mapNotNull { clip.getItemAt(it).text } })
-            .orEmpty()
-            .map { it.toString() }
-    }
-
-    /**
-     * Opens [url] in a Custom Tab, except a Play listing, which goes to the Play Store app: a Custom Tab shows it as a
-     * web page that can only send the user on to the store. Play claims its own https addresses, so the same URL is
-     * handed to it by package, and a device without Play gets the web page after all. Returns false where nothing could
-     * open it, for the UI to say so in the app's language.
-     */
-    private fun openUrl(url: String, isDarkTheme: Boolean): Boolean {
-        val uri = url.toUri()
-        if (uri.host == PLAY_STORE_HOST) {
-            try {
-                startActivity(Intent(Intent.ACTION_VIEW, uri).setPackage(PLAY_STORE_PACKAGE))
-                return true
-            } catch (_: ActivityNotFoundException) {
-            }
-        }
-        return openInCustomTab(uri, isDarkTheme)
-    }
-
-    private fun openInCustomTab(uri: Uri, isDarkTheme: Boolean): Boolean = try {
-        CustomTabsIntent.Builder()
-            .setColorScheme(if (isDarkTheme) CustomTabsIntent.COLOR_SCHEME_DARK else CustomTabsIntent.COLOR_SCHEME_LIGHT)
-            .build()
-            .launchUrl(this, uri)
-        true
-    } catch (_: ActivityNotFoundException) {
-        false
-    }
-
-    @Suppress("DEPRECATION")
-    private fun Intent.parcelableExtra(name: String): Uri? = getParcelableExtra(name)
-
-    @Suppress("DEPRECATION")
-    private fun Intent.parcelableArrayListExtra(name: String): List<Uri>? = getParcelableArrayListExtra(name)
 }
-
-private const val PLAY_STORE_HOST = "play.google.com"
-private const val PLAY_STORE_PACKAGE = "com.android.vending"

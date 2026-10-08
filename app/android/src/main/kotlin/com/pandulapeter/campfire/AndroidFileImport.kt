@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire
 
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.data.model.domain.LibraryFiles
@@ -74,6 +75,26 @@ internal fun importSharedTexts(texts: List<String>, subject: String?) {
         pendingImports.send(files)
     }
 }
+
+/**
+ * `EXTRA_TEXT` is one text for a `SEND` and a list of them for a `SEND_MULTIPLE`, asked for in that order
+ * because the platform logs a warning for an extra asked for as the wrong type. Some senders fill in only the
+ * clip data.
+ */
+internal fun Intent.sharedTexts(): List<String> {
+    val single = { getCharSequenceExtra(Intent.EXTRA_TEXT)?.let { listOf(it) } }
+    val several = { getCharSequenceArrayListExtra(Intent.EXTRA_TEXT) }
+    val texts = if (action == Intent.ACTION_SEND) single() ?: several() else several() ?: single()
+    return (texts ?: clipData?.let { clip -> (0 until clip.itemCount).mapNotNull { clip.getItemAt(it).text } })
+        .orEmpty()
+        .map { it.toString() }
+}
+
+@Suppress("DEPRECATION")
+internal fun Intent.parcelableExtra(name: String): Uri? = getParcelableExtra(name)
+
+@Suppress("DEPRECATION")
+internal fun Intent.parcelableArrayListExtra(name: String): List<Uri>? = getParcelableArrayListExtra(name)
 
 private fun String.isOnlyLinks() = lineSequence().filter { it.isNotBlank() }.let { lines -> lines.any() && lines.all { LINK.matches(it.trim()) } }
 

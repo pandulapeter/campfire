@@ -23,10 +23,12 @@ import android.media.session.PlaybackState
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.ServiceCompat
+import androidx.core.content.ContextCompat
 import com.pandulapeter.campfire.CampfireMainActivity
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.metronome.api.Metronome
 import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
+import com.pandulapeter.campfire.presentation.ui.platform.MetronomeNotification
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -199,7 +201,28 @@ class CampfireMetronomeService : Service() {
         private const val EXTRA_BODY = "body"
         private const val EXTRA_STOP_LABEL = "stopLabel"
 
-        fun intent(
+        /**
+         * Starts the service as a click starts, which is always a tap with the app in front, and hands it new words as
+         * they change.
+         */
+        fun start(context: Context, notification: MetronomeNotification) {
+            val intent = intent(
+                context = context,
+                channelName = notification.channelName,
+                title = notification.title,
+                body = notification.body,
+                stopLabel = notification.stopLabel,
+            )
+            try {
+                if (isRunning) context.startService(intent) else ContextCompat.startForegroundService(context, intent)
+            } catch (exception: Exception) {
+                // A notification that cannot be shown must never take the click down with it: it plays on, and only stops
+                // surviving the app being left.
+                println("Could not start the metronome service: ${exception.message}")
+            }
+        }
+
+        private fun intent(
             context: Context,
             channelName: String,
             title: String,
