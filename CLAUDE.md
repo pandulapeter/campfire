@@ -521,7 +521,7 @@ localized in both languages.
   the desktop target with
   `./gradlew :data:model:desktopTest :data:formats:desktopTest :chordpro:desktopTest :domain:implementation:desktopTest :data:source:local:implementation:desktopTest :data:source:remote:api:desktopTest :data:source:remote:implementation:desktopTest :data:repository:implementation:desktopTest :data:sync:implementation:desktopTest :metronome:api:desktopTest :metronome:implementation:desktopTest :presentation:desktopTest`.
   The build logic's packaging helpers (the `.msix` version and publisher id, the launcher configuration and `.deb`
-  rewrites) are tested in `gradle/build-logic` with `./gradlew -p gradle :build-logic:test`.
+  rewrites, the web build manifest) are tested in `gradle/build-logic` with `./gradlew -p gradle :build-logic:test`.
   The web build's JavaScript — its storage worker, its service worker's routing and the page's decisions about the
   build it keeps — has Node tests of its own (see `app/web`), and the parser of a
   release's description, which is Python, a `unittest` next to it in `.github/scripts`.
@@ -1005,7 +1005,7 @@ start, which is what the rest of `app/web` is about — see its `CLAUDE.md`.
   browser without Wasm GC is told so before the download starts. Settings' web-only Storage row reports whether the
   app was saved together with whether the browser promised to keep the library, since the two are kept or evicted
   together (`isAppAvailableOffline`, next to `requestLibraryPersistence`). See `app/web` for the launch and the cache.
-- `finishWebDistribution` (in `app/web/build.gradle.kts`) finalizes `wasmJsBrowserDistribution`: it writes the build's
+- `finishWebDistribution` (registered in `app/web/build.gradle.kts`, a `FinishWebDistribution` task of `gradle/build-logic`) finalizes `wasmJsBrowserDistribution`: it writes the build's
   id and the size and digest of every file into `index.html` and `build.json`, and precompresses the files when
   `campfire.web.precompress` is on — which it is not, since GitHub Pages ignores the copies (see `app/web`).
 - OPFS, the file input and the download link are reached through `js(...)` blocks rather than through typed wrappers:

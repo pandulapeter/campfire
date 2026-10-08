@@ -54,5 +54,19 @@ platform-wide compiler setting belongs — never in a module's own `build.gradle
   `android-minSdk` / `android-compileSdk` for the Android target). Nothing here hardcodes a version; bumping one is
   an edit to `gradle/libs.versions.toml` alone.
 
+## Tasks
+
+`tasks/` holds the task classes the app modules' build files register, written here rather than inline in a script
+so that what decides whether a package is accepted can be tested: `RecordClassDataArchive`, `AddStartupWmClassToDeb`,
+`AddLaunchAfterInstallToMsi` and `PackageMsix` for `:app:desktop` (see `app/desktop/CLAUDE.md`), and
+`FinishWebDistribution` for `:app:web` (see `app/web/CLAUDE.md`). The registration, its values and its wiring
+(`dependsOn`, `finalizedBy`, `onlyIf`) stay in the consuming build file; a value a task needs from the project is an
+input set there, so that no task action reaches a script object. Their pure parts are top-level functions next to
+them — `PackagingText.kt` (the `.msix` version, publisher id and XML escaping, the launcher configuration's
+`[JavaOptions]`, the `.deb`'s desktop entry and md5sums, the Windows SDK version order) and `WebBuildManifest.kt` (the
+manifest `index.html` and `build.json` carry) — tested in `src/test` with `./gradlew -p gradle :build-logic:test`, which
+`tests.yml` runs. A build file sees these classes because it applies a plugin of this build: `campfire-style` does so
+for `:app:desktop` and `:app:web`, which apply no other.
+
 The plugin ids are registered in `build-logic/build.gradle.kts`; adding another convention plugin means a class, a
 `register` block there, and nothing else.

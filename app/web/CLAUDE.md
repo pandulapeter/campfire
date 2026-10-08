@@ -185,7 +185,9 @@ or `localhost` — a distribution served from `file://` will start and then fail
 - `./gradlew :app:web:wasmJsBrowserDevelopmentRun` — dev server on `localhost` (prints the port).
 - `./gradlew :app:web:wasmJsBrowserDistribution` — the deployable site in `build/dist/wasmJs/productionExecutable`.
 
-`wasmJsBrowserDistribution` is finalized by **`finishWebDistribution`**:
+`wasmJsBrowserDistribution` is finalized by **`finishWebDistribution`**, a `FinishWebDistribution` task registered in
+the build file and written in `gradle/build-logic`'s `tasks/` package, where the manifest it writes is built by the
+pure `webBuildManifest` and tested against a golden text (see `gradle/build-logic/CLAUDE.md`):
 
 - It replaces the `/*{{BUILD}}*/null` token in `index.html` with the build id, the number and total size of the
   binaries, and a map of every file of the distribution but the page, `build.json` and the worker, by its path, to
