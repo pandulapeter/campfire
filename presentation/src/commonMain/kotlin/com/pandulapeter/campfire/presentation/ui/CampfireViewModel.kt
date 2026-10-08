@@ -180,6 +180,7 @@ import com.pandulapeter.campfire.presentation.ui.fontScale.FontScaleAccumulator
 import com.pandulapeter.campfire.presentation.ui.fontScale.PINCH_SENSITIVITY
 import com.pandulapeter.campfire.presentation.ui.songInfo.hasSongInfo
 import com.pandulapeter.campfire.presentation.ui.state.DebouncedPreference
+import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.Companion.BACK_STACK_KEY
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.Companion.SETLISTS_SEARCH_KEY
@@ -233,7 +234,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.runningFold
@@ -619,43 +619,31 @@ class CampfireViewModel(
     private val _isAppOnScreen = MutableStateFlow(false)
     internal val isAppOnScreen: StateFlow<Boolean> = _isAppOnScreen.asStateFlow()
 
-    /**
-     * Read straight from its own repository rather than out of [screenData], which only has anything once every
-     * source has been read: the theme and the language come from here, and waiting for a scan of the whole song
-     * library would leave the app in the system's theme and language for as long as that takes. Both states below
-     * are derived from this one, so that they can never disagree about whether the read has happened.
-     */
-    private val userPreferencesState = getUserPreferences().asState(DataState.Loading(null))
+    private val preferencesController = PreferencesController(
+        scope = viewModelScope,
+        getUserPreferences = getUserPreferences,
+        updateUserPreferences = updateUserPreferences,
+        requestPersistence = ::requestLibraryPersistence,
+    )
 
-    val userPreferences = userPreferencesState.map { it.data }.asState(null)
+    /** See [PreferencesController.userPreferencesState]. */
+    private val userPreferencesState get() = preferencesController.userPreferencesState
 
-    /**
-     * False only for as long as the preferences have not been read yet, which is what the app waits for before it
-     * draws anything: they decide the palette it is drawn in and the language it is written in, and a frame drawn
-     * before they arrive is a frame of the system's guess at both.
-     *
-     * Read rather than read *successfully*: a read that failed has no answer left to wait for, and the app has to
-     * open in the defaults rather than not at all.
-     *
-     * It only ever turns on, because what it gates is the whole of `CampfireContent`: every remembered thing under
-     * it — the scroll position of each list, the state Navigation 3 saved for each entry, the text being edited —
-     * is gone the moment this goes false, and the app comes back with the user somewhere they never navigated to.
-     * Nothing that happens after the first read is a reason to put the launch screen back up.
-     */
-    val arePreferencesLoaded = userPreferencesState
-        .runningFold(false) { hasBeenRead, state -> hasBeenRead || state !is DataState.Loading }
-        .asState(false)
+    /** See [PreferencesController.userPreferences]. */
+    val userPreferences: StateFlow<UserPreferences?> get() = preferencesController.userPreferences
 
-    /**
-     * The one preference enough screens ask about to be worth a state of its own: every list, menu, sheet and app
-     * bar in the app has something it takes away.
-     */
-    val isPerformanceModeEnabled = userPreferences.map { it?.isPerformanceModeEnabled == true }.asState(false)
+    /** See [PreferencesController.arePreferencesLoaded]. */
+    val arePreferencesLoaded: StateFlow<Boolean> get() = preferencesController.arePreferencesLoaded
 
-    /** The top level screens the navigation chrome offers, which are only those of the features switched on. */
-    internal val topLevelDestinations = userPreferences
-        .map { CampfireDestination.TopLevel.entries(areSetlistsEnabled = it?.areSetlistsEnabled != false, isMetronomeEnabled = it?.isMetronomeEnabled != false) }
-        .asState(CampfireDestination.TopLevel.entries)
+    /** See [PreferencesController.isPerformanceModeEnabled]. */
+    val isPerformanceModeEnabled: StateFlow<Boolean> get() = preferencesController.isPerformanceModeEnabled
+
+    /** See [PreferencesController.topLevelDestinations]. */
+    internal val topLevelDestinations: StateFlow<List<CampfireDestination.TopLevel>> get() = preferencesController.topLevelDestinations
+
+    /** See [PreferencesController.libraryPersistence]. */
+    internal val libraryPersistence: StateFlow<LibraryPersistence?> get() = preferencesController.libraryPersistence
+
     /**
      * Read straight from its own repository, like the preferences and for the same reason: sync runs on its own
      * schedule, and a settings screen must not wait for a scan of the library to say whether an account is on.
@@ -664,17 +652,6 @@ class CampfireViewModel(
 
     /** True while a sync run is going. Acted on rather than drawn: a restart the app offers by itself waits for it. */
     val isSyncing = syncState.map { it is SyncState.Connected && it.isSyncing }.asState(false)
-
-    /**
-     * Whether the platform has promised to keep the library, null until it has answered. Asked for here, as early as
-     * there is anything to ask from, and never insisted on: on the web this is what stops the browser from evicting
-     * the library when the device runs short of space, and everywhere else the answer is a foregone conclusion.
-     *
-     * A state of the view model rather than something the settings screen asks for as it opens, for the reason every
-     * other state here is eager: an answer that arrives a frame after the screen does is a row appearing in the
-     * middle of the transition the screen is entering with.
-     */
-    internal val libraryPersistence = flow<LibraryPersistence?> { emit(requestLibraryPersistence()) }.asState(null)
 
     /** Fixed for the life of the build, so it is a value rather than a flow. Empty means sync is not configured. */
     val syncProviders: List<SyncProviderId> = getSyncProviders()
@@ -3625,39 +3602,23 @@ class CampfireViewModel(
 
     fun setShouldShowArchivedSetlists(value: Boolean) = changeUserPreferences { copy(shouldShowArchivedSetlists = value) }
 
-    fun setPerformanceModeEnabled(value: Boolean) = changeUserPreferences { copy(isPerformanceModeEnabled = value) }
+    fun setPerformanceModeEnabled(value: Boolean) = preferencesController.setPerformanceModeEnabled(value)
 
-    fun setChordsEnabled(value: Boolean) = changeUserPreferences { copy(areChordsEnabled = value) }
+    fun setChordsEnabled(value: Boolean) = preferencesController.setChordsEnabled(value)
 
-    fun setChordDiagramsEnabled(value: Boolean) = changeUserPreferences { copy(areChordDiagramsEnabled = value) }
+    fun setChordDiagramsEnabled(value: Boolean) = preferencesController.setChordDiagramsEnabled(value)
 
-    fun setChordInstrument(value: UserPreferences.ChordInstrument) = changeUserPreferences { copy(chordInstrument = value) }
+    fun setChordInstrument(value: UserPreferences.ChordInstrument) = preferencesController.setChordInstrument(value)
 
-    fun toggleChordSectionFold() = changeUserPreferences { copy(isChordSectionFolded = !isChordSectionFolded) }
+    fun toggleChordSectionFold() = preferencesController.toggleChordSectionFold()
 
-    /**
-     * Stores [shape] as the player's own for the chord [chordId] on [instrument], in every song, or forgets their
-     * choice where it is null. Written at once, as the page's own steppers write.
-     */
-    fun setChordVoicing(instrument: UserPreferences.ChordInstrument, chordId: String, shape: String?) = changeUserPreferences {
-        val shapes = chordVoicings[instrument.id].orEmpty().let { if (shape == null) it - chordId else it + (chordId to shape) }
-        copy(chordVoicings = if (shapes.isEmpty()) chordVoicings - instrument.id else chordVoicings + (instrument.id to shapes))
-    }
+    fun setChordVoicing(instrument: UserPreferences.ChordInstrument, chordId: String, shape: String?) = preferencesController.setChordVoicing(instrument, chordId, shape)
 
-    fun setSetlistsEnabled(value: Boolean) = changeUserPreferences { copy(areSetlistsEnabled = value) }
+    fun setSetlistsEnabled(value: Boolean) = preferencesController.setSetlistsEnabled(value)
 
-    fun setMetronomeEnabled(value: Boolean) = changeUserPreferences { copy(isMetronomeEnabled = value) }
+    fun setMetronomeEnabled(value: Boolean) = preferencesController.setMetronomeEnabled(value)
 
-    /**
-     * Folds or unfolds one section of a song (or one tab or grid inside it), [key] being the name the song details
-     * screen gives it. One set per song, wherever it is opened from, and kept in the preferences rather than in a
-     * setlist, since it is how one reader reads the song rather than how the band plays it. It toggles what the
-     * preferences hold when the change runs, which already has the previous tap in it (see [changeTransposition]).
-     */
-    fun toggleSectionFold(songFileName: String, key: String) = changeUserPreferences {
-        val folded = foldedSections[songFileName].orEmpty().let { if (key in it) it - key else it + key }
-        copy(foldedSections = if (folded.isEmpty()) foldedSections - songFileName else foldedSections + (songFileName to folded))
-    }
+    fun toggleSectionFold(songFileName: String, key: String) = preferencesController.toggleSectionFold(songFileName, key)
 
     /**
      * Kept in whole percent, which is all the stepper's label shows: a slow pinch moves less than that on most frames,
@@ -3686,7 +3647,7 @@ class CampfireViewModel(
         settledFontScaleState.floatValue = liveFontScale.floatValue
     }
 
-    fun setSortingMode(value: UserPreferences.SortingMode) = changeUserPreferences { copy(sortingMode = value) }
+    fun setSortingMode(value: UserPreferences.SortingMode) = preferencesController.setSortingMode(value)
 
     fun setSetlistSortingMode(value: UserPreferences.SetlistSortingMode) = changeUserPreferences { copy(setlistSortingMode = value) }
 
@@ -3715,9 +3676,9 @@ class CampfireViewModel(
 
     fun setLanguageMatchMode(value: UserPreferences.MatchMode) = changeUserPreferences { copy(languageMatchMode = value) }
 
-    fun setTagSortingMode(value: UserPreferences.LabelSortingMode) = changeUserPreferences { copy(tagSortingMode = value) }
+    fun setTagSortingMode(value: UserPreferences.LabelSortingMode) = preferencesController.setTagSortingMode(value)
 
-    fun setLanguageSortingMode(value: UserPreferences.LabelSortingMode) = changeUserPreferences { copy(languageSortingMode = value) }
+    fun setLanguageSortingMode(value: UserPreferences.LabelSortingMode) = preferencesController.setLanguageSortingMode(value)
 
     /** The codes are normalized by the parser, so a selected language is the string the filter chip carries. */
     fun toggleLanguageFilter(code: String) = _songFilter.update { filter ->
@@ -3746,27 +3707,25 @@ class CampfireViewModel(
         )
     }
 
-    fun setUiMode(value: UserPreferences.UiMode) = changeUserPreferences { copy(uiMode = value) }
+    fun setUiMode(value: UserPreferences.UiMode) = preferencesController.setUiMode(value)
 
-    fun setThemeColor(value: UserPreferences.ThemeColor) = changeUserPreferences { copy(themeColor = value) }
+    fun setThemeColor(value: UserPreferences.ThemeColor) = preferencesController.setThemeColor(value)
 
-    fun setBackgroundWarmth(value: Int) = changeUserPreferences { copy(backgroundWarmth = value) }
+    fun setBackgroundWarmth(value: Int) = preferencesController.setBackgroundWarmth(value)
 
-    fun setAppIconThemed(value: Boolean) = changeUserPreferences { copy(isAppIconThemed = value) }
+    fun setAppIconThemed(value: Boolean) = preferencesController.setAppIconThemed(value)
 
-    fun setCoverArtEnabled(value: Boolean) = changeUserPreferences { copy(isCoverArtEnabled = value) }
+    fun setCoverArtEnabled(value: Boolean) = preferencesController.setCoverArtEnabled(value)
 
-    fun setSectionNumberingEnabled(value: Boolean) = changeUserPreferences { copy(shouldNumberSections = value) }
+    fun setSectionNumberingEnabled(value: Boolean) = preferencesController.setSectionNumberingEnabled(value)
 
-    fun setLanguage(value: UserPreferences.Language) = changeUserPreferences { copy(language = value) }
+    fun setLanguage(value: UserPreferences.Language) = preferencesController.setLanguage(value)
 
-    fun setAccidentals(value: UserPreferences.Accidentals) = changeUserPreferences { copy(chordSpelling = chordSpelling.copy(accidentals = value)) }
+    fun setAccidentals(value: UserPreferences.Accidentals) = preferencesController.setAccidentals(value)
 
-    fun setNotation(notation: UserPreferences.Notation) = changeUserPreferences { copy(chordSpelling = chordSpelling.copy(notation = notation)) }
+    fun setNotation(notation: UserPreferences.Notation) = preferencesController.setNotation(notation)
 
-    private fun changeUserPreferences(change: UserPreferences.() -> UserPreferences) {
-        viewModelScope.launch { updateUserPreferences { it.change() } }
-    }
+    private fun changeUserPreferences(change: UserPreferences.() -> UserPreferences) = preferencesController.changeUserPreferences(change)
 
     // Sync
 
