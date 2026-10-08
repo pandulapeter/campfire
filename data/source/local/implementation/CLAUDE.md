@@ -179,7 +179,9 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
   supports classic/stream xrefs, object streams, incremental saves and recovery scans, Flate/ASCIIHex/ASCII85/LZW
   filters and predictors, inherited page resources, horizontal text operators and form XObjects. Fonts use
   ToUnicode maps or WinAnsi/MacRoman/Standard encodings and Adobe glyph names; images and font programs are never
-  decoded. Positioned glyphs form lines and columns, with paragraph gaps and repeated edge furniture removed. A gutter
+  decoded. `PdfTextExtractor` walks the page tree, `PdfContentInterpreter` runs a page's content against the
+  document's one `PdfContentBudget`, `PdfLineLayout` sets the glyphs into lines and columns and `PdfRunningLines` finds
+  the repeated headers, footers and page numbers. Positioned glyphs form lines and columns, with paragraph gaps and repeated edge furniture removed. A gutter
   is a whitespace band 0.8 em wide that at most a fifth of the lines cross (a title over the columns may), found at
   every half point rather than sampled, since Campfire's own export leaves only 18 points at its 20-point text; each
   side is searched again, which is what reads three and four columns, and a band nothing crosses splits off a short
