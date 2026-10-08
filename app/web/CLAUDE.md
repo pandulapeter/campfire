@@ -231,3 +231,45 @@ history entry's state kept. Going Back from the consent page instead reloads the
 The web build has no file associations and no "open with": browsers only register those for an installed app.
 Files reach it through the picker (a hidden `<input type="file">`) or by being dropped on the page — files or a folder,
 which is opened one level deep.
+
+## The web build as the app sees it
+
+The web build differs from the other three in where the files are. `FileStorage` has a `wasmJsMain` actual backed by
+the **Origin Private File System**, so the library is a real directory tree in the browser's own storage, private to
+the origin and invisible in the user's downloads. It is also the only build that has to be downloaded before it can
+start, which is what the rest of `app/web` is about — see its `CLAUDE.md`.
+
+- The library is the only copy of the user's own work, and the browser's storage for an origin is evictable until it
+  is asked not to be, so `requestLibraryPersistence()` (in `:presentation`) asks for persistence as the app starts.
+  Whether it is granted is the browser's business — engagement, a bookmark, an install — so the answer is reported in
+  Settings rather than insisted on: a refusal says so there, next to the export that is the way to keep a copy
+  elsewhere. Clearing the site's data still removes the library, as it does for anything a page stores.
+- One tab per origin owns the library through a Web Lock taken before the app is downloaded. A second tab gets a
+  localized page that asks it to close or continue in the first, which keeps OPFS from changing behind the running
+  app's cached repositories.
+- **The page keeps a copy of the app in the browser**, so that the address opens without a connection after one
+  visit with it, on the songs or on a bookmarked screen. Every launch asks the deployment's `build.json` which build
+  is current (past every cache, for three seconds, or 0.8 s where the kept build is whole, the cache being checked
+  meanwhile; an answer that comes later than that and names another build makes the next launch wait the full three
+  seconds, so a slow network gets a release one launch late): the page's own build tops up whatever the cache lacks
+  and starts, another build is downloaded, checked file by file against its SHA-256, stored with its page last and
+  loaded once, and no answer, or an update that fails anywhere, starts the build that is kept. A `service-worker.js` at an address
+  that never changes only answers the folder from that one cache and decides nothing; it is the way out of a kept page
+  that turned out broken, so it is never deleted. Nothing else changes for the user: no manifest, no install prompt,
+  no update dialog, and a build published while the app is open arrives on the next launch. The loading screen's
+  determinate progress bar measures the download of whatever the kept build is missing (or, where nothing can be kept,
+  the binaries as the app fetches them, against the total the build wrote into the page). It is a page and not an
+  installable app on purpose, because every platform that should have an installable Campfire has a native build. A
+  browser without Wasm GC is told so before the download starts. Settings' web-only Storage row reports whether the
+  app was saved together with whether the browser promised to keep the library, since the two are kept or evicted
+  together (`isAppAvailableOffline`, next to `requestLibraryPersistence`). See `app/web` for the launch and the cache.
+- `finishWebDistribution` (registered in `app/web/build.gradle.kts`, a `FinishWebDistribution` task of `gradle/build-logic`) finalizes `wasmJsBrowserDistribution`: it writes the build's
+  id and the size and digest of every file into `index.html` and `build.json`, and precompresses the files when
+  `campfire.web.precompress` is on — which it is not, since GitHub Pages ignores the copies (see `app/web`).
+- OPFS, the file input and the download link are reached through `js(...)` blocks rather than through typed wrappers:
+  one crossing of the Kotlin/Wasm boundary per operation is far cheaper than one per element, and several of these APIs
+  have no binding. A Kotlin lambda cannot be passed into a `js(...)` block, so callbacks (file drops) come back as
+  promises instead.
+- `settings.gradle.kts` uses `RepositoriesMode.PREFER_SETTINGS` rather than `FAIL_ON_PROJECT_REPOS` because the
+  Kotlin/Wasm tooling adds the Node.js, Yarn and Binaryen download repositories to the root project; those are declared
+  in settings instead.

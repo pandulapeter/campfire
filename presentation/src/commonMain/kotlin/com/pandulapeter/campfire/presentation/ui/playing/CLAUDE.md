@@ -31,3 +31,14 @@ The values a song is played with and where each is kept.
   in `onCleared`, and awaited before the desktop process ends (`settleSynchronizationBeforeExit`, a macOS Quit included,
   which never clears the view model), as are the metronome settings, the text size and the export options. A reset (`resetTempo`) removes the override at once and cancels a waiting write. The settings
   (`metronomeSettings`) are saved like the print settings, once they have held still.
+
+## Where a tempo lives
+
+- **Where a tempo lives mirrors the transposition**: a song opened from a setlist keeps an override in that setlist's
+  entry (`Setlist.Entry.tempo`, a `tempo` member of the `*.setlist.json` song, left out where null, so it travels
+  through an export, an import and a sync run), one opened from the library in `UserPreferences.tempos`, never exported
+  but synced (see Sync); neither reads the other, and the song file's `{tempo}` (`Song.tempo`, read at scan time with `{time}` and
+  `{capo}`) is only changed in the editor and the Song defaults sheet. The capo is kept the same way (`Setlist.Entry.capo`, `UserPreferences.capos`,
+  0 to 12 frets, a stored 0 being a capo this setlist takes off rather than no override at all), since one set is
+  played capoed and the next in another key without. The first `{tempo}` and `{time}` are the song's own (the capo is the song's as a whole, so its first readable `{capo}` counts, as for any other field a song says once, a later one being marked as a contradiction in the editor); the tempo counts the
+  clicks of the bar (6/8 at 120 is six clicks a bar at 120 a minute), within 30–300.

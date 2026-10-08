@@ -72,3 +72,43 @@ file name, the writer's cross-reference offsets, Unicode maps, font splitting an
 (`PrintDeflaterTest`, and a round trip through `java.util.zip.Inflater` in `desktopTest`, where `PrintRendererTest`
 also draws real pages and checks selection rectangles). `CAMPFIRE_PRINT_QA_DIR` makes renderer tests save QA PDFs;
 its `campfire.pdf` is also the document importer's positioned export/reimport fixture, documented beside that fixture.
+
+## Printing
+
+Song and setlist action menus have one export entry each (**Export song**, **Export setlist**), which opens the export
+screen titled the same (`presentation/ui/screens/export/ExportScreen.kt`), full screen over the app with Save as its floating
+action button (on a phone the options end above it and the preview is their first item, scrolling away with them; from
+520dp of width it stands beside them) and, on Android and iOS, Share in the app bar: there is no separate share or
+file export entry. Its first option is the format, with a line saying what each is for — a **PDF**, for printing, or
+the library's own files, for sharing with other Campfire users: **ChordPro** for a song, the `.cho` file as the library
+holds it, and **Zip** for a setlist, a setlist manifest (its `*.setlist.json`) next to its songs as ChordPro files. A setlist's songs are ticked off for either format
+alike, and a zip of only some of them carries a manifest naming only those (`ExportSetlistUseCase`'s `songFileNames`,
+everything else in the document kept), so that the archive never names a song the user left out — a ticked song
+whose file is missing from the library is still named, and an import shows it as a missing song, as the setlist itself
+did; with all of them ticked the
+manifest is the stored file unchanged. The library's own files take no other option and are previewed as the text or
+the files they write. The rest of this section is the PDF. `PrintSettings` (the format among
+them) are local user preferences, mapped through
+`PrintSettingsDocument`, saved once the options have settled and whatever way the screen closes, independent of the
+viewer's text size and folded sections. A setlist can export its running order or the selected song sheets, retaining
+the original slot numbers and the transposition of each entry; a lone song reached through a setlist uses that entry's
+key too. Under each song's heading a row says how it is played — the key it is printed in, the transposition that
+took it there and the capo, then the tempo in BPM and the time signature — each half an option of its own (**Key,
+transposition and capo**, **Tempo and time signature**) beside the chords, the chord diagrams, the comments and the
+artist. **The Features tab reaches the export screen**: an option whose feature is switched off (the chords, which take
+the chord diagrams and the key with them, or the metronome, which takes the tempo) is not offered and not printed,
+whatever was chosen before (`PrintSettings.withinFeatures`), the choice itself kept for the switch to be turned back
+on. Missing or unreadable songs retain a visibly marked place. The source is a snapshot read when the screen
+opens. `presentation/ui/print/PrintLayout.kt` lays out PDF points using the same font measurements as the preview —
+lyrics in the app's text font, tablature and grids in its monospace one — keeping lyric/chord pairs and guitar systems
+together, and flowing long songs across columns and pages. `PrintRenderer` draws both the preview and the page images
+(216 dpi, sixteen grays, which print no differently from 256) embedded by the common `PrintPdfWriter`, which titles
+the file after the song or setlist, compressed with Flate by `PrintDeflater`, a small pure-Kotlin zlib encoder. These
+PDFs retain those page images and add invisible selectable text positioned from the same Compose shaping, with
+small glyphless Type 3 fonts and explicit ToUnicode maps. Only the printed content is included, in its printed key
+and with the chosen options; no original ChordPro or excluded metadata is embedded. New exports can be searched,
+copied and reimported without OCR, a right-to-left run in its logical order through `ActualText`; older image-only exports remain unreadable to the importer. Saving uses the existing `FilePicker` on every
+platform, and Android and iOS offer Share in the app bar; the save button counts the pages as they are drawn, and is
+Cancel until the picker is up. The file is named from the song's header or the setlist's title, the way
+`ExportFileNames.kt` names a song (see `domain/implementation/CLAUDE.md`). New controls and text written into PDFs are
+localized in both languages.

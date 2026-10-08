@@ -100,43 +100,10 @@ uninstall and nothing else does.
 
 ## Printing
 
-Song and setlist action menus have one export entry each (**Export song**, **Export setlist**), which opens the export
-screen titled the same (`presentation/ui/screens/export/ExportScreen.kt`), full screen over the app with Save as its floating
-action button (on a phone the options end above it and the preview is their first item, scrolling away with them; from
-520dp of width it stands beside them) and, on Android and iOS, Share in the app bar: there is no separate share or
-file export entry. Its first option is the format, with a line saying what each is for — a **PDF**, for printing, or
-the library's own files, for sharing with other Campfire users: **ChordPro** for a song, the `.cho` file as the library
-holds it, and **Zip** for a setlist, a setlist manifest (its `*.setlist.json`) next to its songs as ChordPro files. A setlist's songs are ticked off for either format
-alike, and a zip of only some of them carries a manifest naming only those (`ExportSetlistUseCase`'s `songFileNames`,
-everything else in the document kept), so that the archive never names a song the user left out — a ticked song
-whose file is missing from the library is still named, and an import shows it as a missing song, as the setlist itself
-did; with all of them ticked the
-manifest is the stored file unchanged. The library's own files take no other option and are previewed as the text or
-the files they write. The rest of this section is the PDF. `PrintSettings` (the format among
-them) are local user preferences, mapped through
-`PrintSettingsDocument`, saved once the options have settled and whatever way the screen closes, independent of the
-viewer's text size and folded sections. A setlist can export its running order or the selected song sheets, retaining
-the original slot numbers and the transposition of each entry; a lone song reached through a setlist uses that entry's
-key too. Under each song's heading a row says how it is played — the key it is printed in, the transposition that
-took it there and the capo, then the tempo in BPM and the time signature — each half an option of its own (**Key,
-transposition and capo**, **Tempo and time signature**) beside the chords, the chord diagrams, the comments and the
-artist. **The Features tab reaches the export screen**: an option whose feature is switched off (the chords, which take
-the chord diagrams and the key with them, or the metronome, which takes the tempo) is not offered and not printed,
-whatever was chosen before (`PrintSettings.withinFeatures`), the choice itself kept for the switch to be turned back
-on. Missing or unreadable songs retain a visibly marked place. The source is a snapshot read when the screen
-opens. `presentation/ui/print/PrintLayout.kt` lays out PDF points using the same font measurements as the preview —
-lyrics in the app's text font, tablature and grids in its monospace one — keeping lyric/chord pairs and guitar systems
-together, and flowing long songs across columns and pages. `PrintRenderer` draws both the preview and the page images
-(216 dpi, sixteen grays, which print no differently from 256) embedded by the common `PrintPdfWriter`, which titles
-the file after the song or setlist, compressed with Flate by `PrintDeflater`, a small pure-Kotlin zlib encoder. These
-PDFs retain those page images and add invisible selectable text positioned from the same Compose shaping, with
-small glyphless Type 3 fonts and explicit ToUnicode maps. Only the printed content is included, in its printed key
-and with the chosen options; no original ChordPro or excluded metadata is embedded. New exports can be searched,
-copied and reimported without OCR, a right-to-left run in its logical order through `ActualText`; older image-only exports remain unreadable to the importer. Saving uses the existing `FilePicker` on every
-platform, and Android and iOS offer Share in the app bar; the save button counts the pages as they are drawn, and is
-Cancel until the picker is up. The file is named from the song's header or the setlist's title, the way
-`ExportFileNames.kt` names a song (see `presentation/CLAUDE.md`). New controls and text written into PDFs are
-localized in both languages.
+Every song and setlist has one export entry, which opens the export screen: a PDF for printing, or the library's own
+files (ChordPro, a zip for a setlist) for other Campfire users. Only what is printed goes into a PDF, and the Features
+tab reaches the export screen. The detail is in `:presentation`'s `ui/screens/export/CLAUDE.md` (the screen) and
+`ui/print/CLAUDE.md` (the format choice, the options and the PDF pipeline).
 
 ## Conventions
 
@@ -604,279 +571,37 @@ localized in both languages.
 ## Sync
 
 Off until the user connects a cloud folder in Settings, and built so that Dropbox is the first provider rather than
-the only possible one. The per-module `CLAUDE.md` files carry the detail; the short version:
-
-- `SyncProvider` sees one flat remote folder addressed by `(kind, name)`, the same shape the library has. Revisions
-  are **opaque strings** the engine never parses, and a service's content hash stays in the provider — which is what
-  keeps Drive's file ids and MD5s out of the engine when it arrives. What is not a song or a setlist by its extension
-  is invisible to the engine on both sides, so whatever else the user keeps in the folder is left alone. A remote file
-  whose name the device cannot hold (a `\` anywhere, or `? : * " < > |` on Windows) is left out too, and named once in the run's summary
-  rather than failed on every run.
-- `SyncPlanner` is a pure function of (local hashes, remote listing, the index of what the last run saw) and is the
-  part that is tested. Content decides what changed, never a clock: the platforms disagree about modification times
-  and the web has none. An edit always beats a deletion.
-- A plan that would delete, **on this device or in the cloud folder**, more than half of the files the index knows
-  (and at least five of them), or every one of them, is not carried out: the run stops before anything moves and
-  Settings asks, naming the side. On this device that is the shape of a remote folder that was emptied, renamed or
-  replaced; in the cloud folder, of a library folder that was moved or deleted under the app — which lists as empty,
-  so an empty library with an index that is not always asks, however small. Carried out faithfully either would leave
-  every device with only what had been edited since the last run. **Delete them here too** / **Delete them from the
-  cloud too** runs again with the deletions allowed; **Keep them and upload** / **Keep them and download** runs again
-  with those files' index entries dropped, so they are new on the side that still has them and are copied back. An
-  answer waives the guard of its own direction only, this device being asked about first. The answer belongs to that
-  one run, and an ordinary run asks again for as long as the folder stays that way. The one run that starts with the
-  cloud folder's answer already given is the one Settings' library deletion starts, since typing `DELETE` in a sheet
-  that says the folder goes too is that answer.
-- A fresh installation never inherits a connection: a launch that finds no preferences document forgets whatever
-  credentials a previous installation left in a store that outlived it (the iOS Keychain), locally and without a
-  request, before anything restores them (`ForgetSyncConnectionUseCase`), so no run starts on an account nobody
-  connected here. One that cannot forget them notes that it still owes it, in a file of its own (removed with the
-  app, unlike the Keychain), and every start up tries again and restores nothing until it has; connecting on this
-  installation crosses the note off.
-- A run belongs to the **app**, not to the screen that started it: `SyncRepository` is a singleton with its own
-  scope, so a run carries on while the user moves around or leaves. Android keeps the process alive with a
-  foreground service and iOS with a background task, both driven by `SyncNotifier`, which each app shell provides
-  the way it provides `FilePicker`. The strings are resolved in the UI so the notification follows the language
-  chosen *in the app*, not the system's.
-- `SyncEngine` runs the plan a few files at a time rather than one after another (which made a first sync one round
-  trip per file), except the remote deletions, which go to the provider in one call — on Dropbox one batch job, about
-  seven files a second rather than one — so that the folder spends as little time as possible half deleted, the
-  state in which another device's guard can let part of a large deletion through unasked. It retries when the service asks
-  it to slow down — being rate limited is the expected answer to a first sync of a whole library, not a reason to
-  give up on it. A file that fails on its own is named in the
-  run's summary rather than ending it, and such a run does not count as the last successful one.
-- **A run starts on its own at launch and after every change the app makes to a song or a setlist** — a save, a tag, a
-  new, imported, renamed or deleted file. The launch's starts at once; a change's ten seconds after the latest such
-  request, so a burst of edits or an import is one run (`SyncRepository.scheduleSynchronization`). A request made during
-  a run is carried out after it. Every run that starts at once — the launch's, Sync now, and the first run after
-  connecting — takes the place of one that is waiting; Stop drops the waiting one too. The
-  app leaving the front starts a waiting run at once, since a phone only keeps alive a run it was told about while the
-  app was still in front, and a desktop quit hides the window and lets the run finish (for up to fifteen seconds, then
-  stops it) before the process ends. The files a run writes go around the repositories that announce changes, so a run never
-  schedules the next one.
-- The index carries an "a run was going" marker, written before anything moves and cleared when it finishes, so a
-  run the app never came back from — killed, swiped away, suspended by iOS — is reported as interrupted next time
-  rather than silently forgotten, and that run is left for the user to start rather than started on launch. That is
-  only for a run the user or a launch started: an automatic one cut short is not reported, and the launch run that
-  follows carries its changes.
-- A file changed on both sides is never merged: the local one keeps the name and the incoming one lands next to it
-  as ` (2)` — or the first number free both on this device and in the cloud folder, so that it never takes the name
-  of a file still on its way down — a name of the other device's making, numbered the way any document is, rather
-  than with the underscore a name the app derived itself collides with (`_2`) — except a setlist whose two versions
-  differ only in the day they name, which every device gives an undated setlist on its own, or where this device's
-  only change is the day its read gave an undated file, or a demo file this device planted that still holds exactly
-  what was planted, met in the folder for the first time: the cloud folder's version is taken.
-- **The library's per-song overrides travel too**: the transposition, tempo and capo of a song opened from the library
-  (`UserPreferences.transpositions`, `tempos`, `capos`; a setlist's own are in its file already) are one
-  `preferences.json` at the top of the cloud folder, beside `songs/` and `setlists/`, where the engine never looks:
-  `{"version": 1, "songs": {"<file name>": {"transposition": 2, "tempo": 92, "capo": 1}}}`, an entry only for a song
-  something is set for. Every run that completes ends by settling it (`SyncedPreferencesSync`) — a three-way merge,
-  value by value, of this device's, the folder's and the last synced one, which the index keeps — so two devices that
-  changed different songs or fields both keep their change, a change beats a removal, and two changes of one value
-  keep this device's. It is merged as a JSON tree and this version only writes the fields it knows, so settings that
-  have nothing to do with the songs can join `songs` at the top level later without an older version dropping them;
-  a document that is missing or cannot be read is taken as unchanged and replaced with this device's values, never
-  read as one that removed everything, and one whose `version` is newer than this one's is left alone.
-  A song no longer in the library after the run takes its entry with it, here and in the folder, unless the run
-  failed to move it or it reached the folder after the run listed it. **The player's chord shapes travel the same way**
-  (`UserPreferences.chordVoicings`): a `chords` member beside `songs`, by instrument and then by the chord's notes
-  (`{"guitar": {"F:0.4.7": "x x 3 2 1 1"}}`), merged value by value, so two devices that chose for different chords both
-  keep their choice and two choices for one chord keep this device's; an instrument this version does not know passes
-  through, and no entry is ever dropped with a song, since none belongs to one. A change to those three maps or to the
-  chord shapes schedules a run like a change to a file does; the run's own write does not.
-- Authorization is OAuth 2.0 with PKCE and no client secret, which is what lets this work with no backend. The four
-  platforms get back from the consent page in four different ways, all behind `SyncAuthenticator`.
+the only possible one. The invariants a change anywhere else could break: there is no server of Campfire's own; a run
+belongs to the app, not to the screen that started it; content decides what changed, never a clock; an edit always
+beats a deletion; a run that would delete most of the library on either side stops and asks. The whole of it — the
+provider contract, the planner, the guard, scheduling, the index, conflicts and the synced preferences — is in
+`data/sync/implementation/CLAUDE.md` (and the contracts in `data/source/remote/api/CLAUDE.md`).
 
 ## Metronome
 
 A third tab and a panel of controls inside the song details screen's app bar, playing on with the screen locked.
-Nothing about it reaches the network. The module `CLAUDE.md` files carry the detail (`metronome/*`, `presentation`); the short version:
-
-- **Timing is by sample count, never by a timer**: `:metronome:implementation`'s `MetronomeSequencer` places every click
-  at its frame in the output's stream with one integer division from the frame its timing started at, so nothing
-  drifts; the sounds are synthesized in Kotlin (no assets, identical everywhere). The flash and the haptics follow the
-  `beats` the engine emits when each click is *heard*, from the output's reported playback position; an output that
-  cannot open runs the same clock silently and says so.
-- **Where a tempo lives mirrors the transposition**: a song opened from a setlist keeps an override in that setlist's
-  entry (`Setlist.Entry.tempo`, a `tempo` member of the `*.setlist.json` song, left out where null, so it travels
-  through an export, an import and a sync run), one opened from the library in `UserPreferences.tempos`, never exported
-  but synced (see Sync); neither reads the other, and the song file's `{tempo}` (`Song.tempo`, read at scan time with `{time}` and
-  `{capo}`) is only changed in the editor and the Song defaults sheet. The capo is kept the same way (`Setlist.Entry.capo`, `UserPreferences.capos`,
-  0 to 12 frets, a stored 0 being a capo this setlist takes off rather than no override at all), since one set is
-  played capoed and the next in another key without. The first `{tempo}` and `{time}` are the song's own (the capo is the song's as a whole, so its first readable `{capo}` counts, as for any other field a song says once, a later one being marked as a contradiction in the editor); the tempo counts the
-  clicks of the bar (6/8 at 120 is six clicks a bar at 120 a minute), within 30–300.
-- **A later `{tempo}` or `{time}` is a change from where it stands** (`ChordProBlock.Timing`), and the page is what
-  says where the band is: on the song details screen a change starts a page of its own (one written before the song's
-  first line stands on the first page, played from there), headed by one read only line
-  naming the tempo and the time signature from there on as the click plays them, and a playing click follows the page
-  being read — the one a step or a fling is headed for, never one a finger is still dragging past — from beat one, the
-  panel's beat row and the app bar's tempo with it. A change inside a section cuts it there, the rest heading the new
-  page with its fold toggle alone; a recalled chorus is played in whatever is in force where it is recalled. The
-  stepper, a setlist's entry and the library's override still hold one number, the song's opening tempo, and a later
-  tempo keeps its ratio to the file's opening one (120 → 60, played at 110 → 55), so nothing new is stored. A song that
-  fits one screen is still cut into pages by a change, since the page is the signal; a songbook of more than 200
-  sections that changes its tempo or time is one column whatever the width, the click following the change scrolled
-  past. The editor offers Tempo and Time
-  signature again and again — into the header first, at the start of the caret's line after that — and the preview
-  shows each change in place and is never paged; the PDF prints it as a line kept with what follows it. **With the
-  Metronome feature off none of it exists**: no line, no forced page, the song laid out as if it had none. A `{key}`
-  further down is still only read past.
-- **The click belongs to the screen it is played from, and there are two of them**: the Metronome tab, whose whole
-  screen is the instrument, and the song details screen, where it is a panel in the app bar. Nowhere else has a
-  metronome, and a click never outlives the screen it was started on - going back to the songs, selecting a tab,
-  opening the editor or the export screen over the song, deleting it, a song opened over the tab or over another
-  song (an "Open with", an import's Open), all stop it - so there is never a click playing with nothing on screen to
-  stop it with. On a song details screen it follows the page the pager is heading for, so paging to the next song moves the
-  click to its tempo from beat one. Every way onto the tab clears the back stack.
-- **Playback is media**: on Android a `mediaPlayback` foreground service with a media session and notification
-  (`app/android`), on iOS the `audio` background mode, Now Playing and the remote commands (`app/ios`), on the web a
-  worker-timed Web Audio scheduler and a best-effort media session (`app/web`); the desktop needs nothing. Each audio
-  output owns the platform's focus or session: a call refuses or stops the click, as do headphones pulled and another
-  app taking the audio, and a click that stopped on its own says why. **A click outlives the app being sent to the
-  background and not the app being left**: the screen locked or another app in front is a phone on a music stand and
-  keeps it, while the app being closed — swiped away or backed out of on Android, quit on the desktop — stops it, since
-  nothing is left to look at the notification it keeps up. A click that cannot sound — the volume at zero or every
-  beat muted — is the exception: it is stopped a few seconds after the app goes out of sight, and says so, since out
-  of sight it has nothing left to show and the phones' background audio is not for silence
-  (`MetronomePattern.canSound`, `CampfireViewModel.onAppStopped`) — except on Android with Vibrate on and a beat not
-  muted, where the click is still felt in a pocket and plays on (iOS has no background haptics).
-- **Both are played from the same panel** (`MetronomePanel`): the least of a metronome that is still one — the bar as
-  it is heard, with its accents tapped on it, since the accents are the bar's rather than one screen's, and play and
-  stop at the end of the row. On the **song details screen** it is inside the app bar, under the title row, because a
-  song is what that screen is for and the tempo is already in the song's own first section a line below it; the bar's
-  own button shows and hides it, opening it starts nothing, stopping the click leaves it up for the next one, and
-  closing it stops a click that is playing. **Whether it is up is a preference** (`MetronomeSettings.isSongPanelShown`)
-  rather than something each screen is asked for again, so a player who reads to a click finds the instrument on the
-  next song and on the next launch. On the **Metronome tab** the same panel is pinned at the top and never hidden, drawn larger
-  there (a 56dp row and button), so a
-  page longer than the screen never has to be scrolled to stop a click, and under it the rest of the instrument scrolls
-  as the rows of a settings page, in two sections a wide window sets side by side: what is played — the tempo on the
-  song details screen's own stepper with its Tap segment, its Italian marking and a slider across the range, the time
-  signature (chips, and two steppers with a slash between them, under a line saying that the bar above is tapped
-  to accent or mute a beat) and the subdivision as a segmented row of the clicks per beat — and, on a card since it holds for a song's click too, how it reaches the player:
-  the sound as chips, the volume, and the animate and vibrate switches.
-- Performance mode keeps the play button, and the panel has no tempo stepper to hide; the song's own line of text says
-  the tempo there, as it says the transposition. The tab stays fully usable. Settings (sound, subdivision, accents per signature, volume, flash, vibrate) are
-  `UserPreferences.metronomeSettings`; there is no mute of its own, since a volume of zero leaves the click running
-  with nothing sounding — on screen, for the flash and the haptics.
+Nothing about it reaches the network. Timing is by sample count, never by a timer; a click never outlives the screen it
+was started on; a tempo override lives where a transposition does (a setlist's entry or `UserPreferences.tempos`). The
+detail is in `metronome/implementation/CLAUDE.md` (timing, playback as media), and in `:presentation`'s
+`ui/metronome/CLAUDE.md` (the panel, the tab, tempo changes) and `ui/playing/CLAUDE.md` (where a tempo lives).
 
 ## Cover art
 
-A song names its cover in its own file (`{meta: cover …}`, see Conventions); the app shows it as a thumbnail at the start of
-the song cards, on the Songs and the Setlists screen alike, at the end of the Choose songs sheet's rows, in the song details app bar before the title, at the start of the About the song sheet's and the editor preview's details (where a tap opens the cover search), and in the editor's app bar, where it follows the text as it is typed, and keeps a copy of every one it has shown. The module `CLAUDE.md` files carry the detail;
-the short version:
-
-- **Every request is in `:data:source:remote`**, through the one Ktor client sync uses: `CoverArtRemoteSource`
-  downloads an image, following redirects (the Cover Art Archive answers with two), and takes nothing that is not an
-  `image/*` or is larger than 5 MB. Coil draws what `GetCoverArtUseCase` hands it and has no network artifact of its
-  own.
-- **The copy is the offline cache on all four platforms**: `covers/<sha256 of the address>`, outside `library/`, kept
-  out of every device backup and deleted after a library read that leaves no song naming it (`CoverArtRepository`).
-  Settings → Library shows how much they take up, under the library's own size, once there is any, and tapping that
-  row deletes them (`CoverArtRepository.clearCoverArtCache`) after a confirmation; the library's own row deletes every
-  song and setlist, after a sheet that wants `DELETE` typed, stops any run that is going and then starts a sync run
-  with the deletions allowed
-  (`DeleteLibraryUseCase`), the typed word being the answer the run's guard would otherwise stop to ask for — so the
-  cloud folder and every device synced with it are emptied too, which the sheet says while an account is connected.
-  Requests for one address share one download, only a few are made at a time, one nobody is waiting for any more by
-  its turn is not made at all, and an address that failed is not asked again for the rest of the
-  session (an answer that is not a cover) or for a minute (no answer at all).
-- **The search is MusicBrainz and the iTunes Search API side by side**, from a sheet the song details and the editor's
-  overflow menus open (`Set cover art` / `Change cover art`; the sheet's Remove cover asks for confirmation), each catalogue's records
-  joining the grid as it answers and one that fails leaving the other's
-  there. On MusicBrainz, the release groups of an album, or those a song's recordings came out on where the album is
-  empty, each with the Cover Art Archive's `front-250` of its release group; on iTunes, the albums the songs matching
-  the artist and the album (or title) are on, each with Apple's artwork at 250 px. That address is what is written
-  into the song. The sheet's other tab takes an address typed in, previewed before it is saved, for a cover neither
-  has. iTunes needs no key and sends CORS headers, so the web build uses it as it is. MusicBrainz allows one request a
-  second from the whole app, so one limiter spaces them 1.1 s apart and a 503 is waited out, the sheet saying so. Every
-  request names the app in its `User-Agent` (`Campfire/<campfire.versionName> ( https://github.com/pandulapeter/campfire )`),
-  which MusicBrainz asks of every client — except in the browser, where a script cannot set one, and MusicBrainz
-  documents no other way for a page to name itself; the web build's requests carry the browser's agent and the
-  page's `Origin`.
-- **The "Cover art" switch in Settings → Features** (`UserPreferences.isCoverArtEnabled`, on by default) turns all of it off: no cover
-  is fetched or drawn and the search is not offered.
-- What a platform will not load is simply not shown: the web build only reaches hosts that send CORS headers, and
-  plain `http://` is refused by Android's and iOS' defaults and by the browser as mixed content.
+A song names its cover in its own file (`{meta: cover …}`, see Conventions), and the app keeps a copy of every one it
+has shown. Every request is in `:data:source:remote`, the search only ever runs from the sheet the user opens for it,
+and the "Cover art" switch in Settings → Features turns all of it off. The detail is in
+`data/source/remote/implementation/CLAUDE.md` (the download, the search, the switch) and
+`data/repository/implementation/CLAUDE.md` (the offline copies and their deletion).
 
 ## Updates
 
-Play's in-app updates, and only on Android: `:presentation`'s `ui/update/AppUpdate.kt` is the contract and
-`ui/update/AppUpdateGate.kt` the UI, with the Play Core implementation in `androidMain` and a no-op actual on the other
-three. The gate wraps the whole app inside `CampfireApp`, so it speaks the theme and the language chosen in the app.
-
-- The **Play release's `updatePriority` is the entire policy** and it is chosen per release rather than in the code:
-  0–1 is left to Play's own schedule, 2–3 offers a dismissible flexible update that downloads in the background,
-  4–5 covers the app with a screen that cannot be dismissed until the update is there. The thresholds live in
-  `AppUpdate.android.kt`. The priority also says which kind of flow an update already in progress is, since Play's
-  answer does not — which is what lets an Activity recreated mid-download pick the download up instead of offering
-  it again. `publish-android.yml` asks for the number as its `update_priority` input — which a release
-  sets with a `<!-- play-store update-priority: N -->` comment in its description — defaulting to 0 — the number belongs to the release being published, not to the code being published.
-- Back on the blocking screen closes the app. The app it covers is still composed behind it, so the gesture has to
-  be taken rather than allowed through, and leaving is the only thing it can honestly mean there.
-- The blocking screen is drawn **over** the app rather than in place of it, so a required update that turns out not
-  to install leaves the library exactly where the user was. Nothing that is a window of its own — a dialog, a sheet,
-  a menu — is shown while it is up.
-- Neither the blocking screen (nor the immediate flow started with it) nor the flexible update's Restart is put over
-  an editor with unsaved text: the gate waits until the text has been saved or let go of (`hasUnsavedEditorChanges`).
-  Restart waits for a sync run too; a required update does not — a run it cuts off is reported as interrupted the
-  ordinary way.
-- Nothing of this exists outside a Play-installed build: a debug APK, a sideloaded release or a device with no Play
-  answers every check with an error, which is why the flow can only be exercised from an internal testing track.
-- **iOS has no equivalent.** Apple ships no API that tells an app the store has a newer build; the only way to ask
-  is to poll their public lookup endpoint for the published version, which would make it the second thing in the app
-  that reaches the network. iOS updates apps on its own, so the iOS actual stays `NotAvailable`. Desktop and the web
-  answer to no store at all, and the web build is downloaded again every time it is opened.
+Play's in-app updates, and only on Android; the Play release's `updatePriority` is the entire policy, chosen per release
+rather than in the code, and iOS, the desktop and the web have no equivalent. The detail — the thresholds, the
+blocking screen, what it waits for — is in `:presentation`'s `ui/update/CLAUDE.md`.
 
 ## Web
 
-The web build differs from the other three in where the files are. `FileStorage` has a `wasmJsMain` actual backed by
-the **Origin Private File System**, so the library is a real directory tree in the browser's own storage, private to
-the origin and invisible in the user's downloads. It is also the only build that has to be downloaded before it can
-start, which is what the rest of `app/web` is about — see its `CLAUDE.md`.
-
-- The library is the only copy of the user's own work, and the browser's storage for an origin is evictable until it
-  is asked not to be, so `requestLibraryPersistence()` (in `:presentation`) asks for persistence as the app starts.
-  Whether it is granted is the browser's business — engagement, a bookmark, an install — so the answer is reported in
-  Settings rather than insisted on: a refusal says so there, next to the export that is the way to keep a copy
-  elsewhere. Clearing the site's data still removes the library, as it does for anything a page stores.
-- One tab per origin owns the library through a Web Lock taken before the app is downloaded. A second tab gets a
-  localized page that asks it to close or continue in the first, which keeps OPFS from changing behind the running
-  app's cached repositories.
-- **Every screen has an address, and the browser's history is the app's back stack**: `/` is the songs, then
-  `search`, `setlists`, `setlists/search`, `metronome`, `settings/{general,features,songs,library,about}`, `song/{song}`, `song/{song}/edit`,
-  `setlist/{setlist}/{song}` and `import`, one history entry per step a back gesture would take — a dialog, a sheet or a
-  menu open over a screen is one too, and so is the setlist reorder mode, at the screen's address (`:presentation`'s
-  `ui/navigation/BrowserHistory.kt`). The app decides and the history follows — pushed, replaced or gone back through
-  to match — and the browser's Back is sent into the navigation event dispatcher like Escape, so it closes a dialog
-  or asks about unsaved text before it leaves a screen. An address that is opened is resolved once the library has
-  been read, behind the launch screen; one naming nothing the library holds opens the songs. GitHub Pages serves a
-  deep address as its site-wide 404 page, which hands it to `index.html` in the query string (`404.html` in the
-  `campfire-website` repository does this for addresses under `app/`), and `index.html` writes a `<base>`
-  for the folder it lives in, which every relative URL of the page and the app depends on.
-- **The page keeps a copy of the app in the browser**, so that the address opens without a connection after one
-  visit with it, on the songs or on a bookmarked screen. Every launch asks the deployment's `build.json` which build
-  is current (past every cache, for three seconds, or 0.8 s where the kept build is whole, the cache being checked
-  meanwhile; an answer that comes later than that and names another build makes the next launch wait the full three
-  seconds, so a slow network gets a release one launch late): the page's own build tops up whatever the cache lacks
-  and starts, another build is downloaded, checked file by file against its SHA-256, stored with its page last and
-  loaded once, and no answer, or an update that fails anywhere, starts the build that is kept. A `service-worker.js` at an address
-  that never changes only answers the folder from that one cache and decides nothing; it is the way out of a kept page
-  that turned out broken, so it is never deleted. Nothing else changes for the user: no manifest, no install prompt,
-  no update dialog, and a build published while the app is open arrives on the next launch. The loading screen's
-  determinate progress bar measures the download of whatever the kept build is missing (or, where nothing can be kept,
-  the binaries as the app fetches them, against the total the build wrote into the page). It is a page and not an
-  installable app on purpose, because every platform that should have an installable Campfire has a native build. A
-  browser without Wasm GC is told so before the download starts. Settings' web-only Storage row reports whether the
-  app was saved together with whether the browser promised to keep the library, since the two are kept or evicted
-  together (`isAppAvailableOffline`, next to `requestLibraryPersistence`). See `app/web` for the launch and the cache.
-- `finishWebDistribution` (registered in `app/web/build.gradle.kts`, a `FinishWebDistribution` task of `gradle/build-logic`) finalizes `wasmJsBrowserDistribution`: it writes the build's
-  id and the size and digest of every file into `index.html` and `build.json`, and precompresses the files when
-  `campfire.web.precompress` is on — which it is not, since GitHub Pages ignores the copies (see `app/web`).
-- OPFS, the file input and the download link are reached through `js(...)` blocks rather than through typed wrappers:
-  one crossing of the Kotlin/Wasm boundary per operation is far cheaper than one per element, and several of these APIs
-  have no binding. A Kotlin lambda cannot be passed into a `js(...)` block, so callbacks (file drops) come back as
-  promises instead.
-- `settings.gradle.kts` uses `RepositoriesMode.PREFER_SETTINGS` rather than `FAIL_ON_PROJECT_REPOS` because the
-  Kotlin/Wasm tooling adds the Node.js, Yarn and Binaryen download repositories to the root project; those are declared
-  in settings instead.
+The web build keeps the library in the browser's Origin Private File System, one tab per origin owns it, every screen
+has an address whose history is the app's back stack, and the page keeps a copy of the app so it opens without a
+connection. The detail is in `app/web/CLAUDE.md` (storage, the lock, the launch and the cache) and
+`presentation/src/wasmJsMain/CLAUDE.md` (addresses and history).

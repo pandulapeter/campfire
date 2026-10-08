@@ -157,4 +157,4 @@ empty.
     form's `\n` is expanded, since a single-line text box has no other way to ask for a line break. It falls back to the visible description with its markdown taken out, and to "Bug fixes and improvements." where the description has no visible text either — or,
     dispatched by hand with nothing given, to the commit log since the previous tag. Every store listing is in
     English only, however many languages the app itself speaks. Its `update_priority` input is
-    what decides whether the new version says anything about itself inside the old one — see Updates below.
+    what decides whether the new version says anything about itself inside the old one — see `:presentation`'s `ui/update/CLAUDE.md`.

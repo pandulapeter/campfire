@@ -61,3 +61,48 @@ shared controls.
   a click started here (`CampfireViewModel.toggleMetronomePanel`), left alone when the screen is left, so the next song
   opens with the instrument the user last chose - and the next launch too, since it is saved with the rest of the
   metronome's settings.
+
+## The click in the app
+
+- **A later `{tempo}` or `{time}` is a change from where it stands** (`ChordProBlock.Timing`), and the page is what
+  says where the band is: on the song details screen a change starts a page of its own (one written before the song's
+  first line stands on the first page, played from there), headed by one read only line
+  naming the tempo and the time signature from there on as the click plays them, and a playing click follows the page
+  being read — the one a step or a fling is headed for, never one a finger is still dragging past — from beat one, the
+  panel's beat row and the app bar's tempo with it. A change inside a section cuts it there, the rest heading the new
+  page with its fold toggle alone; a recalled chorus is played in whatever is in force where it is recalled. The
+  stepper, a setlist's entry and the library's override still hold one number, the song's opening tempo, and a later
+  tempo keeps its ratio to the file's opening one (120 → 60, played at 110 → 55), so nothing new is stored. A song that
+  fits one screen is still cut into pages by a change, since the page is the signal; a songbook of more than 200
+  sections that changes its tempo or time is one column whatever the width, the click following the change scrolled
+  past. The editor offers Tempo and Time
+  signature again and again — into the header first, at the start of the caret's line after that — and the preview
+  shows each change in place and is never paged; the PDF prints it as a line kept with what follows it. **With the
+  Metronome feature off none of it exists**: no line, no forced page, the song laid out as if it had none. A `{key}`
+  further down is still only read past.
+- **The click belongs to the screen it is played from, and there are two of them**: the Metronome tab, whose whole
+  screen is the instrument, and the song details screen, where it is a panel in the app bar. Nowhere else has a
+  metronome, and a click never outlives the screen it was started on - going back to the songs, selecting a tab,
+  opening the editor or the export screen over the song, deleting it, a song opened over the tab or over another
+  song (an "Open with", an import's Open), all stop it - so there is never a click playing with nothing on screen to
+  stop it with. On a song details screen it follows the page the pager is heading for, so paging to the next song moves the
+  click to its tempo from beat one. Every way onto the tab clears the back stack.
+- **Both are played from the same panel** (`MetronomePanel`): the least of a metronome that is still one — the bar as
+  it is heard, with its accents tapped on it, since the accents are the bar's rather than one screen's, and play and
+  stop at the end of the row. On the **song details screen** it is inside the app bar, under the title row, because a
+  song is what that screen is for and the tempo is already in the song's own first section a line below it; the bar's
+  own button shows and hides it, opening it starts nothing, stopping the click leaves it up for the next one, and
+  closing it stops a click that is playing. **Whether it is up is a preference** (`MetronomeSettings.isSongPanelShown`)
+  rather than something each screen is asked for again, so a player who reads to a click finds the instrument on the
+  next song and on the next launch. On the **Metronome tab** the same panel is pinned at the top and never hidden, drawn larger
+  there (a 56dp row and button), so a
+  page longer than the screen never has to be scrolled to stop a click, and under it the rest of the instrument scrolls
+  as the rows of a settings page, in two sections a wide window sets side by side: what is played — the tempo on the
+  song details screen's own stepper with its Tap segment, its Italian marking and a slider across the range, the time
+  signature (chips, and two steppers with a slash between them, under a line saying that the bar above is tapped
+  to accent or mute a beat) and the subdivision as a segmented row of the clicks per beat — and, on a card since it holds for a song's click too, how it reaches the player:
+  the sound as chips, the volume, and the animate and vibrate switches.
+- Performance mode keeps the play button, and the panel has no tempo stepper to hide; the song's own line of text says
+  the tempo there, as it says the transposition. The tab stays fully usable. Settings (sound, subdivision, accents per signature, volume, flash, vibrate) are
+  `UserPreferences.metronomeSettings`; there is no mute of its own, since a volume of zero leaves the click running
+  with nothing sounding — on screen, for the flash and the haptics.

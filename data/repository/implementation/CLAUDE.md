@@ -146,3 +146,17 @@ a deletion of one of those files lands before its reads or after its update and 
 - Sync lives in `:data:sync:implementation`, which reads the library through these repositories' API, holds
   `LibraryFileLock` and listens to `LibraryChanges` (both in `:data:source:local:api` now that two modules share them),
   and records the demo files (`DemoLibraryRepositoryImpl`); see its `CLAUDE.md`.
+
+## The cover copies
+
+- **The copy is the offline cache on all four platforms**: `covers/<sha256 of the address>`, outside `library/`, kept
+  out of every device backup and deleted after a library read that leaves no song naming it (`CoverArtRepository`).
+  Settings → Library shows how much they take up, under the library's own size, once there is any, and tapping that
+  row deletes them (`CoverArtRepository.clearCoverArtCache`) after a confirmation; the library's own row deletes every
+  song and setlist, after a sheet that wants `DELETE` typed, stops any run that is going and then starts a sync run
+  with the deletions allowed
+  (`DeleteLibraryUseCase`), the typed word being the answer the run's guard would otherwise stop to ask for — so the
+  cloud folder and every device synced with it are emptied too, which the sheet says while an account is connected.
+  Requests for one address share one download, only a few are made at a time, one nobody is waiting for any more by
+  its turn is not made at all, and an address that failed is not asked again for the rest of the
+  session (an answer that is not a cover) or for a minute (no answer at all).

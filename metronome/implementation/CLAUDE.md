@@ -75,3 +75,24 @@ Tests (`desktopTest`): `MetronomeSequencerTest`, `ClickSynthesizerTest`, `ClickM
 state machine on virtual time, against a `FakeAudioOutput`: starts, refusals, the silent fallback, stale sessions, beats
 released as they are heard, the preview's hold), `SilentAudioOutputTest` and `AudioClockTest`; `TapTempoTest` and `TimeSignatureTest` in
 `:metronome:api`.
+
+## The click as the app plays it
+
+- **Timing is by sample count, never by a timer**: `:metronome:implementation`'s `MetronomeSequencer` places every click
+  at its frame in the output's stream with one integer division from the frame its timing started at, so nothing
+  drifts; the sounds are synthesized in Kotlin (no assets, identical everywhere). The flash and the haptics follow the
+  `beats` the engine emits when each click is *heard*, from the output's reported playback position; an output that
+  cannot open runs the same clock silently and says so.
+
+- **Playback is media**: on Android a `mediaPlayback` foreground service with a media session and notification
+  (`app/android`), on iOS the `audio` background mode, Now Playing and the remote commands (`app/ios`), on the web a
+  worker-timed Web Audio scheduler and a best-effort media session (`app/web`); the desktop needs nothing. Each audio
+  output owns the platform's focus or session: a call refuses or stops the click, as do headphones pulled and another
+  app taking the audio, and a click that stopped on its own says why. **A click outlives the app being sent to the
+  background and not the app being left**: the screen locked or another app in front is a phone on a music stand and
+  keeps it, while the app being closed — swiped away or backed out of on Android, quit on the desktop — stops it, since
+  nothing is left to look at the notification it keeps up. A click that cannot sound — the volume at zero or every
+  beat muted — is the exception: it is stopped a few seconds after the app goes out of sight, and says so, since out
+  of sight it has nothing left to show and the phones' background audio is not for silence
+  (`MetronomePattern.canSound`, `CampfireViewModel.onAppStopped`) — except on Android with Vibrate on and a beat not
+  muted, where the click is still felt in a pocket and plays on (iOS has no background haptics).

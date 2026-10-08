@@ -157,3 +157,30 @@ and, against a Ktor `MockEngine` in virtual time, how requests answer being told
 timing out, and the credentials store's cache (a cancelled read is not an answer, a failed write is not
 remembered).
 `desktopTest` adds the one platform piece worth testing, the loopback server's cancellation.
+
+## Cover art as the app sees it
+
+A song names its cover in its own file (`{meta: cover …}`, see Conventions); the app shows it as a thumbnail at the start of
+the song cards, on the Songs and the Setlists screen alike, at the end of the Choose songs sheet's rows, in the song details app bar before the title, at the start of the About the song sheet's and the editor preview's details (where a tap opens the cover search), and in the editor's app bar, where it follows the text as it is typed, and keeps a copy of every one it has shown.
+
+- **Every request is in `:data:source:remote`**, through the one Ktor client sync uses: `CoverArtRemoteSource`
+  downloads an image, following redirects (the Cover Art Archive answers with two), and takes nothing that is not an
+  `image/*` or is larger than 5 MB. Coil draws what `GetCoverArtUseCase` hands it and has no network artifact of its
+  own.
+- **The search is MusicBrainz and the iTunes Search API side by side**, from a sheet the song details and the editor's
+  overflow menus open (`Set cover art` / `Change cover art`; the sheet's Remove cover asks for confirmation), each catalogue's records
+  joining the grid as it answers and one that fails leaving the other's
+  there. On MusicBrainz, the release groups of an album, or those a song's recordings came out on where the album is
+  empty, each with the Cover Art Archive's `front-250` of its release group; on iTunes, the albums the songs matching
+  the artist and the album (or title) are on, each with Apple's artwork at 250 px. That address is what is written
+  into the song. The sheet's other tab takes an address typed in, previewed before it is saved, for a cover neither
+  has. iTunes needs no key and sends CORS headers, so the web build uses it as it is. MusicBrainz allows one request a
+  second from the whole app, so one limiter spaces them 1.1 s apart and a 503 is waited out, the sheet saying so. Every
+  request names the app in its `User-Agent` (`Campfire/<campfire.versionName> ( https://github.com/pandulapeter/campfire )`),
+  which MusicBrainz asks of every client — except in the browser, where a script cannot set one, and MusicBrainz
+  documents no other way for a page to name itself; the web build's requests carry the browser's agent and the
+  page's `Origin`.
+- **The "Cover art" switch in Settings → Features** (`UserPreferences.isCoverArtEnabled`, on by default) turns all of it off: no cover
+  is fetched or drawn and the search is not offered.
+- What a platform will not load is simply not shown: the web build only reaches hosts that send CORS headers, and
+  plain `http://` is refused by Android's and iOS' defaults and by the browser as mixed content.

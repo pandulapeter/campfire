@@ -222,3 +222,86 @@ unreadable credentials, since what cannot be removed belongs to an earlier insta
 writes over it and crosses the note off, is the right answer to it.
 
 Tested with `commonTest`, run with `./gradlew :data:sync:implementation:desktopTest`.
+
+## Sync as the app sees it
+
+- `SyncProvider` sees one flat remote folder addressed by `(kind, name)`, the same shape the library has. Revisions
+  are **opaque strings** the engine never parses, and a service's content hash stays in the provider — which is what
+  keeps Drive's file ids and MD5s out of the engine when it arrives. What is not a song or a setlist by its extension
+  is invisible to the engine on both sides, so whatever else the user keeps in the folder is left alone. A remote file
+  whose name the device cannot hold (a `\` anywhere, or `? : * " < > |` on Windows) is left out too, and named once in the run's summary
+  rather than failed on every run.
+- `SyncPlanner` is a pure function of (local hashes, remote listing, the index of what the last run saw) and is the
+  part that is tested. Content decides what changed, never a clock: the platforms disagree about modification times
+  and the web has none. An edit always beats a deletion.
+- A plan that would delete, **on this device or in the cloud folder**, more than half of the files the index knows
+  (and at least five of them), or every one of them, is not carried out: the run stops before anything moves and
+  Settings asks, naming the side. On this device that is the shape of a remote folder that was emptied, renamed or
+  replaced; in the cloud folder, of a library folder that was moved or deleted under the app — which lists as empty,
+  so an empty library with an index that is not always asks, however small. Carried out faithfully either would leave
+  every device with only what had been edited since the last run. **Delete them here too** / **Delete them from the
+  cloud too** runs again with the deletions allowed; **Keep them and upload** / **Keep them and download** runs again
+  with those files' index entries dropped, so they are new on the side that still has them and are copied back. An
+  answer waives the guard of its own direction only, this device being asked about first. The answer belongs to that
+  one run, and an ordinary run asks again for as long as the folder stays that way. The one run that starts with the
+  cloud folder's answer already given is the one Settings' library deletion starts, since typing `DELETE` in a sheet
+  that says the folder goes too is that answer.
+- A fresh installation never inherits a connection: a launch that finds no preferences document forgets whatever
+  credentials a previous installation left in a store that outlived it (the iOS Keychain), locally and without a
+  request, before anything restores them (`ForgetSyncConnectionUseCase`), so no run starts on an account nobody
+  connected here. One that cannot forget them notes that it still owes it, in a file of its own (removed with the
+  app, unlike the Keychain), and every start up tries again and restores nothing until it has; connecting on this
+  installation crosses the note off.
+- A run belongs to the **app**, not to the screen that started it: `SyncRepository` is a singleton with its own
+  scope, so a run carries on while the user moves around or leaves. Android keeps the process alive with a
+  foreground service and iOS with a background task, both driven by `SyncNotifier`, which each app shell provides
+  the way it provides `FilePicker`. The strings are resolved in the UI so the notification follows the language
+  chosen *in the app*, not the system's.
+- `SyncEngine` runs the plan a few files at a time rather than one after another (which made a first sync one round
+  trip per file), except the remote deletions, which go to the provider in one call — on Dropbox one batch job, about
+  seven files a second rather than one — so that the folder spends as little time as possible half deleted, the
+  state in which another device's guard can let part of a large deletion through unasked. It retries when the service asks
+  it to slow down — being rate limited is the expected answer to a first sync of a whole library, not a reason to
+  give up on it. A file that fails on its own is named in the
+  run's summary rather than ending it, and such a run does not count as the last successful one.
+- **A run starts on its own at launch and after every change the app makes to a song or a setlist** — a save, a tag, a
+  new, imported, renamed or deleted file. The launch's starts at once; a change's ten seconds after the latest such
+  request, so a burst of edits or an import is one run (`SyncRepository.scheduleSynchronization`). A request made during
+  a run is carried out after it. Every run that starts at once — the launch's, Sync now, and the first run after
+  connecting — takes the place of one that is waiting; Stop drops the waiting one too. The
+  app leaving the front starts a waiting run at once, since a phone only keeps alive a run it was told about while the
+  app was still in front, and a desktop quit hides the window and lets the run finish (for up to fifteen seconds, then
+  stops it) before the process ends. The files a run writes go around the repositories that announce changes, so a run never
+  schedules the next one.
+- The index carries an "a run was going" marker, written before anything moves and cleared when it finishes, so a
+  run the app never came back from — killed, swiped away, suspended by iOS — is reported as interrupted next time
+  rather than silently forgotten, and that run is left for the user to start rather than started on launch. That is
+  only for a run the user or a launch started: an automatic one cut short is not reported, and the launch run that
+  follows carries its changes.
+- A file changed on both sides is never merged: the local one keeps the name and the incoming one lands next to it
+  as ` (2)` — or the first number free both on this device and in the cloud folder, so that it never takes the name
+  of a file still on its way down — a name of the other device's making, numbered the way any document is, rather
+  than with the underscore a name the app derived itself collides with (`_2`) — except a setlist whose two versions
+  differ only in the day they name, which every device gives an undated setlist on its own, or where this device's
+  only change is the day its read gave an undated file, or a demo file this device planted that still holds exactly
+  what was planted, met in the folder for the first time: the cloud folder's version is taken.
+- **The library's per-song overrides travel too**: the transposition, tempo and capo of a song opened from the library
+  (`UserPreferences.transpositions`, `tempos`, `capos`; a setlist's own are in its file already) are one
+  `preferences.json` at the top of the cloud folder, beside `songs/` and `setlists/`, where the engine never looks:
+  `{"version": 1, "songs": {"<file name>": {"transposition": 2, "tempo": 92, "capo": 1}}}`, an entry only for a song
+  something is set for. Every run that completes ends by settling it (`SyncedPreferencesSync`) — a three-way merge,
+  value by value, of this device's, the folder's and the last synced one, which the index keeps — so two devices that
+  changed different songs or fields both keep their change, a change beats a removal, and two changes of one value
+  keep this device's. It is merged as a JSON tree and this version only writes the fields it knows, so settings that
+  have nothing to do with the songs can join `songs` at the top level later without an older version dropping them;
+  a document that is missing or cannot be read is taken as unchanged and replaced with this device's values, never
+  read as one that removed everything, and one whose `version` is newer than this one's is left alone.
+  A song no longer in the library after the run takes its entry with it, here and in the folder, unless the run
+  failed to move it or it reached the folder after the run listed it. **The player's chord shapes travel the same way**
+  (`UserPreferences.chordVoicings`): a `chords` member beside `songs`, by instrument and then by the chord's notes
+  (`{"guitar": {"F:0.4.7": "x x 3 2 1 1"}}`), merged value by value, so two devices that chose for different chords both
+  keep their choice and two choices for one chord keep this device's; an instrument this version does not know passes
+  through, and no entry is ever dropped with a song, since none belongs to one. A change to those three maps or to the
+  chord shapes schedules a run like a change to a file does; the run's own write does not.
+- Authorization is OAuth 2.0 with PKCE and no client secret, which is what lets this work with no backend. The four
+  platforms get back from the consent page in four different ways, all behind `SyncAuthenticator`.
