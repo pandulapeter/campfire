@@ -85,9 +85,9 @@ internal class MetadataBuilder {
     /** @param isInBody Whether [directive] stands in the body of the song rather than in its header. */
     fun consume(directive: ChordProDirectives.Directive, isInBody: Boolean) {
         val value = directive.value?.trim().orEmpty()
-        when (directive.name) {
-            "title", "t" -> title.consume(value)
-            "subtitle", "st" -> subtitle.consume(value)
+        when (MetadataKind.aliasLongNames[directive.name] ?: directive.name) {
+            "title" -> title.consume(value)
+            "subtitle" -> subtitle.consume(value)
             "artist" -> artist.consume(value)
             "composer" -> composer.consume(value)
             "lyricist" -> lyricist.consume(value)
@@ -99,7 +99,7 @@ internal class MetadataBuilder {
             "time" -> time.consume(value, isInBody)
             "duration" -> duration.consume(value)
             "tag" -> ChordProMetaItems.tag(directive)?.let(::addTag)
-            "language", "lang" -> ChordProMetaItems.language(directive)?.let(::addLanguage)
+            "language" -> ChordProMetaItems.language(directive)?.let(::addLanguage)
             "meta" -> {
                 // The spec defines these as the standalone directive, so they are read as one: a song whose header is
                 // all `{meta: title …}` lines is titled, named and keyed by it like any other.
