@@ -248,7 +248,7 @@ a deletion of one of those files lands before its reads or after its update and 
   `commonTest` runs the engine against an in-memory `SyncProvider` and `LibraryFileLocalSource` for the behaviour the
   planner's tests cannot show, and `SyncRepositoryImplTest` runs the repository against the same fakes plus the ones
   in `FakeSyncCollaborators.kt`. A plan whose deletions on one side are more than half of the index (at least
-  `MIN_DELETIONS_TO_ASK` of them) or the whole of it is not applied under `SyncDeletionPolicy.ASK`, and neither is one
+  `DeletionGuard.MIN_DELETIONS_TO_ASK` of them) or the whole of it is not applied under `SyncDeletionPolicy.ASK`, and neither is one
   that would delete anything remotely while the local listing is empty and the index is not — a library folder that
   went missing lists as empty on every platform, however small the library was. The engine returns
   `Result.DeletionsNeedConfirmation` with the `SyncDeletionDirection` before those deletions move, asking about this
