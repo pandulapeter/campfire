@@ -12,7 +12,6 @@
 ### Bugs / issues
 
 ### Improvements
-- Refactor plans: Follow documentation/issues/EXECUTION.md.
 - Improve test coverage, review existing tests
 - Haptic effects, especially for the fast scroller
 - Clean up all the edit links, about the song bottom sheet, song details menus. Too much duplicated content, not super intuitive
