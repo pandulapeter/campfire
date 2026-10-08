@@ -90,8 +90,10 @@ import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeButton
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomePanel
 import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
 import com.pandulapeter.campfire.presentation.ui.metronome.metronomeAction
+import com.pandulapeter.campfire.presentation.ui.metronome.withBeatLevels
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.playing.songPlaybackOf
+import com.pandulapeter.campfire.presentation.ui.screens.rememberMetronomePanelState
 import com.pandulapeter.campfire.presentation.ui.screens.rememberSongActionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -471,8 +473,14 @@ internal fun SongDetailsAppBar(
             }
         },
         bottomContent = {
+            val panel = rememberMetronomePanelState(viewModel)
             MetronomePanel(
-                viewModel = viewModel,
+                isPlaying = panel.isPlaying,
+                beatLevels = panel.beatLevels,
+                beats = viewModel.metronomeBeats,
+                isFlashEnabled = panel.isFlashEnabled,
+                onBeatLevelsChanged = { levels -> viewModel.updateMetronomeSettings { withBeatLevels(panel.timeSignature, levels) } },
+                onPlayStop = viewModel::toggleMetronome,
                 isVisible = isMetronomePanelVisible,
                 contentPadding = contentPadding,
                 visibleState = metronomePanelState,

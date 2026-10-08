@@ -48,7 +48,9 @@ import com.pandulapeter.campfire.presentation.ui.metronome.TimeSignaturePicker
 import com.pandulapeter.campfire.presentation.ui.metronome.sound
 import com.pandulapeter.campfire.presentation.ui.metronome.subdivision
 import com.pandulapeter.campfire.presentation.ui.metronome.timeSignatureOrDefault
+import com.pandulapeter.campfire.presentation.ui.metronome.withBeatLevels
 import com.pandulapeter.campfire.presentation.ui.platform.rememberBeatHaptics
+import com.pandulapeter.campfire.presentation.ui.screens.rememberMetronomePanelState
 import com.pandulapeter.campfire.presentation.ui.screens.settings.AnimatedSettingsRow
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsCard
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsMessage
@@ -84,6 +86,7 @@ internal fun MetronomeScreen(
         // with it.
         modifier = modifier.fillMaxSize().then(if (isPlaying) Modifier.keepScreenOn() else Modifier),
     ) {
+        val panel = rememberMetronomePanelState(viewModel)
         MetronomePanel(
             // As wide as the page under it, so that the bar ends where the rows it heads end.
             modifier = Modifier
@@ -92,7 +95,12 @@ internal fun MetronomeScreen(
                     max = layout.pageMaxWidth(sections = 2) + contentPadding.calculateStartPadding(layoutDirection) +
                         contentPadding.calculateEndPadding(layoutDirection),
                 ),
-            viewModel = viewModel,
+            isPlaying = panel.isPlaying,
+            beatLevels = panel.beatLevels,
+            beats = viewModel.metronomeBeats,
+            isFlashEnabled = panel.isFlashEnabled,
+            onBeatLevelsChanged = { levels -> viewModel.updateMetronomeSettings { withBeatLevels(panel.timeSignature, levels) } },
+            onPlayStop = viewModel::toggleMetronome,
             isVisible = true,
             isProminent = true,
             contentPadding = contentPadding.only(start = true, end = true),

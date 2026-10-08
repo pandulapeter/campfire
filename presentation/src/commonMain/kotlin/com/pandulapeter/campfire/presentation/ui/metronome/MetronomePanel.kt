@@ -28,7 +28,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,13 +37,13 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
+import com.pandulapeter.campfire.metronome.api.model.BeatLevel
+import com.pandulapeter.campfire.metronome.api.model.MetronomeBeat
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.metronome_start
 import com.pandulapeter.campfire.presentation.resources.metronome_stop
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import kotlinx.coroutines.flow.Flow
 
 /**
  * The least of a metronome that is still one - the bar as it is heard, with its accents tapped on it, and play and stop
@@ -52,12 +51,16 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
  * screens that have one, so that it is started, stopped and accented the same way on either.
  *
  * On the song details screen it is a panel inside the app bar, under its title row, that the bar's own button shows and
- * hides ([CampfireViewModel.toggleMetronomePanel]): the click is something a song is played to there, the tempo is
+ * hides (`CampfireViewModel.toggleMetronomePanel`): the click is something a song is played to there, the tempo is
  * already in the song's own first section right under the bar, and being part of the bar rather than something floating
  * under it, it stays where it is while the song is read and covers none of it. On the Metronome tab it is the header,
  * pinned above everything else the tab sets and never hidden ([isVisible] always true), so that the click can be
  * stopped wherever the page has been scrolled to.
  *
+ * @param beatLevels The bar the click counts as it is accented, see [metronomeTimeSignatureOf].
+ * @param beats One item per click as it is heard, which the flash follows.
+ * @param onBeatLevelsChanged Called with the bar's accents once one of its beats is tapped.
+ * @param onPlayStop Starts or stops the click.
  * @param isProminent Draws the row and the button at the size of an instrument rather than of a bar's own row, and at
  * a settings page's margins: the tab's, where the panel is what the screen is for and heads the rows under it.
  * @param visibleState Where the panel's showing and hiding is followed, for a caller that has to know when it has
@@ -67,7 +70,12 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 @Composable
 internal fun MetronomePanel(
     modifier: Modifier = Modifier,
-    viewModel: CampfireViewModel,
+    isPlaying: Boolean,
+    beatLevels: List<BeatLevel>,
+    beats: Flow<MetronomeBeat>,
+    isFlashEnabled: Boolean,
+    onBeatLevelsChanged: (List<BeatLevel>) -> Unit,
+    onPlayStop: () -> Unit,
     isVisible: Boolean,
     isProminent: Boolean = false,
     contentPadding: PaddingValues,
@@ -92,21 +100,6 @@ internal fun MetronomePanel(
         transitionSpec = { tween(PANEL_ANIMATION_DURATION, easing = FastOutSlowInEasing) },
         label = "songMetronomePanelContent",
     ) { state -> if (state == EnterExitState.Visible) 1f else 0f }
-    val playback by viewModel.metronomePlayback.collectAsStateWithLifecycle()
-    val isPlaying = playback is MetronomePlayback.Playing
-    val settings by viewModel.metronomeSettings.collectAsStateWithLifecycle()
-    val songsByFileName by viewModel.songsByFileName.collectAsStateWithLifecycle()
-    val songsBeingRenamed by viewModel.songsBeingRenamed.collectAsStateWithLifecycle()
-    // The bar the row draws is the one the click counts, which is the song's time signature where it declares one (that of
-    // the stretch of it the page is on, where it changes further down), and
-    // which is what the accents it is tapped are stored under, so a song in 6/8 is accented as the tab's 6/8 is. The
-    // tempo it plays at is nothing this panel shows, so none of what overrides it is read here. A song being renamed is
-    // still the click's song, and its bar is still its own, for the moment the library no longer has the old name.
-    val timeSignature = when (val context = viewModel.metronomeContext) {
-        MetronomeContext.Standalone -> settings.timeSignatureOrDefault
-        is MetronomeContext.Song -> context.timing?.timeSignature
-            ?: (songsByFileName[context.songFileName] ?: songsBeingRenamed[context.songFileName]).timeSignatureOrDefault
-    }
     val layoutDirection = LocalLayoutDirection.current
     val startPadding = if (isProminent) PROMINENT_PANEL_HORIZONTAL_PADDING else PANEL_START_PADDING
     val endPadding = if (isProminent) PROMINENT_PANEL_HORIZONTAL_PADDING else PANEL_END_PADDING
@@ -130,13 +123,13 @@ internal fun MetronomePanel(
     ) {
         BeatRow(
             modifier = Modifier.weight(1f),
-            beatLevels = settings.beatLevelsOf(timeSignature),
-            beats = viewModel.metronomeBeats,
+            beatLevels = beatLevels,
+            beats = beats,
             isPlaying = isPlaying,
-            isFlashEnabled = settings.isVisualBeatEnabled,
+            isFlashEnabled = isFlashEnabled,
             blockHeight = if (isProminent) PROMINENT_PANEL_HEIGHT else PANEL_BEAT_HEIGHT,
             blockGap = if (isProminent) PROMINENT_PANEL_BEAT_GAP else PANEL_BEAT_GAP,
-            onBeatLevelsChanged = { levels -> viewModel.updateMetronomeSettings { withBeatLevels(timeSignature, levels) } },
+            onBeatLevelsChanged = onBeatLevelsChanged,
         )
         val label = stringResource(if (isPlaying) Res.string.metronome_stop else Res.string.metronome_start)
         FilledIconButton(
@@ -145,7 +138,7 @@ internal fun MetronomePanel(
                 // The row already squashes it vertically, so this is what keeps the button round as it scales down.
                 .graphicsLayer { scaleX = contentProgress.value }
                 .semantics { contentDescription = label },
-            onClick = viewModel::toggleMetronome,
+            onClick = onPlayStop,
         ) {
             PlayStopMark(
                 isPlaying = isPlaying,

@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.metronome
 
+import com.pandulapeter.campfire.data.model.domain.MetronomeSettings
+import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.metronome.api.model.TimeSignature
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import kotlin.test.Test
@@ -139,5 +141,33 @@ class MetronomeContextTest {
         startable.forEach { assertTrue(isMetronomeStartable(it, isMetronomeEnabled = true), it.toString()) }
         others.forEach { assertFalse(isMetronomeStartable(it, isMetronomeEnabled = true), it.toString()) }
         (startable + others).forEach { assertFalse(isMetronomeStartable(it, isMetronomeEnabled = false), it.toString()) }
+    }
+
+    @Test
+    fun `the bar the panel draws is the stretch's, then the song's, then the default, and the tab's own standalone`() {
+        val song = Song(
+            fileName = "a.cho",
+            title = "A",
+            artist = "",
+            key = null,
+            transpose = 0,
+            tags = emptyList(),
+            languages = emptyList(),
+            coverArtUrl = null,
+            hasChords = true,
+            canUpdateFileName = false,
+            lastModified = 0,
+            size = 0,
+            time = "6/8",
+        )
+        val settings = MetronomeSettings(timeSignature = "3/4")
+        val songOf = { fileName: String -> song.takeIf { it.fileName == fileName } }
+        assertEquals(TimeSignature(6, 8), metronomeTimeSignatureOf(MetronomeContext.Song("a.cho", null), settings, songOf))
+        assertEquals(
+            TimeSignature(2, 4),
+            metronomeTimeSignatureOf(MetronomeContext.Song("a.cho", null, SongTiming(index = 1, bpm = null, timeSignature = TimeSignature(2, 4))), settings, songOf),
+        )
+        assertEquals(TimeSignature.COMMON_TIME, metronomeTimeSignatureOf(MetronomeContext.Song("gone.cho", null), settings, songOf))
+        assertEquals(TimeSignature(3, 4), metronomeTimeSignatureOf(MetronomeContext.Standalone, settings, songOf))
     }
 }

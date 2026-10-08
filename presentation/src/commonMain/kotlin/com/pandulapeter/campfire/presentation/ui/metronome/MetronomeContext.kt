@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.metronome
 
+import com.pandulapeter.campfire.data.model.domain.MetronomeSettings
+import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.metronome.api.model.TimeSignature
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 
@@ -83,3 +85,15 @@ internal fun isMetronomeContextMoved(last: MetronomeContext, context: MetronomeC
 /** Where in the app a click plays, which is the context without the values a stretch of a song is played with. */
 private val MetronomeContext.place: Any
     get() = if (this is MetronomeContext.Song) copy(timing = timing?.let { SongTiming(index = it.index, bpm = null, timeSignature = TimeSignature.COMMON_TIME) }) else this
+
+/**
+ * The bar the click counts in [context], which is the one the metronome panel draws and its accents are stored under:
+ * the song's time signature where it declares one (that of the stretch of it the page is on, where it changes further
+ * down), so a song in 6/8 is accented as the tab's 6/8 is, and the tab's own otherwise. The tempo is nothing the panel
+ * shows, so none of what overrides it is read here. [songOf] finds a song being renamed too, which is still the click's
+ * song, and its bar still its own, for the moment the library no longer has the old name.
+ */
+internal fun metronomeTimeSignatureOf(context: MetronomeContext, settings: MetronomeSettings, songOf: (String) -> Song?): TimeSignature = when (context) {
+    MetronomeContext.Standalone -> settings.timeSignatureOrDefault
+    is MetronomeContext.Song -> context.timing?.timeSignature ?: songOf(context.songFileName).timeSignatureOrDefault
+}
