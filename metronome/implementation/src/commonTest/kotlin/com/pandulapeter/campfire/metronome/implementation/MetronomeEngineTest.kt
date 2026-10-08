@@ -1,0 +1,186 @@
+/*
+ * This file is part of Campfire.
+ * Copyright (c) Pandula Péter 2017-2026.
+ * https://github.com/pandulapeter/campfire
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * https://mozilla.org/MPL/2.0/.
+ */
+package com.pandulapeter.campfire.metronome.implementation
+
+import com.pandulapeter.campfire.metronome.api.model.BeatLevel
+import com.pandulapeter.campfire.metronome.api.model.MetronomeAudioIssue
+import com.pandulapeter.campfire.metronome.api.model.MetronomeBeat
+import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
+import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
+import com.pandulapeter.campfire.metronome.api.model.MetronomeSound
+import com.pandulapeter.campfire.metronome.api.model.MetronomeStopReason
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.runTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+
+@OptIn(ExperimentalCoroutinesApi::class)
+class MetronomeEngineTest {
+
+    private val pattern = MetronomePattern(bpm = 120)
+    private val output = FakeAudioOutput()
+    private val silentOutput = FakeAudioOutput()
+
+    /**
+     * The engine runs in [TestScope.backgroundScope], which ends with the test: its loop that releases the heard beats
+     * never idles, so time is only ever advanced by a given amount.
+     */
+    private fun TestScope.engine() = MetronomeEngine(
+        output = output,
+        scope = backgroundScope,
+        dispatcher = StandardTestDispatcher(testScheduler),
+        createSilentOutput = { silentOutput },
+    )
+
+    @Test
+    fun `a started click plays the pattern`() = runTest {
+        val engine = engine()
+        engine.start(pattern)
+        runCurrent()
+        assertEquals(MetronomePlayback.Playing(pattern, null), engine.playback.value)
+        assertEquals(listOf(false), output.starts)
+    }
+
+    @Test
+    fun `an output waiting for a gesture keeps saying so`() = runTest {
+        output.result = AudioOutputStart.Started(MetronomeAudioIssue.WAITING_FOR_GESTURE)
+        val engine = engine()
+        engine.start(pattern)
+        runCurrent()
+        assertEquals(MetronomePlayback.Playing(pattern, MetronomeAudioIssue.WAITING_FOR_GESTURE), engine.playback.value)
+    }
+
+    @Test
+    fun `a refused output stops the click with its reason`() = runTest {
+        output.result = AudioOutputStart.Refused(MetronomeStopReason.AUDIO_REFUSED)
+        val engine = engine()
+        engine.start(pattern)
+        runCurrent()
+        assertEquals(MetronomePlayback.Stopped(MetronomeStopReason.AUDIO_REFUSED), engine.playback.value)
+        assertEquals(emptyList(), silentOutput.starts)
+    }
+
+    @Test
+    fun `no output runs the click silently`() = runTest {
+        output.result = AudioOutputStart.Unavailable
+        val engine = engine()
+        engine.start(pattern)
+        runCurrent()
+        assertEquals(listOf(false), silentOutput.starts)
+        assertEquals(MetronomePlayback.Playing(pattern, MetronomeAudioIssue.UNAVAILABLE), engine.playback.value)
+    }
+
+    @Test
+    fun `a start while playing changes the pattern without opening the output again`() = runTest {
+        val engine = engine()
+        engine.start(pattern)
+        runCurrent()
+        val faster = pattern.copy(bpm = 140)
+        engine.start(faster)
+        runCurrent()
+        assertEquals(listOf(false), output.starts)
+        assertEquals(MetronomePlayback.Playing(faster, null), engine.playback.value)
+    }
+
+    @Test
+    fun `an update to the same pattern without a restart changes nothing`() = runTest {
+        val engine = engine()
+        engine.start(pattern)
+        runCurrent()
+        val before = engine.playback.value
+        engine.update(pattern, restartBar = false)
+        runCurrent()
+        assertTrue(before === engine.playback.value)
+    }
+
+    @Test
+    fun `a lost output stops the click, unless it belongs to an earlier session`() = runTest {
+        val engine = engine()
+        engine.start(pattern)
+        runCurrent()
+        val earlier = output.listener!!
+        engine.stop()
+        engine.start(pattern)
+        runCurrent()
+        earlier.onLost(MetronomeStopReason.OUTPUT_DISCONNECTED)
+        earlier.onAudioIssueChanged(MetronomeAudioIssue.WAITING_FOR_GESTURE)
+        runCurrent()
+        assertEquals(MetronomePlayback.Playing(pattern, null), engine.playback.value)
+        output.listener!!.onAudioIssueChanged(MetronomeAudioIssue.WAITING_FOR_GESTURE)
+        runCurrent()
+        assertEquals(MetronomePlayback.Playing(pattern, MetronomeAudioIssue.WAITING_FOR_GESTURE), engine.playback.value)
+        output.listener!!.onLost(MetronomeStopReason.OUTPUT_DISCONNECTED)
+        runCurrent()
+        assertEquals(MetronomePlayback.Stopped(MetronomeStopReason.OUTPUT_DISCONNECTED), engine.playback.value)
+    }
+
+    @Test
+    fun `a beat is released once the output has played it`() = runTest {
+        val engine = engine()
+        val beats = mutableListOf<MetronomeBeat>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { engine.beats.toList(beats) }
+        engine.start(pattern)
+        runCurrent()
+        output.stream!!.schedule(nowFrame = 0, untilFrame = FakeAudioOutput.SAMPLE_RATE.toLong()) { _, _, _, _ -> }
+        advanceTimeBy(RELEASE_STEP_MILLIS)
+        runCurrent()
+        assertEquals(emptyList(), beats)
+        output.heardFrame = 0
+        advanceTimeBy(RELEASE_STEP_MILLIS)
+        runCurrent()
+        assertEquals(listOf(0), beats.map { it.beatIndex })
+        output.heardFrame = FakeAudioOutput.SAMPLE_RATE / 2L
+        advanceTimeBy(RELEASE_STEP_MILLIS)
+        runCurrent()
+        assertEquals(listOf(0, 1), beats.map { it.beatIndex })
+        assertEquals(BeatLevel.ACCENT, beats.first().level)
+    }
+
+    @Test
+    fun `a preview holds the output for a moment after the last one`() = runTest {
+        val engine = engine()
+        engine.preview(MetronomeSound.CLICK, BeatLevel.ACCENT)
+        runCurrent()
+        assertEquals(listOf(true), output.starts)
+        advanceTimeBy(1_000)
+        engine.preview(MetronomeSound.BEEP, BeatLevel.NORMAL)
+        runCurrent()
+        assertEquals(listOf(true), output.starts)
+        advanceTimeBy(1_400)
+        runCurrent()
+        assertEquals(0, output.stopCount)
+        advanceTimeBy(200)
+        runCurrent()
+        assertEquals(1, output.stopCount)
+    }
+
+    @Test
+    fun `a stop closes the output`() = runTest {
+        val engine = engine()
+        engine.start(pattern)
+        runCurrent()
+        engine.stop()
+        runCurrent()
+        assertEquals(1, output.stopCount)
+        assertEquals(MetronomePlayback.Stopped(), engine.playback.value)
+    }
+
+    private companion object {
+        const val RELEASE_STEP_MILLIS = 6L
+    }
+}

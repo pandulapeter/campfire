@@ -508,7 +508,7 @@ localized in both languages.
   `:data:formats` (zip, bounded PDF/Word readers), `:data:source:local:implementation` (the JVM file storage, with independent-producer document goldens in `desktopTest`), `:data:source:remote:*` (hashing, encoders,
   the OAuth authorization URL, the cover search's queries, its `User-Agent` and its pace, the cover download),
   `:data:repository:implementation` (the caches and the cover cache), `:data:sync:implementation` (`SyncPlanner`, which
-  decides what happens to every file in a sync run, the engine and the synced preferences), `:metronome:*` (the sequencer, the synthesizer, the mixer, tap tempo and time signatures) and
+  decides what happens to every file in a sync run, the engine and the synced preferences), `:metronome:*` (the sequencer, the synthesizer, the mixer, the engine's state machine, tap tempo and time signatures) and
   `:presentation` (the pure helpers behind its screens: the search index and ranking, the song picker's filter chips, the fast scroller's section
   index, the setlist slots, stepper labels, section grid and the cutting of sections into columns, row snapping and section measurements of the details screen, the editor's token cache, where a song's tempo comes from and what a click plays for, which chords a song plays and which
   shape each is drawn with, the diagrams' geometry and what the editor's Chord shape button writes), run on

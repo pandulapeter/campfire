@@ -9,7 +9,8 @@
 -->
 # :metronome:implementation
 
-The engine (`MetronomeImpl`, `@Single`) and one `AudioOutput` per platform source set, found by the module's
+The engine (`MetronomeImpl`, `@Single`, which only builds a `MetronomeEngine` with the real scope and dispatcher and
+delegates to it, so the state machine can be tested on virtual time) and one `AudioOutput` per platform source set, found by the module's
 `@ComponentScan` like any platform definition (the Android one takes the `@Provided` `Context`). `:app:di` names
 `MetronomeModule`; only `:app:di` sees this module.
 
@@ -27,7 +28,7 @@ chunked), reusing every buffer. `ClickStream` is one session: the sequencer, the
 non-suspending ends are safe from any thread) for the changes going in and the rendered ticks coming out. The volume is
 squared on its way to a gain.
 
-`MetronomeImpl` runs every call on one confined coroutine (`limitedParallelism(1)`), so calls from the UI, platform
+`MetronomeEngine` runs every call on one confined coroutine (`limitedParallelism(1)`), so calls from the UI, platform
 callbacks and media buttons apply in order without a lock, and each start is a session whose late listener callbacks
 are ignored. **`beats` are released when heard**: a coroutine polls the output's `heardFrame()` (the reported playback
 position, the route's latency included where the platform reports it) every 5 ms and emits the queued ticks it has
@@ -64,5 +65,7 @@ locked phone, a busy desktop or a Kotlin/Native collection needs; a stop flushes
   previous session's stop may still be in flight. Voices are copied into `AudioBuffer`s a sample at a time, once each.
   An idle context is suspended again three seconds after the last gesture.
 
-Tests (`desktopTest`): `MetronomeSequencerTest`, `ClickSynthesizerTest`, `ClickMixerTest`; `TapTempoTest` and
-`TimeSignatureTest` in `:metronome:api`.
+Tests (`desktopTest`): `MetronomeSequencerTest`, `ClickSynthesizerTest`, `ClickMixerTest`, `MetronomeEngineTest` (the
+state machine on virtual time, against a `FakeAudioOutput`: starts, refusals, the silent fallback, stale sessions, beats
+released as they are heard, the preview's hold) and `SilentAudioOutputTest`; `TapTempoTest` and `TimeSignatureTest` in
+`:metronome:api`.
