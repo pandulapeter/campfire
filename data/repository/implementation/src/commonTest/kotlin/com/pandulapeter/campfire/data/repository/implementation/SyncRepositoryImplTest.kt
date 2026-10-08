@@ -32,6 +32,7 @@ import com.pandulapeter.campfire.data.repository.implementation.sync.NoSetlistCo
 import com.pandulapeter.campfire.data.repository.implementation.sync.RecordingSetlistRepository
 import com.pandulapeter.campfire.data.repository.implementation.sync.RecordingSongRepository
 import com.pandulapeter.campfire.data.repository.implementation.sync.RunCounter
+import com.pandulapeter.campfire.data.repository.implementation.sync.SyncConnectionManager
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncIndexDocument
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncIndexEntry
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncIndexStore
@@ -1162,22 +1163,28 @@ class SyncRepositoryImplTest {
             stateHolder = stateHolder,
             environment = environment,
         )
+        val scheduler = SyncRunScheduler(
+            runner = runner,
+            stateHolder = stateHolder,
+            libraryChanges = LibraryChanges(),
+            syncedPreferencesSync = syncedPreferencesSync,
+            environment = environment,
+        )
         return SyncRepositoryImpl(
             syncProviders = syncProviders,
-            authenticator = authenticator,
-            pendingAuthorizationStore = pendingAuthorizationStore,
-            syncIndexLocalSource = stateLocalSource,
             stateHolder = stateHolder,
-            indexStore = indexStore,
-            runner = runner,
-            scheduler = SyncRunScheduler(
-                runner = runner,
+            connectionManager = SyncConnectionManager(
+                syncProviders = syncProviders,
+                authenticator = authenticator,
+                pendingAuthorizationStore = pendingAuthorizationStore,
+                syncIndexLocalSource = stateLocalSource,
                 stateHolder = stateHolder,
-                libraryChanges = LibraryChanges(),
-                syncedPreferencesSync = syncedPreferencesSync,
+                indexStore = indexStore,
+                runner = runner,
+                scheduler = scheduler,
                 environment = environment,
             ),
-            environment = environment,
+            scheduler = scheduler,
         )
     }
 
