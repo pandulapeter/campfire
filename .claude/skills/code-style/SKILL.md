@@ -51,6 +51,11 @@ wrong or undo it".
 
 ## Formatting
 
+- **The mechanical rules are checked by ktlint** (Spotless, configured in the root `.editorconfig`):
+  `./gradlew spotlessApply` fixes them and CI runs `spotlessCheck` with the tests. It checks only the rules
+  the code already follows, the trailing comma rules not among them (ktlint cannot express the exceptions
+  below), so everything in this skill is still the skill's job; a rule is enabled in a commit of its own that
+  also applies it. The license header is checked by `.github/scripts/check_license_headers.py`.
 - **Always use trailing commas** on the last element of any multi-line comma-separated list — function
   parameters and arguments, constructor parameters, collection literals, `enum` entries, `when` with
   multiple guards. This keeps diffs minimal and reordering clean.

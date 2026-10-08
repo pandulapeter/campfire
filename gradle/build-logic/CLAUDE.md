@@ -30,6 +30,11 @@ editing a plugin does not invalidate the whole main build, and `gradle/settings.
   `koinCompiler` extension, and the root `build.gradle.kts` keeps its `apply false` so that the extension type comes
   from one classloader, as it does for KGP and AGP. A module adds only its other Koin libraries itself
   (`:presentation`'s Compose ones, `:app:di`'s `api` of `koin-core`).
+- `campfire-style` (`StylePlugin`) — ktlint through Spotless (`spotlessCheck`, `spotlessApply`), for `src/**/*.kt` and
+  the module's `*.gradle.kts`, found by path so that every kind of module is covered alike. The two library plugins
+  apply it; the plain `:app:*` modules and `:tools:screenshots` name it in their own `plugins {}`, never a root
+  `subprojects {}` block, which would be cross-project configuration. Which ktlint rules run is the root
+  `.editorconfig`'s business (`ktlint_standard_<rule> = disabled`), the ktlint version the catalog's `ktlint`.
 
 `extensions/KotlinMultiplatform.kt` is where the shared configuration lives, and where a new target or a new
 platform-wide compiler setting belongs — never in a module's own `build.gradle.kts`:

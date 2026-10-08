@@ -57,10 +57,11 @@ jobs:
       # Every source file, script, workflow, XML resource and CLAUDE.md carries the MPL-2.0 header.
       - name: Check the license headers
         run: python3 .github/scripts/check_license_headers.py
-      # The unqualified task runs in every module that has one, so a module that gains tests is covered without a
-      # change here. --continue reports the failures of every module rather than only the first.
+      # The unqualified tasks run in every module that has them, so a module that gains tests is covered without a
+      # change here. --continue reports the failures of every module rather than only the first, and a ktlint violation
+      # (spotlessCheck) together with them.
       - name: Run the unit tests
-        run: ./gradlew desktopTest --continue
+        run: ./gradlew spotlessCheck desktopTest --continue
       - name: Upload failed unit test reports
         if: ${{ failure() }}
         uses: actions/upload-artifact@v7

@@ -159,6 +159,12 @@ localized in both languages.
   time, and the `% s` in `100% sure` is a format specifier to it (`pluralTextResource` for a `<plurals>` that
   carries such text). A counted sentence whose singular reads differently
   is a `<plurals>` with `one` and `other` items, read with `pluralStringResource`, rather than a second key.
+- **Formatting is checked, not only described**: the root `.editorconfig` holds the IDE settings (150 columns, trailing
+  commas, no wildcard imports) and the ktlint rules the code follows, which `campfire-style` (Spotless) applies to every
+  module — `./gradlew spotlessApply` fixes them, `spotlessCheck` runs in CI with the tests — and
+  `.github/scripts/check_license_headers.py` requires the MPL-2.0 header in every source file, script, workflow, XML
+  resource and `CLAUDE.md`. The rest of the style (comments, KDoc, the trailing comma exceptions ktlint cannot express)
+  is the `code-style` skill's.
 - The UI is Material 3 Expressive (`org.jetbrains.compose.material3:material3`, versioned separately from Compose
   Multiplatform in `jetbrains-compose-material3`); don't add `androidx.compose.material` (M2) back.
 - **Nearly every change the user can see is animated**: something that appears, disappears, moves, resizes, changes
@@ -517,7 +523,8 @@ localized in both languages.
   The web build's JavaScript — its storage worker, its service worker's routing and the page's decisions about the
   build it keeps — has Node tests of its own (see `app/web`), and the parser of a
   release's description, which is Python, a `unittest` next to it in `.github/scripts`.
-  `.github/workflows/tests.yml` runs all three — every module's `desktopTest`, the Node tests and the Python one — on every pull request, every
+  `.github/workflows/tests.yml` runs all three — every module's `desktopTest`, the Node tests and the Python one, with
+  `spotlessCheck` and the license header check beside them — on every pull request, every
   night on the default branch, and from `publish-all.yml` before it starts a single store build, so a failing test
   stops a release.
   The UI itself is untested by code: `:app:baselineprofile` drives it, but only to record a profile, asserts nothing
