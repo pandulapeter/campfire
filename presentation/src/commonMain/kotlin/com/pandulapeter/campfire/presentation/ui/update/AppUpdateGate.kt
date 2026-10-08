@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui
+package com.pandulapeter.campfire.presentation.ui.update
 
 import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
 import androidx.compose.animation.AnimatedVisibility
@@ -49,10 +49,9 @@ import com.pandulapeter.campfire.presentation.resources.app_update_required_hint
 import com.pandulapeter.campfire.presentation.resources.app_update_restart
 import com.pandulapeter.campfire.presentation.resources.app_update_update
 import com.pandulapeter.campfire.presentation.resources.ic_update
+import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.EmptyState
 import com.pandulapeter.campfire.presentation.ui.components.EmptyStateAction
-import com.pandulapeter.campfire.presentation.ui.platform.AppUpdateState
-import com.pandulapeter.campfire.presentation.ui.platform.rememberAppUpdateController
 import org.jetbrains.compose.resources.painterResource
 
 /**

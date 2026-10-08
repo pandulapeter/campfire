@@ -905,8 +905,8 @@ the short version:
 
 ## Updates
 
-Play's in-app updates, and only on Android: `:presentation`'s `ui/platform/AppUpdate.kt` is the contract and
-`ui/AppUpdateGate.kt` the UI, with the Play Core implementation in `androidMain` and a no-op actual on the other
+Play's in-app updates, and only on Android: `:presentation`'s `ui/update/AppUpdate.kt` is the contract and
+`ui/update/AppUpdateGate.kt` the UI, with the Play Core implementation in `androidMain` and a no-op actual on the other
 three. The gate wraps the whole app inside `CampfireApp`, so it speaks the theme and the language chosen in the app.
 
 - The **Play release's `updatePriority` is the entire policy** and it is chosen per release rather than in the code:

@@ -74,6 +74,7 @@ import com.pandulapeter.campfire.presentation.ui.theme.ApplyLanguagePreference
 import com.pandulapeter.campfire.presentation.ui.theme.CampfireTheme
 import com.pandulapeter.campfire.presentation.ui.theme.LaunchScreenColors
 import com.pandulapeter.campfire.presentation.ui.theme.ProvideInterfaceScale
+import com.pandulapeter.campfire.presentation.ui.update.AppUpdateGate
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emptyFlow

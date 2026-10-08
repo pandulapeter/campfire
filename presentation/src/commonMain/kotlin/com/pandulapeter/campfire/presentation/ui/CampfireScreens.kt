@@ -64,6 +64,7 @@ import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsWidthL
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongDetailsScreen
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.SongEditorScreen
 import com.pandulapeter.campfire.presentation.ui.screens.songs.SongsScreen
+import com.pandulapeter.campfire.presentation.ui.update.LocalIsCoveredByRequiredUpdate
 import kotlin.math.roundToInt
 
 /**

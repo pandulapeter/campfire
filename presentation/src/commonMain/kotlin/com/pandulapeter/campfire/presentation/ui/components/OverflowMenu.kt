@@ -21,7 +21,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layout
-import com.pandulapeter.campfire.presentation.ui.LocalIsCoveredByRequiredUpdate
+import com.pandulapeter.campfire.presentation.ui.update.LocalIsCoveredByRequiredUpdate
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.safeDrawing
