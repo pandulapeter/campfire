@@ -35,7 +35,6 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.sync.withPermit
-import kotlinx.serialization.json.JsonObject
 
 /**
  * Carries out what [SyncPlanner] worked out.
@@ -85,6 +84,14 @@ internal class SyncEngine(
         var index = document.takeIf { it.accountId == accountId }?.toIndex().orEmpty()
         var syncedPreferences = document.syncedPreferences.takeIf { document.accountId == accountId }
         var summary = SyncSummary()
+        val run = SyncRun(
+            provider = provider,
+            accountId = accountId,
+            lastSyncedAt = document.lastSyncedAt,
+            onProgress = onProgress,
+            onIndexChanged = onIndexChanged,
+            onLocalFileChanged = onLocalFileChanged,
+        )
 
         // Two passes at most. A file that a second device changed between this run's listing and its upload comes
         // back as a conflict; the second pass sees the revision it actually has now and resolves it properly. If it
@@ -137,17 +144,14 @@ internal class SyncEngine(
                 policy = deletionPolicy,
             )?.let { return it }
             val outcome = apply(
-                provider = provider,
+                pass = SyncPass(
+                    run = run,
+                    index = index,
+                    remoteFiles = remote.associateBy { it.key },
+                    caseCollisions = caseCollisions,
+                    syncedPreferences = syncedPreferences,
+                ),
                 plan = plan,
-                index = index,
-                remoteFiles = remote.associateBy { it.key },
-                caseCollisions = caseCollisions,
-                onProgress = onProgress,
-                accountId = accountId,
-                lastSyncedAt = document.lastSyncedAt,
-                syncedPreferences = syncedPreferences,
-                onIndexChanged = onIndexChanged,
-                onLocalFileChanged = onLocalFileChanged,
             )
             index = outcome.index
             summary = summary.plus(outcome.summary)
@@ -230,34 +234,23 @@ internal class SyncEngine(
      * ran before a download would undo it. The remote deletions are the one group that is not spread over the
      * permits: they go to the provider together ([deleteRemotely]).
      *
-     * [onIndexChanged] is called under the same lock the results are merged under, so the snapshots arrive in the
-     * order they were taken and the last one handed out is always the most complete. What is handed out is a way to
+     * [SyncRun.onIndexChanged] is called under the same lock the results are merged under, so the snapshots arrive in
+     * the order they were taken and the last one handed out is always the most complete. What is handed out is a way to
      * take the snapshot rather than the snapshot, since building one costs as much as the index is long and most of
      * them are never written. It reads the pass's own map, so it may be called in exactly two places: inside
-     * [onIndexChanged], which runs under the lock, and after [synchronize] has returned or thrown, when nothing writes
-     * to that map any more. Never from a coroutine launched out of [onIndexChanged].
+     * [SyncRun.onIndexChanged], which runs under the lock, and after [synchronize] has returned or thrown, when nothing
+     * writes to that map any more. Never from a coroutine launched out of [SyncRun.onIndexChanged].
      */
-    private suspend fun apply(
-        provider: SyncFolder,
-        plan: List<SyncOperation>,
-        index: Map<SyncKey, SyncIndexEntry>,
-        remoteFiles: Map<SyncKey, RemoteFileState>,
-        caseCollisions: Set<SyncKey>,
-        onProgress: (SyncProgress) -> Unit,
-        accountId: String,
-        lastSyncedAt: Long,
-        syncedPreferences: JsonObject?,
-        onIndexChanged: suspend (snapshot: () -> SyncIndexDocument) -> Unit,
-        onLocalFileChanged: suspend (SyncKey) -> Unit,
-    ): PassOutcome = coroutineScope {
-        val updated = index.toMutableMap()
+    private suspend fun apply(pass: SyncPass, plan: List<SyncOperation>): PassOutcome = coroutineScope {
+        val run = pass.run
+        val updated = pass.index.toMutableMap()
         var summary = SyncSummary()
         val unresolved = mutableSetOf<SyncKey>()
         var completed = 0
         // Whichever request finishes first writes to all four of those, so the merging is done in one place.
         val results = Mutex()
         val permits = Semaphore(CONCURRENT_TRANSFERS)
-        onProgress(SyncProgress(completed = 0, total = plan.size))
+        run.onProgress(SyncProgress(completed = 0, total = plan.size))
 
         suspend fun record(operation: SyncOperation, outcome: OperationOutcome) = results.withLock {
             updated += outcome.entries
@@ -265,14 +258,14 @@ internal class SyncEngine(
             summary = summary.plus(outcome.summary)
             if (outcome.isUnresolved) unresolved += operation.key
             completed++
-            onProgress(SyncProgress(completed = completed, total = plan.size))
-            onIndexChanged {
+            run.onProgress(SyncProgress(completed = completed, total = plan.size))
+            run.onIndexChanged {
                 SyncIndexDocument.of(
-                    providerId = provider.id.id,
-                    accountId = accountId,
-                    lastSyncedAt = lastSyncedAt,
+                    providerId = run.provider.id.id,
+                    accountId = run.accountId,
+                    lastSyncedAt = run.lastSyncedAt,
                     index = updated,
-                    syncedPreferences = syncedPreferences,
+                    syncedPreferences = pass.syncedPreferences,
                 ).copy(isRunInProgress = true)
             }
         }
@@ -280,30 +273,23 @@ internal class SyncEngine(
         plan.groupBy { it.order }.entries.sortedBy { it.key }.forEach { (_, group) ->
             val deletions = group.filterIsInstance<SyncOperation.DeleteRemote>()
             if (deletions.isNotEmpty()) {
-                deleteRemotely(provider, deletions).forEach { (operation, outcome) -> record(operation, outcome) }
+                deleteRemotely(pass, deletions).forEach { (operation, outcome) -> record(operation, outcome) }
             }
             group.filterNot { it is SyncOperation.DeleteRemote }.map { operation ->
-                async { record(operation, permits.withPermit { runOperation(provider, operation, index, remoteFiles, caseCollisions, onLocalFileChanged) }) }
+                async { record(operation, permits.withPermit { runOperation(pass, operation) }) }
             }.awaitAll()
         }
         PassOutcome(summary = summary, index = updated, unresolved = unresolved)
     }
 
-    private suspend fun runOperation(
-        provider: SyncFolder,
-        operation: SyncOperation,
-        index: Map<SyncKey, SyncIndexEntry>,
-        remoteFiles: Map<SyncKey, RemoteFileState>,
-        caseCollisions: Set<SyncKey>,
-        onLocalFileChanged: suspend (SyncKey) -> Unit,
-    ): OperationOutcome = try {
+    private suspend fun runOperation(pass: SyncPass, operation: SyncOperation): OperationOutcome = try {
         when (operation) {
-            is SyncOperation.Download -> download(provider, operation, index, remoteFiles, onLocalFileChanged)
-            is SyncOperation.Upload -> upload(provider, operation, caseCollisions)
-            is SyncOperation.Resolve -> resolve(provider, operation, index[operation.key], remoteFiles, onLocalFileChanged)
-            is SyncOperation.DeleteLocal -> deleteLocally(provider, operation, index, caseCollisions, onLocalFileChanged)
+            is SyncOperation.Download -> download(pass, operation)
+            is SyncOperation.Upload -> upload(pass, operation)
+            is SyncOperation.Resolve -> resolve(pass, operation)
+            is SyncOperation.DeleteLocal -> deleteLocally(pass, operation)
 
-            is SyncOperation.DeleteRemote -> deleteRemotely(provider, listOf(operation)).single().second
+            is SyncOperation.DeleteRemote -> deleteRemotely(pass, listOf(operation)).single().second
 
             is SyncOperation.Forget -> OperationOutcome(removals = setOf(operation.key))
         }
@@ -319,12 +305,12 @@ internal class SyncEngine(
      * [SyncFolder.delete]). What ends a run ends it here too; anything else fails the files it was about.
      */
     private suspend fun deleteRemotely(
-        provider: SyncFolder,
+        pass: SyncPass,
         operations: List<SyncOperation.DeleteRemote>,
     ): List<Pair<SyncOperation, OperationOutcome>> {
         val deletions = operations.associateBy { RemoteDeletion(kind = it.key.kind, name = it.key.name, expectedRevision = it.revision) }
         val failures = try {
-            provider.delete(deletions.keys.toList())
+            pass.run.provider.delete(deletions.keys.toList())
         } catch (exception: Exception) {
             if (exception.endsTheRun) throw exception
             deletions.keys.associateWith { exception.message.orEmpty() }
@@ -359,18 +345,13 @@ internal class SyncEngine(
      * request, so that a file already in step is never transferred, and again after it, together with the write under
      * [libraryFileLock], so that a save lands either before that check, which then sees it, or after the write.
      */
-    private suspend fun download(
-        provider: SyncFolder,
-        operation: SyncOperation.Download,
-        index: Map<SyncKey, SyncIndexEntry>,
-        remoteFiles: Map<SyncKey, RemoteFileState>,
-        onLocalFileChanged: suspend (SyncKey) -> Unit,
-    ): OperationOutcome {
+    private suspend fun download(pass: SyncPass, operation: SyncOperation.Download): OperationOutcome {
         val key = operation.key
+        val index = pass.index
         // The two sides may already hold the same bytes - two devices given the same file, or a library that was
         // copied across by hand before sync was set up. Nothing has to travel for that, only the index.
         val local = libraryFileLocalSource.readLibraryFile(key.kind, key.name)
-        if (local != null && isSameContent(provider, local, remoteFiles[key]?.contentHash)) {
+        if (local != null && isSameContent(pass, local, pass.remoteFiles[key]?.contentHash)) {
             return OperationOutcome(entries = mapOf(key to SyncIndexEntry(localContentHash(local), operation.revision)))
         }
         if (local != null && localContentHash(local) != index[key]?.localHash) {
@@ -378,9 +359,9 @@ internal class SyncEngine(
             // there at all when the run listed the library, so it appeared since - a conflict copy written earlier in
             // this pass, or a song the user made while the run was going. Either way it has changed on both sides, and
             // it is resolved as that rather than written over.
-            return resolve(provider, SyncOperation.Resolve(key, operation.revision), index[key], remoteFiles, onLocalFileChanged)
+            return resolve(pass, SyncOperation.Resolve(key, operation.revision))
         }
-        val downloaded = downloadWithinLimit(provider, key, remoteFiles)
+        val downloaded = downloadWithinLimit(pass, key)
         // The request can take minutes under rate limiting, and the user is free to save this very file meanwhile:
         // decided again on what is there now. The conflict it may turn out to be is resolved with the lock let go,
         // since resolving it is more requests.
@@ -390,20 +371,20 @@ internal class SyncEngine(
                 current
             } else {
                 libraryFileLocalSource.writeLibraryFile(key.kind, key.name, downloaded.bytes)
-                onLocalFileChanged(key)
+                pass.run.onLocalFileChanged(key)
                 null
             }
         }
         if (changed != null) {
             return resolveWith(
-                provider = provider,
+                provider = pass.run.provider,
                 key = key,
                 revision = downloaded.revision,
                 localBytes = changed,
                 remote = downloaded.bytes,
                 indexEntry = index[key],
-                remoteFiles = remoteFiles,
-                onLocalFileChanged = onLocalFileChanged,
+                remoteFiles = pass.remoteFiles,
+                onLocalFileChanged = pass.run.onLocalFileChanged,
             )
         }
         // The revision of what was fetched rather than the listing's: another device may have written the file again in
@@ -421,44 +402,34 @@ internal class SyncEngine(
      * same rule [SyncPlanner] applies, and puts the file back on the remote. The check and the deletion are one step
      * under [libraryFileLock], so that a save cannot land between them.
      */
-    private suspend fun deleteLocally(
-        provider: SyncFolder,
-        operation: SyncOperation.DeleteLocal,
-        index: Map<SyncKey, SyncIndexEntry>,
-        caseCollisions: Set<SyncKey>,
-        onLocalFileChanged: suspend (SyncKey) -> Unit,
-    ): OperationOutcome {
+    private suspend fun deleteLocally(pass: SyncPass, operation: SyncOperation.DeleteLocal): OperationOutcome {
         val key = operation.key
         val outcome = libraryFileLock.withLock {
             val local = libraryFileLocalSource.readLibraryFile(key.kind, key.name)
             when {
                 local == null -> OperationOutcome(removals = setOf(key))
-                localContentHash(local) != index[key]?.localHash -> null
+                localContentHash(local) != pass.index[key]?.localHash -> null
                 else -> {
                     libraryFileLocalSource.deleteLibraryFile(key.kind, key.name)
-                    onLocalFileChanged(key)
+                    pass.run.onLocalFileChanged(key)
                     OperationOutcome(removals = setOf(key), summary = SyncSummary(deletedLocally = 1))
                 }
             }
         }
-        return outcome ?: upload(provider, SyncOperation.Upload(key, expectedRevision = null), caseCollisions)
+        return outcome ?: upload(pass, SyncOperation.Upload(key, expectedRevision = null))
     }
 
-    private suspend fun upload(
-        provider: SyncFolder,
-        operation: SyncOperation.Upload,
-        caseCollisions: Set<SyncKey>,
-    ): OperationOutcome {
+    private suspend fun upload(pass: SyncPass, operation: SyncOperation.Upload): OperationOutcome {
         val key = operation.key
         // Deleted between the listing and now, which the next run will see as a deletion and handle properly.
         val bytes = libraryFileLocalSource.readLibraryFile(key.kind, key.name) ?: return OperationOutcome()
-        return when (val result = provider.upload(key.kind, key.name, bytes, operation.expectedRevision)) {
+        return when (val result = pass.run.provider.upload(key.kind, key.name, bytes, operation.expectedRevision)) {
             is RemoteWriteResult.Written -> OperationOutcome(
                 entries = mapOf(key to SyncIndexEntry(localContentHash(bytes), result.revision)),
                 summary = SyncSummary(uploaded = 1),
             )
 
-            RemoteWriteResult.Conflict -> if (operation.expectedRevision == null && key in caseCollisions) {
+            RemoteWriteResult.Conflict -> if (operation.expectedRevision == null && key in pass.caseCollisions) {
                 // Refused because the service already holds this name in another spelling, which is the other local file.
                 // Another pass would be refused the same way, so this is a file that could not be synced rather than a
                 // conflict waiting to be resolved.
@@ -486,30 +457,24 @@ internal class SyncEngine(
      * device's own write. Where nothing says either way - the network dropped, the run was stopped - it stays, and the
      * worst that follows is a second identical copy.
      */
-    private suspend fun resolve(
-        provider: SyncFolder,
-        operation: SyncOperation.Resolve,
-        indexEntry: SyncIndexEntry?,
-        remoteFiles: Map<SyncKey, RemoteFileState>,
-        onLocalFileChanged: suspend (SyncKey) -> Unit,
-    ): OperationOutcome {
+    private suspend fun resolve(pass: SyncPass, operation: SyncOperation.Resolve): OperationOutcome {
         val key = operation.key
         val local = libraryFileLocalSource.readLibraryFile(key.kind, key.name) ?: return OperationOutcome()
         // The two sides changed to the same thing, which is not a conflict at all - the same edit made twice.
-        if (isSameContent(provider, local, remoteFiles[key]?.contentHash)) {
+        if (isSameContent(pass, local, pass.remoteFiles[key]?.contentHash)) {
             return OperationOutcome(entries = mapOf(key to SyncIndexEntry(localContentHash(local), operation.revision)))
         }
-        val remote = downloadWithinLimit(provider, key, remoteFiles)
+        val remote = downloadWithinLimit(pass, key)
         // Uploaded over the revision it was compared with, so that a version that moved on again since is a conflict.
         return resolveWith(
-            provider = provider,
+            provider = pass.run.provider,
             key = key,
             revision = remote.revision,
             localBytes = local,
             remote = remote.bytes,
-            indexEntry = indexEntry,
-            remoteFiles = remoteFiles,
-            onLocalFileChanged = onLocalFileChanged,
+            indexEntry = pass.index[key],
+            remoteFiles = pass.remoteFiles,
+            onLocalFileChanged = pass.run.onLocalFileChanged,
         )
     }
 
@@ -655,8 +620,8 @@ internal class SyncEngine(
         }
     }
 
-    private fun isSameContent(provider: SyncFolder, local: ByteArray, remoteContentHash: String?) =
-        remoteContentHash != null && provider.contentHashOf(local) == remoteContentHash
+    private fun isSameContent(pass: SyncPass, local: ByteArray, remoteContentHash: String?) =
+        remoteContentHash != null && pass.run.provider.contentHashOf(local) == remoteContentHash
 
     /**
      * A song is a few kilobytes of text, and a download is held in memory whole. Refused here rather than left out
@@ -664,14 +629,10 @@ internal class SyncEngine(
      * large one that is already in the library would be deleted locally for it. Thrown, it is one file's failure
      * like any other - logged, the index left alone, tried again by the next run.
      */
-    private suspend fun downloadWithinLimit(
-        provider: SyncFolder,
-        key: SyncKey,
-        remoteFiles: Map<SyncKey, RemoteFileState>,
-    ): RemoteDocument {
-        val size = remoteFiles[key]?.size ?: 0
+    private suspend fun downloadWithinLimit(pass: SyncPass, key: SyncKey): RemoteDocument {
+        val size = pass.remoteFiles[key]?.size ?: 0
         if (size > MAXIMUM_FILE_SIZE) throw RemoteFileTooLargeException(size)
-        return provider.download(key.kind, key.name)
+        return pass.run.provider.download(key.kind, key.name)
     }
 
     /**
