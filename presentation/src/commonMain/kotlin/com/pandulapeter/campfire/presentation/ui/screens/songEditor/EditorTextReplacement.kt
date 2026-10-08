@@ -15,7 +15,7 @@ import androidx.compose.foundation.text.input.delete
 import androidx.compose.foundation.text.input.insert
 import androidx.compose.ui.text.TextRange
 import com.pandulapeter.campfire.chordpro.ChordProPrettifier
-import com.pandulapeter.campfire.chordpro.ChordProTransposer
+import com.pandulapeter.campfire.chordpro.chords.ChordProTransposer
 
 /**
  * Replaces everything, for the rewrites that touch the whole document. The undo history records such an edit as

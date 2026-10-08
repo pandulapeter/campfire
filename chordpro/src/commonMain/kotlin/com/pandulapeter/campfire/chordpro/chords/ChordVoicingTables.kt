@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.chordpro
+package com.pandulapeter.campfire.chordpro.chords
 
 /**
  * The shapes everybody knows, typed by hand from what every chord chart agrees on, in the syntax of a `{define}`'s

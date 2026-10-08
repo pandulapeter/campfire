@@ -7,11 +7,11 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.chordpro
+package com.pandulapeter.campfire.chordpro.chords
 
-import com.pandulapeter.campfire.chordpro.ChordVoicingSearch.keyboard
-import com.pandulapeter.campfire.chordpro.ChordVoicingSearch.search
-import com.pandulapeter.campfire.chordpro.ChordVoicingSearch.tableShapes
+import com.pandulapeter.campfire.chordpro.chords.ChordVoicingSearch.keyboard
+import com.pandulapeter.campfire.chordpro.chords.ChordVoicingSearch.search
+import com.pandulapeter.campfire.chordpro.chords.ChordVoicingSearch.tableShapes
 import com.pandulapeter.campfire.chordpro.model.Chord
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
 import com.pandulapeter.campfire.chordpro.model.ChordVoicing

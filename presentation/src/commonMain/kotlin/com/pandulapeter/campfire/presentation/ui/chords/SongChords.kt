@@ -11,11 +11,11 @@ package com.pandulapeter.campfire.presentation.ui.chords
 
 import androidx.compose.runtime.Immutable
 import com.pandulapeter.campfire.chordpro.ChordNotation
-import com.pandulapeter.campfire.chordpro.ChordProChords
-import com.pandulapeter.campfire.chordpro.ChordProDefinitions
-import com.pandulapeter.campfire.chordpro.ChordProNotation
-import com.pandulapeter.campfire.chordpro.ChordProTransposer
-import com.pandulapeter.campfire.chordpro.ChordVoicings
+import com.pandulapeter.campfire.chordpro.chords.ChordProChords
+import com.pandulapeter.campfire.chordpro.chords.ChordProDefinitions
+import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
+import com.pandulapeter.campfire.chordpro.chords.ChordProTransposer
+import com.pandulapeter.campfire.chordpro.chords.ChordVoicings
 import com.pandulapeter.campfire.chordpro.model.Chord
 import com.pandulapeter.campfire.chordpro.model.ChordDefinition
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument

@@ -7,14 +7,14 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.chordpro
+package com.pandulapeter.campfire.chordpro.chords
 
-import com.pandulapeter.campfire.chordpro.ChordShapeGeometry.DIAGRAM_FRETS
-import com.pandulapeter.campfire.chordpro.ChordShapeGeometry.MAX_FINGERS
-import com.pandulapeter.campfire.chordpro.ChordShapeGeometry.OPEN_POSITION_FRETS
-import com.pandulapeter.campfire.chordpro.ChordShapeGeometry.fingerCount
-import com.pandulapeter.campfire.chordpro.ChordShapeGeometry.position
-import com.pandulapeter.campfire.chordpro.ChordShapeGeometry.stretch
+import com.pandulapeter.campfire.chordpro.chords.ChordShapeGeometry.DIAGRAM_FRETS
+import com.pandulapeter.campfire.chordpro.chords.ChordShapeGeometry.MAX_FINGERS
+import com.pandulapeter.campfire.chordpro.chords.ChordShapeGeometry.OPEN_POSITION_FRETS
+import com.pandulapeter.campfire.chordpro.chords.ChordShapeGeometry.fingerCount
+import com.pandulapeter.campfire.chordpro.chords.ChordShapeGeometry.position
+import com.pandulapeter.campfire.chordpro.chords.ChordShapeGeometry.stretch
 import com.pandulapeter.campfire.chordpro.model.Chord
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
 import com.pandulapeter.campfire.chordpro.model.ChordVoicing

@@ -10,8 +10,8 @@
 package com.pandulapeter.campfire.presentation.ui.chords
 
 import androidx.compose.runtime.Composable
-import com.pandulapeter.campfire.chordpro.ChordProChords
-import com.pandulapeter.campfire.chordpro.ChordVoicings
+import com.pandulapeter.campfire.chordpro.chords.ChordProChords
+import com.pandulapeter.campfire.chordpro.chords.ChordVoicings
 import com.pandulapeter.campfire.chordpro.model.Chord
 import com.pandulapeter.campfire.chordpro.model.ChordVoicing
 import com.pandulapeter.campfire.presentation.resources.Res

@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.chordpro
 
+import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
+
 /**
  * A way of writing the notes of a chord down. [STANDARD] is the one every file is stored in and the one the model
  * works in; every other notation is only ever a way of showing that, or of typing it, and [ChordProNotation] converts

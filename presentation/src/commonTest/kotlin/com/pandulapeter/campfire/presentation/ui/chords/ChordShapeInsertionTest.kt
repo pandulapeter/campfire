@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.chords
 
 import com.pandulapeter.campfire.chordpro.ChordNotation
-import com.pandulapeter.campfire.chordpro.ChordProChords
+import com.pandulapeter.campfire.chordpro.chords.ChordProChords
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
 import kotlin.test.Test
 import kotlin.test.assertEquals

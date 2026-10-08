@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.chordpro.syntax
 
-import com.pandulapeter.campfire.chordpro.ChordProTransposer
+import com.pandulapeter.campfire.chordpro.chords.ChordProTransposer
 
 /** Where a caret stands in a document after a transposition rewrote it, see [ChordProTransposer.transposedOffset]. */
 internal object ChordProOffsetMapping {
