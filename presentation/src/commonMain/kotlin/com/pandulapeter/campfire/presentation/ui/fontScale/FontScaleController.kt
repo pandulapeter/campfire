@@ -42,10 +42,8 @@ import kotlin.math.roundToInt
  */
 internal class FontScaleController(
     private val scope: CoroutineScope,
-
     private val backStack: List<CampfireDestination>,
     private val dialogHost: DialogHost,
-
     private val updateUserPreferences: UpdateUserPreferencesUseCase,
     private val writeDelayMillis: Long,
 ) {

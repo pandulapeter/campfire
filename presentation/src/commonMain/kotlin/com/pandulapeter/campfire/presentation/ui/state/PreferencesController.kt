@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.domain.api.useCases.UpdateUserPreferencesUseCas
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.LibraryPersistence
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.runningFold
@@ -41,7 +42,7 @@ internal class PreferencesController(
      * library would leave the app in the system's theme and language for as long as that takes. Both states below
      * are derived from this one, so that they can never disagree about whether the read has happened.
      */
-    val userPreferencesState = getUserPreferences().asState(scope, DataState.Loading(null))
+    val userPreferencesState: StateFlow<DataState<UserPreferences>> = getUserPreferences().asState(scope, DataState.Loading(null))
 
     val userPreferences = userPreferencesState.map { it.data }.asState(scope, null)
     /**

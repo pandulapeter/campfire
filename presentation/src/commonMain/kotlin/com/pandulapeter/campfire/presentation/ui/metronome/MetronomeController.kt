@@ -49,22 +49,16 @@ import kotlinx.coroutines.launch
  */
 internal class MetronomeController(
     private val scope: CoroutineScope,
-
     private val metronome: Metronome,
     private val backStack: List<CampfireDestination>,
-
     private val currentSongFileName: (CampfireDestination.SongDetails) -> String?,
     private val dialogHost: DialogHost,
-
     private val userPreferences: StateFlow<UserPreferences?>,
     private val tempos: StateFlow<Tempos>,
-
     private val songsByFileName: StateFlow<Map<String, Song>>,
     private val songsBeingRenamed: StateFlow<Map<String, Song>>,
-
     private val messageSink: MessageSink,
     private val updateUserPreferences: UpdateUserPreferencesUseCase,
-
     private val writeDelayMillis: Long,
 ) {
 

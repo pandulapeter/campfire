@@ -29,11 +29,10 @@ import com.pandulapeter.campfire.chordpro.model.ChordProLink
 import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.CoverArtQuery
-import com.pandulapeter.campfire.data.model.domain.ExportedFile
 import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution
 import com.pandulapeter.campfire.data.model.domain.ImportLimits
-import com.pandulapeter.campfire.data.model.domain.ImportPlan
 import com.pandulapeter.campfire.data.model.domain.ImportProgress
+import com.pandulapeter.campfire.data.model.domain.ImportPlan
 import com.pandulapeter.campfire.data.model.domain.ImportResult
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.data.model.domain.MetronomeSettings
@@ -62,10 +61,6 @@ import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeController
 import com.pandulapeter.campfire.presentation.ui.playing.Transpositions
-import com.pandulapeter.campfire.presentation.ui.print.PdfExportProgress
-import com.pandulapeter.campfire.presentation.ui.print.PrintSource
-import com.pandulapeter.campfire.presentation.ui.print.PrintSong
-import com.pandulapeter.campfire.presentation.ui.print.printChordsOf
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.domain.api.models.ScreenData
 import com.pandulapeter.campfire.domain.api.models.SongFilter
@@ -149,6 +144,7 @@ import com.pandulapeter.campfire.presentation.ui.playing.Capos
 import com.pandulapeter.campfire.presentation.ui.playing.TempoKey
 import com.pandulapeter.campfire.presentation.ui.playing.effectiveCapo
 import com.pandulapeter.campfire.presentation.ui.playing.withCapo
+import com.pandulapeter.campfire.presentation.ui.screens.export.ExportController
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportReport
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.followingLibraryFileNames
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.SetlistDetails
@@ -200,9 +196,9 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
@@ -219,7 +215,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
@@ -458,7 +453,7 @@ class CampfireViewModel(
             // here, a screen opened again in the next moment finds the options it left, and its Save, Share and options do
             // nothing once it is no longer the dialog on screen.
             if (previousDialog is DialogType.Export && dialogType != previousDialog) {
-                viewModelScope.launch { printSettingsPreference.flush(updateUserPreferences::invoke) }
+                exportController.flushPrintSettings()
                 // An export nobody is looking at any more would put its picker up over whatever is on screen by then.
                 cancelPdfExport()
             }
@@ -1077,14 +1072,35 @@ class CampfireViewModel(
     private val _failedSongFileNames = MutableStateFlow(emptySet<String>())
     val failedSongFileNames: StateFlow<Set<String>> = _failedSongFileNames.asStateFlow()
 
-    /**
-     * The export screen's options as it last set them and not saved yet. A step of its size or its margins is a new
-     * value, and saving each one would publish the preferences to every screen once a step, so they are saved the way
-     * [FontScaleController.fontScalePreference] is: once they have held still, or at once when the screen goes (see [setVisibleDialog]). A
-     * screen composed again within that moment, as a rotation does, starts from this rather than a step back.
-     */
-    private val printSettingsPreference = DebouncedPreference<PrintSettings> { copy(printSettings = it) }
-    val pendingPrintSettings = printSettingsPreference.pending
+    private val exportController: ExportController = ExportController(
+        scope = viewModelScope,
+        dialogHost = dialogHost,
+        messageSink = messageSink,
+        screenData = screenData,
+        userPreferencesState = userPreferencesState,
+        transpositions = transpositions,
+        effectiveTempoOf = { songFileName, setlistFileName -> effectiveTempoOf(songFileName, setlistFileName) },
+        effectiveCapoOf = { songFileName, setlistFileName -> effectiveCapoOf(songFileName, setlistFileName) },
+        songRenderer = songRenderer,
+        getSongContent = getSongContent,
+        exportSongs = exportSongs,
+        exportSetlist = exportSetlist,
+        exportLibrary = exportLibrary,
+        updateUserPreferences = updateUserPreferences,
+        writeDelayMillis = PREFERENCE_WRITE_DEBOUNCE_MILLIS,
+    )
+
+    /** See [ExportController.pendingPrintSettings]. */
+    val pendingPrintSettings get() = exportController.pendingPrintSettings
+
+    /** See [ExportController.isFileTransferActive]. */
+    val isFileTransferActive get() = exportController.isFileTransferActive
+
+    /** See [ExportController.pdfExportProgress]. */
+    val pdfExportProgress get() = exportController.pdfExportProgress
+
+    /** See [ExportController.launchFileTransfer]. */
+    private fun launchFileTransfer(block: suspend () -> Unit) = exportController.launchFileTransfer(block)
 
     /**
      * The import that has been worked out but not carried out, waiting for the user to answer the question
@@ -1285,7 +1301,7 @@ class CampfireViewModel(
             setlistsSearch = setlistsSearch,
         )
         fontScaleController.startWriter()
-        printSettingsPreference.start(viewModelScope, PREFERENCE_WRITE_DEBOUNCE_MILLIS, updateUserPreferences::invoke)
+        exportController.startPrintSettingsWriter()
         metronomeController.startSettingsWriter()
         overrides.startSettling()
         metronomeController.startFollowingPattern()
@@ -2362,7 +2378,7 @@ class CampfireViewModel(
     private suspend fun writeWaitingPreferences() = DebouncedPreference.flushAll(
         fontScaleController.fontScalePreference,
         metronomeController.metronomeSettingsPreference,
-        printSettingsPreference,
+        exportController.printSettingsPreference,
         write = updateUserPreferences::invoke,
     )
 
@@ -2370,49 +2386,6 @@ class CampfireViewModel(
     private fun takeWaitingOverrideWrites() = overrides.takeWaitingOverrideWrites()
 
     // Import and export
-
-    /**
-     * The pick, export or share that is running, from the tap until its picker has answered. A second one is ignored
-     * rather than queued: a double tap on a row is one request, the platforms cannot show two pickers at once (Android
-     * stacks them and routes the second answer to nobody, UIKit refuses to present over its own, the desktop nests two
-     * modal dialogs), and an export builds its whole archive before its picker shows, which is seconds in which the
-     * row looks as if it had not been tapped.
-     */
-    private var fileTransferJob: Job? = null
-
-    /** Whether [fileTransferJob] is running, for the buttons that would start one and so would be ignored meanwhile. */
-    private val _isFileTransferActive = MutableStateFlow(false)
-    val isFileTransferActive = _isFileTransferActive.asStateFlow()
-
-    /**
-     * How far the export screen's PDF has been drawn, from its Save until the file is ready to be handed to the picker,
-     * and null otherwise: once the picker is up there is nothing left to count, and nothing to cancel either (see
-     * [cancelPdfExport]).
-     */
-    private val _pdfExportProgress = MutableStateFlow<PdfExportProgress?>(null)
-    val pdfExportProgress = _pdfExportProgress.asStateFlow()
-
-    private var pdfExportJob: Job? = null
-
-    /**
-     * Only as safe as the pickers are: every one of them has to answer on every way its screen can go away, since a
-     * transfer that never ended would keep the app from importing or exporting anything again. Nothing that suspends
-     * may come between the tap and the picker either, because the web's file input needs the tap's user activation.
-     *
-     * [isFileTransferActive] is cleared by the completion of the job that set it, which also comes for a job cancelled
-     * before it started, where a `finally` would not run, and only while that job is still the latest: the handler of
-     * one that ended late must not clear the flag of the next. The job starts once it is recorded, since the main
-     * dispatcher is immediate and a block that never suspends would otherwise complete before it is.
-     */
-    private fun launchFileTransfer(block: suspend () -> Unit): Job? {
-        if (fileTransferJob?.isActive == true) return null
-        _isFileTransferActive.value = true
-        val job = viewModelScope.launch(start = CoroutineStart.LAZY) { block() }
-        fileTransferJob = job
-        job.invokeOnCompletion { if (fileTransferJob === job) _isFileTransferActive.value = false }
-        job.start()
-        return job
-    }
 
     /**
      * The picker is handed in by the composable that has it, but the work runs here: picking a file takes as long as
@@ -2871,52 +2844,11 @@ class CampfireViewModel(
         }
     }
 
-    internal suspend fun preparePrintSource(dialog: DialogType.Export): PrintSource {
-        val preferences = userPreferencesState.value.data
-        val setlist = dialog.setlist
-        val entries = setlist?.entries ?: listOf(Setlist.Entry(requireNotNull(dialog.song).fileName))
-        val songs = screenData.value.data?.unfilteredSongs.orEmpty().associateBy { it.fileName }
-        // Read the way the viewer reads it, so that the page is in the key the screen shows: wrapped, and for a song a
-        // setlist names more than once, the one amount the viewer settles on rather than whichever entry comes first.
-        val setlistFileName = setlist?.fileName ?: dialog.songSetlistFileName
-        val spelling = preferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
-        // Collected whether or not the export asks for the diagrams, so that ticking them lays the pages out again rather
-        // than reading the songs again; with the feature switched off the export does not offer them at all.
-        val chordInstrument = preferences?.takeIf { it.areChordsEnabled && it.areChordDiagramsEnabled }?.chordInstrument?.toChordInstrument()
-        val storedChordShapes = chordInstrument?.let { preferences?.chordVoicings?.get(it.id) }.orEmpty()
-        val printSongs = entries.mapIndexed { index, entry ->
-            val song = songs[entry.songFileName] ?: dialog.song
-            val content = getSongContent(entry.songFileName)
-            val transposition = transpositions.value[entry.songFileName, setlistFileName]
-            // A setlist's tempo and capo are printed as its key is, being how the band plays it; the library's
-            // overrides are one reader's, like the folded sections, so a song exported from the library prints its
-            // file's own.
-            val tempo = setlistFileName?.let { effectiveTempoOf(entry.songFileName, it).takeUnless { tempo -> tempo.isDefault }?.bpm }
-            val capo = setlistFileName?.let { effectiveCapoOf(entry.songFileName, it).takeUnless { capo -> capo.isDefault }?.fret }
-            val transposed = content?.let { withContext(Dispatchers.Default) {
-                songRenderer.transposedSong(it.text, transposition, spelling).withTempo(tempo).withCapo(capo)
-            } }
-            val rendered = transposed?.let { withContext(Dispatchers.Default) { songRenderer.notatedSong(it, spelling) } }
-            val chords = if (transposed != null && chordInstrument != null) {
-                withContext(Dispatchers.Default) { printChordsOf(transposed, spelling.notation.toChordNotation(), chordInstrument, storedChordShapes) }
-            } else {
-                emptyList()
-            }
-            PrintSong(entry.songFileName, song?.title ?: entry.songFileName.substringBeforeLast('.'), song?.artist,
-                index = if (setlist == null) null else index + 1, transposition = transposition, song = rendered, text = content?.text, chords = chords)
-        }
-        return PrintSource(title = setlist?.title ?: requireNotNull(dialog.song).title,
-            description = setlist?.description.orEmpty(), isSetlist = setlist != null, songs = printSongs)
-    }
+    internal suspend fun preparePrintSource(dialog: DialogType.Export) = exportController.preparePrintSource(dialog)
 
-    fun setPrintSettings(value: PrintSettings) = printSettingsPreference.set(value.normalized())
+    fun setPrintSettings(value: PrintSettings) = exportController.setPrintSettings(value)
 
-    /**
-     * [create] draws the pages and reports each one drawn to the callback it is given. Whatever it throws, an
-     * `OutOfMemoryError` included, is the export failing rather than the app: a large setlist on a phone with a small
-     * heap can run out while drawing, which is reported the way any failed export is. On the web running out of memory
-     * is a trap that no handler sees, so there it still ends the app.
-     */
+    /** See [ExportController.exportPdf]. */
     internal fun exportPdf(
         filePicker: FilePicker,
         fileName: String,
@@ -2924,135 +2856,18 @@ class CampfireViewModel(
         pageCount: Int,
         isShare: Boolean,
         create: suspend (onPage: (done: Int) -> Unit) -> ByteArray,
-    ) {
-        // A Save kept until the pages were laid out can arrive after the screen was closed, and its picker would come up
-        // over whatever is on screen by then. Equality rather than identity: the same export closed and opened again
-        // while it slides away is an equal instance, and the screen still showing the old one is that export.
-        if (visibleDialog.value != dialog) return
-        val job = launchFileTransfer {
-            _pdfExportProgress.value = PdfExportProgress(done = 0, total = pageCount)
-            try {
-                // A share leaves the screen open, since a second share or a save may follow; save() only calls onSaved for a save.
-                save(
-                    filePicker = filePicker,
-                    savedMessage = Message.PdfSaved,
-                    isShare = isShare,
-                    // Closed from here rather than by the screen hearing of it, which may not be composed at that moment (an
-                    // Activity recreated under the picker): dismissSheet does nothing once another dialog took its place.
-                    onSaved = { dismissSheet(dialog) },
-                ) {
-                    val bytes = try {
-                        withContext(Dispatchers.Default) { create { done -> _pdfExportProgress.value = PdfExportProgress(done = done, total = pageCount) } }
-                    } catch (exception: CancellationException) {
-                        throw exception
-                    } catch (throwable: Throwable) {
-                        println("Could not create the PDF: ${throwable::class.simpleName}")
-                        null
-                    } finally {
-                        // Before the picker, which cannot be cancelled from here: Android's would stay up and write the
-                        // file all the same once it answered.
-                        _pdfExportProgress.value = null
-                    }
-                    bytes?.let { ExportedFile(fileName, "application/pdf", it) }
-                }
-            } finally {
-                _pdfExportProgress.value = null
-            }
-        }
-        if (job != null) pdfExportJob = job
-    }
+    ) = exportController.exportPdf(filePicker, fileName, dialog, pageCount, isShare, create)
 
-    /** Stops an export that is still drawing its pages, and leaves one that has its picker up to finish. */
-    fun cancelPdfExport() {
-        if (_pdfExportProgress.value != null) pdfExportJob?.cancel()
-    }
+    fun cancelPdfExport() = exportController.cancelPdfExport()
 
-    /**
-     * The export screen's other format: a song as the `.cho` file it already is, a setlist as a zip of its manifest and
-     * the songs it names, narrowed to [songFileNames] where some were left out (null being all of them). A saved file
-     * closes the screen, as a saved PDF does, and the same guard keeps a tap that lands while the screen slides away from
-     * bringing a picker up over whatever is under it.
-     */
-    fun exportFiles(filePicker: FilePicker, dialog: DialogType.Export, songFileNames: Set<String>?, isShare: Boolean) {
-        if (visibleDialog.value != dialog) return
-        val setlist = dialog.setlist
-        launchFileTransfer {
-            save(
-                filePicker = filePicker,
-                savedMessage = if (setlist == null) Message.SongExported else Message.SetlistExported,
-                isShare = isShare,
-                onSaved = { dismissSheet(dialog) },
-            ) {
-                if (setlist == null) {
-                    exportSongs(listOf(requireNotNull(dialog.song).fileName))
-                } else {
-                    exportSetlist.invoke(setlist.fileName, songFileNames)
-                }
-            }
-        }
-    }
+    fun exportFiles(filePicker: FilePicker, dialog: DialogType.Export, songFileNames: Set<String>?, isShare: Boolean) =
+        exportController.exportFiles(filePicker, dialog, songFileNames, isShare)
 
-    fun exportLibrary(filePicker: FilePicker) = launchFileTransfer {
-        var skippedFileNames = emptyList<String>()
-        save(
-            filePicker = filePicker,
-            savedMessage = Message.LibraryExported,
-            // After the save rather than instead of it: the archive is a real copy of everything that could be read,
-            // and what it is missing is the one thing the user could not otherwise find out.
-            warnings = { listOfNotNull(skippedFileNames.takeIf { it.isNotEmpty() }?.let(Message::ExportSkippedFiles)) },
-        ) {
-            exportLibrary.invoke()?.also { skippedFileNames = it.skippedFileNames }?.file
-        }
-    }
+    fun exportLibrary(filePicker: FilePicker) = exportController.exportLibrary(filePicker)
 
-    /** For the Android shell, whose picker can finish an export long after the coroutine that asked for it is gone. */
-    fun onExportFailed() {
-        sendMessage(Message.ExportFailed)
-    }
+    fun onExportFailed() = exportController.onExportFailed()
 
-    /** For the shells, which are what opens a link and so what finds out that nothing did. */
-    fun onLinkNotOpened(url: String) {
-        sendMessage(Message.LinkNotOpened(url))
-    }
-
-    /**
-     * Nothing to export and a picker that threw are the same thing to the user: the file did not come out.
-     *
-     * An archive over what an import takes is saved all the same, since it is still a complete copy that unzips by
-     * hand, but the user is told so the day it is made rather than the day it is needed. [onSaved] runs once the file
-     * has been saved, and not for one the user dismissed the dialog of.
-     *
-     * A saved file is confirmed with [savedMessage], unless something about it is worth saying instead ([warnings],
-     * read once the file has been made): each of those already says the file was saved, and a confirmation queued
-     * after them would only hold up the one line that matters. A share is not confirmed at all, since the platform's
-     * own sheet is what the user sees it go out through, and it cannot tell a share that happened from one dismissed.
-     */
-    private suspend fun save(
-        filePicker: FilePicker,
-        savedMessage: Message,
-        isShare: Boolean = false,
-        warnings: () -> List<Message> = { emptyList() },
-        onSaved: () -> Unit = {},
-        export: suspend () -> ExportedFile?,
-    ) = try {
-        val file = export()
-        when {
-            file == null -> sendMessage(Message.ExportFailed)
-            isShare -> filePicker.shareFile(file)
-            filePicker.saveFile(file) -> {
-                val isTooLargeToImport = file.mimeType == ExportedFile.ZIP_MIME_TYPE && file.bytes.size > ImportLimits.MAX_IMPORT_SIZE
-                val messages = listOfNotNull(Message.ExportTooLargeToImport.takeIf { isTooLargeToImport }) + warnings()
-                messages.ifEmpty { listOf(savedMessage) }.forEach(::sendMessage)
-                onSaved()
-            }
-        }
-        Unit
-    } catch (exception: CancellationException) {
-        throw exception
-    } catch (exception: Exception) {
-        println("Could not export: ${exception.message}")
-        sendMessage(Message.ExportFailed)
-    }
+    fun onLinkNotOpened(url: String) = exportController.onLinkNotOpened(url)
 
     // Setlists
 
