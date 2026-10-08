@@ -42,9 +42,7 @@ class DeleteLibraryUseCaseImpl internal constructor(
         syncRepository.cancelSynchronization()
         val songsFailure = runCatchingFailure { songRepository.deleteAllSongs() }
         val setlistsFailure = runCatchingFailure { setlistRepository.deleteAllSetlists() }
-        userPreferencesRepository.updateUserPreferences { preferences ->
-            preferences.copy(transpositions = emptyMap(), tempos = emptyMap(), capos = emptyMap(), foldedSections = emptyMap())
-        }
+        userPreferencesRepository.updateUserPreferences { it.withoutSongOverrides() }
         if (!syncRepository.synchronize(SyncDeletionPolicy.DELETE_REMOTELY)) {
             println("The deletion's sync run could not be started, a run was already going.")
         }

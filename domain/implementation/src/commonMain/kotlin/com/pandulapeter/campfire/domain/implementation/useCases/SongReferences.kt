@@ -53,21 +53,8 @@ internal suspend fun followSongReferences(
         }
     }
     attempt {
-        userPreferencesRepository.updateUserPreferences { preferences ->
-            preferences.copy(
-                transpositions = preferences.transpositions.movedTo(fileName, newFileName),
-                tempos = preferences.tempos.movedTo(fileName, newFileName),
-                capos = preferences.capos.movedTo(fileName, newFileName),
-                foldedSections = preferences.foldedSections.movedTo(fileName, newFileName),
-            )
-        }
+        userPreferencesRepository.updateUserPreferences { it.withSongRenamed(fileName, newFileName) }
     }
     failures.forEach { println("A reference to \"$fileName\" could not be updated: ${it.message}") }
     return failures.isEmpty()
-}
-
-/** The map with the entry of [fileName] put under [newFileName], or dropped where that is null. */
-private fun <T> Map<String, T>.movedTo(fileName: String, newFileName: String?): Map<String, T> {
-    val value = this[fileName] ?: return this
-    return if (newFileName == null) this - fileName else this - fileName + (newFileName to value)
 }
