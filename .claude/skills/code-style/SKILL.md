@@ -1,6 +1,6 @@
 ---
 name: code-style
-description: Code style, commenting, and documentation conventions for the Campfire codebase. MANDATORY — invoke this skill BEFORE writing or editing ANY source in this repo (every Write or Edit to a `.kt`/`.kts`/`strings.xml` file, new file or change to an existing one), with NO exceptions, even for a "trivial" one-line edit. It governs the MPL-2.0 header on new files, the KDoc-for-declarations / `//`-for-statements split, the "why, not what" comment voice, the trailing comma rule, `modifier` as the first parameter, string resources, and keeping the per-module `CLAUDE.md` files in sync. Get these right while writing, not after.
+description: Code style, commenting, and documentation conventions for the Campfire codebase. MANDATORY — invoke this skill BEFORE writing or editing ANY source in this repo (every Write or Edit to a `.kt`/`.kts`/`strings.xml` file, new file or change to an existing one), with NO exceptions, even for a "trivial" one-line edit. It governs the MPL-2.0 header on new files, the KDoc-for-declarations / `//`-for-statements split, the "why, not what" comment voice, the trailing comma rule, `modifier` as the first parameter, one file per Composable and small cohesive files and packages, string resources, and keeping the per-module `CLAUDE.md` files in sync. Get these right while writing, not after.
 ---
 
 # Campfire code style
@@ -80,22 +80,72 @@ wrong or undo it".
 - Implementation classes are `internal` and named `<Interface>Impl`; Compose components in
   `:presentation` are `internal` too. Use cases are `operator fun invoke`.
 - New Koin bindings go into the module's own top-level `Module.kt`, nowhere else.
+- **Never give a defaulted parameter to the constructor of a `@Single` / `@Factory` / `@KoinViewModel`
+  class, or to a `@Single` module function.** The Koin compiler plugin runs with `skipDefaultValues = true`:
+  such a parameter compiles, passes `:app:di`'s graph check and silently gets its default in production.
+  A collaborator that tests replace and production does not is built in a `@Single` module function that
+  passes every argument explicitly.
 - Cross layers through the `mapper/` packages; never leak a document/entity type upwards.
+
+## Files and packages
+
+- **One file, one thing, named after it.** A top-level class, interface or object gets a file of its own;
+  small private helpers used only by it stay with it. Shared non-UI helpers (constants, state classes,
+  `Modifier` extensions, `remember…` functions) go into a file named for what they are
+  (`SongCardDefaults.kt`, `ListItemMetrics.kt`, `SearchBarMotion.kt`) — never `Utils.kt` / `Helpers.kt`.
+- **Files stay small.** Aim for under ~500 lines. A file that outgrows that is split by cohesion as part of
+  the change that grows it: private state classes become `internal` top-level classes in files of their
+  own, a pure algorithm moves next to its users in a file named for it. A pure algorithm that splitting
+  would only scatter (`SectionGrid`, `PrintLayout`) may stay whole.
+- **Package by role, not by first user.** A screen's package (`ui.screens.<screen>`) holds only that
+  screen; a building block a second screen needs moves to a shared package (`ui.components`, `ui.chords`,
+  `ui.metronome`, `ui.playing`, `ui.search`, `ui.songLayout`, …) rather than being imported out of the
+  screen that first used it. A full screen lives under `ui.screens` even if it is shown over the app
+  (`ui.screens.export`), and `ui.dialogs` holds dialog and sheet content. Tests sit in the package of the
+  code they test.
+- **No god objects.** When a class gains a responsibility unrelated to the ones it has, give that
+  responsibility a collaborator of its own instead of another dozen members. Interfaces are as narrow as
+  their clients (split one that two clients use halves of); a long-lived class takes its
+  `CoroutineScope`, dispatcher and clocks rather than building them, so a test can pass virtual time.
+- **A behaviour-preserving split moves code verbatim**: the same declarations, KDoc with its declaration,
+  `private` widened to `internal` only where another file now needs it (check the package for a name clash
+  first), and nothing else changed in the same commit.
 
 ## Compose
 
 - **`modifier: Modifier = Modifier` is the first parameter** of a Composable that takes one — this repo's
   order, even though the Compose guidelines say otherwise. Follow the repo.
-- A Composable reads as a short list of named children. When a body grows several distinct visual groups,
-  extract each into its own `private @Composable` named for what it *is* in the UI (`SongFilters`,
-  `SectionHeader`), not for where it sits. A single focused widget needs no extraction.
-- Extraction must not change the rendered output: don't add a `Row`/`Column`/`Box` a group didn't have,
-  don't drop one it relied on, and apply parent-scope modifiers (`Modifier.weight`) at the call site.
 - Material 3 Expressive only (`org.jetbrains.compose.material3`). Never import `androidx.compose.material`
   (M2). Icons are vector drawables in `composeResources/drawable/`, loaded with `painterResource` and
   passed around as `Painter`.
 - Nothing appears or disappears abruptly: new UI states animate in and out the way the neighboring
   screens' empty/error states do.
+
+## Composable structure
+
+- **Every top-level UI Composable that is not `private` lives in a file of its own, named exactly after
+  it** (`SongCard` in `SongCard.kt`). Its `private` sub-Composables and helpers used only by it stay in that
+  file; the moment a second file needs one, it becomes `internal` and moves to a file of its own. Value
+  Composables (`rememberX`, `textResource`, `Modifier` extensions) are not UI Composables: group them by
+  cohesion in a file named for them.
+- **A Composable reads as a short, flat list of named children**, not a deep tree of layout primitives
+  interleaved with logic. When a body grows several distinct visual groups, extract each into a
+  Composable named for what it *is* in the UI (`SongFilters`, `SectionHeader`, `PlaybackControls`), not
+  where it sits (`MiddleRow`). Extract when a group has a clear name, nests more than ~2 layout levels
+  inside its parent, or the parent has outgrown a screenful; a single focused widget needs no extraction.
+- **Each extracted Composable takes only the state and callbacks it uses**, plus a `modifier` when its
+  parent positions it. Shared components take state and lambdas, not the whole `CampfireViewModel` (older ones that
+  still take it are converted when a change touches them); only a screen receives the view model. Keep lambdas stable
+  (`remember` them or pass method references) so lists don't recompose on every frame.
+- **Extraction must not change the rendered output.** A Composable is layout-transparent: one that emits
+  several siblings without a wrapper drops them straight into the caller's `Row` / `Column`, so don't add a
+  `Row`/`Column`/`Box` a group didn't have, don't drop one it relied on, and apply parent-scope modifiers
+  (`Modifier.weight`) at the call site, passing the result in as the child's `modifier`.
+- **Decisions are pure functions, not Composable bodies.** Geometry, filtering, ranking, rounding, which
+  item index a key is at — anything computed from plain data — is an `internal` function next to its
+  Composable, and gets a test in `commonTest`. The Composable only remembers its result and draws it.
+- **No service-locator calls inside a Composable** beyond what the root composable wires up; a component
+  gets what it needs as a parameter or a `CompositionLocal` provided once near the root.
 
 ## User-facing strings
 

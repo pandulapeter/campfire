@@ -12,6 +12,8 @@
 ### Bugs / issues
 
 ### Improvements
+- Refactor plans: Follow documentation/issues/EXECUTION.md.
+- Improve test coverage, review existing tests
 - Haptic effects, especially for the fast scroller
 - Clean up all the edit links, about the song bottom sheet, song details menus. Too much duplicated content, not super intuitive
 
@@ -27,7 +29,6 @@
 - Tuner: documentation/plans/tuner.md (question - do we want to add it to the toolbar?)
 - Comments in setlists (between songs)
 - Simplify adding comments / annotations to songs
-- Improve test coverage
 
 ## Long-term
 - Rename master branch to main
@@ -44,4 +45,3 @@
 - Native iOS, macOS, feel (overscroll, touch feedback, fonts, icons, colors, themes - Liquid Glass)
 
 ## Other
-- Test support with external control devices
