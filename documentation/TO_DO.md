@@ -12,6 +12,8 @@
 ### Bugs / issues
 
 ### Improvements
+- Haptic effects, especially for the fast scroller
+- Clean up all the edit links, about the song bottom sheet, song details menus. Too much duplicated content, not super intuitive
 
 ## Midterm (in the next versions)
 - Multi-select for songs: documentation/plans/multi-select.md
@@ -22,12 +24,10 @@
 - Duplicate song button
 - Search field for tags / languages
 - Find a way to allow entering tempo using the keyboard
-- Haptic effects, especially for the fast scroller
 - Tuner: documentation/plans/tuner.md (question - do we want to add it to the toolbar?)
 - Comments in setlists (between songs)
 - Simplify adding comments / annotations to songs
 - Improve test coverage
-- Refactor, improve architecture, each top-level Composable should be defined in a separate file
 
 ## Long-term
 - Rename master branch to main
