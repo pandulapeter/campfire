@@ -58,10 +58,8 @@ class PrepareImportUseCaseImpl internal constructor(
         val songFiles = mutableListOf<IncomingFile>()
         val setlistFiles = mutableListOf<IncomingFile>()
         val documentFiles = mutableListOf<IncomingFile>()
-        val unreadableDocumentFileNames = mutableListOf<String>()
-        val skippedFileNames = mutableListOf<String>()
+        val triage = ImportTriage()
 
-        val oversizedFileNames = mutableListOf<String>()
         // What the import may still hold once everything is unpacked, shared by every archive and plain file of it.
         // The checks here are not redundant with the platform readers: they are what holds for a caller that did not
         // read its files through an ImportBudget.
@@ -73,9 +71,9 @@ class PrepareImportUseCaseImpl internal constructor(
             when {
                 // Picked along with the songs it sits next to by a "select all" on a volume macOS has written to. It
                 // carries the extension of the file it belongs to, and decoded as a song it would be a screen of binary.
-                LibraryFiles.isHiddenFileName(file.name) -> skippedFileNames += file.name
-                extension !in SONG_EXTENSIONS && extension !in DOCUMENT_EXTENSIONS && extension != SETLIST_EXTENSION -> skippedFileNames += file.name
-                file.isTooLarge || file.bytes.size > minOf(ImportLimits.maxSizeOf(file.name), remaining) -> oversizedFileNames += file.name
+                LibraryFiles.isHiddenFileName(file.name) -> triage.skippedFileNames += file.name
+                extension !in SONG_EXTENSIONS && extension !in DOCUMENT_EXTENSIONS && extension != SETLIST_EXTENSION -> triage.skippedFileNames += file.name
+                file.isTooLarge || file.bytes.size > minOf(ImportLimits.maxSizeOf(file.name), remaining) -> triage.oversizedFileNames += file.name
                 else -> {
                     remaining -= file.bytes.size
                     val incoming = IncomingFile(file = file, origin = origin)
@@ -97,7 +95,7 @@ class PrepareImportUseCaseImpl internal constructor(
             val isArchive = isArchiveByName || (!LibraryFiles.isImportableFileName(file.name) && LibraryFiles.isZipArchive(file.bytes))
             when {
                 !isArchive -> sort(file = file, origin = null)
-                file.isTooLarge || file.bytes.size > ImportLimits.MAX_IMPORT_SIZE -> oversizedFileNames += file.name
+                file.isTooLarge || file.bytes.size > ImportLimits.MAX_IMPORT_SIZE -> triage.oversizedFileNames += file.name
                 else -> try {
                     val entries = archiveRepository.unpack(archive = file.bytes, maxSize = remaining)
                     // Everyday document formats are zip archives too (an OpenDocument, a spreadsheet, an e-book), and
@@ -106,25 +104,25 @@ class PrepareImportUseCaseImpl internal constructor(
                     if (isArchiveByName || entries.any { it.isImportable() }) {
                         entries.forEach { sort(file = it, origin = index) }
                     } else {
-                        skippedFileNames += file.name
+                        triage.skippedFileNames += file.name
                     }
                 } catch (exception: CancellationException) {
                     throw exception
                 } catch (exception: Exception) {
                     println("Could not unpack \"${file.name}\": ${exception.message}")
-                    skippedFileNames += file.name
+                    triage.skippedFileNames += file.name
                 }
             }
         }
 
         onProgress(ImportProgress(ImportProgress.Phase.UNPACKING, files.size, files.size))
-        val songs = planSongs(songFiles, documentFiles, skippedFileNames, unreadableDocumentFileNames, oversizedFileNames, onProgress)
+        val songs = planSongs(songFiles, documentFiles, triage, onProgress)
         return ImportPlan(
             songs = songs,
-            setlists = planSetlists(setlistFiles, skippedFileNames, ImportPlanner.plannedSongFileNames(songs)),
-            skippedFileNames = skippedFileNames,
-            oversizedFileNames = oversizedFileNames,
-            unreadableDocumentFileNames = unreadableDocumentFileNames,
+            setlists = planSetlists(setlistFiles, triage, ImportPlanner.plannedSongFileNames(songs)),
+            skippedFileNames = triage.skippedFileNames,
+            oversizedFileNames = triage.oversizedFileNames,
+            unreadableDocumentFileNames = triage.unreadableDocumentFileNames,
         )
     }
 
@@ -132,9 +130,7 @@ class PrepareImportUseCaseImpl internal constructor(
     private suspend fun planSongs(
         files: List<IncomingFile>,
         documents: List<IncomingFile>,
-        skippedFileNames: MutableList<String>,
-        unreadableDocumentFileNames: MutableList<String>,
-        oversizedFileNames: MutableList<String>,
+        triage: ImportTriage,
         onProgress: (ImportProgress) -> Unit,
     ): List<ImportPlan.SongEntry> {
         val incoming = (files + documents).flatMapIndexed { index, (file, origin) ->
@@ -148,7 +144,7 @@ class PrepareImportUseCaseImpl internal constructor(
                 isDocument -> {
                     val extracted = documentRepository.extract(file)
                     if (extracted == null) {
-                        unreadableDocumentFileNames += file.name
+                        triage.unreadableDocumentFileNames += file.name
                         return@flatMapIndexed emptyList()
                     }
                     ChordSheetConverter.convert(extracted.toChordSheet(), String::normalizedToNfc)
@@ -157,13 +153,13 @@ class PrepareImportUseCaseImpl internal constructor(
                 else -> listOf(original!!)
             }
             if (converted.sumOf { it.encodeToByteArray().size.toLong() } > ImportLimits.MAX_TEXT_FILE_SIZE) {
-                oversizedFileNames += file.name
+                triage.oversizedFileNames += file.name
                 return@flatMapIndexed emptyList()
             }
             val isConverted = isDocument || converted != listOf(original)
             val parts = converted.flatMap(ChordProSplitter::split)
             if (parts.isEmpty()) {
-                if (isDocument) unreadableDocumentFileNames += file.name else skippedFileNames += file.name
+                if (isDocument) triage.unreadableDocumentFileNames += file.name else triage.skippedFileNames += file.name
                 return@flatMapIndexed emptyList()
             }
             val songs = parts.map { part ->
@@ -186,7 +182,7 @@ class PrepareImportUseCaseImpl internal constructor(
             // Formatting adds section separators and a final newline; keep the resulting text within the same
             // limit as converted input, so a file at the boundary is not written too large to read back.
             if (songs.sumOf { it.text.encodeToByteArray().size.toLong() } > ImportLimits.MAX_TEXT_FILE_SIZE) {
-                oversizedFileNames += file.name
+                triage.oversizedFileNames += file.name
                 emptyList()
             } else songs
         }
@@ -206,14 +202,14 @@ class PrepareImportUseCaseImpl internal constructor(
     /** Every setlist of the batch held against the library by [ImportPlanner]. */
     private suspend fun planSetlists(
         files: List<IncomingFile>,
-        skippedFileNames: MutableList<String>,
+        triage: ImportTriage,
         songFileNames: ImportPlanner.SongFileNames,
     ): List<ImportPlan.SetlistEntry> {
         val incoming = files.mapNotNull { (file, origin) ->
             yield()
             val parsed = setlistRepository.parseSetlist(file.bytes.decodeLibraryText())
             if (parsed == null) {
-                skippedFileNames += file.name
+                triage.skippedFileNames += file.name
                 return@mapNotNull null
             }
             ImportPlanner.IncomingSetlist(setlist = parsed.setlist, sourceFileName = file.name, origin = origin, isDated = parsed.isDated)
@@ -235,6 +231,13 @@ class PrepareImportUseCaseImpl internal constructor(
         return !LibraryFiles.isHiddenFileName(name) &&
                 (bytes.isNotEmpty() || isTooLarge) &&
                 (extension in SONG_EXTENSIONS || extension in DOCUMENT_EXTENSIONS || name.endsWith(LibraryFiles.SETLIST_EXTENSION, ignoreCase = true))
+    }
+
+    /** The files of the batch that are left out, by why, as the preparation comes across them. */
+    private class ImportTriage {
+        val skippedFileNames = mutableListOf<String>()
+        val unreadableDocumentFileNames = mutableListOf<String>()
+        val oversizedFileNames = mutableListOf<String>()
     }
 
     /** A file of the batch and which picked file it came out of, see [ImportPlan.SongEntry.origin]. */

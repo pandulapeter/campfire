@@ -42,24 +42,58 @@ class ImportFilesUseCaseImpl internal constructor(
         resolution: ImportConflictResolution,
         onProgress: (ImportProgress) -> Unit,
     ): ImportResult {
+        val run = ImportRun(plan = plan, resolution = resolution, onProgress = onProgress)
+        try {
+            run.writeSongs()
+            run.writeSetlists()
+            onProgress(ImportProgress(ImportProgress.Phase.IMPORTING, run.total, run.total))
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Exception) {
+            // Stop at the first write failure: setlists must never be remapped to songs that did not reach storage.
+            run.failAt(exception)
+        } finally {
+            // One change to each list at the end rather than one per file, each of which would rebuild the lists
+            // downstream, and no read of the directory at all: every file written is in hand as what it became. It runs
+            // even when a write failed or the import was cancelled halfway, since the files written before that are on
+            // disk and would otherwise be missing from the lists until something else rescanned them.
+            onProgress(ImportProgress(ImportProgress.Phase.FINISHING))
+            withContext(NonCancellable) {
+                songRepository.adoptImported(run.importedSongs)
+                setlistRepository.adoptImported(run.importedSetlists)
+            }
+        }
+        return run.result()
+    }
+
+    /** One import being written: what has been written, left out and reached so far, which the result is made of. */
+    private inner class ImportRun(
+        private val plan: ImportPlan,
+        private val resolution: ImportConflictResolution,
+        private val onProgress: (ImportProgress) -> Unit,
+    ) {
         val importedSongs = mutableListOf<Song>()
-        val duplicateFileNames = mutableListOf<String>()
-        val convertedSongFileNames = mutableListOf<String>()
-        // Where each imported file ended up, for the setlists below. Only files that held exactly one song are in
-        // here: a file that held several has no single name a setlist could have been pointing at. Kept per picked file
-        // the song came out of, since names are only unique within one archive.
-        val storedSongFileNamesByOrigin = mutableMapOf<Int?, MutableMap<String, String>>()
+        private val duplicateFileNames = mutableListOf<String>()
+        private val convertedSongFileNames = mutableListOf<String>()
+
+        /**
+         * Where each imported file ended up, for the setlists. Only files that held exactly one song are in here: a file
+         * that held several has no single name a setlist could have been pointing at. Kept per picked file the song came
+         * out of, since names are only unique within one archive.
+         */
+        private val storedSongFileNamesByOrigin = mutableMapOf<Int?, MutableMap<String, String>>()
 
         val importedSetlists = mutableListOf<Setlist>()
-        val skippedConflicts = mutableListOf<String>()
+        private val skippedConflicts = mutableListOf<String>()
         val total = plan.songs.size + plan.setlists.size
-        var processedSongs = 0
-        var processedSetlists = 0
-        var currentFileName: String? = null
-        var isFailed = false
-        var failedFileNames = emptyList<String>()
-        var unprocessedFileNames = emptyList<String>()
-        try {
+        private var processedSongs = 0
+        private var processedSetlists = 0
+        private var currentFileName: String? = null
+        private var isFailed = false
+        private var failedFileNames = emptyList<String>()
+        private var unprocessedFileNames = emptyList<String>()
+
+        suspend fun writeSongs() {
             // Where each song of the plan ended up, by its place in the plan: a repeat of an earlier song of the batch
             // is wherever that one went, which was not known when the plan was made.
             val storedNames = arrayOfNulls<String>(plan.songs.size)
@@ -136,7 +170,9 @@ class ImportFilesUseCaseImpl internal constructor(
                 processedSongs++
                 currentFileName = null
             }
+        }
 
+        suspend fun writeSetlists() {
             val librarySetlists = setlistRepository.loadSetlistsIfNeeded().orEmpty()
             val replacedSetlistFileNames = mutableSetOf<String>()
             // Planned again on the names the songs actually got: a song kept next to the one it collided with is
@@ -181,29 +217,18 @@ class ImportFilesUseCaseImpl internal constructor(
                 processedSetlists++
                 currentFileName = null
             }
-            onProgress(ImportProgress(ImportProgress.Phase.IMPORTING, total, total))
-        } catch (exception: CancellationException) {
-            throw exception
-        } catch (exception: Exception) {
-            // Stop at the first write failure: setlists must never be remapped to songs that did not reach storage.
+        }
+
+        fun failAt(exception: Exception) {
             println("Could not import ${currentFileName ?: "the batch"}: ${exception.message}")
             isFailed = true
             failedFileNames = listOfNotNull(currentFileName)
             val remaining = plan.songs.drop(processedSongs).map { it.sourceFileName ?: it.fileName } +
                 plan.setlists.drop(processedSetlists).map { it.sourceFileName }
             unprocessedFileNames = if (currentFileName == null) remaining else remaining.drop(1)
-        } finally {
-            // One change to each list at the end rather than one per file, each of which would rebuild the lists
-            // downstream, and no read of the directory at all: every file written is in hand as what it became. It runs
-            // even when a write failed or the import was cancelled halfway, since the files written before that are on
-            // disk and would otherwise be missing from the lists until something else rescanned them.
-            onProgress(ImportProgress(ImportProgress.Phase.FINISHING))
-            withContext(NonCancellable) {
-                songRepository.adoptImported(importedSongs)
-                setlistRepository.adoptImported(importedSetlists)
-            }
         }
-        return ImportResult(
+
+        fun result() = ImportResult(
             importedSongFileNames = importedSongs.map { it.fileName },
             importedSetlistFileNames = importedSetlists.map { it.fileName },
             skippedFileNames = plan.skippedFileNames,
