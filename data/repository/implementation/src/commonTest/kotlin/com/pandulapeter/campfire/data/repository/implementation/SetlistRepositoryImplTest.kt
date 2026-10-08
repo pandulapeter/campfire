@@ -352,6 +352,24 @@ class SetlistRepositoryImplTest {
         assertTrue(localSource.saves.isEmpty())
     }
 
+    @Test
+    fun `a save waits for the library lock that a sync run holds`() = runTest {
+        val localSource = FakeSetlistLocalSource(emptyList())
+        val lock = LibraryFileLock()
+        val repository = SetlistRepositoryImpl(localSource, lock, LibraryChanges(), Logger.Standard)
+        val release = CompletableDeferred<Unit>()
+        launch { lock.withLock { release.await() } }
+        runCurrent()
+
+        val write = launch { repository.saveSetlist(setlist(FILE_NAME, "a.cho")) }
+        runCurrent()
+
+        assertTrue(localSource.saves.isEmpty())
+        release.complete(Unit)
+        write.join()
+        assertEquals(listOf(FILE_NAME), localSource.saves.map { it.fileName })
+    }
+
     /** A setlists directory held in a map, whose writes can be held back until the test lets them through. */
     private class FakeSetlistLocalSource(setlists: List<Setlist>) : SetlistLocalSource {
 

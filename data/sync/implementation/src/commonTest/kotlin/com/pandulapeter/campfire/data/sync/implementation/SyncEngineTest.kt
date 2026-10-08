@@ -1815,7 +1815,8 @@ class SyncEngineTest {
     /**
      * A save the way the song and setlist repositories make one: under [lock], from what it checks the file against to
      * its write, which goes straight into the map rather than through the hooks a test stands in the engine's own
-     * writes with.
+     * writes with. The repositories' half, that they take the lock at all, is tested in `SongRepositoryImplTest` and
+     * `SetlistRepositoryImplTest`.
      */
     private suspend fun saveUnderTheLock(lock: LibraryFileLock, local: FakeLibraryFileLocalSource, key: SyncKey, bytes: ByteArray) =
         lock.withLock { local.files[key] = bytes }

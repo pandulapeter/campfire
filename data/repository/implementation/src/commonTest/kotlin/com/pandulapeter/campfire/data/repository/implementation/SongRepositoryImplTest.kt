@@ -200,6 +200,42 @@ class SongRepositoryImplTest {
         assertEquals(listOf("b.cho"), repository.loadSongsIfNeeded()?.map { it.fileName })
     }
 
+    @Test
+    fun `a save waits for the library lock that a sync run holds`() = runTest {
+        val localSource = FakeSongLocalSource(mapOf(FILE_NAME to "original"))
+        val lock = LibraryFileLock()
+        val repository = SongRepositoryImpl(localSource, SongContentRepositoryImpl(localSource, Logger.Standard), lock, LibraryChanges(), Logger.Standard)
+        val release = CompletableDeferred<Unit>()
+        launch { lock.withLock { release.await() } }
+        runCurrent()
+
+        val write = launch { repository.saveSong(SongContent(FILE_NAME, "saved")) }
+        runCurrent()
+
+        assertEquals("original", localSource.files[FILE_NAME])
+        release.complete(Unit)
+        write.join()
+        assertEquals("saved", localSource.files[FILE_NAME])
+    }
+
+    @Test
+    fun `a deletion waits for the library lock that a sync run holds`() = runTest {
+        val localSource = FakeSongLocalSource(mapOf(FILE_NAME to "original"))
+        val lock = LibraryFileLock()
+        val repository = SongRepositoryImpl(localSource, SongContentRepositoryImpl(localSource, Logger.Standard), lock, LibraryChanges(), Logger.Standard)
+        val release = CompletableDeferred<Unit>()
+        launch { lock.withLock { release.await() } }
+        runCurrent()
+
+        val deletion = launch { repository.deleteSong(FILE_NAME) }
+        runCurrent()
+
+        assertTrue(FILE_NAME in localSource.files)
+        release.complete(Unit)
+        deletion.join()
+        assertTrue(FILE_NAME !in localSource.files)
+    }
+
     /** A library held in a map, with only the calls a save, a creation and a deletion make answered. */
     private class FakeSongLocalSource(files: Map<String, String>) : SongLocalSource {
 
