@@ -21,7 +21,7 @@ class PdfFiltersTest {
     }
 
     @Test
-    fun supportsFlateAsciiHexAndAscii85IncludingPartialGroups() {
+    fun `supports Flate ASCIIHex and ASCII85 including partial groups`() {
         assertEquals("Readable", decode(PdfTestWriter.storedZlib("Readable".encodeToByteArray()), "FlateDecode").decodeToString())
         assertEquals("AB", decode("41 42>".encodeToByteArray(), "ASCIIHexDecode").decodeToString())
         assertContentEquals(byteArrayOf(0xf0.toByte()), decode("F>".encodeToByteArray(), "ASCIIHexDecode"))
@@ -32,7 +32,7 @@ class PdfFiltersTest {
     }
 
     @Test
-    fun readsFlateWithAMissingOrTrailingChecksum() {
+    fun `reads Flate with a missing or trailing checksum`() {
         val encoded = PdfTestWriter.storedZlib("Readable".encodeToByteArray())
         assertEquals("Readable", decode(encoded, "FlateDecode").decodeToString())
         assertEquals("Readable", decode(encoded.copyOf(encoded.size - 4), "FlateDecode").decodeToString())
@@ -41,7 +41,7 @@ class PdfFiltersTest {
     }
 
     @Test
-    fun supportsLzwClearEndAndTheRepeatedPrefixCase() {
+    fun `supports LZW clear end and the repeated prefix case`() {
         val codes = listOf(256, 65, 66, 258, 260, 257)
         val bytes = ByteArray((codes.size * 9 + 7) / 8)
         var bit = 0
@@ -53,7 +53,7 @@ class PdfFiltersTest {
     }
 
     @Test
-    fun reconstructsPngAndTiffPredictorsAndRejectsInvalidDimensions() {
+    fun `reconstructs PNG and tiff predictors and rejects invalid dimensions`() {
         fun predict(bytes: ByteArray, params: String) = decode(PdfTestWriter.storedZlib(bytes), "FlateDecode", "/DecodeParms << $params >>")
         assertContentEquals(byteArrayOf(10, 20, 30, 11, 22, 33), predict(byteArrayOf(1, 10, 10, 10, 2, 1, 2, 3), "/Predictor 15 /Columns 3"))
         assertContentEquals(byteArrayOf(10, 20, 30), predict(byteArrayOf(10, 10, 10), "/Predictor 2 /Columns 3"))

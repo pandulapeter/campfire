@@ -13,6 +13,7 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
@@ -20,7 +21,7 @@ import kotlin.time.measureTime
 
 class PdfFileTest {
     @Test
-    fun recoveryScanOverManyUnterminatedStreamsIsFast() {
+    fun `recovery scan over many unterminated streams is fast`() {
         val text = buildString {
             append("%PDF-1.7\n")
             repeat(20_000) { append("$it 0 obj\n<< /A 1 >>\nstream\nab\n") }
@@ -30,7 +31,7 @@ class PdfFileTest {
     }
 
     @Test
-    fun streamsWithoutALengthEndAtTheirEndstreamInARecoveryScan() = runTest {
+    fun `streams without a length end at their endstream in a recovery scan`() = runTest {
         val content = "BT /F1 10 Tf 50 700 Td (Unmeasured) Tj ET"
         val bytes = PdfTestWriter.song(content, brokenXref = true).decodeToString().replace("/Length ${content.length} ", "")
         assertTrue("/Length" !in bytes)
@@ -38,7 +39,7 @@ class PdfFileTest {
     }
 
     @Test
-    fun aLengthPointingIntoSharedWhitespaceIsLinear() {
+    fun `a length pointing into shared whitespace is linear`() {
         val placeholder = "0000000000"
         val header = "%PDF-1.7\n"
         val objects = List(5_000) { "$it 0 obj\n<< /Length $placeholder >>\nstream\nab\nendstream\nendobj\n" }
@@ -59,7 +60,7 @@ class PdfFileTest {
     }
 
     @Test
-    fun objectStreamHeadersAreReadOnceAndAnUnlistedObjectIsNotThere() {
+    fun `object stream headers are read once and an unlisted object is not there`() {
         val count = 20_000
         var bytes = "%PDF-1.7\n".encodeToByteArray()
         val catalog = bytes.size
@@ -89,7 +90,7 @@ class PdfFileTest {
     }
 
     @Test
-    fun theNewestDefinitionWinsInARecoveryScan() = runTest {
+    fun `the newest definition wins in a recovery scan`() = runTest {
         val writer = PdfTestWriter()
         writer.add("<< /Type /Catalog /Pages 2 0 R >>")
         writer.add("<< /Type /Pages /Kids [3 0 R] /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> >>")
@@ -104,5 +105,19 @@ class PdfFileTest {
         suspend fun text(bytes: ByteArray) = PdfTextExtractor.extract(bytes).pages.single().lines.single().spans.joinToString("") { it.text }
         assertEquals("Newer", text(bytes))
         assertEquals("Newest", text(bytes + "3 0 obj\n<< /Type /Page /Parent 2 0 R /Contents 7 0 R >>\nendobj\n".encodeToByteArray()))
+    }
+
+    @Test
+    fun `cached reference chains resolve every time and cycles are rejected`() {
+        val writer = PdfTestWriter()
+        writer.add("2 0 R")
+        writer.add("<< /Type /Catalog >>")
+        val file = PdfFile(writer.write())
+        assertEquals("Catalog", file.dictionary(PdfReference(1))?.get("Type").name())
+        assertEquals("Catalog", file.dictionary(PdfReference(1))?.get("Type").name())
+        val cyclic = PdfTestWriter()
+        cyclic.add("2 0 R")
+        cyclic.add("1 0 R")
+        assertFailsWith<IllegalArgumentException> { PdfFile(cyclic.write()).resolve(PdfReference(1)) }
     }
 }

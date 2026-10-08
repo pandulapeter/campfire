@@ -35,7 +35,6 @@ import com.pandulapeter.campfire.presentation.ui.screens.setlists.SetlistWithSon
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.details
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.mergedSetlistDetails
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.withSongTicked
-import com.pandulapeter.campfire.presentation.ui.search.SearchableSong
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.Companion.SETLISTS_SEARCH_KEY
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -128,7 +127,9 @@ internal class SetlistsController(
         if (normalizedQuery.isEmpty()) {
             setlists
         } else {
-            setlists.filter { it.setlist.matchesSearch(normalizedQuery = normalizedQuery, songs = indexed.search.byFileName) }
+            setlists.filter {
+                it.setlist.matchesSearch(normalizedQuery = normalizedQuery, songs = indexed.search.byFileName, normalizeSearchText = normalizeSearchText)
+            }
         }
     }.flowOn(Dispatchers.Default).asState(scope, emptyList())
 
@@ -141,12 +142,7 @@ internal class SetlistsController(
      * something different, and only one of them by making a setlist.
      */
     val setlistsPlaceholder = combine(screenData, setlistsWithSongs, visibleSetlists, isImporting) { screenData, setlistsWithSongs, visibleSetlists, isImporting ->
-        when {
-            setlistsWithSongs.isNotEmpty() -> null
-            screenData.data?.setlists.isNullOrEmpty() -> screenData.emptyPlaceholder(Placeholder.NO_SETLISTS, isImporting)
-            visibleSetlists.isEmpty() -> Placeholder.ALL_SETLISTS_HIDDEN
-            else -> Placeholder.NO_MATCHING_SETLISTS
-        }
+        setlistListPlaceholder(screenData = screenData, setlistsWithSongs = setlistsWithSongs, visibleSetlists = visibleSetlists, isImporting = isImporting)
     }.asState(scope, Placeholder.LOADING)
 
     /**
@@ -266,8 +262,7 @@ internal class SetlistsController(
      * would be recomputed from an order one or more moves out of date.
      *
      * [songFileNames] is the order the screen was showing, which a sync run or another write may have overtaken by the
-     * time this one runs: an entry the drag never saw must not be moved by it, so the songs it did see are dealt back
-     * into the slots they already occupied and everything else stays exactly where it is.
+     * time this one runs, so it is merged into the setlist as the library has it then ([withSongOrder]).
      *
      * [onNotWritten] is called when nothing was written: the write failed, the setlist is gone, or it is archived and
      * so refused the order. A drag's screen holds the order it drew until the library agrees with it, which a write
@@ -276,17 +271,7 @@ internal class SetlistsController(
     fun reorderSetlist(setlistFileName: String, songFileNames: List<String>, onNotWritten: () -> Unit = {}) = messageSink.launchLibraryChange {
         var isWritten = false
         try {
-            isWritten = updateEditableSetlist(setlistFileName) { setlist ->
-                val reordered = songFileNames.mapNotNull { songFileName ->
-                    setlist.entries.firstOrNull { it.songFileName == songFileName }
-                }.iterator()
-                val movedSongFileNames = songFileNames.toSet()
-                setlist.copy(
-                    entries = setlist.entries.map { entry ->
-                        if (entry.songFileName in movedSongFileNames && reordered.hasNext()) reordered.next() else entry
-                    },
-                )
-            }?.isArchived == false
+            isWritten = updateEditableSetlist(setlistFileName) { it.withSongOrder(songFileNames) }?.isArchived == false
         } finally {
             if (!isWritten) onNotWritten()
         }
@@ -305,17 +290,4 @@ internal class SetlistsController(
     fun setShouldShowArchivedSetlists(value: Boolean) = changeUserPreferences { copy(shouldShowArchivedSetlists = value) }
 
     fun setSetlistSortingMode(value: UserPreferences.SetlistSortingMode) = changeUserPreferences { copy(setlistSortingMode = value) }
-
-    /**
-     * Whether a setlist answers the setlists screen's search. The songs are looked up in the library that was
-     * normalized once ([indexedSongs]) rather than normalized here, since this runs over every setlist on every
-     * character typed; the setlist's own two lines are short enough to fold on the spot.
-     *
-     * A song whose file has gone missing can only be matched by the name in the entry, which is not what the user
-     * searched for, so it matches nothing.
-     */
-    private fun Setlist.matchesSearch(normalizedQuery: String, songs: Map<String, SearchableSong>): Boolean =
-        normalizeSearchText(title).contains(normalizedQuery) ||
-            normalizeSearchText(description).contains(normalizedQuery) ||
-            entries.any { entry -> songs[entry.songFileName]?.matches(normalizedQuery) == true }
 }

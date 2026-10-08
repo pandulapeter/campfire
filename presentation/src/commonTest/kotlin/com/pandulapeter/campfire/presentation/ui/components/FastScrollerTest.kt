@@ -24,7 +24,7 @@ import kotlin.test.assertTrue
 class FastScrollerTest {
 
     @Test
-    fun pointerBurstsScrollToTheLatestPositionOnEachFrame() = runTest {
+    fun `pointer bursts scroll to the latest position on each frame`() = runTest {
         val clock = BroadcastFrameClock()
         val requests = Channel<Float>(Channel.CONFLATED)
         val positions = mutableListOf<Float>()
@@ -52,7 +52,7 @@ class FastScrollerTest {
     }
 
     @Test
-    fun aSlowLayoutKeepsTheFinalRequestEvenWhenThePointerReturnsToAnEarlierPosition() = runTest {
+    fun `a slow layout keeps the final request even when the pointer returns to an earlier position`() = runTest {
         val clock = BroadcastFrameClock()
         val requests = Channel<Float>(Channel.CONFLATED)
         val layoutFinished = CompletableDeferred<Unit>()

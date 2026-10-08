@@ -26,7 +26,7 @@ import kotlin.time.measureTime
 
 class PdfTextExtractorTest {
     @Test
-    fun oversizedShownStringsStopAtTheGlyphBudgetAndCancellationPropagates() = runTest {
+    fun `oversized shown strings stop at the glyph budget and cancellation propagates`() = runTest {
         val source = ReadableDocuments
         assertNull(source.extract(ImportedFile("huge.pdf", PdfTestWriter.song("BT /F1 10 Tf (" + "a".repeat(PdfTextExtractor.MAX_GLYPHS + 1) + ") Tj ET"))))
         val cancelled = launch(start = CoroutineStart.UNDISPATCHED) {
@@ -39,7 +39,7 @@ class PdfTextExtractorTest {
     }
 
     @Test
-    fun monospaceGapPaddingCountsAgainstTheTextBudget() = runTest {
+    fun `monospace gap padding counts against the text budget`() = runTest {
         val content = buildString {
             for (y in 100..12_100 step 3_000) append("BT /F1 1000 Tf 1 0 0 1 0 $y Tm (${"A".repeat(3_400)}) Tj ET ")
             append("BT /F1 0.1 Tf 1 0 0 1 0 -500 Tm ")
@@ -52,7 +52,7 @@ class PdfTextExtractorTest {
     }
 
     @Test
-    fun manyFontSelectionsOfALargeFontAreFast() = runTest {
+    fun `many font selections of a large font are fast`() = runTest {
         val font = "/Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding /FirstChar 0 /Widths [${"600 ".repeat(90_000)}]"
         val bytes = PdfTestWriter.song("BT 50 700 Td " + "/F1 10 Tf ".repeat(100_000) + "(hi) Tj ET", font)
         lateinit var text: String
@@ -62,18 +62,7 @@ class PdfTextExtractorTest {
     }
 
     @Test
-    fun equalValuesParsedSeparatelyHashAlike() {
-        fun parse(text: String) = PdfSyntax(text.encodeToByteArray()).next()
-        val first = parse("<< /Widths [1 2 3] /Name /A >>")
-        val second = parse("<< /Widths [1 2 3] /Name /A >>")
-        val different = parse("<< /Widths [1 2 4] /Name /A >>")
-        assertEquals(first, second)
-        assertEquals(first.hashCode(), second.hashCode())
-        assertTrue(first != different)
-    }
-
-    @Test
-    fun aFormInvokedManyTimesHitsTheWorkBudget() = runTest {
+    fun `a form invoked many times hits the work budget`() = runTest {
         val writer = PdfTestWriter()
         writer.add("<< /Type /Catalog /Pages 2 0 R >>")
         writer.add("<< /Type /Pages /Kids [3 0 R] /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> /XObject << /X 6 0 R >> >> >>")
@@ -87,7 +76,7 @@ class PdfTextExtractorTest {
     }
 
     @Test
-    fun aSmallFormUsedOnEveryPageIsFree() = runTest {
+    fun `a small form used on every page is free`() = runTest {
         val writer = PdfTestWriter()
         val pages = 300
         writer.add("<< /Type /Catalog /Pages 2 0 R >>")
@@ -102,7 +91,7 @@ class PdfTextExtractorTest {
     }
 
     @Test
-    fun sharedContentsAreChargedBeforeTheyAreCopied() = runTest {
+    fun `shared contents are charged before they are copied`() = runTest {
         val writer = PdfTestWriter()
         val pages = 50
         writer.add("<< /Type /Catalog /Pages 2 0 R >>")
@@ -116,7 +105,7 @@ class PdfTextExtractorTest {
     }
 
     @Test
-    fun manyStreamsSharingOneFarEndstreamHitTheInputBudget() = runTest {
+    fun `many streams sharing one far endstream hit the input budget`() = runTest {
         val streams = 200
         val objects = mutableListOf(
             "<< /Type /Catalog /Pages 2 0 R >>",
@@ -139,7 +128,7 @@ class PdfTextExtractorTest {
     }
 
     @Test
-    fun aMalformedSecondPageDoesNotCostTheFirst() = runTest {
+    fun `a malformed second page does not cost the first`() = runTest {
         val bytes = pages("BT /F1 10 Tf 50 700 Td (hi) Tj ET", "BT /F1 10 Tf 50 700 Td (bye) Tj ET", secondPage = "/MediaBox [0 0 0 0]")
         val extracted = PdfTextExtractor.extract(bytes).pages
         assertEquals(2, extracted.size)
@@ -148,13 +137,13 @@ class PdfTextExtractorTest {
     }
 
     @Test
-    fun aStrayParenthesisInOnePageStreamOnlyLosesThatPage() = runTest {
+    fun `a stray parenthesis in one page stream only loses that page`() = runTest {
         val bytes = pages("BT /F1 10 Tf 50 700 Td (hi) Tj ET", "BT /F1 10 Tf 50 700 Td (bye) Tj ET ) q")
         assertEquals("hi", PdfTextExtractor.extract(bytes).pages.first().lines.single().spans.joinToString("") { it.text })
     }
 
     @Test
-    fun aMalformedFontLosesOnlyTheTextShownInIt() = runTest {
+    fun `a malformed font loses only the text shown in it`() = runTest {
         val bytes = PdfTestWriter.song("BT /F1 10 Tf 50 700 Td (Readable text) Tj /F2 10 Tf <0001> Tj ET", extra = { writer ->
             writer.add("<< /Type /Font /Subtype /Type0 /BaseFont /Broken /Encoding /Identity-H /DescendantFonts [7 0 R] >>")
             writer.add("<< /Type /Font /Subtype /CIDFontType2 /W [70000 [500]] >>")
@@ -163,13 +152,13 @@ class PdfTextExtractorTest {
     }
 
     @Test
-    fun aDocumentWhoseOnlyPageIsMalformedIsStillUnreadable() = runTest {
+    fun `a document whose only page is malformed is still unreadable`() = runTest {
         val bytes = PdfTestWriter.song("BT /F1 10 Tf 50 700 Td (hi) Tj ET").decodeToString().replace("/MediaBox [0 0 612 792]", "/MediaBox [0 0 0 0]")
         assertFailsWith<IllegalArgumentException> { PdfTextExtractor.extract(bytes.encodeToByteArray()) }
     }
 
     @Test
-    fun aDocumentOfMoreThanTwoThousandPagesIsStillRejected() = runTest {
+    fun `a document of more than two thousand pages is still rejected`() = runTest {
         val count = 2_100
         val writer = PdfTestWriter()
         writer.add("<< /Type /Catalog /Pages 2 0 R >>")
@@ -181,7 +170,7 @@ class PdfTextExtractorTest {
     }
 
     @Test
-    fun aFormThatInvokesItselfIsSkipped() = runTest {
+    fun `a form that invokes itself is skipped`() = runTest {
         val writer = PdfTestWriter()
         writer.add("<< /Type /Catalog /Pages 2 0 R >>")
         writer.add("<< /Type /Pages /Kids [3 0 R] /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> /XObject << /X 6 0 R >> >> >>")
@@ -194,14 +183,14 @@ class PdfTextExtractorTest {
     }
 
     @Test
-    fun aRotationJustShortOfAQuarterTurnReadsAsTheNearestOne() = runTest {
+    fun `a rotation just short of a quarter turn reads as the nearest one`() = runTest {
         val upright = PdfTestWriter.song("BT /F1 10 Tf 50 700 Td (Upright) Tj ET")
         val nearly = upright.decodeToString().replace("<< /Type /Page /Parent 2 0 R", "<< /Type /Page /Rotate 359 /Parent 2 0 R").encodeToByteArray()
         assertEquals(PdfTextExtractor.extract(upright), PdfTextExtractor.extract(nearly))
     }
 
     @Test
-    fun manyFullWidthRowsSplitQuickly() = runTest {
+    fun `many full width rows split quickly`() = runTest {
         val rows = 14_000
         val height = rows * 12 + 100
         fun page(fullWidthRows: Boolean) = PdfTestWriter.song(
@@ -231,7 +220,7 @@ class PdfTextExtractorTest {
     }
 
     @Test
-    fun glyphsMappedToALoneSurrogateAreSkipped() = runTest {
+    fun `glyphs mapped to a lone surrogate are skipped`() = runTest {
         suspend fun text(differences: String, content: String) = PdfTextExtractor.extract(
             PdfTestWriter.song("BT /F1 10 Tf 50 700 Td $content Tj ET", "/Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding << /BaseEncoding /WinAnsiEncoding /Differences [$differences] >>"),
         ).pages.single().lines.single().spans.joinToString("") { it.text }
@@ -244,29 +233,7 @@ class PdfTextExtractorTest {
     }
 
     @Test
-    fun type3WidthsUseTheFontMatrix() {
-        val file = PdfFile(PdfTestWriter.song("BT /F1 10 Tf 50 700 Td (text) Tj ET"))
-        fun font(matrix: String) = PdfFont(
-            file,
-            PdfSyntax("<< /Subtype /Type3 /FontMatrix [$matrix 0 0 $matrix 0 0] /FirstChar 65 /Widths [100] /Encoding << /Differences [65 /A] >> >>".encodeToByteArray()).next() as PdfDictionary,
-        )
-        assertEquals(1000.0, font("0.01").decode(byteArrayOf(65)).first().width, 1e-9)
-        assertEquals(100.0, font("0.001").decode(byteArrayOf(65)).first().width)
-        assertEquals(500.0, font("0.01").decode(byteArrayOf(66)).first().width)
-    }
-
-    @Test
-    fun overlappingCidWidthRangesAreRejectedQuickly() {
-        val file = PdfFile(PdfTestWriter.song("BT /F1 10 Tf 50 700 Td (text) Tj ET"))
-        val dictionary = PdfSyntax(
-            "<< /Subtype /Type0 /DescendantFonts [<< /Subtype /CIDFontType2 /W [${"0 65535 500 ".repeat(33_000)}] >>] >>".encodeToByteArray(),
-        ).next() as PdfDictionary
-        val elapsed = measureTime { assertFailsWith<IllegalArgumentException> { PdfFont(file, dictionary) } }
-        assertTrue(elapsed < 2.seconds, "Took $elapsed")
-    }
-
-    @Test
-    fun manyFontsSharingOneWidthArrayHitTheDocumentBudget() = runTest {
+    fun `many fonts sharing one width array hit the document budget`() = runTest {
         val fonts = 20
         val writer = PdfTestWriter()
         writer.add("<< /Type /Catalog /Pages 2 0 R >>")
@@ -282,17 +249,7 @@ class PdfTextExtractorTest {
     }
 
     @Test
-    fun cidWidthsReadExplicitListsAndRanges() {
-        val file = PdfFile(PdfTestWriter.song("BT /F1 10 Tf 50 700 Td (text) Tj ET"))
-        val font = PdfFont(
-            file,
-            PdfSyntax("<< /Subtype /Type0 /DescendantFonts [<< /Subtype /CIDFontType2 /W [0 [500 600] 10 20 700] >>] >>".encodeToByteArray()).next() as PdfDictionary,
-        )
-        assertEquals(listOf(500.0, 600.0, 700.0), font.decode(byteArrayOf(0, 0, 0, 1, 0, 15)).map { it.width }.toList())
-    }
-
-    @Test
-    fun aHeaderAfterJunkIsAccepted() = runTest {
+    fun `a header after junk is accepted`() = runTest {
         val song = PdfTestWriter.song("BT /F1 10 Tf 50 700 Td (hi) Tj ET")
         val extracted = PdfTextExtractor.extract("junk line\n".encodeToByteArray() + song)
         assertEquals("hi", extracted.pages.single().lines.single().spans.joinToString("") { it.text })
@@ -300,7 +257,7 @@ class PdfTextExtractorTest {
     }
 
     @Test
-    fun actualTextOnOneBaselineReplacesItsGlyphs() = runTest {
+    fun `actual text on one baseline replaces its glyphs`() = runTest {
         suspend fun lines(content: String) = PdfTextExtractor.extract(PdfTestWriter.song(content)).pages.single().lines
             .map { line -> line.spans.joinToString("") { it.text } }.filter { it.isNotEmpty() }
         val shown = "BT /F1 10 Tf 1 0 0 1 60 700 Tm (b) Tj 1 0 0 1 50 700 Tm (a) Tj ET"
@@ -313,21 +270,7 @@ class PdfTextExtractorTest {
     }
 
     @Test
-    fun cachedReferenceChainsResolveEveryTimeAndCyclesAreRejected() {
-        val writer = PdfTestWriter()
-        writer.add("2 0 R")
-        writer.add("<< /Type /Catalog >>")
-        val file = PdfFile(writer.write())
-        assertEquals("Catalog", file.dictionary(PdfReference(1))?.get("Type").name())
-        assertEquals("Catalog", file.dictionary(PdfReference(1))?.get("Type").name())
-        val cyclic = PdfTestWriter()
-        cyclic.add("2 0 R")
-        cyclic.add("1 0 R")
-        assertFailsWith<IllegalArgumentException> { PdfFile(cyclic.write()).resolve(PdfReference(1)) }
-    }
-
-    @Test
-    fun inheritedRotationKeepsHorizontalTextAndDropsTheOtherOrientation() = runTest {
+    fun `inherited rotation keeps horizontal text and drops the other orientation`() = runTest {
         val writer = PdfTestWriter()
         writer.add("<< /Type /Catalog /Pages 2 0 R >>")
         writer.add("<< /Type /Pages /Kids [3 0 R] /MediaBox [0 0 612 792] /Rotate 90 /Resources << /Font << /F1 4 0 R >> >> >>")
@@ -341,7 +284,7 @@ class PdfTextExtractorTest {
     }
 
     @Test
-    fun dropsRunningHeadersAndPageNumbersButKeepsParagraphGaps() = runTest {
+    fun `drops running headers and page numbers but keeps paragraph gaps`() = runTest {
         val writer = PdfTestWriter()
         writer.add("<< /Type /Catalog /Pages 2 0 R >>")
         writer.add("<< /Type /Pages /Kids [3 0 R 4 0 R] /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> >>")
@@ -355,7 +298,7 @@ class PdfTextExtractorTest {
     }
 
     @Test
-    fun dropsPageCountFootersOnASinglePageButKeepsTheSameTextInTheBody() = runTest {
+    fun `drops page count footers on a single page but keeps the same text in the body`() = runTest {
         val bytes = PdfTestWriter.song("BT /F1 10 Tf 50 700 Td (1 / 1) Tj " +
             "1 0 0 1 50 684 Tm (Song lyrics) Tj 1 0 0 1 50 20 Tm (1 / 1) Tj ET")
         val lines = PdfTextExtractor.extract(bytes).pages.single().lines
@@ -363,14 +306,14 @@ class PdfTextExtractorTest {
     }
 
     @Test
-    fun keepsATimeSignatureAtTheTopOfThePage() = runTest {
+    fun `keeps a time signature at the top of the page`() = runTest {
         val bytes = PdfTestWriter.song("BT /F1 10 Tf 50 780 Td (3/4) Tj 1 0 0 1 50 700 Tm (Song lyrics) Tj 1 0 0 1 50 20 Tm (2 / 3) Tj ET")
         val lines = PdfTextExtractor.extract(bytes).pages.single().lines
         assertEquals(listOf("3/4", "", "Song lyrics", "", "2 / 3"), lines.map { it.spans.joinToString("") { span -> span.text } })
     }
 
     @Test
-    fun rejectsInvalidPageBoundsAndCyclicPagesWithoutFailingTheSource() = runTest {
+    fun `rejects invalid page bounds and cyclic pages without failing the source`() = runTest {
         for (tree in listOf("/Kids [2 0 R]", "/Kids [3 0 R] /MediaBox [0 0 0 0]")) {
             val writer = PdfTestWriter()
             writer.add("<< /Type /Catalog /Pages 2 0 R >>")
@@ -381,13 +324,13 @@ class PdfTextExtractorTest {
     }
 
     @Test
-    fun acceptsPageBoxesWrittenWithTheirCornersInEitherOrder() = runTest {
+    fun `accepts page boxes written with their corners in either order`() = runTest {
         val bytes = PdfTestWriter.song("BT /F1 10 Tf 50 700 Td (Flipped) Tj ET").decodeToString().replace("/MediaBox [0 0 612 792]", "/MediaBox [612 792 0 0]")
         assertEquals("Flipped", PdfTextExtractor.extract(bytes.encodeToByteArray()).pages.single().lines.single().spans.joinToString("") { it.text })
     }
 
     @Test
-    fun recoversFromACorruptCompressedXrefStreamByScanning() = runTest {
+    fun `recovers from a corrupt compressed xref stream by scanning`() = runTest {
         val writer = PdfTestWriter()
         writer.add("<< /Type /Catalog /Pages 2 0 R >>")
         writer.add("<< /Type /Pages /Kids [3 0 R] /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> >>")
@@ -402,7 +345,7 @@ class PdfTextExtractorTest {
     }
 
     @Test
-    fun readsObjectStreamsAndXrefStreamsWithPngPrediction() = runTest {
+    fun `reads object streams and xref streams with PNG prediction`() = runTest {
         for (predictor in listOf(false, true)) {
             val writer = PdfTestWriter()
             writer.add("<< /Type /Catalog /Pages 2 0 R >>")
@@ -427,7 +370,7 @@ class PdfTextExtractorTest {
     }
 
     @Test
-    fun incrementalSavesUseTheLatestObjectAndRejectCyclicPrevChains() = runTest {
+    fun `incremental saves use the latest object and reject cyclic prev chains`() = runTest {
         val base = PdfTestWriter.song("BT /F1 10 Tf 50 700 Td (Old) Tj ET")
         val previous = Regex("startxref\\s+([0-9]+)").find(base.decodeToString())!!.groupValues[1]
         val content = "BT /F1 10 Tf 50 700 Td (New) Tj ET"
@@ -442,7 +385,7 @@ class PdfTextExtractorTest {
     }
 
     @Test
-    fun formXobjectsUseTheirResourcesAndMatrixAndIgnoreImages() = runTest {
+    fun `form XObjects use their resources and matrix and ignore images`() = runTest {
         val writer = PdfTestWriter()
         writer.add("<< /Type /Catalog /Pages 2 0 R >>")
         writer.add("<< /Type /Pages /Kids [3 0 R] /MediaBox [0 0 612 792] /Resources << /XObject << /Form1 6 0 R /Image 7 0 R >> >> >>")
@@ -457,7 +400,7 @@ class PdfTextExtractorTest {
     }
 
     @Test
-    fun extractsPositionedStringsInBaselineOrderAndRecoversBrokenXrefOffsets() = runTest {
+    fun `extracts positioned strings in baseline order and recovers broken xref offsets`() = runTest {
         val content = "BT /F1 10 Tf 1 0 0 1 50 700 Tm (Am) Tj 1 0 0 1 92 700 Tm (C) Tj 1 0 0 1 50 688 Tm (Hello world) Tj ET"
         for (broken in listOf(false, true)) {
             val result = PdfTextExtractor.extract(PdfTestWriter.song(content, brokenXref = broken))
@@ -471,7 +414,7 @@ class PdfTextExtractorTest {
     }
 
     @Test
-    fun interpretsTextOperatorsAndGraphicsMatrices() = runTest {
+    fun `interprets text operators and graphics matrices`() = runTest {
         val content = "q 1 0 0 1 20 10 cm BT /F1 10 Tf 12 TL 1 0 0 1 30 690 Tm [(A) -400 (B)] TJ (C) ' 0 0 (D) \" 0 -12 TD (E) Tj T* (F) Tj 0 -12 Td (G) Tj ET Q"
         val lines = PdfTextExtractor.extract(PdfTestWriter.song(content)).pages.single().lines
         assertEquals(listOf("A B", "C", "D", "E", "F", "G"), lines.map { it.spans.joinToString("") { span -> span.text } })
@@ -480,7 +423,7 @@ class PdfTextExtractorTest {
     }
 
     @Test
-    fun decodesToUnicodeCharsRangesArraysLigaturesAndCidWidths() = runTest {
+    fun `decodes to Unicode chars ranges arrays ligatures and CID widths`() = runTest {
         val font = "/Type /Font /Subtype /Type0 /BaseFont /Embedded-Bold /Encoding /Identity-H /DescendantFonts [6 0 R] /ToUnicode 7 0 R"
         val bytes = PdfTestWriter.song("BT /F1 10 Tf 50 700 Td <00010002000300040005> Tj ET", font, extra = { writer ->
             writer.add("<< /Type /Font /Subtype /CIDFontType2 /DW 500 /W [1 [1000 200] 3 5 600] >>")
@@ -493,7 +436,7 @@ class PdfTextExtractorTest {
     }
 
     @Test
-    fun supportsWinAnsiMacRomanStandardAndGlyphNameDifferences() = runTest {
+    fun `supports WinAnsi MacRoman standard and glyph name differences`() = runTest {
         val encodings = listOf(
             "/WinAnsiEncoding" to ("<E9>" to "\u00e9"),
             "/MacRomanEncoding" to ("<8E>" to "\u00e9"),
@@ -509,7 +452,7 @@ class PdfTextExtractorTest {
     }
 
     @Test
-    fun protectedScannedMalformedAndUnmappedDocumentsAreUnreadable() = runTest {
+    fun `protected scanned malformed and unmapped documents are unreadable`() = runTest {
         val source = ReadableDocuments
         assertNull(source.extract(ImportedFile("scan.pdf", PdfTestWriter.song("q Q"))))
         assertNull(source.extract(ImportedFile("bad.pdf", "not a pdf".encodeToByteArray())))
@@ -519,17 +462,6 @@ class PdfTextExtractorTest {
         writer.add("<< /Type /Pages /Kids [] >>")
         assertNull(source.extract(ImportedFile("protected.pdf", writer.write("/Root 1 0 R /Encrypt 8 0 R"))))
         assertNotNull(source.extract(ImportedFile("okay.pdf", PdfTestWriter.song("BT /F1 10 Tf 50 700 Td (text) Tj ET"))))
-    }
-
-    @Test
-    fun tokenizerPreservesBinaryStringsReferencesAndEscapes() {
-        val parser = PdfSyntax("<< /Na#6de (a\\(b\\)\\101\\n) /Hex <4142F> /Ref 12 0 R /List [1 -2.5 /Name] >>".encodeToByteArray())
-        val value = parser.next() as PdfDictionary
-        assertEquals("a(b)A\n", (value["Name"] as PdfString).bytes.decodeToString())
-        assertEquals(listOf(65, 66, 240), (value["Hex"] as PdfString).bytes.map { it.toInt() and 255 })
-        assertEquals(PdfReference(12), value["Ref"])
-        assertEquals(-2.5, value["List"].array()[1].number())
-        assertFailsWith<IllegalArgumentException> { PdfSyntax(("[".repeat(66) + "]".repeat(66)).encodeToByteArray()).next() }
     }
 
     private fun pages(first: String, second: String, secondPage: String = ""): ByteArray {

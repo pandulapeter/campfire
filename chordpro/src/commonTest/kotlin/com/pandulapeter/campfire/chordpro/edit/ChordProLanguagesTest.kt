@@ -88,10 +88,11 @@ class ChordProLanguagesTest {
     }
 
     @Test
-    fun `serializing writes every language as a meta directive`() {
+    fun `every spelling of a language survives serializing`() {
         val song = ChordProParser.parse("{title: T}\n{language: hu}\n{meta: lang en}")
 
-        assertEquals("{title: T}\n{meta: language hu}\n{meta: language en}", ChordProSerializer.serialize(song))
+        assertEquals(listOf("hu", "en"), song.metadata.languages)
+        assertEquals(song, ChordProParser.parse(ChordProSerializer.serialize(song)))
     }
 
     @Test

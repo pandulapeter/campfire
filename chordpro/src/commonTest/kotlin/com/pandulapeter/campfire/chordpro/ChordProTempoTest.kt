@@ -16,22 +16,22 @@ import kotlin.test.assertNull
 class ChordProTempoTest {
 
     @Test
-    fun readsAPlainNumber() = assertEquals(120, ChordProTempo.parse("120"))
+    fun `reads a plain number`() = assertEquals(120, ChordProTempo.parse("120"))
 
     @Test
-    fun readsTheFirstNumberOfWhatPeopleWrite() {
+    fun `reads the first number of what people write`() {
         assertEquals(120, ChordProTempo.parse("120 bpm"))
         assertEquals(96, ChordProTempo.parse("♩ = 96"))
     }
 
     @Test
-    fun roundsAFraction() {
+    fun `rounds a fraction`() {
         assertEquals(98, ChordProTempo.parse("97.5"))
         assertEquals(97, ChordProTempo.parse("97,4"))
     }
 
     @Test
-    fun readsNothingWithoutAPositiveNumber() {
+    fun `reads nothing without a positive number`() {
         assertNull(ChordProTempo.parse(null))
         assertNull(ChordProTempo.parse("fast"))
         assertNull(ChordProTempo.parse("0"))

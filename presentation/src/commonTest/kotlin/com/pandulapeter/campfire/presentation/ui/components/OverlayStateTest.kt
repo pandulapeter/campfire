@@ -16,7 +16,7 @@ import kotlin.test.assertTrue
 class OverlayStateTest {
 
     @Test
-    fun aMenuStaysCountedUntilEveryOpeningIsClosed() {
+    fun `a menu stays counted until every opening is closed`() {
         val state = OverlayState()
         assertFalse(state.isAnyMenuOpen)
         state.onMenuOpened()
@@ -28,7 +28,7 @@ class OverlayStateTest {
     }
 
     @Test
-    fun twoStatesCountApart() {
+    fun `two states count apart`() {
         val first = OverlayState()
         val second = OverlayState()
         first.onMenuOpened()

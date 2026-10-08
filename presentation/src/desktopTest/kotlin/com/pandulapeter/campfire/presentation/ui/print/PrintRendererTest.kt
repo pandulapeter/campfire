@@ -40,7 +40,7 @@ import kotlin.test.assertNotNull
 
 /** Exercises real shaping, canvas rasterization and PDF encoding, including Hungarian and musical symbols. */
 internal class PrintRendererTest {
-    @Test fun selectableRectanglesComeFromTheSameShapingAsThePageImage() = runBlocking {
+    @Test fun `selectable rectangles come from the same shaping as the page image`() = runBlocking {
         val measurer = TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr)
         val renderer = PrintRenderer(measurer)
         val content = "Árvíztűrő e\u0301 \uD83D\uDE42 ♯ ♭ \u200Bpadding\u00A0"
@@ -75,7 +75,7 @@ internal class PrintRendererTest {
         Unit
     }
 
-    @Test fun exportsAPositionedSongForTheImporterRegressionFixture() = runBlocking {
+    @Test fun `exports a positioned song for the importer regression fixture`() = runBlocking {
         val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr))
         val parsed = ChordProParser.parse("""
             {title: Árvíztűrő dal}
@@ -106,7 +106,7 @@ internal class PrintRendererTest {
         Unit
     }
 
-    @Test fun exportsBothColumnsInSongReadingOrder() = runBlocking {
+    @Test fun `exports both columns in song reading order`() = runBlocking {
         val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr))
         val parsed = ChordProParser.parse("{title: Column song}\n{start_of_verse: Verse 1}\n" +
             (1..30).joinToString("\n") { "[Am]Line ${it.toString().padStart(2, '0')} singing [F]together." } + "\n{end_of_verse}")
@@ -129,7 +129,7 @@ internal class PrintRendererTest {
         Unit
     }
 
-    @Test fun exportsEveryColumnOfAFullPageInSongReadingOrder() = runBlocking {
+    @Test fun `exports every column of a full page in song reading order`() = runBlocking {
         val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr))
         // Short pairs that never wrap, as many as leave the last column with only a few of them (a single one in the
         // three columns), the way the page a song ends on does.
@@ -151,7 +151,7 @@ internal class PrintRendererTest {
         }
     }
 
-    @Test fun exportsFourColumnsOfTheLargestTextFilledToTheirEdges() = runBlocking {
+    @Test fun `exports four columns of the largest text filled to their edges`() = runBlocking {
         val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr))
         val parsed = ChordProParser.parse("{title: Dense}\n{start_of_verse: Verse 1}\n" +
             (1..40).joinToString("\n") { "[Am]Line ${it.toString().padStart(3, '0')} singing all the [F]words of a long line together" } + "\n{end_of_verse}")
@@ -168,7 +168,7 @@ internal class PrintRendererTest {
         Unit
     }
 
-    @Test fun rendersAllPagesOfAMultilingualSetlist() = runBlocking {
+    @Test fun `renders all pages of a multilingual setlist`() = runBlocking {
         val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr))
         val parsed = ChordProParser.parse("""
             {title: Árvíztűrő tükörfúrógép}
@@ -218,14 +218,14 @@ internal class PrintRendererTest {
         Unit
     }
 
-    @Test fun convertsPixelsToGrayByLuminance() {
+    @Test fun `converts pixels to gray by luminance`() {
         assertEquals(76, printGray(0xFFFF0000.toInt()))
         assertEquals(149, printGray(0xFF00FF00.toInt()))
         assertEquals(255, printGray(0xFFFFFFFF.toInt()))
         assertEquals(0, printGray(0xFF000000.toInt()))
     }
 
-    @Test fun reusingThePageBitmapLeaksNothingBetweenPages() = runBlocking {
+    @Test fun `reusing the page bitmap leaks nothing between pages`() = runBlocking {
         val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr))
         val top = PrintPage(listOf(PrintText(text = "MMMMMMMM", x = 10f, y = 5f, style = PrintStyle(20))))
         val bottom = PrintPage(listOf(PrintText(text = "MMMMMMMM", x = 10f, y = 70f, style = PrintStyle(20))))
@@ -278,7 +278,7 @@ internal class PrintRendererTest {
         }
     }
 
-    @Test fun detailsArePrintedGrayAndLyricsBlack() = runBlocking {
+    @Test fun `details are printed gray and lyrics black`() = runBlocking {
         val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr))
         val song = ChordProParser.parse("{title: Gray}\n{key: D}\n{tempo: 96}\nWords that are sung in black")
         val document = layoutPrintDocument(PrintSource("Gray", songs = listOf(PrintSong("gray.cho", "Gray", "Artist", song = song))),
@@ -304,7 +304,7 @@ internal class PrintRendererTest {
         assertTrue(darkest(page.texts.first { it.text.startsWith("Words") }) <= 30)
     }
 
-    @Test fun chordDiagramsAreDrawnInTheirBoxesAndLeftOutOfTheSelectableText() = runBlocking {
+    @Test fun `chord diagrams are drawn in their boxes and left out of the selectable text`() = runBlocking {
         val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr))
         val song = ChordProParser.parse("{title: Shapes}\n{define: F base-fret 1 frets 1 3 3 2 1 1 fingers 1 3 4 2 1 1}\n[G]Words [C]sung [D]over [F]chords and [Bm]a barre")
         val labels = PrintLabels("Key", "Transposition", "Capo", "Tempo", "$TEMPO_VALUE BPM", "Time", "Missing", DefaultSectionLabels(verse = "Verse", chorus = "Chorus", bridge = "Bridge", tab = "Tab", grid = "Grid", intro = "Intro", preChorus = "Pre-chorus", solo = "Solo", outro = "Outro"))

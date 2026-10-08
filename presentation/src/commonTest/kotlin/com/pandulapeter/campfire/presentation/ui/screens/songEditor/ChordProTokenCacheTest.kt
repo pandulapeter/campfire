@@ -18,7 +18,7 @@ import kotlin.test.assertSame
 class ChordProTokenCacheTest {
 
     @Test
-    fun unchangedContentDoesNotCopyOrRetokenize() {
+    fun `unchanged content does not copy or retokenize`() {
         val cache = ChordProTokenCache()
         val song = "{title: Verse}\n[C]Sing [G]along"
         val first = ObservedText(song)

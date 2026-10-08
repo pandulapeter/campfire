@@ -20,7 +20,7 @@ import kotlin.test.assertTrue
 class LayoutBudgetTest {
 
     @Test
-    fun aSongWithinTheBudgetIsLeftAlone() {
+    fun `a song within the budget is left alone`() {
         val sections = List(20) { section(lines = 40) }
 
         val (fitting, isCut) = LayoutBudget.fit(sections)
@@ -30,7 +30,7 @@ class LayoutBudgetTest {
     }
 
     @Test
-    fun aSongbookStopsAtTheEndOfTheLastSectionThatFits() {
+    fun `a songbook stops at the end of the last section that fits`() {
         val sections = List(100) { section(lines = 40) }
 
         val (fitting, isCut) = LayoutBudget.fit(sections)
@@ -41,7 +41,7 @@ class LayoutBudgetTest {
     }
 
     @Test
-    fun aFileWithNoBlankLineIsCutInsideItsOneSection() {
+    fun `a file with no blank line is cut inside its one section`() {
         val (fitting, isCut) = LayoutBudget.fit(listOf(section(lines = 60_000)))
 
         assertEquals(LayoutBudget.MAX_LINES, (fitting.single() as RenderSection.Lines).lines.size)
@@ -49,7 +49,7 @@ class LayoutBudgetTest {
     }
 
     @Test
-    fun longLinesAreCountedByTheirCharacters() {
+    fun `long lines are counted by their characters`() {
         val (fitting, isCut) = LayoutBudget.fit(List(10) { section(lines = 10, lineLength = 5_000) })
 
         assertEquals(LayoutBudget.MAX_CHARACTERS / 50_000, fitting.size)
@@ -57,7 +57,7 @@ class LayoutBudgetTest {
     }
 
     @Test
-    fun commentsCountToo() {
+    fun `comments count too`() {
         val comment = RenderSection.Comment(text = "x".repeat(LayoutBudget.MAX_CHARACTERS), style = CommentStyle.PLAIN)
 
         val (fitting, isCut) = LayoutBudget.fit(listOf(section(lines = 1), comment))

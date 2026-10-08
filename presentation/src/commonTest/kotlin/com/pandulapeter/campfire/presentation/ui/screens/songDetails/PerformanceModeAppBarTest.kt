@@ -17,57 +17,56 @@ import kotlin.test.assertTrue
 
 class PerformanceModeAppBarTest {
 
+    /** Every width from below the smallest supported phone to a tablet, one dp apart. */
+    private val widths = (300..900).map { it.dp }
+
     @Test
-    fun `a phone in portrait leaves the cover out of the bar`() {
+    fun `the smallest supported phone keeps the text size stepper but leaves the cover out of the performance bar`() {
+        assertTrue(showsFontScaleInPerformanceBar(360.dp))
         assertFalse(showsCoverInPerformanceMode(360.dp))
     }
 
     @Test
-    fun `the cover stays for as long as the title keeps 160dp beside it`() {
-        // The back button and the bar's paddings, the stepper and its padding, the metronome button, and the cover and
-        // its gap take 280dp.
-        assertTrue(showsCoverInPerformanceMode(440.dp))
-        assertFalse(showsCoverInPerformanceMode(439.dp))
-    }
-
-    @Test
-    fun `a tablet keeps the cover`() {
+    fun `a tablet keeps every control of the performance bar`() {
         assertTrue(showsCoverInPerformanceMode(800.dp))
+        assertTrue(showsMetronomeInPerformanceBar(800.dp))
+        assertTrue(showsFontScaleInPerformanceBar(800.dp))
     }
 
     @Test
-    fun `the text size stepper stays in the bar for as long as the title keeps 160dp beside it`() {
-        // The back button and the bar's paddings, and the stepper and its padding take 180dp.
-        assertTrue(showsFontScaleInPerformanceBar(340.dp))
-        assertFalse(showsFontScaleInPerformanceBar(339.dp))
+    fun `the performance bar loses the cover first, then the metronome button, then the text size stepper`() {
+        widths.forEach { width ->
+            if (showsCoverInPerformanceMode(width)) assertTrue(showsMetronomeInPerformanceBar(width), "$width")
+            if (showsMetronomeInPerformanceBar(width)) assertTrue(showsFontScaleInPerformanceBar(width), "$width")
+        }
+        assertTrue(widths.any { showsMetronomeInPerformanceBar(it) && !showsCoverInPerformanceMode(it) })
+        assertTrue(widths.any { showsFontScaleInPerformanceBar(it) && !showsMetronomeInPerformanceBar(it) })
     }
 
     @Test
-    fun `the metronome button goes into the menu before the text size stepper does`() {
-        assertTrue(showsMetronomeInPerformanceBar(388.dp))
-        assertFalse(showsMetronomeInPerformanceBar(387.dp))
-        assertTrue(showsFontScaleInPerformanceBar(387.dp))
-    }
-
-    @Test
-    fun `a phone in portrait keeps the text size stepper in the bar`() {
-        assertTrue(showsFontScaleInPerformanceBar(360.dp))
+    fun `a control of the performance bar that fits at one width fits at every wider one`() {
+        listOf(::showsCoverInPerformanceMode, ::showsMetronomeInPerformanceBar, ::showsFontScaleInPerformanceBar).forEach { shows ->
+            widths.zipWithNext().forEach { (narrower, wider) ->
+                if (shows(narrower)) assertTrue(shows(wider), "$narrower, $wider")
+            }
+        }
     }
 
     @Test
     fun `the setlist assignments leave the bar before the cover`() {
-        // The back button, the bar's paddings, the metronome and the two menus take 176dp, the cover 52dp more, and
-        // the setlist assignments 36dp.
-        assertEquals(buttons(cover = true, setlistAssignments = true), appBarButtons(424.dp, hasCover = true))
-        assertEquals(buttons(cover = true, setlistAssignments = false), appBarButtons(423.dp, hasCover = true))
-        assertEquals(buttons(cover = true, setlistAssignments = false), appBarButtons(388.dp, hasCover = true))
-        assertEquals(buttons(cover = false, setlistAssignments = false), appBarButtons(387.dp, hasCover = true))
+        listOf(true, false).forEach { hasCover ->
+            val layouts = widths.map { appBarButtons(it, hasCover = hasCover) }
+            layouts.forEach { if (it.isSetlistAssignmentsShown) assertTrue(it.isCoverShown) }
+            assertTrue(layouts.any { it.isCoverShown && !it.isSetlistAssignmentsShown }, "hasCover = $hasCover")
+            assertEquals(buttons(cover = true, setlistAssignments = true), layouts.last())
+        }
     }
 
     @Test
-    fun `a pager without covers keeps no room for one`() {
-        assertEquals(buttons(cover = true, setlistAssignments = true), appBarButtons(372.dp, hasCover = false))
-        assertEquals(buttons(cover = true, setlistAssignments = false), appBarButtons(371.dp, hasCover = false))
+    fun `a pager without covers keeps the setlist assignments at narrower widths than one with them`() {
+        val narrowestWithCovers = widths.first { appBarButtons(it, hasCover = true).isSetlistAssignmentsShown }
+        val narrowestWithoutCovers = widths.first { appBarButtons(it, hasCover = false).isSetlistAssignmentsShown }
+        assertTrue(narrowestWithoutCovers < narrowestWithCovers)
     }
 
     @Test

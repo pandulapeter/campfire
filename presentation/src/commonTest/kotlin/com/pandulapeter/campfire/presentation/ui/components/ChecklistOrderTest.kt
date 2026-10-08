@@ -17,7 +17,7 @@ class ChecklistOrderTest {
     private val rows = listOf("a", "b", "c", "d")
 
     @Test
-    fun heldRowsLeadInTheRequestedSortingOrderAndAreNotRepeated() {
+    fun `held rows lead in the requested sorting order and are not repeated`() {
         val order = ChecklistOrder(setOf("d", "b"))
         assertEquals(listOf("b", "d"), order.selectedGroup(rows) { it })
         assertEquals(listOf("a", "c"), order.remainingRows(rows) { it })
@@ -25,14 +25,14 @@ class ChecklistOrderTest {
     }
 
     @Test
-    fun checkedRowsJoinTheGroupInTickOrderAndStayInPlace() {
+    fun `checked rows join the group in tick order and stay in place`() {
         val order = ChecklistOrder(setOf("b")).withCheckedKeys(setOf("b", "d")).withCheckedKeys(setOf("b", "d", "a"))
         assertEquals(listOf("b", "d", "a"), order.selectedGroup(rows) { it })
         assertEquals(listOf("a", "c", "d"), order.remainingRows(rows) { it })
     }
 
     @Test
-    fun theGroupOnlyGrowsUntilARefresh() {
+    fun `the group only grows until a refresh`() {
         val checked = ChecklistOrder(setOf("b")).withCheckedKeys(setOf("b", "d"))
         val unchecked = checked.withCheckedKeys(emptySet())
         assertEquals(listOf("b", "d"), unchecked.selectedGroup(rows) { it })
@@ -46,7 +46,7 @@ class ChecklistOrderTest {
     }
 
     @Test
-    fun layoutCountsTheHeadingTheGroupAndTheDivider() {
+    fun `layout counts the heading the group and the divider`() {
         assertEquals(0, ChecklistOrder(emptySet()).layout(rows) { it }.leadingRowCount)
         assertEquals(3, ChecklistOrder(setOf("b")).layout(rows) { it }.leadingRowCount)
         assertEquals(4, ChecklistOrder(setOf("b")).withCheckedKeys(setOf("b", "c")).layout(rows) { it }.leadingRowCount)
@@ -55,7 +55,7 @@ class ChecklistOrderTest {
     }
 
     @Test
-    fun theHeadingStaysWhileEverythingCheckedIsFilteredOut() {
+    fun `the heading stays while everything checked is filtered out`() {
         val order = ChecklistOrder(setOf("b", "d"))
         val filtered = listOf("a", "c")
         assertEquals(true, order.hasHeading(filtered) { it })
@@ -68,7 +68,7 @@ class ChecklistOrderTest {
     }
 
     @Test
-    fun filteredOutAndDeletedRowsNeverAppearInTheResults() {
+    fun `filtered out and deleted rows never appear in the results`() {
         val order = ChecklistOrder(setOf("b", "d", "deleted")).withCheckedKeys(setOf("b", "d", "deleted", "hidden"))
         assertEquals(listOf("d"), order.selectedGroup(listOf("a", "d")) { it })
         assertEquals(listOf("a"), order.remainingRows(listOf("a", "d")) { it })
@@ -76,20 +76,20 @@ class ChecklistOrderTest {
     }
 
     @Test
-    fun chipsLeadWithTheHeldOnesAndStayPut() {
+    fun `chips lead with the held ones and stay put`() {
         val order = ChecklistOrder(setOf("d", "b")).withCheckedKeys(setOf("d", "b", "a"))
         assertEquals(listOf("b", "d", "a", "c"), order.ordered(rows) { it })
         assertEquals(2, order.leadingCount(rows) { it })
     }
 
     @Test
-    fun aRefreshWithNothingTickedIsNotReanchored() {
+    fun `a refresh with nothing ticked is not reanchored`() {
         val order = ChecklistOrder(setOf("b", "d"))
         assertNull(order.layout(listOf("a", "b")) { it }.anchorIndexAfter(order.layout(rows) { it }, anchorKey = "a", anchorIndex = 4))
     }
 
     @Test
-    fun aTickKeepsTheAnchorUnderTheFinger() {
+    fun `a tick keeps the anchor under the finger`() {
         val order = ChecklistOrder(setOf("b"))
         val after = order.withCheckedKeys(setOf("b", "c")).layout(rows) { it }
         // One header item comes before the list.
@@ -97,35 +97,35 @@ class ChecklistOrderTest {
     }
 
     @Test
-    fun theFirstTickWithNothingHeldMovesTheAnchorPastTheHeadingTheGroupAndTheDivider() {
+    fun `the first tick with nothing held moves the anchor past the heading the group and the divider`() {
         val order = ChecklistOrder(emptySet())
         val after = order.withCheckedKeys(setOf("c")).layout(rows) { it }
         assertEquals(3, after.anchorIndexAfter(order.layout(rows) { it }, anchorKey = "a", anchorIndex = 0))
     }
 
     @Test
-    fun aCheckedRowArrivingAboveTheAnchorIsCounted() {
+    fun `a checked row arriving above the anchor is counted`() {
         val order = ChecklistOrder(setOf("b"))
         val after = order.withCheckedKeys(setOf("b", "aa")).layout(listOf("a", "aa", "b", "c", "d")) { it }
         assertEquals(6, after.anchorIndexAfter(order.layout(rows) { it }, anchorKey = "c", anchorIndex = 4))
     }
 
     @Test
-    fun tickingARowThatAlreadyHasACopyMovesNothing() {
+    fun `ticking a row that already has a copy moves nothing`() {
         val previous = ChecklistOrder(setOf("b")).withCheckedKeys(setOf("b", "c")).withCheckedKeys(setOf("b"))
         val after = previous.withCheckedKeys(setOf("b", "c")).layout(rows) { it }
         assertNull(after.anchorIndexAfter(previous.layout(rows) { it }, anchorKey = "a", anchorIndex = 4))
     }
 
     @Test
-    fun anAnchorNoLongerListedMovesNothing() {
+    fun `an anchor no longer listed moves nothing`() {
         val order = ChecklistOrder(setOf("b"))
         val after = order.withCheckedKeys(setOf("b", "c")).layout(rows) { it }
         assertNull(after.anchorIndexAfter(order.layout(rows) { it }, anchorKey = "gone", anchorIndex = 4))
     }
 
     @Test
-    fun aKeyAddedThatTheListDoesNotShowMovesNothing() {
+    fun `a key added that the list does not show moves nothing`() {
         val order = ChecklistOrder(setOf("b"))
         val after = order.withCheckedKeys(setOf("b", "zz")).layout(rows) { it }
         assertNull(after.anchorIndexAfter(order.layout(rows) { it }, anchorKey = "c", anchorIndex = 4))

@@ -28,30 +28,37 @@ class TapTempoTest {
     }
 
     @Test
-    fun theFirstTapGivesNoTempo() = assertNull(tapTempo.tap())
+    fun `the first tap gives no tempo`() = assertNull(tapTempo.tap())
 
     @Test
-    fun twoTapsGiveATempo() {
+    fun `two taps give a tempo`() {
         tapTempo.tap()
         assertEquals(120, tapAfter(500.milliseconds))
     }
 
     @Test
-    fun aSteadyRunGivesItsTempo() {
+    fun `a steady run gives its tempo`() {
         tapTempo.tap()
         repeat(10) { tapAfter(625.milliseconds) }
         assertEquals(96, tapAfter(625.milliseconds))
     }
 
     @Test
-    fun oneLateTapDoesNotMoveTheTempo() {
+    fun `one late tap does not move the tempo`() {
         tapTempo.tap()
         repeat(5) { tapAfter(500.milliseconds) }
         assertEquals(120, tapAfter(800.milliseconds))
     }
 
     @Test
-    fun aLongPauseStartsANewSeries() {
+    fun `a new tempo takes over once it is most of the window`() {
+        tapTempo.tap()
+        repeat(8) { tapAfter(500.milliseconds) }
+        assertEquals(listOf(120, 120, 120, 96, 80), List(5) { tapAfter(750.milliseconds) })
+    }
+
+    @Test
+    fun `a long pause starts a new series`() {
         tapTempo.tap()
         tapAfter(500.milliseconds)
         assertNull(tapAfter(3.seconds))
@@ -59,7 +66,7 @@ class TapTempoTest {
     }
 
     @Test
-    fun theTempoIsClampedToTheRange() {
+    fun `the tempo is clamped to the range`() {
         tapTempo.tap()
         assertEquals(300, tapAfter(50.milliseconds))
         tapTempo.reset()

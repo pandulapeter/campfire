@@ -15,13 +15,13 @@ import kotlin.test.assertEquals
 class ByteSizeTest {
 
     @Test
-    fun lessThanAKilobyteIsCountedInBytes() {
+    fun `less than a kilobyte is counted in bytes`() {
         assertEquals(ByteSize(unit = 0, whole = 0), byteSizeOf(0))
         assertEquals(ByteSize(unit = 0, whole = 999), byteSizeOf(999))
     }
 
     @Test
-    fun belowTenThereIsOneDecimal() {
+    fun `below ten there is one decimal`() {
         assertEquals(ByteSize(unit = 1, whole = 1, tenths = 0), byteSizeOf(1_000))
         assertEquals(ByteSize(unit = 1, whole = 1, tenths = 0), byteSizeOf(1_049))
         assertEquals(ByteSize(unit = 1, whole = 1, tenths = 1), byteSizeOf(1_050))
@@ -29,19 +29,19 @@ class ByteSizeTest {
     }
 
     @Test
-    fun fromTenThereIsNone() {
+    fun `from ten there is none`() {
         assertEquals(ByteSize(unit = 1, whole = 10), byteSizeOf(9_950))
         assertEquals(ByteSize(unit = 1, whole = 999), byteSizeOf(999_400))
     }
 
     @Test
-    fun theUnitIsSettledOnTheRoundedNumber() {
+    fun `the unit is settled on the rounded number`() {
         assertEquals(ByteSize(unit = 2, whole = 1, tenths = 0), byteSizeOf(999_960))
         assertEquals(ByteSize(unit = 1, whole = 999), byteSizeOf(999_499))
     }
 
     @Test
-    fun theLargestUnitTakesEverythingAboveIt() {
+    fun `the largest unit takes everything above it`() {
         assertEquals(ByteSize(unit = 3, whole = 5_500), byteSizeOf(5_500_000_000_000))
     }
 }

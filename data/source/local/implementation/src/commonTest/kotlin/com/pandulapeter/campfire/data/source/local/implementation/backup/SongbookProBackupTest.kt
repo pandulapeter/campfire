@@ -20,7 +20,7 @@ import kotlin.test.assertIs
 internal class SongbookProBackupTest {
 
     @Test
-    fun songsGetAHeaderFromWhatSongbookProKeepsBesideTheirText() {
+    fun `songs get a header from what SongbookPro keeps beside their text`() {
         val files = read(
             """{"Id": 1, "name": "Amazing Grace", "author": "John Newton", "Capo": "2", "key": "5", "TempoInt": "72",
             "timeSig": "3/4", "Duration": "217", "Copyright": "Public Domain", "Url": "https://example.com/grace", "Deleted": "False",
@@ -50,7 +50,7 @@ internal class SongbookProBackupTest {
     }
 
     @Test
-    fun headerValuesAreFlattenedOntoOneLineWithoutBraces() {
+    fun `header values are flattened onto one line without braces`() {
         val files = read(
             """{"Id": 1, "name": "Song", "author": "A\nB", "Copyright": "Line1\r\nLine2", "Url": "https://x.com/a b",
             "_folders": "[1]", "_tags": ["x}"], "content": "La"}""",
@@ -78,7 +78,7 @@ internal class SongbookProBackupTest {
     }
 
     @Test
-    fun onlyATimeSignatureTheAppReadsIsWritten() {
+    fun `only a time signature the app reads is written`() {
         val files = read(
             """{"Id": 1, "name": "A", "timeSig": "4/0", "content": "a"}""",
             """{"Id": 2, "name": "B", "timeSig": "17/8", "content": "b"}""",
@@ -94,14 +94,14 @@ internal class SongbookProBackupTest {
     }
 
     @Test
-    fun whatTheTextDeclaresItselfIsNotDeclaredAgain() {
+    fun `what the text declares itself is not declared again`() {
         val files = read("""{"Id": 1, "name": "Title", "key": 3, "Capo": 0, "TempoInt": 0, "content": "{t: Own title}\n{key: Am}\n[Am]La"}""")
 
         assertEquals("{t: Own title}\n{key: Am}\n[Am]La\n", files.single().bytes.decodeToString())
     }
 
     @Test
-    fun deletedSongsAndSongsWithoutTextAreLeftOutAndRepeatedTitlesAreNumbered() {
+    fun `deleted songs and songs without text are left out and repeated titles are numbered`() {
         val files = read(
             """{"Id": 1, "name": "Song", "content": "a"}""",
             """{"Id": 2, "name": "Song", "content": "b"}""",
@@ -114,7 +114,7 @@ internal class SongbookProBackupTest {
     }
 
     @Test
-    fun setsBecomeSetlistsOfTheSongsInOrderWithTheCapoWhereItDiffers() {
+    fun `sets become setlists of the songs in order with the capo where it differs`() {
         val files = read(
             """{"Id": 1, "name": "First", "Capo": 2, "content": "a"}""",
             """{"Id": 2, "name": "Second", "Capo": 0, "content": "b"}""",
@@ -135,7 +135,7 @@ internal class SongbookProBackupTest {
     }
 
     @Test
-    fun aSetWithoutANameOrADateIsTitledByItsNumber() {
+    fun `a set without a name or a date is titled by its number`() {
         val files = read(
             sets = """[
                 {"details": {"Id": 7, "name": "", "Deleted": 0}, "contents": []},
@@ -147,13 +147,13 @@ internal class SongbookProBackupTest {
     }
 
     @Test
-    fun anArchiveWithoutSongbookProsDocumentIsNotASongbookProLibrary() {
+    fun `an archive without SongbookPro document is not a SongbookPro library`() {
         assertIs<SongbookProBackup.Result.NotABackup>(SongbookProBackup.read(listOf(ImportedFile("song.cho", "{title: A}".encodeToByteArray()))))
         assertIs<SongbookProBackup.Result.NotABackup>(SongbookProBackup.read(listOf(dataFile("Just some notes"))))
     }
 
     @Test
-    fun aDocumentThatCannotBeReadIsUnreadableWhereSongbookProsBookkeepingOrVersionLineSaysItIsABackup() {
+    fun `a document that cannot be read is unreadable where SongbookPro bookkeeping or version line says it is a backup`() {
         assertIs<SongbookProBackup.Result.Unreadable>(SongbookProBackup.read(listOf(dataFile("{\"library\": {}}"), ImportedFile.unread("dataFile.hash"))))
         assertIs<SongbookProBackup.Result.NotABackup>(SongbookProBackup.read(listOf(dataFile("{\"library\": {}}"))))
         assertIs<SongbookProBackup.Result.Unreadable>(SongbookProBackup.read(listOf(dataFile("2.0\n{\"library\": {}}"))))

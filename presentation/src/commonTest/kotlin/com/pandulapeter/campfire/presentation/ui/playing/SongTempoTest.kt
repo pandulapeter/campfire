@@ -40,55 +40,55 @@ class SongTempoTest {
     private val tempos = Tempos(library = mapOf(FILE_NAME to 100), bySetlist = mapOf(SETLIST to mapOf(FILE_NAME to 90)))
 
     @Test
-    fun aSetlistReadsItsOwnEntryOnly() = assertEquals(EffectiveTempo(90, Source.SETLIST, 96), effectiveTempo(song(96), SETLIST, tempos))
+    fun `a setlist reads its own entry only`() = assertEquals(EffectiveTempo(90, Source.SETLIST, 96), effectiveTempo(song(96), SETLIST, tempos))
 
     @Test
-    fun theLibraryReadsTheOverride() = assertEquals(EffectiveTempo(100, Source.LIBRARY_OVERRIDE, 96), effectiveTempo(song(96), null, tempos))
+    fun `the library reads the override`() = assertEquals(EffectiveTempo(100, Source.LIBRARY_OVERRIDE, 96), effectiveTempo(song(96), null, tempos))
 
     @Test
-    fun aSetlistWithoutAnEntryDoesNotInheritTheLibrary() =
+    fun `a setlist without an entry does not inherit the library`() =
         assertEquals(EffectiveTempo(96, Source.FILE, 96), effectiveTempo(song(96), "other.setlist.json", tempos))
 
     @Test
-    fun aSongWithoutATempoPlaysTheDefault() =
+    fun `a song without a tempo plays the default`() =
         assertEquals(EffectiveTempo(120, Source.DEFAULT, 120), effectiveTempo(song(null), "other.setlist.json", tempos))
 
     @Test
-    fun anOverrideEqualToTheSongsOwnIsNoOverride() {
+    fun `an override equal to the song's own is no override`() {
         val tempo = effectiveTempo(song(100), null, tempos)
         assertEquals(Source.FILE, tempo.source)
         assertTrue(tempo.isDefault)
     }
 
     @Test
-    fun aFileTempoOutOfRangeIsHeldWithinItForPlayback() = assertEquals(300, effectiveTempo(song(400), "other.setlist.json", tempos).bpm)
+    fun `a file tempo out of range is held within it for playback`() = assertEquals(300, effectiveTempo(song(400), "other.setlist.json", tempos).bpm)
 
     @Test
-    fun anOverrideIsHighlighted() = assertFalse(effectiveTempo(song(96), SETLIST, tempos).isDefault)
+    fun `an override is highlighted`() = assertFalse(effectiveTempo(song(96), SETLIST, tempos).isDefault)
 
     @Test
-    fun onlyATempoSomethingNamesIsShown() {
+    fun `only a tempo something names is shown`() {
         assertEquals(90, effectiveTempo(song(96), SETLIST, tempos).displayedBpm)
         assertEquals(96, effectiveTempo(song(96), "other.setlist.json", tempos).displayedBpm)
         assertEquals(null, effectiveTempo(song(null), "other.setlist.json", tempos).displayedBpm)
     }
 
     @Test
-    fun overridesAreSetAndRemovedByKey() {
+    fun `overrides are set and removed by key`() {
         val changed = tempos.with(SongPlace(FILE_NAME, SETLIST), null).with(SongPlace(FILE_NAME, null), 80)
         assertEquals(null, changed[FILE_NAME, SETLIST])
         assertEquals(80, changed[FILE_NAME, null])
     }
 
     @Test
-    fun anOverrideRewritesTheTempoLine() {
+    fun `an override rewrites the tempo line`() {
         val song = ChordProSong(metadata = ChordProMetadata(tempo = "96 bpm"), blocks = emptyList())
         assertEquals("110", song.withTempo(110).metadata.tempo)
         assertEquals("96 bpm", song.withTempo(null).metadata.tempo)
     }
 
     @Test
-    fun aLaterTempoKeepsItsRatioToTheOpeningOne() {
+    fun `a later tempo keeps its ratio to the opening one`() {
         assertEquals(55, sectionBpm(sectionFileBpm = 60, songFileBpm = 120, playedBpm = 110))
         assertEquals(60, sectionBpm(sectionFileBpm = 60, songFileBpm = 120, playedBpm = 120))
         assertEquals(110, sectionBpm(sectionFileBpm = null, songFileBpm = 120, playedBpm = 110))
@@ -98,7 +98,7 @@ class SongTempoTest {
     }
 
     @Test
-    fun aLaterTempoKeepsItsRatioToTheOpeningOneAsTheClickPlaysIt() {
+    fun `a later tempo keeps its ratio to the opening one as the click plays it`() {
         val song = ChordProSong(
             metadata = ChordProMetadata(tempo = "400"),
             blocks = listOf(ChordProBlock.Timing(tempo = "200", time = null)),
@@ -107,7 +107,7 @@ class SongTempoTest {
     }
 
     @Test
-    fun aChangeAtTheSongsOwnOutOfRangeTempoFollowsTheOverride() {
+    fun `a change at the song's own out of range tempo follows the override`() {
         val song = ChordProSong(
             metadata = ChordProMetadata(tempo = "400"),
             blocks = listOf(ChordProBlock.Timing(tempo = "400", time = "3/4")),
@@ -116,7 +116,7 @@ class SongTempoTest {
     }
 
     @Test
-    fun aChangeOutOfRangeIsHeldBeforeItIsScaled() {
+    fun `a change out of range is held before it is scaled`() {
         val song = ChordProSong(
             metadata = ChordProMetadata(tempo = "120"),
             blocks = listOf(ChordProBlock.Timing(tempo = "400", time = null)),
@@ -125,7 +125,7 @@ class SongTempoTest {
     }
 
     @Test
-    fun anOverrideScalesTheChangesFurtherDown() {
+    fun `an override scales the changes further down`() {
         val song = ChordProSong(
             metadata = ChordProMetadata(tempo = "120"),
             blocks = listOf(ChordProBlock.Timing(tempo = "60", time = "3/4"), ChordProBlock.Timing(tempo = null, time = "6/8")),

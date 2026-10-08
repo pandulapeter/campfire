@@ -22,7 +22,7 @@ import kotlin.test.assertTrue
 class SectionCuttingTest {
 
     @Test
-    fun aSectionIsCutWithALineOnEitherSide() {
+    fun `a section is cut with a line on either side`() {
         assertContentEquals(intArrayOf(0, 1), sectionChunkStarts(listOf(CONTENT, CONTENT)))
         assertContentEquals(intArrayOf(0), sectionChunkStarts(listOf(CONTENT)))
         assertContentEquals(intArrayOf(0, 1, 2, 3, 4, 5), sectionChunkStarts(List(6) { CONTENT }))
@@ -30,13 +30,13 @@ class SectionCuttingTest {
     }
 
     @Test
-    fun noPieceStartsWithAnEmptyLineOrEndsWithAComment() {
+    fun `no piece starts with an empty line or ends with a comment`() {
         assertContentEquals(intArrayOf(0, 1, 3, 4), sectionChunkStarts(listOf(CONTENT, CONTENT, BLANK, CONTENT, CONTENT)))
         assertContentEquals(intArrayOf(0, 1, 2, 4), sectionChunkStarts(listOf(CONTENT, CONTENT, COMMENT, CONTENT, CONTENT)))
     }
 
     @Test
-    fun thePiecesOfASectionOnACardHaveTheCardsPaddingWhereItIsCut() {
+    fun `the pieces of a section on a card have the card's padding where it is cut`() {
         // A section on a card cut into two columns, and a section after it under its second piece.
         val grid = SectionGrid(rows = IntArray(3), columns = intArrayOf(0, 1, 1), columnCounts = intArrayOf(2))
         val arrangement = grid.arrange(
@@ -52,7 +52,7 @@ class SectionCuttingTest {
     }
 
     @Test
-    fun theChunksOfAWholeSectionAreStackedWithoutGaps() {
+    fun `the chunks of a whole section are stacked without gaps`() {
         val grid = SectionGrid(rows = IntArray(3), columns = IntArray(3), columnCounts = intArrayOf(1))
         val arrangement = grid.arrange(intArrayOf(100, 100, 50), sectionGap = 20, rowGap = 40, unitSections = intArrayOf(0, 0, 1), piecePadding = intArrayOf(10, 0))
         assertContentEquals(intArrayOf(0, 100, 220), arrangement.tops)
@@ -60,27 +60,27 @@ class SectionCuttingTest {
     }
 
     @Test
-    fun aSectionTallerThanTheScreenIsCutIntoTheColumnsOfItsRow() {
+    fun `a section taller than the screen is cut into the columns of its row`() {
         val grid = flow(sectionUnits = listOf(listOf(100, 100, 100, 100)), columnCount = 2, maxRowHeight = 300)
         assertContentEquals(intArrayOf(2), grid.columnCounts)
         assertContentEquals(intArrayOf(0, 0, 1, 1), grid.columns)
     }
 
     @Test
-    fun aSectionIsOnlyCutWhereItMayBe() {
+    fun `a section is only cut where it may be`() {
         // Six lines, which may only be cut in front of the fifth: the two columns are four lines and two.
         val grid = flow(sectionUnits = listOf(List(6) { 100 }), columnCount = 2, maxRowHeight = 500, isCuttableBefore = { it == 4 })
         assertContentEquals(intArrayOf(0, 0, 0, 0, 1, 1), grid.columns)
     }
 
     @Test
-    fun sectionsThatFitTheColumnsWholeAreNotCut() {
+    fun `sections that fit the columns whole are not cut`() {
         val sections = listOf(listOf(100), listOf(100), listOf(100), listOf(100))
         assertFalse(cutsAnySection(flow(sectionUnits = sections, columnCount = 2, maxRowHeight = 300), unitSections(sections)))
     }
 
     @Test
-    fun aSectionIsCutToEvenTheColumnsOut() {
+    fun `a section is cut to even the columns out`() {
         // Kept whole, the second section would leave the first column 250 tall and the second 400.
         val sections = listOf(listOf(250), listOf(100, 100, 100, 100))
         val grid = flow(sectionUnits = sections, columnCount = 2, maxRowHeight = 500)
@@ -89,7 +89,7 @@ class SectionCuttingTest {
     }
 
     @Test
-    fun aSectionRunsOnFromTheLastColumnOfARowIntoTheNextRow() {
+    fun `a section runs on from the last column of a row into the next row`() {
         val sections = List(3) { List(4) { 100 } }
         val grid = flow(sectionUnits = sections, columnCount = 2, maxRowHeight = 300)
         val units = unitSections(sections)
@@ -97,7 +97,7 @@ class SectionCuttingTest {
     }
 
     @Test
-    fun pagesAreFilledRatherThanEndedWithASection() {
+    fun `pages are filled rather than ended with a section`() {
         // Six sections of five lines, of which a column holds one and a half: whole, a row holds two of them, three pages
         // in all, while running them on from column to column holds the song on two.
         val sections = List(6) { List(5) { 60 } }
@@ -107,7 +107,7 @@ class SectionCuttingTest {
     }
 
     @Test
-    fun theLastRowTakesTheFewestColumnsThatHoldIt() {
+    fun `the last row takes the fewest columns that hold it`() {
         // Two full rows of two columns, and a short section left over, which is not split across two columns.
         val sections = List(4) { List(3) { 100 } } + listOf(listOf(100))
         val grid = flow(sectionUnits = sections, columnCount = 2, maxRowHeight = 300)
@@ -115,7 +115,7 @@ class SectionCuttingTest {
     }
 
     @Test
-    fun anUncuttableStretchTallerThanTheScreenHasARowOfItsOwn() {
+    fun `an uncuttable stretch taller than the screen has a row of its own`() {
         val sections = listOf(listOf(100), listOf(800), listOf(100))
         val grid = flow(sectionUnits = sections, columnCount = 2, maxRowHeight = 500)
         val row = grid.rows[1]
@@ -124,7 +124,7 @@ class SectionCuttingTest {
     }
 
     @Test
-    fun rowsAreNeverTallerThanTheScreenAndHoldTheSongInItsOrder() {
+    fun `rows are never taller than the screen and hold the song in its order`() {
         val random = Random(7)
         repeat(300) {
             val sections = List(random.nextInt(1, 12)) { List(random.nextInt(1, 6)) { random.nextInt(40, 200) } }
@@ -137,7 +137,7 @@ class SectionCuttingTest {
     }
 
     @Test
-    fun aSongbookSizedFileIsFlowedByTheSameRules() {
+    fun `a songbook sized file is flowed by the same rules`() {
         val random = Random(11)
         val sections = List(1000) { List(3) { random.nextInt(40, 200) } }
         val padding = IntArray(sections.size)
@@ -177,8 +177,6 @@ class SectionCuttingTest {
         unitSections[unit] == unitSections[unit - 1] && (grid.rows[unit] != grid.rows[unit - 1] || grid.columns[unit] != grid.columns[unit - 1])
     }
 
-    private fun unitSections(sectionUnits: List<List<Int>>) = sectionUnits.flatMapIndexed { section, units -> List(units.size) { section } }.toIntArray()
-
     private fun flow(
         sectionUnits: List<List<Int>>,
         columnCount: Int,
@@ -202,7 +200,7 @@ class SectionCuttingTest {
     }
 
     @Test
-    fun aChordsSectionTallerThanThePageRunsOnIntoTheNextColumn() {
+    fun `a chords section taller than the page runs on into the next column`() {
         fun grid(isCuttable: Boolean) = flowLikeAMagazine(
             sectionStarts = intArrayOf(0, 1, 5),
             columnCount = 2,
@@ -219,6 +217,3 @@ class SectionCuttingTest {
         assertContentEquals(intArrayOf(1, 1), grid(isCuttable = false).columnCounts)
     }
 }
-
-private const val SECTION_GAP = 20
-private const val ROW_GAP = 40

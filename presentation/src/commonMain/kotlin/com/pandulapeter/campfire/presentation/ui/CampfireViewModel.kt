@@ -113,6 +113,8 @@ import com.pandulapeter.campfire.presentation.ui.playing.withTempo
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.NavigationState
+import com.pandulapeter.campfire.presentation.ui.navigation.followingSongRename
+import com.pandulapeter.campfire.presentation.ui.navigation.isShowingSong
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.LibraryPersistence
 import com.pandulapeter.campfire.presentation.ui.platform.requestLibraryPersistence
@@ -1006,27 +1008,9 @@ class CampfireViewModel(
             // the old name and the entry is taken out again.
             if ((metronomeContext as? MetronomeContext.Song)?.songFileName == song.fileName) metronomeRenames[song.fileName] = fileName
             songTextStore.updateSongTexts { texts -> texts[song.fileName]?.let { texts - song.fileName + (fileName to it) } ?: texts }
-            // The details screen is named after the songs it pages through, so the entry showing this one is rewritten
-            // rather than popped: the action can be taken from that screen, and a song that has just been renamed is
-            // still the song being read.
             backStack.forEachIndexed { index, destination ->
-                when {
-                    destination is CampfireDestination.SongDetails && song.fileName in destination.songFileNames -> {
-                        // A destination opened on a setlist that named both files - the old name and the one the song is
-                        // moving to, whose file this device did not have - would otherwise name the same song twice, and
-                        // the pager keys its pages by that name.
-                        val songFileNames = destination.songFileNames.map { if (it == song.fileName) fileName else it }.distinct()
-                        backStack[index] = destination.copy(
-                            songFileNames = songFileNames,
-                            // The page the reader is on, so that a rename leaves them looking at the song they renamed.
-                            initialIndex = songFileNames.indexOf(fileName),
-                        )
-                    }
-
-                    destination is CampfireDestination.SongEditor && destination.fileName == song.fileName -> {
-                        backStack[index] = destination.copy(fileName = fileName)
-                    }
-                }
+                val renamed = destination.followingSongRename(from = song.fileName, to = fileName)
+                if (renamed !== destination) backStack[index] = renamed
             }
             songDetailsCurrentSongs.entries.filter { it.value == song.fileName }.forEach { songDetailsCurrentSongs[it.key] = fileName }
             songDetailsTargetSongs.entries.filter { it.value == song.fileName }.forEach { songDetailsTargetSongs[it.key] = fileName }
@@ -1047,7 +1031,7 @@ class CampfireViewModel(
         editorSession.clearEditorDraft()
         // A screen showing the file that has just gone is closed first, or it would sit there on nothing. The editor
         // goes before the details screen underneath it, so both have to be checked rather than only the top one.
-        while (backStack.lastOrNull().let { it is CampfireDestination.SongEditor && it.fileName == fileName || it is CampfireDestination.SongDetails && fileName in it.songFileNames }) {
+        while (backStack.lastOrNull().isShowingSong(fileName)) {
             popBackStack()
         }
         songTextStore.updateSongTexts { it - fileName }

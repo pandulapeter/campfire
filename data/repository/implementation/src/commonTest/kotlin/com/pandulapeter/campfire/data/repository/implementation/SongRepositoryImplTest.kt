@@ -10,12 +10,10 @@
 package com.pandulapeter.campfire.data.repository.implementation
 
 import com.pandulapeter.campfire.data.model.domain.Logger
-import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.SongContent
 import com.pandulapeter.campfire.data.repository.implementation.base.RecordingLogger
 import com.pandulapeter.campfire.data.source.local.api.LibraryChanges
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLock
-import com.pandulapeter.campfire.data.source.local.api.SongLocalSource
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -25,10 +23,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.yield
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /**
@@ -236,73 +234,51 @@ class SongRepositoryImplTest {
         assertTrue(FILE_NAME !in localSource.files)
     }
 
-    /** A library held in a map, with only the calls a save, a creation and a deletion make answered. */
-    private class FakeSongLocalSource(files: Map<String, String>) : SongLocalSource {
+    @Test
+    fun `a renamed song is listed under its new name alone`() = runTest {
+        val localSource = FakeSongLocalSource(mapOf("old.cho" to "text"))
+        localSource.renames["old.cho"] = "new.cho"
+        val repository = SongRepositoryImpl(localSource, SongContentRepositoryImpl(localSource, Logger.Standard), LibraryFileLock(), LibraryChanges(), Logger.Standard)
+        val song = repository.loadSongsIfNeeded()!!.single()
 
-        val files = files.toMutableMap()
+        val renamed = repository.renameSong(song)
 
-        /** Awaited once a save or a deletion has reached the map: the file changed, the caller has not heard yet. */
-        var afterWriteGate: CompletableDeferred<Unit>? = null
+        assertEquals("new.cho", renamed?.fileName)
+        assertEquals(listOf("new.cho"), repository.songs.first().data?.map { it.fileName })
+    }
 
-        override suspend fun loadSongs(onProgress: (List<Song>) -> Unit) = files.keys.map(::song)
+    @Test
+    fun `a rename drops the cached text of the old name`() = runTest {
+        val localSource = FakeSongLocalSource(mapOf("old.cho" to "text"))
+        localSource.renames["old.cho"] = "new.cho"
+        val songContentRepository = SongContentRepositoryImpl(localSource, Logger.Standard)
+        val repository = SongRepositoryImpl(localSource, songContentRepository, LibraryFileLock(), LibraryChanges(), Logger.Standard)
+        val song = repository.loadSongsIfNeeded()!!.single()
+        songContentRepository.loadSongContent("old.cho")
 
-        /** A file whose deletion fails, as one held open by another program would on Windows. */
-        var undeletableFileName: String? = null
+        repository.renameSong(song)
 
-        override suspend fun loadSongFileSizes() = files.mapValues { (_, text) -> text.length.toLong() }
+        assertEquals(null, songContentRepository.loadSongContent("old.cho"))
+    }
 
-        /** Awaited by a read of the file it is filed under, as a slow storage would keep a refresh reading. */
-        val loadGates = mutableMapOf<String, CompletableDeferred<Unit>>()
+    @Test
+    fun `a song the local source does not rename leaves the list as it was`() = runTest {
+        val localSource = FakeSongLocalSource(mapOf("a.cho" to "a", "b.cho" to "b"))
+        val repository = SongRepositoryImpl(localSource, SongContentRepositoryImpl(localSource, Logger.Standard), LibraryFileLock(), LibraryChanges(), Logger.Standard)
+        val before = repository.loadSongsIfNeeded()
 
-        override suspend fun loadSong(fileName: String): Song? {
-            loadGates[fileName]?.await()
-            return if (fileName in files) song(fileName) else null
-        }
+        assertNull(repository.renameSong(before!!.first()))
+        assertEquals(before, repository.songs.first().data)
+    }
 
-        override suspend fun loadSongContent(fileName: String) = files[fileName]?.let { SongContent(fileName = fileName, text = it) }
+    @Test
+    fun `songs adopted before the list was read read the whole library`() = runTest {
+        val localSource = FakeSongLocalSource(mapOf("a.cho" to "a", "imported.cho" to "imported"))
+        val repository = SongRepositoryImpl(localSource, SongContentRepositoryImpl(localSource, Logger.Standard), LibraryFileLock(), LibraryChanges(), Logger.Standard)
 
-        override suspend fun saveSongContent(content: SongContent) {
-            files[content.fileName] = content.text
-            afterWriteGate?.await()
-        }
+        repository.adoptImported(listOf(localSource.song("imported.cho")))
 
-        override suspend fun createSong(title: String, artist: String, text: String): Song {
-            val fileName = generateSequence(1) { it + 1 }.map { if (it == 1) "$title.cho" else "${title}_$it.cho" }.first { it !in files }
-            // The storage finds the name free on one trip and writes under it on another, and this is the gap between them.
-            yield()
-            files[fileName] = text
-            return song(fileName)
-        }
-
-        override fun importFileName(fallbackTitle: String, text: String) = throw UnsupportedOperationException()
-
-        override suspend fun importSong(fileName: String, text: String, shouldReplace: Boolean) = throw UnsupportedOperationException()
-
-        override suspend fun renameSong(song: Song) = throw UnsupportedOperationException()
-
-        override suspend fun deleteSong(fileName: String) {
-            if (fileName == undeletableFileName) throw IllegalStateException("The file is in use.")
-            files.remove(fileName)
-            afterWriteGate?.await()
-        }
-
-        override suspend fun exists(fileName: String) = fileName in files
-
-        private fun song(fileName: String) = Song(
-            fileName = fileName,
-            // Titled with what the file holds, so that a list entry shows whether it was read before or after a save.
-            title = files[fileName] ?: fileName,
-            artist = "",
-            key = null,
-            transpose = 0,
-            tags = emptyList(),
-            languages = emptyList(),
-            coverArtUrl = null,
-            hasChords = false,
-            canUpdateFileName = false,
-            lastModified = 0L,
-            size = 0L,
-        )
+        assertEquals(listOf("a.cho", "imported.cho"), repository.songs.first().data?.map { it.fileName }?.sorted())
     }
 
     private companion object {

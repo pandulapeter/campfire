@@ -18,7 +18,7 @@ import kotlin.test.assertEquals
 class SongPickerIndexTest {
 
     @Test
-    fun tagsAreSpelledByTheFirstSongByFileNameAndCountedOncePerSong() {
+    fun `tags are spelled by the first song by file name and counted once per song`() {
         val options = pickerFilterOptions(
             listOf(
                 song("c", tags = listOf("christmas")),
@@ -35,13 +35,13 @@ class SongPickerIndexTest {
     }
 
     @Test
-    fun aLibraryInOneLanguageHasNoLanguagesToOffer() {
+    fun `a library in one language has no languages to offer`() {
         val options = pickerFilterOptions(listOf(song("a", languages = listOf("en")), song("b", languages = listOf("en"))))
         assertEquals(emptyList(), options.languages)
     }
 
     @Test
-    fun languagesAreMostUsedFirstWithTheUnknownOnesLast() {
+    fun `languages are most used first with the unknown ones last`() {
         val options = pickerFilterOptions(
             listOf(
                 song("a"),
@@ -64,7 +64,7 @@ class SongPickerIndexTest {
     }
 
     @Test
-    fun pickerMatchesAreRankedLikeTheSongsScreen() {
+    fun `picker matches are ranked like the songs screen`() {
         val songs = listOf(
             pickable("ballad", title = "ballad", tags = listOf("love songs")),
             pickable("other", title = "other", artist = "lovers"),
@@ -86,7 +86,7 @@ class SongPickerIndexTest {
     }
 
     @Test
-    fun pickerChipsStillExcludeSongs() {
+    fun `picker chips still exclude songs`() {
         val songs = listOf(
             pickable("ballad", title = "ballad", tags = listOf("love songs"), languages = listOf("en")),
             pickable("love", title = "love me do", languages = listOf("hu")),

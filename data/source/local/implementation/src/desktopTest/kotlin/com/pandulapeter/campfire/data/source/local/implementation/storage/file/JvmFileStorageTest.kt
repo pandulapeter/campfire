@@ -9,8 +9,10 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.storage.file
 
+import com.pandulapeter.campfire.data.model.domain.normalizedToNfc
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import com.pandulapeter.campfire.data.source.local.implementation.arrivingCollisionSuffix
+import com.pandulapeter.campfire.data.source.local.implementation.moveFile
 import com.pandulapeter.campfire.data.source.local.implementation.uniqueName
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -372,6 +374,21 @@ class JvmFileStorageTest {
         fileStorage.writeText(StorageDirectory.SONGS, "a.cho", "content")
 
         assertEquals("A.cho", fileStorage.uniqueName(StorageDirectory.SONGS, "A.cho", currentName = "a.cho"))
+    }
+
+    @Test
+    fun `keeps a file moved to its own name in another case and Unicode form`() = runBlocking {
+        // `Ένα.cho` decomposed, as macOS hands it out, moved to the composed lowercase name the library would give it.
+        val current = "Ένα.cho"
+        val new = "ένα.cho"
+        fileStorage.writeText(StorageDirectory.SONGS, current, "{title: Ένα}\n")
+
+        fileStorage.moveFile(StorageDirectory.SONGS, currentName = current, newName = new) {
+            fileStorage.writeText(StorageDirectory.SONGS, it, "{title: Ένα}\n")
+        }
+
+        assertEquals("{title: Ένα}\n", fileStorage.readText(StorageDirectory.SONGS, new))
+        assertEquals(listOf(new), fileStorage.list(StorageDirectory.SONGS).map { it.name.normalizedToNfc() })
     }
 
     @Test

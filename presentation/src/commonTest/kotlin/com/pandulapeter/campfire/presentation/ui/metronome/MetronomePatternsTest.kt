@@ -48,7 +48,7 @@ class MetronomePatternsTest {
     )
 
     @Test
-    fun aSongPlaysItsOwnTempoAndSignatureWithTheAccentsDrawnForIt() {
+    fun `a song plays its own tempo and signature with the accents drawn for it`() {
         val pattern = metronomePatternOf(MetronomeContext.Song("a.cho", null), settings, mapOf("a.cho" to song)::get, Tempos())
         assertEquals(96, pattern.bpm)
         assertEquals(TimeSignature(7, 8), pattern.timeSignature)
@@ -58,7 +58,7 @@ class MetronomePatternsTest {
     }
 
     @Test
-    fun aStretchAfterAChangePlaysItsOwnTempoAndSignature() {
+    fun `a stretch after a change plays its own tempo and signature`() {
         val timing = SongTiming(index = 0, bpm = 55, timeSignature = TimeSignature(3, 4))
         val pattern = metronomePatternOf(MetronomeContext.Song("a.cho", null, timing), settings, mapOf("a.cho" to song)::get, Tempos())
         assertEquals(55, pattern.bpm)
@@ -68,7 +68,7 @@ class MetronomePatternsTest {
 
     /** A stretch of a song that names no tempo is played at the song's own, an override of it included. */
     @Test
-    fun aStretchWithNoTempoPlaysTheSongsOwn() {
+    fun `a stretch with no tempo plays the song's own`() {
         val timing = SongTiming(index = 0, bpm = null, timeSignature = TimeSignature(6, 8))
         val tempos = Tempos().with(SongPlace("a.cho", null), 110)
         val pattern = metronomePatternOf(MetronomeContext.Song("a.cho", null, timing), settings, mapOf("a.cho" to song)::get, tempos)
@@ -77,7 +77,7 @@ class MetronomePatternsTest {
     }
 
     @Test
-    fun theTabPlaysItsOwn() {
+    fun `the tab plays its own`() {
         val pattern = metronomePatternOf(MetronomeContext.Standalone, settings, { null }, Tempos())
         assertEquals(140, pattern.bpm)
         assertEquals(TimeSignature(3, 4), pattern.timeSignature)
@@ -85,14 +85,14 @@ class MetronomePatternsTest {
     }
 
     @Test
-    fun aSongThatSaysNothingIsCommonTimeAtTheDefault() {
+    fun `a song that says nothing is common time at the default`() {
         val pattern = metronomePatternOf(MetronomeContext.Song("b.cho", null), settings, { null }, Tempos())
         assertEquals(120, pattern.bpm)
         assertEquals(TimeSignature.COMMON_TIME, pattern.timeSignature)
     }
 
     @Test
-    fun unknownIdsAndAccentsOfTheWrongLengthFallBack() {
+    fun `unknown IDs and accents of the wrong length fall back`() {
         val broken = MetronomeSettings(soundId = "kazoo", subdivisionId = "quintuplets", beatLevels = mapOf("4/4" to listOf("accent")))
         val pattern = metronomePatternOf(MetronomeContext.Standalone, broken, { null }, Tempos())
         assertEquals(MetronomeSound.CLICK, pattern.sound)

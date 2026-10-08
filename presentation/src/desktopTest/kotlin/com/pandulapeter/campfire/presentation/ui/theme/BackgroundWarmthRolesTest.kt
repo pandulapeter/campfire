@@ -47,10 +47,10 @@ class BackgroundWarmthRolesTest {
     }
 
     @Test
-    fun theRolesAreFound() = assertTrue(roleGetters.size >= 48, "Only ${roleGetters.size} roles were found")
+    fun `the roles are found`() = assertTrue(roleGetters.size >= 48, "Only ${roleGetters.size} roles were found")
 
     @Test
-    fun everyRoleOfTheLightHalfIsDimmedByTheSameFactor() = palettes.forEach { palette ->
+    fun `every role of the light half is dimmed by the same factor`() = palettes.forEach { palette ->
         (1..UserPreferences.MAX_BACKGROUND_WARMTH).forEach { level ->
             val scale = 1 - (1 - MIN_LIGHT_LUMINANCE_SCALE.toFloat()) * level / UserPreferences.MAX_BACKGROUND_WARMTH
             val warmed = palette.withBackgroundWarmth(level).light.roles()
@@ -63,7 +63,7 @@ class BackgroundWarmthRolesTest {
     }
 
     @Test
-    fun everyRoleOfTheDarkHalfKeepsItsLuminance() = palettes.forEach { palette ->
+    fun `every role of the dark half keeps its luminance`() = palettes.forEach { palette ->
         val warmed = palette.withBackgroundWarmth(UserPreferences.MAX_BACKGROUND_WARMTH).dark.roles()
         palette.dark.roles().forEach { (role, before) ->
             // Eight bits a channel is all a color is stored in, which is all the difference allowed.

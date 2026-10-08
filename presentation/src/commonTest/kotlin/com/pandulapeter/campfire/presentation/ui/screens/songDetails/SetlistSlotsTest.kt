@@ -17,19 +17,19 @@ import kotlin.test.assertNull
 class SetlistSlotsTest {
 
     @Test
-    fun preservesPositionsIncludingMissingEntries() {
+    fun `preserves positions including missing entries`() {
         val entries = listOf("first.cho", "missing.cho", "last.cho").map { Setlist.Entry(it) }
         assertEquals(SetlistSlots(listOf(0, 2), 3), buildSetlistSlots(entries, listOf("first.cho", "last.cho")))
     }
 
     @Test
-    fun duplicateNamesUseFirstEntry() {
+    fun `duplicate names use first entry`() {
         val entries = listOf("song.cho", "song.cho").map { Setlist.Entry(it) }
         assertEquals(SetlistSlots(listOf(0), 2), buildSetlistSlots(entries, listOf("song.cho")))
     }
 
     @Test
-    fun unavailablePagerSongInvalidatesAllSlots() {
+    fun `unavailable pager song invalidates all slots`() {
         val entries = listOf(Setlist.Entry("present.cho"))
         assertNull(buildSetlistSlots(entries, listOf("present.cho", "removed.cho")))
         assertNull(buildSetlistSlots(emptyList(), listOf("renaming.cho")))

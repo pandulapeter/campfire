@@ -108,6 +108,15 @@ internal fun MutableMap<String, Int>.nextFoldKey(name: String): String {
     return "$name#$occurrence"
 }
 
+/**
+ * The key of the next run of [kind] inside the section folded as [sectionFold], named by its label or, unlabelled, by
+ * its kind (`intro#1/tab#2`). Saved in the preferences, so its form is the one every key already saved there has.
+ */
+internal fun MutableMap<String, Int>.nextRunFoldKey(sectionFold: String, label: String?, kind: FoldableKind): String {
+    val runName = label ?: kind.name.lowercase()
+    return "$sectionFold/${nextFoldKey(runName)}"
+}
+
 /** Whether a run (or a section that is nothing else) is unfolded, and how to fold or unfold it. */
 internal class FoldToggle(
     val isExpanded: Boolean,

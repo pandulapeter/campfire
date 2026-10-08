@@ -17,12 +17,12 @@ internal class SetChordProTagUseCaseImplTest {
     private val setChordProTag = SetChordProTagUseCaseImpl()
 
     @Test
-    fun aComposedTagRemovesItsDecomposedSpelling() {
+    fun `a composed tag removes its decomposed spelling`() {
         assertEquals("[C]a", setChordProTag(text = "{tag: Café}\n[C]a", tag = "Café", isSelected = false))
     }
 
     @Test
-    fun aComposedTagIsNotAddedNextToItsDecomposedSpelling() {
+    fun `a composed tag is not added next to its decomposed spelling`() {
         val text = "{tag: Café}\n[C]a"
 
         assertEquals(text, setChordProTag(text = text, tag = "Café", isSelected = true))

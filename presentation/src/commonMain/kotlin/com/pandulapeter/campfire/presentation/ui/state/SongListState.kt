@@ -95,15 +95,7 @@ internal class SongListState(
      * failed) here, so that a list without data never sits on a loading indicator that nothing will ever replace.
      */
     val songsPlaceholder = combine(screenData, songGroups, isImporting) { screenData, songGroups, isImporting ->
-        val data = screenData.data
-        when {
-            songGroups.groups.isNotEmpty() -> null
-            // The library itself, not the filtered list: a library that only holds songs the filters hide is not an
-            // empty one, and offering to create a first song there would be answering a question nobody asked.
-            data == null || data.unfilteredSongs.isEmpty() -> screenData.emptyPlaceholder(Placeholder.NO_SONGS, isImporting)
-            data.songs.isEmpty() -> Placeholder.ALL_SONGS_HIDDEN
-            else -> Placeholder.NO_MATCHING_SONGS
-        }
+        songListPlaceholder(screenData = screenData, songGroups = songGroups, isImporting = isImporting)
     }.asState(scope, Placeholder.LOADING)
 
     /** A selected tag is matched the way the filter itself matches it, without regard to case. */

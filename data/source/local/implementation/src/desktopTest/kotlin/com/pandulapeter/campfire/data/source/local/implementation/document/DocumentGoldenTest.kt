@@ -24,14 +24,14 @@ import kotlinx.coroutines.runBlocking
 
 class DocumentGoldenTest {
     @Test
-    fun campfireExportImportsAccentsAndChordsAtTheirPrintedPositions() = runBlocking {
+    fun `campfire export imports accents and chords at their printed positions`() = runBlocking {
         val document = assertNotNull(DocumentLocalSourceImpl(Logger.Standard).extract(ImportedFile("campfire.pdf", resource("campfire.pdf"))))
         val songs = ChordSheetConverter.convert(document.sheet(), String::normalizedToNfc)
         assertEquals(listOf(resource("campfire.cho").decodeToString()), songs)
     }
 
     @Test
-    fun campfireExportImportsBothColumnsAsOneSongInReadingOrder() = runBlocking {
+    fun `campfire export imports both columns as one song in reading order`() = runBlocking {
         val document = assertNotNull(DocumentLocalSourceImpl(Logger.Standard).extract(ImportedFile("campfire-columns.pdf", resource("campfire-columns.pdf"))))
         val expected = "{title: Column song}\n\n{start_of_verse: Verse 1}\n" +
             (1..30).joinToString("\n") { "[Am]Line ${it.toString().padStart(2, '0')} singing [F]together." } + "\n{end_of_verse}\n"
@@ -39,7 +39,7 @@ class DocumentGoldenTest {
     }
 
     @Test
-    fun campfireExportsOfThreeAndFourColumnsImportAsOneSongInReadingOrder() = runBlocking {
+    fun `campfire exports of three and four columns import as one song in reading order`() = runBlocking {
         for ((name, lineCount) in listOf("campfire-columns-3-landscape" to 28, "campfire-columns-4" to 68, "campfire-columns-4-landscape" to 44)) {
             val document = assertNotNull(DocumentLocalSourceImpl(Logger.Standard).extract(ImportedFile("$name.pdf", resource("$name.pdf"))), name)
             val expected = "{title: Column song}\n\n{start_of_verse: Verse 1}\n" +
@@ -49,7 +49,7 @@ class DocumentGoldenTest {
     }
 
     @Test
-    fun campfireExportOfFourFilledColumnsOfTheLargestTextImportsInReadingOrderWithItsChords() = runBlocking {
+    fun `campfire export of four filled columns of the largest text imports in reading order with its chords`() = runBlocking {
         val document = assertNotNull(DocumentLocalSourceImpl(Logger.Standard).extract(ImportedFile("campfire-columns-dense.pdf", resource("campfire-columns-dense.pdf"))))
         // A line wrapped in the column is imported as the lines it was printed as, each with its chord over its syllable.
         val expected = "{title: Dense}\n\n{start_of_verse: Verse 1}\n" + (1..40).joinToString("\n") {
@@ -59,7 +59,7 @@ class DocumentGoldenTest {
     }
 
     @Test
-    fun independentGeneratorFixturesMatchTheirChordProGoldenFiles() = runBlocking {
+    fun `independent generator fixtures match their ChordPro golden files`() = runBlocking {
         for (name in listOf("python-docx.docx", "libreoffice.docx", "reportlab.pdf", "libreoffice.pdf", "chrome.pdf", "reportlab-unicode.pdf", "two-column.pdf", "songbook.pdf")) {
             val document = assertNotNull(DocumentLocalSourceImpl(Logger.Standard).extract(ImportedFile(name, resource(name))), name)
             val result = ChordSheetConverter.convert(document.sheet(), String::normalizedToNfc)

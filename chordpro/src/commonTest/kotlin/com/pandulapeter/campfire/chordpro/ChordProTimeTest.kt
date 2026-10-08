@@ -16,19 +16,19 @@ import kotlin.test.assertNull
 class ChordProTimeTest {
 
     @Test
-    fun readsAFraction() {
+    fun `reads a fraction`() {
         assertEquals(3 to 4, ChordProTime.parse("3/4"))
         assertEquals(6 to 8, ChordProTime.parse(" 6 / 8 "))
     }
 
     @Test
-    fun readsTheCommonAndCutTimeMarks() {
+    fun `reads the common and cut time marks`() {
         assertEquals(4 to 4, ChordProTime.parse("C"))
         assertEquals(2 to 2, ChordProTime.parse("C|"))
     }
 
     @Test
-    fun readsNothingOutOfRange() {
+    fun `reads nothing out of range`() {
         assertNull(ChordProTime.parse("17/4"))
         assertNull(ChordProTime.parse("4/3"))
         assertNull(ChordProTime.parse("0/4"))

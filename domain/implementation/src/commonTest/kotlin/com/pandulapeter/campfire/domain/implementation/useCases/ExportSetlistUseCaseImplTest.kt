@@ -9,17 +9,9 @@
  */
 package com.pandulapeter.campfire.domain.implementation.useCases
 
-import com.pandulapeter.campfire.data.model.DataState
-import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.SongContent
-import com.pandulapeter.campfire.data.repository.api.ArchiveRepository
-import com.pandulapeter.campfire.data.repository.api.SetlistRepository
-import com.pandulapeter.campfire.data.repository.api.SongContentRepository
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -31,7 +23,7 @@ class ExportSetlistUseCaseImplTest {
 
     @Test
     fun `a setlist is named by its title`() = runTest {
-        val exported = useCase(setlist(fileName = "summer_2.setlist.json", title = "Summer set")).invoke("summer_2.setlist.json")
+        val exported = useCase(testSetlist(fileName = "summer_2.setlist.json", title = "Summer set")).invoke("summer_2.setlist.json")
 
         assertEquals("summer_set.zip", assertNotNull(exported).name)
         assertEquals(setOf("summer_2.setlist.json"), archive.packed.keys)
@@ -39,85 +31,43 @@ class ExportSetlistUseCaseImplTest {
 
     @Test
     fun `a blank title is still a name`() = runTest {
-        val exported = useCase(setlist(fileName = "gig.setlist.json", title = "")).invoke("gig.setlist.json")
+        val exported = useCase(testSetlist(fileName = "gig.setlist.json", title = "")).invoke("gig.setlist.json")
 
         assertEquals("untitled.zip", assertNotNull(exported).name)
     }
 
     @Test
     fun `songs left out are neither in the archive nor named by the setlist in it`() = runTest {
-        val setlist = setlist(fileName = "gig.setlist.json", title = "Gig").copy(
-            entries = listOf("a.cho", "b.cho", "c.cho").map { Setlist.Entry(songFileName = it) },
-        )
+        val setlist = testSetlist(fileName = "gig.setlist.json", title = "Gig", entries = listOf("a.cho", "b.cho", "c.cho"))
         val repository = FakeSetlistRepository(setlist)
 
-        useCase(repository, FakeSongContentRepository(readable = setOf("a.cho", "b.cho", "c.cho"))).invoke("gig.setlist.json", setOf("a.cho", "c.cho"))
+        useCase(repository, readable = setOf("a.cho", "b.cho", "c.cho")).invoke("gig.setlist.json", setOf("a.cho", "c.cho"))
 
         assertEquals(setOf("gig.setlist.json", "a.cho", "c.cho"), archive.packed.keys)
         assertEquals(setOf("a.cho", "c.cho"), repository.requestedSongFileNames)
     }
 
-    private fun useCase(setlist: Setlist) = useCase(FakeSetlistRepository(setlist), FakeSongContentRepository())
+    private fun useCase(setlist: Setlist) = useCase(FakeSetlistRepository(setlist))
 
-    private fun useCase(setlistRepository: SetlistRepository, songContentRepository: SongContentRepository) = ExportSetlistUseCaseImpl(
+    private fun useCase(setlistRepository: FakeSetlistRepository, readable: Set<String> = emptySet()) = ExportSetlistUseCaseImpl(
         setlistRepository = setlistRepository,
-        songContentRepository = songContentRepository,
+        songContentRepository = object : SongContentRepositoryStub() {
+            override suspend fun loadSongContent(fileName: String, useCache: Boolean) =
+                if (fileName in readable) SongContent(fileName, "{title: $fileName}") else null
+        },
         archiveRepository = archive,
     )
 
-    private class FakeSetlistRepository(private val setlist: Setlist) : SetlistRepository {
+    /** Holds the one setlist, and records which songs its document was asked to name. */
+    private class FakeSetlistRepository(private val setlist: Setlist) : SetlistRepositoryStub() {
 
         var requestedSongFileNames: Set<String>? = null
 
-        override val setlists: Flow<DataState<List<Setlist>>> = emptyFlow()
         override suspend fun loadSetlistsIfNeeded() = listOf(setlist)
-        override suspend fun loadSetlistFileNamesNaming(songFileName: String) = throw UnsupportedOperationException()
-        override suspend fun rescan() = throw UnsupportedOperationException()
-        override suspend fun refresh(fileNames: Set<String>) = throw UnsupportedOperationException()
-        override suspend fun adoptImported(setlists: Collection<Setlist>) = throw UnsupportedOperationException()
-        override suspend fun createSetlist(title: String, description: String, date: LocalDate, isCountdownShown: Boolean) = throw UnsupportedOperationException()
-        override suspend fun saveSetlist(setlist: Setlist) = throw UnsupportedOperationException()
-        override suspend fun updateSetlist(fileName: String, transform: (Setlist) -> Setlist) = throw UnsupportedOperationException()
-        override suspend fun renameSetlist(fileName: String, title: String, description: String, date: LocalDate, isCountdownShown: Boolean) = throw UnsupportedOperationException()
-        override suspend fun parseSetlist(document: String) = throw UnsupportedOperationException()
-        override suspend fun importSetlist(setlist: Setlist, shouldReplace: Boolean) = throw UnsupportedOperationException()
-        override suspend fun loadSetlistFileSizes(): Map<String, Long> = throw UnsupportedOperationException()
+
         override suspend fun loadSetlistDocument(fileName: String, songFileNames: Set<String>?): String? {
             requestedSongFileNames = songFileNames
             return if (fileName == setlist.fileName) "{}" else null
         }
-        override suspend fun deleteSetlist(fileName: String) = throw UnsupportedOperationException()
-        override suspend fun deleteAllSetlists() = throw UnsupportedOperationException()
-    }
-
-    private class FakeSongContentRepository(private val readable: Set<String> = emptySet()) : SongContentRepository {
-        override val invalidations: Flow<Long> = emptyFlow()
-        override suspend fun loadSongContent(fileName: String, useCache: Boolean) = if (fileName in readable) SongContent(fileName, "{title: $fileName}") else null
-        override suspend fun invalidate(fileName: String?) = throw UnsupportedOperationException()
-        override suspend fun invalidate(fileNames: Set<String>) = throw UnsupportedOperationException()
-    }
-
-    private class FakeArchiveRepository : ArchiveRepository {
-
-        var packed: Map<String, ByteArray> = emptyMap()
-
-        override suspend fun unpack(archive: ByteArray, maxSize: Long): List<ImportedFile> = throw UnsupportedOperationException()
-
-        override suspend fun pack(files: Map<String, ByteArray>): ByteArray {
-            packed = files
-            return ByteArray(0)
-        }
-    }
-
-    private companion object {
-        fun setlist(fileName: String, title: String) = Setlist(
-            fileName = fileName,
-            title = title,
-            description = "",
-            date = LocalDate(2026, 1, 1),
-            isArchived = false,
-            entries = emptyList(),
-            size = 0L,
-        )
     }
 }

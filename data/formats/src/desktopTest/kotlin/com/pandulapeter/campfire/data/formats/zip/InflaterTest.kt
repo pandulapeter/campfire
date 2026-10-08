@@ -38,7 +38,7 @@ internal class InflaterTest {
     )
 
     @Test
-    fun inflatesRawDeflateAtEveryLevel() {
+    fun `inflates raw deflate at every level`() {
         for ((name, fixture) in fixtures) {
             for (level in 0..9) {
                 val compressed = deflate(fixture, level, nowrap = true)
@@ -49,7 +49,7 @@ internal class InflaterTest {
     }
 
     @Test
-    fun inflatesTheDeflateStreamInsideAZlibWrapper() {
+    fun `inflates the deflate stream inside a zlib wrapper`() {
         for ((name, fixture) in fixtures) {
             for (level in 0..9) {
                 // Skip the 2 byte zlib header and the 4 byte Adler-32 trailer: the inflater only handles raw deflate.
@@ -61,7 +61,7 @@ internal class InflaterTest {
     }
 
     @Test
-    fun inflatesAtAnOffsetInsideALargerBuffer() {
+    fun `inflates at an offset inside a larger buffer`() {
         val fixture = fixtures.getValue("repeated abc")
         val compressed = deflate(fixture, 6, nowrap = true)
         val padded = ByteArray(17) { 0x7F } + compressed + ByteArray(23) { 0x2A }
@@ -70,7 +70,7 @@ internal class InflaterTest {
     }
 
     @Test
-    fun rejectsGarbage() {
+    fun `rejects garbage`() {
         assertFailsWith<ZipException> { Inflater.inflate(byteArrayOf(0x07)) } // Block type 3.
         assertFailsWith<ZipException> { Inflater.inflate(ByteArray(0)) } // Ends before the first block header.
         val truncated = deflate(fixtures.getValue("random 2 MB"), 9, nowrap = true)
@@ -78,7 +78,7 @@ internal class InflaterTest {
     }
 
     @Test
-    fun rejectsAnUnexpectedOutputSize() {
+    fun `rejects an unexpected output size`() {
         val fixture = fixtures.getValue("single byte")
         val compressed = deflate(fixture, 6, nowrap = true)
 

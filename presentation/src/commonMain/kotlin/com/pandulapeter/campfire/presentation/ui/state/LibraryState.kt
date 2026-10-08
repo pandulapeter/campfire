@@ -18,6 +18,7 @@ import com.pandulapeter.campfire.domain.api.useCases.GetScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.LoadScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.NormalizeSearchTextUseCase
 import com.pandulapeter.campfire.presentation.ui.components.LabelsOnEverySong
+import com.pandulapeter.campfire.presentation.ui.components.labelsOnEverySongOf
 import com.pandulapeter.campfire.presentation.ui.screens.settings.LibrarySummary
 import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroups
 import com.pandulapeter.campfire.presentation.ui.search.SongSearchIndex
@@ -100,18 +101,7 @@ internal class LibraryState(
      * all carry that tag, and the rows would then lose the very label the reader narrowed them by. Tags are folded
      * to lowercase the way the filters count them, so two spellings of one word are one tag here too.
      */
-    val labelsOnEverySong = allSongs.map { songs ->
-        // Folded one song at a time, stopping at the first song that leaves both empty, which in most libraries is the
-        // second one.
-        var tags: Set<String>? = null
-        var languages: Set<String>? = null
-        for (song in songs) {
-            if (tags?.isEmpty() != true) song.tags.mapTo(HashSet()) { it.lowercase() }.let { tags = tags?.intersect(it) ?: it }
-            if (languages?.isEmpty() != true) song.languages.toSet().let { languages = languages?.intersect(it) ?: it }
-            if (tags?.isEmpty() == true && languages?.isEmpty() == true) break
-        }
-        LabelsOnEverySong(tags = tags.orEmpty(), languages = languages.orEmpty())
-    }.flowOn(Dispatchers.Default).asState(scope, LabelsOnEverySong())
+    val labelsOnEverySong = allSongs.map(::labelsOnEverySongOf).flowOn(Dispatchers.Default).asState(scope, LabelsOnEverySong())
 
     /**
      * Every tag the library uses, most used first, as both the filter controls and the suggestions of the tag

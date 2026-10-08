@@ -16,7 +16,7 @@ import kotlin.test.assertEquals
 class InflaterImportLimitTest {
 
     @Test
-    fun theInflaterAllowsWhatAnImportDoes() {
+    fun `the inflater allows what an import does`() {
         assertEquals(ImportLimits.MAX_IMPORT_SIZE, Inflater.MAX_ENTRY_SIZE.toLong())
     }
 }

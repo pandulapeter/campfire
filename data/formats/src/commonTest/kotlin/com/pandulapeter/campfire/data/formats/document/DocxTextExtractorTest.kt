@@ -15,14 +15,13 @@ import com.pandulapeter.campfire.data.formats.zip.ZipWriter
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class DocxTextExtractorTest {
     @Test
-    fun textBoxParagraphsStaySeparateAndInvalidNumericStylesUseDefaults() = runTest {
+    fun `text box paragraphs stay separate and invalid numeric styles use defaults`() = runTest {
         val xml = document("""
             <w:p><w:r><w:t>Outside</w:t><w:drawing><w:txbxContent>
               <w:p><w:r><w:rPr><w:sz w:val="NaN"/></w:rPr><w:t>First inside</w:t></w:r></w:p>
@@ -35,7 +34,7 @@ class DocxTextExtractorTest {
     }
 
     @Test
-    fun readsATextBoxAndATrackedMoveOnlyOnce() = runTest {
+    fun `reads a text box and a tracked move only once`() = runTest {
         val xml = document("""
             <w:p><w:r><mc:AlternateContent>
               <mc:Choice><w:drawing><wps:txbx><w:txbxContent><w:p><w:r><w:t>Boxed</w:t></w:r></w:p></w:txbxContent></wps:txbx></w:drawing></mc:Choice>
@@ -49,7 +48,7 @@ class DocxTextExtractorTest {
     }
 
     @Test
-    fun readsStylesTrackedChangesHyperlinksBreaksAndTabs() = runTest {
+    fun `reads styles tracked changes hyperlinks breaks and tabs`() = runTest {
         val styles = """<w:styles xmlns:w="urn:test"><w:docDefaults><w:rPrDefault><w:rPr><w:sz w:val="24"/></w:rPr></w:rPrDefault></w:docDefaults><w:style w:styleId="Title"><w:name w:val="Title"/><w:rPr><w:b/><w:sz w:val="40"/></w:rPr></w:style></w:styles>"""
         val xml = document("""
             <w:p><w:pPr><w:pStyle w:val="Title"/></w:pPr><w:r><w:t>Title &amp; song</w:t></w:r></w:p>
@@ -75,7 +74,7 @@ class DocxTextExtractorTest {
     }
 
     @Test
-    fun alignsChordGridCellsAndReadsOtherTablesInCellOrder() = runTest {
+    fun `aligns chord grid cells and reads other tables in cell order`() = runTest {
         fun cell(text: String) = "<w:tc><w:p><w:r><w:t>$text</w:t></w:r></w:p></w:tc>"
         val grid = "<w:tbl><w:tr>${cell("Am")}${cell("C")}</w:tr><w:tr>${cell("Hello")}${cell("world")}</w:tr></w:tbl>"
         val lines = DocxTextExtractor.fromXml(document(grid)).pages.single().lines
@@ -87,7 +86,7 @@ class DocxTextExtractorTest {
     }
 
     @Test
-    fun readsOnlyTheBodyPartsOfAnActualZipAndChecksItsMagic() = runTest {
+    fun `reads only the body parts of an actual zip and checks its magic`() = runTest {
         val bytes = ZipWriter.write(listOf(
             ZipEntry("word/document.xml", document("<w:p><w:r><w:t>Readable</w:t></w:r></w:p>").encodeToByteArray()),
             ZipEntry("word/header1.xml", "not XML and never opened".encodeToByteArray()),
@@ -102,18 +101,7 @@ class DocxTextExtractorTest {
     }
 
     @Test
-    fun xmlReaderSupportsEntitiesCdataAndAlternatePrefixesButRefusesDtdsAndDeepTrees() {
-        val root = parseXml("<x:p xmlns:x='urn:test'><x:t><![CDATA[a<b]]>&amp;&#x151;&#337;&quot;&apos;</x:t></x:p>")
-        assertEquals("a<b&\u0151\u0151\"'", root.child("t")?.text)
-        assertFailsWith<IllegalStateException> { parseXml("<!DOCTYPE a [<!ENTITY e 'expanded'>]><a>&e;</a>") }
-        assertFailsWith<IllegalArgumentException> { parseXml("<a>".repeat(65) + "</a>".repeat(65)) }
-        assertFailsWith<IllegalArgumentException> { parseXml("<a><b></a>") }
-        assertFailsWith<IllegalArgumentException> { parseXml("<a>&#x110000;</a>") }
-        assertFailsWith<IllegalArgumentException> { parseXml("<a>&external;</a>") }
-    }
-
-    @Test
-    fun aWordShapedDocumentOfTenThousandParagraphsIsRead() = runTest {
+    fun `a Word-shaped document of ten thousand paragraphs is read`() = runTest {
         val paragraph = "<w:p w:rsidR='00A1'><w:pPr><w:spacing w:after='0'/><w:rPr><w:rFonts w:ascii='Arial'/><w:sz w:val='22'/></w:rPr></w:pPr>" +
             "<w:r><w:rPr><w:rFonts w:ascii='Arial'/><w:sz w:val='22'/><w:lang w:val='en-US'/></w:rPr><w:t xml:space='preserve'>hello </w:t></w:r></w:p>"
         val lines = DocxTextExtractor.fromXml(document(paragraph.repeat(10_000))).pages.flatMap { it.lines }
@@ -121,12 +109,7 @@ class DocxTextExtractorTest {
     }
 
     @Test
-    fun pathologicallyManyEventsAreStillRejected() {
-        assertFailsWith<IllegalArgumentException> { parseXml("<r>" + "<a/>".repeat(350_000) + "</r>") }
-    }
-
-    @Test
-    fun aTableInsideAContentControlIsRead() = runTest {
+    fun `a table inside a content control is read`() = runTest {
         fun control(content: String) = "<w:sdt><w:sdtPr/><w:sdtContent>$content</w:sdtContent></w:sdt>"
         fun cell(text: String) = "<w:tc><w:p><w:r><w:t>$text</w:t></w:r></w:p></w:tc>"
         val rows = "<w:tr>${cell("C")}</w:tr><w:tr>${cell("lyric")}</w:tr>"

@@ -7,40 +7,36 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.data.source.local.implementation.storage.file
+package com.pandulapeter.campfire.data.model.domain
 
-import com.pandulapeter.campfire.data.model.domain.decodeLibraryText
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * The decoder lives in `:data:model`, which has no tests of its own; it is exercised here, next to the storages that
- * read every library file through it.
- */
+/** How the bytes of a song or setlist file become text, which every storage and the import read through. */
 internal class LibraryTextDecodingTest {
 
     @Test
-    fun readsUtf8AsIs() {
+    fun `reads UTF-8 as is`() {
         assertEquals("{title: Tükörfúrógép}", "{title: Tükörfúrógép}".encodeToByteArray().decodeLibraryText())
     }
 
     @Test
-    fun stripsTheByteOrderMark() {
+    fun `strips the byte order mark`() {
         assertEquals("{title: É}", "\uFEFF{title: É}".encodeToByteArray().decodeLibraryText())
     }
 
     @Test
-    fun stripsEveryByteOrderMarkAtTheStart() {
+    fun `strips every byte order mark at the start`() {
         assertEquals("{title: É}", "\uFEFF\uFEFF{title: É}".encodeToByteArray().decodeLibraryText())
     }
 
     @Test
-    fun keepsAByteOrderMarkInsideTheText() {
+    fun `keeps a byte order mark inside the text`() {
         assertEquals("{title: A}\n\uFEFFx", "{title: A}\n\uFEFFx".encodeToByteArray().decodeLibraryText())
     }
 
     @Test
-    fun readsLatin1LettersOfAFileThatIsNotUtf8() {
+    fun `reads Latin-1 letters of a file that is not UTF-8`() {
         // "Café à la crème" in Windows-1252: every accented letter is a single byte that starts no valid UTF-8 sequence.
         val bytes = bytes(0x43, 0x61, 0x66, 0xE9, 0x20, 0xE0, 0x20, 0x6C, 0x61, 0x20, 0x63, 0x72, 0xE8, 0x6D, 0x65)
 
@@ -48,19 +44,19 @@ internal class LibraryTextDecodingTest {
     }
 
     @Test
-    fun readsTheTypographicRangeOfWindows1252() {
+    fun `reads the typographic range of Windows-1252`() {
         val bytes = bytes(0x93, 0x80, 0x35, 0x96, 0x8A, 0x9E, 0x9F, 0x85, 0x94, 0x99)
 
         assertEquals("“€5–ŠžŸ…”™", bytes.decodeLibraryText())
     }
 
     @Test
-    fun replacesTheBytesWindows1252LeavesUndefined() {
+    fun `replaces the bytes Windows-1252 leaves undefined`() {
         assertEquals("a�����é", bytes(0x61, 0x81, 0x8D, 0x8F, 0x90, 0x9D, 0xE9).decodeLibraryText())
     }
 
     @Test
-    fun readsAHungarianFileInWindows1250() {
+    fun `reads a Hungarian file in Windows-1250`() {
         // "Árvíztűrő tükörfúrógép": the ű and the ő are on the bytes where Windows-1252 has û and õ.
         val bytes = bytes(0xC1, 0x72, 0x76, 0xED, 0x7A, 0x74, 0xFB, 0x72, 0xF5, 0x20, 0x74, 0xFC, 0x6B, 0xF6, 0x72, 0x66, 0xFA, 0x72, 0xF3, 0x67, 0xE9, 0x70)
 
@@ -68,7 +64,7 @@ internal class LibraryTextDecodingTest {
     }
 
     @Test
-    fun readsAPolishFileInWindows1250() {
+    fun `reads a Polish file in Windows-1250`() {
         // "Gęsi za wodą, żółw"
         val bytes = bytes(0x47, 0xEA, 0x73, 0x69, 0x20, 0x7A, 0x61, 0x20, 0x77, 0x6F, 0x64, 0xB9, 0x2C, 0x20, 0xBF, 0xF3, 0xB3, 0x77)
 
@@ -76,7 +72,7 @@ internal class LibraryTextDecodingTest {
     }
 
     @Test
-    fun keepsWesternFilesThatShareBytesWithCentralEuropeanLettersOnWindows1252() {
+    fun `keeps Western files that share bytes with Central European letters on Windows-1252`() {
         // Portuguese õ next to ç and ã, Estonian Õ next to ä, a French û with no á or í, and a Spanish ¿ opening a sentence.
         assertEquals("Corações não", bytes(0x43, 0x6F, 0x72, 0x61, 0xE7, 0xF5, 0x65, 0x73, 0x20, 0x6E, 0xE3, 0x6F).decodeLibraryText())
         assertEquals("Õhtu äär", bytes(0xD5, 0x68, 0x74, 0x75, 0x20, 0xE4, 0xE4, 0x72).decodeLibraryText())
@@ -85,12 +81,12 @@ internal class LibraryTextDecodingTest {
     }
 
     @Test
-    fun readsAStrayWindows1252ByteInsideUtf8AsTheLetterItStandsFor() {
+    fun `reads a stray Windows-1252 byte inside UTF-8 as the letter it stands for`() {
         assertEquals("éé", ("é".encodeToByteArray() + bytes(0xE9)).decodeLibraryText())
     }
 
     @Test
-    fun keepsEveryUtf8CharacterOfASongbookWithOneStrayLine() {
+    fun `keeps every UTF-8 character of a songbook with one stray line`() {
         val songs = "{title: Tükörfúrógép}\n".repeat(20)
         // "Café\n" in Windows-1252, pasted from an old document.
         val bytes = songs.encodeToByteArray() + bytes(0x43, 0x61, 0x66, 0xE9, 0x0A)
@@ -99,13 +95,13 @@ internal class LibraryTextDecodingTest {
     }
 
     @Test
-    fun readsStrayHungarianBytesThroughWindows1250() {
+    fun `reads stray Hungarian bytes through Windows-1250`() {
         // Only the double acutes of "tűrő" are Windows-1250; the UTF-8 "Á" and "í" are what make the text Hungarian.
         assertEquals("Árvíz tűrő", ("Árvíz ".encodeToByteArray() + bytes(0x74, 0xFB, 0x72, 0xF5)).decodeLibraryText())
     }
 
     @Test
-    fun keepsAWindows1252FileWithOneAccidentalUtf8PairOnWindows1252() {
+    fun `keeps a Windows-1252 file with one accidental UTF-8 pair on Windows-1252`() {
         // "Ã©" happens to be a well-formed UTF-8 "é", against four accented letters that are not UTF-8 at all.
         val bytes = bytes(
             0xC3, 0xA9, 0x20, 0xE0, 0x20, 0x6C, 0x61, 0x20, 0x63, 0x72, 0xE8, 0x6D, 0x65, 0x2C, 0x20,
@@ -116,7 +112,7 @@ internal class LibraryTextDecodingTest {
     }
 
     @Test
-    fun readsUtf16WithAndWithoutByteOrderMarks() {
+    fun `reads UTF-16 with and without byte order marks`() {
         val text = "{title: Tükörfúrógép}\r\n[Am]Őszi szél"
         listOf(true, false).forEach { bigEndian ->
             assertEquals(text, utf16(text, bigEndian, hasMark = true).decodeLibraryText())
@@ -125,7 +121,7 @@ internal class LibraryTextDecodingTest {
     }
 
     @Test
-    fun preservesSurrogatePairsAndReplacesMalformedUtf16() {
+    fun `preserves surrogate pairs and replaces malformed UTF-16`() {
         assertEquals("{c: 𝄞 segno}", utf16("{c: 𝄞 segno}", false, true).decodeLibraryText())
         assertEquals("�A", bytes(0xFF, 0xFE, 0x34, 0xD8, 0x41, 0x00).decodeLibraryText())
         assertEquals("A�", bytes(0xFF, 0xFE, 0x41, 0x00, 0x00, 0xDC).decodeLibraryText())

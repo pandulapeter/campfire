@@ -21,24 +21,24 @@ class SetlistRowsTest {
     private val second = setlistWithSongs("second", description = "For the encore", "d")
 
     @Test
-    fun withoutADragTheRowsAreTheEntries() = assertEquals(
+    fun `without a drag the rows are the entries`() = assertEquals(
         first.entries.map { SetlistRow(entry = it, index = it.index) },
         first.rows(dragOrder = null),
     )
 
     @Test
-    fun aDragRenumbersTheRowsByTheSlotTheyNowSitIn() {
+    fun `a drag renumbers the rows by the slot they now sit in`() {
         val rows = first.rows(dragOrder = listOf("b", "a", "c"))
         assertEquals(listOf("b", "a", "c"), rows.map { it.entry.songFileName })
         assertEquals(listOf(0, 1, 2), rows.map { it.index })
     }
 
     @Test
-    fun aDraggedNameTheSetlistNoLongerHasIsLeftOut() =
+    fun `a dragged name the setlist no longer has is left out`() =
         assertEquals(listOf("c", "a"), first.rows(dragOrder = listOf("c", "gone", "a")).map { it.entry.songFileName })
 
     @Test
-    fun aHeaderCountsTheHeadersEntriesAndDescriptionsBeforeIt() {
+    fun `a header counts the headers entries and descriptions before it`() {
         val setlists = listOf(second, first)
         assertEquals(0, setlists.headerIndexOf("second.setlist.json"))
         assertEquals(4, setlists.headerIndexOf("first.setlist.json"))
@@ -48,7 +48,7 @@ class SetlistRowsTest {
     }
 
     @Test
-    fun aRowMovesOnePlaceEitherWay() {
+    fun `a row moves one place either way`() {
         assertEquals(listOf("b", "a", "c"), listOf("a", "b", "c").movedOnePlace(from = 0, by = 1))
         assertEquals(listOf("a", "c", "b"), listOf("a", "b", "c").movedOnePlace(from = 2, by = -1))
     }

@@ -26,14 +26,14 @@ class ChordSheetConverterTest {
     private fun convert(text: String) = ChordSheetConverter.convert(ChordSheet.ofPlainText(text)).single()
 
     @Test
-    fun preservesChordProIncludingCollectionsAndLineEndings() {
+    fun `preserves ChordPro including collections and line endings`() {
         for (text in listOf("\ufeff{title: Song}\r\n[A]Hello\r\n{new_song}\r\n{title: Other}\r\n", "[G]Hello\r\n[C]world", "{t: Title}\n")) {
             assertEquals(text, convert(text))
         }
     }
 
     @Test
-    fun aHeadingTheParserDoesNotKnowStillEndsTheLyricsBeforeIt() {
+    fun `a heading the parser does not know still ends the lyrics before it`() {
         val result = convert("Hello\nworld\nInterlude\nC   G")
 
         assertTrue("world\n\n{comment: Interlude}" in result, result)
@@ -44,7 +44,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun mergesAndSnapsChordsWithoutChangingTheirOrder() {
+    fun `merges and snaps chords without changing their order`() {
         assertEquals("[Am]Hello [C]world\n", convert("Am     C\nHello world"))
         assertEquals("[Am]Hello [C]world\n", convert(" Am  C\nHello world"))
         assertEquals("[Am]Hel[C]lo world\n", convert("Am C\nHello world"))
@@ -52,7 +52,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun oneChordIsAmbiguousUntilAnotherLineMakesTheContextClear() {
+    fun `one chord is ambiguous until another line makes the context clear`() {
         assertEquals("A\nlong time ago\n", convert("A\nlong time ago"))
         assertEquals("A long time ago\nAm I\n", convert("A long time ago\nAm I"))
         assertEquals("[Am] [F]\n\n[A]long time ago\n", convert("Am F\n\nA\nlong time ago"))
@@ -70,7 +70,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun recognizesGermanAndLowercaseChordsAndKeepsFurniture() {
+    fun `recognizes German and lowercase chords and keeps furniture`() {
         assertEquals("[am] [H7] | % x2 N.C.\n", convert("am H7 | % x2 N.C."))
         assertEquals("| [Am] [F] | [C] [G] |\n", convert("|Am F|C G|"))
         assertFalse(ChordSheetConverter.isChordLine("Am I"))
@@ -79,7 +79,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun sectionsMetadataAndRecallsBecomeDirectives() {
+    fun `sections metadata and recalls become directives`() {
         val text = "Capo: 3rd fret\nHangnem: G\n120 BPM\nTime: 4/4\nEl\u0151ad\u00f3: Someone\n\u00a9 1900\nVerse 2:\nAm C\nHello world\n[Refr\u00e9n]\nAm F\nSing along\n\nRef."
         val result = convert(text)
         assertTrue(result.contains("{capo: 3}\n{key: G}\n{tempo: 120}\n{time: 4/4}\n{artist: Someone}\n{copyright: 1900}"))
@@ -90,7 +90,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun aLaterTempoOrTimeIsAChangeWrittenInPlace() {
+    fun `a later tempo or time is a change written in place`() {
         val text = "Tempo: 120\nTime: 4/4\nVerse 1\nAm C\nHello world\n" + "Am C\nla la\n".repeat(8) + "Tempo: 90   Time: 3/4\nChorus\nAm F\nSing along"
         val result = convert(text)
         assertTrue(result.startsWith("{tempo: 120}\n{time: 4/4}\n"), result)
@@ -101,7 +101,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun theRowCampfiresPdfHeadsASongWithIsReadAsItsValues() {
+    fun `the row campfires PDF heads a song with is read as its values`() {
         val text = "Shapes\nSomeone\nKey: B   Transposition: +2   Capo: 2   Tempo: 96 BPM   Time: 3/4\nVerse 1\nB E\nHello world"
         val result = convert(text)
         assertTrue(result.contains("{key: B}\n{capo: 2}\n{tempo: 96}\n{time: 3/4}\n"), result)
@@ -113,7 +113,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun headingDecorationIsLeftOutOfSectionNames() {
+    fun `heading decoration is left out of section names`() {
         val result = convert("[Verse 1]\nC   G\nHello world\n\n[Intro]\nC G\n\n[Chorus]\nAm F\nLa la")
         assertTrue(result.contains("{start_of_verse: Verse 1}"))
         assertTrue(result.contains("{comment: Intro}"))
@@ -124,7 +124,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun lyricsThatStartLikeALabelStayLyrics() {
+    fun `lyrics that start like a label stay lyrics`() {
         assertEquals("[Am]By the [C]rivers of Babylon\n", convert("Am     C\nBy the rivers of Babylon"))
         assertEquals("[Am]Time after [C]time\n", convert("Am         C\nTime after time"))
         assertEquals("[Am]Key to my [C]heart\n", convert("Am         C\nKey to my heart"))
@@ -133,7 +133,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun chordProWithFewChordsOrOnlyRecallsIsStillChordPro() {
+    fun `ChordPro with few chords or only recalls is still ChordPro`() {
         val sparse = "Verse one\nno chords here\n[G]Only this line\nhas a chord\nand that is all\n"
         assertEquals(sparse, convert(sparse))
         val recall = "First [G] line\nsecond line\nthird line\n{chorus}\n"
@@ -142,7 +142,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun unclosedBracketsAreEscapedInLinearTime() {
+    fun `unclosed brackets are escaped in linear time`() {
         val text = "[".repeat(100_000) + "\nhello world"
         val started = TimeSource.Monotonic.markNow()
         val result = convert(text)
@@ -152,7 +152,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun seededSheetsKeepTheirChordPlacement() {
+    fun `seeded sheets keep their chord placement`() {
         val expected = listOf(
             "[D7]today [C]He[Am]llo si[D7]ng [F]sin[G]g wor[C]ld [C]to[Am]day Hello sing Hello\n",
             "[C]Hel[G]lo [D7]today [Am]He[G]llo [Am]sing today sing\n",
@@ -178,7 +178,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun longChordRowsAndInlineRunsConvertWithinTheWorkBound() {
+    fun `long chord rows and inline runs convert within the work bound`() {
         val chordRow = "C  ".repeat(30_000)
         val lyrics = "la ".repeat(30_000).trimEnd()
         var started = TimeSource.Monotonic.markNow()
@@ -191,7 +191,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun chordsNeverSplitSupplementaryCharacters() {
+    fun `chords never split supplementary characters`() {
         assertEquals("[C]Hel😀[G]lo wor\n", convert("C   G\nHel😀lo wor"))
         assertEquals("[A]x😀[G]hello\n", convert("A G\nx😀hello"))
         assertEquals("[C]😀hello😀[G]\n", convert("C       G\n😀hello😀"))
@@ -205,7 +205,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun extractedControlsCannotHideChordsButDirectionMarksSurvive() {
+    fun `extracted controls cannot hide chords but direction marks survive`() {
         assertEquals("[C]Hello [G]world x\n", convert("\u202eC   G\nHello world\u0007 x"))
         assertEquals("Hello   world next\n", convert("Hello\tworld\u00a0next"))
         assertEquals("שלום\u200f!\u200e\u061c\n", convert("שלום\u200f!\u200e\u061c"))
@@ -213,7 +213,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun aCapitalizedLoneChordCanEndAHeadedSection() {
+    fun `a capitalized lone chord can end a headed section`() {
         assertEquals("{comment: Outro}\n[C]\n", convert("[Outro]\nC"))
         assertTrue(convert("[Verse 1]\nC   G\nHello\n\n[Outro]\nC").endsWith("{comment: Outro}\n[C]\n"))
         assertEquals("{comment: Intro}\n[C]\n", convert("Intro: C"))
@@ -222,26 +222,26 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun letterSpacingDoesNotSplitWords() {
+    fun `letter spacing does not split words`() {
         val spaced = ChordSheet.Line(listOf(span("T", 0.0, 6.7, 12.0), span("h", 7.7, 14.4, 12.0), span("i", 15.4, 18.4, 12.0), span("s", 19.4, 25.4, 12.0), span("i", 30.0, 33.0, 12.0), span("s", 34.0, 40.0, 12.0)))
         assertEquals("This is\n", ChordSheetConverter.convert(ChordSheet(listOf(ChordSheet.Page(listOf(spaced))))).single())
     }
 
     @Test
-    fun tablatureNeedsAtLeastTwoStaffLines() {
+    fun `tablature needs at least two staff lines`() {
         assertEquals("{start_of_tab}\ne|---0---|\nB|---1---|\n{end_of_tab}\n", convert("e|---0---|\nB|---1---|"))
         assertEquals("e|---0---|\n", convert("e|---0---|"))
     }
 
     @Test
-    fun parenthesizedChordsNeedAMajority() {
+    fun `parenthesized chords need a majority`() {
         assertEquals("[Am] Today [C] the day (repeat)\n", convert("(Am) Today (C) the day (repeat)"))
         assertEquals("(Am) Today (repeat)\n", convert("(Am) Today (repeat)"))
         assertEquals("(softly) hello\n", convert("(softly) hello"))
     }
 
     @Test
-    fun ordinaryProseCannotAccidentallyBecomeMarkup() {
+    fun `ordinary prose cannot accidentally become markup`() {
         assertEquals("\uff03 heading\n(unknown: value)\n(something) else\n", convert("# heading\n{unknown: value}\n[something] else"))
         assertEquals("office flower\nnext line\n", convert("o\ufb03ce \ufb02ower\u00ad\u200b\nnext\u00a0line"))
         assertEquals("hello\n\nworld\n", convert("hello\n\n\n\nworld\n"))
@@ -249,14 +249,14 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun mapsProportionalSpansAndCoincidentChordsToCharacters() {
+    fun `maps proportional spans and coincident chords to characters`() {
         val chords = ChordSheet.Line(listOf(span("Am", 100.0, 112.0), span("C", 115.0, 120.0), span("G", 115.0, 120.0)))
         val lyric = ChordSheet.Line(listOf(span("W", 100.0, 110.0), span("i", 110.0, 112.0), span("d", 112.0, 117.0), span("e", 117.0, 122.0)))
         assertEquals("[Am]Wi[C][G]de\n", ChordSheetConverter.convert(ChordSheet(listOf(ChordSheet.Page(listOf(chords, lyric))))).single())
     }
 
     @Test
-    fun readsStyledInlineChords() {
+    fun `reads styled inline chords`() {
         val lyric = ChordSheet.Line(listOf(span("Today ", 0.0, 30.0), span("Am", 30.0, 40.0, bold = true), span(" we sing", 40.0, 80.0)))
         assertEquals("Today [Am] we sing\n", ChordSheetConverter.convert(ChordSheet(listOf(ChordSheet.Page(listOf(lyric))))).single())
         val glyphs = ChordSheet.Line(listOf(span("Today ", 0.0, 30.0), span("A", 30.0, 35.0, bold = true), span("m", 35.0, 40.0, bold = true), span(" we sing", 40.0, 80.0)))
@@ -264,7 +264,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun styledPageTitlesSplitSongbooksButContinuationPagesStayTogether() {
+    fun `styled page titles split songbooks but continuation pages stay together`() {
         fun page(title: String?, words: String) = ChordSheet.Page(
             listOfNotNull(title?.let { ChordSheet.Line(listOf(span(it, 0.0, 100.0, size = 20.0)), isHeading = true) }) +
                 ChordSheet.ofPlainText("Am C\n$words").pages.single().lines,
@@ -279,7 +279,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun aTitleWrappedOverSeveralLinesOfItsTypeIsOneTitleAndTheSmallerLineUnderItItsArtist() {
+    fun `a title wrapped over several lines of its type is one title and the smaller line under it its artist`() {
         val lines = listOf("A song with", "a long title").map { ChordSheet.Line(listOf(span(it, 0.0, 24.0, size = 2.0, bold = true))) } +
             ChordSheet.Line(listOf(span("Someone", 0.0, 7.0, size = 1.0))) +
             ChordSheet.ofPlainText("Am    C\nHello world").pages.single().lines
@@ -290,7 +290,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun aBoldChordOverPlainLyricsOfItsSizeIsAChordWhereNoLineHoldsTwo() {
+    fun `a bold chord over plain lyrics of its size is a chord where no line holds two`() {
         fun sheet(vararg lines: ChordSheet.Line) = ChordSheet(listOf(ChordSheet.Page(lines.toList())))
         val wrapped = sheet(
             ChordSheet.Line(listOf(span("Am", 0.0, 12.0, bold = true))),
@@ -310,7 +310,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun derivesPlainTitleAndExpandsTabs() {
+    fun `derives plain title and expands tabs`() {
         assertTrue(convert("Someone - Song\n\nAm C\nHello world").startsWith("{title: Song}\n{artist: Someone}"))
         assertEquals("[Am]Hello   [C]world\n", convert("Am\tC\nHello   world"))
     }

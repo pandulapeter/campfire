@@ -23,7 +23,7 @@ class MetronomeSequencerTest {
     private fun sequencer(pattern: MetronomePattern) = MetronomeSequencer(SAMPLE_RATE, pattern)
 
     @Test
-    fun placesTheClicksOfAPlainBar() {
+    fun `the clicks of a plain bar are placed by the tempo`() {
         val ticks = sequencer(MetronomePattern(bpm = 120)).ticksUntil(SAMPLE_RATE * 2L)
         assertEquals(listOf(0L, 24_000L, 48_000L, 72_000L), ticks.map { it.frame })
         assertEquals(listOf(0, 1, 2, 3), ticks.map { it.beatIndex })
@@ -31,7 +31,7 @@ class MetronomeSequencerTest {
     }
 
     @Test
-    fun countsTheClicksOfACompoundBarAsTheTempo() {
+    fun `the clicks of a compound bar are counted as the tempo`() {
         val ticks = sequencer(MetronomePattern(bpm = 120, timeSignature = TimeSignature(6, 8))).ticksUntil(SAMPLE_RATE * 3L)
         assertEquals(6, ticks.size)
         assertEquals(listOf(0, 1, 2, 3, 4, 5), ticks.map { it.beatIndex })
@@ -39,21 +39,21 @@ class MetronomeSequencerTest {
     }
 
     @Test
-    fun wrapsAnOddBarIntoTheNext() {
+    fun `an odd bar wraps into the next`() {
         val ticks = sequencer(MetronomePattern(bpm = 60, timeSignature = TimeSignature(7, 8))).ticksUntil(SAMPLE_RATE * 8L)
         assertEquals(listOf(0, 1, 2, 3, 4, 5, 6, 0), ticks.map { it.beatIndex })
         assertEquals(listOf(0L, 0L, 0L, 0L, 0L, 0L, 0L, 1L), ticks.map { it.barIndex })
     }
 
     @Test
-    fun cutsBeatsIntoTriplets() {
+    fun `a triplet subdivision cuts every beat in three`() {
         val ticks = sequencer(MetronomePattern(bpm = 60, subdivision = Subdivision.TRIPLETS)).ticksUntil(SAMPLE_RATE * 1L)
         assertEquals(listOf(0L, 16_000L, 32_000L), ticks.map { it.frame })
         assertEquals(listOf(false, true, true), ticks.map { it.isSubdivision })
     }
 
     @Test
-    fun aMutedBeatCountsWithoutSounding() {
+    fun `a muted beat counts without sounding`() {
         val pattern = MetronomePattern(bpm = 60, beatLevels = listOf(BeatLevel.ACCENT, BeatLevel.MUTED, BeatLevel.NORMAL, BeatLevel.NORMAL))
         val ticks = sequencer(pattern.copy(subdivision = Subdivision.EIGHTHS)).ticksUntil(SAMPLE_RATE * 2L)
         assertEquals(4, ticks.size)
@@ -61,7 +61,7 @@ class MetronomeSequencerTest {
     }
 
     @Test
-    fun aTempoChangeMidBarLandsOnTheNextClick() {
+    fun `a tempo change mid-bar lands on the next click`() {
         val sequencer = sequencer(MetronomePattern(bpm = 60))
         sequencer.ticksUntil(1L)
         sequencer.update(MetronomePattern(bpm = 120), restartBar = false)
@@ -71,7 +71,7 @@ class MetronomeSequencerTest {
     }
 
     @Test
-    fun aTimingChangeWaitsForTheBeatToEnd() {
+    fun `a timing change waits for the beat to end`() {
         val sequencer = sequencer(MetronomePattern(bpm = 60, subdivision = Subdivision.EIGHTHS))
         sequencer.ticksUntil(1L)
         sequencer.update(MetronomePattern(bpm = 120), restartBar = false)
@@ -79,7 +79,7 @@ class MetronomeSequencerTest {
     }
 
     @Test
-    fun aSoundChangeLandsOnTheNextClick() {
+    fun `a sound change lands on the next click`() {
         val sequencer = sequencer(MetronomePattern(bpm = 60, subdivision = Subdivision.EIGHTHS))
         sequencer.ticksUntil(1L)
         sequencer.update(MetronomePattern(bpm = 60, subdivision = Subdivision.EIGHTHS, sound = MetronomeSound.COWBELL), restartBar = false)
@@ -87,7 +87,7 @@ class MetronomeSequencerTest {
     }
 
     @Test
-    fun restartingTheBarMakesTheNextClickBeatOne() {
+    fun `restarting the bar makes the next click beat one`() {
         val sequencer = sequencer(MetronomePattern(bpm = 60))
         sequencer.ticksUntil(SAMPLE_RATE * 2L)
         sequencer.update(MetronomePattern(bpm = 60, timeSignature = TimeSignature(3, 4)), restartBar = true)
@@ -98,7 +98,7 @@ class MetronomeSequencerTest {
     }
 
     @Test
-    fun aShorterBarAfterTheCurrentBeatStartsANewOne() {
+    fun `a shorter bar after the current beat starts a new one`() {
         val sequencer = sequencer(MetronomePattern(bpm = 60))
         sequencer.ticksUntil(SAMPLE_RATE * 3L)
         sequencer.update(MetronomePattern(bpm = 60, timeSignature = TimeSignature(2, 4)), restartBar = false)
@@ -106,7 +106,7 @@ class MetronomeSequencerTest {
     }
 
     @Test
-    fun doesNotDriftOverTenThousandBars() {
+    fun `the clicks do not drift over ten thousand bars`() {
         // 97 at 44.1 kHz is 27 278.35... frames a click, which rounded intervals would get wrong on every one of them.
         val sampleRate = 44_100
         val sequencer = MetronomeSequencer(sampleRate, MetronomePattern(bpm = 97, subdivision = Subdivision.TRIPLETS))

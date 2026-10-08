@@ -30,7 +30,7 @@ import kotlin.test.assertTrue
 internal class SetlistMappersTest {
 
     @Test
-    fun aSongNamedTwiceIsReadOnceWithItsFirstTransposition() {
+    fun `a song named twice is read once with its first transposition`() {
         val document = SetlistDocument(
             title = "Summer",
             songs = listOf(
@@ -50,7 +50,7 @@ internal class SetlistMappersTest {
     }
 
     @Test
-    fun aSongNamedTwiceIsWrittenOnce() {
+    fun `a song named twice is written once`() {
         val setlist = Setlist(
             fileName = "summer.setlist.json",
             title = "Summer",
@@ -70,7 +70,7 @@ internal class SetlistMappersTest {
     }
 
     @Test
-    fun theDateIsWrittenAsAnIsoDateAndReadBack() {
+    fun `the date is written as an ISO date and read back`() {
         val setlist = SetlistDocument(title = "Summer", date = "2026-09-28").toModel("summer.setlist.json", size = 0, undatedDay = DAY)
 
         assertEquals(LocalDate(2026, 9, 28), setlist.date)
@@ -78,7 +78,7 @@ internal class SetlistMappersTest {
     }
 
     @Test
-    fun theCountdownIsWrittenOnlyWhereItIsShown() {
+    fun `the countdown is written only where it is shown`() {
         val setlist = SetlistDocumentFormat.decode("""{"title":"Summer","isCountdownShown":true}""").toModel("summer.setlist.json", size = 0, undatedDay = DAY)
 
         assertTrue(setlist.isCountdownShown)
@@ -87,7 +87,7 @@ internal class SetlistMappersTest {
     }
 
     @Test
-    fun aDateThatIsNotOneIsNoDateAndTheSetlistGetsTheDayItIsHanded() {
+    fun `a date that is not one is no date and the setlist gets the day it is handed`() {
         (listOf("next friday", "2026-02-30", "", "2026-13-01T10:00", "T") + null).forEach { text ->
             val document = SetlistDocument(title = "Summer", date = text)
 
@@ -98,7 +98,7 @@ internal class SetlistMappersTest {
     }
 
     @Test
-    fun theDayOfADateWrittenWithATimeIsTheSetlistsDay() = listOf("2026-10-06T20:00:00", " 2026-10-06T20:00Z ").forEach { text ->
+    fun `the day of a date written with a time is the setlists day`() = listOf("2026-10-06T20:00:00", " 2026-10-06T20:00Z ").forEach { text ->
         val document = SetlistDocument(title = "Summer", date = text)
 
         assertTrue(document.isDated)

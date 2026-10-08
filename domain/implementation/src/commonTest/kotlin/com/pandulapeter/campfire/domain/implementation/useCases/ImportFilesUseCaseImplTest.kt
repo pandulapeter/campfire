@@ -9,11 +9,11 @@
  */
 package com.pandulapeter.campfire.domain.implementation.useCases
 
-import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution
 import com.pandulapeter.campfire.data.model.domain.ImportProgress
 import com.pandulapeter.campfire.data.model.domain.ImportPlan
 import com.pandulapeter.campfire.data.model.domain.Logger
+import com.pandulapeter.campfire.data.model.domain.ParsedSetlist
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.SongContent
@@ -22,15 +22,10 @@ import com.pandulapeter.campfire.data.model.domain.ExtractedDocument
 import com.pandulapeter.campfire.data.model.domain.LibraryFiles
 import com.pandulapeter.campfire.data.model.domain.ImportLimits
 import com.pandulapeter.campfire.chordpro.ChordProParser
-import com.pandulapeter.campfire.data.repository.api.SetlistRepository
-import com.pandulapeter.campfire.data.repository.api.SongRepository
-import com.pandulapeter.campfire.data.repository.api.SongContentRepository
 import com.pandulapeter.campfire.data.repository.api.ArchiveRepository
 import com.pandulapeter.campfire.data.repository.api.DocumentRepository
 import com.pandulapeter.campfire.domain.implementation.ImportPlanner
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
 import kotlin.test.Test
@@ -50,10 +45,7 @@ class ImportFilesUseCaseImplTest {
     fun `ChordPro text and archives are prettified before they are written`() = runTest {
         val raw = "{tag: Folk}\r\n{artist: Singer}\r\n{title: Song}\r\n{soc}\r\n[G]Sing\r\n{eoc}\r\n{sov}\r\n[C]Words\r\n{eov}"
         val expected = "{title: Song}\n{artist: Singer}\n{tag: Folk}\n\n{soc}\n[G]Sing\n{eoc}\n\n{sov}\n[C]Words\n{eov}\n"
-        val archive = object : ArchiveRepository {
-            override suspend fun unpack(archive: ByteArray, maxSize: Long) = listOf(ImportedFile("source.cho", raw.encodeToByteArray()))
-            override suspend fun pack(files: Map<String, ByteArray>) = error("not used")
-        }
+        val archive = FakeArchiveRepository { _, _ -> listOf(ImportedFile("source.cho", raw.encodeToByteArray())) }
         for (source in listOf("source.cho", "source.txt", "source.zip")) {
             val songs = FakeSongRepository(mutableMapOf())
             val plan = prepare(songs, archive = archive)(listOf(ImportedFile(source, raw.encodeToByteArray())))
@@ -139,12 +131,9 @@ class ImportFilesUseCaseImplTest {
     @Test
     fun `archive documents and text take the same conversion path and skipped conflicts are not counted as converted`() = runTest {
         val songs = FakeSongRepository(mutableMapOf("sheet.cho" to "old text\n"))
-        val archive = object : ArchiveRepository {
-            override suspend fun unpack(archive: ByteArray, maxSize: Long): List<ImportedFile> {
-                assertEquals(ImportLimits.MAX_IMPORT_SIZE, maxSize)
-                return listOf(ImportedFile("sheet.txt", "Am C\nNew words".encodeToByteArray()), ImportedFile.unread("scan.docx"))
-            }
-            override suspend fun pack(files: Map<String, ByteArray>) = error("not used")
+        val archive = FakeArchiveRepository { _, maxSize ->
+            assertEquals(ImportLimits.MAX_IMPORT_SIZE, maxSize)
+            listOf(ImportedFile("sheet.txt", "Am C\nNew words".encodeToByteArray()), ImportedFile.unread("scan.docx"))
         }
         val plan = prepare(songs, archive = archive)(listOf(ImportedFile("archive.zip", byteArrayOf(1))))
         assertTrue(plan.hasConflicts)
@@ -157,12 +146,9 @@ class ImportFilesUseCaseImplTest {
     @Test
     fun `a file of an unknown type is unpacked by its content, and a document is never`() = runTest {
         val unpacked = mutableListOf<Int>()
-        val archive = object : ArchiveRepository {
-            override suspend fun unpack(archive: ByteArray, maxSize: Long): List<ImportedFile> {
-                unpacked += archive.size
-                return listOf(ImportedFile("a.cho", "{title: A}".encodeToByteArray()))
-            }
-            override suspend fun pack(files: Map<String, ByteArray>) = error("not used")
+        val archive = FakeArchiveRepository { bytes, _ ->
+            unpacked += bytes.size
+            listOf(ImportedFile("a.cho", "{title: A}".encodeToByteArray()))
         }
         val zip = byteArrayOf(0x50, 0x4B, 3, 4, 0)
         val plan = prepare(FakeSongRepository(mutableMapOf()), archive = archive)(
@@ -179,10 +165,7 @@ class ImportFilesUseCaseImplTest {
     @Test
     fun `a file of an unknown type that holds nothing an import reads is reported under its own name`() = runTest {
         var entries = emptyList<ImportedFile>()
-        val archive = object : ArchiveRepository {
-            override suspend fun unpack(archive: ByteArray, maxSize: Long) = entries
-            override suspend fun pack(files: Map<String, ByteArray>) = error("not used")
-        }
+        val archive = FakeArchiveRepository { _, _ -> entries }
         val zip = byteArrayOf(0x50, 0x4B, 3, 4, 0)
         val prepare = prepare(FakeSongRepository(mutableMapOf()), archive = archive)
         val document = listOf(ImportedFile.unread("mimetype"), ImportedFile("content.xml", "<office/>".encodeToByteArray()), ImportedFile.unread("thumbnail.png"))
@@ -240,20 +223,15 @@ class ImportFilesUseCaseImplTest {
         documents: DocumentRepository = object : DocumentRepository {
             override suspend fun extract(file: ImportedFile): ExtractedDocument? = null
         },
-        archive: ArchiveRepository = object : ArchiveRepository {
-            override suspend fun unpack(archive: ByteArray, maxSize: Long) = emptyList<ImportedFile>()
-            override suspend fun pack(files: Map<String, ByteArray>) = error("not used")
-        },
+        archive: ArchiveRepository = FakeArchiveRepository(),
+        setlists: FakeSetlistRepository = FakeSetlistRepository(),
     ) = PrepareImportUseCaseImpl(
         archiveRepository = archive,
         songRepository = songs,
-        songContentRepository = object : SongContentRepository {
-            override val invalidations: Flow<Long> = emptyFlow()
+        songContentRepository = object : SongContentRepositoryStub() {
             override suspend fun loadSongContent(fileName: String, useCache: Boolean) = songs.files[fileName]?.let { SongContent(fileName, it) }
-            override suspend fun invalidate(fileName: String?) = Unit
-            override suspend fun invalidate(fileNames: Set<String>) = Unit
         },
-        setlistRepository = FakeSetlistRepository(),
+        setlistRepository = setlists,
         documentRepository = documents,
         logger = Logger.Standard,
     )
@@ -610,12 +588,8 @@ class ImportFilesUseCaseImplTest {
     fun `preparation reports expanded archive files and compares before writing`() = runTest {
         val songs = FakeSongRepository(mutableMapOf())
         val events = mutableListOf<ImportProgress>()
-        val archive = object : ArchiveRepository {
-            override suspend fun unpack(archive: ByteArray, maxSize: Long) = listOf(
-                ImportedFile("one.cho", A.encodeToByteArray()),
-                ImportedFile("two.cho", B.encodeToByteArray()),
-            )
-            override suspend fun pack(files: Map<String, ByteArray>) = error("not used")
+        val archive = FakeArchiveRepository { _, _ ->
+            listOf(ImportedFile("one.cho", A.encodeToByteArray()), ImportedFile("two.cho", B.encodeToByteArray()))
         }
         val plan = prepare(songs, archive = archive).invoke(listOf(ImportedFile("bulk.zip", byteArrayOf(1))), events::add)
         assertEquals(2, plan.songs.size)
@@ -673,51 +647,38 @@ class ImportFilesUseCaseImplTest {
         val files: MutableMap<String, String>,
         private val failingImport: Int? = null,
         private val importFailure: Exception = IllegalStateException("Full"),
-    ) : SongRepository {
+    ) : SongRepositoryStub() {
         val importCalls = mutableListOf<Pair<String, Boolean>>()
         val adopted = mutableListOf<String>()
         var rescanCount = 0
-        override val songs: Flow<DataState<List<Song>>> = emptyFlow()
-        override suspend fun loadSongsIfNeeded() = files.keys.map(::song)
-        override suspend fun loadSongFileSizes() = files.mapValues { it.value.length.toLong() }
+
+        override suspend fun loadSongsIfNeeded() = files.keys.map { testSong(it) }
+
         override suspend fun rescan() {
             rescanCount++
         }
 
-        override suspend fun refresh(fileNames: Set<String>) = Unit
-        override suspend fun saveSong(content: SongContent, expectedText: String?) = throw UnsupportedOperationException()
-        override suspend fun createSong(title: String, artist: String, text: String) = throw UnsupportedOperationException()
         override fun importFileName(fallbackTitle: String, text: String) = LibraryFiles.normalizedName(ChordProParser.parseMetadata(text).title ?: fallbackTitle) + ".cho"
+
         override suspend fun importSong(fileName: String, text: String, shouldReplace: Boolean): Song {
             if (importCalls.size == failingImport) throw importFailure
             importCalls += fileName to shouldReplace
             val storedName = if (shouldReplace) fileName else files.freeName(fileName, ".cho")
             files[storedName] = text
-            return song(storedName)
+            return testSong(storedName)
         }
 
         override suspend fun adoptImported(songs: Collection<Song>) {
             adopted += songs.map { it.fileName }
         }
-
-        override suspend fun renameSong(song: Song) = throw UnsupportedOperationException()
-        override suspend fun deleteSong(fileName: String) = throw UnsupportedOperationException()
-        override suspend fun deleteAllSongs() = throw UnsupportedOperationException()
     }
 
-    private inner class FakeSetlistRepository(private val failingImport: Int? = null) : SetlistRepository {
+    private open inner class FakeSetlistRepository(private val failingImport: Int? = null) : SetlistRepositoryStub() {
         val files = mutableMapOf<String, Setlist>()
-        override val setlists: Flow<DataState<List<Setlist>>> = emptyFlow()
         val adopted = mutableListOf<String>()
+
         override suspend fun loadSetlistsIfNeeded() = files.values.toList()
-        override suspend fun loadSetlistFileNamesNaming(songFileName: String) = throw UnsupportedOperationException()
-        override suspend fun rescan() = throw UnsupportedOperationException()
-        override suspend fun refresh(fileNames: Set<String>) = Unit
-        override suspend fun createSetlist(title: String, description: String, date: LocalDate, isCountdownShown: Boolean) = throw UnsupportedOperationException()
-        override suspend fun saveSetlist(setlist: Setlist) = throw UnsupportedOperationException()
-        override suspend fun updateSetlist(fileName: String, transform: (Setlist) -> Setlist) = throw UnsupportedOperationException()
-        override suspend fun renameSetlist(fileName: String, title: String, description: String, date: LocalDate, isCountdownShown: Boolean) = throw UnsupportedOperationException()
-        override suspend fun parseSetlist(document: String) = throw UnsupportedOperationException()
+
         override suspend fun importSetlist(setlist: Setlist, shouldReplace: Boolean): Setlist {
             if (files.size == failingImport) throw IllegalStateException("Full")
             val storedName = if (shouldReplace) setlist.fileName else files.freeName(setlist.fileName, ".setlist.json")
@@ -727,40 +688,12 @@ class ImportFilesUseCaseImplTest {
         override suspend fun adoptImported(setlists: Collection<Setlist>) {
             adopted += setlists.map { it.fileName }
         }
-
-        override suspend fun loadSetlistFileSizes(): Map<String, Long> = throw UnsupportedOperationException()
-        override suspend fun loadSetlistDocument(fileName: String, songFileNames: Set<String>?) = throw UnsupportedOperationException()
-        override suspend fun deleteSetlist(fileName: String) = throw UnsupportedOperationException()
-        override suspend fun deleteAllSetlists() = throw UnsupportedOperationException()
     }
 
     private companion object {
         const val A = "{title: Foo}\nA\n"
         const val B = "{title: Foo}\nB\n"
 
-        fun song(fileName: String) = Song(
-            fileName = fileName,
-            title = fileName,
-            artist = "",
-            key = null,
-            transpose = 0,
-            tags = emptyList(),
-            languages = emptyList(),
-            coverArtUrl = null,
-            hasChords = true,
-            canUpdateFileName = false,
-            lastModified = 0L,
-            size = 0L,
-        )
-
-        fun setlist(entries: List<String>) = Setlist(
-            fileName = "set.setlist.json",
-            title = "Set",
-            description = "",
-            date = LocalDate(2026, 1, 1),
-            isArchived = false,
-            entries = entries.map { Setlist.Entry(songFileName = it) },
-            size = 0L,
-        )
+        fun setlist(entries: List<String>) = testSetlist(fileName = "set.setlist.json", title = "Set", entries = entries)
     }
 }

@@ -25,7 +25,7 @@ class SongSearchScrollAnchorTest {
     )
 
     @Test
-    fun openingDuringAnExistingScrollNeverCapturesOrRestoresAfterItStops() {
+    fun `opening during an existing scroll never captures or restores after it stops`() {
         val anchor = SongSearchScrollAnchor(isOpen = false)
         anchor.update(open = true, contents = contents, isScrolling = true, inset = 0) { fail("Must not capture during scrolling") }
         assertNull(anchor.positionFor(24, isScrolling = true))
@@ -35,7 +35,7 @@ class SongSearchScrollAnchorTest {
     }
 
     @Test
-    fun scrollStartingBetweenCompositionAndMeasurementPermanentlyReleasesTheAnchor() {
+    fun `scroll starting between composition and measurement permanently releases the anchor`() {
         val anchor = SongSearchScrollAnchor(isOpen = false)
         anchor.update(open = true, contents = contents, isScrolling = false, inset = 0) { snapshot }
         assertEquals(SongSearchScrollAnchor.Position(9, 29), anchor.positionFor(10, isScrolling = false))
@@ -49,7 +49,7 @@ class SongSearchScrollAnchorTest {
     }
 
     @Test
-    fun aScrollKeepsTheTailRoomUntilTheResultsChange() {
+    fun `a scroll keeps the tail room until the results change`() {
         val anchor = SongSearchScrollAnchor(isOpen = false)
         anchor.update(open = true, contents = contents, isScrolling = false, inset = 0) { snapshot }
         assertNull(anchor.positionFor(10, isScrolling = true))
@@ -60,7 +60,7 @@ class SongSearchScrollAnchorTest {
     }
 
     @Test
-    fun closingTheSearchAfterAScrollReleasesTheTailRoom() {
+    fun `closing the search after a scroll releases the tail room`() {
         val anchor = SongSearchScrollAnchor(isOpen = false)
         anchor.update(open = true, contents = contents, isScrolling = false, inset = 0) { snapshot }
         assertNull(anchor.positionFor(10, isScrolling = true))
@@ -70,7 +70,7 @@ class SongSearchScrollAnchorTest {
     }
 
     @Test
-    fun theTailRoomIsNotReleasedWhileTheAnchorStillHoldsAPosition() {
+    fun `the tail room is not released while the anchor still holds a position`() {
         val anchor = SongSearchScrollAnchor(isOpen = false)
         anchor.update(open = true, contents = contents, isScrolling = false, inset = 0) { snapshot }
         anchor.releaseTrailingSpaceIfOutOfSight(isSpaceVisible = false)
@@ -78,7 +78,7 @@ class SongSearchScrollAnchorTest {
     }
 
     @Test
-    fun closingDuringAnExistingScrollCannotRestoreTheOriginalPositionAtTheEnd() {
+    fun `closing during an existing scroll cannot restore the original position at the end`() {
         val anchor = SongSearchScrollAnchor(isOpen = false)
         anchor.update(open = true, contents = contents, isScrolling = false, inset = 0) { snapshot }
         anchor.positionFor(56, isScrolling = false)
@@ -89,7 +89,7 @@ class SongSearchScrollAnchorTest {
     }
 
     @Test
-    fun scrollInterruptingTheReturnTransitionCancelsItsFinalRestore() {
+    fun `scroll interrupting the return transition cancels its final restore`() {
         val anchor = SongSearchScrollAnchor(isOpen = false)
         anchor.update(open = true, contents = contents, isScrolling = false, inset = 0) { snapshot }
         anchor.positionFor(56, isScrolling = false)
@@ -100,7 +100,7 @@ class SongSearchScrollAnchorTest {
     }
 
     @Test
-    fun unchangedRoundTripKeepsTheCardFixedAndRestoresTheExactOriginalPosition() {
+    fun `unchanged round trip keeps the card fixed and restores the exact original position`() {
         val anchor = SongSearchScrollAnchor(isOpen = false)
         anchor.update(open = true, contents = contents, isScrolling = false, inset = 0) { snapshot }
         for (inset in listOf(0, 10, 28, 55, 56)) {
@@ -117,7 +117,7 @@ class SongSearchScrollAnchorTest {
     }
 
     @Test
-    fun changedSearchResultsReleaseTheOriginalAnchor() {
+    fun `changed search results release the original anchor`() {
         val anchor = SongSearchScrollAnchor(isOpen = false)
         anchor.update(open = true, contents = contents, isScrolling = false, inset = 0) { snapshot }
         anchor.update(open = true, contents = "filtered results", isScrolling = false, inset = 25) { fail("Must not rearm for changed contents") }

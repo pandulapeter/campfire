@@ -18,7 +18,7 @@ import kotlin.test.assertTrue
 class SectionGridTest {
 
     @Test
-    fun stretchesLaidOutApartAreRowsOfOneGridEachStartingAPage() {
+    fun `stretches laid out apart are rows of one grid each starting a page`() {
         val first = SectionGrid(
             rows = intArrayOf(0, 0, 1),
             columns = intArrayOf(0, 1, 0),
@@ -43,7 +43,7 @@ class SectionGridTest {
     }
 
     @Test
-    fun songThatFitsTheScreenInColumnsStillFitsIt() {
+    fun `song that fits the screen in columns still fits it`() {
         // The sections of a song of short verses, two long bridges and a few choruses, which three columns read top to
         // bottom hold on one screen while no row of them is ever as tall as its columns would have to be.
         val heights = listOf(80, 110, 110, 200, 170, 60, 110, 110, 200, 170, 170, 110)
@@ -53,7 +53,7 @@ class SectionGridTest {
     }
 
     @Test
-    fun songThatFitsTheScreenOnlyInColumnsIsOneRow() {
+    fun `song that fits the screen only in columns is one row`() {
         val heights = List(9) { 280 }
         val grid = flow(heights, maxColumnCount = 3, maxRowHeight = 900)
         assertContentEquals(intArrayOf(3), grid.columnCounts)
@@ -61,7 +61,7 @@ class SectionGridTest {
     }
 
     @Test
-    fun sectionFarTallerThanTheScreenHasARowOfItsOwn() {
+    fun `section far taller than the screen has a row of its own`() {
         val heights = listOf(100, 1400, 100, 100)
         val grid = flow(heights, maxColumnCount = 3, maxRowHeight = 900)
         val row = grid.rows[1]
@@ -70,7 +70,7 @@ class SectionGridTest {
     }
 
     @Test
-    fun sectionsALittleTallerThanTheScreenHaveRowsOfTheirOwn() {
+    fun `sections a little taller than the screen have rows of their own`() {
         // The verses and choruses of a phone held sideways, each a little taller than the screen: a column beside one
         // would send the reader back up to its top once they had scrolled to the end of the other.
         val heights = listOf(290, 100, 290, 170, 300, 290, 300)
@@ -81,13 +81,13 @@ class SectionGridTest {
     }
 
     @Test
-    fun balancedRowStaysEven() {
+    fun `balanced row stays even`() {
         val grid = flow(List(7) { 100 }, maxColumnCount = 3, maxRowHeight = 900)
         assertEquals(listOf(2, 2, 3), grid.columns.toList().groupingBy { it }.eachCount().values.sorted())
     }
 
     @Test
-    fun rowsAreNeverTallerThanTheScreenNorTallerThanTheColumnsTopToBottom() {
+    fun `rows are never taller than the screen nor taller than the columns top to bottom`() {
         val random = Random(42)
         repeat(500) {
             val heights = List(random.nextInt(1, 25)) { random.nextInt(40, 500) }
@@ -109,7 +109,7 @@ class SectionGridTest {
     }
 
     @Test
-    fun rowsShorterThanThePitchAreFollowedByEmptySpace() {
+    fun `rows shorter than the pitch are followed by empty space`() {
         val grid = SectionGrid(rows = intArrayOf(0, 1, 2), columns = IntArray(3), columnCounts = intArrayOf(1, 1, 1))
         val arrangement = grid.arrange(intArrayOf(100, 900, 100), SECTION_GAP, ROW_GAP, minRowPitch = 500, minLastRowHeight = 300)
         // The short first row is padded to the pitch, the tall second one is not, and the last one is padded to its height.
@@ -121,7 +121,7 @@ class SectionGridTest {
     }
 
     @Test
-    fun rowsShorterThanTheCenteredHeightAreMovedToItsMiddle() {
+    fun `rows shorter than the centered height are moved to its middle`() {
         val grid = SectionGrid(rows = intArrayOf(0, 1, 2), columns = IntArray(3), columnCounts = intArrayOf(1, 1, 1))
         val arrangement = grid.arrange(
             heights = intArrayOf(100, 900, 100),
@@ -140,7 +140,7 @@ class SectionGridTest {
     }
 
     @Test
-    fun shortSectionSharesTheWideRowOfTheSectionAfterIt() {
+    fun `short section shares the wide row of the section after it`() {
         // An info card above a staff of tablature that would be cut into systems in a column: the card is stacked in
         // the tab's wide row rather than being left with a row, and a screen, of its own.
         val grid = flow(listOf(200, 900, 300, 300), maxColumnCount = 2, maxRowHeight = 600, wideHeights = mapOf(1 to 250))
@@ -151,7 +151,7 @@ class SectionGridTest {
     }
 
     @Test
-    fun wideRowIsNotStackedTallerThanTheScreen() {
+    fun `wide row is not stacked taller than the screen`() {
         val grid = flow(listOf(200, 900, 300, 300), maxColumnCount = 2, maxRowHeight = 400, wideHeights = mapOf(1 to 250))
         assertContentEquals(intArrayOf(0, 1, 2, 2), grid.rows)
         assertContentEquals(booleanArrayOf(false, true, false), grid.wideRows)
@@ -167,7 +167,7 @@ class SectionGridTest {
     )
 
     @Test
-    fun gridSearchedAgainForTheSameCellsIsTheSameGrid() {
+    fun `grid searched again for the same cells is the same grid`() {
         // A window being resized searches for its grid on every frame, and the sections only glide where it changed.
         val heights = List(6) { 280 }
         assertTrue(flow(heights, maxColumnCount = 2, maxRowHeight = 900).hasSameCellsAs(flow(heights, maxColumnCount = 2, maxRowHeight = 900)))
@@ -198,20 +198,15 @@ class SectionGridTest {
         return lowest[columnCount][heights.size]
     }
 
-    private companion object {
-        const val SECTION_GAP = 20
-        const val ROW_GAP = 40
-    }
-
     @Test
-    fun onlyASingleRowThatFitsIsReadWithoutStepping() {
+    fun `only a single row that fits is read without stepping`() {
         assertEquals(true, isReadWithoutStepping(fits = true, pageCount = 1))
         assertEquals(false, isReadWithoutStepping(fits = true, pageCount = 2))
         assertEquals(false, isReadWithoutStepping(fits = false, pageCount = 1))
     }
 
     @Test
-    fun firstRowIsAsFullAsTheFewestRowsAllow() {
+    fun `first row is as full as the fewest rows allow`() {
         // A song's info card, a short intro and then verses and choruses: packed for the lowest total height, the two
         // short sections would have a row to themselves and the verse beside them, leaving most of the first page empty.
         val heights = listOf(354, 232, 396, 416, 396, 416, 396, 416, 416)
@@ -221,21 +216,21 @@ class SectionGridTest {
     }
 
     @Test
-    fun slackIsLeftOnTheLastPage() {
+    fun `slack is left on the last page`() {
         val heights = listOf(300, 54, 232, 252, 232, 252, 232, 252, 252)
         val grid = flow(heights, maxColumnCount = 2, maxRowHeight = 967)
         assertContentEquals(intArrayOf(0, 0, 0, 0, 0, 0, 0, 1, 1), grid.rows)
     }
 
     @Test
-    fun aRowTallerThanTheScreenIsSeveralPages() {
+    fun `a row taller than the screen is several pages`() {
         assertEquals(1, pagesOf(height = 900, maxRowHeight = 900))
         assertEquals(2, pagesOf(height = 901, maxRowHeight = 900))
         assertEquals(3, pagesOf(height = 2700, maxRowHeight = 900))
     }
 
     @Test
-    fun moreColumnsInOneRowWinOverFewerInSeveral() {
+    fun `more columns in one row win over fewer in several`() {
         // Two columns fit the song as two rows, which are stepped through; three fit it as one, which is read whole.
         val searched = searchColumns(
             maxColumnCount = 4,
@@ -248,7 +243,7 @@ class SectionGridTest {
     }
 
     @Test
-    fun fewestColumnsInSeveralRowsWinWhereNoneFitInOne() {
+    fun `fewest columns in several rows win where none fit in one`() {
         val searched = searchColumns(
             maxColumnCount = 4,
             heights = mapOf(2 to 600, 3 to 500, 4 to 450),
@@ -260,7 +255,7 @@ class SectionGridTest {
     }
 
     @Test
-    fun mostColumnsWinWhereNothingFits() {
+    fun `most columns win where nothing fits`() {
         val searched = searchColumns(
             maxColumnCount = 3,
             heights = mapOf(2 to 1200, 3 to 900),

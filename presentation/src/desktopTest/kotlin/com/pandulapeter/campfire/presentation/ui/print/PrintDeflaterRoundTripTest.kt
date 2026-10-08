@@ -18,19 +18,19 @@ import kotlin.test.assertTrue
 
 /** Round trips through the JVM's zlib, which is the decoder every PDF viewer's Flate implementation agrees with. */
 internal class PrintDeflaterRoundTripTest {
-    @Test fun randomBytesRoundTrip() = runBlocking {
+    @Test fun `random bytes round trip`() = runBlocking {
         val input = Random(7).nextBytes(300_000)
         assertContentEquals(input, inflate(deflate(input), input.size))
     }
 
-    @Test fun whitePaperRoundTripsAndShrinks() = runBlocking {
+    @Test fun `white paper round trips and shrinks`() = runBlocking {
         val input = ByteArray(2 * 1024 * 1024) { -1 }
         val deflated = deflate(input)
         assertContentEquals(input, inflate(deflated, input.size))
         assertTrue(deflated.size < 20_000)
     }
 
-    @Test fun aMatchReachingBackTheWholeWindowRoundTrips() = runBlocking {
+    @Test fun `a match reaching back the whole window round trips`() = runBlocking {
         val block = Random(11).nextBytes(32_768)
         val input = block + block + Random(13).nextBytes(10)
         val deflated = deflate(input)
@@ -38,7 +38,7 @@ internal class PrintDeflaterRoundTripTest {
         assertTrue(deflated.size < 36_000, "The second copy should be found 32 768 bytes back.")
     }
 
-    @Test fun inkedRowsRoundTrip() = runBlocking {
+    @Test fun `inked rows round trip`() = runBlocking {
         val random = Random(17)
         val input = ByteArray(500_000) { if (random.nextInt(10) == 0) random.nextInt(16).toByte() else -1 }
         assertContentEquals(input, inflate(deflate(input), input.size))

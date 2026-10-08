@@ -24,33 +24,33 @@ class MetronomeContextTest {
     private val currentSong = { destination: CampfireDestination.SongDetails -> destination.songFileNames[destination.initialIndex] }
 
     @Test
-    fun theSongOnTopIsTheContext() = assertEquals(
+    fun `the song on top is the context`() = assertEquals(
         MetronomeContext.Song("a.cho", "s.setlist.json"),
         metronomeContextOf(listOf(CampfireDestination.Songs, songDetails), currentSong),
     )
 
     /** A click is stopped with the screen it was started on, so a song under another screen plays for nothing. */
     @Test
-    fun aSongUnderAnotherScreenIsNotTheContext() = assertEquals(
+    fun `a song under another screen is not the context`() = assertEquals(
         MetronomeContext.Standalone,
         metronomeContextOf(listOf(CampfireDestination.Songs, songDetails, CampfireDestination.SongEditor("a.cho")), currentSong),
     )
 
     @Test
-    fun aStackWithoutASongIsStandalone() =
+    fun `a stack without a song is standalone`() =
         assertEquals(MetronomeContext.Standalone, metronomeContextOf(listOf(CampfireDestination.Songs, CampfireDestination.Metronome), currentSong))
 
     @Test
-    fun thePageBeingHeadedForIsTheSong() =
+    fun `the page being headed for is the song`() =
         assertEquals(MetronomeContext.Song("b.cho", "s.setlist.json"), metronomeContextOf(listOf(songDetails), currentSongOf = { "b.cho" }))
 
     /** A song whose file the library does not hold yet has no tempo to play, so the tab's own pattern stands in. */
     @Test
-    fun aSongWithNoFileIsStandalone() =
+    fun `a song with no file is standalone`() =
         assertEquals(MetronomeContext.Standalone, metronomeContextOf(listOf(songDetails), currentSongOf = { null }))
 
     @Test
-    fun theStretchThePageIsHeadedForIsPartOfTheContext() {
+    fun `the stretch the page is headed for is part of the context`() {
         val timing = SongTiming(index = 0, bpm = 90, timeSignature = TimeSignature(3, 4))
         assertEquals(
             MetronomeContext.Song("a.cho", "s.setlist.json", timing),
@@ -59,53 +59,53 @@ class MetronomeContextTest {
     }
 
     @Test
-    fun theSameSongStayingOnTopKeepsTheClick() = assertFalse(isMetronomeScreenLeft(songDetails, songDetails.copy()))
+    fun `the same song staying on top keeps the click`() = assertFalse(isMetronomeScreenLeft(songDetails, songDetails.copy()))
 
     /** A rename rewrites the screen's file names in place, which is still the screen the click was started on. */
     @Test
-    fun theSameSongUnderNewFileNamesKeepsTheClick() =
+    fun `the same song under new file names keeps the click`() =
         assertFalse(isMetronomeScreenLeft(songDetails, songDetails.copy(songFileNames = listOf("c.cho", "b.cho"))))
 
     @Test
-    fun theMetronomeTabStayingOnTopKeepsTheClick() = assertFalse(isMetronomeScreenLeft(CampfireDestination.Metronome, CampfireDestination.Metronome))
+    fun `the metronome tab staying on top keeps the click`() = assertFalse(isMetronomeScreenLeft(CampfireDestination.Metronome, CampfireDestination.Metronome))
 
     @Test
-    fun aSongOpenedOverTheMetronomeTabStopsTheClick() = assertTrue(isMetronomeScreenLeft(CampfireDestination.Metronome, songDetails))
+    fun `a song opened over the metronome tab stops the click`() = assertTrue(isMetronomeScreenLeft(CampfireDestination.Metronome, songDetails))
 
     @Test
-    fun aSongOpenedOverAnotherSongStopsTheClick() = assertTrue(isMetronomeScreenLeft(songDetails, songDetails.copy(id = "2")))
+    fun `a song opened over another song stops the click`() = assertTrue(isMetronomeScreenLeft(songDetails, songDetails.copy(id = "2")))
 
     @Test
-    fun aScreenWithoutAMetronomeStopsTheClick() {
+    fun `a screen without a metronome stops the click`() {
         assertTrue(isMetronomeScreenLeft(songDetails, CampfireDestination.SongEditor("a.cho")))
         assertTrue(isMetronomeScreenLeft(songDetails, CampfireDestination.Songs))
     }
 
     @Test
-    fun theMetronomeTabSelectedFromASongStopsTheClick() = assertTrue(isMetronomeScreenLeft(songDetails, CampfireDestination.Metronome))
+    fun `the metronome tab selected from a song stops the click`() = assertTrue(isMetronomeScreenLeft(songDetails, CampfireDestination.Metronome))
 
     /** A rename is the same song under a new name, so the click goes on in its bar. */
     @Test
-    fun aRenamedSongIsNotMoved() = assertFalse(
+    fun `a renamed song is not moved`() = assertFalse(
         isMetronomeContextMoved(MetronomeContext.Song("a.cho", "s.setlist.json"), MetronomeContext.Song("b.cho", "s.setlist.json"), mapOf("a.cho" to "b.cho")),
     )
 
     @Test
-    fun anotherSongIsMoved() = assertTrue(
+    fun `another song is moved`() = assertTrue(
         isMetronomeContextMoved(MetronomeContext.Song("a.cho", "s.setlist.json"), MetronomeContext.Song("b.cho", "s.setlist.json"), emptyMap()),
     )
 
     @Test
-    fun theSameSongInAnotherSetlistIsMoved() = assertTrue(
+    fun `the same song in another setlist is moved`() = assertTrue(
         isMetronomeContextMoved(MetronomeContext.Song("a.cho", "s.setlist.json"), MetronomeContext.Song("b.cho", null), mapOf("a.cho" to "b.cho")),
     )
 
     @Test
-    fun aSongAfterTheTabIsMoved() =
+    fun `a song after the tab is moved`() =
         assertTrue(isMetronomeContextMoved(MetronomeContext.Standalone, MetronomeContext.Song("a.cho", null), emptyMap()))
 
     @Test
-    fun anotherStretchOfTheSongIsMoved() {
+    fun `another stretch of the song is moved`() {
         val opening = MetronomeContext.Song("a.cho", null)
         val bridge = MetronomeContext.Song("a.cho", null, SongTiming(index = 0, bpm = 90, timeSignature = TimeSignature(3, 4)))
         assertTrue(isMetronomeContextMoved(opening, bridge, emptyMap()))
@@ -115,13 +115,13 @@ class MetronomeContextTest {
 
     /** A stretch whose tempo scales with the opening one stepped is the same stretch, played on from the next beat. */
     @Test
-    fun theSameStretchAtAnotherTempoIsNotMoved() {
+    fun `the same stretch at another tempo is not moved`() {
         val bridge = MetronomeContext.Song("a.cho", null, SongTiming(index = 0, bpm = 90, timeSignature = TimeSignature(3, 4)))
         assertFalse(isMetronomeContextMoved(bridge, bridge.copy(timing = bridge.timing!!.copy(bpm = 95)), emptyMap()))
     }
 
     @Test
-    fun theSameContextIsNotMoved() =
+    fun `the same context is not moved`() =
         assertFalse(isMetronomeContextMoved(MetronomeContext.Song("a.cho", null), MetronomeContext.Song("a.cho", null), emptyMap()))
 
     @Test

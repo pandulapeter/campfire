@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.data.repository.implementation
 import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.model.domain.ParsedSetlist
 import com.pandulapeter.campfire.data.model.domain.Setlist
+import com.pandulapeter.campfire.data.repository.implementation.base.RecordingLogger
 import com.pandulapeter.campfire.data.source.local.api.LibraryChanges
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLock
 import com.pandulapeter.campfire.data.source.local.api.SetlistLocalSource
@@ -370,6 +371,42 @@ class SetlistRepositoryImplTest {
         assertEquals(listOf(FILE_NAME), localSource.saves.map { it.fileName })
     }
 
+    @Test
+    fun `deleting every setlist goes past a file that fails and keeps only that one listed`() = runTest {
+        val localSource = FakeSetlistLocalSource(listOf(setlist("a.setlist.json"), setlist("b.setlist.json"), setlist("c.setlist.json")))
+        localSource.undeletableFileName = "b.setlist.json"
+        val logger = RecordingLogger()
+        val repository = SetlistRepositoryImpl(localSource, LibraryFileLock(), LibraryChanges(), logger)
+        repository.loadSetlistsIfNeeded()
+
+        assertFailsWith<IllegalStateException> { repository.deleteAllSetlists() }
+
+        assertEquals(1, logger.lines.count { "\"b.setlist.json\"" in it })
+        assertEquals(setOf("b.setlist.json"), localSource.files.keys)
+        assertEquals(listOf("b.setlist.json"), repository.setlists.first().data?.map { it.fileName })
+    }
+
+    @Test
+    fun `an import adopted before the list was read reads the whole library`() = runTest {
+        val localSource = FakeSetlistLocalSource(listOf(setlist(FILE_NAME), setlist(SECOND_FILE_NAME)))
+        val repository = SetlistRepositoryImpl(localSource, LibraryFileLock(), LibraryChanges(), Logger.Standard)
+
+        repository.adoptImported(listOf(setlist(SECOND_FILE_NAME)))
+
+        assertEquals(listOf(FILE_NAME, SECOND_FILE_NAME), repository.setlists.first().data?.map { it.fileName }?.sorted())
+    }
+
+    @Test
+    fun `an imported setlist the list already holds replaces it rather than being listed twice`() = runTest {
+        val localSource = FakeSetlistLocalSource(listOf(setlist(FILE_NAME, "a.cho")))
+        val repository = SetlistRepositoryImpl(localSource, LibraryFileLock(), LibraryChanges(), Logger.Standard)
+        repository.loadSetlistsIfNeeded()
+
+        repository.adoptImported(listOf(setlist(FILE_NAME, "b.cho")))
+
+        assertEquals(listOf(listOf("b.cho")), repository.setlists.first().data?.map { setlist -> setlist.entries.map { it.songFileName } })
+    }
+
     /** A setlists directory held in a map, whose writes can be held back until the test lets them through. */
     private class FakeSetlistLocalSource(setlists: List<Setlist>) : SetlistLocalSource {
 
@@ -452,11 +489,15 @@ class SetlistRepositoryImplTest {
 
         override suspend fun importSetlist(setlist: Setlist, shouldReplace: Boolean) = throw UnsupportedOperationException()
 
-        override suspend fun loadSetlistFileSizes(): Map<String, Long> = throw UnsupportedOperationException()
+        override suspend fun loadSetlistFileSizes() = files.mapValues { (_, setlist) -> setlist.size }
 
         override suspend fun loadSetlistDocument(fileName: String, songFileNames: Set<String>?) = throw UnsupportedOperationException()
 
+        /** A file whose deletion fails, as one held open by another program would on Windows. */
+        var undeletableFileName: String? = null
+
         override suspend fun deleteSetlist(fileName: String) {
+            if (fileName == undeletableFileName) throw IllegalStateException("The file is in use.")
             files.remove(fileName)
         }
     }

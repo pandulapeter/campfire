@@ -31,12 +31,12 @@ class WebBuildManifestTest {
         "\"skiko.wasm\":{\"sha256\":\"0b041b443ea5a5f9b95a9ca5b68e5561315ff77cddd323fafb920586a540a379\",\"size\":5}"
 
     @Test
-    fun theIdIsSixteenHexDigitsOfTheMapAndThePage() {
+    fun `the ID is sixteen hex digits of the map and the page`() {
         assertEquals("d35a7fb980b863e0", webBuildManifest(files, template).id)
     }
 
     @Test
-    fun thePageManifestNamesEveryFileInPathOrderAndCountsTheBinaries() {
+    fun `the page manifest names every file in path order and counts the binaries`() {
         assertEquals(
             "{\"id\":\"d35a7fb980b863e0\",\"binaryCount\":2,\"binaryBytes\":13,\"files\":{$fileMap}}",
             webBuildManifest(files, template).pageManifest,
@@ -44,7 +44,7 @@ class WebBuildManifestTest {
     }
 
     @Test
-    fun buildJsonCarriesTheDigestOfTheFinishedPage() {
+    fun `build JSON carries the digest of the finished page`() {
         val manifest = webBuildManifest(files, template)
         val page = template.replace("/*{{BUILD}}*/null", manifest.pageManifest)
         assertEquals(

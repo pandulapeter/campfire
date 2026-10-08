@@ -16,7 +16,7 @@ import kotlin.test.assertTrue
 class RowSnappingTest {
 
     @Test
-    fun theStretchAPageIsInIsTheLastChangeAtOrBeforeIt() {
+    fun `the stretch a page is in is the last change at or before it`() {
         val rows = SongRows(
             restingOffsets = listOf(0, 1000, 2000, 3500),
             stepOffsets = listOf(0, 1000, 2000, 3500),
@@ -35,7 +35,7 @@ class RowSnappingTest {
     }
 
     @Test
-    fun aChangeWrittenBeforeTheFirstLineIsInForceFromTheFirstPage() {
+    fun `a change written before the first line is in force from the first page`() {
         val rows = SongRows(
             restingOffsets = listOf(0, 1000),
             stepOffsets = listOf(0, 1000),
@@ -48,7 +48,7 @@ class RowSnappingTest {
     }
 
     @Test
-    fun aSongbookSteppedBySectionsFollowsTheChangeScrolledPast() {
+    fun `a songbook stepped by sections follows the change scrolled past`() {
         val rows = SongRows(
             stepOffsets = listOf(-24, 100, 300, 500),
             stepSections = listOf(0, 1, 2, 3),
@@ -62,7 +62,7 @@ class RowSnappingTest {
     }
 
     @Test
-    fun theTopFadeOnlyFadesWhatIsScrolledPastTheTopOfTheRow() {
+    fun `the top fade only fades what is scrolled past the top of the row`() {
         val rows = SongRows(restingOffsets = listOf(0, 600, 1200))
         assertEquals(0, rows.scrolledIntoRow(600))
         assertEquals(10, rows.scrolledIntoRow(610))
@@ -87,7 +87,7 @@ class RowSnappingTest {
     )
 
     @Test
-    fun rowsShorterThanTheViewportSnapToTheNearestDivider() {
+    fun `rows shorter than the viewport snap to the nearest divider`() {
         assertEquals(800f, snap(target = 700f, dividers = listOf(800, 1600)))
         assertEquals(800f, snap(target = 1100f, dividers = listOf(800, 1600)))
         assertEquals(1600f, snap(target = 1300f, dividers = listOf(800, 1600)))
@@ -95,13 +95,13 @@ class RowSnappingTest {
     }
 
     @Test
-    fun theEndsOfTheSongAreSnapPoints() {
+    fun `the ends of the song are snap points`() {
         assertEquals(0f, snap(target = -500f, dividers = listOf(800)))
         assertEquals(3000f, snap(start = 900f, target = 5000f, dividers = listOf(800)))
     }
 
     @Test
-    fun aTallRowIsLandedOnAtItsTop() {
+    fun `a tall row is landed on at its top`() {
         // The row from 500 to 2500 has its bottom at the bottom of the viewport at 1500.
         assertEquals(500f, snap(start = 0f, target = 1200f, dividers = listOf(500, 2500)))
         assertEquals(500f, snap(start = 2500f, target = 1700f, dividers = listOf(500, 2500)))
@@ -109,7 +109,7 @@ class RowSnappingTest {
     }
 
     @Test
-    fun aTallRowScrollsFreelyOnceItIsBeingRead() {
+    fun `a tall row scrolls freely once it is being read`() {
         assertEquals(1200f, snap(start = 500f, target = 1200f, dividers = listOf(500, 2500)))
         assertEquals(700f, snap(start = 1200f, target = 700f, dividers = listOf(500, 2500)))
         assertEquals(1500f, snap(start = 900f, target = 1700f, dividers = listOf(500, 2500)))
@@ -117,14 +117,14 @@ class RowSnappingTest {
     }
 
     @Test
-    fun aTallLastRowScrollsFreelyToTheEndOfTheSong() {
+    fun `a tall last row scrolls freely to the end of the song`() {
         assertEquals(2400f, snap(start = 1000f, target = 2900f, dividers = listOf(2400)))
         assertEquals(2900f, snap(start = 2400f, target = 2900f, dividers = listOf(2400)))
         assertEquals(2600f, snap(start = 2900f, target = 2600f, dividers = listOf(2400)))
     }
 
     @Test
-    fun theSpaceAfterARowDoesNotMakeItTall() {
+    fun `the space after a row does not make it tall`() {
         // Both rows end 700 below where they rest, and are followed by empty space down to the next one.
         val dividers = listOf(300, 1400)
         val bottoms = listOf(1000, 2100)
@@ -133,13 +133,13 @@ class RowSnappingTest {
     }
 
     @Test
-    fun aDividerPastTheEndOfTheScrollIsTheEnd() {
+    fun `a divider past the end of the scroll is the end`() {
         assertEquals(3000f, snap(target = 2800f, dividers = listOf(2000, 3400)))
         assertEquals(2000f, snap(target = 2400f, dividers = listOf(2000, 3400)))
     }
 
     @Test
-    fun theButtonsStepToTheNeighbouringRows() {
+    fun `the buttons step to the neighbouring rows`() {
         val rows = listOf(300, 1300, 2300)
         assertEquals(300, nextStepOffset(scroll = 0, stepOffsets = rows, maxValue = 3000))
         assertEquals(null, previousStepOffset(scroll = 0, stepOffsets = rows, maxValue = 3000))
@@ -157,7 +157,7 @@ class RowSnappingTest {
     }
 
     @Test
-    fun stepsFollowVerticalPositionAcrossColumnsAndClampUnreachableSections() {
+    fun `steps follow vertical position across columns and clamp unreachable sections`() {
         val sections = listOf(2300, -24, 1300, 300, 1300, 3400)
         assertEquals(1300, nextStepOffset(scroll = 300, stepOffsets = sections, maxValue = 2000))
         assertEquals(300, previousStepOffset(scroll = 1300, stepOffsets = sections, maxValue = 2000))
@@ -167,7 +167,7 @@ class RowSnappingTest {
     }
 
     @Test
-    fun stepsRespectTheOnePixelToleranceAndTheEndsOfTheSong() {
+    fun `steps respect the one pixel tolerance and the ends of the song`() {
         val sections = listOf(-24, 300, 1300, 2300)
         assertEquals(1300, nextStepOffset(scroll = 299, stepOffsets = sections, maxValue = 3000))
         assertEquals(0, previousStepOffset(scroll = 301, stepOffsets = sections, maxValue = 3000))
@@ -206,7 +206,7 @@ class RowSnappingTest {
     )
 
     @Test
-    fun aFlingGoesNoFurtherThanOneStep() {
+    fun `a fling goes no further than one step`() {
         assertEquals(1300f, capped(start = 300f, target = 3300f))
         assertEquals(300f, capped(start = 1300f, target = 0f))
         // A tall row is flung through a page at a time, as it is stepped through.
@@ -214,20 +214,20 @@ class RowSnappingTest {
     }
 
     @Test
-    fun aFlingShortOfTheNextStepIsLeftAlone() {
+    fun `a fling short of the next step is left alone`() {
         assertEquals(800f, capped(start = 300f, target = 800f))
         assertEquals(900f, capped(start = 1300f, target = 900f))
     }
 
     @Test
-    fun aFlingWithNoStepsLeftItsWayIsLeftAlone() {
+    fun `a fling with no steps left its way is left alone`() {
         assertEquals(-200f, capped(start = 0f, target = -200f))
         assertEquals(4000f, capped(start = 3300f, target = 4000f))
         assertEquals(700f, oneStepCappedTarget(start = 0f, target = 700f, rows = SongRows(), viewportHeight = 1000, window = window, maxValue = 3300))
     }
 
     @Test
-    fun aRowTallerThanTheScreenIsPagedThroughBeforeTheNextOne() {
+    fun `a row taller than the screen is paged through before the next one`() {
         assertEquals(300, next(scroll = 0))
         assertEquals(1300, next(scroll = 300))
         // Its content ends 2000 below the top of the viewport at its top, so it is paged until that end is in view.
@@ -237,7 +237,7 @@ class RowSnappingTest {
     }
 
     @Test
-    fun steppingBackLandsOnTheEndOfATallRowAndTheTopOfAShortOne() {
+    fun `stepping back lands on the end of a tall row and the top of a short one`() {
         assertEquals(2000, previous(scroll = 3300))
         assertEquals(1300, previous(scroll = 2000))
         assertEquals(300, previous(scroll = 1300))
@@ -246,7 +246,7 @@ class RowSnappingTest {
     }
 
     @Test
-    fun aTallLastRowIsPagedThroughToTheEndOfTheSongBeforeTheButtonGoesOn() {
+    fun `a tall last row is paged through to the end of the song before the button goes on`() {
         val rows = rowsWithATallOne.copy(bottoms = listOf(1100, 3000, 5000))
         assertEquals(4000, next(scroll = 3300, rows = rows, maxValue = 4000))
         assertTrue(!isStepStop(4000, rows, maxValue = 4000))
@@ -254,7 +254,7 @@ class RowSnappingTest {
     }
 
     @Test
-    fun sectionsTallerThanTheScreenArePagedThroughToTheEndOfTheSong() {
+    fun `sections taller than the screen are paged through to the end of the song`() {
         val sections = SongRows(stepOffsets = listOf(-24, 400, 2000), stepSections = listOf(0, 1, 2))
         val window = ReadingWindow(end = 50, overlap = 100)
         assertEquals(1300, next(scroll = 400, rows = sections, maxValue = 3000, window = window))
@@ -268,7 +268,7 @@ class RowSnappingTest {
     }
 
     @Test
-    fun aSectionThatFitsWhatCanBeReadIsSteppedPastWhole() {
+    fun `a section that fits what can be read is stepped past whole`() {
         // Further apart than a page, but no further than what can be read at once, so nothing between them is skipped.
         val sections = SongRows(stepOffsets = listOf(0, 950), stepSections = listOf(0, 1))
         assertEquals(950, next(scroll = 0, rows = sections, maxValue = 3000))
@@ -276,7 +276,7 @@ class RowSnappingTest {
     }
 
     @Test
-    fun aPageBeginsWithTheStartOfALineWhereOneIsWithinReach() {
+    fun `a page begins with the start of a line where one is within reach`() {
         // A section taller than the screen whose lines start at 0, 400, 850 and 1300, right under the fade at the top.
         val section = SongRows(stepOffsets = listOf(0, 3000), stepSections = listOf(0, 1), lineTops = listOf(24, 424, 874, 1324))
         val window = ReadingWindow(top = 24, overlap = 100)
@@ -288,7 +288,7 @@ class RowSnappingTest {
     }
 
     @Test
-    fun aPageIsNeverLessThanTwoThirdsOfWhatCanBeRead() {
+    fun `a page is never less than two thirds of what can be read`() {
         assertEquals(667, ReadingWindow(overlap = 2000).pageHeight(viewportHeight = 1000))
         assertEquals(353 - 353 / 3, ReadingWindow(overlap = 204).pageHeight(viewportHeight = 353))
         assertEquals(353 - 40, ReadingWindow(overlap = 40).pageHeight(viewportHeight = 353))
@@ -299,7 +299,7 @@ class RowSnappingTest {
     private val lineWindow = ReadingWindow(overlap = 80)
 
     @Test
-    fun stopsClampedCloseTogetherAreSteppedPastInOnePress() {
+    fun `stops clamped close together are stepped past in one press`() {
         val rows = SongRows(stepOffsets = listOf(1000, 1010, 1020), stepSections = listOf(0, 1, 2))
         assertEquals(1020, nextStepTarget(scroll = 990, rows = rows, viewportHeight = 600, window = lineWindow, maxValue = 1020))
         assertEquals(null, nextStepTarget(scroll = 1020, rows = rows, viewportHeight = 600, window = lineWindow, maxValue = 1020))
@@ -309,26 +309,26 @@ class RowSnappingTest {
     }
 
     @Test
-    fun aPressJustAboveATallSectionPagesIntoItRatherThanPastIt() {
+    fun `a press just above a tall section pages into it rather than past it`() {
         val rows = SongRows(stepOffsets = listOf(1000, 5000), stepSections = listOf(0, 1))
         val target = nextStepTarget(scroll = 995, rows = rows, viewportHeight = 600, window = lineWindow, maxValue = 10_000)!!
         assertTrue(target in 1035..995 + 600)
     }
 
     @Test
-    fun aPressAFewPixelsShortOfTheEndHandsOff() {
+    fun `a press a few pixels short of the end hands off`() {
         val rows = SongRows(stepOffsets = listOf(500, 3000), stepSections = listOf(0, 1))
         assertEquals(null, nextStepTarget(scroll = 1996, rows = rows, viewportHeight = 600, window = lineWindow.copy(end = 32), maxValue = 2000))
     }
 
     @Test
-    fun stopsCloserThanALineAreCountedOnce() {
+    fun `stops closer than a line are counted once`() {
         assertEquals(listOf(1020), reachableStops(SongRows(stepOffsets = listOf(1000, 1010, 1020)), maxValue = 4000, minGap = 40))
         assertEquals(listOf(0, 800, 1600), reachableStops(SongRows(stepOffsets = listOf(0, 800, 1600)), maxValue = 4000, minGap = 40))
     }
 
     @Test
-    fun theReaderStaysInTheRowTheirFirstSectionMovesTo() {
+    fun `the reader stays in the row their first section moves to`() {
         // Three rows starting with sections 0, 2 and 5, the reader resting on the second one.
         val before = SongRows(restingOffsets = listOf(300, 1300, 2300), bottoms = listOf(1000, 2000, 3000), stepOffsets = listOf(300, 1300, 2300), stepSections = listOf(0, 2, 5), isSteppedByRow = true)
         val anchor = readingAnchorOf(scroll = 1300, rows = before)
@@ -342,7 +342,7 @@ class RowSnappingTest {
     }
 
     @Test
-    fun theReaderKeepsTheirPlaceInsideATallRowAsFarAsItReaches() {
+    fun `the reader keeps their place inside a tall row as far as it reaches`() {
         val rows = SongRows(restingOffsets = listOf(300, 1300), bottoms = listOf(1000, 3300), stepOffsets = listOf(300, 1300), stepSections = listOf(0, 3), isSteppedByRow = true)
         val anchor = readingAnchorOf(scroll = 1800, rows = rows)!!
         assertEquals(ReadingAnchor(section = 3, offset = 500), anchor)
@@ -353,7 +353,7 @@ class RowSnappingTest {
     }
 
     @Test
-    fun theReaderInTheHeaderStaysInIt() {
+    fun `the reader in the header stays in it`() {
         val rows = SongRows(restingOffsets = listOf(300, 1300), bottoms = listOf(1000, 2000), stepOffsets = listOf(300, 1300), stepSections = listOf(0, 3), isSteppedByRow = true)
         assertEquals(ReadingAnchor(section = null, offset = 0), readingAnchorOf(scroll = 0, rows = rows))
         val anchor = readingAnchorOf(scroll = 200, rows = rows)!!
@@ -362,7 +362,7 @@ class RowSnappingTest {
     }
 
     @Test
-    fun sectionsOutOfVerticalOrderAreAnchoredByPosition() {
+    fun `sections out of vertical order are anchored by position`() {
         // Two columns read top to bottom: sections 0 and 1 in the first, 2 and 3 in the second.
         val columns = SongRows(stepOffsets = listOf(-24, 800, -24, 600), stepSections = listOf(0, 1, 2, 3))
         assertEquals(ReadingAnchor(section = 3, offset = 100), readingAnchorOf(scroll = 700, rows = columns))
@@ -382,7 +382,7 @@ class RowSnappingTest {
     )
 
     @Test
-    fun aTextSizeChangeInsideATallSectionKeepsTheLine() {
+    fun `a text size change inside a tall section keeps the line`() {
         // Line 30 is at the top of what is read, with 5 px of it above.
         val anchor = readingAnchorOf(scroll = 700 - 41 + 5, rows = tallSection(20), readingTop = 41)!!
         assertEquals(LineAnchor(section = 0, index = 30, offset = 5, height = 20), anchor.line)
@@ -391,13 +391,13 @@ class RowSnappingTest {
     }
 
     @Test
-    fun shrinkingTheTextInsideATallSectionNeverMovesTheReaderToALaterLine() {
+    fun `shrinking the text inside a tall section never moves the reader to a later line`() {
         val anchor = readingAnchorOf(scroll = 100 + 30 * 36 - 41 + 5, rows = tallSection(36), readingTop = 41)!!
         assertEquals(700 + 2 - 41, anchoredScrollOffset(anchor, tallSection(20), viewportHeight = 450, maxValue = 100_000, readingTop = 41))
     }
 
     @Test
-    fun aReaderOnAStopStaysOnIt() {
+    fun `a reader on a stop stays on it`() {
         val rows = tallSection(20).copy(stepOffsets = listOf(59, 8100), stepSections = listOf(0, 1), lineSections = List(400) { 0 })
         val anchor = readingAnchorOf(scroll = 8100, rows = rows, readingTop = 41)!!
         assertEquals(ReadingAnchor(section = 1, offset = 0), anchor)
@@ -430,7 +430,7 @@ class RowSnappingTest {
     )
 
     @Test
-    fun aLineIsFoundInTheRowItsSectionMovedTo() {
+    fun `a line is found in the row its section moved to`() {
         // The reader is 20 px into the second line of section 2.
         val anchor = readingAnchorOf(scroll = 1020, rows = rowOfThreeSections)!!
         assertEquals(LineAnchor(section = 2, index = 1, offset = 20, height = 100), anchor.line)
@@ -438,7 +438,7 @@ class RowSnappingTest {
     }
 
     @Test
-    fun aLineTheNewLayoutDoesNotPageThroughFallsBackToTheStop() {
+    fun `a line the new layout does not page through falls back to the stop`() {
         val anchor = readingAnchorOf(scroll = 1020, rows = rowOfThreeSections)!!
         val byStop = anchor.copy(line = null)
         // Section 2 folded to a single piece.
@@ -450,13 +450,13 @@ class RowSnappingTest {
     }
 
     @Test
-    fun aSongNotLaidOutYetHasNoAnchor() {
+    fun `a song not laid out yet has no anchor`() {
         assertEquals(null, readingAnchorOf(scroll = 100, rows = SongRows()))
         assertEquals(null, anchoredScrollOffset(ReadingAnchor(section = 1, offset = 0), SongRows(), viewportHeight = 1000, maxValue = 4000))
     }
 
     @Test
-    fun stopsTooCloseToTheEndOfTheSongAreCountedOnceWhereItEnds() {
+    fun `stops too close to the end of the song are counted once where it ends`() {
         val column = SongRows(stepOffsets = listOf(-24, 800, 1600, 2400))
         assertEquals(listOf(0, 800, 1600, 2400), reachableStops(column, maxValue = 4000))
         assertEquals(listOf(0, 800, 1500), reachableStops(column, maxValue = 1500))
@@ -468,7 +468,7 @@ class RowSnappingTest {
     }
 
     @Test
-    fun theProgressFollowsTheScrollBetweenTheStops() {
+    fun `the progress follows the scroll between the stops`() {
         val stops = listOf(0, 800, 1600)
         // The song opens on its first stop.
         assertEquals(0f, stopProgress(scroll = 0, stops = stops))
@@ -480,7 +480,7 @@ class RowSnappingTest {
     }
 
     @Test
-    fun theFirstStopIsRestedOnAtTheTopOfThePaddedScroll() {
+    fun `the first stop is rested on at the top of the padded scroll`() {
         val rows = SongRows(
             restingOffsets = listOf(0, 1000),
             bottoms = listOf(900, 1800),
@@ -497,7 +497,7 @@ class RowSnappingTest {
     }
 
     @Test
-    fun theProgressDotsAreCenteredWhereTheyFitAndScrolledToTheMarkWhereNot() {
+    fun `the progress dots are centered where they fit and scrolled to the mark where not`() {
         assertEquals(20f, stepProgressOffset(contentHeight = 60f, availableHeight = 100f, markCenter = 30f))
         // The mark is kept in the middle, as far as the ends of the column let it be.
         assertEquals(0f, stepProgressOffset(contentHeight = 300f, availableHeight = 100f, markCenter = 6f))

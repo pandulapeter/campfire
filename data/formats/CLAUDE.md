@@ -74,8 +74,8 @@ it could not read.
   writes one.
 
 Tested with `commonTest` (syntax, filters, encodings, geometry and rejections of the readers, zip round trips, reader
-rejections, the inflater's limit) and `desktopTest` (the inflater and the zip reader against archives the JVM produced),
-run with `./gradlew :data:formats:desktopTest`.
+rejections, the inflater's limit) and `desktopTest` (the inflater and the zip reader against archives the JVM produced,
+and the writer's entry dates as the JVM reads them back), run with `./gradlew :data:formats:desktopTest`.
 
 ## Documents as the import sees them
 

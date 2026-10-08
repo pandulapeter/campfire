@@ -21,6 +21,7 @@ import java.nio.file.Files
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 /** Which files of a library folder are the library, against a folder that also holds what macOS copies along. */
 class LibraryListingTest {
@@ -143,14 +144,22 @@ class LibraryListingTest {
     }
 
     @Test
-    fun `a scan of 1,000 songs publishes after 64, 128, 256 and 512 songs`() = runBlocking {
+    fun `a long scan fills the list as it goes, a handful of times`() = runBlocking {
         (1..1000).forEach { fileStorage.writeText(StorageDirectory.SONGS, "song_$it.cho", "{title: Song $it}\n") }
-        val published = mutableListOf<Int>()
+        val published = mutableListOf<List<String>>()
 
-        val songs = SongLocalSourceImpl(fileStorage, Logger.Standard).loadSongs { published += it.size }
+        val songs = SongLocalSourceImpl(fileStorage, Logger.Standard).loadSongs { list -> published += list.map { it.fileName } }
 
-        assertEquals(listOf(64, 128, 256, 512), published)
         assertEquals(1000, songs.size)
+        assertTrue(published.size >= 2, "Published ${published.size} times.")
+        // Every hand-over is a beginning of the final list, and never the whole of it, which the return value already is.
+        published.forEach { list ->
+            assertTrue(list.size < songs.size)
+            assertEquals(songs.take(list.size).map { it.fileName }, list)
+        }
+        // At least doubling each time keeps the filtering and sorting every hand-over causes downstream under two full rebuilds.
+        published.zipWithNext().forEach { (previous, next) -> assertTrue(next.size >= previous.size * 2, "${previous.size} -> ${next.size}") }
+        assertTrue(published.sumOf { it.size } < 2 * songs.size)
     }
 
     @Test

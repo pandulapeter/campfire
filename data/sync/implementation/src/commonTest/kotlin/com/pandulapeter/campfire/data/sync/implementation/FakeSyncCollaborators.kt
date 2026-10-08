@@ -31,6 +31,7 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.datetime.LocalDate
+import kotlinx.serialization.json.Json
 
 /** Tells no two setlists apart by anything less than their bytes, so a test using it pins the engine without that rule. */
 internal object NoSetlistComparison : SetlistComparison {
@@ -65,6 +66,13 @@ internal class FakeSyncIndexLocalSource(
     var onLoadIndex: () -> Unit = {},
 ) : SyncIndexLocalSource {
 
+    /**
+     * The index as a document rather than as text, so that a test asks about a field and not about how the file happens
+     * to be formatted: a search for `"isRunInProgress": true` finds nothing once the spacing changes, and every check
+     * that it is not there then passes without looking.
+     */
+    val document get() = index?.let(::decodeSyncIndex)
+
     override suspend fun loadSyncIndex(): String? {
         onLoadIndex()
         return index
@@ -96,13 +104,15 @@ internal class FakeSyncIndexLocalSource(
 }
 
 /**
- * A platform whose consent page answers with [outcome] every time, and that has no redirect waiting at start up.
- * Without an outcome, being asked for consent at all is a mistake of the test. [onAuthorize] runs before the page
- * answers, which is where a test keeps the user on it.
+ * A platform whose consent page answers with [outcome] every time. Without an outcome, being asked for consent at all
+ * is a mistake of the test. [onAuthorize] runs before the page answers, which is where a test keeps the user on it.
+ * [pendingRedirect] is the consent page's answer that reached an app which was not running - the web's ordinary
+ * case - handed over once, the way a platform consumes it.
  */
 internal class FakeSyncAuthenticator(
     private val outcome: SyncAuthenticator.AuthorizationOutcome? = null,
     private val onAuthorize: suspend () -> Unit = {},
+    private var pendingRedirect: String? = null,
 ) : SyncAuthenticator {
 
     override suspend fun prepareRedirectUri(): String? = null
@@ -115,7 +125,7 @@ internal class FakeSyncAuthenticator(
         return outcome ?: throw UnsupportedOperationException()
     }
 
-    override suspend fun consumePendingRedirect(): String? = null
+    override suspend fun consumePendingRedirect() = pendingRedirect.also { pendingRedirect = null }
 }
 
 /**
@@ -291,6 +301,20 @@ internal fun defaultUserPreferences(
     languageSortingMode = UserPreferences.LabelSortingMode.BY_USAGE,
 )
 
+/**
+ * `sync-index.json` as [SyncIndexStore] writes it, for a test that starts from an index on disk. Strict where the store
+ * is lenient when the test reads one back, so that a field the document no longer has fails the test rather than
+ * being skipped.
+ */
+private val syncIndexJson = Json {
+    prettyPrint = true
+    encodeDefaults = true
+}
+
+internal fun SyncIndexDocument.encoded() = syncIndexJson.encodeToString(this)
+
+internal fun decodeSyncIndex(text: String) = syncIndexJson.decodeFromString<SyncIndexDocument>(text)
+
 /** Counts the runs by their opening index write, the one that marks a run as going in an index that said none was. */
 internal class RunCounter {
     var count = 0
@@ -298,7 +322,7 @@ internal class RunCounter {
     private var isRunning = false
 
     fun onSaveIndex(document: String?) {
-        val isMarkedAsRunning = document != null && "\"isRunInProgress\": true" in document
+        val isMarkedAsRunning = document?.let(::decodeSyncIndex)?.isRunInProgress == true
         if (isMarkedAsRunning && !isRunning) count++
         isRunning = isMarkedAsRunning
     }

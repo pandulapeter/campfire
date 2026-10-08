@@ -25,7 +25,7 @@ import kotlin.test.assertTrue
 internal class ImportPlannerTest {
 
     @Test
-    fun songsAreComparedAcrossTheirWholeCollisionFamily() = runTest {
+    fun `songs are compared across their whole collision family`() = runTest {
         val plan = plan(
             library = mapOf("x.cho" to A, "x_2.cho" to B, "x (3).crd" to C),
             song(text = A, sourceFileName = "x.cho"),
@@ -38,7 +38,7 @@ internal class ImportPlannerTest {
     }
 
     @Test
-    fun batchDuplicatesFollowTheFirstEntryAndOnlyOneEntryConflicts() = runTest {
+    fun `batch duplicates follow the first entry and only one entry conflicts`() = runTest {
         val plan = plan(
             library = mapOf("x.cho" to A),
             song(text = B),
@@ -52,7 +52,7 @@ internal class ImportPlannerTest {
     }
 
     @Test
-    fun numberedArrivalsAreHandledInTheirLibraryOrderAndOnlyReadTheirFamily() = runTest {
+    fun `numbered arrivals are handled in their library order and only read their family`() = runTest {
         val reads = mutableListOf<String>()
         val library = mapOf("x.cho" to A, "x_2.cho" to B, "y.cho" to C, "xylophone.cho" to C)
         val plan = ImportPlanner.planSongs(
@@ -66,7 +66,7 @@ internal class ImportPlannerTest {
     }
 
     @Test
-    fun songsArrivingAsOlderNamedLibraryFilesReadEachFileOnceAndInParallel() = runTest {
+    fun `songs arriving as older named library files read each file once and in parallel`() = runTest {
         val library = (1..200).associate { "Artist - Title $it.cho" to "{title: Title $it}\n" }
         val reads = mutableListOf<String>()
         var running = 0
@@ -95,7 +95,7 @@ internal class ImportPlannerTest {
     }
 
     @Test
-    fun setlistsUseFamiliesAndDoNotConflictWithTheirBatchSiblings() {
+    fun `setlists use families and do not conflict with their batch siblings`() {
         val first = setlist(fileName = "summer_set.setlist.json", title = "Summer set")
         val second = setlist(fileName = "summer_set_2.setlist.json", title = "Summer Set!")
         val planned = ImportPlanner.planSetlists(
@@ -112,7 +112,7 @@ internal class ImportPlannerTest {
     }
 
     @Test
-    fun aSetlistThatDiffersOnlyByAFieldThisVersionDoesNotKnowIsNotTheSame() {
+    fun `a setlist that differs only by a field this version does not know is not the same`() {
         val library = setlist(fileName = "summer_set.setlist.json", title = "Summer set")
         val incoming = library.copy(unknownFields = """{"venue":"x"}""")
 
@@ -126,7 +126,7 @@ internal class ImportPlannerTest {
     }
 
     @Test
-    fun aSetlistThatCarriesNoDateIsTheSameAsTheLibrarysDatedOne() {
+    fun `a setlist that carries no date is the same as the library's dated one`() {
         // The bundled demo setlist names no day, and the copy the library holds was dated by the import that planted it.
         val library = setlist(fileName = "summer_set.setlist.json", title = "Summer set").copy(date = LocalDate(2026, 9, 28))
 
@@ -142,7 +142,7 @@ internal class ImportPlannerTest {
     }
 
     @Test
-    fun aSetlistThatCarriesNoDateSaysNothingAboutTheCountdownEither() {
+    fun `a setlist that carries no date says nothing about the countdown either`() {
         val library = setlist(fileName = "summer_set.setlist.json", title = "Summer set").copy(date = LocalDate(2026, 9, 28), isCountdownShown = true)
 
         fun statusOf(incoming: Setlist, isDated: Boolean) = ImportPlanner.planSetlists(
@@ -157,7 +157,7 @@ internal class ImportPlannerTest {
     }
 
     @Test
-    fun aSongIsRecognizedUnderTheLibraryNameItArrivedWith() = runTest {
+    fun `a song is recognized under the library name it arrived with`() = runTest {
         // Exported under a name the library gave it before the naming rule changed, and named by its header now.
         val plan = plan(library = mapOf("old_name.cho" to A), song(text = A, sourceFileName = "old_name.cho"))
 
@@ -166,7 +166,7 @@ internal class ImportPlannerTest {
     }
 
     @Test
-    fun aDifferentSongUnderTheNameItArrivedWithIsNew() = runTest {
+    fun `a different song under the name it arrived with is new`() = runTest {
         val plan = plan(library = mapOf("old_name.cho" to B), song(text = A, sourceFileName = "old_name.cho"))
 
         assertEquals(listOf("x.cho"), plan.map { it.fileName })
@@ -174,7 +174,7 @@ internal class ImportPlannerTest {
     }
 
     @Test
-    fun aSetlistIsRecognizedUnderTheLibraryNameItArrivedWith() {
+    fun `a setlist is recognized under the library name it arrived with`() {
         val library = setlist(fileName = "old_name.setlist.json", title = "Summer set")
         val planned = ImportPlanner.planSetlists(
             incoming = listOf(ImportPlanner.IncomingSetlist(library.copy(fileName = "summer_set.setlist.json"), "old_name.setlist.json")),
@@ -187,7 +187,7 @@ internal class ImportPlannerTest {
     }
 
     @Test
-    fun aSetlistFollowingAnEditedSongKeptNextToTheLibrarysIsANewSetlist() = runTest {
+    fun `a setlist following an edited song kept next to the library's is a new setlist`() = runTest {
         val (songs, setlists) = planEditedSongWithItsSetlist()
         assertEquals(listOf(ImportPlan.Status.CONFLICTING), songs.map { it.status })
         // Before anything is written, the plan expects the song in place, which is what replacing and skipping do.
@@ -206,7 +206,7 @@ internal class ImportPlannerTest {
     }
 
     @Test
-    fun aSetlistFollowingAnEditedSongThatReplacedOrLeftTheLibrarysIsTheSame() = runTest {
+    fun `a setlist following an edited song that replaced or left the library's is the same`() = runTest {
         val (_, setlists) = planEditedSongWithItsSetlist()
 
         // Replacing writes the song over song.cho and skipping leaves song.cho alone: either way it is where it was.
@@ -221,7 +221,7 @@ internal class ImportPlannerTest {
     }
 
     @Test
-    fun aSetlistIsComparedPointingWhereItsSongsLand() = runTest {
+    fun `a setlist is compared pointing where its songs land`() = runTest {
         // The song arrives under a name its header does not give it, and the library already holds it as song_2.cho.
         val songs = ImportPlanner.planSongs(
             incoming = listOf(ImportPlanner.IncomingSong(fileName = "song.cho", text = B, sourceFileName = "Song.cho")),
@@ -241,7 +241,7 @@ internal class ImportPlannerTest {
     }
 
     @Test
-    fun aSetlistWhoseTwoEntriesLandOnOneSongIsTheLibrarysOwnOnReimport() = runTest {
+    fun `a setlist whose two entries land on one song is the library's own on reimport`() = runTest {
         val songs = ImportPlanner.planSongs(
             incoming = listOf(song(A, sourceFileName = "x.cho"), song(A, sourceFileName = "x_2.cho")),
             libraryFileNames = listOf("x.cho"),
@@ -259,7 +259,7 @@ internal class ImportPlannerTest {
     }
 
     @Test
-    fun aSetlistWithItsNewSongIsNewAndPointsAtIt() = runTest {
+    fun `a setlist with its new song is new and points at it`() = runTest {
         val songs = ImportPlanner.planSongs(
             incoming = listOf(ImportPlanner.IncomingSong(fileName = "song.cho", text = A, sourceFileName = "Song.cho")),
             libraryFileNames = emptyList(),
@@ -279,7 +279,7 @@ internal class ImportPlannerTest {
     }
 
     @Test
-    fun aDifferentSongWantingANameTheBatchBringsBackUnchangedIsNew() = runTest {
+    fun `a different song wanting a name the batch brings back unchanged is new`() = runTest {
         val plan = plan(
             library = mapOf("x.cho" to A),
             song(text = A, sourceFileName = "x.cho"),
@@ -293,7 +293,7 @@ internal class ImportPlannerTest {
     }
 
     @Test
-    fun aConflictCopyGivenBeforeTheLibrarysSongIsNew() = runTest {
+    fun `a conflict copy given before the library's song is new`() = runTest {
         val plan = plan(
             library = mapOf("x.cho" to A),
             song(text = B, sourceFileName = "x (2).cho"),
@@ -306,7 +306,7 @@ internal class ImportPlannerTest {
     }
 
     @Test
-    fun aDifferentSongIsNewWhicheverSideOfTheLibrarysSongItArrivesOn() = runTest {
+    fun `a different song is new whichever side of the library's song it arrives on`() = runTest {
         val libraryFirst = plan(library = mapOf("x.cho" to A), song(text = A), song(text = B))
         val libraryLast = plan(library = mapOf("x.cho" to A), song(text = B), song(text = A))
 
@@ -317,7 +317,7 @@ internal class ImportPlannerTest {
     }
 
     @Test
-    fun repeatsAroundTheLibrarysSongFollowTheFirstOfThem() = runTest {
+    fun `repeats around the library's song follow the first of them`() = runTest {
         val repeatAfterLibrary = plan(library = mapOf("x.cho" to A), song(text = B), song(text = A), song(text = B))
         val repeatBeforeLibrary = plan(library = mapOf("x.cho" to A), song(text = A), song(text = B), song(text = B))
 
@@ -336,7 +336,7 @@ internal class ImportPlannerTest {
     }
 
     @Test
-    fun twoDifferentSongsBeforeTheLibrarysSongAreBothNew() = runTest {
+    fun `two different songs before the library's song are both new`() = runTest {
         val plan = plan(library = mapOf("x.cho" to A), song(text = B), song(text = C), song(text = A))
 
         assertEquals(listOf(ImportPlan.Status.NEW, ImportPlan.Status.NEW, ImportPlan.Status.IDENTICAL), plan.map { it.status })
@@ -344,14 +344,14 @@ internal class ImportPlannerTest {
     }
 
     @Test
-    fun aDifferentSongIsStillAQuestionWhenTheBatchDoesNotBringTheLibrarysSong() = runTest {
+    fun `a different song is still a question when the batch does not bring the library's song`() = runTest {
         val plan = plan(library = mapOf("x.cho" to A), song(text = B))
 
         assertEquals(listOf(ImportPlan.Status.CONFLICTING), plan.map { it.status })
     }
 
     @Test
-    fun aNumberedSiblingTheBatchBringsBackProtectsOnlyItself() = runTest {
+    fun `a numbered sibling the batch brings back protects only itself`() = runTest {
         val plan = plan(
             library = mapOf("x.cho" to A, "x_2.cho" to B),
             song(text = B, sourceFileName = "x_2.cho"),
@@ -365,7 +365,7 @@ internal class ImportPlannerTest {
     }
 
     @Test
-    fun aSongWantingTheNameALibrarySongArrivedUnderIsNewInEitherOrder() = runTest {
+    fun `a song wanting the name a library song arrived under is new in either order`() = runTest {
         val renamed = ImportPlanner.IncomingSong(fileName = "y.cho", text = A, sourceFileName = "x.cho")
         val different = ImportPlanner.IncomingSong(fileName = "x.cho", text = B, sourceFileName = null)
         val library = mapOf("x.cho" to A)
@@ -382,7 +382,7 @@ internal class ImportPlannerTest {
     }
 
     @Test
-    fun aDifferentSetlistWantingANameTheBatchBringsBackUnchangedIsNew() {
+    fun `a different setlist wanting a name the batch brings back unchanged is new`() {
         val library = setlist(fileName = "summer.setlist.json", title = "Summer")
         val different = library.copy(entries = listOf(Setlist.Entry(songFileName = "song.cho")))
         fun planSetlists(vararg incoming: Setlist) = ImportPlanner.planSetlists(
@@ -401,7 +401,7 @@ internal class ImportPlannerTest {
     }
 
     @Test
-    fun aNumberedSetlistSiblingTheBatchBringsBackProtectsOnlyItself() {
+    fun `a numbered setlist sibling the batch brings back protects only itself`() {
         val first = setlist(fileName = "summer.setlist.json", title = "Summer")
         val second = first.copy(fileName = "summer_2.setlist.json", entries = listOf(Setlist.Entry(songFileName = "a.cho")))
         val different = first.copy(entries = listOf(Setlist.Entry(songFileName = "b.cho")))
@@ -420,7 +420,7 @@ internal class ImportPlannerTest {
     }
 
     @Test
-    fun aSetlistWantingTheNameALibrarySetlistArrivedUnderIsNew() {
+    fun `a setlist wanting the name a library setlist arrived under is new`() {
         val old = setlist(fileName = "old_name.setlist.json", title = "Summer")
         val different = setlist(fileName = "old_name.setlist.json", title = "Old name")
         val planned = ImportPlanner.planSetlists(
@@ -437,7 +437,7 @@ internal class ImportPlannerTest {
     }
 
     @Test
-    fun aSetlistThatStopsBeingTheLibrarysOnReplanIsNeverReplaced() = runTest {
+    fun `a setlist that stops being the library's on replan is never replaced`() = runTest {
         val other = SONG_SETLIST.copy(entries = listOf(Setlist.Entry(songFileName = "other.cho")))
         val songs = planEditedSong()
         val planned = ImportPlanner.planSetlists(
@@ -466,7 +466,7 @@ internal class ImportPlannerTest {
     }
 
     @Test
-    fun aConflictingSetlistTheReplanFindsBroughtBackIsNoLongerAQuestion() = runTest {
+    fun `a conflicting setlist the replan finds brought back is no longer a question`() = runTest {
         val library = SONG_SETLIST.copy(entries = listOf(Setlist.Entry(songFileName = "song_2.cho")))
         val other = SONG_SETLIST.copy(entries = listOf(Setlist.Entry(songFileName = "other.cho")))
         val songs = planEditedSong()
@@ -490,7 +490,7 @@ internal class ImportPlannerTest {
     }
 
     @Test
-    fun anIdenticalSongIsRecordedUnderTheSpellingTheLibraryLists() = runTest {
+    fun `an identical song is recorded under the spelling the library lists`() = runTest {
         val library = mapOf("Wonderwall.cho" to A)
         val incoming = listOf(ImportPlanner.IncomingSong(fileName = "wonderwall.cho", text = A, sourceFileName = "Wonderwall.cho"))
 
@@ -504,7 +504,7 @@ internal class ImportPlannerTest {
     }
 
     @Test
-    fun aDifferentSongReplacesTheSpellingTheLibraryListsWhereTheFileSystemFoldsCase() = runTest {
+    fun `a different song replaces the spelling the library lists where the file system folds case`() = runTest {
         val library = mapOf("Wonderwall.cho" to A)
         val incoming = listOf(ImportPlanner.IncomingSong(fileName = "wonderwall.cho", text = B, sourceFileName = null))
 
@@ -517,7 +517,7 @@ internal class ImportPlannerTest {
     }
 
     @Test
-    fun aDifferentSongIsANameOfItsOwnWhereTheFileSystemTellsCaseApart() = runTest {
+    fun `a different song is a name of its own where the file system tells case apart`() = runTest {
         val library = mapOf("Wonderwall.cho" to A)
         val incoming = listOf(ImportPlanner.IncomingSong(fileName = "wonderwall.cho", text = B, sourceFileName = null))
 
@@ -528,7 +528,7 @@ internal class ImportPlannerTest {
     }
 
     @Test
-    fun aSongListedInDecomposedFormIsAMemberOfItsComposedFamily() = runTest {
+    fun `a song listed in decomposed form is a member of its composed family`() = runTest {
         // "йога", its first letter written as и and a combining breve, the way APFS may list it.
         val library = mapOf("\u0438\u0306\u043e\u0433\u0430.cho" to A)
         val incoming = listOf(ImportPlanner.IncomingSong(fileName = "\u0439\u043e\u0433\u0430.cho", text = A, sourceFileName = null))
@@ -542,7 +542,7 @@ internal class ImportPlannerTest {
     }
 
     @Test
-    fun aDifferentSongNextToTheLibrarysUnderAnotherSpellingIsNew() = runTest {
+    fun `a different song next to the library's under another spelling is new`() = runTest {
         val library = mapOf("Wonderwall.cho" to A)
         val plan = ImportPlanner.planSongs(
             incoming = listOf(
@@ -559,7 +559,7 @@ internal class ImportPlannerTest {
     }
 
     @Test
-    fun aSetlistFollowsItsSongToTheSpellingTheLibraryLists() = runTest {
+    fun `a setlist follows its song to the spelling the library lists`() = runTest {
         val library = mapOf("Wonderwall.cho" to A)
         val songs = ImportPlanner.planSongs(
             incoming = listOf(ImportPlanner.IncomingSong(fileName = "wonderwall.cho", text = A, sourceFileName = "Wonderwall.cho")),
@@ -598,7 +598,7 @@ internal class ImportPlannerTest {
         ImportPlanner.planSongs(incoming.toList(), library.keys) { library[it] }
 
     @Test
-    fun aSongWrittenWithShortDirectivesIsTheLibrarysOwn() = runTest {
+    fun `a song written with short directives is the library's own`() = runTest {
         val library = "{title: River}\n{artist: Band}\n\n{start_of_chorus}\n[C]la\n{end_of_chorus}\n"
         val incoming = "{t:River}\n{artist:Band}\n\n{soc}\n[C]la\n{eoc}\n"
 
@@ -627,7 +627,7 @@ internal class ImportPlannerTest {
     }
 
     @Test
-    fun aSetlistPointsAtTheSongOfItsOwnArchiveWhereTwoArrivedUnderOneName() = runTest {
+    fun `a setlist points at the song of its own archive where two arrived under one name`() = runTest {
         val songs = ImportPlanner.planSongs(
             incoming = listOf(
                 ImportPlanner.IncomingSong(fileName = "a-song.cho", text = A, sourceFileName = "Song.cho", origin = 0),

@@ -43,7 +43,7 @@ class ChordPaddingTest {
     )
 
     @Test
-    fun aChordOnlyLineBreaksBetweenItsChordsAndNowhereElse() {
+    fun `a chord only line breaks between its chords and nowhere else`() {
         val padded = lyrics("[C] [G] [Am] [F]").padded()
         assertFalse(' ' in padded.text)
         assertEquals(3, padded.text.count { it == '​' })
@@ -52,12 +52,12 @@ class ChordPaddingTest {
     }
 
     @Test
-    fun aWordIsNeverBrokenBetweenItsChords() {
+    fun `a word is never broken between its chords`() {
         assertFalse('​' in lyrics("wo[C]n[G]der").padded().text)
     }
 
     @Test
-    fun aPaddedFragmentKeepsItsTrailingSpaceWithItsChord() {
+    fun `a padded fragment keeps its trailing space with its chord`() {
         val padded = lyrics("[C]Hello [G]world").padded(chordWidth = 100f)
         assertEquals(1, padded.text.count { it == '​' })
         assertFalse(padded.text.endsWith('​'))
@@ -66,13 +66,13 @@ class ChordPaddingTest {
     }
 
     @Test
-    fun theInnerSpacesOfAFragmentStayOrdinary() {
+    fun `the inner spaces of a fragment stay ordinary`() {
         val padded = lyrics("[C]Hello world [G]x").padded(chordWidth = 30f)
         assertTrue(padded.text.startsWith("Hello world ​"))
     }
 
     @Test
-    fun chordPositionsPointAtTheirFragments() {
+    fun `chord positions point at their fragments`() {
         val padded = lyrics("[C]Hello [G]world [Am]again").padded(chordWidth = 100f)
         assertEquals('H', padded.text[padded.chords[0].position])
         assertEquals('w', padded.text[padded.chords[1].position])

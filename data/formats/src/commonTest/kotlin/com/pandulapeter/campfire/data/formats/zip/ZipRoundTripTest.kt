@@ -18,7 +18,7 @@ import kotlin.test.assertTrue
 internal class ZipRoundTripTest {
 
     @Test
-    fun writesAndReadsBackEveryEntryInOrder() {
+    fun `writes and reads back every entry in order`() {
         val entries = listOf(
             ZipEntry("empty.cho", ByteArray(0)),
             ZipEntry("songs/Plain ASCII.cho", "{title: Plain}\n[Am]Hello [C]world\n".encodeToByteArray()),
@@ -35,7 +35,7 @@ internal class ZipRoundTripTest {
     }
 
     @Test
-    fun writesAndReadsBackAnEmptyArchive() {
+    fun `writes and reads back an empty archive`() {
         val archive = ZipWriter.write(emptyList())
 
         assertEquals(22, archive.size)
@@ -43,7 +43,7 @@ internal class ZipRoundTripTest {
     }
 
     @Test
-    fun writesAndReadsBackASingleEmptyEntry() {
+    fun `writes and reads back a single empty entry`() {
         val read = ZipReader.read(ZipWriter.write(listOf(ZipEntry("nothing.cho", ByteArray(0))))).entries
 
         assertEquals(1, read.size)

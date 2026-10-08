@@ -46,7 +46,7 @@ class SyncNotificationSchedulerTest {
     }
 
     @Test
-    fun aBurstOfRequestsPostsOnceAtTheEndOfTheInterval() = runTest {
+    fun `a burst of requests posts once at the end of the interval`() = runTest {
         val harness = Harness(backgroundScope)
         repeat(10) { harness.scheduler.requestUpdate(immediately = false) }
         advance(INTERVAL.inWholeMilliseconds - 1)
@@ -56,7 +56,7 @@ class SyncNotificationSchedulerTest {
     }
 
     @Test
-    fun aRequestAfterAPostPostsOneIntervalLater() = runTest {
+    fun `a request after a post posts one interval later`() = runTest {
         val harness = Harness(backgroundScope)
         harness.scheduler.requestUpdate(immediately = false)
         advance(INTERVAL.inWholeMilliseconds)
@@ -68,7 +68,7 @@ class SyncNotificationSchedulerTest {
     }
 
     @Test
-    fun anImmediateRequestPostsAtOnceAndDropsThePendingOne() = runTest {
+    fun `an immediate request posts at once and drops the pending one`() = runTest {
         val harness = Harness(backgroundScope)
         harness.scheduler.requestUpdate(immediately = false)
         harness.scheduler.requestUpdate(immediately = true)
@@ -78,7 +78,7 @@ class SyncNotificationSchedulerTest {
     }
 
     @Test
-    fun aCancelledUpdateIsNotPosted() = runTest {
+    fun `a cancelled update is not posted`() = runTest {
         val harness = Harness(backgroundScope)
         harness.scheduler.requestUpdate(immediately = false)
         advance(INTERVAL.inWholeMilliseconds / 2)
@@ -88,7 +88,7 @@ class SyncNotificationSchedulerTest {
     }
 
     @Test
-    fun aReleaseComesExactlyAtTheEndOfTheGrace() = runTest {
+    fun `a release comes exactly at the end of the grace`() = runTest {
         val harness = Harness(backgroundScope)
         harness.scheduler.scheduleRelease()
         advance(GRACE.inWholeMilliseconds - 1)
@@ -98,7 +98,7 @@ class SyncNotificationSchedulerTest {
     }
 
     @Test
-    fun aReleaseScheduledTwiceComesOnce() = runTest {
+    fun `a release scheduled twice comes once`() = runTest {
         val harness = Harness(backgroundScope)
         harness.scheduler.scheduleRelease()
         advance(GRACE.inWholeMilliseconds / 2)
@@ -108,7 +108,7 @@ class SyncNotificationSchedulerTest {
     }
 
     @Test
-    fun aCancelledReleaseDoesNotCome() = runTest {
+    fun `a cancelled release does not come`() = runTest {
         val harness = Harness(backgroundScope)
         harness.scheduler.scheduleRelease()
         advance(GRACE.inWholeMilliseconds / 2)
@@ -118,7 +118,7 @@ class SyncNotificationSchedulerTest {
     }
 
     @Test
-    fun aRunStartedWithinTheGraceKeepsIt() = runTest {
+    fun `a run started within the grace keeps it`() = runTest {
         val harness = Harness(backgroundScope)
         harness.scheduler.scheduleRelease()
         advance(GRACE.inWholeMilliseconds / 2)
@@ -128,7 +128,7 @@ class SyncNotificationSchedulerTest {
     }
 
     @Test
-    fun aReleaseThatCancelsTheGraceItselfIsSafe() = runTest {
+    fun `a release that cancels the grace itself is safe`() = runTest {
         val harness = Harness(backgroundScope) {
             scheduler.cancelRelease()
             scheduler.cancelUpdate()

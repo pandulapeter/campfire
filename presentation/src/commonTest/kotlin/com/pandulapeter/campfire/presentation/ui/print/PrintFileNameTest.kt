@@ -16,25 +16,25 @@ import kotlin.test.assertEquals
 internal class PrintFileNameTest {
 
     @Test
-    fun songIsNamedByItsHeaderRatherThanItsLibraryFile() = assertEquals(
+    fun `song is named by its header rather than its library file`() = assertEquals(
         "tukorfurogep-arviz.pdf",
         pdfFileName(songSource(fileName = "Foo Bar (2).cho", title = "Árvíz", artist = "Tükörfúrógép"), PrintSettings()),
     )
 
     @Test
-    fun songWithBlankArtistIsNamedByItsTitleAlone() = assertEquals(
+    fun `song with blank artist is named by its title alone`() = assertEquals(
         "hallelujah.pdf",
         pdfFileName(songSource(fileName = "hallelujah_2.cho", title = "Hallelujah", artist = " "), PrintSettings()),
     )
 
     @Test
-    fun setlistSongSheetsAreNamedByTheSetlistTitle() = assertEquals(
+    fun `setlist song sheets are named by the setlist title`() = assertEquals(
         "summer_set_2026.pdf",
         pdfFileName(setlistSource(), PrintSettings(setlistMode = PrintSettings.SetlistMode.SONG_SHEETS)),
     )
 
     @Test
-    fun setlistRunningOrderIsToldApartFromItsSongSheets() = assertEquals(
+    fun `setlist running order is told apart from its song sheets`() = assertEquals(
         "summer_set_2026-running_order.pdf",
         pdfFileName(setlistSource(), PrintSettings(setlistMode = PrintSettings.SetlistMode.RUNNING_ORDER)),
     )

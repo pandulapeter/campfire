@@ -64,7 +64,7 @@ cp /tmp/campfire-print-qa/campfire-columns*.pdf \
   data/source/local/implementation/src/desktopTest/resources/document/
 ```
 
-`DocumentGoldenTest.campfireExportImportsAccentsAndChordsAtTheirPrintedPositions` checks the exported bytes through
+`DocumentGoldenTest`'s `campfire export imports accents and chords at their printed positions` checks the exported bytes through
 the real document local source and chord-sheet converter, including omission of the printed page-count footer.
 
 Still missing from the planned producer matrix: real Microsoft Word, Google Docs, Apple Pages, Safari print and

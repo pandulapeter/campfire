@@ -10,48 +10,29 @@
 package com.pandulapeter.campfire.presentation.ui.firstRun
 
 import kotlin.test.Test
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
+import kotlin.test.assertEquals
 
 class WhatsNewGateTest {
 
     @Test
-    fun opensWhenNothingIsInTheWay() {
-        assertTrue(canShowWhatsNew(hasDialog = false, isImporting = false, hasImportReport = false, queuedImportCount = 0))
+    fun `What's new waits for every dialog and import that is in its way`() {
+        val cases = mapOf(
+            "nothing" to canShowWhatsNew(hasDialog = false, isImporting = false, hasImportReport = false, queuedImportCount = 0),
+            "a dialog" to canShowWhatsNew(hasDialog = true, isImporting = false, hasImportReport = false, queuedImportCount = 0),
+            "an import running" to canShowWhatsNew(hasDialog = false, isImporting = true, hasImportReport = false, queuedImportCount = 0),
+            "a conflicts question" to canShowWhatsNew(hasDialog = false, isImporting = false, hasImportReport = true, queuedImportCount = 0),
+            "a batch still queued" to canShowWhatsNew(hasDialog = false, isImporting = false, hasImportReport = false, queuedImportCount = 1),
+        )
+        assertEquals(mapOf("nothing" to true), cases.filterValues { it })
     }
 
     @Test
-    fun waitsForAnotherDialog() {
-        assertFalse(canShowWhatsNew(hasDialog = true, isImporting = false, hasImportReport = false, queuedImportCount = 0))
-    }
-
-    @Test
-    fun waitsForAnImportRunning() {
-        assertFalse(canShowWhatsNew(hasDialog = false, isImporting = true, hasImportReport = false, queuedImportCount = 0))
-    }
-
-    @Test
-    fun waitsForAConflictsQuestion() {
-        assertFalse(canShowWhatsNew(hasDialog = false, isImporting = false, hasImportReport = true, queuedImportCount = 0))
-    }
-
-    @Test
-    fun waitsForABatchStillInTheQueue() {
-        assertFalse(canShowWhatsNew(hasDialog = false, isImporting = false, hasImportReport = false, queuedImportCount = 1))
-    }
-
-    @Test
-    fun welcomeOpensWhenNothingIsInTheWay() {
-        assertTrue(canShowWelcome(hasDialog = false, hasImportReport = false))
-    }
-
-    @Test
-    fun welcomeStaysOffAnotherDialog() {
-        assertFalse(canShowWelcome(hasDialog = true, hasImportReport = false))
-    }
-
-    @Test
-    fun welcomeStaysOffAnImportScreen() {
-        assertFalse(canShowWelcome(hasDialog = false, hasImportReport = true))
+    fun `the welcome stays off another dialog and an import screen`() {
+        val cases = mapOf(
+            "nothing" to canShowWelcome(hasDialog = false, hasImportReport = false),
+            "a dialog" to canShowWelcome(hasDialog = true, hasImportReport = false),
+            "an import screen" to canShowWelcome(hasDialog = false, hasImportReport = true),
+        )
+        assertEquals(mapOf("nothing" to true), cases.filterValues { it })
     }
 }

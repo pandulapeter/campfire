@@ -10,35 +10,23 @@
 package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 
 import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
-import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.model.domain.SyncAccount
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
-import com.pandulapeter.campfire.data.source.local.api.SyncCredentialsLocalSource
-import com.pandulapeter.campfire.data.source.remote.api.SyncAuthorizationException
 import com.pandulapeter.campfire.data.source.remote.api.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.SyncRemoteStorageFullException
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteDeletion
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteWriteResult
-import com.pandulapeter.campfire.data.source.remote.implementation.auth.SyncCredentialsStore
-import com.pandulapeter.campfire.data.source.remote.implementation.network.HttpClientHolder
-import io.ktor.client.HttpClient
-import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.mock.MockEngine
-import io.ktor.client.engine.mock.MockRequestHandleScope
 import io.ktor.client.engine.mock.respond
 import io.ktor.client.network.sockets.SocketTimeoutException
 import io.ktor.client.plugins.HttpRequestTimeoutException
 import io.ktor.client.plugins.HttpTimeout
-import io.ktor.client.request.HttpRequestData
-import io.ktor.client.request.HttpResponseData
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.TextContent
-import io.ktor.http.headersOf
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancelAndJoin
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runTest
@@ -59,7 +47,7 @@ class DropboxRequestTest {
     @Test
     fun `retries a write that was refused for too many write operations`() = runTest {
         val requests = mutableListOf<String>()
-        val provider = provider { request ->
+        val provider = dropboxProvider { request ->
             requests += request.url.toString()
             if (requests.size <= 3) {
                 respondJson("""{"error_summary":"path/too_many_write_operations/...","error":{}}""", HttpStatusCode.Conflict)
@@ -78,7 +66,7 @@ class DropboxRequestTest {
     @Test
     fun `deletes every file in one batch job and waits for it`() = runTest {
         val requests = mutableListOf<String>()
-        val provider = provider { request ->
+        val provider = dropboxProvider { request ->
             requests += request.url.encodedPath
             when (requests.size) {
                 1 -> respondJson("""{".tag":"async_job_id","async_job_id":"job"}""")
@@ -108,7 +96,7 @@ class DropboxRequestTest {
     @Test
     fun `sends the files of a busy batch again`() = runTest {
         val bodies = mutableListOf<String>()
-        val provider = provider { request ->
+        val provider = dropboxProvider { request ->
             bodies += (request.body as TextContent).text
             if (bodies.size == 1) {
                 respondJson(
@@ -132,7 +120,7 @@ class DropboxRequestTest {
     @Test
     fun `waits as long as the body of a rate limited answer asks`() = runTest {
         var requestCount = 0
-        val provider = provider {
+        val provider = dropboxProvider {
             requestCount++
             if (requestCount == 1) {
                 respondJson(
@@ -140,7 +128,7 @@ class DropboxRequestTest {
                     HttpStatusCode.TooManyRequests,
                 )
             } else {
-                respondJson("""{"entries":[],"cursor":"","has_more":false}""")
+                respondJson(EMPTY_LISTING)
             }
         }
         provider.list()
@@ -151,12 +139,12 @@ class DropboxRequestTest {
     @Test
     fun `waits longer every time the service is unavailable without saying for how long`() = runTest {
         var requestCount = 0
-        val provider = provider {
+        val provider = dropboxProvider {
             requestCount++
             if (requestCount <= 6) {
                 respond(content = "", status = HttpStatusCode.ServiceUnavailable)
             } else {
-                respondJson("""{"entries":[],"cursor":"","has_more":false}""")
+                respondJson(EMPTY_LISTING)
             }
         }
         provider.list()
@@ -166,25 +154,25 @@ class DropboxRequestTest {
 
     @Test
     fun `gives up on a service that stays unavailable`() = runTest {
-        val provider = provider { respond(content = "", status = HttpStatusCode.ServiceUnavailable) }
+        val provider = dropboxProvider { respond(content = "", status = HttpStatusCode.ServiceUnavailable) }
         assertFailsWith<SyncNetworkException> { provider.list() }
     }
 
     @Test
     fun `an upload whose receipt cannot be read is one that may have landed`() = runTest {
-        val provider = provider { respond(content = "<html>", status = HttpStatusCode.OK) }
+        val provider = dropboxProvider { respond(content = "<html>", status = HttpStatusCode.OK) }
         assertFailsWith<SyncNetworkException> { provider.upload(LibraryFileKind.SONG, "song.cho", ByteArray(1), null) }
     }
 
     @Test
     fun `reports a full account as that rather than as one refused file`() = runTest {
-        val provider = provider { respondJson("""{"error_summary":"path/insufficient_space/..","error":{}}""", HttpStatusCode.Conflict) }
+        val provider = dropboxProvider { respondJson("""{"error_summary":"path/insufficient_space/..","error":{}}""", HttpStatusCode.Conflict) }
         assertFailsWith<SyncRemoteStorageFullException> { provider.upload(LibraryFileKind.SONG, "song.cho", ByteArray(1), null) }
     }
 
     @Test
     fun `reports a refused name as the refusal of that one file`() = runTest {
-        val provider = provider { respondJson("""{"error_summary":"path/malformed_path/..","error":{}}""", HttpStatusCode.Conflict) }
+        val provider = dropboxProvider { respondJson("""{"error_summary":"path/malformed_path/..","error":{}}""", HttpStatusCode.Conflict) }
         assertFailsWith<DropboxApiException> { provider.upload(LibraryFileKind.SONG, "song.cho", ByteArray(1), null) }
     }
 
@@ -192,7 +180,7 @@ class DropboxRequestTest {
     @Test
     fun `a request that is cancelled stays a cancellation`() = runTest {
         val hasStarted = CompletableDeferred<Unit>()
-        val provider = provider {
+        val provider = dropboxProvider {
             hasStarted.complete(Unit)
             awaitCancellation()
         }
@@ -209,7 +197,7 @@ class DropboxRequestTest {
      */
     @Test
     fun `a request that keeps timing out is the service not being reached`() = runTest {
-        val provider = provider(
+        val provider = dropboxProvider(
             configure = { install(HttpTimeout) { requestTimeoutMillis = 50 } },
         ) { awaitCancellation() }
         val exception = assertFailsWith<SyncNetworkException> { provider.list() }
@@ -218,32 +206,23 @@ class DropboxRequestTest {
 
     @Test
     fun `a cancellation nobody asked for is the service not being reached`() = runTest {
-        val provider = provider { throw CancellationException("The engine gave up.") }
+        val provider = dropboxProvider { throw CancellationException("The engine gave up.") }
         assertFailsWith<SyncNetworkException> { provider.list() }
     }
 
     /** What the browser engine throws for a `fetch` that failed: a `kotlin.Error`, not an `Exception`. */
     @Test
     fun `a request the browser could not send is the service not being reached`() = runTest {
-        val provider = provider { throw Error("Fail to fetch") }
+        val provider = dropboxProvider { throw Error("Fail to fetch") }
         assertFailsWith<SyncNetworkException> { provider.list() }
         assertFailsWith<SyncNetworkException> { provider.download(LibraryFileKind.SONG, "song.cho") }
         assertFailsWith<SyncNetworkException> { provider.upload(LibraryFileKind.SONG, "song.cho", ByteArray(1), null) }
     }
 
     @Test
-    fun `a token exchange the browser could not send is the service not being reached`() = runTest {
-        val provider = provider(storage = ConnectedStorage(expiresAt = 0)) { request ->
-            if (request.url.toString() == TOKEN_URL) throw Error("Fail to fetch")
-            respondJson("""{"entries":[],"cursor":"","has_more":false}""")
-        }
-        assertFailsWith<SyncNetworkException> { provider.list() }
-    }
-
-    @Test
     fun `disconnecting while the browser cannot send the revocation still disconnects`() = runTest {
         val storage = ConnectedStorage()
-        val provider = provider(storage = storage) { request ->
+        val provider = dropboxProvider(storage = storage) { request ->
             if (request.url.toString() == REVOKE_URL) throw Error("Fail to fetch")
             error("No other request was expected.")
         }
@@ -253,7 +232,7 @@ class DropboxRequestTest {
 
     @Test
     fun `the stored account is answered without a request`() = runTest {
-        val provider = provider(
+        val provider = dropboxProvider(
             storage = ConnectedStorage(names = ""","displayName":"Jane","email":"jane@example.com""""),
         ) { error("No request was expected.") }
         assertEquals(
@@ -264,7 +243,7 @@ class DropboxRequestTest {
 
     @Test
     fun `a stored account whose name was never read goes by its id`() = runTest {
-        val provider = provider(storage = ConnectedStorage(names = ""","accountId":"dbid:1"""")) {
+        val provider = dropboxProvider(storage = ConnectedStorage(names = ""","accountId":"dbid:1"""")) {
             error("No request was expected.")
         }
         assertEquals(
@@ -275,95 +254,17 @@ class DropboxRequestTest {
 
     @Test
     fun `a connection nothing was stored about has no stored account`() = runTest {
-        val provider = provider { error("No request was expected.") }
+        val provider = dropboxProvider { error("No request was expected.") }
         assertNull(provider.storedAccount())
-    }
-
-    /** A token the device's clock still believes in can be one Dropbox has stopped accepting. */
-    @Test
-    fun `refreshes the token once when dropbox refuses it`() = runTest {
-        val authorizations = mutableListOf<String?>()
-        var tokenRequestCount = 0
-        val provider = provider { request ->
-            if (request.url.toString() == TOKEN_URL) {
-                tokenRequestCount++
-                respondJson("""{"access_token":"renewed","expires_in":14400}""")
-            } else {
-                authorizations += request.headers["Authorization"]
-                if (authorizations.size == 1) {
-                    respondJson("""{"error_summary":"expired_access_token/..."}""", HttpStatusCode.Unauthorized)
-                } else {
-                    respondJson("""{"entries":[],"cursor":"","has_more":false}""")
-                }
-            }
-        }
-        provider.list()
-        assertEquals(expected = 1, actual = tokenRequestCount)
-        assertEquals(expected = listOf<String?>("Bearer access", "Bearer renewed"), actual = authorizations)
-    }
-
-    @Test
-    fun `several requests refused at once renew the token once`() = runTest {
-        var tokenRequestCount = 0
-        val provider = provider { request ->
-            when {
-                request.url.toString() == TOKEN_URL -> {
-                    tokenRequestCount++
-                    respondJson("""{"access_token":"renewed","expires_in":14400}""")
-                }
-
-                request.headers["Authorization"] == "Bearer renewed" -> respond(
-                    content = "song",
-                    status = HttpStatusCode.OK,
-                    headers = headersOf("Dropbox-API-Result", """{"rev":"r1"}"""),
-                )
-                else -> respondJson("""{"error_summary":"expired_access_token/..."}""", HttpStatusCode.Unauthorized)
-            }
-        }
-        coroutineScope {
-            repeat(6) { launch { assertEquals("song", provider.download(LibraryFileKind.SONG, "song_$it.cho").bytes.decodeToString()) } }
-        }
-        assertEquals(expected = 1, actual = tokenRequestCount)
-    }
-
-    @Test
-    fun `believes a refusal of a token it has just refreshed`() = runTest {
-        var tokenRequestCount = 0
-        val provider = provider { request ->
-            if (request.url.toString() == TOKEN_URL) {
-                tokenRequestCount++
-                respondJson("""{"access_token":"renewed","expires_in":14400}""")
-            } else {
-                respondJson("""{"error_summary":"invalid_access_token/..."}""", HttpStatusCode.Unauthorized)
-            }
-        }
-        assertFailsWith<SyncAuthorizationException> { provider.list() }
-        assertEquals(expected = 1, actual = tokenRequestCount)
-    }
-
-    @Test
-    fun `reports why the token endpoint refused a refresh`() = runTest {
-        val provider = provider { request ->
-            if (request.url.toString() == TOKEN_URL) {
-                respondJson("""{"error":"invalid_grant","error_description":"refresh token is invalid or revoked"}""", HttpStatusCode.BadRequest)
-            } else {
-                respondJson("""{"error_summary":"expired_access_token/..."}""", HttpStatusCode.Unauthorized)
-            }
-        }
-        val exception = assertFailsWith<SyncAuthorizationException> { provider.list() }
-        assertEquals(
-            expected = "Dropbox refused the authorization: 400 invalid_grant: refresh token is invalid or revoked",
-            actual = exception.message,
-        )
     }
 
     /** A cell handover or a tunnel, which the next attempt gets through. */
     @Test
     fun `a socket timeout is retried`() = runTest {
         var attempts = 0
-        val provider = provider {
+        val provider = dropboxProvider {
             if (++attempts <= 2) throw SocketTimeoutException("Stalled")
-            respondJson("""{"entries":[],"cursor":"","has_more":false}""")
+            respondJson(EMPTY_LISTING)
         }
         provider.list()
         assertEquals(3, attempts)
@@ -372,7 +273,7 @@ class DropboxRequestTest {
     @Test
     fun `a socket timeout on every attempt is the service not being reached`() = runTest {
         var attempts = 0
-        val provider = provider {
+        val provider = dropboxProvider {
             attempts++
             throw SocketTimeoutException("Stalled")
         }
@@ -380,57 +281,7 @@ class DropboxRequestTest {
         assertEquals(7, attempts)
     }
 
-    @Test
-    fun `a download answers the revision it fetched`() = runTest {
-        val provider = provider {
-            respond(content = "song", status = HttpStatusCode.OK, headers = headersOf("Dropbox-API-Result", """{"rev":"r7"}"""))
-        }
-        val downloaded = provider.download(LibraryFileKind.SONG, "song.cho")
-        assertEquals("song", downloaded.bytes.decodeToString())
-        assertEquals("r7", downloaded.revision)
-    }
-
-    @Test
-    fun `a download that names no revision fails`() = runTest {
-        val provider = provider { respond(content = "song", status = HttpStatusCode.OK) }
-        assertFailsWith<DropboxApiException> { provider.download(LibraryFileKind.SONG, "song.cho") }
-    }
-
-    private fun provider(
-        configure: HttpClientConfig<*>.() -> Unit = {},
-        storage: SyncCredentialsLocalSource = ConnectedStorage(),
-        handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData,
-    ) = DropboxSyncProvider(
-        httpClientHolder = HttpClientHolder { HttpClient(MockEngine(handler), configure) },
-        credentialsStore = SyncCredentialsStore(storage, Logger.Standard),
-        appKey = APP_KEY,
-        logger = Logger.Standard,
-    )
-
-    private fun MockRequestHandleScope.respondJson(content: String, status: HttpStatusCode = HttpStatusCode.OK) = respond(
-        content = content,
-        status = status,
-        headers = headersOf("Content-Type", "application/json"),
-    )
-
-    /**
-     * A connection whose access token is good for as long as any test runs unless [expiresAt] says otherwise, so no
-     * request needs a refresh. [credentials] is what the provider last stored.
-     */
-    private class ConnectedStorage(names: String = "", expiresAt: Long = Long.MAX_VALUE) : SyncCredentialsLocalSource {
-        var credentials: String? =
-            """{"providerId":"dropbox","accessToken":"access","refreshToken":"refresh","expiresAt":$expiresAt$names}"""
-
-        override suspend fun loadSyncCredentials() = credentials
-
-        override suspend fun saveSyncCredentials(document: String?) {
-            credentials = document
-        }
-    }
-
     private companion object {
-        const val APP_KEY = "test-app-key"
-        const val TOKEN_URL = "https://api.dropboxapi.com/oauth2/token"
         const val REVOKE_URL = "https://api.dropboxapi.com/2/auth/token/revoke"
     }
 }

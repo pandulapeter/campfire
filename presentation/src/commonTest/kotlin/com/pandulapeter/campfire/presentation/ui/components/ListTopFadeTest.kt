@@ -15,7 +15,7 @@ import kotlin.test.assertEquals
 class ListTopFadeTest {
 
     @Test
-    fun unscrolledListHasNoFadeWithExpandedOrCollapsedHeaders() {
+    fun `unscrolled list has no fade with expanded or collapsed headers`() {
         assertEquals(0f, strength(canScrollBackward = false, index = 0, offset = 0, headerHeight = 56f))
         assertEquals(0f, strength(canScrollBackward = false, index = 1, offset = 0, headerHeight = 0f))
         // A collapsed slot can leave the first card at index 1 even before any real pixels have been scrolled.
@@ -23,21 +23,21 @@ class ListTopFadeTest {
     }
 
     @Test
-    fun collapsedHeaderDoesNotSkipTheGradualFade() {
+    fun `collapsed header does not skip the gradual fade`() {
         for ((offset, expected) in listOf(1 to 1f / 24f, 6 to 0.25f, 12 to 0.5f, 24 to 1f, 48 to 1f)) {
             assertEquals(expected, strength(canScrollBackward = true, index = 1, offset = offset, headerHeight = 0f))
         }
     }
 
     @Test
-    fun expandedHeaderScrollStartsGraduallyAndReachesFullStrengthBeforeTheFirstCard() {
+    fun `expanded header scroll starts gradually and reaches full strength before the first card`() {
         assertEquals(0.25f, strength(canScrollBackward = true, index = 0, offset = 6, headerHeight = 56f))
         assertEquals(1f, strength(canScrollBackward = true, index = 1, offset = 0, headerHeight = 56f))
         assertEquals(1f, strength(canScrollBackward = true, index = 2, offset = 0, headerHeight = 0f))
     }
 
     @Test
-    fun shortListPulledUpFadesAsFarAsItIsPulled() {
+    fun `short list pulled up fades as far as it is pulled`() {
         for ((pull, expected) in listOf(0f to 0f, 6f to 0.25f, 24f to 1f, 80f to 1f)) {
             assertEquals(expected, strength(canScrollBackward = false, index = 0, offset = 0, headerHeight = 56f, pull = pull))
         }

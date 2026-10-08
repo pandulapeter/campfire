@@ -22,14 +22,14 @@ import kotlin.test.assertTrue
 class ChordRowsTest {
 
     @Test
-    fun cellsFlowIntoRowsAtTheWidth() {
+    fun `cells flow into rows at the width`() {
         assertContentEquals(intArrayOf(0, 2), chordRowStarts(intArrayOf(56, 56, 56), gap = 6, width = 118))
         assertContentEquals(intArrayOf(0, 1, 2), chordRowStarts(intArrayOf(56, 56, 56), gap = 6, width = 117))
         assertContentEquals(intArrayOf(0), chordRowStarts(intArrayOf(56, 56, 56), gap = 6, width = Int.MAX_VALUE))
     }
 
     @Test
-    fun theCellsAreSharedOutEvenlyBetweenAsFewRowsAsTheWidthAllows() {
+    fun `the cells are shared out evenly between as few rows as the width allows`() {
         // Six of nine fit on a line: two rows still, but five over four rather than six over three.
         assertContentEquals(intArrayOf(0, 5), chordRowStarts(IntArray(9) { 56 }, gap = 6, width = 6 * 56 + 5 * 6))
         assertContentEquals(intArrayOf(0, 4, 7), chordRowStarts(IntArray(10) { 56 }, gap = 6, width = 4 * 56 + 3 * 6))
@@ -37,13 +37,13 @@ class ChordRowsTest {
     }
 
     @Test
-    fun aCellWiderThanTheWidthIsARowOfItsOwn() {
+    fun `a cell wider than the width is a row of its own`() {
         assertContentEquals(intArrayOf(0, 1, 2), chordRowStarts(intArrayOf(56, 200, 56), gap = 6, width = 120))
         assertEquals(0, chordRowStarts(IntArray(0), gap = 6, width = 120).size)
     }
 
     @Test
-    fun aSlotHoldsTheRowItsIndexNamesAndTheLastOneTheRest() {
+    fun `a slot holds the row its index names and the last one the rest`() {
         assertEquals(1..1, chordSlotRows(rowCount = 5, firstSlot = 1, lastSlot = 1, isLastSlot = false))
         assertEquals(3..4, chordSlotRows(rowCount = 5, firstSlot = 3, lastSlot = 3, isLastSlot = true))
         assertTrue(chordSlotRows(rowCount = 2, firstSlot = 3, lastSlot = 3, isLastSlot = false).isEmpty())
@@ -51,7 +51,7 @@ class ChordRowsTest {
     }
 
     @Test
-    fun theSlotsAreAsManyAsTheCellsUpToTheCap() {
+    fun `the slots are as many as the cells up to the cap`() {
         assertEquals(1, chordSlotCount(1))
         assertEquals(5, chordSlotCount(5))
         assertEquals(48, chordSlotCount(48))
@@ -60,7 +60,7 @@ class ChordRowsTest {
     }
 
     @Test
-    fun aFoldedChordsSectionIsItsHeaderAlone() {
+    fun `a folded chords section is its header alone`() {
         val cell = ChordCell(
             name = "G",
             soundingName = null,

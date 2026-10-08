@@ -21,25 +21,25 @@ class PrintPreviewGeometryTest {
     private val area = fitArea(viewport, margin = 20f, bottom = 80f)
 
     @Test
-    fun theAreaLeavesTheMarginsAndNeverTurnsInsideOut() {
+    fun `the area leaves the margins and never turns inside out`() {
         assertEquals(Rect(20f, 20f, 380f, 520f), area)
         assertEquals(Rect(20f, 20f, 20f, 20f), fitArea(Size(30f, 50f), margin = 20f, bottom = 80f))
     }
 
     @Test
-    fun aPageFitsTheAreaByItsTighterSide() {
+    fun `a page fits the area by its tighter side`() {
         assertEquals(Size(250f, 500f), fittedPageSize(area.size, ASPECT_RATIO))
         assertEquals(Size(360f, 180f), fittedPageSize(area.size, 2f))
         assertEquals(Offset(75f, 20f), centeredTopLeft(Size(250f, 500f), area))
     }
 
     @Test
-    fun aPageThatFitsTheAreaStaysCentered() {
+    fun `a page that fits the area stays centered`() {
         assertOffset(Offset.Zero, clampPan(Offset(100f, -50f), area, Size(250f, 500f), viewport))
     }
 
     @Test
-    fun aPageBetweenTheAreaAndTheViewportCoversTheAreaAndStaysInsideTheViewport() {
+    fun `a page between the area and the viewport covers the area and stays inside the viewport`() {
         val pageSize = Size(275f, 550f)
         // Centered, its top is at -5: it may move from a top of 0, the viewport's, to one of 20, the area's.
         assertOffset(Offset(0f, 25f), clampPan(Offset(0f, 100f), area, pageSize, viewport))
@@ -48,7 +48,7 @@ class PrintPreviewGeometryTest {
     }
 
     @Test
-    fun aPageLargerThanTheViewportAlwaysCoversIt() {
+    fun `a page larger than the viewport always covers it`() {
         val pageSize = Size(500f, 1000f)
         assertOffset(Offset(50f, 230f), clampPan(Offset(1000f, 1000f), area, pageSize, viewport))
         assertOffset(Offset(-50f, -170f), clampPan(Offset(-1000f, -1000f), area, pageSize, viewport))
@@ -56,7 +56,7 @@ class PrintPreviewGeometryTest {
     }
 
     @Test
-    fun aViewKeepsThePanItWasMadeFromWithinItsRange() {
+    fun `a view keeps the pan it was made from within its range`() {
         val pageSize = Size(500f, 1000f)
         for (pan in listOf(Offset(30f, -100f), Offset(-50f, 230f), Offset.Zero)) {
             assertOffset(pan, pageViewOf(zoom = 2f, pan = pan, area = area, pageSize = pageSize, viewport = viewport).panOf(pageSize))
@@ -67,7 +67,7 @@ class PrintPreviewGeometryTest {
     }
 
     @Test
-    fun theBoundsOfAPageFollowItsView() {
+    fun `the bounds of a page follow its view`() {
         val pageSize = fittedPageSize(area.size, ASPECT_RATIO) * 2f
         val view = pageViewOf(zoom = 2f, pan = Offset(30f, -100f), area = area, pageSize = pageSize, viewport = viewport)
         val bounds = pageBounds(viewport, area, ASPECT_RATIO, view)

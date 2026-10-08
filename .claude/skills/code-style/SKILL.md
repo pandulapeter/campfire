@@ -201,6 +201,14 @@ wrong or undo it".
   ./gradlew :data:model:desktopTest :data:formats:desktopTest :chordpro:desktopTest :domain:implementation:desktopTest :data:source:local:implementation:desktopTest :data:source:remote:api:desktopTest :data:source:remote:implementation:desktopTest :data:repository:implementation:desktopTest :data:sync:implementation:desktopTest :metronome:api:desktopTest :metronome:implementation:desktopTest :presentation:desktopTest
   ```
 - Don't add a test module or a UI test framework for a change that doesn't warrant one.
+- **Tests assert behaviour, not implementation.** Check what a user or a caller could observe — a returned value, a
+  file on disk, an emitted state — never a private constant copied into the test, an exact count of internal calls or
+  a pretty-printed format searched as text (decode it). A call order on a fake is asserted only where the order is
+  itself the documented behaviour. Time is virtual (`runTest`), never a `delay` on a real dispatcher.
+- **Every test is named as a backtick sentence** in the present tense (`` `a keep-both import numbers the new file` ``),
+  uses `kotlin.test` only, and sits in the package of the code it tests, in the module that owns that code. A module's
+  repository and use case fakes are shared stubs in its test sources (each unused member failing the same way), not a
+  copy per test file.
 
 ## Keep the CLAUDE.md files in sync
 

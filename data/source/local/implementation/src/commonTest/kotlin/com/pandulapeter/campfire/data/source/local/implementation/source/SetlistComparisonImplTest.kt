@@ -32,17 +32,17 @@ internal class SetlistComparisonImplTest {
     private val comparison = SetlistComparisonImpl()
 
     @Test
-    fun twoDaysOfOneSetlistAreTheSame() = assertTrue(
+    fun `two days of one setlist are the same`() = assertTrue(
         comparison.isSameApartFromDate(DOCUMENT.copy(date = "2026-10-05").bytes(), DOCUMENT.copy(date = "2026-10-07").bytes()),
     )
 
     @Test
-    fun anUndatedAndADatedCopyAreTheSame() = assertTrue(
+    fun `an undated and a dated copy are the same`() = assertTrue(
         comparison.isSameApartFromDate(DOCUMENT.bytes(), DOCUMENT.copy(date = "2026-10-07").bytes()),
     )
 
     @Test
-    fun theDroppedPriorityDoesNotCount() = assertTrue(
+    fun `the dropped priority does not count`() = assertTrue(
         comparison.isSameApartFromDate(
             """{"title":"Summer","priority":3,"songs":[{"file":"a.cho"},{"file":"b.cho","transposition":2}]}""".encodeToByteArray(),
             DOCUMENT.copy(date = "2026-10-07").bytes(),
@@ -50,7 +50,7 @@ internal class SetlistComparisonImplTest {
     )
 
     @Test
-    fun everythingElseCounts() = listOf(
+    fun `everything else counts`() = listOf(
         DOCUMENT.copy(isCountdownShown = true),
         DOCUMENT.copy(title = "Winter"),
         DOCUMENT.copy(songs = DOCUMENT.songs.reversed()),
@@ -61,11 +61,11 @@ internal class SetlistComparisonImplTest {
     }
 
     @Test
-    fun aFileThatIsNoSetlistIsNeverTheSame() =
+    fun `a file that is no setlist is never the same`() =
         assertFalse(comparison.isSameApartFromDate("{title".encodeToByteArray(), DOCUMENT.bytes()))
 
     @Test
-    fun withoutTheDayADatedFileIsTheUndatedOneItWasWrittenFrom() = listOf(
+    fun `without the day a dated file is the undated one it was written from`() = listOf(
         DOCUMENT,
         DOCUMENT.copy(songs = DOCUMENT.songs + SetlistSongDocument(file = "c.cho", tempo = 96, capo = 2)),
     ).forEach { document ->
@@ -79,7 +79,7 @@ internal class SetlistComparisonImplTest {
     }
 
     @Test
-    fun aFileThatIsNoSetlistHasNoUndatedForm() = assertNull(comparison.withoutDate("not json".encodeToByteArray()))
+    fun `a file that is no setlist has no undated form`() = assertNull(comparison.withoutDate("not json".encodeToByteArray()))
 
     private fun SetlistDocument.bytes() = SetlistDocumentFormat.encode(this).encodeToByteArray()
 

@@ -17,7 +17,7 @@ import kotlin.test.assertTrue
 class SectionSizesPoolTest {
 
     @Test
-    fun equalSectionsKeepTheirSizes() {
+    fun `equal sections keep their sizes`() {
         val pool = SectionSizesPool<String>()
         val before = pool.sizesFor(listOf("verse 1", "chorus", "verse 2"))
         before[1].heightsByWidth[400] = 120
@@ -30,7 +30,7 @@ class SectionSizesPoolTest {
     }
 
     @Test
-    fun newSectionsStartWithNothingMeasured() {
+    fun `new sections start with nothing measured`() {
         val pool = SectionSizesPool<String>()
         pool.sizesFor(listOf("verse")).single().heightsByWidth[400] = 80
         val after = pool.sizesFor(listOf("bridge")).single()
@@ -39,7 +39,7 @@ class SectionSizesPoolTest {
     }
 
     @Test
-    fun duplicatesAreHandedOutInOrder() {
+    fun `duplicates are handed out in order`() {
         val pool = SectionSizesPool<String>()
         val before = pool.sizesFor(listOf("chorus", "verse", "chorus"))
         assertNotSame(before[0], before[2])
@@ -51,7 +51,7 @@ class SectionSizesPoolTest {
     }
 
     @Test
-    fun sizesLeftOutOfOneListAreNotReturnedToALaterOne() {
+    fun `sizes left out of one list are not returned to a later one`() {
         val pool = SectionSizesPool<String>()
         val first = pool.sizesFor(listOf("verse")).single()
         pool.sizesFor(listOf("chorus"))

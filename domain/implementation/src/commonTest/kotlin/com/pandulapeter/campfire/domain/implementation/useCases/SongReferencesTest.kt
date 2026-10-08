@@ -9,23 +9,17 @@
  */
 package com.pandulapeter.campfire.domain.implementation.useCases
 
-import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song
-import com.pandulapeter.campfire.data.model.domain.SongContent
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
-import com.pandulapeter.campfire.data.repository.api.SetlistRepository
-import com.pandulapeter.campfire.data.repository.api.SongRepository
-import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emptyFlow
+import com.pandulapeter.campfire.domain.api.models.SongFileRename
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /**
@@ -35,10 +29,10 @@ import kotlin.test.assertTrue
 class SongReferencesTest {
 
     private val setlists = FakeSetlistRepository(
-        mutableMapOf(
-            "first.setlist.json" to setlist("first.setlist.json", "a.cho", "b.cho"),
-            "second.setlist.json" to setlist("second.setlist.json", "b.cho", "a.cho"),
-            "other.setlist.json" to setlist("other.setlist.json", "b.cho"),
+        listOf(
+            testSetlist("first.setlist.json", entries = listOf("a.cho", "b.cho")),
+            testSetlist("second.setlist.json", entries = listOf("b.cho", "a.cho")),
+            testSetlist("other.setlist.json", entries = listOf("b.cho")),
         ),
     )
     private val preferences = FakeUserPreferencesRepository(mapOf("a.cho" to 2, "b.cho" to 1))
@@ -121,6 +115,23 @@ class SongReferencesTest {
         assertEquals(mapOf("a.cho" to 2, "b.cho" to 1), preferences.transpositions)
     }
 
+    @Test
+    fun `a rename answers the name the file moved to and whether the references followed it`() = runTest {
+        val rename = RenameSongFileUseCaseImpl(FakeSongRepository(renamedTo = "c.cho"), setlists, preferences, Logger.Standard).invoke(testSong("a.cho"))
+
+        assertEquals(SongFileRename(fileName = "c.cho", haveReferencesFollowed = true), rename)
+        assertEquals(listOf("c.cho", "b.cho"), setlists.entriesOf("first.setlist.json"))
+    }
+
+    @Test
+    fun `a file that did not move leaves every reference where it was`() = runTest {
+        val rename = RenameSongFileUseCaseImpl(FakeSongRepository(renamedTo = null), setlists, preferences, Logger.Standard).invoke(testSong("a.cho"))
+
+        assertNull(rename)
+        assertEquals(listOf("a.cho", "b.cho"), setlists.entriesOf("first.setlist.json"))
+        assertEquals(mapOf("a.cho" to 2, "b.cho" to 1), preferences.transpositions)
+    }
+
     private suspend fun follow(newFileName: String?, fileName: String = "a.cho") = followSongReferences(
         setlistRepository = setlists,
         logger = Logger.Standard,
@@ -129,7 +140,8 @@ class SongReferencesTest {
         newFileName = newFileName,
     )
 
-    private class FakeSetlistRepository(private val files: MutableMap<String, Setlist>) : SetlistRepository {
+    private class FakeSetlistRepository(setlists: List<Setlist>) : SetlistRepositoryStub() {
+        private val files = setlists.associateByTo(mutableMapOf()) { it.fileName }
         var isListingBroken = false
         var unwritable = emptySet<String>()
 
@@ -138,40 +150,23 @@ class SongReferencesTest {
 
         fun entriesOf(fileName: String) = files.getValue(fileName).entries.map { it.songFileName }
 
-        override val setlists: Flow<DataState<List<Setlist>>> = emptyFlow()
-        override suspend fun loadSetlistsIfNeeded() = throw UnsupportedOperationException()
         override suspend fun loadSetlistFileNamesNaming(songFileName: String): List<String> {
             if (isListingBroken) throw IllegalStateException("The setlists could not be listed.")
             return files.values.filter { setlist -> setlist.entries.any { it.songFileName == songFileName } }.map { it.fileName }
         }
 
-        override suspend fun rescan() = throw UnsupportedOperationException()
-        override suspend fun refresh(fileNames: Set<String>) = throw UnsupportedOperationException()
-        override suspend fun adoptImported(setlists: Collection<Setlist>) = throw UnsupportedOperationException()
-        override suspend fun createSetlist(title: String, description: String, date: LocalDate, isCountdownShown: Boolean) = throw UnsupportedOperationException()
-        override suspend fun saveSetlist(setlist: Setlist) = throw UnsupportedOperationException()
         override suspend fun updateSetlist(fileName: String, transform: (Setlist) -> Setlist): Setlist? {
             if (fileName in unwritable) throw IllegalStateException("The setlist could not be written.")
             if (fileName in gone) return null
             return files[fileName]?.let(transform)?.also { files[fileName] = it }
         }
-
-        override suspend fun renameSetlist(fileName: String, title: String, description: String, date: LocalDate, isCountdownShown: Boolean) = throw UnsupportedOperationException()
-        override suspend fun parseSetlist(document: String) = throw UnsupportedOperationException()
-        override suspend fun importSetlist(setlist: Setlist, shouldReplace: Boolean) = throw UnsupportedOperationException()
-        override suspend fun loadSetlistFileSizes(): Map<String, Long> = throw UnsupportedOperationException()
-        override suspend fun loadSetlistDocument(fileName: String, songFileNames: Set<String>?) = throw UnsupportedOperationException()
-        override suspend fun deleteSetlist(fileName: String) = throw UnsupportedOperationException()
-        override suspend fun deleteAllSetlists() = throw UnsupportedOperationException()
     }
 
     private class FakeUserPreferencesRepository(
         var transpositions: Map<String, Int>,
         var foldedSections: Map<String, Set<String>> = emptyMap(),
-    ) : UserPreferencesRepository {
-        override val userPreferences: Flow<DataState<UserPreferences>> = emptyFlow()
-        override suspend fun loadUserPreferencesIfNeeded() = PREFERENCES.copy(transpositions = transpositions, foldedSections = foldedSections)
-        override suspend fun saveUserPreferences(userPreferences: UserPreferences) = throw UnsupportedOperationException()
+    ) : UserPreferencesRepositoryStub() {
+        override suspend fun loadUserPreferencesIfNeeded() = TEST_PREFERENCES.copy(transpositions = transpositions, foldedSections = foldedSections)
 
         override suspend fun updateUserPreferences(transform: (UserPreferences) -> UserPreferences) {
             transform(loadUserPreferencesIfNeeded()).let { updated ->
@@ -179,64 +174,17 @@ class SongReferencesTest {
                 foldedSections = updated.foldedSections
             }
         }
-
-        override suspend fun hasStoredUserPreferences() = throw UnsupportedOperationException()
     }
 
-    private class FakeSongRepository(private val isBroken: Boolean = false) : SongRepository {
+    /** @param renamedTo Where a rename moves a song, null for a file that could not be moved. */
+    private class FakeSongRepository(private val isBroken: Boolean = false, private val renamedTo: String? = null) : SongRepositoryStub() {
         val deleted = mutableListOf<String>()
-        override val songs: Flow<DataState<List<Song>>> = emptyFlow()
-        override suspend fun loadSongsIfNeeded() = throw UnsupportedOperationException()
-        override suspend fun loadSongFileSizes() = throw UnsupportedOperationException()
-        override suspend fun rescan() = throw UnsupportedOperationException()
-        override suspend fun refresh(fileNames: Set<String>) = throw UnsupportedOperationException()
-        override suspend fun adoptImported(songs: Collection<Song>) = throw UnsupportedOperationException()
-        override suspend fun saveSong(content: SongContent, expectedText: String?) = throw UnsupportedOperationException()
-        override suspend fun createSong(title: String, artist: String, text: String) = throw UnsupportedOperationException()
-        override fun importFileName(fallbackTitle: String, text: String) = throw UnsupportedOperationException()
-        override suspend fun importSong(fileName: String, text: String, shouldReplace: Boolean) = throw UnsupportedOperationException()
-        override suspend fun renameSong(song: Song) = throw UnsupportedOperationException()
-        override suspend fun deleteAllSongs() = throw UnsupportedOperationException()
 
         override suspend fun deleteSong(fileName: String) {
             if (isBroken) throw IllegalStateException("The file could not be deleted.")
             deleted += fileName
         }
-    }
 
-    private companion object {
-        val PREFERENCES = UserPreferences(
-            isPerformanceModeEnabled = false,
-            shouldShowArchivedSetlists = false,
-            areChordsEnabled = true,
-            areSetlistsEnabled = true,
-            isMetronomeEnabled = true,
-            fontScale = 1f,
-            sortingMode = UserPreferences.SortingMode.BY_TITLE,
-            setlistSortingMode = UserPreferences.SetlistSortingMode.BY_DATE,
-            uiMode = UserPreferences.UiMode.SYSTEM_DEFAULT,
-            themeColor = UserPreferences.ThemeColor.CAMPFIRE,
-            isAppIconThemed = true,
-            isCoverArtEnabled = true,
-            shouldNumberSections = true,
-            language = UserPreferences.Language.SYSTEM_DEFAULT,
-            chordSpelling = UserPreferences.ChordSpelling.Default,
-            transpositions = emptyMap(),
-            foldedSections = emptyMap(),
-            tagMatchMode = UserPreferences.MatchMode.ANY,
-            languageMatchMode = UserPreferences.MatchMode.ANY,
-            tagSortingMode = UserPreferences.LabelSortingMode.BY_USAGE,
-            languageSortingMode = UserPreferences.LabelSortingMode.BY_USAGE,
-        )
-
-        fun setlist(fileName: String, vararg songs: String) = Setlist(
-            fileName = fileName,
-            title = fileName,
-            description = "",
-            date = LocalDate(2026, 1, 1),
-            isArchived = false,
-            entries = songs.map { Setlist.Entry(songFileName = it) },
-            size = 0L,
-        )
+        override suspend fun renameSong(song: Song) = renamedTo?.let(::testSong)
     }
 }

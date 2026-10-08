@@ -7,11 +7,8 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.data.source.local.implementation
+package com.pandulapeter.campfire.data.model.domain
 
-import com.pandulapeter.campfire.data.model.domain.ImportBudget
-import com.pandulapeter.campfire.data.model.domain.ImportLimits
-import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.data.formats.zip.ZipEntry
 import com.pandulapeter.campfire.data.formats.zip.ZipWriter
 import kotlin.test.Test
@@ -21,11 +18,14 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-/** The rules of `:data:model`'s [ImportBudget], which every platform reads its incoming files through. */
+/**
+ * The rules of `:data:model`'s [ImportBudget], which every platform reads its incoming files through. Tested here rather than
+ * in `:data:model`, which cannot depend on the zip writer of `:data:formats` that builds the archive the rules recognise.
+ */
 internal class ImportLimitsTest {
 
     @Test
-    fun aFileOfAnUnknownTypeIsKeptOnlyWhereItIsAnArchive() {
+    fun `a file of an unknown type is kept only where it is an archive`() {
         val budget = ImportBudget()
         val video = ByteArray(10 shl 20)
         val archive = ZipWriter.write(listOf(ZipEntry("a.cho", "{title: A}".encodeToByteArray())))
@@ -39,7 +39,7 @@ internal class ImportLimitsTest {
     }
 
     @Test
-    fun aFileOfAnUnknownTypeLargerThanTheSelectionIsNotRead() {
+    fun `a file of an unknown type larger than the selection is not read`() {
         val file = ImportBudget().read(name = "video.mp4", size = ImportLimits.MAX_IMPORT_SIZE + 1) { error("read") }
 
         assertEquals(ImportedFile.unread("video.mp4"), file)
@@ -47,20 +47,20 @@ internal class ImportLimitsTest {
     }
 
     @Test
-    fun anotherAppsBackupIsReadAsAnArchive() {
+    fun `another app's backup is read as an archive`() {
         assertEquals(ImportLimits.MAX_IMPORT_SIZE, ImportLimits.maxSizeOf("Library.SBPBACKUP"))
         assertEquals(ImportLimits.MAX_IMPORT_SIZE, ImportLimits.maxSizeOf("set.sbp"))
     }
 
     @Test
-    fun aFileOverItsDeclaredSizeIsNotRead() {
+    fun `a file over its declared size is not read`() {
         val file = ImportBudget().read(name = "a.cho", size = ImportLimits.MAX_TEXT_FILE_SIZE + 1) { error("read") }
 
         assertTrue(file!!.isTooLarge)
     }
 
     @Test
-    fun aFileOfUnknownSizeIsFoundOutWhileReading() {
+    fun `a file of unknown size is found out while reading`() {
         var givenLimit: Long? = null
 
         val file = ImportBudget().read(name = "a.cho", size = null) { limit ->
@@ -73,7 +73,7 @@ internal class ImportLimitsTest {
     }
 
     @Test
-    fun theSelectionSharesOneBudget() {
+    fun `the selection shares one budget`() {
         val budget = ImportBudget()
         val size = 10L shl 20
 
@@ -86,12 +86,12 @@ internal class ImportLimitsTest {
     }
 
     @Test
-    fun anUnreadableFileIsLeftOut() {
+    fun `an unreadable file is left out`() {
         assertNull(ImportBudget().read(name = "a.cho", size = 10) { null })
     }
 
     @Test
-    fun documentsHaveTheirOwnLimit() {
+    fun `documents have their own limit`() {
         for (name in listOf("song.pdf", "song.DOCX", "song.doc")) {
             assertEquals(ImportLimits.MAX_DOCUMENT_FILE_SIZE, ImportLimits.maxSizeOf(name))
             assertTrue(ImportBudget().read(name, ImportLimits.MAX_DOCUMENT_FILE_SIZE + 1) { error("read") }!!.isTooLarge)

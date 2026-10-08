@@ -172,17 +172,6 @@ class SyncPlannerTest {
         actual = SyncPlanner.plan(local = emptyList(), remote = emptyList(), index = emptyMap()),
     )
 
-    /** The index is keyed by a path, and a key has to survive the round trip through it unchanged. */
-    @Test
-    fun `a key survives being written to the index and read back`() {
-        val key = SyncKey(LibraryFileKind.SETLIST, "Summer tour.setlist.json")
-        assertEquals(expected = key, actual = SyncKey.fromPath(key.path))
-    }
-
-    @Test
-    fun `a key with a slash in the name is not read back as something else`() =
-        assertEquals(expected = null, actual = SyncKey.fromPath("nonsense"))
-
     private companion object {
         val SONG = SyncKey(LibraryFileKind.SONG, "Artist - Title.cho")
 

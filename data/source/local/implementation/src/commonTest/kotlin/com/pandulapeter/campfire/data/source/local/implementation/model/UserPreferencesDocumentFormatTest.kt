@@ -21,7 +21,7 @@ import kotlin.test.assertTrue
 internal class UserPreferencesDocumentFormatTest {
 
     @Test
-    fun readsWhatItWrote() {
+    fun `reads what it wrote`() {
         val document = UserPreferencesDocument(
             isPerformanceModeEnabled = true,
             shouldShowArchivedSetlists = true,
@@ -55,7 +55,7 @@ internal class UserPreferencesDocumentFormatTest {
     }
 
     @Test
-    fun readsADocumentWithMissingAndUnknownFields() {
+    fun `reads a document with missing and unknown fields`() {
         val decoded = UserPreferencesDocumentFormat.decode("""{"fontScale": 1.5, "somethingNew": [1, 2]}""")
 
         assertEquals(UserPreferencesDocument(fontScale = 1.5f), decoded.document)
@@ -63,7 +63,7 @@ internal class UserPreferencesDocumentFormatTest {
     }
 
     @Test
-    fun treatsANullAsAMissingField() {
+    fun `treats a null as a missing field`() {
         val decoded = UserPreferencesDocumentFormat.decode("""{"fontScale": null, "transpositions": null, "uiMode": "dark"}""")
 
         assertEquals(UserPreferencesDocument(uiMode = "dark"), decoded.document)
@@ -71,7 +71,7 @@ internal class UserPreferencesDocumentFormatTest {
     }
 
     @Test
-    fun givesUpOnlyTheFieldOfTheWrongShape() {
+    fun `gives up only the field of the wrong shape`() {
         val decoded = UserPreferencesDocumentFormat.decode(
             """{"fontScale": "big", "isLyricsOnlyModeEnabled": true, "language": "hu", "transpositions": {"a.cho": 2}}""",
         )
@@ -84,7 +84,7 @@ internal class UserPreferencesDocumentFormatTest {
     }
 
     @Test
-    fun givesUpOnlyTheTranspositionThatIsNotANumber() {
+    fun `gives up only the transposition that is not a number`() {
         val decoded = UserPreferencesDocumentFormat.decode(
             """{"transpositions": {"a.cho": 2, "b.cho": "2x", "c.cho": -3, "d.cho": 1.5, "e.cho": [1]}}""",
         )
@@ -94,7 +94,7 @@ internal class UserPreferencesDocumentFormatTest {
     }
 
     @Test
-    fun givesUpOnlyTheFoldedSectionsThatAreNotText() {
+    fun `gives up only the folded sections that are not text`() {
         val decoded = UserPreferencesDocumentFormat.decode(
             """{"foldedSections": {"a.cho": ["chorus#1", 2, "verse#1"], "b.cho": "chorus#1", "c.cho": ["bridge#1"]}}""",
         )
@@ -104,7 +104,7 @@ internal class UserPreferencesDocumentFormatTest {
     }
 
     @Test
-    fun givesUpTranspositionsThatAreNotAnObject() {
+    fun `gives up transpositions that are not an object`() {
         val decoded = UserPreferencesDocumentFormat.decode("""{"transpositions": [1, 2], "themeColor": "forest"}""")
 
         assertEquals(UserPreferencesDocument(themeColor = "forest"), decoded.document)
@@ -112,7 +112,7 @@ internal class UserPreferencesDocumentFormatTest {
     }
 
     @Test
-    fun readsTextThatIsNotAnObjectAsTheDefaults() {
+    fun `reads text that is not an object as the defaults`() {
         listOf("", "   ", """{"fontScale": 1.""", "[1, 2]", "hello").forEach { text ->
             val decoded = UserPreferencesDocumentFormat.decode(text)
 

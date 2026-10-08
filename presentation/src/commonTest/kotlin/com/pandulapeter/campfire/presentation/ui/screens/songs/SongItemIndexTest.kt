@@ -23,23 +23,23 @@ class SongItemIndexTest {
     )
 
     @Test
-    fun aSongCountsTheHeadersAndTheSongsBeforeIt() {
+    fun `a song counts the headers and the songs before it`() {
         assertEquals(1, groups.itemIndexOf(songItemKey(song("a1")), hasPlaceholder = false))
         assertEquals(2, groups.itemIndexOf(songItemKey(song("a2")), hasPlaceholder = false))
         assertEquals(4, groups.itemIndexOf(songItemKey(song("b1")), hasPlaceholder = false))
     }
 
     @Test
-    fun aPlaceholderTakesTheFirstItem() = assertEquals(5, groups.itemIndexOf(songItemKey(song("b1")), hasPlaceholder = true))
+    fun `a placeholder takes the first item`() = assertEquals(5, groups.itemIndexOf(songItemKey(song("b1")), hasPlaceholder = true))
 
     @Test
-    fun searchResultsHaveNoHeaders() {
+    fun `search results have no headers`() {
         val results = listOf(SongGroup(header = null, songs = listOf(song("a1"), song("b1"))))
         assertEquals(1, results.itemIndexOf(songItemKey(song("b1")), hasPlaceholder = false))
     }
 
     @Test
-    fun aKeyNoSongHasIsNowhere() = assertNull(groups.itemIndexOf("song_c1.cho", hasPlaceholder = false))
+    fun `a key no song has is nowhere`() = assertNull(groups.itemIndexOf("song_c1.cho", hasPlaceholder = false))
 
     private fun song(name: String) = Song(
         fileName = "$name.cho",

@@ -235,8 +235,7 @@ internal fun SongSectionContent(
                     val runModifier = if (wholeSectionKind != null || foldedRuns == null) {
                         Modifier
                     } else {
-                        val runName = group.first().environmentLabel ?: kind.name.lowercase()
-                        val run = "$sectionFold/${runNameCounts.nextFoldKey(runName)}"
+                        val run = runNameCounts.nextRunFoldKey(sectionFold = sectionFold, label = group.first().environmentLabel, kind = kind)
                         if (0 in shownSlots) FoldToggleRow(
                             kind = kind,
                             label = group.first().environmentLabel ?: defaultLabels.labelOf(kind),

@@ -154,8 +154,9 @@ Tested in `commonTest`, run on the desktop target: the hashing, the encoders, bo
 its `User-Agent`, its pace and its retries in virtual time, the cover download's refusals, and the authorization URL — get a
 parameter wrong there and the user meets an error page on the service's own site with nothing in the app to say why —
 and, against a Ktor `MockEngine` in virtual time, how requests answer being told to slow down, and being cancelled or
-timing out, and the credentials store's cache (a cancelled read is not an answer, a failed write is not
-remembered).
+timing out (`DropboxRequestTest`), how tokens are renewed (`DropboxTokensTest`), what a listing, an upload and a
+download send and read (`DropboxFilesTest`), the credentials store's cache (a cancelled read is not an answer, a
+failed write is not remembered) and a pending authorization kept beside the tokens without costing them.
 `desktopTest` adds the one platform piece worth testing, the loopback server's cancellation.
 
 ## Cover art as the app sees it

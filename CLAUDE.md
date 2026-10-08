@@ -216,15 +216,17 @@ tab reaches the export screen. The detail is in `:presentation`'s `ui/screens/ex
   only by case or by Unicode form is taken as that name — it is the same file to APFS, NTFS and the sync service, and
   a move nothing else can see is one other devices never follow — so a capitalised or decomposed file keeps its
   spelling until **Update file name** (or, for a setlist, a new title) moves it for a reason that is part of the name.
-- Only pure logic is tested: `commonTest` unit tests in `:data:model` (the library name identity rule and the tag
-  normalization), `:chordpro` (including chord-sheet conversion, and chord names, shapes and definitions, every shape of the tables checked against the chord it is filed under), `:domain:implementation` (`ImportPlanner` and conversion import plumbing),
+- Only pure logic is tested: `commonTest` unit tests in `:data:model` (the library name identity rule, the file name
+  predicates and the tag normalization), `:chordpro` (including chord-sheet conversion, and chord names, shapes and definitions, every shape of the tables checked against the chord it is filed under), `:domain:implementation` (`ImportPlanner` and conversion import plumbing),
   `:data:formats` (zip, bounded PDF/Word readers), `:data:source:local:implementation` (the JVM file storage, with independent-producer document goldens in `desktopTest`), `:data:source:remote:*` (hashing, encoders,
   the OAuth authorization URL, the cover search's queries, its `User-Agent` and its pace, the cover download),
   `:data:repository:implementation` (the caches and the cover cache), `:data:sync:implementation` (`SyncPlanner`, which
   decides what happens to every file in a sync run, the engine and the synced preferences), `:metronome:*` (the sequencer, the synthesizer, the mixer, the engine's state machine, tap tempo and time signatures) and
   `:presentation` (the pure helpers behind its screens: the search index and ranking, the song picker's filter chips, the fast scroller's section
   index, the setlist slots, stepper labels, section grid and the cutting of sections into columns, row snapping and section measurements of the details screen, the editor's token cache, where a song's tempo comes from and what a click plays for, which chords a song plays and which
-  shape each is drawn with, the diagrams' geometry and what the editor's Chord shape button writes), run on
+  shape each is drawn with, the diagrams' geometry and what the editor's Chord shape button writes, the setlist reorder merge and
+  search and the list placeholders; and, over small fakes of their use cases, the song text writes, the metadata sheets'
+  edits, the playing overrides and the song filters), run on
   the desktop target with
   `./gradlew :data:model:desktopTest :data:formats:desktopTest :chordpro:desktopTest :domain:implementation:desktopTest :data:source:local:implementation:desktopTest :data:source:remote:api:desktopTest :data:source:remote:implementation:desktopTest :data:repository:implementation:desktopTest :data:sync:implementation:desktopTest :metronome:api:desktopTest :metronome:implementation:desktopTest :presentation:desktopTest`.
   The build logic's packaging helpers (the `.msix` version and publisher id, the launcher configuration and `.deb`

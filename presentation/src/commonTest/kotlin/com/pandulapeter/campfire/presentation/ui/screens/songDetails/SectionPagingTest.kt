@@ -18,14 +18,14 @@ import kotlin.test.assertTrue
 class SectionPagingTest {
 
     @Test
-    fun aSongThatFitsTheScreenIsOnePage() {
+    fun `a song that fits the screen is one page`() {
         val grid = page(listOf(listOf(100), listOf(100, 100)), maxRowHeight = 1000)
         assertEquals(1, grid.pageCount)
         assertTrue(grid.sharesKeyline)
     }
 
     @Test
-    fun pagesAreFilledRatherThanEndedWithASection() {
+    fun `pages are filled rather than ended with a section`() {
         // Three sections of four 100 high lines on 550 high pages: every page is filled, the sections running on.
         val grid = page(List(3) { List(4) { 100 } }, maxRowHeight = 550)
         assertEquals(3, grid.pageCount)
@@ -33,7 +33,7 @@ class SectionPagingTest {
     }
 
     @Test
-    fun aSectionIsOnlyCutWhereItMayBe() {
+    fun `a section is only cut where it may be`() {
         val sections = listOf(listOf(100, 100), listOf(100, 100, 100, 100))
         // The second section may only be cut after its second line, so the page ends after its first two lines.
         val grid = page(sections, maxRowHeight = 450, isCuttableBefore = { it == 4 })
@@ -41,21 +41,21 @@ class SectionPagingTest {
     }
 
     @Test
-    fun nothingIsCutInFrontOfAUnitWithNoHeight() {
+    fun `nothing is cut in front of a unit with no height`() {
         // The run of a tab drawn in slots, the last two of them empty at this width: the page may not end before them.
         val grid = page(listOf(listOf(300), listOf(100, 100, 0, 0)), maxRowHeight = 450)
         assertEquals(listOf(0, 0, 1, 1, 1), grid.pageOfEveryUnit())
     }
 
     @Test
-    fun anUncuttableStretchTallerThanTheScreenEndsItsPage() {
+    fun `an uncuttable stretch taller than the screen ends its page`() {
         // After a short section it starts on the same page; after one that fills half the screen, on a page of its own.
         assertEquals(listOf(0, 0, 1), page(listOf(listOf(100), listOf(800), listOf(100)), maxRowHeight = 500).pageOfEveryUnit())
         assertEquals(listOf(0, 1, 2), page(listOf(listOf(300), listOf(800), listOf(100)), maxRowHeight = 500).pageOfEveryUnit())
     }
 
     @Test
-    fun twoNarrowSectionsAreSetSideBySideOnThePage() {
+    fun `two narrow sections are set side by side on the page`() {
         val grid = page(listOf(listOf(100), listOf(80), listOf(60), listOf(100)), maxRowHeight = 1000, narrow = setOf(1, 2))
         assertEquals(1, grid.pageCount)
         assertContentEquals(intArrayOf(1, 2, 1), grid.columnCounts)
@@ -69,13 +69,13 @@ class SectionPagingTest {
     }
 
     @Test
-    fun aNarrowSectionNextToAWideOneIsStacked() {
+    fun `a narrow section next to a wide one is stacked`() {
         val grid = page(listOf(listOf(100), listOf(80), listOf(100)), maxRowHeight = 1000, narrow = setOf(1))
         assertContentEquals(intArrayOf(1), grid.columnCounts)
     }
 
     @Test
-    fun aPairThatDoesNotFitWhatIsLeftIsStackedWhereItsFirstSectionCanStartThere() {
+    fun `a pair that does not fit what is left is stacked where its first section can start there`() {
         // The pair would be 200 tall, which the 180 left of the first page does not hold, but the first line of its first
         // section does.
         val grid = page(listOf(listOf(300), listOf(100, 100), listOf(100)), maxRowHeight = 500, narrow = setOf(1, 2))
@@ -84,7 +84,7 @@ class SectionPagingTest {
     }
 
     @Test
-    fun whatCannotBeCutRunsAMostlyEmptyPageOnPastTheScreen() {
+    fun `what cannot be cut runs a mostly empty page on past the screen`() {
         // A short first section, then a 450 high staff that cannot be cut: moving it to the next page would leave the first
         // one four fifths empty, so it starts there and the page runs on.
         val grid = page(listOf(listOf(100), listOf(450), listOf(100)), maxRowHeight = 500)
@@ -92,14 +92,14 @@ class SectionPagingTest {
     }
 
     @Test
-    fun aPairThatDoesNotFitWhatIsLeftStartsTheNextPage() {
+    fun `a pair that does not fit what is left starts the next page`() {
         val grid = page(listOf(listOf(400), listOf(200), listOf(200)), maxRowHeight = 500, narrow = setOf(1, 2))
         assertEquals(2, grid.pageCount)
         assertEquals(listOf(0, 1, 1), grid.pageOfEveryUnit())
     }
 
     @Test
-    fun thePagesOfJoinedRowsAreReadApart() {
+    fun `the pages of joined rows are read apart`() {
         val grid = SectionGrid(
             rows = intArrayOf(0, 1, 1, 2),
             columns = intArrayOf(0, 0, 1, 0),
@@ -115,7 +115,7 @@ class SectionPagingTest {
     }
 
     @Test
-    fun noPageIsTallerThanTheScreenAndTheSongIsInItsOrder() {
+    fun `no page is taller than the screen and the song is in its order`() {
         val random = Random(7)
         repeat(200) {
             val sections = List(random.nextInt(1, 12)) { List(random.nextInt(1, 8)) { random.nextInt(20, 120) } }
@@ -135,8 +135,6 @@ class SectionPagingTest {
         val pages = IntArray(columnCounts.size) { row -> if (startsPage(row)) ++page else page }
         return rows.map { pages[it] }
     }
-
-    private fun unitSections(sectionUnits: List<List<Int>>) = sectionUnits.flatMapIndexed { section, units -> List(units.size) { section } }.toIntArray()
 
     private fun page(
         sectionUnits: List<List<Int>>,
@@ -160,7 +158,7 @@ class SectionPagingTest {
     }
 
     @Test
-    fun aChordsSectionIsCutBetweenItsRowsRatherThanRunPastThePage() {
+    fun `a chords section is cut between its rows rather than run past the page`() {
         val grid = flowIntoPages(
             sectionStarts = intArrayOf(0, 1, 4),
             heightAt = { unit, _ -> intArrayOf(90, 130, 100, 100)[unit] },
@@ -175,6 +173,3 @@ class SectionPagingTest {
         assertTrue(grid.joinsPrevious.none { it })
     }
 }
-
-private const val SECTION_GAP = 20
-private const val ROW_GAP = 40

@@ -30,7 +30,7 @@ class DebouncedPreferenceTest {
     }
 
     @Test
-    fun aBurstOfValuesIsWrittenOnceWithTheLastOneAfterTheDelay() = runTest {
+    fun `a burst of values is written once with the last one after the delay`() = runTest {
         val fontScale = DebouncedPreference<Float> { copy(fontScale = it) }
         fontScale.start(backgroundScope, DELAY, write)
         fontScale.set(1.1f)
@@ -47,7 +47,7 @@ class DebouncedPreferenceTest {
     }
 
     @Test
-    fun aValueSetWhileAWriteIsInFlightIsKeptAndWrittenNext() = runTest {
+    fun `a value set while a write is in flight is kept and written next`() = runTest {
         val gate = CompletableDeferred<Unit>()
         val slowWrite: PreferencesWrite = { update ->
             gate.await()
@@ -68,7 +68,7 @@ class DebouncedPreferenceTest {
     }
 
     @Test
-    fun flushAllWritesEveryWaitingValueInOneCall() = runTest {
+    fun `flush all writes every waiting value in one call`() = runTest {
         val fontScale = DebouncedPreference<Float> { copy(fontScale = it) }
         val numbering = DebouncedPreference<Boolean> { copy(shouldNumberSections = it) }
         val unused = DebouncedPreference<Boolean> { copy(isCoverArtEnabled = it) }
@@ -84,13 +84,13 @@ class DebouncedPreferenceTest {
     }
 
     @Test
-    fun flushAllWritesNothingWhenNothingIsWaiting() = runTest {
+    fun `flush all writes nothing when nothing is waiting`() = runTest {
         DebouncedPreference.flushAll(DebouncedPreference<Float> { copy(fontScale = it) }, write = write)
         assertEquals(0, writeCount)
     }
 
     @Test
-    fun flushAllLetsGoOnlyOfTheValuesUnchangedSinceItReadThem() = runTest {
+    fun `flush all lets go only of the values unchanged since it read them`() = runTest {
         val fontScale = DebouncedPreference<Float> { copy(fontScale = it) }
         val numbering = DebouncedPreference<Boolean> { copy(shouldNumberSections = it) }
         fontScale.set(1.4f)
@@ -105,7 +105,7 @@ class DebouncedPreferenceTest {
     }
 
     @Test
-    fun aFailingFlushAllIsCaughtAndLeavesTheValuesWaiting() = runTest {
+    fun `a failing flush all is caught and leaves the values waiting`() = runTest {
         val fontScale = DebouncedPreference<Float> { copy(fontScale = it) }
         fontScale.set(1.4f)
         DebouncedPreference.flushAll(fontScale) { throw IllegalStateException("The disk is full.") }
@@ -113,7 +113,7 @@ class DebouncedPreferenceTest {
     }
 
     @Test
-    fun flushWritesTheWaitingValueAtOnce() = runTest {
+    fun `flush writes the waiting value at once`() = runTest {
         val fontScale = DebouncedPreference<Float> { copy(fontScale = it) }
         fontScale.set(1.4f)
         fontScale.flush(write)

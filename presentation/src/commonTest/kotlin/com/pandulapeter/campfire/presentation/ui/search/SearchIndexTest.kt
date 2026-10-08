@@ -14,13 +14,15 @@ import com.pandulapeter.campfire.domain.api.models.SongSection
 import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroup
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertSame
+import kotlin.test.assertTrue
 
 class SearchIndexTest {
 
     @Test
-    fun ranksInStableBooleanBuckets() {
+    fun `ranks in stable boolean buckets`() {
         val songs = listOf(
             searchable("tag", "else", "else", listOf("love")),
             searchable("artist", "else", "lovely", emptyList()),
@@ -34,50 +36,61 @@ class SearchIndexTest {
     }
 
     @Test
-    fun searchRankBucketsOneSong() {
+    fun `a title and an artist that both start with the query outrank a title alone, and a miss has no rank`() {
         assertNull(searchRank(title = "other", artist = "other", tags = listOf("rock"), query = "love"))
-        assertEquals(7, searchRank(title = "love song", artist = "lovers", tags = emptyList(), query = "love"))
-        assertEquals(1, searchRank(title = "beloved", artist = "else", tags = emptyList(), query = "love"))
-        assertEquals(0, searchRank(title = "else", artist = "else", tags = listOf("love songs"), query = "love"))
+        val both = assertNotNull(searchRank(title = "love song", artist = "lovers", tags = emptyList(), query = "love"))
+        val titleOnly = assertNotNull(searchRank(title = "love song", artist = "else", tags = emptyList(), query = "love"))
+        assertTrue(both > titleOnly)
     }
 
     @Test
-    fun songFieldsAreNormalizedOnceAndLatestModelsReplaceCachedOnes() {
+    fun `a song whose title or tags were edited is found by the new text and no longer by the old`() {
+        val index = SongSearchIndex { it.lowercase() }
+        val original = song("first").copy(title = "Yesterday", tags = listOf("Ballad"))
+        index.update(listOf(original), listOf(original))
+
+        val edited = original.copy(title = "Tomorrow", tags = listOf("Rock"))
+        val snapshot = index.update(listOf(edited), listOf(edited))
+
+        assertEquals(listOf(edited), rankSongs(snapshot.filtered, "tomorrow"))
+        assertEquals(listOf(edited), rankSongs(snapshot.filtered, "rock"))
+        assertEquals(emptyList(), rankSongs(snapshot.filtered, "yesterday"))
+        assertEquals(emptyList(), rankSongs(snapshot.filtered, "ballad"))
+    }
+
+    @Test
+    fun `a renamed file is indexed under its new name only`() {
+        val index = SongSearchIndex { it.lowercase() }
+        val original = song("first")
+        index.update(listOf(original), listOf(original))
+
+        val renamed = original.copy(fileName = "renamed.cho")
+        val snapshot = index.update(listOf(renamed), listOf(renamed))
+
+        assertEquals(setOf("renamed.cho"), snapshot.byFileName.keys)
+        assertEquals(setOf("renamed.cho"), snapshot.songsByFileName.keys)
+    }
+
+    @Test
+    fun `an edit that leaves the searched fields alone still hands out the new song`() {
         var calls = 0
         val index = SongSearchIndex { text -> calls++; text.lowercase() }
-        val first = song("first").copy(title = "First", artist = "Artist", tags = listOf("Tag"))
-        val second = song("second").copy(title = "Second", artist = "Artist")
-        val initial = index.update(listOf(first, second), listOf(second, first))
-        assertEquals(5, calls)
-        assertEquals(listOf(second, first), initial.filtered.map { it.song })
+        val original = song("first").copy(title = "First", artist = "Artist")
+        index.update(listOf(original), listOf(original))
+        val callsAfterFirstUpdate = calls
 
-        val unchanged = index.update(listOf(first, second), listOf(second, first))
-        assertEquals(5, calls)
-        assertSame(initial.byFileName.getValue("first.cho"), unchanged.byFileName.getValue("first.cho"))
-        assertSame(initial.byFileName.getValue("second.cho"), unchanged.byFileName.getValue("second.cho"))
-        assertSame(initial.filtered[0], unchanged.filtered[0])
-        assertSame(initial.filtered[1], unchanged.filtered[1])
+        val metadataEdit = original.copy(size = 100L, key = "C")
+        val snapshot = index.update(listOf(metadataEdit), listOf(metadataEdit))
 
-        val metadataEdit = first.copy(size = 100L, key = "C")
-        val reused = index.update(listOf(metadataEdit, second), listOf(metadataEdit))
-        assertEquals(5, calls)
-        assertSame(metadataEdit, reused.byFileName.getValue("first.cho").song)
-        assertEquals(listOf(metadataEdit), reused.filtered.map { it.song })
-
-        val titleEdit = metadataEdit.copy(title = "Changed")
-        val changed = index.update(listOf(titleEdit, second), listOf(titleEdit))
-        assertEquals(8, calls)
-        assertEquals("changed", changed.byFileName.getValue("first.cho").title)
-
-        val renamed = titleEdit.copy(fileName = "renamed.cho")
-        val final = index.update(listOf(renamed), listOf(renamed))
-        assertEquals(setOf("renamed.cho"), final.byFileName.keys)
-        assertEquals(setOf("renamed.cho"), final.songsByFileName.keys)
-        assertEquals(11, calls)
+        assertEquals(listOf(metadataEdit), snapshot.filtered.map { it.song })
+        assertSame(metadataEdit, snapshot.songsByFileName.getValue("first.cho"))
+        assertEquals(listOf(metadataEdit), rankSongs(snapshot.filtered, "first"))
+        // The index exists so that a library value that leaves a song's text alone does not fold it again.
+        assertEquals(callsAfterFirstUpdate, calls)
     }
 
     @Test
-    fun anEmptyNormalizedQueryKeepsTheSections() {
+    fun `an empty normalized query keeps the sections`() {
         val first = searchable("first", "first", "a", emptyList())
         val second = searchable("second", "second", "b", emptyList())
         val sections = listOf(

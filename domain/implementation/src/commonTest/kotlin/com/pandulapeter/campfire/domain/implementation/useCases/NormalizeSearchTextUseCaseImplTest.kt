@@ -17,7 +17,7 @@ internal class NormalizeSearchTextUseCaseImplTest {
     private val normalizeSearchText = NormalizeSearchTextUseCaseImpl(normalizeText = NormalizeTextUseCaseImpl())
 
     @Test
-    fun punctuationAndSpacesAreIgnored() {
+    fun `punctuation and spaces are ignored`() {
         assertEquals("ymca", normalizeSearchText("Y.M.C.A."))
         assertEquals("acdc", normalizeSearchText("AC/DC"))
         assertEquals("acdc", normalizeSearchText(" ac dc "))
@@ -26,18 +26,18 @@ internal class NormalizeSearchTextUseCaseImplTest {
     }
 
     @Test
-    fun accentsAndCaseAreFoldedAsForSorting() {
+    fun `accents and case are folded as for sorting`() {
         assertEquals("tukorfurogep", normalizeSearchText("Tükörfúrógép"))
         assertEquals("катюша", normalizeSearchText("Катюша"))
     }
 
     @Test
-    fun marksOfOtherScriptsAreKept() {
+    fun `marks of other scripts are kept`() {
         assertEquals("नमस्ते", normalizeSearchText("नमस्ते"))
     }
 
     @Test
-    fun textWithNothingSearchableIsEmpty() {
+    fun `text with nothing searchable is empty`() {
         assertEquals("", normalizeSearchText(" ... "))
     }
 }

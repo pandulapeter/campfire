@@ -38,37 +38,37 @@ class SongCapoTest {
     private val capos = Capos(library = mapOf(FILE_NAME to 4), bySetlist = mapOf(SETLIST to mapOf(FILE_NAME to 0)))
 
     @Test
-    fun aSetlistReadsItsOwnEntryOnly() = assertEquals(EffectiveCapo(fret = 0, songFret = 2), effectiveCapo(song(2), SETLIST, capos))
+    fun `a setlist reads its own entry only`() = assertEquals(EffectiveCapo(fret = 0, songFret = 2), effectiveCapo(song(2), SETLIST, capos))
 
     @Test
-    fun theLibraryReadsTheOverride() = assertEquals(EffectiveCapo(fret = 4, songFret = 2), effectiveCapo(song(2), null, capos))
+    fun `the library reads the override`() = assertEquals(EffectiveCapo(fret = 4, songFret = 2), effectiveCapo(song(2), null, capos))
 
     @Test
-    fun aSetlistWithoutAnEntryDoesNotInheritTheLibrary() =
+    fun `a setlist without an entry does not inherit the library`() =
         assertEquals(EffectiveCapo(fret = 2, songFret = 2), effectiveCapo(song(2), "other.setlist.json", capos))
 
     @Test
-    fun aSongWithoutACapoIsPlayedWithoutOne() =
+    fun `a song without a capo is played without one`() =
         assertEquals(EffectiveCapo(fret = 0, songFret = 0), effectiveCapo(song(null), "other.setlist.json", capos))
 
     @Test
-    fun aCapoASetlistTookOffIsAnOverrideAndNotNothing() = assertFalse(effectiveCapo(song(2), SETLIST, capos).isDefault)
+    fun `a capo a setlist took off is an override and not nothing`() = assertFalse(effectiveCapo(song(2), SETLIST, capos).isDefault)
 
     @Test
-    fun anOverrideEqualToTheSongsOwnIsNoOverride() = assertTrue(effectiveCapo(song(4), null, capos).isDefault)
+    fun `an override equal to the song's own is no override`() = assertTrue(effectiveCapo(song(4), null, capos).isDefault)
 
     @Test
-    fun aFileCapoOutOfRangeIsHeldWithinIt() = assertEquals(12, effectiveCapo(song(40), "other.setlist.json", capos).fret)
+    fun `a file capo out of range is held within it`() = assertEquals(12, effectiveCapo(song(40), "other.setlist.json", capos).fret)
 
     @Test
-    fun overridesAreSetAndRemovedByKey() {
+    fun `overrides are set and removed by key`() {
         val changed = capos.with(SongPlace(FILE_NAME, SETLIST), null).with(SongPlace(FILE_NAME, null), 3)
         assertEquals(null, changed[FILE_NAME, SETLIST])
         assertEquals(3, changed[FILE_NAME, null])
     }
 
     @Test
-    fun anOverrideRewritesTheCapoLine() {
+    fun `an override rewrites the capo line`() {
         val song = ChordProSong(metadata = ChordProMetadata(capo = 2), blocks = emptyList())
         assertEquals(0, song.withCapo(0).metadata.capo)
         assertEquals(2, song.withCapo(null).metadata.capo)

@@ -11,21 +11,16 @@ package com.pandulapeter.campfire.domain.implementation.useCases
 
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields.Field
-import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.Song
-import com.pandulapeter.campfire.data.model.domain.SongContent
-import com.pandulapeter.campfire.data.repository.api.SongRepository
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.runTest
 
 class CreateSongUseCaseImplTest {
 
     @Test
-    fun createsSongWithOptionalMetadataAndEditableVerse() = runTest {
+    fun `writes the optional metadata and an empty verse to edit`() = runTest {
         val repository = RecordingSongRepository()
         CreateSongUseCaseImpl(repository)(
             title = " Title ",
@@ -56,7 +51,7 @@ class CreateSongUseCaseImplTest {
     }
 
     @Test
-    fun titleAloneKeepsTheOriginalTemplateWithoutEmptyOptionalDirectives() = runTest {
+    fun `a title alone writes the plain template without empty optional directives`() = runTest {
         val repository = RecordingSongRepository()
         val create = CreateSongUseCaseImpl(repository)
         create(title = "Title", artist = "")
@@ -67,29 +62,14 @@ class CreateSongUseCaseImplTest {
         assertEquals("{title: Title}\n{artist: }\n{key: }\n{capo: 0}\n{tempo: 120}\n{time: 4/4}\n\n{start_of_verse}\n\n{end_of_verse}\n", repository.text)
     }
 
-    private class RecordingSongRepository : SongRepository {
+    private class RecordingSongRepository : SongRepositoryStub() {
         var text = ""
         var name = "" to ""
-        override val songs: Flow<DataState<List<Song>>> = emptyFlow()
+
         override suspend fun createSong(title: String, artist: String, text: String): Song {
             this.text = text
             name = title to artist
-            return Song(
-                fileName = "song.cho", title = title, artist = artist, key = null, transpose = 0,
-                tags = emptyList(), languages = emptyList(), coverArtUrl = null, hasChords = false,
-                canUpdateFileName = false, lastModified = 0, size = text.length.toLong(),
-            )
+            return testSong(fileName = "song.cho", title = title, artist = artist)
         }
-        override suspend fun loadSongsIfNeeded() = error("Unused")
-        override suspend fun loadSongFileSizes() = error("Unused")
-        override suspend fun rescan() = error("Unused")
-        override suspend fun refresh(fileNames: Set<String>) = error("Unused")
-        override suspend fun adoptImported(songs: Collection<Song>) = error("Unused")
-        override suspend fun saveSong(content: SongContent, expectedText: String?) = error("Unused")
-        override fun importFileName(fallbackTitle: String, text: String) = error("Unused")
-        override suspend fun importSong(fileName: String, text: String, shouldReplace: Boolean) = error("Unused")
-        override suspend fun renameSong(song: Song) = error("Unused")
-        override suspend fun deleteSong(fileName: String) = error("Unused")
-        override suspend fun deleteAllSongs() = error("Unused")
     }
 }

@@ -323,14 +323,7 @@ internal class ImportController(
                     }
             }
             _importProgress.value = null
-            // A song that was already in the library is opened as well: it is still the song that was asked for, under
-            // the name the library has for it. One that the answer to the conflicts left out is in neither list, and
-            // the library's own file under that name is a different song.
-            val songToOpen = if (request.shouldOpenSong && plan.songs.size == 1 && !plan.songs.single().isConverted && plan.setlists.isEmpty()) {
-                (result.importedSongFileNames + result.duplicateFileNames).singleOrNull()
-            } else {
-                null
-            }
+            val songToOpen = songToOpen(plan = plan, result = result, shouldOpenSong = request.shouldOpenSong)
             val isReportShown = isReported && isImportReportOnBackStack
             when {
                 // The one song the system handed over is what the user was after, and the question about its name has

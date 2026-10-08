@@ -9,23 +9,14 @@
  */
 package com.pandulapeter.campfire.domain.implementation.useCases
 
-import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.ImportLimits
-import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.SongContent
-import com.pandulapeter.campfire.data.repository.api.ArchiveRepository
-import com.pandulapeter.campfire.data.repository.api.SetlistRepository
-import com.pandulapeter.campfire.data.repository.api.SongContentRepository
-import com.pandulapeter.campfire.data.repository.api.SongRepository
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -82,7 +73,7 @@ class ExportLibraryUseCaseImplTest {
         ).invoke()
 
         assertEquals(listOf("huge.cho"), assertNotNull(result).skippedFileNames)
-        assertFalse("huge.cho" in songContents.reads)
+        assertFalse("huge.cho" in songContents.reads.value)
     }
 
     @Test
@@ -153,14 +144,14 @@ class ExportLibraryUseCaseImplTest {
 
     @Test
     fun `keeps the sorted order whichever song is read first`() = runTest {
-        val names = listOf("a", "b", "c", "d")
-        songContents.delays = names.withIndex().associate { (index, name) -> "$name.cho" to (names.size - index) * 100L }
+        // Every read waits for the one of the song after it, so the reads can only finish the last song first.
+        songContents.readAfter = mapOf("a.cho" to "b.cho", "b.cho" to "c.cho", "c.cho" to "d.cho")
 
-        val result = useCase(songs = names.map(::song), unreadable = setOf("a.cho", "c.cho")).invoke()
+        val result = useCase(songs = listOf("a", "b", "c", "d").map(::song), unreadable = setOf("a.cho", "c.cho")).invoke()
 
+        assertEquals(listOf("d.cho", "c.cho", "b.cho", "a.cho"), songContents.reads.value)
         assertEquals(listOf("a.cho", "c.cho"), assertNotNull(result).skippedFileNames)
         assertEquals(listOf("songs/b.cho", "songs/d.cho"), archive.packed.keys.toList())
-        assertEquals(listOf("d.cho", "c.cho", "b.cho", "a.cho"), songContents.reads)
     }
 
     private fun useCase(
@@ -171,115 +162,38 @@ class ExportLibraryUseCaseImplTest {
         setlistFolder: Map<String, Long> = setlists.orEmpty().associate { it.fileName to 2L },
         setlistDocument: String = "{}",
     ) = ExportLibraryUseCaseImpl(
-        songRepository = FakeSongRepository(scanned = songs, folder = folder),
+        songRepository = object : SongRepositoryStub() {
+            override suspend fun loadSongsIfNeeded() = songs
+            override suspend fun loadSongFileSizes() = folder
+        },
         songContentRepository = songContents.also { it.unreadable = unreadable },
-        setlistRepository = FakeSetlistRepository(
-            scanned = setlists,
-            folder = setlistFolder,
-            document = setlistDocument,
-            unreadable = unreadable,
-        ),
+        setlistRepository = object : SetlistRepositoryStub() {
+            override suspend fun loadSetlistsIfNeeded() = setlists
+            override suspend fun loadSetlistFileSizes() = setlistFolder
+            override suspend fun loadSetlistDocument(fileName: String, songFileNames: Set<String>?) = if (fileName in unreadable) null else setlistDocument
+        },
         archiveRepository = archive,
     )
 
-    private class FakeSongRepository(
-        private val scanned: List<Song>?,
-        private val folder: Map<String, Long>,
-    ) : SongRepository {
-        override val songs: Flow<DataState<List<Song>>> = emptyFlow()
-        override suspend fun loadSongsIfNeeded() = scanned
-        override suspend fun loadSongFileSizes() = folder
-        override suspend fun rescan() = throw UnsupportedOperationException()
-        override suspend fun refresh(fileNames: Set<String>) = throw UnsupportedOperationException()
-        override suspend fun adoptImported(songs: Collection<Song>) = throw UnsupportedOperationException()
-        override suspend fun saveSong(content: SongContent, expectedText: String?) = throw UnsupportedOperationException()
-        override suspend fun createSong(title: String, artist: String, text: String) = throw UnsupportedOperationException()
-        override fun importFileName(fallbackTitle: String, text: String) = throw UnsupportedOperationException()
-        override suspend fun importSong(fileName: String, text: String, shouldReplace: Boolean) = throw UnsupportedOperationException()
-        override suspend fun renameSong(song: Song) = throw UnsupportedOperationException()
-        override suspend fun deleteSong(fileName: String) = throw UnsupportedOperationException()
-        override suspend fun deleteAllSongs() = throw UnsupportedOperationException()
-    }
-
     /** Read from several threads at once, since the export reads its songs in parallel on `Dispatchers.Default`. */
-    private class FakeSongContentRepository : SongContentRepository {
+    private class FakeSongContentRepository : SongContentRepositoryStub() {
         var unreadable = emptySet<String>()
-        var delays = emptyMap<String, Long>()
-        val reads = mutableListOf<String>()
-        private val readsMutex = Mutex()
-        override val invalidations: Flow<Long> = emptyFlow()
+
+        /** A read of a key waits until its value has been read, which puts the reads into an order of the test's choosing. */
+        var readAfter = emptyMap<String, String>()
+        val reads = MutableStateFlow(emptyList<String>())
+
         override suspend fun loadSongContent(fileName: String, useCache: Boolean): SongContent? {
-            delays[fileName]?.let { delay(it) }
-            readsMutex.withLock { reads += fileName }
+            readAfter[fileName]?.let { previous -> reads.first { previous in it } }
+            reads.update { it + fileName }
             return if (fileName in unreadable) null else SongContent(fileName = fileName, text = "{title: $fileName}")
-        }
-
-        override suspend fun invalidate(fileName: String?) = throw UnsupportedOperationException()
-
-        override suspend fun invalidate(fileNames: Set<String>) = throw UnsupportedOperationException()
-    }
-
-    private class FakeSetlistRepository(
-        private val scanned: List<Setlist>?,
-        private val folder: Map<String, Long>,
-        private val document: String,
-        private val unreadable: Set<String>,
-    ) : SetlistRepository {
-        override val setlists: Flow<DataState<List<Setlist>>> = emptyFlow()
-        override suspend fun loadSetlistsIfNeeded() = scanned
-        override suspend fun loadSetlistFileNamesNaming(songFileName: String) = throw UnsupportedOperationException()
-        override suspend fun rescan() = throw UnsupportedOperationException()
-        override suspend fun refresh(fileNames: Set<String>) = throw UnsupportedOperationException()
-        override suspend fun adoptImported(setlists: Collection<Setlist>) = throw UnsupportedOperationException()
-        override suspend fun createSetlist(title: String, description: String, date: LocalDate, isCountdownShown: Boolean) = throw UnsupportedOperationException()
-        override suspend fun saveSetlist(setlist: Setlist) = throw UnsupportedOperationException()
-        override suspend fun updateSetlist(fileName: String, transform: (Setlist) -> Setlist) = throw UnsupportedOperationException()
-        override suspend fun renameSetlist(fileName: String, title: String, description: String, date: LocalDate, isCountdownShown: Boolean) = throw UnsupportedOperationException()
-        override suspend fun parseSetlist(document: String) = throw UnsupportedOperationException()
-        override suspend fun importSetlist(setlist: Setlist, shouldReplace: Boolean) = throw UnsupportedOperationException()
-        override suspend fun loadSetlistFileSizes() = folder
-        override suspend fun loadSetlistDocument(fileName: String, songFileNames: Set<String>?) = if (fileName in unreadable) null else document
-        override suspend fun deleteSetlist(fileName: String) = throw UnsupportedOperationException()
-        override suspend fun deleteAllSetlists() = throw UnsupportedOperationException()
-    }
-
-    private class FakeArchiveRepository : ArchiveRepository {
-
-        var packed: Map<String, ByteArray> = emptyMap()
-
-        override suspend fun unpack(archive: ByteArray, maxSize: Long): List<ImportedFile> = throw UnsupportedOperationException()
-
-        override suspend fun pack(files: Map<String, ByteArray>): ByteArray {
-            packed = files
-            return ByteArray(0)
         }
     }
 
     private companion object {
 
-        fun song(name: String) = Song(
-            fileName = "$name.cho",
-            title = name,
-            artist = "",
-            key = null,
-            transpose = 0,
-            tags = emptyList(),
-            languages = emptyList(),
-            coverArtUrl = null,
-            hasChords = true,
-            canUpdateFileName = false,
-            lastModified = 0L,
-            size = 0L,
-        )
+        fun song(name: String) = testSong(fileName = "$name.cho")
 
-        fun setlist(name: String) = Setlist(
-            fileName = "$name.setlist.json",
-            title = name,
-            description = "",
-            date = LocalDate(2026, 1, 1),
-            isArchived = false,
-            entries = emptyList(),
-            size = 0L,
-        )
+        fun setlist(name: String) = testSetlist(fileName = "$name.setlist.json")
     }
 }

@@ -17,7 +17,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-class ChordDefinitionTransposerTest {
+class ChordProDefinitionsTranspositionTest {
 
     private val tableDefinitions = mapOf(
         ChordInstrument.GUITAR to ChordVoicingTables.guitar,

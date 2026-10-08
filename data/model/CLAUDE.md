@@ -92,7 +92,8 @@ it.
 
 Three of its rules exist so that the same song written down by two people arrives at one name rather than two files: an
 apostrophe is deleted rather than folded to a separator, `&` and `+` are spelled out as "and", and `feat` / `featuring`
-are filed as `ft`. All of it is idempotent, which it has to be: an exported name is normalized again on its way back in.
+are filed as `ft`. All of it is idempotent, which it has to be: an exported name is normalized again on its way back in
+(`LibraryFilesTest`, which also covers which names of a folder are library files).
 Every name the app writes goes through it — the export path (`:domain:implementation`) and the import path
 (`SongLocalSource.importFileName`) included, which is what makes a song arrive under the same name whether it was
 written in the app, exported from another copy of it or downloaded from somewhere that names its downloads after the
@@ -129,7 +130,7 @@ the same test, asked about the file with its UTF-8 set aside; and no byte order 
 where two files were joined, is `ChordProSplitter`'s to drop). Czech, Slovak and Romanian are left on 1252 on purpose:
 their letters share bytes with Western ones, and guessing the language would misread files that read right. The storage
 layer reads every library file through it and the import every incoming file, so a file reads the same whichever way it
-arrived. It is tested from `:data:source:local:implementation`.
+arrived (`LibraryTextDecodingTest`).
 
 - `ExtractedDocument` — transient pages, lines and positioned spans (size, bold, monospace and raised) from the local
   PDF/Word readers. The domain maps it to `:chordpro`'s input model; no original file or origin is stored with a song.

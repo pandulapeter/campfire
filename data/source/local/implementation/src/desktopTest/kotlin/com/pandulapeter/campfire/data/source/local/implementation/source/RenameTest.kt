@@ -11,9 +11,7 @@ package com.pandulapeter.campfire.data.source.local.implementation.source
 
 import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.model.domain.Setlist
-import com.pandulapeter.campfire.data.model.domain.normalizedToNfc
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
-import com.pandulapeter.campfire.data.source.local.implementation.moveFile
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileStorage
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.JvmFileStorage
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StorageDirectory
@@ -23,6 +21,7 @@ import java.io.File
 import java.nio.file.Files
 import kotlin.test.AfterTest
 import kotlin.test.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
@@ -56,18 +55,40 @@ class RenameTest {
     }
 
     @Test
-    fun `a move to the same name in another case and form keeps the file`() = runBlocking {
-        // `Ένα.cho` decomposed, as macOS hands it out, moved to the composed lowercase name the library would give it.
-        val current = "\u0395\u0301\u03bd\u03b1.cho"
-        val new = "\u03ad\u03bd\u03b1.cho"
-        fileStorage.writeText(StorageDirectory.SONGS, current, "{title: Ένα}\n")
+    fun `a renamed song is the same bytes under its new name only`() = runBlocking {
+        val text = "{title: Árvíz}\r\n{artist: Tükörfúrógép}\r\n[Am]Őszi szél\r\n"
+        fileStorage.writeText(StorageDirectory.SONGS, "Old name.cho", text)
+        val original = File(root, "library/songs/Old name.cho").readBytes()
 
-        fileStorage.moveFile(StorageDirectory.SONGS, currentName = current, newName = new) {
-            fileStorage.writeText(StorageDirectory.SONGS, it, "{title: Ένα}\n")
-        }
+        val renamed = songLocalSource.renameSong(songLocalSource.loadSong("Old name.cho")!!)
 
-        assertEquals("{title: Ένα}\n", fileStorage.readText(StorageDirectory.SONGS, new))
-        assertEquals(listOf(new), fileStorage.list(StorageDirectory.SONGS).map { it.name.normalizedToNfc() })
+        assertEquals("tukorfurogep-arviz.cho", renamed?.fileName)
+        assertEquals(listOf("tukorfurogep-arviz.cho"), fileStorage.list(StorageDirectory.SONGS).map { it.name })
+        assertContentEquals(original, File(root, "library/songs/tukorfurogep-arviz.cho").readBytes())
+        assertFalse(renamed!!.canUpdateFileName)
+    }
+
+    @Test
+    fun `a renamed song keeps the extension of its family it was stored with`() = runBlocking {
+        fileStorage.writeText(StorageDirectory.SONGS, "Old name.crd", "{title: Bar}\n")
+        fileStorage.writeText(StorageDirectory.SONGS, "Other.chordpro", "{title: Baz}\n")
+
+        val crd = songLocalSource.renameSong(songLocalSource.loadSong("Old name.crd")!!)
+        val chordPro = songLocalSource.renameSong(songLocalSource.loadSong("Other.chordpro")!!)
+
+        assertEquals("bar.crd", crd?.fileName)
+        assertEquals("baz.chordpro", chordPro?.fileName)
+        assertEquals(listOf("bar.crd", "baz.chordpro"), fileStorage.list(StorageDirectory.SONGS).map { it.name })
+    }
+
+    @Test
+    fun `a song whose file is gone is not renamed and nothing is written`() = runBlocking {
+        fileStorage.writeText(StorageDirectory.SONGS, "Old name.cho", "{title: Bar}\n")
+        val song = songLocalSource.loadSong("Old name.cho")!!
+        fileStorage.delete(StorageDirectory.SONGS, "Old name.cho")
+
+        assertNull(songLocalSource.renameSong(song))
+        assertEquals(emptyList(), fileStorage.list(StorageDirectory.SONGS))
     }
 
     @Test

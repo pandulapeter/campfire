@@ -18,7 +18,7 @@ import kotlin.test.assertTrue
 class ClickMixerTest {
 
     @Test
-    fun aClickCrossingAChunkBoundaryIsTheSameAsUnchunked() {
+    fun `a click crossing a chunk boundary is the same as unchunked`() {
         val whole = ShortArray(4_800)
         ClickMixer(SAMPLE_RATE).apply {
             add(frame = 1_000, sound = MetronomeSound.COWBELL, voice = ClickVoice.ACCENT, gain = 1f)
@@ -38,7 +38,7 @@ class ClickMixerTest {
     }
 
     @Test
-    fun aStreamIsTheSameHoweverItIsChunked() {
+    fun `a stream is the same however it is chunked`() {
         fun render(chunkSize: Int): ShortArray {
             val stream = ClickStream(SAMPLE_RATE, MetronomePattern(bpm = 300, sound = MetronomeSound.WOODBLOCK))
             val output = ShortArray(SAMPLE_RATE)

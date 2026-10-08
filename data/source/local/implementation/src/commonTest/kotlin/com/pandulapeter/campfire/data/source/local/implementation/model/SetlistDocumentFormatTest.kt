@@ -28,7 +28,7 @@ import kotlin.test.assertTrue
 internal class SetlistDocumentFormatTest {
 
     @Test
-    fun fieldsThisVersionDoesNotKnowSurviveARewrite() {
+    fun `fields this version does not know survive a rewrite`() {
         val text = """{"title":"Summer","venue":{"city":"Pécs"},"songs":[{"file":"a.cho","note":"capo 2"},{"file":"b.cho"}]}"""
 
         val setlist = SetlistDocumentFormat.decode(text).toModel("summer.setlist.json", size = 0, undatedDay = DAY)
@@ -43,7 +43,7 @@ internal class SetlistDocumentFormatTest {
     }
 
     @Test
-    fun aDocumentWithNothingUnknownIsWrittenAsBefore() {
+    fun `a document with nothing unknown is written as before`() {
         // What the serializer alone wrote, which is what every setlist file in the field looks like.
         val serializer = Json { prettyPrint = true }
         listOf(
@@ -53,7 +53,7 @@ internal class SetlistDocumentFormatTest {
     }
 
     @Test
-    fun aKnownFieldIsNeverKeptAsUnknown() {
+    fun `a known field is never kept as unknown`() {
         val document = SetlistDocumentFormat.decode("""{"title":"Summer","isArchived":null,"songs":[{"file":"a.cho","transposition":1}]}""")
 
         assertTrue(document.unknownFields.isEmpty())
@@ -61,7 +61,7 @@ internal class SetlistDocumentFormatTest {
     }
 
     @Test
-    fun theOrderOlderVersionsWroteIsReadAndDropped() {
+    fun `the order older versions wrote is read and dropped`() {
         val document = SetlistDocumentFormat.decode("""{"title":"Summer","priority":3}""")
 
         assertTrue(document.unknownFields.isEmpty())
@@ -69,7 +69,7 @@ internal class SetlistDocumentFormatTest {
     }
 
     @Test
-    fun aDateThatIsNotTextLosesOnlyItself() {
+    fun `a date that is not text loses only itself`() {
         listOf("20260928", "{}").forEach { date ->
             val document = SetlistDocumentFormat.decode("""{"title":"S","date":$date,"songs":[{"file":"a.cho"}]}""")
 
@@ -80,10 +80,10 @@ internal class SetlistDocumentFormatTest {
     }
 
     @Test
-    fun aDateThatIsTextIsKept() = assertEquals("2026-09-28", SetlistDocumentFormat.decode("""{"title":"S","date":"2026-09-28"}""").date)
+    fun `a date that is text is kept`() = assertEquals("2026-09-28", SetlistDocumentFormat.decode("""{"title":"S","date":"2026-09-28"}""").date)
 
     @Test
-    fun aTempoRoundTripsAndIsLeftOutWhenNull() {
+    fun `a tempo round trips and is left out when null`() {
         val text = """{"title":"S","songs":[{"file":"a.cho","tempo":96},{"file":"b.cho"}]}"""
         val setlist = SetlistDocumentFormat.decode(text).toModel("s.setlist.json", size = 0, undatedDay = DAY)
         assertEquals(listOf(96, null), setlist.entries.map { it.tempo })
@@ -94,7 +94,7 @@ internal class SetlistDocumentFormatTest {
     }
 
     @Test
-    fun aTempoThatIsNotOneLosesOnlyItself() {
+    fun `a tempo that is not one loses only itself`() {
         listOf("\"fast\"", "96.5", "0", "1000", "{}").forEach { tempo ->
             val document = SetlistDocumentFormat.decode("""{"title":"S","songs":[{"file":"a.cho","tempo":$tempo,"transposition":2}]}""")
 
@@ -105,7 +105,7 @@ internal class SetlistDocumentFormatTest {
     }
 
     @Test
-    fun anUnknownMemberSurvivesBesideTheTempo() {
+    fun `an unknown member survives beside the tempo`() {
         val text = """{"title":"S","songs":[{"file":"a.cho","tempo":96,"capo":2}]}"""
         val rewritten = SetlistDocumentFormat.encode(SetlistDocumentFormat.decode(text).toModel("s.setlist.json", size = 0, undatedDay = DAY).toDocument())
         val song = Json.parseToJsonElement(rewritten).jsonObject.getValue("songs").jsonArray.single().jsonObject

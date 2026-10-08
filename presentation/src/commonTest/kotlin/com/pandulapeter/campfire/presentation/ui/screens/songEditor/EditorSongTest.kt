@@ -17,19 +17,19 @@ import kotlin.test.assertEquals
 class EditorSongTest {
 
     @Test
-    fun theCaretStartsOnTheLineAfterTheFirstSectionStarts() {
+    fun `the caret starts on the line after the first section starts`() {
         val text = "{title: Song}\n{start_of_verse}\n\n{end_of_verse}\n{start_of_chorus}\n"
         assertEquals(text.indexOf("{start_of_verse}") + "{start_of_verse}\n".length, text.caretInsideFirstSection())
     }
 
     @Test
-    fun withoutASectionOrALineAfterItTheCaretGoesToTheEnd() {
+    fun `without a section or a line after it the caret goes to the end`() {
         assertEquals(13, "{title: Song}".caretInsideFirstSection())
         assertEquals(30, "{title: Song}\n{start_of_verse}".caretInsideFirstSection())
     }
 
     @Test
-    fun theSongIsWhatTheTextSays() = assertEquals(
+    fun `the song is what the text says`() = assertEquals(
         Song(
             fileName = "file_name.cho",
             title = "Hello (Live)",
@@ -60,7 +60,7 @@ class EditorSongTest {
     )
 
     @Test
-    fun aTextWithoutATitleIsNamedByItsFile() = assertEquals(
+    fun `a text without a title is named by its file`() = assertEquals(
         "file_name",
         ChordProParser.summarize("[G]Hello").toEditorSong("file_name.cho").title,
     )

@@ -32,7 +32,7 @@ internal class ZipReaderJvmTest {
     )
 
     @Test
-    fun readsAnArchiveWrittenByTheJvm() {
+    fun `reads an archive written by the JVM`() {
         val archive = ByteArrayOutputStream().also { stream ->
             ZipOutputStream(stream).use { zip ->
                 zip.putNextEntry(java.util.zip.ZipEntry("songs/"))
@@ -57,7 +57,7 @@ internal class ZipReaderJvmTest {
     }
 
     @Test
-    fun readsNamesStoredInTheDosCodePage() {
+    fun `reads names stored in the DOS code page`() {
         val archive = ByteArrayOutputStream().also { stream ->
             ZipOutputStream(stream, java.nio.charset.Charset.forName("IBM437")).use { zip ->
                 zip.putNextEntry(java.util.zip.ZipEntry("Tükörfúrógép.cho"))
@@ -72,7 +72,7 @@ internal class ZipReaderJvmTest {
     }
 
     @Test
-    fun readsAnArchiveWithAComment() {
+    fun `reads an archive with a comment`() {
         val archive = ByteArrayOutputStream().also { stream ->
             ZipOutputStream(stream).use { zip ->
                 zip.setComment("A".repeat(1000))
@@ -89,7 +89,7 @@ internal class ZipReaderJvmTest {
     }
 
     @Test
-    fun jvmReadsAnArchiveWrittenByTheZipWriter() {
+    fun `JVM reads an archive written by the zip writer`() {
         val archive = ZipWriter.write(contents.map { ZipEntry(it.key, it.value) })
 
         val read = mutableMapOf<String, ByteArray>()

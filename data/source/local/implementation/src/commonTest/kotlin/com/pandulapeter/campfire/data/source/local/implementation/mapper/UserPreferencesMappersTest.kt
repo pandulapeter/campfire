@@ -23,7 +23,7 @@ import kotlin.test.assertEquals
 internal class UserPreferencesMappersTest {
 
     @Test
-    fun introducedVersionsSurviveOtherPreferenceChangesAndReloading() {
+    fun `introduced versions survive other preference changes and reloading`() {
         val legacy = UserPreferencesDocumentFormat.decode("""{"uiMode":"dark"}""").document.toModel()
         assertEquals(emptySet(), legacy.seenWhatsNewVersions)
         val versions = setOf("4.5.1", "4.6.0", "4.6.1")
@@ -35,7 +35,7 @@ internal class UserPreferencesMappersTest {
     }
 
     @Test
-    fun theRememberedDemoFilesSurviveSavingAndReloading() {
+    fun `the remembered demo files survive saving and reloading`() {
         val legacy = UserPreferencesDocumentFormat.decode("""{"uiMode":"dark"}""").document.toModel()
         assertEquals(emptyMap(), legacy.demoLibraryContentHashes)
         val hashes = mapOf("songs/a.cho" to "0a1b", "setlists/b.setlist.json" to "2c3d")
@@ -46,7 +46,7 @@ internal class UserPreferencesMappersTest {
     }
 
     @Test
-    fun printSettingsSurviveSavingAndReloadingPreferences() {
+    fun `print settings survive saving and reloading preferences`() {
         val settings = PrintSettings(format = PrintSettings.Format.FILES, paper = PrintSettings.Paper.LETTER, isLandscape = true, fontSize = 18,
             marginMm = 20, columns = 4, showChords = false, showChordDiagrams = false, showKey = false, showTempo = false, showComments = false, showMetadata = false,
             showPageNumbers = false, startSongsOnNewPage = false, setlistMode = PrintSettings.SetlistMode.RUNNING_ORDER,
@@ -58,7 +58,7 @@ internal class UserPreferencesMappersTest {
     }
 
     @Test
-    fun theKeyAndTheTempoFollowTheDetailsBoxThatPrintedThemUntilTheyAreChosen() {
+    fun `the key and the tempo follow the details box that printed them until they are chosen`() {
         fun printSettingsOf(text: String) = UserPreferencesDocumentFormat.decode("""{"printSettings":$text}""").document.toModel().printSettings
 
         printSettingsOf("""{"showMetadata":false}""").let { assertEquals(false to false, it.showKey to it.showTempo) }
@@ -70,14 +70,14 @@ internal class UserPreferencesMappersTest {
     }
 
     @Test
-    fun malformedPrintSizesAndUnknownPaperFallBackWithoutLosingOtherChoices() {
+    fun `malformed print sizes and unknown paper fall back without losing other choices`() {
         val preferences = UserPreferencesDocument(printSettings = PrintSettingsDocument(format = "docx", paper = "tabloid", setlistMode = "unknown",
             fontSize = 400, marginMm = -1, columns = 50, showChords = false)).toModel()
         assertEquals(PrintSettings(fontSize = 20, marginMm = 10, columns = 4, showChords = false), preferences.printSettings)
     }
 
     @Test
-    fun featuresDefaultToOnAndChordsKeepTheLyricsOnlySwitchTheyReplaced() {
+    fun `features default to on and chords keep the lyrics only switch they replaced`() {
         val defaults = UserPreferencesDocumentFormat.decode("{}").document.toModel()
         assertEquals(true, defaults.areChordsEnabled)
         assertEquals(true, defaults.areSetlistsEnabled)
@@ -88,7 +88,7 @@ internal class UserPreferencesMappersTest {
     }
 
     @Test
-    fun chordDiagramsDefaultToTheGuitarAndKeepEveryChosenShape() {
+    fun `chord diagrams default to the guitar and keep every chosen shape`() {
         val defaults = UserPreferencesDocumentFormat.decode("{}").document.toModel()
         assertEquals(true, defaults.areChordDiagramsEnabled)
         assertEquals(UserPreferences.ChordInstrument.GUITAR, defaults.chordInstrument)
@@ -108,7 +108,7 @@ internal class UserPreferencesMappersTest {
     }
 
     @Test
-    fun anUnknownEnumIdFallsBackForThatFieldOnly() {
+    fun `an unknown enum ID falls back for that field only`() {
         val preferences = UserPreferencesDocument(
             sortingMode = "by_mood",
             uiMode = UserPreferences.UiMode.DARK.id,
@@ -127,7 +127,7 @@ internal class UserPreferencesMappersTest {
     }
 
     @Test
-    fun aStoredFontScaleOutsideTheRangeIsClampedToIt() {
+    fun `a stored font scale outside the range is clamped to it`() {
         assertEquals(UserPreferences.MAX_FONT_SCALE, UserPreferencesDocument(fontScale = 40f).toModel().fontScale)
         assertEquals(UserPreferences.MIN_FONT_SCALE, UserPreferencesDocument(fontScale = 0f).toModel().fontScale)
         assertEquals(UserPreferences.MIN_FONT_SCALE, UserPreferencesDocument(fontScale = -1f).toModel().fontScale)
@@ -135,7 +135,7 @@ internal class UserPreferencesMappersTest {
     }
 
     @Test
-    fun aStoredBackgroundWarmthOutsideTheRangeIsClampedToIt() {
+    fun `a stored background warmth outside the range is clamped to it`() {
         assertEquals(UserPreferences.MAX_BACKGROUND_WARMTH, UserPreferencesDocument(backgroundWarmth = 40).toModel().backgroundWarmth)
         assertEquals(0, UserPreferencesDocument(backgroundWarmth = -1).toModel().backgroundWarmth)
         assertEquals(0, UserPreferencesDocumentFormat.decode("{}").document.toModel().backgroundWarmth)
@@ -144,13 +144,13 @@ internal class UserPreferencesMappersTest {
     }
 
     @Test
-    fun aStoredFontScaleThatIsNotANumberFallsBackToTheDefault() {
+    fun `a stored font scale that is not a number falls back to the default`() {
         assertEquals(UserPreferences.DEFAULT_FONT_SCALE, UserPreferencesDocument(fontScale = Float.NaN).toModel().fontScale)
         assertEquals(UserPreferences.DEFAULT_FONT_SCALE, UserPreferencesDocument(fontScale = Float.POSITIVE_INFINITY).toModel().fontScale)
     }
 
     @Test
-    fun aDocumentFromBeforeTheNotationKeepsItsGermanNotation() {
+    fun `a document from before the notation keeps its German notation`() {
         assertEquals(UserPreferences.Notation.GERMAN, UserPreferencesDocument(isGermanNotationEnabled = true).toModel().chordSpelling.notation)
         assertEquals(UserPreferences.Notation.STANDARD, UserPreferencesDocument().toModel().chordSpelling.notation)
         assertEquals(
@@ -161,7 +161,7 @@ internal class UserPreferencesMappersTest {
     }
 
     @Test
-    fun everyNotationSurvivesSavingAndReloading() {
+    fun `every notation survives saving and reloading`() {
         UserPreferences.Notation.entries.forEach { notation ->
             assertEquals(notation, UserPreferencesDocument(notation = notation.id).toModel().toDocument().toModel().chordSpelling.notation)
         }
@@ -171,7 +171,7 @@ internal class UserPreferencesMappersTest {
     }
 
     @Test
-    fun metronomeSettingsAndTemposSurviveSavingAndReloading() {
+    fun `metronome settings and tempos survive saving and reloading`() {
         val settings = MetronomeSettings(soundId = "cowbell", volume = 0.5f, subdivisionId = "triplets", isVisualBeatEnabled = false,
             isHapticBeatEnabled = true, beatLevels = mapOf("7/8" to listOf("accent", "normal", "accent", "normal", "accent", "normal", "normal")),
             bpm = 96, timeSignature = "7/8")
@@ -183,7 +183,7 @@ internal class UserPreferencesMappersTest {
     }
 
     @Test
-    fun aMetronomeValueOutOfRangeIsHeldWithinIt() {
+    fun `a metronome value out of range is held within it`() {
         val preferences = UserPreferencesDocument(metronomeSettings = MetronomeSettingsDocument(volume = 4f, bpm = 1_000), tempos = mapOf("a.cho" to 5, "b.cho" to 96))
             .toModel()
         assertEquals(1f, preferences.metronomeSettings.volume)
@@ -192,7 +192,7 @@ internal class UserPreferencesMappersTest {
     }
 
     @Test
-    fun aTempoOfTheWrongShapeCostsOnlyItself() {
+    fun `a tempo of the wrong shape costs only itself`() {
         val preferences = UserPreferencesDocumentFormat.decode("""{"tempos":{"a.cho":96,"b.cho":"fast"},"uiMode":"dark"}""").document.toModel()
         assertEquals(mapOf("a.cho" to 96), preferences.tempos)
         assertEquals(UserPreferences.UiMode.DARK, preferences.uiMode)

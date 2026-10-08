@@ -17,14 +17,14 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 internal class PrintPdfWriterTest {
-    @Test fun packsTwoRoundedGraysABytePaddingAnOddRowWithWhite() {
+    @Test fun `packs two rounded grays a byte padding an odd row with white`() {
         val packed = ByteArray(4)
         val pixels = intArrayOf(0xFF000000.toInt(), 0xFFFFFFFF.toInt(), 0xFF888888.toInt())
         packPrintRows(pixels + pixels, width = 3, rows = 2, packed = packed, firstRow = 0)
         assertContentEquals(byteArrayOf(0x0F, 0x8F.toByte(), 0x0F, 0x8F.toByte()), packed)
     }
 
-    @Test fun pdfCrossReferenceOffsetsResolveToEveryObjectWithTwoPages() = runTest {
+    @Test fun `PDF cross reference offsets resolve to every object with two pages`() = runTest {
         val writer = PrintPdfWriter(595.276f, 841.89f, "Szőke (live)")
         repeat(2) { writer.addPage(8, 8, ByteArray(32) { if (it % 4 == 0) 0x0F else -1 }) }
         val bytes = writer.finish()
@@ -45,7 +45,7 @@ internal class PrintPdfWriterTest {
         }
     }
 
-    @Test fun aReusedScratchBufferWritesIdenticalPagesIdentically() = runTest {
+    @Test fun `a reused scratch buffer writes identical pages identically`() = runTest {
         val page = ByteArray(32 * 64) { if (it % 7 == 0) 0 else -1 }
         val writer = PrintPdfWriter(100f, 100f, "Pages")
         writer.addPage(32, 16, ByteArray(256) { it.toByte() })
@@ -62,7 +62,7 @@ internal class PrintPdfWriterTest {
         assertContentEquals(streams[1], streams[2])
     }
 
-    @Test fun invisibleFontsCarryUnicodeClustersAndPrintedStylesAcrossPages() = runTest {
+    @Test fun `invisible fonts carry Unicode clusters and printed styles across pages`() = runTest {
         val writer = PrintPdfWriter(100f, 100f, "Unicode")
         val glyphs = listOf(
             PrintPdfText("Ő", 10f, 20f, 8f, 12f, PrintStyle(12, bold = true)),
@@ -80,7 +80,7 @@ internal class PrintPdfWriterTest {
         assertEquals(2, Regex("/Font << /F0 \\d+ 0 R /F1 \\d+ 0 R /F2 \\d+ 0 R >>").findAll(text).count())
     }
 
-    @Test fun aFontSplitsAfter255DistinctCharactersWithoutTruncatingItsUnicodeMap() = runTest {
+    @Test fun `a font splits after 255 distinct characters without truncating its Unicode map`() = runTest {
         val writer = PrintPdfWriter(1000f, 100f, "Many characters")
         val glyphs = (0x400..0x500).mapIndexed { index, code ->
             PrintPdfText(code.toChar().toString(), index * 2f, 10f, 2f, 12f, PrintStyle(12))
@@ -96,7 +96,7 @@ internal class PrintPdfWriterTest {
         assertTrue(Regex("(\\d+) beginbfchar").findAll(text).all { it.groupValues[1].toInt() <= 100 })
     }
 
-    @Test fun pdfNumbersAreFiniteDecimalNumbersEvenForSmallAdvances() {
+    @Test fun `PDF numbers are finite decimal numbers even for small advances`() {
         assertEquals("0.001", printPdfNumber(0.001f))
         assertEquals("-0.125", printPdfNumber(-0.125f))
         assertEquals("595.276", printPdfNumber(595.276f))
@@ -104,8 +104,8 @@ internal class PrintPdfWriterTest {
         assertFailsWith<IllegalArgumentException> { printPdfNumber(Float.NaN) }
     }
 
-    @Test fun rightToLeftRunsAreFoundWhole() {
-        fun glyph(run: Int, isRtl: Boolean = false) = PrintPdfText("x", 0f, 0f, 1f, 1f, PrintStyle(12), run, isRtl)
+    @Test fun `right to left runs are found whole`() {
+        fun `glyph`(run: Int, isRtl: Boolean = false) = PrintPdfText("x", 0f, 0f, 1f, 1f, PrintStyle(12), run, isRtl)
         val glyphs = listOf(
             glyph(0), glyph(0),
             glyph(1, isRtl = true), glyph(1, isRtl = true),
@@ -116,7 +116,7 @@ internal class PrintPdfWriterTest {
         assertEquals(emptyList(), rtlRuns(glyphs.take(2)))
     }
 
-    @Test fun aRightToLeftRunCarriesItsLogicalTextAndLatinPagesAreUnchanged() = runTest {
+    @Test fun `a right to left run carries its logical text and Latin pages are unchanged`() = runTest {
         suspend fun content(glyphs: List<PrintPdfText>): ByteArray {
             val writer = PrintPdfWriter(100f, 100f, "Text")
             writer.addPage(2, 2, ByteArray(2) { -1 }, glyphs)

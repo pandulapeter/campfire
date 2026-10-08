@@ -21,16 +21,16 @@ import kotlin.test.assertTrue
 class MetronomePatternTest {
 
     @Test
-    fun soundsByDefault() = assertTrue(MetronomePattern(bpm = 120).canSound)
+    fun `a default pattern sounds`() = assertTrue(MetronomePattern(bpm = 120).canSound)
 
     @Test
-    fun isSilentAtZeroVolume() {
+    fun `a pattern at zero volume is silent`() {
         assertFalse(MetronomePattern(bpm = 120, volume = 0f).canSound)
         assertFalse(MetronomePattern(bpm = 120, beatLevels = listOf(NORMAL, NORMAL, NORMAL, NORMAL), volume = 0f).canSound)
     }
 
     @Test
-    fun isSilentWithEveryBeatMuted() {
+    fun `a pattern with every beat muted is silent`() {
         val muted = listOf(MUTED, MUTED, MUTED, MUTED)
         assertFalse(MetronomePattern(bpm = 120, timeSignature = TimeSignature(4, 4), beatLevels = muted).canSound)
         assertFalse(
@@ -44,7 +44,7 @@ class MetronomePatternTest {
     }
 
     @Test
-    fun playsABeatAtZeroVolume() {
+    fun `a pattern at zero volume still plays a beat`() {
         assertTrue(MetronomePattern(bpm = 120, volume = 0f).hasUnmutedBeat)
         assertFalse(
             MetronomePattern(bpm = 120, timeSignature = TimeSignature(4, 4), beatLevels = listOf(MUTED, MUTED, MUTED, MUTED)).hasUnmutedBeat,
@@ -52,7 +52,7 @@ class MetronomePatternTest {
     }
 
     @Test
-    fun soundsWithOneAudibleBeatAtAnyVolume() = assertTrue(
+    fun `one audible beat makes a pattern sound at any volume`() = assertTrue(
         MetronomePattern(
             bpm = 120,
             timeSignature = TimeSignature(4, 4),
@@ -62,12 +62,12 @@ class MetronomePatternTest {
     )
 
     @Test
-    fun padsAShortListFromTheDefaults() = assertTrue(
+    fun `a short list of beat levels is padded from the defaults`() = assertTrue(
         MetronomePattern(bpm = 120, timeSignature = TimeSignature(4, 4), beatLevels = listOf(MUTED)).canSound,
     )
 
     @Test
-    fun cutsALongList() = assertFalse(
+    fun `a long list of beat levels is cut to the bar`() = assertFalse(
         MetronomePattern(bpm = 120, timeSignature = TimeSignature(3, 4), beatLevels = listOf(MUTED, MUTED, MUTED, NORMAL)).canSound,
     )
 }

@@ -9,37 +9,28 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation
 
-import com.pandulapeter.campfire.data.model.domain.ImportLimits
 import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
-import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.model.domain.SyncAccount
-import com.pandulapeter.campfire.data.model.domain.SyncDeletionDirection
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
-import com.pandulapeter.campfire.data.source.local.api.LibraryFileLock
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import com.pandulapeter.campfire.data.source.remote.api.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.SyncRemoteStorageFullException
-import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.yield
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import kotlin.test.fail
 
 /**
  * The engine against an in-memory library and remote folder: what a run leaves behind when it does not get to the
- * end, which the planner's tests cannot show since the planner never sees a run at all.
+ * end, what it reports and records as it goes, and whose index it acts on, which the planner's tests cannot show since
+ * the planner never sees a run at all. The rest of the engine's behaviour is in the other `SyncEngine…Test` files.
  */
 class SyncEngineTest {
 
@@ -54,15 +45,7 @@ class SyncEngineTest {
         val snapshots = mutableListOf<() -> SyncIndexDocument>()
 
         assertFailsWith<SyncNetworkException> {
-            SyncEngine(FakeLibraryFileLocalSource(), LibraryFileLock(), NoSetlistComparison).synchronize(
-                provider = provider,
-                document = SyncIndexDocument(),
-                accountId = ACCOUNT_ID,
-                onProgress = {},
-                onIndexChanged = { snapshots += it },
-                onLocalFileChanged = {},
-                deletionPolicy = SyncDeletionPolicy.ASK,
-            )
+            synchronize(FakeLibraryFileLocalSource(), provider, SyncIndexDocument(), onIndexChanged = { snapshots += it })
         }
 
         val last = snapshots.last()()
@@ -81,14 +64,11 @@ class SyncEngineTest {
         val snapshots = mutableListOf<() -> SyncIndexDocument>()
 
         assertFailsWith<SyncNetworkException> {
-            SyncEngine(FakeLibraryFileLocalSource(), LibraryFileLock(), NoSetlistComparison).synchronize(
+            synchronize(
+                local = FakeLibraryFileLocalSource(),
                 provider = provider,
                 document = SyncIndexDocument(accountId = ACCOUNT_ID, lastSyncedAt = 42),
-                accountId = ACCOUNT_ID,
-                onProgress = {},
                 onIndexChanged = { snapshots += it },
-                onLocalFileChanged = {},
-                deletionPolicy = SyncDeletionPolicy.ASK,
             )
         }
 
@@ -97,658 +77,11 @@ class SyncEngineTest {
     }
 
     @Test
-    fun `a song edited while it waits to come down is kept next to the incoming version`() = runTest {
-        val original = "Original".encodeToByteArray()
-        val edited = "Edited here".encodeToByteArray()
-        val incoming = "Edited there".encodeToByteArray()
-        val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to original, song(2) to original))
-        val provider = FakeSyncProvider(files = mapOf(song(1) to incoming, song(2) to incoming))
-        // Both songs were in step at the last run and have since moved on remotely, so both are planned as downloads;
-        // the first one's transfer is where the user saves an edit to the second.
-        provider.onDownload = { key -> if (key == song(1)) local.files[song(2)] = edited }
-
-        SyncEngine(local, LibraryFileLock(), NoSetlistComparison).synchronize(
-            provider = provider,
-            document = indexOf(song(1) to original, song(2) to original),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.ASK,
-        )
-
-        assertContentEquals(edited, local.files[song(2)])
-        assertContentEquals(incoming, local.files[SyncKey(kind = LibraryFileKind.SONG, name = "song_2 (2).cho")])
-        assertContentEquals(edited, provider.files.getValue(song(2)).first)
-    }
-
-    @Test
-    fun `a setlist dated differently on two devices takes the folder's day and keeps no copy`() = runTest {
-        val here = "Gig;date:2026-10-07;songs:a".encodeToByteArray()
-        val there = "Gig;date:2026-10-05;songs:a".encodeToByteArray()
-        val local = FakeLibraryFileLocalSource(files = mapOf(GIG to here))
-        val provider = FakeSyncProvider(files = mapOf(GIG to there))
-
-        val result = SyncEngine(local, LibraryFileLock(), DayBlindSetlistComparison).synchronize(
-            provider = provider,
-            document = indexOf(GIG to "Gig;date:2026-01-01;songs:a".encodeToByteArray()),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.ASK,
-        )
-
-        val completed = assertIs<SyncEngine.Result.Completed>(result)
-        assertContentEquals(there, local.files[GIG])
-        assertEquals(setOf(GIG), local.files.keys)
-        assertEquals(setOf(GIG), provider.files.keys)
-        assertEquals(emptyList(), completed.summary.conflicts)
-        val entry = completed.index.entries.getValue(GIG.path)
-        assertEquals(localContentHash(there), entry.localHash)
-        assertEquals("r1", entry.remoteRevision)
-    }
-
-    @Test
-    fun `a setlist dated differently on a device connecting for the first time keeps no copy`() = runTest {
-        val there = "Gig;date:2026-10-05;songs:a".encodeToByteArray()
-        val local = FakeLibraryFileLocalSource(files = mapOf(GIG to "Gig;date:2026-10-07;songs:a".encodeToByteArray()))
-        val provider = FakeSyncProvider(files = mapOf(GIG to there))
-
-        val result = SyncEngine(local, LibraryFileLock(), DayBlindSetlistComparison).synchronize(
-            provider = provider,
-            document = SyncIndexDocument(),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.ASK,
-        )
-
-        assertContentEquals(there, local.files[GIG])
-        assertEquals(setOf(GIG), local.files.keys)
-        assertEquals(setOf(GIG), provider.files.keys)
-        assertEquals(emptyList(), assertIs<SyncEngine.Result.Completed>(result).summary.conflicts)
-    }
-
-    @Test
-    fun `a setlist changed in more than its date still keeps both`() = runTest {
-        val here = "Gig;date:2026-10-07;songs:a,b".encodeToByteArray()
-        val there = "Gig;date:2026-10-05;songs:a,c".encodeToByteArray()
-        val local = FakeLibraryFileLocalSource(files = mapOf(GIG to here))
-        val provider = FakeSyncProvider(files = mapOf(GIG to there))
-
-        val result = SyncEngine(local, LibraryFileLock(), DayBlindSetlistComparison).synchronize(
-            provider = provider,
-            document = indexOf(GIG to "Gig;date:2026-01-01;songs:a".encodeToByteArray()),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.ASK,
-        )
-
-        assertContentEquals(here, local.files[GIG])
-        assertContentEquals(there, local.files[GIG_COPY])
-        assertEquals(listOf(GIG_COPY.name), assertIs<SyncEngine.Result.Completed>(result).summary.conflicts)
-    }
-
-    @Test
-    fun `an untouched planted demo song takes the cloud folder's version and keeps no copy`() = runTest {
-        val planted = "Demo, as this version plants it".encodeToByteArray()
-        val there = "Demo, as an older version planted it".encodeToByteArray()
-        val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to planted))
-        val provider = FakeSyncProvider(files = mapOf(song(1) to there))
-
-        val result = synchronizePlanted(local, provider, SyncIndexDocument()) { key -> if (key == song(1)) localContentHash(planted) else null }
-
-        val completed = assertIs<SyncEngine.Result.Completed>(result)
-        assertContentEquals(there, local.files[song(1)])
-        assertEquals(setOf(song(1)), local.files.keys)
-        assertEquals(setOf(song(1)), provider.files.keys)
-        assertContentEquals(there, provider.files.getValue(song(1)).first)
-        assertEquals(emptyList(), completed.summary.conflicts)
-        assertEquals(localContentHash(there), completed.index.entries.getValue(song(1).path).localHash)
-    }
-
-    @Test
-    fun `a planted demo song edited here is kept next to the cloud folder's version`() = runTest {
-        val planted = "Demo, as this version plants it".encodeToByteArray()
-        val edited = "Demo, with the user's own verse".encodeToByteArray()
-        val there = "Demo, as an older version planted it".encodeToByteArray()
-        val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to edited))
-        val provider = FakeSyncProvider(files = mapOf(song(1) to there))
-
-        val result = synchronizePlanted(local, provider, SyncIndexDocument()) { key -> if (key == song(1)) localContentHash(planted) else null }
-
-        assertContentEquals(edited, local.files[song(1)])
-        assertContentEquals(there, local.files[SyncKey(kind = LibraryFileKind.SONG, name = "song_1 (2).cho")])
-        assertContentEquals(edited, provider.files.getValue(song(1)).first)
-        assertEquals(listOf("song_1 (2).cho"), assertIs<SyncEngine.Result.Completed>(result).summary.conflicts)
-    }
-
-    @Test
-    fun `a file planted under another name does not make this one yield`() = runTest {
-        val here = "Song, as written here".encodeToByteArray()
-        val there = "Song, as written there".encodeToByteArray()
-        val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to here))
-        val provider = FakeSyncProvider(files = mapOf(song(1) to there))
-
-        val result = synchronizePlanted(local, provider, SyncIndexDocument()) { key -> if (key == song(2)) localContentHash(here) else null }
-
-        assertContentEquals(here, local.files[song(1)])
-        assertContentEquals(there, local.files[SyncKey(kind = LibraryFileKind.SONG, name = "song_1 (2).cho")])
-        assertEquals(listOf("song_1 (2).cho"), assertIs<SyncEngine.Result.Completed>(result).summary.conflicts)
-    }
-
-    @Test
-    fun `a planted demo song changed back here after a synced edit keeps its copy`() = runTest {
-        val planted = "Demo, as this version plants it".encodeToByteArray()
-        val edited = "Demo, with a tag this device took off again".encodeToByteArray()
-        val there = "Demo, with a verse another device edited".encodeToByteArray()
-        val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to planted))
-        val provider = FakeSyncProvider(files = mapOf(song(1) to there))
-
-        val result = synchronizePlanted(local, provider, indexOf(song(1) to edited)) { key -> if (key == song(1)) localContentHash(planted) else null }
-
-        assertContentEquals(planted, local.files[song(1)])
-        assertContentEquals(there, local.files[SyncKey(kind = LibraryFileKind.SONG, name = "song_1 (2).cho")])
-        assertEquals(listOf("song_1 (2).cho"), assertIs<SyncEngine.Result.Completed>(result).summary.conflicts)
-    }
-
-    @Test
-    fun `a planted demo setlist that changed in more than its day takes the folder's version`() = runTest {
-        val here = "Gig;date:2026-10-07;songs:a,b".encodeToByteArray()
-        val there = "Gig;date:2026-10-05;songs:a,c".encodeToByteArray()
-        val local = FakeLibraryFileLocalSource(files = mapOf(GIG to here))
-        val provider = FakeSyncProvider(files = mapOf(GIG to there))
-
-        val result = synchronizePlanted(local, provider, SyncIndexDocument()) { key -> if (key == GIG) localContentHash(here) else null }
-
-        assertContentEquals(there, local.files[GIG])
-        assertEquals(setOf(GIG), local.files.keys)
-        assertEquals(emptyList(), assertIs<SyncEngine.Result.Completed>(result).summary.conflicts)
-    }
-
-    private suspend fun synchronizePlanted(
-        local: FakeLibraryFileLocalSource,
-        provider: FakeSyncProvider,
-        document: SyncIndexDocument,
-        plantedContentHash: suspend (SyncKey) -> String?,
-    ) = SyncEngine(local, LibraryFileLock(), NoSetlistComparison, plantedContentHash).synchronize(
-        provider = provider,
-        document = document,
-        accountId = ACCOUNT_ID,
-        onProgress = {},
-        onIndexChanged = {},
-        onLocalFileChanged = {},
-        deletionPolicy = SyncDeletionPolicy.ASK,
-    )
-
-    @Test
-    fun `a song that differs only in what reads as a day still keeps both`() = runTest {
-        val here = "Song;date:2026-10-07;".encodeToByteArray()
-        val there = "Song;date:2026-10-05;".encodeToByteArray()
-        val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to here))
-        val provider = FakeSyncProvider(files = mapOf(song(1) to there))
-
-        val result = SyncEngine(local, LibraryFileLock(), DayBlindSetlistComparison).synchronize(
-            provider = provider,
-            document = indexOf(song(1) to "Song;".encodeToByteArray()),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.ASK,
-        )
-
-        assertContentEquals(here, local.files[song(1)])
-        assertContentEquals(there, local.files[SyncKey(kind = LibraryFileKind.SONG, name = "song_1 (2).cho")])
-        assertEquals(listOf("song_1 (2).cho"), assertIs<SyncEngine.Result.Completed>(result).summary.conflicts)
-    }
-
-    @Test
-    fun `a setlist saved while the folder's day comes down is not written over`() = runTest {
-        val here = "Gig;date:2026-10-07;songs:a".encodeToByteArray()
-        val saved = "Gig;date:2026-10-07;songs:a,b".encodeToByteArray()
-        val there = "Gig;date:2026-10-05;songs:a".encodeToByteArray()
-        val local = FakeLibraryFileLocalSource(files = mapOf(GIG to here))
-        val provider = FakeSyncProvider(files = mapOf(GIG to there))
-        var hasSaved = false
-        provider.onDownload = { key ->
-            if (key == GIG && !hasSaved) {
-                hasSaved = true
-                local.files[GIG] = saved
-            }
-        }
-
-        val result = SyncEngine(local, LibraryFileLock(), DayBlindSetlistComparison).synchronize(
-            provider = provider,
-            document = indexOf(GIG to "Gig;date:2026-01-01;songs:a".encodeToByteArray()),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.ASK,
-        )
-
-        // The first pass leaves it to the second, which finds the save: more than a day apart from the folder's copy.
-        assertContentEquals(saved, local.files[GIG])
-        assertContentEquals(saved, provider.files.getValue(GIG).first)
-        assertContentEquals(there, local.files[GIG_COPY])
-        assertEquals(listOf(GIG_COPY.name), assertIs<SyncEngine.Result.Completed>(result).summary.conflicts)
-    }
-
-    @Test
-    fun `a setlist only dated here takes another device's edit and keeps no copy`() = runTest {
-        val undated = "Gig;songs:a".encodeToByteArray()
-        val edited = "Gig;songs:a,b".encodeToByteArray()
-        val local = FakeLibraryFileLocalSource(files = mapOf(GIG to "Gig;date:2026-10-07;songs:a".encodeToByteArray()))
-        val provider = FakeSyncProvider(files = mapOf(GIG to edited))
-
-        val result = SyncEngine(local, LibraryFileLock(), DayBlindSetlistComparison).synchronize(
-            provider = provider,
-            document = indexOf(GIG to undated),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.ASK,
-        )
-
-        val completed = assertIs<SyncEngine.Result.Completed>(result)
-        assertContentEquals(edited, local.files[GIG])
-        assertEquals(setOf(GIG), local.files.keys)
-        assertEquals(emptyList(), completed.summary.conflicts)
-        val entry = completed.index.entries.getValue(GIG.path)
-        assertEquals(localContentHash(edited), entry.localHash)
-        assertEquals("r1", entry.remoteRevision)
-    }
-
-    @Test
-    fun `a setlist edited and dated here still keeps another device's edit next to it`() = runTest {
-        val here = "Gig;date:2026-10-07;songs:a,c".encodeToByteArray()
-        val edited = "Gig;songs:a,b".encodeToByteArray()
-        val local = FakeLibraryFileLocalSource(files = mapOf(GIG to here))
-        val provider = FakeSyncProvider(files = mapOf(GIG to edited))
-
-        val result = SyncEngine(local, LibraryFileLock(), DayBlindSetlistComparison).synchronize(
-            provider = provider,
-            document = indexOf(GIG to "Gig;songs:a".encodeToByteArray()),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.ASK,
-        )
-
-        assertContentEquals(here, local.files[GIG])
-        assertContentEquals(edited, local.files[GIG_COPY])
-        assertEquals(listOf(GIG_COPY.name), assertIs<SyncEngine.Result.Completed>(result).summary.conflicts)
-    }
-
-    @Test
-    fun `a conflict copy is not written over by a download waiting under its name`() = runTest {
-        val copy = SyncKey(kind = LibraryFileKind.SONG, name = "song_1 (2).cho")
-        val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to "A's second edit".encodeToByteArray()))
-        val provider = FakeSyncProvider(
-            files = mapOf(song(1) to "B's edit".encodeToByteArray(), copy to "A's first edit".encodeToByteArray()),
-        )
-
-        val result = SyncEngine(local, LibraryFileLock(), NoSetlistComparison).synchronize(
-            provider = provider,
-            document = indexOf(song(1) to "Original".encodeToByteArray()),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.ASK,
-        )
-
-        val expected = setOf("A's second edit", "B's edit", "A's first edit")
-        assertEquals("A's second edit", local.files.getValue(song(1)).decodeToString())
-        assertEquals(expected, local.files.values.map { it.decodeToString() }.toSet())
-        assertEquals(expected, provider.files.values.map { it.first.decodeToString() }.toSet())
-        // The copy takes the first name free on both sides, so the file waiting under "(2)" comes down as it is.
-        val nextCopy = SyncKey(kind = LibraryFileKind.SONG, name = "song_1 (3).cho")
-        assertEquals("A's first edit", local.files.getValue(copy).decodeToString())
-        assertEquals("A's first edit", provider.files.getValue(copy).first.decodeToString())
-        assertEquals("B's edit", local.files.getValue(nextCopy).decodeToString())
-        assertEquals("B's edit", provider.files.getValue(nextCopy).first.decodeToString())
-        assertEquals(listOf(nextCopy.name), assertIs<SyncEngine.Result.Completed>(result).summary.conflicts)
-    }
-
-    @Test
-    fun `a song created under a name that is waiting to come down is kept`() = runTest {
-        val mine = "Mine".encodeToByteArray()
-        val theirs = "Theirs".encodeToByteArray()
-        val local = FakeLibraryFileLocalSource()
-        val provider = FakeSyncProvider(files = mapOf(song(1) to "One".encodeToByteArray(), song(2) to theirs))
-        provider.onDownload = { key -> if (key == song(1)) local.files[song(2)] = mine }
-
-        SyncEngine(local, LibraryFileLock(), NoSetlistComparison).synchronize(
-            provider = provider,
-            document = SyncIndexDocument(),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.ASK,
-        )
-
-        assertContentEquals(mine, local.files[song(2)])
-        assertContentEquals(theirs, local.files[SyncKey(kind = LibraryFileKind.SONG, name = "song_2 (2).cho")])
-    }
-
-    @Test
-    fun `a song saved while its own download is in flight is kept next to the incoming version`() = runTest {
-        val original = "Original".encodeToByteArray()
-        val edited = "Edited here".encodeToByteArray()
-        val incoming = "Edited there".encodeToByteArray()
-        val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to original))
-        val provider = FakeSyncProvider(files = mapOf(song(1) to incoming))
-        provider.onDownload = { key -> if (key == song(1)) local.files[song(1)] = edited }
-
-        SyncEngine(local, LibraryFileLock(), NoSetlistComparison).synchronize(
-            provider = provider,
-            document = indexOf(song(1) to original),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.ASK,
-        )
-
-        assertContentEquals(edited, local.files[song(1)])
-        assertContentEquals(incoming, local.files[SyncKey(kind = LibraryFileKind.SONG, name = "song_1 (2).cho")])
-        assertContentEquals(edited, provider.files.getValue(song(1)).first)
-        assertEquals(1, provider.downloadCounts[song(1)])
-    }
-
-    @Test
-    fun `a song created under the name while its download is in flight is kept`() = runTest {
-        val mine = "Mine".encodeToByteArray()
-        val theirs = "Theirs".encodeToByteArray()
-        val local = FakeLibraryFileLocalSource()
-        val provider = FakeSyncProvider(files = mapOf(song(2) to theirs))
-        provider.onDownload = { key -> if (key == song(2)) local.files[song(2)] = mine }
-
-        SyncEngine(local, LibraryFileLock(), NoSetlistComparison).synchronize(
-            provider = provider,
-            document = SyncIndexDocument(),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.ASK,
-        )
-
-        assertContentEquals(mine, local.files[song(2)])
-        assertContentEquals(theirs, local.files[SyncKey(kind = LibraryFileKind.SONG, name = "song_2 (2).cho")])
-    }
-
-    @Test
-    fun `a song saved between the last check of its download and the write is not written over`() = runTest {
-        val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to ORIGINAL))
-        val lock = LibraryFileLock()
-        val provider = FakeSyncProvider(files = mapOf(song(1) to THERE))
-        // The save starts once the engine has decided the file is still the one it saw, and gets as far as it can
-        // before the engine writes the download.
-        var save: Job? = null
-        local.onWrite = { key ->
-            if (key == song(1) && save == null) {
-                save = launch { saveUnderTheLock(lock, local, song(1), HERE) }
-                yield()
-            }
-        }
-
-        SyncEngine(local, lock, NoSetlistComparison).synchronize(
-            provider = provider,
-            document = indexOf(song(1) to ORIGINAL),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.ASK,
-        )
-        save?.join()
-
-        assertContentEquals(HERE, local.files[song(1)])
-    }
-
-    @Test
-    fun `a song saved between the last check of its deletion and the deletion is not deleted`() = runTest {
-        val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to ORIGINAL, song(2) to ORIGINAL))
-        val lock = LibraryFileLock()
-        val provider = FakeSyncProvider(files = mapOf(song(2) to ORIGINAL))
-        var save: Job? = null
-        local.onDelete = { key ->
-            if (key == song(1) && save == null) {
-                save = launch { saveUnderTheLock(lock, local, song(1), HERE) }
-                yield()
-            }
-        }
-
-        SyncEngine(local, lock, NoSetlistComparison).synchronize(
-            provider = provider,
-            document = syncedIndexOf(mapOf(song(1) to ORIGINAL, song(2) to ORIGINAL)),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.ASK,
-        )
-        save?.join()
-
-        assertContentEquals(HERE, local.files[song(1)])
-    }
-
-    @Test
-    fun `a local file too large to sync is neither uploaded nor taken for a deletion`() = runTest {
-        val synced = "Synced".encodeToByteArray()
-        val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to tooLarge()))
-        var uploads = 0
-        val provider = FakeSyncProvider(files = mapOf(song(1) to synced), onUpload = { uploads++ })
-
-        val result = SyncEngine(local, LibraryFileLock(), NoSetlistComparison).synchronize(
-            provider = provider,
-            document = indexOf(song(1) to synced),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.ASK,
-        )
-
-        assertEquals(0, uploads)
-        assertContentEquals(synced, provider.files.getValue(song(1)).first)
-        assertEquals(listOf(song(1).name), assertIs<SyncEngine.Result.Completed>(result).summary.failed)
-    }
-
-    @Test
-    fun `a local file too large to sync is not uploaded when it is new`() = runTest {
-        val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to tooLarge()))
-        val provider = FakeSyncProvider()
-
-        val result = SyncEngine(local, LibraryFileLock(), NoSetlistComparison).synchronize(
-            provider = provider,
-            document = SyncIndexDocument(),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.ASK,
-        )
-
-        assertTrue(provider.files.isEmpty())
-        assertEquals(listOf(song(1).name), assertIs<SyncEngine.Result.Completed>(result).summary.failed)
-    }
-
-    @Test
-    fun `a song edited while it waits to be deleted goes back up instead`() = runTest {
-        val original = "Original".encodeToByteArray()
-        val edited = "Edited here".encodeToByteArray()
-        val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to original, song(2) to original))
-        val provider = FakeSyncProvider(files = mapOf(song(1) to "Edited there".encodeToByteArray()))
-        // The second song is gone remotely and unchanged here, which plans a local deletion; it is edited while the
-        // first one comes down, before the deletions get their turn.
-        provider.onDownload = { local.files[song(2)] = edited }
-
-        val result = SyncEngine(local, LibraryFileLock(), NoSetlistComparison).synchronize(
-            provider = provider,
-            document = indexOf(song(1) to original, song(2) to original),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.ASK,
-        )
-
-        assertContentEquals(edited, local.files[song(2)])
-        assertContentEquals(edited, provider.files.getValue(song(2)).first)
-        assertEquals(0, assertIs<SyncEngine.Result.Completed>(result).summary.deletedLocally)
-    }
-
-    @Test
-    fun `a conflict that is contested while it is resolved leaves one copy rather than two`() = runTest {
-        val original = "Original".encodeToByteArray()
-        val here = "Edited here".encodeToByteArray()
-        val there = "Edited there".encodeToByteArray()
-        val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to here))
-        val provider = FakeSyncProvider(files = mapOf(song(1) to there))
-        // Another device writes the file once while this one is downloading it, so the first upload is refused.
-        var isContested = true
-        provider.onDownload = { key ->
-            if (isContested) {
-                isContested = false
-                provider.files[key] = there to "r9"
-            }
-        }
-
-        SyncEngine(local, LibraryFileLock(), NoSetlistComparison).synchronize(
-            provider = provider,
-            document = indexOf(song(1) to original),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.ASK,
-        )
-
-        assertEquals(setOf("song_1.cho", "song_1 (2).cho"), local.files.keys.map { it.name }.toSet())
-        assertContentEquals(here, local.files[song(1)])
-    }
-
-    @Test
-    fun `a conflict whose copy cannot be written leaves the remote version alone`() = runTest {
-        val local = FakeLibraryFileLocalSource(
-            files = mapOf(song(1) to HERE),
-            onWrite = { key -> if (key != song(1)) throw LibraryStorageException("Full") },
-        )
-        val provider = FakeSyncProvider(files = mapOf(song(1) to THERE))
-
-        val result = SyncEngine(local, LibraryFileLock(), NoSetlistComparison).synchronize(
-            provider = provider,
-            document = indexOf(song(1) to ORIGINAL),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.ASK,
-        )
-
-        assertContentEquals(THERE, provider.files.getValue(song(1)).first)
-        assertEquals(setOf(song(1)), local.files.keys)
-        assertTrue(assertIs<SyncEngine.Result.Completed>(result).summary.conflicts.isEmpty())
-    }
-
-    @Test
-    fun `an upload that landed before it was reported as contested keeps the copy`() = runTest {
-        val copy = SyncKey(kind = LibraryFileKind.SONG, name = "song_1 (2).cho")
-        val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to HERE))
-        val provider = FakeSyncProvider(files = mapOf(song(1) to THERE))
-        // The write lands and its answer is lost, so the retry carries a revision that is no longer current.
-        var isFirstUpload = true
-        provider.onUpload = { key ->
-            if (key == song(1) && isFirstUpload) {
-                isFirstUpload = false
-                provider.files[key] = HERE to "r7"
-            }
-        }
-
-        val result = SyncEngine(local, LibraryFileLock(), NoSetlistComparison).synchronize(
-            provider = provider,
-            document = indexOf(song(1) to ORIGINAL),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.ASK,
-        )
-
-        assertContentEquals(HERE, local.files[song(1)])
-        assertContentEquals(HERE, provider.files.getValue(song(1)).first)
-        assertContentEquals(THERE, local.files[copy])
-        assertContentEquals(THERE, provider.files.getValue(copy).first)
-        assertEquals(listOf(copy.name), assertIs<SyncEngine.Result.Completed>(result).summary.conflicts)
-    }
-
-    @Test
-    fun `an upload the service refuses takes the copy back`() = runTest {
-        val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to HERE))
-        val provider = FakeSyncProvider(files = mapOf(song(1) to THERE))
-        provider.onUpload = { key -> if (key == song(1)) throw IllegalStateException("Refused") }
-
-        val result = SyncEngine(local, LibraryFileLock(), NoSetlistComparison).synchronize(
-            provider = provider,
-            document = indexOf(song(1) to ORIGINAL),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.ASK,
-        )
-
-        assertIs<SyncEngine.Result.Completed>(result)
-        assertEquals(setOf(song(1)), local.files.keys)
-        assertContentEquals(THERE, provider.files.getValue(song(1)).first)
-    }
-
-    @Test
-    fun `an upload cut off by the network keeps the copy`() = runTest {
-        val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to HERE))
-        val provider = FakeSyncProvider(files = mapOf(song(1) to THERE))
-        provider.onUpload = { throw SyncNetworkException("Offline") }
-
-        assertFailsWith<SyncNetworkException> {
-            SyncEngine(local, LibraryFileLock(), NoSetlistComparison).synchronize(
-                provider = provider,
-                document = indexOf(song(1) to ORIGINAL),
-                accountId = ACCOUNT_ID,
-                onProgress = {},
-                onIndexChanged = {},
-                onLocalFileChanged = {},
-                deletionPolicy = SyncDeletionPolicy.ASK,
-            )
-        }
-
-        assertContentEquals(THERE, local.files[SyncKey(kind = LibraryFileKind.SONG, name = "song_1 (2).cho")])
-    }
-
-    @Test
     fun `a file that cannot be written is named in the summary and the others still move`() = runTest {
         val local = FakeLibraryFileLocalSource(onWrite = { key -> if (key == song(2)) throw LibraryStorageException("Full") })
         val provider = FakeSyncProvider(files = librarySongs(3))
 
-        val result = SyncEngine(local, LibraryFileLock(), NoSetlistComparison).synchronize(
-            provider = provider,
-            document = SyncIndexDocument(),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.ASK,
-        )
+        val result = synchronize(local, provider, SyncIndexDocument())
 
         val completed = assertIs<SyncEngine.Result.Completed>(result)
         assertEquals(listOf("song_2.cho"), completed.summary.failed)
@@ -772,15 +105,7 @@ class SyncEngineTest {
             }
         }
 
-        val result = SyncEngine(local, LibraryFileLock(), NoSetlistComparison).synchronize(
-            provider = provider,
-            document = SyncIndexDocument(),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.ASK,
-        )
+        val result = synchronize(local, provider, SyncIndexDocument())
 
         assertTrue(!isContested)
         assertEquals(1, assertIs<SyncEngine.Result.Completed>(result).summary.failed.size)
@@ -796,15 +121,7 @@ class SyncEngineTest {
             if (key == song(1)) provider.files[key] = provider.files.getValue(key).first to "r${100 + ++contestedUploads}"
         }
 
-        val result = SyncEngine(local, LibraryFileLock(), NoSetlistComparison).synchronize(
-            provider = provider,
-            document = syncedIndexOf(mapOf(song(1) to ORIGINAL)),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.ASK,
-        )
+        val result = synchronize(local, provider, syncedIndexOf(mapOf(song(1) to ORIGINAL)))
 
         assertEquals(2, contestedUploads)
         assertEquals(listOf(song(1).name), assertIs<SyncEngine.Result.Completed>(result).summary.failed)
@@ -818,142 +135,8 @@ class SyncEngineTest {
         provider.onUpload = { throw SyncRemoteStorageFullException("Full") }
 
         assertFailsWith<SyncRemoteStorageFullException> {
-            SyncEngine(local, LibraryFileLock(), NoSetlistComparison).synchronize(
-                provider = provider,
-                document = SyncIndexDocument(),
-                accountId = ACCOUNT_ID,
-                onProgress = {},
-                onIndexChanged = {},
-                onLocalFileChanged = {},
-                deletionPolicy = SyncDeletionPolicy.ASK,
-            )
+            synchronize(local, provider, SyncIndexDocument())
         }
-    }
-
-    @Test
-    fun `a local name another one shadows on a service that ignores case is reported instead of retried`() = runTest {
-        val lower = "Lower".encodeToByteArray()
-        val local = FakeLibraryFileLocalSource(files = mapOf(song("Song") to "Upper".encodeToByteArray(), song("song") to lower))
-        val provider = FakeSyncProvider(files = mapOf(song("song") to lower), ignoresCase = true)
-
-        val result = SyncEngine(local, LibraryFileLock(), NoSetlistComparison).synchronize(
-            provider = provider,
-            // In step at the revision the fake holds it at, so the only thing left to do is the other spelling.
-            document = SyncIndexDocument(
-                accountId = ACCOUNT_ID,
-                entries = mapOf(
-                    song("song").path to SyncIndexDocument.Entry(localHash = localContentHash(lower), remoteRevision = "r1"),
-                ),
-            ),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.ASK,
-        )
-
-        assertEquals(listOf("Song.cho"), assertIs<SyncEngine.Result.Completed>(result).summary.failed)
-        assertEquals(1, provider.listCount)
-        assertEquals(1, provider.files.size)
-    }
-
-    @Test
-    fun `a song renamed by case keeps its index entry under the new spelling`() = runTest {
-        val local = FakeLibraryFileLocalSource(files = mapOf(song("hallelujah") to ORIGINAL))
-        val provider = FakeSyncProvider(files = mapOf(song("Hallelujah") to ORIGINAL), ignoresCase = true)
-
-        val result = SyncEngine(local, LibraryFileLock(), NoSetlistComparison).synchronize(
-            provider = provider,
-            document = renamedIndexOf(song("Hallelujah") to ORIGINAL, revision = "r1"),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.ASK,
-        )
-
-        val completed = assertIs<SyncEngine.Result.Completed>(result)
-        assertEquals(setOf(song("hallelujah").path), completed.index.entries.keys)
-        assertFalse(completed.summary.hasChanges)
-        assertTrue(song("Hallelujah") in provider.files)
-    }
-
-    @Test
-    fun `deleting a song renamed by case deletes it remotely`() = runTest {
-        val local = FakeLibraryFileLocalSource()
-        val provider = FakeSyncProvider(files = mapOf(song("Hallelujah") to ORIGINAL), ignoresCase = true)
-
-        SyncEngine(local, LibraryFileLock(), NoSetlistComparison).synchronize(
-            provider = provider,
-            document = renamedIndexOf(song("hallelujah") to ORIGINAL, revision = "r1"),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            // The one song is the whole library, which an ordinary run asks about before emptying the folder.
-            deletionPolicy = SyncDeletionPolicy.DELETE_REMOTELY,
-        )
-
-        assertTrue(provider.files.isEmpty())
-        assertTrue(local.files.isEmpty())
-    }
-
-    @Test
-    fun `an edit made elsewhere to a song renamed by case is downloaded rather than taken for a conflict`() = runTest {
-        val local = FakeLibraryFileLocalSource(files = mapOf(song("hallelujah") to ORIGINAL))
-        val provider = FakeSyncProvider(files = mapOf(song("Hallelujah") to THERE), ignoresCase = true)
-
-        val result = SyncEngine(local, LibraryFileLock(), NoSetlistComparison).synchronize(
-            provider = provider,
-            document = renamedIndexOf(song("Hallelujah") to ORIGINAL, revision = "r0"),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.ASK,
-        )
-
-        assertEquals(setOf(song("hallelujah")), local.files.keys)
-        assertContentEquals(THERE, local.files.getValue(song("hallelujah")))
-        assertTrue(assertIs<SyncEngine.Result.Completed>(result).summary.conflicts.isEmpty())
-    }
-
-    @Test
-    fun `an index entry two listed names fold to is left where it is`() {
-        val index = mapOf(song("SONG") to SyncIndexEntry(localHash = "a", remoteRevision = "r1"))
-
-        assertEquals(index, foldIndexNamesOntoListings(index = index, listed = setOf(song("Song"), song("song"))))
-    }
-
-    @Test
-    fun `two index entries that fold to one listed name are left where they are`() {
-        val index = mapOf(
-            song("SONG") to SyncIndexEntry(localHash = "a", remoteRevision = "r1"),
-            song("Song") to SyncIndexEntry(localHash = "b", remoteRevision = "r2"),
-        )
-
-        assertEquals(index, foldIndexNamesOntoListings(index = index, listed = setOf(song("song"))))
-    }
-
-    @Test
-    fun `two local names that differ only by case both go up to a service with exact names`() = runTest {
-        val local = FakeLibraryFileLocalSource(
-            files = mapOf(song("Song") to "Upper".encodeToByteArray(), song("song") to "Lower".encodeToByteArray()),
-        )
-        val provider = FakeSyncProvider()
-
-        val result = SyncEngine(local, LibraryFileLock(), NoSetlistComparison).synchronize(
-            provider = provider,
-            document = SyncIndexDocument(),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.ASK,
-        )
-
-        assertTrue(assertIs<SyncEngine.Result.Completed>(result).summary.failed.isEmpty())
-        assertEquals(setOf(song("Song"), song("song")), provider.files.keys)
     }
 
     @Test
@@ -962,18 +145,38 @@ class SyncEngineTest {
         val provider = FakeSyncProvider()
         val account = SyncAccount(SyncProviderId.DROPBOX, id = "dbid:1", displayName = "Someone", email = "someone@example.com")
 
-        SyncEngine(local, LibraryFileLock(), NoSetlistComparison).synchronize(
+        synchronize(
+            local = local,
             provider = provider,
             document = indexOf(song(1) to ORIGINAL).adoptedBy(account),
             accountId = account.indexKey(),
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
             deletionPolicy = SyncDeletionPolicy.DELETE_LOCALLY,
         )
 
         assertTrue(local.files.isEmpty())
         assertTrue(provider.files.isEmpty())
+    }
+
+    @Test
+    fun `an index written for another account is disregarded, files and synced preferences alike`() = runTest {
+        val library = librarySongs(3)
+        val local = FakeLibraryFileLocalSource(files = library)
+        val provider = FakeSyncProvider()
+        val document = syncedIndexOf(library).copy(
+            accountId = "dropbox:someone-else",
+            syncedPreferences = JsonObject(mapOf("version" to JsonPrimitive(1))),
+        )
+
+        // Deleting here allowed, so that the guard is not what keeps the other account's index from emptying the library.
+        val result = synchronize(local, provider, document, deletionPolicy = SyncDeletionPolicy.DELETE_LOCALLY)
+
+        val completed = assertIs<SyncEngine.Result.Completed>(result)
+        assertEquals(3, completed.summary.uploaded)
+        assertEquals(0, completed.summary.deletedLocally)
+        assertEquals(library.keys, local.files.keys)
+        assertEquals(library.keys, provider.files.keys)
+        assertEquals(ACCOUNT_ID, completed.index.accountId)
+        assertNull(completed.index.syncedPreferences)
     }
 
     @Test
@@ -981,731 +184,21 @@ class SyncEngineTest {
         val local = FakeLibraryFileLocalSource(files = (1..200).associate { song(it) to "Song $it".encodeToByteArray() })
         val provider = FakeSyncProvider()
 
-        val result = SyncEngine(local, LibraryFileLock(), NoSetlistComparison).synchronize(
-            provider = provider,
-            document = SyncIndexDocument(),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.ASK,
-        )
+        val result = synchronize(local, provider, SyncIndexDocument())
 
         assertEquals(200, assertIs<SyncEngine.Result.Completed>(result).summary.uploaded)
         assertEquals(local.files.keys, provider.files.keys)
     }
 
     @Test
-    fun `a remote name that differs from a local one only by case takes the local spelling`() = assertEquals(
-        expected = listOf(RemoteFileState(song("Song"), revision = "r1", contentHash = null)),
-        actual = foldRemoteNamesOntoLocal(
-            local = listOf(LocalFileState(song("Song"), hash = "a")),
-            remote = listOf(RemoteFileState(song("song"), revision = "r1", contentHash = null)),
-        ),
-    )
-
-    @Test
-    fun `a remote name with an exact local match is left as it is`() = assertEquals(
-        expected = listOf(
-            RemoteFileState(song("Song"), revision = "r1", contentHash = null),
-            RemoteFileState(song("song"), revision = "r2", contentHash = null),
-        ),
-        actual = foldRemoteNamesOntoLocal(
-            local = listOf(LocalFileState(song("Song"), hash = "a"), LocalFileState(song("song"), hash = "b")),
-            remote = listOf(
-                RemoteFileState(song("Song"), revision = "r1", contentHash = null),
-                RemoteFileState(song("song"), revision = "r2", contentHash = null),
-            ),
-        ),
-    )
-
-    @Test
-    fun `names are only folded within the same kind`() = assertEquals(
-        expected = listOf(RemoteFileState(SyncKey(LibraryFileKind.SETLIST, "song.cho"), revision = "r1", contentHash = null)),
-        actual = foldRemoteNamesOntoLocal(
-            local = listOf(LocalFileState(song("Song"), hash = "a")),
-            remote = listOf(RemoteFileState(SyncKey(LibraryFileKind.SETLIST, "song.cho"), revision = "r1", contentHash = null)),
-        ),
-    )
-
-    @Test
-    fun `a file whose remote name differs only by case is not uploaded as a new one`() = runTest {
-        val bytes = "Song".encodeToByteArray()
-        val local = FakeLibraryFileLocalSource(files = mapOf(song("Song") to bytes))
-        val provider = FakeSyncProvider(files = mapOf(song("song") to bytes))
-
-        val result = SyncEngine(local, LibraryFileLock(), NoSetlistComparison).synchronize(
-            provider = provider,
-            document = SyncIndexDocument(),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.ASK,
-        )
-
-        assertEquals(setOf(song("Song").path), assertIs<SyncEngine.Result.Completed>(result).index.entries.keys)
-        assertEquals(setOf(song("Song")), local.files.keys)
-    }
-
-    @Test
-    fun `a remote file this device cannot store is left alone and named once`() = runTest {
-        val local = FakeLibraryFileLocalSource(canHoldFileName = { '?' !in it })
-        val provider = FakeSyncProvider(files = mapOf(song("ok") to ORIGINAL, song("who?") to ORIGINAL))
-
-        val result = SyncEngine(local, LibraryFileLock(), NoSetlistComparison).synchronize(
-            provider = provider,
-            document = SyncIndexDocument(),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.ASK,
-        )
-
-        val completed = assertIs<SyncEngine.Result.Completed>(result)
-        assertEquals(setOf(song("ok")), local.files.keys)
-        assertEquals(setOf(song("ok"), song("who?")), provider.files.keys)
-        assertEquals(listOf(song("who?").name), completed.summary.failed)
-        assertEquals(setOf(song("ok").path), completed.index.entries.keys)
-    }
-
-    @Test
-    fun `a remote file this device cannot store is not taken for a deletion`() = runTest {
-        val local = FakeLibraryFileLocalSource(files = mapOf(song("ok") to ORIGINAL), canHoldFileName = { '?' !in it })
-        val provider = FakeSyncProvider(files = mapOf(song("ok") to ORIGINAL, song("who?") to ORIGINAL))
-
-        val result = SyncEngine(local, LibraryFileLock(), NoSetlistComparison).synchronize(
-            provider = provider,
-            document = syncedIndexOf(mapOf(song("ok") to ORIGINAL, song("who?") to ORIGINAL)),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.ASK,
-        )
-
-        val completed = assertIs<SyncEngine.Result.Completed>(result)
-        assertTrue(song("who?") in provider.files)
-        assertEquals(setOf(song("ok").path), completed.index.entries.keys)
-    }
-
-    @Test
-    fun `a name this device cannot store is not folded onto a local one`() = runTest {
-        val local = FakeLibraryFileLocalSource(files = mapOf(song("who") to ORIGINAL), canHoldFileName = { '?' !in it })
-        val provider = FakeSyncProvider(files = mapOf(song("who?") to THERE))
-
-        val result = SyncEngine(local, LibraryFileLock(), NoSetlistComparison).synchronize(
-            provider = provider,
-            document = SyncIndexDocument(),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.ASK,
-        )
-
-        assertEquals(1, assertIs<SyncEngine.Result.Completed>(result).summary.uploaded)
-        assertContentEquals(THERE, provider.files.getValue(song("who?")).first)
-        assertContentEquals(ORIGINAL, provider.files.getValue(song("who")).first)
-        assertEquals(setOf(song("who")), local.files.keys)
-    }
-
-    @Test
-    fun `a device that can store every name reports no failures`() = runTest {
-        val local = FakeLibraryFileLocalSource()
-        val provider = FakeSyncProvider(files = mapOf(song("ok") to ORIGINAL, song("who?") to ORIGINAL))
-
-        val result = SyncEngine(local, LibraryFileLock(), NoSetlistComparison).synchronize(
-            provider = provider,
-            document = SyncIndexDocument(),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.ASK,
-        )
-
-        assertTrue(assertIs<SyncEngine.Result.Completed>(result).summary.failed.isEmpty())
-        assertEquals(setOf(song("ok"), song("who?")), local.files.keys)
-    }
-
-    @Test
-    fun `a file whose remote name differs only by Unicode form is not uploaded as a new one`() = runTest {
-        val local = FakeLibraryFileLocalSource(files = mapOf(song(COMPOSED) to ORIGINAL))
-        val provider = FakeSyncProvider(files = mapOf(song(DECOMPOSED) to ORIGINAL))
-
-        val result = SyncEngine(local, LibraryFileLock(), NoSetlistComparison).synchronize(
-            provider = provider,
-            document = SyncIndexDocument(),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.ASK,
-        )
-
-        assertEquals(setOf(song(COMPOSED).path), assertIs<SyncEngine.Result.Completed>(result).index.entries.keys)
-        assertEquals(setOf(song(COMPOSED)), local.files.keys)
-        assertEquals(1, provider.files.size)
-    }
-
-    @Test
-    fun `an index entry follows a name across a change of Unicode form`() = runTest {
-        val local = FakeLibraryFileLocalSource(files = mapOf(song(COMPOSED) to ORIGINAL))
-        val provider = FakeSyncProvider(files = mapOf(song(COMPOSED) to ORIGINAL))
-
-        val result = SyncEngine(local, LibraryFileLock(), NoSetlistComparison).synchronize(
-            provider = provider,
-            document = renamedIndexOf(song(DECOMPOSED) to ORIGINAL, revision = "r1"),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.ASK,
-        )
-
-        val completed = assertIs<SyncEngine.Result.Completed>(result)
-        assertFalse(completed.summary.hasChanges)
-        assertEquals(setOf(song(COMPOSED).path), completed.index.entries.keys)
-        assertEquals(setOf(song(COMPOSED)), local.files.keys)
-        assertEquals(setOf(song(COMPOSED)), provider.files.keys)
-    }
-
-    @Test
-    fun `a run that would delete the whole library stops and asks before anything moves`() = runTest {
-        val library = librarySongs(10)
-        val local = FakeLibraryFileLocalSource(files = library)
-
-        val result = SyncEngine(local, LibraryFileLock(), NoSetlistComparison).synchronize(
-            provider = FakeSyncProvider(),
-            document = indexOf(*library.toList().toTypedArray()),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.ASK,
-        )
-
-        assertEquals(
-            SyncEngine.Result.DeletionsNeedConfirmation(count = 10, total = 10, direction = SyncDeletionDirection.LOCAL),
-            result,
-        )
-        assertEquals(library.keys, local.files.keys)
-    }
-
-    @Test
-    fun `keeping the files a run asked about uploads them again`() = runTest {
-        val library = librarySongs(10)
-        val local = FakeLibraryFileLocalSource(files = library)
-        val provider = FakeSyncProvider()
-
-        val result = SyncEngine(local, LibraryFileLock(), NoSetlistComparison).synchronize(
-            provider = provider,
-            document = indexOf(*library.toList().toTypedArray()),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.KEEP_AND_UPLOAD,
-        )
-
-        assertEquals(10, assertIs<SyncEngine.Result.Completed>(result).summary.uploaded)
-        assertEquals(library.keys, local.files.keys)
-        assertEquals(library.keys, provider.files.keys)
-    }
-
-    @Test
-    fun `keeping the files a run asked about forgets their synced preferences`() = runTest {
-        val library = librarySongs(10)
-        val local = FakeLibraryFileLocalSource(files = library)
-        val songs = (library.keys.map { it.name } + "elsewhere.cho").associateWith { JsonObject(mapOf("capo" to JsonPrimitive(2))) }
-
-        val result = SyncEngine(local, LibraryFileLock(), NoSetlistComparison).synchronize(
-            provider = FakeSyncProvider(),
-            document = indexOf(*library.toList().toTypedArray()).copy(
-                syncedPreferences = JsonObject(mapOf("version" to JsonPrimitive(1), "songs" to JsonObject(songs))),
-            ),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.KEEP_AND_UPLOAD,
-        )
-
-        val synced = assertIs<SyncEngine.Result.Completed>(result).index.syncedPreferences
-        assertEquals(setOf("elsewhere.cho"), (synced?.get("songs") as? JsonObject)?.keys)
-    }
-
-    @Test
-    fun `deleting the files a run asked about deletes them`() = runTest {
-        val library = librarySongs(10)
-        val local = FakeLibraryFileLocalSource(files = library)
-
-        val result = SyncEngine(local, LibraryFileLock(), NoSetlistComparison).synchronize(
-            provider = FakeSyncProvider(),
-            document = indexOf(*library.toList().toTypedArray()),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.DELETE_LOCALLY,
-        )
-
-        assertEquals(10, assertIs<SyncEngine.Result.Completed>(result).summary.deletedLocally)
-        assertTrue(local.files.isEmpty())
-    }
-
-    @Test
-    fun `a run that would empty the cloud folder stops and asks before anything moves`() = runTest {
-        val library = librarySongs(10)
-        val provider = FakeSyncProvider(files = library)
-
-        val result = SyncEngine(FakeLibraryFileLocalSource(files = emptyMap()), LibraryFileLock(), NoSetlistComparison).synchronize(
-            provider = provider,
-            document = syncedIndexOf(library),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.ASK,
-        )
-
-        assertEquals(
-            SyncEngine.Result.DeletionsNeedConfirmation(count = 10, total = 10, direction = SyncDeletionDirection.REMOTE),
-            result,
-        )
-        assertEquals(library.keys, provider.files.keys)
-    }
-
-    @Test
-    fun `a small library that vanished from this device stops and asks`() = runTest {
-        val library = librarySongs(5)
-        // Two of the five are gone from the folder as well, so only three would be deleted from it: fewer than the
-        // proportional rule asks about, and not the whole index either.
-        val provider = FakeSyncProvider(files = library.filterKeys { it != song(1) && it != song(2) })
-
-        val result = SyncEngine(FakeLibraryFileLocalSource(files = emptyMap()), LibraryFileLock(), NoSetlistComparison).synchronize(
-            provider = provider,
-            document = syncedIndexOf(library),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.ASK,
-        )
-
-        assertEquals(
-            SyncEngine.Result.DeletionsNeedConfirmation(count = 3, total = 5, direction = SyncDeletionDirection.REMOTE),
-            result,
-        )
-        assertEquals(3, provider.files.size)
-    }
-
-    @Test
-    fun `deleting the files a run asked about removes them from the cloud folder`() = runTest {
-        val library = librarySongs(10)
-        val provider = FakeSyncProvider(files = library)
-
-        val result = SyncEngine(FakeLibraryFileLocalSource(files = emptyMap()), LibraryFileLock(), NoSetlistComparison).synchronize(
-            provider = provider,
-            document = syncedIndexOf(library),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.DELETE_REMOTELY,
-        )
-
-        assertEquals(10, assertIs<SyncEngine.Result.Completed>(result).summary.deletedRemotely)
-        assertTrue(provider.files.isEmpty())
-        // One request, so that another device listing the folder meanwhile does not see the deletion half done.
-        assertEquals(listOf(10), provider.deleteCalls.map { it.size })
-    }
-
-    @Test
-    fun `a remote deletion the service refuses fails that file and keeps it in the index`() = runTest {
-        val library = librarySongs(10)
-        val provider = FakeSyncProvider(files = library).apply { refusedDeletions = setOf(library.keys.first().name) }
-
-        val result = SyncEngine(FakeLibraryFileLocalSource(files = emptyMap()), LibraryFileLock(), NoSetlistComparison).synchronize(
-            provider = provider,
-            document = syncedIndexOf(library),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.DELETE_REMOTELY,
-        )
-
-        val completed = assertIs<SyncEngine.Result.Completed>(result)
-        assertEquals(9, completed.summary.deletedRemotely)
-        assertEquals(listOf(library.keys.first().name), completed.summary.failed)
-        assertEquals(setOf(library.keys.first()), provider.files.keys)
-        assertEquals(setOf(library.keys.first().path), completed.index.entries.keys)
-    }
-
-    @Test
-    fun `keeping the files a run asked about downloads them again`() = runTest {
-        val library = librarySongs(10)
-        val local = FakeLibraryFileLocalSource(files = emptyMap())
-        val provider = FakeSyncProvider(files = library)
-
-        val result = SyncEngine(local, LibraryFileLock(), NoSetlistComparison).synchronize(
-            provider = provider,
-            document = syncedIndexOf(library),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.KEEP_AND_DOWNLOAD,
-        )
-
-        assertEquals(10, assertIs<SyncEngine.Result.Completed>(result).summary.downloaded)
-        assertEquals(library.keys, local.files.keys)
-        assertEquals(library.keys, provider.files.keys)
-    }
-
-    @Test
-    fun `answering about this device does not let a run empty the cloud folder`() = runTest {
-        val library = librarySongs(10)
-        val provider = FakeSyncProvider(files = library)
-
-        val result = SyncEngine(FakeLibraryFileLocalSource(files = emptyMap()), LibraryFileLock(), NoSetlistComparison).synchronize(
-            provider = provider,
-            document = syncedIndexOf(library),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.DELETE_LOCALLY,
-        )
-
-        assertEquals(SyncDeletionDirection.REMOTE, assertIs<SyncEngine.Result.DeletionsNeedConfirmation>(result).direction)
-        assertEquals(library.keys, provider.files.keys)
-    }
-
-    @Test
-    fun `answering about the cloud folder does not let a run empty this device`() = runTest {
-        val library = librarySongs(10)
-        val local = FakeLibraryFileLocalSource(files = library)
-
-        val result = SyncEngine(local, LibraryFileLock(), NoSetlistComparison).synchronize(
-            provider = FakeSyncProvider(),
-            document = indexOf(*library.toList().toTypedArray()),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.DELETE_REMOTELY,
-        )
-
-        assertEquals(SyncDeletionDirection.LOCAL, assertIs<SyncEngine.Result.DeletionsNeedConfirmation>(result).direction)
-        assertEquals(library.keys, local.files.keys)
-    }
-
-    @Test
-    fun `a run with no index never asks`() = runTest {
-        val result = SyncEngine(FakeLibraryFileLocalSource(files = emptyMap()), LibraryFileLock(), NoSetlistComparison).synchronize(
-            provider = FakeSyncProvider(),
-            document = SyncIndexDocument(),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.ASK,
-        )
-
-        assertIs<SyncEngine.Result.Completed>(result)
-    }
-
-    @Test
-    fun `a run that deletes a few files out of many does not ask`() = runTest {
-        val library = librarySongs(10)
-        val local = FakeLibraryFileLocalSource(files = library)
-        val provider = FakeSyncProvider(files = library.filterKeys { it != song(1) && it != song(2) })
-
-        val result = SyncEngine(local, LibraryFileLock(), NoSetlistComparison).synchronize(
-            provider = provider,
-            document = indexOf(*library.toList().toTypedArray()).let { document ->
-                // In step with the fake's starting revision, so that only the two missing files make a plan.
-                document.copy(entries = document.entries.mapValues { (_, entry) -> entry.copy(remoteRevision = "r1") })
-            },
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.ASK,
-        )
-
-        assertEquals(2, assertIs<SyncEngine.Result.Completed>(result).summary.deletedLocally)
-        assertEquals(8, local.files.size)
-    }
-
-    /** A phone restored from a backup, which carries the library but not the index, signing in again. */
-    @Test
-    fun `with no index a file that is the same on both sides moves nothing`() = runTest {
-        val library = librarySongs(1)
-        val local = FakeLibraryFileLocalSource(files = library)
-        var uploads = 0
-        val provider = FakeSyncProvider(files = library, onUpload = { uploads++ })
-
-        val completed = assertIs<SyncEngine.Result.Completed>(synchronize(local, provider, SyncIndexDocument()))
-
-        assertFalse(completed.summary.hasChanges)
-        assertEquals(0, uploads)
-        assertNull(provider.downloadCounts[song(1)])
-        assertEquals(setOf(song(1).path), completed.index.entries.keys)
-    }
-
-    @Test
-    fun `a conflict copy is not given a name the cloud folder already holds`() = runTest {
-        val another = "Another song".encodeToByteArray()
-        val local = FakeLibraryFileLocalSource(files = mapOf(song("x") to HERE))
-        val provider = FakeSyncProvider(files = mapOf(song("x") to THERE, song("x (2)") to another))
-
-        val completed = assertIs<SyncEngine.Result.Completed>(synchronize(local, provider, indexOf(song("x") to ORIGINAL)))
-
-        assertEquals(listOf("x (3).cho"), completed.summary.conflicts)
-        assertContentEquals(HERE, local.files.getValue(song("x")))
-        assertContentEquals(another, local.files.getValue(song("x (2)")))
-        assertContentEquals(THERE, local.files.getValue(song("x (3)")))
-        assertContentEquals(HERE, provider.files.getValue(song("x")).first)
-        assertContentEquals(another, provider.files.getValue(song("x (2)")).first)
-        assertEquals("r1", provider.files.getValue(song("x (2)")).second)
-        assertContentEquals(THERE, provider.files.getValue(song("x (3)")).first)
-    }
-
-    @Test
-    fun `a file that is there but cannot be read is named and neither deleted nor overwritten`() = runTest {
-        val library = librarySongs(3)
-        val local = FakeLibraryFileLocalSource(
-            files = library,
-            onRead = { key -> if (key == song(2)) throw LibraryStorageException("Locked") },
-        )
-        val provider = FakeSyncProvider(files = library)
-        val edit = "Three, edited".encodeToByteArray()
-        provider.files[song(3)] = edit to "r5"
-
-        val logger = RecordingLogger()
-
-        val completed = assertIs<SyncEngine.Result.Completed>(synchronize(local, provider, syncedIndexOf(library), logger))
-
-        assertEquals(listOf("song_2.cho"), completed.summary.failed)
-        assertTrue(logger.lines.any { song(2).path in it })
-        assertContentEquals(library.getValue(song(2)), provider.files.getValue(song(2)).first)
-        assertContentEquals(edit, local.files.getValue(song(3)))
-        assertNull(provider.downloadCounts[song(2)])
-        assertTrue(song(2).path in completed.index.entries)
-    }
-
-    @Test
-    fun `a remote edit to a file that cannot be read here is not downloaded over it`() = runTest {
-        val library = librarySongs(3)
-        val local = FakeLibraryFileLocalSource(
-            files = library,
-            onRead = { key -> if (key == song(1)) throw LibraryStorageException("Locked") },
-        )
-        val provider = FakeSyncProvider(files = library)
-        provider.files[song(1)] = "One, edited".encodeToByteArray() to "r5"
-
-        val completed = assertIs<SyncEngine.Result.Completed>(synchronize(local, provider, syncedIndexOf(library)))
-
-        assertNull(provider.downloadCounts[song(1)])
-        assertContentEquals(library.getValue(song(1)), local.files.getValue(song(1)))
-        assertTrue("song_1.cho" in completed.summary.failed)
-    }
-
-    @Test
-    fun `a library of which no file can be read ends the run as a storage failure`() = runTest {
-        val library = librarySongs(3)
-        val local = FakeLibraryFileLocalSource(files = library, onRead = { throw LibraryStorageException("Locked") })
-        val provider = FakeSyncProvider(files = library)
-
-        assertFailsWith<LibraryStorageException> { synchronize(local, provider, syncedIndexOf(library)) }
-
-        assertEquals(library.keys, provider.files.keys)
-    }
-
-    @Test
-    fun `a file that cannot be read is not taken for a deletion when the index knows it`() = runTest {
-        val library = librarySongs(3)
-        val local = FakeLibraryFileLocalSource(
-            files = library,
-            onRead = { key -> if (key == song(1)) throw LibraryStorageException("Locked") },
-        )
-        val provider = FakeSyncProvider(files = library)
-
-        synchronize(local, provider, syncedIndexOf(library))
-
-        assertTrue(song(1) in provider.files)
-        assertTrue(provider.deleteCalls.isEmpty())
-    }
-
-    @Test
-    fun `a remote file that is not a library file is left where it is`() = runTest {
-        val libraryFile = song(1)
-        val foreignFile = foreign("wonderwall.pdf")
-        val provider = FakeSyncProvider(
-            files = mapOf(
-                libraryFile to "Song".encodeToByteArray(),
-                foreignFile to "PDF".encodeToByteArray(),
-            ),
-        )
-        val local = FakeLibraryFileLocalSource()
-
-        val result = SyncEngine(local, LibraryFileLock(), NoSetlistComparison).synchronize(
-            provider = provider,
-            document = SyncIndexDocument(),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.ASK,
-        )
-
-        val completed = assertIs<SyncEngine.Result.Completed>(result)
-        assertEquals(setOf(libraryFile), local.files.keys)
-        assertEquals(setOf(libraryFile, foreignFile), provider.files.keys)
-        assertEquals(setOf(libraryFile.path), completed.index.entries.keys)
-        assertEquals(1, completed.summary.downloaded)
-    }
-
-    @Test
-    fun `a foreign file an earlier run indexed is forgotten rather than deleted remotely`() = runTest {
-        val key = foreign("wonderwall.pdf")
-        val bytes = "PDF".encodeToByteArray()
-        val provider = FakeSyncProvider(files = mapOf(key to bytes))
-
-        val result = SyncEngine(FakeLibraryFileLocalSource(), LibraryFileLock(), NoSetlistComparison).synchronize(
-            provider = provider,
-            document = indexOf(key to bytes).let { document ->
-                document.copy(entries = document.entries.mapValues { (_, entry) -> entry.copy(remoteRevision = "r1") })
-            },
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.ASK,
-        )
-
-        val completed = assertIs<SyncEngine.Result.Completed>(result)
-        assertEquals(setOf(key), provider.files.keys)
-        assertEquals(0, completed.summary.deletedRemotely)
-        assertTrue(completed.index.entries.isEmpty())
-    }
-
-    @Test
-    fun `the local copy of a foreign file an earlier run downloaded is removed while the remote one is still there`() = runTest {
-        val key = foreign("wonderwall.pdf")
-        val bytes = "PDF".encodeToByteArray()
-        val local = FakeLibraryFileLocalSource(files = mapOf(key to bytes))
-        val provider = FakeSyncProvider(files = mapOf(key to bytes))
-
-        SyncEngine(local, LibraryFileLock(), NoSetlistComparison).synchronize(
-            provider = provider,
-            document = indexOf(key to bytes).let { document ->
-                document.copy(entries = document.entries.mapValues { (_, entry) -> entry.copy(remoteRevision = "r1") })
-            },
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.ASK,
-        )
-
-        assertTrue(key !in local.files)
-        assertEquals(setOf(key), provider.files.keys)
-    }
-
-    @Test
-    fun `a changed local copy of a foreign file an earlier run downloaded is kept`() = runTest {
-        val key = foreign("wonderwall.pdf")
-        val indexed = "PDF".encodeToByteArray()
-        val changed = "Changed".encodeToByteArray()
-        val local = FakeLibraryFileLocalSource(files = mapOf(key to changed))
-        val provider = FakeSyncProvider(files = mapOf(key to indexed))
-
-        SyncEngine(local, LibraryFileLock(), NoSetlistComparison).synchronize(
-            provider = provider,
-            document = indexOf(key to indexed).let { document ->
-                document.copy(entries = document.entries.mapValues { (_, entry) -> entry.copy(remoteRevision = "r1") })
-            },
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.ASK,
-        )
-
-        assertContentEquals(changed, local.files[key])
-        assertEquals(setOf(key), provider.files.keys)
-    }
-
-    @Test
-    fun `a remote file too large to be a song is not downloaded`() = runTest {
-        val provider = FakeSyncProvider(
-            files = mapOf(
-                song(1) to "One".encodeToByteArray(),
-                song(2) to "Two".encodeToByteArray(),
-            ),
-            sizes = mapOf(song(2) to (9L shl 20)),
-            onDownload = { if (it == song(2)) fail("Downloaded") },
-        )
-        val local = FakeLibraryFileLocalSource()
-
-        val result = SyncEngine(local, LibraryFileLock(), NoSetlistComparison).synchronize(
-            provider = provider,
-            document = SyncIndexDocument(),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.ASK,
-        )
-
-        val completed = assertIs<SyncEngine.Result.Completed>(result)
-        assertEquals(setOf(song(1)), local.files.keys)
-        assertEquals(setOf(song(1).path), completed.index.entries.keys)
-        assertEquals(setOf(song(1), song(2)), provider.files.keys)
-        assertEquals(1, completed.summary.downloaded)
-    }
-
-    @Test
-    fun `a remote file that grew too large does not take the local one with it`() = runTest {
-        val original = "Original".encodeToByteArray()
-        val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to original))
-        val provider = FakeSyncProvider(
-            files = mapOf(song(1) to "Changed remotely".encodeToByteArray()),
-            sizes = mapOf(song(1) to (9L shl 20)),
-        )
-        val document = indexOf(song(1) to original)
-
-        val result = SyncEngine(local, LibraryFileLock(), NoSetlistComparison).synchronize(
-            provider = provider,
-            document = document,
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = {},
-            deletionPolicy = SyncDeletionPolicy.ASK,
-        )
-
-        val completed = assertIs<SyncEngine.Result.Completed>(result)
-        assertContentEquals(original, local.files[song(1)])
-        assertEquals(0, completed.summary.deletedLocally)
-        assertEquals(document.entries, completed.index.entries)
-    }
-
-    @Test
     fun `a download reports the file it wrote`() = runTest {
         val changed = mutableSetOf<SyncKey>()
 
-        reportingSynchronize(
+        synchronize(
             local = FakeLibraryFileLocalSource(),
             provider = FakeSyncProvider(files = mapOf(song(1) to THERE)),
             document = SyncIndexDocument(),
-            changed = changed,
+            onLocalFileChanged = { changed += it },
         )
 
         assertEquals(setOf(song(1)), changed)
@@ -1715,11 +208,11 @@ class SyncEngineTest {
     fun `a local deletion reports the file it deleted`() = runTest {
         val changed = mutableSetOf<SyncKey>()
 
-        reportingSynchronize(
+        synchronize(
             local = FakeLibraryFileLocalSource(files = mapOf(song(1) to ORIGINAL)),
             provider = FakeSyncProvider(),
             document = indexOf(song(1) to ORIGINAL),
-            changed = changed,
+            onLocalFileChanged = { changed += it },
             deletionPolicy = SyncDeletionPolicy.DELETE_LOCALLY,
         )
 
@@ -1730,11 +223,11 @@ class SyncEngineTest {
     fun `a conflict reports the copy it wrote`() = runTest {
         val changed = mutableSetOf<SyncKey>()
 
-        reportingSynchronize(
+        synchronize(
             local = FakeLibraryFileLocalSource(files = mapOf(song(1) to HERE)),
             provider = FakeSyncProvider(files = mapOf(song(1) to THERE)),
             document = indexOf(song(1) to ORIGINAL),
-            changed = changed,
+            onLocalFileChanged = { changed += it },
         )
 
         assertEquals(setOf(SyncKey(kind = LibraryFileKind.SONG, name = "song_1 (2).cho")), changed)
@@ -1747,15 +240,7 @@ class SyncEngineTest {
         provider.onUpload = { key -> if (key == song(1)) throw IllegalStateException("Refused") }
         val changed = mutableListOf<SyncKey>()
 
-        SyncEngine(local, LibraryFileLock(), NoSetlistComparison).synchronize(
-            provider = provider,
-            document = indexOf(song(1) to ORIGINAL),
-            accountId = ACCOUNT_ID,
-            onProgress = {},
-            onIndexChanged = {},
-            onLocalFileChanged = { changed += it },
-            deletionPolicy = SyncDeletionPolicy.ASK,
-        )
+        synchronize(local, provider, indexOf(song(1) to ORIGINAL), onLocalFileChanged = { changed += it })
 
         val copy = SyncKey(kind = LibraryFileKind.SONG, name = "song_1 (2).cho")
         assertEquals(listOf(copy, copy), changed)
@@ -1794,100 +279,5 @@ class SyncEngineTest {
         assertTrue(second.summary.conflicts.isEmpty())
         assertContentEquals(HERE, provider.files.getValue(song(1)).first)
         assertEquals(setOf(song(1)), local.files.keys)
-    }
-
-    private suspend fun reportingSynchronize(
-        local: FakeLibraryFileLocalSource,
-        provider: FakeSyncProvider,
-        document: SyncIndexDocument,
-        changed: MutableSet<SyncKey>,
-        deletionPolicy: SyncDeletionPolicy = SyncDeletionPolicy.ASK,
-    ) = SyncEngine(local, LibraryFileLock(), NoSetlistComparison).synchronize(
-        provider = provider,
-        document = document,
-        accountId = ACCOUNT_ID,
-        onProgress = {},
-        onIndexChanged = {},
-        onLocalFileChanged = { changed += it },
-        deletionPolicy = deletionPolicy,
-    )
-
-    /**
-     * A save the way the song and setlist repositories make one: under [lock], from what it checks the file against to
-     * its write, which goes straight into the map rather than through the hooks a test stands in the engine's own
-     * writes with. The repositories' half, that they take the lock at all, is tested in `SongRepositoryImplTest` and
-     * `SetlistRepositoryImplTest`.
-     */
-    private suspend fun saveUnderTheLock(lock: LibraryFileLock, local: FakeLibraryFileLocalSource, key: SyncKey, bytes: ByteArray) =
-        lock.withLock { local.files[key] = bytes }
-
-    private suspend fun synchronize(
-        local: FakeLibraryFileLocalSource,
-        provider: FakeSyncProvider,
-        document: SyncIndexDocument,
-        logger: Logger = Logger.Standard,
-    ) = SyncEngine(local, LibraryFileLock(), NoSetlistComparison, logger = logger).synchronize(
-        provider = provider,
-        document = document,
-        accountId = ACCOUNT_ID,
-        onProgress = {},
-        onIndexChanged = {},
-        onLocalFileChanged = {},
-        deletionPolicy = SyncDeletionPolicy.ASK,
-    )
-
-    private companion object {
-        const val ACCOUNT_ID = "dropbox:someone@example.com"
-
-        /** One name in the two Unicode forms the platforms hand out, composed as Android writes it and decomposed as macOS does. */
-        const val COMPOSED = "\u043C\u0430\u0439"
-        const val DECOMPOSED = "\u043C\u0430\u0438\u0306"
-
-        val ORIGINAL = "Original".encodeToByteArray()
-        val HERE = "Edited here".encodeToByteArray()
-        val THERE = "Edited there".encodeToByteArray()
-
-        val GIG = SyncKey(kind = LibraryFileKind.SETLIST, name = "gig.setlist.json")
-        val GIG_COPY = SyncKey(kind = LibraryFileKind.SETLIST, name = "gig (2).setlist.json")
-
-        fun song(number: Int) = song(name = "song_$number")
-
-        fun song(name: String) = SyncKey(kind = LibraryFileKind.SONG, name = "$name.cho")
-
-        fun foreign(name: String) = SyncKey(kind = LibraryFileKind.SONG, name = name)
-
-        /** A file one byte over what a run reads, put into the library from outside the app. */
-        fun tooLarge() = ByteArray((ImportLimits.MAX_TEXT_FILE_SIZE + 1).toInt())
-
-        fun librarySongs(count: Int) = (1..count).associate { song(it) to "Song $it".encodeToByteArray() }
-
-        /** An index that says the last run saw [files] with these contents, at the revision the fake starts from. */
-        /** One file in step with the fake's revision rather than [indexOf]'s, for the tests that rename it. */
-        fun renamedIndexOf(file: Pair<SyncKey, ByteArray>, revision: String) = SyncIndexDocument.of(
-            providerId = SyncProviderId.DROPBOX.id,
-            accountId = ACCOUNT_ID,
-            lastSyncedAt = 1,
-            syncedPreferences = null,
-            index = mapOf(file.first to SyncIndexEntry(localHash = localContentHash(file.second), remoteRevision = revision)),
-        )
-
-        /** An index that says the last run saw [files] as they are, on this device and at the revision the fake holds. */
-        fun syncedIndexOf(files: Map<SyncKey, ByteArray>) = SyncIndexDocument.of(
-            providerId = SyncProviderId.DROPBOX.id,
-            accountId = ACCOUNT_ID,
-            lastSyncedAt = 1,
-            syncedPreferences = null,
-            index = files.mapValues { (_, bytes) -> SyncIndexEntry(localHash = localContentHash(bytes), remoteRevision = "r1") },
-        )
-
-        fun indexOf(vararg files: Pair<SyncKey, ByteArray>) = SyncIndexDocument.of(
-            providerId = SyncProviderId.DROPBOX.id,
-            accountId = ACCOUNT_ID,
-            lastSyncedAt = 1,
-            syncedPreferences = null,
-            index = files.associate { (key, bytes) ->
-                key to SyncIndexEntry(localHash = localContentHash(bytes), remoteRevision = "r0")
-            },
-        )
     }
 }

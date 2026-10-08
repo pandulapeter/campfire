@@ -22,7 +22,7 @@ import kotlin.test.assertTrue
 class ImportReportSectionsTest {
 
     @Test
-    fun problemsComeBeforeWhatArrivedAndEmptyGroupsAreLeftOut() {
+    fun `problems come before what arrived and empty groups are left out`() {
         val sections = importReportSections(
             result = ImportResult(
                 importedSongFileNames = listOf("a.cho"),
@@ -40,7 +40,7 @@ class ImportReportSectionsTest {
     }
 
     @Test
-    fun songsAndSetlistsAreNamedAsTheLibraryNamesThem() {
+    fun `songs and setlists are named as the library names them`() {
         val sections = importReportSections(
             result = ImportResult(
                 importedSongFileNames = listOf("a.cho", "gone.cho"),
@@ -74,7 +74,7 @@ class ImportReportSectionsTest {
     }
 
     @Test
-    fun aDeletedOrRenamedLibraryFileIsFollowedAndWhatWasLeftOutIsNot() {
+    fun `a deleted or renamed library file is followed and what was left out is not`() {
         val result = ImportResult(
             importedSongFileNames = listOf("a.cho", "deleted.cho"),
             importedSetlistFileNames = listOf("deleted.setlist.json"),
@@ -102,7 +102,7 @@ class ImportReportSectionsTest {
     }
 
     @Test
-    fun aFileListedTwiceKeepsTwoRowsWithKeysOfTheirOwn() {
+    fun `a file listed twice keeps two rows with keys of their own`() {
         val rows = importReportSections(
             result = ImportResult(
                 importedSongFileNames = emptyList(),
@@ -118,7 +118,7 @@ class ImportReportSectionsTest {
     }
 
     @Test
-    fun aSearchKeepsTheRowsWhoseNameTitleOrArtistHoldsItAndDropsEmptiedSections() {
+    fun `a search keeps the rows whose name title or artist holds it and drops emptied sections`() {
         val sections = importReportSections(
             result = ImportResult(
                 importedSongFileNames = listOf("a.cho", "b.cho"),
@@ -136,7 +136,7 @@ class ImportReportSectionsTest {
     }
 
     @Test
-    fun aSearchIgnoresSpacesAndPunctuationTheWayTheLibrarySearchesDo() {
+    fun `a search ignores spaces and punctuation the way the library searches do`() {
         val sections = importReportSections(
             result = ImportResult(
                 importedSongFileNames = listOf("a.cho", "b.cho"),

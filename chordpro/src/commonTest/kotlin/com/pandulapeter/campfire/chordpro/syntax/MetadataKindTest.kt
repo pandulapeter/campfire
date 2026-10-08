@@ -9,39 +9,43 @@
  */
 package com.pandulapeter.campfire.chordpro.syntax
 
+import com.pandulapeter.campfire.chordpro.ChordProParser
+import com.pandulapeter.campfire.chordpro.edit.ChordProHeader
+import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class MetadataKindTest {
 
     @Test
-    fun `the header order is the order of the kinds`() {
-        assertEquals(
-            listOf(
-                "title", "subtitle", "artist", "composer", "lyricist", "album", "cover", "year", "key", "capo", "tempo", "time",
-                "duration", "tag", "language", "link",
-            ),
-            ChordProHeaderLayout.metadataOrder,
-        )
+    fun `a directive lands in the header between the kinds that come before and after it`() {
+        val header = "{title: T}\n{subtitle: S}\n{artist: A}\n{album: L}\n{key: G}\n{tempo: 90}\n{tag: slow}\n\nla"
+
+        assertEquals("{title: T}\n{subtitle: S}\n{artist: A}\n{album: L}\n{year: }\n{key: G}", header.insert("year").substringBefore("\n{tempo"))
+        assertEquals("{tempo: 90}\n{duration: }\n{tag: slow}", header.insert("duration").substringAfter("{key: G}\n").substringBefore("\n\n"))
+        assertEquals("{tag: slow}\n{link: }\n\nla", header.insert("link").substringAfter("{tempo: 90}\n"))
     }
 
     @Test
-    fun `the short spellings are the ones ChordPro defines`() {
-        assertEquals(mapOf("t" to "title", "st" to "subtitle", "lang" to "language"), ChordProHeaderLayout.metadataAliases)
+    fun `the short spellings are read as the directives they stand for`() {
+        val metadata = ChordProParser.parseMetadata("{t: X}\n{st: Y}\n{lang: hu}")
+
+        assertEquals("X", metadata.title)
+        assertEquals("Y", metadata.subtitle)
+        assertEquals(listOf("hu"), metadata.languages)
     }
 
     @Test
-    fun `the meta items that stand for a standalone directive are the twelve the model has a field for`() {
-        assertEquals(
-            setOf("title", "subtitle", "artist", "composer", "lyricist", "album", "year", "key", "capo", "tempo", "time", "duration"),
-            MetadataKind.entries.filter { it.isStandardMeta }.map { it.longName }.toSet(),
-        )
+    fun `only the tempo and the time signature change from where they stand in the body`() {
+        val song = ChordProParser.parse("{key: G}\n{capo: 2}\n{tempo: 100}\n{time: 4/4}\n\nla\n{key: A}\n{capo: 3}\n{tempo: 90}\n{time: 3/4}\nlo")
+
+        assertEquals("G", song.metadata.key)
+        assertEquals(2, song.metadata.capo)
+        assertEquals(listOf("90" to "3/4"), song.blocks.filterIsInstance<ChordProBlock.Timing>().map { it.tempo to it.time })
     }
 
-    @Test
-    fun `the repeatable and the changeable kinds`() {
-        assertEquals(setOf("tag", "language", "link"), MetadataKind.entries.filter { it.isRepeatable }.map { it.longName }.toSet())
-        assertEquals(setOf("tempo", "time"), MetadataKind.entries.filter { it.isTimingChange }.map { it.longName }.toSet())
-        assertEquals(setOf("key", "tempo", "time"), MetadataKind.entries.filter { it.isKeptInBody }.map { it.longName }.toSet())
+    private fun String.insert(name: String): String {
+        val insertion = ChordProHeader.insert(this, name = name, prefix = "{$name: ", suffix = "}")
+        return replaceRange(insertion.offset, insertion.offset, insertion.text)
     }
 }

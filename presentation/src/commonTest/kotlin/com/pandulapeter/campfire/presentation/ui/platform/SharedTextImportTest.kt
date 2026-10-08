@@ -22,29 +22,29 @@ class SharedTextImportTest {
     private fun nameOf(text: String, subject: String? = null) = namesOf(listOf(text), subject).single()
 
     @Test
-    fun anEmptyShareIsOneEmptyUntitledFile() {
+    fun `an empty share is one empty untitled file`() {
         val file = sharedTextsToImportedFiles(emptyList(), null).single()
         assertEquals("untitled${LibraryFiles.TEXT_EXTENSION}", file.name)
         assertTrue(file.bytes.isEmpty())
     }
 
     @Test
-    fun aTextWithNoSubjectIsNamedAfterItsFirstPlainLine() {
+    fun `a text with no subject is named after its first plain line`() {
         assertEquals("Amazing Grace${LibraryFiles.TEXT_EXTENSION}", nameOf("\n  \n{title: x}\n[Chorus]\n# c\n  Amazing Grace  \nHow sweet"))
     }
 
     @Test
-    fun aTextOfOnlyDirectivesSectionsAndCommentsIsUntitled() {
+    fun `a text of only directives sections and comments is untitled`() {
         assertEquals("untitled${LibraryFiles.TEXT_EXTENSION}", nameOf("{title: x}\n[Chorus]\n# c"))
     }
 
     @Test
-    fun aSubjectNamesTheFile() {
+    fun `a subject names the file`() {
         assertEquals("Page title${LibraryFiles.TEXT_EXTENSION}", nameOf("Lyrics", subject = "Page title"))
     }
 
     @Test
-    fun severalTextsUnderOneSubjectAreNumbered() {
+    fun `several texts under one subject are numbered`() {
         assertEquals(
             listOf("Notes 1${LibraryFiles.TEXT_EXTENSION}", "Notes 2${LibraryFiles.TEXT_EXTENSION}"),
             namesOf(listOf("a", "b"), subject = "Notes"),
@@ -52,35 +52,35 @@ class SharedTextImportTest {
     }
 
     @Test
-    fun aSubjectWithNothingUsableFallsBackToTheFirstPlainLine() {
+    fun `a subject with nothing usable falls back to the first plain line`() {
         assertEquals("Lyric${LibraryFiles.TEXT_EXTENSION}", nameOf("Lyric", subject = " / // "))
     }
 
     @Test
-    fun separatorsAndControlCharactersBecomeSpaces() {
+    fun `separators and control characters become spaces`() {
         assertEquals("a b c d${LibraryFiles.TEXT_EXTENSION}", nameOf("a/b\\c\u0007d"))
     }
 
     @Test
-    fun aLongLineIsCutToEightyCharactersAndTrimmed() {
+    fun `a long line is cut to eighty characters and trimmed`() {
         assertEquals("x".repeat(79) + LibraryFiles.TEXT_EXTENSION, nameOf("x".repeat(79) + " " + "y".repeat(120)))
         assertEquals("z".repeat(80) + LibraryFiles.TEXT_EXTENSION, nameOf("z".repeat(200)))
     }
 
     @Test
-    fun aTextOfOnlyLinksIsPassedOnEmpty() {
+    fun `a text of only links is passed on empty`() {
         val file = sharedTextsToImportedFiles(listOf("https://example.com/a\n\n  HTTP://EXAMPLE.COM/b  \n"), null).single()
         assertTrue(file.bytes.isEmpty())
     }
 
     @Test
-    fun aLinkWithALyricIsKept() {
+    fun `a link with a lyric is kept`() {
         val text = "https://example.com\nA lyric line"
         assertContentEquals(text.encodeToByteArray(), sharedTextsToImportedFiles(listOf(text), null).single().bytes)
     }
 
     @Test
-    fun theBytesAreTheTextInUtf8() {
+    fun `the bytes are the text in UTF-8`() {
         val text = "Ég a napmelegtől\nКатюша"
         val bytes = sharedTextsToImportedFiles(listOf(text), null).single().bytes
         assertEquals(text, bytes.decodeToString())

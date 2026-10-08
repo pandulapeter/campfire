@@ -9,11 +9,8 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation
 
-import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
 import com.pandulapeter.campfire.data.model.domain.Logger
-import com.pandulapeter.campfire.data.model.domain.SyncAccount
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
-import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.model.domain.SyncState
 import com.pandulapeter.campfire.data.source.local.api.LibraryChanges
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLock
@@ -51,7 +48,7 @@ class SyncRunSchedulerTest {
     @Test
     fun `a request during a run follows it`() = runTest {
         val gate = CompletableDeferred<Unit>()
-        val world = world(files = mapOf(SONG to "One".encodeToByteArray()), onDownload = { gate.await() })
+        val world = world(files = mapOf(song(1) to "One".encodeToByteArray()), onDownload = { gate.await() })
 
         world.scheduler.synchronize(SyncDeletionPolicy.ASK)
         world.stateHolder.state.first { (it as? SyncState.Connected)?.progress?.total == 1 }
@@ -81,6 +78,8 @@ class SyncRunSchedulerTest {
 
         world.scheduler.schedule()
         world.scheduler.cancel()
+        // Not even leaving the app, which starts a waiting run at once, finds one.
+        world.scheduler.startScheduled()
         advanceTimeBy(20_000)
 
         assertEquals(0, world.runs.count)
@@ -105,9 +104,9 @@ class SyncRunSchedulerTest {
     ): World {
         val environment = testEnvironment()
         val runs = RunCounter()
-        val syncProviders = SyncProviders(listOf(FakeSyncProvider(files = files, onDownload = onDownload, account = ACCOUNT)))
+        val syncProviders = SyncProviders(listOf(FakeSyncProvider(files = files, onDownload = onDownload, account = TEST_ACCOUNT)))
         val stateHolder = SyncStateHolder(Logger.Standard).apply {
-            update { SyncState.Connected(account = ACCOUNT, progress = null, lastSyncedAt = null, lastOutcome = null) }
+            update { SyncState.Connected(account = TEST_ACCOUNT, progress = null, lastSyncedAt = null, lastOutcome = null) }
         }
         val userPreferencesRepository = FakeUserPreferencesRepository()
         val libraryFileLocalSource = FakeLibraryFileLocalSource()
@@ -136,15 +135,5 @@ class SyncRunSchedulerTest {
         )
         runCurrent()
         return World(scheduler = scheduler, stateHolder = stateHolder, runs = runs)
-    }
-
-    private companion object {
-        val SONG = SyncKey(kind = LibraryFileKind.SONG, name = "song_1.cho")
-        val ACCOUNT = SyncAccount(
-            providerId = SyncProviderId.DROPBOX,
-            id = "dbid:1",
-            displayName = "Someone",
-            email = "someone@example.com",
-        )
     }
 }

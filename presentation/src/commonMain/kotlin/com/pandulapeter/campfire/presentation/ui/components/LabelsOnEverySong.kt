@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components
 
+import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 
 /**
@@ -19,3 +20,17 @@ data class LabelsOnEverySong(
     val tags: Set<String> = emptySet(),
     val languages: Set<String> = emptySet(),
 )
+
+/** The labels every one of [songs] carries, see [CampfireViewModel.labelsOnEverySong]: tags folded to lowercase, languages as they are. */
+internal fun labelsOnEverySongOf(songs: List<Song>): LabelsOnEverySong {
+    // Folded one song at a time, stopping at the first song that leaves both empty, which in most libraries is the
+    // second one.
+    var tags: Set<String>? = null
+    var languages: Set<String>? = null
+    for (song in songs) {
+        if (tags?.isEmpty() != true) song.tags.mapTo(HashSet()) { it.lowercase() }.let { tags = tags?.intersect(it) ?: it }
+        if (languages?.isEmpty() != true) song.languages.toSet().let { languages = languages?.intersect(it) ?: it }
+        if (tags?.isEmpty() == true && languages?.isEmpty() == true) break
+    }
+    return LabelsOnEverySong(tags = tags.orEmpty(), languages = languages.orEmpty())
+}

@@ -35,10 +35,10 @@ class BackgroundWarmthTest {
     )
 
     @Test
-    fun noWarmthIsThePaletteItself() = palettes.forEach { assertSame(it, it.withBackgroundWarmth(0)) }
+    fun `no warmth is the palette itself`() = palettes.forEach { assertSame(it, it.withBackgroundWarmth(0)) }
 
     @Test
-    fun theDarkHalfKeepsTheLuminanceOfEveryNeutral() = palettes.forEach { palette ->
+    fun `the dark half keeps the luminance of every neutral`() = palettes.forEach { palette ->
         (1..UserPreferences.MAX_BACKGROUND_WARMTH).forEach { level ->
             palette.dark.neutrals().zip(palette.withBackgroundWarmth(level).dark.neutrals()).forEach { (before, after) ->
                 // Eight bits a channel is all a color is stored in, which is all the difference allowed.
@@ -48,7 +48,7 @@ class BackgroundWarmthTest {
     }
 
     @Test
-    fun everyLevelKeepsEveryContrastOfTheScheme() = palettes.forEach { palette ->
+    fun `every level keeps every contrast of the scheme`() = palettes.forEach { palette ->
         (1..UserPreferences.MAX_BACKGROUND_WARMTH).forEach { level ->
             val warmed = palette.withBackgroundWarmth(level)
             listOf(
@@ -67,7 +67,7 @@ class BackgroundWarmthTest {
     }
 
     @Test
-    fun theAccentsKeepTheirColor() {
+    fun `the accents keep their color`() {
         val warmed = CampfireColorScheme.withBackgroundWarmth(UserPreferences.MAX_BACKGROUND_WARMTH)
         assertEquals(CampfireColorScheme.dark.tertiary, warmed.dark.tertiary)
         assertEquals(CampfireColorScheme.darkSecondAccent, warmed.darkSecondAccent)
@@ -78,7 +78,7 @@ class BackgroundWarmthTest {
     }
 
     @Test
-    fun fullWarmthIsSepia() {
+    fun `full warmth is sepia`() {
         val background = CampfireColorScheme.withBackgroundWarmth(UserPreferences.MAX_BACKGROUND_WARMTH).light.background
         assertTrue(background.red >= background.green && background.green > background.blue, "$background is not a warm paper")
         assertTrue(background.red - background.blue > 0.05f, "$background is all but white")

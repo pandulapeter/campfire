@@ -54,7 +54,7 @@ overflow menu.
 has put the rows in (`DraggedSetlist`, drawn through `SetlistWithSongs.rows`, each row numbered by the slot it sits in)
 and gives it up only once the library agrees — or once the write fails, is refused or the setlist is archived — so
 nothing snaps back while the write is round tripping. `CampfireViewModel.reorderSetlist` then writes that order in one
-go, dealing the songs the drag saw back into the slots they occupied, so that an entry that reached the file meanwhile
+go, dealing the songs the drag saw back into the slots they occupied (`withSongOrder`, `ui/state/SetlistSongOrder.kt`), so that an entry that reached the file meanwhile
 keeps its place. Writing per move instead worked each one out from a `setlists` value the previous move had not reached
 yet, which is what made a quick drag jump. The rows of the other setlists are not drop targets while a drag runs
 (`ReorderableItem`'s `enabled`, from the setlist the drag started in): the reorderable state locks itself after every

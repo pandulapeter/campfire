@@ -18,7 +18,7 @@ import kotlin.test.assertTrue
 class ClickSynthesizerTest {
 
     @Test
-    fun everyVoiceIsShortAndPeaksBelowFullScale() {
+    fun `every voice is short and peaks below full scale`() {
         MetronomeSound.entries.forEach { sound ->
             ClickVoice.entries.forEach { voice ->
                 val samples = ClickSynthesizer.render(sound, voice, SAMPLE_RATE)
@@ -31,7 +31,7 @@ class ClickSynthesizerTest {
     }
 
     @Test
-    fun theAccentIsLouderThanTheBeatAndTheBeatThanTheSubdivision() {
+    fun `the accent is louder than the beat and the beat than the subdivision`() {
         MetronomeSound.entries.forEach { sound ->
             val (accent, normal, subdivision) = ClickVoice.entries.map { voice -> ClickSynthesizer.render(sound, voice, SAMPLE_RATE).maxOf { abs(it) } }
             assertTrue(accent > normal && normal > subdivision, "$sound")
@@ -44,7 +44,7 @@ class ClickSynthesizerTest {
      * quantizing hides.
      */
     @Test
-    fun theSoundsAreWhatTheyWere() {
+    fun `the sounds are what they were`() {
         val checksums = MetronomeSound.entries.associateWith { sound ->
             ClickVoice.entries.map { voice ->
                 ClickSynthesizer.render(sound, voice, SAMPLE_RATE).fold(17L) { hash, sample -> hash * 31 + (sample * Short.MAX_VALUE).toInt() }

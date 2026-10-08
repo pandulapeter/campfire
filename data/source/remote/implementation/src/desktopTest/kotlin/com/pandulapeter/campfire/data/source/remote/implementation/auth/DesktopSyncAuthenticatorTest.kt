@@ -54,8 +54,8 @@ class DesktopSyncAuthenticatorTest {
         val authenticator = DesktopSyncAuthenticator(systemBrowser = { true }, logger = Logger.Standard)
         authenticator.prepareRedirectUri()
         val authorization = async { authenticator.authorize("https://example.com/authorize", COMPLETION_PAGE) }
-        // Long enough for `accept` to actually be blocking, which is the state the cancellation has to reach.
-        delay(300)
+        // `accept` has to actually be blocking, which is the state the cancellation has to reach.
+        awaitAccept(isBlocking = true)
         assertTrue(isPortOpen(), "The socket should still be listening while the authorization waits.")
 
         authorization.cancel()
@@ -73,7 +73,7 @@ class DesktopSyncAuthenticatorTest {
         val authenticator = DesktopSyncAuthenticator(systemBrowser = { true }, logger = Logger.Standard)
         authenticator.prepareRedirectUri()
         val authorization = async { authenticator.authorize("https://example.com/authorize", COMPLETION_PAGE) }
-        delay(300)
+        awaitAccept(isBlocking = true)
         Socket("127.0.0.1", 53682).use { socket ->
             PrintWriter(socket.getOutputStream(), true).apply {
                 print("GET /?code=abc123&state=deadbeef HTTP/1.1\r\nHost: 127.0.0.1\r\n\r\n")
@@ -101,9 +101,10 @@ class DesktopSyncAuthenticatorTest {
         val authenticator = DesktopSyncAuthenticator(systemBrowser = { true }, logger = Logger.Standard)
         authenticator.prepareRedirectUri()
         val authorization = async { authenticator.authorize("https://example.com/authorize", COMPLETION_PAGE) }
-        delay(300)
+        awaitAccept(isBlocking = true)
         val idle = Socket("127.0.0.1", 53682)
-        delay(300)
+        // Taken off the backlog before the redirect connects, the way the browser's speculative connection comes first.
+        awaitAccept(isBlocking = false)
         Socket("127.0.0.1", 53682).use { socket ->
             PrintWriter(socket.getOutputStream(), true).apply {
                 print("GET /?code=abc123&state=deadbeef HTTP/1.1\r\nHost: 127.0.0.1\r\n\r\n")
@@ -138,6 +139,18 @@ class DesktopSyncAuthenticatorTest {
         withTimeout(5_000) { while (isPortOpen()) delay(50) }
     }
 
+    /**
+     * Waits until the listener is, or is no longer, blocked in `accept`, found from the threads' stacks: a probe of the
+     * port itself would be a connection the listener has to accept and answer, which is exactly what is being waited for.
+     */
+    private suspend fun awaitAccept(isBlocking: Boolean) = withTimeout(5_000) {
+        while (isAcceptBlocking() != isBlocking) delay(10)
+    }
+
+    private fun isAcceptBlocking() = Thread.getAllStackTraces().values.any { stack ->
+        stack.any { frame -> frame.className == "java.net.ServerSocket" && frame.methodName == "accept" }
+    }
+
     private fun isPortOpen() = try {
         Socket("127.0.0.1", 53682).close()
         true
@@ -149,7 +162,7 @@ class DesktopSyncAuthenticatorTest {
     private suspend fun DesktopSyncAuthenticator.close() {
         val authorization = kotlinx.coroutines.CoroutineScope(kotlin.coroutines.EmptyCoroutineContext)
             .async { authorize("https://example.com/authorize", COMPLETION_PAGE) }
-        delay(100)
+        awaitAccept(isBlocking = true)
         authorization.cancel()
         withTimeout(5_000) {
             while (isPortOpen()) {

@@ -16,7 +16,7 @@ import kotlin.test.assertEquals
 class SongSectionIndexTest {
 
     @Test
-    fun matchesExpandedLabelsAtEveryBoundary() {
+    fun `matches expanded labels at every boundary`() {
         val groups = listOf(
             SongSectionIndex.Group(0, SongSection.Header.Letter('A')),
             SongSectionIndex.Group(3, SongSection.Header.Letter('B')),
@@ -40,7 +40,7 @@ class SongSectionIndexTest {
     }
 
     @Test
-    fun headerlessSearchAndEmptyGroupsHaveNoLabels() {
+    fun `headerless search and empty groups have no labels`() {
         assertEquals(null, SongSectionIndex(emptyList()).labelForItem(0))
         val index = SongSectionIndex(listOf(SongSectionIndex.Group(3, null)))
         for (position in 0..2) assertEquals(null, index.labelForItem(position))

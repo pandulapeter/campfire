@@ -12,12 +12,8 @@ package com.pandulapeter.campfire.domain.implementation.useCases
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song
-import com.pandulapeter.campfire.data.model.domain.SongContent
 import com.pandulapeter.campfire.data.model.domain.SongLanguage
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
-import com.pandulapeter.campfire.data.repository.api.SetlistRepository
-import com.pandulapeter.campfire.data.repository.api.SongRepository
-import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
 import com.pandulapeter.campfire.domain.api.models.ScreenData
 import com.pandulapeter.campfire.domain.api.models.SongFilter
 import com.pandulapeter.campfire.domain.api.useCases.NormalizeTextUseCase
@@ -44,15 +40,21 @@ class GetScreenDataUseCaseImplTest {
 
     private val setlists = MutableStateFlow<DataState<List<Setlist>>>(DataState.Idle(listOf(setlist("b", day = 1), setlist("a", day = 2))))
     private val songs = MutableStateFlow<DataState<List<Song>>>(DataState.Idle(listOf(song("Yesterday"), song("Hey Jude"))))
-    private val preferences = MutableStateFlow<DataState<UserPreferences>>(DataState.Idle(PREFERENCES))
+    private val preferences = MutableStateFlow<DataState<UserPreferences>>(DataState.Idle(TEST_PREFERENCES))
     private val filter = MutableStateFlow(SongFilter())
     private val useCase = GetScreenDataUseCaseImpl(
         normalizeText = object : NormalizeTextUseCase {
             override fun invoke(text: String) = text.lowercase()
         },
-        setlistRepository = FakeSetlistRepository(setlists),
-        songRepository = FakeSongRepository(songs),
-        userPreferencesRepository = FakeUserPreferencesRepository(preferences),
+        setlistRepository = object : SetlistRepositoryStub() {
+            override val setlists = this@GetScreenDataUseCaseImplTest.setlists
+        },
+        songRepository = object : SongRepositoryStub() {
+            override val songs = this@GetScreenDataUseCaseImplTest.songs
+        },
+        userPreferencesRepository = object : UserPreferencesRepositoryStub() {
+            override val userPreferences = preferences
+        },
     )
 
     @Test
@@ -77,7 +79,7 @@ class GetScreenDataUseCaseImplTest {
         // changes made at once may arrive in either order.
         setlists.value = DataState.Idle(setlists.value.data.orEmpty() + setlist("c", day = 3))
         assertEquals(listOf("c", "a", "b"), latest.first { it?.data?.setlists?.size == 3 }?.data?.setlists?.map { it.title })
-        preferences.value = DataState.Idle(PREFERENCES.copy(setlistSortingMode = UserPreferences.SetlistSortingMode.BY_TITLE))
+        preferences.value = DataState.Idle(TEST_PREFERENCES.copy(setlistSortingMode = UserPreferences.SetlistSortingMode.BY_TITLE))
         val second = latest.first { it?.data?.setlists?.firstOrNull()?.title == "a" }?.data
 
         assertEquals(listOf("a", "b", "c"), second?.setlists?.map { it.title })
@@ -107,7 +109,7 @@ class GetScreenDataUseCaseImplTest {
         val latest = collectScreenData()
         val first = latest.idle()
 
-        preferences.value = DataState.Idle(PREFERENCES.copy(sortingMode = UserPreferences.SortingMode.BY_ARTIST))
+        preferences.value = DataState.Idle(TEST_PREFERENCES.copy(sortingMode = UserPreferences.SortingMode.BY_ARTIST))
         val second = latest.first { it?.data != null && it.data !== first }?.data
 
         assertNotSame(first.songSections, second?.songSections)
@@ -160,7 +162,7 @@ class GetScreenDataUseCaseImplTest {
     @Test
     fun `the song list carries the filter and the preferences it was built for`() = runTest {
         filter.value = SongFilter(selectedTags = setOf("Folk"), selectedLanguages = setOf("ru"))
-        preferences.value = DataState.Idle(PREFERENCES.copy(tagMatchMode = UserPreferences.MatchMode.ALL))
+        preferences.value = DataState.Idle(TEST_PREFERENCES.copy(tagMatchMode = UserPreferences.MatchMode.ALL))
 
         val screenData = collectScreenData().first { it?.data?.tagMatchMode == UserPreferences.MatchMode.ALL }?.data
 
@@ -197,7 +199,7 @@ class GetScreenDataUseCaseImplTest {
 
         assertEquals(listOf("Kalinka", "Moscow Nights", "Yesterday"), latest.first { it?.data?.songs?.size == 3 }?.data?.songs?.map { it.title })
 
-        preferences.value = DataState.Idle(PREFERENCES.copy(languageMatchMode = UserPreferences.MatchMode.ALL))
+        preferences.value = DataState.Idle(TEST_PREFERENCES.copy(languageMatchMode = UserPreferences.MatchMode.ALL))
         assertEquals(listOf("Moscow Nights"), latest.first { it?.data?.songs?.size == 1 }?.data?.songs?.map { it.title })
 
         filter.value = SongFilter(selectedLanguages = setOf("en", SongLanguage.UNKNOWN))
@@ -288,7 +290,7 @@ class GetScreenDataUseCaseImplTest {
         assertEquals(listOf("1999", "¿Quién será?", "Hey Jude", "Yesterday"), byTitle.sortedSongs.map { it.title })
         assertEquals(byTitle.songs, byTitle.sortedSongs)
 
-        preferences.value = DataState.Idle(PREFERENCES.copy(sortingMode = UserPreferences.SortingMode.BY_ARTIST))
+        preferences.value = DataState.Idle(TEST_PREFERENCES.copy(sortingMode = UserPreferences.SortingMode.BY_ARTIST))
         val byArtist = latest.first { it?.data?.sortingMode == UserPreferences.SortingMode.BY_ARTIST }?.data
         assertEquals(byArtist?.songs, byArtist?.sortedSongs)
         assertEquals(listOf("¿Quién será?", "1999", "Hey Jude", "Yesterday"), byArtist?.sortedSongs?.map { it.title })
@@ -323,101 +325,15 @@ class GetScreenDataUseCaseImplTest {
 
     private suspend fun StateFlow<DataState<ScreenData>?>.idle() = assertIs<DataState.Idle<ScreenData>>(first { it != null }).data
 
-    private class FakeSetlistRepository(override val setlists: MutableStateFlow<DataState<List<Setlist>>>) : SetlistRepository {
-        override suspend fun loadSetlistsIfNeeded() = throw UnsupportedOperationException()
-        override suspend fun loadSetlistFileNamesNaming(songFileName: String) = throw UnsupportedOperationException()
-        override suspend fun rescan() = throw UnsupportedOperationException()
-        override suspend fun refresh(fileNames: Set<String>) = throw UnsupportedOperationException()
-        override suspend fun adoptImported(setlists: Collection<Setlist>) = throw UnsupportedOperationException()
-        override suspend fun createSetlist(title: String, description: String, date: LocalDate, isCountdownShown: Boolean) = throw UnsupportedOperationException()
-        override suspend fun saveSetlist(setlist: Setlist) = throw UnsupportedOperationException()
-        override suspend fun updateSetlist(fileName: String, transform: (Setlist) -> Setlist) = throw UnsupportedOperationException()
-        override suspend fun renameSetlist(fileName: String, title: String, description: String, date: LocalDate, isCountdownShown: Boolean) = throw UnsupportedOperationException()
-        override suspend fun parseSetlist(document: String) = throw UnsupportedOperationException()
-        override suspend fun importSetlist(setlist: Setlist, shouldReplace: Boolean) = throw UnsupportedOperationException()
-        override suspend fun loadSetlistFileSizes(): Map<String, Long> = throw UnsupportedOperationException()
-        override suspend fun loadSetlistDocument(fileName: String, songFileNames: Set<String>?) = throw UnsupportedOperationException()
-        override suspend fun deleteSetlist(fileName: String) = throw UnsupportedOperationException()
-        override suspend fun deleteAllSetlists() = throw UnsupportedOperationException()
-    }
-
-    private class FakeSongRepository(override val songs: MutableStateFlow<DataState<List<Song>>>) : SongRepository {
-        override suspend fun loadSongsIfNeeded() = throw UnsupportedOperationException()
-        override suspend fun loadSongFileSizes() = throw UnsupportedOperationException()
-        override suspend fun rescan() = throw UnsupportedOperationException()
-        override suspend fun refresh(fileNames: Set<String>) = throw UnsupportedOperationException()
-        override suspend fun adoptImported(songs: Collection<Song>) = throw UnsupportedOperationException()
-        override suspend fun saveSong(content: SongContent, expectedText: String?) = throw UnsupportedOperationException()
-        override suspend fun createSong(title: String, artist: String, text: String) = throw UnsupportedOperationException()
-        override fun importFileName(fallbackTitle: String, text: String) = throw UnsupportedOperationException()
-        override suspend fun importSong(fileName: String, text: String, shouldReplace: Boolean) = throw UnsupportedOperationException()
-        override suspend fun renameSong(song: Song) = throw UnsupportedOperationException()
-        override suspend fun deleteSong(fileName: String) = throw UnsupportedOperationException()
-        override suspend fun deleteAllSongs() = throw UnsupportedOperationException()
-    }
-
-    private class FakeUserPreferencesRepository(
-        override val userPreferences: MutableStateFlow<DataState<UserPreferences>>,
-    ) : UserPreferencesRepository {
-        override suspend fun loadUserPreferencesIfNeeded() = throw UnsupportedOperationException()
-        override suspend fun saveUserPreferences(userPreferences: UserPreferences) = throw UnsupportedOperationException()
-        override suspend fun updateUserPreferences(transform: (UserPreferences) -> UserPreferences) = throw UnsupportedOperationException()
-        override suspend fun hasStoredUserPreferences() = throw UnsupportedOperationException()
-    }
-
     private companion object {
-        val PREFERENCES = UserPreferences(
-            isPerformanceModeEnabled = false,
-            shouldShowArchivedSetlists = false,
-            areChordsEnabled = true,
-            areSetlistsEnabled = true,
-            isMetronomeEnabled = true,
-            fontScale = 1f,
-            sortingMode = UserPreferences.SortingMode.BY_TITLE,
-            setlistSortingMode = UserPreferences.SetlistSortingMode.BY_DATE,
-            uiMode = UserPreferences.UiMode.SYSTEM_DEFAULT,
-            themeColor = UserPreferences.ThemeColor.CAMPFIRE,
-            isAppIconThemed = true,
-            isCoverArtEnabled = true,
-            shouldNumberSections = true,
-            language = UserPreferences.Language.SYSTEM_DEFAULT,
-            chordSpelling = UserPreferences.ChordSpelling.Default,
-            transpositions = emptyMap(),
-            foldedSections = emptyMap(),
-            tagMatchMode = UserPreferences.MatchMode.ANY,
-            languageMatchMode = UserPreferences.MatchMode.ANY,
-            tagSortingMode = UserPreferences.LabelSortingMode.BY_USAGE,
-            languageSortingMode = UserPreferences.LabelSortingMode.BY_USAGE,
-        )
-
-        fun setlist(title: String, day: Int = 1, isArchived: Boolean = false) = Setlist(
-            fileName = "$title.setlist.json",
-            title = title,
-            description = "",
-            date = LocalDate(2026, 9, day),
-            isArchived = isArchived,
-            entries = emptyList(),
-            size = 0L,
-        )
+        fun setlist(title: String, day: Int = 1, isArchived: Boolean = false) =
+            testSetlist(fileName = "$title.setlist.json", date = LocalDate(2026, 9, day), isArchived = isArchived)
 
         fun song(
             title: String,
             tags: List<String> = emptyList(),
             languages: List<String> = emptyList(),
             artist: String = "The Beatles",
-        ) = Song(
-            fileName = "${title.lowercase().replace(' ', '_')}.cho",
-            title = title,
-            artist = artist,
-            key = null,
-            transpose = 0,
-            tags = tags,
-            languages = languages,
-            coverArtUrl = null,
-            hasChords = true,
-            canUpdateFileName = false,
-            lastModified = 0L,
-            size = 0L,
-        )
+        ) = testSong(fileName = "${title.lowercase().replace(' ', '_')}.cho", title = title, artist = artist, tags = tags, languages = languages)
     }
 }

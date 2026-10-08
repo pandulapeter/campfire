@@ -94,8 +94,8 @@ that opens a run and the one that completes it do, which is how a device that ca
 `STORAGE` before anything is written, and start up and a new connection leave such a file alone. Only one that reads
 and does not decode is taken for none. The scope, the time source, the wall clock and the dispatcher documents are
 coded on come from `SyncEnvironment` (a `@Single` function of `DataSyncModule`, the same shape as the repositories'
-`RepositoryEnvironment`), which is what lets `SyncRepositoryImplTest`, `SyncRunSchedulerTest` and
-`SyncLibraryRefresherTest` run every
+`RepositoryEnvironment`), which is what lets `SyncRepositoryImplTest`, the `SyncConnectionManager…Test` files,
+`SyncRunSchedulerTest` and `SyncLibraryRefresherTest` run every
 launched job and the ten-second debounce on the test scheduler's virtual time — the scope being
 background work there, so a test advances it with `runCurrent` or `advanceTimeBy`, never `advanceUntilIdle`. The
 repository's scope carries a `CoroutineExceptionHandler` that logs, since nothing
@@ -132,8 +132,11 @@ from the repository's own scope.
 `Connected` answers from it and reads nothing: read again from the disk, a run that is going would look like one
 that was interrupted, and its marker would be cleared under it.
 `commonTest` runs the engine against an in-memory `SyncProvider` and `LibraryFileLocalSource` for the behaviour the
-planner's tests cannot show, and `SyncRepositoryImplTest` runs the repository against the same fakes plus the ones
-in `FakeSyncCollaborators.kt`. The pure parts of a run are tested on their own: `preparePass` (`PassListing.kt`,
+planner's tests cannot show (the `SyncEngine…Test` files, one per behaviour, over the helpers in
+`SyncEngineFixtures.kt`), and `SyncRepositoryImplTest` and the `SyncConnectionManager…Test` files run the repository
+against the same fakes plus the ones in `FakeSyncCollaborators.kt`, built by `TestSyncRepository.kt`.
+`SyncIndexDocumentTest` reads `sync-index.json` as devices already have it, written out by hand, since the store's
+lenient decoding would read a renamed field as an empty index rather than fail. The pure parts of a run are tested on their own: `preparePass` (`PassListing.kt`,
 `PassListingTest`) works out what one pass may touch from the two listings and the index, and `DeletionGuard`
 (`DeletionGuardTest`) is the question below; the engine threads one `SyncRun` and one `SyncPass` (`SyncRun.kt`)
 through its steps instead of their values one by one. A plan whose deletions on one side are more than half of the index (at least

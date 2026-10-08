@@ -27,7 +27,6 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class MetronomeEngineTest {
@@ -98,14 +97,23 @@ class MetronomeEngineTest {
     }
 
     @Test
-    fun `an update to the same pattern without a restart changes nothing`() = runTest {
+    fun `an update without a restart keeps counting the bar, and one with a restart starts it again`() = runTest {
         val engine = engine()
+        val beats = beatsOf(engine)
         engine.start(pattern)
         runCurrent()
-        val before = engine.playback.value
+        output.heardFrame = Long.MAX_VALUE
+        output.scheduleBeats(from = 0, to = 2)
         engine.update(pattern, restartBar = false)
         runCurrent()
-        assertTrue(before === engine.playback.value)
+        output.scheduleBeats(from = 2, to = 4)
+        engine.update(pattern, restartBar = true)
+        runCurrent()
+        output.scheduleBeats(from = 4, to = 6)
+        advanceTimeBy(RELEASE_STEP_MILLIS)
+        runCurrent()
+        assertEquals(listOf(0, 1, 2, 3, 0, 1), beats.map { it.beatIndex })
+        assertEquals(MetronomePlayback.Playing(pattern, null), engine.playback.value)
     }
 
     @Test
@@ -132,8 +140,7 @@ class MetronomeEngineTest {
     @Test
     fun `a beat is released once the output has played it`() = runTest {
         val engine = engine()
-        val beats = mutableListOf<MetronomeBeat>()
-        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { engine.beats.toList(beats) }
+        val beats = beatsOf(engine)
         engine.start(pattern)
         runCurrent()
         output.stream!!.schedule(nowFrame = 0, untilFrame = FakeAudioOutput.SAMPLE_RATE.toLong()) { _, _, _, _ -> }
@@ -170,6 +177,47 @@ class MetronomeEngineTest {
     }
 
     @Test
+    fun `a start right after a preview keeps playing past the preview's hold`() = runTest {
+        val engine = engine()
+        engine.preview(MetronomeSound.CLICK, BeatLevel.ACCENT)
+        runCurrent()
+        engine.start(pattern)
+        runCurrent()
+        advanceTimeBy(5_000)
+        runCurrent()
+        assertEquals(listOf(true, false), output.starts)
+        assertEquals(1, output.stopCount)
+        assertEquals(MetronomePlayback.Playing(pattern, null), engine.playback.value)
+    }
+
+    @Test
+    fun `a preview while playing is mixed into the click without opening the output again`() = runTest {
+        val engine = engine()
+        engine.start(pattern)
+        runCurrent()
+        engine.preview(MetronomeSound.BEEP, BeatLevel.NORMAL)
+        advanceTimeBy(5_000)
+        runCurrent()
+        assertEquals(listOf(false), output.starts)
+        assertEquals(0, output.stopCount)
+        assertEquals(MetronomePlayback.Playing(pattern, null), engine.playback.value)
+    }
+
+    @Test
+    fun `a refused preview leaves the click stopped and the next one asks again`() = runTest {
+        output.result = AudioOutputStart.Refused(MetronomeStopReason.AUDIO_REFUSED)
+        val engine = engine()
+        engine.preview(MetronomeSound.CLICK, BeatLevel.ACCENT)
+        advanceTimeBy(5_000)
+        runCurrent()
+        assertEquals(MetronomePlayback.Stopped(), engine.playback.value)
+        assertEquals(0, output.stopCount)
+        engine.preview(MetronomeSound.CLICK, BeatLevel.ACCENT)
+        runCurrent()
+        assertEquals(listOf(true, true), output.starts)
+    }
+
+    @Test
     fun `a stop closes the output`() = runTest {
         val engine = engine()
         engine.start(pattern)
@@ -180,7 +228,31 @@ class MetronomeEngineTest {
         assertEquals(MetronomePlayback.Stopped(), engine.playback.value)
     }
 
+    @Test
+    fun `no beat is released after a stop, however far the output's position runs`() = runTest {
+        val engine = engine()
+        val beats = beatsOf(engine)
+        engine.start(pattern)
+        runCurrent()
+        output.scheduleBeats(from = 0, to = 4)
+        engine.stop()
+        runCurrent()
+        output.heardFrame = Long.MAX_VALUE
+        advanceTimeBy(1_000)
+        runCurrent()
+        assertEquals(emptyList(), beats)
+    }
+
+    private fun TestScope.beatsOf(engine: MetronomeEngine) = mutableListOf<MetronomeBeat>().also { beats ->
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { engine.beats.toList(beats) }
+    }
+
+    /** Has the output take the ticks of beats [from] to [to] (exclusive) of [pattern], the way a pull of its queue would. */
+    private fun FakeAudioOutput.scheduleBeats(from: Int, to: Int) =
+        stream!!.schedule(nowFrame = from * BEAT_FRAMES, untilFrame = to * BEAT_FRAMES) { _, _, _, _ -> }
+
     private companion object {
         const val RELEASE_STEP_MILLIS = 6L
+        const val BEAT_FRAMES = FakeAudioOutput.SAMPLE_RATE / 2L
     }
 }

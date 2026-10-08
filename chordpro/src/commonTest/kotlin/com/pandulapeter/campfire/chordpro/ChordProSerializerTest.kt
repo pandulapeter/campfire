@@ -10,8 +10,6 @@
 package com.pandulapeter.campfire.chordpro
 
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
-import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
-import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -39,10 +37,7 @@ class ChordProSerializerTest {
     fun `a chorus cut by a comment comes back as one environment`() {
         val parsed = ChordProParser.parse("{soc}\n[C]one\n{comment: softly}\n[G]two\n{eoc}\n\n{chorus}")
 
-        val serialized = ChordProSerializer.serialize(parsed)
-
-        assertEquals("{start_of_chorus}\n[C]one\n{comment: softly}\n[G]two\n{end_of_chorus}\n\n{chorus}", serialized)
-        assertEquals(parsed, ChordProParser.parse(serialized))
+        assertEquals(parsed, ChordProParser.parse(ChordProSerializer.serialize(parsed)))
     }
 
     @Test
@@ -75,10 +70,6 @@ class ChordProSerializerTest {
         val adjacent = ChordProParser.parse("{sov}\n{sot}\ne|-0-|\n{eot}\n{sot}\ne|-2-|\n{eot}\n{eov}")
 
         assertEquals(blankBetween, ChordProParser.parse(ChordProSerializer.serialize(blankBetween)))
-        assertEquals(
-            "{start_of_verse}\n{start_of_tab}\ne|-0-|\n{end_of_tab}\n{start_of_tab}\ne|-2-|\n{end_of_tab}\n{end_of_verse}",
-            ChordProSerializer.serialize(adjacent),
-        )
         assertEquals(adjacent, ChordProParser.parse(ChordProSerializer.serialize(adjacent)))
     }
 
@@ -89,11 +80,6 @@ class ChordProSerializerTest {
                 "{sog: First}\n| Am . |\n{eog}\n{sog: Second}\n| C . |\n{eog}\n{eov}",
         )
 
-        assertEquals(
-            "{start_of_verse: Intro}\n[Am] [C]\n{start_of_tab: Picking pattern}\ne|-0-|\n{comment: again}\ne|-2-|\n{end_of_tab}\n" +
-                "{start_of_grid: First}\n| Am . |\n{end_of_grid}\n{start_of_grid: Second}\n| C . |\n{end_of_grid}\n{end_of_verse}",
-            ChordProSerializer.serialize(parsed),
-        )
         assertEquals(parsed, ChordProParser.parse(ChordProSerializer.serialize(parsed)))
     }
 
@@ -133,19 +119,6 @@ class ChordProSerializerTest {
     }
 
     @Test
-    fun `a side of a change that names nothing is not written`() {
-        val serialized = ChordProSerializer.serialize(
-            ChordProSong(
-                metadata = ChordProMetadata(),
-                blocks = listOf(ChordProBlock.Timing(tempo = null, time = "3/4")),
-            ),
-        )
-
-        assertTrue("{time: 3/4}" in serialized, serialized)
-        assertFalse("{tempo" in serialized, serialized)
-    }
-
-    @Test
     fun `a group of changes that comes back to the values in force survives serializing`() {
         val parsed = ChordProParser.parse("{tempo: 100}\n{time: 4/4}\n\nla\n{tempo: 120}\n{tempo: 100}\nlo")
 
@@ -169,24 +142,8 @@ class ChordProSerializerTest {
     @Test
     fun `a tab with a blank line in it comes back as one section`() {
         val parsed = ChordProParser.parse("{sot: Riff}\ne|--0--|\n\ne|--3--|\n{eot}")
-        val serialized = ChordProSerializer.serialize(parsed)
 
-        assertEquals("{start_of_tab: Riff}\ne|--0--|\n\ne|--3--|\n{end_of_tab}", serialized)
-        assertEquals(parsed, ChordProParser.parse(serialized))
-    }
-
-    @Test
-    fun `metadata is written in canonical order and zero transposition is omitted`() {
-        val song = ChordProParser.parse("{artist: A}\n{title: T}\n{transpose: 0}\n{meta: tuning DADGAD}")
-
-        assertEquals("{title: T}\n{artist: A}\n{meta: tuning DADGAD}", ChordProSerializer.serialize(song))
-    }
-
-    @Test
-    fun `chords and annotations are written back at their positions`() {
-        val song = ChordProParser.parse("[Am]one [*hold]two [C]three")
-
-        assertEquals("[Am]one [*hold]two [C]three", ChordProSerializer.serialize(song))
+        assertEquals(parsed, ChordProParser.parse(ChordProSerializer.serialize(parsed)))
     }
 
     companion object {

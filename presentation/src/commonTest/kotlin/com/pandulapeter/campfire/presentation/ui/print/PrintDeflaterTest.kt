@@ -15,15 +15,15 @@ import kotlin.test.assertEquals
 
 /** Known zlib streams with fixed Huffman codes, checked against zlib's own decoder when they were written down. */
 internal class PrintDeflaterTest {
-    @Test fun emptyInputIsAnEmptyFixedBlock() = runTest {
+    @Test fun `empty input is an empty fixed block`() = runTest {
         assertEquals("7801030000000001", deflated(ByteArray(0)))
     }
 
-    @Test fun aRepeatedByteIsOneLiteralAndMaximalMatches() = runTest {
+    @Test fun `a repeated byte is one literal and maximal matches`() = runTest {
         assertEquals("78014b1c05a360140c7b0000f9d87af8", deflated(ByteArray(1000) { 'a'.code.toByte() }))
     }
 
-    @Test fun everyByteValueUsesBothLiteralCodeLengths() = runTest {
+    @Test fun `every byte value uses both literal code lengths`() = runTest {
         assertEquals(
             "78016360646266616563e7e0e4e2e6e1e5e3171014121611151397909492969195935750545256515553d7d0d4d2d6d1d5d33730343236313533" +
                 "b7b0b4b2b6b1b5b37770747276717573f7f0f4f2f6f1f5f30f080c0a0e090d0b8f888c8a8e898d8b4f484c4a4e494d4bcfc8cccacec9cdcb2f282c2a" +
