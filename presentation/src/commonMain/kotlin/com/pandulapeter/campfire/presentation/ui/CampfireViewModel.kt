@@ -12,7 +12,6 @@ package com.pandulapeter.campfire.presentation.ui
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
@@ -59,6 +58,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.firstRun.DemoLibrary
 import com.pandulapeter.campfire.presentation.ui.firstRun.canShowWelcome
 import com.pandulapeter.campfire.presentation.ui.firstRun.canShowWhatsNew
+import com.pandulapeter.campfire.presentation.ui.fontScale.FontScaleController
 import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.playing.Transpositions
@@ -220,6 +220,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -228,7 +229,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
@@ -503,65 +503,31 @@ class CampfireViewModel(
         return true
     }
 
-    /**
-     * Whether the song details screen is on top with nothing over it, which is where Ctrl / Cmd + plus, minus and zero
-     * change the text size and where the web page keeps the browser from zooming itself instead. It is asked from the
-     * desktop window and the web page rather than from a key handler on the screen for the reason [openCurrentSearch]
-     * is: the browser acts on a key pressed anywhere but the canvas before Compose hears of it, and a zoomed page is
-     * not something Compose can undo. A dialog, a sheet or an overflow menu keeps the shortcuts from the screen under it.
-     */
-    internal val isSongTextZoomable
-        get() = backStack.lastOrNull() is CampfireDestination.SongDetails && visibleDialog.value == null && !overlayState.isAnyMenuOpen
+    private val fontScaleController = FontScaleController(
+        scope = viewModelScope,
+        backStack = backStack,
+        dialogHost = dialogHost,
+        updateUserPreferences = updateUserPreferences,
+        writeDelayMillis = PREFERENCE_WRITE_DEBOUNCE_MILLIS,
+    )
 
-    /**
-     * Answers the zoom shortcuts the way the browser answers them for a page: [steps] of [FONT_SCALE_STEP] in or out,
-     * or back to [UserPreferences.DEFAULT_FONT_SCALE] for null. Answers whether it did, so that everywhere but the song
-     * details screen the key is left to whoever else wants it.
-     */
-    internal fun zoomSongText(steps: Int?): Boolean {
-        if (!isSongTextZoomable) return false
-        if (steps == null) {
-            setFontScale(UserPreferences.DEFAULT_FONT_SCALE)
-            settleFontScale()
-        } else {
-            adjustFontScale(steps)
-        }
-        return true
-    }
+    /** See [FontScaleController.isSongTextZoomable]. */
+    internal val isSongTextZoomable get() = fontScaleController.isSongTextZoomable
 
-    /** Where the pinches [magnifyByTouchpad] is given add up, which each arrive as too small a step to be kept on their own. */
-    private val touchpadFontScale = FontScaleAccumulator()
+    /** See [FontScaleController.zoomSongText]. */
+    internal fun zoomSongText(steps: Int?) = fontScaleController.zoomSongText(steps)
 
-    private val _printPreviewMagnifications = MutableSharedFlow<Float>(extraBufferCapacity = 64)
+    /** See [FontScaleController.printPreviewMagnifications]. */
+    internal val printPreviewMagnifications: SharedFlow<Float> get() = fontScaleController.printPreviewMagnifications
 
-    /** The touchpad pinches [magnifyByTouchpad] hands the export screen's preview, which zooms its page by each ratio. */
-    internal val printPreviewMagnifications = _printPreviewMagnifications.asSharedFlow()
+    /** See [FontScaleController.magnifyByTouchpad]. */
+    fun magnifyByTouchpad(factor: Float) = fontScaleController.magnifyByTouchpad(factor)
 
-    /**
-     * Answers a pinch on a touchpad the way a touchscreen pinch is answered where it lands: on the song details screen
-     * with the text size, [factor] being how much farther apart the fingers are than at the last report, damped by the
-     * same [PINCH_SENSITIVITY], and on the export screen with the zoom of the page on preview, by [factor] itself as a
-     * touchscreen pinch zooms it. Only a platform that tells a touchpad pinch apart from a scroll calls it - the macOS
-     * desktop app, which reports the gesture itself, and Chrome, Edge and Firefox, which report a Ctrl + scroll the user
-     * is not holding Ctrl for; Safari reports a gesture of its own that nothing listens for, so there a pinch zooms the
-     * page - and it is asked from the window rather than from the screen, since none of these ever reach Compose as a
-     * pinch. Neither screen answers one with anything drawn over it, and it answers whether one did, so that anywhere
-     * else the gesture is left to whoever else wants it.
-     */
-    fun magnifyByTouchpad(factor: Float): Boolean {
-        val isUsable = factor > 0f && factor.isFinite()
-        return when {
-            isSongTextZoomable -> {
-                if (isUsable) setFontScale(touchpadFontScale.next(fontScale) { it * factor.pow(PINCH_SENSITIVITY) })
-                true
-            }
-            visibleDialog.value is DialogType.Export && !overlayState.isAnyMenuOpen -> {
-                if (isUsable) _printPreviewMagnifications.tryEmit(factor)
-                true
-            }
-            else -> false
-        }
-    }
+    /** See [FontScaleController.fontScale]. */
+    val fontScale: Float get() = fontScaleController.fontScale
+
+    /** See [FontScaleController.settledFontScale]. */
+    val settledFontScale: Float get() = fontScaleController.settledFontScale
 
     // Data
     /**
@@ -1126,40 +1092,13 @@ class CampfireViewModel(
     val failedSongFileNames: StateFlow<Set<String>> = _failedSongFileNames.asStateFlow()
 
     /**
-     * The text size multiplier of the song details screen. A pinch gesture changes it on every frame, so the latest
-     * value is kept here and only written to the user preferences once the changes have settled.
-     */
-    private val liveFontScale = mutableFloatStateOf(UserPreferences.DEFAULT_FONT_SCALE)
-
-    /**
-     * Snapshot state rather than a flow, so that it is read where the text is laid out: a pinch changes it on every
-     * frame, and a flow collected at the root of the screen would recompose the whole screen every time, a frame late.
-     */
-    val fontScale: Float get() = liveFontScale.floatValue
-
-    /**
-     * The value set on this device and not yet written to the preferences. For as long as there is one it wins over
-     * the stored value; once it is saved, whatever the preferences hold wins again.
-     */
-    private val fontScalePreference = DebouncedPreference<Float> { copy(fontScale = it) }
-
-    /**
      * The export screen's options as it last set them and not saved yet. A step of its size or its margins is a new
      * value, and saving each one would publish the preferences to every screen once a step, so they are saved the way
-     * [fontScalePreference] is: once they have held still, or at once when the screen goes (see [setVisibleDialog]). A
+     * [FontScaleController.fontScalePreference] is: once they have held still, or at once when the screen goes (see [setVisibleDialog]). A
      * screen composed again within that moment, as a rotation does, starts from this rather than a step back.
      */
     private val printSettingsPreference = DebouncedPreference<PrintSettings> { copy(printSettings = it) }
     val pendingPrintSettings = printSettingsPreference.pending
-
-    private val settledFontScaleState = mutableFloatStateOf(UserPreferences.DEFAULT_FONT_SCALE)
-
-    /**
-     * [fontScale] once it has held still for a moment: what the songs that are not on screen are laid out at, so that a
-     * pinch lays out the one song being read rather than the pages beside it as well. A step of the stepper or of a
-     * shortcut is not a continuous change, so it reaches them at once.
-     */
-    val settledFontScale: Float get() = settledFontScaleState.floatValue
 
     /**
      * The import that has been worked out but not carried out, waiting for the user to answer the question
@@ -1359,7 +1298,7 @@ class CampfireViewModel(
             songsSearch = songsSearch,
             setlistsSearch = setlistsSearch,
         )
-        fontScalePreference.start(viewModelScope, PREFERENCE_WRITE_DEBOUNCE_MILLIS, updateUserPreferences::invoke)
+        fontScaleController.startWriter()
         printSettingsPreference.start(viewModelScope, PREFERENCE_WRITE_DEBOUNCE_MILLIS, updateUserPreferences::invoke)
         metronomeSettingsPreference.start(viewModelScope, PREFERENCE_WRITE_DEBOUNCE_MILLIS, updateUserPreferences::invoke)
         overrides.startSettling()
@@ -1409,19 +1348,8 @@ class CampfireViewModel(
                 (playback as? MetronomePlayback.Stopped)?.reason?.let { sendMessage(Message.MetronomeStopped(it)) }
             }
         }
-        viewModelScope.launch {
-            // The first read at launch, a read again, a restore, a sync run: whatever wrote the preference wins
-            // whenever nothing set here is still waiting to be saved. The echo of our own save equals the live value.
-            userPreferences.filterNotNull().map { it.fontScale }.distinctUntilChanged().collect { stored ->
-                if (fontScalePreference.pending.value == null) {
-                    liveFontScale.floatValue = stored
-                    settleFontScale()
-                }
-            }
-        }
-        viewModelScope.launch {
-            snapshotFlow { fontScale }.debounce(FONT_SCALE_SETTLE_MILLIS).collect { settledFontScaleState.floatValue = it }
-        }
+        fontScaleController.startEcho(userPreferences)
+        fontScaleController.startSettle()
         viewModelScope.launch {
             // Where the web's audio output listens for the presses that allow a page's audio to start, so that tapping
             // around the rest of the app never opens the audio device; a no-op on the other platforms. The screen
@@ -2589,7 +2517,7 @@ class CampfireViewModel(
      * only if nothing newer arrived meanwhile, as the collectors do.
      */
     private suspend fun writeWaitingPreferences() = DebouncedPreference.flushAll(
-        fontScalePreference,
+        fontScaleController.fontScalePreference,
         metronomeSettingsPreference,
         printSettingsPreference,
         write = updateUserPreferences::invoke,
@@ -3463,6 +3391,12 @@ class CampfireViewModel(
 
     // User preferences
 
+    /** See [FontScaleController.setFontScale]. */
+    fun setFontScale(value: Float) = fontScaleController.setFontScale(value)
+
+    /** See [FontScaleController.adjustFontScale]. */
+    fun adjustFontScale(steps: Int) = fontScaleController.adjustFontScale(steps)
+
     fun setShouldShowArchivedSetlists(value: Boolean) = changeUserPreferences { copy(shouldShowArchivedSetlists = value) }
 
     fun setPerformanceModeEnabled(value: Boolean) = preferencesController.setPerformanceModeEnabled(value)
@@ -3482,33 +3416,6 @@ class CampfireViewModel(
     fun setMetronomeEnabled(value: Boolean) = preferencesController.setMetronomeEnabled(value)
 
     fun toggleSectionFold(songFileName: String, key: String) = preferencesController.toggleSectionFold(songFileName, key)
-
-    /**
-     * Kept in whole percent, which is all the stepper's label shows: a slow pinch moves less than that on most frames,
-     * and an equal value is one the snapshot state ignores, so those frames lay nothing out again.
-     */
-    fun setFontScale(value: Float) {
-        val clamped = (value.coerceIn(UserPreferences.MIN_FONT_SCALE, UserPreferences.MAX_FONT_SCALE) * 100).roundToInt() / 100f
-        if (clamped == liveFontScale.floatValue) return
-        liveFontScale.floatValue = clamped
-        fontScalePreference.set(clamped)
-    }
-
-    /**
-     * Moves the font scale by the given number of [FONT_SCALE_STEP]s. A value set by a gesture is first snapped to the
-     * grid of steps in the direction of the change, so that a single tap always lands on the next step (125% goes to
-     * 120% or 130%, never past them).
-     */
-    fun adjustFontScale(steps: Int) {
-        val currentSteps = liveFontScale.floatValue / FONT_SCALE_STEP
-        val snappedSteps = if (steps > 0) floor(currentSteps + FONT_SCALE_STEP_TOLERANCE) else ceil(currentSteps - FONT_SCALE_STEP_TOLERANCE)
-        setFontScale((snappedSteps + steps) * FONT_SCALE_STEP)
-        settleFontScale()
-    }
-
-    private fun settleFontScale() {
-        settledFontScaleState.floatValue = liveFontScale.floatValue
-    }
 
     fun setSortingMode(value: UserPreferences.SortingMode) = preferencesController.setSortingMode(value)
 
@@ -3754,9 +3661,7 @@ class CampfireViewModel(
     )
 
     companion object {
-        private const val FONT_SCALE_STEP_TOLERANCE = 0.01f // Floating point slack, so that 1.1000001 still counts as step 11.
         private const val PREFERENCE_WRITE_DEBOUNCE_MILLIS = 500L
-        private const val FONT_SCALE_SETTLE_MILLIS = 200L
         private const val SONG_EDIT_ATTEMPTS = 2
         private const val SILENT_CLICK_GRACE_MILLIS = 3_000L
         private const val DEMO_LIBRARY_READ_TIMEOUT_MILLIS = 10_000L // Past the drawables' five seconds: it cuts short a first impression, not a frame.
