@@ -9,31 +9,148 @@
 -->
 # :app:ios
 
-iOS entry point. A Kotlin/Native module that produces the static `ComposeApp` framework consumed by the Xcode project in `iosApp/`.
+iOS entry point. A Kotlin/Native module that produces the static `ComposeApp` framework consumed by the Xcode project in
+`iosApp/`.
 
-- `CampfireViewController()` (in `src/iosMain`) starts Koin once, through `:app:di`'s `startCampfireDependencyGraph`, and returns a `ComposeUIViewController` hosting `CampfireIosApp`. Links open through `UIApplication.openURL`; an address `NSURL` refuses as written (a non-ASCII letter or a `|` in a song's link, which iOS 15 and 16 do not encode themselves) is percent-encoded first. It also sets the window's `overrideUserInterfaceStyle` from the theme preference (`onUiModeChanged` of `CampfireIosApp`) — unspecified for "System default" — because the status bar, the document picker, the share sheet and the keyboard follow UIKit's interface style rather than Compose's theme. The modules are named in `:app:di`, not here.
-- `IosFilePicker.kt` — the `FilePicker` actual: `UIDocumentPickerViewController` for importing, `UIActivityViewController` for saving and sharing. A presentation UIKit would refuse — anything already on the host, a sheet that is still dismissing included — is answered as nothing picked and nothing shared, rather than reported as done. The bytes of an export are written on the IO dispatcher and only the presentation happens on the main thread, because a whole-library archive is megabytes and the caller is the view model's main-thread scope. The picker is asked for copies, so every picked file is a copy in the temporary directory and is deleted once it has been read; an export's and a share's temporary file is deleted by whoever made it — the export after the picker has answered, the share from the activity controller's completion handler — and the temporary directory is never swept, because sharing hands a file to an app that is still reading it while Campfire is in the background.
-- `IosFileImport.kt` — a top-level `openUrl(url)` that Swift calls from `.onOpenURL`, which in practice means a file opened with Campfire. A sync redirect is answered by the `ASWebAuthenticationSession` itself and never arrives here, but one is recognised and ignored anyway: read as a song it would fail, and the user would be told a file could not be imported that they never tried to import. The URL is read on a background dispatcher, one at a time and in the order it arrived, so a large file does not hold up the launch it caused; a file that cannot be read is passed on empty, so the import reports it as skipped instead of the app coming to the front and saying nothing. A file that came from AirDrop, Mail or Messages is a copy iOS leaves in `Documents/Inbox` — visible in the Files app because of `UIFileSharingEnabled` — and it is deleted once it has been read, and only there, since a file opened in place is the user's original (possibly one in the library itself). Because it is the user's original, it is read through an `NSFileCoordinator` (`readImportedFile`): an iCloud Drive song may not be on the device at all, and a coordinated read is what fetches it — and waits for another app still writing it — instead of reporting it as skipped. `cleanImportInbox()`, called from Swift when the scene goes to the background, removes the rest: the copies that could not be read or that the app was killed before reading. It is not done at start, because the file a cold start was caused by is already in the inbox by then and is only handed over afterwards, so there is no telling it from a leftover.
-- `iosApp/iosApp.xcodeproj` — SwiftUI wrapper (`ContentView.swift` embeds the view controller with `.ignoresSafeArea()`, the Compose scaffold applies insets itself; `iOSApp.swift` forwards `.onOpenURL` to `openUrl` and observes `scenePhase` to call `cleanImportInbox()` when the app goes to the background). A "Compile Kotlin Framework" build phase runs `./gradlew :app:ios:embedAndSignAppleFrameworkForXcode` from the repo root. Team id, bundle id and app name live in `iosApp/Configuration/Config.xcconfig` (the target's settings read all three from it, so a team picked in Xcode's Signing tab would write a literal over `$(TEAM_ID)` — change it in the file); version and build number come from `gradle.properties` (`campfire.versionName`, `campfire.buildNumber`, both shared with every platform), overridable from `local.properties` as for Gradle, written into the built `Info.plist` by the "Set version from the Gradle properties" build phase — `MARKETING_VERSION` and `CURRENT_PROJECT_VERSION` are deliberately not set in `project.pbxproj`.
+### `CampfireViewController()`
 
-`Info.plist` also declares the `campfire` URL scheme under `CFBundleURLTypes`. `ASWebAuthenticationSession` intercepts its own callback scheme and does not need the declaration, but the scheme is what Dropbox has registered as the redirect URI, so it stays declared.
+`CampfireViewController()` (in `src/iosMain`) starts Koin once, through `:app:di`'s `startCampfireDependencyGraph`, and
+returns a `ComposeUIViewController` hosting `CampfireIosApp`. Links open through `UIApplication.openURL`; an address
+`NSURL` refuses as written (a non-ASCII letter or a `|` in a song's link, which iOS 15 and 16 do not encode themselves)
+is percent-encoded first. It also sets the window's `overrideUserInterfaceStyle` from the theme preference
+(`onUiModeChanged` of `CampfireIosApp`) — unspecified for "System default" — because the status bar, the document
+picker, the share sheet and the keyboard follow UIKit's interface style rather than Compose's theme. The modules are
+named in `:app:di`, not here.
 
-`ITSAppUsesNonExemptEncryption` is `false`, so App Store Connect does not hold every upload for the export compliance questions: the app's only cryptography is HTTPS through the system, SHA-256 hashing and the Keychain, all exempt. Anything that adds encryption of its own has to change that answer.
+### `IosFilePicker.kt`
 
-`Info.plist` carries the document integration: `UIFileSharingEnabled` and `LSSupportsOpeningDocumentsInPlace` put the library under "On My iPhone → Campfire" in the Files app (the library is in the documents directory; the preferences are not, so they stay out of the user's way), and claiming to open documents in place is claiming to read them the way their owner expects, through a file coordinator. Both directories are in the device backup, except what `IosFileStorage` marks as excluded each time it is written — the sync index and the forget-pending note (`SyncIndexLocalSourceImpl`), the editor draft (`EditorDraftLocalSourceImpl`) and every cover copy (`CoverArtLocalSourceImpl`) — and the credentials, which are a device-bound Keychain item. `UTImportedTypeDeclarations` declares the ChordPro types and `CFBundleDocumentTypes` claims them — `.cho` with `LSHandlerRank` `Default`, the rest of the family `Alternate`, since those extensions are shared with other kinds of file. Zip and plain text are deliberately absent. Keep the list in step with `LibraryFiles.SONG_EXTENSIONS`.
+`IosFilePicker.kt` — the `FilePicker` actual: `UIDocumentPickerViewController` for importing, `UIActivityViewController`
+for saving and sharing. A presentation UIKit would refuse — anything already on the host, a sheet that is still
+dismissing included — is answered as nothing picked and nothing shared, rather than reported as done. The bytes of an
+export are written on the IO dispatcher and only the presentation happens on the main thread, because a whole-library
+archive is megabytes and the caller is the view model's main-thread scope. The picker is asked for copies, so every
+picked file is a copy in the temporary directory and is deleted once it has been read; an export's and a share's
+temporary file is deleted by whoever made it — the export after the picker has answered, the share from the activity
+controller's completion handler — and the temporary directory is never swept, because sharing hands a file to an app
+that is still reading it while Campfire is in the background.
 
-`CFBundleLocalizations` lists `en` and `hu`. The app's strings are Compose resources, which iOS cannot see, so the key is what tells UIKit which languages the app speaks: without it the system UI drawn for the app (the sign-in alert, the document picker, the share sheet, the notification prompt) stays English on a Hungarian iPhone, and Settings offers no per-app language. Keep it in step with the `values-*` folders of `:presentation`'s composeResources.
+### `IosFileImport.kt`
 
-The home screen icon follows the theme color: `Assets.xcassets` has an `AppIcon-<Color>` alternate icon set for every color but the app's own (generated by `app/generate_theme_icons.py`, each with the light, dark and tinted appearance, so the home screen's own appearance setting still decides between those), named in `ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES`, and `applyAppIcon` in `CampfireViewController.kt` switches with `setAlternateIconName`. iOS answers every switch with an alert it does not let an app suppress, and refuses one asked for by an app that is not active, so `CampfireIosApp` asks only once the color has stayed the same for a second while the app is resumed, and again at every resume, which is a no-op where the icon already matches and what applies a preference a restored backup brought. The primary `AppIcon` set is generated as well, in the app's own purple to orange gradient, from the orange sources in `app/icons` — edit those, never the sets. `LaunchScreen.storyboard` is nothing but the `LaunchBackground` color of the catalog, the background of the app's own palette in either appearance, so it hands over to the app's first frame without a change of color.
+`IosFileImport.kt` — a top-level `openUrl(url)` that Swift calls from `.onOpenURL`, which in practice means a file
+opened with Campfire. A sync redirect is answered by the `ASWebAuthenticationSession` itself and never arrives here, but
+one is recognised and ignored anyway: read as a song it would fail, and the user would be told a file could not be
+imported that they never tried to import. The URL is read on a background dispatcher, one at a time and in the order it
+arrived, so a large file does not hold up the launch it caused; a file that cannot be read is passed on empty, so the
+import reports it as skipped instead of the app coming to the front and saying nothing.
 
-`PrivacyInfo.xcprivacy`, in the app target's Resources phase, is the privacy manifest App Store Connect refuses a build without. It declares no tracking and no collected data, and the two required-reason categories the linked binary references: file timestamps, for the library's own files (`NSFileModificationDate` in `IosFileStorage`, and skia's and ICU's `stat`/`fstat` on the bundle, C617.1) and for the size of a file the user picked or opened in place (3B52.1), and the system boot time, `mach_absolute_time` from the runtime's monotonic clock, for elapsed time inside the app (35F9.1). The Kotlin framework is static, so what Compose, skiko and the Kotlin runtime call is the app's to declare; none of them ships a manifest. After a Kotlin, Compose or skiko update, `nm -u` on a Release build's `Campfire` executable is how to see whether a new category has come in (`NSUserDefaults` is the likely one; `systemUptime` would fall under the boot time category already declared) before App Store Connect says so.
+A file that came from AirDrop, Mail or Messages is a copy iOS leaves in `Documents/Inbox` — visible in the Files app
+because of `UIFileSharingEnabled` — and it is deleted once it has been read, and only there, since a file opened in
+place is the user's original (possibly one in the library itself). Because it is the user's original, it is read through
+an `NSFileCoordinator` (`readImportedFile`): an iCloud Drive song may not be on the device at all, and a coordinated
+read is what fetches it — and waits for another app still writing it — instead of reporting it as skipped.
+`cleanImportInbox()`, called from Swift when the scene goes to the background, removes the rest: the copies that could
+not be read or that the app was killed before reading. It is not done at start, because the file a cold start was caused
+by is already in the inbox by then and is only handed over afterwards, so there is no telling it from a leftover.
 
-`IosSyncNotifier.kt` holds a `beginBackgroundTask` and posts a local notification while a sync run lasts, handed to `CampfireIosApp` as its `SyncNotifier`. It is one per process and follows the run itself, the way the Android service does: it collects `GetSyncStateUseCase`, begins the background task when a run starts and ends it, and takes the notification down, when the run ends — the task two seconds later (`SyncNotificationScheduler`, shared with the Android service and tested in `:presentation`'s `ui/platform`), kept by a run that starts meanwhile, since a run chained behind the one that ended starts within milliseconds and a suspended app would never see it — and takes nothing from the composition but the translated words. Compose stops collecting and drawing as soon as the scene leaves the foreground, so a notifier driven by the UI would hear nothing once the app is out of sight. It posts only while the app is in the background — when it leaves, and then at most once a second as the counts move, by the same scheduler — and takes the notification down when the app comes back, because iOS silences a notification that arrives for an app in the foreground and the settings screen shows the run there anyway. The permission is asked for when a run starts, while the user is looking at the app. iOS is stricter than Android here: a background task buys tens of seconds, not minutes, so when iOS says that time is up the run is stopped — it writes its index and reports itself as interrupted, the way Android's `onTimeout` does — and a process killed before that is still found by the index's "a run was going" marker at the next start. The notification is informational (iOS has no progress bar in one, and no button without a registered category), so stopping a run is done in the app.
+### `iosApp/iosApp.xcodeproj`
 
-`IosMetronomeNotifier.kt` is a playing metronome's face on the lock screen and in Control Center, handed to `CampfireIosApp` as its `MetronomeNotifier`: `MPNowPlayingInfoCenter` with the song (or "Metronome") and the tempo in the language chosen in the app, and `MPRemoteCommandCenter`'s pause, stop and toggle, every one of which stops the click, since there is no paused state. It only draws and answers: the audio session, the background audio and the interruptions belong to the audio output in `:metronome:implementation`, so a call stops the click whether or not this is around. It follows the engine's own `playback` for taking Now Playing down, since the composition stops as the app leaves the front. `Info.plist`'s `UIBackgroundModes` holds `audio` for it, the session being active only while a click plays, which is what App Review checks the mode against. A click that cannot sound is stopped by `:presentation` a few seconds after the app leaves the front, so the mode never keeps a silent session alive.
+`iosApp/iosApp.xcodeproj` — SwiftUI wrapper (`ContentView.swift` embeds the view controller with `.ignoresSafeArea()`,
+the Compose scaffold applies insets itself; `iOSApp.swift` forwards `.onOpenURL` to `openUrl` and observes `scenePhase`
+to call `cleanImportInbox()` when the app goes to the background). A "Compile Kotlin Framework" build phase runs
+`./gradlew :app:ios:embedAndSignAppleFrameworkForXcode` from the repo root. Team id, bundle id and app name live in
+`iosApp/Configuration/Config.xcconfig` (the target's settings read all three from it, so a team picked in Xcode's
+Signing tab would write a literal over `$(TEAM_ID)` — change it in the file); version and build number come from
+`gradle.properties` (`campfire.versionName`, `campfire.buildNumber`, both shared with every platform), overridable from
+`local.properties` as for Gradle, written into the built `Info.plist` by the "Set version from the Gradle properties"
+build phase — `MARKETING_VERSION` and `CURRENT_PROJECT_VERSION` are deliberately not set in `project.pbxproj`.
 
-Because the Files app can change the library behind the app's back, `CampfireApp` rescans whenever the app enters the foreground here (`ON_START`, not the `ON_RESUME` that Control Center and system alerts also send) (see `isLibraryEditableOutsideApp` in `:presentation`).
+`Info.plist` also declares the `campfire` URL scheme under `CFBundleURLTypes`. `ASWebAuthenticationSession` intercepts
+its own callback scheme and does not need the declaration, but the scheme is what Dropbox has registered as the redirect
+URI, so it stays declared.
 
-The shared "iOS" run configuration (`.run/iOS.run.xml`) runs the app from Android Studio or IntelliJ. The Kotlin Multiplatform plugin makes a shared Xcode scheme of it, `xcshareddata/xcschemes/iOS.xcscheme`, on every Mac that opens the project, and that folder is ignored: a project with a shared scheme gets no automatic one, and `publish-ios.yml` archives with the automatic `iosApp` scheme a fresh checkout has. The same thing makes `xcodebuild -scheme iosApp` fail on a Mac the IDE has written the scheme on, which is why the commands here name the target instead.
+`ITSAppUsesNonExemptEncryption` is `false`, so App Store Connect does not hold every upload for the export compliance
+questions: the app's only cryptography is HTTPS through the system, SHA-256 hashing and the Keychain, all exempt.
+Anything that adds encryption of its own has to change that answer.
 
-Build and run from Xcode (or `xcodebuild -project app/ios/iosApp/iosApp.xcodeproj -target iosApp -sdk iphonesimulator -arch arm64 SYMROOT=<dir> OBJROOT=<dir> build`); `./gradlew :app:ios:linkDebugFrameworkIosSimulatorArm64` only checks that the Kotlin side compiles and links. The target excludes `x86_64` from simulator builds (`EXCLUDED_ARCHS[sdk=iphonesimulator*]`), since the Kotlin side has no Intel simulator target: a build for every architecture — the Release configuration the shared iOS run configuration uses, or any build without `ONLY_ACTIVE_ARCH` — otherwise stops in Compose resources' sync with "Unknown iOS simulator arch: 'x86_64'".
+`Info.plist` carries the document integration: `UIFileSharingEnabled` and `LSSupportsOpeningDocumentsInPlace` put the
+library under "On My iPhone → Campfire" in the Files app (the library is in the documents directory; the preferences are
+not, so they stay out of the user's way), and claiming to open documents in place is claiming to read them the way their
+owner expects, through a file coordinator. Both directories are in the device backup, except what `IosFileStorage` marks
+as excluded each time it is written — the sync index and the forget-pending note (`SyncIndexLocalSourceImpl`), the
+editor draft (`EditorDraftLocalSourceImpl`) and every cover copy (`CoverArtLocalSourceImpl`) — and the credentials,
+which are a device-bound Keychain item. `UTImportedTypeDeclarations` declares the ChordPro types and
+`CFBundleDocumentTypes` claims them — `.cho` with `LSHandlerRank` `Default`, the rest of the family `Alternate`, since
+those extensions are shared with other kinds of file. Zip and plain text are deliberately absent. Keep the list in step
+with `LibraryFiles.SONG_EXTENSIONS`.
+
+`CFBundleLocalizations` lists `en` and `hu`. The app's strings are Compose resources, which iOS cannot see, so the key
+is what tells UIKit which languages the app speaks: without it the system UI drawn for the app (the sign-in alert, the
+document picker, the share sheet, the notification prompt) stays English on a Hungarian iPhone, and Settings offers no
+per-app language. Keep it in step with the `values-*` folders of `:presentation`'s composeResources.
+
+The home screen icon follows the theme color: `Assets.xcassets` has an `AppIcon-<Color>` alternate icon set for every
+color but the app's own (generated by `app/generate_theme_icons.py`, each with the light, dark and tinted appearance, so
+the home screen's own appearance setting still decides between those), named in
+`ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES`, and `applyAppIcon` in `CampfireViewController.kt` switches with
+`setAlternateIconName`. iOS answers every switch with an alert it does not let an app suppress, and refuses one asked
+for by an app that is not active, so `CampfireIosApp` asks only once the color has stayed the same for a second while
+the app is resumed, and again at every resume, which is a no-op where the icon already matches and what applies a
+preference a restored backup brought. The primary `AppIcon` set is generated as well, in the app's own purple to orange
+gradient, from the orange sources in `app/icons` — edit those, never the sets. `LaunchScreen.storyboard` is nothing but
+the `LaunchBackground` color of the catalog, the background of the app's own palette in either appearance, so it hands
+over to the app's first frame without a change of color.
+
+`PrivacyInfo.xcprivacy`, in the app target's Resources phase, is the privacy manifest App Store Connect refuses a build
+without. It declares no tracking and no collected data, and the two required-reason categories the linked binary
+references: file timestamps, for the library's own files (`NSFileModificationDate` in `IosFileStorage`, and skia's and
+ICU's `stat`/`fstat` on the bundle, C617.1) and for the size of a file the user picked or opened in place (3B52.1), and
+the system boot time, `mach_absolute_time` from the runtime's monotonic clock, for elapsed time inside the app (35F9.1).
+The Kotlin framework is static, so what Compose, skiko and the Kotlin runtime call is the app's to declare; none of them
+ships a manifest. After a Kotlin, Compose or skiko update, `nm -u` on a Release build's `Campfire` executable is how to
+see whether a new category has come in (`NSUserDefaults` is the likely one; `systemUptime` would fall under the boot
+time category already declared) before App Store Connect says so.
+
+`IosSyncNotifier.kt` holds a `beginBackgroundTask` and posts a local notification while a sync run lasts, handed to
+`CampfireIosApp` as its `SyncNotifier`. It is one per process and follows the run itself, the way the Android service
+does: it collects `GetSyncStateUseCase`, begins the background task when a run starts and ends it, and takes the
+notification down, when the run ends — the task two seconds later (`SyncNotificationScheduler`, shared with the Android
+service and tested in `:presentation`'s `ui/platform`), kept by a run that starts meanwhile, since a run chained behind
+the one that ended starts within milliseconds and a suspended app would never see it — and takes nothing from the
+composition but the translated words. Compose stops collecting and drawing as soon as the scene leaves the foreground,
+so a notifier driven by the UI would hear nothing once the app is out of sight.
+
+It posts only while the app is in the background — when it leaves, and then at most once a second as the counts move, by
+the same scheduler — and takes the notification down when the app comes back, because iOS silences a notification that
+arrives for an app in the foreground and the settings screen shows the run there anyway. The permission is asked for
+when a run starts, while the user is looking at the app. iOS is stricter than Android here: a background task buys tens
+of seconds, not minutes, so when iOS says that time is up the run is stopped — it writes its index and reports itself as
+interrupted, the way Android's `onTimeout` does — and a process killed before that is still found by the index's "a run
+was going" marker at the next start. The notification is informational (iOS has no progress bar in one, and no button
+without a registered category), so stopping a run is done in the app.
+
+`IosMetronomeNotifier.kt` is a playing metronome's face on the lock screen and in Control Center, handed to
+`CampfireIosApp` as its `MetronomeNotifier`: `MPNowPlayingInfoCenter` with the song (or "Metronome") and the tempo in
+the language chosen in the app, and `MPRemoteCommandCenter`'s pause, stop and toggle, every one of which stops the
+click, since there is no paused state. It only draws and answers: the audio session, the background audio and the
+interruptions belong to the audio output in `:metronome:implementation`, so a call stops the click whether or not this
+is around. It follows the engine's own `playback` for taking Now Playing down, since the composition stops as the app
+leaves the front. `Info.plist`'s `UIBackgroundModes` holds `audio` for it, the session being active only while a click
+plays, which is what App Review checks the mode against. A click that cannot sound is stopped by `:presentation` a few
+seconds after the app leaves the front, so the mode never keeps a silent session alive.
+
+Because the Files app can change the library behind the app's back, `CampfireApp` rescans whenever the app enters the
+foreground here (`ON_START`, not the `ON_RESUME` that Control Center and system alerts also send) (see
+`isLibraryEditableOutsideApp` in `:presentation`).
+
+The shared "iOS" run configuration (`.run/iOS.run.xml`) runs the app from Android Studio or IntelliJ. The Kotlin
+Multiplatform plugin makes a shared Xcode scheme of it, `xcshareddata/xcschemes/iOS.xcscheme`, on every Mac that opens
+the project, and that folder is ignored: a project with a shared scheme gets no automatic one, and `publish-ios.yml`
+archives with the automatic `iosApp` scheme a fresh checkout has. The same thing makes `xcodebuild -scheme iosApp` fail
+on a Mac the IDE has written the scheme on, which is why the commands here name the target instead.
+
+Build and run from Xcode (or `xcodebuild -project app/ios/iosApp/iosApp.xcodeproj -target iosApp -sdk iphonesimulator
+-arch arm64 SYMROOT=<dir> OBJROOT=<dir> build`); `./gradlew :app:ios:linkDebugFrameworkIosSimulatorArm64` only checks
+that the Kotlin side compiles and links. The target excludes `x86_64` from simulator builds
+(`EXCLUDED_ARCHS[sdk=iphonesimulator*]`), since the Kotlin side has no Intel simulator target: a build for every
+architecture — the Release configuration the shared iOS run configuration uses, or any build without `ONLY_ACTIVE_ARCH`
+— otherwise stops in Compose resources' sync with "Unknown iOS simulator arch: 'x86_64'".

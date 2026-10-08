@@ -9,94 +9,319 @@
 -->
 # :app:desktop
 
-Compose Desktop entry point (`CampfireDesktopApplication.kt`, `main(args)`). It first lets Compose configure the Swing globals (`configureSwingGlobalsForCompose`, which `application` would only call later) — on Linux that is what sets the display scale, which the AWT toolkit reads once, when it starts — and then, on Linux, sets the X11 toolkit's app class name to `Campfire` (`setLinuxWindowClassName`) before the first window exists. Nothing may start the toolkit before the first of those two: a window at 1x on a HiDPI screen is what that costs, and only a Linux desktop whose scale is in `Xft.dpi` shows it. Starts Koin through `:app:di`'s `startCampfireDependencyGraph` before the window opens (the graph belongs to the process, so there is no `KoinApplication` composable around the content), then hosts `CampfireDesktopApp` in a `Window` whose `onKeyEvent` is wired to `CampfireViewModel.handleKeyEvent` (Escape dismisses the visible modal, closes an open search, pops the back stack, or on the root screen asks whether to close the app — `DialogType.ConfirmExit`, see `presentation`) and whose `onPreviewKeyEvent` drops the repeats of a held Escape. The modules are named in `:app:di`, not here.
+Compose Desktop entry point (`CampfireDesktopApplication.kt`, `main(args)`). It first lets Compose configure the Swing
+globals (`configureSwingGlobalsForCompose`, which `application` would only call later) — on Linux that is what sets the
+display scale, which the AWT toolkit reads once, when it starts — and then, on Linux, sets the X11 toolkit's app class
+name to `Campfire` (`setLinuxWindowClassName`) before the first window exists. Nothing may start the toolkit before the
+first of those two: a window at 1x on a HiDPI screen is what that costs, and only a Linux desktop whose scale is in
+`Xft.dpi` shows it. Starts Koin through `:app:di`'s `startCampfireDependencyGraph` before the window opens (the graph
+belongs to the process, so there is no `KoinApplication` composable around the content), then hosts `CampfireDesktopApp`
+in a `Window` whose `onKeyEvent` is wired to `CampfireViewModel.handleKeyEvent` (Escape dismisses the visible modal,
+closes an open search, pops the back stack, or on the root screen asks whether to close the app —
+`DialogType.ConfirmExit`, see `presentation`) and whose `onPreviewKeyEvent` drops the repeats of a held Escape. The
+modules are named in `:app:di`, not here.
 
-Closing the window is a back-navigation as far as unsaved text is concerned: `onCloseRequest`, the Close of the question Escape asks on the root screen, and the macOS quit (the application menu and Cmd+Q, which never reach `onCloseRequest` and are caught with `Desktop.setQuitHandler` instead) all go through `CampfireViewModel.requestExit`, which waits for a save still being written, asks the editor's unsaved changes question if there is unsaved text then — a save that failed included — and only lets the process end once the text is in the file or has been discarded. The window and that Close end it with `exitApplication`. The macOS quit keeps the system's `QuitResponse` and answers it — `performQuit` once the text is in the file or has been discarded, `cancelQuit` when the user chose to stay (`requestExit`'s `onCancelled`) — because cancelling it up front aborts the logout, restart or shut down it was part of, with macOS naming Campfire as the app that interrupted it. Every one of those ends in the same `leave`, which hides the window at once and ends the process only after `CampfireViewModel.settleSynchronizationBeforeExit`: an import that is being written is let finish first, for up to thirty seconds, since its songs are written before its setlists (one still being read is cancelled, having written nothing, a conflicts question that is up is dropped, and no queued batch is started); then the automatic sync run an edit made just before is waiting for starts then, and a run that is going is let finish, for up to fifteen seconds, after which it is stopped and its winding down waited for briefly. Dropped, the last change would reach the other devices only the next time this computer opens Campfire; killed mid run, it would leave the "a run was going" marker behind. The listener for other instances is closed first, so a launch in the meantime waits for the lock.
+Closing the window is a back-navigation as far as unsaved text is concerned: `onCloseRequest`, the Close of the question
+Escape asks on the root screen, and the macOS quit (the application menu and Cmd+Q, which never reach `onCloseRequest`
+and are caught with `Desktop.setQuitHandler` instead) all go through `CampfireViewModel.requestExit`, which waits for a
+save still being written, asks the editor's unsaved changes question if there is unsaved text then — a save that failed
+included — and only lets the process end once the text is in the file or has been discarded. The window and that Close
+end it with `exitApplication`. The macOS quit keeps the system's `QuitResponse` and answers it — `performQuit` once the
+text is in the file or has been discarded, `cancelQuit` when the user chose to stay (`requestExit`'s `onCancelled`) —
+because cancelling it up front aborts the logout, restart or shut down it was part of, with macOS naming Campfire as the
+app that interrupted it.
 
-The view model is obtained outside `Window` so window resizing doesn't reset it. The window opens at 800x600 and cannot be made smaller than 480x480 dp of the app's own interface — 408x408, since the app draws its dp at `:presentation`'s `interfaceScale` — both capped to the free area of the screen it opens on (`fitSizeToScreen`), since a window below its minimum is grown past the edge of the screen. The JetBrains Runtime hands that minimum to Windows scaled, which OpenJDK does not (Windows takes it for physical pixels there, so at 200% the window could be dragged down to half of it).
+Every one of those ends in the same `leave`, which hides the window at once and ends the process only after
+`CampfireViewModel.settleSynchronizationBeforeExit`: an import that is being written is let finish first, for up to
+thirty seconds, since its songs are written before its setlists (one still being read is cancelled, having written
+nothing, a conflicts question that is up is dropped, and no queued batch is started); then the automatic sync run an
+edit made just before is waiting for starts then, and a run that is going is let finish, for up to fifteen seconds,
+after which it is stopped and its winding down waited for briefly. Dropped, the last change would reach the other
+devices only the next time this computer opens Campfire; killed mid run, it would leave the "a run was going" marker
+behind. The listener for other instances is closed first, so a launch in the meantime waits for the lock.
 
-On macOS and Windows the window has no title bar of its own color: its content is laid out under it, keeping only the window buttons, so they sit on the app's own background in every theme and color, and nothing draws a title (`TitleBar.kt`). On both it is the JetBrains Runtime's custom title bar (`JBR.getWindowDecorations()`, from the `jbr-api` library, whose interfaces `proguard-rules.pro` keeps by name, since the runtime binds them by name), which gives the strip the title bar's behavior — dragging, and a double click that does what the system is set to do with one (macOS's Desktop & Dock setting: zoom, fill, minimize or nothing; maximize on Windows) — only where nothing listens to the mouse, and Compose's canvas listens everywhere, so a toolkit-wide event listener marks every mouse event over the strip as the title bar's (`forceHitTest(false)`), running after the runtime's own guess and before it acts on it, except in full screen, where the app bar reaches the top edge. The macOS transparent title bar (the `apple.awt.fullWindowContent` client properties) looks the same but lets the double click through to the content, where it does nothing. Linux keeps the window manager's title bar, and so does a runtime other than the JetBrains Runtime. The shared UI learns of the strip (28pt on macOS, 32 on Windows) as a system bar inset at the top (`TitleBarInsets`, which provides Compose Desktop's internal `LocalPlatformWindowInsets`, the local its `WindowInsets` read), so every screen already keeps clear of it the way it keeps clear of a phone's status bar, and nothing of the app is ever under it to take the mouse away; a full screen window gets none. On macOS whether the window is in full screen is taken from the system's own notifications (`com.apple.eawt.FullScreenUtilities`, through reflection and its own `--add-exports`, like the trackpad's pinch below) rather than from `WindowState.placement`, which Compose reads again only on a resize: a zoomed window can go full screen without one, and kept the strip there. It is all set in `SwingWindow`'s `init`, before the window is shown, because the JDK does not lay the content out again when it changes on a window already on screen. The buttons — and on macOS the rim along the top edge — are drawn for the app's own light or dark theme (`TitleBarAppearance`: `apple.awt.windowAppearance`, `controls.dark`), since the wrong one leaves them all but invisible; until the preferences are read the macOS application follows the system's appearance (`apple.awt.application.appearance`, where the JDK's default is always light). The per-window appearance and the custom title bar exist only in the JetBrains Runtime, which is why `toolchainLauncher` asks for that vendor: it is the runtime `run` starts and every package bundles, which Gradle cannot download (foojay lists no JetBrains Runtime 21), so it has to be installed where Gradle finds JDKs, as the workflows do with `setup-java` and as the IDE's own runtime is when it starts Gradle. Where there is none, any JDK 21 stands in with a warning, so that a fresh clone still builds every module, and every `createRelease…`, `packageRelease…` and `runRelease` task fails before it starts (`isJetBrainsRuntimeMissing`): whatever is handed out always has the custom title bar. What a fast resize uncovers before the app's next frame fills it is kept on the theme's background color, reported by `CampfireApp`'s `onBackgroundColorChanged` (`setUndrawnAreaColor`): the window's own background and that of the heavyweight surface the app is rendered into, which does not follow the window's, and on Windows that of every component of the window, since Swing repaints the uncovered edge with the opaque panels between the two, in the look and feel's panel gray that Compose installs.
+The view model is obtained outside `Window` so window resizing doesn't reset it. The window opens at 800x600 and cannot
+be made smaller than 480x480 dp of the app's own interface — 408x408, since the app draws its dp at `:presentation`'s
+`interfaceScale` — both capped to the free area of the screen it opens on (`fitSizeToScreen`), since a window below its
+minimum is grown past the edge of the screen. The JetBrains Runtime hands that minimum to Windows scaled, which OpenJDK
+does not (Windows takes it for physical pixels there, so at 200% the window could be dragged down to half of it).
+
+On macOS and Windows the window has no title bar of its own color: its content is laid out under it, keeping only the
+window buttons, so they sit on the app's own background in every theme and color, and nothing draws a title
+(`TitleBar.kt`). On both it is the JetBrains Runtime's custom title bar (`JBR.getWindowDecorations()`, from the
+`jbr-api` library, whose interfaces `proguard-rules.pro` keeps by name, since the runtime binds them by name), which
+gives the strip the title bar's behavior — dragging, and a double click that does what the system is set to do with one
+(macOS's Desktop & Dock setting: zoom, fill, minimize or nothing; maximize on Windows) — only where nothing listens to
+the mouse, and Compose's canvas listens everywhere, so a toolkit-wide event listener marks every mouse event over the
+strip as the title bar's (`forceHitTest(false)`), running after the runtime's own guess and before it acts on it, except
+in full screen, where the app bar reaches the top edge. The macOS transparent title bar (the
+`apple.awt.fullWindowContent` client properties) looks the same but lets the double click through to the content, where
+it does nothing. Linux keeps the window manager's title bar, and so does a runtime other than the JetBrains Runtime.
+
+The shared UI learns of the strip (28pt on macOS, 32 on Windows) as a system bar inset at the top (`TitleBarInsets`,
+which provides Compose Desktop's internal `LocalPlatformWindowInsets`, the local its `WindowInsets` read), so every
+screen already keeps clear of it the way it keeps clear of a phone's status bar, and nothing of the app is ever under it
+to take the mouse away; a full screen window gets none. On macOS whether the window is in full screen is taken from the
+system's own notifications (`com.apple.eawt.FullScreenUtilities`, through reflection and its own `--add-exports`, like
+the trackpad's pinch below) rather than from `WindowState.placement`, which Compose reads again only on a resize: a
+zoomed window can go full screen without one, and kept the strip there. It is all set in `SwingWindow`'s `init`, before
+the window is shown, because the JDK does not lay the content out again when it changes on a window already on screen.
+The buttons — and on macOS the rim along the top edge — are drawn for the app's own light or dark theme
+(`TitleBarAppearance`: `apple.awt.windowAppearance`, `controls.dark`), since the wrong one leaves them all but
+invisible; until the preferences are read the macOS application follows the system's appearance
+(`apple.awt.application.appearance`, where the JDK's default is always light).
+
+The per-window appearance and the custom title bar exist only in the JetBrains Runtime, which is why `toolchainLauncher`
+asks for that vendor: it is the runtime `run` starts and every package bundles, which Gradle cannot download (foojay
+lists no JetBrains Runtime 21), so it has to be installed where Gradle finds JDKs, as the workflows do with `setup-java`
+and as the IDE's own runtime is when it starts Gradle. Where there is none, any JDK 21 stands in with a warning, so that
+a fresh clone still builds every module, and every `createRelease…`, `packageRelease…` and `runRelease` task fails
+before it starts (`isJetBrainsRuntimeMissing`): whatever is handed out always has the custom title bar. What a fast
+resize uncovers before the app's next frame fills it is kept on the theme's background color, reported by
+`CampfireApp`'s `onBackgroundColorChanged` (`setUndrawnAreaColor`): the window's own background and that of the
+heavyweight surface the app is rendered into, which does not follow the window's, and on Windows that of every component
+of the window, since Swing repaints the uncovered edge with the opaque panels between the two, in the look and feel's
+panel gray that Compose installs.
 
 `main` takes `args` because that is how "open with" reaches a desktop application on Windows and Linux: the system
-launches the app with the file as an argument. macOS sends an `odoc` Apple event instead — to a starting app and to
-a running one alike — which the JDK hands to the handler `OpenedFiles` registers with `Desktop.setOpenFileHandler`
-right after the single-instance check and before Koin starts, on macOS only (asking `Desktop` anything starts AWT,
-which on Linux would read the display scale before Compose sets it) and for the life of the process (the JDK queues
-the events that precede the first handler and drops the ones that find it removed). Both end in
-`OpenedFiles.open(paths)`, a channel that is read off the event thread and imported by `CampfireApp`; anything else
-that learns of a file to open calls the same function. Files dropped onto the window take their own path (`Modifier.dragAndDropTarget` in `CampfireDesktopApp`).
+launches the app with the file as an argument. macOS sends an `odoc` Apple event instead — to a starting app and to a
+running one alike — which the JDK hands to the handler `OpenedFiles` registers with `Desktop.setOpenFileHandler` right
+after the single-instance check and before Koin starts, on macOS only (asking `Desktop` anything starts AWT, which on
+Linux would read the display scale before Compose sets it) and for the life of the process (the JDK queues the events
+that precede the first handler and drops the ones that find it removed). Both end in `OpenedFiles.open(paths)`, a
+channel that is read off the event thread and imported by `CampfireApp`; anything else that learns of a file to open
+calls the same function. Files dropped onto the window take their own path (`Modifier.dragAndDropTarget` in
+`CampfireDesktopApp`).
 
-One process owns a data directory. Before Koin starts, `SingleInstance.kt` takes `instance.lock` with `tryLock()`;
-the holder listens on `127.0.0.1` on a port chosen by the system and writes that port with a random token into the
+One process owns a data directory. Before Koin starts, `SingleInstance.kt` takes `instance.lock` with `tryLock()`; the
+holder listens on `127.0.0.1` on a port chosen by the system and writes that port with a random token into the
 owner-only `instance.endpoint`. A later process sends the token and its arguments, receives `OK` and exits; its paths
 join the ones from `args` and the macOS open-file handler, and the existing window comes forward. On Windows that
 requires toggling `isAlwaysOnTop`, since `toFront()` alone can only flash the taskbar for a process that is not in the
-foreground. The check fails open when the lock cannot be asked for or the holder does not answer. The lock is asked for again
-before every hand-over attempt, so a process started while the previous one is still closing takes it over once it is
-free rather than starting without it: while the lock is held and `instance.endpoint` is gone, which is a closing holder,
-the newcomer waits up to 60 s - longer than the 30 + 15 + 2 s a quit gives a running import and a sync run in
-`settleSynchronizationBeforeExit` -
-and it gives up after about 5 s only when an endpoint file is there and does not answer. A holder whose listener could
-not start leaves an endpoint file that cannot be answered, so that newcomers take the short wait rather than the long
-one. And an instance that has decided to exit stops listening
+foreground. The check fails open when the lock cannot be asked for or the holder does not answer.
+
+The lock is asked for again before every hand-over attempt, so a process started while the previous one is still closing
+takes it over once it is free rather than starting without it: while the lock is held and `instance.endpoint` is gone,
+which is a closing holder, the newcomer waits up to 60 s - longer than the 30 + 15 + 2 s a quit gives a running import
+and a sync run in `settleSynchronizationBeforeExit` - and it gives up after about 5 s only when an endpoint file is
+there and does not answer. A holder whose listener could not start leaves an endpoint file that cannot be answered, so
+that newcomers take the short wait rather than the long one. And an instance that has decided to exit stops listening
 (`stopListeningForOtherInstances`, called before `exitApplication`) while keeping the lock until it is gone, so it never
 acknowledges files it will not open. It uses `java.base` only.
 
 A pinch on a Mac's trackpad reaches AWT as neither a mouse event nor a touch, so Compose never hears of it; the JDK
-hands it only to a `com.apple.eawt.event` listener registered on a Swing component. `TouchpadMagnification.kt`
-registers one on the window's root pane and passes each magnification on to the view model's `magnifyByTouchpad`,
-which resizes the song text like a touch pinch while the song details screen is on top, zooms the page on preview while
-the PDF export screen is, and ignores it elsewhere. The
-package exists only in a macOS runtime and is not exported, so it is reached through reflection (the build is also
-made on Linux and Windows) and the application starts with `--add-exports=java.desktop/com.apple.eawt.event=ALL-UNNAMED` (and `com.apple.eawt`'s, for the full screen notifications)
-on a macOS host only, the way the Linux one gets its `--add-opens`; without it the listener is simply not there.
-Windows needs nothing of its own, since it makes a touchpad pinch into the Ctrl + wheel the screen already answers.
+hands it only to a `com.apple.eawt.event` listener registered on a Swing component. `TouchpadMagnification.kt` registers
+one on the window's root pane and passes each magnification on to the view model's `magnifyByTouchpad`, which resizes
+the song text like a touch pinch while the song details screen is on top, zooms the page on preview while the PDF export
+screen is, and ignores it elsewhere. The package exists only in a macOS runtime and is not exported, so it is reached
+through reflection (the build is also made on Linux and Windows) and the application starts with
+`--add-exports=java.desktop/com.apple.eawt.event=ALL-UNNAMED` (and `com.apple.eawt`'s, for the full screen
+notifications) on a macOS host only, the way the Linux one gets its `--add-opens`; without it the listener is simply not
+there. Windows needs nothing of its own, since it makes a touchpad pinch into the Ctrl + wheel the screen already
+answers.
 
 A finger on a touchscreen reaches Compose as a touch through `TouchScreen.kt`. The JetBrains Runtime takes the
 touchscreen on Windows and X11 itself and hands a finger on as mouse wheel events of three scroll types of its own
-(`sun.awt.event.TouchEvent`: 2 down, 3 for each move past a 10 px radius with the distance as the rotation, 4 up),
-then a mouse click for a finger that never left the radius. Compose reads the moves as wheel notches — a twentieth of
-the scrolled area each on Windows, animated — so a drag scrolled screens at a time, nothing flung and nothing could
-be dragged. An `EventQueue` pushed for the window takes those events before Compose does and sends the window's
-`ComposeScene` a `PointerType.Touch` press, moves and release at the finger's position instead (the position, never
-the delta, so a move split into one event per axis is one move), and drops the move, drag, press, release and click
-that follow a tap, which the runtime posts together and marks as a touch's on Windows only. Lists, the song pager and
-sheets then drag, fling and long press as on a phone. Multitouch is out of reach: the runtime passes on the primary
-finger alone. Compose Desktop has no public way to a window's scene, so it is found by type among the fields of the
-window and the Compose objects behind it (panel, container, mediator, its lazy `scene`), following only classes
-under `androidx.compose.`, whose names the release build keeps since ProGuard does not obfuscate there; a Compose version that keeps it elsewhere
-prints that touchscreen input is left to Compose, and the window behaves as it would without this. Check it after
-every Compose update: on a Mac, posting `MouseWheelEvent`s of those scroll types from an in-app driver exercises
-the whole path, since only the runtime's source of them is platform specific.
+(`sun.awt.event.TouchEvent`: 2 down, 3 for each move past a 10 px radius with the distance as the rotation, 4 up), then
+a mouse click for a finger that never left the radius. Compose reads the moves as wheel notches — a twentieth of the
+scrolled area each on Windows, animated — so a drag scrolled screens at a time, nothing flung and nothing could be
+dragged. An `EventQueue` pushed for the window takes those events before Compose does and sends the window's
+`ComposeScene` a `PointerType.Touch` press, moves and release at the finger's position instead (the position, never the
+delta, so a move split into one event per axis is one move), and drops the move, drag, press, release and click that
+follow a tap, which the runtime posts together and marks as a touch's on Windows only.
 
-Everything the process prints is also written to `campfire.log` in the data directory (`DesktopLog`), since an
-installed build started from Finder, the Start menu or a `.desktop` entry has nowhere for standard output to go and the
-app has no crash reporting: `System.out` and `System.err` are mirrored into it line by line with a timestamp, and a
-default uncaught exception handler — which AWT's event thread and a coroutine nobody handles both end up in — prints
-there too. At 1 MB it becomes `campfire.log.1`, replacing the previous one; a file that cannot be written is given up
-on for the session, and the console keeps working. It is installed after the single-instance check, so a second
-process handing its files over never rotates the running one's log. It is what a desktop bug report should attach —
-after a look, since it names song files. It opens with skiko's `Renderer info` block (the render API and the graphics adapter, asked for with
-`skiko.hardwareInfo.enabled`, which `main` sets unless somebody else did) and the app's own start line once the first
-frame is under way (time since the process started, render API, Java runtime — `sharing` in it when class data sharing
-is on — the garbage collectors, processors and the heap limit), which is the first thing to read in a report about a
-slow desktop. The start line names the API asked for at the first frame, and a Direct3D context that fails on its first
-draw falls back after it; where the two disagree, the last `Renderer info` block is the renderer in use.
+Lists, the song pager and sheets then drag, fling and long press as on a phone. Multitouch is out of reach: the runtime
+passes on the primary finger alone. Compose Desktop has no public way to a window's scene, so it is found by type among
+the fields of the window and the Compose objects behind it (panel, container, mediator, its lazy `scene`), following
+only classes under `androidx.compose.`, whose names the release build keeps since ProGuard does not obfuscate there; a
+Compose version that keeps it elsewhere prints that touchscreen input is left to Compose, and the window behaves as it
+would without this. Check it after every Compose update: on a Mac, posting `MouseWheelEvent`s of those scroll types from
+an in-app driver exercises the whole path, since only the runtime's source of them is platform specific.
 
-Packaging: the task classes the build file registers (`RecordClassDataArchive`, `AddStartupWmClassToDeb`, `AddLaunchAfterInstallToMsi`, `PackageMsix`) live in `gradle/build-logic`'s `tasks/` package, with their text rewrites tested there (see `gradle/build-logic/CLAUDE.md`); the build file keeps their registration and wiring, and every value an action or an `onlyIf` of it reads is copied into a local first (the host checks, `isJetBrainsRuntimeMissing`, the ANGLE configuration as a file collection), since the configuration cache stores the actions and cannot store the build script. `compose.desktop` produces Dmg/Pkg/Msi/Deb, versioned from the `campfire.versionName` Gradle property. That format is stricter than the app's — `MAJOR[.MINOR][.PATCH]` and nothing else — so a version with a suffix fails the build at configuration time. `javaHome` is pinned to the toolchain JDK because the Gradle JVM may lack `jpackage`. Asking for a `.pkg` (`packagePkg`, `packageReleasePkg`) is what turns on the Mac App Store packaging, since the `.pkg` is made for nothing else and every other Mac build has to start where it was made: `appStore`, the App Sandbox through `app-store.entitlements` (the app's executable, which the JVM runs in) and `app-store-runtime.entitlements` (everything in the bundled runtime, sandboxed and inheriting, as the store wants every executable), and the two provisioning profiles. The store build is signed once `campfire.mac.signingIdentity` names the certificates — as `Name (TEAMID)`, since the plugin adds the `3rd Party Mac Developer …` prefix itself — and a checkout without it builds it signed ad hoc. A `.dmg` built by hand — nothing publishes one — stays signed ad hoc whatever the property says: a real signature enforces the hardened runtime, and only the store build carries the entitlements the JVM needs under it. The sandbox needs nothing from the code: the JDK takes `user.home` from the container, so the library simply lands in `~/Library/Containers/com.pandulapeter.campfire/Data/Library/Application Support/Campfire`, and the two loopback sockets are what `network.server` is for. `campfire.buildNumber`, which every platform shares, is the Mac App Store's `CFBundleVersion`. The profiles' extended attributes are cleared before they are copied into the bundle, since a profile downloaded through a browser is quarantined, the copy keeps the mark, and App Store Connect refuses a build with a quarantined file in it (ITMS-91109, by mail after the upload). The store build must not have a `bin` folder in its runtime at all, which is why the class data sharing step below deletes the one it creates, and the release build takes the other processor's skiko library out of the joined jar (`proguardReleaseJars`), since the macOS skiko jar carries both and only this machine's is moved into the bundle and signed. Icons live in `src/main/resources/appIcon.{icns,ico}` (packaging) and `src/main/composeResources/drawable/app_icon.png` (the window icon, also used for the Linux package and scaled into the Store's logos), all three in the app's own gray and written by `app/generate_theme_icons.py` from the orange sources in `app/icons` — edit those, never these. While the app runs its icon follows the theme (`AppIcon.kt`): the window icon, which is the title bar's and the taskbar's on Windows and the window manager's on Linux, is `app_icon_<color>.png` in the chosen theme color, and on macOS the Dock icon is set through `Taskbar` to `dock_icon_<color>.png`. Only the preferences decide, once read; the packaged icons, the Store's logos and the `.desktop` entry's are the system's and stay gray, and a desktop environment that draws the `.desktop` entry's icon for a running window (GNOME) shows that one. Every one of those files is generated by `app/generate_theme_icons.py` and committed. The Linux package asks for a `shortcut`, because jpackage writes a `.desktop` entry — and so shows the icon anywhere — only for a package that asks for one or declares file associations, and the entry gets a `StartupWMClass` of its own once the package is built (`addStartupWmClassToDeb`), since the Compose plugin owns jpackage's `--resource-dir` and there is no way to hand it a template. That value has to stay equal to the app class name `main` gives the X11 toolkit (`setLinuxWindowClassName`, which is what the Linux-only `--add-opens` is for): a desktop environment matches a window to its launcher by `WM_CLASS`, and AWT's default is the main class with its dots turned into dashes, which is what alt-tab showed and what a pinned shortcut was created under. The Windows installer asks for a Start menu entry and a desktop shortcut for the same reason as the Linux shortcut, installs per user so that it needs no administrator, and carries a fixed `upgradeUuid`, which is what makes a newer installer replace the installed version. Neither may ever change: Windows Installer only finds a product with the same upgrade code in the context it is installing into, so changing either one puts a second Campfire in Apps next to every existing installation. 4.2.2, the first release with an `.msi`, had neither — it installed per machine under the upgrade code jpackage derives by itself — so an installation of it stays next to 4.2.3 and later until it is uninstalled by hand; from 4.2.3 on, a newer `.msi` replaces the installed one (checked by installing the 4.2.3 release and then 4.3.0 over it). Nothing publishes the `.msi` since the Microsoft Store has the app, so an installation of it is no longer updated; the Store build keeps a library of its own (see the MSIX paragraph below), so one replacing it starts from the demo library, and the songs come across by an export and an import or by sync. Its last page has a ticked "Launch Campfire" checkbox, which jpackage cannot be asked for: `addLaunchAfterInstallToMsi` runs `add-launch-after-install.ps1` over the finished `.msi` after `packageMsi` and `packageReleaseMsi`, adding the property that shows the checkbox WiX's `ExitDialog` already carries and a custom action on its Finish button, which starts the app without waiting for it. A silent installation shows no dialog and so starts nothing, and a repair or a removal does not show the box. `modules(...)` lists what `suggestRuntimeModules` finds beyond Compose Desktop's defaults, plus the two it cannot find: `jdk.localedata`, which `Locale` reaches through `ServiceLoader` so that no class file names it and without which every language name in an installed build is English, and `jdk.accessibility`, which holds the Java Access Bridge that Windows screen readers read the app through. The packaged runtime holds nothing else, so a missing module is a `NoClassDefFoundError` — or, for a module found by service loading, a silent wrong answer — that only an installed build shows. Run that task again after adding a JVM dependency, and remember that it answers about byte code only. Every jlink run is followed by `-Xshare:dump` in the image it wrote, which puts back the class data sharing archive of the JDK's own classes that a JDK ships and jlink leaves out; the image's own `java` is gone (`--strip-native-commands`), so the toolchain's is copied in for the dump and deleted after it. On Windows and Linux the app's own classes are archived on top of that (`recordClassDataArchive`, which `packageReleaseDeb`, `packageReleaseMsi` and `packageReleaseMsix` depend on): the release image is started once with `-XX:ArchiveClassesAtExit` and a throwaway home, the app ends itself once the demo library is on screen and some frames are drawn (`-Dcampfire.trainingRun=true`, since a killed JVM writes no archive), and the resulting `campfire.jsa` (about 56 MB) is left in `$APPDIR` and named in `Campfire.cfg` with `-XX:SharedArchiveFile`. Nearly every class of a start is then mapped rather than read and verified out of the jar, which took the time to the song list from 0.9 to 0.5 s on a Mac and from 4.6 to 2.8 s on a two slow core stand-in. It is recorded again with every image, and a JVM that finds one that does not match (another jar, other module options) warns and starts without it. It trains the image `createReleaseDistributable` wrote and never `PackageMsix`'s copy, whose launcher names the Store package's data folder; on Linux it needs a display (`xvfb-run` in CI). macOS has none, since the store `.pkg` is signed inside `createReleaseDistributable` and starts nowhere but TestFlight — the build file says more. On a Windows host `createReleaseDistributable` also copies ANGLE's `libEGL.dll` and `libGLESv2.dll` into the image's `$APPDIR` from the `angleRuntime` configuration (`skiko-awt-runtime-angle-windows-x64`, whose `skiko` version in `libs.versions.toml` has to equal the one Compose brings in), before the training start sees the image: on the runtime classpath ProGuard would join them into the jar and skiko would unpack them into the user's home. `main` turns ANGLE on (`skiko.rendering.angle.enabled`) only where `libEGL.dll` is in `skiko.library.path` and neither `SKIKO_RENDER_API` nor `skiko.renderApi` chose a renderer, so ANGLE draws through Direct3D 11 the way a browser does — the path the integrated GPUs of small Windows machines are best tested on — and skiko falls back to Direct3D 12 on its own when it cannot start. `run` has no DLLs and keeps Direct3D 12, and a user environment variable `SKIKO_RENDER_API=DIRECT3D` is the way back for a machine where ANGLE misbehaves. File associations follow iOS and Android: `.cho` is claimed, the extensions ChordPro shares with other kinds of file (`.crd`, `.chord`, `.pro`) are at most an alternative. On macOS the document types are written as raw plist keys (`macos/document-types.plist`, through `infoPlist.extraKeysRawXml`, next to `macos/export-compliance.plist`, which answers the export compliance question with `ITSAppUsesNonExemptEncryption` `false` the way the iOS app's `Info.plist` does; anything that adds encryption of its own changes both. The two fragments carry no comment, since every line of them lands in the bundle's `Info.plist`) — the iOS app's imported types, `.cho` at rank `Default` and the rest `Alternate` — because the Compose DSL's `fileAssociation` writes a document type with the `****` OS type, which claims every kind of file, and offers no rank. On Windows `chordProFileAssociations()` registers only `.cho`, `.chopro` and `.chordpro` as `text/plain`, since an MSI can only make an app an extension's handler outright. The Microsoft Store package claims the same three. Linux has none: an association there is keyed by the MIME type, and that would make Campfire a handler of every text file. Deliberately not zip or `.txt`, and kept in step with `LibraryFiles.SONG_EXTENSIONS`, which a build file cannot see.
+Everything the process prints is also written to `campfire.log` in the data directory (`DesktopLog`), since an installed
+build started from Finder, the Start menu or a `.desktop` entry has nowhere for standard output to go and the app has no
+crash reporting: `System.out` and `System.err` are mirrored into it line by line with a timestamp, and a default
+uncaught exception handler — which AWT's event thread and a coroutine nobody handles both end up in — prints there too.
+At 1 MB it becomes `campfire.log.1`, replacing the previous one; a file that cannot be written is given up on for the
+session, and the console keeps working. It is installed after the single-instance check, so a second process handing its
+files over never rotates the running one's log.
 
-The Microsoft Store gets an `.msix`, which the Compose plugin cannot make: `packageReleaseMsix` copies the release app image, writes `AppxManifest.xml` next to `Campfire.exe` with the identity from the `campfire.windows.*` properties (Partner Center's *Product identity* page, repeated to the letter) and `campfire.versionName` plus a `.0` the Store keeps for itself, scales the tile and taskbar logos out of `app_icon.png`, indexes them with makepri — on their own, since makepri indexes every file of the folder it is given — and packs the lot with makeappx, from the newest Windows SDK or from `campfire.windows.sdkBinDirectory` (the `Microsoft.Windows.SDK.BuildTools` NuGet package has both tools without the SDK). The package is unsigned, because Partner Center signs what it certifies. A packaged app's writes under AppData go to a hidden copy of the folder that only the app sees, so an Explorer window opened on the usual path would show a folder without the library in it; the Store turns down the `unvirtualizedResources` capability that would switch that off. So the task also adds `-Dcampfire.packageFamilyName=<identity name>_<publisher id>` to the Java options in the image's `app/Campfire.cfg` — the publisher id derived from `campfire.windows.publisher` the way Windows derives it, which is what Partner Center shows as `PublisherId` — and `desktopDataDirectory()` (in both `:presentation` and `:data:source:local:implementation`) keeps everything in `%LOCALAPPDATA%\Packages\<family name>\LocalState` when that property is set: the package's own folder, which is not virtualized and which Explorer shows as it is. It is removed with the app, as a Store app's data is, and it is not the `.msi` build's library; the manifest asks for `runFullTrust` alone. The manifest declares English alone, because Partner Center wants a listing in every language a package declares. To try a package on the machine that built it, turn on Developer Mode and `Add-AppxPackage -Register app/desktop/build/tmp/packageReleaseMsix/package/AppxManifest.xml`, which installs the unpacked package; `Get-AppxPackage Campfire* | Remove-AppxPackage` removes it.
+It is what a desktop bug report should attach — after a look, since it names song files. It opens with skiko's `Renderer
+info` block (the render API and the graphics adapter, asked for with `skiko.hardwareInfo.enabled`, which `main` sets
+unless somebody else did) and the app's own start line once the first frame is under way (time since the process
+started, render API, Java runtime — `sharing` in it when class data sharing is on — the garbage collectors, processors
+and the heap limit), which is the first thing to read in a report about a slow desktop. The start line names the API
+asked for at the first frame, and a Direct3D context that fails on its first draw falls back after it; where the two
+disagree, the last `Renderer info` block is the renderer in use.
 
-`proguard-rules.pro` is added to the release build on top of the rules Compose Desktop ships. It turns off ProGuard's type specialization and generalization optimizations, which rewrite a generic function's erased parameter or return type to the one subclass every call site passes without inserting the `checkcast` the verifier then wants — the release build died on its first frame with a `VerifyError` in `NavDisplay` because of it. Compose's own rules already work around the same bug for `**Kt__*` classes; the rules file has the detail. It also keeps `SingleInstance.kt`'s `heldLock` by name: the field is only ever written, ProGuard removes such a field, and the lock it holds is then released by the first garbage collection, after which every file opened from Explorer starts a window of its own. It carries Coil's own keep rules too, which Coil ships inside its jar for R8 and ProGuard does not read from there. The release build also joins ProGuard's output into one jar (`joinOutputJars`): Windows Defender scans every file the app opens again once its signatures have been updated, which is several times a day, at a cost per file rather than per byte, and a hundred jars made the first start after that take six seconds where one jar takes under two. ProGuard keeps the first of two resources with the same name, so the merge stays lossless only while no two dependencies ship a `META-INF/services` file of the same name — check the joined jar when a dependency is added. **A release build has to be started once before it is shipped**: this class of breakage exists only after ProGuard runs, so `run` and `assembleDebug` say nothing about it. `publish-linux.yml` and `publish-windows.yml` do that on every leg before anything is attached or submitted — also logging the classes it loads and failing when fewer than 80% came from the class data sharing archives, which is how an archive that stopped matching would show (about 95% with it, 17% without) — and `publish-macos.yml` on a copy of the store build signed ad hoc, since the store's signature starts nowhere but TestFlight (the demo library has to appear in an empty data directory and the process has to outlive it with no exception in its log; on Windows that log is the `campfire.log` in the data directory); locally it is `./gradlew :app:desktop:createReleaseDistributable` then `app/desktop/build/compose/binaries/main-release/app/Campfire.app/Contents/MacOS/Campfire` (or `:app:desktop:runRelease`), which prints what the window cannot.
+Packaging: the task classes the build file registers (`RecordClassDataArchive`, `AddStartupWmClassToDeb`,
+`AddLaunchAfterInstallToMsi`, `PackageMsix`) live in `gradle/build-logic`'s `tasks/` package, with their text rewrites
+tested there (see `gradle/build-logic/CLAUDE.md`); the build file keeps their registration and wiring, and every value
+an action or an `onlyIf` of it reads is copied into a local first (the host checks, `isJetBrainsRuntimeMissing`, the
+ANGLE configuration as a file collection), since the configuration cache stores the actions and cannot store the build
+script. `compose.desktop` produces Dmg/Pkg/Msi/Deb, versioned from the `campfire.versionName` Gradle property. That
+format is stricter than the app's — `MAJOR[.MINOR][.PATCH]` and nothing else — so a version with a suffix fails the
+build at configuration time. `javaHome` is pinned to the toolchain JDK because the Gradle JVM may lack `jpackage`.
+Asking for a `.pkg` (`packagePkg`, `packageReleasePkg`) is what turns on the Mac App Store packaging, since the `.pkg`
+is made for nothing else and every other Mac build has to start where it was made: `appStore`, the App Sandbox through
+`app-store.entitlements` (the app's executable, which the JVM runs in) and `app-store-runtime.entitlements` (everything
+in the bundled runtime, sandboxed and inheriting, as the store wants every executable), and the two provisioning
+profiles.
 
-The library lives where the platform keeps application data (`~/Library/Application Support/Campfire` on macOS, `%APPDATA%\Campfire` on Windows — the package's `LocalState` for the Microsoft Store build, see above — `~/.local/share/campfire` — or `$XDG_DATA_HOME/campfire` — elsewhere, in lowercase as Linux names are), which is a folder the user can open — hence the rescan when the window is restored, and when it regains focus once the last rescan is ten seconds old. Settings does not show its path: it is the platform's convention, and nothing the user can change.
+The store build is signed once `campfire.mac.signingIdentity` names the certificates — as `Name (TEAMID)`, since the
+plugin adds the `3rd Party Mac Developer …` prefix itself — and a checkout without it builds it signed ad hoc. A `.dmg`
+built by hand — nothing publishes one — stays signed ad hoc whatever the property says: a real signature enforces the
+hardened runtime, and only the store build carries the entitlements the JVM needs under it. The sandbox needs nothing
+from the code: the JDK takes `user.home` from the container, so the library simply lands in
+`~/Library/Containers/com.pandulapeter.campfire/Data/Library/Application Support/Campfire`, and the two loopback sockets
+are what `network.server` is for. `campfire.buildNumber`, which every platform shares, is the Mac App Store's
+`CFBundleVersion`. The profiles' extended attributes are cleared before they are copied into the bundle, since a profile
+downloaded through a browser is quarantined, the copy keeps the mark, and App Store Connect refuses a build with a
+quarantined file in it (ITMS-91109, by mail after the upload).
+
+The store build must not have a `bin` folder in its runtime at all, which is why the class data sharing step below
+deletes the one it creates, and the release build takes the other processor's skiko library out of the joined jar
+(`proguardReleaseJars`), since the macOS skiko jar carries both and only this machine's is moved into the bundle and
+signed. Icons live in `src/main/resources/appIcon.{icns,ico}` (packaging) and
+`src/main/composeResources/drawable/app_icon.png` (the window icon, also used for the Linux package and scaled into the
+Store's logos), all three in the app's own gray and written by `app/generate_theme_icons.py` from the orange sources in
+`app/icons` — edit those, never these. While the app runs its icon follows the theme (`AppIcon.kt`): the window icon,
+which is the title bar's and the taskbar's on Windows and the window manager's on Linux, is `app_icon_<color>.png` in
+the chosen theme color, and on macOS the Dock icon is set through `Taskbar` to `dock_icon_<color>.png`. Only the
+preferences decide, once read; the packaged icons, the Store's logos and the `.desktop` entry's are the system's and
+stay gray, and a desktop environment that draws the `.desktop` entry's icon for a running window (GNOME) shows that one.
+
+Every one of those files is generated by `app/generate_theme_icons.py` and committed. The Linux package asks for a
+`shortcut`, because jpackage writes a `.desktop` entry — and so shows the icon anywhere — only for a package that asks
+for one or declares file associations, and the entry gets a `StartupWMClass` of its own once the package is built
+(`addStartupWmClassToDeb`), since the Compose plugin owns jpackage's `--resource-dir` and there is no way to hand it a
+template. That value has to stay equal to the app class name `main` gives the X11 toolkit (`setLinuxWindowClassName`,
+which is what the Linux-only `--add-opens` is for): a desktop environment matches a window to its launcher by
+`WM_CLASS`, and AWT's default is the main class with its dots turned into dashes, which is what alt-tab showed and what
+a pinned shortcut was created under. The Windows installer asks for a Start menu entry and a desktop shortcut for the
+same reason as the Linux shortcut, installs per user so that it needs no administrator, and carries a fixed
+`upgradeUuid`, which is what makes a newer installer replace the installed version.
+
+Neither may ever change: Windows Installer only finds a product with the same upgrade code in the context it is
+installing into, so changing either one puts a second Campfire in Apps next to every existing installation. 4.2.2, the
+first release with an `.msi`, had neither — it installed per machine under the upgrade code jpackage derives by itself —
+so an installation of it stays next to 4.2.3 and later until it is uninstalled by hand; from 4.2.3 on, a newer `.msi`
+replaces the installed one (checked by installing the 4.2.3 release and then 4.3.0 over it). Nothing publishes the
+`.msi` since the Microsoft Store has the app, so an installation of it is no longer updated; the Store build keeps a
+library of its own (see the MSIX paragraph below), so one replacing it starts from the demo library, and the songs come
+across by an export and an import or by sync. Its last page has a ticked "Launch Campfire" checkbox, which jpackage
+cannot be asked for: `addLaunchAfterInstallToMsi` runs `add-launch-after-install.ps1` over the finished `.msi` after
+`packageMsi` and `packageReleaseMsi`, adding the property that shows the checkbox WiX's `ExitDialog` already carries and
+a custom action on its Finish button, which starts the app without waiting for it.
+
+A silent installation shows no dialog and so starts nothing, and a repair or a removal does not show the box.
+`modules(...)` lists what `suggestRuntimeModules` finds beyond Compose Desktop's defaults, plus the two it cannot find:
+`jdk.localedata`, which `Locale` reaches through `ServiceLoader` so that no class file names it and without which every
+language name in an installed build is English, and `jdk.accessibility`, which holds the Java Access Bridge that Windows
+screen readers read the app through. The packaged runtime holds nothing else, so a missing module is a
+`NoClassDefFoundError` — or, for a module found by service loading, a silent wrong answer — that only an installed build
+shows. Run that task again after adding a JVM dependency, and remember that it answers about byte code only. Every jlink
+run is followed by `-Xshare:dump` in the image it wrote, which puts back the class data sharing archive of the JDK's own
+classes that a JDK ships and jlink leaves out; the image's own `java` is gone (`--strip-native-commands`), so the
+toolchain's is copied in for the dump and deleted after it.
+
+On Windows and Linux the app's own classes are archived on top of that (`recordClassDataArchive`, which
+`packageReleaseDeb`, `packageReleaseMsi` and `packageReleaseMsix` depend on): the release image is started once with
+`-XX:ArchiveClassesAtExit` and a throwaway home, the app ends itself once the demo library is on screen and some frames
+are drawn (`-Dcampfire.trainingRun=true`, since a killed JVM writes no archive), and the resulting `campfire.jsa` (about
+56 MB) is left in `$APPDIR` and named in `Campfire.cfg` with `-XX:SharedArchiveFile`. Nearly every class of a start is
+then mapped rather than read and verified out of the jar, which took the time to the song list from 0.9 to 0.5 s on a
+Mac and from 4.6 to 2.8 s on a two slow core stand-in. It is recorded again with every image, and a JVM that finds one
+that does not match (another jar, other module options) warns and starts without it. It trains the image
+`createReleaseDistributable` wrote and never `PackageMsix`'s copy, whose launcher names the Store package's data folder;
+on Linux it needs a display (`xvfb-run` in CI). macOS has none, since the store `.pkg` is signed inside
+`createReleaseDistributable` and starts nowhere but TestFlight — the build file says more.
+
+On a Windows host `createReleaseDistributable` also copies ANGLE's `libEGL.dll` and `libGLESv2.dll` into the image's
+`$APPDIR` from the `angleRuntime` configuration (`skiko-awt-runtime-angle-windows-x64`, whose `skiko` version in
+`libs.versions.toml` has to equal the one Compose brings in), before the training start sees the image: on the runtime
+classpath ProGuard would join them into the jar and skiko would unpack them into the user's home. `main` turns ANGLE on
+(`skiko.rendering.angle.enabled`) only where `libEGL.dll` is in `skiko.library.path` and neither `SKIKO_RENDER_API` nor
+`skiko.renderApi` chose a renderer, so ANGLE draws through Direct3D 11 the way a browser does — the path the integrated
+GPUs of small Windows machines are best tested on — and skiko falls back to Direct3D 12 on its own when it cannot start.
+`run` has no DLLs and keeps Direct3D 12, and a user environment variable `SKIKO_RENDER_API=DIRECT3D` is the way back for
+a machine where ANGLE misbehaves. File associations follow iOS and Android: `.cho` is claimed, the extensions ChordPro
+shares with other kinds of file (`.crd`, `.chord`, `.pro`) are at most an alternative.
+
+On macOS the document types are written as raw plist keys (`macos/document-types.plist`, through
+`infoPlist.extraKeysRawXml`, next to `macos/export-compliance.plist`, which answers the export compliance question with
+`ITSAppUsesNonExemptEncryption` `false` the way the iOS app's `Info.plist` does; anything that adds encryption of its
+own changes both. The two fragments carry no comment, since every line of them lands in the bundle's `Info.plist`) — the
+iOS app's imported types, `.cho` at rank `Default` and the rest `Alternate` — because the Compose DSL's
+`fileAssociation` writes a document type with the `****` OS type, which claims every kind of file, and offers no rank.
+On Windows `chordProFileAssociations()` registers only `.cho`, `.chopro` and `.chordpro` as `text/plain`, since an MSI
+can only make an app an extension's handler outright. The Microsoft Store package claims the same three. Linux has none:
+an association there is keyed by the MIME type, and that would make Campfire a handler of every text file. Deliberately
+not zip or `.txt`, and kept in step with `LibraryFiles.SONG_EXTENSIONS`, which a build file cannot see.
+
+The Microsoft Store gets an `.msix`, which the Compose plugin cannot make: `packageReleaseMsix` copies the release app
+image, writes `AppxManifest.xml` next to `Campfire.exe` with the identity from the `campfire.windows.*` properties
+(Partner Center's *Product identity* page, repeated to the letter) and `campfire.versionName` plus a `.0` the Store
+keeps for itself, scales the tile and taskbar logos out of `app_icon.png`, indexes them with makepri — on their own,
+since makepri indexes every file of the folder it is given — and packs the lot with makeappx, from the newest Windows
+SDK or from `campfire.windows.sdkBinDirectory` (the `Microsoft.Windows.SDK.BuildTools` NuGet package has both tools
+without the SDK). The package is unsigned, because Partner Center signs what it certifies. A packaged app's writes under
+AppData go to a hidden copy of the folder that only the app sees, so an Explorer window opened on the usual path would
+show a folder without the library in it; the Store turns down the `unvirtualizedResources` capability that would switch
+that off.
+
+So the task also adds `-Dcampfire.packageFamilyName=<identity name>_<publisher id>` to the Java options in the image's
+`app/Campfire.cfg` — the publisher id derived from `campfire.windows.publisher` the way Windows derives it, which is
+what Partner Center shows as `PublisherId` — and `desktopDataDirectory()` (in both `:presentation` and
+`:data:source:local:implementation`) keeps everything in `%LOCALAPPDATA%\Packages\<family name>\LocalState` when that
+property is set: the package's own folder, which is not virtualized and which Explorer shows as it is. It is removed
+with the app, as a Store app's data is, and it is not the `.msi` build's library; the manifest asks for `runFullTrust`
+alone. The manifest declares English alone, because Partner Center wants a listing in every language a package declares.
+To try a package on the machine that built it, turn on Developer Mode and `Add-AppxPackage -Register
+app/desktop/build/tmp/packageReleaseMsix/package/AppxManifest.xml`, which installs the unpacked package;
+`Get-AppxPackage Campfire* | Remove-AppxPackage` removes it.
+
+`proguard-rules.pro` is added to the release build on top of the rules Compose Desktop ships. It turns off ProGuard's
+type specialization and generalization optimizations, which rewrite a generic function's erased parameter or return type
+to the one subclass every call site passes without inserting the `checkcast` the verifier then wants — the release build
+died on its first frame with a `VerifyError` in `NavDisplay` because of it. Compose's own rules already work around the
+same bug for `**Kt__*` classes; the rules file has the detail. It also keeps `SingleInstance.kt`'s `heldLock` by name:
+the field is only ever written, ProGuard removes such a field, and the lock it holds is then released by the first
+garbage collection, after which every file opened from Explorer starts a window of its own. It carries Coil's own keep
+rules too, which Coil ships inside its jar for R8 and ProGuard does not read from there. The release build also joins
+ProGuard's output into one jar (`joinOutputJars`): Windows Defender scans every file the app opens again once its
+signatures have been updated, which is several times a day, at a cost per file rather than per byte, and a hundred jars
+made the first start after that take six seconds where one jar takes under two.
+
+ProGuard keeps the first of two resources with the same name, so the merge stays lossless only while no two dependencies
+ship a `META-INF/services` file of the same name — check the joined jar when a dependency is added. **A release build
+has to be started once before it is shipped**: this class of breakage exists only after ProGuard runs, so `run` and
+`assembleDebug` say nothing about it. `publish-linux.yml` and `publish-windows.yml` do that on every leg before anything
+is attached or submitted — also logging the classes it loads and failing when fewer than 80% came from the class data
+sharing archives, which is how an archive that stopped matching would show (about 95% with it, 17% without) — and
+`publish-macos.yml` on a copy of the store build signed ad hoc, since the store's signature starts nowhere but
+TestFlight (the demo library has to appear in an empty data directory and the process has to outlive it with no
+exception in its log; on Windows that log is the `campfire.log` in the data directory); locally it is `./gradlew
+:app:desktop:createReleaseDistributable` then
+`app/desktop/build/compose/binaries/main-release/app/Campfire.app/Contents/MacOS/Campfire` (or
+`:app:desktop:runRelease`), which prints what the window cannot.
+
+The library lives where the platform keeps application data (`~/Library/Application Support/Campfire` on macOS,
+`%APPDATA%\Campfire` on Windows — the package's `LocalState` for the Microsoft Store build, see above —
+`~/.local/share/campfire` — or `$XDG_DATA_HOME/campfire` — elsewhere, in lowercase as Linux names are), which is a
+folder the user can open — hence the rescan when the window is restored, and when it regains focus once the last rescan
+is ten seconds old. Settings does not show its path: it is the platform's convention, and nothing the user can change.
 
 For sync, a second socket briefly makes the desktop a web server: `DesktopSyncAuthenticator` opens it on
 `127.0.0.1:53682` for the length of one authorization, because a service only redirects to a URI registered with it
-character for character and a port chosen by the operating system could not be registered. The consent page is
-opened by the same URL opener as the links in Settings, `:presentation`'s `DesktopSystemBrowser`. The tab the
-redirect lands in stays open, since a browser only lets a script close a window a script opened, so the window comes
-forward instead (`bringForward`) once the sync state leaves `Connecting` for an account or a failure — watched from
-`main`, never part of the authorization itself.
+character for character and a port chosen by the operating system could not be registered. The consent page is opened by
+the same URL opener as the links in Settings, `:presentation`'s `DesktopSystemBrowser`. The tab the redirect lands in
+stays open, since a browser only lets a script close a window a script opened, so the window comes forward instead
+(`bringForward`) once the sync state leaves `Connecting` for an account or a failure — watched from `main`, never part
+of the authorization itself.
 
-`./gradlew :app:desktop:run` to launch (`--args="/path/to/song.cho"` to test opening a file); `:app:desktop:packageDistributionForCurrentOS` to build an installer (`packageDeb`, `packageDmg` and `packageMsi` for one format); the `packageRelease…` variants of the same tasks are the ones that run ProGuard, writing to `build/compose/binaries/main-release`; `publish-linux.yml` runs `packageReleaseDeb`, `publish-windows.yml` `packageReleaseMsix` and `publish-macos.yml` `packageReleasePkg`.
+`./gradlew :app:desktop:run` to launch (`--args="/path/to/song.cho"` to test opening a file);
+`:app:desktop:packageDistributionForCurrentOS` to build an installer (`packageDeb`, `packageDmg` and `packageMsi` for
+one format); the `packageRelease…` variants of the same tasks are the ones that run ProGuard, writing to
+`build/compose/binaries/main-release`; `publish-linux.yml` runs `packageReleaseDeb`, `publish-windows.yml`
+`packageReleaseMsix` and `publish-macos.yml` `packageReleasePkg`.

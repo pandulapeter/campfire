@@ -12,15 +12,114 @@
 
 What every screen shares; each destination's own package has its own notes where it has any.
 
-- `ui/screens/` — one package per destination (`songs`, `setlists`, `settings`, `songDetails`, `songEditor`, `importReport`). The setlists screen lists every song a setlist names, whatever the song filters are set to: those narrow a view of the library, while a setlist is the list somebody wrote down (`CampfireViewModel.setlistsWithSongs`, read from `ScreenData.unfilteredSongs`). Its sort button opens a `SortMenu` with the two ordering choices, as the songs screen's does; a toggle at the end of the scrolling list includes archived setlists, and appears only while the library holds at least one. It is off by default, since that is what archiving one is for. A setlist whose `isCountdownShown` is on says how far its day is ("In 5 days", "Yesterday", `relativeDay` in `components/RelativeTime.kt`) as the subtitle of its `SectionHeader`, in the description's type, so it stays pinned in sight while the setlist is read — the one place its date is seen outside the sheet, performance mode included — and turns over at midnight on a screen left open (`rememberToday`). A setlist's description, where it has one, is the first thing under its header row — the row names the setlist and leaves the description room to read in full, and it is what somebody wants to read first once a search has found the setlist. It stands as far above the first card as it stands below the header's text (`sectionHeaderBottomGap`, which depends on the header's subtitle and the text size). In a short window — the room the list's padding leaves under 480dp, the keyboard of a search counted — it starts at two lines instead and opens or folds on a tap, growing by a size animation: there four lines of it pushed the setlist's first song out of sight. An archived setlist is marked by the icon in its header row — which fades in and out with the archiving rather than arriving between two frames, since the menu that archives one hangs from the other end of that row — and comes after the rest whatever the order, and a screen whose every setlist is archived says so rather than claiming there are none. Every setlist ends in a "Choose songs" row (absent in performance mode and from an archived setlist), which for an empty one stands in place of its songs and which opens the same song picker as its menu's "Choose songs", and a setlist created from the screen's "New setlist" opens that picker on its own (`CampfireViewModel.createSetlist`, only where nothing else was opened meanwhile and the library has songs), since a setlist is created to have songs put into it. The song details and editor screens own their `TopAppBar` (which handles the status bar inset; the top level screens get it from `TopLevelScreenSurface`), and every screen gets a `contentPadding` for the bottom/horizontal insets — the system bars and the display cutout (`contentEdges`), which Material's own bars already keep clear of on Android — from the outer scaffold so lists scroll edge to edge. That padding follows the keyboard, and asks about it when it is used rather than when it is made (`KeyboardAwarePadding` in `CampfireScreens.kt`), so the keyboard sliding in lays the lists out again without recomposing the app around them; a screen narrows it with `PaddingValues.only(…)` rather than by taking it apart while composing, which would bring the recomposition back. The song details screen's padding is the one that does not follow the keyboard: nothing on it is typed into, and the keyboard a dialog opened from its header brings up would otherwise reflow the lyrics behind that dialog and lift the setlist's pager bar. Both lists put their primary action — "New song", "New setlist" — in that bar rather than in a floating button, so it sits on the same keyline as the other app bar action next to it and leaves the corner the fast scroller runs down to the fast scroller alone. Both of those are a dropdown rather than a dialog of their own (`components/NewItemMenu.kt`): making the new thing and importing files are an either / or asked before anything else is, and only "Create a song" / "Create a setlist" goes on to the sheet that names it. A vertical divider in front of the button sets it apart from the sort and filter actions on the same pill, which change how the list is shown rather than what it holds. The bar draws it (`ClosedSearchActionsDivider`), shown with the button (`areClosedSearchActionsShown`), and it narrows and fades on the search action's spring rather than inside the button's own exit, whose clipped shrink towards the end edge would cut it off on the first frame. The import is the same on both screens, since an archive holds songs and setlists alike, and the two entries are the first two buttons of that screen's empty state ("No setlists yet" has them as well as "Your library is empty"), under the same labels and in the same order. The menu leaves the bar while that empty state, the loading indicator or the error is up (`allowsNewItemMenu`), since each of those offers its own buttons. The setlists screen lists its setlists whenever there are any, an empty library included: they are empty there rather than missing, and each offers to be filled, while the library's own empty state belongs to the songs screen. Both are also **searched from a button rather than from a field that is always there** (`components/SearchableTopAppBar.kt`): the bar holds no title - the pinned section header of the list stands in its place, under the bar's buttons - and a permanent field would have crowded the actions. The songs are searched by title, artist and tags, through `NormalizeSearchTextUseCase` on both sides, so neither case, accents, spaces nor punctuation decide a match (`ymca` finds `Y.M.C.A.`), and a song found by a tag alone is ranked after every song found by its title or artist, since a tag names a whole shelf of songs - and so are the two pickers and the tag list of the song details' "Manage tags" sheet; a setlist answers by its own title or description, or by holding a song that does, and a setlist that answers is shown whole - the search finds setlists rather than songs inside them, and three of a setlist's twelve songs is not the list somebody wrote down. Each list scrolls back to the top when its search changes what it holds. Empty and error states are their own composables and animate in and out like everything else, so nothing appears or disappears abruptly while the library is still loading. Every lazy list in the app animates its items into place through `listItemAnimation` (`components/ListItemAnimation.kt`) rather than through `Modifier.animateItem()` directly, because there are two occasions it has to be left off. The song and setlist lists only animate once the library has arrived whole: the first read publishes what it has put together as it goes, so a list fills up in several batches and animating those would have it rearranging itself while the app is still opening. `rememberHasLoadedLibrary` is what draws that line, and it is an effect rather than `!isLoading` read directly, since the last and largest batch lands in the very composition that goes false. The same line is where the song list holds its position by index rather than by key: the batches arrive in the order the files are listed, so a later one puts songs above the rows already showing, and a grid following its first visible key down would open the app already scrolled. The two lists scroll back to the top through `ScrollToTopWhenChanged` whenever their search (the query that is applied, so closing a search counts) or sorting changes; the songs list also does so for filters, except for a tag or a language tapped on a song row: that song still carries it, so the list keeps the row where it was (`ListAnchor`, resolved to the row's new index and on-screen offset once the filtered list arrives). The songs list's key is not read off the filter and the preferences but carried by the list itself (`SongGroups.filterKey`, built from what `ScreenData` says it was built for), so the key and the list arrive together, and a filter that leaves every song where it was still delivers a list for the anchor to be consumed by rather than leaving it to jump the list at its next unrelated change. That is a jump to another index, which a lazy grid answers by forgetting where every item was, so the change is narrated by the anchor instead (`anchoredTransition`, a layer on every song row and header): the rows that were on screen slide from where they were, the rest fade in, and the ones it took away are gone at once, while the setlists screen leaves its bottom archive toggle in reach. They hold by index there too, in the composition the new contents arrive in: a list that grows puts rows above its first visible one, a grid following that row down and then being sent back to the top takes the jump for a scroll and forgets where every item was, and the rows that stayed would snap into place while the new ones appeared without fading in. Every list also leaves the placement animation off for as long as it is being scrolled (by its spec, so the modifier and the node behind it stay put and a placement already running is not cut short): a lazy list moves the animation state of each item on screen by the distance the list was scrolled, and at the ends of the list — where a fast scroll asks for more than there is left to give — that distance is the one that was asked for rather than the shorter one that was actually scrolled, which lands the item far outside the list and then animates it back. What that looks like is one row sliding in from off screen while every other row is already still, most visibly the first row of a list after it is flung back to the top. Nothing is lost by it, since an item animation is there to narrate a change of the list's contents and the contents do not change under a finger. The one exception is a setlist being rearranged (`isRearranging`), where the contents change under the finger and the list scrolls itself as the dragged row reaches an edge, so the rows it passes have to keep sliding out of its way rather than snapping for as long as that scroll lasts.
+### `ui/screens/`
+
+`ui/screens/` — one package per destination (`songs`, `setlists`, `settings`, `songDetails`, `songEditor`,
+`importReport`). The setlists screen lists every song a setlist names, whatever the song filters are set to: those
+narrow a view of the library, while a setlist is the list somebody wrote down (`CampfireViewModel.setlistsWithSongs`,
+read from `ScreenData.unfilteredSongs`). Its sort button opens a `SortMenu` with the two ordering choices, as the songs
+screen's does; a toggle at the end of the scrolling list includes archived setlists, and appears only while the library
+holds at least one. It is off by default, since that is what archiving one is for. A setlist whose `isCountdownShown` is
+on says how far its day is ("In 5 days", "Yesterday", `relativeDay` in `components/RelativeTime.kt`) as the subtitle of
+its `SectionHeader`, in the description's type, so it stays pinned in sight while the setlist is read — the one place
+its date is seen outside the sheet, performance mode included — and turns over at midnight on a screen left open
+(`rememberToday`). A setlist's description, where it has one, is the first thing under its header row — the row names
+the setlist and leaves the description room to read in full, and it is what somebody wants to read first once a search
+has found the setlist.
+
+It stands as far above the first card as it stands below the header's text (`sectionHeaderBottomGap`, which depends on
+the header's subtitle and the text size). In a short window — the room the list's padding leaves under 480dp, the
+keyboard of a search counted — it starts at two lines instead and opens or folds on a tap, growing by a size animation:
+there four lines of it pushed the setlist's first song out of sight. An archived setlist is marked by the icon in its
+header row — which fades in and out with the archiving rather than arriving between two frames, since the menu that
+archives one hangs from the other end of that row — and comes after the rest whatever the order, and a screen whose
+every setlist is archived says so rather than claiming there are none. Every setlist ends in a "Choose songs" row
+(absent in performance mode and from an archived setlist), which for an empty one stands in place of its songs and which
+opens the same song picker as its menu's "Choose songs", and a setlist created from the screen's "New setlist" opens
+that picker on its own (`CampfireViewModel.createSetlist`, only where nothing else was opened meanwhile and the library
+has songs), since a setlist is created to have songs put into it.
+
+The song details and editor screens own their `TopAppBar` (which handles the status bar inset; the top level screens get
+it from `TopLevelScreenSurface`), and every screen gets a `contentPadding` for the bottom/horizontal insets — the system
+bars and the display cutout (`contentEdges`), which Material's own bars already keep clear of on Android — from the
+outer scaffold so lists scroll edge to edge. That padding follows the keyboard, and asks about it when it is used rather
+than when it is made (`KeyboardAwarePadding` in `CampfireScreens.kt`), so the keyboard sliding in lays the lists out
+again without recomposing the app around them; a screen narrows it with `PaddingValues.only(…)` rather than by taking it
+apart while composing, which would bring the recomposition back. The song details screen's padding is the one that does
+not follow the keyboard: nothing on it is typed into, and the keyboard a dialog opened from its header brings up would
+otherwise reflow the lyrics behind that dialog and lift the setlist's pager bar. Both lists put their primary action —
+"New song", "New setlist" — in that bar rather than in a floating button, so it sits on the same keyline as the other
+app bar action next to it and leaves the corner the fast scroller runs down to the fast scroller alone.
+
+Both of those are a dropdown rather than a dialog of their own (`components/NewItemMenu.kt`): making the new thing and
+importing files are an either / or asked before anything else is, and only "Create a song" / "Create a setlist" goes on
+to the sheet that names it. A vertical divider in front of the button sets it apart from the sort and filter actions on
+the same pill, which change how the list is shown rather than what it holds. The bar draws it
+(`ClosedSearchActionsDivider`), shown with the button (`areClosedSearchActionsShown`), and it narrows and fades on the
+search action's spring rather than inside the button's own exit, whose clipped shrink towards the end edge would cut it
+off on the first frame. The import is the same on both screens, since an archive holds songs and setlists alike, and the
+two entries are the first two buttons of that screen's empty state ("No setlists yet" has them as well as "Your library
+is empty"), under the same labels and in the same order. The menu leaves the bar while that empty state, the loading
+indicator or the error is up (`allowsNewItemMenu`), since each of those offers its own buttons.
+
+The setlists screen lists its setlists whenever there are any, an empty library included: they are empty there rather
+than missing, and each offers to be filled, while the library's own empty state belongs to the songs screen. Both are
+also **searched from a button rather than from a field that is always there** (`components/SearchableTopAppBar.kt`): the
+bar holds no title - the pinned section header of the list stands in its place, under the bar's buttons - and a
+permanent field would have crowded the actions. The songs are searched by title, artist and tags, through
+`NormalizeSearchTextUseCase` on both sides, so neither case, accents, spaces nor punctuation decide a match (`ymca`
+finds `Y.M.C.A.`), and a song found by a tag alone is ranked after every song found by its title or artist, since a tag
+names a whole shelf of songs - and so are the two pickers and the tag list of the song details' "Manage tags" sheet; a
+setlist answers by its own title or description, or by holding a song that does, and a setlist that answers is shown
+whole - the search finds setlists rather than songs inside them, and three of a setlist's twelve songs is not the list
+somebody wrote down. Each list scrolls back to the top when its search changes what it holds.
+
+Empty and error states are their own composables and animate in and out like everything else, so nothing appears or
+disappears abruptly while the library is still loading. Every lazy list in the app animates its items into place through
+`listItemAnimation` (`components/ListItemAnimation.kt`) rather than through `Modifier.animateItem()` directly, because
+there are two occasions it has to be left off. The song and setlist lists only animate once the library has arrived
+whole: the first read publishes what it has put together as it goes, so a list fills up in several batches and animating
+those would have it rearranging itself while the app is still opening. `rememberHasLoadedLibrary` is what draws that
+line, and it is an effect rather than `!isLoading` read directly, since the last and largest batch lands in the very
+composition that goes false. The same line is where the song list holds its position by index rather than by key: the
+batches arrive in the order the files are listed, so a later one puts songs above the rows already showing, and a grid
+following its first visible key down would open the app already scrolled.
+
+The two lists scroll back to the top through `ScrollToTopWhenChanged` whenever their search (the query that is applied,
+so closing a search counts) or sorting changes; the songs list also does so for filters, except for a tag or a language
+tapped on a song row: that song still carries it, so the list keeps the row where it was (`ListAnchor`, resolved to the
+row's new index and on-screen offset once the filtered list arrives). The songs list's key is not read off the filter
+and the preferences but carried by the list itself (`SongGroups.filterKey`, built from what `ScreenData` says it was
+built for), so the key and the list arrive together, and a filter that leaves every song where it was still delivers a
+list for the anchor to be consumed by rather than leaving it to jump the list at its next unrelated change. That is a
+jump to another index, which a lazy grid answers by forgetting where every item was, so the change is narrated by the
+anchor instead (`anchoredTransition`, a layer on every song row and header): the rows that were on screen slide from
+where they were, the rest fade in, and the ones it took away are gone at once, while the setlists screen leaves its
+bottom archive toggle in reach.
+
+They hold by index there too, in the composition the new contents arrive in: a list that grows puts rows above its first
+visible one, a grid following that row down and then being sent back to the top takes the jump for a scroll and forgets
+where every item was, and the rows that stayed would snap into place while the new ones appeared without fading in.
+Every list also leaves the placement animation off for as long as it is being scrolled (by its spec, so the modifier and
+the node behind it stay put and a placement already running is not cut short): a lazy list moves the animation state of
+each item on screen by the distance the list was scrolled, and at the ends of the list — where a fast scroll asks for
+more than there is left to give — that distance is the one that was asked for rather than the shorter one that was
+actually scrolled, which lands the item far outside the list and then animates it back. What that looks like is one row
+sliding in from off screen while every other row is already still, most visibly the first row of a list after it is
+flung back to the top. Nothing is lost by it, since an item animation is there to narrate a change of the list's
+contents and the contents do not change under a finger.
+
+The one exception is a setlist being rearranged (`isRearranging`), where the contents change under the finger and the
+list scrolls itself as the dragged row reaches an edge, so the rows it passes have to keep sliding out of its way rather
+than snapping for as long as that scroll lasts.
 
 ## Searching the list screens
 
-- **Both list screens are searched from a button rather than from a field that is always there**: the app bar has
-  no title — the list's pinned section header stands in its place — and the one search icon is the one close button (the mark morphs
-  between the two as the button travels from the actions to the start of the bar, with the field after it, see
-  `:presentation`). On the desktop and the web Ctrl / Cmd + F opens it, in place of the browser's find bar there.
+- **Both list screens are searched from a button rather than from a field that is always there**: the app bar has no
+  title — the list's pinned section header stands in its place — and the one search icon is the one close button (the
+  mark morphs between the two as the button travels from the actions to the start of the bar, with the field after it,
+  see `:presentation`). On the desktop and the web Ctrl / Cmd + F opens it, in place of the browser's find bar there.
   The songs are searched by title, artist and tags, ignoring case, accents, spaces and punctuation alike (`ymca` finds
-  `Y.M.C.A.`), a song found by a tag alone coming after those found by their title or artist; a setlist answers by its own title or description, or by holding a
-  song that does — and a setlist that answers is shown **whole**, since a setlist is the list somebody wrote down and
-  three of its twelve songs is not that list.
+  `Y.M.C.A.`), a song found by a tag alone coming after those found by their title or artist; a setlist answers by its
+  own title or description, or by holding a song that does — and a setlist that answers is shown **whole**, since a
+  setlist is the list somebody wrote down and three of its twelve songs is not that list.

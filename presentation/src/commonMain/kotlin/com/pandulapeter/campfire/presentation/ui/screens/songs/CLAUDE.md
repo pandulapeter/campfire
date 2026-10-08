@@ -12,4 +12,6 @@
 
 The songs screen.
 
-Before the first search interaction, Songs lays arriving section headers out fully expanded so loading cannot retain a collapsed first row as a scroll offset. `ListTopFade` treats leading collapsed header slots as zero scroll distance: its mask is absent at the real top and grows over the first 24dp of scrolling, including when the first card is item 1.
+Before the first search interaction, Songs lays arriving section headers out fully expanded so loading cannot retain a
+collapsed first row as a scroll offset. `ListTopFade` treats leading collapsed header slots as zero scroll distance: its
+mask is absent at the real top and grows over the first 24dp of scrolling, including when the first card is item 1.
