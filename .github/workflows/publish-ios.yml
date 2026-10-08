@@ -141,14 +141,14 @@ jobs:
         run: |
           VERSION_NAME=$(sed -n 's/^campfire\.versionName=//p' gradle.properties | tr -d '\r')
           BUILD_NUMBER=$(sed -n 's/^campfire\.buildNumber=//p' gradle.properties | tr -d '\r')
-          printf 'campfire.dropbox.appKey=%s\n' "${DROPBOX_APP_KEY//\\/\\\\}" > local.properties
+          python3 .github/scripts/write_local_properties.py campfire.dropbox.appKey=DROPBOX_APP_KEY
           if [ -n "$BUILD_NUMBER_OVERRIDE" ]; then
             if ! [[ "$BUILD_NUMBER_OVERRIDE" =~ ^[0-9]+$ ]]; then
               echo "::error::The build number override has to be a whole number, not \"$BUILD_NUMBER_OVERRIDE\"." >&2
               exit 1
             fi
             BUILD_NUMBER=$BUILD_NUMBER_OVERRIDE
-            printf 'campfire.buildNumber=%s\n' "$BUILD_NUMBER" >> local.properties
+            python3 .github/scripts/write_local_properties.py --append "campfire.buildNumber=:$BUILD_NUMBER"
           fi
           echo "name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
           echo "build=$BUILD_NUMBER" >> "$GITHUB_OUTPUT"

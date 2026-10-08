@@ -64,7 +64,7 @@ jobs:
         env:
           DROPBOX_APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
         run: |
-          printf 'campfire.dropbox.appKey=%s\n' "${DROPBOX_APP_KEY//\\/\\\\}" > local.properties
+          python3 .github/scripts/write_local_properties.py campfire.dropbox.appKey=DROPBOX_APP_KEY
           ./gradlew :app:web:wasmJsBrowserDistribution
       - name: Check out the website repository
         uses: actions/checkout@v5

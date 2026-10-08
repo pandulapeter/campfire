@@ -167,7 +167,7 @@ jobs:
           fi
           echo "MAC_SIGNING_IDENTITY=$IDENTITY" >> "$GITHUB_ENV"
       # Where a developer's machine keeps the same values, so that the Gradle invocation is the one CLAUDE.md names.
-      # Backslashes are doubled because java.util.Properties reads one as an escape.
+      # The script doubles backslashes, which java.util.Properties reads as escapes.
       - name: Write local.properties
         id: version
         env:
@@ -176,20 +176,19 @@ jobs:
         run: |
           VERSION_NAME=$(sed -n 's/^campfire\.versionName=//p' gradle.properties | tr -d '\r')
           BUILD_NUMBER=$(sed -n 's/^campfire\.buildNumber=//p' gradle.properties | tr -d '\r')
-          {
-            printf 'campfire.dropbox.appKey=%s\n' "${DROPBOX_APP_KEY//\\/\\\\}"
-            printf 'campfire.mac.signingIdentity=%s\n' "$MAC_SIGNING_IDENTITY"
-            printf 'campfire.mac.signingKeychain=%s\n' "$KEYCHAIN_PATH"
-            printf 'campfire.mac.provisioningProfile=%s\n' "$RUNNER_TEMP/embedded.provisionprofile"
-            printf 'campfire.mac.runtimeProvisioningProfile=%s\n' "$RUNNER_TEMP/runtime.provisionprofile"
-          } > local.properties
+          python3 .github/scripts/write_local_properties.py \
+            campfire.dropbox.appKey=DROPBOX_APP_KEY \
+            campfire.mac.signingIdentity=MAC_SIGNING_IDENTITY \
+            campfire.mac.signingKeychain=KEYCHAIN_PATH \
+            "campfire.mac.provisioningProfile=:$RUNNER_TEMP/embedded.provisionprofile" \
+            "campfire.mac.runtimeProvisioningProfile=:$RUNNER_TEMP/runtime.provisionprofile"
           if [ -n "$BUILD_NUMBER_OVERRIDE" ]; then
             if ! [[ "$BUILD_NUMBER_OVERRIDE" =~ ^[0-9]+$ ]]; then
               echo "::error::The build number override has to be a whole number, not \"$BUILD_NUMBER_OVERRIDE\"." >&2
               exit 1
             fi
             BUILD_NUMBER=$BUILD_NUMBER_OVERRIDE
-            printf 'campfire.buildNumber=%s\n' "$BUILD_NUMBER" >> local.properties
+            python3 .github/scripts/write_local_properties.py --append "campfire.buildNumber=:$BUILD_NUMBER"
           fi
           echo "name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
           echo "build=$BUILD_NUMBER" >> "$GITHUB_OUTPUT"

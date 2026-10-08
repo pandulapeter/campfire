@@ -566,11 +566,14 @@ localized in both languages.
   campfire.dropbox.appKey=...
   ```
 
-  CI has no `local.properties`, so every workflow writes one from its own secret store, with each value reaching the
+  CI has no `local.properties`, so every workflow writes one from its own secret store with
+  `.github/scripts/write_local_properties.py` (tested), each value reaching the
   script through `env:` rather than being interpolated into it: a `-P` puts the value in the runner's process list,
   and a secret substituted into a `run:` block is re-read by the shell, so a password holding a `$`, a backtick or a
   quote would sign with something other than what is stored. Backslashes are doubled on the way in, since
-  `java.util.Properties` reads one as an escape. The file is read as UTF-8, so a value outside ASCII survives as well.
+  `java.util.Properties` reads one as an escape. The file is written and read as UTF-8, with LF line endings on the Windows runner too, so a value outside
+  ASCII survives as well. Before any of it, `.github/scripts/require_secrets.py` stops a workflow whose secrets are
+  empty.
 - The `campfire-library` convention plugin sets each module's `archivesName` from its Gradle path, because a klib
   carries the name of the artifact it is built into and half the modules here are called `api` or `implementation`.
 - `./gradlew :app:android:assembleDebug` — Android APK; from Android Studio, the shared "Android" run configuration,

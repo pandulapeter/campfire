@@ -154,8 +154,8 @@ jobs:
         run: printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > app/android/release.keystore
       # Through local.properties rather than -P: a value on the command line is in the runner's process list for the
       # whole build, and a secret interpolated into the script is re-read by the shell, so a password holding a $, a
-      # backtick or a quote would sign the APK with something other than what is in the secret store. Backslashes are
-      # doubled because java.util.Properties treats one as an escape inside a value.
+      # backtick or a quote would sign the APK with something other than what is in the secret store. The script reads
+      # each value from the environment and doubles its backslashes, which java.util.Properties reads as escapes.
       - name: Build release APK
         env:
           DROPBOX_APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
@@ -163,14 +163,12 @@ jobs:
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
         run: |
-          escape() { printf '%s' "${1//\\/\\\\}"; }
-          {
-            printf 'campfire.dropbox.appKey=%s\n' "$(escape "$DROPBOX_APP_KEY")"
-            printf 'campfire.android.keyAlias=%s\n' "$(escape "$ANDROID_KEY_ALIAS")"
-            printf 'campfire.android.keyPassword=%s\n' "$(escape "$ANDROID_KEY_PASSWORD")"
-            printf 'campfire.android.keystoreFile=release.keystore\n'
-            printf 'campfire.android.keystorePassword=%s\n' "$(escape "$ANDROID_KEYSTORE_PASSWORD")"
-          } > local.properties
+          python3 .github/scripts/write_local_properties.py \
+            campfire.dropbox.appKey=DROPBOX_APP_KEY \
+            campfire.android.keyAlias=ANDROID_KEY_ALIAS \
+            campfire.android.keyPassword=ANDROID_KEY_PASSWORD \
+            campfire.android.keystoreFile=:release.keystore \
+            campfire.android.keystorePassword=ANDROID_KEYSTORE_PASSWORD
           ./gradlew :app:android:assembleRelease
       - name: Upload the APK to the Play Console
         uses: r0adkll/upload-google-play@v1.1.5
