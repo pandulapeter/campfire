@@ -18,7 +18,6 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
-import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -61,6 +60,7 @@ import com.pandulapeter.campfire.presentation.ui.firstRun.canShowWhatsNew
 import com.pandulapeter.campfire.presentation.ui.fontScale.FontScaleController
 import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
+import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeController
 import com.pandulapeter.campfire.presentation.ui.playing.Transpositions
 import com.pandulapeter.campfire.presentation.ui.print.PdfExportProgress
 import com.pandulapeter.campfire.presentation.ui.print.PrintSource
@@ -125,9 +125,6 @@ import com.pandulapeter.campfire.presentation.resources.whats_new_message
 import com.pandulapeter.campfire.presentation.ui.components.ScrollPosition
 import com.pandulapeter.campfire.presentation.ui.components.SearchState
 import com.pandulapeter.campfire.metronome.api.Metronome
-import com.pandulapeter.campfire.metronome.api.model.BeatLevel
-import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
-import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
 import com.pandulapeter.campfire.metronome.api.model.MetronomeSound
 import com.pandulapeter.campfire.presentation.ui.components.isAnyOverflowMenuOpen
 import com.pandulapeter.campfire.presentation.ui.dialogs.SONG_METADATA_FIELDS
@@ -137,11 +134,7 @@ import com.pandulapeter.campfire.presentation.ui.playing.PlayingOverrides
 import com.pandulapeter.campfire.presentation.ui.playing.PlayingOverridesSnapshot
 import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
 import com.pandulapeter.campfire.presentation.ui.playing.Tempos
-import com.pandulapeter.campfire.presentation.ui.metronome.isMetronomeContextMoved
 import com.pandulapeter.campfire.presentation.ui.metronome.isMetronomeScreenLeft
-import com.pandulapeter.campfire.presentation.ui.metronome.isMetronomeStartable
-import com.pandulapeter.campfire.presentation.ui.metronome.metronomeContextOf
-import com.pandulapeter.campfire.presentation.ui.metronome.metronomePatternOf
 import com.pandulapeter.campfire.presentation.ui.playing.withTempo
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
@@ -861,45 +854,38 @@ class CampfireViewModel(
 
     // Metronome
 
-    /** Saved like [pendingPrintSettings]: a dragged slider is a new value every frame. */
-    private val metronomeSettingsPreference = DebouncedPreference<MetronomeSettings> { copy(metronomeSettings = it) }
+    private val metronomeController = MetronomeController(
+        scope = viewModelScope,
+        metronome = metronome,
+        backStack = backStack,
+        currentSongFileName = { currentSongFileName(it) },
+        dialogHost = dialogHost,
+        userPreferences = userPreferences,
+        tempos = tempos,
+        songsByFileName = songsByFileName,
+        songsBeingRenamed = _songsBeingRenamed,
+        messageSink = messageSink,
+        updateUserPreferences = updateUserPreferences,
+        writeDelayMillis = PREFERENCE_WRITE_DEBOUNCE_MILLIS,
+    )
 
-    val metronomeSettings = combine(userPreferences, metronomeSettingsPreference.pending) { userPreferences, pending ->
-        pending ?: userPreferences?.metronomeSettings ?: MetronomeSettings()
-    }.asState(MetronomeSettings())
+    /** See [MetronomeController.metronomeSettings]. */
+    val metronomeSettings: StateFlow<MetronomeSettings> get() = metronomeController.metronomeSettings
 
-    val metronomePlayback = metronome.playback
+    /** See [MetronomeController.metronomePlayback]. */
+    val metronomePlayback get() = metronomeController.metronomePlayback
 
-    /** One item per click as it is heard, which the flash and the haptics are driven from and nothing else. */
-    val metronomeBeats = metronome.beats
+    /** See [MetronomeController.metronomeBeats]. */
+    val metronomeBeats get() = metronomeController.metronomeBeats
 
-    /**
-     * The song each song details screen's pager is heading for, by [CampfireDestination.SongDetails.id]: its target page
-     * rather than the one it settles on, so that a click paged on to the next song has the new tempo while the page is
-     * still sliding in. Reported by the screen, see [onSongDetailsPageChanged].
-     */
-    private val songDetailsTargetSongs = mutableStateMapOf<String, String>()
+    private val songDetailsTargetSongs get() = metronomeController.songDetailsTargetSongs
 
-    /**
-     * The stretch of the song in [songDetailsTargetSongs] each song details screen's page is headed for, by the same
-     * id, where it changes its tempo or time signature further down: what the click follows inside one song.
-     */
-    private val songDetailsTargetTimings = mutableStateMapOf<String, SongTiming>()
+    private val songDetailsTargetTimings get() = metronomeController.songDetailsTargetTimings
 
-    /**
-     * The renames of the song a click plays for, old name to new, from the moment [updateSongFileName] knows the new
-     * name until the click's context has followed it: the context moving from one to the other is the same song under
-     * another name, which keeps the bar going instead of restarting it. Read and written on the main thread only.
-     */
-    private val metronomeRenames = mutableMapOf<String, String>()
+    private val metronomeRenames get() = metronomeController.metronomeRenames
 
-    /** What a click plays for, derived from the back stack, see [metronomeContextOf]; snapshot state, observable. */
-    internal val metronomeContext
-        get() = metronomeContextOf(
-            backStack = backStack,
-            currentSongOf = { destination -> songDetailsTargetSongs[destination.id] ?: currentSongFileName(destination) },
-            currentTimingOf = { destination -> songDetailsTargetTimings[destination.id]?.takeIf { songDetailsTargetSongs[destination.id] != null } },
-        )
+    /** See [MetronomeController.metronomeContext]. */
+    internal val metronomeContext get() = metronomeController.metronomeContext
 
     /**
      * Every song of the library in the order the songs screen is sorted by, with its search and filter keys, as the song
@@ -1300,66 +1286,13 @@ class CampfireViewModel(
         )
         fontScaleController.startWriter()
         printSettingsPreference.start(viewModelScope, PREFERENCE_WRITE_DEBOUNCE_MILLIS, updateUserPreferences::invoke)
-        metronomeSettingsPreference.start(viewModelScope, PREFERENCE_WRITE_DEBOUNCE_MILLIS, updateUserPreferences::invoke)
+        metronomeController.startSettingsWriter()
         overrides.startSettling()
-        viewModelScope.launch {
-            // One collector for everything that changes what a playing click plays, so that a context change and the
-            // pattern it brings are one update: paging to another song moves the click to it from beat one, and
-            // anything else - a tempo stepped, a setting, a song's {tempo} saved or synced - is applied from the next
-            // beat. Leaving the song is not among them, since a click does not outlive the screen it is played from.
-            // The first value is only remembered: a view model built again while a click plays (an activity recreated)
-            // starts from a back stack it has not moved. What was applied is compared rather than the values repeating,
-            // since a pattern that changed while the click was held is emitted again unchanged once the hold ends.
-            var previous: MetronomeContext? = null
-            var applied: MetronomePattern? = null
-            combine(
-                snapshotFlow { metronomeContext },
-                tempos,
-                metronomeSettings,
-                songsByFileName,
-                _songsBeingRenamed,
-            ) { context, tempos, settings, songs, renaming ->
-                Triple(
-                    context,
-                    metronomePatternOf(context = context, settings = settings, songOf = { songs[it] ?: renaming[it] }, tempos = tempos),
-                    renaming.keys,
-                )
-            }.collect { (context, pattern, renaming) ->
-                // Held while the click's own song is being renamed: its overrides move to the new name before the screen
-                // does, and the screen follows a moment after the rename is over. Whatever changed meanwhile is applied
-                // once it has.
-                if (context is MetronomeContext.Song && (context.songFileName in renaming || context.songFileName in metronomeRenames)) {
-                    return@collect
-                }
-                val last = previous
-                previous = context
-                if (last != null) {
-                    val isMoved = isMetronomeContextMoved(last = last, context = context, renames = metronomeRenames)
-                    if (last is MetronomeContext.Song && context != last) metronomeRenames.remove(last.songFileName)
-                    if (context != last || pattern != applied) metronome.update(pattern, restartBar = isMoved)
-                }
-                applied = pattern
-            }
-        }
-        viewModelScope.launch {
-            // Only what happens from here on: the engine outlives the view model, and a reason from before it was built
-            // was said by the one before it.
-            metronome.playback.drop(1).collect { playback ->
-                (playback as? MetronomePlayback.Stopped)?.reason?.let { sendMessage(Message.MetronomeStopped(it)) }
-            }
-        }
+        metronomeController.startFollowingPattern()
+        metronomeController.startReportingStops()
         fontScaleController.startEcho(userPreferences)
         fontScaleController.startSettle()
-        viewModelScope.launch {
-            // Where the web's audio output listens for the presses that allow a page's audio to start, so that tapping
-            // around the rest of the app never opens the audio device; a no-op on the other platforms. The screen
-            // composes before the tap that starts a click, so the listener is there in time.
-            combine(
-                snapshotFlow { backStack.lastOrNull() },
-                userPreferences.map { it?.isMetronomeEnabled != false },
-                ::isMetronomeStartable,
-            ).distinctUntilChanged().collect(metronome::setStartable)
-        }
+        metronomeController.startStartableRule()
     }
 
     // Navigation
@@ -2122,8 +2055,6 @@ class CampfireViewModel(
      * caller to hand over there and then, rather than left to arrive through [syncState], which it would only do
      * after a hop to the main thread this callback is holding.
      */
-    private var silentClickStopJob: Job? = null
-
     fun onAppPaused(): SyncProgress? {
         val syncProgress = startScheduledSynchronization()
         if (!_isEditorDraftRecoveryPending.value) {
@@ -2133,34 +2064,9 @@ class CampfireViewModel(
         return syncProgress
     }
 
-    /**
-     * Called whenever the app is out of sight (ON_STOP). A click that cannot sound - the volume at zero, every beat
-     * muted - is only there for the flash and the haptics. The flash never reaches a screen nobody sees, and keeping the
-     * click up for nothing would keep the phone's background audio (iOS's audio mode, Android's media playback service)
-     * going for silence, which is not what either platform allows it for. The haptics do reach a pocket where
-     * [areBeatsFeltInBackground] (Android, with a vibrator) and the Vibrate switch is on, so a click with a beat left to
-     * feel is kept there. A few seconds' grace, since an Android activity recreated in front (a system theme or language
-     * change) stops, and is only started again once its new composition is up, and a click playing on its own screen
-     * is not to be stopped by that.
-     */
-    fun onAppStopped(areBeatsFeltInBackground: Boolean) {
-        silentClickStopJob?.cancel()
-        silentClickStopJob = viewModelScope.launch {
-            delay(SILENT_CLICK_GRACE_MILLIS)
-            val playing = metronome.playback.value as? MetronomePlayback.Playing ?: return@launch
-            val isFelt = areBeatsFeltInBackground && metronomeSettings.value.isHapticBeatEnabled && playing.pattern.hasUnmutedBeat
-            if (!playing.pattern.canSound && !isFelt) {
-                metronome.stop()
-                sendMessage(Message.SilentMetronomeStopped)
-            }
-        }
-    }
+    fun onAppStopped(areBeatsFeltInBackground: Boolean) = metronomeController.onAppStopped(areBeatsFeltInBackground)
 
-    /** Called whenever the app is in sight again (ON_START), which takes back a stop [onAppStopped] has not made yet. */
-    fun onAppStarted() {
-        silentClickStopJob?.cancel()
-        silentClickStopJob = null
-    }
+    fun onAppStarted() = metronomeController.onAppStarted()
 
     /**
      * The unsaved text as the file would hold it, or null when nothing is unsaved. Stored as the file would hold it
@@ -2348,82 +2254,19 @@ class CampfireViewModel(
 
     fun resetTransposition(songFileName: String, setlistFileName: String?) = overrides.resetTransposition(songFileName, setlistFileName)
 
-    /**
-     * Reported by the song details screen whenever its pager heads for a page, or the page it heads for for another
-     * stretch of its song, see [songDetailsTargetSongs] and [songDetailsTargetTimings].
-     */
-    internal fun onSongDetailsPageChanged(destination: CampfireDestination.SongDetails, songFileName: String, timing: SongTiming?) {
-        if (backStack.any { it is CampfireDestination.SongDetails && it.id == destination.id }) {
-            // One snapshot, so that the click never reads the new song with the stretch of the one before it.
-            Snapshot.withMutableSnapshot {
-                songDetailsTargetSongs[destination.id] = songFileName
-                if (timing == null) songDetailsTargetTimings.remove(destination.id) else songDetailsTargetTimings[destination.id] = timing
-            }
-        }
-    }
+    internal fun onSongDetailsPageChanged(destination: CampfireDestination.SongDetails, songFileName: String, timing: SongTiming?) = metronomeController.onSongDetailsPageChanged(destination, songFileName, timing)
 
-    /** The pattern a click started now would play, for [metronomeContext]. */
-    private fun currentMetronomePattern(context: MetronomeContext) = metronomePatternOf(
-        context = context,
-        settings = metronomeSettings.value,
-        songOf = { songsByFileName.value[it] ?: _songsBeingRenamed.value[it] },
-        tempos = tempos.value,
-    )
+    internal fun toggleMetronomeByKey(isSpace: Boolean) = metronomeController.toggleMetronomeByKey(isSpace)
 
-    /**
-     * The keyboard's way to [toggleMetronome], asked from the desktop window and the web page: Space on the Metronome tab
-     * and M on the song details screen, while nothing is drawn over either. Pedals send only arrows, so this is for
-     * keyboards. Answers whether it did, so that anywhere else the key is left alone.
-     */
-    internal fun toggleMetronomeByKey(isSpace: Boolean): Boolean {
-        if (visibleDialog.value != null || overlayState.isAnyMenuOpen) return false
-        val top = backStack.lastOrNull()
-        if (if (isSpace) top != CampfireDestination.Metronome else top !is CampfireDestination.SongDetails || userPreferences.value?.isMetronomeEnabled == false) return false
-        toggleMetronome()
-        return true
-    }
+    fun toggleMetronome() = metronomeController.toggleMetronome()
 
-    /**
-     * Starts a click for whatever is on screen - the song, or the Metronome tab's own pattern - or stops the one
-     * playing. A click started while a song is being read opens the panel with it, so that stopping it again from there
-     * leaves the instrument up, see [toggleMetronomePanel].
-     */
-    fun toggleMetronome() {
-        if (metronome.playback.value is MetronomePlayback.Playing) {
-            metronome.stop()
-        } else {
-            val context = metronomeContext
-            metronome.start(currentMetronomePattern(context))
-            if (backStack.lastOrNull() is CampfireDestination.SongDetails) showMetronomePanel(isShown = true)
-        }
-    }
+    internal fun toggleMetronomePanel() = metronomeController.toggleMetronomePanel()
 
-    /**
-     * The song details screen's metronome button, which is about the panel rather than about the click: the panel is
-     * what the click is started and stopped from there, so stopping one leaves the instrument up for the next and only
-     * this takes it away. Opening it starts nothing, and closing it stops a click that is playing, since a click is
-     * never left with nothing on screen to stop it with.
-     *
-     * Whether it is up is a preference (`MetronomeSettings.isSongPanelShown`), so a player who reads to a click finds
-     * the panel on the next song as well; a click that is playing is only ever playing with the panel up.
-     */
-    internal fun toggleMetronomePanel() {
-        if (metronomeSettings.value.isSongPanelShown || metronome.playback.value is MetronomePlayback.Playing) {
-            showMetronomePanel(isShown = false)
-            metronome.stop()
-        } else {
-            showMetronomePanel(isShown = true)
-        }
-    }
+    fun stopMetronome() = metronomeController.stopMetronome()
 
-    private fun showMetronomePanel(isShown: Boolean) = updateMetronomeSettings { copy(isSongPanelShown = isShown) }
+    fun previewMetronomeSound(sound: MetronomeSound) = metronomeController.previewMetronomeSound(sound)
 
-    fun stopMetronome() = metronome.stop()
-
-    fun previewMetronomeSound(sound: MetronomeSound) = metronome.preview(sound, BeatLevel.ACCENT)
-
-    fun updateMetronomeSettings(change: MetronomeSettings.() -> MetronomeSettings) =
-        metronomeSettingsPreference.update { (it ?: metronomeSettings.value).change() }
+    fun updateMetronomeSettings(change: MetronomeSettings.() -> MetronomeSettings) = metronomeController.updateMetronomeSettings(change)
 
     internal fun effectiveTempoOf(songFileName: String, setlistFileName: String?) = overrides.effectiveTempoOf(songFileName, setlistFileName)
 
@@ -2518,7 +2361,7 @@ class CampfireViewModel(
      */
     private suspend fun writeWaitingPreferences() = DebouncedPreference.flushAll(
         fontScaleController.fontScalePreference,
-        metronomeSettingsPreference,
+        metronomeController.metronomeSettingsPreference,
         printSettingsPreference,
         write = updateUserPreferences::invoke,
     )
@@ -3663,7 +3506,6 @@ class CampfireViewModel(
     companion object {
         private const val PREFERENCE_WRITE_DEBOUNCE_MILLIS = 500L
         private const val SONG_EDIT_ATTEMPTS = 2
-        private const val SILENT_CLICK_GRACE_MILLIS = 3_000L
         private const val DEMO_LIBRARY_READ_TIMEOUT_MILLIS = 10_000L // Past the drawables' five seconds: it cuts short a first impression, not a frame.
         private const val MAX_SAVED_BACK_STACK_LENGTH = 100_000 // Characters of JSON, about 200 KB as the UTF-16 a Bundle writes.
         private val MIN_RESCAN_INTERVAL = 10.seconds
