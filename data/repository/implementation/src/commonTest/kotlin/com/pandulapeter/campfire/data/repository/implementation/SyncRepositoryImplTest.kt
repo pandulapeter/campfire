@@ -34,7 +34,6 @@ import com.pandulapeter.campfire.data.repository.implementation.sync.RecordingSo
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncIndexDocument
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncIndexEntry
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncKey
-import com.pandulapeter.campfire.data.repository.implementation.sync.defaultUserPreferences
 import com.pandulapeter.campfire.data.repository.implementation.sync.indexKey
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import com.pandulapeter.campfire.data.source.remote.api.PendingAuthorization
@@ -1096,47 +1095,22 @@ class SyncRepositoryImplTest {
     }
 
     @Test
-    fun `rememberDemoLibraryFiles records the content of the files that are there`() = runTest {
-        val a = "Song a".encodeToByteArray()
-        val b = "Setlist b".encodeToByteArray()
-        val libraryFileLocalSource = FakeLibraryFileLocalSource(
-            files = mapOf(
-                SyncKey(kind = LibraryFileKind.SONG, name = "a.cho") to a,
-                SyncKey(kind = LibraryFileKind.SETLIST, name = "b.setlist.json") to b,
-            ),
-        )
-        val userPreferencesRepository = FakeUserPreferencesRepository(
-            defaultUserPreferences().copy(demoLibraryContentHashes = mapOf("songs/earlier.cho" to "0a1b")),
-        )
-        val repository = repository(
-            provider = FakeSyncProvider(),
-            libraryFileLocalSource = libraryFileLocalSource,
-            userPreferencesRepository = userPreferencesRepository,
-        )
-
-        repository.rememberDemoLibraryFiles(songFileNames = listOf("a.cho", "missing.cho"), setlistFileNames = listOf("b.setlist.json"))
-
-        assertEquals(
-            mapOf(
-                "songs/earlier.cho" to "0a1b",
-                "songs/a.cho" to localContentHash(a),
-                "setlists/b.setlist.json" to localContentHash(b),
-            ),
-            userPreferencesRepository.current.demoLibraryContentHashes,
-        )
-    }
-
-    @Test
     fun `a run takes the folder's version of a remembered demo song`() = runTest {
         val planted = "Demo, as this version plants it".encodeToByteArray()
         val there = "Demo, as an older version planted it".encodeToByteArray()
         val libraryFileLocalSource = FakeLibraryFileLocalSource(files = mapOf(song(1) to planted))
+        val userPreferencesRepository = FakeUserPreferencesRepository()
         val repository = repository(
             provider = FakeSyncProvider(files = mapOf(song(1) to there), account = ACCOUNT),
             libraryFileLocalSource = libraryFileLocalSource,
+            userPreferencesRepository = userPreferencesRepository,
         )
 
-        repository.rememberDemoLibraryFiles(songFileNames = listOf(song(1).name), setlistFileNames = emptyList())
+        DemoLibraryRepositoryImpl(
+            libraryFileLocalSource = libraryFileLocalSource,
+            libraryFileLock = LibraryFileLock(),
+            userPreferencesRepository = userPreferencesRepository,
+        ).rememberDemoLibraryFiles(songFileNames = listOf(song(1).name), setlistFileNames = emptyList())
         repository.restore()
         repository.synchronize(SyncDeletionPolicy.ASK)
         val state = repository.awaitOutcome()

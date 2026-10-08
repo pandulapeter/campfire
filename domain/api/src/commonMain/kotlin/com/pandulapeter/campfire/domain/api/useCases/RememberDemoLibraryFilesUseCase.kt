@@ -11,6 +11,6 @@ package com.pandulapeter.campfire.domain.api.useCases
 
 interface RememberDemoLibraryFilesUseCase {
 
-    /** See `SyncRepository.rememberDemoLibraryFiles`: what the demo files just planted under these names hold. */
+    /** See `DemoLibraryRepository.rememberDemoLibraryFiles`: what the demo files just planted under these names hold. */
     suspend operator fun invoke(songFileNames: Collection<String>, setlistFileNames: Collection<String>)
 }

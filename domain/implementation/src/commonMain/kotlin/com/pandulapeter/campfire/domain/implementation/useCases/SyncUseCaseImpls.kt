@@ -22,7 +22,6 @@ import com.pandulapeter.campfire.domain.api.useCases.DisconnectSyncProviderUseCa
 import com.pandulapeter.campfire.domain.api.useCases.ForgetSyncConnectionUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetSyncProvidersUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetSyncStateUseCase
-import com.pandulapeter.campfire.domain.api.useCases.RememberDemoLibraryFilesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.RestoreSyncUseCase
 import com.pandulapeter.campfire.domain.api.useCases.StartScheduledSynchronizationUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SynchronizeLibraryUseCase
@@ -75,15 +74,6 @@ class ForgetSyncConnectionUseCaseImpl internal constructor(
 ) : ForgetSyncConnectionUseCase {
 
     override suspend operator fun invoke() = syncRepository.forgetStoredConnection()
-}
-
-@Factory
-class RememberDemoLibraryFilesUseCaseImpl internal constructor(
-    private val syncRepository: SyncRepository,
-) : RememberDemoLibraryFilesUseCase {
-
-    override suspend operator fun invoke(songFileNames: Collection<String>, setlistFileNames: Collection<String>) =
-        syncRepository.rememberDemoLibraryFiles(songFileNames, setlistFileNames)
 }
 
 @Factory

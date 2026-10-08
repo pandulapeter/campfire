@@ -99,14 +99,6 @@ interface SyncRepository {
     suspend fun forgetStoredConnection()
 
     /**
-     * Writes down what the demo files the app has just planted hold, so that a run which finds a different version of
-     * one of them in the cloud folder - planted there by an older version of the app - takes that version instead of
-     * keeping both, for as long as this device's file still holds exactly what was planted. Names of files that are not
-     * there are ignored. Never fails: a record that could not be taken only means a conflict copy later.
-     */
-    suspend fun rememberDemoLibraryFiles(songFileNames: Collection<String>, setlistFileNames: Collection<String>)
-
-    /**
      * Starts a run, if nothing is connected there is nothing to start, and if one is already going this does
      * nothing - so pressing the button twice cannot start two runs over the same files. Returns whether it started
      * one: false where a run is already going, which the request then does not survive, its [deletionPolicy]

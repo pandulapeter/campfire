@@ -77,8 +77,6 @@ private class ConnectedSyncRepository : SyncRepository {
 
     override suspend fun forgetStoredConnection() = Unit
 
-    override suspend fun rememberDemoLibraryFiles(songFileNames: Collection<String>, setlistFileNames: Collection<String>) = Unit
-
     override fun synchronize(deletionPolicy: SyncDeletionPolicy) = false
 
     override fun scheduleSynchronization() = Unit
