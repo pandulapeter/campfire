@@ -11,8 +11,6 @@ package com.pandulapeter.campfire.chordpro
 
 import com.pandulapeter.campfire.chordpro.ChordProDirectives.Directive
 import com.pandulapeter.campfire.chordpro.ChordProVocabulary.META
-import com.pandulapeter.campfire.chordpro.ChordProVocabulary.TEMPO
-import com.pandulapeter.campfire.chordpro.ChordProVocabulary.TIME
 import com.pandulapeter.campfire.chordpro.model.ChordProLink
 
 /**
@@ -33,8 +31,6 @@ internal object ChordProMetaItems {
     /** The `{meta}` key a link about the song is written under, one directive per link. */
     const val LINK_NAME = "link"
     internal const val LANGUAGE_SHORT_NAME = "lang"
-    private const val CAPO = "capo"
-    private const val DURATION = "duration"
 
     /**
      * The two ISO codes that mean "there is no language here" — undetermined and no linguistic content. They say
@@ -59,9 +55,7 @@ internal object ChordProMetaItems {
      * The names the spec defines `{meta: name value}` to mean exactly what the standalone `{name: value}` means, of the
      * ones the model has a field for; the tag and the language are read by [tag] and [language].
      */
-    private val standardMetaNames = setOf(
-        "title", "subtitle", "artist", "composer", "lyricist", "album", "year", "key", "capo", "tempo", "time", "duration",
-    )
+    private val standardMetaNames = MetadataKind.entries.filter { it.isStandardMeta }.map { it.longName }.toSet()
 
     /**
      * The standalone directive a `{meta}` one stands for (`{meta: title Amazing Grace}` is `{title: Amazing Grace}`), or
@@ -80,13 +74,7 @@ internal object ChordProMetaItems {
      * reads past where it cannot and the editor marks as unreadable: a tempo, a time signature, a capo and a duration
      * have a form, every other kind is read as it is written.
      */
-    fun isReadableValue(kind: String, value: String) = when (kind) {
-        TEMPO -> ChordProTempo.parse(value) != null
-        TIME -> ChordProTime.parse(value) != null
-        CAPO -> value.toIntOrNull()?.let { it >= 0 } == true
-        DURATION -> ChordProDuration.parse(value) != null
-        else -> true
-    }
+    fun isReadableValue(kind: String, value: String) = MetadataKind.of(kind)?.isReadable?.invoke(value) ?: true
 
     /**
      * Equal for exactly the strings `equals(ignoreCase = true)` calls equal, char by char, so that it can key a hash set.

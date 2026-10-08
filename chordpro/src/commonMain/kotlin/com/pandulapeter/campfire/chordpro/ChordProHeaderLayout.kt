@@ -16,7 +16,6 @@ import com.pandulapeter.campfire.chordpro.ChordProEnvironments.endOfEnvironment
 import com.pandulapeter.campfire.chordpro.ChordProEnvironments.startOfEnvironment
 import com.pandulapeter.campfire.chordpro.ChordProMetaItems.COVER_NAME
 import com.pandulapeter.campfire.chordpro.ChordProMetaItems.LANGUAGE_NAME
-import com.pandulapeter.campfire.chordpro.ChordProMetaItems.LANGUAGE_SHORT_NAME
 import com.pandulapeter.campfire.chordpro.ChordProMetaItems.LINK_NAME
 import com.pandulapeter.campfire.chordpro.ChordProMetaItems.TAG_NAME
 import com.pandulapeter.campfire.chordpro.ChordProMetaItems.isCoverMeta
@@ -30,14 +29,10 @@ import com.pandulapeter.campfire.chordpro.ChordProVocabulary.SOURCE_COMMENT
 internal object ChordProHeaderLayout {
 
     /**
-     * The directives a song describes itself with, in the order a header reads best in: what the song is called, who
-     * made it, what record it came on and what its sleeve looks like, and how it is played, with the three repeatable ones at the end. It is what
+     * The directives a song describes itself with, in the order a header reads best in (see [MetadataKind]). It is what
      * decides where a directive added to a file lands, see [metadataInsertionIndex].
      */
-    val metadataOrder = listOf(
-        "title", "subtitle", "artist", "composer", "lyricist", "album", COVER_NAME, "year", "key", "capo", "tempo", "time",
-        "duration", TAG_NAME, LANGUAGE_NAME, LINK_NAME,
-    )
+    val metadataOrder = MetadataKind.entries.map { it.longName }
 
     /**
      * The metadata directive a line declares, under the single name the app knows it by: the short spellings (`{t}`)
@@ -56,11 +51,7 @@ internal object ChordProHeaderLayout {
         }
     }
 
-    internal val metadataAliases = mapOf(
-        "t" to "title",
-        "st" to "subtitle",
-        LANGUAGE_SHORT_NAME to LANGUAGE_NAME,
-    )
+    internal val metadataAliases = MetadataKind.aliasLongNames
 
     /**
      * Where a directive of kind [name] goes when one is added to a file the user wrote.

@@ -412,28 +412,16 @@ class ChordProHighlighterTest {
     }
 
     /**
-     * Every spelling the parser reads for each metadata kind, as the only line of a song: the twelve `{meta}` standard
-     * names in both forms, the short title and subtitle, the tag, the four spellings of a language, and the cover and the
-     * link, which are only ever read as `{meta}` items.
+     * Every spelling the parser reads for each metadata kind, as the only line of a song: `{meta: name value}` for all of
+     * them, and the standalone directive under the long name and every short one for all but the cover and the link,
+     * which are only ever read as `{meta}` items. The language's short name is a `{meta}` key as well.
      */
-    private val metadataSpellings: Map<String, List<(String) -> String>> = buildMap {
-        listOf("title", "subtitle", "artist", "composer", "lyricist", "album", "year", "key", "capo", "tempo", "time", "duration").forEach { name ->
-            put(name, listOf({ value: String -> "{$name: $value}" }, { value: String -> "{meta: $name $value}" }))
-        }
-        put("title", getValue("title") + { value: String -> "{t: $value}" })
-        put("subtitle", getValue("subtitle") + { value: String -> "{st: $value}" })
-        put("tag", listOf({ value: String -> "{tag: $value}" }, { value: String -> "{meta: tag $value}" }))
-        put(
-            "language",
-            listOf(
-                { value: String -> "{language: $value}" },
-                { value: String -> "{lang: $value}" },
-                { value: String -> "{meta: language $value}" },
-                { value: String -> "{meta: lang $value}" },
-            ),
-        )
-        put("cover", listOf { value: String -> "{meta: cover $value}" })
-        put("link", listOf { value: String -> "{meta: link $value}" })
+    private val metadataSpellings = MetadataKind.entries.associate { kind ->
+        val names = listOf(kind.longName) + kind.aliases
+        val standalone = if (kind == MetadataKind.COVER || kind == MetadataKind.LINK) emptyList() else names
+        val meta = if (kind == MetadataKind.LANGUAGE) names else listOf(kind.longName)
+        kind.longName to standalone.map { name -> { value: String -> "{$name: $value}" } } +
+            meta.map { name -> { value: String -> "{meta: $name $value}" } }
     }
 
     private val metadataValues = listOf(
