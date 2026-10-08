@@ -23,6 +23,7 @@ import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.data.repository.api.SyncRepository
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
+import com.pandulapeter.campfire.data.repository.implementation.base.recovering
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncEngine
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncIndexDocument
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncKey
@@ -200,15 +201,11 @@ internal class SyncRepositoryImpl(
         }
         // A previous installation's credentials that the first launch could not forget are tried again before
         // anything reads them - and while they still cannot be forgotten, nothing is restored from them.
-        val isForgettingOwed = try {
-            syncStateLocalSource.isForgettingCredentialsOwed()
-        } catch (exception: CancellationException) {
-            throw exception
-        } catch (exception: Exception) {
+        val isForgettingOwed = recovering(
+            describe = { "Could not tell whether the sync credentials are to be forgotten: ${it::class.simpleName}" },
             // Not knowing is not a reason to disconnect an ordinary installation, which is every one but this rare case.
-            println("Could not tell whether the sync credentials are to be forgotten: ${exception::class.simpleName}")
-            false
-        }
+            fallback = { false },
+        ) { syncStateLocalSource.isForgettingCredentialsOwed() }
         if (isForgettingOwed && !withContext(NonCancellable) { forgetStoredConnectionNow() }) {
             return disconnectedResult
         }
@@ -240,16 +237,12 @@ internal class SyncRepositoryImpl(
         // bad network that answer can take over a minute, and until it came the settings screen would offer to connect
         // an account that is connected. Only a connection nothing was ever stored about has to wait for it.
         val storedAccount = connected.storedAccount()
-        val account = storedAccount ?: try {
-            connected.loadAccount()
-        } catch (exception: CancellationException) {
-            throw exception
-        } catch (exception: Exception) {
-            // Start up must never end in an exception because of a service: the library is what the app is for,
-            // and sync is a thing it does on the side.
-            println("Could not restore the ${connected.id} connection: ${exception.message}")
-            null
-        }
+        // Start up must never end in an exception because of a service: the library is what the app is for, and sync
+        // is a thing it does on the side.
+        val account = storedAccount ?: recovering(
+            describe = { "Could not restore the ${connected.id} connection: ${it.message}" },
+            fallback = { null },
+        ) { connected.loadAccount() }
         if (account == null) {
             // The credentials are there but the service will not say who they belong to, which only happens once
             // they have been revoked. Nothing is deleted here: the user is told, and disconnecting is their call.
@@ -371,13 +364,10 @@ internal class SyncRepositoryImpl(
         withContext(NonCancellable) {
             providers.forEach { provider ->
                 // Asked inside the try, so that credentials that cannot be read right now still end in a disconnect.
-                try {
-                    if (provider.isConnected()) provider.disconnect()
-                } catch (exception: CancellationException) {
-                    throw exception
-                } catch (exception: Exception) {
-                    println("Could not disconnect from ${provider.id}: ${exception.message}")
-                }
+                recovering(
+                    describe = { "Could not disconnect from ${provider.id}: ${it.message}" },
+                    fallback = {},
+                ) { if (provider.isConnected()) provider.disconnect() }
             }
             // The index describes a remote folder this device is no longer looking at. Kept, and it would read that
             // folder's every file as a deletion the next time something connects. Under the run lock, because a run
@@ -396,7 +386,10 @@ internal class SyncRepositoryImpl(
     }
 
     override suspend fun rememberDemoLibraryFiles(songFileNames: Collection<String>, setlistFileNames: Collection<String>) {
-        try {
+        recovering(
+            describe = { "Could not remember the demo library: ${it.message}" },
+            fallback = {},
+        ) {
             val keys = songFileNames.map { SyncKey(LibraryFileKind.SONG, it) } + setlistFileNames.map { SyncKey(LibraryFileKind.SETLIST, it) }
             // Read under the lock the repositories write under, so the bytes recorded are the ones the import left.
             val hashes = libraryFileLock.withLock {
@@ -405,10 +398,6 @@ internal class SyncRepositoryImpl(
             if (hashes.isNotEmpty()) {
                 userPreferencesRepository.updateUserPreferences { it.copy(demoLibraryContentHashes = it.demoLibraryContentHashes + hashes) }
             }
-        } catch (exception: CancellationException) {
-            throw exception
-        } catch (exception: Exception) {
-            println("Could not remember the demo library: ${exception.message}")
         }
     }
 
@@ -423,14 +412,10 @@ internal class SyncRepositoryImpl(
         quietly("note that the sync credentials are to be forgotten") { syncStateLocalSource.setForgettingCredentialsOwed(true) }
         var haveCredentialsGone = true
         providers.forEach { provider ->
-            try {
-                provider.forgetStoredCredentials()
-            } catch (exception: CancellationException) {
-                throw exception
-            } catch (exception: Exception) {
-                println("Could not forget the ${provider.id} credentials: ${exception.message}")
-                haveCredentialsGone = false
-            }
+            recovering(
+                describe = { "Could not forget the ${provider.id} credentials: ${it.message}" },
+                fallback = { haveCredentialsGone = false },
+            ) { provider.forgetStoredCredentials() }
         }
         // A build with no provider at all still has to lose an authorization written down by one that had one.
         discardPendingAuthorization()
@@ -445,15 +430,8 @@ internal class SyncRepositoryImpl(
     }
 
     /** For the clean-ups whose failure is worth a line in the log and nothing more. */
-    private suspend fun quietly(action: String, block: suspend () -> Unit) {
-        try {
-            block()
-        } catch (exception: CancellationException) {
-            throw exception
-        } catch (exception: Exception) {
-            println("Could not $action: ${exception::class.simpleName}")
-        }
-    }
+    private inline fun quietly(action: String, block: () -> Unit) =
+        recovering(describe = { "Could not $action: ${it::class.simpleName}" }, fallback = {}, block = block)
 
     /**
      * Starts a run and returns; what it is doing and how it ended arrive through [syncState]. Fire and forget
@@ -738,14 +716,10 @@ internal class SyncRepositoryImpl(
     private fun refreshAccount(provider: SyncProvider) {
         if (accountRefreshJob?.isActive == true) return
         accountRefreshJob = scope.launch {
-            val account = try {
-                provider.loadAccount()
-            } catch (exception: CancellationException) {
-                throw exception
-            } catch (exception: Exception) {
-                println("Could not refresh the ${provider.id} account: ${exception.message}")
-                return@launch
-            }
+            val account = recovering(
+                describe = { "Could not refresh the ${provider.id} account: ${it.message}" },
+                fallback = { return@launch },
+            ) { provider.loadAccount() }
             updateConnected { connected ->
                 when {
                     connected.account.providerId != provider.id -> connected
@@ -823,14 +797,11 @@ internal class SyncRepositoryImpl(
      * leave [SyncState.Connecting] whatever the storage says. What stays behind is a verifier nothing asks for
      * again, and the next authorization writes over it.
      */
-    private suspend fun discardPendingAuthorization() = try {
-        pendingAuthorizationStore.clearPendingAuthorization()
-    } catch (exception: CancellationException) {
-        throw exception
-    } catch (exception: Exception) {
+    private suspend fun discardPendingAuthorization() = recovering(
         // Only the kind of failure: the message of one that came from the credentials document may quote it.
-        println("Could not clear the pending authorization: ${exception::class.simpleName}")
-    }
+        describe = { "Could not clear the pending authorization: ${it::class.simpleName}" },
+        fallback = {},
+    ) { pendingAuthorizationStore.clearPendingAuthorization() }
 
     /**
      * Turns a redirect into a connection. Shared by the platforms that come back to a running app and the one that
@@ -911,13 +882,10 @@ internal class SyncRepositoryImpl(
      * there is nothing to revoke on the user's behalf for a connection they never saw made. A failure is only logged,
      * since the outcome the caller is on its way to report is the one that matters.
      */
-    private suspend fun forgetCredentialsOf(provider: SyncProvider) = try {
-        provider.forgetStoredCredentials()
-    } catch (exception: CancellationException) {
-        throw exception
-    } catch (exception: Exception) {
-        println("Could not forget the ${provider.id} credentials: ${exception.message}")
-    }
+    private suspend fun forgetCredentialsOf(provider: SyncProvider) = recovering(
+        describe = { "Could not forget the ${provider.id} credentials: ${it.message}" },
+        fallback = {},
+    ) { provider.forgetStoredCredentials() }
 
     private fun fail(providerId: SyncProviderId, reason: SyncFailureReason, message: String): Boolean {
         println(message)
@@ -944,26 +912,18 @@ internal class SyncRepositoryImpl(
         val text = syncStateLocalSource.loadSyncIndex() ?: return SyncIndexDocument()
         // Off the caller's thread, which for restore() is the main one: the index has an entry per library file.
         return withContext(Dispatchers.Default) {
-            try {
-                json.decodeFromString<SyncIndexDocument>(text)
-            } catch (exception: CancellationException) {
-                throw exception
-            } catch (exception: Exception) {
-                println("Could not decode the sync index: ${exception.message}")
-                SyncIndexDocument()
-            }
+            recovering(
+                describe = { "Could not decode the sync index: ${it.message}" },
+                fallback = { SyncIndexDocument() },
+            ) { json.decodeFromString<SyncIndexDocument>(text) }
         }
     }
 
     /** For the callers that only show what the index says or check whose it is, and must not throw because of it. */
-    private suspend fun loadIndexOrNull() = try {
-        loadIndex()
-    } catch (exception: CancellationException) {
-        throw exception
-    } catch (exception: Exception) {
-        println("Could not read the sync index: ${exception.message}")
-        null
-    }
+    private suspend fun loadIndexOrNull() = recovering(
+        describe = { "Could not read the sync index: ${it.message}" },
+        fallback = { null },
+    ) { loadIndex() }
 
     private suspend fun saveIndex(document: SyncIndexDocument) =
         syncStateLocalSource.saveSyncIndex(withContext(Dispatchers.Default) { json.encodeToString(document) })
@@ -974,13 +934,10 @@ internal class SyncRepositoryImpl(
      * run and not a wrong one, so a failure here is not worth more than a line in the log. A run whose storage is
      * really gone still says so, through the opening write and the one that completes it.
      */
-    private suspend fun saveIndexQuietly(document: SyncIndexDocument) = try {
-        saveIndex(document)
-    } catch (exception: CancellationException) {
-        throw exception
-    } catch (exception: Exception) {
-        println("Could not write the sync index: ${exception.message}")
-    }
+    private suspend fun saveIndexQuietly(document: SyncIndexDocument) = recovering(
+        describe = { "Could not write the sync index: ${it.message}" },
+        fallback = {},
+    ) { saveIndex(document) }
 
     private companion object {
         /** How much of a run a killed app can lose at most, traded against rewriting the whole index per file. */

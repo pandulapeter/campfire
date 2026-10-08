@@ -193,7 +193,10 @@ a deletion of one of those files lands before its reads or after its update and 
   `STORAGE` before anything is written, and start up and a new connection leave such a file alone. Only one that reads
   and does not decode is taken for none. The repository's scope carries a `CoroutineExceptionHandler` that logs, since nothing
   launched there has anyone to throw to, and a run that ends in a throwable that is not an `Exception` (a synchronous
-  `js(...)` failure on the web, a real `Error`) is finished and reported like a failed one rather than left to it. An interrupted run therefore keeps what it transferred, and only a completed
+  `js(...)` failure on the web, a real `Error`) is finished and reported like a failed one rather than left to it. The failures that are only worth a line in the
+  log — a clean-up, a quiet index write, a file that could not be read — go through `base/recovering`, which rethrows a
+  cancellation, logs and falls back on any other `Exception` and catches nothing else; a block with an extra typed arm
+  or work to do on cancellation keeps its own `try`. An interrupted run therefore keeps what it transferred, and only a completed
   one with no failed files moves `lastSyncedAt`.
   The engine reports every library file it changes (`onLocalFileChanged`), once the change is on disk, and the library
   counts are kept moving during a run by a live refresh of those files that waits five times what the previous one

@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.data.model.domain.SyncProgress
 import com.pandulapeter.campfire.data.model.domain.SyncSummary
 import com.pandulapeter.campfire.data.model.domain.normalizedToNfc
 import com.pandulapeter.campfire.data.repository.implementation.LibraryFileLock
+import com.pandulapeter.campfire.data.repository.implementation.base.recovering
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
 import com.pandulapeter.campfire.data.source.local.api.SetlistComparison
 import com.pandulapeter.campfire.data.source.remote.api.SyncAuthorizationException
@@ -271,15 +272,13 @@ internal class SyncEngine(
         )
     }
 
-    private suspend fun readLocalState(key: SyncKey): LocalRead = try {
+    private suspend fun readLocalState(key: SyncKey): LocalRead = recovering(
+        describe = { "Could not read \"${key.path}\": ${it.message}" },
+        fallback = { LocalRead.Failed(key, it) },
+    ) {
         libraryFileLocalSource.readLibraryFile(key.kind, key.name)
             ?.let { LocalRead.Read(LocalFileState(key = key, hash = localContentHash(it))) }
             ?: LocalRead.Absent
-    } catch (exception: CancellationException) {
-        throw exception
-    } catch (exception: Exception) {
-        println("Could not read \"${key.path}\": ${exception.message}")
-        LocalRead.Failed(key, exception)
     }
 
     /** What reading one listed file came to. [Absent] is a file deleted since the listing, which really is gone. */
@@ -717,18 +716,17 @@ internal class SyncEngine(
      * everything else this class removes: only the bytes that were written a moment ago are taken back.
      */
     private suspend fun discardCopy(copyKey: SyncKey, written: ByteArray, onLocalFileChanged: suspend (SyncKey) -> Unit) {
-        try {
+        recovering(
+            // A copy too many is the harmless way for this to go wrong.
+            describe = { "Could not remove the unused copy \"${copyKey.path}\": ${it.message}" },
+            fallback = {},
+        ) {
             libraryFileLock.withLock {
                 if (libraryFileLocalSource.readLibraryFile(copyKey.kind, copyKey.name)?.contentEquals(written) == true) {
                     libraryFileLocalSource.deleteLibraryFile(copyKey.kind, copyKey.name)
                     onLocalFileChanged(copyKey)
                 }
             }
-        } catch (exception: CancellationException) {
-            throw exception
-        } catch (exception: Exception) {
-            // A copy too many is the harmless way for this to go wrong.
-            println("Could not remove the unused copy \"${copyKey.path}\": ${exception.message}")
         }
     }
 
@@ -767,18 +765,17 @@ internal class SyncEngine(
         val foreign = index.filterKeys { !it.kind.matches(it.name) }
         foreign.forEach { (key, entry) ->
             val isStillRemote = listed.any { it.kind == key.kind && it.name == key.name && it.revision == entry.remoteRevision }
-            try {
+            recovering(
+                // Tidying up is not worth a run: the entry is dropped either way, and the file stays where it is.
+                describe = { "Could not remove the local copy of \"${key.path}\": ${it.message}" },
+                fallback = {},
+            ) {
                 libraryFileLock.withLock {
                     val local = libraryFileLocalSource.readLibraryFile(key.kind, key.name)
                     if (isStillRemote && local != null && localContentHash(local) == entry.localHash) {
                         libraryFileLocalSource.deleteLibraryFile(key.kind, key.name)
                     }
                 }
-            } catch (exception: CancellationException) {
-                throw exception
-            } catch (exception: Exception) {
-                // Tidying up is not worth a run: the entry is dropped either way, and the file stays where it is.
-                println("Could not remove the local copy of \"${key.path}\": ${exception.message}")
             }
         }
         return index - foreign.keys
