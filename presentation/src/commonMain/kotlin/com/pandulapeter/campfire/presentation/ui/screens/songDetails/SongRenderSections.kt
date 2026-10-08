@@ -11,7 +11,6 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import androidx.compose.foundation.layout.size
 import com.pandulapeter.campfire.chordpro.ChordProTempo
-import com.pandulapeter.campfire.chordpro.ChordProTime
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
@@ -19,6 +18,7 @@ import com.pandulapeter.campfire.chordpro.model.CommentPlacement
 import com.pandulapeter.campfire.chordpro.model.SectionType
 import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
 import com.pandulapeter.campfire.metronome.api.model.TimeSignature
+import com.pandulapeter.campfire.presentation.ui.metronome.timeSignatureOf
 import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
 import com.pandulapeter.campfire.presentation.ui.songLayout.FoldableKind
 import com.pandulapeter.campfire.presentation.ui.songLayout.UNNAMED_SECTION_HEADER
@@ -221,7 +221,7 @@ private fun ChordProBlock.Transpose.toRenderSection(shouldShowChords: Boolean) =
 /** The line naming how the song is played from a change on, read the way the click reads it. */
 private fun ChordProBlock.Timing.toRenderSection() = RenderSection.Timing(
     tempo = ChordProTempo.parse(tempo)?.let(MetronomePattern::coerceBpm)?.toString(),
-    time = (ChordProTime.parse(time)?.let { (beats, unit) -> TimeSignature(beats, unit) } ?: TimeSignature.COMMON_TIME).toString(),
+    time = (timeSignatureOf(time) ?: TimeSignature.COMMON_TIME).toString(),
 )
 
 /**

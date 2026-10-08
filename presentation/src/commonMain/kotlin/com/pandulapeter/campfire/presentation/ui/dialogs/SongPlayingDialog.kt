@@ -45,7 +45,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.chordpro.ChordProMetadataFields.Field
-import com.pandulapeter.campfire.chordpro.ChordProTime
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
 import com.pandulapeter.campfire.metronome.api.model.TimeSignature
@@ -68,6 +67,7 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.rememberClearTextButton
 import com.pandulapeter.campfire.presentation.ui.metronome.TimeSignaturePicker
+import com.pandulapeter.campfire.presentation.ui.metronome.timeSignatureOf
 import com.pandulapeter.campfire.presentation.ui.playing.effectiveTempo
 import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
 import com.pandulapeter.campfire.presentation.ui.platform.numericPlatformImeOptions
@@ -113,7 +113,7 @@ internal fun SongPlayingDialog(
     var values by rememberSaveable(dialog.song.fileName, stateSaver = songPlayingSaver) { mutableStateOf(offeredValues) }
     // Read the way the click reads it, so that a {time: C} is the common time it stands for rather than nothing.
     val timeSignature = remember(values[Field.TIME]) {
-        ChordProTime.parse(values[Field.TIME])?.let { (beats, unit) -> TimeSignature(beats, unit) } ?: TimeSignature.COMMON_TIME
+        timeSignatureOf(values[Field.TIME]) ?: TimeSignature.COMMON_TIME
     }
     val isValid = isValidSongPlayingDraft(
         capo = values[Field.CAPO].orEmpty(),

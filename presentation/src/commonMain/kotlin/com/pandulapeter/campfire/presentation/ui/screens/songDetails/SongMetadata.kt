@@ -10,11 +10,11 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import com.pandulapeter.campfire.chordpro.ChordProTempo
-import com.pandulapeter.campfire.chordpro.ChordProTime
 import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
 import com.pandulapeter.campfire.metronome.api.model.TimeSignature
+import com.pandulapeter.campfire.presentation.ui.metronome.timeSignatureOf
 
 /**
  * What the song says about itself is the first section of its own grid, so it shares the rows, columns, stepping and
@@ -61,7 +61,7 @@ internal fun withMetadataSection(
         tempo = ChordProTempo.parse(metadata.tempo)?.let(MetronomePattern::coerceBpm)?.toString()?.takeIf { shouldShowTempo },
         time = when {
             !shouldShowTempo -> null
-            else -> ChordProTime.parse(metadata.time)?.let { (beats, unit) -> TimeSignature(beats, unit).toString() }
+            else -> timeSignatureOf(metadata.time)?.toString()
                 ?: TimeSignature.COMMON_TIME.toString().takeIf { readsBoth }
         },
     )
