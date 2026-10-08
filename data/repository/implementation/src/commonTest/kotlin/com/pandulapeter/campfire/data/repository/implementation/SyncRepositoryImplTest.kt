@@ -33,6 +33,7 @@ import com.pandulapeter.campfire.data.repository.implementation.sync.RecordingSe
 import com.pandulapeter.campfire.data.repository.implementation.sync.RecordingSongRepository
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncIndexDocument
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncIndexEntry
+import com.pandulapeter.campfire.data.repository.implementation.sync.SyncIndexStore
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncKey
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncStateHolder
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncedPreferencesSync
@@ -1137,24 +1138,28 @@ class SyncRepositoryImplTest {
         songRepository: RecordingSongRepository = RecordingSongRepository(),
         setlistRepository: RecordingSetlistRepository = RecordingSetlistRepository(),
         userPreferencesRepository: FakeUserPreferencesRepository = FakeUserPreferencesRepository(),
-    ) = SyncRepositoryImpl(
-        syncProviders = SyncProviders(listOf(provider)),
-        authenticator = authenticator,
-        pendingAuthorizationStore = pendingAuthorizationStore,
-        syncIndexLocalSource = stateLocalSource,
-        songRepository = songRepository,
-        setlistRepository = setlistRepository,
-        stateHolder = SyncStateHolder(),
-        engine = DataRepositoryModule.syncEngine(
-            libraryFileLocalSource = libraryFileLocalSource,
-            libraryFileLock = LibraryFileLock(),
-            setlistComparison = NoSetlistComparison,
-            userPreferencesRepository = userPreferencesRepository,
-        ),
-        syncedPreferencesSync = SyncedPreferencesSync(userPreferencesRepository, libraryFileLocalSource),
-        libraryChanges = LibraryChanges(),
-        environment = testEnvironment(),
-    )
+    ): SyncRepositoryImpl {
+        val environment = testEnvironment()
+        return SyncRepositoryImpl(
+            syncProviders = SyncProviders(listOf(provider)),
+            authenticator = authenticator,
+            pendingAuthorizationStore = pendingAuthorizationStore,
+            syncIndexLocalSource = stateLocalSource,
+            songRepository = songRepository,
+            setlistRepository = setlistRepository,
+            stateHolder = SyncStateHolder(),
+            indexStore = SyncIndexStore(stateLocalSource, environment),
+            engine = DataRepositoryModule.syncEngine(
+                libraryFileLocalSource = libraryFileLocalSource,
+                libraryFileLock = LibraryFileLock(),
+                setlistComparison = NoSetlistComparison,
+                userPreferencesRepository = userPreferencesRepository,
+            ),
+            syncedPreferencesSync = SyncedPreferencesSync(userPreferencesRepository, libraryFileLocalSource),
+            libraryChanges = LibraryChanges(),
+            environment = environment,
+        )
+    }
 
     /** Counts the runs by their opening index write, the one that marks a run as going in an index that said none was. */
     private class RunCounter {

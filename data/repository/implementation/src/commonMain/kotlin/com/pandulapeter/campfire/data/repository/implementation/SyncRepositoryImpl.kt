@@ -26,6 +26,7 @@ import com.pandulapeter.campfire.data.repository.implementation.base.RepositoryE
 import com.pandulapeter.campfire.data.repository.implementation.base.recovering
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncEngine
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncIndexDocument
+import com.pandulapeter.campfire.data.repository.implementation.sync.SyncIndexStore
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncKey
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncStateHolder
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncedPreferencesDocument
@@ -63,7 +64,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.Json
 import org.koin.core.annotation.Single
 
 /**
@@ -88,6 +88,7 @@ internal class SyncRepositoryImpl(
     private val songRepository: SongRepository,
     private val setlistRepository: SetlistRepository,
     private val stateHolder: SyncStateHolder,
+    private val indexStore: SyncIndexStore,
     private val engine: SyncEngine,
     private val syncedPreferencesSync: SyncedPreferencesSync,
     libraryChanges: LibraryChanges,
@@ -228,7 +229,7 @@ internal class SyncRepositoryImpl(
             stateHolder.update { SyncState.ConnectionFailed(connected.id, SyncFailureReason.AUTHORIZATION) }
             return disconnectedResult
         }
-        val document = loadIndexOrNull() ?: SyncIndexDocument()
+        val document = indexStore.loadOrNull() ?: SyncIndexDocument()
         // An automatic run is the one leaving the app starts, and being swiped away right after an edit is how it
         // routinely ends. Reported and left unrepeated, it would keep that very edit off the cloud folder until the
         // user asked for a run - for the sake of a message about a run nobody asked for, which the launch run that
@@ -244,7 +245,7 @@ internal class SyncRepositoryImpl(
             )
         }
         if (document.isRunInProgress) {
-            saveIndexQuietly(document.markedAsFinished())
+            indexStore.saveQuietly(document.markedAsFinished())
         }
         if (storedAccount != null) {
             refreshAccount(connected)
@@ -353,7 +354,7 @@ internal class SyncRepositoryImpl(
             // that was stopped a moment ago is not in syncJob any more and may still be writing the index on its way
             // out; no new one can slip in, since the providers above no longer say they are connected.
             mutex.withLock {
-                syncIndexLocalSource.saveSyncIndex(null)
+                indexStore.clear()
                 stateBeforeConnecting = null
                 stateHolder.update { SyncState.Disconnected }
             }
@@ -384,7 +385,7 @@ internal class SyncRepositoryImpl(
         discardPendingAuthorization()
         // There cannot be an index on a fresh installation, and one that is somehow there describes a folder
         // this installation has never looked at.
-        quietly("clear the sync index") { syncIndexLocalSource.saveSyncIndex(null) }
+        quietly("clear the sync index") { indexStore.clear() }
         stateHolder.update { SyncState.Disconnected }
         if (haveCredentialsGone) {
             quietly("note that the sync credentials are forgotten") { syncIndexLocalSource.setForgettingCredentialsOwed(false) }
@@ -506,11 +507,11 @@ internal class SyncRepositoryImpl(
                 if (setlistRepository.setlists.first() is DataState.Loading) setlistRepository.loadSetlistsIfNeeded()
                 // Taken over before the marker is written, so that an index filed under the key an earlier version used
                 // is under the current one from the first write of this run, however the run ends.
-                val document = loadIndex().adoptedBy(connected.account)
+                val document = indexStore.load().adoptedBy(connected.account)
                 latestIndex = { document.markedAsRunning(isAutomatic) }
                 // Written before anything moves, so that a run the app never comes back from is still recognisable
                 // as interrupted next time - iOS suspending the app mid sync looks exactly like being killed.
-                saveIndex(document.markedAsRunning(isAutomatic))
+                indexStore.save(document.markedAsRunning(isAutomatic))
                 val result = engine.synchronize(
                     provider = provider,
                     document = document,
@@ -534,7 +535,7 @@ internal class SyncRepositoryImpl(
                         // Asked before the deletions moved, but not necessarily before anything did: a second pass
                         // can find the folder emptied after the first one had already brought files in, and those
                         // are on disk whether the question is answered.
-                        saveIndexQuietly(latestIndex().markedAsFinished())
+                        indexStore.saveQuietly(latestIndex().markedAsFinished())
                         refreshLibraryAfterRun()
                         stateHolder.updateConnected {
                             it.copy(
@@ -559,7 +560,7 @@ internal class SyncRepositoryImpl(
                         } else {
                             result.index.lastSyncedAt
                         }
-                        saveIndex(
+                        indexStore.save(
                             result.index.copy(
                                 lastSyncedAt = syncedAt,
                                 syncedPreferences = syncedPreferences ?: result.index.syncedPreferences,
@@ -667,7 +668,7 @@ internal class SyncRepositoryImpl(
         // Taken here and not in the job: the engine's lock is what makes reading its map safe, and it is only held
         // for as long as this call runs.
         val document = snapshot()
-        indexWriteJob = scope.launch { saveIndexQuietly(document) }
+        indexWriteJob = scope.launch { indexStore.saveQuietly(document) }
     }
 
     /**
@@ -740,7 +741,7 @@ internal class SyncRepositoryImpl(
      */
     private suspend fun finishRunCutShort(latestIndex: (() -> SyncIndexDocument)?) {
         indexWriteJob?.join()
-        latestIndex?.let { saveIndexQuietly(it().markedAsFinished()) }
+        latestIndex?.let { indexStore.saveQuietly(it().markedAsFinished()) }
         refreshLibraryAfterRun()
     }
 
@@ -804,9 +805,9 @@ internal class SyncRepositoryImpl(
                 // The account decides which remote folder the index describes, so one written for a different
                 // account is worthless rather than merely stale. One that cannot be read is left for the run to find:
                 // replaced here, it could be the good index of this very account.
-                val document = loadIndexOrNull()?.adoptedBy(account)
+                val document = indexStore.loadOrNull()?.adoptedBy(account)
                 if (document != null && document.accountId != account.indexKey()) {
-                    saveIndex(SyncIndexDocument())
+                    indexStore.save(SyncIndexDocument())
                 }
                 stateBeforeConnecting = null
                 stateHolder.update {
@@ -847,44 +848,6 @@ internal class SyncRepositoryImpl(
         else -> SyncFailureReason.UNKNOWN
     }
 
-    // Documents
-
-    /**
-     * Throws when the file is there and cannot be read: an index taken for none is a run that undoes every deletion
-     * since the last one, and then writes the empty index over the good one. One that reads but does not decode is
-     * worth nothing to anybody and starts from nothing, as a device that never synced does.
-     */
-    private suspend fun loadIndex(): SyncIndexDocument {
-        val text = syncIndexLocalSource.loadSyncIndex() ?: return SyncIndexDocument()
-        // Off the caller's thread, which for restore() is the main one: the index has an entry per library file.
-        return withContext(environment.computation) {
-            recovering(
-                describe = { "Could not decode the sync index: ${it.message}" },
-                fallback = { SyncIndexDocument() },
-            ) { json.decodeFromString<SyncIndexDocument>(text) }
-        }
-    }
-
-    /** For the callers that only show what the index says or check whose it is, and must not throw because of it. */
-    private suspend fun loadIndexOrNull() = recovering(
-        describe = { "Could not read the sync index: ${it.message}" },
-        fallback = { null },
-    ) { loadIndex() }
-
-    private suspend fun saveIndex(document: SyncIndexDocument) =
-        syncIndexLocalSource.saveSyncIndex(withContext(environment.computation) { json.encodeToString(document) })
-
-    /**
-     * For the writes nobody is waiting on the result of - the periodic one and the ones made on the way out of a run.
-     * The index only ever saves work: whatever it fails to record looks unsynced to the next run, which is a slower
-     * run and not a wrong one, so a failure here is not worth more than a line in the log. A run whose storage is
-     * really gone still says so, through the opening write and the one that completes it.
-     */
-    private suspend fun saveIndexQuietly(document: SyncIndexDocument) = recovering(
-        describe = { "Could not write the sync index: ${it.message}" },
-        fallback = {},
-    ) { saveIndex(document) }
-
     private companion object {
         /** How much of a run a killed app can lose at most, traded against rewriting the whole index per file. */
         val INDEX_WRITE_INTERVAL = 2.seconds
@@ -897,11 +860,6 @@ internal class SyncRepositoryImpl(
             didReturnFromAuthorization = false,
             wasInterrupted = false,
         )
-        val json = Json {
-            ignoreUnknownKeys = true
-            prettyPrint = true
-            encodeDefaults = true
-        }
     }
 }
 
