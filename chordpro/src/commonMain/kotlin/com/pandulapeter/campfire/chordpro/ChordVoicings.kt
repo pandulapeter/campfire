@@ -54,6 +54,11 @@ object ChordVoicings {
         return shape
     }
 
+    /** Forgets every default worked out so far, so that a test asking [needsSearch] does not depend on the ones before it. */
+    internal fun resetCache() {
+        defaults = emptyMap()
+    }
+
     /**
      * Whether [default] would have to run the search for [chord] on [instrument]: a fretted chord the tables do not
      * hold and nothing has looked for yet this session. What builds a page in a frame asks this first.

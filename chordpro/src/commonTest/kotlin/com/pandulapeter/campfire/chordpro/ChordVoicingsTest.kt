@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.chordpro
 
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
 import com.pandulapeter.campfire.chordpro.model.ChordVoicing
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -19,6 +20,9 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class ChordVoicingsTest {
+
+    @BeforeTest
+    fun resetCache() = ChordVoicings.resetCache()
 
     @Test
     fun `the forty chords every songbook uses are shown the way every chart shows them`() {

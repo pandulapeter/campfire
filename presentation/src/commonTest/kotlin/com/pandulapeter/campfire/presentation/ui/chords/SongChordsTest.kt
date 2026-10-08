@@ -45,6 +45,8 @@ class SongChordsTest {
 
     @Test
     fun `the first build leaves the search out`() {
+        // The shapes worked out are cached for the whole process and only :chordpro's own tests can reset that cache, so
+        // these chords are ones no other test of this module asks for.
         val unusual = ChordProChords.parse("Ebmaj9#11/Bb")!!
         assertTrue(ChordVoicings.needsSearch(unusual, ChordInstrument.GUITAR))
         val chords = songChordsOf(ChordProParser.parse("[C]la [Ebmaj9#11/Bb]la"), ChordNotation.STANDARD, ChordInstrument.GUITAR, searchesShapes = false)
