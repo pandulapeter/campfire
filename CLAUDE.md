@@ -468,7 +468,8 @@ localized in both languages.
   is filed under `ft` however it was abbreviated. Before any of that the name is brought to Unicode NFC
   (`normalizedToNfc`, an expect/actual in `:data:model`), since macOS and iOS hand out names decomposed and every other
   platform composed, and a non-Latin letter keeps its marks — so the two forms would be two songs; sync's name matching
-  and the import's family lookup compose too. The rule is idempotent, which it has to be, since a name that left the
+  and the import's family lookup compose too, and every place that asks whether two names are one file asks
+  `LibraryFiles.identityKey` / `isSameLibraryName` (NFC, then a per-character case fold, the same on every platform). The rule is idempotent, which it has to be, since a name that left the
   app is normalized again on its way back in. Nothing is migrated, and a name that differs from the normalized one
   only by case or by Unicode form is taken as that name — it is the same file to APFS, NTFS and the sync service, and
   a move nothing else can see is one other devices never follow — so a capitalised or decomposed file keeps its
@@ -496,7 +497,8 @@ localized in both languages.
 - A rename reaches **sync** as a deletion and a new file, since `SyncPlanner` is keyed by name and knows no moves. The
   "an edit beats a deletion" rule then applies: a device that edited the file under its old name since the last run
   puts that file back, leaving both.
-- Only pure logic is tested: `commonTest` unit tests in `:chordpro` (including chord-sheet conversion, and chord names, shapes and definitions, every shape of the tables checked against the chord it is filed under), `:domain:implementation` (`ImportPlanner` and conversion import plumbing),
+- Only pure logic is tested: `commonTest` unit tests in `:data:model` (the library name identity rule and the tag
+  normalization), `:chordpro` (including chord-sheet conversion, and chord names, shapes and definitions, every shape of the tables checked against the chord it is filed under), `:domain:implementation` (`ImportPlanner` and conversion import plumbing),
   `:data:source:local:implementation` (zip, bounded PDF/Word readers and the JVM file storage, with independent-producer document goldens in `desktopTest`), `:data:source:remote:*` (hashing, encoders,
   the OAuth authorization URL, the cover search's queries, its `User-Agent` and its pace, the cover download),
   `:data:repository:implementation` (`SyncPlanner`, which decides what happens to every file in a sync run, the
@@ -505,7 +507,7 @@ localized in both languages.
   index, the setlist slots, stepper labels, section grid and the cutting of sections into columns, row snapping and section measurements of the details screen, the editor's token cache, where a song's tempo comes from and what a click plays for, which chords a song plays and which
   shape each is drawn with, the diagrams' geometry and what the editor's Chord shape button writes), run on
   the desktop target with
-  `./gradlew :chordpro:desktopTest :domain:implementation:desktopTest :data:source:local:implementation:desktopTest :data:source:remote:api:desktopTest :data:source:remote:implementation:desktopTest :data:repository:implementation:desktopTest :metronome:api:desktopTest :metronome:implementation:desktopTest :presentation:desktopTest`.
+  `./gradlew :data:model:desktopTest :chordpro:desktopTest :domain:implementation:desktopTest :data:source:local:implementation:desktopTest :data:source:remote:api:desktopTest :data:source:remote:implementation:desktopTest :data:repository:implementation:desktopTest :metronome:api:desktopTest :metronome:implementation:desktopTest :presentation:desktopTest`.
   The web build's JavaScript — its storage worker, its service worker's routing and the page's decisions about the
   build it keeps — has Node tests of its own (see `app/web`), and the parser of a
   release's description, which is Python, a `unittest` next to it in `.github/scripts`.
