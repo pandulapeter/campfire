@@ -36,7 +36,7 @@ object ChordProDefinitions {
     /** The part of a definition after the chord's name, as [line] writes it. */
     internal fun shapeOf(name: String, voicing: ChordVoicing, notation: ChordNotation = ChordNotation.STANDARD) = when (voicing) {
         is ChordVoicing.Fretted -> {
-            val baseFret = ChordVoicings.baseFret(voicing.frets)
+            val baseFret = ChordShapeGeometry.baseFret(voicing.frets)
             buildString {
                 append("$BASE_FRET $baseFret $FRETS ")
                 append(voicing.frets.joinToString(" ") { fret -> if (fret == null) "x" else if (fret == 0) "0" else (fret - baseFret + 1).toString() })
@@ -74,7 +74,7 @@ object ChordProDefinitions {
      * moves up by the rest of the octave instead, which is the same chord, the way a tab with an open string is moved.
      * For every other shape up by the transposition and down by the rest of the octave are both looked at: one that
      * would take a fret off the neck is out (and a shape no move keeps on the neck stays as it is, named as it was), and
-     * of the rest the one a hand can hold is taken ([ChordVoicings.isHoldable]), the lower one where both can or neither
+     * of the rest the one a hand can hold is taken ([ChordShapeGeometry.isHoldable]), the lower one where both can or neither
      * can. So a shape high on the neck comes down
      * rather than running off its end, and the lower of the two never needs more fingers than the higher, which is why
      * there and back lands on the shape it started as.
@@ -100,7 +100,7 @@ object ChordProDefinitions {
             }
             is ChordVoicing.Fretted -> {
                 // A shape no move keeps on the neck is not the new chord's, so it is left as the old chord's.
-                val (move, moved) = voicing.moved(semitones, ChordVoicings.MAX_FINGERS) ?: return definition
+                val (move, moved) = voicing.moved(semitones, ChordShapeGeometry.MAX_FINGERS) ?: return definition
                 definition.copy(name = name, voicing = moved, movedBy = definition.movedBy + move)
             }
         }
@@ -114,7 +114,7 @@ object ChordProDefinitions {
         val shift = semitones.mod(12)
         val candidates = (if (frets.any { it == 0 }) listOf(shift) else listOf(shift - 12, shift))
             .filter { move -> frets.all { it == null || it + move in 0..ChordVoicings.MAX_FRET } }
-        val move = candidates.firstOrNull { ChordVoicings.isHoldable(frets.map { fret -> fret?.plus(it) }) }
+        val move = candidates.firstOrNull { ChordShapeGeometry.isHoldable(frets.map { fret -> fret?.plus(it) }) }
             ?: candidates.firstOrNull()
             ?: return null
         return move to movedBy(move, maxFinger)
@@ -205,7 +205,7 @@ object ChordProDefinitions {
             val baseFretKeyword = keywordIndices.firstOrNull { keywordOf(value.substring(words[it])) == BASE_FRET }
             // A line with no base fret counts its frets from the nut whatever they are, so that moving it back writes
             // the line it was.
-            val baseFret = if (baseFretKeyword == null) 1 else ChordVoicings.baseFret(moved.frets)
+            val baseFret = if (baseFretKeyword == null) 1 else ChordShapeGeometry.baseFret(moved.frets)
             fun argumentsOf(keyword: String) = keywordIndices.firstOrNull { keywordOf(value.substring(words[it])) == keyword }?.let { start ->
                 (start + 1 until (keywordIndices.firstOrNull { it > start } ?: words.size)).toList()
             }

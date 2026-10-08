@@ -28,7 +28,7 @@ class ChordVoicingTablesTest {
                 val chord = assertNotNull(ChordProChords.parse(shape.name), line)
                 val voicing = assertIs<ChordVoicing.Fretted>(shape.voicing)
                 val played = if (instrument == ChordInstrument.UKULELE) chord.copy(bass = null) else chord
-                val sounded = ChordVoicings.pitchClasses(voicing, instrument)
+                val sounded = ChordShapeGeometry.pitchClasses(voicing, instrument)
                 val fifth = (played.root + 7) % 12
                 assertTrue(played.pitchClasses.containsAll(sounded), "$line sounds only notes of its chord")
                 assertTrue(
@@ -53,7 +53,7 @@ class ChordVoicingTablesTest {
                     assertEquals(fret != null && fret > 0, fingers[string] > 0, "$line, string ${string + 1}")
                 }
                 assertTrue(fingers.all { it in 0..4 }, line)
-                assertTrue(ChordVoicings.isHoldable(voicing.frets), line)
+                assertTrue(ChordShapeGeometry.isHoldable(voicing.frets), line)
             }
         }
     }

@@ -58,8 +58,8 @@ class ChordVoicingsTest {
                     val frets = shape.frets
                     val label = "$name on ${instrument.id}: ${ChordVoicings.write(shape)}"
                     assertEquals(instrument.tuning.size, frets.size, label)
-                    assertTrue(played.pitchClasses.containsAll(ChordVoicings.pitchClasses(shape, instrument)), label)
-                    assertTrue(ChordVoicings.fingerCount(frets) <= 4, label)
+                    assertTrue(played.pitchClasses.containsAll(ChordShapeGeometry.pitchClasses(shape, instrument)), label)
+                    assertTrue(ChordShapeGeometry.fingerCount(frets) <= 4, label)
                     val sounding = frets.indices.filter { frets[it] != null }
                     // The tables' own shapes, which carry their fingering, may mute a string with a finger that rests on it.
                     if (shape.fingers == null) assertEquals(sounding.size, sounding.last() - sounding.first() + 1, "$label mutes no string between two that sound")
@@ -165,26 +165,6 @@ class ChordVoicingsTest {
             assertEquals(emptyList(), ChordVoicings.all(chord, it))
             assertNull(ChordVoicings.default(chord, it))
         }
-    }
-
-    @Test
-    fun `fingers are counted with the barres a hand makes`() {
-        assertEquals(3, ChordVoicings.fingerCount(listOf(null, 3, 2, 0, 1, 0)))
-        assertEquals(3, ChordVoicings.fingerCount(listOf(1, 3, 3, 2, 1, 1)))
-        assertEquals(2, ChordVoicings.fingerCount(listOf(null, 1, 3, 3, 3, 3)))
-        assertEquals(4, ChordVoicings.fingerCount(listOf(1, 0, 3, 2, 1, 1)))
-        assertEquals(0, ChordVoicings.fingerCount(listOf(0, 0, 0, 0)))
-        assertTrue(ChordVoicings.isHoldable(listOf(null, 13, 15, 15, 15, 13)))
-        assertTrue(!ChordVoicings.isHoldable(listOf(null, 16, 18, 18, 18, 16)))
-        assertTrue(!ChordVoicings.isHoldable(listOf(1, 2, 3, 4, 5, null)))
-    }
-
-    @Test
-    fun `a diagram starts at the nut where the shape fits there`() {
-        assertEquals(1, ChordVoicings.baseFret(listOf(null, 3, 2, 0, 1, 0)))
-        assertEquals(1, ChordVoicings.baseFret(listOf(null, 1, 3, 3, 3, 4)))
-        assertEquals(3, ChordVoicings.baseFret(listOf(null, 3, 5, 5, 5, 3)))
-        assertEquals(1, ChordVoicings.baseFret(listOf(0, 0, 0, 0)))
     }
 
     private fun first(name: String, instrument: ChordInstrument) = ChordVoicings.default(ChordProChords.parse(name)!!, instrument)?.let(ChordVoicings::write)

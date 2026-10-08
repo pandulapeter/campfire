@@ -32,10 +32,10 @@ class ChordDefinitionTransposerTest {
             (-5..6).forEach { semitones ->
                 val moved = move(definition, semitones)
                 val chord = ChordProChords.parse(moved.name)!!.let { if (definition.instrument == ChordInstrument.UKULELE) it.copy(bass = null) else it }
-                val sounded = ChordVoicings.pitchClasses(moved.voicing, definition.instrument)
+                val sounded = ChordShapeGeometry.pitchClasses(moved.voicing, definition.instrument)
                 assertTrue(chord.pitchClasses.containsAll(sounded), "${definition.name} $semitones -> ${moved.name} ${ChordVoicings.write(moved.voicing)}")
                 assertEquals(
-                    ChordVoicings.pitchClasses(definition.voicing, definition.instrument).map { (it + semitones).mod(12) }.toSet(),
+                    ChordShapeGeometry.pitchClasses(definition.voicing, definition.instrument).map { (it + semitones).mod(12) }.toSet(),
                     sounded,
                     "${definition.name} $semitones",
                 )
