@@ -15,39 +15,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.snapshotFlow
-import androidx.compose.ui.graphics.toArgb
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.pandulapeter.campfire.metronome.api.Metronome
 import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
 import com.pandulapeter.campfire.presentation.ui.navigation.BrowserHistoryEffect
-import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.navigateToBrowserAddress
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.LocalMetronomeNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.ProvideKeyboardInsets
 import com.pandulapeter.campfire.presentation.ui.platform.WebFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.WebMetronomeNotifier
-import com.pandulapeter.campfire.presentation.ui.platform.appIconColor
-import com.pandulapeter.campfire.presentation.ui.platform.appIconThemeColor
 import com.pandulapeter.campfire.presentation.ui.platform.droppedFiles
-import com.pandulapeter.campfire.presentation.ui.theme.colorSchemePair
-import com.pandulapeter.campfire.presentation.ui.theme.isDarkTheme
-import com.pandulapeter.campfire.presentation.ui.theme.withBackgroundWarmth
 import kotlinx.browser.window
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
-import org.w3c.dom.AddEventListenerOptions
-import org.w3c.dom.events.Event
 import org.w3c.dom.events.KeyboardEvent
-import org.w3c.dom.events.WheelEvent
 import kotlin.js.ExperimentalWasmJsInterop
-import kotlin.js.unsafeCast
-import kotlin.math.exp
-import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
@@ -121,225 +101,6 @@ fun CampfireWebApp(
  */
 private fun openInNewTab(url: String) {
     window.open(url, "_blank", "noopener,noreferrer")
-}
-
-/**
- * Opens the search of the list screen that is on top on Ctrl / Cmd + F ([CampfireViewModel.openCurrentSearch]), and
- * keeps the browser's own find bar shut when it does: that bar searches the page's text, and the whole of this page is
- * one canvas with none. Everywhere else - another screen, a dialog - the key is left alone and the browser opens its
- * bar as it always does.
- *
- * It is a listener on the window in the capture phase rather than a key handler inside the composition, for two
- * reasons. Nothing on a list screen is focused until its search is, and a key event only reaches Compose along the
- * focus path. And a key pressed in the hidden `<input>` that holds the caret of a field reaches Compose only after
- * the browser has acted on it (see [startSuppressingBrowserSave]), so a Compose handler could never have stopped the
- * find bar opening over the app. The listener is a Kotlin function rather than a `js(...)` block because what it has
- * to decide is the view model's, and has to be decided before the browser moves on.
- */
-@Composable
-private fun SearchShortcutEffect(viewModel: CampfireViewModel) = DisposableEffect(viewModel) {
-    val listener: (Event) -> Unit = { event ->
-        val keyEvent = event.unsafeCast<KeyboardEvent>()
-        // code, as Compose goes by it (Key.F is the physical key); key for a virtual keyboard, which has none.
-        val isF = keyEvent.code == "KeyF" || keyEvent.key == "f" || keyEvent.key == "F"
-        if ((keyEvent.ctrlKey || keyEvent.metaKey) && !keyEvent.altKey && isF && viewModel.openCurrentSearch()) {
-            keyEvent.preventDefault()
-        }
-    }
-    window.addEventListener(EVENT_KEY_DOWN, listener, true)
-    onDispose { window.removeEventListener(EVENT_KEY_DOWN, listener, true) }
-}
-
-/**
- * Tells the metronome whether a screen that can start a click is on top - the Metronome tab or a song, with the feature
- * on - which is where its output listens for the presses that allow a page's audio to start, so that tapping around the
- * rest of the app never opens the audio device. The screen composes before the tap that starts a click, so the listener
- * is there in time.
- */
-@Composable
-private fun MetronomeStartableEffect(viewModel: CampfireViewModel) {
-    val metronome = koinInject<Metronome>()
-    LaunchedEffect(viewModel, metronome) {
-        snapshotFlow { viewModel.backStack.lastOrNull() }
-            .combine(viewModel.userPreferences.map { it?.isMetronomeEnabled != false }) { top, isEnabled ->
-                isEnabled && (top == CampfireDestination.Metronome || top is CampfireDestination.SongDetails)
-            }
-            .distinctUntilChanged()
-            .collect(metronome::setStartable)
-    }
-}
-
-/**
- * Space and M start and stop the metronome ([CampfireViewModel.toggleMetronomeByKey]). Unlike the search shortcut this
- * listens in the bubbling phase and leaves alone whatever Compose already handled (a focused button, which Space
- * presses) or what is typed into a field (the hidden input of a focused text field), so that the key only toggles the
- * metronome where it would otherwise do nothing.
- */
-@Composable
-private fun MetronomeShortcutEffect(viewModel: CampfireViewModel) = DisposableEffect(viewModel) {
-    val listener: (Event) -> Unit = listener@{ event ->
-        val keyEvent = event.unsafeCast<KeyboardEvent>()
-        if (keyEvent.defaultPrevented || keyEvent.ctrlKey || keyEvent.metaKey || keyEvent.altKey || isTypingTarget(keyEvent)) return@listener
-        val isSpace = when (keyEvent.code) {
-            "Space" -> true
-            "KeyM" -> false
-            else -> return@listener
-        }
-        // A held key repeats its key-down; only the first press is a request, the rest would start and stop the click
-        // thirty times a second.
-        if (keyEvent.repeat) return@listener
-        if (viewModel.toggleMetronomeByKey(isSpace)) keyEvent.preventDefault()
-    }
-    window.addEventListener(EVENT_KEY_DOWN, listener)
-    onDispose { window.removeEventListener(EVENT_KEY_DOWN, listener) }
-}
-
-private fun isTypingTarget(event: KeyboardEvent): Boolean = js("event.target && (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA' || event.target.isContentEditable === true)")
-
-/**
- * Keeps the `theme-color` of the page - what Chrome on Android and the browsers built on it paint their toolbar and the
- * status bar in - on the palette the app is drawn in. index.html can only name the app's own palette, in the system's
- * light or dark half, since the preferences are in OPFS and nothing reads them before the app does.
- *
- * A light scheme hands over its `surfaceContainerHigh`, the tone of the search pill, rather than its background:
- * Chrome ignores a color whose HSL lightness is above 0.94 and paints its own default toolbar instead, and every light
- * background is well above that, while every palette's `surfaceContainerHigh` is below it. A dark scheme hands over its
- * background, which Chrome takes as it is - but only while the system is in its light theme. With the system in
- * dark, Chrome keeps its own dark toolbar whatever the page asks for, so an app in the system's own theme only gets
- * a toolbar of its colors in the light half.
- *
- * It follows the preferences rather than the colors on screen, the way the Android shell's system bars do: the theme
- * cross fades between two schemes on every frame of a change, and the browsers animate a new `theme-color` of their
- * own accord. Both of the page's tags are written, so the one whose media query matches carries it whichever it is.
- */
-@Composable
-private fun BrowserThemeColorEffect(viewModel: CampfireViewModel) {
-    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
-    val isDarkTheme = userPreferences?.uiMode.isDarkTheme()
-    val baseColorSchemePair = colorSchemePair(userPreferences?.themeColor)
-    val backgroundWarmth = userPreferences?.backgroundWarmth ?: 0
-    val colorSchemePair = remember(baseColorSchemePair, backgroundWarmth) { baseColorSchemePair.withBackgroundWarmth(backgroundWarmth) }
-    val toolbarColor = if (isDarkTheme) colorSchemePair.dark.background else colorSchemePair.light.surfaceContainerHigh
-    // Nothing is known until the preferences are, and index.html's own tags are the better guess until then.
-    if (userPreferences != null) {
-        LaunchedEffect(toolbarColor) {
-            setBrowserThemeColor("#" + (toolbarColor.toArgb() and 0xFFFFFF).toString(16).padStart(6, '0'))
-        }
-    }
-}
-
-/** Writes [color], a `#rrggbb` string, into every `theme-color` tag of the page. */
-private fun setBrowserThemeColor(color: String) {
-    js(
-        """document.querySelectorAll('meta[name="theme-color"]').forEach(function (meta) {
-            meta.setAttribute('content', color);
-        })"""
-    )
-}
-
-/**
- * Shows the app icon the preferences ask for (`appIconThemeColor`) as the page's favicon: one of the recolored
- * `favicon-<color>.png` files, the app's own one included, since a browser keeps a favicon by its address and an
- * icon that changed under the same name would go on showing as it was - which is also why an icon that is redrawn is
- * given a new name rather than written over the old one. The name is also left in the browser's local
- * storage, where index.html looks for it before anything else is fetched, so that the tab and the loading screen of the
- * next visit are in that color from the start rather than turning into it once the preferences have been read, sixteen
- * megabytes later.
- */
-@Composable
-private fun FaviconEffect(viewModel: CampfireViewModel) {
-    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
-    val appIconColor = userPreferences.appIconThemeColor.appIconColor
-    if (userPreferences != null) {
-        LaunchedEffect(appIconColor) {
-            setFavicon("favicon-${appIconColor.id}.png")
-        }
-    }
-}
-
-/**
- * Points the page's icon at [fileName], a file next to index.html, and remembers it for index.html. Storage that
- * cannot be written - blocked for the site, or a private window out of space - costs the next visit its first frames
- * in the app's own icon and nothing else. The icon is asked for by its versioned address, which is the one it is kept
- * in the browser under, so the icon of an app opened without a connection is there too.
- */
-private fun setFavicon(fileName: String) {
-    js(
-        """{
-            document.querySelector('link[rel="icon"]').setAttribute('href', window.campfireVersioned ? window.campfireVersioned(fileName) : fileName);
-            try {
-                window.localStorage.setItem('campfire-icon', fileName);
-            } catch (e) {
-            }
-        }"""
-    )
-}
-
-/**
- * Turns the browser's zoom shortcuts into the text size of the song details screen while it is on top
- * ([CampfireViewModel.isSongTextZoomable]): Ctrl / Cmd + plus, minus and zero step it the way the app bar's buttons
- * do, and a Ctrl + scroll is kept from the browser so that the screen's own gesture handler can have it (see
- * fontScaleGestures). A zoomed page is the whole app grown around a song that stayed the same size, which is not what
- * anybody reading one asked for. Everywhere else the browser zooms the page as it always does, which is how the rest of
- * the app is made larger on the web.
- *
- * Every browser the app runs in reports a pinch on a touchpad as a Ctrl + scroll too, with Ctrl set although nobody
- * holds it and a distance that is the logarithm of the pinch ([PIXELS_PER_PINCH_E]) - which, taken for notches of a
- * wheel, would move the text a few percent for a whole pinch. So a Ctrl + scroll arriving while the Ctrl key is not
- * down is taken for the pinch it is: it goes to [CampfireViewModel.magnifyByTouchpad] and is stopped before the canvas
- * hears of it - which is also how the page on preview of the PDF export screen is zoomed by a pinch, while a real
- * Ctrl + scroll there is left to the browser. Whether the key is down is only known from its own key events, so one held
- * since before the page had the focus reads as not held, and scrolling with it resizes as fast as a pinch does.
- *
- * Window listeners in the capture phase, for the reasons [SearchShortcutEffect] gives. The wheel listener has to be
- * declared not passive, since a wheel listener on the window is passive unless it says otherwise and a passive one
- * cannot prevent anything.
- */
-@Composable
-private fun SongTextZoomEffect(viewModel: CampfireViewModel) = DisposableEffect(viewModel) {
-    var isControlKeyDown = false
-    val keyDownListener: (Event) -> Unit = listener@{ event ->
-        val keyEvent = event.unsafeCast<KeyboardEvent>()
-        if (keyEvent.key == KEY_CONTROL) isControlKeyDown = true
-        // key rather than code, as the browser's own zoom goes by it: the plus of a Hungarian layout is Shift + 3.
-        // Alt is left out because AltGr arrives as Ctrl + Alt on Windows, and AltGr with these keys types a character
-        // on some layouts.
-        val steps = when (keyEvent.key) {
-            "+", "=" -> 1
-            "-", "_" -> -1
-            "0" -> null
-            else -> return@listener
-        }
-        if ((keyEvent.ctrlKey || keyEvent.metaKey) && !keyEvent.altKey && viewModel.zoomSongText(steps)) {
-            keyEvent.preventDefault()
-        }
-    }
-    val keyUpListener: (Event) -> Unit = { event ->
-        if (event.unsafeCast<KeyboardEvent>().key == KEY_CONTROL) isControlKeyDown = false
-    }
-    // A key released while another window has the focus is never reported to this one.
-    val blurListener: (Event) -> Unit = { isControlKeyDown = false }
-    val wheelListener: (Event) -> Unit = { event ->
-        val wheelEvent = event.unsafeCast<WheelEvent>()
-        if (wheelEvent.ctrlKey) {
-            if (viewModel.isSongTextZoomable) event.preventDefault()
-            val isPinch = !isControlKeyDown && wheelEvent.deltaMode == WheelEvent.DOM_DELTA_PIXEL
-            if (isPinch && viewModel.magnifyByTouchpad(exp(-wheelEvent.deltaY / PIXELS_PER_PINCH_E).toFloat())) {
-                event.preventDefault()
-                event.stopPropagation()
-            }
-        }
-    }
-    window.addEventListener(EVENT_KEY_DOWN, keyDownListener, true)
-    window.addEventListener(EVENT_KEY_UP, keyUpListener, true)
-    window.addEventListener(EVENT_BLUR, blurListener)
-    window.addEventListener(EVENT_WHEEL, wheelListener, AddEventListenerOptions(passive = false, capture = true))
-    onDispose {
-        window.removeEventListener(EVENT_KEY_DOWN, keyDownListener, true)
-        window.removeEventListener(EVENT_KEY_UP, keyUpListener, true)
-        window.removeEventListener(EVENT_BLUR, blurListener)
-        window.removeEventListener(EVENT_WHEEL, wheelListener, true)
-    }
 }
 
 /**
@@ -497,10 +258,3 @@ private fun stopForwardingEscapeKey() {
         })()"""
     )
 }
-
-private const val EVENT_KEY_DOWN = "keydown"
-private const val EVENT_WHEEL = "wheel"
-private const val EVENT_KEY_UP = "keyup"
-private const val EVENT_BLUR = "blur"
-private const val KEY_CONTROL = "Control"
-private const val PIXELS_PER_PINCH_E = 100.0 // A pinch that moves the fingers e times farther apart scrolls by -100 px.
