@@ -16,28 +16,13 @@ object ChordProSplitter {
 
     fun split(text: String): List<String> {
         val parts = mutableListOf<MutableList<String>>(mutableListOf())
-        var delegatedEnvironment: String? = null
-        ChordProLines.splitLines(text.withoutByteOrderMarks()).forEach { rawLine ->
-            val trimmedLine = rawLine.trim()
-            // Inside an environment handed to another program a `{ns}` is that program's text, as the parser reads it. Any
-            // `{end_of_…}` closes it and any `{start_of_…}` written with a value moves it on, whichever environment they
-            // name, as they do for the parser; one the file never closes takes the rest of the file, which the parser does too.
-            if (delegatedEnvironment != null) {
-                ChordProDirectives.matchDelegatedDirective(trimmedLine)?.name?.let { name ->
-                    ChordProEnvironments.startOfEnvironment(name)?.let { environment ->
-                        delegatedEnvironment = environment.takeIf { it in ChordProEnvironments.delegateEnvironments }
-                    }
-                    ChordProEnvironments.endOfEnvironment(name)?.let { delegatedEnvironment = null }
-                }
-                parts.last() += rawLine
-                return@forEach
-            }
-            val directive = ChordProDirectives.matchDirective(trimmedLine)
-            if (directive != null && (directive.name == "new_song" || directive.name == "ns")) {
+        // Inside an environment handed to another program a `{ns}` is that program's text, as the parser reads it.
+        ChordProLineScanner.scan(text.withoutByteOrderMarks()).forEach { line ->
+            val name = line.directive?.name
+            if (!line.isDelegated && (name == "new_song" || name == "ns")) {
                 parts += mutableListOf<String>()
             } else {
-                delegatedEnvironment = directive?.name?.let(ChordProEnvironments::startOfEnvironment)?.takeIf { it in ChordProEnvironments.delegateEnvironments }
-                parts.last() += rawLine
+                parts.last() += line.raw
             }
         }
         return parts.map { part -> part.dropWhile { it.isBlank() }.dropLastWhile { it.isBlank() }.joinToString("\n") }
@@ -54,30 +39,18 @@ object ChordProSplitter {
      * ([ChordProDirectives.canonicalDirective]): a short name, a missing space or a capital is how a file was typed, not
      * what it says.
      */
-    fun comparable(text: String): String {
-        var delegatedEnvironment: String? = null
-        return ChordProLines.splitLines(ChordProNotation.convertText(text.withoutByteOrderMarks(), ChordNotation.STANDARD, ChordNotation.STANDARD))
-            .map { rawLine ->
-                val trimmedLine = rawLine.trim()
-                // The same walk through the delegated environments as split's, so that LilyPond's `{ c d e }` or an
-                // ABC line is never read as a directive and respelled.
-                if (delegatedEnvironment != null) {
-                    ChordProDirectives.matchDelegatedDirective(trimmedLine)?.name?.let { name ->
-                        ChordProEnvironments.startOfEnvironment(name)?.let { environment ->
-                            delegatedEnvironment = environment.takeIf { it in ChordProEnvironments.delegateEnvironments }
-                        }
-                        ChordProEnvironments.endOfEnvironment(name)?.let { delegatedEnvironment = null }
-                    }
-                    return@map rawLine
-                }
-                val directive = ChordProDirectives.matchDirective(trimmedLine) ?: return@map rawLine
-                delegatedEnvironment = ChordProEnvironments.startOfEnvironment(directive.name)?.takeIf { it in ChordProEnvironments.delegateEnvironments }
-                ChordProDirectives.canonicalDirective(directive)
+    fun comparable(text: String): String =
+        ChordProLineScanner.scan(ChordProNotation.convertText(text.withoutByteOrderMarks(), ChordNotation.STANDARD, ChordNotation.STANDARD))
+            .map { line ->
+                // LilyPond's `{ c d e }` or an ABC line is never read as a directive and respelled, and neither is a
+                // directive written inside one, as split reads it.
+                val directive = line.directive
+                if (directive == null || line.isDelegated) line.raw else ChordProDirectives.canonicalDirective(directive)
             }
+            .toList()
             .dropWhile { it.isBlank() }
             .dropLastWhile { it.isBlank() }
             .joinToString("\n")
-    }
 
     /**
      * A byte order mark is never part of a song. Editors on Windows prefix a UTF-8 file with one, and joining two
