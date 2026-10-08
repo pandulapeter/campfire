@@ -35,6 +35,7 @@ import com.pandulapeter.campfire.data.repository.implementation.sync.SyncIndexDo
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncIndexEntry
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncIndexStore
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncKey
+import com.pandulapeter.campfire.data.repository.implementation.sync.SyncLibraryRefresher
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncStateHolder
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncedPreferencesSync
 import com.pandulapeter.campfire.data.repository.implementation.sync.indexKey
@@ -1145,9 +1146,8 @@ class SyncRepositoryImplTest {
             authenticator = authenticator,
             pendingAuthorizationStore = pendingAuthorizationStore,
             syncIndexLocalSource = stateLocalSource,
-            songRepository = songRepository,
-            setlistRepository = setlistRepository,
             stateHolder = SyncStateHolder(),
+            libraryRefresher = SyncLibraryRefresher(songRepository, setlistRepository, environment),
             indexStore = SyncIndexStore(stateLocalSource, environment),
             engine = DataRepositoryModule.syncEngine(
                 libraryFileLocalSource = libraryFileLocalSource,

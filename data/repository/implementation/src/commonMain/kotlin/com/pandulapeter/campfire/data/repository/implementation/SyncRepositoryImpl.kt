@@ -11,23 +11,19 @@
 
 package com.pandulapeter.campfire.data.repository.implementation
 
-import com.pandulapeter.campfire.data.model.DataState
-import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.domain.SyncFailureReason
 import com.pandulapeter.campfire.data.model.domain.SyncOutcome
 import com.pandulapeter.campfire.data.model.domain.SyncProgress
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.model.domain.SyncState
-import com.pandulapeter.campfire.data.repository.api.SetlistRepository
-import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.data.repository.api.SyncRepository
 import com.pandulapeter.campfire.data.repository.implementation.base.RepositoryEnvironment
 import com.pandulapeter.campfire.data.repository.implementation.base.recovering
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncEngine
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncIndexDocument
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncIndexStore
-import com.pandulapeter.campfire.data.repository.implementation.sync.SyncKey
+import com.pandulapeter.campfire.data.repository.implementation.sync.SyncLibraryRefresher
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncStateHolder
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncedPreferencesDocument
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncedPreferencesSync
@@ -44,14 +40,11 @@ import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompl
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteAuthorizationResponse
 import com.pandulapeter.campfire.data.source.remote.api.model.redirectParameters
 import kotlinx.coroutines.cancelAndJoin
-import kotlin.concurrent.Volatile
 import kotlin.concurrent.atomics.AtomicReference
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
-import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.ExperimentalTime
 import kotlin.time.TimeMark
-import kotlin.time.measureTime
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
@@ -79,15 +72,8 @@ internal class SyncRepositoryImpl(
     private val authenticator: SyncAuthenticator,
     private val pendingAuthorizationStore: PendingAuthorizationStore,
     private val syncIndexLocalSource: SyncIndexLocalSource,
-    /**
-     * Sync writes song and setlist files behind these two repositories' backs, so it is the one thing that has to
-     * tell them to read the library again. It used to be the use case's job, back when a run finished before the
-     * caller did; now that a run outlives whoever started it, this is the only place that reliably still exists
-     * when it ends.
-     */
-    private val songRepository: SongRepository,
-    private val setlistRepository: SetlistRepository,
     private val stateHolder: SyncStateHolder,
+    private val libraryRefresher: SyncLibraryRefresher,
     private val indexStore: SyncIndexStore,
     private val engine: SyncEngine,
     private val syncedPreferencesSync: SyncedPreferencesSync,
@@ -127,19 +113,6 @@ internal class SyncRepositoryImpl(
      * and the second one may arrive while the first is still waiting for the service to say whose account this is.
      */
     private val restoreMutex = Mutex()
-
-    private var liveRefreshJob: Job? = null
-
-    /** The library files the running run has changed and the repositories have not read again yet. */
-    private val changedFiles = mutableSetOf<SyncKey>()
-    private val changedFilesMutex = Mutex()
-
-    /** When the last live refresh ended and how long the next one has to wait for, see [scheduleLiveRefresh]. */
-    @Volatile
-    private var lastLiveRescanEnd: TimeMark? = null
-
-    @Volatile
-    private var liveRescanPause = LIVE_RESCAN_INTERVAL
 
     private var indexWriteJob: Job? = null
     private var accountRefreshJob: Job? = null
@@ -500,11 +473,7 @@ internal class SyncRepositoryImpl(
             var latestIndex: (() -> SyncIndexDocument)? = null
             var hasFinishedOperations = false
             try {
-                // A launch starts a run beside the first scan of the library, and both read every file, so the screen's
-                // read goes first. Waited for rather than started again: a repository that is not Loading has been read,
-                // or has failed, which a second read here would only repeat.
-                if (songRepository.songs.first() is DataState.Loading) songRepository.loadSongsIfNeeded()
-                if (setlistRepository.setlists.first() is DataState.Loading) setlistRepository.loadSetlistsIfNeeded()
+                libraryRefresher.awaitFirstRead()
                 // Taken over before the marker is written, so that an index filed under the key an earlier version used
                 // is under the current one from the first write of this run, however the run ends.
                 val document = indexStore.load().adoptedBy(connected.account)
@@ -518,7 +487,7 @@ internal class SyncRepositoryImpl(
                     accountId = connected.account.indexKey(),
                     onProgress = { progress ->
                         stateHolder.updateConnected { it.copy(progress = progress) }
-                        scheduleLiveRefresh()
+                        libraryRefresher.scheduleLiveRefresh()
                     },
                     onIndexChanged = { snapshot ->
                         val marked = { snapshot().markedAsRunning(isAutomatic) }
@@ -526,7 +495,7 @@ internal class SyncRepositoryImpl(
                         hasFinishedOperations = true
                         scheduleIndexWrite(marked)
                     },
-                    onLocalFileChanged = { key -> changedFilesMutex.withLock { changedFiles += key } },
+                    onLocalFileChanged = libraryRefresher::onFileChanged,
                     deletionPolicy = deletionPolicy,
                 )
                 indexWriteJob?.join()
@@ -536,7 +505,7 @@ internal class SyncRepositoryImpl(
                         // can find the folder emptied after the first one had already brought files in, and those
                         // are on disk whether the question is answered.
                         indexStore.saveQuietly(latestIndex().markedAsFinished())
-                        refreshLibraryAfterRun()
+                        libraryRefresher.refreshAfterRun()
                         stateHolder.updateConnected {
                             it.copy(
                                 progress = null,
@@ -567,7 +536,7 @@ internal class SyncRepositoryImpl(
                             ),
                         )
                         // Reads only what the run changed, which for most runs is nothing.
-                        refreshLibraryAfterRun()
+                        libraryRefresher.refreshAfterRun()
                         stateHolder.updateConnected {
                             it.copy(
                                 progress = null,
@@ -605,7 +574,7 @@ internal class SyncRepositoryImpl(
                     finishRunCutShort(latestIndex)
                     // Thrown from anywhere, a write included, so what the engine reported is not necessarily all it
                     // changed: the whole library is read again.
-                    if (hasFinishedOperations) rescanLibrary()
+                    if (hasFinishedOperations) libraryRefresher.rescanLibrary()
                 }
                 stateHolder.updateConnected { it.copy(progress = null, lastOutcome = SyncOutcome.Failure(SyncFailureReason.UNKNOWN)) }
             } finally {
@@ -638,27 +607,9 @@ internal class SyncRepositoryImpl(
     }
 
     /**
-     * Keeps the library counts moving while a run is going.
-     *
-     * Sync writes files behind the two repositories' backs, so nothing reads them again until something says to: this
-     * hands them the files the run has changed so far, which they read again one by one. Throttled by what the last one
-     * cost, see [liveRescanPauseAfter], since a first sync changes files several times a second and every refresh
-     * rebuilds the lists downstream. Whatever is still waiting when the run ends is refreshed then.
-     */
-    private fun scheduleLiveRefresh() {
-        if (liveRefreshJob?.isActive == true) return
-        if (lastLiveRescanEnd?.let { it.elapsedNow() < liveRescanPause } == true) return
-        liveRefreshJob = scope.launch {
-            val duration = environment.timeSource.measureTime { refreshChangedFiles() }
-            liveRescanPause = liveRescanPauseAfter(duration)
-            lastLiveRescanEnd = environment.timeSource.markNow()
-        }
-    }
-
-    /**
      * Keeps `sync-index.json` close behind the run, so that an app that is killed rather than stopped - which gets no
      * chance to write anything on its way out - still loses no more than the last couple of seconds of transfers.
-     * Throttled the same way as [scheduleLiveRefresh], since the index is rewritten whole and a run finishes a file
+     * Throttled the same way as [SyncLibraryRefresher.scheduleLiveRefresh], since the index is rewritten whole and a run finishes a file
      * several times a second. Whatever this skips, the write at the end of the run covers.
      */
     private fun scheduleIndexWrite(snapshot: () -> SyncIndexDocument) {
@@ -694,39 +645,6 @@ internal class SyncRepositoryImpl(
         }
     }
 
-    private suspend fun rescanLibrary() {
-        songRepository.rescan()
-        setlistRepository.rescan()
-    }
-
-    /**
-     * Hands the files changed since the last refresh to the two repositories. They are taken out of [changedFiles]
-     * before they are read, so a file the run changes again meanwhile waits for the next refresh, and put back when
-     * this one is stopped before it got to them.
-     */
-    private suspend fun refreshChangedFiles() {
-        val keys = changedFilesMutex.withLock { changedFiles.toSet().also { changedFiles.clear() } }
-        if (keys.isEmpty()) return
-        try {
-            songRepository.refresh(keys.namesOf(LibraryFileKind.SONG))
-            setlistRepository.refresh(keys.namesOf(LibraryFileKind.SETLIST))
-        } catch (exception: CancellationException) {
-            withContext(NonCancellable) { changedFilesMutex.withLock { changedFiles += keys } }
-            throw exception
-        }
-    }
-
-    private fun Set<SyncKey>.namesOf(kind: LibraryFileKind) = filter { it.kind == kind }.mapTo(mutableSetOf()) { it.name }
-
-    /**
-     * The refresh a run ends with. A live one still reading is stopped first, which puts back what it had not got to,
-     * and everything still waiting is read here.
-     */
-    private suspend fun refreshLibraryAfterRun() {
-        liveRefreshJob?.cancelAndJoin()
-        refreshChangedFiles()
-    }
-
     /**
      * What a run that did not reach its end still owes: the periodic writer waited for, so that it cannot land after
      * the final write - waited for rather than cancelled, because on the web a cancelled write carries on in the
@@ -742,7 +660,7 @@ internal class SyncRepositoryImpl(
     private suspend fun finishRunCutShort(latestIndex: (() -> SyncIndexDocument)?) {
         indexWriteJob?.join()
         latestIndex?.let { indexStore.saveQuietly(it().markedAsFinished()) }
-        refreshLibraryAfterRun()
+        libraryRefresher.refreshAfterRun()
     }
 
     /**
@@ -862,17 +780,3 @@ internal class SyncRepositoryImpl(
         )
     }
 }
-
-/**
- * How long the counters wait after a live refresh that took [duration]. A refresh reads every file changed since the
- * last one, which on a first sync of a large library is a lot of them, and each one rebuilds the lists downstream:
- * waiting a multiple of what it cost caps the share of a run that goes into re-reading what it has already written,
- * while a small run keeps the interval that makes the numbers visibly move.
- */
-internal fun liveRescanPauseAfter(duration: Duration) = maxOf(LIVE_RESCAN_INTERVAL, duration * LIVE_RESCAN_PAUSE_FACTOR)
-
-/** Often enough that the counters visibly move, where the reading costs next to nothing. */
-internal val LIVE_RESCAN_INTERVAL = 1.seconds
-
-/** One part reading to five parts not: a live refresh never takes more than about a sixth of a run. */
-private const val LIVE_RESCAN_PAUSE_FACTOR = 5

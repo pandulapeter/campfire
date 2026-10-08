@@ -155,6 +155,7 @@ internal class RecordingSongRepository(
     private val onRescan: () -> Unit = {},
     override val songs: MutableStateFlow<DataState<List<Song>>> = MutableStateFlow(DataState.Idle(emptyList())),
     private val onLoadIfNeeded: suspend () -> Unit = {},
+    private val onRefresh: suspend (Set<String>) -> Unit = {},
 ) : SongRepository {
 
     var rescanCount = 0
@@ -173,6 +174,7 @@ internal class RecordingSongRepository(
     }
 
     override suspend fun refresh(fileNames: Set<String>) {
+        onRefresh(fileNames)
         refreshed += fileNames
     }
 
