@@ -135,6 +135,7 @@ import com.pandulapeter.campfire.presentation.ui.playing.Tempos
 import com.pandulapeter.campfire.presentation.ui.playing.effectiveTempo
 import com.pandulapeter.campfire.presentation.ui.metronome.isMetronomeContextMoved
 import com.pandulapeter.campfire.presentation.ui.metronome.isMetronomeScreenLeft
+import com.pandulapeter.campfire.presentation.ui.metronome.isMetronomeStartable
 import com.pandulapeter.campfire.presentation.ui.metronome.metronomeContextOf
 import com.pandulapeter.campfire.presentation.ui.metronome.metronomePatternOf
 import com.pandulapeter.campfire.presentation.ui.playing.withTempo
@@ -1465,6 +1466,16 @@ class CampfireViewModel(
         }
         viewModelScope.launch {
             snapshotFlow { fontScale }.debounce(FONT_SCALE_SETTLE_MILLIS).collect { settledFontScaleState.floatValue = it }
+        }
+        viewModelScope.launch {
+            // Where the web's audio output listens for the presses that allow a page's audio to start, so that tapping
+            // around the rest of the app never opens the audio device; a no-op on the other platforms. The screen
+            // composes before the tap that starts a click, so the listener is there in time.
+            combine(
+                snapshotFlow { backStack.lastOrNull() },
+                userPreferences.map { it?.isMetronomeEnabled != false },
+                ::isMetronomeStartable,
+            ).distinctUntilChanged().collect(metronome::setStartable)
         }
     }
 

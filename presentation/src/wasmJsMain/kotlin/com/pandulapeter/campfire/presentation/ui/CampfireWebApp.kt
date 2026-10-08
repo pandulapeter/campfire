@@ -65,7 +65,6 @@ fun CampfireWebApp(
     BrowserHistoryEffect(viewModel)
     SearchShortcutEffect(viewModel)
     MetronomeShortcutEffect(viewModel)
-    MetronomeStartableEffect(viewModel)
     LaunchedEffect(viewModel) { WebMetronomeNotifier.forEachStopRequest(viewModel::stopMetronome) }
     // The composition stops collecting while the tab is hidden (Compose moves the lifecycle to CREATED), and a hidden tab
     // is when the browser's media controls are used: the session follows the engine itself, as Android's service does.

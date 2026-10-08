@@ -121,4 +121,23 @@ class MetronomeContextTest {
     @Test
     fun theSameContextIsNotMoved() =
         assertFalse(isMetronomeContextMoved(MetronomeContext.Song("a.cho", null), MetronomeContext.Song("a.cho", null), emptyMap()))
+
+    @Test
+    fun `only the metronome tab and a song can start a click, and only with the feature on`() {
+        val startable = listOf(
+            CampfireDestination.Metronome,
+            CampfireDestination.SongDetails(songFileNames = listOf("a.cho"), setlistFileName = null, initialIndex = 0),
+        )
+        val others = listOf(
+            null,
+            CampfireDestination.Songs,
+            CampfireDestination.Setlists,
+            CampfireDestination.Settings,
+            CampfireDestination.SongEditor(fileName = "a.cho"),
+            CampfireDestination.ImportReport,
+        )
+        startable.forEach { assertTrue(isMetronomeStartable(it, isMetronomeEnabled = true), it.toString()) }
+        others.forEach { assertFalse(isMetronomeStartable(it, isMetronomeEnabled = true), it.toString()) }
+        (startable + others).forEach { assertFalse(isMetronomeStartable(it, isMetronomeEnabled = false), it.toString()) }
+    }
 }

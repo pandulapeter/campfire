@@ -63,6 +63,13 @@ internal fun isMetronomeScreenLeft(previousTop: CampfireDestination?, top: Campf
     (top !is CampfireDestination.SongDetails && top != CampfireDestination.Metronome) || top.contentKey != previousTop?.contentKey
 
 /**
+ * Whether a screen that can start a click is on top - the Metronome tab or a song, with the feature on - which is
+ * where the web's audio output listens for the presses that allow a page's audio to start (`Metronome.setStartable`).
+ */
+internal fun isMetronomeStartable(top: CampfireDestination?, isMetronomeEnabled: Boolean) =
+    isMetronomeEnabled && (top == CampfireDestination.Metronome || top is CampfireDestination.SongDetails)
+
+/**
  * Whether [context] is another song than [last] rather than the same one under the name a rename gave it, or another
  * stretch of the same song. A stretch whose tempo changed with the song's opening one (a stepper, a tap) is the same
  * stretch, and the change is played from the next beat.
