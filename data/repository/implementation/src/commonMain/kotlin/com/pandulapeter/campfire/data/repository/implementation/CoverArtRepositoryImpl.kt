@@ -15,12 +15,12 @@ import com.pandulapeter.campfire.data.model.domain.CoverArtSearchResults
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.repository.api.CoverArtRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
+import com.pandulapeter.campfire.data.repository.implementation.base.recovering
 import com.pandulapeter.campfire.data.source.local.api.CoverArtLocalSource
 import com.pandulapeter.campfire.data.source.remote.api.CoverArtRemoteSource
 import com.pandulapeter.campfire.data.source.remote.api.CoverArtSearchRemoteSources
 import com.pandulapeter.campfire.data.source.remote.api.hashing.Sha256
 import com.pandulapeter.campfire.data.source.remote.api.model.CoverArtDownload
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
@@ -143,17 +143,15 @@ internal class CoverArtRepositoryImpl(
         coverArtSearchRemoteSources.all.forEach { source ->
             val service = source.service
             launch {
-                val candidates = try {
+                val candidates = recovering(
+                    describe = { "The cover search on $service failed: ${it::class.simpleName}" },
+                    fallback = { null },
+                ) {
                     source.searchCoverArt(
                         query = query,
                         // A wait reported by a source that has answered since is not one anybody is still waiting on.
                         onBusy = { launch { update { if (service in pending) copy(busy = busy + service) else this } } },
                     )
-                } catch (exception: CancellationException) {
-                    throw exception
-                } catch (exception: Exception) {
-                    println("The cover search on $service failed: ${exception::class.simpleName}")
-                    null
                 }
                 update {
                     copy(

@@ -14,8 +14,8 @@ import com.pandulapeter.campfire.data.model.domain.SongContent
 import com.pandulapeter.campfire.data.repository.api.SongContentRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.data.repository.implementation.base.LibraryListRepository
+import com.pandulapeter.campfire.data.repository.implementation.base.recovering
 import com.pandulapeter.campfire.data.source.local.api.SongLocalSource
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -72,14 +72,10 @@ internal class SongRepositoryImpl(
         }
     }
 
-    private suspend fun loadSongOrNull(fileName: String) = try {
-        songLocalSource.loadSong(fileName)
-    } catch (exception: CancellationException) {
-        throw exception
-    } catch (exception: Exception) {
-        println("Could not read the song \"$fileName\": ${exception.message}")
-        null
-    }
+    private suspend fun loadSongOrNull(fileName: String) = recovering(
+        describe = { "Could not read the song \"$fileName\": ${it.message}" },
+        fallback = { null },
+    ) { songLocalSource.loadSong(fileName) }
 
     /**
      * Only the changed file is re-read: parsing the whole library again to pick up one edited title would make every

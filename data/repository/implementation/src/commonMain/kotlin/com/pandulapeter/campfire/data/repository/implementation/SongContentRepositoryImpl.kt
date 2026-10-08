@@ -11,8 +11,8 @@ package com.pandulapeter.campfire.data.repository.implementation
 
 import com.pandulapeter.campfire.data.model.domain.SongContent
 import com.pandulapeter.campfire.data.repository.api.SongContentRepository
+import com.pandulapeter.campfire.data.repository.implementation.base.recovering
 import com.pandulapeter.campfire.data.source.local.api.SongLocalSource
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.sync.Mutex
@@ -56,14 +56,10 @@ internal class SongContentRepositoryImpl(
             }
             generation
         }
-        val content = try {
-            songLocalSource.loadSongContent(fileName)
-        } catch (exception: CancellationException) {
-            throw exception
-        } catch (exception: Exception) {
-            println("Could not read the song \"$fileName\": ${exception.message}")
-            null
-        } ?: return null
+        val content = recovering(
+            describe = { "Could not read the song \"$fileName\": ${it.message}" },
+            fallback = { null },
+        ) { songLocalSource.loadSongContent(fileName) } ?: return null
         if (useCache) {
             mutex.withLock {
                 if (generation == generationBeforeRead) put(content)

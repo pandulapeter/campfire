@@ -12,8 +12,8 @@ package com.pandulapeter.campfire.data.repository.implementation
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.implementation.base.LibraryListRepository
+import com.pandulapeter.campfire.data.repository.implementation.base.recovering
 import com.pandulapeter.campfire.data.source.local.api.SetlistLocalSource
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
@@ -100,14 +100,10 @@ internal class SetlistRepositoryImpl(
         // read here would be put back over it. The lock alone, not writeMutex, which [writing] takes before it.
         libraryFileLock.withLock {
             val reloaded = fileNames.mapNotNull { fileName ->
-                try {
-                    setlistLocalSource.loadSetlist(fileName)
-                } catch (exception: CancellationException) {
-                    throw exception
-                } catch (exception: Exception) {
-                    println("Could not read the setlist \"$fileName\": ${exception.message}")
-                    null
-                }
+                recovering(
+                    describe = { "Could not read the setlist \"$fileName\": ${it.message}" },
+                    fallback = { null },
+                ) { setlistLocalSource.loadSetlist(fileName) }
             }
             replaceInCache(fileNames, reloaded)
         }
@@ -187,14 +183,10 @@ internal class SetlistRepositoryImpl(
      */
     private suspend fun latest(fileName: String): Setlist? {
         val cached = loadDataIfNeeded()?.firstOrNull { it.fileName == fileName }
-        return try {
-            setlistLocalSource.loadSetlist(fileName).also { if (it == null && cached != null) dropFromCache(fileName) }
-        } catch (exception: CancellationException) {
-            throw exception
-        } catch (exception: Exception) {
-            println("Could not read the setlist \"$fileName\": ${exception.message}")
-            cached
-        }
+        return recovering(
+            describe = { "Could not read the setlist \"$fileName\": ${it.message}" },
+            fallback = { cached },
+        ) { setlistLocalSource.loadSetlist(fileName).also { if (it == null && cached != null) dropFromCache(fileName) } }
     }
 
     /**

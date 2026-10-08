@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.repository.implementation
 
-import kotlinx.coroutines.CancellationException
+import com.pandulapeter.campfire.data.repository.implementation.base.recovering
 
 /** The files a [deleteEach] could not delete, and why. */
 internal class RemainingFiles(
@@ -29,15 +29,13 @@ internal suspend fun deleteEach(fileNames: Collection<String>, delete: suspend (
     val remaining = mutableSetOf<String>()
     val failures = mutableListOf<Exception>()
     fileNames.forEach { fileName ->
-        try {
-            delete(fileName)
-        } catch (exception: CancellationException) {
-            throw exception
-        } catch (exception: Exception) {
-            println("Could not delete \"$fileName\": ${exception.message}")
-            remaining += fileName
-            failures += exception
-        }
+        recovering(
+            describe = { "Could not delete \"$fileName\": ${it.message}" },
+            fallback = {
+                remaining += fileName
+                failures += it
+            },
+        ) { delete(fileName) }
     }
     return RemainingFiles(fileNames = remaining, failures = failures)
 }
