@@ -29,19 +29,23 @@ object ChordProMetadataFields {
      * `{tempo}` or `{time}` is a change in the body rather than a second value of its field, so [KEY], [TEMPO] and [TIME]
      * edit the header line the song starts in and leave their lines in the body where they stand.
      */
-    enum class Field(val directiveName: String) {
-        TITLE("title"),
-        SUBTITLE("subtitle"),
-        ARTIST("artist"),
-        COMPOSER("composer"),
-        LYRICIST("lyricist"),
-        ALBUM("album"),
-        YEAR("year"),
-        DURATION("duration"),
-        KEY("key"),
-        CAPO("capo"),
-        TEMPO("tempo"),
-        TIME("time"),
+    enum class Field(internal val kind: MetadataKind) {
+        TITLE(MetadataKind.TITLE),
+        SUBTITLE(MetadataKind.SUBTITLE),
+        ARTIST(MetadataKind.ARTIST),
+        COMPOSER(MetadataKind.COMPOSER),
+        LYRICIST(MetadataKind.LYRICIST),
+        ALBUM(MetadataKind.ALBUM),
+        YEAR(MetadataKind.YEAR),
+        DURATION(MetadataKind.DURATION),
+        KEY(MetadataKind.KEY),
+        CAPO(MetadataKind.CAPO),
+        TEMPO(MetadataKind.TEMPO),
+        TIME(MetadataKind.TIME),
+        ;
+
+        /** The long name of the directive the field is written with. */
+        val directiveName get() = kind.longName
     }
 
     /** What [metadata] says for [field], as text, or null where the song declares nothing for it. */
@@ -84,10 +88,10 @@ object ChordProMetadataFields {
         val indices = lines.indices.filter { lines[it].kind() == field.directiveName }
         // The lines of a field the song changes mid-song are its changes from the body on, which are always kept; only
         // the header's are the song's own value, and every field of any other kind is all header.
-        val bodyStart = if (field.isChangedInTheBody) ChordProHeaderLayout.bodyStartIndex(lines) else lines.size
+        val bodyStart = if (field.kind.isKeptInBody) ChordProHeaderLayout.bodyStartIndex(lines) else lines.size
         val (header, body) = indices.partition { it < bodyStart }
         fun List<Int>.declaring() = filter { !lines[it].value().isNullOrEmpty() }
-        fun List<Int>.readable() = declaring().filter { field.canRead(lines[it].value().orEmpty()) }
+        fun List<Int>.readable() = declaring().filter { field.kind.isReadable(lines[it].value().orEmpty()) }
         // The line the parser takes the value from: the first one that names one it can read, since a later one is a
         // change mid-song for a key, tempo or time signature and a contradiction for every other field, then the first
         // one it cannot read. An empty line of the template stands in where none says anything, so that filling a field
@@ -112,12 +116,6 @@ object ChordProMetadataFields {
         }
         return if (kept == lines) text else ChordProLines.joinLines(kept, text)
     }
-
-    /** Whether the parser can use [value] for this field, which it reads past where it cannot, as the editor marks it. */
-    private fun Field.canRead(value: String) = ChordProMetaItems.isReadableValue(directiveName, value)
-
-    /** Whether a later line of this field is a change from where it stands rather than a duplicate the parser reads past. */
-    private val Field.isChangedInTheBody get() = this == Field.KEY || this == Field.TEMPO || this == Field.TIME
 
     private fun String.directive() = ChordProDirectives.matchDirective(trim())
 
