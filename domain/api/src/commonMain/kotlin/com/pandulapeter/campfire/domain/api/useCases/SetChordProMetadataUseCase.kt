@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.domain.api.useCases
 
-import com.pandulapeter.campfire.chordpro.ChordProMetadataFields
+import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields
 
 interface SetChordProMetadataUseCase {
 

@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.domain.implementation.useCases
 
-import com.pandulapeter.campfire.chordpro.ChordProLanguages
+import com.pandulapeter.campfire.chordpro.edit.ChordProLanguages
 import com.pandulapeter.campfire.domain.api.useCases.SetChordProLanguagesUseCase
 import org.koin.core.annotation.Factory
 

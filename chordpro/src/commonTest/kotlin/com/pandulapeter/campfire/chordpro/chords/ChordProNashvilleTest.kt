@@ -10,9 +10,9 @@
 package com.pandulapeter.campfire.chordpro.chords
 
 import com.pandulapeter.campfire.chordpro.ChordNotation
-import com.pandulapeter.campfire.chordpro.ChordProHighlighter
+import com.pandulapeter.campfire.chordpro.edit.ChordProHighlighter
 import com.pandulapeter.campfire.chordpro.ChordProParser
-import com.pandulapeter.campfire.chordpro.ChordProTabWrapper
+import com.pandulapeter.campfire.chordpro.edit.ChordProTabWrapper
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.ChordProSong

@@ -15,7 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import com.pandulapeter.campfire.chordpro.ChordProHighlighter
+import com.pandulapeter.campfire.chordpro.edit.ChordProHighlighter
 
 /**
  * Colours the text as it is typed. Only styles are added, no characters are inserted or removed, so the offsets the

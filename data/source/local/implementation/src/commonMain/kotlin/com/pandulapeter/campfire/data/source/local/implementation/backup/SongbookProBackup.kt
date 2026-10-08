@@ -10,8 +10,8 @@
 package com.pandulapeter.campfire.data.source.local.implementation.backup
 
 import com.pandulapeter.campfire.chordpro.ChordProDuration
-import com.pandulapeter.campfire.chordpro.ChordProLinks
 import com.pandulapeter.campfire.chordpro.ChordProTime
+import com.pandulapeter.campfire.chordpro.edit.ChordProLinks
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.data.model.domain.LibraryFiles
 import com.pandulapeter.campfire.data.model.domain.MetronomeSettings
@@ -20,6 +20,7 @@ import com.pandulapeter.campfire.data.model.domain.decodeLibraryText
 import com.pandulapeter.campfire.data.source.local.implementation.model.SetlistDocument
 import com.pandulapeter.campfire.data.source.local.implementation.model.SetlistDocumentFormat
 import com.pandulapeter.campfire.data.source.local.implementation.model.SetlistSongDocument
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -27,7 +28,6 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import kotlin.time.Duration.Companion.seconds
 
 /**
  * Reads a SongbookPro library - its `.sbpbackup` backup or the `.sbp` it shares a set as - into the files an import of

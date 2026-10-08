@@ -14,7 +14,7 @@ import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import com.pandulapeter.campfire.chordpro.ChordProDuration
-import com.pandulapeter.campfire.chordpro.ChordProMetadataFields.Field
+import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields.Field
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds

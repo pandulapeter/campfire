@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.chordpro.syntax
 
-import com.pandulapeter.campfire.chordpro.ChordProHeader
+import com.pandulapeter.campfire.chordpro.edit.ChordProHeader
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.syntax.ChordProDirectives.Directive
 import com.pandulapeter.campfire.chordpro.syntax.ChordProDirectives.hasSelectorSuffix

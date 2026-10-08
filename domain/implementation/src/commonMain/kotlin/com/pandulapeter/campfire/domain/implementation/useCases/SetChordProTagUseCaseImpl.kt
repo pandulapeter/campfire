@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.domain.implementation.useCases
 
-import com.pandulapeter.campfire.chordpro.ChordProTags
+import com.pandulapeter.campfire.chordpro.edit.ChordProTags
 import com.pandulapeter.campfire.data.model.domain.normalizedToNfc
 import com.pandulapeter.campfire.domain.api.useCases.SetChordProTagUseCase
 import org.koin.core.annotation.Factory

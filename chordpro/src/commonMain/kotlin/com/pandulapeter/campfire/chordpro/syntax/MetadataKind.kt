@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.chordpro.syntax
 
 import com.pandulapeter.campfire.chordpro.ChordProDuration
-import com.pandulapeter.campfire.chordpro.ChordProHeader
+import com.pandulapeter.campfire.chordpro.edit.ChordProHeader
 import com.pandulapeter.campfire.chordpro.ChordProTempo
 import com.pandulapeter.campfire.chordpro.ChordProTime
 

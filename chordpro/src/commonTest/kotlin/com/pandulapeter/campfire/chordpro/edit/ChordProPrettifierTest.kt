@@ -7,15 +7,16 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.chordpro
+package com.pandulapeter.campfire.chordpro.edit
 
+import com.pandulapeter.campfire.chordpro.ChordProParser
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
-import kotlin.time.TimeSource
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeSource
 
 class ChordProPrettifierTest {
 

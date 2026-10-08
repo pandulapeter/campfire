@@ -7,9 +7,10 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.chordpro
+package com.pandulapeter.campfire.chordpro.convert
 
 import com.pandulapeter.campfire.chordpro.chords.ChordProChordNames
+import com.pandulapeter.campfire.chordpro.edit.ChordProLiteralText
 import com.pandulapeter.campfire.chordpro.syntax.ChordProDirectives
 import kotlin.math.abs
 import kotlin.math.roundToInt

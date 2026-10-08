@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.dialogs
 
 import androidx.compose.runtime.saveable.listSaver
-import com.pandulapeter.campfire.chordpro.ChordProMetadataFields.Field
+import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields.Field
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_details_playing_tempo
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_album

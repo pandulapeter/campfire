@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.print
 
-import com.pandulapeter.campfire.chordpro.ChordProTabWrapper
+import com.pandulapeter.campfire.chordpro.edit.ChordProTabWrapper
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
@@ -20,16 +20,16 @@ import com.pandulapeter.campfire.chordpro.model.SectionType
 import com.pandulapeter.campfire.data.model.domain.PrintSettings
 import com.pandulapeter.campfire.presentation.ui.chords.ChordDiagramGeometry
 import com.pandulapeter.campfire.presentation.ui.chords.secondaryName
-import com.pandulapeter.campfire.presentation.ui.songLayout.balancedRowStarts
-import com.pandulapeter.campfire.presentation.ui.songLayout.header
-import com.pandulapeter.campfire.presentation.ui.songLayout.withNumber
-import com.pandulapeter.campfire.presentation.ui.songLayout.withNumberedSections
 import com.pandulapeter.campfire.presentation.ui.songLayout.alignedGridBars
 import com.pandulapeter.campfire.presentation.ui.songLayout.areAll
+import com.pandulapeter.campfire.presentation.ui.songLayout.balancedRowStarts
+import com.pandulapeter.campfire.presentation.ui.songLayout.header
 import com.pandulapeter.campfire.presentation.ui.songLayout.labelOf
 import com.pandulapeter.campfire.presentation.ui.songLayout.padLyricsToFitChords
-import kotlinx.coroutines.yield
+import com.pandulapeter.campfire.presentation.ui.songLayout.withNumber
+import com.pandulapeter.campfire.presentation.ui.songLayout.withNumberedSections
 import kotlin.math.roundToInt
+import kotlinx.coroutines.yield
 
 /**
  * A single layout for the preview and export. Measuring is supplied by the same Compose text renderer that draws

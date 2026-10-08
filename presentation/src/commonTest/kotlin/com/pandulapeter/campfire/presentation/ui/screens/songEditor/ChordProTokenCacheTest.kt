@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songEditor
 
-import com.pandulapeter.campfire.chordpro.ChordProHighlighter
+import com.pandulapeter.campfire.chordpro.edit.ChordProHighlighter
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotSame

@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.dialogs
 
-import com.pandulapeter.campfire.chordpro.ChordProMetadataFields.Field
+import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields.Field
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue

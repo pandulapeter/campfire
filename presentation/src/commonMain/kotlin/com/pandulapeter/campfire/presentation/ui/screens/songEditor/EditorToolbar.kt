@@ -41,10 +41,9 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.pandulapeter.campfire.chordpro.ChordProHeader
 import com.pandulapeter.campfire.chordpro.ChordNotation
+import com.pandulapeter.campfire.chordpro.edit.ChordProHeader
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
-import com.pandulapeter.campfire.presentation.ui.chords.chordShapeInsertion
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_album
@@ -52,6 +51,7 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_insert_annot
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_artist
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_capo
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_chord
+import com.pandulapeter.campfire.presentation.resources.song_editor_insert_chord_shape
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_chorus_recall
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_comment
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_comment_box
@@ -62,7 +62,6 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_insert_durat
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_key
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_key_change
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_language
-import com.pandulapeter.campfire.presentation.resources.song_editor_insert_chord_shape
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_link
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_lyricist
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_subtitle
@@ -80,6 +79,7 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_section_pre_
 import com.pandulapeter.campfire.presentation.resources.song_editor_section_solo
 import com.pandulapeter.campfire.presentation.resources.song_editor_section_tab
 import com.pandulapeter.campfire.presentation.resources.song_editor_section_verse
+import com.pandulapeter.campfire.presentation.ui.chords.chordShapeInsertion
 import com.pandulapeter.campfire.presentation.ui.platform.bounceHorizontalScroll
 
 /**

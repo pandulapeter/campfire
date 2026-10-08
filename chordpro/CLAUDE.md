@@ -13,10 +13,17 @@ The [ChordPro](https://www.chordpro.org) format and conversion of positioned cho
 all** — not even Koin: everything in it is a stateless `object`, reached from the rest of the app through the use cases
 in `:domain:*`. `:data:source:local:implementation` uses it directly for the metadata of the song list.
 
-Packages (under `com.pandulapeter.campfire.chordpro`): the root holds the entry points the app reads songs through;
-`model` the immutable song model; `syntax` the internal rules every reader and writer of ChordPro text shares — the
-lines, the directives, the environments, the metadata kinds and spellings, the line scanner, the parser's builders, the
-chord rewrite engine — which nothing outside the module can see.
+Packages (under `com.pandulapeter.campfire.chordpro`): the root holds the entry points the app reads songs through
+(`ChordProParser`, `ChordProSummaryCache`, `ChordProSplitter`, `ChordProSerializer`, `ChordNotation`) and the values a
+directive holds (`ChordProTempo`, `ChordProTime`, `ChordProDuration`); `model` the immutable song model; `chords` what a
+chord name means, how it is spelled, moved and played (`ChordProChords`, `ChordProNotation`, `ChordProNashville`,
+`ChordProTransposer`, `ChordProTabTransposer`, `ChordProDefinitions`, `ChordVoicings` and their internal helpers);
+`edit` the text rewriters the editor and the sheets call (`ChordProMetadataFields`, `ChordProHeader`, `ChordProTags`,
+`ChordProLanguages`, `ChordProLinks`, `ChordProCoverArt`, `ChordProPrettifier`, `ChordProHighlighter`,
+`ChordProTabWrapper`); `convert` the chord sheet conversion of the imports (`ChordSheet`, `ChordSheetConverter`); and
+`syntax` the internal rules every reader and writer of ChordPro text shares — the lines, the directives, the
+environments, the metadata kinds and spellings, the line scanner, the parser's builders, the chord rewrite engine —
+which nothing outside the module can see.
 
 - `ChordSheet` / `ChordSheetConverter` — the dependency-free input model and deterministic conversion shared by
   plain text, PDF and Word imports. The positions may be columns, exact PDF points or Word width estimates;

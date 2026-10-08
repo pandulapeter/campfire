@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.domain.implementation.useCases
 
-import com.pandulapeter.campfire.chordpro.ChordProPrettifier
+import com.pandulapeter.campfire.chordpro.edit.ChordProPrettifier
 import com.pandulapeter.campfire.domain.api.useCases.PrettifyChordProUseCase
 import org.koin.core.annotation.Factory
 

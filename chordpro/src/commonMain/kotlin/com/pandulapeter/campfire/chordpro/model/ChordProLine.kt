@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.chordpro.model
 
-import com.pandulapeter.campfire.chordpro.ChordProTabWrapper
+import com.pandulapeter.campfire.chordpro.edit.ChordProTabWrapper
 
 /**
  * One line inside a [ChordProBlock.Section].

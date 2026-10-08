@@ -10,11 +10,11 @@
 package com.pandulapeter.campfire.domain.implementation.useCases
 
 import com.pandulapeter.campfire.chordpro.ChordNotation
-import com.pandulapeter.campfire.chordpro.ChordProPrettifier
 import com.pandulapeter.campfire.chordpro.ChordProSplitter
-import com.pandulapeter.campfire.chordpro.ChordSheet
-import com.pandulapeter.campfire.chordpro.ChordSheetConverter
 import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
+import com.pandulapeter.campfire.chordpro.convert.ChordSheet
+import com.pandulapeter.campfire.chordpro.convert.ChordSheetConverter
+import com.pandulapeter.campfire.chordpro.edit.ChordProPrettifier
 import com.pandulapeter.campfire.data.model.domain.ImportLimits
 import com.pandulapeter.campfire.data.model.domain.ImportPlan
 import com.pandulapeter.campfire.data.model.domain.ImportProgress
