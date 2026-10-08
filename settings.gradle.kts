@@ -92,6 +92,7 @@ include(
     ":app:ios",
     ":app:web",
     ":chordpro",
+    ":data:formats",
     ":data:model",
     ":data:repository:api",
     ":data:repository:implementation",

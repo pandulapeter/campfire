@@ -12,9 +12,8 @@ package com.pandulapeter.campfire.data.source.local.implementation
 import com.pandulapeter.campfire.data.model.domain.ImportBudget
 import com.pandulapeter.campfire.data.model.domain.ImportLimits
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
-import com.pandulapeter.campfire.data.source.local.implementation.zip.Inflater
-import com.pandulapeter.campfire.data.source.local.implementation.zip.ZipEntry
-import com.pandulapeter.campfire.data.source.local.implementation.zip.ZipWriter
+import com.pandulapeter.campfire.data.formats.zip.ZipEntry
+import com.pandulapeter.campfire.data.formats.zip.ZipWriter
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -89,11 +88,6 @@ internal class ImportLimitsTest {
     @Test
     fun anUnreadableFileIsLeftOut() {
         assertNull(ImportBudget().read(name = "a.cho", size = 10) { null })
-    }
-
-    @Test
-    fun theInflaterAllowsWhatAnImportDoes() {
-        assertEquals(ImportLimits.MAX_IMPORT_SIZE, Inflater.MAX_ENTRY_SIZE.toLong())
     }
 
     @Test

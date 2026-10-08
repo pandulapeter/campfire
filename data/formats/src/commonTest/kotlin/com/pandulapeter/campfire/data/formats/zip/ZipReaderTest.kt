@@ -1,0 +1,330 @@
+/*
+ * This file is part of Campfire.
+ * Copyright (c) Pandula Péter 2017-2026.
+ * https://github.com/pandulapeter/campfire
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * https://mozilla.org/MPL/2.0/.
+ */
+package com.pandulapeter.campfire.data.formats.zip
+
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
+
+internal class ZipReaderTest {
+
+    @Test
+    fun readsAStoredArchive() {
+        val read = ZipReader.read(storedArchive())
+
+        assertEquals(listOf("sub/nested.txt", "hello.txt"), read.entries.map { it.name })
+        assertEquals("nested", read.entries[0].bytes.decodeToString())
+        assertEquals("hello zip", read.entries[1].bytes.decodeToString())
+        assertEquals(emptyList(), read.unread)
+    }
+
+    @Test
+    fun skipsDirectoryEntries() {
+        // The archive holds three central directory records; the "sub/" directory must not become an entry.
+        assertEquals(3, storedArchive().u16(EOCD_OFFSET + 10))
+        assertEquals(2, ZipReader.read(storedArchive()).entries.size)
+    }
+
+    @Test
+    fun rejectsATruncatedArchive() {
+        val archive = storedArchive()
+
+        // Without the end of central directory record the archive is not recognisable at all.
+        assertFailsWith<ZipException> { ZipReader.read(archive.copyOfRange(0, archive.size - 10)) }
+        // The central directory is intact but the entry data it points at is gone.
+        assertFailsWith<ZipException> { ZipReader.read(archive.copyOfRange(EOCD_OFFSET, archive.size)) }
+    }
+
+    @Test
+    fun rejectsAnEmptyInput() {
+        assertFailsWith<ZipException> { ZipReader.read(ByteArray(0)) }
+    }
+
+    @Test
+    fun leavesOutAnEntryWithAnUnsupportedCompressionMethod() {
+        val archive = storedArchive()
+        archive[HELLO_CENTRAL_DIRECTORY_OFFSET + 10] = 99
+        archive[HELLO_CENTRAL_DIRECTORY_OFFSET + 11] = 0
+
+        val read = ZipReader.read(archive)
+
+        assertEquals(listOf("sub/nested.txt"), read.entries.map { it.name })
+        assertEquals(listOf(UnreadZipEntry("hello.txt", UnreadZipEntry.Reason.UNREADABLE)), read.unread)
+    }
+
+    @Test
+    fun leavesOutAnEntryWithABadChecksum() {
+        val archive = storedArchive()
+        archive[HELLO_DATA_OFFSET] = 'H'.code.toByte()
+
+        val read = ZipReader.read(archive)
+
+        assertEquals(listOf("sub/nested.txt"), read.entries.map { it.name })
+        assertEquals(listOf(UnreadZipEntry("hello.txt", UnreadZipEntry.Reason.UNREADABLE)), read.unread)
+    }
+
+    @Test
+    fun leavesOutAnEncryptedEntry() {
+        val archive = storedArchive()
+        archive[HELLO_CENTRAL_DIRECTORY_OFFSET + 8] = 1
+
+        val read = ZipReader.read(archive)
+
+        assertEquals(listOf("sub/nested.txt"), read.entries.map { it.name })
+        assertEquals(listOf(UnreadZipEntry("hello.txt", UnreadZipEntry.Reason.UNREADABLE)), read.unread)
+    }
+
+    @Test
+    fun leavesOutAnEntryDeclaringMoreThanItCouldEverInflateTo() {
+        assertEquals(
+            listOf(UnreadZipEntry("bomb.cho", UnreadZipEntry.Reason.TOO_LARGE)),
+            ZipReader.read(deflatedArchive(declaredSize = 2L shl 30)).unread,
+        )
+        // Past the archive limit the entry limit still stands, before a buffer of the declared size is allocated.
+        assertEquals(
+            listOf(UnreadZipEntry("bomb.cho", UnreadZipEntry.Reason.UNREADABLE)),
+            ZipReader.read(deflatedArchive(declaredSize = 1L shl 30), maxTotalSize = Long.MAX_VALUE).unread,
+        )
+    }
+
+    @Test
+    fun leavesOutADeclaredSizeTheStreamDoesNotProduceWithoutAllocatingIt() {
+        val read = ZipReader.read(deflatedArchive(declaredSize = 16L shl 20))
+
+        assertEquals(emptyList(), read.entries)
+        assertEquals(listOf(UnreadZipEntry("bomb.cho", UnreadZipEntry.Reason.UNREADABLE)), read.unread)
+    }
+
+    @Test
+    fun stopsReadingAtTheTotalLimit() {
+        // The two stored entries hold 6 and 9 bytes.
+        assertEquals(2, ZipReader.read(storedArchive(), maxTotalSize = 15).entries.size)
+
+        val read = ZipReader.read(storedArchive(), maxTotalSize = 14)
+
+        assertEquals(listOf("sub/nested.txt"), read.entries.map { it.name })
+        assertEquals(listOf(UnreadZipEntry("hello.txt", UnreadZipEntry.Reason.TOO_LARGE)), read.unread)
+    }
+
+    @Test
+    fun doesNotReadWhatTheCallerDoesNotWant() {
+        // The checksum no longer matches, so reading the entry would leave it out as unreadable instead.
+        val archive = storedArchive()
+        archive[HELLO_DATA_OFFSET] = 'H'.code.toByte()
+
+        val read = ZipReader.read(archive, limitOf = { if (it == "hello.txt") null else Long.MAX_VALUE })
+
+        assertEquals(listOf("sub/nested.txt"), read.entries.map { it.name })
+        assertEquals(listOf(UnreadZipEntry("hello.txt", UnreadZipEntry.Reason.NOT_WANTED)), read.unread)
+    }
+
+    @Test
+    fun leavesOutAnEntryOverItsOwnLimit() {
+        val read = ZipReader.read(storedArchive(), limitOf = { 8 })
+
+        assertEquals(listOf("sub/nested.txt"), read.entries.map { it.name })
+        assertEquals(listOf(UnreadZipEntry("hello.txt", UnreadZipEntry.Reason.TOO_LARGE)), read.unread)
+    }
+
+    @Test
+    fun leavesOutAnEntryWhoseEndOverflowsAnInt() {
+        val archive = deflatedArchive(declaredSize = Int.MAX_VALUE.toLong(), compressedSize = Int.MAX_VALUE.toLong(), method = 0)
+
+        val read = ZipReader.read(archive, maxTotalSize = Long.MAX_VALUE)
+
+        assertEquals(listOf(UnreadZipEntry("bomb.cho", UnreadZipEntry.Reason.UNREADABLE)), read.unread)
+        assertFailsWith<ZipException> { Inflater.inflate(archive, offset = 1, length = Int.MAX_VALUE) }
+    }
+
+    @Test
+    fun stopsAnEntryThatInflatesPastWhatItDeclaredAtThatSize() {
+        val exception = assertFailsWith<ZipException> { Inflater.inflate(helloStream(), expectedSize = 3) }
+
+        assertTrue(exception.message.orEmpty().contains("3 bytes"), exception.message)
+    }
+
+    @Test
+    fun readsEntriesSharingTheirDataOnce() {
+        val content = ByteArray(1000) { 'a'.code.toByte() }
+        val stream = byteArrayOf(0x01, 0xE8.toByte(), 0x03, 0x17, 0xFC.toByte()) + content
+
+        val read = ZipReader.read(overlappingArchive(stream, count = 3, declaredSize = 1000, crc = Crc32.of(content)))
+
+        assertEquals(1, read.entries.size)
+        assertEquals(List(2) { UnreadZipEntry("bomb.cho", UnreadZipEntry.Reason.UNREADABLE) }, read.unread)
+    }
+
+    @Test
+    fun chargesADamagedEntryWhatItDeclared() {
+        val stream = helloStream()
+        val archive = archive(
+            streams = listOf(stream, stream),
+            records = listOf(
+                CentralRecord(stream = 0, declaredSize = 5, crc = 0),
+                CentralRecord(stream = 1, declaredSize = 5, crc = Crc32.of("hello".encodeToByteArray())),
+            ),
+        )
+
+        val read = ZipReader.read(archive, maxTotalSize = 9)
+
+        assertEquals(emptyList(), read.entries)
+        assertEquals(
+            listOf(
+                UnreadZipEntry("bomb.cho", UnreadZipEntry.Reason.UNREADABLE),
+                UnreadZipEntry("bomb.cho", UnreadZipEntry.Reason.TOO_LARGE),
+            ),
+            read.unread,
+        )
+    }
+
+    @Test
+    fun costsAtMostTheArchiveForManyRecordsLyingAboutOneStream() {
+        // Sixteen stored blocks of 65,535 bytes: a stream that inflates to a mebibyte, named by every record.
+        val block = ByteArray(65535) { 'a'.code.toByte() }
+        val stream = (0 until 16).fold(ByteArray(0)) { stream, index ->
+            stream + byteArrayOf(if (index == 15) 0x01 else 0x00, 0xFF.toByte(), 0xFF.toByte(), 0x00, 0x00) + block
+        }
+
+        val read = ZipReader.read(overlappingArchive(stream, count = 200, declaredSize = 10, crc = 0), maxTotalSize = Long.MAX_VALUE)
+
+        assertEquals(emptyList(), read.entries)
+        assertEquals(List(200) { UnreadZipEntry("bomb.cho", UnreadZipEntry.Reason.UNREADABLE) }, read.unread)
+    }
+
+    /** One local header holding [stream], and [count] central directory records that all point at it. */
+    private fun overlappingArchive(stream: ByteArray, count: Int, declaredSize: Long, crc: Long, method: Int = 8) = archive(
+        streams = listOf(stream),
+        records = List(count) { CentralRecord(stream = 0, declaredSize = declaredSize, crc = crc, method = method) },
+    )
+
+    private class CentralRecord(val stream: Int, val declaredSize: Long, val crc: Long, val method: Int = 8)
+
+    /** One local header named "bomb.cho" per stream in [streams], and the central directory [records] pointing at them. */
+    private fun archive(streams: List<ByteArray>, records: List<CentralRecord>): ByteArray {
+        val name = "bomb.cho".encodeToByteArray()
+        val builder = ByteArrayBuilder()
+        val offsets = streams.map { stream ->
+            val offset = builder.size
+            builder.u32(0x04034B50L)
+            repeat(3) { builder.u16(0) } // Version, flags, method: the central directory is the one that is read.
+            repeat(2) { builder.u16(0) } // Modification time and date.
+            repeat(3) { builder.u32(0) } // Checksum and sizes.
+            builder.u16(name.size)
+            builder.u16(0) // Extra field length.
+            builder.bytes(name)
+            builder.bytes(stream)
+            offset
+        }
+        val centralDirectoryOffset = builder.size
+        records.forEach { record ->
+            builder.u32(0x02014B50L)
+            builder.u16(20) // Version made by.
+            builder.u16(20) // Version needed to extract.
+            builder.u16(0) // Flags.
+            builder.u16(record.method)
+            repeat(2) { builder.u16(0) } // Modification time and date.
+            builder.u32(record.crc)
+            builder.u32(streams[record.stream].size.toLong())
+            builder.u32(record.declaredSize)
+            builder.u16(name.size)
+            repeat(4) { builder.u16(0) } // Extra field and comment lengths, disk number, internal attributes.
+            builder.u32(0) // External attributes.
+            builder.u32(offsets[record.stream].toLong())
+            builder.bytes(name)
+        }
+        val centralDirectorySize = builder.size - centralDirectoryOffset
+        builder.u32(0x06054B50L)
+        repeat(2) { builder.u16(0) } // Disk numbers.
+        repeat(2) { builder.u16(records.size) } // Entries on this disk and in total.
+        builder.u32(centralDirectorySize.toLong())
+        builder.u32(centralDirectoryOffset.toLong())
+        builder.u16(0) // Comment length.
+        return builder.build()
+    }
+
+    /** A DEFLATE stream of a single stored block of "hello", ten bytes long. */
+    private fun helloStream() = byteArrayOf(0x01, 0x05, 0x00, 0xFA.toByte(), 0xFF.toByte()) + "hello".encodeToByteArray()
+
+    /**
+     * An archive of one entry whose ten byte data is a DEFLATE stream of a single stored block of "hello", and whose
+     * central directory claims it inflates to [declaredSize] bytes, takes up [compressedSize] and uses [method].
+     */
+    private fun deflatedArchive(declaredSize: Long, compressedSize: Long = 10, method: Int = 8): ByteArray {
+        val name = "bomb.cho".encodeToByteArray()
+        val stream = helloStream()
+        val builder = ByteArrayBuilder()
+        builder.u32(0x04034B50L)
+        repeat(3) { builder.u16(0) } // Version, flags, method: the central directory is the one that is read.
+        repeat(2) { builder.u16(0) } // Modification time and date.
+        repeat(3) { builder.u32(0) } // Checksum and sizes.
+        builder.u16(name.size)
+        builder.u16(0) // Extra field length.
+        builder.bytes(name)
+        builder.bytes(stream)
+        val centralDirectoryOffset = builder.size
+        builder.u32(0x02014B50L)
+        builder.u16(20) // Version made by.
+        builder.u16(20) // Version needed to extract.
+        builder.u16(0) // Flags.
+        builder.u16(method)
+        repeat(2) { builder.u16(0) } // Modification time and date.
+        builder.u32(0) // Checksum, never reached.
+        builder.u32(compressedSize)
+        builder.u32(declaredSize)
+        builder.u16(name.size)
+        repeat(4) { builder.u16(0) } // Extra field and comment lengths, disk number, internal attributes.
+        builder.u32(0) // External attributes.
+        builder.u32(0) // Local header offset.
+        builder.bytes(name)
+        val centralDirectorySize = builder.size - centralDirectoryOffset
+        builder.u32(0x06054B50L)
+        repeat(2) { builder.u16(0) } // Disk numbers.
+        repeat(2) { builder.u16(1) } // Entries on this disk and in total.
+        builder.u32(centralDirectorySize.toLong())
+        builder.u32(centralDirectoryOffset.toLong())
+        builder.u16(0) // Comment length.
+        return builder.build()
+    }
+
+    /**
+     * A minimal archive produced by the system `zip -0` tool, holding the directory `sub/`, the stored file
+     * `sub/nested.txt` ("nested") and the stored file `hello.txt` ("hello zip").
+     */
+    private fun storedArchive() = STORED_ARCHIVE_HEX.hexToByteArray()
+
+    private fun String.hexToByteArray() = ByteArray(length / 2) {
+        ((digit(this[it * 2]) shl 4) or digit(this[it * 2 + 1])).toByte()
+    }
+
+    private fun digit(character: Char) = when (character) {
+        in '0'..'9' -> character - '0'
+        in 'a'..'f' -> character - 'a' + 10
+        else -> throw IllegalArgumentException("Not a hex digit: $character")
+    }
+
+    private companion object {
+        // Offsets inside STORED_ARCHIVE_HEX, read off the archive once and asserted on by the tests above.
+        const val EOCD_OFFSET = 297
+        const val HELLO_CENTRAL_DIRECTORY_OFFSET = 242
+        const val HELLO_DATA_OFFSET = 123
+
+        const val STORED_ARCHIVE_HEX =
+            "504b03040a00000000003b63295d0000000000000000000000000400000073756" +
+                    "22f504b03040a00000000003b63295de9c2c9aa06000000060000000e0000007375622f6e" +
+                    "65737465642e7478746e6573746564504b03040a00000000003b63295d8b7395ac0900000" +
+                    "0090000000900000068656c6c6f2e74787468656c6c6f207a6970504b01021e030a000000" +
+                    "00003b63295d000000000000000000000000040000000000000000001000ed41000000007" +
+                    "375622f504b01021e030a00000000003b63295de9c2c9aa06000000060000000e00000000" +
+                    "00000000000000a481220000007375622f6e65737465642e747874504b01021e030a00000" +
+                    "000003b63295d8b7395ac0900000009000000090000000000000000000000a48154000000" +
+                    "68656c6c6f2e747874504b05060000000003000300a5000000840000000000"
+    }
+}

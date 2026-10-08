@@ -16,11 +16,11 @@ import com.pandulapeter.campfire.data.model.domain.LibraryFiles
 import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.source.local.api.ArchiveLocalSource
 import com.pandulapeter.campfire.data.source.local.implementation.backup.SongbookProBackup
-import com.pandulapeter.campfire.data.source.local.implementation.zip.ZipEntry
-import com.pandulapeter.campfire.data.source.local.implementation.zip.DosTimestamp
-import com.pandulapeter.campfire.data.source.local.implementation.zip.UnreadZipEntry
-import com.pandulapeter.campfire.data.source.local.implementation.zip.ZipReader
-import com.pandulapeter.campfire.data.source.local.implementation.zip.ZipWriter
+import com.pandulapeter.campfire.data.formats.zip.ZipEntry
+import com.pandulapeter.campfire.data.formats.zip.DosTimestamp
+import com.pandulapeter.campfire.data.formats.zip.UnreadZipEntry
+import com.pandulapeter.campfire.data.formats.zip.ZipReader
+import com.pandulapeter.campfire.data.formats.zip.ZipWriter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.time.Clock

@@ -9,28 +9,18 @@
  */
 plugins {
     id("campfire-library")
-    alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.koin.compiler)
 }
 
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            api(project(":data:source:local:api"))
-            implementation(project(":data:formats"))
+            api(project(":data:model"))
             implementation(project(":chordpro"))
-            implementation(libs.koin.annotations)
-            implementation(libs.koin.core)
+            // The extractors give way and rethrow a cancellation on long documents.
             implementation(libs.kotlin.coroutines)
-            implementation(libs.kotlin.datetime)
-            implementation(libs.kotlin.serialization.json)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.coroutines.test)
-        }
-        wasmJsMain.dependencies {
-            // The Origin Private File System is reached through the browser APIs, see FileStorage.wasmJs.kt.
-            implementation(libs.kotlin.browser)
         }
     }
 }
