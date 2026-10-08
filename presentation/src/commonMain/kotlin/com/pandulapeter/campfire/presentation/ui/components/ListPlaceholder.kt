@@ -48,7 +48,6 @@ import com.pandulapeter.campfire.presentation.resources.songs_create_song
 import com.pandulapeter.campfire.presentation.resources.songs_empty_title
 import com.pandulapeter.campfire.presentation.resources.songs_no_search_results
 import com.pandulapeter.campfire.presentation.resources.songs_no_search_results_hint
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -67,7 +66,7 @@ import org.jetbrains.compose.resources.painterResource
 @Composable
 internal fun ListPlaceholder(
     modifier: Modifier = Modifier,
-    placeholder: CampfireViewModel.Placeholder,
+    placeholder: Placeholder,
     onRetry: () -> Unit,
     onNewSong: (() -> Unit)? = null,
     onNewSetlist: (() -> Unit)? = null,
@@ -79,14 +78,14 @@ internal fun ListPlaceholder(
     transitionSpec = { fadeIn() togetherWith fadeOut() },
 ) { currentPlaceholder ->
     when (currentPlaceholder) {
-        CampfireViewModel.Placeholder.LOADING -> Box(
+        Placeholder.LOADING -> Box(
             modifier = Modifier.fillMaxWidth().padding(32.dp),
             contentAlignment = Alignment.Center,
         ) {
             CircularProgressIndicator()
         }
 
-        CampfireViewModel.Placeholder.ERROR -> EmptyState(
+        Placeholder.ERROR -> EmptyState(
             icon = painterResource(Res.drawable.ic_error),
             title = stringResource(Res.string.error_no_data),
             hint = stringResource(Res.string.error_no_data_hint),
@@ -96,7 +95,7 @@ internal fun ListPlaceholder(
         // All three offers stand or fall with onNewSong: they are the three ways of filling a library, and a
         // screen with no business offering any of them - performance mode is on - passes none of them. The demo
         // songs come last of the three: they are the way out for somebody who wants neither of the other two.
-        CampfireViewModel.Placeholder.NO_SONGS -> EmptyState(
+        Placeholder.NO_SONGS -> EmptyState(
             icon = painterResource(Res.drawable.ic_songs),
             title = stringResource(Res.string.songs_empty_title),
             hint = stringResource(Res.string.songs_empty_hint),
@@ -112,7 +111,7 @@ internal fun ListPlaceholder(
         // The same two first offers as an empty library, and the same two as the screen's own "New setlist" menu,
         // which leaves the bar while this is up. There are no demo setlists to add on their own: the one the app is
         // shipped with names demo songs, and it arrives with them from the songs screen.
-        CampfireViewModel.Placeholder.NO_SETLISTS -> EmptyState(
+        Placeholder.NO_SETLISTS -> EmptyState(
             icon = painterResource(Res.drawable.ic_setlists),
             title = stringResource(Res.string.setlists_no_data),
             hint = stringResource(Res.string.setlists_no_data_hint),
@@ -124,25 +123,25 @@ internal fun ListPlaceholder(
             }.orEmpty(),
         )
 
-        CampfireViewModel.Placeholder.ALL_SETLISTS_HIDDEN -> EmptyState(
+        Placeholder.ALL_SETLISTS_HIDDEN -> EmptyState(
             icon = painterResource(Res.drawable.ic_archive),
             title = stringResource(Res.string.setlists_all_hidden),
             hint = stringResource(Res.string.setlists_all_hidden_hint),
         )
 
-        CampfireViewModel.Placeholder.ALL_SONGS_HIDDEN -> EmptyState(
+        Placeholder.ALL_SONGS_HIDDEN -> EmptyState(
             icon = painterResource(Res.drawable.ic_tune),
             title = stringResource(Res.string.songs_all_hidden),
             hint = stringResource(Res.string.songs_all_hidden_hint),
         )
 
-        CampfireViewModel.Placeholder.NO_MATCHING_SONGS -> EmptyState(
+        Placeholder.NO_MATCHING_SONGS -> EmptyState(
             icon = painterResource(Res.drawable.ic_search),
             title = stringResource(Res.string.songs_no_search_results),
             hint = stringResource(Res.string.songs_no_search_results_hint),
         )
 
-        CampfireViewModel.Placeholder.NO_MATCHING_SETLISTS -> EmptyState(
+        Placeholder.NO_MATCHING_SETLISTS -> EmptyState(
             icon = painterResource(Res.drawable.ic_search),
             title = stringResource(Res.string.setlists_no_search_results),
             hint = stringResource(Res.string.setlists_no_search_results_hint),
@@ -156,16 +155,16 @@ internal fun ListPlaceholder(
  * later, and it stays away from the empty state and the error, both of which offer their own buttons for the same
  * thing.
  */
-internal val CampfireViewModel.Placeholder?.allowsNewItemMenu
+internal val Placeholder?.allowsNewItemMenu
     get() = when (this) {
         null,
-        CampfireViewModel.Placeholder.ALL_SONGS_HIDDEN,
-        CampfireViewModel.Placeholder.NO_MATCHING_SONGS,
-        CampfireViewModel.Placeholder.ALL_SETLISTS_HIDDEN,
-        CampfireViewModel.Placeholder.NO_MATCHING_SETLISTS -> true
+        Placeholder.ALL_SONGS_HIDDEN,
+        Placeholder.NO_MATCHING_SONGS,
+        Placeholder.ALL_SETLISTS_HIDDEN,
+        Placeholder.NO_MATCHING_SETLISTS -> true
 
-        CampfireViewModel.Placeholder.LOADING,
-        CampfireViewModel.Placeholder.ERROR,
-        CampfireViewModel.Placeholder.NO_SONGS,
-        CampfireViewModel.Placeholder.NO_SETLISTS -> false
+        Placeholder.LOADING,
+        Placeholder.ERROR,
+        Placeholder.NO_SONGS,
+        Placeholder.NO_SETLISTS -> false
     }

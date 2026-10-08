@@ -82,7 +82,7 @@ import kotlin.math.abs
 @Composable
 internal fun ChordShapesSheet(
     viewModel: CampfireViewModel,
-    dialog: CampfireViewModel.DialogType.ChordShapes,
+    dialog: DialogType.ChordShapes,
 ) {
     val songs by viewModel.allSongs.collectAsStateWithLifecycle()
     val song = songs.firstOrNull { it.fileName == dialog.song.fileName } ?: dialog.song

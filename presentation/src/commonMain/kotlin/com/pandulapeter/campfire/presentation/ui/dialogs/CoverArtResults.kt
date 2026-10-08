@@ -57,7 +57,6 @@ import com.pandulapeter.campfire.presentation.resources.cover_art_search_loading
 import com.pandulapeter.campfire.presentation.resources.cover_art_search_no_results
 import com.pandulapeter.campfire.presentation.resources.ic_check
 import com.pandulapeter.campfire.presentation.resources.retry
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.CoverArt
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
@@ -80,7 +79,7 @@ internal fun CoverArtResults(
     contentPadding: PaddingValues,
     pinFields: Boolean,
     scrollingControls: (@Composable () -> Unit)?,
-    state: CampfireViewModel.CoverArtSearchState,
+    state: CoverArtSearchState,
     unavailableKeys: Set<String>,
     selectedUrl: String?,
     onSelected: (CoverArtCandidate) -> Unit,
@@ -88,7 +87,7 @@ internal fun CoverArtResults(
     onRetry: () -> Unit,
     fields: @Composable () -> Unit,
 ) {
-    val results = (state as? CampfireViewModel.CoverArtSearchState.Active)?.results
+    val results = (state as? CoverArtSearchState.Active)?.results
     val candidates = remember(results, unavailableKeys) { results?.candidates?.filterNot { it.key in unavailableKeys }.orEmpty() }
     val content = when {
         results == null -> ResultsContent.HINT

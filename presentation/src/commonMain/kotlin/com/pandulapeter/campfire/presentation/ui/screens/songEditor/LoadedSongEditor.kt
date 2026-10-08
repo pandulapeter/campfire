@@ -92,6 +92,7 @@ import com.pandulapeter.campfire.presentation.ui.components.overlappingAction
 import com.pandulapeter.campfire.presentation.ui.components.saveShortcut
 import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.TextTranspositionControls
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.coverArtAction
@@ -186,7 +187,7 @@ internal fun LoadedSongEditor(
     var selectedPanes by rememberSaveable(stateSaver = EditorPanes.Saver) { mutableStateOf(EditorPanes.SPLIT) }
     val panes = if (selectedPanes == EditorPanes.SPLIT && !hasRoomForSplitPanes) EditorPanes.EDIT else selectedPanes
     val hasSideBySidePreview = panes == EditorPanes.SPLIT
-    val fontScale = userPreferences?.fontScale ?: CampfireViewModel.DEFAULT_FONT_SCALE
+    val fontScale = userPreferences?.fontScale ?: UserPreferences.DEFAULT_FONT_SCALE
     val chordSpelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
     // The two rows of insertions are taller than what a phone has left for the text once the keyboard is up, so a
     // phone opens the editor with them folded away. The shorter side of the window is what decides that rather than
@@ -337,7 +338,7 @@ internal fun LoadedSongEditor(
                         if (prettified != text.value) textFieldState.replaceWithPrettification(prettified)
                     },
                     canRevert = hasUnsavedChanges && hasSavedText && !isSaving,
-                    onRevert = { viewModel.showDialog(CampfireViewModel.DialogType.RevertChanges) },
+                    onRevert = { viewModel.showDialog(DialogType.RevertChanges) },
                     onOpenChordProReference = { urlOpener(CHORDPRO_REFERENCE_URL) },
                 )
             },

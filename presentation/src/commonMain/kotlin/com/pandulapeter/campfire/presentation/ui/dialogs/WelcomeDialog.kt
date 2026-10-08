@@ -82,7 +82,7 @@ internal fun WelcomeDialog(
                 // Every color in one row, which is as wide as the sheet is ever worth being: the other rows are a line
                 // of text and a choice of three.
                 sheetMaxWidth = THEME_COLOR_CHOICE_WIDTH,
-                onDismiss = { viewModel.dismissSheet(CampfireViewModel.DialogType.Welcome) },
+                onDismiss = { viewModel.dismissSheet(DialogType.Welcome) },
             ) { contentPadding ->
                 WelcomeContent(
                     viewModel = viewModel,

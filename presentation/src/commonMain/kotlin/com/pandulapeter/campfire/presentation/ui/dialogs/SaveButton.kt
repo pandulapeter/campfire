@@ -36,7 +36,7 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.cancel
 import com.pandulapeter.campfire.presentation.resources.ic_save
 import com.pandulapeter.campfire.presentation.resources.print_save
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.print.PdfExportProgress
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -48,7 +48,7 @@ import org.jetbrains.compose.resources.painterResource
 internal fun SaveButton(
     modifier: Modifier,
     isVisible: Boolean,
-    progress: CampfireViewModel.PdfExportProgress?,
+    progress: PdfExportProgress?,
     onSave: () -> Unit,
     onCancel: () -> Unit,
 ) = AnimatedVisibility(isVisible, modifier = modifier, enter = fadeIn() + scaleIn(), exit = fadeOut() + scaleOut()) {

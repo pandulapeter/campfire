@@ -49,6 +49,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_library_storage
 import com.pandulapeter.campfire.presentation.resources.settings_library_summary
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.platform.LibraryPersistence
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.isAppAvailableOffline
@@ -81,7 +82,7 @@ internal fun LibrarySection(
             description = stringResource(Res.string.settings_library_size, formattedSize(summary.size)),
             deleteLabel = stringResource(Res.string.settings_library_delete),
             isEnabled = summary.songCount + summary.setlistCount > 0 && !isImporting && !isPerformanceModeEnabled,
-            onClick = { viewModel.showDialog(CampfireViewModel.DialogType.DeleteLibrary) },
+            onClick = { viewModel.showDialog(DialogType.DeleteLibrary) },
         )
     }
     // Not while there is nothing in it: an empty cache says nothing a library without covers does not.
@@ -91,7 +92,7 @@ internal fun LibrarySection(
             description = stringResource(Res.string.settings_library_size, formattedSize(size)),
             deleteLabel = stringResource(Res.string.settings_library_cover_art_cache_clear),
             isEnabled = !isPerformanceModeEnabled,
-            onClick = { viewModel.showDialog(CampfireViewModel.DialogType.ClearCoverArtCache) },
+            onClick = { viewModel.showDialog(DialogType.ClearCoverArtCache) },
         )
     }
     // Only where the answer is not a foregone conclusion, which is the web: the other three platforms keep the
@@ -132,7 +133,7 @@ internal fun LibrarySection(
         ActionListItem(
             title = stringResource(Res.string.add_demo_songs),
             icon = painterResource(Res.drawable.ic_songs),
-            isEnabled = offer == CampfireViewModel.DemoLibraryOffer.AVAILABLE && !isPerformanceModeEnabled,
+            isEnabled = offer == DemoLibraryOffer.AVAILABLE && !isPerformanceModeEnabled,
             isEmphasized = false,
             onClick = viewModel::importDemoLibrary,
         )

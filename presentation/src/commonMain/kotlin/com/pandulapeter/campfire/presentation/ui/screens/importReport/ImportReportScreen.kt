@@ -54,8 +54,8 @@ import com.pandulapeter.campfire.presentation.resources.import_progress_title
 import com.pandulapeter.campfire.presentation.resources.import_status_stopped
 import com.pandulapeter.campfire.presentation.resources.import_status_title
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel.ImportReport
 import com.pandulapeter.campfire.presentation.ui.components.only
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.ImportProgressContent
 import org.jetbrains.compose.resources.painterResource
 
@@ -175,7 +175,7 @@ internal fun ImportReportScreen(
                 onImport = {
                     val summary = (shown as? ImportReport.Review)?.summary
                     if (summary != null && resolution == ImportConflictResolution.REPLACE) {
-                        viewModel.showDialog(CampfireViewModel.DialogType.ConfirmImportReplace(summary.conflictingFileNames.size))
+                        viewModel.showDialog(DialogType.ConfirmImportReplace(summary.conflictingFileNames.size))
                     } else {
                         viewModel.resolveImport(resolution)
                     }

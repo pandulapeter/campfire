@@ -124,7 +124,7 @@ import kotlinx.datetime.atStartOfDayIn
 @Composable
 internal fun ExportScreen(
     viewModel: CampfireViewModel,
-    dialog: CampfireViewModel.DialogType.Export,
+    dialog: DialogType.Export,
 ) {
     val preferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val initialSettings = preferences?.printSettings ?: return

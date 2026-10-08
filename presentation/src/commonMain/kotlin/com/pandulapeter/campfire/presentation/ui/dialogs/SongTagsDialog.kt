@@ -80,7 +80,7 @@ import org.jetbrains.compose.resources.painterResource
 @Composable
 internal fun SongTagsDialog(
     viewModel: CampfireViewModel,
-    dialog: CampfireViewModel.DialogType.SongTags,
+    dialog: DialogType.SongTags,
 ) {
     val libraryTags by viewModel.tags.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()

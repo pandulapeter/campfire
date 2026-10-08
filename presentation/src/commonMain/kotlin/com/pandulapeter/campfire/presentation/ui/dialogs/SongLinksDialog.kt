@@ -81,7 +81,7 @@ import org.jetbrains.compose.resources.painterResource
 @Composable
 internal fun SongLinksDialog(
     viewModel: CampfireViewModel,
-    dialog: CampfireViewModel.DialogType.SongLinks,
+    dialog: DialogType.SongLinks,
 ) {
     var rows by rememberSaveable(dialog.song.fileName, stateSaver = songLinkRowsSaver) {
         mutableStateOf(dialog.links.ifEmpty { listOf(ChordProLink(url = "")) }.toRows())

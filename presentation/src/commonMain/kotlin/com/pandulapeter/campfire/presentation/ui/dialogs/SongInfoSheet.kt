@@ -49,7 +49,7 @@ import org.jetbrains.compose.resources.painterResource
 @Composable
 internal fun SongInfoSheet(
     viewModel: CampfireViewModel,
-    dialog: CampfireViewModel.DialogType.SongInfo,
+    dialog: DialogType.SongInfo,
     urlOpener: (String) -> Unit,
 ) {
     val songs by viewModel.allSongs.collectAsStateWithLifecycle()

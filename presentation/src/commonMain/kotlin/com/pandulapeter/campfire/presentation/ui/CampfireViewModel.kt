@@ -33,7 +33,6 @@ import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.CoverArtQuery
-import com.pandulapeter.campfire.data.model.domain.CoverArtSearchResults
 import com.pandulapeter.campfire.data.model.domain.ExportedFile
 import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution
 import com.pandulapeter.campfire.data.model.domain.ImportLimits
@@ -54,6 +53,14 @@ import com.pandulapeter.campfire.data.model.domain.SyncState
 import com.pandulapeter.campfire.data.model.domain.PrintSettings
 import com.pandulapeter.campfire.presentation.ui.chords.toChordInstrument
 import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
+import com.pandulapeter.campfire.presentation.ui.components.LabelsOnEverySong
+import com.pandulapeter.campfire.presentation.ui.components.Placeholder
+import com.pandulapeter.campfire.presentation.ui.dialogs.CoverArtSearchState
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
+import com.pandulapeter.campfire.presentation.ui.messages.Message
+import com.pandulapeter.campfire.presentation.ui.playing.Transpositions
+import com.pandulapeter.campfire.presentation.ui.playing.wrapTransposition
+import com.pandulapeter.campfire.presentation.ui.print.PdfExportProgress
 import com.pandulapeter.campfire.presentation.ui.print.PrintSource
 import com.pandulapeter.campfire.presentation.ui.print.PrintSong
 import com.pandulapeter.campfire.presentation.ui.print.printChordsOf
@@ -125,7 +132,6 @@ import com.pandulapeter.campfire.metronome.api.model.BeatLevel
 import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
 import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
 import com.pandulapeter.campfire.metronome.api.model.MetronomeSound
-import com.pandulapeter.campfire.metronome.api.model.MetronomeStopReason
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeContext
 import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
 import com.pandulapeter.campfire.presentation.ui.metronome.TempoKey
@@ -144,15 +150,22 @@ import com.pandulapeter.campfire.presentation.ui.navigation.withoutDisabledFeatu
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.LibraryPersistence
 import com.pandulapeter.campfire.presentation.ui.platform.requestLibraryPersistence
+import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportReport
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.followingLibraryFileNames
+import com.pandulapeter.campfire.presentation.ui.screens.setlists.SetlistWithSongs
+import com.pandulapeter.campfire.presentation.ui.screens.settings.DemoLibraryOffer
+import com.pandulapeter.campfire.presentation.ui.screens.settings.LibrarySummary
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsTab
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.CapoKey
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.Capos
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.FONT_SCALE_STEP
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.FontScaleAccumulator
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.PINCH_SENSITIVITY
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.effectiveCapo
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.hasSongInfo
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.withCapo
+import com.pandulapeter.campfire.presentation.ui.screens.songEditor.EditorTextEdit
+import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroups
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.CoroutineScope
@@ -434,13 +447,13 @@ class CampfireViewModel(
 
     /**
      * Answers the zoom shortcuts the way the browser answers them for a page: [steps] of [FONT_SCALE_STEP] in or out,
-     * or back to [DEFAULT_FONT_SCALE] for null. Answers whether it did, so that everywhere but the song details screen
+     * or back to [UserPreferences.DEFAULT_FONT_SCALE] for null. Answers whether it did, so that everywhere but the song details screen
      * the key is left to whoever else wants it.
      */
     internal fun zoomSongText(steps: Int?): Boolean {
         if (!isSongTextZoomable) return false
         if (steps == null) {
-            setFontScale(DEFAULT_FONT_SCALE)
+            setFontScale(UserPreferences.DEFAULT_FONT_SCALE)
             settleFontScale()
         } else {
             adjustFontScale(steps)
@@ -1106,7 +1119,7 @@ class CampfireViewModel(
      * The text size multiplier of the song details screen. A pinch gesture changes it on every frame, so the latest
      * value is kept here and only written to the user preferences once the changes have settled.
      */
-    private val liveFontScale = mutableFloatStateOf(DEFAULT_FONT_SCALE)
+    private val liveFontScale = mutableFloatStateOf(UserPreferences.DEFAULT_FONT_SCALE)
 
     /**
      * Snapshot state rather than a flow, so that it is read where the text is laid out: a pinch changes it on every
@@ -1129,7 +1142,7 @@ class CampfireViewModel(
     private val _pendingPrintSettings = MutableStateFlow<PrintSettings?>(null)
     val pendingPrintSettings = _pendingPrintSettings.asStateFlow()
 
-    private val settledFontScaleState = mutableFloatStateOf(DEFAULT_FONT_SCALE)
+    private val settledFontScaleState = mutableFloatStateOf(UserPreferences.DEFAULT_FONT_SCALE)
 
     /**
      * [fontScale] once it has held still for a moment: what the songs that are not on screen are laid out at, so that a
@@ -1369,17 +1382,17 @@ class CampfireViewModel(
             }
         }
         viewModelScope.launch {
-            unsavedFontScale.filterNotNull().debounce(FONT_SCALE_SAVE_DELAY_MILLIS).collect { fontScale ->
+            unsavedFontScale.filterNotNull().debounce(PREFERENCE_WRITE_DEBOUNCE_MILLIS).collect { fontScale ->
                 updateUserPreferences { it.copy(fontScale = fontScale) }
                 // Only if nothing newer arrived while this one was being saved, or that one would never be.
                 unsavedFontScale.compareAndSet(fontScale, null)
             }
         }
         viewModelScope.launch {
-            _pendingPrintSettings.filterNotNull().debounce(FONT_SCALE_SAVE_DELAY_MILLIS).collect { savePrintSettings(it) }
+            _pendingPrintSettings.filterNotNull().debounce(PREFERENCE_WRITE_DEBOUNCE_MILLIS).collect { savePrintSettings(it) }
         }
         viewModelScope.launch {
-            _pendingMetronomeSettings.filterNotNull().debounce(FONT_SCALE_SAVE_DELAY_MILLIS).collect { settings ->
+            _pendingMetronomeSettings.filterNotNull().debounce(PREFERENCE_WRITE_DEBOUNCE_MILLIS).collect { settings ->
                 updateUserPreferences { it.copy(metronomeSettings = settings) }
                 // Only if nothing newer arrived while this one was being saved, or that one would never be.
                 _pendingMetronomeSettings.compareAndSet(settings, null)
@@ -2701,7 +2714,7 @@ class CampfireViewModel(
         pendingTempos.update { it + (key to PendingTempo(bpm = override)) }
         tempoWriteJobs.remove(key)?.cancel()
         tempoWriteJobs[key] = viewModelScope.launch {
-            delay(FONT_SCALE_SAVE_DELAY_MILLIS)
+            delay(PREFERENCE_WRITE_DEBOUNCE_MILLIS)
             tempoWriteJobs.remove(key)
             writeTempo(key, override)
         }
@@ -2773,7 +2786,7 @@ class CampfireViewModel(
         pendingCapos.update { it + (key to PendingCapo(fret = override)) }
         capoWriteJobs.remove(key)?.cancel()
         capoWriteJobs[key] = viewModelScope.launch {
-            delay(FONT_SCALE_SAVE_DELAY_MILLIS)
+            delay(PREFERENCE_WRITE_DEBOUNCE_MILLIS)
             capoWriteJobs.remove(key)
             writeCapo(key, override)
         }
@@ -3855,7 +3868,7 @@ class CampfireViewModel(
      * and an equal value is one the snapshot state ignores, so those frames lay nothing out again.
      */
     fun setFontScale(value: Float) {
-        val clamped = (value.coerceIn(MIN_FONT_SCALE, MAX_FONT_SCALE) * 100).roundToInt() / 100f
+        val clamped = (value.coerceIn(UserPreferences.MIN_FONT_SCALE, UserPreferences.MAX_FONT_SCALE) * 100).roundToInt() / 100f
         if (clamped == liveFontScale.floatValue) return
         liveFontScale.floatValue = clamped
         unsavedFontScale.value = clamped
@@ -4238,85 +4251,8 @@ class CampfireViewModel(
         val selectedLanguages: List<String>,
     )
 
-    /** One change of [editorTextEdits]: [edit] applied to the text the editor of [fileName] holds when it arrives. */
-    class EditorTextEdit(val fileName: String, val edit: (String) -> String)
-
     /** [text] is [fileText] as an editor showing [notation] shows it, see [editorTextOf]. */
     private class EditorText(val fileText: String, val notation: UserPreferences.Notation, val text: String)
-
-    /** What the cover search sheet shows under its fields, see [coverArtSearch]. */
-    sealed interface CoverArtSearchState {
-
-        /** Nothing has been asked yet, or there is nothing to ask by. */
-        data object Idle : CoverArtSearchState
-
-        /** A search that was asked, running or answered, see [CoverArtSearchResults]. */
-        data class Active(val query: CoverArtQuery, val results: CoverArtSearchResults) : CoverArtSearchState
-    }
-
-    /** What [CampfireDestination.ImportReport] shows, see [importReport]. */
-    sealed interface ImportReport {
-
-        /** Names the library has given to other files, and the question of what to do about them, see [resolveImport]. */
-        data class Review(val summary: ImportPlan.Summary) : ImportReport
-
-        /** The answer being carried out, with [importProgress] saying how far. */
-        data object Importing : ImportReport
-
-        /** What the import came to; null for one that failed before it could say. */
-        data class Finished(val result: ImportResult?) : ImportReport
-    }
-
-    /** Something that has happened and is worth one line of text at the bottom of the screen. */
-    sealed interface Message {
-        /**
-         * @param hasDetails Whether the snackbar offers the import screen, for an outcome that needed none but has
-         *   more to it than the counts fit into one line: a batch of more than one file, or one whose screen was left
-         *   while it was being written.
-         */
-        data class ImportFinished(val result: ImportResult, val hasDetails: Boolean) : Message
-
-        data object ImportFailed : Message
-        data object ExportFailed : Message
-        data object PdfSaved : Message
-        data object SongExported : Message
-        data object SetlistExported : Message
-        data object LibraryExported : Message
-
-        /** An archive that was saved, but that the import would refuse for its size. */
-        data object ExportTooLargeToImport : Message
-
-        /** An archive that was saved without the files it names: they could not be read, so they are not in it. */
-        data class ExportSkippedFiles(val fileNames: List<String>) : Message
-        data object SaveFailed : Message
-
-        /** The file of the song in the editor is no longer there; the editor's text is, and saving writes it back. */
-        data object EditedSongFileGone : Message
-
-        /** A long document's unsaved text did not survive the process being killed in the background. */
-        data object EditorDraftLost : Message
-
-        /** The editor was reopened on the unsaved text a previous run left when it ended in the background. */
-        data object EditorDraftRestored : Message
-
-        /** A change to the library (a new setlist, a deleted song, a moved entry) that could not be written. */
-        data object OperationFailed : Message
-
-        /** The song's file was renamed, but a setlist or its saved transposition still names the old file. */
-        data object SongFileRenamedPartly : Message
-
-        /** The song's file was deleted, but a setlist or its saved transposition still names it. */
-        data object SongDeletedPartly : Message
-
-        /** A link nothing on this machine would open. The address is shown, since reading it is all that is left. */
-        data class LinkNotOpened(val url: String) : Message
-
-        /** The click stopped, or did not start, without being asked to. */
-        data class MetronomeStopped(val reason: MetronomeStopReason) : Message
-
-        /** A click that could not sound was stopped as the app left the front, see [onAppStopped]. */
-        data object SilentMetronomeStopped : Message
-    }
 
     /**
      * A tempo override set on this device. [bpm] null removes the override.
@@ -4334,31 +4270,6 @@ class CampfireViewModel(
         val isWritten: Boolean = false,
     )
 
-    /** The settings screen's offer to add the demo library, see [demoLibraryOffer]. */
-    enum class DemoLibraryOffer {
-        AVAILABLE,
-
-        /** Shown, but not to be taken while an import is running, this one included. */
-        UNAVAILABLE,
-    }
-
-    /** What a list without content has in its place. */
-    enum class Placeholder {
-        LOADING,
-        ERROR,
-        NO_SONGS,
-        NO_SETLISTS,
-
-        /** The library has songs, but every one of them is filtered out. */
-        ALL_SONGS_HIDDEN,
-
-        /** There are setlists, but every one of them is archived and the screen is not showing those. */
-        ALL_SETLISTS_HIDDEN,
-
-        NO_MATCHING_SONGS,
-        NO_MATCHING_SETLISTS,
-    }
-
     /**
      * What an empty list has in its place: it is only an error once the load that would have filled it has actually
      * failed, and only [whenEmpty] once a load has finished - until then it is still loading, and saying anything
@@ -4374,17 +4285,6 @@ class CampfireViewModel(
         this is DataState.Failure -> Placeholder.ERROR
         else -> whenEmpty
     }
-
-    /**
-     * The counts the settings screen shows for the library, only once there is a library to count.
-     *
-     * @param size The bytes the song and setlist files that were counted take up on disk.
-     */
-    data class LibrarySummary(
-        val songCount: Int,
-        val setlistCount: Int,
-        val size: Long,
-    )
 
     /** @param filterKey The filter and the preferences [filtered] was built for, see [SongGroups]. */
     private data class IndexedSongInput(
@@ -4403,196 +4303,9 @@ class CampfireViewModel(
         val sorted: List<Song>,
     )
 
-    /**
-     * What every song in the library is filed under, see [labelsOnEverySong]. The tags are lowercase, so a song's own
-     * has to be folded before it is looked up here.
-     */
-    data class LabelsOnEverySong(
-        val tags: Set<String> = emptySet(),
-        val languages: Set<String> = emptySet(),
-    )
-
-    /**
-     * The song list with the filter, the sort and the query it was built for: two equal lists for two filters are two
-     * values. The song list scrolls by [filterKey] and keeps a tapped row in place once the list built for it arrives,
-     * and with the key read from anywhere else a filter that left every song where it was would never deliver that
-     * list, leaving the row to be put back in place by whatever changed the list next.
-     */
-    data class SongGroups(
-        val filterKey: String,
-        val groups: List<SongGroup>,
-    )
-
-    /** @param header Null for the results of a search, which are ranked rather than filed under anything. */
-    data class SongGroup(
-        val header: SongSection.Header?,
-        val songs: List<Song>,
-    )
-
-    /** How many of the [total] pages of a PDF have been drawn, see [pdfExportProgress]. */
-    data class PdfExportProgress(
-        val done: Int,
-        val total: Int,
-    )
-
-    /**
-     * The transposition of every song the UI can currently show, from both places one can be stored. Looked up by
-     * how the song was opened rather than by a composite key, so callers cannot accidentally mix the two up.
-     */
-    data class Transpositions(
-        private val library: Map<String, Int> = emptyMap(),
-        private val bySetlist: Map<String, Map<String, Int>> = emptyMap(),
-    ) {
-
-        /** Wrapped on the way out too, since a file or a preferences document may hold any amount (see [wrapTransposition]). */
-        operator fun get(songFileName: String, setlistFileName: String?): Int = wrapTransposition(
-            if (setlistFileName == null) {
-                library[songFileName] ?: 0
-            } else {
-                bySetlist[setlistFileName]?.get(songFileName) ?: 0
-            }
-        )
-    }
-
-    /**
-     * One setlist as a list shows it: every entry it has, since a setlist is read as the list somebody wrote down
-     * rather than as a view of the library. An entry whose file is not in the library any more (deleted from
-     * outside the app) is kept as [Entry.Missing] rather than dropped, so that the user can see it and remove it.
-     */
-    data class SetlistWithSongs(
-        val setlist: Setlist,
-        val entries: List<Entry>,
-    ) {
-
-        /** The songs that can actually be opened, which is what the pager of the song details screen gets. */
-        val songs get() = entries.mapNotNull { (it as? Entry.Present)?.song }
-
-        sealed interface Entry {
-
-            /** The entry's place in the setlist, which is the number its row carries. */
-            val index: Int
-
-            val songFileName: String
-
-            data class Present(override val index: Int, val song: Song) : Entry {
-                override val songFileName get() = song.fileName
-            }
-
-            data class Missing(override val index: Int, override val songFileName: String) : Entry
-        }
-    }
-
-    sealed interface DialogType {
-        data class Export(val song: Song? = null, val setlist: Setlist? = null, val songSetlistFileName: String? = null) : DialogType
-        data object NewSetlist : DialogType
-        data object NewSong : DialogType
-        data object SongFilters : DialogType
-        /**
-         * Every setlist with a box each, which is how a song is both put into one and taken out of another.
-         * [setlistFileName] is the setlist the song is being read through, if any, whose box is shown but cannot be
-         * changed: the song is taken out of a setlist from the setlist's own row, not from the screen reading it there.
-         */
-        data class SetlistPicker(val song: Song, val setlistFileName: String? = null) : DialogType
-        /**
-         * Every song of the library with a box each, which is how a setlist is filled from its own side rather than
-         * one song at a time from the menu of each. [setlist] is the setlist the sheet was opened on, and only stands
-         * in for the one in [setlists] until the library has caught up with it, which a setlist created a moment ago
-         * may not have.
-         */
-        data class SongPicker(val setlist: Setlist) : DialogType
-        data class DeleteSetlist(val setlist: Setlist) : DialogType
-        data class RemoveSongFromSetlist(val songFileName: String, val songTitle: String, val setlistFileName: String) : DialogType
-        data class EditSetlist(val setlist: Setlist) : DialogType
-        data class DuplicateSetlist(val setlist: Setlist) : DialogType
-        data class DeleteSong(val song: Song) : DialogType
-        /**
-         * What a song says about itself beyond how it is played, opened from the song details app bar. It reads the
-         * song's text as it is now rather than a snapshot, so that what its buttons edit is there when it is opened
-         * again.
-         */
-        data class SongInfo(val song: Song) : DialogType
-        /**
-         * The chords of a song and the other ways each can be played, opened from the header of its Chords section,
-         * which reads the song as the page plays it - in the setlist it was opened from, if any - and its text as it
-         * is now.
-         */
-        data class ChordShapes(val song: Song, val setlistFileName: String?) : DialogType
-        /**
-         * Opened from the song details overflow menu, and offers the song's own tags and
-         * the rest of the library's.
-         */
-        data class SongTags(override val song: Song, override val isEditorDraft: Boolean = false) : SongEdit
-        /** A snapshot of what the song says for each field the overflow menu's metadata editor offers, blank for nothing. */
-        data class SongMetadata(override val song: Song, val values: Map<ChordProMetadataFields.Field, String>, override val isEditorDraft: Boolean = false) : SongEdit
-        /** A snapshot of the links offered by the overflow menu's link editor. */
-        data class SongLinks(override val song: Song, val links: List<ChordProLink>, override val isEditorDraft: Boolean = false) : SongEdit
-        /** Opened from the same menu, and asking about every language at once rather than one at a time. */
-        data class SongLanguages(override val song: Song, override val isEditorDraft: Boolean = false) : SongEdit
-
-        /**
-         * What the song's file declares for the four values it is played by, opened from the song details editing
-         * menu or from the editor's: a snapshot of each as the sheet offers it, blank for nothing (see
-         * [showSongPlayingDialog]). [setlistFileName] is the setlist the song is read through, whose overrides the
-         * sheet names, or null for the library's on this device, and always null for the editor's draft.
-         */
-        data class SongPlaying(
-            override val song: Song,
-            val setlistFileName: String?,
-            override val isEditorDraft: Boolean = false,
-            val values: Map<ChordProMetadataFields.Field, String>,
-        ) : SongEdit
-        /** The records the song may have come out on, whose front cover can be made the song's, see [searchCoverArt]. */
-        data class CoverArtSearch(override val song: Song, override val isEditorDraft: Boolean = false) : SongEdit
-        /** Removing a cover rewrites the file, so the cover art sheet asks before doing it. */
-        data class RemoveSongCoverArt(override val song: Song, override val isEditorDraft: Boolean = false) : SongEdit
-
-        /**
-         * A dialog that edits the metadata of one song, opened from the song details overflow menu or from the editor's.
-         * Opened from the editor, it changes the text being typed there rather than the file (see [editorTextEdits]),
-         * since nothing but Save writes the file the editor is open on.
-         */
-        sealed interface SongEdit : DialogType {
-            val song: Song
-            val isEditorDraft: Boolean
-        }
-        /**
-         * Asked before the connected account is forgotten. Nothing is deleted either way, but reconnecting means
-         * going through the consent page again, which is not something to end up in by mistapping a list row.
-         */
-        data class DisconnectSync(val accountName: String) : DialogType
-        /** Asked before the copies of the covers are deleted, which costs a download of each one shown again. */
-        data object ClearCoverArtCache : DialogType
-        /**
-         * Asked before every song and setlist is deleted, and answered by typing a word rather than by a tap, since it
-         * is the one thing in the app that loses the user's own work wholesale.
-         */
-        data object DeleteLibrary : DialogType
-        /** Asked before the editor is left with something in it that has not been written yet, see [navigateBack]. */
-        data object UnsavedChanges : DialogType
-        /** Asked before a key that otherwise only goes back closes the application, see [confirmExit]. */
-        data object ConfirmExit : DialogType
-
-        /**
-         * Asked over the import screen before its answer overwrites [count] files of the library, which is the one
-         * answer to its question that cannot be taken back.
-         */
-        data class ConfirmImportReplace(val count: Int) : DialogType
-        /** Asked before the editor throws away everything typed since the last save, see [revertEditorChanges]. */
-        data object RevertChanges : DialogType
-
-        /** Shown once, over the first run of an installation, see [showWelcomeOnFirstRun]. */
-        data object Welcome : DialogType
-        /** The current version's introduction, shown once after the first installed version. */
-        data object WhatsNew : DialogType
-    }
-
     companion object {
-        const val DEFAULT_FONT_SCALE = UserPreferences.DEFAULT_FONT_SCALE
-        const val MIN_FONT_SCALE = UserPreferences.MIN_FONT_SCALE
-        const val MAX_FONT_SCALE = UserPreferences.MAX_FONT_SCALE
-        const val FONT_SCALE_STEP = 0.1f
         private const val FONT_SCALE_STEP_TOLERANCE = 0.01f // Floating point slack, so that 1.1000001 still counts as step 11.
-        private const val FONT_SCALE_SAVE_DELAY_MILLIS = 500L
+        private const val PREFERENCE_WRITE_DEBOUNCE_MILLIS = 500L
         private const val FONT_SCALE_SETTLE_MILLIS = 200L
         private const val SONG_EDIT_ATTEMPTS = 2
         private const val SILENT_CLICK_GRACE_MILLIS = 3_000L
@@ -4615,13 +4328,5 @@ class CampfireViewModel(
 
         /** Long enough for a few hundred songs to be written; only a stalled disk reaches it. */
         private val EXIT_IMPORT_GRACE = 30.seconds
-        private const val SEMITONES_PER_OCTAVE = 12
-
-        /**
-         * [semitones] as the one amount between -5 and +6 that moves the chords to the same names: twelve semitones up
-         * or down is the same song, so +7 reads as -5 and -6 as +6, the stepper steps around the octave rather than into
-         * an end, and a label never claims more than half an octave either way.
-         */
-        fun wrapTransposition(semitones: Int) = (semitones + 5).mod(SEMITONES_PER_OCTAVE) - 5
     }
 }

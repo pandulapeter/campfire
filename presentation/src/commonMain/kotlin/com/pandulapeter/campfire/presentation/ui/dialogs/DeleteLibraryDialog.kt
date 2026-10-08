@@ -46,6 +46,7 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.rememberClearTextButton
 import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
+import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportReport
 
 /**
  * The one confirmation that is typed rather than tapped: every song and setlist on the device goes with it, and a
@@ -68,7 +69,7 @@ internal fun DeleteLibraryDialog(
     val isConfirmed = value.text.trim() == DELETE_LIBRARY_CONFIRMATION
     // Files dropped or opened with the app while the sheet is up are imported against the library it would delete, so
     // Delete waits, greyed, until that import and its question are over.
-    val canDelete = isConfirmed && !isImporting && importReport !is CampfireViewModel.ImportReport.Review
+    val canDelete = isConfirmed && !isImporting && importReport !is ImportReport.Review
     val focusRequester = rememberFirstFieldFocusRequester()
     val keyboardController = LocalSoftwareKeyboardController.current
     val scrollState = rememberScrollState()
@@ -80,7 +81,7 @@ internal fun DeleteLibraryDialog(
         }
     }
     TextFieldBottomSheet(
-        onDismissRequest = { viewModel.dismissSheet(CampfireViewModel.DialogType.DeleteLibrary) },
+        onDismissRequest = { viewModel.dismissSheet(DialogType.DeleteLibrary) },
         title = stringResource(Res.string.settings_library_delete),
         text = { contentPadding ->
             val closeSheet = { close() }

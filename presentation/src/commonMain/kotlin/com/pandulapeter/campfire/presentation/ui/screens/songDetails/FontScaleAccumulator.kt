@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import kotlin.math.abs
 
 /**
@@ -30,7 +30,7 @@ internal class FontScaleAccumulator {
     /** Applies [change] to the scale the changes so far have arrived at, or to [current] if that is not it any more. */
     fun next(current: Float, change: (Float) -> Float): Float {
         val base = unrounded?.takeIf { abs(it - current) <= ROUNDING_TOLERANCE } ?: current
-        return change(base).coerceIn(CampfireViewModel.MIN_FONT_SCALE, CampfireViewModel.MAX_FONT_SCALE).also { unrounded = it }
+        return change(base).coerceIn(UserPreferences.MIN_FONT_SCALE, UserPreferences.MAX_FONT_SCALE).also { unrounded = it }
     }
 }
 

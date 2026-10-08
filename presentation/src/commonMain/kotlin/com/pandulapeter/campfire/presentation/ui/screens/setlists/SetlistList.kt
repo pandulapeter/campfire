@@ -98,6 +98,7 @@ import com.pandulapeter.campfire.presentation.ui.components.rememberHasLoadedLib
 import com.pandulapeter.campfire.presentation.ui.components.rememberSectionHeaderState
 import com.pandulapeter.campfire.presentation.ui.components.songCardPadding
 import com.pandulapeter.campfire.presentation.ui.components.sectionHeaderBottomGap
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.metronome.effectiveTempo
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.effectiveCapo
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
@@ -304,7 +305,7 @@ internal fun SetlistList(
                         placeholder = placeholder,
                         onRetry = viewModel::refresh,
                         onNewSetlist = if (isPerformanceModeEnabled) null else {
-                            { viewModel.showDialog(CampfireViewModel.DialogType.NewSetlist) }
+                            { viewModel.showDialog(DialogType.NewSetlist) }
                         },
                         onImport = if (isPerformanceModeEnabled) null else {
                             { viewModel.importFiles(filePicker) }
@@ -439,7 +440,7 @@ internal fun SetlistList(
                         // screen, and above the branch below so that reorder mode starting or ending does not work it
                         // out again: the row is composed again as every scroll starts and ends, and it is a whole
                         // transposition to work out.
-                        val renderedKey = (entry as? CampfireViewModel.SetlistWithSongs.Entry.Present)?.let { present ->
+                        val renderedKey = (entry as? SetlistWithSongs.Entry.Present)?.let { present ->
                             val transposition = transpositions[present.song.fileName, setlistWithSongs.setlist.fileName]
                             val capo = effectiveCapo(song = present.song, setlistFileName = setlistWithSongs.setlist.fileName, capos = capos).fret
                             remember(present.song.key, present.song.transpose, transposition, capo, chordSpelling) {
@@ -478,7 +479,7 @@ internal fun SetlistList(
                             } else {
                                 {
                                     AnimatedVisibility(
-                                        visible = !setlistWithSongs.setlist.isArchived || entry is CampfireViewModel.SetlistWithSongs.Entry.Present,
+                                        visible = !setlistWithSongs.setlist.isArchived || entry is SetlistWithSongs.Entry.Present,
                                         enter = fadeIn() + expandHorizontally(),
                                         exit = fadeOut() + shrinkHorizontally(),
                                     ) {
@@ -513,7 +514,7 @@ internal fun SetlistList(
                                 }
                             }
                             when (entry) {
-                                is CampfireViewModel.SetlistWithSongs.Entry.Present -> {
+                                is SetlistWithSongs.Entry.Present -> {
                                     val setlistFileName = setlistWithSongs.setlist.fileName
                                     SongListItem(
                                         modifier = cardModifier,
@@ -540,7 +541,7 @@ internal fun SetlistList(
                                 }
 
                                 // Nothing to open, but it still takes its place in the order and can be removed.
-                                is CampfireViewModel.SetlistWithSongs.Entry.Missing -> MissingSongListItem(
+                                is SetlistWithSongs.Entry.Missing -> MissingSongListItem(
                                     modifier = cardModifier,
                                     index = row.index,
                                     songFileName = entry.songFileName,
@@ -584,7 +585,7 @@ internal fun SetlistList(
                                     modifier = Modifier.fadingUnderListTop(topFade),
                                     title = stringResource(Res.string.setlists_choose_songs),
                                     icon = painterResource(Res.drawable.ic_add),
-                                    onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SongPicker(setlistWithSongs.setlist)) },
+                                    onClick = { viewModel.showDialog(DialogType.SongPicker(setlistWithSongs.setlist)) },
                                 )
                             }
                         }
@@ -647,7 +648,7 @@ private val DESCRIPTION_TOP_PADDING = 8.dp
  * The index the grid holds a setlist's header at, counted the way [SetlistList] emits the items of the setlists before
  * it while performance mode is off, which it is whenever a setlist is being reordered.
  */
-private fun List<CampfireViewModel.SetlistWithSongs>.headerIndexOf(setlistFileName: String?): Int? {
+private fun List<SetlistWithSongs>.headerIndexOf(setlistFileName: String?): Int? {
     var index = 0
     forEach { setlistWithSongs ->
         if (setlistWithSongs.setlist.fileName == setlistFileName) return index

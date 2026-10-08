@@ -57,13 +57,13 @@ internal fun ExportHost(
     transition: ExportTransition,
 ) {
     val visibleDialog by viewModel.visibleDialog.collectAsStateWithLifecycle()
-    val target = visibleDialog as? CampfireViewModel.DialogType.Export
+    val target = visibleDialog as? DialogType.Export
     // The export on screen, which outlives the dialog for as long as the screen takes to slide away. One export
     // replacing another is the same screen with what it reads starting over, not a second one sliding in.
-    var shown by remember { mutableStateOf<CampfireViewModel.DialogType.Export?>(null) }
+    var shown by remember { mutableStateOf<DialogType.Export?>(null) }
     // The export a back gesture has just closed: the gesture ends a moment before the dialog does, and the screen
     // slides on away from wherever the finger left it rather than starting back towards the open position first.
-    var closedByGesture by remember { mutableStateOf<CampfireViewModel.DialogType.Export?>(null) }
+    var closedByGesture by remember { mutableStateOf<DialogType.Export?>(null) }
     val backGesture = rememberNavigationEventState(currentInfo = NavigationEventInfo.None)
     // Composed after the app, so that the dispatcher reaches this handler before the back stack's, and registered
     // whether or not the screen is up, since a handler that comes and goes changes the order the dispatcher picks in.
@@ -82,7 +82,7 @@ internal fun ExportHost(
                 ?.takeIf { it.direction == NavigationEventTransitionState.TRANSITIONING_BACK }
                 ?.latestEvent
                 ?.progress
-            (visibleDialog as? CampfireViewModel.DialogType.Export)?.takeIf { it !== closedByGesture } to gestureProgress
+            (visibleDialog as? DialogType.Export)?.takeIf { it !== closedByGesture } to gestureProgress
         }.collectLatest { (open, gestureProgress) ->
             when {
                 open == null -> {

@@ -38,7 +38,7 @@ import org.jetbrains.compose.resources.painterResource
 internal fun PushedSetlistHeader(
     viewModel: CampfireViewModel,
     listState: LazyGridState,
-    setlistsWithSongs: List<CampfireViewModel.SetlistWithSongs>,
+    setlistsWithSongs: List<SetlistWithSongs>,
     endPadding: Dp,
     isPerformanceModeEnabled: Boolean,
     reorderingSetlistFileName: String?,

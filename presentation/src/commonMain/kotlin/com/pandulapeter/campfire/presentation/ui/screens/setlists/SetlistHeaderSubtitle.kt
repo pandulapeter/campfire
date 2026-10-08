@@ -22,7 +22,6 @@ import com.pandulapeter.campfire.presentation.resources.setlists_countdown_yeste
 import com.pandulapeter.campfire.presentation.resources.setlists_header_subtitle
 import com.pandulapeter.campfire.presentation.resources.setlists_total_duration
 import com.pandulapeter.campfire.presentation.resources.setlists_total_duration_minimum
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.RelativeDay
 import com.pandulapeter.campfire.presentation.ui.components.relativeDay
 import com.pandulapeter.campfire.presentation.localization.pluralStringResource
@@ -34,7 +33,7 @@ import kotlinx.datetime.LocalDate
  * take to play, where any of them says, with a `+` where some do not ([SetlistTotalDuration.isMinimum]).
  */
 @Composable
-internal fun CampfireViewModel.SetlistWithSongs.headerSubtitle(today: LocalDate): String? {
+internal fun SetlistWithSongs.headerSubtitle(today: LocalDate): String? {
     val countdown = setlist.countdownText(today)
     val duration = remember(entries) { totalDuration }?.let { duration ->
         val total = ChordProDuration.format(duration.total)

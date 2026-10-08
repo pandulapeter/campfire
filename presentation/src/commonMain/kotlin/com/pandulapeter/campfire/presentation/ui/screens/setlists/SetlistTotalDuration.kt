@@ -9,7 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.setlists
 
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import kotlin.time.Duration
 
 /**
@@ -25,5 +24,5 @@ internal fun setlistTotalDuration(durations: List<Duration?>): SetlistTotalDurat
     return SetlistTotalDuration(total = known.fold(Duration.ZERO, Duration::plus), isMinimum = known.size < durations.size)
 }
 
-internal val CampfireViewModel.SetlistWithSongs.totalDuration
-    get() = setlistTotalDuration(entries.map { (it as? CampfireViewModel.SetlistWithSongs.Entry.Present)?.song?.duration })
+internal val SetlistWithSongs.totalDuration
+    get() = setlistTotalDuration(entries.map { (it as? SetlistWithSongs.Entry.Present)?.song?.duration })

@@ -51,7 +51,6 @@ import com.pandulapeter.campfire.presentation.resources.ic_dot
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo
 import com.pandulapeter.campfire.presentation.resources.songs_key
 import com.pandulapeter.campfire.presentation.resources.songs_lyrics_only
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 import org.jetbrains.compose.resources.painterResource
 import kotlin.time.Duration
@@ -96,7 +95,7 @@ internal fun SongListItem(
     tempo: Int? = null,
     shouldShowChords: Boolean = true,
     duration: Duration? = null,
-    labelsOnEverySong: CampfireViewModel.LabelsOnEverySong,
+    labelsOnEverySong: LabelsOnEverySong,
     shouldShowLabels: Boolean = true,
     songFilter: SongFilter = SongFilter(),
     onTagClicked: ((String) -> Unit)? = null,

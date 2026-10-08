@@ -22,8 +22,10 @@ import com.pandulapeter.campfire.domain.api.models.SongSection
 import com.pandulapeter.campfire.presentation.localization.StringsDefault
 import com.pandulapeter.campfire.presentation.localization.StringsHu
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsTab
+import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroups
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
@@ -110,7 +112,7 @@ internal open class PrepareScope(
     }
 
     /** Waits until the song list the Songs screen would show answers [predicate], which the view model works out off the main thread. */
-    suspend fun awaitSongGroups(predicate: (CampfireViewModel.SongGroups) -> Boolean): CampfireViewModel.SongGroups {
+    suspend fun awaitSongGroups(predicate: (SongGroups) -> Boolean): SongGroups {
         withTimeoutOrNull(WAIT_TIMEOUT_MILLIS) {
             while (!predicate(viewModel.songGroups.value)) settle(FRAME_MILLIS)
         } ?: error("The song list never became what the shot waits for.")
@@ -243,7 +245,7 @@ internal val shots = listOf(
                 "printSettings" to printSettings(isLandscape = device != Device.ANDROID_SMALL_TABLET),
             )
         },
-        drive = { viewModel.showDialog(CampfireViewModel.DialogType.Export(song = song(HOME_ON_THE_RANGE))) },
+        drive = { viewModel.showDialog(DialogType.Export(song = song(HOME_ON_THE_RANGE))) },
     ),
     // Sync and the library: Settings' Library tab, the Dropbox account connected and synchronized a few minutes ago,
     // what the library holds, the covers it keeps and the ways in and out of it.

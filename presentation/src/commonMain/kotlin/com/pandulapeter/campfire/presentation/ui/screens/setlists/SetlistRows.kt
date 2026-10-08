@@ -18,7 +18,7 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
  * already occupied, the numbers do not change again when [CampfireViewModel.reorderSetlist] writes the same
  * dealing out to the file.
  */
-private fun CampfireViewModel.SetlistWithSongs.rows(dragOrder: List<String>?): List<SetlistRow> {
+private fun SetlistWithSongs.rows(dragOrder: List<String>?): List<SetlistRow> {
     val songFileNames = dragOrder ?: return entries.map { SetlistRow(entry = it, index = it.index) }
     val entriesBySongFileName = entries.associateBy { it.songFileName }
     return songFileNames.mapIndexedNotNull { position, songFileName ->
@@ -32,11 +32,11 @@ private fun CampfireViewModel.SetlistWithSongs.rows(dragOrder: List<String>?): L
 internal class SetlistRowsCache {
     private val cached = mutableMapOf<String, CachedRows>()
 
-    fun retainOnly(setlists: List<CampfireViewModel.SetlistWithSongs>) {
+    fun retainOnly(setlists: List<SetlistWithSongs>) {
         cached.keys.retainAll(setlists.mapTo(mutableSetOf()) { it.setlist.fileName })
     }
 
-    fun rowsFor(setlist: CampfireViewModel.SetlistWithSongs, draggedSetlist: DraggedSetlist?): SetlistRows {
+    fun rowsFor(setlist: SetlistWithSongs, draggedSetlist: DraggedSetlist?): SetlistRows {
         val dragOrder = draggedSetlist?.takeIf { it.setlistFileName == setlist.setlist.fileName }?.songFileNames
         val previous = cached[setlist.setlist.fileName]
         if (previous != null && previous.setlist === setlist && previous.dragOrder == dragOrder) return previous.rows
@@ -48,7 +48,7 @@ internal class SetlistRowsCache {
     }
 
     private class CachedRows(
-        val setlist: CampfireViewModel.SetlistWithSongs,
+        val setlist: SetlistWithSongs,
         val dragOrder: List<String>?,
         val rows: SetlistRows,
     )
@@ -61,7 +61,7 @@ internal class SetlistRows(
 
 /** One row of a setlist as it is drawn: the entry, and the place it sits in right now. */
 internal data class SetlistRow(
-    val entry: CampfireViewModel.SetlistWithSongs.Entry,
+    val entry: SetlistWithSongs.Entry,
     val index: Int,
 )
 

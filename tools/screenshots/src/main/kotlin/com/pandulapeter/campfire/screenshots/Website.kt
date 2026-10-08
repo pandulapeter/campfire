@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.screenshots
 
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
@@ -68,7 +68,7 @@ internal val websiteShots: List<Triple<String, Device, Shot>> by lazy {
                 id = "tablet-export",
                 uiMode = UserPreferences.UiMode.DARK,
                 preferences = { mapOf("printSettings" to printSettings(isLandscape = false)) },
-                drive = { viewModel.showDialog(CampfireViewModel.DialogType.Export(song = song("barenaked_ladies-big_bang_theory_theme.cho"))) },
+                drive = { viewModel.showDialog(DialogType.Export(song = song("barenaked_ladies-big_bang_theory_theme.cho"))) },
             ),
         ),
         Triple("laptop-song", Device.LAPTOP, song("laptop-song", "the_rembrandts-ill_be_there_for_you.cho", fontScale = 1.05f)),

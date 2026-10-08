@@ -34,6 +34,7 @@ import com.pandulapeter.campfire.presentation.resources.setlists_duplicate_setli
 import com.pandulapeter.campfire.presentation.resources.setlists_edit_details
 import com.pandulapeter.campfire.presentation.resources.setlists_unarchive
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -70,13 +71,13 @@ internal fun SetlistActions(
                 isVisible = !setlist.isArchived,
                 icon = painterResource(Res.drawable.ic_edit),
                 isAlwaysInMenu = true,
-                onClick = { viewModel.showDialog(CampfireViewModel.DialogType.EditSetlist(setlist)) },
+                onClick = { viewModel.showDialog(DialogType.EditSetlist(setlist)) },
             ),
             ActionsMenuItem(
                 title = stringResource(Res.string.setlists_choose_songs),
                 isVisible = !setlist.isArchived,
                 icon = painterResource(Res.drawable.ic_songs),
-                onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SongPicker(setlist)) },
+                onClick = { viewModel.showDialog(DialogType.SongPicker(setlist)) },
             ),
             onReorder?.let {
                 ActionsMenuItem(
@@ -93,7 +94,7 @@ internal fun SetlistActions(
                 title = stringResource(Res.string.setlists_duplicate_setlist),
                 icon = painterResource(Res.drawable.ic_duplicate),
                 isAlwaysInMenu = true,
-                onClick = { viewModel.showDialog(CampfireViewModel.DialogType.DuplicateSetlist(setlist)) },
+                onClick = { viewModel.showDialog(DialogType.DuplicateSetlist(setlist)) },
             ),
             ActionsMenuItem(
                 title = if (setlist.isArchived) stringResource(Res.string.setlists_unarchive) else stringResource(Res.string.setlists_archive),
@@ -105,13 +106,13 @@ internal fun SetlistActions(
                 title = stringResource(Res.string.setlists_export),
                 icon = painterResource(Res.drawable.ic_export),
                 isAlwaysInMenu = true,
-                onClick = { viewModel.showDialog(CampfireViewModel.DialogType.Export(setlist = setlist)) },
+                onClick = { viewModel.showDialog(DialogType.Export(setlist = setlist)) },
             ),
             ActionsMenuItem(
                 title = stringResource(Res.string.setlists_delete_setlist),
                 icon = painterResource(Res.drawable.ic_delete),
                 isAlwaysInMenu = true,
-                onClick = { viewModel.showDialog(CampfireViewModel.DialogType.DeleteSetlist(setlist)) },
+                onClick = { viewModel.showDialog(DialogType.DeleteSetlist(setlist)) },
             ),
         ),
     )

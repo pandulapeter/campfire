@@ -20,7 +20,6 @@ import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import com.pandulapeter.campfire.data.model.domain.PrintSettings
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.print.PrintDocument
 import com.pandulapeter.campfire.presentation.ui.print.PrintLabels
 import com.pandulapeter.campfire.presentation.ui.print.PrintSource
@@ -68,7 +67,7 @@ internal class ExportState(
 
 @Composable
 internal fun rememberExportState(
-    dialog: CampfireViewModel.DialogType.Export,
+    dialog: DialogType.Export,
     initialSettings: () -> PrintSettings,
 ) = ExportState(
     settings = remember(dialog) { mutableStateOf(initialSettings()) },

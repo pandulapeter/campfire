@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 
 /**
@@ -25,5 +26,5 @@ internal fun LiveFontScaleControls(
     modifier = modifier,
     fontScale = viewModel.fontScale,
     onFontScaleAdjusted = viewModel::adjustFontScale,
-    onFontScaleReset = { viewModel.setFontScale(CampfireViewModel.DEFAULT_FONT_SCALE) },
+    onFontScaleReset = { viewModel.setFontScale(UserPreferences.DEFAULT_FONT_SCALE) },
 )

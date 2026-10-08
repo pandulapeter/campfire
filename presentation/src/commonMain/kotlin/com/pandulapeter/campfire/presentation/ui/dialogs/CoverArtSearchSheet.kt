@@ -70,7 +70,7 @@ import org.jetbrains.compose.resources.painterResource
 @Composable
 internal fun CoverArtSearchSheet(
     viewModel: CampfireViewModel,
-    dialog: CampfireViewModel.DialogType.CoverArtSearch,
+    dialog: DialogType.CoverArtSearch,
 ) {
     val searchState by viewModel.coverArtSearch.collectAsStateWithLifecycle()
     val initialQuery = remember(dialog.song.fileName) { viewModel.coverArtQueryOf(song = dialog.song, isEditorDraft = dialog.isEditorDraft) }
@@ -105,7 +105,7 @@ internal fun CoverArtSearchSheet(
                     CoverArtSheetMode.ADDRESS -> usableAddress != null && usableAddress != dialog.song.coverArtUrl
                 },
                 onRemove = {
-                    viewModel.showDialog(CampfireViewModel.DialogType.RemoveSongCoverArt(song = dialog.song, isEditorDraft = dialog.isEditorDraft))
+                    viewModel.showDialog(DialogType.RemoveSongCoverArt(song = dialog.song, isEditorDraft = dialog.isEditorDraft))
                 },
                 onSave = {
                     viewModel.setSongCoverArt(

@@ -69,7 +69,7 @@ import org.jetbrains.compose.resources.painterResource
 @Composable
 internal fun SongPicker(
     viewModel: CampfireViewModel,
-    dialog: CampfireViewModel.DialogType.SongPicker,
+    dialog: DialogType.SongPicker,
 ) {
     val setlists by viewModel.setlists.collectAsStateWithLifecycle()
     val songs by viewModel.allSongs.collectAsStateWithLifecycle()

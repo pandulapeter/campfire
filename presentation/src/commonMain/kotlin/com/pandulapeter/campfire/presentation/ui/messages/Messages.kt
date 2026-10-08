@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui
+package com.pandulapeter.campfire.presentation.ui.messages
 
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Snackbar
@@ -51,6 +51,7 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_file_gone
 import com.pandulapeter.campfire.presentation.resources.song_editor_save_failed
 import com.pandulapeter.campfire.presentation.resources.songs_delete_song_partly
 import com.pandulapeter.campfire.presentation.resources.songs_update_file_name_partly
+import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.pluralTextResource
 import com.pandulapeter.campfire.presentation.ui.components.textResource
 
@@ -74,7 +75,7 @@ internal fun Messages(
     val queue by viewModel.messageQueue.collectAsStateWithLifecycle()
     val head = queue.firstOrNull()
     val text = when (val current = head?.value) {
-        is CampfireViewModel.Message.ImportFinished -> listOfNotNull(
+        is Message.ImportFinished -> listOfNotNull(
             if (current.result.isFailed) stringResource(Res.string.import_status_stopped) else null,
             stringResource(
                 Res.string.import_result,
@@ -86,29 +87,29 @@ internal fun Messages(
             if (current.result.convertedSongFileNames.isNotEmpty()) stringResource(Res.string.import_converted, current.result.convertedSongFileNames.size) else null,
         ).joinToString("\n")
 
-        CampfireViewModel.Message.ImportFailed -> stringResource(Res.string.import_failed)
-        CampfireViewModel.Message.ExportFailed -> stringResource(Res.string.export_failed)
-        CampfireViewModel.Message.PdfSaved -> stringResource(Res.string.export_pdf_saved)
-        CampfireViewModel.Message.SongExported -> stringResource(Res.string.export_song_saved)
-        CampfireViewModel.Message.SetlistExported -> stringResource(Res.string.export_setlist_saved)
-        CampfireViewModel.Message.LibraryExported -> stringResource(Res.string.export_library_saved)
-        CampfireViewModel.Message.ExportTooLargeToImport -> stringResource(Res.string.export_too_large_to_import)
-        is CampfireViewModel.Message.ExportSkippedFiles -> pluralTextResource(
+        Message.ImportFailed -> stringResource(Res.string.import_failed)
+        Message.ExportFailed -> stringResource(Res.string.export_failed)
+        Message.PdfSaved -> stringResource(Res.string.export_pdf_saved)
+        Message.SongExported -> stringResource(Res.string.export_song_saved)
+        Message.SetlistExported -> stringResource(Res.string.export_setlist_saved)
+        Message.LibraryExported -> stringResource(Res.string.export_library_saved)
+        Message.ExportTooLargeToImport -> stringResource(Res.string.export_too_large_to_import)
+        is Message.ExportSkippedFiles -> pluralTextResource(
             Res.plurals.export_skipped_files,
             current.fileNames.size,
             current.fileNames.size.toString(),
             current.fileNames.take(MAXIMUM_NAMED_FILES).joinToString(),
         )
 
-        CampfireViewModel.Message.SaveFailed -> stringResource(Res.string.song_editor_save_failed)
-        CampfireViewModel.Message.EditorDraftLost -> stringResource(Res.string.song_editor_draft_lost)
-        CampfireViewModel.Message.EditorDraftRestored -> stringResource(Res.string.song_editor_draft_restored)
-        CampfireViewModel.Message.EditedSongFileGone -> stringResource(Res.string.song_editor_file_gone)
-        CampfireViewModel.Message.OperationFailed -> stringResource(Res.string.error_operation_failed)
-        CampfireViewModel.Message.SongFileRenamedPartly -> stringResource(Res.string.songs_update_file_name_partly)
-        CampfireViewModel.Message.SongDeletedPartly -> stringResource(Res.string.songs_delete_song_partly)
-        is CampfireViewModel.Message.LinkNotOpened -> textResource(Res.string.error_link_not_opened, current.url)
-        is CampfireViewModel.Message.MetronomeStopped -> stringResource(
+        Message.SaveFailed -> stringResource(Res.string.song_editor_save_failed)
+        Message.EditorDraftLost -> stringResource(Res.string.song_editor_draft_lost)
+        Message.EditorDraftRestored -> stringResource(Res.string.song_editor_draft_restored)
+        Message.EditedSongFileGone -> stringResource(Res.string.song_editor_file_gone)
+        Message.OperationFailed -> stringResource(Res.string.error_operation_failed)
+        Message.SongFileRenamedPartly -> stringResource(Res.string.songs_update_file_name_partly)
+        Message.SongDeletedPartly -> stringResource(Res.string.songs_delete_song_partly)
+        is Message.LinkNotOpened -> textResource(Res.string.error_link_not_opened, current.url)
+        is Message.MetronomeStopped -> stringResource(
             when (current.reason) {
                 MetronomeStopReason.AUDIO_REFUSED -> Res.string.metronome_stopped_refused
                 MetronomeStopReason.AUDIO_INTERRUPTED -> Res.string.metronome_stopped_interrupted
@@ -116,10 +117,10 @@ internal fun Messages(
                 MetronomeStopReason.OUTPUT_FAILED -> Res.string.metronome_stopped_failed
             }
         )
-        CampfireViewModel.Message.SilentMetronomeStopped -> stringResource(Res.string.metronome_stopped_silent)
+        Message.SilentMetronomeStopped -> stringResource(Res.string.metronome_stopped_silent)
         null -> null
     }
-    val importFinished = head?.value as? CampfireViewModel.Message.ImportFinished
+    val importFinished = head?.value as? Message.ImportFinished
     val songToOpen = importFinished?.result?.convertedSongToOpen
     val actionLabel = when {
         songToOpen != null -> stringResource(Res.string.import_open)

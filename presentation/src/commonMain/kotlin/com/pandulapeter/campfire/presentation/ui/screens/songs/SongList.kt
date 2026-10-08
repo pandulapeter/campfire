@@ -52,6 +52,7 @@ import com.pandulapeter.campfire.presentation.ui.components.ListAnchor
 import com.pandulapeter.campfire.presentation.ui.components.LIST_APP_BAR_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.components.ListColumns
 import com.pandulapeter.campfire.presentation.ui.components.ListPlaceholder
+import com.pandulapeter.campfire.presentation.ui.components.Placeholder
 import com.pandulapeter.campfire.presentation.ui.components.ScrollToTopWhenChanged
 import com.pandulapeter.campfire.presentation.ui.components.SectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.SetlistAssignmentsButton
@@ -68,6 +69,7 @@ import com.pandulapeter.campfire.presentation.ui.components.rememberOverflowMenu
 import com.pandulapeter.campfire.presentation.ui.components.rememberSectionHeaderState
 import com.pandulapeter.campfire.presentation.ui.components.songCardPadding
 import com.pandulapeter.campfire.presentation.ui.components.searchTravelSpec
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.metronome.effectiveTempo
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableContent
@@ -82,9 +84,9 @@ internal fun SongList(
     modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
     listState: LazyGridState,
-    placeholder: CampfireViewModel.Placeholder?,
+    placeholder: Placeholder?,
     isSearchOpen: Boolean,
-    songGroups: CampfireViewModel.SongGroups,
+    songGroups: SongGroups,
     columnCount: Int,
     hasLoadedLibrary: Boolean,
     contentPadding: PaddingValues,
@@ -236,7 +238,7 @@ internal fun SongList(
                         placeholder = it,
                         onRetry = viewModel::refresh,
                         onNewSong = if (isPerformanceModeEnabled) null else {
-                            { viewModel.showDialog(CampfireViewModel.DialogType.NewSong) }
+                            { viewModel.showDialog(DialogType.NewSong) }
                         },
                         onDemoLibrary = if (isPerformanceModeEnabled) null else {
                             { viewModel.importDemoLibrary() }
@@ -384,7 +386,7 @@ internal fun SongList(
 private fun songItemKey(song: Song) = "song_${song.fileName}"
 
 /** The grid index of the item with [key], counted the way [SongList] emits its items. */
-private fun List<CampfireViewModel.SongGroup>.itemIndexOf(key: Any, hasPlaceholder: Boolean): Int? {
+private fun List<SongGroup>.itemIndexOf(key: Any, hasPlaceholder: Boolean): Int? {
     var index = if (hasPlaceholder) 1 else 0
     forEach { group ->
         if (group.header != null) index++

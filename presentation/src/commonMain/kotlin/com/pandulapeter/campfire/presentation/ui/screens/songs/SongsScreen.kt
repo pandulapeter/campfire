@@ -65,6 +65,7 @@ import com.pandulapeter.campfire.presentation.ui.components.overlappingAction
 import com.pandulapeter.campfire.presentation.ui.components.rememberHasLoadedLibrary
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedLazyGridState
 import com.pandulapeter.campfire.presentation.ui.components.underAppBar
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import org.jetbrains.compose.resources.painterResource
 
@@ -95,12 +96,12 @@ internal fun SongsScreen(
     }
     DismissSheetWhenSidePanelAppears(
         isSidePanelVisible = isSidePanelVisible,
-        isSheetVisible = visibleDialog == CampfireViewModel.DialogType.SongFilters,
+        isSheetVisible = visibleDialog == DialogType.SongFilters,
         onDismiss = viewModel::dismissDialog,
     )
     // A sync run can take the last tag out of the library under an open sheet, which would leave it empty.
     LaunchedEffect(hasSongFilters) {
-        if (!hasSongFilters && visibleDialog == CampfireViewModel.DialogType.SongFilters) viewModel.dismissDialog()
+        if (!hasSongFilters && visibleDialog == DialogType.SongFilters) viewModel.dismissDialog()
     }
     // The widest the app bar's buttons reach in over the list, which a pinned header keeps clear of - nothing once
     // the bar has filled in and moved the list down under itself.
@@ -156,7 +157,7 @@ internal fun SongsScreen(
                             viewModel = viewModel,
                             contentDescription = stringResource(Res.string.songs_new_song),
                             createLabel = stringResource(Res.string.songs_create_song),
-                            onCreate = { viewModel.showDialog(CampfireViewModel.DialogType.NewSong) },
+                            onCreate = { viewModel.showDialog(DialogType.NewSong) },
                         )
                     },
                     actions = {
@@ -171,7 +172,7 @@ internal fun SongsScreen(
                         ) {
                             SongFiltersAction(
                                 isSongFilterActive = isSongFilterActive,
-                                onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SongFilters) },
+                                onClick = { viewModel.showDialog(DialogType.SongFilters) },
                             )
                         }
                     },

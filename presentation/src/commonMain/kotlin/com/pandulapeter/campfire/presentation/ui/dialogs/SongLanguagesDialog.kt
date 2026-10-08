@@ -77,7 +77,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableConten
 @Composable
 internal fun SongLanguagesDialog(
     viewModel: CampfireViewModel,
-    dialog: CampfireViewModel.DialogType.SongLanguages,
+    dialog: DialogType.SongLanguages,
 ) {
     val appLanguageCode = currentLanguage.value.code
     val libraryLanguages by viewModel.languages.collectAsStateWithLifecycle()

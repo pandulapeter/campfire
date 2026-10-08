@@ -43,7 +43,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
 @Composable
 internal fun SongMetadataDialog(
     viewModel: CampfireViewModel,
-    dialog: CampfireViewModel.DialogType.SongMetadata,
+    dialog: DialogType.SongMetadata,
 ) {
     // Compared with the draft the form opened with rather than with the file's text, so that a duration the field
     // could not show, and so opened empty, is only removed when the user typed into it.

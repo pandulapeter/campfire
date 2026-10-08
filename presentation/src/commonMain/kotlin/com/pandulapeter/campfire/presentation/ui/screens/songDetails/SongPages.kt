@@ -32,6 +32,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
 import com.pandulapeter.campfire.presentation.ui.metronome.effectiveTempo
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
@@ -171,7 +172,7 @@ internal fun SongPages(
             chordDiagrams = remember(chordDiagrams, song.fileName, destination.setlistFileName, isReadOnly) {
                 chordDiagrams?.copy(
                     onShapesClicked = if (isReadOnly) null else {
-                        { viewModel.showDialog(CampfireViewModel.DialogType.ChordShapes(song = song, setlistFileName = destination.setlistFileName)) }
+                        { viewModel.showDialog(DialogType.ChordShapes(song = song, setlistFileName = destination.setlistFileName)) }
                     },
                 )
             },

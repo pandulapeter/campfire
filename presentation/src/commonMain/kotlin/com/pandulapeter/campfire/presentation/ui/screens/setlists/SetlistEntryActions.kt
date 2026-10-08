@@ -24,6 +24,7 @@ import com.pandulapeter.campfire.presentation.ui.components.SongActions
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.setlistAssignmentsAction
 import com.pandulapeter.campfire.presentation.localization.stringResource
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -37,7 +38,7 @@ import org.jetbrains.compose.resources.painterResource
 @Composable
 internal fun SetlistEntryActions(
     viewModel: CampfireViewModel,
-    entry: CampfireViewModel.SetlistWithSongs.Entry,
+    entry: SetlistWithSongs.Entry,
     setlistFileName: String,
     isArchived: Boolean,
     onMoveUp: (() -> Unit)?,
@@ -45,15 +46,15 @@ internal fun SetlistEntryActions(
 ) {
     val onRemove: () -> Unit = {
         viewModel.showDialog(
-            CampfireViewModel.DialogType.RemoveSongFromSetlist(
+            DialogType.RemoveSongFromSetlist(
                 songFileName = entry.songFileName,
-                songTitle = (entry as? CampfireViewModel.SetlistWithSongs.Entry.Present)?.song?.title ?: entry.songFileName,
+                songTitle = (entry as? SetlistWithSongs.Entry.Present)?.song?.title ?: entry.songFileName,
                 setlistFileName = setlistFileName,
             ),
         )
     }
     when (entry) {
-        is CampfireViewModel.SetlistWithSongs.Entry.Present -> SongActions(
+        is SetlistWithSongs.Entry.Present -> SongActions(
             viewModel = viewModel,
             song = entry.song,
             isDeletable = false,
@@ -73,7 +74,7 @@ internal fun SetlistEntryActions(
             },
         )
 
-        is CampfireViewModel.SetlistWithSongs.Entry.Missing -> ActionsMenu(
+        is SetlistWithSongs.Entry.Missing -> ActionsMenu(
             isExpandable = false,
             items = setlistRowActions(onMoveUp, onMoveDown, onRemove),
         )

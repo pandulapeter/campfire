@@ -23,6 +23,7 @@ import com.pandulapeter.campfire.presentation.resources.songs_delete_song
 import com.pandulapeter.campfire.presentation.resources.songs_edit_song
 import com.pandulapeter.campfire.presentation.resources.songs_update_file_name
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -90,14 +91,14 @@ internal fun SongActions(
                 title = stringResource(Res.string.songs_export_song),
                 icon = painterResource(Res.drawable.ic_export),
                 isAlwaysInMenu = true,
-                onClick = { viewModel.showDialog(CampfireViewModel.DialogType.Export(song = song, songSetlistFileName = setlistFileName)) },
+                onClick = { viewModel.showDialog(DialogType.Export(song = song, songSetlistFileName = setlistFileName)) },
             ),
             if (isDeletable && !isEditAndExportOnly) {
                 ActionsMenuItem(
                     title = stringResource(Res.string.songs_delete_song),
                     icon = painterResource(Res.drawable.ic_delete),
                     isAlwaysInMenu = true,
-                    onClick = { viewModel.showDialog(CampfireViewModel.DialogType.DeleteSong(song)) },
+                    onClick = { viewModel.showDialog(DialogType.DeleteSong(song)) },
                 )
             } else {
                 null

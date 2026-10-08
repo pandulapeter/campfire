@@ -49,7 +49,7 @@ import org.jetbrains.compose.resources.painterResource
 @Composable
 internal fun SetlistPicker(
     viewModel: CampfireViewModel,
-    dialog: CampfireViewModel.DialogType.SetlistPicker,
+    dialog: DialogType.SetlistPicker,
 ) {
     val setlists by viewModel.setlists.collectAsStateWithLifecycle()
     var query by rememberSaveable { mutableStateOf("") }

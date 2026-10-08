@@ -30,6 +30,7 @@ import com.pandulapeter.campfire.presentation.resources.setlists_create_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_new_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_search
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.components.AppBarOverlap
 import com.pandulapeter.campfire.presentation.ui.components.ListUnderAppBar
@@ -121,7 +122,7 @@ internal fun SetlistsScreen(
                     viewModel = viewModel,
                     contentDescription = stringResource(Res.string.setlists_new_setlist),
                     createLabel = stringResource(Res.string.setlists_create_setlist),
-                    onCreate = { viewModel.showDialog(CampfireViewModel.DialogType.NewSetlist) },
+                    onCreate = { viewModel.showDialog(DialogType.NewSetlist) },
                     onItemSelected = { viewModel.reorderingSetlistFileName = null },
                     isEnabled = !isReordering,
                 )

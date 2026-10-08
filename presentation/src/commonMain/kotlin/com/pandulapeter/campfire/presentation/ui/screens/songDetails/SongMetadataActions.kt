@@ -33,6 +33,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_set_cover_a
 import com.pandulapeter.campfire.presentation.resources.song_details_tags_manage
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ActionsMenuItem
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.metronome.EffectiveTempo
 import com.pandulapeter.campfire.presentation.ui.metronome.timeSignatureOrDefault
 import org.jetbrains.compose.resources.painterResource
@@ -119,7 +120,7 @@ internal fun rememberSongPlayingControls(
 /**
  * What the header and group edit buttons open: the dialog of each group, on the song details screen's sheet and on the
  * editor preview's card alike. From the editor ([isEditorDraft]) they edit the text being typed rather than the file,
- * see [CampfireViewModel.DialogType.SongEdit], and [song] is that text's description of the song, which follows every
+ * see [DialogType.SongEdit], and [song] is that text's description of the song, which follows every
  * keystroke, so the latest one is what a button opens its dialog on.
  */
 @Composable
@@ -224,12 +225,12 @@ internal fun songLabelActions(
         title = stringResource(Res.string.song_details_tags_manage),
         icon = painterResource(Res.drawable.ic_label),
         isAlwaysInMenu = true,
-        onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SongTags(song = song, isEditorDraft = isEditorDraft)) },
+        onClick = { viewModel.showDialog(DialogType.SongTags(song = song, isEditorDraft = isEditorDraft)) },
     ),
     ActionsMenuItem(
         title = stringResource(Res.string.song_details_languages_edit),
         icon = painterResource(Res.drawable.ic_language),
         isAlwaysInMenu = true,
-        onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SongLanguages(song = song, isEditorDraft = isEditorDraft)) },
+        onClick = { viewModel.showDialog(DialogType.SongLanguages(song = song, isEditorDraft = isEditorDraft)) },
     ),
 )

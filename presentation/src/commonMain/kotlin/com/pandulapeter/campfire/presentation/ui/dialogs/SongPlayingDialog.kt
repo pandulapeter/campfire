@@ -104,7 +104,7 @@ import kotlin.math.absoluteValue
 @Composable
 internal fun SongPlayingDialog(
     viewModel: CampfireViewModel,
-    dialog: CampfireViewModel.DialogType.SongPlaying,
+    dialog: DialogType.SongPlaying,
 ) {
     val offeredValues = dialog.values
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()

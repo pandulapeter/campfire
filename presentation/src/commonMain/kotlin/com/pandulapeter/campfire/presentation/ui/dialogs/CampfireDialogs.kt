@@ -72,14 +72,14 @@ internal fun CampfireDialogs(
         onCancel = viewModel::cancelImportPreparation,
     )
     // A stable composition slot keeps the parent sheet mounted while its editor opens in another modal window.
-    val songInfo = underlyingSongInfo ?: (visibleDialog as? CampfireViewModel.DialogType.SongInfo)
+    val songInfo = underlyingSongInfo ?: (visibleDialog as? DialogType.SongInfo)
     if (songInfo != null) {
         SongInfoSheet(viewModel = viewModel, dialog = songInfo, urlOpener = urlOpener)
     }
     when (val dialog = visibleDialog) {
         // Drawn by ExportHost, which deals it over the screens rather than in a window of its own.
-        is CampfireViewModel.DialogType.Export -> Unit
-        CampfireViewModel.DialogType.NewSetlist -> SetlistDetailsDialog(
+        is DialogType.Export -> Unit
+        DialogType.NewSetlist -> SetlistDetailsDialog(
             title = stringResource(Res.string.setlists_new_setlist),
             confirmLabel = stringResource(Res.string.create),
             onDismiss = { viewModel.dismissSheet(dialog) },
@@ -91,7 +91,7 @@ internal fun CampfireDialogs(
             },
         )
 
-        is CampfireViewModel.DialogType.EditSetlist -> SetlistDetailsDialog(
+        is DialogType.EditSetlist -> SetlistDetailsDialog(
             title = stringResource(Res.string.setlists_edit_details),
             subtitle = dialog.setlist.title,
             isTitleFocused = false,
@@ -115,7 +115,7 @@ internal fun CampfireDialogs(
 
         // Named before it is made rather than after: two setlists can carry the same title (a setlist is identified
         // by its file name), so a copy nobody named would sit under the original's title until somebody noticed.
-        is CampfireViewModel.DialogType.DuplicateSetlist -> SetlistDetailsDialog(
+        is DialogType.DuplicateSetlist -> SetlistDetailsDialog(
             title = stringResource(Res.string.setlists_duplicate_setlist),
             subtitle = dialog.setlist.title,
             initialTitle = textResource(Res.string.setlists_duplicate_title, dialog.setlist.title),
@@ -134,14 +134,14 @@ internal fun CampfireDialogs(
             },
         )
 
-        CampfireViewModel.DialogType.NewSong -> NewSongDialog(
+        DialogType.NewSong -> NewSongDialog(
             onDismiss = { viewModel.dismissSheet(dialog) },
             onCreate = { values -> viewModel.createSong(values = values) },
         )
 
-        CampfireViewModel.DialogType.SongFilters -> CampfireBottomSheet(
+        DialogType.SongFilters -> CampfireBottomSheet(
             title = stringResource(Res.string.songs_filter),
-            onDismiss = { viewModel.dismissSheet(CampfireViewModel.DialogType.SongFilters) },
+            onDismiss = { viewModel.dismissSheet(DialogType.SongFilters) },
         ) { contentPadding ->
             SongFilters(
                 viewModel = viewModel,
@@ -151,20 +151,20 @@ internal fun CampfireDialogs(
             )
         }
 
-        is CampfireViewModel.DialogType.SongInfo -> Unit
-        is CampfireViewModel.DialogType.ChordShapes -> ChordShapesSheet(viewModel = viewModel, dialog = dialog)
+        is DialogType.SongInfo -> Unit
+        is DialogType.ChordShapes -> ChordShapesSheet(viewModel = viewModel, dialog = dialog)
 
-        is CampfireViewModel.DialogType.SetlistPicker -> SetlistPicker(
+        is DialogType.SetlistPicker -> SetlistPicker(
             viewModel = viewModel,
             dialog = dialog,
         )
 
-        is CampfireViewModel.DialogType.SongPicker -> SongPicker(
+        is DialogType.SongPicker -> SongPicker(
             viewModel = viewModel,
             dialog = dialog,
         )
 
-        is CampfireViewModel.DialogType.DeleteSong -> ConfirmationDialog(
+        is DialogType.DeleteSong -> ConfirmationDialog(
             title = stringResource(Res.string.songs_delete_song),
             text = textResource(Res.string.songs_delete_song_confirmation, dialog.song.title),
             confirmLabel = stringResource(Res.string.delete),
@@ -175,49 +175,49 @@ internal fun CampfireDialogs(
             },
         )
 
-        is CampfireViewModel.DialogType.SongTags -> SongTagsDialog(
+        is DialogType.SongTags -> SongTagsDialog(
             viewModel = viewModel,
             dialog = dialog,
         )
 
-        is CampfireViewModel.DialogType.SongMetadata -> SongMetadataDialog(
+        is DialogType.SongMetadata -> SongMetadataDialog(
             viewModel = viewModel,
             dialog = dialog,
         )
 
-        is CampfireViewModel.DialogType.SongLinks -> SongLinksDialog(
+        is DialogType.SongLinks -> SongLinksDialog(
             viewModel = viewModel,
             dialog = dialog,
         )
 
-        is CampfireViewModel.DialogType.SongLanguages -> SongLanguagesDialog(
+        is DialogType.SongLanguages -> SongLanguagesDialog(
             viewModel = viewModel,
             dialog = dialog,
         )
 
-        is CampfireViewModel.DialogType.SongPlaying -> SongPlayingDialog(
+        is DialogType.SongPlaying -> SongPlayingDialog(
             viewModel = viewModel,
             dialog = dialog,
         )
 
-        is CampfireViewModel.DialogType.CoverArtSearch -> CoverArtSearchSheet(
+        is DialogType.CoverArtSearch -> CoverArtSearchSheet(
             viewModel = viewModel,
             dialog = dialog,
         )
 
-        is CampfireViewModel.DialogType.RemoveSongCoverArt -> ConfirmationDialog(
+        is DialogType.RemoveSongCoverArt -> ConfirmationDialog(
             title = stringResource(Res.string.cover_art_search_remove),
             text = textResource(Res.string.song_details_remove_cover_art_confirmation, dialog.song.title),
             confirmLabel = stringResource(Res.string.cover_art_search_remove),
             // Not removing the cover is not being done with it: the sheet the bin was tapped in comes back.
-            onDismiss = { viewModel.showDialog(CampfireViewModel.DialogType.CoverArtSearch(song = dialog.song, isEditorDraft = dialog.isEditorDraft)) },
+            onDismiss = { viewModel.showDialog(DialogType.CoverArtSearch(song = dialog.song, isEditorDraft = dialog.isEditorDraft)) },
             onConfirm = {
                 viewModel.setSongCoverArt(fileName = dialog.song.fileName, isEditorDraft = dialog.isEditorDraft, url = null)
                 viewModel.dismissDialog()
             },
         )
 
-        is CampfireViewModel.DialogType.RemoveSongFromSetlist -> ConfirmationDialog(
+        is DialogType.RemoveSongFromSetlist -> ConfirmationDialog(
             title = stringResource(Res.string.setlists_remove_song),
             text = textResource(Res.string.setlists_remove_song_confirmation, dialog.songTitle),
             confirmLabel = stringResource(Res.string.setlists_remove_song),
@@ -228,7 +228,7 @@ internal fun CampfireDialogs(
             },
         )
 
-        is CampfireViewModel.DialogType.DeleteSetlist -> ConfirmationDialog(
+        is DialogType.DeleteSetlist -> ConfirmationDialog(
             title = stringResource(Res.string.setlists_delete_setlist),
             text = textResource(Res.string.setlists_delete_setlist_confirmation, dialog.setlist.title),
             confirmLabel = stringResource(Res.string.delete),
@@ -239,7 +239,7 @@ internal fun CampfireDialogs(
             },
         )
 
-        is CampfireViewModel.DialogType.DisconnectSync -> ConfirmationDialog(
+        is DialogType.DisconnectSync -> ConfirmationDialog(
             title = stringResource(Res.string.settings_sync_disconnect),
             text = textResource(Res.string.settings_sync_disconnect_confirmation, dialog.accountName),
             confirmLabel = stringResource(Res.string.settings_sync_disconnect),
@@ -250,7 +250,7 @@ internal fun CampfireDialogs(
             },
         )
 
-        CampfireViewModel.DialogType.ClearCoverArtCache -> ConfirmationDialog(
+        DialogType.ClearCoverArtCache -> ConfirmationDialog(
             title = stringResource(Res.string.settings_library_cover_art_cache_clear),
             text = stringResource(Res.string.settings_library_cover_art_cache_clear_confirmation),
             confirmLabel = stringResource(Res.string.settings_library_cover_art_cache_clear_action),
@@ -261,11 +261,11 @@ internal fun CampfireDialogs(
             },
         )
 
-        CampfireViewModel.DialogType.DeleteLibrary -> DeleteLibraryDialog(
+        DialogType.DeleteLibrary -> DeleteLibraryDialog(
             viewModel = viewModel,
         )
 
-        CampfireViewModel.DialogType.RevertChanges -> ConfirmationDialog(
+        DialogType.RevertChanges -> ConfirmationDialog(
             title = stringResource(Res.string.song_editor_revert),
             text = stringResource(Res.string.song_editor_revert_confirmation),
             confirmLabel = stringResource(Res.string.song_editor_revert),
@@ -273,7 +273,7 @@ internal fun CampfireDialogs(
             onConfirm = viewModel::revertEditorChanges,
         )
 
-        is CampfireViewModel.DialogType.ConfirmImportReplace -> ConfirmationDialog(
+        is DialogType.ConfirmImportReplace -> ConfirmationDialog(
             title = pluralStringResource(Res.plurals.import_replace_title, dialog.count, dialog.count),
             text = stringResource(Res.string.import_conflicts_replace_description),
             confirmLabel = stringResource(Res.string.import_conflicts_replace),
@@ -284,7 +284,7 @@ internal fun CampfireDialogs(
             },
         )
 
-        CampfireViewModel.DialogType.ConfirmExit -> ConfirmationDialog(
+        DialogType.ConfirmExit -> ConfirmationDialog(
             title = stringResource(Res.string.confirm_exit_title),
             text = stringResource(Res.string.confirm_exit_message),
             confirmLabel = stringResource(Res.string.close),
@@ -293,18 +293,18 @@ internal fun CampfireDialogs(
             onConfirm = viewModel::exitConfirmed,
         )
 
-        CampfireViewModel.DialogType.UnsavedChanges -> UnsavedChangesDialog(
+        DialogType.UnsavedChanges -> UnsavedChangesDialog(
             isSaving = viewModel.isSavingSong.collectAsStateWithLifecycle().value,
             onCancel = viewModel::dismissDialog,
             onDiscard = viewModel::leaveEditorWithoutSaving,
             onSave = viewModel::saveEditorChangesAndLeave,
         )
 
-        CampfireViewModel.DialogType.Welcome -> WelcomeDialog(
+        DialogType.Welcome -> WelcomeDialog(
             viewModel = viewModel,
         )
 
-        CampfireViewModel.DialogType.WhatsNew -> {
+        DialogType.WhatsNew -> {
             // Only once it has stayed up for a moment: Play's answer can arrive after the app is on screen and cover the
             // dialog with the update required screen, which takes it out of the composition and cancels this, and whose
             // flow ends the process (see CampfireViewModel.showWhatsNewOnVersionChange).

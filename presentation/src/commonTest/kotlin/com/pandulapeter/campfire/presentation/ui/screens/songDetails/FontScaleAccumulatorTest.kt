@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import kotlin.math.roundToInt
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -34,8 +34,8 @@ class FontScaleAccumulatorTest {
     @Test
     fun `a change past a bound turns back from the bound`() {
         val accumulator = FontScaleAccumulator()
-        assertEquals(CampfireViewModel.MAX_FONT_SCALE, accumulator.next(CampfireViewModel.MAX_FONT_SCALE) { it * 2f })
-        assertEquals(CampfireViewModel.MAX_FONT_SCALE - 0.1f, accumulator.next(CampfireViewModel.MAX_FONT_SCALE) { it - 0.1f })
+        assertEquals(UserPreferences.MAX_FONT_SCALE, accumulator.next(UserPreferences.MAX_FONT_SCALE) { it * 2f })
+        assertEquals(UserPreferences.MAX_FONT_SCALE - 0.1f, accumulator.next(UserPreferences.MAX_FONT_SCALE) { it - 0.1f })
     }
 
     /** What the view model does to every value it is given. */

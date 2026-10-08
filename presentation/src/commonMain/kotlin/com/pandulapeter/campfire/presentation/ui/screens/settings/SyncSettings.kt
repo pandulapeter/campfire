@@ -91,6 +91,7 @@ import com.pandulapeter.campfire.presentation.ui.components.Elapsed
 import com.pandulapeter.campfire.presentation.ui.components.pluralTextResource
 import com.pandulapeter.campfire.presentation.ui.components.rememberElapsed
 import com.pandulapeter.campfire.presentation.ui.components.textResource
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.platform.withSyncCounts
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
@@ -260,7 +261,7 @@ private fun ColumnScope.ConnectedSyncSettings(
         title = stringResource(Res.string.settings_sync_disconnect),
         icon = painterResource(Res.drawable.ic_cloud_off),
         isEmphasized = false,
-        onClick = { viewModel.showDialog(CampfireViewModel.DialogType.DisconnectSync(syncState.account.displayName)) },
+        onClick = { viewModel.showDialog(DialogType.DisconnectSync(syncState.account.displayName)) },
     )
 }
 
