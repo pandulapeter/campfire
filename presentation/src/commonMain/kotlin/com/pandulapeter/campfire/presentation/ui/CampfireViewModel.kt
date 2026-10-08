@@ -169,15 +169,12 @@ import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.Companion.BACK_STACK_KEY
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.Companion.SETLISTS_SEARCH_KEY
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.Companion.SONG_FILTER_KEY
-import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.Companion.SONG_PICKER_LANGUAGES_KEY
-import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.Companion.SONG_PICKER_TAGS_KEY
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.SavedSongFilter
 import com.pandulapeter.campfire.presentation.ui.state.SongListState
+import com.pandulapeter.campfire.presentation.ui.state.SongPickerState
 import com.pandulapeter.campfire.presentation.ui.state.SyncController
 import com.pandulapeter.campfire.presentation.ui.state.asState
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.EditorTextEdit
-import com.pandulapeter.campfire.presentation.ui.search.PickerFilterOptions
-import com.pandulapeter.campfire.presentation.ui.search.PickerSongs
 import com.pandulapeter.campfire.presentation.ui.search.SearchableSong
 import com.pandulapeter.campfire.presentation.ui.search.pickerFilterOptions
 import com.pandulapeter.campfire.presentation.ui.search.toPickableSong
@@ -300,18 +297,6 @@ class CampfireViewModel(
             ?.let { SongFilter(selectedTags = it.selectedTags.toSet(), selectedLanguages = it.selectedLanguages.toSet()) }
             ?: SongFilter()
     )
-
-    /** Assignment-sheet tags survive reopening the sheet, independently of the main Songs filter. Same run lifetime. */
-    private val _songPickerSelectedTags = MutableStateFlow<Set<String>>(
-        restore<List<String>>(SONG_PICKER_TAGS_KEY).orEmpty().mapTo(mutableSetOf()) { it.lowercase() }
-    )
-    internal val songPickerSelectedTags = _songPickerSelectedTags.asStateFlow()
-
-    /** Assignment-sheet languages have the same independent session lifetime as its tags. */
-    private val _songPickerSelectedLanguages = MutableStateFlow<Set<String>>(
-        restore<List<String>>(SONG_PICKER_LANGUAGES_KEY).orEmpty().toSet()
-    )
-    internal val songPickerSelectedLanguages = _songPickerSelectedLanguages.asStateFlow()
 
     private val libraryState = LibraryState(
         scope = viewModelScope,
@@ -794,24 +779,24 @@ class CampfireViewModel(
     /** See [MetronomeController.metronomeContext]. */
     internal val metronomeContext get() = metronomeController.metronomeContext
 
-    /**
-     * Every song of the library in the order the songs screen is sorted by, with its search and filter keys, as the song
-     * picker lists and searches it. Built here rather than as the sheet opens, where the first frame of the sheet would
-     * wait for a whole library to be folded. The order is the domain layer's (`ScreenData.sortedSongs`), which sorts
-     * the library once for the songs screen and the picker alike, and comes with the search index of the same value.
-     */
-    internal val pickerSongs = indexedSongs.map { indexed ->
-        val list = indexed.sorted.mapNotNull { indexed.search.byFileName[it.fileName] }.map { it.toPickableSong() }
-        PickerSongs(list = list, byFileName = list.associateBy { it.song.fileName })
-    }
-        .flowOn(Dispatchers.Default)
-        .asState(PickerSongs.Empty)
+    private val songPickerState = SongPickerState(
+        scope = viewModelScope,
+        savedStateStore = savedStateStore,
+        indexedSongs = indexedSongs,
+        allSongs = allSongs,
+    )
 
-    /** The song picker's filter chips, counted over the whole library for the same reason [pickerSongs] is sorted here. */
-    internal val songPickerFilters = allSongs
-        .map(::pickerFilterOptions)
-        .flowOn(Dispatchers.Default)
-        .asState(PickerFilterOptions.Empty)
+    /** See [SongPickerState.songPickerSelectedTags]. */
+    internal val songPickerSelectedTags get() = songPickerState.songPickerSelectedTags
+
+    /** See [SongPickerState.songPickerSelectedLanguages]. */
+    internal val songPickerSelectedLanguages get() = songPickerState.songPickerSelectedLanguages
+
+    /** See [SongPickerState.pickerSongs]. */
+    internal val pickerSongs get() = songPickerState.pickerSongs
+
+    /** See [SongPickerState.songPickerFilters]. */
+    internal val songPickerFilters get() = songPickerState.songPickerFilters
 
     private val coverArtSearchController = CoverArtSearchController(
         scope = viewModelScope,
@@ -1175,8 +1160,8 @@ class CampfireViewModel(
         }
         savedStateStore.startPersisting(
             songFilter = _songFilter,
-            songPickerSelectedTags = _songPickerSelectedTags,
-            songPickerSelectedLanguages = _songPickerSelectedLanguages,
+            songPickerSelectedTags = songPickerSelectedTags,
+            songPickerSelectedLanguages = songPickerSelectedLanguages,
             songsSearch = songsSearch,
             setlistsSearch = setlistsSearch,
         )
@@ -2914,14 +2899,9 @@ class CampfireViewModel(
 
     fun toggleTagFilter(tag: String) = songListState.toggleTagFilter(tag)
 
-    internal fun toggleSongPickerTag(tag: String) = _songPickerSelectedTags.update { selected ->
-        val key = tag.lowercase()
-        if (key in selected) selected - key else selected + key
-    }
+    internal fun toggleSongPickerTag(tag: String) = songPickerState.toggleSongPickerTag(tag)
 
-    internal fun toggleSongPickerLanguage(code: String) = _songPickerSelectedLanguages.update { selected ->
-        if (code in selected) selected - code else selected + code
-    }
+    internal fun toggleSongPickerLanguage(code: String) = songPickerState.toggleSongPickerLanguage(code)
 
     fun clearTagFilter() = songListState.clearTagFilter()
 
