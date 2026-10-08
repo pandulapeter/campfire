@@ -100,6 +100,7 @@ include(
     ":data:source:local:implementation",
     ":data:source:remote:api",
     ":data:source:remote:implementation",
+    ":data:sync:implementation",
     ":domain:api",
     ":domain:implementation",
     ":metronome:api",

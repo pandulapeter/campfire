@@ -1,0 +1,1200 @@
+/*
+ * This file is part of Campfire.
+ * Copyright (c) Pandula Péter 2017-2026.
+ * https://github.com/pandulapeter/campfire
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * https://mozilla.org/MPL/2.0/.
+ */
+package com.pandulapeter.campfire.data.sync.implementation
+
+import com.pandulapeter.campfire.data.model.DataState
+import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
+import com.pandulapeter.campfire.data.model.domain.Logger
+import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.data.model.domain.SyncAccount
+import com.pandulapeter.campfire.data.model.domain.SyncDeletionDirection
+import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
+import com.pandulapeter.campfire.data.model.domain.SyncFailureReason
+import com.pandulapeter.campfire.data.model.domain.SyncOutcome
+import com.pandulapeter.campfire.data.model.domain.SyncProviderId
+import com.pandulapeter.campfire.data.model.domain.SyncState
+import com.pandulapeter.campfire.data.repository.api.SyncRepository
+import com.pandulapeter.campfire.data.source.local.api.LibraryChanges
+import com.pandulapeter.campfire.data.source.local.api.LibraryFileLock
+import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
+import com.pandulapeter.campfire.data.source.remote.api.PendingAuthorization
+import com.pandulapeter.campfire.data.source.remote.api.SyncAuthorizationException
+import com.pandulapeter.campfire.data.source.remote.api.SyncAuthenticator
+import com.pandulapeter.campfire.data.source.remote.api.SyncNetworkException
+import com.pandulapeter.campfire.data.source.remote.api.SyncProviders
+import com.pandulapeter.campfire.data.source.remote.api.SyncRemoteStorageFullException
+import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
+import com.pandulapeter.campfire.data.model.domain.AuthorizationCompletionPage
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.Json
+import kotlin.test.Test
+import kotlin.test.assertContentEquals
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertIs
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+import kotlin.test.fail
+
+/**
+ * The repository around the engine: what a run reports and what it leaves in the index when something other than the
+ * files goes wrong, which the engine's own tests cannot show since the engine never writes the index itself.
+ */
+class SyncRepositoryImplTest {
+
+    @Test
+    fun `a run whose index cannot be written ends as a storage failure`() = runTest {
+        val stateLocalSource = FakeSyncIndexLocalSource(onSaveIndex = { throw LibraryStorageException("Full") })
+        val repository = repository(provider = FakeSyncProvider(account = ACCOUNT), stateLocalSource = stateLocalSource)
+
+        repository.restore()
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        val state = repository.awaitOutcome()
+
+        assertEquals(SyncOutcome.Failure(SyncFailureReason.STORAGE), state.lastOutcome)
+        assertNull(state.progress)
+    }
+
+    @Test
+    fun `an automatic run starts straight away when the app leaves the front`() = runTest {
+        val repository = repository(provider = FakeSyncProvider(files = mapOf(song(1) to "One".encodeToByteArray()), account = ACCOUNT))
+
+        repository.restore()
+        repository.scheduleSynchronization()
+        repository.startScheduledSynchronization()
+        val state = repository.awaitOutcome()
+
+        assertEquals(1, assertIs<SyncOutcome.Success>(state.lastOutcome).summary.downloaded)
+    }
+
+    @Test
+    fun `an automatic run started as the app leaves shows as going before the call returns`() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        val repository = repository(
+            provider = FakeSyncProvider(
+                files = mapOf(song(1) to "One".encodeToByteArray()),
+                onDownload = { gate.await() },
+                account = ACCOUNT,
+            ),
+        )
+
+        repository.restore()
+        repository.scheduleSynchronization()
+        val progress = repository.startScheduledSynchronization()
+
+        assertNotNull(progress)
+        assertNotNull((repository.syncState.value as SyncState.Connected).progress)
+        gate.complete(Unit)
+        assertIs<SyncOutcome.Success>(repository.awaitOutcome().lastOutcome)
+    }
+
+    @Test
+    fun `an automatic run asked for during a run follows it at once when the app leaves`() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        val automaticRunStarted = CompletableDeferred<Unit>()
+        val stateLocalSource = FakeSyncIndexLocalSource(
+            onSaveIndex = { if (it != null && "\"isAutomaticRunInProgress\": true" in it) automaticRunStarted.complete(Unit) },
+        )
+        val repository = repository(
+            provider = FakeSyncProvider(
+                files = mapOf(song(1) to "One".encodeToByteArray()),
+                onDownload = { gate.await() },
+                account = ACCOUNT,
+            ),
+            stateLocalSource = stateLocalSource,
+        )
+
+        repository.restore()
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        repository.syncState.first { (it as? SyncState.Connected)?.progress?.total == 1 }
+        repository.scheduleSynchronization()
+        val progress = repository.startScheduledSynchronization()
+        gate.complete(Unit)
+
+        assertEquals(1, progress?.total)
+        automaticRunStarted.await()
+        // Well inside the ten seconds an automatic run would otherwise wait for.
+        assertTrue(testScheduler.currentTime < 10_000)
+        assertIs<SyncOutcome.Success>(repository.awaitOutcome().lastOutcome)
+    }
+
+    @Test
+    fun `leaving the app with no automatic run waiting starts nothing`() = runTest {
+        val provider = FakeSyncProvider(account = ACCOUNT)
+        val repository = repository(provider = provider)
+
+        repository.restore()
+        val progress = repository.startScheduledSynchronization()
+        // Well past the ten seconds an automatic run waits for. Not advanceUntilIdle, which leaves the repository's
+        // scope - background work of the test - waiting.
+        advanceTimeBy(20_000)
+
+        assertNull(progress)
+        assertNull((repository.syncState.value as SyncState.Connected).progress)
+        assertEquals(0, provider.listCount)
+    }
+
+    @Test
+    fun `an automatic run starts ten seconds after the latest change`() = runTest {
+        val provider = FakeSyncProvider(account = ACCOUNT)
+        val repository = repository(provider = provider)
+        runCurrent()
+
+        repository.restore()
+        repository.scheduleSynchronization()
+        advanceTimeBy(6_000)
+        repository.scheduleSynchronization()
+        advanceTimeBy(9_900)
+        assertEquals(0, provider.listCount)
+        advanceTimeBy(200)
+
+        assertTrue(provider.listCount > 0)
+        assertIs<SyncOutcome.Success>(repository.awaitOutcome().lastOutcome)
+    }
+
+    @Test
+    fun `a change during a run is carried out after it`() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        val runs = RunCounter()
+        val repository = repository(
+            provider = FakeSyncProvider(
+                files = mapOf(song(1) to "One".encodeToByteArray()),
+                onDownload = { gate.await() },
+                account = ACCOUNT,
+            ),
+            stateLocalSource = FakeSyncIndexLocalSource(onSaveIndex = runs::onSaveIndex),
+        )
+        runCurrent()
+
+        repository.restore()
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        repository.syncState.first { (it as? SyncState.Connected)?.progress?.total == 1 }
+        repository.scheduleSynchronization()
+        gate.complete(Unit)
+        repository.awaitOutcome()
+        assertEquals(1, runs.count)
+        advanceTimeBy(10_100)
+
+        assertEquals(2, runs.count)
+    }
+
+    @Test
+    fun `Sync now takes the place of the waiting automatic run`() = runTest {
+        val runs = RunCounter()
+        val repository = repository(
+            provider = FakeSyncProvider(account = ACCOUNT),
+            stateLocalSource = FakeSyncIndexLocalSource(onSaveIndex = runs::onSaveIndex),
+        )
+        runCurrent()
+
+        repository.restore()
+        repository.scheduleSynchronization()
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        repository.awaitOutcome()
+        advanceTimeBy(20_000)
+
+        assertEquals(1, runs.count)
+    }
+
+    @Test
+    fun `lastSyncedAt is the clock's time`() = runTest {
+        val repository = repository(provider = FakeSyncProvider(account = ACCOUNT))
+
+        repository.restore()
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        val state = repository.awaitOutcome()
+
+        assertIs<SyncOutcome.Success>(state.lastOutcome)
+        assertEquals(TEST_NOW.toEpochMilliseconds(), state.lastSyncedAt)
+    }
+
+    @Test
+    fun `a run stopped before it got going shows no progress`() = runTest {
+        val repository = repository(provider = FakeSyncProvider(account = ACCOUNT))
+
+        repository.restore()
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        repository.cancelSynchronization()
+        val state = repository.syncState.first { (it as? SyncState.Connected)?.progress == null }
+
+        assertNull((state as SyncState.Connected).progress)
+    }
+
+    @Test
+    fun `stopping sync drops the automatic run that is waiting`() = runTest {
+        val provider = FakeSyncProvider(account = ACCOUNT)
+        val repository = repository(provider = provider)
+
+        repository.restore()
+        repository.scheduleSynchronization()
+        repository.cancelSynchronization()
+        repository.startScheduledSynchronization()
+        // Well past the ten seconds an automatic run waits for. Not advanceUntilIdle, which leaves the repository's
+        // scope - background work of the test - waiting.
+        advanceTimeBy(20_000)
+
+        assertEquals(0, provider.listCount)
+    }
+
+    @Test
+    fun `a periodic index write that fails does not end the run`() = runTest {
+        val stateLocalSource = FakeSyncIndexLocalSource(
+            onSaveIndex = { document ->
+                if (document != null && "\"isRunInProgress\": true" in document && song(1).name in document) {
+                    throw LibraryStorageException("Full")
+                }
+            },
+        )
+        val logger = RecordingLogger()
+        val repository = repository(
+            provider = FakeSyncProvider(files = mapOf(song(1) to "Song".encodeToByteArray()), account = ACCOUNT),
+            stateLocalSource = stateLocalSource,
+            logger = logger,
+        )
+
+        repository.restore()
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        val state = repository.awaitOutcome()
+
+        val outcome = assertIs<SyncOutcome.Success>(state.lastOutcome)
+        assertEquals(1, outcome.summary.downloaded)
+        assertTrue("Could not write the sync index: Full" in logger.lines)
+        val index = stateLocalSource.index.orEmpty()
+        assertTrue(song(1).name in index)
+        assertFalse("\"isRunInProgress\": true" in index)
+    }
+
+    @Test
+    fun `a run reads no file before the first read of the library is done`() = runTest {
+        val reads = mutableListOf<SyncKey>()
+        val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to "One".encodeToByteArray()), onRead = { reads += it })
+        val isWaiting = CompletableDeferred<Unit>()
+        val release = CompletableDeferred<Unit>()
+        val songs = MutableStateFlow<DataState<List<Song>>>(DataState.Loading(null))
+        val repository = repository(
+            provider = FakeSyncProvider(account = ACCOUNT),
+            libraryFileLocalSource = local,
+            songRepository = RecordingSongRepository(
+                songs = songs,
+                onLoadIfNeeded = {
+                    isWaiting.complete(Unit)
+                    release.await()
+                    songs.value = DataState.Idle(emptyList())
+                },
+            ),
+        )
+
+        repository.restore()
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        isWaiting.await()
+        assertTrue(reads.isEmpty())
+        release.complete(Unit)
+        val state = repository.awaitOutcome()
+
+        assertIs<SyncOutcome.Success>(state.lastOutcome)
+        assertTrue(song(1) in reads)
+    }
+
+    @Test
+    fun `a completed run reads again only the file it downloaded`() = runTest {
+        val songRepository = RecordingSongRepository()
+        val repository = repository(
+            provider = FakeSyncProvider(files = mapOf(song(1) to "One".encodeToByteArray()), account = ACCOUNT),
+            libraryFileLocalSource = FakeLibraryFileLocalSource(files = mapOf(song(2) to "Two".encodeToByteArray())),
+            songRepository = songRepository,
+        )
+
+        repository.restore()
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        val state = repository.awaitOutcome()
+
+        assertIs<SyncOutcome.Success>(state.lastOutcome)
+        assertEquals(listOf(song(1).name), songRepository.refreshed)
+        assertEquals(0, songRepository.rescanCount)
+    }
+
+    @Test
+    fun `a run that fails after moving files reads them again`() = runTest {
+        val local = FakeLibraryFileLocalSource(files = mapOf(song(2) to "Two".encodeToByteArray()))
+        val songRepository = RecordingSongRepository()
+        val repository = repository(
+            provider = FakeSyncProvider(
+                files = mapOf(song(1) to "One".encodeToByteArray()),
+                onUpload = { throw SyncNetworkException("Offline") },
+                account = ACCOUNT,
+            ),
+            libraryFileLocalSource = local,
+            songRepository = songRepository,
+        )
+
+        repository.restore()
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        val state = repository.awaitOutcome()
+
+        assertEquals(SyncOutcome.Failure(SyncFailureReason.NETWORK), state.lastOutcome)
+        assertTrue(song(1) in local.files)
+        assertTrue(song(1).name in songRepository.refreshed)
+        assertEquals(0, songRepository.rescanCount)
+    }
+
+    @Test
+    fun `a run stopped by the question on its second pass reads again what it brought in`() = runTest {
+        val json = Json {
+            prettyPrint = true
+            encodeDefaults = true
+        }
+        val local = FakeLibraryFileLocalSource(
+            files = (1..10).associate { song(it) to "Song $it".encodeToByteArray() } + (song(11) to "New".encodeToByteArray()),
+        )
+        val stateLocalSource = FakeSyncIndexLocalSource(
+            index = json.encodeToString(
+                SyncIndexDocument.of(
+                    providerId = SyncProviderId.DROPBOX.id,
+                    accountId = ACCOUNT.indexKey(),
+                    lastSyncedAt = 1,
+                    syncedPreferences = null,
+                    index = (1..10).associate {
+                        song(it) to SyncIndexEntry(localHash = localContentHash("Song $it".encodeToByteArray()), remoteRevision = "r1")
+                    },
+                ),
+            ),
+        )
+        val provider = FakeSyncProvider(
+            files = (1..10).associate { song(it) to "Song $it".encodeToByteArray() } + (song(12) to "Incoming".encodeToByteArray()),
+            account = ACCOUNT,
+        )
+        // The upload meets a file that appeared in the meantime, which makes the engine list again, and by then another
+        // device has emptied most of the folder.
+        provider.onUpload = { key ->
+            if (key == song(11)) {
+                (1..10).forEach { provider.files -= song(it) }
+                provider.files[song(11)] = "Other".encodeToByteArray() to "r9"
+            }
+        }
+        val songRepository = RecordingSongRepository()
+        val repository = repository(
+            provider = provider,
+            stateLocalSource = stateLocalSource,
+            libraryFileLocalSource = local,
+            songRepository = songRepository,
+        )
+
+        repository.restore()
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        val state = repository.awaitOutcome()
+
+        assertIs<SyncOutcome.DeletionsNeedConfirmation>(state.lastOutcome)
+        assertTrue(song(12) in local.files)
+        assertTrue(song(12).name in songRepository.refreshed)
+    }
+
+    @Test
+    fun `a run that would empty the cloud folder says so in its outcome`() = runTest {
+        val json = Json {
+            prettyPrint = true
+            encodeDefaults = true
+        }
+        val library = (1..10).associate { song(it) to "Song $it".encodeToByteArray() }
+        val stateLocalSource = FakeSyncIndexLocalSource(
+            index = json.encodeToString(
+                SyncIndexDocument.of(
+                    providerId = SyncProviderId.DROPBOX.id,
+                    accountId = ACCOUNT.indexKey(),
+                    lastSyncedAt = 1,
+                    syncedPreferences = null,
+                    index = library.mapValues { (_, bytes) -> SyncIndexEntry(localHash = localContentHash(bytes), remoteRevision = "r1") },
+                ),
+            ),
+        )
+        val provider = FakeSyncProvider(files = library, account = ACCOUNT)
+        val repository = repository(
+            provider = provider,
+            stateLocalSource = stateLocalSource,
+            libraryFileLocalSource = FakeLibraryFileLocalSource(files = emptyMap()),
+        )
+
+        repository.restore()
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        val state = repository.awaitOutcome()
+
+        assertEquals(
+            SyncOutcome.DeletionsNeedConfirmation(count = 10, total = 10, direction = SyncDeletionDirection.REMOTE),
+            state.lastOutcome,
+        )
+        assertEquals(library.keys, provider.files.keys)
+    }
+
+    /** What the browser engine of the HTTP client throws for a request that failed, were it to get past the provider. */
+    @Test
+    fun `a run that ends in something other than an exception still reports and clears its marker`() = runTest {
+        val stateLocalSource = FakeSyncIndexLocalSource()
+        val repository = repository(
+            provider = FakeSyncProvider(
+                files = (1..3).associate { song(it) to "Song $it".encodeToByteArray() },
+                // Keyed by the file rather than counted, since the engine runs several downloads at once.
+                onDownload = { if (it == song(2)) throw Error("Fail to fetch") },
+                account = ACCOUNT,
+            ),
+            stateLocalSource = stateLocalSource,
+        )
+
+        repository.restore()
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        val state = repository.awaitOutcome()
+
+        assertEquals(SyncOutcome.Failure(SyncFailureReason.UNKNOWN), state.lastOutcome)
+        assertNull(state.progress)
+        assertFalse("\"isRunInProgress\": true" in stateLocalSource.index.orEmpty())
+    }
+
+    @Test
+    fun `a run in which a file failed keeps the time of the last run that was in step`() = runTest {
+        val stateLocalSource = FakeSyncIndexLocalSource(index = """{"lastSyncedAt":42}""")
+        val repository = repository(
+            provider = FakeSyncProvider(files = mapOf(song(1) to "One".encodeToByteArray()), account = ACCOUNT),
+            stateLocalSource = stateLocalSource,
+            libraryFileLocalSource = FakeLibraryFileLocalSource(onWrite = { throw LibraryStorageException("Full") }),
+        )
+
+        repository.restore()
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        val state = repository.awaitOutcome()
+
+        val outcome = assertIs<SyncOutcome.Success>(state.lastOutcome)
+        assertEquals(listOf(song(1).name), outcome.summary.failed)
+        assertEquals(42, state.lastSyncedAt)
+        assertTrue("\"lastSyncedAt\": 42" in stateLocalSource.index.orEmpty())
+    }
+
+    @Test
+    fun `a full remote folder is reported as that`() = runTest {
+        val repository = repository(
+            provider = FakeSyncProvider(onUpload = { throw SyncRemoteStorageFullException("Full") }, account = ACCOUNT),
+            libraryFileLocalSource = FakeLibraryFileLocalSource(files = mapOf(song(1) to "One".encodeToByteArray())),
+        )
+
+        repository.restore()
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        val state = repository.awaitOutcome()
+
+        assertEquals(SyncOutcome.Failure(SyncFailureReason.REMOTE_STORAGE_FULL), state.lastOutcome)
+    }
+
+    @Test
+    fun `restoring again while a run is going leaves the run alone`() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        val stateLocalSource = FakeSyncIndexLocalSource()
+        val repository = repository(
+            provider = FakeSyncProvider(
+                files = mapOf(song(1) to "One".encodeToByteArray()),
+                onDownload = { gate.await() },
+                account = ACCOUNT,
+            ),
+            stateLocalSource = stateLocalSource,
+        )
+
+        repository.restore()
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        repository.syncState.first { (it as? SyncState.Connected)?.progress?.total == 1 }
+        val result = repository.restore()
+
+        assertTrue(result.isConnected)
+        assertFalse(result.wasInterrupted)
+        val state = assertIs<SyncState.Connected>(repository.syncState.value)
+        assertTrue(state.isSyncing)
+        assertNull(state.lastOutcome)
+        assertTrue("\"isRunInProgress\": true" in stateLocalSource.index.orEmpty())
+        gate.complete(Unit)
+        assertIs<SyncOutcome.Success>(repository.awaitOutcome().lastOutcome)
+    }
+
+    @Test
+    fun `restoring again after an interrupted run still reports it`() = runTest {
+        val repository = repository(
+            provider = FakeSyncProvider(account = ACCOUNT),
+            stateLocalSource = FakeSyncIndexLocalSource(index = """{"isRunInProgress":true}"""),
+        )
+
+        assertTrue(repository.restore().wasInterrupted)
+        assertTrue(repository.restore().wasInterrupted)
+        assertEquals(SyncOutcome.Interrupted, (repository.syncState.value as SyncState.Connected).lastOutcome)
+    }
+
+    @Test
+    fun `an interrupted automatic run is neither reported nor keeps the launch run from starting`() = runTest {
+        val stateLocalSource = FakeSyncIndexLocalSource(index = """{"isRunInProgress":true,"isAutomaticRunInProgress":true}""")
+        val repository = repository(provider = FakeSyncProvider(account = ACCOUNT), stateLocalSource = stateLocalSource)
+
+        assertFalse(repository.restore().wasInterrupted)
+        assertNull((repository.syncState.value as SyncState.Connected).lastOutcome)
+        assertFalse("\"isRunInProgress\": true" in stateLocalSource.index.orEmpty())
+        assertFalse("\"isAutomaticRunInProgress\": true" in stateLocalSource.index.orEmpty())
+    }
+
+    @Test
+    fun `an automatic run marks itself as one in the index`() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        val stateLocalSource = FakeSyncIndexLocalSource()
+        val repository = repository(
+            provider = FakeSyncProvider(
+                files = mapOf(song(1) to "One".encodeToByteArray()),
+                onDownload = { gate.await() },
+                account = ACCOUNT,
+            ),
+            stateLocalSource = stateLocalSource,
+        )
+
+        repository.restore()
+        repository.scheduleSynchronization()
+        repository.startScheduledSynchronization()
+        repository.syncState.first { (it as? SyncState.Connected)?.progress?.total == 1 }
+
+        assertTrue("\"isAutomaticRunInProgress\": true" in stateLocalSource.index.orEmpty())
+        gate.complete(Unit)
+        repository.awaitOutcome()
+        assertFalse("\"isRunInProgress\": true" in stateLocalSource.index.orEmpty())
+        assertFalse("\"isAutomaticRunInProgress\": true" in stateLocalSource.index.orEmpty())
+    }
+
+    @Test
+    fun `a run somebody asked for is not marked as automatic`() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        val stateLocalSource = FakeSyncIndexLocalSource()
+        val repository = repository(
+            provider = FakeSyncProvider(
+                files = mapOf(song(1) to "One".encodeToByteArray()),
+                onDownload = { gate.await() },
+                account = ACCOUNT,
+            ),
+            stateLocalSource = stateLocalSource,
+        )
+
+        repository.restore()
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        repository.syncState.first { (it as? SyncState.Connected)?.progress?.total == 1 }
+
+        assertTrue("\"isRunInProgress\": true" in stateLocalSource.index.orEmpty())
+        assertTrue("\"isAutomaticRunInProgress\": false" in stateLocalSource.index.orEmpty())
+        gate.complete(Unit)
+        repository.awaitOutcome()
+    }
+
+    @Test
+    fun `a disconnect that is cancelled after the credentials went still ends disconnected`() = runTest {
+        val stateLocalSource = FakeSyncIndexLocalSource(index = "{}")
+        val provider = FakeSyncProvider(account = ACCOUNT).apply { onDisconnect = { delay(1_000) } }
+        val repository = repository(provider = provider, stateLocalSource = stateLocalSource)
+        repository.restore()
+
+        val job = launch { repository.disconnect() }
+        runCurrent()
+        assertFalse(provider.connected)
+        job.cancel()
+        advanceUntilIdle()
+
+        assertEquals(SyncState.Disconnected, repository.syncState.first { it == SyncState.Disconnected })
+        assertNull(stateLocalSource.index)
+    }
+
+    @Test
+    fun `a run asked for after the credentials went reports the connection as failed`() = runTest {
+        val provider = FakeSyncProvider(account = ACCOUNT)
+        val repository = repository(provider = provider)
+        repository.restore()
+
+        provider.connected = false
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        val state = repository.syncState.first { it is SyncState.ConnectionFailed }
+
+        assertEquals(SyncFailureReason.AUTHORIZATION, assertIs<SyncState.ConnectionFailed>(state).reason)
+    }
+
+    @Test
+    fun `a run the service refuses reports the connection as failed and keeps the index`() = runTest {
+        val stateLocalSource = FakeSyncIndexLocalSource()
+        val repository = repository(
+            provider = FakeSyncProvider(
+                files = mapOf(song(1) to "One".encodeToByteArray()),
+                onDownload = { throw SyncAuthorizationException("Refused") },
+                account = ACCOUNT,
+            ),
+            stateLocalSource = stateLocalSource,
+        )
+
+        repository.restore()
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        val state = repository.syncState.first { it is SyncState.ConnectionFailed }
+
+        assertEquals(SyncFailureReason.AUTHORIZATION, assertIs<SyncState.ConnectionFailed>(state).reason)
+        assertNotNull(stateLocalSource.index)
+        assertFalse("\"isRunInProgress\": true" in stateLocalSource.index.orEmpty())
+    }
+
+    @Test
+    fun `backing out of reconnecting a refused connection keeps it failed`() = runTest {
+        val repository = repository(
+            provider = FakeSyncProvider(
+                files = mapOf(song(1) to "One".encodeToByteArray()),
+                onDownload = { throw SyncAuthorizationException("Refused") },
+                account = ACCOUNT,
+            ),
+            authenticator = FakeSyncAuthenticator(outcome = SyncAuthenticator.AuthorizationOutcome.Cancelled()),
+        )
+        repository.restore()
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        repository.syncState.first { it is SyncState.ConnectionFailed }
+
+        assertFalse(repository.connect(SyncProviderId.DROPBOX, COMPLETION_PAGE))
+
+        assertEquals(SyncState.ConnectionFailed(SyncProviderId.DROPBOX, SyncFailureReason.AUTHORIZATION), repository.syncState.value)
+    }
+
+    @Test
+    fun `cancelling the reconnect of a refused connection keeps it failed`() = runTest {
+        val repository = repository(
+            provider = FakeSyncProvider(
+                files = mapOf(song(1) to "One".encodeToByteArray()),
+                onDownload = { throw SyncAuthorizationException("Refused") },
+                account = ACCOUNT,
+            ),
+            authenticator = FakeSyncAuthenticator(onAuthorize = { awaitCancellation() }),
+        )
+        repository.restore()
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        repository.syncState.first { it is SyncState.ConnectionFailed }
+
+        // In the order the view model gives up in: the waiting connection first, then the authorization it started.
+        val job = launch { repository.connect(SyncProviderId.DROPBOX, COMPLETION_PAGE) }
+        runCurrent()
+        assertEquals(SyncState.Connecting(SyncProviderId.DROPBOX), repository.syncState.value)
+        job.cancelAndJoin()
+        repository.cancelConnection()
+
+        assertEquals(SyncState.ConnectionFailed(SyncProviderId.DROPBOX, SyncFailureReason.AUTHORIZATION), repository.syncState.value)
+    }
+
+    @Test
+    fun `backing out of retrying a connection that never stored credentials ends disconnected`() = runTest {
+        val store = FakePendingAuthorizationStore().apply { onWrite = { throw LibraryStorageException("Full") } }
+        val provider = FakeSyncProvider()
+        val repository = repository(
+            provider = provider,
+            authenticator = FakeSyncAuthenticator(outcome = SyncAuthenticator.AuthorizationOutcome.Cancelled()),
+            pendingAuthorizationStore = store,
+        )
+        assertFalse(repository.connect(SyncProviderId.DROPBOX, COMPLETION_PAGE))
+        assertEquals(SyncState.ConnectionFailed(SyncProviderId.DROPBOX, SyncFailureReason.STORAGE), repository.syncState.value)
+        provider.connected = false
+        store.onWrite = {}
+
+        assertFalse(repository.connect(SyncProviderId.DROPBOX, COMPLETION_PAGE))
+
+        assertEquals(SyncState.Disconnected, repository.syncState.value)
+    }
+
+    @Test
+    fun `a run whose index cannot be read stops before anything moves`() = runTest {
+        val json = Json {
+            prettyPrint = true
+            encodeDefaults = true
+        }
+        // The library is empty and the index knows the song, so the index is what says it was deleted here.
+        val index = json.encodeToString(
+            SyncIndexDocument.of(
+                providerId = SyncProviderId.DROPBOX.id,
+                accountId = ACCOUNT.indexKey(),
+                lastSyncedAt = 1,
+                syncedPreferences = null,
+                index = mapOf(
+                    song(1) to SyncIndexEntry(localHash = localContentHash("One".encodeToByteArray()), remoteRevision = "r1"),
+                ),
+            ),
+        )
+        val stateLocalSource = FakeSyncIndexLocalSource(index = index)
+        val local = FakeLibraryFileLocalSource()
+        val provider = FakeSyncProvider(files = mapOf(song(1) to "One".encodeToByteArray()), account = ACCOUNT)
+        val repository = repository(provider = provider, stateLocalSource = stateLocalSource, libraryFileLocalSource = local)
+
+        repository.restore()
+        stateLocalSource.onLoadIndex = { throw LibraryStorageException("Locked") }
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        val state = repository.awaitOutcome()
+
+        assertEquals(SyncOutcome.Failure(SyncFailureReason.STORAGE), state.lastOutcome)
+        assertEquals(index, stateLocalSource.index)
+        assertTrue(local.files.isEmpty())
+        assertTrue(song(1) in provider.files)
+    }
+
+    @Test
+    fun `restoring with an unreadable index still shows the account`() = runTest {
+        val repository = repository(
+            provider = FakeSyncProvider(account = ACCOUNT),
+            stateLocalSource = FakeSyncIndexLocalSource(onLoadIndex = { throw LibraryStorageException("Locked") }),
+        )
+
+        val result = repository.restore()
+
+        assertTrue(result.isConnected)
+        assertIs<SyncState.Connected>(repository.syncState.value)
+    }
+
+    @Test
+    fun `restoring again with nothing going starts from the state`() = runTest {
+        val repository = repository(
+            provider = FakeSyncProvider(files = mapOf(song(1) to "One".encodeToByteArray()), account = ACCOUNT),
+        )
+
+        repository.restore()
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        repository.awaitOutcome()
+        val result = repository.restore()
+
+        assertTrue(result.isConnected)
+        assertFalse(result.wasInterrupted)
+        assertIs<SyncOutcome.Success>((repository.syncState.value as SyncState.Connected).lastOutcome)
+    }
+
+    @Test
+    fun `disconnecting right after stopping a run leaves no index behind`() = runTest {
+        val stateLocalSource = FakeSyncIndexLocalSource()
+        val repository = repository(
+            provider = FakeSyncProvider(
+                files = mapOf(song(1) to "One".encodeToByteArray()),
+                onDownload = { CompletableDeferred<Unit>().await() },
+                account = ACCOUNT,
+            ),
+            stateLocalSource = stateLocalSource,
+        )
+
+        repository.restore()
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        repository.syncState.first { (it as? SyncState.Connected)?.progress?.total == 1 }
+        repository.cancelSynchronization()
+        repository.disconnect()
+
+        assertNull(stateLocalSource.index)
+        assertEquals(SyncState.Disconnected, repository.syncState.value)
+    }
+
+    @Test
+    fun `forgetting the connection leaves nothing to restore`() = runTest {
+        val stateLocalSource = FakeSyncIndexLocalSource(index = "{}")
+        val provider = FakeSyncProvider(account = ACCOUNT)
+        val repository = repository(provider = provider, stateLocalSource = stateLocalSource)
+
+        repository.forgetStoredConnection()
+        val result = repository.restore()
+
+        assertEquals(
+            SyncRepository.RestoreResult(isConnected = false, didReturnFromAuthorization = false, wasInterrupted = false),
+            result,
+        )
+        assertEquals(SyncState.Disconnected, repository.syncState.value)
+        assertNull(stateLocalSource.index)
+    }
+
+    @Test
+    fun `forgetting the connection tells the service nothing`() = runTest {
+        val provider = FakeSyncProvider(account = ACCOUNT).apply { onDisconnect = { fail("The service was told.") } }
+        val repository = repository(provider = provider)
+
+        repository.forgetStoredConnection()
+
+        assertTrue(provider.hasForgottenCredentials)
+        assertFalse(provider.connected)
+    }
+
+    @Test
+    fun `forgetting the connection drops an unfinished authorization`() = runTest {
+        val store = FakePendingAuthorizationStore().apply {
+            pending = PendingAuthorization(SyncProviderId.DROPBOX, state = "state", verifier = "verifier", redirectUri = null)
+        }
+        val repository = repository(provider = FakeSyncProvider(), pendingAuthorizationStore = store)
+
+        repository.forgetStoredConnection()
+
+        assertNull(store.loadPendingAuthorization())
+    }
+
+    @Test
+    fun `an ordinary launch does not forget anything`() = runTest {
+        val provider = FakeSyncProvider(account = ACCOUNT)
+        val stateLocalSource = FakeSyncIndexLocalSource().apply { onSetForgettingOwed = { fail("A forgetting was noted.") } }
+        val repository = repository(provider = provider, stateLocalSource = stateLocalSource)
+
+        val result = repository.restore()
+
+        assertTrue(result.isConnected)
+        assertFalse(provider.hasForgottenCredentials)
+        assertEquals(ACCOUNT, (repository.syncState.value as SyncState.Connected).account)
+    }
+
+    @Test
+    fun `a forgetting that fails restores nothing and is owed`() = runTest {
+        val stateLocalSource = FakeSyncIndexLocalSource()
+        val provider = FakeSyncProvider(account = ACCOUNT).apply { onForgetStoredCredentials = { error("The Keychain is locked.") } }
+        val repository = repository(provider = provider, stateLocalSource = stateLocalSource)
+
+        repository.forgetStoredConnection()
+        val result = repository.restore()
+
+        assertFalse(result.isConnected)
+        assertEquals(SyncState.Disconnected, repository.syncState.value)
+        assertTrue(stateLocalSource.isForgettingOwed)
+        assertTrue(provider.connected)
+    }
+
+    @Test
+    fun `the next start up forgets what the first one could not`() = runTest {
+        val stateLocalSource = FakeSyncIndexLocalSource()
+        val provider = FakeSyncProvider(account = ACCOUNT).apply { onForgetStoredCredentials = { error("The Keychain is locked.") } }
+        repository(provider = provider, stateLocalSource = stateLocalSource).forgetStoredConnection()
+        provider.onForgetStoredCredentials = {}
+
+        assertFalse(repository(provider = provider, stateLocalSource = stateLocalSource).restore().isConnected)
+        assertTrue(provider.hasForgottenCredentials)
+        assertFalse(stateLocalSource.isForgettingOwed)
+
+        provider.connected = true
+        assertTrue(repository(provider = provider, stateLocalSource = stateLocalSource).restore().isConnected)
+    }
+
+    @Test
+    fun `a forgetting that works leaves nothing owed`() = runTest {
+        val notes = mutableListOf<Boolean>()
+        val stateLocalSource = FakeSyncIndexLocalSource().apply { onSetForgettingOwed = { notes += it } }
+        val repository = repository(provider = FakeSyncProvider(account = ACCOUNT), stateLocalSource = stateLocalSource)
+
+        repository.forgetStoredConnection()
+
+        assertEquals(listOf(true, false), notes)
+        assertFalse(stateLocalSource.isForgettingOwed)
+    }
+
+    @Test
+    fun `connecting crosses off a forgetting still owed`() = runTest {
+        val stateLocalSource = FakeSyncIndexLocalSource().apply { isForgettingOwed = true }
+        val provider = FakeSyncProvider(account = ACCOUNT).apply {
+            connected = false
+            onCompleteAuthorization = {
+                connected = true
+                ACCOUNT
+            }
+        }
+        val repository = repository(
+            provider = provider,
+            authenticator = FakeSyncAuthenticator(
+                outcome = SyncAuthenticator.AuthorizationOutcome.Received("https://example.com/?code=c&state=state"),
+            ),
+            stateLocalSource = stateLocalSource,
+        )
+
+        assertTrue(repository.connect(SyncProviderId.DROPBOX, COMPLETION_PAGE))
+        assertFalse(stateLocalSource.isForgettingOwed)
+        assertTrue(repository(provider = provider, stateLocalSource = stateLocalSource).restore().isConnected)
+    }
+
+    @Test
+    fun `not knowing whether forgetting is owed restores as usual`() = runTest {
+        val stateLocalSource = FakeSyncIndexLocalSource().apply { onIsForgettingOwed = { error("Not readable.") } }
+        val repository = repository(provider = FakeSyncProvider(account = ACCOUNT), stateLocalSource = stateLocalSource)
+
+        assertTrue(repository.restore().isConnected)
+    }
+
+    @Test
+    fun `a connection that was redirected away can still be cancelled`() = runTest {
+        val store = FakePendingAuthorizationStore()
+        val repository = repository(
+            provider = FakeSyncProvider(),
+            authenticator = FakeSyncAuthenticator(outcome = SyncAuthenticator.AuthorizationOutcome.Redirected),
+            pendingAuthorizationStore = store,
+        )
+
+        assertFalse(repository.connect(SyncProviderId.DROPBOX, COMPLETION_PAGE))
+        assertEquals(SyncState.Connecting(SyncProviderId.DROPBOX), repository.syncState.first())
+        assertNotNull(store.pending)
+        repository.cancelConnection()
+
+        assertEquals(SyncState.Disconnected, repository.syncState.value)
+        assertNull(store.pending)
+    }
+
+    @Test
+    fun `cancelling a connection leaves every other state alone`() = runTest {
+        val store = FakePendingAuthorizationStore()
+        val repository = repository(provider = FakeSyncProvider(account = ACCOUNT), pendingAuthorizationStore = store)
+        repository.restore()
+        val pending = PendingAuthorization(SyncProviderId.DROPBOX, state = "state", verifier = "verifier", redirectUri = null)
+        store.pending = pending
+
+        repository.cancelConnection()
+
+        assertIs<SyncState.Connected>(repository.syncState.value)
+        assertEquals(pending, store.pending)
+    }
+
+    @Test
+    fun `a connection whose storage refuses every write ends as a failure`() = runTest {
+        val store = FakePendingAuthorizationStore().apply { onWrite = { throw LibraryStorageException("Full") } }
+        val repository = repository(provider = FakeSyncProvider(), pendingAuthorizationStore = store)
+
+        assertFalse(repository.connect(SyncProviderId.DROPBOX, COMPLETION_PAGE))
+
+        assertEquals(SyncState.ConnectionFailed(SyncProviderId.DROPBOX, SyncFailureReason.STORAGE), repository.syncState.value)
+    }
+
+    @Test
+    fun `an authorization that ends with a reason reports the connection as failed`() = runTest {
+        val repository = repository(
+            provider = FakeSyncProvider(),
+            authenticator = FakeSyncAuthenticator(
+                outcome = SyncAuthenticator.AuthorizationOutcome.Cancelled("Timed out waiting for the browser."),
+            ),
+        )
+
+        assertFalse(repository.connect(SyncProviderId.DROPBOX, COMPLETION_PAGE))
+
+        assertEquals(SyncState.ConnectionFailed(SyncProviderId.DROPBOX, SyncFailureReason.UNKNOWN), repository.syncState.value)
+    }
+
+    @Test
+    fun `a closed browser is not a failure even when the clean up is`() = runTest {
+        val store = FakePendingAuthorizationStore().apply { onWrite = failingAfterFirstWrite() }
+        val logger = RecordingLogger()
+        val repository = repository(
+            provider = FakeSyncProvider(),
+            authenticator = FakeSyncAuthenticator(outcome = SyncAuthenticator.AuthorizationOutcome.Cancelled()),
+            pendingAuthorizationStore = store,
+            logger = logger,
+        )
+
+        assertFalse(repository.connect(SyncProviderId.DROPBOX, COMPLETION_PAGE))
+
+        assertEquals(SyncState.Disconnected, repository.syncState.value)
+        // Only the kind of the failure, since the message of one that came from the credentials document may quote it.
+        val line = logger.lines.single { "pending authorization" in it }
+        assertTrue("LibraryStorageException" in line)
+        assertFalse("Full" in line)
+    }
+
+    @Test
+    fun `giving up on a connection whose clean up fails still ends disconnected`() = runTest {
+        val store = FakePendingAuthorizationStore().apply { onWrite = failingAfterFirstWrite() }
+        val repository = repository(
+            provider = FakeSyncProvider(),
+            authenticator = FakeSyncAuthenticator(onAuthorize = { awaitCancellation() }),
+            pendingAuthorizationStore = store,
+        )
+
+        val job = launch { repository.connect(SyncProviderId.DROPBOX, COMPLETION_PAGE) }
+        repository.syncState.first { it is SyncState.Connecting }
+        job.cancelAndJoin()
+
+        assertTrue(job.isCancelled)
+        assertEquals(SyncState.Disconnected, repository.syncState.value)
+    }
+
+    @Test
+    fun `giving up after the tokens were stored forgets them`() = runTest {
+        val provider = FakeSyncProvider().apply {
+            connected = false
+            onCompleteAuthorization = {
+                connected = true
+                awaitCancellation()
+            }
+        }
+        val repository = repository(
+            provider = provider,
+            authenticator = FakeSyncAuthenticator(outcome = SyncAuthenticator.AuthorizationOutcome.Received(REDIRECT)),
+        )
+
+        val job = launch { repository.connect(SyncProviderId.DROPBOX, COMPLETION_PAGE) }
+        runCurrent()
+        assertTrue(provider.connected)
+        job.cancelAndJoin()
+
+        assertTrue(provider.hasForgottenCredentials)
+        assertFalse(provider.isConnected())
+        assertEquals(SyncState.Disconnected, repository.syncState.value)
+        assertFalse(repository.restore().isConnected)
+    }
+
+    @Test
+    fun `a connection whose index cannot be reset forgets the tokens it stored`() = runTest {
+        val provider = FakeSyncProvider().apply {
+            connected = false
+            onCompleteAuthorization = {
+                connected = true
+                ACCOUNT
+            }
+        }
+        val repository = repository(
+            provider = provider,
+            authenticator = FakeSyncAuthenticator(outcome = SyncAuthenticator.AuthorizationOutcome.Received(REDIRECT)),
+            stateLocalSource = FakeSyncIndexLocalSource(
+                index = """{"accountId":"someone-else"}""",
+                onSaveIndex = { throw LibraryStorageException("Full") },
+            ),
+        )
+
+        assertFalse(repository.connect(SyncProviderId.DROPBOX, COMPLETION_PAGE))
+
+        assertEquals(SyncState.ConnectionFailed(SyncProviderId.DROPBOX, SyncFailureReason.STORAGE), repository.syncState.value)
+        assertTrue(provider.hasForgottenCredentials)
+    }
+
+    @Test
+    fun `credentials that cannot be read right now are reported as that and start nothing`() = runTest {
+        val provider = FakeSyncProvider(account = ACCOUNT).apply {
+            onIsConnected = { throw LibraryStorageException("Keystore busy") }
+        }
+        val repository = repository(provider = provider)
+
+        assertFalse(repository.restore().isConnected)
+
+        assertEquals(SyncState.ConnectionFailed(SyncProviderId.DROPBOX, SyncFailureReason.STORAGE), repository.syncState.value)
+        assertEquals(0, provider.listCount)
+    }
+
+    @Test
+    fun `a disconnect whose credentials cannot be read still ends disconnected`() = runTest {
+        val provider = FakeSyncProvider(account = ACCOUNT)
+        val stateLocalSource = FakeSyncIndexLocalSource(index = "{}")
+        val repository = repository(provider = provider, stateLocalSource = stateLocalSource)
+        repository.restore()
+        provider.onIsConnected = { throw LibraryStorageException("Keystore busy") }
+
+        repository.disconnect()
+
+        assertEquals(SyncState.Disconnected, repository.syncState.value)
+        assertNull(stateLocalSource.index)
+    }
+
+    @Test
+    fun `a run takes the folder's version of a remembered demo song`() = runTest {
+        val planted = "Demo, as this version plants it".encodeToByteArray()
+        val there = "Demo, as an older version planted it".encodeToByteArray()
+        val libraryFileLocalSource = FakeLibraryFileLocalSource(files = mapOf(song(1) to planted))
+        val userPreferencesRepository = FakeUserPreferencesRepository()
+        val repository = repository(
+            provider = FakeSyncProvider(files = mapOf(song(1) to there), account = ACCOUNT),
+            libraryFileLocalSource = libraryFileLocalSource,
+            userPreferencesRepository = userPreferencesRepository,
+        )
+
+        DemoLibraryRepositoryImpl(
+            libraryFileLocalSource = libraryFileLocalSource,
+            libraryFileLock = LibraryFileLock(),
+            userPreferencesRepository = userPreferencesRepository,
+            logger = Logger.Standard,
+        ).rememberDemoLibraryFiles(songFileNames = listOf(song(1).name), setlistFileNames = emptyList())
+        repository.restore()
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        val state = repository.awaitOutcome()
+
+        assertEquals(emptyList(), assertIs<SyncOutcome.Success>(state.lastOutcome).summary.conflicts)
+        assertEquals(setOf(song(1)), libraryFileLocalSource.files.keys)
+        assertContentEquals(there, libraryFileLocalSource.files[song(1)])
+    }
+
+    /** A storage that takes the pending authorization and then refuses to let go of it. */
+    private fun failingAfterFirstWrite(): () -> Unit {
+        var writeCount = 0
+        return { if (++writeCount > 1) throw LibraryStorageException("Full") }
+    }
+
+    private fun TestScope.repository(
+        provider: FakeSyncProvider,
+        authenticator: FakeSyncAuthenticator = FakeSyncAuthenticator(),
+        pendingAuthorizationStore: FakePendingAuthorizationStore = FakePendingAuthorizationStore(),
+        stateLocalSource: FakeSyncIndexLocalSource = FakeSyncIndexLocalSource(),
+        libraryFileLocalSource: FakeLibraryFileLocalSource = FakeLibraryFileLocalSource(),
+        songRepository: RecordingSongRepository = RecordingSongRepository(),
+        setlistRepository: RecordingSetlistRepository = RecordingSetlistRepository(),
+        userPreferencesRepository: FakeUserPreferencesRepository = FakeUserPreferencesRepository(),
+        logger: Logger = Logger.Standard,
+    ): SyncRepositoryImpl {
+        val environment = testEnvironment(logger = logger)
+        val syncProviders = SyncProviders(listOf(provider))
+        val stateHolder = SyncStateHolder(logger)
+        val indexStore = SyncIndexStore(stateLocalSource, environment)
+        val syncedPreferencesSync = SyncedPreferencesSync(userPreferencesRepository, libraryFileLocalSource, logger)
+        val runner = SyncRunner(
+            syncProviders = syncProviders,
+            engine = DataSyncModule.syncEngine(
+                libraryFileLocalSource = libraryFileLocalSource,
+                libraryFileLock = LibraryFileLock(),
+                setlistComparison = NoSetlistComparison,
+                userPreferencesRepository = userPreferencesRepository,
+                logger = logger,
+            ),
+            syncedPreferencesSync = syncedPreferencesSync,
+            indexStore = indexStore,
+            libraryRefresher = SyncLibraryRefresher(songRepository, setlistRepository, environment),
+            stateHolder = stateHolder,
+            environment = environment,
+        )
+        val scheduler = SyncRunScheduler(
+            runner = runner,
+            stateHolder = stateHolder,
+            libraryChanges = LibraryChanges(),
+            syncedPreferencesSync = syncedPreferencesSync,
+            environment = environment,
+        )
+        return SyncRepositoryImpl(
+            syncProviders = syncProviders,
+            stateHolder = stateHolder,
+            connectionManager = SyncConnectionManager(
+                syncProviders = syncProviders,
+                authenticator = authenticator,
+                pendingAuthorizationStore = pendingAuthorizationStore,
+                syncIndexLocalSource = stateLocalSource,
+                stateHolder = stateHolder,
+                indexStore = indexStore,
+                runner = runner,
+                scheduler = scheduler,
+                environment = environment,
+            ),
+            scheduler = scheduler,
+        )
+    }
+
+    /** Waits for the state a run reports at its end; a run that never reports is failed by `runTest`'s own timeout. */
+    private suspend fun SyncRepositoryImpl.awaitOutcome() = syncState.first {
+        it is SyncState.Connected && !it.isSyncing && it.lastOutcome != null
+    } as SyncState.Connected
+
+    private companion object {
+        val COMPLETION_PAGE = AuthorizationCompletionPage(title = "", message = "")
+        const val REDIRECT = "campfire://sync?code=c&state=state"
+        val ACCOUNT = SyncAccount(
+            providerId = SyncProviderId.DROPBOX,
+            id = "dbid:1",
+            displayName = "Someone",
+            email = "someone@example.com",
+        )
+
+        fun song(number: Int) = SyncKey(kind = LibraryFileKind.SONG, name = "song_$number.cho")
+    }
+}

@@ -23,6 +23,7 @@ kotlin {
             implementation(project(":data:repository:implementation"))
             implementation(project(":data:source:local:implementation"))
             implementation(project(":data:source:remote:implementation"))
+            implementation(project(":data:sync:implementation"))
             implementation(project(":domain:implementation"))
             implementation(project(":metronome:implementation"))
             implementation(project(":presentation"))

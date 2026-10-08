@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.di
 import com.pandulapeter.campfire.data.repository.implementation.DataRepositoryModule
 import com.pandulapeter.campfire.data.source.local.implementation.DataLocalSourceModule
 import com.pandulapeter.campfire.data.source.remote.implementation.DataRemoteSourceModule
+import com.pandulapeter.campfire.data.sync.implementation.DataSyncModule
 import com.pandulapeter.campfire.domain.api.useCases.LoadScreenDataUseCase
 import com.pandulapeter.campfire.domain.implementation.DomainModule
 import com.pandulapeter.campfire.metronome.implementation.MetronomeModule
@@ -35,6 +36,7 @@ import org.koin.plugin.module.dsl.startKoin
         DataLocalSourceModule::class,
         DataRemoteSourceModule::class,
         DataRepositoryModule::class,
+        DataSyncModule::class,
         DomainModule::class,
         MetronomeModule::class,
         PresentationModule::class,
