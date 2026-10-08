@@ -531,6 +531,11 @@ localized in both languages.
   into the built
   `Info.plist` by a build phase of the Xcode project, which sets no version of its own, reading `gradle.properties`
   and then `local.properties` the way Gradle does.
+- `gradle.properties` turns on the local build cache and parallel project execution (`org.gradle.caching`,
+  `org.gradle.parallel`). Parallel lets a Kotlin/Native release link run beside other compilations in one daemon,
+  which is why `publish-ios.yml` raises the daemon's heap; where a build runs out of memory, cap
+  `org.gradle.workers.max` rather than turning parallel off. CI caches Gradle with `gradle/actions/setup-gradle`, the
+  cache written by runs on the default branch and read by every other.
 - **Everything configurable is a `campfire.*` Gradle property**, declared with a default in `gradle.properties` and
   read with `project.property("campfire.x")`: the app version and the build number, the
   Android release signing values, the Dropbox app key, the Mac App Store

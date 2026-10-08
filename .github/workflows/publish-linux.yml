@@ -68,7 +68,10 @@ jobs:
         with:
           distribution: 'jetbrains'
           java-version: 21
-          cache: 'gradle'
+      # Caches the dependencies, the wrapper and the build cache's task outputs. The cache is written by runs on the
+      # default branch (the nightly one) and only read by every other run, a release's included.
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v5
       # A published build with an empty key has no sync provider at all, and nothing downstream would notice: the
       # empty string is the checked-in default, because a fresh clone has to build without a secret.
       - name: Check the sync credentials
