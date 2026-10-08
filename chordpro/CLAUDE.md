@@ -115,7 +115,11 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   directive), `ChordProHeaderLayout` (`metadataKind` for the one name a directive is known by whichever of its
   spellings a file uses, and where a new one goes in a file the user wrote) and `ChordProTokens` (`isStaffLine` for "is
   this line of a tab environment the staff or something written above it", `words` for the words of a line and their
-  ranges, the cells of a grid line).
+  ranges, the cells of a grid line). `MetadataKind` describes every metadata directive once — its long name, its short
+  spellings, whether `{meta: name …}` stands for it, whether it repeats, whether a later line is a timing change
+  (`tempo`, `time`) or merely kept in the body by the field editor (`key` too), and which values the parser can read —
+  in header order, so `metadataOrder`, the aliases, the standard `{meta}` names, the parser's alias resolution, the
+  highlighter's rules, the prettifier's timing check and `ChordProMetadataFields.Field` all read it.
   `ChordProHeaderLayout.metadataInsertionIndex` is the rule for where a directive goes: after the last directive of the same kind, and otherwise into the
   header in `metadataOrder`, the order the app lists metadata in — which leaves a header arranged some other way
   exactly as it is, since it only ever decides where a line is *added*. Every other object here goes through these, so
@@ -226,7 +230,7 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   `key`, `tempo` and `time` is the first of the header, since a later one is a change mid-song, and the first of the
   body where the header has none; an empty line, the new song
   template's, where none does — where it stands and in its own spelling (`{t: …}`, a `{meta: title …}`), drops the
-  other lines of the same field (but never a `{key}`, `{tempo}` or `{time}` in the body), writes a field the file lacks
+  other lines of the same field (but never a `{key}`, `{tempo}` or `{time}` in the body: `MetadataKind.isKeptInBody`), writes a field the file lacks
   into the header by `metadataInsertionIndex`, and removes it for a blank value — except a header `{key}`, `{tempo}` or
   `{time}` whose field the body still changes, which is kept as an empty line so that the song declares nothing rather
   than starting in the body's first change; editing the text for the reason `ChordProTags` does. `valueOf` reads a field back out
@@ -242,9 +246,8 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   is the other half of that: what the song already declares, counted by directive and not by value, so that a
   `{title: }` waiting to be typed into is a title, and `DeclaredMetadataCache` is its incremental form, which an editor
   calls on every keystroke: it counts again only when the edit changes what a line declares, and is always equal to
-  `declaredMetadata`. `repeatableMetadata` is what a song may say twice — its tags,
-  its languages and its links — and `changeableMetadata` what it may say again further down as a change (`tempo`,
-  `time`), which `insertChangeable` writes: into the header by `insert` where it has no line of the kind, into an empty
+  `declaredMetadata`. `repeatableMetadata` is what a song may say twice and `changeableMetadata` what it may say again
+  further down as a change, both read off `MetadataKind`; `insertChangeable` writes the second: into the header by `insert` where it has no line of the kind, into an empty
   header line (one the Song defaults sheet cleared), at the start of the caret's line where the header names a value
   and the caret is below the body's first line of the song, and otherwise nowhere, the header's value selected instead. Everything else is a thing
   a song can only be one of, which is what lets an editor stop offering it. `metadataInsertionIndex` counts only the
@@ -381,14 +384,14 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   environment it names, since the parser, the summary and the transposition read the lines after it as ordinary ones.
   A directive whose value the parser reads and then drops — a `{time}`, `{tempo}`, `{capo}`, `{duration}` or
   `{transpose}` it cannot make sense of, a cover or a link that is no web address, a language that names none — is one
-  `INVALID` token over the whole line instead, decided by the same functions that read it (`ChordProTime`,
-  `ChordProDuration`, `ChordProMetaItems.cover`…); one with no value at all is not, since that is what the editor writes
+  `INVALID` token over the whole line instead, decided by the same functions that read it (`MetadataKind.isReadable`,
+  `ChordProMetaItems.cover`…), which a table test holds against the parser for every kind and spelling; one with no value at all is not, since that is what the editor writes
   into the header for the value to be typed into. A definition is coloured the same way: the chord it names is a
   `CHORD` token inside its value, and one whose shape cannot be read (`ChordProDefinitions.Reading.Invalid`: a fret
   that is no number, fingers that do not match the frets, a value given twice, a selector naming an instrument the
   shape is not for) is one `INVALID` token; one that is only not Campfire's to draw (a `copy`, a banjo's five strings) is neither. A directive
-  that says again what a song can only say once — every metadata kind but `ChordProHeader.repeatableMetadata` and
-  `changeableMetadata`, counted by `ChordProHeaderLayout.metadataKind`, so a `{t}` after a `{title}` counts — is one
+  that says again what a song can only say once — every `MetadataKind` but the repeatable and the timing-change ones,
+  counted by `ChordProHeaderLayout.metadataKind`, so a `{t}` after a `{title}` counts — is one
   `DUPLICATE` token from the line after the first that says something on, an empty one included — exactly the lines
   the parser reads past — which the editor draws in the error colour too; an empty or `INVALID` line before it counts
   for nothing, a body `{key}` is one wherever the header has a key line at all, and inside a delegated environment
