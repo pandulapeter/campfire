@@ -22,7 +22,6 @@ import com.pandulapeter.campfire.data.model.domain.SyncState
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.data.repository.api.SyncRepository
-import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
 import com.pandulapeter.campfire.data.repository.implementation.base.RepositoryEnvironment
 import com.pandulapeter.campfire.data.repository.implementation.base.recovering
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncEngine
@@ -31,8 +30,6 @@ import com.pandulapeter.campfire.data.repository.implementation.sync.SyncKey
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncedPreferencesDocument
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncedPreferencesSync
 import com.pandulapeter.campfire.data.repository.implementation.sync.indexKey
-import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
-import com.pandulapeter.campfire.data.source.local.api.SetlistComparison
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import com.pandulapeter.campfire.data.source.local.api.SyncIndexLocalSource
 import com.pandulapeter.campfire.data.source.remote.api.PendingAuthorizationStore
@@ -91,19 +88,13 @@ internal class SyncRepositoryImpl(
      */
     private val songRepository: SongRepository,
     private val setlistRepository: SetlistRepository,
-    private val userPreferencesRepository: UserPreferencesRepository,
-    private val libraryFileLocalSource: LibraryFileLocalSource,
-    private val libraryFileLock: LibraryFileLock,
-    setlistComparison: SetlistComparison,
+    private val engine: SyncEngine,
+    private val syncedPreferencesSync: SyncedPreferencesSync,
     libraryChanges: LibraryChanges,
     private val environment: RepositoryEnvironment,
 ) : SyncRepository {
 
     private val providers = syncProviders.all
-    private val engine = SyncEngine(libraryFileLocalSource, libraryFileLock, setlistComparison) { key ->
-        userPreferencesRepository.loadUserPreferencesIfNeeded()?.demoLibraryContentHashes?.get(key.path)
-    }
-    private val syncedPreferencesSync = SyncedPreferencesSync(userPreferencesRepository, libraryFileLocalSource)
     private val _syncState = MutableStateFlow<SyncState>(SyncState.Disconnected)
     override val syncState = _syncState.asStateFlow()
     override val availableProviders = providers.map { it.id }

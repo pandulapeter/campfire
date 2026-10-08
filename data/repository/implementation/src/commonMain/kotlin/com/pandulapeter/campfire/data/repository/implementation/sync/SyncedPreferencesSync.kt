@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.serialization.json.JsonObject
+import org.koin.core.annotation.Single
 
 /**
  * The last step of a run that completed: [SyncedPreferencesDocument] settled between this device and the cloud folder.
@@ -37,7 +38,11 @@ import kotlinx.serialization.json.JsonObject
  * The preferences are changed before the document is uploaded. The other way round, an upload followed by a write
  * that failed would leave this device's old values looking like changes made here since, and the next run would
  * undo the other devices' with them; this way round, a failed upload only leaves the next run a change to carry.
+ *
+ * One instance for the whole app: [localChanges] only recognizes the values that same instance's [synchronize] wrote,
+ * and both the run and the scheduler of the next one reach it.
  */
+@Single
 internal class SyncedPreferencesSync(
     private val userPreferencesRepository: UserPreferencesRepository,
     private val libraryFileLocalSource: LibraryFileLocalSource,

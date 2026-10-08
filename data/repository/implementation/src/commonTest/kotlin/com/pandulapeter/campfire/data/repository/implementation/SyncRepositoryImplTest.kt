@@ -34,6 +34,7 @@ import com.pandulapeter.campfire.data.repository.implementation.sync.RecordingSo
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncIndexDocument
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncIndexEntry
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncKey
+import com.pandulapeter.campfire.data.repository.implementation.sync.SyncedPreferencesSync
 import com.pandulapeter.campfire.data.repository.implementation.sync.indexKey
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import com.pandulapeter.campfire.data.source.remote.api.PendingAuthorization
@@ -1142,10 +1143,13 @@ class SyncRepositoryImplTest {
         syncIndexLocalSource = stateLocalSource,
         songRepository = songRepository,
         setlistRepository = setlistRepository,
-        userPreferencesRepository = userPreferencesRepository,
-        libraryFileLocalSource = libraryFileLocalSource,
-        libraryFileLock = LibraryFileLock(),
-        setlistComparison = NoSetlistComparison,
+        engine = DataRepositoryModule.syncEngine(
+            libraryFileLocalSource = libraryFileLocalSource,
+            libraryFileLock = LibraryFileLock(),
+            setlistComparison = NoSetlistComparison,
+            userPreferencesRepository = userPreferencesRepository,
+        ),
+        syncedPreferencesSync = SyncedPreferencesSync(userPreferencesRepository, libraryFileLocalSource),
         libraryChanges = LibraryChanges(),
         environment = testEnvironment(),
     )
