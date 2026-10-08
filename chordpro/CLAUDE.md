@@ -32,7 +32,7 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   row of several such values set apart by gaps (`Key: B   Transposition: +2   Capo: 2   Tempo: 96 BPM   Time: 3/4`,
   the row the PDF heads a song with, in English or Hungarian labels) is read as each of them, the tempo without its
   `BPM`; the transposition is dropped, since the chords under it are already in the key it names. A text is passed through as ChordPro when any line is a directive ChordPro
-  defines (`ChordProSyntax.isKnownDirective`) or holds a chord bracketed against a syllable (`[G]Hello`), and
+  defines (`ChordProDirectives.isKnownDirective`) or holds a chord bracketed against a syllable (`[G]Hello`), and
   otherwise only when most of its lines hold bracketed chords. The caller
   supplies NFC normalization. `ChordProLiteralText` rewrites prose brackets, directive braces and a leading hash so
   extracted text cannot silently become markup. No recognized song structure means escaped prose, not a guessed
@@ -79,7 +79,7 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   `ChordProLine.Tab.continuesEnvironment` is what tells the two apart, and the serializer writes the boundary back.
   The environments ChordPro hands to another program (`abc`, `ly`, `svg`, `textblock`) are sections whose lines are kept
   verbatim as lyrics with no chords — `#` lines and braces included: only the `{end_of_…}` that closes one and a
-  directive written with a colon are read as directives inside it (`ChordProSyntax.matchDelegatedDirective`), by the
+  directive written with a colon are read as directives inside it (`ChordProDirectives.matchDelegatedDirective`), by the
   parser, the summary, the transposition and the highlighter alike — so the transposition, the chord detection of the library scan and the highlighter
   all leave them alone. A `{comment}`, a break or a `{chorus}` inside an environment cuts the section in two the way it
   does anywhere else, and the environment carries on in the second half; a comment there is never read as a Campfire 3
@@ -101,17 +101,20 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   labels and comments in, and a cell may hold several chords joined with `~`, each transposed on its own.
   The model is immutable, and the Compose compiler is told so (`gradle/compose-stability.conf`): never hand it a
   collection that is mutated afterwards, and add a new model class to that file only once that holds for it.
-- `ChordProSyntax` — the shared low-level rules (the directive and chord regexes, long/short directive names, a value
-  separated from a known directive name by a colon or by whitespace alone (the spec allows both, and a line in braces whose name the app
-  does not know stays the lyrics it has always been shown as), the `start_of_` / `end_of_` prefixes, `label`
-  attributes in either quotes, and no label at all for a value made of other attributes, what counts as a tag, a language, a cover or a link directive, `metadataKind` for the one name a
-  directive is known by whichever of its spellings a file uses, `isStaffLine` for "is this line of a tab environment
-  the staff or something written above it", `words` for the words of a line and their ranges, and where a new one
-  goes in a file the user wrote).
-  `metadataInsertionIndex` is that last rule: after the last directive of the same kind, and otherwise into the
+- The shared low-level rules, one `internal object` per concern: `ChordProLines` (splitting a file into lines and
+  joining them back with its own separator), `ChordProDirectives` (the directive and chord bracket walks, long/short
+  directive names, a value separated from a known directive name by a colon or by whitespace alone — the spec allows
+  both, and a line in braces whose name the app does not know stays the lyrics it has always been shown as),
+  `ChordProEnvironments` (the `start_of_` / `end_of_` prefixes, `label` attributes in either quotes, and no label at
+  all for a value made of other attributes), `ChordProMetaItems` (what counts as a tag, a language, a cover or a link
+  directive), `ChordProHeaderLayout` (`metadataKind` for the one name a directive is known by whichever of its
+  spellings a file uses, and where a new one goes in a file the user wrote) and `ChordProTokens` (`isStaffLine` for "is
+  this line of a tab environment the staff or something written above it", `words` for the words of a line and their
+  ranges, the cells of a grid line).
+  `ChordProHeaderLayout.metadataInsertionIndex` is the rule for where a directive goes: after the last directive of the same kind, and otherwise into the
   header in `metadataOrder`, the order the app lists metadata in — which leaves a header arranged some other way
-  exactly as it is, since it only ever decides where a line is *added*. Every other object here goes through it, so
-  the dialect is defined once. What counts as a space is decided in `words`, by `Char.isWhitespace` and not by a
+  exactly as it is, since it only ever decides where a line is *added*. Every other object here goes through these, so
+  the dialect is defined once. What counts as a space is decided in `ChordProTokens.words`, by `Char.isWhitespace` and not by a
   regex: the three platforms' regex engines disagree about `\s`, and a chart pasted from a web page is full of
   non-breaking spaces.
 - `ChordProParser` — `parse` (the whole song), `summarize` (the directives plus "does it have chords", from one walk,
@@ -130,7 +133,7 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   (the highlighter marks it `DUPLICATE`); a song that changes key, tempo or time signature is in
   the one its first `{key}`, `{tempo}` or `{time}` names — the first one it can read, a `{tempo}` or `{time}` the
   highlighter marks invalid counting as missing, and so does a negative `{capo}` — the first in the header (before the body begins, by the rule
-  `{transpose}` is read with, `ChordProSyntax.bodyStartIndex`), a line in the body counting only for a song whose header
+  `{transpose}` is read with, `ChordProHeaderLayout.bodyStartIndex`), a line in the body counting only for a song whose header
   has no line of that field at all, an empty one included, which is how a cleared value stays cleared; an empty `{key}`,
   `{capo}`, `{tempo}` or `{time}` (the new song template's `{key}`) declares nothing and takes back nothing another header line
   said; a `{transpose}` before the song's first line transposes the whole of it (`ChordProMetadata.transpose`,
@@ -168,14 +171,14 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   reason `ChordProTransposer.transposeText` does — the result is written straight back to the user's file, so their
   own formatting has to survive a chip being tapped in the viewer. A new tag lands after the last one the file
   already has, or at the end of the directives it opens with. What makes "every other byte" true for all of these
-  text edits (tags, languages, the transposition) is `ChordProSyntax.joinLines`: the line separator is detected per
+  text edits (tags, languages, the transposition) is `ChordProLines.joinLines`: the line separator is detected per
   file, CRLF where any line ends that way, a bare CR where the file uses those and no CRLF (an old Mac export), LF
   otherwise, and a trailing line break is put back where the file had one; `ChordProHeader.insert` writes its line
   break with the same separator. A file mixing its endings comes out with the one separator that picked.
 - `ChordProLanguages` — the languages a song is sung in, which ChordPro has no directive for at all: what Campfire
   writes is `{meta: language en}`, a custom metadata item, and what it reads is that plus `{meta: lang en}` and the
   bare `{language: en}` / `{lang: en}` a hand written file may carry. A value is normalized on the way in
-  (`ChordProSyntax.languageCode`): trimmed, cut down to its primary subtag, folded to lower case and, where the
+  (`ChordProMetaItems.languageCode`): trimmed, cut down to its primary subtag, folded to lower case and, where the
   standard has a two letter code for the same language, to that — so `EN-us`, `eng` and `ger` are `en`, `en` and
   `de`. A region would make a filter group of its own for what is the same language to a song book, and the
   platforms disagree about what to call one anyway; a three letter code would make a *second* group for a language
@@ -190,13 +193,13 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   `HUN` or `en-US` and has to find the row the library files that language under.
 - `ChordProCoverArt` — the cover of a song, which ChordPro has no directive for either: `{meta: cover https://…}`,
   read into `ChordProMetadata.coverArt` as the first such line whose value is an `http` or `https` address with no
-  whitespace in it (`ChordProSyntax.webUrl`), anything else being no cover rather than a custom item. `set` rewrites
+  whitespace in it (`ChordProMetaItems.webUrl`), anything else being no cover rather than a custom item. `set` rewrites
   the first cover line where it stands and drops the rest, writes one into the header after the album where the file
   has none (the cover sits between `album` and `year` in `metadataOrder`), or removes them all for null, editing the
   text for the reason `ChordProTags` does; a line that already names the address is left as it is written. It counts
   as declared metadata under `cover`, and a song has one, so the editor stops offering it once the file carries one.
   `usableUrl` is what the cover sheet checks a typed address against, completing one typed without its scheme as
-  `https` the way `ChordProLinks.usableUrl` does (both are `ChordProSyntax.typedWebUrl`); reading a file stays strict.
+  `https` the way `ChordProLinks.usableUrl` does (both are `ChordProMetaItems.typedWebUrl`); reading a file stays strict.
 - `ChordProLinks` — pages about a song (a video, a recording, a tab), any site at all: one `{meta: link https://… Optional name}`
   line per link, read into `ChordProMetadata.links` as `ChordProLink(url, name)` in file order, each address once
   and keeping its first name, by the same address rule as the cover. An unnamed link has a null name. `addLink` writes a line after the last link, or into the header after the languages where there is none
@@ -206,7 +209,7 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   last of them — keeping an unchanged line that stays in its place in its original spelling and changing only the
   link lines; names are optional, trimmed, and cannot inject
   braces or line breaks. The serializer keeps the names too. `usableUrl` is what the dialog checks a typed address
-  against (`ChordProSyntax.typedWebUrl`, shared with the cover's), and takes one typed without its scheme as `https`,
+  against (`ChordProMetaItems.typedWebUrl`, shared with the cover's), and takes one typed without its scheme as `https`,
   the way a browser's address bar shows most of them —
   but only where it starts with a host (and perhaps a port), so `mailto:…`, `me@…` or a mistyped `https:/…` is refused
   rather than saved as an `https` address naming nothing.
@@ -247,7 +250,7 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   never closes takes the rest of it. `comparable` folds a text the same way, line endings included, which is what an import compares a part
   against the file already on disk with: the same song, tagged in the app or written by hand, is not a conflict. It
   also writes each directive outside a delegated environment in its long name and one spacing
-  (`ChordProSyntax.canonicalDirective`, `{t:X}` as `{title: X}`), which Prettify does not, since that would rewrite the
+  (`ChordProDirectives.canonicalDirective`, `{t:X}` as `{title: X}`), which Prettify does not, since that would rewrite the
   user's file. Both
   drop a byte order mark wherever it sits, since joining two files that each carry one leaves one in the middle, and
   U+FEFF is not whitespace to `trim`, so a `{title}` behind it would be read as lyrics.
@@ -257,7 +260,7 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   its note and keeps the words (`renameKey`), which is also what the notation and the library scan use for the key, and leaves
   annotations alone. The brackets of a comment (`{comment}`, `{ci}`, `{cb}`, `{highlight}`) and of a label (a section's,
   a chorus recall's) are read as a line of lyrics and moved the same way on the model and in the text
-  (`ChordProSyntax.hasChordsInValue` names those directives), since that is where an intro is written down as a row of
+  (`ChordProDirectives.hasChordsInValue` names those directives), since that is where an intro is written down as a row of
   chords — and a Campfire 3 heading, `{comment: Intro: [G] [Em]}`, is a comment in the file and a label in the model.
   They are renamed but do not vote on the spelling or the notation, which the library scan could not see. A bracket is only moved when
   `ChordProChordNames.isChordName` accepts the whole of it, so a `[Break]` or a `[Chorus 2x]` somebody wrote without
@@ -362,7 +365,7 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
 - `ChordProHighlighter` — the typed spans an editor wants to colour (directive name, directive value, chord,
   annotation, comment, invalid line, a second line of what is said once). It lives here rather than in the UI so that what counts as a chord is decided in exactly one
   place; only what those look like on screen is the caller's business. It reads the file's lines through
-  `ChordProSyntax` rather than walking them itself, so it agrees with the parser about where a line ends whichever of
+  `ChordProLines` rather than walking them itself, so it agrees with the parser about where a line ends whichever of
   the three endings the file uses, and reads a bracket trimmed the way the parser does, so a `[ *softly]` is an
   annotation and an empty `[]` is not a chord. Inside a tab it colours the brackets of the lines that are not the staff,
   which are the ones the transposition renames, and inside a grid the cells the parser reads as chords, which are
@@ -373,13 +376,13 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   A directive whose value the parser reads and then drops — a `{time}`, `{tempo}`, `{capo}`, `{duration}` or
   `{transpose}` it cannot make sense of, a cover or a link that is no web address, a language that names none — is one
   `INVALID` token over the whole line instead, decided by the same functions that read it (`ChordProTime`,
-  `ChordProDuration`, `ChordProSyntax.cover`…); one with no value at all is not, since that is what the editor writes
+  `ChordProDuration`, `ChordProMetaItems.cover`…); one with no value at all is not, since that is what the editor writes
   into the header for the value to be typed into. A definition is coloured the same way: the chord it names is a
   `CHORD` token inside its value, and one whose shape cannot be read (`ChordProDefinitions.Reading.Invalid`: a fret
   that is no number, fingers that do not match the frets, a value given twice, a selector naming an instrument the
   shape is not for) is one `INVALID` token; one that is only not Campfire's to draw (a `copy`, a banjo's five strings) is neither. A directive
   that says again what a song can only say once — every metadata kind but `ChordProHeader.repeatableMetadata` and
-  `changeableMetadata`, counted by `ChordProSyntax.metadataKind`, so a `{t}` after a `{title}` counts — is one
+  `changeableMetadata`, counted by `ChordProHeaderLayout.metadataKind`, so a `{t}` after a `{title}` counts — is one
   `DUPLICATE` token from the line after the first that says something on, an empty one included — exactly the lines
   the parser reads past — which the editor draws in the error colour too; an empty or `INVALID` line before it counts
   for nothing, a body `{key}` is one wherever the header has a key line at all, and inside a delegated environment

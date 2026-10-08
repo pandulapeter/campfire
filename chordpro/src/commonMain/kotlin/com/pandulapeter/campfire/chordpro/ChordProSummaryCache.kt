@@ -86,21 +86,21 @@ class ChordProSummaryCache internal constructor(
             var lineEnd = offset
             while (lineEnd < start && text[lineEnd] != '\n' && text[lineEnd] != '\r') lineEnd++
             val trimmed = text.substring(offset, lineEnd).trim()
-            val isDelegated = environment in ChordProSyntax.delegateEnvironments
+            val isDelegated = environment in ChordProEnvironments.delegateEnvironments
             if (!(trimmed.startsWith('#') && !isDelegated)) {
                 val directive = when {
                     !trimmed.startsWith('{') -> null
-                    isDelegated -> ChordProSyntax.matchDelegatedDirective(trimmed)
-                    else -> ChordProSyntax.matchDirective(trimmed)
+                    isDelegated -> ChordProDirectives.matchDelegatedDirective(trimmed)
+                    else -> ChordProDirectives.matchDirective(trimmed)
                 }
-                if (directive != null && !ChordProSyntax.hasSelectorSuffix(directive.name)) {
-                    ChordProSyntax.startOfEnvironment(directive.name)?.let { environment = it.lowercase() }
-                    ChordProSyntax.endOfEnvironment(directive.name)?.let { environment = null }
+                if (directive != null && !ChordProDirectives.hasSelectorSuffix(directive.name)) {
+                    ChordProEnvironments.startOfEnvironment(directive.name)?.let { environment = it.lowercase() }
+                    ChordProEnvironments.endOfEnvironment(directive.name)?.let { environment = null }
                 }
             }
             offset = lineEnd + if (text.getOrNull(lineEnd) == '\r' && text.getOrNull(lineEnd + 1) == '\n') 2 else 1
         }
-        return if (environment == "tab" || environment == "grid" || environment in ChordProSyntax.delegateEnvironments) null else start..end
+        return if (environment == "tab" || environment == "grid" || environment in ChordProEnvironments.delegateEnvironments) null else start..end
     }
 
     /**

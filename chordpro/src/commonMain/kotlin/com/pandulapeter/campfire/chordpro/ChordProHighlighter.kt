@@ -46,7 +46,7 @@ object ChordProHighlighter {
 
         /**
          * A whole directive line that says again what the song can only say once — a second title, a second year, a
-         * second key — counted by the one name the directive is known by (see [ChordProSyntax.metadataKind]), so a
+         * second key — counted by the one name the directive is known by (see [ChordProHeaderLayout.metadataKind]), so a
          * `{t}` after a `{title}` is one too. The parser takes the first line of the kind that says anything and reads
          * past the rest, so every line after that one is marked, an empty one included; an empty line or an [INVALID]
          * one before it says nothing and leaves the kind free. A `{key}` in the body is also one wherever the header
@@ -77,27 +77,27 @@ object ChordProHighlighter {
         // song's key from even where it is empty.
         val saidOnce = mutableSetOf<String>()
         var hasHeaderKey = false
-        // The lines and their offsets come from ChordProSyntax rather than from a walk of their own, so that a file
+        // The lines and their offsets come from ChordProLines rather than from a walk of their own, so that a file
         // written with any of the three line endings is highlighted the way it is parsed.
-        val lines = ChordProSyntax.splitLines(text)
-        val lineStarts = ChordProSyntax.lineStartOffsets(text)
-        val bodyStart = ChordProSyntax.bodyStartIndex(lines)
+        val lines = ChordProLines.splitLines(text)
+        val lineStarts = ChordProLines.lineStartOffsets(text)
+        val bodyStart = ChordProHeaderLayout.bodyStartIndex(lines)
         lines.forEachIndexed { index, line ->
             val lineStart = lineStarts[index]
             val trimmed = line.trim()
-            val directive = if (isInDelegate) ChordProSyntax.matchDelegatedDirective(trimmed) else ChordProSyntax.matchDirective(trimmed)
+            val directive = if (isInDelegate) ChordProDirectives.matchDelegatedDirective(trimmed) else ChordProDirectives.matchDirective(trimmed)
             when {
                 trimmed.startsWith(SOURCE_COMMENT) && !isInDelegate -> tokens += Token(TokenType.COMMENT, lineStart, lineStart + line.length)
 
                 directive != null -> {
-                    ChordProSyntax.startOfEnvironment(directive.name)?.let {
+                    ChordProEnvironments.startOfEnvironment(directive.name)?.let {
                         isInTab = it == TAB_ENVIRONMENT
                         isInGrid = it == GRID_ENVIRONMENT
-                        isInDelegate = it in ChordProSyntax.delegateEnvironments
+                        isInDelegate = it in ChordProEnvironments.delegateEnvironments
                     }
                     // Any end of an environment ends the way the lines were being read, whichever environment it names: the parser,
                     // the summary and the transposition all read the lines after it as ordinary ones.
-                    ChordProSyntax.endOfEnvironment(directive.name)?.let {
+                    ChordProEnvironments.endOfEnvironment(directive.name)?.let {
                         isInTab = false
                         isInGrid = false
                         isInDelegate = false
@@ -114,7 +114,7 @@ object ChordProHighlighter {
                         else -> directive.tokens(
                             line = line,
                             lineStart = lineStart,
-                            valueStart = ChordProSyntax.directiveValueStart(trimmed),
+                            valueStart = ChordProDirectives.directiveValueStart(trimmed),
                         )
                     }
                 }
@@ -123,7 +123,7 @@ object ChordProHighlighter {
 
                 // A staff line's brackets are part of the tablature, which the transposition moves by its frets; the
                 // brackets of any other line of a tab are chords to it, and are coloured as chords here.
-                !isInDelegate && !(isInTab && ChordProSyntax.isStaffLine(line)) -> ChordProSyntax.brackets(line).forEach { bracket ->
+                !isInDelegate && !(isInTab && ChordProTokens.isStaffLine(line)) -> ChordProDirectives.brackets(line).forEach { bracket ->
                     bracket.token(lineStart)?.let { tokens += it }
                 }
             }
@@ -137,7 +137,7 @@ object ChordProHighlighter {
      * coloured as one: a directive only matches when both of them are there, so the closing one is as much a sign of
      * what the line is as the opening one, and leaving it plain made a directive look unfinished after its value.
      */
-    private fun ChordProSyntax.Directive.tokens(line: String, lineStart: Int, valueStart: Int?): List<Token> {
+    private fun ChordProDirectives.Directive.tokens(line: String, lineStart: Int, valueStart: Int?): List<Token> {
         val open = line.indexOf('{')
         val close = line.lastIndexOf('}')
         if (open == -1 || close <= open) return emptyList()
@@ -165,8 +165,8 @@ object ChordProHighlighter {
      * editor writes into the header for the value to be typed into, and a `{transpose}` without one is a valid one
      * besides, going back to the transposition before it.
      */
-    private fun ChordProSyntax.Directive.isUnreadable(): Boolean {
-        val directive = ChordProSyntax.standardMeta(this) ?: this
+    private fun ChordProDirectives.Directive.isUnreadable(): Boolean {
+        val directive = ChordProMetaItems.standardMeta(this) ?: this
         val value = valueText()
         if (value.isEmpty()) return false
         ChordProDefinitions.selectorOf(directive.name)?.let { selector ->
@@ -178,23 +178,23 @@ object ChordProHighlighter {
             directive.name == "capo" -> value.toIntOrNull()?.takeIf { it >= 0 } == null
             directive.name == "duration" -> ChordProDuration.parse(value) == null
             directive.name == TRANSPOSE -> ChordProParser.transposeSemitones(value) == null
-            ChordProSyntax.isCoverMeta(directive) -> ChordProSyntax.cover(directive) == null
-            ChordProSyntax.isLinkMeta(directive) -> ChordProSyntax.link(directive) == null
-            directive.name in LANGUAGE_NAMES || ChordProSyntax.isLanguageMeta(directive) -> ChordProSyntax.language(directive) == null
+            ChordProMetaItems.isCoverMeta(directive) -> ChordProMetaItems.cover(directive) == null
+            ChordProMetaItems.isLinkMeta(directive) -> ChordProMetaItems.link(directive) == null
+            directive.name in LANGUAGE_NAMES || ChordProMetaItems.isLanguageMeta(directive) -> ChordProMetaItems.language(directive) == null
             else -> false
         }
     }
 
     /** What the directive is set to, trimmed, a `{meta: …}` item's without its name. */
-    private fun ChordProSyntax.Directive.valueText(): String {
-        val directive = ChordProSyntax.standardMeta(this) ?: this
+    private fun ChordProDirectives.Directive.valueText(): String {
+        val directive = ChordProMetaItems.standardMeta(this) ?: this
         return directive.value?.trim()
             ?.let { if (directive.name == META) it.substringAfter(' ', missingDelimiterValue = "").trim() else it }
             .orEmpty()
     }
 
     /** The kind of metadata this directive declares where a song can only be one of it, see [TokenType.DUPLICATE]. */
-    private fun ChordProSyntax.Directive.onceOnlyKind() = ChordProSyntax.metadataKind(this)
+    private fun ChordProDirectives.Directive.onceOnlyKind() = ChordProHeaderLayout.metadataKind(this)
         ?.takeIf { it !in ChordProHeader.repeatableMetadata && it !in ChordProHeader.changeableMetadata }
 
     /**
@@ -202,8 +202,8 @@ object ChordProHighlighter {
      * plain. The words are counted on the line as it is written rather than trimmed, which is the same words at the
      * offsets the editor needs.
      */
-    private fun gridChordTokens(line: String, lineStart: Int): List<Token> = ChordProSyntax.words(line)
-        .zip(ChordProSyntax.parseGridTokens(line.trim()))
+    private fun gridChordTokens(line: String, lineStart: Int): List<Token> = ChordProTokens.words(line)
+        .zip(ChordProTokens.parseGridTokens(line.trim()))
         .filter { (_, token) -> token is GridToken.Chord }
         .map { (word, _) -> Token(TokenType.CHORD, lineStart + word.range.first, lineStart + word.range.last + 1) }
 
@@ -213,17 +213,17 @@ object ChordProHighlighter {
      * `[Chorus x2]` is not moved and a `[*softly]` is not lifted out of it the way an annotation is lifted out of the
      * lyrics. [notation] is the one the text is shown in, which in a numbering makes a step of the key a chord too.
      */
-    fun chordsOfShownText(text: String, notation: ChordNotation = ChordNotation.STANDARD): List<Token> = ChordProSyntax.brackets(text)
+    fun chordsOfShownText(text: String, notation: ChordNotation = ChordNotation.STANDARD): List<Token> = ChordProDirectives.brackets(text)
         .filter { bracket -> bracket.content.trim().let { it.isMovedChordName() || (notation.isNumbering && ChordProNashville.isDegree(it)) } }
         .mapNotNull { it.token(0) }
 
     /**
      * The value of a directive, cut around the chords in it where it is text the song shows (see
-     * [ChordProSyntax.hasChordsInValue]): those brackets are moved by the transposition, and the editor says so.
+     * [ChordProDirectives.hasChordsInValue]): those brackets are moved by the transposition, and the editor says so.
      */
-    private fun ChordProSyntax.Directive.valueTokens(value: String, valueStart: Int): List<Token> {
+    private fun ChordProDirectives.Directive.valueTokens(value: String, valueStart: Int): List<Token> {
         val chords = when {
-            ChordProSyntax.hasChordsInValue(name) -> chordsOfShownText(value).map { it.copy(start = valueStart + it.start, end = valueStart + it.end) }
+            ChordProDirectives.hasChordsInValue(name) -> chordsOfShownText(value).map { it.copy(start = valueStart + it.start, end = valueStart + it.end) }
             // The chord a definition names is the first word of its value, written without brackets.
             ChordProDefinitions.selectorOf(name) != null -> {
                 val start = value.indexOfFirst { !it.isWhitespace() }
@@ -254,7 +254,7 @@ object ChordProHighlighter {
      * will draw in the lyrics, and a `[]` is not a chord to anything downstream. What counts as a chord is decided in
      * one place or in none.
      */
-    private fun ChordProSyntax.Bracket.token(offset: Int): Token? {
+    private fun ChordProDirectives.Bracket.token(offset: Int): Token? {
         val content = content.trim()
         if (content.isEmpty()) return null
         return Token(
@@ -271,5 +271,5 @@ object ChordProHighlighter {
     private const val TRANSPOSE = "transpose"
     private const val META = "meta"
     private const val KEY = "key"
-    private val LANGUAGE_NAMES = setOf(ChordProSyntax.LANGUAGE_NAME, "lang")
+    private val LANGUAGE_NAMES = setOf(ChordProMetaItems.LANGUAGE_NAME, "lang")
 }

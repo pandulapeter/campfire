@@ -30,9 +30,9 @@ object ChordProTags {
         val trimmedTag = tag.asTag()
         val key = fold(trimmedTag)
         if (trimmedTag.isEmpty() || ChordProParser.parseMetadata(text).tags.any { fold(it).equals(key, ignoreCase = true) }) return text
-        val lines = ChordProSyntax.splitLines(text).toMutableList()
-        lines.add(ChordProSyntax.metadataInsertionIndex(lines, ChordProSyntax.TAG_NAME), "{${ChordProSyntax.TAG_NAME}: $trimmedTag}")
-        return ChordProSyntax.joinLines(lines, text)
+        val lines = ChordProLines.splitLines(text).toMutableList()
+        lines.add(ChordProHeaderLayout.metadataInsertionIndex(lines, ChordProMetaItems.TAG_NAME), "{${ChordProMetaItems.TAG_NAME}: $trimmedTag}")
+        return ChordProLines.joinLines(lines, text)
     }
 
     /**
@@ -45,12 +45,12 @@ object ChordProTags {
         val trimmedTag = tag.asTag()
         if (trimmedTag.isEmpty()) return text
         val key = fold(trimmedTag)
-        val lines = ChordProSyntax.splitLines(text).filterNot { line -> line.tag()?.let(fold)?.equals(key, ignoreCase = true) == true }
-        return ChordProSyntax.joinLines(lines, text)
+        val lines = ChordProLines.splitLines(text).filterNot { line -> line.tag()?.let(fold)?.equals(key, ignoreCase = true) == true }
+        return ChordProLines.joinLines(lines, text)
     }
 
     /** The tag of a line that is a tag directive, null for every other line. */
-    private fun String.tag() = ChordProSyntax.matchDirective(trim())?.let { ChordProSyntax.tag(it) }
+    private fun String.tag() = ChordProDirectives.matchDirective(trim())?.let { ChordProMetaItems.tag(it) }
 
     /** A tag is one line of the file, so the line breaks a pasted value may carry are the spaces between its words. */
     private fun String.asTag() = replace(lineBreakRegex, " ").trim()

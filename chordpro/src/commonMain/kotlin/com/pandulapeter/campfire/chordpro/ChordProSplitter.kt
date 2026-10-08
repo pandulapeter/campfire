@@ -17,26 +17,26 @@ object ChordProSplitter {
     fun split(text: String): List<String> {
         val parts = mutableListOf<MutableList<String>>(mutableListOf())
         var delegatedEnvironment: String? = null
-        ChordProSyntax.splitLines(text.withoutByteOrderMarks()).forEach { rawLine ->
+        ChordProLines.splitLines(text.withoutByteOrderMarks()).forEach { rawLine ->
             val trimmedLine = rawLine.trim()
             // Inside an environment handed to another program a `{ns}` is that program's text, as the parser reads it. Any
             // `{end_of_…}` closes it and any `{start_of_…}` written with a value moves it on, whichever environment they
             // name, as they do for the parser; one the file never closes takes the rest of the file, which the parser does too.
             if (delegatedEnvironment != null) {
-                ChordProSyntax.matchDelegatedDirective(trimmedLine)?.name?.let { name ->
-                    ChordProSyntax.startOfEnvironment(name)?.let { environment ->
-                        delegatedEnvironment = environment.takeIf { it in ChordProSyntax.delegateEnvironments }
+                ChordProDirectives.matchDelegatedDirective(trimmedLine)?.name?.let { name ->
+                    ChordProEnvironments.startOfEnvironment(name)?.let { environment ->
+                        delegatedEnvironment = environment.takeIf { it in ChordProEnvironments.delegateEnvironments }
                     }
-                    ChordProSyntax.endOfEnvironment(name)?.let { delegatedEnvironment = null }
+                    ChordProEnvironments.endOfEnvironment(name)?.let { delegatedEnvironment = null }
                 }
                 parts.last() += rawLine
                 return@forEach
             }
-            val directive = ChordProSyntax.matchDirective(trimmedLine)
+            val directive = ChordProDirectives.matchDirective(trimmedLine)
             if (directive != null && (directive.name == "new_song" || directive.name == "ns")) {
                 parts += mutableListOf<String>()
             } else {
-                delegatedEnvironment = directive?.name?.let(ChordProSyntax::startOfEnvironment)?.takeIf { it in ChordProSyntax.delegateEnvironments }
+                delegatedEnvironment = directive?.name?.let(ChordProEnvironments::startOfEnvironment)?.takeIf { it in ChordProEnvironments.delegateEnvironments }
                 parts.last() += rawLine
             }
         }
@@ -51,28 +51,28 @@ object ChordProSplitter {
      * The chords are folded into the standard notation as well, since an import writes them that way: a German chart
      * imported again is the file it became the first time, and the same as one written before that was so. So is every
      * directive outside an environment handed to another program, into one spelling
-     * ([ChordProSyntax.canonicalDirective]): a short name, a missing space or a capital is how a file was typed, not
+     * ([ChordProDirectives.canonicalDirective]): a short name, a missing space or a capital is how a file was typed, not
      * what it says.
      */
     fun comparable(text: String): String {
         var delegatedEnvironment: String? = null
-        return ChordProSyntax.splitLines(ChordProNotation.convertText(text.withoutByteOrderMarks(), ChordNotation.STANDARD, ChordNotation.STANDARD))
+        return ChordProLines.splitLines(ChordProNotation.convertText(text.withoutByteOrderMarks(), ChordNotation.STANDARD, ChordNotation.STANDARD))
             .map { rawLine ->
                 val trimmedLine = rawLine.trim()
                 // The same walk through the delegated environments as split's, so that LilyPond's `{ c d e }` or an
                 // ABC line is never read as a directive and respelled.
                 if (delegatedEnvironment != null) {
-                    ChordProSyntax.matchDelegatedDirective(trimmedLine)?.name?.let { name ->
-                        ChordProSyntax.startOfEnvironment(name)?.let { environment ->
-                            delegatedEnvironment = environment.takeIf { it in ChordProSyntax.delegateEnvironments }
+                    ChordProDirectives.matchDelegatedDirective(trimmedLine)?.name?.let { name ->
+                        ChordProEnvironments.startOfEnvironment(name)?.let { environment ->
+                            delegatedEnvironment = environment.takeIf { it in ChordProEnvironments.delegateEnvironments }
                         }
-                        ChordProSyntax.endOfEnvironment(name)?.let { delegatedEnvironment = null }
+                        ChordProEnvironments.endOfEnvironment(name)?.let { delegatedEnvironment = null }
                     }
                     return@map rawLine
                 }
-                val directive = ChordProSyntax.matchDirective(trimmedLine) ?: return@map rawLine
-                delegatedEnvironment = ChordProSyntax.startOfEnvironment(directive.name)?.takeIf { it in ChordProSyntax.delegateEnvironments }
-                ChordProSyntax.canonicalDirective(directive)
+                val directive = ChordProDirectives.matchDirective(trimmedLine) ?: return@map rawLine
+                delegatedEnvironment = ChordProEnvironments.startOfEnvironment(directive.name)?.takeIf { it in ChordProEnvironments.delegateEnvironments }
+                ChordProDirectives.canonicalDirective(directive)
             }
             .dropWhile { it.isBlank() }
             .dropLastWhile { it.isBlank() }

@@ -16,7 +16,7 @@ package com.pandulapeter.campfire.chordpro
  *
  * ChordPro has no directive for the language of a song, so this is `{meta: language en}` — a custom metadata item,
  * which the spec leaves free for exactly this. The other spellings a file may use are read, see
- * [ChordProSyntax.language], but never written.
+ * [ChordProMetaItems.language], but never written.
  */
 object ChordProLanguages {
 
@@ -26,8 +26,8 @@ object ChordProLanguages {
      * the file already declares. A set that is already what the file says returns the text unchanged.
      */
     fun setLanguages(text: String, codes: List<String>): String {
-        val wanted = codes.mapNotNull(ChordProSyntax::languageCode).distinct()
-        val lines = ChordProSyntax.splitLines(text)
+        val wanted = codes.mapNotNull(ChordProMetaItems::languageCode).distinct()
+        val lines = ChordProLines.splitLines(text)
         val kept = mutableListOf<String>()
         val declared = mutableListOf<String>()
         lines.forEach { line ->
@@ -42,10 +42,10 @@ object ChordProLanguages {
         val missing = wanted.filterNot { it in declared }
         if (missing.isEmpty() && kept.size == lines.size) return text
         kept.addAll(
-            ChordProSyntax.metadataInsertionIndex(kept, ChordProSyntax.LANGUAGE_NAME),
-            missing.map { "{meta: ${ChordProSyntax.LANGUAGE_NAME} $it}" },
+            ChordProHeaderLayout.metadataInsertionIndex(kept, ChordProMetaItems.LANGUAGE_NAME),
+            missing.map { "{meta: ${ChordProMetaItems.LANGUAGE_NAME} $it}" },
         )
-        return ChordProSyntax.joinLines(kept, text)
+        return ChordProLines.joinLines(kept, text)
     }
 
     /**
@@ -57,8 +57,8 @@ object ChordProLanguages {
      * somebody may well type `HUN` or `en-US` — can ask the question a file would be answered with, and find the
      * language under the one code everything above this module knows it by.
      */
-    fun code(value: String) = ChordProSyntax.languageCode(value)
+    fun code(value: String) = ChordProMetaItems.languageCode(value)
 
     /** The language of a line that is a language directive, null for every other line. */
-    private fun String.language() = ChordProSyntax.matchDirective(trim())?.let { ChordProSyntax.language(it) }
+    private fun String.language() = ChordProDirectives.matchDirective(trim())?.let { ChordProMetaItems.language(it) }
 }

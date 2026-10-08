@@ -172,7 +172,7 @@ object ChordProDefinitions {
     fun rewrittenLine(rawLine: String, selector: String, rename: (String) -> String, semitones: Int = 0): String {
         val trimmed = rawLine.trim()
         val indent = rawLine.length - rawLine.trimStart().length
-        val valueStart = ChordProSyntax.directiveValueStart(trimmed)?.let { it + indent } ?: return rawLine
+        val valueStart = ChordProDirectives.directiveValueStart(trimmed)?.let { it + indent } ?: return rawLine
         val valueEnd = indent + trimmed.lastIndexOf('}')
         if (valueEnd <= valueStart) return rawLine
         val value = rawLine.substring(valueStart, valueEnd)
@@ -254,10 +254,10 @@ object ChordProDefinitions {
      * before it included — or null where it is in none, or in one that holds an annotation or nothing.
      */
     fun chordAt(text: String, offset: Int): String? {
-        val starts = ChordProSyntax.lineStartOffsets(text)
+        val starts = ChordProLines.lineStartOffsets(text)
         val line = starts.indexOfLast { it <= offset }.coerceAtLeast(0)
         val column = offset - starts[line]
-        return ChordProSyntax.brackets(ChordProSyntax.splitLines(text)[line])
+        return ChordProDirectives.brackets(ChordProLines.splitLines(text)[line])
             .firstOrNull { column >= it.range.first && column <= it.range.last + 1 }
             ?.content?.trim()?.takeIf { it.isNotEmpty() && !it.startsWith("*") }
     }
@@ -269,11 +269,11 @@ object ChordProDefinitions {
      * a second line.
      */
     fun rangeOf(text: String, name: String, instrument: ChordInstrument): IntRange? {
-        val starts = ChordProSyntax.lineStartOffsets(text)
-        val lines = ChordProSyntax.splitLines(text).withIndex().reversed()
+        val starts = ChordProLines.lineStartOffsets(text)
+        val lines = ChordProLines.splitLines(text).withIndex().reversed()
         fun rangeOn(isDefine: Boolean) = lines.firstNotNullOfOrNull { (index, line) ->
             val trimmed = line.trim()
-            val directive = ChordProSyntax.matchDirective(trimmed) ?: return@firstNotNullOfOrNull null
+            val directive = ChordProDirectives.matchDirective(trimmed) ?: return@firstNotNullOfOrNull null
             if ((directive.name.substringBefore('-') == DEFINE) != isDefine) return@firstNotNullOfOrNull null
             val selector = selectorOf(directive.name) ?: return@firstNotNullOfOrNull null
             val shape = directive.value?.let { read(it, selector.takeIf { selector -> selector.isNotEmpty() }) } as? Reading.Shape

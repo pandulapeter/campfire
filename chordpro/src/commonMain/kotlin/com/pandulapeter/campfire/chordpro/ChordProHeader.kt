@@ -30,7 +30,7 @@ object ChordProHeader {
      * words for, and has as many pages about it as somebody linked. Every other directive in [declaredMetadata] says one thing about the song, and a file that
      * says it twice is a file with a contradiction in it rather than a richer one.
      */
-    val repeatableMetadata = setOf(ChordProSyntax.TAG_NAME, ChordProSyntax.LANGUAGE_NAME, ChordProSyntax.LINK_NAME)
+    val repeatableMetadata = setOf(ChordProMetaItems.TAG_NAME, ChordProMetaItems.LANGUAGE_NAME, ChordProMetaItems.LINK_NAME)
 
     /**
      * The metadata directives a song may say again further down, each later one a change from where it stands rather
@@ -46,8 +46,8 @@ object ChordProHeader {
      * It is the directives that are counted and not what they are worth, so a `{title: }` waiting to be typed into
      * counts as a title: what this answers is whether writing another one would be writing a second of the same.
      */
-    fun declaredMetadata(text: String): Set<String> = ChordProSyntax.splitLines(text)
-        .mapNotNullTo(mutableSetOf()) { line -> ChordProSyntax.matchDirective(line.trim())?.let(ChordProSyntax::metadataKind) }
+    fun declaredMetadata(text: String): Set<String> = ChordProLines.splitLines(text)
+        .mapNotNullTo(mutableSetOf()) { line -> ChordProDirectives.matchDirective(line.trim())?.let(ChordProHeaderLayout::metadataKind) }
 
     /**
      * [declaredMetadata] for a text that is edited one keystroke at a time, which is how the editor's toolbar keeps a
@@ -93,7 +93,7 @@ object ChordProHeader {
             while (start > 0 && text[start - 1] != '\n' && text[start - 1] != '\r') start--
             var end = offset
             while (end < text.length && text[end] != '\n' && text[end] != '\r') end++
-            return ChordProSyntax.matchDirective(text.substring(start, end).trim())?.let(ChordProSyntax::metadataKind)
+            return ChordProDirectives.matchDirective(text.substring(start, end).trim())?.let(ChordProHeaderLayout::metadataKind)
         }
     }
 
@@ -103,19 +103,19 @@ object ChordProHeader {
      * where between them the caret ends up.
      *
      * The line goes after the last directive of its own kind, or, for a kind the song does not declare yet, into
-     * the header in the order [ChordProSyntax.metadataInsertionIndex] describes. Applying the result is a single
+     * the header in the order [ChordProHeaderLayout.metadataInsertionIndex] describes. Applying the result is a single
      * insertion at [Insertion.offset] and a caret at [Insertion.caretOffset]; the two are only valid for the text
      * they were computed from.
      */
     fun insert(text: String, name: String, prefix: String, suffix: String): Insertion {
-        val lines = ChordProSyntax.splitLines(text)
-        val index = ChordProSyntax.metadataInsertionIndex(lines, name)
-        val separator = ChordProSyntax.lineSeparatorOf(text)
+        val lines = ChordProLines.splitLines(text)
+        val index = ChordProHeaderLayout.metadataInsertionIndex(lines, name)
+        val separator = ChordProLines.lineSeparatorOf(text)
         // Past the last line there is nothing to put the directive in front of, so it takes a line break with it
         // instead of leaving one behind, and a file that ended without one still does. A file that ends with a line
         // break has the start of one more line there, which is an ordinary place to insert at.
-        val isAppended = index >= lines.size && !ChordProSyntax.endsWithLineBreak(text)
-        val offset = if (isAppended) text.length else ChordProSyntax.lineStartOffsets(text).getOrElse(index) { text.length }
+        val isAppended = index >= lines.size && !ChordProLines.endsWithLineBreak(text)
+        val offset = if (isAppended) text.length else ChordProLines.lineStartOffsets(text).getOrElse(index) { text.length }
         val opening = if (isAppended) "$separator$prefix" else prefix
         return Insertion(
             offset = offset,
@@ -127,22 +127,22 @@ object ChordProHeader {
     /**
      * Where a chord definition, [line], goes in [text]: after the last definition of the header, or where there is
      * none, at the end of the header, after everything the song says about itself. Definitions are not among the kinds
-     * [ChordProSyntax.metadataOrder] arranges, since Prettify keeps them where they stand and a file that holds some
+     * [ChordProHeaderLayout.metadataOrder] arranges, since Prettify keeps them where they stand and a file that holds some
      * has to come out of it as it always did; this only decides where a new one is added. The caret goes to the start
      * of the chord's name, where one with no name yet is typed.
      */
     fun insertDefinition(text: String, line: String): Insertion {
         val nameStart = line.indexOf(':') + 2
         if (text.isEmpty()) return Insertion(offset = 0, text = line, caretOffset = nameStart)
-        val lines = ChordProSyntax.splitLines(text)
-        val headerEnd = ChordProSyntax.headerEndIndex(lines)
+        val lines = ChordProLines.splitLines(text)
+        val headerEnd = ChordProHeaderLayout.headerEndIndex(lines)
         val lastDefinition = (0 until headerEnd).lastOrNull { index ->
-            ChordProSyntax.matchDirective(lines[index].trim())?.let { ChordProDefinitions.selectorOf(it.name) } != null
+            ChordProDirectives.matchDirective(lines[index].trim())?.let { ChordProDefinitions.selectorOf(it.name) } != null
         }
         val index = lastDefinition?.plus(1) ?: headerEnd
-        val separator = ChordProSyntax.lineSeparatorOf(text)
-        val isAppended = index >= lines.size && !ChordProSyntax.endsWithLineBreak(text)
-        val offset = if (isAppended) text.length else ChordProSyntax.lineStartOffsets(text).getOrElse(index) { text.length }
+        val separator = ChordProLines.lineSeparatorOf(text)
+        val isAppended = index >= lines.size && !ChordProLines.endsWithLineBreak(text)
+        val offset = if (isAppended) text.length else ChordProLines.lineStartOffsets(text).getOrElse(index) { text.length }
         val opening = if (isAppended) separator else ""
         return Insertion(
             offset = offset,
@@ -165,16 +165,16 @@ object ChordProHeader {
      *   anything is played is the song's own value.
      */
     fun insertChangeable(text: String, name: String, caretOffset: Int, prefix: String, suffix: String): Insertion {
-        val lines = ChordProSyntax.splitLines(text)
-        val bodyStart = ChordProSyntax.bodyStartIndex(lines)
+        val lines = ChordProLines.splitLines(text)
+        val bodyStart = ChordProHeaderLayout.bodyStartIndex(lines)
         val headerIndex = (0 until bodyStart).firstOrNull { index ->
-            ChordProSyntax.matchDirective(lines[index].trim())?.let(ChordProSyntax::metadataKind) == name
+            ChordProDirectives.matchDirective(lines[index].trim())?.let(ChordProHeaderLayout::metadataKind) == name
         } ?: return insert(text, name, prefix, suffix)
-        val lineStarts = ChordProSyntax.lineStartOffsets(text)
+        val lineStarts = ChordProLines.lineStartOffsets(text)
         val headerLine = lines[headerIndex]
         val headerLineStart = lineStarts[headerIndex]
-        val directive = ChordProSyntax.matchDirective(headerLine.trim())!!
-        val value = (ChordProSyntax.standardMeta(directive) ?: directive).value.orEmpty()
+        val directive = ChordProDirectives.matchDirective(headerLine.trim())!!
+        val value = (ChordProMetaItems.standardMeta(directive) ?: directive).value.orEmpty()
         if (value.isEmpty()) {
             return Insertion(
                 offset = headerLineStart,
@@ -189,7 +189,7 @@ object ChordProHeader {
         val firstContentLine = (bodyStart until lines.size).firstOrNull { index ->
             val trimmed = lines[index].trim()
             if (trimmed.isEmpty() || trimmed.startsWith('#')) return@firstOrNull false
-            val directive = ChordProSyntax.matchDirective(trimmed) ?: return@firstOrNull true
+            val directive = ChordProDirectives.matchDirective(trimmed) ?: return@firstOrNull true
             directive.name == "chorus"
         } ?: lines.size
         if (caretLine <= firstContentLine) {
@@ -197,8 +197,8 @@ object ChordProHeader {
             return Insertion(offset = valueStart, text = "", caretOffset = valueStart, selectionEnd = valueStart + value.length)
         }
         // A caret past the final line break is on a line of its own already, the one after the last.
-        val offset = if (caretOffset >= text.length && ChordProSyntax.endsWithLineBreak(text)) text.length else lineStarts[caretLine]
-        return Insertion(offset = offset, text = "$prefix$suffix${ChordProSyntax.lineSeparatorOf(text)}", caretOffset = offset + prefix.length)
+        val offset = if (caretOffset >= text.length && ChordProLines.endsWithLineBreak(text)) text.length else lineStarts[caretLine]
+        return Insertion(offset = offset, text = "$prefix$suffix${ChordProLines.lineSeparatorOf(text)}", caretOffset = offset + prefix.length)
     }
 
     /**

@@ -33,7 +33,7 @@ object ChordProTabWrapper {
      * Whether the lines are tablature at all: a run inside `{start_of_tab}` that holds no staff line is preformatted
      * text (chord names over lyrics, most often), which has no staff to cut by and is cut by [wrapPreformatted] instead.
      */
-    fun isTablature(lines: List<String>) = lines.any(ChordProSyntax::isStaffLine)
+    fun isTablature(lines: List<String>) = lines.any(ChordProTokens::isStaffLine)
 
     /**
      * Cuts [lines], the lines of one run of tablature, into rows of at most [maxColumns] characters. Every row is a
@@ -50,7 +50,7 @@ object ChordProTabWrapper {
      * shown that wide anyway, since a staff cut into pieces of two characters is not a staff any more.
      */
     fun wrap(lines: List<String>, maxColumns: Int): List<List<String>> {
-        val isStaffLine = lines.map(ChordProSyntax::isStaffLine)
+        val isStaffLine = lines.map(ChordProTokens::isStaffLine)
         val length = lines.maxOfOrNull { it.length } ?: 0
         if (isStaffLine.none { it } || length <= maxColumns) return listOf(lines)
         // Proportional to the run rather than a fixed number, since a fixed cap per run or per system still lets a file
@@ -137,7 +137,7 @@ object ChordProTabWrapper {
      * often than it is a chord.
      */
     private fun isChordLine(line: String): Boolean {
-        val words = ChordProSyntax.words(line).map { it.value }
+        val words = ChordProTokens.words(line).map { it.value }
         return words.any(::isChordWord) && words.all { word ->
             val trimmed = word.trim('(', ')')
             trimmed.isEmpty() || trimmed == ROMAN_ONE || isChordWord(word) || trimmed.none(Char::isLetterOrDigit) || repeatCountRegex.matches(trimmed)

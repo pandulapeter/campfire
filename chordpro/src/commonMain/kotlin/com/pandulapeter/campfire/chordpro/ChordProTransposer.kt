@@ -169,7 +169,7 @@ object ChordProTransposer {
         song.blocks.asSequence().filterIsInstance<ChordProBlock.Section>().flatMap { it.lines }.forEach { line ->
             when (line) {
                 is ChordProLine.Lyrics -> yieldAll(line.chords.filter { !it.isAnnotation }.map { it.name })
-                is ChordProLine.Grid -> yieldAll(line.tokens.filterIsInstance<GridToken.Chord>().flatMap { ChordProSyntax.cellChords(it.name) })
+                is ChordProLine.Grid -> yieldAll(line.tokens.filterIsInstance<GridToken.Chord>().flatMap { ChordProTokens.cellChords(it.name) })
                 is ChordProLine.Tab -> yieldAll(ChordProTabTransposer.chordNames(listOf(line.text)))
                 ChordProLine.Blank -> Unit
             }
@@ -264,13 +264,13 @@ object ChordProTransposer {
     fun transposedOffset(before: String, after: String, offset: Int): Int {
         val clamped = offset.coerceIn(0, before.length)
         if (before == after) return clamped
-        val beforeStarts = ChordProSyntax.lineStartOffsets(before)
-        val afterStarts = ChordProSyntax.lineStartOffsets(after)
+        val beforeStarts = ChordProLines.lineStartOffsets(before)
+        val afterStarts = ChordProLines.lineStartOffsets(after)
         if (beforeStarts.size != afterStarts.size) return clamped.coerceAtMost(after.length)
         val line = lastLineStartingAtOrBefore(beforeStarts, clamped)
         val column = clamped - beforeStarts[line]
-        val beforeLine = ChordProSyntax.splitLines(before)[line]
-        val afterLine = ChordProSyntax.splitLines(after)[line]
+        val beforeLine = ChordProLines.splitLines(before)[line]
+        val afterLine = ChordProLines.splitLines(after)[line]
         val afterLineStart = afterStarts[line]
         if (column > beforeLine.length) {
             // On the line break, or past the final one. The break is measured on the new text, since joinLines may
@@ -293,8 +293,8 @@ object ChordProTransposer {
 
     private fun transposedColumn(before: String, after: String, column: Int): Int {
         if (before == after) return column
-        val beforeBrackets = ChordProSyntax.brackets(before)
-        val afterBrackets = ChordProSyntax.brackets(after)
+        val beforeBrackets = ChordProDirectives.brackets(before)
+        val afterBrackets = ChordProDirectives.brackets(after)
         if (beforeBrackets.size == afterBrackets.size && beforeBrackets.isNotEmpty()) {
             var shift = 0
             beforeBrackets.forEachIndexed { index, bracket ->
@@ -343,18 +343,18 @@ object ChordProTransposer {
         rename: (String) -> String,
         rewriteDefinition: (rawLine: String, selector: String) -> String = { rawLine, _ -> rawLine },
     ): String {
-        val lines = ChordProSyntax.splitLines(text).toMutableList()
+        val lines = ChordProLines.splitLines(text).toMutableList()
         val tabLineIndices = mutableListOf<Int>() // The tab environment being collected: it is rewritten as a whole.
         var environment: String? = null
         lines.forEachIndexed { index, rawLine ->
             val trimmedLine = rawLine.trim()
             // Inside an environment handed to another program a `#` and a brace are that program's syntax.
-            val isDelegated = environment in ChordProSyntax.delegateEnvironments
+            val isDelegated = environment in ChordProEnvironments.delegateEnvironments
             val isSourceComment = trimmedLine.startsWith(SOURCE_COMMENT) && !isDelegated
             val directive = when {
                 isSourceComment -> null
-                isDelegated -> ChordProSyntax.matchDelegatedDirective(trimmedLine)
-                else -> ChordProSyntax.matchDirective(trimmedLine)
+                isDelegated -> ChordProDirectives.matchDelegatedDirective(trimmedLine)
+                else -> ChordProDirectives.matchDirective(trimmedLine)
             }
             when {
                 isSourceComment -> Unit
@@ -362,35 +362,35 @@ object ChordProTransposer {
                     // A definition inside an environment handed to another program is that program's text. One with a
                     // selector is read whichever instrument it names, so it is renamed with the rest.
                     if (!isDelegated) ChordProDefinitions.selectorOf(directive.name)?.let { lines[index] = rewriteDefinition(rawLine, it) }
-                    if (ChordProSyntax.hasSelectorSuffix(directive.name)) return@forEachIndexed
-                    ChordProSyntax.startOfEnvironment(directive.name)?.let {
+                    if (ChordProDirectives.hasSelectorSuffix(directive.name)) return@forEachIndexed
+                    ChordProEnvironments.startOfEnvironment(directive.name)?.let {
                         lines.rewriteTab(tabLineIndices, rewriteTab)
                         environment = it.lowercase()
                     }
-                    ChordProSyntax.endOfEnvironment(directive.name)?.let {
+                    ChordProEnvironments.endOfEnvironment(directive.name)?.let {
                         lines.rewriteTab(tabLineIndices, rewriteTab)
                         environment = null
                     }
-                    if (directive.name in ChordProSyntax.blockNames || directive.name == TRANSPOSE) {
+                    if (directive.name in ChordProHeaderLayout.blockNames || directive.name == TRANSPOSE) {
                         // The parser cuts the section in two here, and each half of the tab is a run of its own in the model;
                         // moving them as one fingerboard would let the viewer and the editor disagree about the octave.
                         lines.rewriteTab(tabLineIndices, rewriteTab)
                     }
-                    (ChordProSyntax.standardMeta(directive) ?: directive).takeIf { it.name == KEY }?.value?.takeIf { it.isNotEmpty() }?.let { key ->
+                    (ChordProMetaItems.standardMeta(directive) ?: directive).takeIf { it.name == KEY }?.value?.takeIf { it.isNotEmpty() }?.let { key ->
                         lines[index] = rewriteKeyLine(rawLine, key, rename)
                     }
                     // The directive's name holds no brackets, so the line can be read as a line of lyrics whole.
-                    if (ChordProSyntax.hasChordsInValue(directive.name)) lines[index] = rewriteLyricsLineChords(rawLine, rename)
+                    if (ChordProDirectives.hasChordsInValue(directive.name)) lines[index] = rewriteLyricsLineChords(rawLine, rename)
                 }
 
                 environment == TAB -> tabLineIndices += index
                 environment == GRID -> lines[index] = rewriteGridLine(rawLine, trimmedLine, rename)
-                environment in ChordProSyntax.delegateEnvironments -> Unit
+                environment in ChordProEnvironments.delegateEnvironments -> Unit
                 else -> lines[index] = rewriteLyricsLineChords(rawLine, rename)
             }
         }
         lines.rewriteTab(tabLineIndices, rewriteTab) // An environment the file never closes.
-        return ChordProSyntax.joinLines(lines, text)
+        return ChordProLines.joinLines(lines, text)
     }
 
     /** Whether flats should be preferred for the key this song arrives in after the transposition. */
@@ -448,7 +448,7 @@ object ChordProTransposer {
         is ChordProLine.Grid -> line.copy(
             tokens = line.tokens.map { token ->
                 if (token is GridToken.Chord) {
-                    GridToken.Chord(ChordProSyntax.cellChords(token.name).joinToString(ChordProSyntax.GRID_CELL_CHORD_SEPARATOR, transform = rename))
+                    GridToken.Chord(ChordProTokens.cellChords(token.name).joinToString(ChordProTokens.GRID_CELL_CHORD_SEPARATOR, transform = rename))
                 } else {
                     token
                 }
@@ -471,7 +471,7 @@ object ChordProTransposer {
 
     /** Applies [rename] to every `[chord]` of a raw line, leaving the annotations, the empty brackets and the text. */
     internal fun rewriteLyricsLineChords(rawLine: String, rename: (String) -> String): String {
-        val brackets = ChordProSyntax.brackets(rawLine)
+        val brackets = ChordProDirectives.brackets(rawLine)
         if (brackets.isEmpty()) return rawLine
         return buildString(rawLine.length) {
             var consumedUntil = 0
@@ -496,16 +496,16 @@ object ChordProTransposer {
 
     private fun rewriteGridLine(rawLine: String, trimmedLine: String, rename: (String) -> String): String {
         // The ranges and the tokens are zipped by index, which is only safe because both are the same list of words:
-        // parseGridTokens reads the line through ChordProSyntax.words as well.
-        val matches = ChordProSyntax.words(trimmedLine)
-        val tokens = ChordProSyntax.parseGridTokens(trimmedLine)
+        // parseGridTokens reads the line through ChordProTokens.words as well.
+        val matches = ChordProTokens.words(trimmedLine)
+        val tokens = ChordProTokens.parseGridTokens(trimmedLine)
         val body = buildString {
             var consumedUntil = 0
             matches.forEachIndexed { index, match ->
                 append(trimmedLine, consumedUntil, match.range.first)
                 append(
                     if (tokens[index] is GridToken.Chord) {
-                        ChordProSyntax.cellChords(match.value).joinToString(ChordProSyntax.GRID_CELL_CHORD_SEPARATOR, transform = rename)
+                        ChordProTokens.cellChords(match.value).joinToString(ChordProTokens.GRID_CELL_CHORD_SEPARATOR, transform = rename)
                     } else {
                         match.value
                     }

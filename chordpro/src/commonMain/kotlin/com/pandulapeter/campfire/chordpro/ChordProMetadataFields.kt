@@ -20,7 +20,7 @@ object ChordProMetadataFields {
 
     /**
      * One directive a song says one thing with, under the name the app knows it by (see
-     * [ChordProSyntax.metadataKind]). The repeatable ones — tags, languages, links — and the cover have editors of
+     * [ChordProHeaderLayout.metadataKind]). The repeatable ones — tags, languages, links — and the cover have editors of
      * their own.
      *
      * How the song is played is here too — [KEY], [CAPO], [TEMPO] and [TIME] — as the values the song itself declares,
@@ -64,9 +64,9 @@ object ChordProMetadataFields {
      * is left alone. The line the parser reads the value from is rewritten where it stands, in the spelling it was
      * written in (`{t: …}` stays short, `{meta: title …}` stays a `meta`), and the other lines of the same field, which
      * the parser reads past, are dropped — except for [Field.KEY], [Field.TEMPO] and [Field.TIME], whose lines in the
-     * body are changes mid-song and are always kept (see [ChordProSyntax.bodyStartIndex]): their value is the first line
+     * body are changes mid-song and are always kept (see [ChordProHeaderLayout.bodyStartIndex]): their value is the first line
      * of the header, or where the header has no line of the field, the first line of the body. A field the song does not
-     * declare yet gets a line in the header, where [ChordProSyntax.metadataInsertionIndex] puts it. A null or blank value
+     * declare yet gets a line in the header, where [ChordProHeaderLayout.metadataInsertionIndex] puts it. A null or blank value
      * removes the field instead — except that clearing a header line of a field the body still changes leaves it in the
      * header empty, so that the song declares nothing rather than starting in its first change; a value that only the
      * body declares has no header to keep that line in, so clearing it makes the next change the song's. A line break in
@@ -79,11 +79,11 @@ object ChordProMetadataFields {
 
     private fun set(text: String, field: Field, value: String?): String {
         val newValue = value?.replace('\r', ' ')?.replace('\n', ' ')?.trim()?.takeIf { it.isNotEmpty() }
-        val lines = ChordProSyntax.splitLines(text)
+        val lines = ChordProLines.splitLines(text)
         val indices = lines.indices.filter { lines[it].kind() == field.directiveName }
         // The lines of a field the song changes mid-song are its changes from the body on, which are always kept; only
         // the header's are the song's own value, and every field of any other kind is all header.
-        val bodyStart = if (field.isChangedInTheBody) ChordProSyntax.bodyStartIndex(lines) else lines.size
+        val bodyStart = if (field.isChangedInTheBody) ChordProHeaderLayout.bodyStartIndex(lines) else lines.size
         val (header, body) = indices.partition { it < bodyStart }
         fun List<Int>.declaring() = filter { !lines[it].value().isNullOrEmpty() }
         fun List<Int>.readable() = declaring().filter { field.canRead(lines[it].value().orEmpty()) }
@@ -107,9 +107,9 @@ object ChordProMetadataFields {
             }
         }
         if (newValue != null && effectiveIndex == null) {
-            kept.add(ChordProSyntax.metadataInsertionIndex(kept, field.directiveName), "{${field.directiveName}: $newValue}")
+            kept.add(ChordProHeaderLayout.metadataInsertionIndex(kept, field.directiveName), "{${field.directiveName}: $newValue}")
         }
-        return if (kept == lines) text else ChordProSyntax.joinLines(kept, text)
+        return if (kept == lines) text else ChordProLines.joinLines(kept, text)
     }
 
     /** Whether the parser can use [value] for this field, which it reads past where it cannot, as the editor marks it. */
@@ -124,11 +124,11 @@ object ChordProMetadataFields {
     /** Whether a later line of this field is a change from where it stands rather than a duplicate the parser reads past. */
     private val Field.isChangedInTheBody get() = this == Field.KEY || this == Field.TEMPO || this == Field.TIME
 
-    private fun String.directive() = ChordProSyntax.matchDirective(trim())
+    private fun String.directive() = ChordProDirectives.matchDirective(trim())
 
-    private fun String.kind() = directive()?.let(ChordProSyntax::metadataKind)
+    private fun String.kind() = directive()?.let(ChordProHeaderLayout::metadataKind)
 
-    private fun String.value() = directive()?.let { ChordProSyntax.standardMeta(it) ?: it }?.value?.trim()
+    private fun String.value() = directive()?.let { ChordProMetaItems.standardMeta(it) ?: it }?.value?.trim()
 
     private fun String.rewritten(field: Field, value: String): String {
         val indentation = takeWhile { it.isWhitespace() }

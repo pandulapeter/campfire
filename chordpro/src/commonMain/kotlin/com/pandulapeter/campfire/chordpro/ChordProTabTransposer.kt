@@ -28,7 +28,7 @@ internal object ChordProTabTransposer {
      * than [MAX_FRET] frets), the environment is left alone rather than half transposed.
      */
     fun transpose(lines: List<String>, semitones: Int, rename: (String) -> String): List<String> {
-        val isStaffLine = lines.map(ChordProSyntax::isStaffLine)
+        val isStaffLine = lines.map(ChordProTokens::isStaffLine)
         val frets = lines.filterIndexed { index, _ -> isStaffLine[index] }.flatMap(::fretNumbers)
         val shift = semitones + (octaveOffset(frets, semitones) ?: return lines)
         return lines.mapIndexed { index, line ->
@@ -46,7 +46,7 @@ internal object ChordProTabTransposer {
      * viewer prefers reaches a tab, where transposing would mean the frets instead.
      */
     fun rewriteChordNames(lines: List<String>, rename: (String) -> String) =
-        lines.map { line -> if (ChordProSyntax.isStaffLine(line)) line else rewriteChordLine(line, rename) }
+        lines.map { line -> if (ChordProTokens.isStaffLine(line)) line else rewriteChordLine(line, rename) }
 
     /** The chord names [rewriteChordNames] would rewrite in [lines], in order. */
     fun chordNames(lines: List<String>): List<String> = buildList {
@@ -116,8 +116,8 @@ internal object ChordProTabTransposer {
      */
     private fun rewriteChordLine(line: String, rename: (String) -> String): String {
         val trimmedLine = line.trim()
-        if (trimmedLine.isEmpty() || trimmedLine.startsWith(SOURCE_COMMENT) || ChordProSyntax.matchDirective(trimmedLine) != null) return line
-        if (ChordProSyntax.hasBrackets(line)) return ChordProTransposer.rewriteLyricsLineChords(line, rename)
+        if (trimmedLine.isEmpty() || trimmedLine.startsWith(SOURCE_COMMENT) || ChordProDirectives.matchDirective(trimmedLine) != null) return line
+        if (ChordProDirectives.hasBrackets(line)) return ChordProTransposer.rewriteLyricsLineChords(line, rename)
         val replacements = chordWords(line)?.map { word ->
             word.range to rename(word.value)
         } ?: return line
@@ -125,9 +125,9 @@ internal object ChordProTabTransposer {
     }
 
     /** The chord names of a line that holds only chords and markers, or null when the line is prose. */
-    private fun chordWords(line: String): List<ChordProSyntax.Word>? {
-        val chordWords = mutableListOf<ChordProSyntax.Word>()
-        ChordProSyntax.words(line).forEach { word ->
+    private fun chordWords(line: String): List<ChordProTokens.Word>? {
+        val chordWords = mutableListOf<ChordProTokens.Word>()
+        ChordProTokens.words(line).forEach { word ->
             when {
                 // A Latin name is read here so that a file written in Latin has its row read into the standard notation.
                 ChordProChordNames.isChordName(word.value) || ChordProChordNames.latinExpanded(word.value) != null -> chordWords += word
@@ -138,7 +138,7 @@ internal object ChordProTabTransposer {
         return chordWords
     }
 
-    private fun isMarker(word: String) = ChordProSyntax.isBar(word) ||
+    private fun isMarker(word: String) = ChordProTokens.isBar(word) ||
             word == BEAT ||
             word == REPEAT ||
             word == DOUBLE_REPEAT ||

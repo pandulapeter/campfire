@@ -22,81 +22,81 @@ class ChordProSyntaxTest {
 
     @Test
     fun `a directive is matched by its braces name and colon`() {
-        assertEquals(ChordProSyntax.Directive("title", "Song"), ChordProSyntax.matchDirective("{title: Song}"))
-        assertEquals(ChordProSyntax.Directive("soc", null), ChordProSyntax.matchDirective("{ soc }"))
-        assertEquals(ChordProSyntax.Directive("title", ""), ChordProSyntax.matchDirective("{title: }"))
-        assertEquals(ChordProSyntax.Directive("tag", "a}b"), ChordProSyntax.matchDirective("{tag: a}b}"))
+        assertEquals(ChordProDirectives.Directive("title", "Song"), ChordProDirectives.matchDirective("{title: Song}"))
+        assertEquals(ChordProDirectives.Directive("soc", null), ChordProDirectives.matchDirective("{ soc }"))
+        assertEquals(ChordProDirectives.Directive("title", ""), ChordProDirectives.matchDirective("{title: }"))
+        assertEquals(ChordProDirectives.Directive("tag", "a}b"), ChordProDirectives.matchDirective("{tag: a}b}"))
     }
 
     @Test
     fun `a line that only looks like a directive is content`() {
         listOf("", "{", "}", "{}", "{:}", "{title", "title}", "{ti tle: x}", "{title}}", "{cím: x}", "{Verse 2}", "{verse 2}", "{Refrén 2x}").forEach {
-            assertNull(ChordProSyntax.matchDirective(it))
+            assertNull(ChordProDirectives.matchDirective(it))
         }
     }
 
     @Test
     fun `a value may be separated from a known name by whitespace alone`() {
-        assertEquals(ChordProSyntax.Directive("title", "Wonderwall"), ChordProSyntax.matchDirective("{title Wonderwall}"))
-        assertEquals(ChordProSyntax.Directive("start_of_verse", "Verse 1"), ChordProSyntax.matchDirective("{start_of_verse Verse 1}"))
-        assertEquals(ChordProSyntax.Directive("meta", "language en"), ChordProSyntax.matchDirective("{meta language en}"))
-        assertEquals(ChordProSyntax.Directive("x_note", "hi"), ChordProSyntax.matchDirective("{x_note hi}"))
-        assertEquals(ChordProSyntax.Directive("title", "a: b"), ChordProSyntax.matchDirective("{title a: b}"))
+        assertEquals(ChordProDirectives.Directive("title", "Wonderwall"), ChordProDirectives.matchDirective("{title Wonderwall}"))
+        assertEquals(ChordProDirectives.Directive("start_of_verse", "Verse 1"), ChordProDirectives.matchDirective("{start_of_verse Verse 1}"))
+        assertEquals(ChordProDirectives.Directive("meta", "language en"), ChordProDirectives.matchDirective("{meta language en}"))
+        assertEquals(ChordProDirectives.Directive("x_note", "hi"), ChordProDirectives.matchDirective("{x_note hi}"))
+        assertEquals(ChordProDirectives.Directive("title", "a: b"), ChordProDirectives.matchDirective("{title a: b}"))
     }
 
     @Test
     fun `a negated selector names the directive it is written on`() {
-        assertEquals(ChordProSyntax.Directive("tag", "Folk"), ChordProSyntax.matchDirective("{tag-guitar!: Folk}"))
+        assertEquals(ChordProDirectives.Directive("tag", "Folk"), ChordProDirectives.matchDirective("{tag-guitar!: Folk}"))
     }
 
     @Test
     fun `the value start is after the colon or after the whitespace`() {
-        assertEquals(7, ChordProSyntax.directiveValueStart("{title: X}"))
-        assertEquals(7, ChordProSyntax.directiveValueStart("{title X}"))
-        assertNull(ChordProSyntax.directiveValueStart("{soc}"))
-        assertNull(ChordProSyntax.directiveValueStart("{Verse 2}"))
+        assertEquals(7, ChordProDirectives.directiveValueStart("{title: X}"))
+        assertEquals(7, ChordProDirectives.directiveValueStart("{title X}"))
+        assertNull(ChordProDirectives.directiveValueStart("{soc}"))
+        assertNull(ChordProDirectives.directiveValueStart("{Verse 2}"))
     }
 
     @Test
     fun `a label is the value or its label attribute in either quotes`() {
-        assertEquals("Verse 1", ChordProSyntax.label("Verse 1"))
-        assertEquals("Verse 1", ChordProSyntax.label("label=\"Verse 1\""))
-        assertEquals("Verse 1", ChordProSyntax.label("label='Verse 1'"))
-        assertEquals("Solo", ChordProSyntax.label("shape=\"1+4x2+4\" label=\"Solo\""))
-        assertNull(ChordProSyntax.label("shape=\"1+4x2+4\""))
-        assertNull(ChordProSyntax.label("  "))
-        assertNull(ChordProSyntax.label("label=\"\""))
+        assertEquals("Verse 1", ChordProEnvironments.label("Verse 1"))
+        assertEquals("Verse 1", ChordProEnvironments.label("label=\"Verse 1\""))
+        assertEquals("Verse 1", ChordProEnvironments.label("label='Verse 1'"))
+        assertEquals("Solo", ChordProEnvironments.label("shape=\"1+4x2+4\" label=\"Solo\""))
+        assertNull(ChordProEnvironments.label("shape=\"1+4x2+4\""))
+        assertNull(ChordProEnvironments.label("  "))
+        assertNull(ChordProEnvironments.label("label=\"\""))
     }
 
     @Test
     fun `brackets are paired from the left`() {
-        assertEquals(listOf(0..3 to "Am", 7..11 to "G/B"), ChordProSyntax.brackets("[Am]la [G/B]la").map { it.range to it.content })
-        assertEquals(listOf(0..4 to "[Am"), ChordProSyntax.brackets("[[Am]").map { it.range to it.content })
-        assertEquals(listOf(0..3 to "Am"), ChordProSyntax.brackets("[Am] [C").map { it.range to it.content })
+        assertEquals(listOf(0..3 to "Am", 7..11 to "G/B"), ChordProDirectives.brackets("[Am]la [G/B]la").map { it.range to it.content })
+        assertEquals(listOf(0..4 to "[Am"), ChordProDirectives.brackets("[[Am]").map { it.range to it.content })
+        assertEquals(listOf(0..3 to "Am"), ChordProDirectives.brackets("[Am] [C").map { it.range to it.content })
     }
 
     @Test
     fun `crafted lines cost no more than their length`() {
-        assertNull(assertLinear { ChordProSyntax.matchDirective("{c:" + " ".repeat(4_000) + "x") })
-        assertNull(assertLinear { ChordProSyntax.matchDirective("{title" + " ".repeat(4_000) + "x") })
-        assertLinear { ChordProSyntax.label("a=\"b\" ".repeat(20_000) + "c") }
-        assertTrue(assertLinear { ChordProSyntax.brackets("[".repeat(100_000)) }.isEmpty())
-        assertFalse(ChordProSyntax.hasBrackets("[".repeat(100_000)))
+        assertNull(assertLinear { ChordProDirectives.matchDirective("{c:" + " ".repeat(4_000) + "x") })
+        assertNull(assertLinear { ChordProDirectives.matchDirective("{title" + " ".repeat(4_000) + "x") })
+        assertLinear { ChordProEnvironments.label("a=\"b\" ".repeat(20_000) + "c") }
+        assertTrue(assertLinear { ChordProDirectives.brackets("[".repeat(100_000)) }.isEmpty())
+        assertFalse(ChordProDirectives.hasBrackets("[".repeat(100_000)))
     }
 
     @Test
     fun `the line separator of a file is the one it is written with`() {
-        assertEquals("\r", ChordProSyntax.lineSeparatorOf("a\rb"))
-        assertEquals("\n", ChordProSyntax.lineSeparatorOf("a\nb"))
-        assertEquals("\r\n", ChordProSyntax.lineSeparatorOf("a\r\nb"))
-        assertEquals("\r\n", ChordProSyntax.lineSeparatorOf("a\rb\r\nc"))
+        assertEquals("\r", ChordProLines.lineSeparatorOf("a\rb"))
+        assertEquals("\n", ChordProLines.lineSeparatorOf("a\nb"))
+        assertEquals("\r\n", ChordProLines.lineSeparatorOf("a\r\nb"))
+        assertEquals("\r\n", ChordProLines.lineSeparatorOf("a\rb\r\nc"))
     }
 
     @Test
     fun `every line starts where the offsets say it does`() {
         listOf("", "a", "a\n", "a\r", "a\r\n", "a\rb\nc").forEach { text ->
-            val lines = ChordProSyntax.splitLines(text)
-            val starts = ChordProSyntax.lineStartOffsets(text)
+            val lines = ChordProLines.splitLines(text)
+            val starts = ChordProLines.lineStartOffsets(text)
             assertEquals(lines.size, starts.size, text)
             lines.forEachIndexed { index, line ->
                 val end = starts.getOrNull(index + 1) ?: text.length
@@ -108,17 +108,17 @@ class ChordProSyntaxTest {
     @Test
     fun `words are separated by any space the platform calls one`() {
         assertEquals(
-            listOf(ChordProSyntax.Word(0..0, "a"), ChordProSyntax.Word(2..2, "b"), ChordProSyntax.Word(5..5, "c")),
-            ChordProSyntax.words("a\u00A0b \u00A0c"),
+            listOf(ChordProTokens.Word(0..0, "a"), ChordProTokens.Word(2..2, "b"), ChordProTokens.Word(5..5, "c")),
+            ChordProTokens.words("a\u00A0b \u00A0c"),
         )
-        listOf("", "   ", "\u00A0").forEach { assertTrue(ChordProSyntax.words(it).isEmpty(), it) }
+        listOf("", "   ", "\u00A0").forEach { assertTrue(ChordProTokens.words(it).isEmpty(), it) }
     }
 
     @Test
     fun `a grid separated by non-breaking spaces is still a grid`() {
         assertEquals(
             listOf(GridToken.Bar("|"), GridToken.Chord("Am"), GridToken.Beat, GridToken.Chord("G"), GridToken.Bar("|")),
-            ChordProSyntax.parseGridTokens("|\u00A0Am\u00A0.\u00A0G\u00A0|"),
+            ChordProTokens.parseGridTokens("|\u00A0Am\u00A0.\u00A0G\u00A0|"),
         )
     }
 
@@ -141,7 +141,7 @@ class ChordProSyntaxTest {
         ).forEach { (line, isBody) ->
             val lines = listOf("{key: }", line, "{key: G}")
 
-            assertEquals(if (isBody) 1 else 3, ChordProSyntax.bodyStartIndex(lines), line)
+            assertEquals(if (isBody) 1 else 3, ChordProHeaderLayout.bodyStartIndex(lines), line)
             assertEquals(if (isBody) null else "G", ChordProParser.parseMetadata(lines.joinToString("\n")).key?.takeIf { it.isNotBlank() }, line)
         }
     }

@@ -82,7 +82,7 @@ internal class MetadataBuilder {
     private val custom = mutableMapOf<String, MutableList<String>>()
 
     /** @param isInBody Whether [directive] stands in the body of the song rather than in its header. */
-    fun consume(directive: ChordProSyntax.Directive, isInBody: Boolean) {
+    fun consume(directive: ChordProDirectives.Directive, isInBody: Boolean) {
         val value = directive.value?.trim().orEmpty()
         when (directive.name) {
             "title", "t" -> title.consume(value)
@@ -97,26 +97,26 @@ internal class MetadataBuilder {
             "tempo" -> tempo.consume(value, isInBody)
             "time" -> time.consume(value, isInBody)
             "duration" -> duration.consume(value)
-            "tag" -> ChordProSyntax.tag(directive)?.let(::addTag)
-            "language", "lang" -> ChordProSyntax.language(directive)?.let(::addLanguage)
+            "tag" -> ChordProMetaItems.tag(directive)?.let(::addTag)
+            "language", "lang" -> ChordProMetaItems.language(directive)?.let(::addLanguage)
             "meta" -> {
                 // The spec defines these as the standalone directive, so they are read as one: a song whose header is
                 // all `{meta: title …}` lines is titled, named and keyed by it like any other.
-                ChordProSyntax.standardMeta(directive)?.let {
+                ChordProMetaItems.standardMeta(directive)?.let {
                     consume(it, isInBody)
                     return
                 }
                 val name = value.substringBefore(' ').trim()
                 when {
-                    name.equals(ChordProSyntax.TAG_NAME, ignoreCase = true) -> ChordProSyntax.tag(directive)?.let(::addTag)
+                    name.equals(ChordProMetaItems.TAG_NAME, ignoreCase = true) -> ChordProMetaItems.tag(directive)?.let(::addTag)
                     // The language is read as its own thing rather than as one more custom item, so that it is
                     // not carried twice; an unusable value drops out here instead of coming back as a filter
                     // group nothing can be named.
-                    ChordProSyntax.isLanguageMeta(directive) -> ChordProSyntax.language(directive)?.let(::addLanguage)
+                    ChordProMetaItems.isLanguageMeta(directive) -> ChordProMetaItems.language(directive)?.let(::addLanguage)
                     // The same goes for the cover, the first usable one of which is the song's.
-                    ChordProSyntax.isCoverMeta(directive) -> if (coverArt == null) coverArt = ChordProSyntax.cover(directive)
+                    ChordProMetaItems.isCoverMeta(directive) -> if (coverArt == null) coverArt = ChordProMetaItems.cover(directive)
                     // And for the links, every usable one of which is kept, once each.
-                    ChordProSyntax.isLinkMeta(directive) -> ChordProSyntax.link(directive)?.let { if (links.none { link -> link.url == it.url }) links += it }
+                    ChordProMetaItems.isLinkMeta(directive) -> ChordProMetaItems.link(directive)?.let { if (links.none { link -> link.url == it.url }) links += it }
                     name.isNotEmpty() -> custom.getOrPut(name) { mutableListOf() } += value.substringAfter(' ', missingDelimiterValue = "").trim()
                 }
             }
@@ -142,7 +142,7 @@ internal class MetadataBuilder {
 
     /** A tag the song already carries in another spelling is not a second tag, see [ChordProMetadata.tags]. */
     private fun addTag(value: String) {
-        if (tagKeys.add(ChordProSyntax.caseInsensitiveKey(value))) tags += value
+        if (tagKeys.add(ChordProMetaItems.caseInsensitiveKey(value))) tags += value
     }
 
     /** The codes are normalized before they get here, so a repeated language is a repeated string. */

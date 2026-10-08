@@ -42,8 +42,8 @@ internal class TimingChanges {
     }
 
     /** The change [directive] makes, or null where it makes none; called before [metadata] reads it. */
-    fun consume(directive: ChordProSyntax.Directive, metadata: MetadataBuilder): ChordProBlock.Timing? {
-        val standard = ChordProSyntax.standardMeta(directive) ?: directive
+    fun consume(directive: ChordProDirectives.Directive, metadata: MetadataBuilder): ChordProBlock.Timing? {
+        val standard = ChordProMetaItems.standardMeta(directive) ?: directive
         val written = standard.value?.trim().orEmpty()
         val (inForceTempo, inForceTime) = inForce(metadata)
         when (standard.name) {

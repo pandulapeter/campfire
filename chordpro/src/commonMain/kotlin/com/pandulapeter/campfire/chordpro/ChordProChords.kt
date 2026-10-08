@@ -138,7 +138,7 @@ object ChordProChords {
     internal fun forEachName(song: ChordProSong, action: (name: String, offset: Int) -> Unit) {
         var offset = 0
         fun addBrackets(text: String?) {
-            text?.let { ChordProSyntax.brackets(it).map { bracket -> bracket.content.trim() }.filter { name -> name.isNotEmpty() && !name.startsWith("*") }.forEach { action(it, offset) } }
+            text?.let { ChordProDirectives.brackets(it).map { bracket -> bracket.content.trim() }.filter { name -> name.isNotEmpty() && !name.startsWith("*") }.forEach { action(it, offset) } }
         }
         fun addBlocks(blocks: List<ChordProBlock>) {
             blocks.forEach { block ->
@@ -150,7 +150,7 @@ object ChordProChords {
                                 is ChordProLine.Lyrics -> line.chords.filter { !it.isAnnotation }.forEach { action(it.name, offset) }
                                 is ChordProLine.Grid -> {
                                     addBrackets(line.label)
-                                    line.tokens.filterIsInstance<GridToken.Chord>().forEach { token -> ChordProSyntax.cellChords(token.name).forEach { action(it, offset) } }
+                                    line.tokens.filterIsInstance<GridToken.Chord>().forEach { token -> ChordProTokens.cellChords(token.name).forEach { action(it, offset) } }
                                 }
                                 is ChordProLine.Tab -> {
                                     addBrackets(line.label)

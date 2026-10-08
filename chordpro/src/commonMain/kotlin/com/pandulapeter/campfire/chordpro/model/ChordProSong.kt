@@ -9,8 +9,8 @@
  */
 package com.pandulapeter.campfire.chordpro.model
 
-import com.pandulapeter.campfire.chordpro.ChordProSyntax
 import com.pandulapeter.campfire.chordpro.ChordProTabTransposer
+import com.pandulapeter.campfire.chordpro.ChordProTokens
 
 /**
  * A parsed ChordPro song: the directives that describe it plus the blocks that make up its body.
@@ -30,7 +30,7 @@ data class ChordProSong(
                 when (line) {
                     is ChordProLine.Lyrics -> line.chords.any { !it.isAnnotation }
                     is ChordProLine.Grid -> line.tokens.any { it is GridToken.Chord }
-                    is ChordProLine.Tab -> ChordProSyntax.isStaffLine(line.text) || ChordProTabTransposer.chordNames(listOf(line.text)).isNotEmpty()
+                    is ChordProLine.Tab -> ChordProTokens.isStaffLine(line.text) || ChordProTabTransposer.chordNames(listOf(line.text)).isNotEmpty()
                     ChordProLine.Blank -> false
                 }
             }

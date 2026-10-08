@@ -101,14 +101,14 @@ object ChordSheetConverter {
     private fun isChordPro(text: String): Boolean {
         val lines = text.lines().filter { it.isNotBlank() }
         if (lines.any { line ->
-                ChordProSyntax.isKnownDirective(line.trim()) || ChordProSyntax.brackets(line).any {
+                ChordProDirectives.isKnownDirective(line.trim()) || ChordProDirectives.brackets(line).any {
                     it.content.none(Char::isWhitespace) && isChordOrLatinName(it.content) &&
                         line.getOrNull(it.range.last + 1)?.let { next ->
                             next in 'A'..'Z' || next in 'a'..'z' || next in '\u00c0'..'\u024f' || next in '\u0370'..'\u04ff'
                         } == true
                 }
             }) return true
-        val inline = lines.count { line -> ChordProSyntax.brackets(line).any { chord(it.content) } }
+        val inline = lines.count { line -> ChordProDirectives.brackets(line).any { chord(it.content) } }
         return inline > 0 && inline * 2 >= lines.size
     }
 

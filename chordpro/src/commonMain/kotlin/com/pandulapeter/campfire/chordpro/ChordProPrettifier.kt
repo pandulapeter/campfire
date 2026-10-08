@@ -26,7 +26,7 @@ object ChordProPrettifier {
      * after a group that cut a running paragraph closed that paragraph in the source, which is then kept after it.
      */
     fun prettify(text: String): String {
-        val lines = ChordProSyntax.splitLines(text)
+        val lines = ChordProLines.splitLines(text)
         val hoisted = hoistedTimings(lines)
         var song = 0
         val output = mutableListOf<String>()
@@ -51,7 +51,7 @@ object ChordProPrettifier {
 
         fun flushTimings() {
             if (timings.isEmpty()) return
-            output += timings.sortedBy { ChordProSyntax.matchDirective(it)?.let(ChordProSyntax::metadataKind) != TEMPO }
+            output += timings.sortedBy { ChordProDirectives.matchDirective(it)?.let(ChordProHeaderLayout::metadataKind) != TEMPO }
             timings.clear()
             if (doesBlankLineCloseGroup) gap() else isHeadedByTimings = true
             doesGroupCutSection = false
@@ -65,10 +65,10 @@ object ChordProPrettifier {
 
         for ((index, rawLine) in lines.withIndex()) {
             val trimmed = rawLine.trim()
-            val directive = ChordProSyntax.matchDirective(trimmed)
-            val start = directive?.name?.let(ChordProSyntax::startOfEnvironment)
-            val end = directive?.name?.let(ChordProSyntax::endOfEnvironment)
-            val delegated = environments.lastOrNull() in ChordProSyntax.delegateEnvironments
+            val directive = ChordProDirectives.matchDirective(trimmed)
+            val start = directive?.name?.let(ChordProEnvironments::startOfEnvironment)
+            val end = directive?.name?.let(ChordProEnvironments::endOfEnvironment)
+            val delegated = environments.lastOrNull() in ChordProEnvironments.delegateEnvironments
 
             // Braces and hashes inside delegated notation are that language's syntax, even metadata-shaped ones.
             if (delegated && end != environments.last()) {
@@ -83,12 +83,12 @@ object ChordProPrettifier {
                     output += rawLine
                     continue
                 }
-                if (directive != null && start == null && end == null && directive.name !in ChordProSyntax.blockNames &&
+                if (directive != null && start == null && end == null && directive.name !in ChordProHeaderLayout.blockNames &&
                     directive.name != "new_song" && directive.name != "ns") {
-                    val kind = ChordProSyntax.metadataKind(directive)
+                    val kind = ChordProHeaderLayout.metadataKind(directive)
                     if (kind != null || directive.name == "meta") {
-                        metadata += (kind?.let(ChordProSyntax.metadataOrder::indexOf)?.takeIf { it >= 0 }
-                            ?: ChordProSyntax.metadataOrder.size) to trimmed
+                        metadata += (kind?.let(ChordProHeaderLayout.metadataOrder::indexOf)?.takeIf { it >= 0 }
+                            ?: ChordProHeaderLayout.metadataOrder.size) to trimmed
                     } else {
                         flushMetadata()
                         output += trimmed
@@ -97,7 +97,7 @@ object ChordProPrettifier {
                 }
                 hoisted[song]?.forEach { hoistedIndex ->
                     val line = lines[hoistedIndex].trim()
-                    metadata += ChordProSyntax.matchDirective(line)?.let(ChordProSyntax::metadataKind)?.let(ChordProSyntax.metadataOrder::indexOf)!! to line
+                    metadata += ChordProDirectives.matchDirective(line)?.let(ChordProHeaderLayout::metadataKind)?.let(ChordProHeaderLayout.metadataOrder::indexOf)!! to line
                 }
                 flushMetadata()
                 isHeader = false
@@ -119,7 +119,7 @@ object ChordProPrettifier {
                 continue
             }
 
-            if (directive != null && ChordProSyntax.metadataKind(directive) in ChordProHeader.changeableMetadata) {
+            if (directive != null && ChordProHeaderLayout.metadataKind(directive) in ChordProHeader.changeableMetadata) {
                 // A blank line before the group would close a paragraph the change only cuts, see cutsRunningSection.
                 if (timings.isEmpty()) {
                     doesGroupCutSection = isImplicitSectionRunning && !gapBeforeNext
@@ -151,10 +151,10 @@ object ChordProPrettifier {
             // section of its own, so none is added where they only cut the one that is running. A recall or a heading
             // closes it anyway.
             val cutsRunningSection = isImplicitSectionRunning && directive != null && start == null && directive.name != "chorus" &&
-                directive.name in ChordProSyntax.blockNames && !isLegacyHeading
+                directive.name in ChordProHeaderLayout.blockNames && !isLegacyHeading
             val isNewSong = directive?.name == "new_song" || directive?.name == "ns"
             if ((!isHeadedByTimings || isNewSong) && (gapBeforeNext || (start != null && !isLineMode) ||
-                    (directive?.name in ChordProSyntax.blockNames && !cutsRunningSection) || isNewSong)) gap()
+                    (directive?.name in ChordProHeaderLayout.blockNames && !cutsRunningSection) || isNewSong)) gap()
             gapBeforeNext = false
             isHeadedByTimings = false
             output += if (directive == null) rawLine else trimmed
@@ -189,10 +189,10 @@ object ChordProPrettifier {
     fun prettifiedOffset(before: String, after: String, offset: Int): Int {
         val caret = offset.coerceIn(0, before.length)
         if (before == after) return caret
-        val oldLines = ChordProSyntax.splitLines(before)
-        val newLines = ChordProSyntax.splitLines(after)
-        val oldStarts = ChordProSyntax.lineStartOffsets(before)
-        val newStarts = ChordProSyntax.lineStartOffsets(after)
+        val oldLines = ChordProLines.splitLines(before)
+        val newLines = ChordProLines.splitLines(after)
+        val oldStarts = ChordProLines.lineStartOffsets(before)
+        val newStarts = ChordProLines.lineStartOffsets(after)
         val indexed = HashMap<String, MutableList<Int>>()
         newLines.forEachIndexed { index, line ->
             if (line.isNotBlank()) indexed.getOrPut(line.trim()) { mutableListOf() }.add(index)
@@ -259,9 +259,9 @@ object ChordProPrettifier {
         }
         lines.forEachIndexed { index, rawLine ->
             val trimmed = rawLine.trim()
-            val delegated = environments.lastOrNull() in ChordProSyntax.delegateEnvironments
-            val directive = if (delegated) ChordProSyntax.matchDelegatedDirective(trimmed) else ChordProSyntax.matchDirective(trimmed)
-            val end = directive?.name?.let(ChordProSyntax::endOfEnvironment)
+            val delegated = environments.lastOrNull() in ChordProEnvironments.delegateEnvironments
+            val directive = if (delegated) ChordProDirectives.matchDelegatedDirective(trimmed) else ChordProDirectives.matchDirective(trimmed)
+            val end = directive?.name?.let(ChordProEnvironments::endOfEnvironment)
             if (delegated) {
                 if (end != null) environments.removeAt(environments.lastIndex)
                 return@forEachIndexed
@@ -272,18 +272,18 @@ object ChordProPrettifier {
                 isHeader = true
                 return@forEachIndexed
             }
-            val kind = directive?.let(ChordProSyntax::metadataKind)
+            val kind = directive?.let(ChordProHeaderLayout::metadataKind)
             if (isHeader) {
                 if (trimmed.isEmpty() || trimmed.startsWith('#')) return@forEachIndexed
-                if (directive != null && !ChordProSyntax.startsBody(directive) && ChordProSyntax.endOfEnvironment(directive.name) == null) {
+                if (directive != null && !ChordProHeaderLayout.startsBody(directive) && ChordProEnvironments.endOfEnvironment(directive.name) == null) {
                     kind?.let(headerKinds::add)
                     return@forEachIndexed
                 }
                 isHeader = false
             }
-            directive?.name?.let(ChordProSyntax::startOfEnvironment)?.let { environments += it.lowercase() }
+            directive?.name?.let(ChordProEnvironments::startOfEnvironment)?.let { environments += it.lowercase() }
             if (end != null) environments.indexOfLast { it == end.lowercase() }.takeIf { it >= 0 }?.let { environments.subList(it, environments.size).clear() }
-            val value = directive?.let { (ChordProSyntax.standardMeta(it) ?: it).value }
+            val value = directive?.let { (ChordProMetaItems.standardMeta(it) ?: it).value }
             val isReadable = when (kind) {
                 TEMPO -> ChordProTempo.parse(value) != null
                 TIME -> ChordProTime.parse(value) != null

@@ -80,7 +80,7 @@ internal class SectionBuilder(private val blocks: MutableList<ChordProBlock>) {
      */
     val isInLineMode get() = lineMode != null
 
-    /** Whether one of the environments ChordPro hands to another program is open, see [ChordProSyntax.matchDelegatedDirective]. */
+    /** Whether one of the environments ChordPro hands to another program is open, see [ChordProDirectives.matchDelegatedDirective]. */
     val isDelegated get() = lineMode == LineMode.VERBATIM
 
     /** Whether the running paragraph was opened by the tab or grid environment that is open, see [closeLineMode]. */
@@ -274,7 +274,7 @@ internal class SectionBuilder(private val blocks: MutableList<ChordProBlock>) {
         if (lineMode == LineMode.TAB || lineMode == LineMode.GRID) hasLineModeLine = true
         lines += when (lineMode) {
             LineMode.TAB -> ChordProLine.Tab(rawLine, continuesEnvironment = hasTabLine, label = lineModeLabel).also { hasTabLine = true }
-            LineMode.GRID -> ChordProLine.Grid(ChordProSyntax.parseGridTokens(trimmedLine), label = lineModeLabel)
+            LineMode.GRID -> ChordProLine.Grid(ChordProTokens.parseGridTokens(trimmedLine), label = lineModeLabel)
             LineMode.VERBATIM -> ChordProLine.Lyrics(text = rawLine, chords = emptyList())
             null -> ChordProParser.parseLyrics(rawLine)
         }

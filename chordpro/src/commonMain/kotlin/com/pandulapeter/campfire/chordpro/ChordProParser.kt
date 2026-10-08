@@ -46,11 +46,11 @@ object ChordProParser {
         val section = SectionBuilder(blocks)
         val transposition = Transposition()
         val timing = TimingChanges()
-        ChordProSyntax.splitLines(text).forEach { rawLine ->
+        ChordProLines.splitLines(text).forEach { rawLine ->
             val trimmedLine = rawLine.trim()
             // Inside an environment handed to another program a `#` and a brace are that program's syntax.
             if (trimmedLine.startsWith(SOURCE_COMMENT) && !section.isDelegated) return@forEach
-            val directive = if (section.isDelegated) ChordProSyntax.matchDelegatedDirective(trimmedLine) else ChordProSyntax.matchDirective(trimmedLine)
+            val directive = if (section.isDelegated) ChordProDirectives.matchDelegatedDirective(trimmedLine) else ChordProDirectives.matchDirective(trimmedLine)
             if (directive == null) {
                 if (trimmedLine.isNotEmpty()) transposition.startBody()
                 section.addContent(rawLine, trimmedLine)
@@ -109,24 +109,24 @@ object ChordProParser {
         var hasChords = false
         var environment: String? = null
         var isGermanNotated = notation == ChordNotation.GERMAN
-        ChordProSyntax.splitLines(text).forEach { rawLine ->
+        ChordProLines.splitLines(text).forEach { rawLine ->
             val trimmedLine = rawLine.trim()
-            val isDelegated = environment in ChordProSyntax.delegateEnvironments
+            val isDelegated = environment in ChordProEnvironments.delegateEnvironments
             if (trimmedLine.startsWith(SOURCE_COMMENT) && !isDelegated) return@forEach
             val directive = when {
                 !trimmedLine.startsWith(DIRECTIVE_START) -> null
-                isDelegated -> ChordProSyntax.matchDelegatedDirective(trimmedLine)
-                else -> ChordProSyntax.matchDirective(trimmedLine)
+                isDelegated -> ChordProDirectives.matchDelegatedDirective(trimmedLine)
+                else -> ChordProDirectives.matchDirective(trimmedLine)
             }
             if (directive != null) {
-                if (!ChordProSyntax.hasSelectorSuffix(directive.name)) {
+                if (!ChordProDirectives.hasSelectorSuffix(directive.name)) {
                     if (directive.name == TRANSPOSE) {
                         transposition.consume(directive.value)
-                    } else if (ChordProSyntax.startsBody(directive)) {
+                    } else if (ChordProHeaderLayout.startsBody(directive)) {
                         transposition.startBody()
                     }
-                    ChordProSyntax.startOfEnvironment(directive.name)?.let { environment = it.lowercase() }
-                    ChordProSyntax.endOfEnvironment(directive.name)?.let { environment = null }
+                    ChordProEnvironments.startOfEnvironment(directive.name)?.let { environment = it.lowercase() }
+                    ChordProEnvironments.endOfEnvironment(directive.name)?.let { environment = null }
                     metadata.consume(directive, isInBody = transposition.isInBody)
                 }
                 return@forEach
@@ -139,7 +139,7 @@ object ChordProParser {
             val names = writtenChordNames(rawLine, trimmedLine, environment)
             if (isLookingForChords) {
                 // A tab is chords to the transposition as long as it has a staff to move or chord names over it.
-                hasChords = names.isNotEmpty() || (environment == TAB && ChordProSyntax.isStaffLine(rawLine))
+                hasChords = names.isNotEmpty() || (environment == TAB && ChordProTokens.isStaffLine(rawLine))
             }
             if (isLookingForNotation) isGermanNotated = names.any(ChordProNotation::isGermanName)
         }
@@ -160,8 +160,8 @@ object ChordProParser {
      */
     private fun mayHoldGermanName(rawLine: String, environment: String?) = when (environment) {
         TAB, GRID -> rawLine.hasGermanLetter()
-        in ChordProSyntax.delegateEnvironments -> false
-        else -> ChordProSyntax.hasBrackets(rawLine) && ChordProSyntax.brackets(rawLine).any { it.content.hasGermanLetter() }
+        in ChordProEnvironments.delegateEnvironments -> false
+        else -> ChordProDirectives.hasBrackets(rawLine) && ChordProDirectives.brackets(rawLine).any { it.content.hasGermanLetter() }
     }
 
     private fun String.hasGermanLetter() = GERMAN_LETTER in this || GERMAN_LETTER.lowercaseChar() in this
@@ -169,13 +169,13 @@ object ChordProParser {
     /** The names one line of the body hands to a chord rewrite, by the environment it stands in. */
     private fun writtenChordNames(rawLine: String, trimmedLine: String, environment: String?) = when (environment) {
         TAB -> ChordProTabTransposer.chordNames(listOf(rawLine))
-        GRID -> ChordProSyntax.parseGridTokens(trimmedLine).filterIsInstance<GridToken.Chord>().flatMap { ChordProSyntax.cellChords(it.name) }
-        in ChordProSyntax.delegateEnvironments -> emptyList()
+        GRID -> ChordProTokens.parseGridTokens(trimmedLine).filterIsInstance<GridToken.Chord>().flatMap { ChordProTokens.cellChords(it.name) }
+        in ChordProEnvironments.delegateEnvironments -> emptyList()
         else -> parseLyrics(rawLine).chords.filter { !it.isAnnotation }.map { it.name }
     }
 
     private fun handleDirective(
-        directive: ChordProSyntax.Directive,
+        directive: ChordProDirectives.Directive,
         metadata: MetadataBuilder,
         blocks: MutableList<ChordProBlock>,
         section: SectionBuilder,
@@ -192,33 +192,33 @@ object ChordProParser {
             }
             return
         }
-        if (ChordProSyntax.hasSelectorSuffix(name)) return
+        if (ChordProDirectives.hasSelectorSuffix(name)) return
         if (name == TRANSPOSE) {
             // Inside a section the modulation cuts it in two, the way a comment does, and the rest is its continuation.
             transposition.consume(directive.value)?.let { semitones -> section.addBlock(ChordProBlock.Transpose(semitones)) }
             return
         }
-        if (ChordProSyntax.startsBody(directive)) transposition.startBody()
-        ChordProSyntax.startOfEnvironment(name)?.let { environment ->
+        if (ChordProHeaderLayout.startsBody(directive)) transposition.startBody()
+        ChordProEnvironments.startOfEnvironment(name)?.let { environment ->
             // Tablature and grids are how the next few lines are written, not a section of their own: they open
             // inside whatever section is running, and a song with a solo written as a line of chords over a tab is
             // one section rather than three.
             lineMode(environment)?.let { mode ->
-                section.openLineMode(mode, ChordProSyntax.label(directive.value))
+                section.openLineMode(mode, ChordProEnvironments.label(directive.value))
                 return
             }
             section.close()
-            section.open(sectionType(environment), ChordProSyntax.label(directive.value), isExplicit = true)
-            if (environment.lowercase() in ChordProSyntax.delegateEnvironments) section.openLineMode(LineMode.VERBATIM, label = null)
+            section.open(sectionType(environment), ChordProEnvironments.label(directive.value), isExplicit = true)
+            if (environment.lowercase() in ChordProEnvironments.delegateEnvironments) section.openLineMode(LineMode.VERBATIM, label = null)
             return
         }
-        ChordProSyntax.endOfEnvironment(name)?.let { environment ->
+        ChordProEnvironments.endOfEnvironment(name)?.let { environment ->
             if (lineMode(environment) == null) section.close() else section.closeLineMode()
             return
         }
         when (name) {
             "chorus" -> {
-                val recall = ChordProBlock.ChorusRecall(ChordProSyntax.label(directive.value))
+                val recall = ChordProBlock.ChorusRecall(ChordProEnvironments.label(directive.value))
                 if (section.isInLineMode) {
                     // The environment still has lines to come, so the recall interrupts it the way a comment does.
                     section.addBlock(recall)
@@ -319,7 +319,7 @@ object ChordProParser {
         val text = StringBuilder()
         val chords = mutableListOf<ChordProLine.Lyrics.Chord>()
         var consumedUntil = 0
-        ChordProSyntax.brackets(rawLine).forEach { bracket ->
+        ChordProDirectives.brackets(rawLine).forEach { bracket ->
             text.append(rawLine, consumedUntil, bracket.range.first)
             val content = bracket.content.trim()
             if (content.isNotEmpty()) {

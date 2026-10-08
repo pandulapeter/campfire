@@ -28,17 +28,17 @@ object ChordProLinks {
     fun addLink(text: String, url: String): String {
         val link = usableUrl(url) ?: return text
         if (ChordProParser.parseMetadata(text).links.any { it.url == link }) return text
-        val lines = ChordProSyntax.splitLines(text).toMutableList()
-        lines.add(ChordProSyntax.metadataInsertionIndex(lines, ChordProSyntax.LINK_NAME), "{meta: ${ChordProSyntax.LINK_NAME} $link}")
-        return ChordProSyntax.joinLines(lines, text)
+        val lines = ChordProLines.splitLines(text).toMutableList()
+        lines.add(ChordProHeaderLayout.metadataInsertionIndex(lines, ChordProMetaItems.LINK_NAME), "{meta: ${ChordProMetaItems.LINK_NAME} $link}")
+        return ChordProLines.joinLines(lines, text)
     }
 
     /** Drops every link line naming [url], which is more than one only in a file written by hand. */
     fun removeLink(text: String, url: String): String {
-        val link = ChordProSyntax.webUrl(url) ?: return text
-        val lines = ChordProSyntax.splitLines(text)
-        val kept = lines.filterNot { line -> ChordProSyntax.matchDirective(line.trim())?.let(ChordProSyntax::link)?.url == link }
-        return if (kept.size == lines.size) text else ChordProSyntax.joinLines(kept, text)
+        val link = ChordProMetaItems.webUrl(url) ?: return text
+        val lines = ChordProLines.splitLines(text)
+        val kept = lines.filterNot { line -> ChordProDirectives.matchDirective(line.trim())?.let(ChordProMetaItems::link)?.url == link }
+        return if (kept.size == lines.size) text else ChordProLines.joinLines(kept, text)
     }
 
     /**
@@ -58,26 +58,26 @@ object ChordProLinks {
         // since there are no more such places than wanted addresses.
         val inOrder = wanted.iterator()
         val declared = mutableSetOf<String>()
-        val lines = ChordProSyntax.splitLines(text)
+        val lines = ChordProLines.splitLines(text)
         val kept = mutableListOf<String>()
         lines.forEach { line ->
-            val directive = ChordProSyntax.matchDirective(line.trim())
-            val link = directive?.let(ChordProSyntax::link)
+            val directive = ChordProDirectives.matchDirective(line.trim())
+            val link = directive?.let(ChordProMetaItems::link)
             if (link == null) {
                 kept += line
             } else if (link.url in wantedUrls && declared.add(link.url)) {
                 val replacement = inOrder.next()
-                kept += if (replacement == link) line else "{meta: ${ChordProSyntax.LINK_NAME} ${value(replacement)}}"
+                kept += if (replacement == link) line else "{meta: ${ChordProMetaItems.LINK_NAME} ${value(replacement)}}"
             }
         }
         val missing = inOrder.asSequence().toList()
         if (missing.isNotEmpty()) {
             kept.addAll(
-                ChordProSyntax.metadataInsertionIndex(kept, ChordProSyntax.LINK_NAME),
-                missing.map { "{meta: ${ChordProSyntax.LINK_NAME} ${value(it)}}" },
+                ChordProHeaderLayout.metadataInsertionIndex(kept, ChordProMetaItems.LINK_NAME),
+                missing.map { "{meta: ${ChordProMetaItems.LINK_NAME} ${value(it)}}" },
             )
         }
-        return if (kept == lines) text else ChordProSyntax.joinLines(kept, text)
+        return if (kept == lines) text else ChordProLines.joinLines(kept, text)
     }
 
     /** The value of a link directive, shared by text editing and whole-song serialization. */
@@ -95,9 +95,9 @@ object ChordProLinks {
      * browser's address bar shows most of them, is taken as `https`, since a page that is only served over plain
      * `http` is rare enough to be typed out in full. That is only done where the text starts with a host, though: one
      * that starts with another scheme (`mailto:`), a mistyped one (`https:/`) or a user name (`me@`) would otherwise
-     * be written as an `https` address that names nothing the user meant ([ChordProSyntax.typedWebUrl], which the cover
+     * be written as an `https` address that names nothing the user meant ([ChordProMetaItems.typedWebUrl], which the cover
      * art's address shares). What a field the user types an address into checks against, so that it never offers to
      * save something the file would not keep.
      */
-    fun usableUrl(value: String): String? = ChordProSyntax.typedWebUrl(value)
+    fun usableUrl(value: String): String? = ChordProMetaItems.typedWebUrl(value)
 }

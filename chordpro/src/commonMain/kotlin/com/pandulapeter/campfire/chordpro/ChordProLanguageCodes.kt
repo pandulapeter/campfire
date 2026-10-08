@@ -13,7 +13,7 @@ package com.pandulapeter.campfire.chordpro
  * The one piece of data `:chordpro` carries that is not about the ChordPro format: which three letter language codes
  * name a language that also has a two letter one.
  *
- * It is here because the identity of a language is decided here, in [ChordProSyntax.languageCode], and a library
+ * It is here because the identity of a language is decided here, in [ChordProMetaItems.languageCode], and a library
  * where one file says `{meta: language eng}` and the next says `{meta: language en}` has to hold one language rather
  * than two. Which of the two spellings wins is not arbitrary either: the two letter code is the one every platform
  * can translate — asked about `eng` a JVM answers "English" whatever language it is asked in, while `en` it calls

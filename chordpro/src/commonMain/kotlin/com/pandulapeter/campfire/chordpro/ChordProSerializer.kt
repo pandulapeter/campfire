@@ -80,7 +80,7 @@ object ChordProSerializer {
         metadata.composer?.let { add("{composer: $it}") }
         metadata.lyricist?.let { add("{lyricist: $it}") }
         metadata.album?.let { add("{album: $it}") }
-        metadata.coverArt?.let { add("{meta: ${ChordProSyntax.COVER_NAME} $it}") }
+        metadata.coverArt?.let { add("{meta: ${ChordProMetaItems.COVER_NAME} $it}") }
         metadata.year?.let { add("{year: $it}") }
         metadata.key?.let { add("{key: $it}") }
         metadata.capo?.let { add("{capo: $it}") }
@@ -88,9 +88,9 @@ object ChordProSerializer {
         metadata.time?.let { add("{time: $it}") }
         metadata.duration?.let { add("{duration: $it}") }
         metadata.transpose.takeIf { it != 0 }?.let { add("{transpose: $it}") }
-        metadata.tags.forEach { add("{${ChordProSyntax.TAG_NAME}: $it}") }
-        metadata.languages.forEach { add("{meta: ${ChordProSyntax.LANGUAGE_NAME} $it}") }
-        metadata.links.forEach { add("{meta: ${ChordProSyntax.LINK_NAME} ${ChordProLinks.value(it)}}") }
+        metadata.tags.forEach { add("{${ChordProMetaItems.TAG_NAME}: $it}") }
+        metadata.languages.forEach { add("{meta: ${ChordProMetaItems.LANGUAGE_NAME} $it}") }
+        metadata.links.forEach { add("{meta: ${ChordProMetaItems.LINK_NAME} ${ChordProLinks.value(it)}}") }
         metadata.definitions.forEach { add(ChordProDefinitions.line(it.name, it.voicing)) }
         metadata.custom.forEach { (name, values) ->
             values.forEach { value -> add(if (value.isEmpty()) "{meta: $name}" else "{meta: $name $value}") }

@@ -856,13 +856,13 @@ class ChordProParserTest {
     fun `the words before the first bar of a grid line are its margin label`() {
         assertEquals(
             listOf(GridToken.Text("A"), GridToken.Bar("||"), GridToken.Chord("G7"), GridToken.Beat, GridToken.Bar("|")),
-            ChordProSyntax.parseGridTokens("A    || G7 . |"),
+            ChordProTokens.parseGridTokens("A    || G7 . |"),
         )
         assertEquals(
             listOf(GridToken.Text("Coda"), GridToken.Bar("|"), GridToken.Chord("D7"), GridToken.Bar("|.")),
-            ChordProSyntax.parseGridTokens("Coda | D7 |."),
+            ChordProTokens.parseGridTokens("Coda | D7 |."),
         )
-        assertEquals(listOf(GridToken.Chord("Am"), GridToken.Chord("C")), ChordProSyntax.parseGridTokens("Am C"))
+        assertEquals(listOf(GridToken.Chord("Am"), GridToken.Chord("C")), ChordProTokens.parseGridTokens("Am C"))
     }
 
     @Test
@@ -879,9 +879,9 @@ class ChordProParserTest {
                 GridToken.Chord("D"),
                 GridToken.Bar("|"),
             ),
-            ChordProSyntax.parseGridTokens("|: C7 / :|: G7 . :|2> D |"),
+            ChordProTokens.parseGridTokens("|: C7 / :|: G7 . :|2> D |"),
         )
-        val voltas = ChordProSyntax.parseGridTokens("|1 C :|2 D |")
+        val voltas = ChordProTokens.parseGridTokens("|1 C :|2 D |")
         assertEquals(GridToken.Bar("|1"), voltas.first())
         assertTrue(GridToken.Bar(":|2") in voltas)
     }
@@ -1227,8 +1227,8 @@ class ChordProParserTest {
     fun `a negated selector is read as the directive it is written on`() {
         assertEquals("X", ChordProParser.parse("{title-guitar!: X}").metadata.title)
         assertNull(ChordProParser.parse("{title-guitar: Y}").metadata.title)
-        assertNull(ChordProSyntax.matchDirective("{tit!le: X}"))
-        assertNull(ChordProSyntax.matchDirective("{title!: X}"))
+        assertNull(ChordProDirectives.matchDirective("{tit!le: X}"))
+        assertNull(ChordProDirectives.matchDirective("{title!: X}"))
     }
 
     @Test
