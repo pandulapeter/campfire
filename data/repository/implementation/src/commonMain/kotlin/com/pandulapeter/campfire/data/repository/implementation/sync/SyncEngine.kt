@@ -20,10 +20,9 @@ import com.pandulapeter.campfire.data.repository.implementation.LibraryFileLock
 import com.pandulapeter.campfire.data.repository.implementation.base.recovering
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
 import com.pandulapeter.campfire.data.source.local.api.SetlistComparison
-import com.pandulapeter.campfire.data.source.remote.api.SyncAuthorizationException
 import com.pandulapeter.campfire.data.source.remote.api.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.SyncFolder
-import com.pandulapeter.campfire.data.source.remote.api.SyncRemoteStorageFullException
+import com.pandulapeter.campfire.data.source.remote.api.SyncRunEndingException
 import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteDeletion
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteDocument
@@ -421,10 +420,7 @@ internal class SyncEngine(
      * run. The other three say something about every file after this one as well.
      */
     private val Exception.endsTheRun
-        get() = this is CancellationException ||
-            this is SyncAuthorizationException ||
-            this is SyncNetworkException ||
-            this is SyncRemoteStorageFullException
+        get() = this is CancellationException || this is SyncRunEndingException
 
     /**
      * Overwrites the local file, so it is read, decided about and only then written: the plan was made from hashes

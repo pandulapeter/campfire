@@ -63,6 +63,7 @@ and why each of them is load bearing, are spelled out in the KDoc of `SyncFolder
   while, and throws `CoverArtSearchException` only once it has given up. Every source is registered as one
   `CoverArtSearchRemoteSources`, never a bare list, for the reason `SyncProviders` is.
 - `SyncAuthorizationException` / `SyncNetworkException` / `SyncRemoteStorageFullException` — the three failures the
-  engine treats as reasons to stop a run; the last one only ever comes from `upload`, since every upload after it
+  engine treats as reasons to stop a run, the subclasses of the sealed `SyncRunEndingException`, each carrying the
+  `SyncFailureReason` the run is reported as, so that a fourth is one subclass rather than one more case in every list; the last one only ever comes from `upload`, since every upload after it
   would be refused the same way. Everything else is one file's problem and must not keep the other four hundred from
   travelling.

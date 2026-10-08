@@ -244,8 +244,8 @@ a deletion of one of those files lands before its reads or after its update and 
   overrides travel back with them rather than following a folder another device emptied — and `KEEP_AND_DOWNLOAD` those of every file that is there and not here, which it reads as
   new remote ones. An answer waives the guard of its own direction only, so a run told to delete here still stops if it
   would also empty the cloud folder. The policy is a parameter of the one run it was given to, never state. A failure on one file does not end a run; only the three failures
-  that make every further call pointless (the credentials refused, the service unreachable, the remote folder full)
-  do — and a `CancellationException` is caught *first* and rethrown, since a stopped run is not a few
+  that make every further call pointless (the credentials refused, the service unreachable, the remote folder full,
+  the subclasses of the sealed `SyncRunEndingException`, whose `reason` is what the run is reported as) do — and a `CancellationException` is caught *first* and rethrown, since a stopped run is not a few
   hundred files that failed. A file that failed is named in `SyncSummary.failed`, and a run that has any does not
   move `lastSyncedAt`. So is a file the service still reported as contested in the last of the `MAXIMUM_PASSES`
   passes (another device writing it under every upload): the two sides still differ, and the run did not settle it. Operations run `CONCURRENT_TRANSFERS` at a time within each ordering group rather than

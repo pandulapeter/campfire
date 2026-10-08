@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 import com.pandulapeter.campfire.data.source.remote.api.SyncAuthorizationException
 import com.pandulapeter.campfire.data.source.remote.api.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.SyncRemoteStorageFullException
+import com.pandulapeter.campfire.data.source.remote.api.SyncRunEndingException
 import com.pandulapeter.campfire.data.source.remote.implementation.network.HttpClientHolder
 import com.pandulapeter.campfire.data.source.remote.implementation.network.exponentialBackoffSeconds
 import io.ktor.client.network.sockets.ConnectTimeoutException
@@ -162,9 +163,7 @@ internal suspend fun <T> transport(block: suspend () -> T): T = try {
     // and passed on it would end a transfer of the engine's without a word, as though the user had stopped it.
     currentCoroutineContext().ensureActive()
     throw SyncNetworkException(exception.message ?: "Dropbox could not be reached.", exception)
-} catch (exception: SyncAuthorizationException) {
-    throw exception
-} catch (exception: SyncNetworkException) {
+} catch (exception: SyncRunEndingException) {
     throw exception
 } catch (exception: DropboxApiException) {
     throw exception
