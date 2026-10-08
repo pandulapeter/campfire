@@ -9,7 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.navigation
 
-
 /**
  * Everything that decides where the user is in the app, which is more than the back stack: the search of a list
  * screen is closed by the back gesture before the screen is left, and the tab of the settings screen is what that

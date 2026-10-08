@@ -17,7 +17,6 @@ import androidx.lifecycle.viewModelScope
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.ChordProTempo
 import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields
-import com.pandulapeter.campfire.chordpro.ChordProMetadataFields
 import com.pandulapeter.campfire.chordpro.model.ChordProLink
 import com.pandulapeter.campfire.data.model.domain.CoverArtQuery
 import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution
@@ -40,7 +39,6 @@ import com.pandulapeter.campfire.presentation.ui.chords.toChordInstrument
 import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.components.LabelsOnEverySong
 import com.pandulapeter.campfire.presentation.ui.components.Placeholder
-import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.firstRun.FirstRunController
@@ -103,7 +101,6 @@ import com.pandulapeter.campfire.domain.api.useCases.UpdateUserPreferencesUseCas
 import com.pandulapeter.campfire.presentation.ui.components.SearchState
 import com.pandulapeter.campfire.metronome.api.Metronome
 import com.pandulapeter.campfire.metronome.api.model.MetronomeSound
-import com.pandulapeter.campfire.presentation.ui.components.isAnyOverflowMenuOpen
 import com.pandulapeter.campfire.presentation.ui.dialogs.SONG_METADATA_FIELDS
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeContext
 import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
@@ -119,9 +116,7 @@ import com.pandulapeter.campfire.presentation.ui.navigation.NavigationState
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.LibraryPersistence
 import com.pandulapeter.campfire.presentation.ui.platform.requestLibraryPersistence
-import com.pandulapeter.campfire.presentation.ui.playing.CapoKey
 import com.pandulapeter.campfire.presentation.ui.playing.Capos
-import com.pandulapeter.campfire.presentation.ui.playing.TempoKey
 import com.pandulapeter.campfire.presentation.ui.playing.effectiveCapo
 import com.pandulapeter.campfire.presentation.ui.playing.withCapo
 import com.pandulapeter.campfire.presentation.ui.screens.export.ExportController
@@ -129,13 +124,9 @@ import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportRepo
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.SetlistWithSongs
 import com.pandulapeter.campfire.presentation.ui.screens.settings.DemoLibraryOffer
 import com.pandulapeter.campfire.presentation.ui.screens.settings.LibrarySummary
-import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsTab
 import com.pandulapeter.campfire.presentation.ui.navigation.SettingsTab
 import com.pandulapeter.campfire.presentation.ui.playing.SongOverrides
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.FONT_SCALE_STEP
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.FontScaleAccumulator
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.PINCH_SENSITIVITY
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.hasSongInfo
 import com.pandulapeter.campfire.presentation.ui.fontScale.FontScaleAccumulator
 import com.pandulapeter.campfire.presentation.ui.fontScale.PINCH_SENSITIVITY
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.EditorSession

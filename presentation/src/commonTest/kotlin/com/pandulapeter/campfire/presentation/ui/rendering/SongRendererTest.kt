@@ -9,9 +9,9 @@
  */
 package com.pandulapeter.campfire.presentation.ui.rendering
 
-import com.pandulapeter.campfire.chordpro.ChordProNotation
+import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
 import com.pandulapeter.campfire.chordpro.ChordProParser
-import com.pandulapeter.campfire.chordpro.ChordProTransposer
+import com.pandulapeter.campfire.chordpro.chords.ChordProTransposer
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.data.model.domain.UserPreferences.Notation

@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.state
 
 import androidx.compose.foundation.text.input.TextFieldState
-import com.pandulapeter.campfire.chordpro.ChordProMetadataFields
+import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.ChordProTempo
 import com.pandulapeter.campfire.chordpro.model.ChordProLink
