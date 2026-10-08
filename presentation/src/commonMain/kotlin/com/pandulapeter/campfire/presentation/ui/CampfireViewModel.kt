@@ -54,6 +54,7 @@ import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.components.LabelsOnEverySong
 import com.pandulapeter.campfire.presentation.ui.components.Placeholder
 import com.pandulapeter.campfire.presentation.ui.dialogs.CoverArtSearchState
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.firstRun.DemoLibrary
 import com.pandulapeter.campfire.presentation.ui.firstRun.canShowWelcome
@@ -124,7 +125,6 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.whats_new_message
 import com.pandulapeter.campfire.presentation.ui.components.ScrollPosition
 import com.pandulapeter.campfire.presentation.ui.components.SearchState
-import com.pandulapeter.campfire.presentation.ui.components.OverlayState
 import com.pandulapeter.campfire.metronome.api.Metronome
 import com.pandulapeter.campfire.metronome.api.model.BeatLevel
 import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
@@ -441,8 +441,50 @@ class CampfireViewModel(
             else -> null
         }
 
-    /** Whether a menu is open over the app, which CampfireApp hands to every menu it composes. */
-    internal val overlayState = OverlayState()
+    private val dialogHost = DialogHost(viewModelScope).apply {
+        addBeforeDialogChange { _, dialogType ->
+            // Editing can rename the setlist's file, which is what the mode is keyed by, so it ends the mode as the other
+            // ways of leaving the rows do rather than losing it to a name that has stopped existing.
+            if (dialogType is DialogType.Export || dialogType is DialogType.DuplicateSetlist || dialogType is DialogType.EditSetlist) {
+                reorderingSetlistFileName = null
+            }
+        }
+        addBeforeDialogChange { _, dialogType ->
+            // An exit the question was asked for and that is not being run is an exit that was cancelled: its caller
+            // may be waiting to hear so (the macOS quit request is).
+            if (dialogType != DialogType.UnsavedChanges) takePendingExit()?.onCancelled?.invoke()
+            if (dialogType != DialogType.ConfirmExit) confirmedExit = null
+        }
+        addBeforeDialogChange { _, dialogType ->
+            // Nothing but the sheet reads it, and a search nobody is waiting for any more still counts against the
+            // service's one request a second.
+            if (dialogType !is DialogType.CoverArtSearch) clearCoverArtSearch()
+        }
+        addBeforeDialogChange { previousDialog, dialogType ->
+            // However the export screen goes - closed, Escape, the web's Back, another dialog put over it - it stays drawn
+            // while it slides away, so its own disposal would be too late: its options are saved and its drawing cancelled
+            // here, a screen opened again in the next moment finds the options it left, and its Save, Share and options do
+            // nothing once it is no longer the dialog on screen.
+            if (previousDialog is DialogType.Export && dialogType != previousDialog) {
+                viewModelScope.launch { printSettingsPreference.flush(updateUserPreferences::invoke) }
+                // An export nobody is looking at any more would put its picker up over whatever is on screen by then.
+                cancelPdfExport()
+            }
+        }
+        addBeforeDialogChange { _, dialogType ->
+            // The export screen covers the song the click is played from as a screen of its own would, and leaves no way
+            // to stop it, so it stops a click the way pushing a destination does (see updateBackStack).
+            if (dialogType is DialogType.Export) metronome.stop()
+        }
+        addAfterDialogChange { previousDialog, dialogType ->
+            // Asked as the sheet is put up rather than by the sheet once it is composed, so that its first frame already
+            // says that the search is running instead of crossfading from the hint to it while it slides up.
+            if (dialogType is DialogType.CoverArtSearch && previousDialog !is DialogType.CoverArtSearch) searchCoverArt(coverArtQueryOf(song = dialogType.song, target = dialogType.target))
+        }
+    }
+
+    /** See [DialogHost.overlayState]. */
+    internal val overlayState get() = dialogHost.overlayState
 
     /**
      * Answers Ctrl / Cmd + F, which the desktop window and the web page both hear before anything in the composition
@@ -1252,12 +1294,11 @@ class CampfireViewModel(
     val coverArtSearch = _coverArtSearch.asStateFlow()
     private var coverArtSearchJob: Job? = null
 
-    private val _visibleDialog = MutableStateFlow<DialogType?>(null)
-    val visibleDialog: StateFlow<DialogType?> = _visibleDialog.asStateFlow()
+    /** See [DialogHost.visibleDialog]. */
+    val visibleDialog: StateFlow<DialogType?> get() = dialogHost.visibleDialog
 
-    // Kept mounted beneath an editor so its sheet and scroll position survive opening and closing that editor.
-    private val _underlyingSongInfo = MutableStateFlow<DialogType.SongInfo?>(null)
-    val underlyingSongInfo = _underlyingSongInfo.asStateFlow()
+    /** See [DialogHost.underlyingSongInfo]. */
+    val underlyingSongInfo: StateFlow<DialogType.SongInfo?> get() = dialogHost.underlyingSongInfo
 
     /**
      * Whether this is the first launch of this installation, asked once and shared. It stops being true the moment
@@ -1339,20 +1380,7 @@ class CampfireViewModel(
                 }
             }
         }
-        // A sheet or a dialog about one song goes when the song does - deleted or renamed by a sync run, or taken out
-        // of the folder behind the app's back - whichever screen opened it: the details screen underneath closes
-        // itself, but the dialogs are not its own, and a setlist picker left behind would write the name of a file that
-        // is not there into every setlist ticked in it. Only against a library that has been read, and never for a song
-        // this app is renaming, which is missing from the library for a few writes on purpose (songsBeingRenamed).
-        viewModelScope.launch {
-            combine(_visibleDialog, allSongs, isLoading, _songsBeingRenamed) { dialog, songs, isLoading, songsBeingRenamed ->
-                val fileName = dialog?.songFileName
-                dialog?.takeIf { fileName != null && !isLoading && fileName !in songsBeingRenamed && songs.none { it.fileName == fileName } }
-            }.filterNotNull().collect { dialog ->
-                // The song disappearing closes both the editor and the sheet underneath it.
-                if (_visibleDialog.value == dialog) setVisibleDialog(null)
-            }
-        }
+        dialogHost.startClosingWithSong(allSongs = allSongs, isLoading = isLoading, songsBeingRenamed = _songsBeingRenamed)
         // The editor's unsaved text as a previous run left it, when the process ended in the background (see
         // onAppPaused). Once that is settled, whatever leaves the editor with nothing unsaved takes the stored
         // draft with it - a save, a discard, a revert, the song deleted - so a crash after a save never brings back
@@ -2323,7 +2351,7 @@ class CampfireViewModel(
             val isSaved = writeEditorText(fileName = draft.fileName, text = draft.text)
             when {
                 !isSaved -> dismissDialog()
-                _visibleDialog.value == DialogType.UnsavedChanges -> {
+                visibleDialog.value == DialogType.UnsavedChanges -> {
                     // Taken before leaving, which dismisses the dialog and would otherwise report this exit as
                     // cancelled.
                     val exit = takePendingExit()
@@ -2933,8 +2961,8 @@ class CampfireViewModel(
         if (!isFirstLaunch.await()) return
         isAppOnScreen.first { it }
         // A report is set before it is pushed, so this also covers one still waiting for its push.
-        if (!canShowWelcome(hasDialog = _visibleDialog.value != null, hasImportReport = _importReport.value != null)) return
-        _visibleDialog.compareAndSet(null, DialogType.Welcome)
+        if (!canShowWelcome(hasDialog = visibleDialog.value != null, hasImportReport = _importReport.value != null)) return
+        dialogHost.showIfNoneIsShown(DialogType.Welcome)
     }
 
     /**
@@ -2956,7 +2984,7 @@ class CampfireViewModel(
         if (CAMPFIRE_VERSION_NAME in preferences.seenWhatsNewVersions) return
         isAppOnScreen.first { it }
         if (LocalizedStrings.get(Res.string.whats_new_message).isNotBlank()) {
-            combine(_visibleDialog, _isImporting, _importReport, _queuedImportCount) { dialog, isImporting, report, queuedImportCount ->
+            combine(visibleDialog, _isImporting, _importReport, _queuedImportCount) { dialog, isImporting, report, queuedImportCount ->
                 canShowWhatsNew(
                     hasDialog = dialog != null,
                     isImporting = isImporting,
@@ -2964,9 +2992,9 @@ class CampfireViewModel(
                     queuedImportCount = queuedImportCount,
                 )
             }.first { it }
-            if (_visibleDialog.compareAndSet(null, DialogType.WhatsNew)) {
+            if (dialogHost.showIfNoneIsShown(DialogType.WhatsNew)) {
                 // A close before the dialog's own delay ran out; being covered leaves the dialog where it is.
-                _visibleDialog.first { it != DialogType.WhatsNew }
+                visibleDialog.first { it != DialogType.WhatsNew }
                 recordWhatsNewVersion()
             }
         } else {
@@ -3188,7 +3216,7 @@ class CampfireViewModel(
         val request = ++importReportRequest
         _importReport.value = report
         viewModelScope.launch {
-            combine(_visibleDialog, _editorDraft, _songTexts, snapshotFlow { backStack.toList() }) { dialog, _, _, stack ->
+            combine(visibleDialog, _editorDraft, _songTexts, snapshotFlow { backStack.toList() }) { dialog, _, _, stack ->
                 dialog == null && !(hasUnsavedEditorText() && stack.any { it is CampfireDestination.SongEditor })
             }.first { it }
             if (importReportRequest == request && _importReport.value != null && !isImportReportOnBackStack) {
@@ -3293,7 +3321,7 @@ class CampfireViewModel(
         // A Save kept until the pages were laid out can arrive after the screen was closed, and its picker would come up
         // over whatever is on screen by then. Equality rather than identity: the same export closed and opened again
         // while it slides away is an equal instance, and the screen still showing the old one is that export.
-        if (_visibleDialog.value != dialog) return
+        if (visibleDialog.value != dialog) return
         val job = launchFileTransfer {
             _pdfExportProgress.value = PdfExportProgress(done = 0, total = pageCount)
             try {
@@ -3339,7 +3367,7 @@ class CampfireViewModel(
      * bringing a picker up over whatever is under it.
      */
     fun exportFiles(filePicker: FilePicker, dialog: DialogType.Export, songFileNames: Set<String>?, isShare: Boolean) {
-        if (_visibleDialog.value != dialog) return
+        if (visibleDialog.value != dialog) return
         val setlist = dialog.setlist
         launchFileTransfer {
             save(
@@ -3429,8 +3457,7 @@ class CampfireViewModel(
     fun createSetlist(title: String, description: String, date: LocalDate, isCountdownShown: Boolean) = launchLibraryChange {
         val setlist = createSetlist.invoke(title = title, description = description, date = date, isCountdownShown = isCountdownShown)
         if (allSongs.value.isNotEmpty()) {
-            // Not through setVisibleDialog: this only ever replaces no dialog at all, behind which nothing is parked.
-            _visibleDialog.compareAndSet(null, DialogType.SongPicker(setlist))
+            dialogHost.showIfNoneIsShown(DialogType.SongPicker(setlist))
         }
     }
 
@@ -3778,85 +3805,17 @@ class CampfireViewModel(
 
     // Dialogs
 
-    /**
-     * The one place [visibleDialog] is given a value, because a dialog can have work parked behind it that nothing
-     * else can answer for: the exit behind [DialogType.UnsavedChanges]. It goes with its dialog, however that leaves
-     * the screen - answered, dismissed, or replaced, the way the desktop's close button puts the unsaved changes
-     * question over anything.
-     */
-    private fun setVisibleDialog(dialogType: DialogType?) {
-        // Editing can rename the setlist's file, which is what the mode is keyed by, so it ends the mode as the other
-        // ways of leaving the rows do rather than losing it to a name that has stopped existing.
-        if (dialogType is DialogType.Export || dialogType is DialogType.DuplicateSetlist || dialogType is DialogType.EditSetlist) {
-            reorderingSetlistFileName = null
-        }
-        // An exit the question was asked for and that is not being run is an exit that was cancelled: its caller
-        // may be waiting to hear so (the macOS quit request is).
-        if (dialogType != DialogType.UnsavedChanges) takePendingExit()?.onCancelled?.invoke()
-        if (dialogType != DialogType.ConfirmExit) confirmedExit = null
-        // Nothing but the sheet reads it, and a search nobody is waiting for any more still counts against the
-        // service's one request a second.
-        if (dialogType !is DialogType.CoverArtSearch) clearCoverArtSearch()
-        val previousDialog = _visibleDialog.value
-        _underlyingSongInfo.value = when {
-            // The cover art sheet's Remove asks first, and either answer goes back to the sheet the cover art was opened
-            // from: Remove directly, Cancel through the cover art sheet it puts back.
-            previousDialog is DialogType.CoverArtSearch && dialogType is DialogType.RemoveSongCoverArt -> _underlyingSongInfo.value
-            previousDialog is DialogType.RemoveSongCoverArt && dialogType is DialogType.CoverArtSearch -> _underlyingSongInfo.value
-            else -> (previousDialog as? DialogType.SongInfo)
-        }?.takeIf { parent ->
-            dialogType is DialogType.SongEdit && dialogType.target is SongEditTarget.File && dialogType.song.fileName == parent.song.fileName &&
-                (dialogType is DialogType.SongMetadata || dialogType is DialogType.SongTags ||
-                    dialogType is DialogType.SongLinks || dialogType is DialogType.SongLanguages ||
-                    dialogType is DialogType.SongPlaying || dialogType is DialogType.CoverArtSearch ||
-                    dialogType is DialogType.RemoveSongCoverArt)
-        }
-        // However the export screen goes - closed, Escape, the web's Back, another dialog put over it - it stays drawn
-        // while it slides away, so its own disposal would be too late: its options are saved and its drawing cancelled
-        // here, a screen opened again in the next moment finds the options it left, and its Save, Share and options do
-        // nothing once it is no longer the dialog on screen.
-        if (previousDialog is DialogType.Export && dialogType != previousDialog) {
-            viewModelScope.launch { printSettingsPreference.flush(updateUserPreferences::invoke) }
-            // An export nobody is looking at any more would put its picker up over whatever is on screen by then.
-            cancelPdfExport()
-        }
-        // The export screen covers the song the click is played from as a screen of its own would, and leaves no way
-        // to stop it, so it stops a click the way pushing a destination does (see updateBackStack).
-        if (dialogType is DialogType.Export) metronome.stop()
-        _visibleDialog.update { dialogType }
-        // Asked as the sheet is put up rather than by the sheet once it is composed, so that its first frame already
-        // says that the search is running instead of crossfading from the hint to it while it slides up.
-        if (dialogType is DialogType.CoverArtSearch && previousDialog !is DialogType.CoverArtSearch) searchCoverArt(coverArtQueryOf(song = dialogType.song, target = dialogType.target))
-    }
+    /** See [DialogHost.setVisibleDialog]. */
+    private fun setVisibleDialog(dialogType: DialogType?) = dialogHost.setVisibleDialog(dialogType)
 
-    fun showDialog(dialogType: DialogType) = setVisibleDialog(dialogType)
+    fun showDialog(dialogType: DialogType) = dialogHost.showDialog(dialogType)
 
-    fun dismissDialog() = setVisibleDialog(_underlyingSongInfo.value)
+    fun dismissDialog() = dialogHost.dismissDialog()
 
-    /**
-     * What a bottom sheet dismisses itself with: [dialogType] goes only while it is still the dialog on screen. A
-     * sheet reports its dismissal from the end of its hide animation, and one that is replaced while it is hiding
-     * reports the cancellation of that animation the same way - Material's scrim and back handlers included - by
-     * which time the dialog on screen is the one that replaced it. It is also how the export screen closes itself, for
-     * the same reason: its saved file and its back gesture can both arrive once another dialog has replaced it.
-     */
-    fun dismissSheet(dialogType: DialogType) {
-        if (_visibleDialog.value == dialogType) dismissDialog()
-    }
+    /** See [DialogHost.dismissSheet]. */
+    fun dismissSheet(dialogType: DialogType) = dialogHost.dismissSheet(dialogType)
 
     // Helpers
-
-    /** The song a dialog is about, for the ones that are about one, see the collector in `init`. */
-    private val DialogType.songFileName: String?
-        get() = when (this) {
-            is DialogType.SetlistPicker -> song.fileName
-            is DialogType.DeleteSong -> song.fileName
-            is DialogType.SongInfo -> song.fileName
-            is DialogType.ChordShapes -> song.fileName
-            // The editor's draft is the editor's to keep, whatever became of the file it was opened on.
-            is DialogType.SongEdit -> song.fileName.takeIf { target is SongEditTarget.File }
-            else -> null
-        }
 
     private fun restoreSearch(key: String) = savedStateStore.restoreSearch(key)
 
