@@ -11,7 +11,7 @@ package com.pandulapeter.campfire.data.source.remote.implementation.auth
 
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
-import com.pandulapeter.campfire.data.source.local.api.SyncStateLocalSource
+import com.pandulapeter.campfire.data.source.local.api.SyncCredentialsLocalSource
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteAuthorizationRequest
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
@@ -143,7 +143,7 @@ class SyncCredentialsStoreTest {
      * way a secret store that refuses for a moment does, and writes that can be refused or cancelled once they have
      * gone through.
      */
-    private class FakeStorage(var credentials: String?) : SyncStateLocalSource {
+    private class FakeStorage(var credentials: String?) : SyncCredentialsLocalSource {
         var shouldCancelNextRead = false
         var shouldFailNextRead = false
         var readCount = 0
@@ -176,11 +176,6 @@ class SyncCredentialsStoreTest {
                 throw CancellationException("The writer went away.")
             }
         }
-
-        override suspend fun loadSyncIndex(): String? = null
-        override suspend fun saveSyncIndex(document: String?) = Unit
-        override suspend fun isForgettingCredentialsOwed() = false
-        override suspend fun setForgettingCredentialsOwed(isOwed: Boolean) = Unit
     }
 
     private companion object {

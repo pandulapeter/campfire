@@ -26,7 +26,7 @@ import com.pandulapeter.campfire.data.repository.implementation.sync.FakeLibrary
 import com.pandulapeter.campfire.data.repository.implementation.sync.FakePendingAuthorizationStore
 import com.pandulapeter.campfire.data.repository.implementation.sync.FakeSyncAuthenticator
 import com.pandulapeter.campfire.data.repository.implementation.sync.FakeSyncProvider
-import com.pandulapeter.campfire.data.repository.implementation.sync.FakeSyncStateLocalSource
+import com.pandulapeter.campfire.data.repository.implementation.sync.FakeSyncIndexLocalSource
 import com.pandulapeter.campfire.data.repository.implementation.sync.FakeUserPreferencesRepository
 import com.pandulapeter.campfire.data.repository.implementation.sync.NoSetlistComparison
 import com.pandulapeter.campfire.data.repository.implementation.sync.RecordingSetlistRepository
@@ -75,7 +75,7 @@ class SyncRepositoryImplTest {
 
     @Test
     fun `a run whose index cannot be written ends as a storage failure`() = runTest {
-        val stateLocalSource = FakeSyncStateLocalSource(onSaveIndex = { throw LibraryStorageException("Full") })
+        val stateLocalSource = FakeSyncIndexLocalSource(onSaveIndex = { throw LibraryStorageException("Full") })
         val repository = repository(provider = FakeSyncProvider(account = ACCOUNT), stateLocalSource = stateLocalSource)
 
         repository.restore()
@@ -123,7 +123,7 @@ class SyncRepositoryImplTest {
     fun `an automatic run asked for during a run follows it at once when the app leaves`() = runTest {
         val gate = CompletableDeferred<Unit>()
         val automaticRunStarted = CompletableDeferred<Unit>()
-        val stateLocalSource = FakeSyncStateLocalSource(
+        val stateLocalSource = FakeSyncIndexLocalSource(
             onSaveIndex = { if (it != null && "\"isAutomaticRunInProgress\": true" in it) automaticRunStarted.complete(Unit) },
         )
         val repository = repository(
@@ -193,7 +193,7 @@ class SyncRepositoryImplTest {
                 onDownload = { gate.await() },
                 account = ACCOUNT,
             ),
-            stateLocalSource = FakeSyncStateLocalSource(onSaveIndex = runs::onSaveIndex),
+            stateLocalSource = FakeSyncIndexLocalSource(onSaveIndex = runs::onSaveIndex),
         )
         runCurrent()
 
@@ -214,7 +214,7 @@ class SyncRepositoryImplTest {
         val runs = RunCounter()
         val repository = repository(
             provider = FakeSyncProvider(account = ACCOUNT),
-            stateLocalSource = FakeSyncStateLocalSource(onSaveIndex = runs::onSaveIndex),
+            stateLocalSource = FakeSyncIndexLocalSource(onSaveIndex = runs::onSaveIndex),
         )
         runCurrent()
 
@@ -269,7 +269,7 @@ class SyncRepositoryImplTest {
 
     @Test
     fun `a periodic index write that fails does not end the run`() = runTest {
-        val stateLocalSource = FakeSyncStateLocalSource(
+        val stateLocalSource = FakeSyncIndexLocalSource(
             onSaveIndex = { document ->
                 if (document != null && "\"isRunInProgress\": true" in document && song(1).name in document) {
                     throw LibraryStorageException("Full")
@@ -374,7 +374,7 @@ class SyncRepositoryImplTest {
         val local = FakeLibraryFileLocalSource(
             files = (1..10).associate { song(it) to "Song $it".encodeToByteArray() } + (song(11) to "New".encodeToByteArray()),
         )
-        val stateLocalSource = FakeSyncStateLocalSource(
+        val stateLocalSource = FakeSyncIndexLocalSource(
             index = json.encodeToString(
                 SyncIndexDocument.of(
                     providerId = SyncProviderId.DROPBOX.id,
@@ -423,7 +423,7 @@ class SyncRepositoryImplTest {
             encodeDefaults = true
         }
         val library = (1..10).associate { song(it) to "Song $it".encodeToByteArray() }
-        val stateLocalSource = FakeSyncStateLocalSource(
+        val stateLocalSource = FakeSyncIndexLocalSource(
             index = json.encodeToString(
                 SyncIndexDocument.of(
                     providerId = SyncProviderId.DROPBOX.id,
@@ -455,7 +455,7 @@ class SyncRepositoryImplTest {
     /** What the browser engine of the HTTP client throws for a request that failed, were it to get past the provider. */
     @Test
     fun `a run that ends in something other than an exception still reports and clears its marker`() = runTest {
-        val stateLocalSource = FakeSyncStateLocalSource()
+        val stateLocalSource = FakeSyncIndexLocalSource()
         val repository = repository(
             provider = FakeSyncProvider(
                 files = (1..3).associate { song(it) to "Song $it".encodeToByteArray() },
@@ -477,7 +477,7 @@ class SyncRepositoryImplTest {
 
     @Test
     fun `a run in which a file failed keeps the time of the last run that was in step`() = runTest {
-        val stateLocalSource = FakeSyncStateLocalSource(index = """{"lastSyncedAt":42}""")
+        val stateLocalSource = FakeSyncIndexLocalSource(index = """{"lastSyncedAt":42}""")
         val repository = repository(
             provider = FakeSyncProvider(files = mapOf(song(1) to "One".encodeToByteArray()), account = ACCOUNT),
             stateLocalSource = stateLocalSource,
@@ -511,7 +511,7 @@ class SyncRepositoryImplTest {
     @Test
     fun `restoring again while a run is going leaves the run alone`() = runTest {
         val gate = CompletableDeferred<Unit>()
-        val stateLocalSource = FakeSyncStateLocalSource()
+        val stateLocalSource = FakeSyncIndexLocalSource()
         val repository = repository(
             provider = FakeSyncProvider(
                 files = mapOf(song(1) to "One".encodeToByteArray()),
@@ -540,7 +540,7 @@ class SyncRepositoryImplTest {
     fun `restoring again after an interrupted run still reports it`() = runTest {
         val repository = repository(
             provider = FakeSyncProvider(account = ACCOUNT),
-            stateLocalSource = FakeSyncStateLocalSource(index = """{"isRunInProgress":true}"""),
+            stateLocalSource = FakeSyncIndexLocalSource(index = """{"isRunInProgress":true}"""),
         )
 
         assertTrue(repository.restore().wasInterrupted)
@@ -550,7 +550,7 @@ class SyncRepositoryImplTest {
 
     @Test
     fun `an interrupted automatic run is neither reported nor keeps the launch run from starting`() = runTest {
-        val stateLocalSource = FakeSyncStateLocalSource(index = """{"isRunInProgress":true,"isAutomaticRunInProgress":true}""")
+        val stateLocalSource = FakeSyncIndexLocalSource(index = """{"isRunInProgress":true,"isAutomaticRunInProgress":true}""")
         val repository = repository(provider = FakeSyncProvider(account = ACCOUNT), stateLocalSource = stateLocalSource)
 
         assertFalse(repository.restore().wasInterrupted)
@@ -562,7 +562,7 @@ class SyncRepositoryImplTest {
     @Test
     fun `an automatic run marks itself as one in the index`() = runTest {
         val gate = CompletableDeferred<Unit>()
-        val stateLocalSource = FakeSyncStateLocalSource()
+        val stateLocalSource = FakeSyncIndexLocalSource()
         val repository = repository(
             provider = FakeSyncProvider(
                 files = mapOf(song(1) to "One".encodeToByteArray()),
@@ -587,7 +587,7 @@ class SyncRepositoryImplTest {
     @Test
     fun `a run somebody asked for is not marked as automatic`() = runTest {
         val gate = CompletableDeferred<Unit>()
-        val stateLocalSource = FakeSyncStateLocalSource()
+        val stateLocalSource = FakeSyncIndexLocalSource()
         val repository = repository(
             provider = FakeSyncProvider(
                 files = mapOf(song(1) to "One".encodeToByteArray()),
@@ -609,7 +609,7 @@ class SyncRepositoryImplTest {
 
     @Test
     fun `a disconnect that is cancelled after the credentials went still ends disconnected`() = runTest {
-        val stateLocalSource = FakeSyncStateLocalSource(index = "{}")
+        val stateLocalSource = FakeSyncIndexLocalSource(index = "{}")
         val provider = FakeSyncProvider(account = ACCOUNT).apply { onDisconnect = { delay(1_000) } }
         val repository = repository(provider = provider, stateLocalSource = stateLocalSource)
         repository.restore()
@@ -639,7 +639,7 @@ class SyncRepositoryImplTest {
 
     @Test
     fun `a run the service refuses reports the connection as failed and keeps the index`() = runTest {
-        val stateLocalSource = FakeSyncStateLocalSource()
+        val stateLocalSource = FakeSyncIndexLocalSource()
         val repository = repository(
             provider = FakeSyncProvider(
                 files = mapOf(song(1) to "One".encodeToByteArray()),
@@ -738,7 +738,7 @@ class SyncRepositoryImplTest {
                 ),
             ),
         )
-        val stateLocalSource = FakeSyncStateLocalSource(index = index)
+        val stateLocalSource = FakeSyncIndexLocalSource(index = index)
         val local = FakeLibraryFileLocalSource()
         val provider = FakeSyncProvider(files = mapOf(song(1) to "One".encodeToByteArray()), account = ACCOUNT)
         val repository = repository(provider = provider, stateLocalSource = stateLocalSource, libraryFileLocalSource = local)
@@ -758,7 +758,7 @@ class SyncRepositoryImplTest {
     fun `restoring with an unreadable index still shows the account`() = runTest {
         val repository = repository(
             provider = FakeSyncProvider(account = ACCOUNT),
-            stateLocalSource = FakeSyncStateLocalSource(onLoadIndex = { throw LibraryStorageException("Locked") }),
+            stateLocalSource = FakeSyncIndexLocalSource(onLoadIndex = { throw LibraryStorageException("Locked") }),
         )
 
         val result = repository.restore()
@@ -785,7 +785,7 @@ class SyncRepositoryImplTest {
 
     @Test
     fun `disconnecting right after stopping a run leaves no index behind`() = runTest {
-        val stateLocalSource = FakeSyncStateLocalSource()
+        val stateLocalSource = FakeSyncIndexLocalSource()
         val repository = repository(
             provider = FakeSyncProvider(
                 files = mapOf(song(1) to "One".encodeToByteArray()),
@@ -807,7 +807,7 @@ class SyncRepositoryImplTest {
 
     @Test
     fun `forgetting the connection leaves nothing to restore`() = runTest {
-        val stateLocalSource = FakeSyncStateLocalSource(index = "{}")
+        val stateLocalSource = FakeSyncIndexLocalSource(index = "{}")
         val provider = FakeSyncProvider(account = ACCOUNT)
         val repository = repository(provider = provider, stateLocalSource = stateLocalSource)
 
@@ -848,7 +848,7 @@ class SyncRepositoryImplTest {
     @Test
     fun `an ordinary launch does not forget anything`() = runTest {
         val provider = FakeSyncProvider(account = ACCOUNT)
-        val stateLocalSource = FakeSyncStateLocalSource().apply { onSetForgettingOwed = { fail("A forgetting was noted.") } }
+        val stateLocalSource = FakeSyncIndexLocalSource().apply { onSetForgettingOwed = { fail("A forgetting was noted.") } }
         val repository = repository(provider = provider, stateLocalSource = stateLocalSource)
 
         val result = repository.restore()
@@ -860,7 +860,7 @@ class SyncRepositoryImplTest {
 
     @Test
     fun `a forgetting that fails restores nothing and is owed`() = runTest {
-        val stateLocalSource = FakeSyncStateLocalSource()
+        val stateLocalSource = FakeSyncIndexLocalSource()
         val provider = FakeSyncProvider(account = ACCOUNT).apply { onForgetStoredCredentials = { error("The Keychain is locked.") } }
         val repository = repository(provider = provider, stateLocalSource = stateLocalSource)
 
@@ -875,7 +875,7 @@ class SyncRepositoryImplTest {
 
     @Test
     fun `the next start up forgets what the first one could not`() = runTest {
-        val stateLocalSource = FakeSyncStateLocalSource()
+        val stateLocalSource = FakeSyncIndexLocalSource()
         val provider = FakeSyncProvider(account = ACCOUNT).apply { onForgetStoredCredentials = { error("The Keychain is locked.") } }
         repository(provider = provider, stateLocalSource = stateLocalSource).forgetStoredConnection()
         provider.onForgetStoredCredentials = {}
@@ -891,7 +891,7 @@ class SyncRepositoryImplTest {
     @Test
     fun `a forgetting that works leaves nothing owed`() = runTest {
         val notes = mutableListOf<Boolean>()
-        val stateLocalSource = FakeSyncStateLocalSource().apply { onSetForgettingOwed = { notes += it } }
+        val stateLocalSource = FakeSyncIndexLocalSource().apply { onSetForgettingOwed = { notes += it } }
         val repository = repository(provider = FakeSyncProvider(account = ACCOUNT), stateLocalSource = stateLocalSource)
 
         repository.forgetStoredConnection()
@@ -902,7 +902,7 @@ class SyncRepositoryImplTest {
 
     @Test
     fun `connecting crosses off a forgetting still owed`() = runTest {
-        val stateLocalSource = FakeSyncStateLocalSource().apply { isForgettingOwed = true }
+        val stateLocalSource = FakeSyncIndexLocalSource().apply { isForgettingOwed = true }
         val provider = FakeSyncProvider(account = ACCOUNT).apply {
             connected = false
             onCompleteAuthorization = {
@@ -925,7 +925,7 @@ class SyncRepositoryImplTest {
 
     @Test
     fun `not knowing whether forgetting is owed restores as usual`() = runTest {
-        val stateLocalSource = FakeSyncStateLocalSource().apply { onIsForgettingOwed = { error("Not readable.") } }
+        val stateLocalSource = FakeSyncIndexLocalSource().apply { onIsForgettingOwed = { error("Not readable.") } }
         val repository = repository(provider = FakeSyncProvider(account = ACCOUNT), stateLocalSource = stateLocalSource)
 
         assertTrue(repository.restore().isConnected)
@@ -1055,7 +1055,7 @@ class SyncRepositoryImplTest {
         val repository = repository(
             provider = provider,
             authenticator = FakeSyncAuthenticator(outcome = SyncAuthenticator.AuthorizationOutcome.Received(REDIRECT)),
-            stateLocalSource = FakeSyncStateLocalSource(
+            stateLocalSource = FakeSyncIndexLocalSource(
                 index = """{"accountId":"someone-else"}""",
                 onSaveIndex = { throw LibraryStorageException("Full") },
             ),
@@ -1083,7 +1083,7 @@ class SyncRepositoryImplTest {
     @Test
     fun `a disconnect whose credentials cannot be read still ends disconnected`() = runTest {
         val provider = FakeSyncProvider(account = ACCOUNT)
-        val stateLocalSource = FakeSyncStateLocalSource(index = "{}")
+        val stateLocalSource = FakeSyncIndexLocalSource(index = "{}")
         val repository = repository(provider = provider, stateLocalSource = stateLocalSource)
         repository.restore()
         provider.onIsConnected = { throw LibraryStorageException("Keystore busy") }
@@ -1130,7 +1130,7 @@ class SyncRepositoryImplTest {
         provider: FakeSyncProvider,
         authenticator: FakeSyncAuthenticator = FakeSyncAuthenticator(),
         pendingAuthorizationStore: FakePendingAuthorizationStore = FakePendingAuthorizationStore(),
-        stateLocalSource: FakeSyncStateLocalSource = FakeSyncStateLocalSource(),
+        stateLocalSource: FakeSyncIndexLocalSource = FakeSyncIndexLocalSource(),
         libraryFileLocalSource: FakeLibraryFileLocalSource = FakeLibraryFileLocalSource(),
         songRepository: RecordingSongRepository = RecordingSongRepository(),
         setlistRepository: RecordingSetlistRepository = RecordingSetlistRepository(),
@@ -1139,7 +1139,7 @@ class SyncRepositoryImplTest {
         syncProviders = SyncProviders(listOf(provider)),
         authenticator = authenticator,
         pendingAuthorizationStore = pendingAuthorizationStore,
-        syncStateLocalSource = stateLocalSource,
+        syncIndexLocalSource = stateLocalSource,
         songRepository = songRepository,
         setlistRepository = setlistRepository,
         userPreferencesRepository = userPreferencesRepository,

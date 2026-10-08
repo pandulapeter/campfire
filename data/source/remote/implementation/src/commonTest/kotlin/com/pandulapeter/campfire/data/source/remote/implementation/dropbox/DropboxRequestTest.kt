@@ -12,7 +12,7 @@ package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
 import com.pandulapeter.campfire.data.model.domain.SyncAccount
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
-import com.pandulapeter.campfire.data.source.local.api.SyncStateLocalSource
+import com.pandulapeter.campfire.data.source.local.api.SyncCredentialsLocalSource
 import com.pandulapeter.campfire.data.source.remote.api.SyncAuthorizationException
 import com.pandulapeter.campfire.data.source.remote.api.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.SyncRemoteStorageFullException
@@ -397,7 +397,7 @@ class DropboxRequestTest {
 
     private fun provider(
         configure: HttpClientConfig<*>.() -> Unit = {},
-        storage: SyncStateLocalSource = ConnectedStorage(),
+        storage: SyncCredentialsLocalSource = ConnectedStorage(),
         handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData,
     ) = DropboxSyncProvider(
         httpClientHolder = HttpClientHolder { HttpClient(MockEngine(handler), configure) },
@@ -415,7 +415,7 @@ class DropboxRequestTest {
      * A connection whose access token is good for as long as any test runs unless [expiresAt] says otherwise, so no
      * request needs a refresh. [credentials] is what the provider last stored.
      */
-    private class ConnectedStorage(names: String = "", expiresAt: Long = Long.MAX_VALUE) : SyncStateLocalSource {
+    private class ConnectedStorage(names: String = "", expiresAt: Long = Long.MAX_VALUE) : SyncCredentialsLocalSource {
         var credentials: String? =
             """{"providerId":"dropbox","accessToken":"access","refreshToken":"refresh","expiresAt":$expiresAt$names}"""
 
@@ -424,10 +424,6 @@ class DropboxRequestTest {
         override suspend fun saveSyncCredentials(document: String?) {
             credentials = document
         }
-        override suspend fun loadSyncIndex(): String? = null
-        override suspend fun saveSyncIndex(document: String?) = Unit
-        override suspend fun isForgettingCredentialsOwed() = false
-        override suspend fun setForgettingCredentialsOwed(isOwed: Boolean) = Unit
     }
 
     private companion object {

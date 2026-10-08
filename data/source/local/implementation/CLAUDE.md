@@ -33,7 +33,7 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
     that they do not.
     Android's backup rules in `:app:android` name `library/` and `preferences/preferences.json` by path, so moving a
     directory or renaming the preferences file means changing those two XML files as well. iOS backs up both of its
-    directories whole, so what must stay behind says so itself: `SyncStateLocalSourceImpl` calls
+    directories whole, so what must stay behind says so itself: `SyncIndexLocalSourceImpl` calls
     `keepOutOfDeviceBackup` after every write of `sync-index.json` and of the forget-pending note, and
     `EditorDraftLocalSourceImpl` after every write of `editor-draft.json` and `CoverArtLocalSourceImpl` after every cover, which `IosFileStorage` answers by setting
     `NSURLIsExcludedFromBackupKey` again — it is an attribute of the file, and the atomic write replaces the file.
@@ -111,7 +111,7 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
   wrote without that is moved over when it is read. The item survives an uninstall, which is why a first launch
   forgets it (`SyncRepository.forgetStoredConnection`), and why a launch that could not goes on trying at every start. Desktop and the web get the common `FileSecretStore` (through `DesktopSecretStore` and `WebSecretStore`), the
   plain `preferences/sync-credentials.json` it always was: no desktop keychain is worth a native dependency per
-  operating system, and the browser has none. `SyncStateLocalSourceImpl` moves a plain file left by an older version
+  operating system, and the browser has none. `SyncCredentialsLocalSourceImpl` moves a plain file left by an older version
   into the store on the first read and deletes it, which on desktop and the web is a no-op, since the store found
   that file itself. The index stays a plain file everywhere: it holds hashes and revisions, nothing secret.
 - **`FileNames.kt`** owns everything about what a file is called. Every name the app writes itself is normalized

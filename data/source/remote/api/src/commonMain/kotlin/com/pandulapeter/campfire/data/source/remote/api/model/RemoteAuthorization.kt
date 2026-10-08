@@ -15,7 +15,7 @@ package com.pandulapeter.campfire.data.source.remote.api.model
  * @param state The random value echoed back in the redirect, which is what makes a redirect that was not asked for
  *   detectable.
  * @param verifier The PKCE code verifier. It has to outlive a full page reload on the web, so it is written down
- *   rather than kept in memory - see `SyncStateLocalSource`.
+ *   rather than kept in memory - see `SyncCredentialsLocalSource`.
  */
 data class RemoteAuthorizationRequest(
     val authorizationUrl: String,

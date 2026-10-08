@@ -52,11 +52,12 @@ platform types.
   synced or backed up, since the address travels in the song and the image can be downloaded again. Nothing here
   throws — a cover is never worth failing over — and `keepOnlyCoverArt` is how the ones no song names any more go;
   `getCoverArtCacheSize` adds up what the rest take.
-- `SyncStateLocalSource` — the two documents sync remembers between runs, and the note that forgetting the
-  credentials is still owed (see `SyncRepository.forgetStoredConnection`), kept next to the preferences and so outside
-  `library/`: neither is the user's data and an export must not carry them. Both are **opaque strings** here — what
-  is in them belongs to the layers that write them (the credentials to the remote source, the index to the
-  repository), and the storage layer has no business knowing either shape. `loadSyncIndex` answers null only for an
+- `SyncCredentialsLocalSource` and `SyncIndexLocalSource` — the two documents sync remembers between runs, one per
+  client: the credentials for the remote source, and the index with the note that forgetting the credentials is still
+  owed (see `SyncRepository.forgetStoredConnection`) for the repository, which is the one that decides it. All kept
+  next to the preferences and so outside `library/`: none is the user's data and an export must not carry them. Both
+  documents are **opaque strings** here — what is in them belongs to the layers that write them — and the storage
+  layer has no business knowing either shape. `loadSyncIndex` answers null only for an
   index that is not there; one that is there and cannot be read throws `LibraryStorageException`, since a run that
   took it for none would undo every deletion since the last one. Unreadable credentials are still treated as none,
   which connecting again answers.

@@ -34,7 +34,7 @@ import com.pandulapeter.campfire.data.repository.implementation.sync.indexKey
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
 import com.pandulapeter.campfire.data.source.local.api.SetlistComparison
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
-import com.pandulapeter.campfire.data.source.local.api.SyncStateLocalSource
+import com.pandulapeter.campfire.data.source.local.api.SyncIndexLocalSource
 import com.pandulapeter.campfire.data.source.remote.api.PendingAuthorizationStore
 import com.pandulapeter.campfire.data.source.remote.api.SyncAuthenticator
 import com.pandulapeter.campfire.data.source.remote.api.SyncAuthorizationException
@@ -83,7 +83,7 @@ internal class SyncRepositoryImpl(
     syncProviders: SyncProviders,
     private val authenticator: SyncAuthenticator,
     private val pendingAuthorizationStore: PendingAuthorizationStore,
-    private val syncStateLocalSource: SyncStateLocalSource,
+    private val syncIndexLocalSource: SyncIndexLocalSource,
     /**
      * Sync writes song and setlist files behind these two repositories' backs, so it is the one thing that has to
      * tell them to read the library again. It used to be the use case's job, back when a run finished before the
@@ -195,7 +195,7 @@ internal class SyncRepositoryImpl(
             describe = { "Could not tell whether the sync credentials are to be forgotten: ${it::class.simpleName}" },
             // Not knowing is not a reason to disconnect an ordinary installation, which is every one but this rare case.
             fallback = { false },
-        ) { syncStateLocalSource.isForgettingCredentialsOwed() }
+        ) { syncIndexLocalSource.isForgettingCredentialsOwed() }
         if (isForgettingOwed && !withContext(NonCancellable) { forgetStoredConnectionNow() }) {
             return disconnectedResult
         }
@@ -364,7 +364,7 @@ internal class SyncRepositoryImpl(
             // that was stopped a moment ago is not in syncJob any more and may still be writing the index on its way
             // out; no new one can slip in, since the providers above no longer say they are connected.
             mutex.withLock {
-                syncStateLocalSource.saveSyncIndex(null)
+                syncIndexLocalSource.saveSyncIndex(null)
                 stateBeforeConnecting = null
                 _syncState.update { SyncState.Disconnected }
             }
@@ -383,7 +383,7 @@ internal class SyncRepositoryImpl(
      * about the note first. Callers hold [restoreMutex].
      */
     private suspend fun forgetStoredConnectionNow(): Boolean {
-        quietly("note that the sync credentials are to be forgotten") { syncStateLocalSource.setForgettingCredentialsOwed(true) }
+        quietly("note that the sync credentials are to be forgotten") { syncIndexLocalSource.setForgettingCredentialsOwed(true) }
         var haveCredentialsGone = true
         providers.forEach { provider ->
             recovering(
@@ -395,10 +395,10 @@ internal class SyncRepositoryImpl(
         discardPendingAuthorization()
         // There cannot be an index on a fresh installation, and one that is somehow there describes a folder
         // this installation has never looked at.
-        quietly("clear the sync index") { syncStateLocalSource.saveSyncIndex(null) }
+        quietly("clear the sync index") { syncIndexLocalSource.saveSyncIndex(null) }
         _syncState.update { SyncState.Disconnected }
         if (haveCredentialsGone) {
-            quietly("note that the sync credentials are forgotten") { syncStateLocalSource.setForgettingCredentialsOwed(false) }
+            quietly("note that the sync credentials are forgotten") { syncIndexLocalSource.setForgettingCredentialsOwed(false) }
         }
         return haveCredentialsGone
     }
@@ -819,7 +819,7 @@ internal class SyncRepositoryImpl(
                 // Connected on this installation, so whatever an earlier one left in the store has just been written
                 // over, and a forgetting still owed for it must not take this connection down at the next start up.
                 quietly("note that the sync credentials are this installation's") {
-                    syncStateLocalSource.setForgettingCredentialsOwed(false)
+                    syncIndexLocalSource.setForgettingCredentialsOwed(false)
                 }
                 // The account decides which remote folder the index describes, so one written for a different
                 // account is worthless rather than merely stale. One that cannot be read is left for the run to find:
@@ -883,7 +883,7 @@ internal class SyncRepositoryImpl(
      * worth nothing to anybody and starts from nothing, as a device that never synced does.
      */
     private suspend fun loadIndex(): SyncIndexDocument {
-        val text = syncStateLocalSource.loadSyncIndex() ?: return SyncIndexDocument()
+        val text = syncIndexLocalSource.loadSyncIndex() ?: return SyncIndexDocument()
         // Off the caller's thread, which for restore() is the main one: the index has an entry per library file.
         return withContext(environment.computation) {
             recovering(
@@ -900,7 +900,7 @@ internal class SyncRepositoryImpl(
     ) { loadIndex() }
 
     private suspend fun saveIndex(document: SyncIndexDocument) =
-        syncStateLocalSource.saveSyncIndex(withContext(environment.computation) { json.encodeToString(document) })
+        syncIndexLocalSource.saveSyncIndex(withContext(environment.computation) { json.encodeToString(document) })
 
     /**
      * For the writes nobody is waiting on the result of - the periodic one and the ones made on the way out of a run.

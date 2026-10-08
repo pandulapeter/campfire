@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.data.source.remote.implementation.auth
 
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
-import com.pandulapeter.campfire.data.source.local.api.SyncStateLocalSource
+import com.pandulapeter.campfire.data.source.local.api.SyncCredentialsLocalSource
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -24,7 +24,7 @@ import org.koin.core.annotation.Single
  */
 @Single
 internal class SyncCredentialsStore(
-    private val syncStateLocalSource: SyncStateLocalSource,
+    private val syncCredentialsLocalSource: SyncCredentialsLocalSource,
 ) {
 
     private val mutex = Mutex()
@@ -50,7 +50,7 @@ internal class SyncCredentialsStore(
     private suspend fun read(): SyncCredentialsDocument? {
         if (!hasRead) {
             cached = try {
-                syncStateLocalSource.loadSyncCredentials()?.let { json.decodeFromString<SyncCredentialsDocument>(it) }
+                syncCredentialsLocalSource.loadSyncCredentials()?.let { json.decodeFromString<SyncCredentialsDocument>(it) }
             } catch (exception: CancellationException) {
                 // Nothing has been found out yet, so nothing may be remembered: this object outlives whoever was
                 // cancelled, and "no credentials" kept from here on is what a later authorization would write its
@@ -72,7 +72,7 @@ internal class SyncCredentialsStore(
 
     private suspend fun write(document: SyncCredentialsDocument?) {
         try {
-            syncStateLocalSource.saveSyncCredentials(document?.let { json.encodeToString(it) })
+            syncCredentialsLocalSource.saveSyncCredentials(document?.let { json.encodeToString(it) })
         } catch (exception: Exception) {
             // Refused, or cancelled somewhere between starting and being seen to finish: either way what is stored
             // is no longer known here, and a guess would be acted on - a pending authorization that was never

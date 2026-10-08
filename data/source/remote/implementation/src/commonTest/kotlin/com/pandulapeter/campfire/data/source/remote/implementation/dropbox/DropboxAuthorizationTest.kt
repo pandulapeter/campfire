@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 
-import com.pandulapeter.campfire.data.source.local.api.SyncStateLocalSource
+import com.pandulapeter.campfire.data.source.local.api.SyncCredentialsLocalSource
 import com.pandulapeter.campfire.data.source.remote.api.hashing.Sha256
 import com.pandulapeter.campfire.data.source.remote.api.model.redirectParameters
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.SyncCredentialsStore
@@ -89,13 +89,9 @@ class DropboxAuthorizationTest {
     )
 
     /** Building the URL touches no storage, so the test does not need any. */
-    private object NoStorage : SyncStateLocalSource {
+    private object NoStorage : SyncCredentialsLocalSource {
         override suspend fun loadSyncCredentials(): String? = null
         override suspend fun saveSyncCredentials(document: String?) = Unit
-        override suspend fun loadSyncIndex(): String? = null
-        override suspend fun saveSyncIndex(document: String?) = Unit
-        override suspend fun isForgettingCredentialsOwed() = false
-        override suspend fun setForgettingCredentialsOwed(isOwed: Boolean) = Unit
     }
 
     private companion object {

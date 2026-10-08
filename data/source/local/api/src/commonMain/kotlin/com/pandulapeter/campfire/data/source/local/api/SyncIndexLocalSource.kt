@@ -10,27 +10,14 @@
 package com.pandulapeter.campfire.data.source.local.api
 
 /**
- * Where sync keeps the two documents it has to remember between runs, and one note about the credentials, next to
- * the preferences and so outside `library/`: none of them is the user's data, and an export must not carry them.
+ * What sync remembers between runs on this device besides the tokens - the index, and one note about the credentials -
+ * next to the preferences and so outside `library/`: neither is the user's data, and an export must not carry them.
  *
- * Both are opaque strings here. What is in them belongs to the layers that write them - the credentials to the
- * remote source, the index to the repository - and the storage layer has no business knowing either shape.
+ * The index is an opaque string here. What is in it belongs to the repository that writes it, and the storage layer
+ * has no business knowing its shape. The note is about credentials but goes with the index: its only client is the
+ * repository, which decides when a previous installation's credentials are forgotten.
  */
-interface SyncStateLocalSource {
-
-    /**
-     * The tokens of the connected account. Null when nothing is connected, and also when what was stored can no
-     * longer be read, which only connecting again can answer. Credentials that are there and cannot be read right now
-     * - a secret store that refuses for a moment - throw [LibraryStorageException] instead, since taking them for none
-     * would have the next authorization written over tokens that still work.
-     *
-     * Android keeps them encrypted with a key held by the Keystore and iOS in the Keychain. Desktop and the web keep
-     * them in a file of app-private storage, which is as private as the platform makes it - the origin on the web,
-     * the user's own data directory on desktop - and so readable by anything that can already read the user's files.
-     */
-    suspend fun loadSyncCredentials(): String?
-
-    suspend fun saveSyncCredentials(document: String?)
+interface SyncIndexLocalSource {
 
     /**
      * What the last successful run saw, which is how the next one tells a change from a deletion. Null only when there is

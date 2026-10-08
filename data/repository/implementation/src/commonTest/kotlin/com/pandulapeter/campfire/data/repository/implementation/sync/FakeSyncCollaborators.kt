@@ -20,7 +20,7 @@ import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
 import com.pandulapeter.campfire.data.source.local.api.SetlistComparison
-import com.pandulapeter.campfire.data.source.local.api.SyncStateLocalSource
+import com.pandulapeter.campfire.data.source.local.api.SyncIndexLocalSource
 import com.pandulapeter.campfire.data.source.remote.api.PendingAuthorization
 import com.pandulapeter.campfire.data.source.remote.api.PendingAuthorizationStore
 import com.pandulapeter.campfire.data.source.remote.api.SyncAuthenticator
@@ -59,19 +59,11 @@ internal object DayBlindSetlistComparison : SetlistComparison {
  * stored, and [onLoadIndex] before a read of it answers, which is where a test makes either fail by throwing from it. A cancelled caller's write is refused the
  * way the real storage's is, whose writes are a `withContext` and so answer a cancellation on the way in.
  */
-internal class FakeSyncStateLocalSource(
+internal class FakeSyncIndexLocalSource(
     var index: String? = null,
     var onSaveIndex: (String?) -> Unit = {},
     var onLoadIndex: () -> Unit = {},
-) : SyncStateLocalSource {
-
-    var credentials: String? = null
-
-    override suspend fun loadSyncCredentials() = credentials
-
-    override suspend fun saveSyncCredentials(document: String?) {
-        credentials = document
-    }
+) : SyncIndexLocalSource {
 
     override suspend fun loadSyncIndex(): String? {
         onLoadIndex()
