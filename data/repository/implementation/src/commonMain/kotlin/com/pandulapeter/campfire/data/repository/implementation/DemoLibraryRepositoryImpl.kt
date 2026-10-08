@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.repository.implementation
 
 import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.repository.api.DemoLibraryRepository
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
 import com.pandulapeter.campfire.data.repository.implementation.base.recovering
@@ -28,10 +29,11 @@ internal class DemoLibraryRepositoryImpl(
     private val libraryFileLocalSource: LibraryFileLocalSource,
     private val libraryFileLock: LibraryFileLock,
     private val userPreferencesRepository: UserPreferencesRepository,
+    private val logger: Logger,
 ) : DemoLibraryRepository {
 
     override suspend fun rememberDemoLibraryFiles(songFileNames: Collection<String>, setlistFileNames: Collection<String>) {
-        recovering(
+        logger.recovering(
             describe = { "Could not remember the demo library: ${it.message}" },
             fallback = {},
         ) {

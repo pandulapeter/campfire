@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.repository.implementation.sync
 
 import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.model.domain.SyncSummary
 import com.pandulapeter.campfire.data.repository.implementation.LibraryFileLock
 import com.pandulapeter.campfire.data.repository.implementation.base.recovering
@@ -31,6 +32,7 @@ internal class ConflictResolver(
     private val libraryFileLock: LibraryFileLock,
     private val setlistComparison: SetlistComparison,
     private val plantedContentHash: suspend (SyncKey) -> String?,
+    private val logger: Logger,
 ) {
 
     /**
@@ -162,7 +164,7 @@ internal class ConflictResolver(
      * everything else this class removes: only the bytes that were written a moment ago are taken back.
      */
     private suspend fun discardCopy(copyKey: SyncKey, written: ByteArray, onLocalFileChanged: suspend (SyncKey) -> Unit) {
-        recovering(
+        logger.recovering(
             // A copy too many is the harmless way for this to go wrong.
             describe = { "Could not remove the unused copy \"${copyKey.path}\": ${it.message}" },
             fallback = {},

@@ -90,7 +90,7 @@ internal class SyncConnectionManager(
         }
         // A previous installation's credentials that the first launch could not forget are tried again before
         // anything reads them - and while they still cannot be forgotten, nothing is restored from them.
-        val isForgettingOwed = recovering(
+        val isForgettingOwed = environment.logger.recovering(
             describe = { "Could not tell whether the sync credentials are to be forgotten: ${it::class.simpleName}" },
             // Not knowing is not a reason to disconnect an ordinary installation, which is every one but this rare case.
             fallback = { false },
@@ -114,7 +114,7 @@ internal class SyncConnectionManager(
             // The credentials are there and could not be read right now. Shown as not connected, the user would
             // connect again and the new authorization would be written over tokens that still work; this says
             // what happened, starts no run, and the next start - or the next attempt - reads them again.
-            println("Could not read the stored sync credentials: ${exception.message}")
+            environment.logger.log("Could not read the stored sync credentials: ${exception.message}")
             stateHolder.update { SyncState.ConnectionFailed(providers.first().id, SyncFailureReason.STORAGE) }
             return disconnectedResult
         }
@@ -128,7 +128,7 @@ internal class SyncConnectionManager(
         val storedAccount = connected.storedAccount()
         // Start up must never end in an exception because of a service: the library is what the app is for, and sync
         // is a thing it does on the side.
-        val account = storedAccount ?: recovering(
+        val account = storedAccount ?: environment.logger.recovering(
             describe = { "Could not restore the ${connected.id} connection: ${it.message}" },
             fallback = { null },
         ) { connected.loadAccount() }
@@ -184,7 +184,7 @@ internal class SyncConnectionManager(
                 // The app is on its way to the consent page; whatever it says arrives at the next start up.
                 SyncAuthenticator.AuthorizationOutcome.Redirected -> false
                 is SyncAuthenticator.AuthorizationOutcome.Cancelled -> {
-                    println("The authorization was cancelled: ${outcome.message}")
+                    environment.logger.log("The authorization was cancelled: ${outcome.message}")
                     discardPendingAuthorization()
                     // A message is the authenticator saying something went wrong on the way; without one, the user
                     // simply closed the page, which needs no explaining.
@@ -207,7 +207,7 @@ internal class SyncConnectionManager(
             stateBeforeConnecting = null
             throw exception
         } catch (exception: Exception) {
-            println("Could not connect to $providerId: ${exception.message}")
+            environment.logger.log("Could not connect to $providerId: ${exception.message}")
             discardPendingAuthorization()
             stateHolder.update { SyncState.ConnectionFailed(providerId, exception.toFailureReason()) }
             false
@@ -252,7 +252,7 @@ internal class SyncConnectionManager(
         withContext(NonCancellable) {
             providers.forEach { provider ->
                 // Asked inside the try, so that credentials that cannot be read right now still end in a disconnect.
-                recovering(
+                environment.logger.recovering(
                     describe = { "Could not disconnect from ${provider.id}: ${it.message}" },
                     fallback = {},
                 ) { if (provider.isConnected()) provider.disconnect() }
@@ -284,7 +284,7 @@ internal class SyncConnectionManager(
         quietly("note that the sync credentials are to be forgotten") { syncIndexLocalSource.setForgettingCredentialsOwed(true) }
         var haveCredentialsGone = true
         providers.forEach { provider ->
-            recovering(
+            environment.logger.recovering(
                 describe = { "Could not forget the ${provider.id} credentials: ${it.message}" },
                 fallback = { haveCredentialsGone = false },
             ) { provider.forgetStoredCredentials() }
@@ -303,7 +303,7 @@ internal class SyncConnectionManager(
 
     /** For the clean-ups whose failure is worth a line in the log and nothing more. */
     private inline fun quietly(action: String, block: () -> Unit) =
-        recovering(describe = { "Could not $action: ${it::class.simpleName}" }, fallback = {}, block = block)
+        environment.logger.recovering(describe = { "Could not $action: ${it::class.simpleName}" }, fallback = {}, block = block)
 
     /**
      * Asks the service who the account is behind a start up that has already shown what was stored. The answer only
@@ -314,7 +314,7 @@ internal class SyncConnectionManager(
     private fun refreshAccount(provider: SyncProvider) {
         if (accountRefreshJob?.isActive == true) return
         accountRefreshJob = scope.launch {
-            val account = recovering(
+            val account = environment.logger.recovering(
                 describe = { "Could not refresh the ${provider.id} account: ${it.message}" },
                 fallback = { return@launch },
             ) { provider.loadAccount() }
@@ -335,7 +335,7 @@ internal class SyncConnectionManager(
      * leave [SyncState.Connecting] whatever the storage says. What stays behind is a verifier nothing asks for
      * again, and the next authorization writes over it.
      */
-    private suspend fun discardPendingAuthorization() = recovering(
+    private suspend fun discardPendingAuthorization() = environment.logger.recovering(
         // Only the kind of failure: the message of one that came from the credentials document may quote it.
         describe = { "Could not clear the pending authorization: ${it::class.simpleName}" },
         fallback = {},
@@ -348,7 +348,7 @@ internal class SyncConnectionManager(
     private suspend fun completePendingAuthorization(redirectUri: String): Boolean {
         val pending = pendingAuthorizationStore.loadPendingAuthorization()
         if (pending == null) {
-            println("A redirect arrived that no authorization was waiting for.")
+            environment.logger.log("A redirect arrived that no authorization was waiting for.")
             stateHolder.update { SyncState.Disconnected }
             return false
         }
@@ -420,7 +420,7 @@ internal class SyncConnectionManager(
      * there is nothing to revoke on the user's behalf for a connection they never saw made. A failure is only logged,
      * since the outcome the caller is on its way to report is the one that matters.
      */
-    private suspend fun forgetCredentialsOf(provider: SyncProvider) = recovering(
+    private suspend fun forgetCredentialsOf(provider: SyncProvider) = environment.logger.recovering(
         describe = { "Could not forget the ${provider.id} credentials: ${it.message}" },
         fallback = {},
     ) { provider.forgetStoredCredentials() }

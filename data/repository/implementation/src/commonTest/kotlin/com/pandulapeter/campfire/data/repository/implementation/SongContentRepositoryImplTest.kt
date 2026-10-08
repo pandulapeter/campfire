@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.repository.implementation
 
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.SongContent
 import com.pandulapeter.campfire.data.source.local.api.SongLocalSource
@@ -22,7 +23,7 @@ import kotlin.test.assertEquals
 class SongContentRepositoryImplTest {
 
     private val localSource = FakeSongLocalSource()
-    private val repository = SongContentRepositoryImpl(localSource)
+    private val repository = SongContentRepositoryImpl(localSource, Logger.Standard)
 
     @Test
     fun `a collector busy reading still learns of every invalidation that arrived meanwhile`() = runTest {

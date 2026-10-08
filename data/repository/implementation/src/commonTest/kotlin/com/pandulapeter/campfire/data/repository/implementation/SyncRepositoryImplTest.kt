@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.data.repository.implementation
 
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.SyncAccount
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionDirection
@@ -20,6 +21,7 @@ import com.pandulapeter.campfire.data.model.domain.SyncOutcome
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.model.domain.SyncState
 import com.pandulapeter.campfire.data.repository.api.SyncRepository
+import com.pandulapeter.campfire.data.repository.implementation.base.RecordingLogger
 import com.pandulapeter.campfire.data.repository.implementation.base.TEST_NOW
 import com.pandulapeter.campfire.data.repository.implementation.base.testEnvironment
 import com.pandulapeter.campfire.data.repository.implementation.sync.FakeLibraryFileLocalSource
@@ -284,9 +286,11 @@ class SyncRepositoryImplTest {
                 }
             },
         )
+        val logger = RecordingLogger()
         val repository = repository(
             provider = FakeSyncProvider(files = mapOf(song(1) to "Song".encodeToByteArray()), account = ACCOUNT),
             stateLocalSource = stateLocalSource,
+            logger = logger,
         )
 
         repository.restore()
@@ -295,6 +299,7 @@ class SyncRepositoryImplTest {
 
         val outcome = assertIs<SyncOutcome.Success>(state.lastOutcome)
         assertEquals(1, outcome.summary.downloaded)
+        assertTrue("Could not write the sync index: Full" in logger.lines)
         val index = stateLocalSource.index.orEmpty()
         assertTrue(song(1).name in index)
         assertFalse("\"isRunInProgress\": true" in index)
@@ -998,15 +1003,21 @@ class SyncRepositoryImplTest {
     @Test
     fun `a closed browser is not a failure even when the clean up is`() = runTest {
         val store = FakePendingAuthorizationStore().apply { onWrite = failingAfterFirstWrite() }
+        val logger = RecordingLogger()
         val repository = repository(
             provider = FakeSyncProvider(),
             authenticator = FakeSyncAuthenticator(outcome = SyncAuthenticator.AuthorizationOutcome.Cancelled()),
             pendingAuthorizationStore = store,
+            logger = logger,
         )
 
         assertFalse(repository.connect(SyncProviderId.DROPBOX, COMPLETION_PAGE))
 
         assertEquals(SyncState.Disconnected, repository.syncState.value)
+        // Only the kind of the failure, since the message of one that came from the credentials document may quote it.
+        val line = logger.lines.single { "pending authorization" in it }
+        assertTrue("LibraryStorageException" in line)
+        assertFalse("Full" in line)
     }
 
     @Test
@@ -1118,6 +1129,7 @@ class SyncRepositoryImplTest {
             libraryFileLocalSource = libraryFileLocalSource,
             libraryFileLock = LibraryFileLock(),
             userPreferencesRepository = userPreferencesRepository,
+            logger = Logger.Standard,
         ).rememberDemoLibraryFiles(songFileNames = listOf(song(1).name), setlistFileNames = emptyList())
         repository.restore()
         repository.synchronize(SyncDeletionPolicy.ASK)
@@ -1143,12 +1155,13 @@ class SyncRepositoryImplTest {
         songRepository: RecordingSongRepository = RecordingSongRepository(),
         setlistRepository: RecordingSetlistRepository = RecordingSetlistRepository(),
         userPreferencesRepository: FakeUserPreferencesRepository = FakeUserPreferencesRepository(),
+        logger: Logger = Logger.Standard,
     ): SyncRepositoryImpl {
-        val environment = testEnvironment()
+        val environment = testEnvironment(logger = logger)
         val syncProviders = SyncProviders(listOf(provider))
-        val stateHolder = SyncStateHolder()
+        val stateHolder = SyncStateHolder(logger)
         val indexStore = SyncIndexStore(stateLocalSource, environment)
-        val syncedPreferencesSync = SyncedPreferencesSync(userPreferencesRepository, libraryFileLocalSource)
+        val syncedPreferencesSync = SyncedPreferencesSync(userPreferencesRepository, libraryFileLocalSource, logger)
         val runner = SyncRunner(
             syncProviders = syncProviders,
             engine = DataRepositoryModule.syncEngine(
@@ -1156,6 +1169,7 @@ class SyncRepositoryImplTest {
                 libraryFileLock = LibraryFileLock(),
                 setlistComparison = NoSetlistComparison,
                 userPreferencesRepository = userPreferencesRepository,
+                logger = logger,
             ),
             syncedPreferencesSync = syncedPreferencesSync,
             indexStore = indexStore,

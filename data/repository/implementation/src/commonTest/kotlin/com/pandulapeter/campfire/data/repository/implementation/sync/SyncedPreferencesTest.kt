@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.repository.implementation.sync
 
 import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteWriteResult
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -512,7 +513,7 @@ class SyncedPreferencesTest {
     }
 
     private fun sync(preferences: FakeUserPreferencesRepository, library: FakeLibraryFileLocalSource) =
-        SyncedPreferencesSync(userPreferencesRepository = preferences, libraryFileLocalSource = library)
+        SyncedPreferencesSync(userPreferencesRepository = preferences, libraryFileLocalSource = library, logger = Logger.Standard)
 
     private fun library(vararg songs: String) = FakeLibraryFileLocalSource(
         files = songs.associate { SyncKey(kind = LibraryFileKind.SONG, name = it) to it.encodeToByteArray() },

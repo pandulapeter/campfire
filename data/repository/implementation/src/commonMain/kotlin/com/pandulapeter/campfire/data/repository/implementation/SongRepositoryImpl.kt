@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.repository.implementation
 
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.SongContent
 import com.pandulapeter.campfire.data.repository.api.SongContentRepository
@@ -32,6 +33,7 @@ internal class SongRepositoryImpl(
     private val songContentRepository: SongContentRepository,
     private val libraryFileLock: LibraryFileLock,
     private val libraryChanges: LibraryChanges,
+    override val logger: Logger,
 ) : LibraryListRepository<Song>(), SongRepository {
 
     override val songs = dataState
@@ -72,7 +74,7 @@ internal class SongRepositoryImpl(
         }
     }
 
-    private suspend fun loadSongOrNull(fileName: String) = recovering(
+    private suspend fun loadSongOrNull(fileName: String) = logger.recovering(
         describe = { "Could not read the song \"$fileName\": ${it.message}" },
         fallback = { null },
     ) { songLocalSource.loadSong(fileName) }
@@ -150,7 +152,7 @@ internal class SongRepositoryImpl(
 
     override suspend fun deleteAllSongs() = libraryFileLock.withLock {
         withContext(NonCancellable) {
-            val remaining = deleteEach(songLocalSource.loadSongFileSizes().keys, songLocalSource::deleteSong)
+            val remaining = deleteEach(logger, songLocalSource.loadSongFileSizes().keys, songLocalSource::deleteSong)
             songContentRepository.invalidate()
             keepOnlyInCache(remaining)
             libraryChanges.onLibraryChanged()

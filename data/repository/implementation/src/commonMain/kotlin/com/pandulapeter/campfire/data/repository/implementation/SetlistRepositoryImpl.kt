@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.repository.implementation
 
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.implementation.base.LibraryListRepository
@@ -30,6 +31,7 @@ internal class SetlistRepositoryImpl(
     private val setlistLocalSource: SetlistLocalSource,
     private val libraryFileLock: LibraryFileLock,
     private val libraryChanges: LibraryChanges,
+    override val logger: Logger,
 ) : LibraryListRepository<Setlist>(), SetlistRepository {
 
     override val setlists = dataState
@@ -100,7 +102,7 @@ internal class SetlistRepositoryImpl(
         // read here would be put back over it. The lock alone, not writeMutex, which [writing] takes before it.
         libraryFileLock.withLock {
             val reloaded = fileNames.mapNotNull { fileName ->
-                recovering(
+                logger.recovering(
                     describe = { "Could not read the setlist \"$fileName\": ${it.message}" },
                     fallback = { null },
                 ) { setlistLocalSource.loadSetlist(fileName) }
@@ -160,7 +162,7 @@ internal class SetlistRepositoryImpl(
     }
 
     override suspend fun deleteAllSetlists() = writing {
-        val remaining = deleteEach(setlistLocalSource.loadSetlistFileSizes().keys, setlistLocalSource::deleteSetlist)
+        val remaining = deleteEach(logger, setlistLocalSource.loadSetlistFileSizes().keys, setlistLocalSource::deleteSetlist)
         keepOnlyInCache(remaining)
         libraryChanges.onLibraryChanged()
         remaining.throwFirstFailure()
@@ -183,7 +185,7 @@ internal class SetlistRepositoryImpl(
      */
     private suspend fun latest(fileName: String): Setlist? {
         val cached = loadDataIfNeeded()?.firstOrNull { it.fileName == fileName }
-        return recovering(
+        return logger.recovering(
             describe = { "Could not read the setlist \"$fileName\": ${it.message}" },
             fallback = { cached },
         ) { setlistLocalSource.loadSetlist(fileName).also { if (it == null && cached != null) dropFromCache(fileName) } }

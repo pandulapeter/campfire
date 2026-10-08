@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.repository.implementation.sync
 
 import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.model.domain.SyncAccount
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
@@ -107,12 +108,12 @@ class SyncRunSchedulerTest {
         val environment = testEnvironment()
         val runs = RunCounter()
         val syncProviders = SyncProviders(listOf(FakeSyncProvider(files = files, onDownload = onDownload, account = ACCOUNT)))
-        val stateHolder = SyncStateHolder().apply {
+        val stateHolder = SyncStateHolder(Logger.Standard).apply {
             update { SyncState.Connected(account = ACCOUNT, progress = null, lastSyncedAt = null, lastOutcome = null) }
         }
         val userPreferencesRepository = FakeUserPreferencesRepository()
         val libraryFileLocalSource = FakeLibraryFileLocalSource()
-        val syncedPreferencesSync = SyncedPreferencesSync(userPreferencesRepository, libraryFileLocalSource)
+        val syncedPreferencesSync = SyncedPreferencesSync(userPreferencesRepository, libraryFileLocalSource, Logger.Standard)
         val runner = SyncRunner(
             syncProviders = syncProviders,
             engine = DataRepositoryModule.syncEngine(
@@ -120,6 +121,7 @@ class SyncRunSchedulerTest {
                 libraryFileLock = LibraryFileLock(),
                 setlistComparison = NoSetlistComparison,
                 userPreferencesRepository = userPreferencesRepository,
+                logger = Logger.Standard,
             ),
             syncedPreferencesSync = syncedPreferencesSync,
             indexStore = SyncIndexStore(FakeSyncIndexLocalSource(onSaveIndex = runs::onSaveIndex), environment),

@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.repository.implementation.base
 
 import com.pandulapeter.campfire.data.model.DataState
+import com.pandulapeter.campfire.data.model.domain.Logger
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -213,6 +214,8 @@ class BaseLocalDataRepositoryTest {
         var batches: List<List<String>>,
         var shouldFail: Boolean = false,
     ) : BaseLocalDataRepository<List<String>>() {
+
+        override val logger = Logger.Standard
 
         /**
          * Every state that was published, in order. The collector is unconfined so that it runs at the moment of

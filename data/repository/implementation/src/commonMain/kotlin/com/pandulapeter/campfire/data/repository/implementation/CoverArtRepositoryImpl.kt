@@ -136,7 +136,7 @@ internal class CoverArtRepositoryImpl(
         coverArtSearchRemoteSources.all.forEach { source ->
             val service = source.service
             launch {
-                val candidates = recovering(
+                val candidates = environment.logger.recovering(
                     describe = { "The cover search on $service failed: ${it::class.simpleName}" },
                     fallback = { null },
                 ) {

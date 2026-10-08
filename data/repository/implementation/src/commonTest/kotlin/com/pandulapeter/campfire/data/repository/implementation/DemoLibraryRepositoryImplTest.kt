@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.repository.implementation
 
 import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.repository.implementation.sync.FakeLibraryFileLocalSource
 import com.pandulapeter.campfire.data.repository.implementation.sync.FakeUserPreferencesRepository
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncKey
@@ -80,5 +81,6 @@ class DemoLibraryRepositoryImplTest {
         libraryFileLocalSource = libraryFileLocalSource,
         libraryFileLock = LibraryFileLock(),
         userPreferencesRepository = userPreferencesRepository,
+        logger = Logger.Standard,
     )
 }

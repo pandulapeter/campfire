@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.data.repository.implementation.sync
 
 import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
 import com.pandulapeter.campfire.data.model.domain.LibraryFiles
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
 import com.pandulapeter.campfire.data.source.remote.api.SyncFolder
@@ -46,6 +47,7 @@ import org.koin.core.annotation.Single
 internal class SyncedPreferencesSync(
     private val userPreferencesRepository: UserPreferencesRepository,
     private val libraryFileLocalSource: LibraryFileLocalSource,
+    private val logger: Logger,
 ) {
 
     /**
@@ -106,7 +108,7 @@ internal class SyncedPreferencesSync(
                 // The version that bumped the format is the one that has to keep this one's values, so the document is
                 // neither applied nor written over. Null would report a failure no retry can mend until the app is
                 // updated, and an empty base names no song, so a later run with it only ever adds, as with none.
-                println("${SyncedPreferencesDocument.FILE_NAME} was written by a newer version of Campfire; it is left alone.")
+                logger.log("${SyncedPreferencesDocument.FILE_NAME} was written by a newer version of Campfire; it is left alone.")
                 return previous ?: JsonObject(emptyMap())
             }
             // A document that is missing, or is not one this version can read, is taken as unchanged since the last run
@@ -167,7 +169,7 @@ internal class SyncedPreferencesSync(
                 RemoteWriteResult.Conflict -> previous = effectiveRemote
             }
         }
-        println("Another device kept writing ${SyncedPreferencesDocument.FILE_NAME}; the next run settles it.")
+        logger.log("Another device kept writing ${SyncedPreferencesDocument.FILE_NAME}; the next run settles it.")
         return null
     }
 

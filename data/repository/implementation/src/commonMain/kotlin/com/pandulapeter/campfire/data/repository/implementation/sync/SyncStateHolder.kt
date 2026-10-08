@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.repository.implementation.sync
 
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.model.domain.SyncFailureReason
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.model.domain.SyncState
@@ -19,7 +20,9 @@ import org.koin.core.annotation.Single
 
 /** The one [SyncState] every part of sync reports into, and the screens read through `SyncRepository.syncState`. */
 @Single
-internal class SyncStateHolder {
+internal class SyncStateHolder(
+    private val logger: Logger,
+) {
 
     private val _state = MutableStateFlow<SyncState>(SyncState.Disconnected)
     val state = _state.asStateFlow()
@@ -37,7 +40,7 @@ internal class SyncStateHolder {
     }
 
     fun fail(providerId: SyncProviderId, reason: SyncFailureReason, message: String): Boolean {
-        println(message)
+        logger.log(message)
         _state.update { SyncState.ConnectionFailed(providerId, reason) }
         return false
     }

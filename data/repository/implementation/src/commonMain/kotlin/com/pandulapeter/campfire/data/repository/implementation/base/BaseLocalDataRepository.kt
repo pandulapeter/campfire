@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.repository.implementation.base
 
 import com.pandulapeter.campfire.data.model.DataState
+import com.pandulapeter.campfire.data.model.domain.Logger
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -67,6 +68,9 @@ internal abstract class BaseLocalDataRepository<T> {
      * change their data through [updateData] instead, which keeps a failed or unfinished read what it is.
      */
     protected fun updateState(transform: (DataState<T>) -> DataState<T>) = _dataState.update(transform)
+
+    /** Where a read that failed says why. */
+    protected abstract val logger: Logger
 
     /** Reads everything this repository caches, from its own local source. */
     protected abstract suspend fun loadDataFromLocalSource(): T
@@ -175,7 +179,7 @@ internal abstract class BaseLocalDataRepository<T> {
             update { current -> if (previousData == null) DataState.Loading(null) else DataState.Idle(current.data ?: previousData) }
             throw exception
         } catch (exception: Exception) {
-            println(exception.message)
+            logger.log("${exception.message}")
             value = DataState.Failure(previousData)
             hasReadFailed = true
             null

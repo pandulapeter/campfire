@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.repository.implementation.base
 
+import com.pandulapeter.campfire.data.model.domain.Logger
 import kotlinx.coroutines.CancellationException
 
 /**
@@ -19,7 +20,7 @@ import kotlinx.coroutines.CancellationException
  * Some callers log only `exception::class.simpleName` on purpose: the message of an exception that came from the
  * credentials document may quote a token.
  */
-internal inline fun <T> recovering(
+internal inline fun <T> Logger.recovering(
     describe: (Exception) -> String,
     fallback: (Exception) -> T,
     block: () -> T,
@@ -28,6 +29,6 @@ internal inline fun <T> recovering(
 } catch (exception: CancellationException) {
     throw exception
 } catch (exception: Exception) {
-    println(describe(exception))
+    log(describe(exception))
     fallback(exception)
 }

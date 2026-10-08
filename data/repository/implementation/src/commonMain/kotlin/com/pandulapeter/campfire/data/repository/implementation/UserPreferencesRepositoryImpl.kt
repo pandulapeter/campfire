@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.repository.implementation
 
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
 import com.pandulapeter.campfire.data.repository.implementation.base.WholeDocumentRepository
@@ -18,6 +19,7 @@ import org.koin.core.annotation.Single
 @Single
 internal class UserPreferencesRepositoryImpl(
     private val userPreferencesLocalSource: UserPreferencesLocalSource,
+    override val logger: Logger,
 ) : WholeDocumentRepository<UserPreferences>(), UserPreferencesRepository {
 
     override val userPreferences = dataState

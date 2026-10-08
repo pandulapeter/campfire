@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.repository.implementation
 
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.repository.implementation.base.recovering
 
 /** The files a [deleteEach] could not delete, and why. */
@@ -25,11 +26,15 @@ internal class RemainingFiles(
  * Deletes every one of [fileNames], going on past a file that fails: a folder that is emptied should be as empty as it
  * can be made, rather than stop at the first file it could not delete and keep everything after it.
  */
-internal suspend fun deleteEach(fileNames: Collection<String>, delete: suspend (String) -> Unit): RemainingFiles {
+internal suspend fun deleteEach(
+    logger: Logger,
+    fileNames: Collection<String>,
+    delete: suspend (String) -> Unit,
+): RemainingFiles {
     val remaining = mutableSetOf<String>()
     val failures = mutableListOf<Exception>()
     fileNames.forEach { fileName ->
-        recovering(
+        logger.recovering(
             describe = { "Could not delete \"$fileName\": ${it.message}" },
             fallback = {
                 remaining += fileName

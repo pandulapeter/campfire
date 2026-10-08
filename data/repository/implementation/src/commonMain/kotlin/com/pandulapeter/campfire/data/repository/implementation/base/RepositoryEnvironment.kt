@@ -11,6 +11,7 @@
 
 package com.pandulapeter.campfire.data.repository.implementation.base
 
+import com.pandulapeter.campfire.data.model.domain.Logger
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
@@ -32,6 +33,7 @@ internal class RepositoryEnvironment(
     val clock: Clock,
     /** Where a large document is encoded or decoded off the caller's thread. */
     val computation: CoroutineDispatcher,
+    val logger: Logger,
 ) {
 
     /**
@@ -41,7 +43,7 @@ internal class RepositoryEnvironment(
      */
     fun scopeFor(name: String) = CoroutineScope(
         context + SupervisorJob(context[Job]) + CoroutineExceptionHandler { _, throwable ->
-            println("A $name job ended in an exception nothing caught: $throwable")
+            logger.log("A $name job ended in an exception nothing caught: $throwable")
         },
     )
 }

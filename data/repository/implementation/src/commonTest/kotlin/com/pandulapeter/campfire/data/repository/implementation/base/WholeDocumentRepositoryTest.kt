@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.repository.implementation.base
 
 import com.pandulapeter.campfire.data.model.DataState
+import com.pandulapeter.campfire.data.model.domain.Logger
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -186,6 +187,8 @@ class WholeDocumentRepositoryTest {
         scope: CoroutineScope,
         var batches: List<List<String>>,
     ) : WholeDocumentRepository<List<String>>() {
+
+        override val logger = Logger.Standard
 
         /** Every state that was published, in order, collected unconfined so that no publish is conflated away. */
         val states = mutableListOf<DataState<List<String>>>()

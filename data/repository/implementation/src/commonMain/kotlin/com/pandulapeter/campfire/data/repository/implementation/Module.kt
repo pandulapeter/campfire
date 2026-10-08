@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.repository.implementation
 
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
 import com.pandulapeter.campfire.data.repository.implementation.base.RepositoryEnvironment
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncEngine
@@ -33,12 +34,20 @@ object DataRepositoryModule {
      */
     @OptIn(ExperimentalTime::class)
     @Single
-    internal fun repositoryEnvironment(): RepositoryEnvironment = RepositoryEnvironment(
+    internal fun repositoryEnvironment(logger: Logger): RepositoryEnvironment = RepositoryEnvironment(
         context = SupervisorJob() + Dispatchers.Default,
         timeSource = TimeSource.Monotonic,
         clock = Clock.System,
         computation = Dispatchers.Default,
+        logger = logger,
     )
+
+    /**
+     * The one [Logger] of the data and domain layers, provided here for every module: the Koin graph is checked whole
+     * in `:app:di`, so which module object declares it does not matter to anyone who asks for it.
+     */
+    @Single
+    internal fun logger(): Logger = Logger.Standard
 
     /**
      * Built here rather than declared on the class, so that its tests keep the constructor with the default lookup:
@@ -51,7 +60,12 @@ object DataRepositoryModule {
         libraryFileLock: LibraryFileLock,
         setlistComparison: SetlistComparison,
         userPreferencesRepository: UserPreferencesRepository,
-    ): SyncEngine = SyncEngine(libraryFileLocalSource, libraryFileLock, setlistComparison) { key ->
-        userPreferencesRepository.loadUserPreferencesIfNeeded()?.demoLibraryContentHashes?.get(key.path)
-    }
+        logger: Logger,
+    ): SyncEngine = SyncEngine(
+        libraryFileLocalSource = libraryFileLocalSource,
+        libraryFileLock = libraryFileLock,
+        setlistComparison = setlistComparison,
+        plantedContentHash = { key -> userPreferencesRepository.loadUserPreferencesIfNeeded()?.demoLibraryContentHashes?.get(key.path) },
+        logger = logger,
+    )
 }

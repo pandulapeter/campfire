@@ -13,6 +13,10 @@ Implements `:data:repository:api` on top of `:data:source:local:api` and — for
 `:data:source:remote:api`. Koin wiring: `Module.kt` holds the `@Module @ComponentScan object DataRepositoryModule`, and every
 repository is a `@Single`.
 
+Nothing here prints: what fails without an exception is written to the injected `Logger` (`:data:model`), whose one
+`@Single` is `DataRepositoryModule.logger()` for every module of the app, and `base/recovering` is an extension of it;
+the tests hand a `RecordingLogger` to check that a failure was noticed and what it said.
+
 `DocumentRepositoryImpl` is stateless, a pass-through to `DocumentLocalSource`, like `ArchiveRepositoryImpl`:
 extraction is a one-shot import operation, not another cached library. Conversion belongs to the domain/chordpro
 layers, and no original document enters the repository's stored state.

@@ -83,7 +83,7 @@ internal abstract class WholeDocumentRepository<T> : BaseLocalDataRepository<T>(
                 } catch (exception: CancellationException) {
                     throw exception
                 } catch (exception: Exception) {
-                    println(exception.message)
+                    logger.log("${exception.message}")
                     // The change is kept in memory even though it could not be written: undoing it under the user would
                     // be more surprising than a preference that is lost when the app is restarted. Only if it is still
                     // the change on show, though - a newer one has a write of its own coming, and its own answer.

@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.repository.implementation
 
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.model.domain.SongContent
 import com.pandulapeter.campfire.data.repository.api.SongContentRepository
 import com.pandulapeter.campfire.data.repository.implementation.base.recovering
@@ -22,6 +23,7 @@ import org.koin.core.annotation.Single
 @Single
 internal class SongContentRepositoryImpl(
     private val songLocalSource: SongLocalSource,
+    private val logger: Logger,
 ) : SongContentRepository {
 
     /**
@@ -56,7 +58,7 @@ internal class SongContentRepositoryImpl(
             }
             generation
         }
-        val content = recovering(
+        val content = logger.recovering(
             describe = { "Could not read the song \"$fileName\": ${it.message}" },
             fallback = { null },
         ) { songLocalSource.loadSongContent(fileName) } ?: return null

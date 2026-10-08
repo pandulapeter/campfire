@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.data.repository.implementation.sync
 
 import com.pandulapeter.campfire.data.model.domain.ImportLimits
 import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.model.domain.SongContent
 import com.pandulapeter.campfire.data.model.domain.SyncAccount
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionDirection
@@ -20,6 +21,7 @@ import com.pandulapeter.campfire.data.repository.implementation.LibraryChanges
 import com.pandulapeter.campfire.data.repository.implementation.LibraryFileLock
 import com.pandulapeter.campfire.data.repository.implementation.SongContentRepositoryImpl
 import com.pandulapeter.campfire.data.repository.implementation.SongRepositoryImpl
+import com.pandulapeter.campfire.data.repository.implementation.base.RecordingLogger
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import com.pandulapeter.campfire.data.source.remote.api.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.SyncRemoteStorageFullException
@@ -495,7 +497,7 @@ class SyncEngineTest {
         val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to ORIGINAL))
         val songLocalSource = LibrarySongLocalSource(local)
         val lock = LibraryFileLock()
-        val repository = SongRepositoryImpl(songLocalSource, SongContentRepositoryImpl(songLocalSource), lock, LibraryChanges())
+        val repository = SongRepositoryImpl(songLocalSource, SongContentRepositoryImpl(songLocalSource, Logger.Standard), lock, LibraryChanges(), Logger.Standard)
         val provider = FakeSyncProvider(files = mapOf(song(1) to THERE))
         // The save starts once the engine has decided the file is still the one it saw, and gets as far as it can
         // before the engine writes the download.
@@ -526,7 +528,7 @@ class SyncEngineTest {
         val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to ORIGINAL, song(2) to ORIGINAL))
         val songLocalSource = LibrarySongLocalSource(local)
         val lock = LibraryFileLock()
-        val repository = SongRepositoryImpl(songLocalSource, SongContentRepositoryImpl(songLocalSource), lock, LibraryChanges())
+        val repository = SongRepositoryImpl(songLocalSource, SongContentRepositoryImpl(songLocalSource, Logger.Standard), lock, LibraryChanges(), Logger.Standard)
         val provider = FakeSyncProvider(files = mapOf(song(2) to ORIGINAL))
         var save: Job? = null
         local.onDelete = { key ->
@@ -1494,9 +1496,12 @@ class SyncEngineTest {
         val edit = "Three, edited".encodeToByteArray()
         provider.files[song(3)] = edit to "r5"
 
-        val completed = assertIs<SyncEngine.Result.Completed>(synchronize(local, provider, syncedIndexOf(library)))
+        val logger = RecordingLogger()
+
+        val completed = assertIs<SyncEngine.Result.Completed>(synchronize(local, provider, syncedIndexOf(library), logger))
 
         assertEquals(listOf("song_2.cho"), completed.summary.failed)
+        assertTrue(logger.lines.any { song(2).path in it })
         assertContentEquals(library.getValue(song(2)), provider.files.getValue(song(2)).first)
         assertContentEquals(edit, local.files.getValue(song(3)))
         assertNull(provider.downloadCounts[song(2)])
@@ -1820,7 +1825,8 @@ class SyncEngineTest {
         local: FakeLibraryFileLocalSource,
         provider: FakeSyncProvider,
         document: SyncIndexDocument,
-    ) = SyncEngine(local, LibraryFileLock(), NoSetlistComparison).synchronize(
+        logger: Logger = Logger.Standard,
+    ) = SyncEngine(local, LibraryFileLock(), NoSetlistComparison, logger = logger).synchronize(
         provider = provider,
         document = document,
         accountId = ACCOUNT_ID,

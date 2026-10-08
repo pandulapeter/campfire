@@ -32,7 +32,7 @@ internal class SyncIndexStore(
         val text = syncIndexLocalSource.loadSyncIndex() ?: return SyncIndexDocument()
         // Off the caller's thread, which for restore() is the main one: the index has an entry per library file.
         return withContext(environment.computation) {
-            recovering(
+            environment.logger.recovering(
                 describe = { "Could not decode the sync index: ${it.message}" },
                 fallback = { SyncIndexDocument() },
             ) { json.decodeFromString<SyncIndexDocument>(text) }
@@ -40,7 +40,7 @@ internal class SyncIndexStore(
     }
 
     /** For the callers that only show what the index says or check whose it is, and must not throw because of it. */
-    suspend fun loadOrNull() = recovering(
+    suspend fun loadOrNull() = environment.logger.recovering(
         describe = { "Could not read the sync index: ${it.message}" },
         fallback = { null },
     ) { load() }
@@ -57,7 +57,7 @@ internal class SyncIndexStore(
      * run and not a wrong one, so a failure here is not worth more than a line in the log. A run whose storage is
      * really gone still says so, through the opening write and the one that completes it.
      */
-    suspend fun saveQuietly(document: SyncIndexDocument) = recovering(
+    suspend fun saveQuietly(document: SyncIndexDocument) = environment.logger.recovering(
         describe = { "Could not write the sync index: ${it.message}" },
         fallback = {},
     ) { save(document) }

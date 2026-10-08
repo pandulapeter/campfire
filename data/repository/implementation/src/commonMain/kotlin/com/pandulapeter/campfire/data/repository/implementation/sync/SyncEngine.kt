@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.repository.implementation.sync
 
 import com.pandulapeter.campfire.data.model.domain.ImportLimits
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionDirection
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.domain.SyncProgress
@@ -70,9 +71,11 @@ internal class SyncEngine(
      * [ConflictResolver.resolveWith].
      */
     plantedContentHash: suspend (SyncKey) -> String? = { null },
+    /** Where the failures of single files are written. A default for the tests' direct calls; production passes one. */
+    private val logger: Logger = Logger.Standard,
 ) {
 
-    private val conflictResolver = ConflictResolver(libraryFileLocalSource, libraryFileLock, setlistComparison, plantedContentHash)
+    private val conflictResolver = ConflictResolver(libraryFileLocalSource, libraryFileLock, setlistComparison, plantedContentHash, logger)
 
     suspend fun synchronize(
         provider: SyncFolder,
@@ -192,7 +195,7 @@ internal class SyncEngine(
      */
     private suspend fun readLocalStates(): LocalListing = coroutineScope {
         val (tooLarge, files) = libraryFileLocalSource.loadLibraryFiles().partition { it.size > MAXIMUM_FILE_SIZE }
-        tooLarge.forEach { println("Skipped \"${it.name}\": ${it.size} bytes is more than a library file can hold.") }
+        tooLarge.forEach { logger.log("Skipped \"${it.name}\": ${it.size} bytes is more than a library file can hold.") }
         // In batches for the same reason as the song scan in SongLocalSourceImpl: unbounded, a large library is
         // thousands of open handles and all of its bytes in memory at once.
         val reads = files
@@ -208,7 +211,7 @@ internal class SyncEngine(
         )
     }
 
-    private suspend fun readLocalState(key: SyncKey): LocalRead = recovering(
+    private suspend fun readLocalState(key: SyncKey): LocalRead = logger.recovering(
         describe = { "Could not read \"${key.path}\": ${it.message}" },
         fallback = { LocalRead.Failed(key, it) },
     ) {
@@ -329,7 +332,7 @@ internal class SyncEngine(
 
     /** The index is left alone, so the next run sees this file as it was and tries again. */
     private fun failedOutcome(key: SyncKey, reason: String?): OperationOutcome {
-        println("Could not sync \"${key.path}\": $reason")
+        logger.log("Could not sync \"${key.path}\": $reason")
         return OperationOutcome(summary = SyncSummary(failed = listOf(key.name)))
     }
 
@@ -435,7 +438,7 @@ internal class SyncEngine(
                 // Refused because the service already holds this name in another spelling, which is the other local file.
                 // Another pass would be refused the same way, so this is a file that could not be synced rather than a
                 // conflict waiting to be resolved.
-                println("Could not sync \"${key.path}\": the service holds the same name in another case.")
+                logger.log("Could not sync \"${key.path}\": the service holds the same name in another case.")
                 OperationOutcome(summary = SyncSummary(failed = listOf(key.name)))
             } else {
                 // The remote file moved under the write, which asks for another pass over a fresh listing.
@@ -509,7 +512,7 @@ internal class SyncEngine(
         val foreign = index.filterKeys { !it.kind.matches(it.name) }
         foreign.forEach { (key, entry) ->
             val isStillRemote = listed.any { it.kind == key.kind && it.name == key.name && it.revision == entry.remoteRevision }
-            recovering(
+            logger.recovering(
                 // Tidying up is not worth a run: the entry is dropped either way, and the file stays where it is.
                 describe = { "Could not remove the local copy of \"${key.path}\": ${it.message}" },
                 fallback = {},

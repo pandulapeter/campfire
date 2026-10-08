@@ -79,7 +79,7 @@ internal class SyncRunner(
             } catch (exception: LibraryStorageException) {
                 // Outside the run's own try below, so a failure here would reach the scope's handler with nothing on
                 // screen. A successful read is cached, but a failed credentials write clears it for the next one.
-                println("Could not read the stored sync credentials: ${exception.message}")
+                environment.logger.log("Could not read the stored sync credentials: ${exception.message}")
                 stateHolder.updateConnected { it.copy(progress = null, lastOutcome = SyncOutcome.Failure(SyncFailureReason.STORAGE)) }
                 return@withLock
             } ?: run {
@@ -174,7 +174,7 @@ internal class SyncRunner(
                 stateHolder.updateConnected { it.copy(progress = null, lastOutcome = SyncOutcome.Interrupted) }
                 throw exception
             } catch (exception: Exception) {
-                println("The sync run failed: ${exception.message}")
+                environment.logger.log("The sync run failed: ${exception.message}")
                 withContext(NonCancellable) { finishRunCutShort(latestIndex) }
                 stateHolder.updateConnected {
                     if (exception is SyncAuthorizationException) {
@@ -191,7 +191,7 @@ internal class SyncRunner(
                 // Not an Exception: what a synchronous js(...) call throws on the web (a JsException), or a real Error.
                 // The run still owes everything a failed one owes, or the marker stays on disk and the lists keep the
                 // old library. Not thrown on, since the scope's handler would only log it again.
-                println("The sync run failed: $throwable")
+                environment.logger.log("The sync run failed: $throwable")
                 withContext(NonCancellable) {
                     finishRunCutShort(latestIndex)
                     // Thrown from anywhere, a write included, so what the engine reported is not necessarily all it
@@ -224,7 +224,7 @@ internal class SyncRunner(
     } catch (exception: SyncAuthorizationException) {
         throw exception
     } catch (exception: Exception) {
-        println("Could not sync ${SyncedPreferencesDocument.FILE_NAME}: ${exception.message}")
+        environment.logger.log("Could not sync ${SyncedPreferencesDocument.FILE_NAME}: ${exception.message}")
         null
     }
 
