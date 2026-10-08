@@ -259,10 +259,25 @@ object ChordSheetConverter {
         val candidates = lines.map(::chordTokens).map { row ->
             row?.takeUnless { !hasLatinChords && !isPositioned(it) && it.filter { word -> chord(word.text) }.all { word -> isBareLatinNote(word.text) } }
         }
-        val hasUnambiguousChords = candidates.any { it != null && it.count { word -> chord(word.text) } > 1 }
         val parenthesized = lines.flatMap { parentheses.findAll(it.text).toList() }
         val convertParentheses = parenthesized.isNotEmpty() && parenthesized.count { chord(it.groupValues[1]) } * 2 > parenthesized.size
-        val kinds = lines.mapIndexed { index, line ->
+        val kinds = classify(lines, candidates)
+        val styled = lines.any { line -> !isChordLine(line.text) && line.source.spans.any { (it.isBold || it.isRaised) && chord(it.text.trim()) } }
+        if (kinds.none { it in listOf(Kind.CHORD, Kind.SECTION, Kind.TAB) } && !convertParentheses && !styled) {
+            return collapse(lines.map { ChordProLiteralText.escape(it.text) })
+        }
+        val header = mutableListOf<String>()
+        val omitted = mutableSetOf<Int>()
+        val changes = extractHeader(lines, kinds, header, omitted)
+        extractTitle(lines, kinds, header, omitted)
+        val output = writeBody(lines, kinds, candidates, omitted, changes, convertParentheses)
+        return collapse(header + if (header.isEmpty()) output else listOf("") + output)
+    }
+
+    private fun classify(lines: List<Rendered>, candidates: List<List<Token>?>): List<Kind> {
+        val hasUnambiguousChords = candidates.any { it != null && it.count { word -> chord(word.text) } > 1 }
+        return lines.mapIndexed { index, line ->
+            val candidate = candidates[index]
             when {
                 line.text.isBlank() -> Kind.BLANK
                 tab.matches(line.text.trim()) && (lines.getOrNull(index - 1)?.let { tab.matches(it.text.trim()) } == true ||
@@ -270,22 +285,25 @@ object ChordSheetConverter {
                 section(line.text) != null -> Kind.SECTION
                 index < 15 && (metadata(line.text) != null || labelledRow(line.text, isHeader = true) != null) ||
                     labelledRow(line.text, isHeader = false) != null -> Kind.METADATA
-                candidates[index] != null && (candidates[index]!!.count { chord(it.text) } > 1 ||
-                    candidates[index]!!.count { chord(it.text) } == 1 &&
-                    candidates[index]!!.filter { chord(it.text) }.all { it.text.first().isUpperCase() } &&
+                candidate != null && (candidate.count { chord(it.text) } > 1 ||
+                    candidate.count { chord(it.text) } == 1 &&
+                    candidate.filter { chord(it.text) }.all { it.text.first().isUpperCase() } &&
                     lines.getOrNull(index - 1)?.let { section(it.text) != null } == true &&
                     lines.getOrNull(index + 1)?.let { it.text.isBlank() || section(it.text) != null } != false ||
-                    (hasUnambiguousChords || isStyledChordLine(line, candidates[index]!!, lines.getOrNull(index + 1))) &&
+                    (hasUnambiguousChords || isStyledChordLine(line, candidate, lines.getOrNull(index + 1))) &&
                     lines.getOrNull(index + 1)?.let { it.text.isNotBlank() && chordTokens(it) == null && section(it.text) == null && metadata(it.text) == null } == true) -> Kind.CHORD
                 else -> Kind.LYRIC
             }
         }
-        val styled = lines.any { line -> !isChordLine(line.text) && line.source.spans.any { (it.isBold || it.isRaised) && chord(it.text.trim()) } }
-        if (kinds.none { it in listOf(Kind.CHORD, Kind.SECTION, Kind.TAB) } && !convertParentheses && !styled) {
-            return collapse(lines.map { ChordProLiteralText.escape(it.text) })
-        }
-        val header = mutableListOf<String>()
-        val omitted = mutableSetOf<Int>()
+    }
+
+    /** Takes the metadata lines into [header] and [omitted], and returns the changes of tempo and time, by the line they stand at. */
+    private fun extractHeader(
+        lines: List<Rendered>,
+        kinds: List<Kind>,
+        header: MutableList<String>,
+        omitted: MutableSet<Int>,
+    ): Map<Int, List<String>> {
         // The first tempo and time signature are the song's; a later one is a change from where it stands, which is
         // written there, as Campfire's own PDF prints one.
         val changes = mutableMapOf<Int, List<String>>()
@@ -300,6 +318,16 @@ object ChordSheetConverter {
             }
             omitted += index
         } }
+        return changes
+    }
+
+    /** Takes the title the song opens with, and the credit under it, into [header] and [omitted]. */
+    private fun extractTitle(
+        lines: List<Rendered>,
+        kinds: List<Kind>,
+        header: MutableList<String>,
+        omitted: MutableSet<Int>,
+    ) {
         val first = kinds.indexOfFirst { it != Kind.BLANK }
         if (first >= 0 && kinds[first] == Kind.LYRIC && !isChordLine(lines[first].text) && (isTitle(lines[first], lines) ||
                 kinds.getOrNull(first + 1) == Kind.BLANK && kinds.indexOf(Kind.CHORD) in (first + 2)..(first + 4))) {
@@ -323,13 +351,16 @@ object ChordSheetConverter {
                 omitted += artist
             }
         }
-        val output = mutableListOf<String>()
-        var environment: String? = null
-        var inTab = false
-        fun closeTab() { if (inTab) { output += "{end_of_tab}"; inTab = false } }
-        fun closeSection() { environment?.let { output += "{end_of_$it}" }; environment = null }
-        val pendingChanges = mutableListOf<String>()
-        fun flushChanges() { output += pendingChanges; pendingChanges.clear() }
+    }
+
+    private fun writeBody(
+        lines: List<Rendered>,
+        kinds: List<Kind>,
+        candidates: List<List<Token>?>,
+        omitted: Set<Int>,
+        changes: Map<Int, List<String>>,
+        convertParentheses: Boolean,
+    ): List<String> = with(BodyWriter()) {
         var index = 0
         while (index < lines.size) {
             changes[index]?.let { pendingChanges += it }
@@ -370,7 +401,18 @@ object ChordSheetConverter {
         closeTab()
         closeSection()
         flushChanges()
-        return collapse(header + if (header.isEmpty()) output else listOf("") + output)
+        output
+    }
+
+    /** The body of the song as it is written, with the environment and the changes still open around the next line. */
+    private class BodyWriter {
+        val output = mutableListOf<String>()
+        var environment: String? = null
+        var inTab = false
+        val pendingChanges = mutableListOf<String>()
+        fun closeTab() { if (inTab) { output += "{end_of_tab}"; inTab = false } }
+        fun closeSection() { environment?.let { output += "{end_of_$it}" }; environment = null }
+        fun flushChanges() { output += pendingChanges; pendingChanges.clear() }
     }
 
     private fun inline(line: Rendered, convertParentheses: Boolean): String {
