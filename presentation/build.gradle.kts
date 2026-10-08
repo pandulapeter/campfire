@@ -10,7 +10,7 @@
 plugins {
     id("campfire-compose-library")
     alias(libs.plugins.hyperether.localization)
-    alias(libs.plugins.koin.compiler)
+    id("campfire-koin")
     alias(libs.plugins.kotlin.serialization)
 }
 
@@ -62,10 +62,8 @@ kotlin {
                 implementation(libs.compose.ui)
                 // Only the required-update screen needs one, to stop back navigating the app it is covering.
                 implementation(libs.compose.ui.backhandler)
-                implementation(libs.koin.annotations)
                 implementation(libs.koin.compose)
                 implementation(libs.koin.compose.viewmodel)
-                implementation(libs.koin.core)
                 implementation(libs.koin.core.viewmodel)
                 implementation(libs.kotlin.coroutines)
                 // The one place the shared UI needs a calendar: the local date and time of the last sync.

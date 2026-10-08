@@ -9,15 +9,13 @@
  */
 plugins {
     id("campfire-library")
-    alias(libs.plugins.koin.compiler)
+    id("campfire-koin")
 }
 
 kotlin {
     sourceSets {
         commonMain.dependencies {
             api(project(":metronome:api"))
-            implementation(libs.koin.annotations)
-            implementation(libs.koin.core)
             implementation(libs.kotlin.coroutines)
         }
         commonTest.dependencies {

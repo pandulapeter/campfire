@@ -27,6 +27,7 @@ tasks.withType<KotlinCompile>().configureEach {
 
 dependencies {
     implementation(libs.gradle)
+    implementation(libs.koin.compilerPlugin)
     implementation(libs.kotlin)
     implementation(libs.kotlin.composeCompiler)
 }
@@ -40,6 +41,10 @@ gradlePlugin {
         register("compose-library") {
             id = "campfire-compose-library"
             implementationClass = "com.pandulapeter.campfire.buildLogic.plugins.ComposeLibraryPlugin"
+        }
+        register("koin") {
+            id = "campfire-koin"
+            implementationClass = "com.pandulapeter.campfire.buildLogic.plugins.KoinPlugin"
         }
     }
 }

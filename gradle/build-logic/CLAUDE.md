@@ -9,7 +9,7 @@
 -->
 # :build-logic
 
-The two convention plugins every library module applies, in an **included build** of their own
+The convention plugins the library modules apply, in an **included build** of their own
 (`includeBuild("gradle")` in the root `settings.gradle.kts`). It is a separate build rather than `buildSrc` so that
 editing a plugin does not invalidate the whole main build, and `gradle/settings.gradle.kts` gives it the same
 `libs.versions.toml` the app uses — one catalog, read from both sides.
@@ -23,6 +23,13 @@ editing a plugin does not invalidate the whole main build, and `gradle/settings.
   instance and a new parse would recompose every line of a song. The file names each class on its own, never a
   wildcard, and leaves `kotlin.collections` out. Reaching the typed extension is why `compose-compiler-gradle-plugin`
   (`kotlin-composeCompiler`, versioned with Kotlin) is on this build's classpath.
+- `campfire-koin` (`KoinPlugin`) — the Koin compiler plugin (`io.insert-koin.compiler.plugin`) with `aiAssist` off,
+  and `koin-annotations` and `koin-core` in `commonMain`, for every module that declares a definition. It is applied
+  next to one of the two above, in either order: it waits for Kotlin Multiplatform with `pluginManager.withPlugin`. The
+  plugin's Gradle artifact (`koin-compilerPlugin` in the catalog) is on this build's classpath for its typed
+  `koinCompiler` extension, and the root `build.gradle.kts` keeps its `apply false` so that the extension type comes
+  from one classloader, as it does for KGP and AGP. A module adds only its other Koin libraries itself
+  (`:presentation`'s Compose ones, `:app:di`'s `api` of `koin-core`).
 
 `extensions/KotlinMultiplatform.kt` is where the shared configuration lives, and where a new target or a new
 platform-wide compiler setting belongs — never in a module's own `build.gradle.kts`:
@@ -42,5 +49,5 @@ platform-wide compiler setting belongs — never in a module's own `build.gradle
   `android-minSdk` / `android-compileSdk` for the Android target). Nothing here hardcodes a version; bumping one is
   an edit to `gradle/libs.versions.toml` alone.
 
-The plugin ids are registered in `build-logic/build.gradle.kts`; adding a third convention plugin means a class, a
+The plugin ids are registered in `build-logic/build.gradle.kts`; adding another convention plugin means a class, a
 `register` block there, and nothing else.

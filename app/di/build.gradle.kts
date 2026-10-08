@@ -9,12 +9,7 @@
  */
 plugins {
     id("campfire-library")
-    alias(libs.plugins.koin.compiler)
-}
-
-// A failed graph check is reported as the missing definition; the line advertising an AI service after it is left out.
-koinCompiler {
-    aiAssist = false
+    id("campfire-koin")
 }
 
 kotlin {
@@ -29,7 +24,6 @@ kotlin {
             implementation(project(":presentation"))
             // The start function takes and returns Koin's own types, which the entry points calling it have to see.
             api(libs.koin.core)
-            implementation(libs.koin.annotations)
             implementation(libs.kotlin.coroutines)
         }
     }

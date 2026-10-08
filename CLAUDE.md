@@ -203,7 +203,7 @@ localized in both languages.
   Kotlin/Native-only and `:app:web` Kotlin/Wasm-only; every other module (`:presentation` and `:chordpro` included) is
   a multiplatform library.
 - **Koin is wired with Koin Annotations through the Koin compiler plugin** (`io.insert-koin.compiler.plugin`, applied
-  by every module that declares a definition). A class declares itself: `@Single` on repositories, local sources,
+  through `campfire-koin` by every module that declares a definition). A class declares itself: `@Single` on repositories, local sources,
   the platform storage and the authenticators, `@Factory` on use cases, `@KoinViewModel` on `CampfireViewModel`.
   Each module's top-level `Module.kt` holds one `@Module @ComponentScan object XxxModule`, empty where the classes
   annotate themselves and holding a `@Single` function where a definition is built rather than constructed (the
