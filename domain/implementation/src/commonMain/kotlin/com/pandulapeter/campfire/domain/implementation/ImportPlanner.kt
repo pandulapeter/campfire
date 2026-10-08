@@ -355,7 +355,7 @@ internal object ImportPlanner {
     }
 
     /** Whether this listed name is [name] as a file system that ignores case and Unicode form would read it. */
-    private fun String.isSpellingOf(name: String) = normalizedToNfc().equals(name.normalizedToNfc(), ignoreCase = true)
+    private fun String.isSpellingOf(name: String) = LibraryFiles.isSameLibraryName(this, name)
 
     private class SongFamily(
         /**

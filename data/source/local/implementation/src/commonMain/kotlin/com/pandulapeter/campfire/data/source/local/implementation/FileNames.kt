@@ -119,7 +119,7 @@ internal suspend fun FileStorage.moveFile(
  * it: a name taken for another file's by the first and for this file's by the second is a move that deletes what it
  * just wrote.
  */
-private fun String.isSameFileNameAs(other: String) = normalizedToNfc().equals(other.normalizedToNfc(), ignoreCase = true)
+private fun String.isSameFileNameAs(other: String) = LibraryFiles.isSameLibraryName(this, other)
 
 /** The collision suffix of a name the app derived itself, which is every name it writes into the library. */
 internal fun normalizedCollisionSuffix(index: Int) = LibraryFiles.NAME_SEPARATOR + index
@@ -149,8 +149,8 @@ internal fun String.isNamed(desired: String): Boolean {
     if (!extension.equals(desired.knownExtension(), ignoreCase = true)) return false
     val base = removeSuffix(extension).normalizedToNfc()
     val desiredBase = desired.removeSuffix(desired.knownExtension())
-    return base.equals(desiredBase, ignoreCase = true) ||
-        LibraryFiles.withoutCollisionSuffix(base)?.equals(desiredBase, ignoreCase = true) == true
+    return LibraryFiles.isSameLibraryName(base, desiredBase) ||
+        LibraryFiles.withoutCollisionSuffix(base)?.let { LibraryFiles.isSameLibraryName(it, desiredBase) } == true
 }
 
 /**
