@@ -30,14 +30,14 @@ object ChordProHeader {
      * words for, and has as many pages about it as somebody linked. Every other directive in [declaredMetadata] says one thing about the song, and a file that
      * says it twice is a file with a contradiction in it rather than a richer one.
      */
-    val repeatableMetadata = setOf(ChordProMetaItems.TAG_NAME, ChordProMetaItems.LANGUAGE_NAME, ChordProMetaItems.LINK_NAME)
+    val repeatableMetadata = MetadataKind.entries.filter { it.isRepeatable }.map { it.longName }.toSet()
 
     /**
      * The metadata directives a song may say again further down, each later one a change from where it stands rather
      * than a second value (see `ChordProBlock.Timing`): the header's line is the song's own value, and every line of the
      * body is a change. An editor keeps offering them, through [insertChangeable].
      */
-    val changeableMetadata = setOf("tempo", "time")
+    val changeableMetadata = MetadataKind.entries.filter { it.isTimingChange }.map { it.longName }.toSet()
 
     /**
      * The metadata directives [text] already declares, each under the one name the app knows it by (`{t}` and
