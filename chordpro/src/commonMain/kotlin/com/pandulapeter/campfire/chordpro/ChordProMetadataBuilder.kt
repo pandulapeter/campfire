@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.chordpro
 
+import com.pandulapeter.campfire.chordpro.ChordProVocabulary.CUSTOM_PREFIX
 import com.pandulapeter.campfire.chordpro.model.ChordDefinition
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
 import com.pandulapeter.campfire.chordpro.model.ChordProLink
@@ -172,5 +173,3 @@ internal class MetadataBuilder {
         custom = custom.mapValues { it.value.toList() },
     )
 }
-
-private const val CUSTOM_PREFIX = "x_"

@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.chordpro
 
+import com.pandulapeter.campfire.chordpro.ChordProVocabulary.TEMPO
+import com.pandulapeter.campfire.chordpro.ChordProVocabulary.TIME
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 
 /**
@@ -64,6 +66,3 @@ internal class TimingChanges {
         return ChordProBlock.Timing(tempo = tempo ?: inForceTempo, time = time ?: inForceTime)
     }
 }
-
-private const val TEMPO = "tempo"
-private const val TIME = "time"

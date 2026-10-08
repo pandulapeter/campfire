@@ -100,7 +100,7 @@ object ChordProDefinitions {
             }
             is ChordVoicing.Fretted -> {
                 // A shape no move keeps on the neck is not the new chord's, so it is left as the old chord's.
-                val (move, moved) = voicing.moved(semitones, MAX_HAND_FINGER) ?: return definition
+                val (move, moved) = voicing.moved(semitones, ChordVoicings.MAX_FINGERS) ?: return definition
                 definition.copy(name = name, voicing = moved, movedBy = definition.movedBy + move)
             }
         }
@@ -113,7 +113,7 @@ object ChordProDefinitions {
     private fun ChordVoicing.Fretted.moved(semitones: Int, maxFinger: Int): Pair<Int, ChordVoicing.Fretted>? {
         val shift = semitones.mod(12)
         val candidates = (if (frets.any { it == 0 }) listOf(shift) else listOf(shift - 12, shift))
-            .filter { move -> frets.all { it == null || it + move in 0..MAX_FRET } }
+            .filter { move -> frets.all { it == null || it + move in 0..ChordVoicings.MAX_FRET } }
         val move = candidates.firstOrNull { ChordVoicings.isHoldable(frets.map { fret -> fret?.plus(it) }) }
             ?: candidates.firstOrNull()
             ?: return null
@@ -342,9 +342,9 @@ object ChordProDefinitions {
             // describing a shape that is no longer there.
             if (keyword in valueKeywords && !given.add(keyword)) return Reading.Invalid
             when (keyword) {
-                BASE_FRET -> baseFret = arguments().singleOrNull()?.toIntOrNull()?.takeIf { it in 1..MAX_FRET } ?: return Reading.Invalid
+                BASE_FRET -> baseFret = arguments().singleOrNull()?.toIntOrNull()?.takeIf { it in 1..ChordVoicings.MAX_FRET } ?: return Reading.Invalid
                 FRETS -> frets = arguments().takeIf { it.isNotEmpty() }?.map { word ->
-                    if (word in mutedFrets) null else word.toIntOrNull()?.takeIf { it in 0..MAX_FRET } ?: return Reading.Invalid
+                    if (word in mutedFrets) null else word.toIntOrNull()?.takeIf { it in 0..ChordVoicings.MAX_FRET } ?: return Reading.Invalid
                 } ?: return Reading.Invalid
                 // The specification has every value but a finger's number ignored: a thumb's `T`, a letter, a `-`.
                 FINGERS -> fingers = arguments().takeIf { it.isNotEmpty() }?.map { word ->
@@ -371,7 +371,7 @@ object ChordProDefinitions {
             }
             // Both operands are already on the neck, so the sum cannot overflow; past the last fret is off it.
             frets != null -> ChordVoicing.Fretted(
-                frets = frets.map { fret -> if (fret == null || fret == 0) fret else (fret + baseFret - 1).takeIf { it <= MAX_FRET } ?: return Reading.Invalid },
+                frets = frets.map { fret -> if (fret == null || fret == 0) fret else (fret + baseFret - 1).takeIf { it <= ChordVoicings.MAX_FRET } ?: return Reading.Invalid },
                 fingers = fingers,
             )
             else -> return Reading.Other(name)
@@ -393,13 +393,13 @@ object ChordProDefinitions {
         val root = chord?.root ?: 0
         val absolute = keys.map { key ->
             root + when {
-                key > MAX_KEY -> MAX_KEY - 11 + key.mod(12)
+                key > ChordVoicings.MAX_KEY -> ChordVoicings.MAX_KEY - 11 + key.mod(12)
                 key < MIN_KEY -> MIN_KEY + key.mod(12)
                 else -> key
             }
         }
         val octaves = absolute.min().let { lowest -> if (lowest < 0) (-lowest + 11) / 12 else 0 }
-        val notes = absolute.map { it + octaves * 12 }.map { if (it > MAX_KEY) MAX_KEY - 11 + it.mod(12) else it }.distinct().sorted()
+        val notes = absolute.map { it + octaves * 12 }.map { if (it > ChordVoicings.MAX_KEY) ChordVoicings.MAX_KEY - 11 + it.mod(12) else it }.distinct().sorted()
         val bass = chord?.bass
         val lowest = notes.first()
         if (bass != null && notes.size > 1 && lowest.mod(12) == bass) {
@@ -421,10 +421,7 @@ object ChordProDefinitions {
     private const val FINGERS = "fingers"
     private const val KEYS = "keys"
     private const val MAX_FINGER = 5
-    private const val MAX_HAND_FINGER = 4
-    private const val MAX_FRET = 24
     private const val MIN_KEY = -24
-    private const val MAX_KEY = 47
     private const val COPY = "copy"
     private const val COPY_ALL = "copyall"
     private val valueKeywords = setOf(BASE_FRET, FRETS, FINGERS, KEYS)

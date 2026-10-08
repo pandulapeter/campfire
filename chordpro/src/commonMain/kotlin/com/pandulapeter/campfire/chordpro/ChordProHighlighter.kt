@@ -9,6 +9,13 @@
  */
 package com.pandulapeter.campfire.chordpro
 
+import com.pandulapeter.campfire.chordpro.ChordProVocabulary.ANNOTATION_MARKER
+import com.pandulapeter.campfire.chordpro.ChordProVocabulary.GRID
+import com.pandulapeter.campfire.chordpro.ChordProVocabulary.KEY
+import com.pandulapeter.campfire.chordpro.ChordProVocabulary.META
+import com.pandulapeter.campfire.chordpro.ChordProVocabulary.SOURCE_COMMENT
+import com.pandulapeter.campfire.chordpro.ChordProVocabulary.TAB
+import com.pandulapeter.campfire.chordpro.ChordProVocabulary.TRANSPOSE
 import com.pandulapeter.campfire.chordpro.model.GridToken
 
 /**
@@ -91,8 +98,8 @@ object ChordProHighlighter {
 
                 directive != null -> {
                     ChordProEnvironments.startOfEnvironment(directive.name)?.let {
-                        isInTab = it == TAB_ENVIRONMENT
-                        isInGrid = it == GRID_ENVIRONMENT
+                        isInTab = it == TAB
+                        isInGrid = it == GRID
                         isInDelegate = it in ChordProEnvironments.delegateEnvironments
                     }
                     // Any end of an environment ends the way the lines were being read, whichever environment it names: the parser,
@@ -256,18 +263,11 @@ object ChordProHighlighter {
         val content = content.trim()
         if (content.isEmpty()) return null
         return Token(
-            type = if (content.startsWith(ANNOTATION_PREFIX)) TokenType.ANNOTATION else TokenType.CHORD,
+            type = if (content.startsWith(ANNOTATION_MARKER)) TokenType.ANNOTATION else TokenType.CHORD,
             start = offset + range.first,
             end = offset + range.last + 1,
         )
     }
 
-    private const val SOURCE_COMMENT = "#"
-    private const val TAB_ENVIRONMENT = "tab"
-    private const val GRID_ENVIRONMENT = "grid"
-    private const val ANNOTATION_PREFIX = "*"
-    private const val TRANSPOSE = "transpose"
-    private const val META = "meta"
-    private const val KEY = "key"
     private val LANGUAGE_NAMES = setOf(ChordProMetaItems.LANGUAGE_NAME, "lang")
 }

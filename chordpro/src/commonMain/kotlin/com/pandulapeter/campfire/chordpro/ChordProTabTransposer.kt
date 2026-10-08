@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.chordpro
 
+import com.pandulapeter.campfire.chordpro.ChordProVocabulary.SOURCE_COMMENT
+
 /**
  * Moves the contents of one tab environment by a number of semitones, on the raw lines, for [ChordProTransposer].
  *
@@ -25,7 +27,7 @@ internal object ChordProTabTransposer {
      * usually written above the staff) gets those transposed instead, and everything else is returned byte for byte.
      * The environment is a unit: a transposition that would take a fret off the fingerboard moves the whole of it by
      * whole octaves instead, which keeps every interval in it exact, and if not even that fits (a tab spanning more
-     * than [MAX_FRET] frets), the environment is left alone rather than half transposed.
+     * than [ChordVoicings.MAX_FRET] frets), the environment is left alone rather than half transposed.
      */
     fun transpose(lines: List<String>, semitones: Int, rename: (String) -> String): List<String> {
         val isStaffLine = lines.map(ChordProTokens::isStaffLine)
@@ -91,7 +93,7 @@ internal object ChordProTabTransposer {
     private fun octaveOffset(frets: List<Int>, semitones: Int): Int? {
         if (frets.isEmpty()) return 0
         val lowestOctave = -(frets.min() + semitones).floorDiv(SEMITONES_IN_OCTAVE)
-        val highestOctave = (MAX_FRET - frets.max() - semitones).floorDiv(SEMITONES_IN_OCTAVE)
+        val highestOctave = (ChordVoicings.MAX_FRET - frets.max() - semitones).floorDiv(SEMITONES_IN_OCTAVE)
         if (lowestOctave > highestOctave) return null
         return SEMITONES_IN_OCTAVE * 0.coerceIn(lowestOctave, highestOctave) // The one closest to not moving at all.
     }
@@ -179,11 +181,9 @@ internal object ChordProTabTransposer {
         return result.toString()
     }
 
-    private const val MAX_FRET = 24
     private const val SEMITONES_IN_OCTAVE = 12
     private const val DASH = '-'
     private const val REPEAT_COUNT_MARKER = 'x' // The `x` of an `x4` after a bar or a `4x` after the last one, whose number is not a fret.
-    private const val SOURCE_COMMENT = "#"
     private const val BEAT = "."
     private const val REPEAT = "%"
     private const val DOUBLE_REPEAT = "%%"

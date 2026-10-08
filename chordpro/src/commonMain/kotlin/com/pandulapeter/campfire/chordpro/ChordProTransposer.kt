@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.chordpro.ChordProChordRewriter.keyWords
 import com.pandulapeter.campfire.chordpro.ChordProChordRewriter.rewriteChordNamesInText
 import com.pandulapeter.campfire.chordpro.ChordProChordRewriter.rewriteChords
 import com.pandulapeter.campfire.chordpro.ChordProChordRewriter.writtenChordNames
+import com.pandulapeter.campfire.chordpro.ChordProVocabulary.NOTE_COUNT
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 
@@ -153,7 +154,6 @@ object ChordProTransposer {
         return (if (preferFlats) flatNames else sharpNames)[transposedNoteIndex] + part.substring(suffixStartIndex)
     }
 
-    private const val NOTE_COUNT = 12
     private val minorKeyWords = setOf("minor", "min", "moll", "menor", "mineur", "minore")
     private val sharpNames = listOf("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
     private val flatNames = listOf("C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B")

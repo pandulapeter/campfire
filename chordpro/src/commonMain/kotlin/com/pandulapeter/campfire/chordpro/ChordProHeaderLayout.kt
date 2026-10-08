@@ -24,11 +24,10 @@ import com.pandulapeter.campfire.chordpro.ChordProMetaItems.isLanguageMeta
 import com.pandulapeter.campfire.chordpro.ChordProMetaItems.isLinkMeta
 import com.pandulapeter.campfire.chordpro.ChordProMetaItems.isTagMeta
 import com.pandulapeter.campfire.chordpro.ChordProMetaItems.standardMeta
+import com.pandulapeter.campfire.chordpro.ChordProVocabulary.SOURCE_COMMENT
 
 /** Where the header of a song ends, where its body begins and where a metadata directive added to it goes, see [metadataInsertionIndex]. */
 internal object ChordProHeaderLayout {
-
-    private const val SOURCE_COMMENT = "#"
 
     /**
      * The directives a song describes itself with, in the order a header reads best in: what the song is called, who

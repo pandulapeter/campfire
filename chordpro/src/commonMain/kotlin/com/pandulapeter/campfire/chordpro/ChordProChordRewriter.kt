@@ -9,6 +9,15 @@
  */
 package com.pandulapeter.campfire.chordpro
 
+import com.pandulapeter.campfire.chordpro.ChordProVocabulary.ACCIDENTALS
+import com.pandulapeter.campfire.chordpro.ChordProVocabulary.ANNOTATION_MARKER
+import com.pandulapeter.campfire.chordpro.ChordProVocabulary.BRACKET_CLOSE
+import com.pandulapeter.campfire.chordpro.ChordProVocabulary.BRACKET_OPEN
+import com.pandulapeter.campfire.chordpro.ChordProVocabulary.GRID
+import com.pandulapeter.campfire.chordpro.ChordProVocabulary.KEY
+import com.pandulapeter.campfire.chordpro.ChordProVocabulary.SOURCE_COMMENT
+import com.pandulapeter.campfire.chordpro.ChordProVocabulary.TAB
+import com.pandulapeter.campfire.chordpro.ChordProVocabulary.TRANSPOSE
 import com.pandulapeter.campfire.chordpro.model.ChordDefinition
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
@@ -113,7 +122,7 @@ internal object ChordProChordRewriter {
      */
     private fun spelledOutKeyNoteLength(key: String): Int? {
         val letterLength = if (key.firstOrNull() in 'A'..'H') 1 else ChordProChordNames.latinNoteLength(key) ?: return null
-        val noteLength = if (key.getOrNull(letterLength)?.let { it in ACCIDENTAL_SIGNS } == true) letterLength + 1 else letterLength
+        val noteLength = if (key.getOrNull(letterLength)?.let { it in ACCIDENTALS } == true) letterLength + 1 else letterLength
         return noteLength.takeIf { keyWordOf(key.substring(noteLength)) in keyWords }
     }
 
@@ -347,14 +356,5 @@ internal object ChordProChordRewriter {
         return substring(0, start) + replacement + substring(start + trimmedLine.length)
     }
 
-    private const val SOURCE_COMMENT = "#"
-    private const val ANNOTATION_MARKER = "*"
-    private const val KEY = "key"
-    private const val ACCIDENTAL_SIGNS = "#b♯♭"
-    private const val TRANSPOSE = "transpose"
-    private const val TAB = "tab"
-    private const val GRID = "grid"
-    private const val BRACKET_OPEN = '['
-    private const val BRACKET_CLOSE = ']'
     internal val keyWords = setOf("major", "minor", "maj", "min", "dur", "dúr", "moll", "mayor", "menor", "majeur", "mineur", "maggiore", "minore")
 }

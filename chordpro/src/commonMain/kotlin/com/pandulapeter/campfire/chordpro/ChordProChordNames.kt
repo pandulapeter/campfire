@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.chordpro
 
+import com.pandulapeter.campfire.chordpro.ChordProVocabulary.ACCIDENTALS
+
 /** Linear recognition and rewriting of the notes in a chord name. */
 internal object ChordProChordNames {
 
@@ -244,7 +246,6 @@ internal object ChordProChordNames {
     )
     private const val LATIN_INITIALS = "DRMFSL"
     private const val LATIN_SECOND_LETTERS = "oeiaOEIAóéáÓÉÁ"
-    private const val ACCIDENTALS = "#b♯♭"
 }
 
 /**

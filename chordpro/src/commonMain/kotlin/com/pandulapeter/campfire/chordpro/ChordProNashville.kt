@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.chordpro
 
+import com.pandulapeter.campfire.chordpro.ChordProVocabulary.NOTE_COUNT
+
 /**
  * The chords of a song counted from its key, as [ChordNotation.NASHVILLE] and [ChordNotation.ROMAN] show them. The aim
  * is the chart a working musician writes by hand rather than the one an algorithm finds simplest:
@@ -138,7 +140,6 @@ internal object ChordProNashville {
         override fun bass(note: String) = Unit
     }
 
-    private const val NOTE_COUNT = 12
     private const val MINOR_SIGN = "-"
     private const val DIMINISHED = "°"
     private const val HALF_DIMINISHED = "ø"

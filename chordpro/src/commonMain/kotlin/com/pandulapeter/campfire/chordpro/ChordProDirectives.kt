@@ -16,6 +16,9 @@ import com.pandulapeter.campfire.chordpro.ChordProEnvironments.endShortNames
 import com.pandulapeter.campfire.chordpro.ChordProEnvironments.startOfEnvironment
 import com.pandulapeter.campfire.chordpro.ChordProEnvironments.startShortNames
 import com.pandulapeter.campfire.chordpro.ChordProHeaderLayout.metadataAliases
+import com.pandulapeter.campfire.chordpro.ChordProVocabulary.BRACKET_CLOSE
+import com.pandulapeter.campfire.chordpro.ChordProVocabulary.BRACKET_OPEN
+import com.pandulapeter.campfire.chordpro.ChordProVocabulary.CUSTOM_PREFIX
 
 /** How a line is read as a directive and where the chords in brackets are, see [matchDirective]. */
 internal object ChordProDirectives {
@@ -23,9 +26,6 @@ internal object ChordProDirectives {
     private const val DIRECTIVE_OPEN = '{'
     private const val DIRECTIVE_CLOSE = '}'
     private const val DIRECTIVE_VALUE_SEPARATOR = ':'
-    private const val BRACKET_OPEN = '['
-    private const val BRACKET_CLOSE = ']'
-    private const val CUSTOM_PREFIX = "x_"
 
     /**
      * Every directive name ChordPro defines, used to detect (and drop) selector suffixes such as `title-guitar` and to

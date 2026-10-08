@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.chordpro
 
+import com.pandulapeter.campfire.chordpro.ChordProVocabulary.META
 import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 
 /**
@@ -136,5 +137,4 @@ object ChordProMetadataFields {
         return if (name == META) "$indentation{$META: ${field.directiveName} $value}" else "$indentation{$name: $value}"
     }
 
-    private const val META = "meta"
 }

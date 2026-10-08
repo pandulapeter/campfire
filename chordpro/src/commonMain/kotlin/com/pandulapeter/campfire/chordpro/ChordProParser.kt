@@ -9,6 +9,11 @@
  */
 package com.pandulapeter.campfire.chordpro
 
+import com.pandulapeter.campfire.chordpro.ChordProVocabulary.ANNOTATION_MARKER
+import com.pandulapeter.campfire.chordpro.ChordProVocabulary.GRID
+import com.pandulapeter.campfire.chordpro.ChordProVocabulary.SOURCE_COMMENT
+import com.pandulapeter.campfire.chordpro.ChordProVocabulary.TAB
+import com.pandulapeter.campfire.chordpro.ChordProVocabulary.TRANSPOSE
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
@@ -336,15 +341,10 @@ object ChordProParser {
         return ChordProLine.Lyrics(text = text.toString(), chords = chords)
     }
 
-    private const val SOURCE_COMMENT = "#"
     private const val DIRECTIVE_START = "{"
-    private const val ANNOTATION_MARKER = "*"
     private const val VERSE = "verse"
     private const val CHORUS = "chorus"
     private const val BRIDGE = "bridge"
-    private const val TAB = "tab"
-    private const val GRID = "grid"
     private const val GERMAN_LETTER = 'H'
-    private const val TRANSPOSE = "transpose"
     private val SPELLING_SUFFIXES = setOf('s', 'f')
 }

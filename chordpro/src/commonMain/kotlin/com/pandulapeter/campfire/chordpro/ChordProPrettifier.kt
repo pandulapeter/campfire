@@ -9,6 +9,9 @@
  */
 package com.pandulapeter.campfire.chordpro
 
+import com.pandulapeter.campfire.chordpro.ChordProVocabulary.TEMPO
+import com.pandulapeter.campfire.chordpro.ChordProVocabulary.TIME
+
 /** Formats raw ChordPro without a model round trip, which would discard unsupported directives and comments. */
 object ChordProPrettifier {
 
@@ -294,9 +297,6 @@ object ChordProPrettifier {
         finishSong()
         return hoisted
     }
-
-    private const val TEMPO = "tempo"
-    private const val TIME = "time"
 
     private val plainCommentNames = setOf("comment", "c")
 

@@ -290,16 +290,24 @@ object ChordVoicings {
     private const val BASS_SEPARATOR = "/"
     private const val DIAGRAM_FRETS = 4
     private const val OPEN_POSITION_FRETS = 5
-    private const val MAX_FINGERS = 4
+
+    /**
+     * The fingers a fretting hand holds a shape with, the thumb not counted: the most a shape may need, and the highest
+     * finger number a moved definition keeps.
+     */
+    internal const val MAX_FINGERS = 4
+
     private const val MAX_POSITION = 12
     private const val MAX_TABLE_POSITION = 9
     private const val MAX_HOLDABLE_FRET = 15
-    private const val MAX_FRET = 24
+
+    /** The last fret of the neck, on every fretted instrument and in a tab. */
+    internal const val MAX_FRET = 24
 
     /** How many notes a keyboard shape aims at: the fifth and the root are left out above it, never a note the name asks for. */
     private const val MAX_KEYS = 5
 
     /** The highest key a keyboard shape can press: four octaves above the diagram's C, past anything [keyboard] writes. */
-    private const val MAX_KEY = 47
+    internal const val MAX_KEY = 47
     private const val MAX_CACHED_DEFAULTS = 256
 }

@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.chordpro
 
 import com.pandulapeter.campfire.chordpro.ChordProDirectives.Directive
+import com.pandulapeter.campfire.chordpro.ChordProVocabulary.META
 import com.pandulapeter.campfire.chordpro.model.ChordProLink
 
 /**
@@ -30,7 +31,6 @@ internal object ChordProMetaItems {
     /** The `{meta}` key a link about the song is written under, one directive per link. */
     const val LINK_NAME = "link"
     internal const val LANGUAGE_SHORT_NAME = "lang"
-    private const val META = "meta"
 
     /**
      * The two ISO codes that mean "there is no language here" — undetermined and no linguistic content. They say
