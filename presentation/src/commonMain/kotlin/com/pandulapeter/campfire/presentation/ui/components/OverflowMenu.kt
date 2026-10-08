@@ -15,7 +15,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -31,8 +30,8 @@ import androidx.compose.ui.platform.LocalWindowInfo
 /**
  * The popup behind app bar and overflow buttons, and the one place that knows whether one is open: a
  * [DropdownMenu] keeps that next to the button that opened it, inside the composition, where the desktop window's
- * key handler (`CampfireViewModel.handleKeyEvent`) cannot see it - and an Escape pressed with a menu up belongs to
- * the menu rather than to the back stack.
+ * key handler (`CampfireViewModel.handleKeyEvent`) cannot see it, so it counts itself into the [OverlayState] - and an
+ * Escape pressed with a menu up belongs to the menu rather than to the back stack.
  *
  * @param state Whether the menu is open, hoisted only where something other than [button] opens it too.
  * @param button The button that opens the menu, handed the way to open it.
@@ -55,13 +54,16 @@ internal fun OverflowMenu(
     val insets = WindowInsets.safeDrawing.union(WindowInsets.ime)
     // A menu is a window of its own, which the update required screen cannot cover; it is left open in its state and
     // comes back if that screen ever goes, see LocalIsCoveredByRequiredUpdate.
+    val overlayState = LocalOverlayState.current
     val isShown = state.isExpanded && !LocalIsCoveredByRequiredUpdate.current
     if (isShown) {
         // Counted for as long as the menu is up, and given back by whatever takes it away - a choice, a click
         // outside it, or the row it hangs from leaving the list.
-        DisposableEffect(Unit) {
-            openOverflowMenuCount++
-            onDispose { openOverflowMenuCount-- }
+        // Keyed on the state it counted into, so that the close goes to the same one even if the app is handed another
+        // while the menu is up.
+        DisposableEffect(overlayState) {
+            overlayState.onMenuOpened()
+            onDispose { overlayState.onMenuClosed() }
         }
     }
     Box(modifier = modifier) {
@@ -120,10 +122,3 @@ internal class OverflowMenuState {
 @Composable
 internal fun rememberOverflowMenuState() = remember { OverflowMenuState() }
 
-/**
- * True while any [OverflowMenu] is open, for the platform shells that have to know that before they act on a key, and
- * for the web build's history, which gives an open menu an entry of its own (which is why it is a snapshot state).
- */
-internal val isAnyOverflowMenuOpen get() = openOverflowMenuCount > 0
-
-private var openOverflowMenuCount by mutableIntStateOf(0)

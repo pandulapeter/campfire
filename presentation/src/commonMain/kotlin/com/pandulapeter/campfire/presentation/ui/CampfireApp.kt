@@ -18,6 +18,7 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.State
@@ -62,6 +63,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_sync_notificati
 import com.pandulapeter.campfire.presentation.resources.settings_sync_notification_title
 import com.pandulapeter.campfire.presentation.resources.settings_sync_preparing
 import com.pandulapeter.campfire.presentation.resources.settings_sync_progress
+import com.pandulapeter.campfire.presentation.ui.components.LocalOverlayState
 import com.pandulapeter.campfire.presentation.ui.components.ProvideCoverArtImageLoader
 import com.pandulapeter.campfire.presentation.ui.platform.LocalSyncNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.SyncNotification
@@ -150,107 +152,111 @@ fun CampfireApp(
     val arePreferencesLoaded by viewModel.arePreferencesLoaded.collectAsStateWithLifecycle()
     val hasLibraryToShow by viewModel.hasLibraryToShow.collectAsStateWithLifecycle()
     ApplyLanguagePreference(userPreferences?.language)
-    CampfireTheme(
-        uiMode = userPreferences?.uiMode,
-        themeColor = userPreferences?.themeColor,
-        backgroundWarmth = userPreferences?.backgroundWarmth ?: 0,
-    ) { isThemeSettled, launchScreenColors ->
-        val backgroundColor = MaterialTheme.colorScheme.background
-        SideEffect { onBackgroundColorChanged(backgroundColor) }
-        Box(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            // Nothing is composed until the preferences have been read: they decide the palette and the language,
-            // and the app would otherwise open on the system's guess at both and correct itself a frame later - in
-            // an accent color the user did not choose, with labels in a language they did not choose either.
-            // Waiting costs the one frame it takes to read a small file, and even that frame is not empty: the
-            // window is already painted in the theme's background, which is the one color the palettes agree on
-            // within a light or a dark scheme.
-            if (arePreferencesLoaded) {
-                // The launch screen is left out of the interface scale: it hands over from the startup screens of the
-                // platforms, which draw the mark at its unscaled size.
-                ProvideInterfaceScale {
-                    // Inside the theme, so that the one screen it can put in the way of the app is drawn in the colors
-                    // the user chose, and above the language preference, so that it is in the language they chose too.
-                    AppUpdateGate(viewModel = viewModel) {
-                        CampfireContent(
-                            viewModel = viewModel,
-                            urlOpener = urlOpener,
-                        )
+    // Menus are counted into the view model's own overlay state rather than a global, so the key handlers and the web
+    // build's history that read it read the one this app is composed with.
+    CompositionLocalProvider(LocalOverlayState provides viewModel.overlayState) {
+        CampfireTheme(
+            uiMode = userPreferences?.uiMode,
+            themeColor = userPreferences?.themeColor,
+            backgroundWarmth = userPreferences?.backgroundWarmth ?: 0,
+        ) { isThemeSettled, launchScreenColors ->
+            val backgroundColor = MaterialTheme.colorScheme.background
+            SideEffect { onBackgroundColorChanged(backgroundColor) }
+            Box(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                // Nothing is composed until the preferences have been read: they decide the palette and the language,
+                // and the app would otherwise open on the system's guess at both and correct itself a frame later - in
+                // an accent color the user did not choose, with labels in a language they did not choose either.
+                // Waiting costs the one frame it takes to read a small file, and even that frame is not empty: the
+                // window is already painted in the theme's background, which is the one color the palettes agree on
+                // within a light or a dark scheme.
+                if (arePreferencesLoaded) {
+                    // The launch screen is left out of the interface scale: it hands over from the startup screens of the
+                    // platforms, which draw the mark at its unscaled size.
+                    ProvideInterfaceScale {
+                        // Inside the theme, so that the one screen it can put in the way of the app is drawn in the colors
+                        // the user chose, and above the language preference, so that it is in the language they chose too.
+                        AppUpdateGate(viewModel = viewModel) {
+                            CampfireContent(
+                                viewModel = viewModel,
+                                urlOpener = urlOpener,
+                            )
+                        }
                     }
                 }
-            }
-            // The launch screen covers the app rather than standing in for it, and it fades away once there is
-            // something to look at underneath: the app composes, lays out and draws behind it in the meantime, so
-            // holding it through the first read of the library costs none of the time that read was going to take
-            // anyway. What it covers is the handful of frames the song list would otherwise open on its loading
-            // indicator for, and a startup screen handing over to a spinner is two startup screens in a row - the
-            // very thing onAppReady exists to keep the other shells from doing.
-            //
-            // The colors have to have stopped moving as well, or the launch screen would be taken away halfway
-            // through its own cross fade from the theme the window opened on to the stored one (the app underneath
-            // snaps to it at once, see CampfireTheme).
-            //
-            // Read once: the composition that took the launch screen away is not always the one drawing the app
-            // (Android recreates its activity on the configuration changes it does not handle itself, see the
-            // manifest, and when the system reclaims it), and one that starts after it has nothing to cover.
-            val hasShownAppBefore = remember { viewModel.hasShownApp }
-            var isAppReady by remember { mutableStateOf(hasShownAppBefore) }
-            if (hasShownAppBefore) {
-                // The shell still holds a startup screen of its own until it is told, the Android activity's pre-draw
-                // gate.
-                LaunchedEffect(Unit) { onAppReady() }
-            } else if (isAppReady && isStartupScreenHeldUntilAppReady) {
-                // Outside the launch screen's own block, which leaves the composition - and cancels its effects - the
-                // moment the app is uncovered. The two frames are there for the reason given below: the composition
-                // without the launch screen has to be the one being drawn when the shell lets go, or Android's first
-                // frame would be the mark after all.
-                LaunchedEffect(Unit) {
-                    repeat(2) { withFrameNanos { } }
-                    onAppReady()
+                // The launch screen covers the app rather than standing in for it, and it fades away once there is
+                // something to look at underneath: the app composes, lays out and draws behind it in the meantime, so
+                // holding it through the first read of the library costs none of the time that read was going to take
+                // anyway. What it covers is the handful of frames the song list would otherwise open on its loading
+                // indicator for, and a startup screen handing over to a spinner is two startup screens in a row - the
+                // very thing onAppReady exists to keep the other shells from doing.
+                //
+                // The colors have to have stopped moving as well, or the launch screen would be taken away halfway
+                // through its own cross fade from the theme the window opened on to the stored one (the app underneath
+                // snaps to it at once, see CampfireTheme).
+                //
+                // Read once: the composition that took the launch screen away is not always the one drawing the app
+                // (Android recreates its activity on the configuration changes it does not handle itself, see the
+                // manifest, and when the system reclaims it), and one that starts after it has nothing to cover.
+                val hasShownAppBefore = remember { viewModel.hasShownApp }
+                var isAppReady by remember { mutableStateOf(hasShownAppBefore) }
+                if (hasShownAppBefore) {
+                    // The shell still holds a startup screen of its own until it is told, the Android activity's pre-draw
+                    // gate.
+                    LaunchedEffect(Unit) { onAppReady() }
+                } else if (isAppReady && isStartupScreenHeldUntilAppReady) {
+                    // Outside the launch screen's own block, which leaves the composition - and cancels its effects - the
+                    // moment the app is uncovered. The two frames are there for the reason given below: the composition
+                    // without the launch screen has to be the one being drawn when the shell lets go, or Android's first
+                    // frame would be the mark after all.
+                    LaunchedEffect(Unit) {
+                        repeat(2) { withFrameNanos { } }
+                        onAppReady()
+                    }
                 }
-            }
-            if (!isAppReady) {
-                val opacity = remember { Animatable(1f) }
-                // In the desktop application the mark grows as it goes, over the slower of the two effect springs so
-                // that the movement has the time to be read as one: this is the one platform where the launch screen is
-                // the whole of the startup - the first frame the window paints and the last one before the app - so it
-                // is worth leaving by opening into the app rather than by merely thinning out. The other three
-                // open on a startup screen of their own and never watch this one go: Android's splash and the web's
-                // loading page are still over it when it goes, so there it does not fade at all, and on iOS the mark
-                // is already the second thing shown - so there it stays the plain, quicker dissolve, and the extra
-                // frames are not spent.
-                val markGrowth = if (isLaunchScreenWholeStartup) LAUNCH_MARK_EXIT_GROWTH else 0f
-                LaunchScreen(
-                    modifier = Modifier.graphicsLayer { alpha = opacity.value.coerceIn(0f, 1f) },
-                    colors = launchScreenColors,
-                    markScale = { 1f + (1f - opacity.value.coerceIn(0f, 1f)) * markGrowth },
-                )
-                val motionScheme = MaterialTheme.motionScheme
-                val fadeSpec = if (isLaunchScreenWholeStartup) motionScheme.slowEffectsSpec<Float>() else motionScheme.defaultEffectsSpec<Float>()
-                // The icons have to be in as well, or the app would be uncovered while it is still fetching them one
-                // by one and every list row, button and chip holding one would resize around it as it lands. Asking
-                // for them here rather than anywhere earlier is what pays for the wait out of time the launch screen
-                // was up for anyway, and on the three platforms that read a drawable without suspending this is
-                // constantly true and costs nothing.
-                val areDrawablesLoaded = areDrawablesLoaded()
-                LaunchedEffect(arePreferencesLoaded, hasLibraryToShow, isThemeSettled, areDrawablesLoaded) {
-                    if (arePreferencesLoaded && hasLibraryToShow && isThemeSettled && areDrawablesLoaded) {
-                        if (isStartupScreenHeldUntilAppReady) {
-                            // Nothing under the shell's own startup screen is seen, so the fade would only hold the
-                            // app back: the app is uncovered at once, and the effect below lets the shell go.
-                            isAppReady = true
-                            viewModel.hasShownApp = true
-                        } else {
-                            // Two frames rather than one, because withFrameNanos resumes while the frame it belongs
-                            // to is still being assembled: the frame after it is the first one that is certainly drawn.
-                            repeat(2) { withFrameNanos { } }
-                            opacity.animateTo(0f, fadeSpec)
-                            isAppReady = true
-                            viewModel.hasShownApp = true
-                            // Only now, so that the shells holding a startup screen of their own hand over to the app
-                            // itself rather than to the last frames of a mark fading off it.
-                            onAppReady()
+                if (!isAppReady) {
+                    val opacity = remember { Animatable(1f) }
+                    // In the desktop application the mark grows as it goes, over the slower of the two effect springs so
+                    // that the movement has the time to be read as one: this is the one platform where the launch screen is
+                    // the whole of the startup - the first frame the window paints and the last one before the app - so it
+                    // is worth leaving by opening into the app rather than by merely thinning out. The other three
+                    // open on a startup screen of their own and never watch this one go: Android's splash and the web's
+                    // loading page are still over it when it goes, so there it does not fade at all, and on iOS the mark
+                    // is already the second thing shown - so there it stays the plain, quicker dissolve, and the extra
+                    // frames are not spent.
+                    val markGrowth = if (isLaunchScreenWholeStartup) LAUNCH_MARK_EXIT_GROWTH else 0f
+                    LaunchScreen(
+                        modifier = Modifier.graphicsLayer { alpha = opacity.value.coerceIn(0f, 1f) },
+                        colors = launchScreenColors,
+                        markScale = { 1f + (1f - opacity.value.coerceIn(0f, 1f)) * markGrowth },
+                    )
+                    val motionScheme = MaterialTheme.motionScheme
+                    val fadeSpec = if (isLaunchScreenWholeStartup) motionScheme.slowEffectsSpec<Float>() else motionScheme.defaultEffectsSpec<Float>()
+                    // The icons have to be in as well, or the app would be uncovered while it is still fetching them one
+                    // by one and every list row, button and chip holding one would resize around it as it lands. Asking
+                    // for them here rather than anywhere earlier is what pays for the wait out of time the launch screen
+                    // was up for anyway, and on the three platforms that read a drawable without suspending this is
+                    // constantly true and costs nothing.
+                    val areDrawablesLoaded = areDrawablesLoaded()
+                    LaunchedEffect(arePreferencesLoaded, hasLibraryToShow, isThemeSettled, areDrawablesLoaded) {
+                        if (arePreferencesLoaded && hasLibraryToShow && isThemeSettled && areDrawablesLoaded) {
+                            if (isStartupScreenHeldUntilAppReady) {
+                                // Nothing under the shell's own startup screen is seen, so the fade would only hold the
+                                // app back: the app is uncovered at once, and the effect below lets the shell go.
+                                isAppReady = true
+                                viewModel.hasShownApp = true
+                            } else {
+                                // Two frames rather than one, because withFrameNanos resumes while the frame it belongs
+                                // to is still being assembled: the frame after it is the first one that is certainly drawn.
+                                repeat(2) { withFrameNanos { } }
+                                opacity.animateTo(0f, fadeSpec)
+                                isAppReady = true
+                                viewModel.hasShownApp = true
+                                // Only now, so that the shells holding a startup screen of their own hand over to the app
+                                // itself rather than to the last frames of a mark fading off it.
+                                onAppReady()
+                            }
                         }
                     }
                 }

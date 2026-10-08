@@ -24,7 +24,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
-import com.pandulapeter.campfire.presentation.ui.components.isAnyOverflowMenuOpen
+import com.pandulapeter.campfire.presentation.ui.components.LocalOverlayState
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.setlists_create_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_new_setlist
@@ -140,7 +140,7 @@ internal fun SetlistsScreen(
     val backGesture = rememberNavigationEventState(currentInfo = NavigationEventInfo.None)
     NavigationBackHandler(
         state = backGesture,
-        isBackEnabled = isReordering && visibleDialog == null && !isAnyOverflowMenuOpen,
+        isBackEnabled = isReordering && visibleDialog == null && !LocalOverlayState.current.isAnyMenuOpen,
         onBackCompleted = { viewModel.reorderingSetlistFileName = null },
     )
 }

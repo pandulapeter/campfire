@@ -107,21 +107,22 @@ import com.pandulapeter.campfire.domain.api.useCases.TransposeChordProTextUseCas
 import com.pandulapeter.campfire.domain.api.useCases.TransposeChordProUseCase
 import com.pandulapeter.campfire.domain.api.useCases.UpdateSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.UpdateUserPreferencesUseCase
+import com.pandulapeter.campfire.presentation.CAMPFIRE_VERSION_NAME
+import com.pandulapeter.campfire.presentation.localization.LocalizedStrings
+import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.whats_new_message
+import com.pandulapeter.campfire.presentation.ui.components.ScrollPosition
+import com.pandulapeter.campfire.presentation.ui.components.SearchState
+import com.pandulapeter.campfire.presentation.ui.components.OverlayState
 import com.pandulapeter.campfire.metronome.api.Metronome
 import com.pandulapeter.campfire.metronome.api.model.BeatLevel
 import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
 import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
 import com.pandulapeter.campfire.metronome.api.model.MetronomeSound
-import com.pandulapeter.campfire.presentation.CAMPFIRE_VERSION_NAME
-import com.pandulapeter.campfire.presentation.localization.LocalizedStrings
-import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.whats_new_message
 import com.pandulapeter.campfire.presentation.ui.chords.toChordInstrument
 import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.components.LabelsOnEverySong
 import com.pandulapeter.campfire.presentation.ui.components.Placeholder
-import com.pandulapeter.campfire.presentation.ui.components.ScrollPosition
-import com.pandulapeter.campfire.presentation.ui.components.SearchState
 import com.pandulapeter.campfire.presentation.ui.components.isAnyOverflowMenuOpen
 import com.pandulapeter.campfire.presentation.ui.dialogs.CoverArtSearchState
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
@@ -432,6 +433,9 @@ class CampfireViewModel(
             else -> null
         }
 
+    /** Whether a menu is open over the app, which CampfireApp hands to every menu it composes. */
+    internal val overlayState = OverlayState()
+
     /**
      * Answers Ctrl / Cmd + F, which the desktop window and the web page both hear before anything in the composition
      * does: nothing on a list screen is focused while its search is closed, and a key event only travels along the
@@ -442,7 +446,7 @@ class CampfireViewModel(
      * it, the way it keeps Escape from reaching it.
      */
     internal fun openCurrentSearch(): Boolean {
-        if (visibleDialog.value != null || isAnyOverflowMenuOpen || isSetlistReordering) return false
+        if (visibleDialog.value != null || overlayState.isAnyMenuOpen || isSetlistReordering) return false
         val search = currentSearch
             ?: importReportSearch.takeIf { backStack.lastOrNull() == CampfireDestination.ImportReport }
             ?: return false
@@ -458,7 +462,7 @@ class CampfireViewModel(
      * not something Compose can undo. A dialog, a sheet or an overflow menu keeps the shortcuts from the screen under it.
      */
     internal val isSongTextZoomable
-        get() = backStack.lastOrNull() is CampfireDestination.SongDetails && visibleDialog.value == null && !isAnyOverflowMenuOpen
+        get() = backStack.lastOrNull() is CampfireDestination.SongDetails && visibleDialog.value == null && !overlayState.isAnyMenuOpen
 
     /**
      * Answers the zoom shortcuts the way the browser answers them for a page: [steps] of [FONT_SCALE_STEP] in or out,
@@ -502,7 +506,7 @@ class CampfireViewModel(
                 if (isUsable) setFontScale(touchpadFontScale.next(fontScale) { it * factor.pow(PINCH_SENSITIVITY) })
                 true
             }
-            visibleDialog.value is DialogType.Export && !isAnyOverflowMenuOpen -> {
+            visibleDialog.value is DialogType.Export && !overlayState.isAnyMenuOpen -> {
                 if (isUsable) _printPreviewMagnifications.tryEmit(factor)
                 true
             }
@@ -2642,7 +2646,7 @@ class CampfireViewModel(
      * keyboards. Answers whether it did, so that anywhere else the key is left alone.
      */
     internal fun toggleMetronomeByKey(isSpace: Boolean): Boolean {
-        if (visibleDialog.value != null || isAnyOverflowMenuOpen) return false
+        if (visibleDialog.value != null || overlayState.isAnyMenuOpen) return false
         val top = backStack.lastOrNull()
         if (if (isSpace) top != CampfireDestination.Metronome else top !is CampfireDestination.SongDetails || userPreferences.value?.isMetronomeEnabled == false) return false
         toggleMetronome()

@@ -15,7 +15,6 @@ import com.pandulapeter.campfire.data.model.domain.LibraryFiles
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.components.isAnyOverflowMenuOpen
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsTab
 import kotlin.js.ExperimentalWasmJsInterop
@@ -88,7 +87,7 @@ internal object BrowserRoutes {
         // again, and an entry for it would be one more pushed on top of that without a user gesture, which Chrome's
         // Back skips the entry under.
         val dialog = viewModel.visibleDialog.value
-        if (dialog != null && dialog != DialogType.UnsavedChanges || isAnyOverflowMenuOpen) lastOrNull()?.let(::add)
+        if (dialog != null && dialog != DialogType.UnsavedChanges || viewModel.overlayState.isAnyMenuOpen) lastOrNull()?.let(::add)
     }
 
     /**

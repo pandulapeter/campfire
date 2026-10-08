@@ -31,7 +31,7 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalWindowInfo
-import com.pandulapeter.campfire.presentation.ui.components.isAnyOverflowMenuOpen
+import com.pandulapeter.campfire.presentation.ui.components.LocalOverlayState
 import kotlinx.coroutines.launch
 
 /**
@@ -92,6 +92,7 @@ internal fun Modifier.songKeyboardShortcuts(
     LaunchedEffect(isUncovered) { if (!isUncovered) heldStepKeys.clear() else focusRequester.requestFocus() }
     // The focus inside a window stays where it was when the window loses it, so that is not reported below.
     val windowInfo = LocalWindowInfo.current
+    val overlayState = LocalOverlayState.current
     LaunchedEffect(windowInfo) { snapshotFlow { windowInfo.isWindowFocused }.collect { if (!it) heldStepKeys.clear() } }
     return this
         .focusRequester(focusRequester)
@@ -100,7 +101,7 @@ internal fun Modifier.songKeyboardShortcuts(
             if (!focusState.hasFocus) coroutineScope.launch {
                 // Whatever took the focus, if anything, has it by the next frame, and so has whatever it is drawn by.
                 withFrameNanos {}
-                if (latestIsUncovered && !isAnyOverflowMenuOpen) focusRequester.requestFocus()
+                if (latestIsUncovered && !overlayState.isAnyMenuOpen) focusRequester.requestFocus()
             }
         }
         .focusable()

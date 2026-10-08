@@ -30,7 +30,6 @@ import androidx.compose.ui.input.key.isCtrlPressed
 import androidx.compose.ui.input.key.isMetaPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.type
-import com.pandulapeter.campfire.presentation.ui.components.isAnyOverflowMenuOpen
 import com.pandulapeter.campfire.presentation.ui.platform.DesktopFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.openUrl
@@ -143,7 +142,7 @@ fun CampfireViewModel.handleKeyEvent(keyEvent: KeyEvent, onExit: () -> Unit): Bo
         // Window key handlers run before Compose turns Escape into a back event, so consuming it here would pop the
         // back stack behind an open dialog, bottom sheet or overflow menu. Those register their own back handlers:
         // leaving the event unconsumed lets the top one dismiss itself (with its exit animation).
-        if (visibleDialog.value != null || isAnyOverflowMenuOpen) return false
+        if (visibleDialog.value != null || overlayState.isAnyMenuOpen) return false
         // The import's progress dialog is modal but no visibleDialog, and its back handling comes after this handler,
         // so the key is consumed here: it would otherwise go back behind the dialog, or ask to close the app midway
         // through the import. Under the same condition the dialog host shows it.
