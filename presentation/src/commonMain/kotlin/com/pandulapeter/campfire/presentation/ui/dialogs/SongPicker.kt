@@ -32,8 +32,8 @@ import com.pandulapeter.campfire.presentation.resources.songs_empty_title
 import com.pandulapeter.campfire.presentation.resources.songs_no_search_results
 import com.pandulapeter.campfire.presentation.resources.songs_search
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.PickerFilterOptions
-import com.pandulapeter.campfire.presentation.ui.songPickerMatches
+import com.pandulapeter.campfire.presentation.ui.search.PickerFilterOptions
+import com.pandulapeter.campfire.presentation.ui.search.songPickerMatches
 import com.pandulapeter.campfire.presentation.ui.components.CheckboxListItem
 import com.pandulapeter.campfire.presentation.ui.components.CHIP_GAP
 import com.pandulapeter.campfire.presentation.ui.components.CountedFilterChip

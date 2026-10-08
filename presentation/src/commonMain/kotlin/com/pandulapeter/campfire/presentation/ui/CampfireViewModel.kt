@@ -166,6 +166,14 @@ import com.pandulapeter.campfire.presentation.ui.screens.songDetails.hasSongInfo
 import com.pandulapeter.campfire.presentation.ui.playing.withCapo
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.EditorTextEdit
 import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroups
+import com.pandulapeter.campfire.presentation.ui.search.PickerFilterOptions
+import com.pandulapeter.campfire.presentation.ui.search.PickerSongs
+import com.pandulapeter.campfire.presentation.ui.search.SearchableSong
+import com.pandulapeter.campfire.presentation.ui.search.SongSearchIndex
+import com.pandulapeter.campfire.presentation.ui.search.SongSearchSnapshot
+import com.pandulapeter.campfire.presentation.ui.search.pickerFilterOptions
+import com.pandulapeter.campfire.presentation.ui.search.songGroupsFor
+import com.pandulapeter.campfire.presentation.ui.search.toPickableSong
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.CoroutineScope
