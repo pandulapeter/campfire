@@ -9,9 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.print
 
-import com.pandulapeter.campfire.chordpro.ChordNotation
 import com.pandulapeter.campfire.chordpro.ChordProTabWrapper
-import com.pandulapeter.campfire.chordpro.model.ChordInstrument
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
@@ -21,12 +19,7 @@ import com.pandulapeter.campfire.chordpro.model.GridToken
 import com.pandulapeter.campfire.chordpro.model.SectionType
 import com.pandulapeter.campfire.data.model.domain.PrintSettings
 import com.pandulapeter.campfire.presentation.ui.chords.ChordDiagramGeometry
-import com.pandulapeter.campfire.presentation.ui.chords.chordDiagramGeometryOf
-import com.pandulapeter.campfire.presentation.ui.chords.emptyChordDiagramGeometryOf
 import com.pandulapeter.campfire.presentation.ui.chords.secondaryName
-import com.pandulapeter.campfire.presentation.ui.chords.selectShape
-import com.pandulapeter.campfire.presentation.ui.chords.songChordsOf
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.DefaultSectionLabels
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.balancedRowStarts
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.header
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.withNumber
@@ -37,144 +30,6 @@ import com.pandulapeter.campfire.presentation.ui.screens.songDetails.labelOf
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.padLyricsToFitChords
 import kotlinx.coroutines.yield
 import kotlin.math.roundToInt
-
-/**
- * What a PDF is made of, read once when the export screen opens: a snapshot, so that the preview and the file agree even
- * if the library changes underneath the screen. [date] is already formatted in the app's language.
- */
-internal data class PrintSource(
-    val title: String,
-    val description: String = "",
-    val date: String? = null,
-    val isSetlist: Boolean = false,
-    val songs: List<PrintSong>,
-)
-
-/**
- * One song of a [PrintSource], [index] being its one-based slot in a setlist, kept when songs are left out, and
- * [transposition] the semitones the viewer moves it by, which [song] is already rendered in.
- */
-internal data class PrintSong(
-    val fileName: String,
-    val title: String,
-    val artist: String?,
-    val index: Int? = null,
-    val transposition: Int = 0,
-    /** Null for an unreadable or missing file; its place remains visible in the running order. */
-    val song: ChordProSong?,
-    /** The file as it is stored, which the export screen shows for a song exported as ChordPro, and null when it could not be read. */
-    val text: String? = null,
-    /**
-     * Every chord the song plays, in the order it is first played, with the shape its Chords section draws it with on
-     * the reader's instrument; empty where the chord diagrams are switched off in the app, whatever the export asks for.
-     */
-    val chords: List<PrintChord> = emptyList(),
-)
-
-/**
- * One chord diagram of a [PrintSong]: the chord as the page names it, the one it sounds as where that differs or else
- * its letters where the page counts it ([SongChord.secondaryName]), and its shape.
- */
-internal data class PrintChord(
-    val name: String,
-    val secondaryName: String? = null,
-    val geometry: ChordDiagramGeometry,
-)
-
-/**
- * The chords of [song], transposed as it is printed and still in the standard notation, named in [notation] and drawn
- * the way the song details screen's Chords section draws them
- * on [instrument]: the song's own definition, the player's shape from [storedShapes], or the app's own, and an empty
- * frame for a chord with none, so that the page and the screen finger every chord alike.
- */
-internal fun printChordsOf(
-    song: ChordProSong,
-    notation: ChordNotation,
-    instrument: ChordInstrument,
-    storedShapes: Map<String, String>,
-): List<PrintChord> = songChordsOf(song, notation, instrument, song.metadata.capo ?: 0).map { chord ->
-    PrintChord(
-        name = chord.name,
-        secondaryName = chord.secondaryName,
-        geometry = selectShape(chord, instrument, storedShapes).shape?.let { chordDiagramGeometryOf(it, instrument, chord.chord.root) }
-            ?: emptyChordDiagramGeometryOf(instrument),
-    )
-}
-
-/**
- * How a text is set: [size] in PDF points, [monospace] for the tablature and grids whose characters have to line up
- * (everything else is in the app's text font, as in the viewer), and [gray] from 0 (black) to 255 (white).
- */
-internal data class PrintStyle(
-    val size: Int,
-    val bold: Boolean = false,
-    val italic: Boolean = false,
-    val monospace: Boolean = false,
-    val gray: Int = 0,
-)
-
-/**
- * Coordinates and sizes are PDF points (1/72 inch), independent of screen density and accessibility text size.
- *
- * @property isSelectable False for the names over the chord diagrams, which are left out of the file's selectable text:
- *   read back by an import, a row of them would be a line of chords above the song's first line.
- */
-internal data class PrintText(
-    val text: String,
-    val x: Float,
-    val y: Float,
-    val style: PrintStyle,
-    val isSelectable: Boolean = true,
-)
-
-/** A filled rectangle, the way frames and bars are drawn; in PDF points like the texts, [gray] from 0 (black) to 255. */
-internal data class PrintRule(
-    val x: Float,
-    val y: Float,
-    val width: Float,
-    val height: Float,
-    val gray: Int = 0,
-)
-
-/** A chord diagram drawn into the [width] by [height] box at [x], [y], in PDF points like the texts. */
-internal data class PrintDiagram(
-    val geometry: ChordDiagramGeometry,
-    val x: Float,
-    val y: Float,
-    val width: Float,
-    val height: Float,
-)
-
-/** Everything on one page, in PDF points from its top left corner; the rules are drawn under the texts and the diagrams. */
-internal data class PrintPage(
-    val texts: List<PrintText>,
-    val rules: List<PrintRule> = emptyList(),
-    val diagrams: List<PrintDiagram> = emptyList(),
-)
-
-/** The pages of one export, all of one size, which is the paper's in PDF points turned for the orientation. */
-internal data class PrintDocument(
-    val width: Float,
-    val height: Float,
-    val pages: List<PrintPage>,
-)
-
-/**
- * The words the layout prints, resolved by the export screen in the app's language, since the layout runs off the composition
- * where no string resource can be read.
- */
-internal data class PrintLabels(
-    val key: String,
-    val transposition: String,
-    val capo: String,
-    val tempo: String,
-    /** A tempo's value as the app writes it, [TEMPO_VALUE] standing for the number: "96 BPM". */
-    val tempoValue: String,
-    val time: String,
-    val missing: String,
-    /** The headings of the sections the file leaves unnamed, the viewer's own. */
-    val sections: DefaultSectionLabels,
-)
 
 /**
  * A single layout for the preview and export. Measuring is supplied by the same Compose text renderer that draws
@@ -839,9 +694,6 @@ private fun List<Row>.height() = sumOf { it.height.toDouble() }.toFloat()
  */
 private const val METADATA_SEPARATOR = "   "
 
-/** What [PrintLabels.tempoValue] holds in place of the number. */
-internal const val TEMPO_VALUE = "\u0001"
-
 private const val CHORUS_INDENT = 8f
 private const val CHORUS_BAR_WIDTH = 1.5f
 private const val FRAME_WIDTH = 0.75f
@@ -885,83 +737,3 @@ private fun GridToken.printText() = when (this) {
 
 /** Blank once the padding the chords add (no-break spaces and the zero-width break opportunities) is disregarded too. */
 private fun String.isPrintBlank() = all { it.isWhitespace() || it == '\u00A0' || it == '\u200B' }
-
-/** Preserve every character (including spaces used as chord anchors), splitting at words where there is room. */
-internal fun wrapPrintText(text: String, width: Float, measure: (String) -> Float): List<String> {
-    if (text.isEmpty()) return listOf("")
-    if (measure(text) <= width) return listOf(text)
-    val result = mutableListOf<String>()
-    var start = 0
-    while (start < text.length) {
-        // Bound the search by a few screenfuls, rather than shaping the whole remaining line for every wrap.
-        var upper = minOf(start + 32, text.length)
-        while (upper < text.length && measure(text.substring(start, upper)) <= width) {
-            upper = minOf(text.length, start + (upper - start) * 2)
-        }
-        var low = start + 1
-        var high = upper
-        var end = low
-        while (low <= high) {
-            val middle = (low + high) / 2
-            if (measure(text.substring(start, middle)) <= width) {
-                end = middle
-                low = middle + 1
-            } else {
-                high = middle - 1
-            }
-        }
-        if (end < text.length) {
-            // Break after the last space or break opportunity, unless the word after it would not fit a line of its own
-            // either, in which case the hard cut is the right one. The cut only ever moves back, so the fragments still
-            // add up to the text and chord positions still map onto them by index.
-            val space = maxOf(text.lastIndexOf(' ', end - 1), text.lastIndexOf('\u200B', end - 1))
-            if (space > start) {
-                val next = listOf(text.indexOf(' ', space + 1), text.indexOf('\u200B', space + 1))
-                    .filter { it >= 0 }
-                    .minOrNull() ?: text.length
-                if (measure(text.substring(space + 1, next)) <= width) end = space + 1
-            }
-            // A cut inside a grapheme cluster would print a mark, a modifier or half a flag on its own, so it moves back to
-            // the start of the cluster, or past its end where the cluster is all the fragment has.
-            while (end - start > 1 && text.splitsClusterAt(end)) end--
-            while (text.splitsClusterAt(end)) end++
-        }
-        result += text.substring(start, end)
-        start = end
-    }
-    return result
-}
-
-/** Whether a cut between `index - 1` and `index` would separate a character from what is drawn as one with it. */
-private fun String.splitsClusterAt(index: Int): Boolean {
-    if (index <= 0 || index >= length) return false
-    val char = this[index]
-    if (char.isLowSurrogate() || char == '\u200D' || char == '\uFE0E' || char == '\uFE0F' || this[index - 1] == '\u200D') return true
-    if (char.category in COMBINING_CATEGORIES) return true
-    val codePoint = codePointAt(index)
-    if (codePoint in SKIN_TONE_MODIFIERS) return true
-    // Regional indicators pair up into flags from the start of their run, so a cut after an odd number of them is inside one.
-    if (codePoint !in REGIONAL_INDICATORS) return false
-    var count = 0
-    var position = index
-    while (position >= 2 && codePointAt(position - 2) in REGIONAL_INDICATORS) {
-        count++
-        position -= 2
-    }
-    return count % 2 == 1
-}
-
-private fun String.codePointAt(index: Int): Int =
-    if (this[index].isHighSurrogate() && index + 1 < length && this[index + 1].isLowSurrogate()) {
-        0x10000 + ((this[index].code - 0xD800) shl 10) + (this[index + 1].code - 0xDC00)
-    } else {
-        this[index].code
-    }
-
-private val COMBINING_CATEGORIES = setOf(
-    CharCategory.NON_SPACING_MARK,
-    CharCategory.ENCLOSING_MARK,
-    CharCategory.COMBINING_SPACING_MARK,
-)
-private val SKIN_TONE_MODIFIERS = 0x1F3FB..0x1F3FF
-private val REGIONAL_INDICATORS = 0x1F1E6..0x1F1FF
