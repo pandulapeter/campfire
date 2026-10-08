@@ -7,14 +7,8 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui
+package com.pandulapeter.campfire.presentation.ui.components
 
-import com.pandulapeter.campfire.presentation.ui.components.Elapsed
-import com.pandulapeter.campfire.presentation.ui.components.RelativeDay
-import com.pandulapeter.campfire.presentation.ui.components.elapsed
-import com.pandulapeter.campfire.presentation.ui.components.nextElapsedChange
-import com.pandulapeter.campfire.presentation.ui.components.nextMidnight
-import com.pandulapeter.campfire.presentation.ui.components.relativeDay
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone

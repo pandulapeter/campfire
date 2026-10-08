@@ -7,10 +7,8 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui
+package com.pandulapeter.campfire.presentation.ui.screens.setlists
 
-import com.pandulapeter.campfire.presentation.ui.screens.setlists.SetlistTotalDuration
-import com.pandulapeter.campfire.presentation.ui.screens.setlists.setlistTotalDuration
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
