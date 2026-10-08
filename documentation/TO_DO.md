@@ -12,6 +12,7 @@
 ### Bugs / issues
 
 ### Improvements
+- Improve haptic effects (fast scroll is inconsistent, tap tempo should not have one)
 - Clean up all the edit links, about the song bottom sheet, song details menus. Too much duplicated content, not super intuitive
 
 ## Midterm (in the next versions)
