@@ -36,6 +36,7 @@ import com.pandulapeter.campfire.data.repository.implementation.sync.SyncIndexEn
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncIndexStore
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncKey
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncLibraryRefresher
+import com.pandulapeter.campfire.data.repository.implementation.sync.SyncRunner
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncStateHolder
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncedPreferencesSync
 import com.pandulapeter.campfire.data.repository.implementation.sync.indexKey
@@ -1141,21 +1142,32 @@ class SyncRepositoryImplTest {
         userPreferencesRepository: FakeUserPreferencesRepository = FakeUserPreferencesRepository(),
     ): SyncRepositoryImpl {
         val environment = testEnvironment()
+        val syncProviders = SyncProviders(listOf(provider))
+        val stateHolder = SyncStateHolder()
+        val indexStore = SyncIndexStore(stateLocalSource, environment)
+        val syncedPreferencesSync = SyncedPreferencesSync(userPreferencesRepository, libraryFileLocalSource)
         return SyncRepositoryImpl(
-            syncProviders = SyncProviders(listOf(provider)),
+            syncProviders = syncProviders,
             authenticator = authenticator,
             pendingAuthorizationStore = pendingAuthorizationStore,
             syncIndexLocalSource = stateLocalSource,
-            stateHolder = SyncStateHolder(),
-            libraryRefresher = SyncLibraryRefresher(songRepository, setlistRepository, environment),
-            indexStore = SyncIndexStore(stateLocalSource, environment),
-            engine = DataRepositoryModule.syncEngine(
-                libraryFileLocalSource = libraryFileLocalSource,
-                libraryFileLock = LibraryFileLock(),
-                setlistComparison = NoSetlistComparison,
-                userPreferencesRepository = userPreferencesRepository,
+            stateHolder = stateHolder,
+            indexStore = indexStore,
+            runner = SyncRunner(
+                syncProviders = syncProviders,
+                engine = DataRepositoryModule.syncEngine(
+                    libraryFileLocalSource = libraryFileLocalSource,
+                    libraryFileLock = LibraryFileLock(),
+                    setlistComparison = NoSetlistComparison,
+                    userPreferencesRepository = userPreferencesRepository,
+                ),
+                syncedPreferencesSync = syncedPreferencesSync,
+                indexStore = indexStore,
+                libraryRefresher = SyncLibraryRefresher(songRepository, setlistRepository, environment),
+                stateHolder = stateHolder,
+                environment = environment,
             ),
-            syncedPreferencesSync = SyncedPreferencesSync(userPreferencesRepository, libraryFileLocalSource),
+            syncedPreferencesSync = syncedPreferencesSync,
             libraryChanges = LibraryChanges(),
             environment = environment,
         )
