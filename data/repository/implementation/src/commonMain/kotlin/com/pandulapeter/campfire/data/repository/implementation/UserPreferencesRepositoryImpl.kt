@@ -11,14 +11,14 @@ package com.pandulapeter.campfire.data.repository.implementation
 
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
-import com.pandulapeter.campfire.data.repository.implementation.base.BaseLocalDataRepository
+import com.pandulapeter.campfire.data.repository.implementation.base.WholeDocumentRepository
 import com.pandulapeter.campfire.data.source.local.api.UserPreferencesLocalSource
 import org.koin.core.annotation.Single
 
 @Single
 internal class UserPreferencesRepositoryImpl(
     private val userPreferencesLocalSource: UserPreferencesLocalSource,
-) : BaseLocalDataRepository<UserPreferences>(), UserPreferencesRepository {
+) : WholeDocumentRepository<UserPreferences>(), UserPreferencesRepository {
 
     override val userPreferences = dataState
 

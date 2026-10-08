@@ -23,7 +23,8 @@ import kotlinx.coroutines.sync.withLock
  * A repository backed by one local source that is read as a whole and cached in memory.
  *
  * Writing is *not* part of the shape: songs and setlists are one file each, so a change writes that file and updates
- * the cached list, rather than persisting the list. Only the preferences are saved as a whole, through [writeData].
+ * the cached list, rather than persisting the list. Only the preferences are saved as a whole, through
+ * [WholeDocumentRepository], the one subclass that may publish a state of its own making.
  *
  * A change made through [updateData] while a read is running is on disk already, but the read may have listed the
  * directory before it got there, and publishing that result as it is would drop the change from the list until the
@@ -46,15 +47,6 @@ internal abstract class BaseLocalDataRepository<T> {
     private var isPublishingPartialData = false
 
     /**
-     * Held while the storage is written to, so that the writes reach it one at a time. A lock of its own rather than
-     * [mutex]: a read is no reason for a change to wait, and a change is published before it takes this one.
-     */
-    private val writeMutex = Mutex()
-
-    /** What the last write that succeeded put into the storage. Only touched while [writeMutex] is held. */
-    private var lastPersistedData: T? = null
-
-    /**
      * Set by a read that failed and cleared by one that succeeded, rather than read off the state: a write of the
      * preferences that failed is a [DataState.Failure] too, and reading those again would replace the change being
      * kept in memory with the older document still on disk.
@@ -66,6 +58,15 @@ internal abstract class BaseLocalDataRepository<T> {
      * A state flow for its atomic update, since [updateData] is called from any thread and does not suspend.
      */
     private val transformsDuringRead = MutableStateFlow<List<(T?) -> T>?>(null)
+
+    /** The state as it is at this moment, for a [WholeDocumentRepository] building a write on it. */
+    protected val currentState get() = _dataState.value
+
+    /**
+     * Replaces the state atomically, for a [WholeDocumentRepository] publishing what it writes. The list repositories
+     * change their data through [updateData] instead, which keeps a failed or unfinished read what it is.
+     */
+    protected fun updateState(transform: (DataState<T>) -> DataState<T>) = _dataState.update(transform)
 
     /** Reads everything this repository caches, from its own local source. */
     protected abstract suspend fun loadDataFromLocalSource(): T
@@ -128,70 +129,6 @@ internal abstract class BaseLocalDataRepository<T> {
     protected fun publishPartialData(data: T) {
         if (!isPublishingPartialData) return
         _dataState.update { DataState.Loading(transformsDuringRead.value.orEmpty().fold(data) { result, transform -> transform(result) }) }
-    }
-
-    /**
-     * Publishes [data], then persists it as a whole.
-     *
-     * It is published as [DataState.Idle] right away rather than as a [DataState.Loading] that the write then
-     * resolves: what is being written is already what every reader should be showing, and it stays that way even
-     * when the write fails. A [DataState.Loading] here would say "nothing has been read yet" to whoever reads this
-     * state for that — and a write is a suspending call, so it would say it for as long as the storage takes.
-     *
-     * It is also published *before* the storage is waited for, because the callers build each change on the state
-     * they find: a change that stayed unpublished while an earlier one was still being written would be missing from
-     * the next one. The storage is then written to one call at a time, and what a call writes is whatever is
-     * published by the time the storage is free rather than what it was called with. That is what keeps the last
-     * change the last thing written whichever thread each call came from, and it lets a burst of changes end in one
-     * write instead of one each. A write that succeeded publishes nothing: there is nothing to say that the first
-     * publish did not, and saying it again would put this call's data back over a change made since.
-     */
-    protected suspend fun writeData(data: T, persist: suspend (T) -> Unit) {
-        _dataState.value = DataState.Idle(data)
-        persistLatest(data, persist)
-    }
-
-    /**
-     * [writeData] for a change rather than a whole document: [transform] is applied to the data published at this
-     * moment, atomically, and the result is published and persisted the same way. A caller that built the whole
-     * document itself would build it on whatever copy of the state it holds, and a copy that has not caught up with
-     * the previous change yet - a flow a few hops downstream, collected on another dispatcher - would put that change
-     * back. [transform] may run more than once when changes race, so it has to be pure.
-     *
-     * Nothing happens while there is no data, which is before the first read and after one that failed: there is
-     * nothing for the change to apply to, and a document made of it alone would replace everything else in the store.
-     * Nor when [transform] changes nothing, which would otherwise take a failed write's [DataState.Failure] off the
-     * screen without anything having been written.
-     */
-    protected suspend fun transformAndWriteData(transform: (T) -> T, persist: suspend (T) -> Unit) {
-        var changed: T? = null
-        _dataState.update { current ->
-            val data = current.data ?: return@update current
-            val transformed = transform(data)
-            changed = transformed.takeIf { it != data }
-            if (changed == null) current else DataState.Idle(transformed)
-        }
-        persistLatest(changed ?: return, persist)
-    }
-
-    private suspend fun persistLatest(data: T, persist: suspend (T) -> Unit) {
-        writeMutex.withLock {
-            val latestData = _dataState.value.data ?: data
-            if (latestData != lastPersistedData) {
-                try {
-                    persist(latestData)
-                    lastPersistedData = latestData
-                } catch (exception: CancellationException) {
-                    throw exception
-                } catch (exception: Exception) {
-                    println(exception.message)
-                    // The change is kept in memory even though it could not be written: undoing it under the user would
-                    // be more surprising than a preference that is lost when the app is restarted. Only if it is still
-                    // the change on show, though - a newer one has a write of its own coming, and its own answer.
-                    _dataState.update { if (it.data == latestData) DataState.Failure(latestData) else it }
-                }
-            }
-        }
     }
 
     private suspend fun read(): T? = try {

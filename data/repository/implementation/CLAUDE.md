@@ -50,7 +50,10 @@ and updates the one cached entry (`updateData`, which takes a transform of the c
 so a save landing during a rescan cannot overwrite what the rescan found). The cached lists are in no particular order
 — a scan leaves them by file name, a write moves its item to the end — and ordering them is the domain layer's
 business. The two lists share those transforms through `base/LibraryListRepository` (`putInCache`, `replaceInCache`,
-`dropFromCache`, `keepOnlyInCache`). Only the preferences are persisted as a whole (`writeData`). What `writeData` publishes is `Idle` from the
+`dropFromCache`, `keepOnlyInCache`). Only the preferences are persisted as a whole (`writeData`), through
+`base/WholeDocumentRepository`, the subclass `UserPreferencesRepositoryImpl` extends and the list repositories do not,
+so neither can replace its cached library with a list of its own making; the base gives it `currentState` and
+`updateState` rather than its state flow, and `WholeDocumentRepositoryTest` covers the writes. What `writeData` publishes is `Idle` from the
 first moment, never a `Loading` the write then resolves: the data being written is already what every reader should
 show, and it stays that way even when the write fails, while a `Loading` would tell whoever reads this state for
 "nothing has been read yet" exactly that — for as long as the storage takes to answer. The publish also comes before
