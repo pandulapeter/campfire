@@ -96,8 +96,11 @@ val toolchainLauncher: Provider<JavaLauncher> = if (isJetBrainsRuntimeMissing) {
  * shipping a window that keeps the system's title bar and draws its buttons for the wrong theme.
  */
 tasks.matching { it.name.startsWith("createRelease") || it.name.startsWith("packageRelease") || it.name == "runRelease" }.configureEach {
+    // Copied into a local, as every script-level value a task action reads is: the configuration cache stores the
+    // action, and cannot store the build script it would otherwise reach the value through.
+    val runtimeMissing = isJetBrainsRuntimeMissing
     doFirst {
-        if (isJetBrainsRuntimeMissing) {
+        if (runtimeMissing) {
             throw GradleException("$path is a release build, which has to bundle the JetBrains Runtime, and none was found.")
         }
     }
@@ -259,7 +262,7 @@ tasks.withType<AbstractJLinkTask>().configureEach {
  * `doLast` of the image's own task, so the libraries are already there when `recordClassDataArchive` trains it.
  */
 tasks.matching { isWindowsHost && it.name == "createReleaseDistributable" }.configureEach {
-    val libraries = angleRuntime
+    val libraries = files(angleRuntime)
     val appDirectory = layout.buildDirectory.dir("compose/binaries/main-release/app/Campfire/app")
     inputs.files(libraries)
     doLast {
@@ -297,7 +300,8 @@ tasks.matching { isWindowsHost && it.name == "createReleaseDistributable" }.conf
  * the one build that runs on Apple silicon alone, where the start is already under a second.
  */
 val recordClassDataArchive = tasks.register<RecordClassDataArchive>("recordClassDataArchive") {
-    onlyIf { isWindowsHost || isLinuxHost }
+    val trainsOnThisHost = isWindowsHost || isLinuxHost
+    onlyIf { trainsOnThisHost }
     dependsOn("createReleaseDistributable")
     doNotTrackState("Edits the release app image in place")
     appImage = layout.buildDirectory.dir("compose/binaries/main-release/app/Campfire")
@@ -316,7 +320,8 @@ tasks.matching { it.name == "packageReleaseDeb" || it.name == "packageReleaseMsi
  * `:app:desktop`'s entry point sets the toolkit's app class name to; the two have to agree.
  */
 val addStartupWmClassToDeb = tasks.register<AddStartupWmClassToDeb>("addStartupWmClassToDeb") {
-    onlyIf { isLinuxHost }
+    val linux = isLinuxHost
+    onlyIf { linux }
     val packages = fileTree(layout.buildDirectory.dir("compose/binaries")) { include("main/deb/*.deb", "main-release/deb/*.deb") }
     this.packages.from(packages)
     windowClassName = "Campfire"
@@ -338,7 +343,8 @@ tasks.matching { it.name == "packageDeb" || it.name == "packageReleaseDeb" }.con
  * what it edits fails that build rather than letting an installer out without it.
  */
 val addLaunchAfterInstallToMsi = tasks.register<AddLaunchAfterInstallToMsi>("addLaunchAfterInstallToMsi") {
-    onlyIf { isWindowsHost }
+    val windows = isWindowsHost
+    onlyIf { windows }
     val packages = fileTree(layout.buildDirectory.dir("compose/binaries")) { include("main/msi/*.msi", "main-release/msi/*.msi") }
     this.packages.from(packages)
     script = project.file("add-launch-after-install.ps1")

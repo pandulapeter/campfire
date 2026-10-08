@@ -547,6 +547,12 @@ localized in both languages.
   which is why `publish-ios.yml` raises the daemon's heap, and the shared Kotlin daemon ran out of memory with one
   compilation per core, which is why `org.gradle.workers.max` is 4; lower it rather than turning parallel off. CI caches Gradle with `gradle/actions/setup-gradle`, the
   cache written by runs on the default branch and read by every other.
+- **The configuration cache is on** (`org.gradle.configuration-cache`): a build whose scripts and inputs have not
+  changed (`local.properties` included, which `settings.gradle.kts` reads) skips configuring the twenty projects. A
+  task action may capture only locals, providers and file collections, never a script-level `val` or function, which
+  the cache cannot store — copy the value into a local outside the action, as `app/desktop/build.gradle.kts` does. No
+  plugin the build applies reports a problem with it today; one that does gets
+  `notCompatibleWithConfigurationCache("<why>")` on its tasks rather than the cache turned off or set to warn.
 - **Everything configurable is a `campfire.*` Gradle property**, declared with a default in `gradle.properties` and
   read with `project.property("campfire.x")`: the app version and the build number, the
   Android release signing values, the Dropbox app key, the Mac App Store
