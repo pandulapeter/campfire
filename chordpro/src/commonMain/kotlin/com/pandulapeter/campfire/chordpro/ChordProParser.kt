@@ -11,7 +11,6 @@ package com.pandulapeter.campfire.chordpro
 
 import com.pandulapeter.campfire.chordpro.ChordProVocabulary.ANNOTATION_MARKER
 import com.pandulapeter.campfire.chordpro.ChordProVocabulary.GRID
-import com.pandulapeter.campfire.chordpro.ChordProVocabulary.SOURCE_COMMENT
 import com.pandulapeter.campfire.chordpro.ChordProVocabulary.TAB
 import com.pandulapeter.campfire.chordpro.ChordProVocabulary.TRANSPOSE
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
@@ -51,14 +50,12 @@ object ChordProParser {
         val section = SectionBuilder(blocks)
         val transposition = Transposition()
         val timing = TimingChanges()
-        ChordProLines.splitLines(text).forEach { rawLine ->
-            val trimmedLine = rawLine.trim()
-            // Inside an environment handed to another program a `#` and a brace are that program's syntax.
-            if (trimmedLine.startsWith(SOURCE_COMMENT) && !section.isDelegated) return@forEach
-            val directive = if (section.isDelegated) ChordProDirectives.matchDelegatedDirective(trimmedLine) else ChordProDirectives.matchDirective(trimmedLine)
+        ChordProLineScanner.scan(text).forEach { line ->
+            if (line.isSourceComment) return@forEach
+            val directive = line.directive
             if (directive == null) {
-                if (trimmedLine.isNotEmpty()) transposition.startBody()
-                section.addContent(rawLine, trimmedLine)
+                if (line.trimmed.isNotEmpty()) transposition.startBody()
+                section.addContent(line.raw, line.trimmed)
             } else {
                 handleDirective(directive, metadata, blocks, section, transposition, timing)
             }
