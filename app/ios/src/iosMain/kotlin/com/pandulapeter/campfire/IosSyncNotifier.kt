@@ -12,11 +12,10 @@ package com.pandulapeter.campfire
 import com.pandulapeter.campfire.data.model.domain.SyncProgress
 import com.pandulapeter.campfire.data.model.domain.SyncState
 import com.pandulapeter.campfire.presentation.ui.platform.SyncNotification
+import com.pandulapeter.campfire.presentation.ui.platform.SyncNotificationScheduler
 import com.pandulapeter.campfire.presentation.ui.platform.SyncNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.withSyncCounts
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -68,8 +67,14 @@ class IosSyncNotifier(
     private var words: SyncNotification? = null
     private var progress: SyncProgress? = null
     private var isInBackground = false
-    private var notificationUpdateJob: Job? = null
-    private var backgroundTaskEndJob: Job? = null
+    private val scheduler = SyncNotificationScheduler(
+        scope = scope,
+        updateInterval = 1.seconds,
+        handoverGrace = 2.seconds,
+        postUpdate = ::updateNotification,
+        release = ::endBackgroundTask,
+        isRunGoing = { progress != null },
+    )
 
     /**
      * Takes down whatever the last launch left behind.
@@ -98,7 +103,7 @@ class IosSyncNotifier(
             queue = NSOperationQueue.mainQueue,
         ) { _ ->
             isInBackground = false
-            cancelNotificationUpdate()
+            scheduler.cancelUpdate()
             removeNotification()
         }
         scope.launch {
@@ -128,17 +133,16 @@ class IosSyncNotifier(
         val wasPreparing = progress?.isPreparing != false
         progress = newProgress
         if (newProgress == null) {
-            cancelNotificationUpdate()
+            scheduler.cancelUpdate()
             removeNotification()
             scheduleBackgroundTaskEnd()
         } else {
-            backgroundTaskEndJob?.cancel()
-            backgroundTaskEndJob = null
+            scheduler.cancelRelease()
             // From the state rather than from a frame, so the time is asked for even when the app leaves before the run
             // has been drawn once.
             beginBackgroundTask()
             if (isInBackground) {
-                scheduleNotificationUpdate(isCountingStarted = wasPreparing && !newProgress.isPreparing)
+                scheduler.requestUpdate(immediately = wasPreparing && !newProgress.isPreparing)
             }
         }
     }
@@ -160,46 +164,17 @@ class IosSyncNotifier(
     }
 
     /**
-     * Gives the background task back [RUN_HANDOVER_GRACE] after a run ends rather than at once. A run asked for while
-     * another one was going starts within milliseconds of that one ending, and an app in the background whose task
-     * had just been ended would be suspended before its progress reached this notifier - the run carrying the user's
-     * latest change frozen in its first request. A run that starts within the grace cancels it, and keeps the task.
+     * Gives the background task back after the scheduler's handover grace rather than at once, for a run chained behind
+     * this one to start in (see [SyncNotificationScheduler.scheduleRelease]). Only a task this notifier began.
      */
     private fun scheduleBackgroundTaskEnd() {
-        if (backgroundTask == UIBackgroundTaskInvalid || backgroundTaskEndJob?.isActive == true) return
-        backgroundTaskEndJob = scope.launch {
-            delay(RUN_HANDOVER_GRACE)
-            if (progress == null) endBackgroundTask()
-        }
+        if (backgroundTask != UIBackgroundTaskInvalid) scheduler.scheduleRelease()
     }
 
     private fun endBackgroundTask() {
         if (backgroundTask == UIBackgroundTaskInvalid) return
         UIApplication.sharedApplication.endBackgroundTask(backgroundTask)
         backgroundTask = UIBackgroundTaskInvalid
-    }
-
-    /**
-     * Posts the latest counts at most once per [NOTIFICATION_UPDATE_INTERVAL], from one delayed job that reads them
-     * when it fires: a run finishes several files a second, and a job that only skipped updates inside the interval
-     * would leave the count where the last burst stopped. The step from preparing to counting goes out at once, as it
-     * changes what the notification says rather than one of its numbers.
-     */
-    private fun scheduleNotificationUpdate(isCountingStarted: Boolean) {
-        if (isCountingStarted) {
-            cancelNotificationUpdate()
-            updateNotification()
-        } else if (notificationUpdateJob?.isActive != true) {
-            notificationUpdateJob = scope.launch {
-                delay(NOTIFICATION_UPDATE_INTERVAL)
-                updateNotification()
-            }
-        }
-    }
-
-    private fun cancelNotificationUpdate() {
-        notificationUpdateJob?.cancel()
-        notificationUpdateJob = null
     }
 
     /**
@@ -238,10 +213,5 @@ class IosSyncNotifier(
     private companion object {
         /** Fixed, so that each update replaces the previous notification instead of stacking another one up. */
         const val NOTIFICATION_ID = "sync"
-
-        val NOTIFICATION_UPDATE_INTERVAL = 1.seconds
-
-        /** How long the background task outlives a run, for the one chained behind it to start in. */
-        val RUN_HANDOVER_GRACE = 2.seconds
     }
 }
