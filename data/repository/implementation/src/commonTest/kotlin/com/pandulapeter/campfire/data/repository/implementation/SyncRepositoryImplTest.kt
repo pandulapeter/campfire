@@ -31,11 +31,13 @@ import com.pandulapeter.campfire.data.repository.implementation.sync.FakeUserPre
 import com.pandulapeter.campfire.data.repository.implementation.sync.NoSetlistComparison
 import com.pandulapeter.campfire.data.repository.implementation.sync.RecordingSetlistRepository
 import com.pandulapeter.campfire.data.repository.implementation.sync.RecordingSongRepository
+import com.pandulapeter.campfire.data.repository.implementation.sync.RunCounter
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncIndexDocument
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncIndexEntry
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncIndexStore
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncKey
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncLibraryRefresher
+import com.pandulapeter.campfire.data.repository.implementation.sync.SyncRunScheduler
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncRunner
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncStateHolder
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncedPreferencesSync
@@ -1146,6 +1148,20 @@ class SyncRepositoryImplTest {
         val stateHolder = SyncStateHolder()
         val indexStore = SyncIndexStore(stateLocalSource, environment)
         val syncedPreferencesSync = SyncedPreferencesSync(userPreferencesRepository, libraryFileLocalSource)
+        val runner = SyncRunner(
+            syncProviders = syncProviders,
+            engine = DataRepositoryModule.syncEngine(
+                libraryFileLocalSource = libraryFileLocalSource,
+                libraryFileLock = LibraryFileLock(),
+                setlistComparison = NoSetlistComparison,
+                userPreferencesRepository = userPreferencesRepository,
+            ),
+            syncedPreferencesSync = syncedPreferencesSync,
+            indexStore = indexStore,
+            libraryRefresher = SyncLibraryRefresher(songRepository, setlistRepository, environment),
+            stateHolder = stateHolder,
+            environment = environment,
+        )
         return SyncRepositoryImpl(
             syncProviders = syncProviders,
             authenticator = authenticator,
@@ -1153,37 +1169,16 @@ class SyncRepositoryImplTest {
             syncIndexLocalSource = stateLocalSource,
             stateHolder = stateHolder,
             indexStore = indexStore,
-            runner = SyncRunner(
-                syncProviders = syncProviders,
-                engine = DataRepositoryModule.syncEngine(
-                    libraryFileLocalSource = libraryFileLocalSource,
-                    libraryFileLock = LibraryFileLock(),
-                    setlistComparison = NoSetlistComparison,
-                    userPreferencesRepository = userPreferencesRepository,
-                ),
-                syncedPreferencesSync = syncedPreferencesSync,
-                indexStore = indexStore,
-                libraryRefresher = SyncLibraryRefresher(songRepository, setlistRepository, environment),
+            runner = runner,
+            scheduler = SyncRunScheduler(
+                runner = runner,
                 stateHolder = stateHolder,
+                libraryChanges = LibraryChanges(),
+                syncedPreferencesSync = syncedPreferencesSync,
                 environment = environment,
             ),
-            syncedPreferencesSync = syncedPreferencesSync,
-            libraryChanges = LibraryChanges(),
             environment = environment,
         )
-    }
-
-    /** Counts the runs by their opening index write, the one that marks a run as going in an index that said none was. */
-    private class RunCounter {
-        var count = 0
-            private set
-        private var isRunning = false
-
-        fun onSaveIndex(document: String?) {
-            val isMarkedAsRunning = document != null && "\"isRunInProgress\": true" in document
-            if (isMarkedAsRunning && !isRunning) count++
-            isRunning = isMarkedAsRunning
-        }
     }
 
     /** Waits for the state a run reports at its end; a run that never reports is failed by `runTest`'s own timeout. */

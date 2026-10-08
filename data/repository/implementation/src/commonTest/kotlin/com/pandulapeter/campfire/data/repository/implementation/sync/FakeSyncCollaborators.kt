@@ -290,3 +290,16 @@ internal fun defaultUserPreferences(
     tagSortingMode = UserPreferences.LabelSortingMode.BY_USAGE,
     languageSortingMode = UserPreferences.LabelSortingMode.BY_USAGE,
 )
+
+/** Counts the runs by their opening index write, the one that marks a run as going in an index that said none was. */
+internal class RunCounter {
+    var count = 0
+        private set
+    private var isRunning = false
+
+    fun onSaveIndex(document: String?) {
+        val isMarkedAsRunning = document != null && "\"isRunInProgress\": true" in document
+        if (isMarkedAsRunning && !isRunning) count++
+        isRunning = isMarkedAsRunning
+    }
+}

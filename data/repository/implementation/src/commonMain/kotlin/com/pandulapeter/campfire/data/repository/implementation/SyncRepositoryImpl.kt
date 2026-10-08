@@ -7,14 +7,11 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-@file:OptIn(ExperimentalTime::class, ExperimentalAtomicApi::class)
-
 package com.pandulapeter.campfire.data.repository.implementation
 
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.domain.SyncFailureReason
 import com.pandulapeter.campfire.data.model.domain.SyncOutcome
-import com.pandulapeter.campfire.data.model.domain.SyncProgress
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.model.domain.SyncState
 import com.pandulapeter.campfire.data.repository.api.SyncRepository
@@ -23,10 +20,10 @@ import com.pandulapeter.campfire.data.repository.implementation.base.recovering
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncEngine
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncIndexDocument
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncIndexStore
+import com.pandulapeter.campfire.data.repository.implementation.sync.SyncRunScheduler
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncRunner
 import com.pandulapeter.campfire.data.repository.implementation.sync.toFailureReason
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncStateHolder
-import com.pandulapeter.campfire.data.repository.implementation.sync.SyncedPreferencesSync
 import com.pandulapeter.campfire.data.repository.implementation.sync.indexKey
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import com.pandulapeter.campfire.data.source.local.api.SyncIndexLocalSource
@@ -37,20 +34,10 @@ import com.pandulapeter.campfire.data.source.remote.api.SyncProviders
 import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteAuthorizationResponse
 import com.pandulapeter.campfire.data.source.remote.api.model.redirectParameters
-import kotlinx.coroutines.cancelAndJoin
-import kotlin.concurrent.atomics.AtomicReference
-import kotlin.concurrent.atomics.ExperimentalAtomicApi
-import kotlin.time.Duration.Companion.seconds
-import kotlin.time.ExperimentalTime
-import kotlin.time.TimeMark
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -73,8 +60,7 @@ internal class SyncRepositoryImpl(
     private val stateHolder: SyncStateHolder,
     private val indexStore: SyncIndexStore,
     private val runner: SyncRunner,
-    private val syncedPreferencesSync: SyncedPreferencesSync,
-    libraryChanges: LibraryChanges,
+    private val scheduler: SyncRunScheduler,
     private val environment: RepositoryEnvironment,
 ) : SyncRepository {
 
@@ -83,50 +69,18 @@ internal class SyncRepositoryImpl(
     override val availableProviders = providers.map { it.id }
 
     /**
-     * A run belongs to the app, not to whatever screen started it. This repository is a singleton, so a sync
-     * carries on while the user moves around the app, and on Android it survives the activity being destroyed -
-     * which is what lets a foreground service keep it going after the app has been left.
-     *
-     * Nothing launched here may close the app, see [RepositoryEnvironment.scopeFor]: sync is something the app does
-     * on the side.
-     */
-    private val scope = environment.scopeFor("sync")
-
-    /**
-     * The run that is going, or the last one. Swapped atomically rather than assigned: the buttons start and stop runs
-     * from the main thread, while an automatic run is started from this scope's own, and two starters that both found
-     * no run going would each start one, the second one then being the only one Stop can reach.
-     */
-    private val syncJob = AtomicReference<Job?>(null)
-
-    /** When the automatic run [scheduleSynchronization] asked for is to start, or null while none is waiting. */
-    private val scheduledRunDueAt = MutableStateFlow<TimeMark?>(null)
-
-    /**
      * Start up is asked for once per ViewModel, which on Android is once per activity rather than once per process,
      * and the second one may arrive while the first is still waiting for the service to say whose account this is.
      */
     private val restoreMutex = Mutex()
 
+    /** Nothing launched here may close the app, see [RepositoryEnvironment.scopeFor]. */
+    private val scope = environment.scopeFor("sync")
+
     private var accountRefreshJob: Job? = null
 
     /** The failed connection a [connect] started from, which backing out of it returns to, see [stateAfterBackingOut]. */
     private var stateBeforeConnecting: SyncState? = null
-
-    init {
-        scope.launch { libraryChanges.changes.collect { scheduleSynchronization() } }
-        scope.launch { syncedPreferencesSync.localChanges.collect { scheduleSynchronization() } }
-        // collectLatest is the debounce: a request that arrives while the previous one is still waiting, or still waiting
-        // for a run to end, moves the start instead of adding a second run.
-        scope.launch {
-            scheduledRunDueAt.collectLatest { dueAt ->
-                if (dueAt == null) return@collectLatest
-                delay(-dueAt.elapsedNow())
-                syncJob.load()?.join()
-                if (scheduledRunDueAt.compareAndSet(dueAt, null)) startRun(SyncDeletionPolicy.ASK, isAutomatic = true)
-            }
-        }
-    }
 
     override suspend fun restore() = restoreMutex.withLock { restoreConnection() }
 
@@ -304,8 +258,7 @@ internal class SyncRepositoryImpl(
         accountRefreshJob?.cancel()
         // A run that is still going would carry on against an account that is gone, fail, and report that failure
         // onto an account the user just disconnected.
-        scheduledRunDueAt.value = null
-        syncJob.exchange(null)?.cancelAndJoin()
+        scheduler.stopForDisconnect()
         withContext(NonCancellable) {
             providers.forEach { provider ->
                 // Asked inside the try, so that credentials that cannot be read right now still end in a disconnect.
@@ -316,7 +269,7 @@ internal class SyncRepositoryImpl(
             }
             // The index describes a remote folder this device is no longer looking at. Kept, and it would read that
             // folder's every file as a deletion the next time something connects. Under the run lock, because a run
-            // that was stopped a moment ago is not in syncJob any more and may still be writing the index on its way
+            // that was stopped a moment ago is not in the scheduler's syncJob any more and may still be writing the index on its way
             // out; no new one can slip in, since the providers above no longer say they are connected.
             runner.withRunLock {
                 indexStore.clear()
@@ -362,77 +315,13 @@ internal class SyncRepositoryImpl(
     private inline fun quietly(action: String, block: () -> Unit) =
         recovering(describe = { "Could not $action: ${it::class.simpleName}" }, fallback = {}, block = block)
 
-    /**
-     * Starts a run and returns; what it is doing and how it ended arrive through [syncState]. Fire and forget
-     * because the run outlives whoever asked for it - the screen that started it may be gone long before it
-     * finishes, and on Android the activity may be too.
-     *
-     * The policy belongs to this one run rather than to the state: an answer to "delete them here too?" is an answer
-     * about the files that were gone when it was asked, not a setting every later run should inherit.
-     */
-    override fun synchronize(deletionPolicy: SyncDeletionPolicy) = startRun(deletionPolicy).also { isStarted ->
-        // The run starts after every change an automatic one is waiting for, so it carries them too.
-        if (isStarted) scheduledRunDueAt.value = null
-    }
+    override fun synchronize(deletionPolicy: SyncDeletionPolicy) = scheduler.synchronize(deletionPolicy)
 
-    override fun scheduleSynchronization() {
-        if (stateHolder.value !is SyncState.Connected) return
-        scheduledRunDueAt.value = environment.timeSource.markNow() + AUTOMATIC_RUN_DELAY
-    }
+    override fun scheduleSynchronization() = scheduler.schedule()
 
-    override fun startScheduledSynchronization(): SyncProgress? {
-        val dueAt = scheduledRunDueAt.value
-        when {
-            dueAt == null -> Unit
-            // The debounce chains the waiting run right behind the one that is going, as it would have in ten seconds.
-            syncJob.load()?.isActive == true -> scheduledRunDueAt.compareAndSet(dueAt, environment.timeSource.markNow())
-            // Started here rather than left to the debounce, which would start it on another thread a moment later:
-            // the caller is the app leaving the front, and it can only hand a run to the platform's keep-alive while
-            // it still is in front - which is what the progress this returns is for.
-            scheduledRunDueAt.compareAndSet(dueAt, null) -> if (!startRun(SyncDeletionPolicy.ASK, isAutomatic = true)) {
-                // A run started on another thread in between, and the one asked for now follows it.
-                scheduledRunDueAt.compareAndSet(null, environment.timeSource.markNow())
-            }
-        }
-        return (stateHolder.value as? SyncState.Connected)?.progress
-    }
+    override fun startScheduledSynchronization() = scheduler.startScheduled()
 
-    /** Stops a run where it is. What has already moved stays moved, and the next run picks up from there. */
-    override fun cancelSynchronization() {
-        scheduledRunDueAt.value = null
-        syncJob.exchange(null)?.cancel()
-    }
-
-    /**
-     * Starts a run unless one is going, and answers whether it did.
-     *
-     * @param isAutomatic Whether nobody asked for this run - the one [scheduleSynchronization] waits to start. It is
-     *   written into the index's marker, see [SyncIndexDocument.isAutomaticRunInProgress].
-     */
-    private fun startRun(deletionPolicy: SyncDeletionPolicy, isAutomatic: Boolean = false): Boolean {
-        val current = syncJob.load()
-        if (current?.isActive == true) return false
-        // Lazy, so that a run that lost the race below is dropped before it has done anything.
-        val run = scope.launch(start = CoroutineStart.LAZY) { runner.run(deletionPolicy, isAutomatic) }
-        if (!syncJob.compareAndSet(current, run)) {
-            run.cancel()
-            return false
-        }
-        // Shown before the run gets to the thread it runs on, so that the state says a run is going by the time this
-        // returns: see startScheduledSynchronization for the caller that depends on it. The run puts the same value
-        // there again once it holds the lock, and clears it on every way out of its body - and the handler clears it
-        // for a run that is cancelled before its body clears anything, waiting for the lock or not started yet.
-        stateHolder.updateConnected { it.copy(progress = SyncProgress(), lastOutcome = null) }
-        run.invokeOnCompletion { cause ->
-            if (cause == null) return@invokeOnCompletion
-            val current = syncJob.load()
-            if (current == null || current === run || !current.isActive) {
-                stateHolder.updateConnected { if (it.progress == null) it else it.copy(progress = null) }
-            }
-        }
-        run.start()
-        return true
-    }
+    override fun cancelSynchronization() = scheduler.cancel()
 
     /**
      * Asks the service who the account is behind a start up that has already shown what was stored. The answer only
@@ -555,9 +444,6 @@ internal class SyncRepositoryImpl(
     ) { provider.forgetStoredCredentials() }
 
     private companion object {
-        /** How long the library has to stay unchanged before an automatic run starts, see [scheduleSynchronization]. */
-        val AUTOMATIC_RUN_DELAY = 10.seconds
-
         val disconnectedResult = SyncRepository.RestoreResult(
             isConnected = false,
             didReturnFromAuthorization = false,
