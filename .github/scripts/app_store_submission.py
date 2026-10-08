@@ -36,7 +36,8 @@ Uses the App Store Connect API the way app_store_signing.py does, and the same e
 import sys
 import time
 
-from app_store_signing import awaiting_versions, fail, request
+from app_store_signing import awaiting_versions, request
+from store_http import fail
 
 # The states in which a version still takes a build, notes and a submission. READY_FOR_REVIEW is a version added to a
 # review submission that has not been submitted yet, which is what "Add for Review" in App Store Connect leaves behind.
