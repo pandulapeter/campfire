@@ -1,24 +1,16 @@
-/*
- * This file is part of Campfire.
- * Copyright (c) Pandula Péter 2017-2026.
- * https://github.com/pandulapeter/campfire
- *
- * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
- * If a copy of the MPL was not distributed with this file, You can obtain one at
- * https://mozilla.org/MPL/2.0/.
- */
 package com.pandulapeter.campfire
 
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.awt.ComposeWindow
 import androidx.compose.ui.awt.SwingWindow
@@ -49,17 +41,10 @@ import java.awt.Toolkit
 import java.awt.event.WindowEvent
 import java.awt.event.WindowFocusListener
 import java.io.File
-import java.lang.management.ManagementFactory
-import java.time.Duration
-import java.time.Instant
 import javax.swing.SwingUtilities
 import kotlin.system.exitProcess
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeoutOrNull
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
@@ -69,21 +54,7 @@ import org.koin.compose.viewmodel.koinViewModel
  */
 @OptIn(ExperimentalComposeUiApi::class)
 fun main(args: Array<String>) {
-    // A Gradle or IDE run has no Campfire.app bundle, so macOS would use the Java launcher or this main class as
-    // the application name. AWT reads this once when it first starts, for both the menu bar and app switcher.
-    System.setProperty("apple.awt.application.name", "Campfire")
-    // The JDK gives the application the light Aqua appearance whatever the system's is. The window follows the app's
-    // own theme (TitleBarAppearance), but only once the preferences are read; until then the system's is the better
-    // guess, and it is read once, like the name.
-    System.setProperty("apple.awt.application.appearance", "system")
-    // Compose's own set-up, which application() would only do later, has to come before anything that starts the
-    // AWT toolkit: on Linux it is what puts the display's scale into sun.java2d.uiScale, which the toolkit reads once,
-    // when it starts. Behind the same property application() checks, so that this is the same decision made earlier
-    // rather than a second one (application() calling it again is harmless - the library loads once).
-    if (System.getProperty("compose.application.configure.swing.globals") == "true") configureSwingGlobalsForCompose()
-    // After Compose's set-up and before the first window, since the toolkit reads the name when that window is
-    // created - and asking for the toolkit is what starts it.
-    setLinuxWindowClassName()
+    configureBeforeToolkit()
     val activations = Channel<Unit>(Channel.CONFLATED)
     val isFirstInstance = claimSingleInstance(
         dataDirectory = desktopDataDirectory(),
@@ -134,27 +105,7 @@ fun main(args: Array<String>) {
         // Closing the window leaves the editor as surely as Escape does, so it asks about unsaved text the same way,
         // and it waits for a save that is still being written, since exitApplication ends the process.
         val requestExit = { viewModel.value?.requestExit(exit) ?: exit() }
-        // Quitting from the macOS application menu or with Cmd+Q never reaches onCloseRequest: without a handler of
-        // its own the JDK answers it with System.exit. The request is kept and answered once the editor's unsaved
-        // text has been dealt with - performQuit lets the logout, restart or shut down that asked carry on, and
-        // cancelQuit is said only where the user actually chose to stay. Cancelling it up front would be
-        // NSTerminateCancel, which aborts the whole sequence and has macOS report that Campfire interrupted it, with
-        // nothing unsaved anywhere.
-        DisposableEffect(Unit) {
-            val desktop = if (Desktop.isDesktopSupported()) Desktop.getDesktop().takeIf { it.isSupported(Desktop.Action.APP_QUIT_HANDLER) } else null
-            desktop?.setQuitHandler { _, response ->
-                // The handler returns before anything is decided: what follows waits for a save, and may put a
-                // dialog on screen.
-                SwingUtilities.invokeLater {
-                    // The process ends with the system's reply rather than with exitApplication, after the same wait
-                    // for an import and for sync as `exit`. A logout or shut down that asked waits for it, which is
-                    // seconds at most but can reach the bounds of both waits together on a stalled disk or network.
-                    val performQuit = { leave(response::performQuit) }
-                    viewModel.value?.requestExit(onExit = performQuit, onCancelled = response::cancelQuit) ?: performQuit()
-                }
-            }
-            onDispose { desktop?.setQuitHandler(null) }
-        }
+        MacQuitHandlerEffect(viewModel = viewModel, leave = leave)
         // Set before the window is shown, which the content cannot do (see extendContentIntoTitleBar).
         var titleBar by remember { mutableStateOf<ExtendedTitleBar?>(null) }
         // Window itself, with a hook for the window before it is shown.
@@ -168,60 +119,9 @@ fun main(args: Array<String>) {
             onKeyEvent = { keyEvent -> viewModel.value?.handleKeyEvent(keyEvent, onExit = exit) == true },
             init = { window -> titleBar = window.extendContentIntoTitleBar() },
         ) {
-            DisposableEffect(window) {
-                window.fitSizeToScreen(windowState)
-                onDispose { }
-            }
-            DisposableEffect(window) {
-                val focusListener = object : WindowFocusListener {
-                    override fun windowGainedFocus(event: WindowEvent) = Unit
-                    override fun windowLostFocus(event: WindowEvent) = resetEscapeKey()
-                }
-                window.addWindowFocusListener(focusListener)
-                onDispose { window.removeWindowFocusListener(focusListener) }
-            }
-            // A pinch on a Mac's trackpad resizes the text of a song, or zooms the page of the PDF preview, the way
-            // Ctrl / Cmd + scroll does, which is what Windows makes of a pinch on its touchpads and so needs nothing of
-            // its own.
-            DisposableEffect(window) {
-                val stopListening = window.listenForTouchpadMagnification { factor -> viewModel.value?.magnifyByTouchpad(factor) }
-                onDispose { stopListening?.invoke() }
-            }
-            // A finger on a Windows or Linux touchscreen drags and flings the way it does on a phone.
-            DisposableEffect(window) {
-                val stopTranslating = window.translateTouchScreenInput()
-                onDispose { stopTranslating() }
-            }
-            // One line a desktop bug report can be read by: how the window is drawn, on what, and how long the start took.
-            LaunchedEffect(window) {
-                withFrameNanos { }
-                val sinceStart = ProcessHandle.current().info().startInstant().map { Duration.between(it, Instant.now()).toMillis() }
-                // A Swing component's state, so read on the event thread rather than inside the IO block below.
-                val renderApi = window.renderApi
-                withContext(Dispatchers.IO) {
-                    val runtime = Runtime.getRuntime()
-                    println(
-                        "Started in ${sinceStart.map { "$it ms" }.orElse("an unknown time")}: $renderApi rendering, " +
-                            "Java ${System.getProperty("java.runtime.version")} (${System.getProperty("java.vm.info")}), " +
-                            "${ManagementFactory.getGarbageCollectorMXBeans().joinToString { it.name }}, " +
-                            "${runtime.availableProcessors()} processors, ${runtime.maxMemory() / (1024 * 1024)} MB heap at most",
-                    )
-                }
-            }
-            if (isTrainingRun) {
-                LaunchedEffect(Unit) {
-                    val data = desktopDataDirectory()
-                    // The demo library being written means Koin started, the preferences were read and the songs scanned.
-                    while (!File(data, "preferences/preferences.json").isFile ||
-                        File(data, "library/songs").listFiles { file -> file.extension == "cho" }.isNullOrEmpty()
-                    ) delay(100)
-                    // Enough frames for the song cards, the welcome sheet and their animations to have been composed and
-                    // drawn - bounded in time too, so a session that produces no frames still ends normally (and so still
-                    // writes the archive) instead of being killed by the build's timeout.
-                    withTimeoutOrNull(15_000) { repeat(120) { withFrameNanos { } } }
-                    exit()
-                }
-            }
+            WindowInputEffects(window = window, windowState = windowState, viewModel = viewModel)
+            StartupLogEffect(window = window)
+            TrainingRunEffect(exit = exit)
             // Another process was asked to open Campfire and handed over to this one, so this is the window the
             // user is looking for.
             LaunchedEffect(Unit) {
@@ -252,10 +152,87 @@ fun main(args: Array<String>) {
 }
 
 /**
- * Set by the build's training run (`recordClassDataArchive`), which needs the process to end on its own: a killed JVM
- * writes no archive.
+ * What has to be set before anything starts the AWT toolkit, which reads each of these once, when it starts.
  */
-private val isTrainingRun = System.getProperty("campfire.trainingRun") == "true"
+@OptIn(ExperimentalComposeUiApi::class)
+private fun configureBeforeToolkit() {
+    // A Gradle or IDE run has no Campfire.app bundle, so macOS would use the Java launcher or this main class as
+    // the application name. AWT reads this once when it first starts, for both the menu bar and app switcher.
+    System.setProperty("apple.awt.application.name", "Campfire")
+    // The JDK gives the application the light Aqua appearance whatever the system's is. The window follows the app's
+    // own theme (TitleBarAppearance), but only once the preferences are read; until then the system's is the better
+    // guess, and it is read once, like the name.
+    System.setProperty("apple.awt.application.appearance", "system")
+    // Compose's own set-up, which application() would only do later, has to come before anything that starts the
+    // AWT toolkit: on Linux it is what puts the display's scale into sun.java2d.uiScale, which the toolkit reads once,
+    // when it starts. Behind the same property application() checks, so that this is the same decision made earlier
+    // rather than a second one (application() calling it again is harmless - the library loads once).
+    if (System.getProperty("compose.application.configure.swing.globals") == "true") configureSwingGlobalsForCompose()
+    // After Compose's set-up and before the first window, since the toolkit reads the name when that window is
+    // created - and asking for the toolkit is what starts it.
+    setLinuxWindowClassName()
+}
+
+/**
+ * Quitting from the macOS application menu or with Cmd+Q never reaches onCloseRequest: without a handler of its own the
+ * JDK answers it with System.exit. The request is kept and answered once the editor's unsaved text has been dealt with -
+ * performQuit lets the logout, restart or shut down that asked carry on, and cancelQuit is said only where the user
+ * actually chose to stay. Cancelling it up front would be NSTerminateCancel, which aborts the whole sequence and has
+ * macOS report that Campfire interrupted it, with nothing unsaved anywhere.
+ */
+@Composable
+private fun MacQuitHandlerEffect(
+    viewModel: State<CampfireViewModel?>,
+    leave: (end: () -> Unit) -> Unit,
+) {
+    DisposableEffect(Unit) {
+        val desktop = if (Desktop.isDesktopSupported()) Desktop.getDesktop().takeIf { it.isSupported(Desktop.Action.APP_QUIT_HANDLER) } else null
+        desktop?.setQuitHandler { _, response ->
+            // The handler returns before anything is decided: what follows waits for a save, and may put a
+            // dialog on screen.
+            SwingUtilities.invokeLater {
+                // The process ends with the system's reply rather than with exitApplication, after the same wait
+                // for an import and for sync as `exit`. A logout or shut down that asked waits for it, which is
+                // seconds at most but can reach the bounds of both waits together on a stalled disk or network.
+                val performQuit = { leave(response::performQuit) }
+                viewModel.value?.requestExit(onExit = performQuit, onCancelled = response::cancelQuit) ?: performQuit()
+            }
+        }
+        onDispose { desktop?.setQuitHandler(null) }
+    }
+}
+
+@Composable
+private fun WindowInputEffects(
+    window: ComposeWindow,
+    windowState: WindowState,
+    viewModel: State<CampfireViewModel?>,
+) {
+    DisposableEffect(window) {
+        window.fitSizeToScreen(windowState)
+        onDispose { }
+    }
+    DisposableEffect(window) {
+        val focusListener = object : WindowFocusListener {
+            override fun windowGainedFocus(event: WindowEvent) = Unit
+            override fun windowLostFocus(event: WindowEvent) = resetEscapeKey()
+        }
+        window.addWindowFocusListener(focusListener)
+        onDispose { window.removeWindowFocusListener(focusListener) }
+    }
+    // A pinch on a Mac's trackpad resizes the text of a song, or zooms the page of the PDF preview, the way
+    // Ctrl / Cmd + scroll does, which is what Windows makes of a pinch on its touchpads and so needs nothing of
+    // its own.
+    DisposableEffect(window) {
+        val stopListening = window.listenForTouchpadMagnification { factor -> viewModel.value?.magnifyByTouchpad(factor) }
+        onDispose { stopListening?.invoke() }
+    }
+    // A finger on a Windows or Linux touchscreen drags and flings the way it does on a phone.
+    DisposableEffect(window) {
+        val stopTranslating = window.translateTouchScreenInput()
+        onDispose { stopTranslating() }
+    }
+}
 
 /**
  * The initial size is in AWT's units, which are the scaled ones the platform's dp map to, so it looks the same at any

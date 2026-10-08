@@ -280,7 +280,7 @@ tasks.matching { isWindowsHost && it.name == "createReleaseDistributable" }.conf
  * most of the time it takes to show the library. With this archive nearly all of them are mapped instead.
  *
  * The archive is recorded once, here, by a training run of the image (`-XX:ArchiveClassesAtExit`) that the app ends
- * by itself once the demo library is on screen (`campfire.trainingRun` in `CampfireDesktopApplication.kt`), since a
+ * by itself once the demo library is on screen (`campfire.trainingRun` in `TrainingRun.kt`), since a
  * killed JVM writes nothing. It is shipped inside the image, so the package installs and removes it with everything
  * else, and it is recorded again with every image: the JVM checks the jar's size and the base archive it was recorded
  * on, so an archive written for other jars is never used - it prints a warning and starts without it, as it does on
