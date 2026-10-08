@@ -149,60 +149,28 @@ jobs:
           echo "path=$PACKAGE" >> "$GITHUB_OUTPUT"
           echo "identity=$IDENTITY" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION_NAME.0" >> "$GITHUB_OUTPUT"
-      # ProGuard breaks an application in ways that only starting it shows - a VerifyError on the first frame is how
-      # the last one looked - so the app image the package was made of is started once before anything is submitted.
-      # The demo library appearing in an empty data directory proves that Koin started, the window composed and the
-      # library was written; the process still being there a while later proves the first frames did not kill it. The
-      # app writes everything it prints to campfire.log in the data directory, which is read for an exception the way
-      # the Linux and macOS legs read theirs. The classes it loads are logged too, and most of them have to come from the
-      # archive the packaging recorded: a start that does not map it is as slow as one without it, and says so only in
-      # a warning.
+      # ProGuard breaks an application in ways that only starting it shows, so the app image the package was made of is
+      # started once before anything is submitted (.github/scripts/start_release_build.sh, which says what it checks).
+      # The app writes everything it prints to campfire.log in the data directory, which is read for an exception the
+      # way the Linux and macOS legs read theirs. The classes it loads are logged too, for the check of the class data
+      # sharing archive the packaging recorded.
       - name: Start the release build once
         run: |
-          APP="app/desktop/build/compose/binaries/main-release/app/Campfire/Campfire.exe"
           HOME_DIRECTORY="$RUNNER_TEMP/campfire-home"
           DATA="$HOME_DIRECTORY/AppData/Roaming/Campfire"
-          LOG="$DATA/campfire.log"
           mkdir -p "$HOME_DIRECTORY"
           # The log is a relative name, resolved against the checkout this step runs in: a drive letter's colon is a
           # separator to -Xlog.
           export JAVA_TOOL_OPTIONS="-Duser.home=$(cygpath -w "$HOME_DIRECTORY") -Xlog:class+load=info:file=class-load.txt"
           export APPDATA="$(cygpath -w "$HOME_DIRECTORY/AppData/Roaming")"
           # The runner has no GPU. Skiko would fall back to software rendering on its own, but it logs the failed
-          # attempt as a RenderException first, which the check below would take for a crash.
+          # attempt as a RenderException first, which the check would take for a crash.
           export SKIKO_RENDER_API=SOFTWARE_FAST
-          "$APP" &
-          # The launcher is not a process Git Bash can signal, so it is asked about and stopped by name.
-          is_running() {
-            tasklist //FI "IMAGENAME eq Campfire.exe" | grep -q Campfire.exe
-          }
-          stop() {
-            taskkill //F //IM Campfire.exe > /dev/null 2>&1 || true
-          }
-          fail() {
-            echo "::error::$1"
-            cat "$LOG" 2> /dev/null || true
-            stop
-            exit 1
-          }
-          for _ in $(seq 120); do
-            is_running || fail "The release build exited on its own before the library was written."
-            if [ -f "$DATA/preferences/preferences.json" ] && ls "$DATA/library/songs/"*.cho > /dev/null 2>&1; then
-              break
-            fi
-            sleep 1
-          done
-          ls "$DATA/library/songs/"*.cho > /dev/null 2>&1 || fail "The release build did not write the demo library in two minutes."
-          sleep 15
-          is_running || fail "The release build exited on its own after it had written the library."
-          grep -q "Exception" "$LOG" && fail "The release build logged an exception."
-          stop
-          cat "$LOG"
-          LOADED=$(wc -l < class-load.txt)
-          SHARED=$(grep -c 'source: shared objects file' class-load.txt || true)
-          echo "$SHARED of $LOADED classes came from the class data sharing archives."
-          [ $((SHARED * 100)) -ge $((LOADED * 80)) ] || fail "The release build did not use its class data sharing archive."
-          echo "The release build started and wrote: $(ls "$DATA/library/songs")"
+          bash .github/scripts/start_release_build.sh --windows \
+            --launcher "app/desktop/build/compose/binaries/main-release/app/Campfire/Campfire.exe" \
+            --data "$DATA" \
+            --log "$DATA/campfire.log" \
+            --class-load class-load.txt --min-shared-percent 80
       - name: Keep the package
         uses: actions/upload-artifact@v7
         with:

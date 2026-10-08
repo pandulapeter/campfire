@@ -211,15 +211,11 @@ jobs:
           fi
       # ProGuard breaks an application in ways that only starting it shows, and the sandbox can break it in more. A
       # build signed for the store does not start outside TestFlight, so a copy is signed ad hoc with the same
-      # entitlements, less the two that tie it to the App ID, which only a provisioning profile may grant. The demo
-      # library appearing in the fresh container proves that Koin started, the window composed and the library was
-      # written inside the sandbox; the process still being there a while later proves the first frames did not kill
-      # it.
+      # entitlements, less the two that tie it to the App ID, which only a provisioning profile may grant, and started
+      # in a fresh sandbox container (.github/scripts/start_release_build.sh, which says what it checks).
       - name: Start the release build once
         run: |
           COPY="$RUNNER_TEMP/Campfire.app"
-          LOG="$RUNNER_TEMP/campfire.log"
-          DATA="$HOME/Library/Containers/com.pandulapeter.campfire/Data/Library/Application Support/Campfire"
           cp -R app/desktop/build/compose/binaries/main-release/app/Campfire.app "$COPY"
           rm -f "$COPY/Contents/embedded.provisionprofile" "$COPY/Contents/runtime/Contents/embedded.provisionprofile"
           python3 - app/desktop/app-store.entitlements "$RUNNER_TEMP/local.entitlements" <<'PYTHON'
@@ -235,28 +231,11 @@ jobs:
             | xargs -0 codesign --force --sign - --options runtime --entitlements app/desktop/app-store-runtime.entitlements
           codesign --force --sign - "$COPY/Contents/runtime"
           codesign --force --sign - --options runtime --entitlements "$RUNNER_TEMP/local.entitlements" "$COPY"
-          "$COPY/Contents/MacOS/Campfire" > "$LOG" 2>&1 &
-          PID=$!
-          fail() {
-            echo "::error::$1"
-            cat "$LOG"
-            kill "$PID" 2> /dev/null || true
-            exit 1
-          }
-          for _ in $(seq 120); do
-            kill -0 "$PID" 2> /dev/null || fail "The release build exited on its own before the library was written."
-            if [ -f "$DATA/preferences/preferences.json" ] && ls "$DATA/library/songs/"*.cho > /dev/null 2>&1; then
-              break
-            fi
-            sleep 1
-          done
-          ls "$DATA/library/songs/"*.cho > /dev/null 2>&1 || fail "The release build did not write the demo library in two minutes."
-          sleep 15
-          kill -0 "$PID" 2> /dev/null || fail "The release build exited on its own after it had written the library."
-          grep -q "Exception" "$LOG" && fail "The release build logged an exception."
-          kill "$PID" 2> /dev/null || true
-          cat "$LOG"
-          echo "The release build started in the sandbox and wrote: $(ls "$DATA/library/songs")"
+          bash .github/scripts/start_release_build.sh \
+            --launcher "$COPY/Contents/MacOS/Campfire" \
+            --data "$HOME/Library/Containers/com.pandulapeter.campfire/Data/Library/Application Support/Campfire" \
+            --log "$RUNNER_TEMP/campfire.log" \
+            --started "The release build started in the sandbox"
       - name: Upload to App Store Connect
         env:
           ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}

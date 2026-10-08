@@ -93,55 +93,26 @@ jobs:
           python3 .github/scripts/write_local_properties.py campfire.dropbox.appKey=DROPBOX_APP_KEY
           SKIKO_RENDER_API=SOFTWARE_FAST xvfb-run --auto-servernum ./gradlew :app:desktop:createReleaseDistributable :app:desktop:packageReleaseDeb
           ./gradlew --stop
-      # ProGuard breaks an application in ways that only starting it shows - a VerifyError on the first frame is how
-      # the last one looked - so the app image is started once before anybody downloads the package. The demo
-      # library appearing in an empty data directory proves that Koin started, the window composed and the library
-      # was written; the process still being there a while later proves the first frames did not kill it. The classes
-      # it loads are logged too, and most of them have to come from the archive the packaging recorded: a start that
-      # does not map it is as slow as one without it, and says so only in a warning.
+      # ProGuard breaks an application in ways that only starting it shows, so the app image is started once before
+      # anybody downloads the package (.github/scripts/start_release_build.sh, which says what it checks). The classes it
+      # loads are logged too, for the check of the class data sharing archive the packaging recorded.
       - name: Start the release build once
         run: |
           APP="app/desktop/build/compose/binaries/main-release/app/Campfire/bin/Campfire"
           HOME_DIRECTORY="$RUNNER_TEMP/campfire-home"
-          DATA="$HOME_DIRECTORY/.local/share/campfire"
-          LOG="$RUNNER_TEMP/campfire.log"
           mkdir -p "$HOME_DIRECTORY"
           # A relative name, resolved against the checkout this step runs in.
           export JAVA_TOOL_OPTIONS="-Duser.home=$HOME_DIRECTORY -Xlog:class+load=info:file=class-load.txt"
           unset XDG_DATA_HOME
           # Xvfb has no OpenGL. Skiko would fall back to software rendering on its own, but it logs the failed attempt
-          # as a RenderException first, which the check below would take for a crash.
+          # as a RenderException first, which the check would take for a crash.
           export SKIKO_RENDER_API=SOFTWARE_FAST
-          xvfb-run --auto-servernum "$APP" > "$LOG" 2>&1 &
-          PID=$!
-          stop() {
-            pkill -f "$APP" || true
-            kill "$PID" 2> /dev/null || true
-          }
-          fail() {
-            echo "::error::$1"
-            cat "$LOG"
-            stop
-            exit 1
-          }
-          for _ in $(seq 120); do
-            kill -0 "$PID" 2> /dev/null || fail "The release build exited on its own before the library was written."
-            if [ -f "$DATA/preferences/preferences.json" ] && ls "$DATA/library/songs/"*.cho > /dev/null 2>&1; then
-              break
-            fi
-            sleep 1
-          done
-          ls "$DATA/library/songs/"*.cho > /dev/null 2>&1 || fail "The release build did not write the demo library in two minutes."
-          sleep 15
-          kill -0 "$PID" 2> /dev/null || fail "The release build exited on its own after it had written the library."
-          grep -q "Exception" "$LOG" && fail "The release build logged an exception."
-          stop
-          cat "$LOG"
-          LOADED=$(wc -l < class-load.txt)
-          SHARED=$(grep -c 'source: shared objects file' class-load.txt || true)
-          echo "$SHARED of $LOADED classes came from the class data sharing archives."
-          [ $((SHARED * 100)) -ge $((LOADED * 80)) ] || fail "The release build did not use its class data sharing archive."
-          echo "The release build started and wrote: $(ls "$DATA/library/songs")"
+          bash .github/scripts/start_release_build.sh \
+            --launcher "$APP" \
+            --data "$HOME_DIRECTORY/.local/share/campfire" \
+            --log "$RUNNER_TEMP/campfire.log" \
+            --class-load class-load.txt --min-shared-percent 80 \
+            -- xvfb-run --auto-servernum "$APP"
       - name: Attach the package to the GitHub release
         env:
           GH_TOKEN: ${{ github.token }}

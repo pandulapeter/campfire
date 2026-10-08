@@ -632,7 +632,9 @@ localized in both languages.
     builds the app image (`createReleaseDistributable`; the plugin packages the jars directly and leaves no image
     behind on its own) and starts it under Xvfb with an empty data directory, and attaches nothing unless the demo
     library appears, the process is still there after that, its log names no exception and at least 80% of the
-    classes it loaded came from the class data sharing archives. The packaging itself runs under Xvfb too, since it
+    classes it loaded came from the class data sharing archives — the start check
+    `.github/scripts/start_release_build.sh` makes for the Windows and macOS legs as well, each workflow preparing
+    only its own environment around it. The packaging itself runs under Xvfb too, since it
     starts the image once to record the archive of the app's own classes that the package ships (see `app/desktop`).
   - `publish-windows.yml` builds `packageReleaseMsix` on a Windows runner (whose image has the SDK's makeappx),
     checks the identity and the version in the package's manifest against `gradle.properties`, starts the app image it
