@@ -10,28 +10,18 @@
 package com.pandulapeter.campfire
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.InternalComposeUiApi
 import androidx.compose.ui.awt.ComposeWindow
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalPlatformWindowInsets
-import androidx.compose.ui.platform.PlatformInsets
-import androidx.compose.ui.platform.PlatformWindowInsets
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.WindowState
 import com.jetbrains.JBR
 import com.jetbrains.WindowDecorations
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.theme.isDarkTheme
 import java.awt.AWTEvent
 import java.awt.Toolkit
 import java.awt.Window
@@ -100,61 +90,6 @@ private fun ComposeWindow.extendContentIntoCustomTitleBar(height: Dp): ExtendedT
         AWTEvent.MOUSE_EVENT_MASK or AWTEvent.MOUSE_MOTION_EVENT_MASK,
     )
     return ExtendedTitleBar(height = height, customTitleBar = titleBar)
-}
-
-/**
- * Draws the window buttons, and on macOS the rim along the window's top edge, for the theme the app is in rather than
- * the system's, since with the content laid out under them the app's background is theirs: dark mode buttons on a
- * light theme are all but invisible, and the other way around. The macOS property exists only in the JetBrains
- * Runtime, which the build packages for this; any other JDK ignores it and keeps the system's appearance.
- */
-@Composable
-internal fun TitleBarAppearance(
-    window: ComposeWindow,
-    titleBar: ExtendedTitleBar,
-    viewModel: CampfireViewModel,
-) {
-    val isDarkTheme = viewModel.userPreferences.collectAsState().value?.uiMode.isDarkTheme()
-    SideEffect {
-        if (isMacOs) {
-            window.rootPane.putClientProperty("apple.awt.windowAppearance", if (isDarkTheme) "NSAppearanceNameDarkAqua" else "NSAppearanceNameAqua")
-        }
-        // Every property set redraws the title bar, and this runs with every recomposition.
-        if (isWindows && titleBar.customTitleBar.properties[WINDOWS_DARK_CONTROLS] != isDarkTheme) {
-            titleBar.customTitleBar.putProperty(WINDOWS_DARK_CONTROLS, isDarkTheme)
-        }
-    }
-}
-
-/**
- * Tells the shared UI about the strip [extendContentIntoTitleBar] lays the content under, as the system bar inset at
- * the top that Android's status bar and iOS's are, so that every screen already keeps its content clear of the window
- * buttons while its background reaches under them. A full screen window has no title bar (on macOS, until the pointer
- * reaches the top of the screen, and then the system draws it over the content), so it gets none.
- *
- * Compose Desktop has no public way to set the insets; this is the composition local its own `WindowInsets` read.
- */
-@OptIn(InternalComposeUiApi::class)
-@Composable
-internal fun TitleBarInsets(
-    titleBar: ExtendedTitleBar?,
-    isFullscreen: Boolean,
-    content: @Composable () -> Unit,
-) {
-    // The content is composed from this one call site whatever the insets are, since one composed from two would be
-    // thrown away and built again at every change into or out of full screen, every scroll position with it.
-    val platformInsets = LocalPlatformWindowInsets.current
-    val titleBarHeight = titleBar?.takeUnless { isFullscreen }?.let { with(LocalDensity.current) { it.height.roundToPx() } }
-    val insets = remember(platformInsets, titleBarHeight) {
-        if (titleBarHeight == null) platformInsets else object : PlatformWindowInsets by platformInsets {
-            override val captionBar = PlatformInsets(top = titleBarHeight)
-            override val systemBars = PlatformInsets(top = titleBarHeight)
-
-            // A dialog or a popup asks for the insets without the ones it has already kept clear of.
-            override fun excluding(safeInsets: Boolean, ime: Boolean) = if (safeInsets) platformInsets.excluding(safeInsets, ime) else this
-        }
-    }
-    CompositionLocalProvider(LocalPlatformWindowInsets provides insets, content = content)
 }
 
 /**
@@ -230,6 +165,3 @@ private val MAC_TITLE_BAR_HEIGHT = 28.dp
 private val WINDOWS_TITLE_BAR_HEIGHT = 32.dp
 
 private const val EAWT_PACKAGE = "com.apple.eawt"
-
-/** Whether the caption buttons are drawn for a dark background (light icons) or a light one. */
-private const val WINDOWS_DARK_CONTROLS = "controls.dark"
