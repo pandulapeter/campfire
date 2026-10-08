@@ -19,10 +19,10 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.Dp
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_archive
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.AppBarOverlap
 import com.pandulapeter.campfire.presentation.ui.components.SectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.SectionHeaderState
+import com.pandulapeter.campfire.presentation.ui.components.SetlistActionHandler
 import com.pandulapeter.campfire.presentation.ui.components.SetlistActions
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.pushedSectionHeader
@@ -36,7 +36,7 @@ import org.jetbrains.compose.resources.painterResource
  */
 @Composable
 internal fun PushedSetlistHeader(
-    viewModel: CampfireViewModel,
+    setlistActions: SetlistActionHandler,
     listState: LazyGridState,
     setlistsWithSongs: List<SetlistWithSongs>,
     endPadding: Dp,
@@ -64,7 +64,7 @@ internal fun PushedSetlistHeader(
             { actionModifier, _ ->
                 SetlistActions(
                     modifier = actionModifier,
-                    viewModel = viewModel,
+                    actions = setlistActions,
                     setlist = setlist,
                     isDecorative = true,
                     isReordering = reorderingSetlistFileName == setlist.fileName,

@@ -102,6 +102,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.ui.playing.songPlaybackOf
+import com.pandulapeter.campfire.presentation.ui.screens.rememberSetlistActionHandler
 import com.pandulapeter.campfire.presentation.ui.screens.rememberSongActionHandler
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.currentCoroutineContext
@@ -128,6 +129,7 @@ internal fun SetlistList(
     onReorderingSetlistChanged: (String?) -> Unit,
 ) {
     val songActions = rememberSongActionHandler(viewModel)
+    val setlistActions = rememberSetlistActionHandler(viewModel)
     val setlistsWithSongs by viewModel.setlistsWithSongs.collectAsStateWithLifecycle()
     // Keep validation and writes tied to the full library; only the rendered list is narrowed by this mode.
     var narrowedSetlistFileName by remember { mutableStateOf<String?>(null) }
@@ -340,7 +342,7 @@ internal fun SetlistList(
                                     SetlistActions(
                                         modifier = actionModifier,
                                         buttonModifier = buttonModifier,
-                                        viewModel = viewModel,
+                                        actions = setlistActions,
                                         setlist = setlistWithSongs.setlist,
                                         isReordering = isReordering && reorderingSetlistFileName == setlistWithSongs.setlist.fileName,
                                         onReorder = if (setlistWithSongs.entries.size > 1) {
@@ -610,7 +612,7 @@ internal fun SetlistList(
         }
         // The visual copy can pass above the grid's clipped viewport, under the transparent app bar, as it fades away.
         PushedSetlistHeader(
-            viewModel = viewModel,
+            setlistActions = setlistActions,
             listState = listState,
             setlistsWithSongs = shownSetlists,
             endPadding = headerEndPadding,
