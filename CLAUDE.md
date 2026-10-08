@@ -524,9 +524,11 @@ localized in both languages.
   build it keeps — has Node tests of its own (see `app/web`), and the parser of a
   release's description, which is Python, a `unittest` next to it in `.github/scripts`.
   `.github/workflows/tests.yml` runs all three — every module's `desktopTest`, the Node tests and the Python one, with
-  `spotlessCheck` and the license header check beside them — on every pull request, every
+  `spotlessCheck` and the license header check beside them — and compiles what `desktopTest` does not: the Android
+  app (every library's `androidMain`), the desktop and web apps, the Baseline Profile generator and the screenshot tool
+  on Linux, and the iOS framework (every `iosMain`) on a macOS runner — on every pull request, every
   night on the default branch, and from `publish-all.yml` before it starts a single store build, so a failing test
-  stops a release.
+  or a platform that does not compile stops every store's release rather than one of them.
   The UI itself is untested by code: `:app:baselineprofile` drives it, but only to record a profile, asserts nothing
   and is never run by CI; a release is checked by hand, on a Mac, before it is published.
 

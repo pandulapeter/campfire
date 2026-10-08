@@ -124,8 +124,8 @@ jobs:
           RELEASE_BODY: ${{ github.event.release.body }}
         run: python3 .github/scripts/release_description.py
 
-  # A failing test stops the release before anything is built, signed or submitted. Run beside prepare rather than
-  # after it, since neither needs the other.
+  # A failing test, or a platform that does not compile, stops the release before anything is built, signed or
+  # submitted. Run beside prepare rather than after it, since neither needs the other.
   test:
     name: Tests
     uses: ./.github/workflows/tests.yml

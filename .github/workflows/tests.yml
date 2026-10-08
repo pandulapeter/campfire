@@ -7,9 +7,11 @@
 # https://mozilla.org/MPL/2.0/.
 
 # Every test the repository has: the unit tests of every module, run on the desktop target, the Node tests of the
-# web build's storage worker and offline support and the Python test of the release description's parser. Run on every pull request, every night on the default branch, which catches what was
-# pushed there directly, and by publish-all.yml before it starts a single store build, so a failing test stops a
-# release.
+# web build's storage worker and offline support and the Python test of the release description's parser — and a
+# compilation of every platform's code, the iOS one on a macOS runner, since desktopTest compiles only the desktop
+# target's. Run on every pull request, every night on the default branch, which catches what was pushed there
+# directly, and by publish-all.yml before it starts a single store build, so a failing test or a platform that does
+# not compile stops every store's release rather than one of them.
 
 name: 'Tests'
 
@@ -75,3 +77,63 @@ jobs:
       # than by Gradle.
       - name: Run the web build's JavaScript tests
         run: node --test app/web/tests/opfs-writer.test.cjs app/web/tests/offline.test.cjs
+
+  compile:
+    name: Compile every platform
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        # The JetBrains runtime is looked up through the GitHub API, which setup-java only authenticates with this
+        # variable (not its token input); unauthenticated, the runner's shared address runs out of requests.
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          distribution: 'jetbrains'
+          java-version: 21
+      # Caches the dependencies, the wrapper and the build cache's task outputs. The cache is written by runs on the
+      # default branch (the nightly one) and only read by every other run, a release's included.
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v5
+      # desktopTest compiles commonMain and desktopMain alone. The Android app compiles every library's androidMain, and
+      # the web one their wasmJsMain; the distribution's Binaryen pass is left to publish-web.yml, since the compilation
+      # is what catches an error.
+      - name: Compile the Android, desktop and web apps, the Baseline Profile generator and the screenshot tool
+        run: >-
+          ./gradlew --continue
+          :app:android:assembleDebug
+          :app:baselineprofile:compileNonMinifiedReleaseKotlin
+          :app:desktop:compileKotlin
+          :app:web:compileProductionExecutableKotlinWasmJs
+          :tools:screenshots:compileKotlin
+
+  compile-ios:
+    name: Compile the iOS app
+    runs-on: macos-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        # The JetBrains runtime is looked up through the GitHub API, which setup-java only authenticates with this
+        # variable (not its token input); unauthenticated, the runner's shared address runs out of requests.
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          distribution: 'jetbrains'
+          java-version: 21
+      # Caches the dependencies, the wrapper and the build cache's task outputs. The cache is written by runs on the
+      # default branch (the nightly one) and only read by every other run, a release's included.
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v5
+      # Kotlin/Native compiles inside the Gradle daemon, which runs out of the 4 GB gradle.properties gives it, as in
+      # publish-ios.yml.
+      - name: Give the Gradle daemon more memory
+        run: |
+          mkdir -p ~/.gradle
+          echo 'org.gradle.jvmargs=-Xmx6g -Dfile.encoding=UTF-8' >> ~/.gradle/gradle.properties
+      # Every library's iosMain and the framework the Xcode project embeds.
+      - name: Compile the iOS framework
+        run: ./gradlew :app:ios:linkDebugFrameworkIosSimulatorArm64
