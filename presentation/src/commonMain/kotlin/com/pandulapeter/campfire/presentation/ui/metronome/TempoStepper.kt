@@ -35,9 +35,9 @@ import com.pandulapeter.campfire.presentation.resources.metronome_tap_descriptio
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo_decrease
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo_increase
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo_reset
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.STEPPER_HEIGHT
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.Stepper
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.scaled
+import com.pandulapeter.campfire.presentation.ui.components.STEPPER_HEIGHT
+import com.pandulapeter.campfire.presentation.ui.components.Stepper
+import com.pandulapeter.campfire.presentation.ui.components.scaled
 import org.jetbrains.compose.resources.painterResource
 
 /**

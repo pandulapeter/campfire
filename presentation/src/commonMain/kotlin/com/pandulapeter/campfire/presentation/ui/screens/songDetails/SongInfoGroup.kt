@@ -27,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.presentation.ui.components.scaled
 
 /**
  * One group of [SongInfoBody] under its title, if it has one, with a count next to the title when it is more than one

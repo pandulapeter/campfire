@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
+import com.pandulapeter.campfire.presentation.ui.chords.ChordCell
 import com.pandulapeter.campfire.presentation.ui.chords.MAX_SONG_CHORDS
 import com.pandulapeter.campfire.presentation.ui.chords.SelectedShape
 import kotlin.test.Test

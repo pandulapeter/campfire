@@ -25,7 +25,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_metronome_h
 import com.pandulapeter.campfire.presentation.resources.song_details_metronome_show
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo
 import com.pandulapeter.campfire.presentation.ui.components.ActionsMenuItem
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.KEY_SEPARATOR
+import com.pandulapeter.campfire.presentation.ui.components.KEY_SEPARATOR
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import org.jetbrains.compose.resources.painterResource

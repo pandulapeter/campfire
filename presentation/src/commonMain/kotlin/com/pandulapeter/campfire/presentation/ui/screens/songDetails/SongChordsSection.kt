@@ -57,21 +57,14 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import com.pandulapeter.campfire.chordpro.ChordProChords
-import com.pandulapeter.campfire.chordpro.ChordVoicings
-import com.pandulapeter.campfire.chordpro.model.Chord
-import com.pandulapeter.campfire.chordpro.model.ChordVoicing
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_edit
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_shapes
-import com.pandulapeter.campfire.presentation.resources.song_details_chord_diagram
-import com.pandulapeter.campfire.presentation.resources.song_details_chord_diagram_none
-import com.pandulapeter.campfire.presentation.resources.song_details_chord_letters
-import com.pandulapeter.campfire.presentation.resources.song_details_chord_sounding
 import com.pandulapeter.campfire.presentation.resources.song_details_chords
 import com.pandulapeter.campfire.presentation.localization.stringResource
+import com.pandulapeter.campfire.presentation.ui.chords.chordCellDescription
 import com.pandulapeter.campfire.presentation.ui.components.drawChordDiagram
-import com.pandulapeter.campfire.presentation.ui.components.textResource
+import com.pandulapeter.campfire.presentation.ui.components.songControlHeight
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 import org.jetbrains.compose.resources.painterResource
 import kotlin.math.roundToInt
@@ -310,27 +303,6 @@ private class ChordRowsMeasurePolicy(
 
     override fun IntrinsicMeasureScope.maxIntrinsicHeight(measurables: List<IntrinsicMeasurable>, width: Int) =
         layouts.height(width, firstSlot, lastSlot, isLastSlot)
-}
-
-/**
- * How a chord is read out: its name, the one it sounds as where that differs or else its letters where the page counts
- * it, and its shape as it would be dictated.
- */
-@Composable
-internal fun chordCellDescription(cell: ChordCell): String {
-    val name = cell.soundingName?.let { textResource(Res.string.song_details_chord_sounding, cell.name, it) }
-        ?: cell.letterName?.let { textResource(Res.string.song_details_chord_letters, cell.name, it) }
-        ?: cell.name
-    val shape = cell.selection.shape ?: return textResource(Res.string.song_details_chord_diagram_none, name)
-    return textResource(Res.string.song_details_chord_diagram, name, spokenShape(shape))
-}
-
-/** A fretted shape as its frets from the lowest string, a keyboard one as the notes it presses from the lowest up. */
-private fun spokenShape(shape: ChordVoicing) = when (shape) {
-    is ChordVoicing.Fretted -> ChordVoicings.write(shape)
-    is ChordVoicing.Keys -> (listOfNotNull(shape.bass) + shape.notes).joinToString(" ") { note ->
-        ChordProChords.noteNames(Chord(root = note % 12, intervals = listOf(0))).first()
-    }
 }
 
 private val SHAPES_ICON_SIZE = 18.dp

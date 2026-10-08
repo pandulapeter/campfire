@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.chordpro.ChordNotation
 import com.pandulapeter.campfire.chordpro.ChordProHighlighter
 import com.pandulapeter.campfire.chordpro.model.CommentStyle
+import com.pandulapeter.campfire.presentation.ui.components.scaled
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 
 /**

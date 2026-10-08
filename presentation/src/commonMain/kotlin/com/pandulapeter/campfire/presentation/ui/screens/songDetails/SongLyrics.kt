@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_details_cut
 import com.pandulapeter.campfire.presentation.localization.stringResource
+import com.pandulapeter.campfire.presentation.ui.components.scaled
 
 /**
  * Renders the song [model] with the chords displayed above the lyrics, aligned to the syllable they belong to. A model

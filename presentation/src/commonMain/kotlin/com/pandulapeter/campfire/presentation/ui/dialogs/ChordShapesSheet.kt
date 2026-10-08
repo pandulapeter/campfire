@@ -63,9 +63,9 @@ import com.pandulapeter.campfire.presentation.ui.components.ChordDiagram
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.ChordCell
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.Stepper
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.chordCellDescription
+import com.pandulapeter.campfire.presentation.ui.chords.ChordCell
+import com.pandulapeter.campfire.presentation.ui.components.Stepper
+import com.pandulapeter.campfire.presentation.ui.chords.chordCellDescription
 import com.pandulapeter.campfire.presentation.ui.playing.effectiveCapo
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 import kotlinx.coroutines.Dispatchers

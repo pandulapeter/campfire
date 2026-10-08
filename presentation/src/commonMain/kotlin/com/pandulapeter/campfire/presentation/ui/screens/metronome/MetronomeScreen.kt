@@ -54,7 +54,7 @@ import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsCard
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsMessage
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsPage
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsSection
-import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsSubsection
+import com.pandulapeter.campfire.presentation.ui.components.SettingsSubsection
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsWidthLayout
 
 /**

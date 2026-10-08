@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.ui.components.ACTION_BUTTON_OVERLAP
+import com.pandulapeter.campfire.presentation.ui.components.STEPPER_WIDTH
 
 /**
  * Whether the app bar of a screen [appBarWidth] wide has room for the text size stepper in performance mode, where it is

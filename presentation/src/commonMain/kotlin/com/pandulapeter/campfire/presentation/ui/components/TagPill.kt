@@ -30,7 +30,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.scaled
 
 /**
  * One tag as a tonal pill. Like a [SectionHeader] it is a label first and a control second, so it is laid out at its

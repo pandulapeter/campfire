@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.presentation.resources.ic_add
 import com.pandulapeter.campfire.presentation.resources.ic_subtract
 import com.pandulapeter.campfire.presentation.resources.song_editor_transpose_text_down
 import com.pandulapeter.campfire.presentation.resources.song_editor_transpose_text_up
+import com.pandulapeter.campfire.presentation.ui.components.Stepper
 import org.jetbrains.compose.resources.painterResource
 
 /**

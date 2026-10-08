@@ -48,6 +48,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_user_interface_
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.RadioListItem
+import com.pandulapeter.campfire.presentation.ui.components.SettingsSubsection
 import com.pandulapeter.campfire.presentation.ui.components.SwitchListItem
 import com.pandulapeter.campfire.presentation.ui.components.ThemeColorChoice
 import com.pandulapeter.campfire.presentation.ui.components.UiModeChoice

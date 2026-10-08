@@ -45,7 +45,6 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.metronome_start
 import com.pandulapeter.campfire.presentation.resources.metronome_stop
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.screens.metronome.BeatRow
 
 /**
  * The least of a metronome that is still one - the bar as it is heard, with its accents tapped on it, and play and stop

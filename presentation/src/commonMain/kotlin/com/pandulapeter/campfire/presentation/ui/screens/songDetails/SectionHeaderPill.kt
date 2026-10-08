@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.presentation.ui.components.songControlHeight
 
 /**
  * The raised pill a section is headed by, which folds the section where it has anything to fold ([toggle]). It is laid

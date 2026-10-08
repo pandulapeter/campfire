@@ -52,7 +52,7 @@ import com.pandulapeter.campfire.presentation.ui.components.UiModeChoice
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.fadingVerticalEdges
 import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
-import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsSubsection
+import com.pandulapeter.campfire.presentation.ui.components.SettingsSubsection
 
 /**
  * The first run's one screen of its own: a line about what the app is, the two choices that decide how all of it

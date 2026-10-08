@@ -14,6 +14,7 @@ import androidx.compose.runtime.Immutable
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 import com.pandulapeter.campfire.chordpro.model.CommentStyle
+import com.pandulapeter.campfire.presentation.ui.chords.ChordCell
 
 /**
  * [text] with its runs of whitespace collapsed into single spaces and cut to [DESCRIPTION_LENGTH] characters, an ellipsis

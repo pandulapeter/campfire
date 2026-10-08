@@ -54,7 +54,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.LocalMetronomeNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.MetronomeNotification
 import com.pandulapeter.campfire.presentation.ui.platform.areBeatHapticsFeltInBackground
 import com.pandulapeter.campfire.presentation.ui.platform.rememberBeatHaptics
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.KEY_SEPARATOR
+import com.pandulapeter.campfire.presentation.ui.components.KEY_SEPARATOR
 import androidx.lifecycle.repeatOnLifecycle
 import com.pandulapeter.campfire.presentation.resources.settings
 import com.pandulapeter.campfire.presentation.resources.settings_sync_cancel

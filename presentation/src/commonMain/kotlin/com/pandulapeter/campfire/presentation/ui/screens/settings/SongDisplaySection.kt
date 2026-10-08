@@ -43,6 +43,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_number_sections
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.RadioListItem
 import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
+import com.pandulapeter.campfire.presentation.ui.components.SettingsSubsection
 import com.pandulapeter.campfire.presentation.ui.components.SwitchListItem
 
 @Composable

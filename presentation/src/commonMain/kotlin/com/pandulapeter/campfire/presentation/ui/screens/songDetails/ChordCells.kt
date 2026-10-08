@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.chordpro.ChordNotation
 import com.pandulapeter.campfire.chordpro.ChordProChords
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
+import com.pandulapeter.campfire.presentation.ui.chords.ChordCell
 import com.pandulapeter.campfire.presentation.ui.chords.SelectedShape
 import com.pandulapeter.campfire.presentation.ui.chords.SongChord
 import com.pandulapeter.campfire.presentation.ui.chords.selectShape
@@ -38,20 +39,6 @@ internal data class ChordDiagrams(
     val onShapesClicked: (() -> Unit)? = null,
     val showsDefinitionsOnly: Boolean = false,
     val notation: ChordNotation = ChordNotation.STANDARD,
-)
-
-/**
- * One diagram of the Chords section: the chord as the page names it and the shape it is drawn with, and the names
- * [SongChord.soundingName] and [SongChord.letterName] give it after that.
- */
-@Immutable
-internal data class ChordCell(
-    val name: String,
-    val soundingName: String?,
-    val letterName: String? = null,
-    val instrument: ChordInstrument,
-    val root: Int,
-    val selection: SelectedShape,
 )
 
 /** The cells of [chords], each with the shape [selectShape] picks for it. */

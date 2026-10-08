@@ -28,6 +28,8 @@ import com.pandulapeter.campfire.presentation.resources.song_details_transpositi
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_capo
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_tempo
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_time
+import com.pandulapeter.campfire.presentation.ui.components.scaled
+import com.pandulapeter.campfire.presentation.ui.components.songControlHeight
 import com.pandulapeter.campfire.presentation.ui.metronome.TempoStepper
 
 /**

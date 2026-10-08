@@ -92,7 +92,7 @@ import com.pandulapeter.campfire.presentation.ui.components.SettingsSectionTitle
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableContent
 import com.pandulapeter.campfire.presentation.ui.print.PrintSource
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.Stepper
+import com.pandulapeter.campfire.presentation.ui.components.Stepper
 import org.jetbrains.compose.resources.painterResource
 
 /**

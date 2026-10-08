@@ -17,6 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.presentation.ui.components.scaled
 
 /**
  * The album, the year and the people behind the song, each a label over its value, flowing side by side where they fit:
