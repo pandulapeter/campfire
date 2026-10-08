@@ -170,7 +170,8 @@ object ChordProHighlighter {
             directive.name == TRANSPOSE -> ChordProParser.transposeSemitones(value) == null
             ChordProMetaItems.isCoverMeta(directive) -> ChordProMetaItems.cover(directive) == null
             ChordProMetaItems.isLinkMeta(directive) -> ChordProMetaItems.link(directive) == null
-            directive.name in LANGUAGE_NAMES || ChordProMetaItems.isLanguageMeta(directive) -> ChordProMetaItems.language(directive) == null
+            (ChordProHeaderLayout.metadataAliases[directive.name] ?: directive.name) == ChordProMetaItems.LANGUAGE_NAME ||
+                ChordProMetaItems.isLanguageMeta(directive) -> ChordProMetaItems.language(directive) == null
             else -> false
         }
     }
@@ -183,7 +184,7 @@ object ChordProHighlighter {
 
     /** The kind of metadata this directive declares where a song can only be one of it, see [TokenType.DUPLICATE]. */
     private fun ChordProDirectives.Directive.onceOnlyKind() = ChordProHeaderLayout.metadataKind(this)
-        ?.takeIf { it !in ChordProHeader.repeatableMetadata && it !in ChordProHeader.changeableMetadata }
+        ?.takeIf { kind -> MetadataKind.of(kind)?.let { it.isRepeatable || it.isTimingChange } != true }
 
     /**
      * The chord cells of a grid line, read the way the parser reads them, so that a margin label or a `/` is left
@@ -251,6 +252,4 @@ object ChordProHighlighter {
             end = offset + range.last + 1,
         )
     }
-
-    private val LANGUAGE_NAMES = setOf(ChordProMetaItems.LANGUAGE_NAME, "lang")
 }
