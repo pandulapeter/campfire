@@ -15,6 +15,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.source.remote.api.SyncAuthenticator
 import com.pandulapeter.campfire.data.model.domain.AuthorizationCompletionPage
 import kotlinx.coroutines.CancellationException
@@ -44,6 +45,7 @@ internal class AndroidSyncAuthenticator(
     // Provided rather than declared: the context is what the Android app shell hands to Koin as it starts, which no
     // shared module can see.
     @Provided private val context: Context,
+    private val logger: Logger,
 ) : SyncAuthenticator {
 
     override suspend fun prepareRedirectUri() = "$REDIRECT_SCHEME://$REDIRECT_HOST"
@@ -65,7 +67,7 @@ internal class AndroidSyncAuthenticator(
                 select {
                     redirect.onAwait { SyncAuthenticator.AuthorizationOutcome.Received(it) }
                     abandoned.onAwait {
-                        println("The browser was closed before the service answered.")
+                        logger.log("The browser was closed before the service answered.")
                         // The user backing out, which is not a failure to explain, see Cancelled.
                         SyncAuthenticator.AuthorizationOutcome.Cancelled()
                     }

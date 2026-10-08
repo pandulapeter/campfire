@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.remote.implementation.auth
 
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.source.remote.api.SyncAuthenticator
 import com.pandulapeter.campfire.data.model.domain.SystemBrowser
 import com.pandulapeter.campfire.data.model.domain.AuthorizationCompletionPage
@@ -46,6 +47,7 @@ internal class DesktopSyncAuthenticator(
      * whoever runs the tests: cancelling a blocked `accept` is subtle enough to be worth a test of its own.
      */
     private val systemBrowser: SystemBrowser,
+    private val logger: Logger,
 ) : SyncAuthenticator {
 
     private var serverSocket: ServerSocket? = null
@@ -127,7 +129,7 @@ internal class DesktopSyncAuthenticator(
                 try {
                     accepted.respond(NOT_FOUND_RESPONSE)
                 } catch (exception: IOException) {
-                    println("Could not answer a stray authorization request: ${exception.message}")
+                    logger.log("Could not answer a stray authorization request: ${exception.message}")
                 }
             } catch (exception: SocketTimeoutException) {
                 // A connection that never spoke: the browser's speculative one.
@@ -146,7 +148,7 @@ internal class DesktopSyncAuthenticator(
             connection?.close()
             serverSocket?.close()
         } catch (exception: Exception) {
-            println("Could not close the authorization socket: ${exception.message}")
+            logger.log("Could not close the authorization socket: ${exception.message}")
         }
         connection = null
         serverSocket = null

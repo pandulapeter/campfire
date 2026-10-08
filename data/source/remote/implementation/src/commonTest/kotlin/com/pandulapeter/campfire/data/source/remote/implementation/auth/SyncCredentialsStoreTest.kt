@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.remote.implementation.auth
 
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import com.pandulapeter.campfire.data.source.local.api.SyncCredentialsLocalSource
@@ -31,7 +32,7 @@ class SyncCredentialsStoreTest {
     @Test
     fun `a cancelled first read is not remembered as no credentials`() = runTest {
         val storage = FakeStorage(CONNECTED).apply { shouldCancelNextRead = true }
-        val store = SyncCredentialsStore(storage)
+        val store = SyncCredentialsStore(storage, Logger.Standard)
 
         assertFailsWith<CancellationException> { store.load() }
 
@@ -42,7 +43,7 @@ class SyncCredentialsStoreTest {
     @Test
     fun `an authorization started after a cancelled read keeps the stored tokens`() = runTest {
         val storage = FakeStorage(CONNECTED).apply { shouldCancelNextRead = true }
-        val store = SyncCredentialsStore(storage)
+        val store = SyncCredentialsStore(storage, Logger.Standard)
         assertFailsWith<CancellationException> { store.load() }
 
         PendingAuthorizationStoreImpl(store).savePendingAuthorization(providerId = SyncProviderId.DROPBOX, request = REQUEST)
@@ -55,7 +56,7 @@ class SyncCredentialsStoreTest {
     @Test
     fun `a read the storage refused is not remembered as no credentials`() = runTest {
         val storage = FakeStorage(CONNECTED).apply { shouldFailNextRead = true }
-        val store = SyncCredentialsStore(storage)
+        val store = SyncCredentialsStore(storage, Logger.Standard)
 
         assertFailsWith<LibraryStorageException> { store.load() }
 
@@ -66,7 +67,7 @@ class SyncCredentialsStoreTest {
     @Test
     fun `an authorization started while the credentials cannot be read writes nothing over them`() = runTest {
         val storage = FakeStorage(CONNECTED).apply { shouldFailNextRead = true }
-        val store = SyncCredentialsStore(storage)
+        val store = SyncCredentialsStore(storage, Logger.Standard)
 
         assertFailsWith<LibraryStorageException> {
             PendingAuthorizationStoreImpl(store).savePendingAuthorization(providerId = SyncProviderId.DROPBOX, request = REQUEST)
@@ -79,7 +80,7 @@ class SyncCredentialsStoreTest {
     @Test
     fun `a document that cannot be parsed is read as none, once`() = runTest {
         val storage = FakeStorage("not json")
-        val store = SyncCredentialsStore(storage)
+        val store = SyncCredentialsStore(storage, Logger.Standard)
 
         assertNull(store.load())
         assertNull(store.load())
@@ -89,7 +90,7 @@ class SyncCredentialsStoreTest {
     @Test
     fun `a document that was read is not read again`() = runTest {
         val storage = FakeStorage(CONNECTED)
-        val store = SyncCredentialsStore(storage)
+        val store = SyncCredentialsStore(storage, Logger.Standard)
 
         store.load()
         store.load()
@@ -100,7 +101,7 @@ class SyncCredentialsStoreTest {
     @Test
     fun `a write that was refused is not remembered`() = runTest {
         val storage = FakeStorage(CONNECTED)
-        val store = SyncCredentialsStore(storage)
+        val store = SyncCredentialsStore(storage, Logger.Standard)
         val stored = assertNotNull(store.load())
         storage.shouldRefuseNextWrite = true
 
@@ -113,7 +114,7 @@ class SyncCredentialsStoreTest {
     @Test
     fun `a pending authorization that could not be saved leaves nothing to clear`() = runTest {
         val storage = FakeStorage(CONNECTED)
-        val pendingStore = PendingAuthorizationStoreImpl(SyncCredentialsStore(storage))
+        val pendingStore = PendingAuthorizationStoreImpl(SyncCredentialsStore(storage, Logger.Standard))
         storage.shouldRefuseNextWrite = true
         assertFailsWith<IllegalStateException> { pendingStore.savePendingAuthorization(SyncProviderId.DROPBOX, REQUEST) }
         storage.shouldRefuseNextWrite = true
@@ -128,7 +129,7 @@ class SyncCredentialsStoreTest {
     @Test
     fun `a write that was cancelled after it was stored is read back`() = runTest {
         val storage = FakeStorage(null).apply { shouldCancelNextWriteAfterStoring = true }
-        val store = SyncCredentialsStore(storage)
+        val store = SyncCredentialsStore(storage, Logger.Standard)
 
         assertFailsWith<CancellationException> {
             store.save(SyncCredentialsDocument(providerId = "dropbox", accessToken = "access", refreshToken = "refresh"))

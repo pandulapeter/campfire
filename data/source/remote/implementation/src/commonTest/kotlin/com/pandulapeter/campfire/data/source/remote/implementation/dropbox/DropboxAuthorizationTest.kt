@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.source.local.api.SyncCredentialsLocalSource
 import com.pandulapeter.campfire.data.source.remote.api.hashing.Sha256
 import com.pandulapeter.campfire.data.source.remote.api.model.redirectParameters
@@ -84,8 +85,9 @@ class DropboxAuthorizationTest {
 
     private fun provider() = DropboxSyncProvider(
         httpClientHolder = HttpClientHolder(create = ::createHttpClient),
-        credentialsStore = SyncCredentialsStore(NoStorage),
+        credentialsStore = SyncCredentialsStore(NoStorage, Logger.Standard),
         appKey = APP_KEY,
+        logger = Logger.Standard,
     )
 
     /** Building the URL touches no storage, so the test does not need any. */

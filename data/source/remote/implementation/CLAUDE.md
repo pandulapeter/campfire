@@ -9,7 +9,9 @@
 -->
 # :data:source:remote:implementation
 
-Implements `:data:source:remote:api`. Koin wiring: `Module.kt` holds the `@Module @ComponentScan object
+Implements `:data:source:remote:api`. What fails without an exception — a revocation, an account that cannot be read, a
+stray request on the desktop's socket — is written to the injected `Logger` (`:data:model`), which the provider list's
+`@Single` function hands the Dropbox provider. Koin wiring: `Module.kt` holds the `@Module @ComponentScan object
 DataRemoteSourceModule`, whose three `@Single` functions build what is not simply constructed — the HTTP client, the
 list of providers and the list of cover searches (MusicBrainz first, then iTunes), the first built with the clock its
 tests replace — while the stores and the four platform authenticators (`AndroidSyncAuthenticator`, …, each a

@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 
 import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.model.domain.SyncAccount
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.source.local.api.SyncCredentialsLocalSource
@@ -401,8 +402,9 @@ class DropboxRequestTest {
         handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData,
     ) = DropboxSyncProvider(
         httpClientHolder = HttpClientHolder { HttpClient(MockEngine(handler), configure) },
-        credentialsStore = SyncCredentialsStore(storage),
+        credentialsStore = SyncCredentialsStore(storage, Logger.Standard),
         appKey = APP_KEY,
+        logger = Logger.Standard,
     )
 
     private fun MockRequestHandleScope.respondJson(content: String, status: HttpStatusCode = HttpStatusCode.OK) = respond(

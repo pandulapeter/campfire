@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 
 import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.model.domain.SyncAccount
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.source.remote.api.SyncAuthorizationException
@@ -62,6 +63,7 @@ internal class DropboxSyncProvider(
     private val httpClientHolder: HttpClientHolder,
     private val credentialsStore: SyncCredentialsStore,
     private val appKey: String,
+    private val logger: Logger,
 ) : SyncProvider {
 
     override val id = SyncProviderId.DROPBOX
@@ -152,7 +154,7 @@ internal class DropboxSyncProvider(
         } catch (exception: CancellationException) {
             throw exception
         } catch (exception: Exception) {
-            println("Could not revoke the Dropbox token: ${exception.message}")
+            logger.log("Could not revoke the Dropbox token: ${exception.message}")
         }
     }
 
@@ -177,12 +179,12 @@ internal class DropboxSyncProvider(
             throw exception
         } catch (exception: SyncAuthorizationException) {
             // Refused or revoked, which is the one answer that means the credentials are no longer good for anything.
-            println("Dropbox no longer accepts the stored credentials: ${exception.message}")
+            logger.log("Dropbox no longer accepts the stored credentials: ${exception.message}")
             null
         } catch (exception: Exception) {
             // Offline, or an answer that could not be read, is not "not connected": the stored name is what the app
             // knew last time, and it is still true.
-            println("Could not read the Dropbox account: ${exception.message}")
+            logger.log("Could not read the Dropbox account: ${exception.message}")
             storedAccountOf(credentials)
         }
     }

@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.remote.implementation.auth
 
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import com.pandulapeter.campfire.data.source.local.api.SyncCredentialsLocalSource
 import kotlinx.coroutines.CancellationException
@@ -25,6 +26,7 @@ import org.koin.core.annotation.Single
 @Single
 internal class SyncCredentialsStore(
     private val syncCredentialsLocalSource: SyncCredentialsLocalSource,
+    private val logger: Logger,
 ) {
 
     private val mutex = Mutex()
@@ -62,7 +64,7 @@ internal class SyncCredentialsStore(
                 throw exception
             } catch (exception: Exception) {
                 // A parse failure's message quotes the input around where it failed, which here can be a piece of a token.
-                println("Could not read the sync credentials: ${exception::class.simpleName}")
+                logger.log("Could not read the sync credentials: ${exception::class.simpleName}")
                 null
             }
             hasRead = true

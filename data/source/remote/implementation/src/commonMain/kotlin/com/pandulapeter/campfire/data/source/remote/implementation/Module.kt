@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.remote.implementation
 
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.source.remote.api.CoverArtSearchRemoteSources
 import com.pandulapeter.campfire.data.source.remote.api.SyncProviders
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.SyncCredentialsStore
@@ -43,10 +44,18 @@ object DataRemoteSourceModule {
     internal fun syncProviders(
         httpClientHolder: HttpClientHolder,
         credentialsStore: SyncCredentialsStore,
+        logger: Logger,
     ): SyncProviders = SyncProviders(
         all = buildList {
             if (DROPBOX_APP_KEY.isNotEmpty()) {
-                add(DropboxSyncProvider(httpClientHolder = httpClientHolder, credentialsStore = credentialsStore, appKey = DROPBOX_APP_KEY))
+                add(
+                    DropboxSyncProvider(
+                        httpClientHolder = httpClientHolder,
+                        credentialsStore = credentialsStore,
+                        appKey = DROPBOX_APP_KEY,
+                        logger = logger,
+                    ),
+                )
             }
         },
     )

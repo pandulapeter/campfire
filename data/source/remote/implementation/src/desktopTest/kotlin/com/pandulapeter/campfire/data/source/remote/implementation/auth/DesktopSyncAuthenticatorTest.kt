@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.remote.implementation.auth
 
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.source.remote.api.SyncAuthenticator
 import com.pandulapeter.campfire.data.model.domain.AuthorizationCompletionPage
 import java.io.PrintWriter
@@ -38,7 +39,7 @@ class DesktopSyncAuthenticatorTest {
 
     @Test
     fun `prepares a loopback redirect uri on the registered port`() = runBlocking {
-        val authenticator = DesktopSyncAuthenticator { true }
+        val authenticator = DesktopSyncAuthenticator(systemBrowser = { true }, logger = Logger.Standard)
         try {
             assertEquals(expected = "http://127.0.0.1:53682", actual = authenticator.prepareRedirectUri())
             assertTrue(isPortOpen(), "The socket the service redirects to is not listening.")
@@ -50,7 +51,7 @@ class DesktopSyncAuthenticatorTest {
     /** The bug this exists for: cancelling used to leave the thread blocked and the port held for five minutes. */
     @Test
     fun `cancelling the authorization releases the port`() = runBlocking {
-        val authenticator = DesktopSyncAuthenticator { true }
+        val authenticator = DesktopSyncAuthenticator(systemBrowser = { true }, logger = Logger.Standard)
         authenticator.prepareRedirectUri()
         val authorization = async { authenticator.authorize("https://example.com/authorize", COMPLETION_PAGE) }
         // Long enough for `accept` to actually be blocking, which is the state the cancellation has to reach.
@@ -69,7 +70,7 @@ class DesktopSyncAuthenticatorTest {
     /** And the ordinary path still works: the browser's request comes back as the redirect it carries. */
     @Test
     fun `a redirect delivered to the socket is returned`() = runBlocking {
-        val authenticator = DesktopSyncAuthenticator { true }
+        val authenticator = DesktopSyncAuthenticator(systemBrowser = { true }, logger = Logger.Standard)
         authenticator.prepareRedirectUri()
         val authorization = async { authenticator.authorize("https://example.com/authorize", COMPLETION_PAGE) }
         delay(300)
@@ -97,7 +98,7 @@ class DesktopSyncAuthenticatorTest {
      */
     @Test
     fun `a connection that sends nothing does not keep the redirect from being read`() = runBlocking {
-        val authenticator = DesktopSyncAuthenticator { true }
+        val authenticator = DesktopSyncAuthenticator(systemBrowser = { true }, logger = Logger.Standard)
         authenticator.prepareRedirectUri()
         val authorization = async { authenticator.authorize("https://example.com/authorize", COMPLETION_PAGE) }
         delay(300)
@@ -129,7 +130,7 @@ class DesktopSyncAuthenticatorTest {
      */
     @Test
     fun `an authorization whose browser could not be opened ends at once`() = runBlocking {
-        val authenticator = DesktopSyncAuthenticator { false }
+        val authenticator = DesktopSyncAuthenticator(systemBrowser = { false }, logger = Logger.Standard)
         authenticator.prepareRedirectUri()
         val outcome = withTimeout(5_000) { authenticator.authorize("https://example.com/authorize", COMPLETION_PAGE) }
         assertIs<SyncAuthenticator.AuthorizationOutcome.Cancelled>(outcome)
