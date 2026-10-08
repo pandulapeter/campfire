@@ -15,7 +15,6 @@ import com.pandulapeter.campfire.chordpro.ChordProVocabulary.BRACKET_CLOSE
 import com.pandulapeter.campfire.chordpro.ChordProVocabulary.BRACKET_OPEN
 import com.pandulapeter.campfire.chordpro.ChordProVocabulary.GRID
 import com.pandulapeter.campfire.chordpro.ChordProVocabulary.KEY
-import com.pandulapeter.campfire.chordpro.ChordProVocabulary.SOURCE_COMMENT
 import com.pandulapeter.campfire.chordpro.ChordProVocabulary.TAB
 import com.pandulapeter.campfire.chordpro.ChordProVocabulary.TRANSPOSE
 import com.pandulapeter.campfire.chordpro.model.ChordDefinition
@@ -211,33 +210,25 @@ internal object ChordProChordRewriter {
         rename: (String) -> String,
         rewriteDefinition: (rawLine: String, selector: String) -> String = { rawLine, _ -> rawLine },
     ): String {
-        val lines = ChordProLines.splitLines(text).toMutableList()
+        // The scanner reads the lines as the file has them, and the loop writes its rewrites into a copy, so a line is
+        // never read after it was rewritten.
+        val writtenLines = ChordProLines.splitLines(text)
+        val lines = writtenLines.toMutableList()
         val tabLineIndices = mutableListOf<Int>() // The tab environment being collected: it is rewritten as a whole.
-        var environment: String? = null
-        lines.forEachIndexed { index, rawLine ->
-            val trimmedLine = rawLine.trim()
-            // Inside an environment handed to another program a `#` and a brace are that program's syntax.
-            val isDelegated = environment in ChordProEnvironments.delegateEnvironments
-            val isSourceComment = trimmedLine.startsWith(SOURCE_COMMENT) && !isDelegated
-            val directive = when {
-                isSourceComment -> null
-                isDelegated -> ChordProDirectives.matchDelegatedDirective(trimmedLine)
-                else -> ChordProDirectives.matchDirective(trimmedLine)
-            }
+        ChordProLineScanner.scan(writtenLines).forEach { line ->
+            val index = line.index
+            val rawLine = line.raw
+            val environment = line.environment
+            val directive = line.directive
             when {
-                isSourceComment -> Unit
+                line.isSourceComment -> Unit
                 directive != null -> {
                     // A definition inside an environment handed to another program is that program's text. One with a
                     // selector is read whichever instrument it names, so it is renamed with the rest.
-                    if (!isDelegated) ChordProDefinitions.selectorOf(directive.name)?.let { lines[index] = rewriteDefinition(rawLine, it) }
-                    if (ChordProDirectives.hasSelectorSuffix(directive.name)) return@forEachIndexed
-                    ChordProEnvironments.startOfEnvironment(directive.name)?.let {
+                    if (!line.isDelegated) ChordProDefinitions.selectorOf(directive.name)?.let { lines[index] = rewriteDefinition(rawLine, it) }
+                    if (ChordProDirectives.hasSelectorSuffix(directive.name)) return@forEach
+                    if (ChordProEnvironments.startOfEnvironment(directive.name) != null || ChordProEnvironments.endOfEnvironment(directive.name) != null) {
                         lines.rewriteTab(tabLineIndices, rewriteTab)
-                        environment = it.lowercase()
-                    }
-                    ChordProEnvironments.endOfEnvironment(directive.name)?.let {
-                        lines.rewriteTab(tabLineIndices, rewriteTab)
-                        environment = null
                     }
                     if (directive.name in ChordProHeaderLayout.blockNames || directive.name == TRANSPOSE) {
                         // The parser cuts the section in two here, and each half of the tab is a run of its own in the model;
@@ -252,7 +243,7 @@ internal object ChordProChordRewriter {
                 }
 
                 environment == TAB -> tabLineIndices += index
-                environment == GRID -> lines[index] = rewriteGridLine(rawLine, trimmedLine, rename)
+                environment == GRID -> lines[index] = rewriteGridLine(rawLine, line.trimmed, rename)
                 environment in ChordProEnvironments.delegateEnvironments -> Unit
                 else -> lines[index] = rewriteLyricsLineChords(rawLine, rename)
             }
