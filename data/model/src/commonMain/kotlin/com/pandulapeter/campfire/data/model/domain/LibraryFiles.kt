@@ -209,7 +209,57 @@ object LibraryFiles {
         ?.let { name.substring(startIndex = 0, endIndex = it.range.first) }
         ?.takeIf { it.isNotEmpty() }
 
+    /**
+     * The one key under which two spellings of a library name are the same file: composed to NFC, then every character
+     * mapped through `uppercaseChar().lowercaseChar()` - exactly what `String.equals(ignoreCase = true)` compares - so
+     * the key and [isSameLibraryName] always agree. The simple case mappings come from Kotlin's own tables, so the key is
+     * the same on every platform, unlike a full `lowercase()`, which changes the length of `İ` and applies the Greek
+     * final sigma rule wherever the runtime does.
+     *
+     * A cased letter above U+FFFF (Deseret, Osage, Vithkuqi, Old Hungarian, Warang Citi, Medefaidrin, Adlam) is folded
+     * as one code point rather than as two surrogates, which Kotlin cannot case: the JVM's `equalsIgnoreCase` folds
+     * them, and the key has to be the same on Kotlin/Native and Kotlin/Wasm, which compare `Char` by `Char`.
+     */
+    fun identityKey(name: String): String {
+        val composed = name.normalizedToNfc()
+        return buildString(composed.length) {
+            var index = 0
+            while (index < composed.length) {
+                val high = composed[index]
+                val low = composed.getOrNull(index + 1)
+                if (high.isHighSurrogate() && low != null && low.isLowSurrogate()) {
+                    val codePoint = (((high.code - 0xD800) shl 10) or (low.code - 0xDC00)) + 0x10000
+                    val folded = lowercaseSupplementary(codePoint) - 0x10000
+                    append(Char(0xD800 + (folded shr 10)))
+                    append(Char(0xDC00 + (folded and 0x3FF)))
+                    index += 2
+                } else {
+                    append(high.uppercaseChar().lowercaseChar())
+                    index++
+                }
+            }
+        }
+    }
+
+    /** Whether [first] and [second] name one library file, see [identityKey]. */
+    fun isSameLibraryName(first: String, second: String) = identityKey(first) == identityKey(second)
+
     private const val FALLBACK_NAME = "untitled"
+
+    /**
+     * The small letter of a capital above U+FFFF, or [codePoint] itself: the bicameral scripts of that range as Unicode
+     * 15 has them, which is what the JVM the desktop ships compares by.
+     */
+    private fun lowercaseSupplementary(codePoint: Int) = when (codePoint) {
+        in 0x10400..0x10427 -> codePoint + 0x28
+        in 0x104B0..0x104D3 -> codePoint + 0x28
+        in 0x10570..0x1057A, in 0x1057C..0x1058A, in 0x1058C..0x10592, in 0x10594..0x10595 -> codePoint + 0x27
+        in 0x10C80..0x10CB2 -> codePoint + 0x40
+        in 0x118A0..0x118BF -> codePoint + 0x20
+        in 0x16E40..0x16E5F -> codePoint + 0x20
+        in 0x1E900..0x1E921 -> codePoint + 0x22
+        else -> codePoint
+    }
 
     private const val HIDDEN_NAME_PREFIX = "."
 
