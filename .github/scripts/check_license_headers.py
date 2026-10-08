@@ -63,7 +63,8 @@ def missing_headers(paths, read):
 
 def tracked_files():
     output = subprocess.run(["git", "ls-files", "-z"], check=True, capture_output=True).stdout
-    return [path for path in output.decode("utf-8").split("\0") if path]
+    # A file deleted from the working tree and not yet committed is still listed, and has nothing left to check.
+    return [path for path in output.decode("utf-8").split("\0") if path and os.path.isfile(path)]
 
 
 def read_file(path):
