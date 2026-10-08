@@ -28,31 +28,9 @@ import com.pandulapeter.campfire.presentation.resources.settings_user_interface_
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color_system
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color_teal
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color_yellow
-import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_dark
-import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_light
-import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_system_default
 import com.pandulapeter.campfire.presentation.ui.theme.isDarkTheme
 import com.pandulapeter.campfire.presentation.ui.theme.themeColorOptions
 import org.jetbrains.compose.resources.painterResource
-
-/** Light, dark or whatever the system is set to, as the settings screen and the welcome sheet both offer it. */
-@Composable
-internal fun UiModeChoice(
-    modifier: Modifier = Modifier,
-    selected: UserPreferences.UiMode?,
-    shouldApplyPadding: Boolean = true,
-    onSelected: (UserPreferences.UiMode) -> Unit,
-) = SegmentedChoice(
-    modifier = modifier,
-    options = listOf(
-        UserPreferences.UiMode.SYSTEM_DEFAULT to stringResource(Res.string.settings_user_interface_theme_system_default),
-        UserPreferences.UiMode.LIGHT to stringResource(Res.string.settings_user_interface_theme_light),
-        UserPreferences.UiMode.DARK to stringResource(Res.string.settings_user_interface_theme_dark),
-    ),
-    shouldApplyPadding = shouldApplyPadding,
-    selected = selected,
-    onSelected = onSelected,
-)
 
 /**
  * How wide the [ThemeColorChoice] is with every color the preference has in one row, the system's included, which is
