@@ -14,7 +14,7 @@ all** — not even Koin: everything in it is a stateless `object`, reached from 
 in `:domain:*`. `:data:source:local:implementation` uses it directly for the metadata of the song list.
 
 Packages (under `com.pandulapeter.campfire.chordpro`): the root holds the entry points the app reads songs through
-(`ChordProParser`, `ChordProSummaryCache`, `ChordProSplitter`, `ChordProSerializer`, `ChordNotation`) and the values a
+(`ChordProParser`, `ChordProSummaryCache`, `ChordProSplitter`, `ChordNotation`) and the values a
 directive holds (`ChordProTempo`, `ChordProTime`, `ChordProDuration`); `model` the immutable song model; `chords` what a
 chord name means, how it is spelled, moved and played (`ChordProChords`, `ChordProNotation`, `ChordProNashville`,
 `ChordProTransposer`, `ChordProTabTransposer`, `ChordProDefinitions`, `ChordVoicings` and their internal helpers);
@@ -178,10 +178,6 @@ which nothing outside the module can see.
   are parsed and dropped. It also understands the Campfire 3 dialect, where `{comment: Verse 1}` outside an environment was a section heading; one that no line
   follows before a blank line, another section or the end of the file stays the comment it was, since a section with
   nothing in it is not drawn.
-- `ChordProSerializer` — writes the model back as canonical ChordPro. The editor works on raw text, so the user's own
-  formatting does not have to survive this; `parse(serialize(parse(x))) == parse(x)` does. A `Timing` is written as
-  the `{tempo}` and `{time}` it changes against the ones in force, starting from the header's, and the definitions
-  after the rest of the header, as `ChordProDefinitions.line` writes them.
 - `ChordProTags` — the tags of a song. ChordPro's own `{tag: Needs study}` directive, one tag per directive and as
   many of them as the song has; `{meta: tag Needs study}`, which the spec documents as the same thing, is read as
   well but never written. The value is taken whole, commas included, because the spec calls a tag arbitrary text — arbitrary text on one line: a line break in a value handed to `addTag` or `removeTag` is read as a space, since it would otherwise end the directive and leave the rest of it in the song as lyrics.
@@ -477,3 +473,8 @@ which nothing outside the module can see.
 
 Everything here is pure, so everything here is tested: `commonTest`, run with `./gradlew :chordpro:desktopTest`. A
 change to the dialect belongs in a test first.
+`ChordProSerializer` lives in `commonTest` alone: a test-only serializer that writes the model back as canonical
+ChordPro, the round-trip oracle `parse(serialize(parse(x))) == parse(x)` the parser's tests hold every model change
+to (the editor works on raw text, so nothing in the app writes a model back). A `Timing` is written as the `{tempo}`
+and `{time}` it changes against the ones in force, starting from the header's, and the definitions after the rest of
+the header, as `ChordProDefinitions.line` writes them.
