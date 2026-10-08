@@ -13,7 +13,6 @@ import com.pandulapeter.campfire.chordpro.ChordProVocabulary.ANNOTATION_MARKER
 import com.pandulapeter.campfire.chordpro.ChordProVocabulary.GRID
 import com.pandulapeter.campfire.chordpro.ChordProVocabulary.KEY
 import com.pandulapeter.campfire.chordpro.ChordProVocabulary.META
-import com.pandulapeter.campfire.chordpro.ChordProVocabulary.SOURCE_COMMENT
 import com.pandulapeter.campfire.chordpro.ChordProVocabulary.TAB
 import com.pandulapeter.campfire.chordpro.ChordProVocabulary.TRANSPOSE
 import com.pandulapeter.campfire.chordpro.model.GridToken
@@ -73,13 +72,6 @@ object ChordProHighlighter {
 
     fun tokenize(text: String): List<Token> {
         val tokens = mutableListOf<Token>()
-        // Chords are not chords on the staff of a tab or inside an environment handed to another program: the brackets
-        // there are part of the tablature or of the notation, and the viewer leaves them alone too. The other lines of
-        // a tab are rows of chord names, whose brackets the transposition renames. A grid has no brackets at all: its
-        // cells are chords as they are, and the transposition renames them.
-        var isInTab = false
-        var isInGrid = false
-        var isInDelegate = false
         // The kinds a line has said something for, and whether the header has a key line, which the parser takes the
         // song's key from even where it is empty.
         val saidOnce = mutableSetOf<String>()
@@ -89,26 +81,18 @@ object ChordProHighlighter {
         val lines = ChordProLines.splitLines(text)
         val lineStarts = ChordProLines.lineStartOffsets(text)
         val bodyStart = ChordProHeaderLayout.bodyStartIndex(lines)
-        lines.forEachIndexed { index, line ->
+        ChordProLineScanner.scan(lines).forEach { scanned ->
+            val index = scanned.index
+            val line = scanned.raw
             val lineStart = lineStarts[index]
-            val trimmed = line.trim()
-            val directive = if (isInDelegate) ChordProDirectives.matchDelegatedDirective(trimmed) else ChordProDirectives.matchDirective(trimmed)
+            val directive = scanned.directive
             when {
-                trimmed.startsWith(SOURCE_COMMENT) && !isInDelegate -> tokens += Token(TokenType.COMMENT, lineStart, lineStart + line.length)
+                scanned.isSourceComment -> tokens += Token(TokenType.COMMENT, lineStart, lineStart + line.length)
 
                 directive != null -> {
-                    ChordProEnvironments.startOfEnvironment(directive.name)?.let {
-                        isInTab = it == TAB
-                        isInGrid = it == GRID
-                        isInDelegate = it in ChordProEnvironments.delegateEnvironments
-                    }
-                    // Any end of an environment ends the way the lines were being read, whichever environment it names: the parser,
-                    // the summary and the transposition all read the lines after it as ordinary ones.
-                    ChordProEnvironments.endOfEnvironment(directive.name)?.let {
-                        isInTab = false
-                        isInGrid = false
-                        isInDelegate = false
-                    }
+                    // A directive that opens or closes an environment is read by the environment it leaves open, which
+                    // is how a `{start_of_abc: …}` line is left alone like the notation after it.
+                    val isInDelegate = scanned.isDelegatedAfter
                     val isUnreadable = !isInDelegate && directive.isUnreadable()
                     val onceOnlyKind = if (isInDelegate || isUnreadable) null else directive.onceOnlyKind()
                     val isReadPast = onceOnlyKind != null &&
@@ -121,16 +105,18 @@ object ChordProHighlighter {
                         else -> directive.tokens(
                             line = line,
                             lineStart = lineStart,
-                            valueStart = ChordProDirectives.directiveValueStart(trimmed),
+                            valueStart = ChordProDirectives.directiveValueStart(scanned.trimmed),
                         )
                     }
                 }
 
-                isInGrid -> tokens += gridChordTokens(line, lineStart)
+                // Chords are not chords on the staff of a tab or inside an environment handed to another program: the
+                // brackets there are part of the tablature or of the notation, and the viewer leaves them alone too. The
+                // other lines of a tab are rows of chord names, whose brackets the transposition renames. A grid has no
+                // brackets at all: its cells are chords as they are, and the transposition renames them.
+                scanned.environment == GRID -> tokens += gridChordTokens(line, lineStart)
 
-                // A staff line's brackets are part of the tablature, which the transposition moves by its frets; the
-                // brackets of any other line of a tab are chords to it, and are coloured as chords here.
-                !isInDelegate && !(isInTab && ChordProTokens.isStaffLine(line)) -> ChordProDirectives.brackets(line).forEach { bracket ->
+                !scanned.isDelegated && !(scanned.environment == TAB && ChordProTokens.isStaffLine(line)) -> ChordProDirectives.brackets(line).forEach { bracket ->
                     bracket.token(lineStart)?.let { tokens += it }
                 }
             }
