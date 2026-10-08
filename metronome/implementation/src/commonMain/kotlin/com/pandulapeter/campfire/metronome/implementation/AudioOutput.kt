@@ -51,6 +51,18 @@ internal interface AudioOutput {
     companion object {
         const val CHUNK_SECONDS = 0.02
         const val QUEUED_SECONDS = 0.1
+
+        /** The rate an output runs at where it chooses its own, and falls back on where the device reports none. */
+        const val DEFAULT_SAMPLE_RATE = 48_000
+
+        /** One frame of 16-bit mono PCM. */
+        const val BYTES_PER_FRAME = 2
+
+        /** The frames of one chunk an output writes at a time, [CHUNK_SECONDS] long. */
+        fun chunkFrames(sampleRate: Int) = (CHUNK_SECONDS * sampleRate).toInt()
+
+        /** The frames an output keeps queued ahead of the one being heard, [QUEUED_SECONDS] long. */
+        fun queuedFrames(sampleRate: Int) = (QUEUED_SECONDS * sampleRate).toInt()
     }
 }
 

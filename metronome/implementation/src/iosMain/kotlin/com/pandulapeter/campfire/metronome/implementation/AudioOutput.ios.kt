@@ -74,7 +74,8 @@ internal class IosAudioOutput : AudioOutput {
 
     @Volatile
     private var gapTracker: PlaybackGapTracker? = null
-    private var sampleRate = DEFAULT_SAMPLE_RATE
+    /** The rate the session reports it runs at, [AudioOutput.DEFAULT_SAMPLE_RATE] only for one that reports none. */
+    private var sampleRate = AudioOutput.DEFAULT_SAMPLE_RATE
     private var observers = emptyList<NSObjectProtocol>()
 
     override fun start(isPreview: Boolean, createStream: (sampleRate: Int) -> ClickStream, listener: AudioOutputListener): AudioOutputStart {
@@ -86,7 +87,7 @@ internal class IosAudioOutput : AudioOutput {
                 session.setActive(true, error.ptr)
         }
         if (!isActive) return AudioOutputStart.Refused(MetronomeStopReason.AUDIO_REFUSED)
-        sampleRate = session.sampleRate.toInt().takeIf { it > 0 } ?: DEFAULT_SAMPLE_RATE
+        sampleRate = session.sampleRate.toInt().takeIf { it > 0 } ?: AudioOutput.DEFAULT_SAMPLE_RATE
         val format = AVAudioFormat(standardFormatWithSampleRate = sampleRate.toDouble(), channels = 1u)
         val engine = AVAudioEngine()
         val player = AVAudioPlayerNode()
@@ -107,7 +108,7 @@ internal class IosAudioOutput : AudioOutput {
         this.player = player
         observers = observe(engine, listener)
         val stream = createStream(sampleRate)
-        val frames = (AudioOutput.CHUNK_SECONDS * sampleRate).toInt()
+        val frames = AudioOutput.chunkFrames(sampleRate)
         val buffers = List(BUFFER_COUNT) { AVAudioPCMBuffer(pCMFormat = format, frameCapacity = frames.toUInt())!! }
         val samples = ShortArray(frames)
         // Created empty, never with a count: libdispatch ends the process when a semaphore is released holding less than
@@ -225,7 +226,6 @@ internal class IosAudioOutput : AudioOutput {
     }
 
     private companion object {
-        const val DEFAULT_SAMPLE_RATE = 48_000
         const val BUFFER_COUNT = 5
         const val SHORT_SCALE = 32_768f
     }

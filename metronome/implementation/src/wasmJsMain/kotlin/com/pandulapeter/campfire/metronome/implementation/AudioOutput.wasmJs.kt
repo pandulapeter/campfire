@@ -54,7 +54,7 @@ internal class WebAudioOutput : AudioOutput {
         // audio thread.
         startTime = contextTime() + START_DELAY_SECONDS
         val stream = createStream(sampleRate)
-        val aheadFrames = (AudioOutput.QUEUED_SECONDS * sampleRate).toLong()
+        val aheadFrames = AudioOutput.queuedFrames(sampleRate).toLong()
         val loadedVoices = mutableSetOf<String>()
         var isRunning = isContextRunning()
         job = scope.launch {

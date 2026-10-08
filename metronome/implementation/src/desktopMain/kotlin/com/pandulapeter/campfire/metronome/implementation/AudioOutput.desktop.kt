@@ -34,7 +34,7 @@ internal class DesktopAudioOutput : AudioOutput {
         val format = AudioFormat(SAMPLE_RATE.toFloat(), 16, 1, true, false)
         val line = try {
             AudioSystem.getSourceDataLine(format).apply {
-                open(format, (AudioOutput.QUEUED_SECONDS * SAMPLE_RATE).toInt() * format.frameSize)
+                open(format, AudioOutput.queuedFrames(SAMPLE_RATE) * format.frameSize)
                 start()
             }
         } catch (_: Exception) {
@@ -51,7 +51,7 @@ internal class DesktopAudioOutput : AudioOutput {
     }
 
     private fun feed(line: SourceDataLine, stream: ClickStream, listener: AudioOutputListener) {
-        val frames = (AudioOutput.CHUNK_SECONDS * SAMPLE_RATE).toInt()
+        val frames = AudioOutput.chunkFrames(SAMPLE_RATE)
         val samples = ShortArray(frames)
         val bytes = ByteArray(frames * 2)
         try {
@@ -88,6 +88,6 @@ internal class DesktopAudioOutput : AudioOutput {
     }
 
     private companion object {
-        const val SAMPLE_RATE = 48_000
+        const val SAMPLE_RATE = AudioOutput.DEFAULT_SAMPLE_RATE
     }
 }

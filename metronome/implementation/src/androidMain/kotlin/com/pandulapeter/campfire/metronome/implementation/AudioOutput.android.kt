@@ -52,7 +52,8 @@ internal class AndroidAudioOutput(
 
     @Volatile
     private var track: AudioTrack? = null
-    private var sampleRate = DEFAULT_SAMPLE_RATE
+    /** The rate the device reports it mixes at, [AudioOutput.DEFAULT_SAMPLE_RATE] only for one that reports none. */
+    private var sampleRate = AudioOutput.DEFAULT_SAMPLE_RATE
     private var focusRequest: AudioFocusRequest? = null
     private var noisyReceiver: BroadcastReceiver? = null
 
@@ -76,7 +77,7 @@ internal class AndroidAudioOutput(
             return AudioOutputStart.Refused(MetronomeStopReason.AUDIO_REFUSED)
         }
         this.focusRequest = focusRequest
-        sampleRate = audioManager.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE)?.toIntOrNull() ?: DEFAULT_SAMPLE_RATE
+        sampleRate = audioManager.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE)?.toIntOrNull() ?: AudioOutput.DEFAULT_SAMPLE_RATE
         val track = try {
             AudioTrack.Builder()
                 .setAudioAttributes(attributes)
@@ -91,7 +92,7 @@ internal class AndroidAudioOutput(
                 .setBufferSizeInBytes(
                     maxOf(
                         AudioTrack.getMinBufferSize(sampleRate, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT),
-                        (AudioOutput.QUEUED_SECONDS * sampleRate).toInt() * BYTES_PER_FRAME,
+                        AudioOutput.queuedFrames(sampleRate) * AudioOutput.BYTES_PER_FRAME,
                     )
                 )
                 .build()
@@ -113,7 +114,7 @@ internal class AndroidAudioOutput(
 
     private fun feed(track: AudioTrack, stream: ClickStream, listener: AudioOutputListener) {
         Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO)
-        val frames = (AudioOutput.CHUNK_SECONDS * sampleRate).toInt()
+        val frames = AudioOutput.chunkFrames(sampleRate)
         val samples = ShortArray(frames)
         try {
             while (this.track === track) {
@@ -178,10 +179,5 @@ internal class AndroidAudioOutput(
     private fun abandonFocus() {
         focusRequest?.let(audioManager::abandonAudioFocusRequest)
         focusRequest = null
-    }
-
-    private companion object {
-        const val DEFAULT_SAMPLE_RATE = 48_000
-        const val BYTES_PER_FRAME = 2
     }
 }

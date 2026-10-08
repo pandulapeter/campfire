@@ -36,7 +36,7 @@ internal class SilentAudioOutput(
         stop()
         val stream = createStream(SAMPLE_RATE)
         val mark = timeSource.markNow().also { startMark = it }
-        val aheadFrames = (AudioOutput.QUEUED_SECONDS * SAMPLE_RATE).toLong()
+        val aheadFrames = AudioOutput.queuedFrames(SAMPLE_RATE).toLong()
         job = scope.launch(dispatcher) {
             while (isActive) {
                 val now = AudioClock.framesIn(mark.elapsedNow().inWholeMicroseconds, SAMPLE_RATE)
@@ -56,6 +56,6 @@ internal class SilentAudioOutput(
     }
 
     private companion object {
-        const val SAMPLE_RATE = 48_000
+        const val SAMPLE_RATE = AudioOutput.DEFAULT_SAMPLE_RATE
     }
 }

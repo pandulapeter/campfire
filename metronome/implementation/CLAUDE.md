@@ -44,7 +44,8 @@ preview while stopped opens the output for one and a half seconds after the last
 transient duck, iOS's ambient category) rather than playback's.
 
 The outputs (~20 ms chunks, ~100 ms queued — latency is only heard at start and stop, and the depth is the slack a
-locked phone, a busy desktop or a Kotlin/Native collection needs; a stop flushes rather than plays out):
+locked phone, a busy desktop or a Kotlin/Native collection needs; a stop flushes rather than plays out; the two
+durations, the frames they come to at a rate and the 48 kHz default are declared once, on `AudioOutput`'s companion):
 
 - **Android** — `AudioTrack` streaming at the device's native rate, default performance mode (not low latency, which
   buys nothing audible and costs underruns with the screen off), fed from a thread at `THREAD_PRIORITY_URGENT_AUDIO`
