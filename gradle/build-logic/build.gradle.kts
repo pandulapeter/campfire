@@ -30,6 +30,7 @@ dependencies {
     implementation(libs.koin.compilerPlugin)
     implementation(libs.kotlin)
     implementation(libs.kotlin.composeCompiler)
+    implementation(libs.spotless.gradlePlugin)
 }
 
 gradlePlugin {
@@ -45,6 +46,10 @@ gradlePlugin {
         register("koin") {
             id = "campfire-koin"
             implementationClass = "com.pandulapeter.campfire.buildLogic.plugins.KoinPlugin"
+        }
+        register("style") {
+            id = "campfire-style"
+            implementationClass = "com.pandulapeter.campfire.buildLogic.plugins.StylePlugin"
         }
     }
 }

@@ -33,8 +33,10 @@ kotlin-browser = "0.5.0" # https://github.com/Kotlin/kotlinx-browser/releases
 kotlin-coroutines = "1.11.0" # https://github.com/Kotlin/kotlinx.coroutines/releases
 kotlin-datetime = "0.8.0" # https://github.com/Kotlin/kotlinx-datetime/releases
 kotlin-serialization = "1.11.0" # https://github.com/Kotlin/kotlinx.serialization/releases
+ktlint = "1.8.0" # https://github.com/pinterest/ktlint/releases
 ktor = "3.6.0" # https://github.com/ktorio/ktor/releases
 skiko = "0.150.1" # Must equal the skiko version Compose brings in: ./gradlew :app:desktop:dependencies --configuration runtimeClasspath | grep skiko
+spotless = "8.10.2" # https://github.com/diffplug/spotless/blob/main/plugin-gradle/CHANGES.md
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity" }
@@ -80,6 +82,7 @@ ktor-client-js = { module = "io.ktor:ktor-client-js", version.ref = "ktor" }
 ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
 skiko-angle-windows-x64 = { module = "org.jetbrains.skiko:skiko-awt-runtime-angle-windows-x64", version.ref = "skiko" }
+spotless-gradlePlugin = { module = "com.diffplug.spotless:spotless-plugin-gradle", version.ref = "spotless" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "gradle" }
@@ -93,3 +96,4 @@ koin-compiler = { id = "io.insert-koin.compiler.plugin", version.ref = "koin-com
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }

@@ -26,6 +26,38 @@ ij_kotlin_allow_trailing_comma_on_call_site = true
 ij_kotlin_name_count_to_use_star_import = 999
 ij_kotlin_name_count_to_use_star_import_for_members = 999
 ktlint_code_style = intellij_idea
+# ktlint checks the rules the code already follows. Each rule below is one the code does not follow today, enabled
+# later in a commit of its own that also applies it. Two of them are the trailing comma rules, which cannot be: ktlint
+# wants a comma after the single argument of a call broken across lines, before the ';' that ends an enum with members
+# and after the last condition of a when branch, all three of which the code style leaves without one.
+ktlint_standard_annotation = disabled
+ktlint_standard_argument-list-wrapping = disabled
+ktlint_standard_backing-property-naming = disabled
+ktlint_standard_binary-expression-wrapping = disabled
+ktlint_standard_blank-line-between-when-conditions = disabled
+ktlint_standard_class-signature = disabled
+ktlint_standard_enum-wrapping = disabled
+ktlint_standard_filename = disabled
+ktlint_standard_function-literal = disabled
+ktlint_standard_function-naming = disabled
+ktlint_standard_function-signature = disabled
+ktlint_standard_indent = disabled
+ktlint_standard_import-ordering = disabled
+ktlint_standard_keyword-spacing = disabled
+ktlint_standard_kdoc = disabled
+ktlint_standard_max-line-length = disabled
+ktlint_standard_mixed-condition-operators = disabled
+ktlint_standard_multiline-if-else = disabled
+ktlint_standard_multiline-loop = disabled
+ktlint_standard_parameter-list-wrapping = disabled
+ktlint_standard_paren-spacing = disabled
+ktlint_standard_property-naming = disabled
+ktlint_standard_property-wrapping = disabled
+ktlint_standard_spacing-between-declarations-with-comments = disabled
+ktlint_standard_statement-wrapping = disabled
+ktlint_standard_trailing-comma-on-call-site = disabled
+ktlint_standard_trailing-comma-on-declaration-site = disabled
+ktlint_standard_wrapping = disabled
 
 [*.{yml,yaml,json}]
 indent_size = 2

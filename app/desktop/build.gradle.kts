@@ -24,6 +24,7 @@ plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.compose)
     alias(libs.plugins.compose.compiler)
+    id("campfire-style")
 }
 
 /**

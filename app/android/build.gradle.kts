@@ -13,6 +13,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.androidx.baselineprofile)
     alias(libs.plugins.compose.compiler)
+    id("campfire-style")
 }
 
 dependencies {

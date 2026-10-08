@@ -25,6 +25,7 @@ class ComposeLibraryPlugin : Plugin<Project> {
         with(pluginManager) {
             apply(libs.pluginId("kotlin-multiplatform"))
             apply(libs.pluginId("android-multiplatformLibrary"))
+            apply(StylePlugin::class.java)
             apply(libs.pluginId("compose"))
             apply(libs.pluginId("compose-compiler"))
         }

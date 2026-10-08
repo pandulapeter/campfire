@@ -14,6 +14,7 @@ plugins {
     alias(libs.plugins.compose)
     alias(libs.plugins.compose.compiler)
     application
+    id("campfire-style")
 }
 
 dependencies {

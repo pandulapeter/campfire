@@ -10,6 +10,7 @@
 plugins {
     alias(libs.plugins.android.test)
     alias(libs.plugins.androidx.baselineprofile)
+    id("campfire-style")
 }
 
 android {
