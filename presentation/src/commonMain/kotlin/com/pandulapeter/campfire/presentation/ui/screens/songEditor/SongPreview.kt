@@ -78,6 +78,8 @@ internal fun SongPreview(
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val labels = rememberDefaultSectionLabels(shouldNumberSections = userPreferences?.shouldNumberSections == true)
     val latestChordSpelling by rememberUpdatedState(chordSpelling)
+    val songRenderer = viewModel.songRenderer
+    val notation = viewModel.editorNotation
     // Lyrics only mode is about how a song is read, and this preview is here to show what is being written: chords
     // typed into the field opposite it have to appear, or the editor would answer an edit with nothing. The reader's
     // transposition is a way of reading it too, so the preview is in the key the field and the stepper name - the
@@ -90,7 +92,7 @@ internal fun SongPreview(
         labels = labels,
     )
     fun prepare(inputs: SongLyricsInputs) = prepareSongLyrics(
-        song = viewModel.renderSong(inputs.text, inputs.transposition, inputs.spelling, writtenIn = viewModel.editorNotation),
+        song = songRenderer.renderSong(inputs.text, inputs.transposition, inputs.spelling, writtenIn = notation),
         shouldShowChords = inputs.shouldShowChords,
         labels = inputs.labels,
         notation = inputs.spelling.notation.toChordNotation(),
@@ -128,7 +130,7 @@ internal fun SongPreview(
             isSongInfoShown = true,
             songInfoEditing = songInfoEditing,
             // Whatever the two switches and the instrument in Settings say: what is being written is what is shown.
-            chordDiagrams = remember { ChordDiagrams(instrument = ChordInstrument.GUITAR, showsDefinitionsOnly = true, notation = viewModel.editorNotation.toChordNotation()) },
+            chordDiagrams = remember { ChordDiagrams(instrument = ChordInstrument.GUITAR, showsDefinitionsOnly = true, notation = notation.toChordNotation()) },
         )
     }
 }

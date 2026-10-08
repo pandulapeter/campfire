@@ -103,7 +103,7 @@ internal fun SongPicker(
     val matches = remember(pickableSongs, query, activeTags, activeLanguages) {
         songPickerMatches(
             songs = pickableSongs,
-            normalizedQuery = viewModel.normalizeForSearch(query),
+            normalizedQuery = viewModel.songRenderer.normalizeForSearch(query),
             activeTags = activeTags,
             activeLanguages = activeLanguages,
         )

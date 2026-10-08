@@ -59,7 +59,7 @@ import kotlin.time.Duration
  * @param index The song's place in the setlist it is listed in, prefixed to its title.
  *   Null on the screens where a song is not in an order of anyone's making and a number would only claim it was.
  * @param key The key the song sounds in where it is listed, the transposition and the capo of that listing applied,
- *   which is a different key in every setlist that plays it differently (`CampfireViewModel.renderKey`), drawn next to
+ *   which is a different key in every setlist that plays it differently (`SongRenderer.renderKey`), drawn next to
  *   the artist. Null for a file that declares none.
  * @param tempo The tempo the song is played at where it is listed, the override of that listing applied. Null where
  *   neither the file nor an override names one, since the metronome's default says nothing about this song.

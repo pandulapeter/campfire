@@ -98,7 +98,7 @@ internal fun ChordShapesSheet(
     val transposition = transpositions[song.fileName, dialog.setlistFileName]
     val capo = effectiveCapo(song = song, setlistFileName = dialog.setlistFileName, capos = capos).fret
     val chords by produceState<List<SongChord>?>(null, text, transposition, capo, spelling, instrument) {
-        value = text?.let { withContext(Dispatchers.Default) { songChordsOf(viewModel.transposedSong(it, transposition, spelling), notation, instrument, capo) } }
+        value = text?.let { withContext(Dispatchers.Default) { songChordsOf(viewModel.songRenderer.transposedSong(it, transposition, spelling), notation, instrument, capo) } }
     }
     val storedShapes = userPreferences?.chordVoicings?.get(instrument.id).orEmpty()
     CampfireBottomSheet(

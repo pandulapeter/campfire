@@ -267,7 +267,7 @@ internal fun SetlistList(
 
     val isSearchOpen by viewModel.setlistsSearch.isOpen.collectAsStateWithLifecycle()
     val query = if (isSearchOpen) viewModel.setlistsSearch.textFieldState.text.toString() else ""
-    val searchedQuery = remember(query) { viewModel.normalizeForSearch(query) }
+    val searchedQuery = remember(query) { viewModel.songRenderer.normalizeForSearch(query) }
     ScrollToTopWhenChanged(
         listState = listState,
         // A closed search narrows nothing whatever its field still holds, as on the songs screen, and the query is
@@ -444,7 +444,7 @@ internal fun SetlistList(
                             val transposition = transpositions[present.song.fileName, setlistWithSongs.setlist.fileName]
                             val capo = effectiveCapo(song = present.song, setlistFileName = setlistWithSongs.setlist.fileName, capos = capos).fret
                             remember(present.song.key, present.song.transpose, transposition, capo, chordSpelling) {
-                                viewModel.renderKey(song = present.song, transposition = transposition, capo = capo, spelling = chordSpelling)
+                                viewModel.songRenderer.renderKey(song = present.song, transposition = transposition, capo = capo, spelling = chordSpelling)
                             }
                         }
                         // ReorderableItem's drag tracking, and the elevation and color it animates while a row is

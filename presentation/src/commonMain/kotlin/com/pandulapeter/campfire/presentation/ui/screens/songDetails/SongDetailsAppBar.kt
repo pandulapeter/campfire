@@ -220,7 +220,7 @@ internal fun SongDetailsAppBar(
                 // content was composed for rather than for the current one, since a crossfade between two songs
                 // draws both at once. Lyrics only mode says nothing about either, as it says nothing in a row.
                 val headerKey = song?.takeIf { shouldShowChords && it.hasChords }?.let {
-                    viewModel.renderKey(
+                    viewModel.songRenderer.renderKey(
                         song = it,
                         transposition = transpositions[it.fileName, destination.setlistFileName],
                         capo = effectiveCapo(song = it, setlistFileName = destination.setlistFileName, capos = capos).fret,

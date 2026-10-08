@@ -156,9 +156,11 @@ internal fun LoadedSongEditor(
     // The text as one string, copied once per edit and shared by everything that follows it: the draft, the summary
     // in the bar, the toolbar and the preview would otherwise each copy and scan the whole song on every keystroke.
     val text = remember(textFieldState) { derivedStateOf { textFieldState.text.toString() } }
+    val songRenderer = viewModel.songRenderer
+    val notation = viewModel.editorNotation
     // Compare with the same formatted draft the action applies, so the option follows typing, undo and revert. Only the
     // open menu reads it (ActionsMenuItem.isEnabledInMenu), so typing never prettifies the whole song.
-    val prettifiedText = remember(textFieldState, viewModel) { derivedStateOf { viewModel.prettifyText(text.value) } }
+    val prettifiedText = remember(textFieldState, viewModel) { derivedStateOf { songRenderer.prettifyText(text.value) } }
     ReportDraft(viewModel = viewModel, fileName = destination.fileName, text = text, textFieldState = textFieldState)
 
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
@@ -167,7 +169,7 @@ internal fun LoadedSongEditor(
     // comes from the parser rather than from a regex of this screen's own, so that it is the same title, artist and
     // key the rest of the app will show once the file is written - the fallback to the file name included. One
     // summary rather than a parse per field: it also answers whether there is anything left to transpose.
-    val summaryCache = remember(textFieldState) { viewModel.editorSummaryCache() }
+    val summaryCache = remember(textFieldState) { songRenderer.editorSummaryCache(notation) }
     val summary by remember(textFieldState) { derivedStateOf { summaryCache.summaryOf(text.value) } }
     val hasUnsavedChanges by viewModel.hasUnsavedEditorChanges.collectAsStateWithLifecycle()
     RevertOnRequest(viewModel = viewModel, fileName = destination.fileName, textFieldState = textFieldState, summaryCache = summaryCache)
@@ -358,12 +360,12 @@ internal fun LoadedSongEditor(
                     ) {
                         TextTranspositionControls(
                             // The summary reads the key into the standard notation, and the field is in the editor's.
-                            key = summary.metadata.key?.let(viewModel::editorKeyOf),
+                            key = summary.metadata.key?.let { songRenderer.editorKeyOf(it, notation) },
                             // A key is enough on its own: it says what the song is in, and moving it is a transposition
                             // even before a chord has been written under it.
                             isEnabled = summary.hasChords || !summary.metadata.key.isNullOrBlank(),
                             onTransposed = { semitones ->
-                                textFieldState.replaceWithTransposition(viewModel.transposeText(textFieldState.text.toString(), semitones, chordSpelling.accidentals))
+                                textFieldState.replaceWithTransposition(songRenderer.transposeText(textFieldState.text.toString(), semitones, chordSpelling.accidentals, notation))
                             },
                         )
                         SegmentedChoice(
@@ -399,7 +401,7 @@ internal fun LoadedSongEditor(
                         chordShapes = remember(userPreferences) {
                             val instrument = (userPreferences?.chordInstrument ?: UserPreferences.ChordInstrument.GUITAR).toChordInstrument()
                             EditorChordShapes(
-                                notation = viewModel.editorNotation.toChordNotation(),
+                                notation = notation.toChordNotation(),
                                 instrument = instrument,
                                 storedShapes = userPreferences?.chordVoicings?.get(instrument.id).orEmpty(),
                             )

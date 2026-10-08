@@ -67,7 +67,7 @@ internal fun rememberSongPlayingControls(
     // The key the transposition alone takes the song to, which is what the chords on the page spell: the capo is the
     // stepper next to this one and moves the sounding key without moving a chord, so counting it in here would have
     // this control naming a key that is written nowhere in the song. The app bar's is the sounding one.
-    val key = if (canTranspose) viewModel.renderKey(song = song, transposition = transposition, capo = 0, spelling = chordSpelling) else null
+    val key = if (canTranspose) viewModel.songRenderer.renderKey(song = song, transposition = transposition, capo = 0, spelling = chordSpelling) else null
     val timeSignature = song.timeSignatureOrDefault.toString()
     val fileName = song.fileName
     return remember(

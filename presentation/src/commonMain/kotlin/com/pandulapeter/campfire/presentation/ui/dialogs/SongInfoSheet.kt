@@ -111,7 +111,7 @@ internal fun SongInfoSheet(
                 // Each value goes with its feature, and the group with both of them, see SongPlayingDialog.
                 defaults = if (shouldShowChords || shouldShowTempo) {
                     SongDefaults(
-                        key = metadata.key?.takeIf { shouldShowChords && it.isNotBlank() }?.let(viewModel::editorKeyOf),
+                        key = metadata.key?.takeIf { shouldShowChords && it.isNotBlank() }?.let { viewModel.songRenderer.editorKeyOf(it, viewModel.editorNotation) },
                         capo = metadata.capo?.takeIf { shouldShowChords },
                         tempo = ChordProTempo.parse(metadata.tempo)?.takeIf { shouldShowTempo },
                         time = metadata.time?.takeIf { shouldShowTempo },

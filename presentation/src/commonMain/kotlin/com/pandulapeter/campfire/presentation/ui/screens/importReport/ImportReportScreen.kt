@@ -94,7 +94,7 @@ internal fun ImportReportScreen(
             is ImportReport.Finished -> shown.result?.let { importReportSections(it, songs, setlists) }.orEmpty()
         }
     }
-    val matchingSections = remember(sections, query) { sections.matching(query, viewModel::normalizeForSearch) }
+    val matchingSections = remember(sections, query) { sections.matching(query, viewModel.songRenderer::normalizeForSearch) }
     val isSearchAvailable = sections.isNotEmpty()
     val layoutDirection = LocalLayoutDirection.current
     // Narrowed rather than taken apart, so that the keyboard of the search field lays the list out again as it slides

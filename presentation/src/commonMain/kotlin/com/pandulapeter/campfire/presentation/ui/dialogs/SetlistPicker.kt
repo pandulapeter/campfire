@@ -66,9 +66,9 @@ internal fun SetlistPicker(
     // Answered by the title or the description, the way the setlists screen's own search answers, but not by the
     // songs inside: the song this sheet is about is the only one that matters here.
     val matches = remember(pickableSetlists, query) {
-        val normalizedQuery = viewModel.normalizeForSearch(query)
+        val normalizedQuery = viewModel.songRenderer.normalizeForSearch(query)
         pickableSetlists.filter { setlist ->
-            normalizedQuery in viewModel.normalizeForSearch(setlist.title) || normalizedQuery in viewModel.normalizeForSearch(setlist.description)
+            normalizedQuery in viewModel.songRenderer.normalizeForSearch(setlist.title) || normalizedQuery in viewModel.songRenderer.normalizeForSearch(setlist.description)
         }
     }
     val isSkippingToNewSetlist = rememberSaveable { !hasListableSetlist(setlists, dialog.song.fileName) }

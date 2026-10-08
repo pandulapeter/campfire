@@ -92,7 +92,7 @@ internal fun SongLanguagesDialog(
     val languages = remember(dialog.song, libraryLanguages, appLanguageCode, sortingMode) {
         val declared = dialog.song.languages
         val libraryCodes = libraryLanguages.map { it.code }.filterNot { it == SongLanguage.UNKNOWN }
-        val pickable = pickableLanguages(appLanguageCode = appLanguageCode, alsoOffer = declared + libraryCodes, normalize = viewModel::normalize)
+        val pickable = pickableLanguages(appLanguageCode = appLanguageCode, alsoOffer = declared + libraryCodes, normalize = viewModel.songRenderer::normalize)
         val leading = when (sortingMode) {
             UserPreferences.LabelSortingMode.BY_USAGE -> libraryCodes.distinct()
             UserPreferences.LabelSortingMode.ALPHABETICAL -> emptyList()
@@ -102,10 +102,10 @@ internal fun SongLanguagesDialog(
     val focusRequester = rememberFirstFieldFocusRequester()
     val keyboardController = LocalSoftwareKeyboardController.current
     val matches = remember(languages, query) {
-        val normalizedQuery = viewModel.normalize(query)
+        val normalizedQuery = viewModel.songRenderer.normalize(query)
         // What was typed may be a code, and not the one the library files the language under: `HUN`, `hu-HU` and
         // `hu` all name Hungarian, and whichever of them a reader knows has to find the single row that is.
-        val queryCode = viewModel.languageCode(query)
+        val queryCode = viewModel.songRenderer.languageCode(query)
         if (normalizedQuery.isEmpty()) {
             languages.filter { it.isListed }
         } else {

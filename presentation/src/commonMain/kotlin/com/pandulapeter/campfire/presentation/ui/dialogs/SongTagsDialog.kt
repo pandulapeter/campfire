@@ -97,9 +97,9 @@ internal fun SongTagsDialog(
         } + ownTags).distinctBy { it.lowercase() }
         if (sortingMode == UserPreferences.LabelSortingMode.ALPHABETICAL) tags.sortedAlphabeticallyBy { it } else tags
     }
-    val searchableTags = remember(offeredTags) { offeredTags.map { it to viewModel.normalizeForSearch(it) } }
+    val searchableTags = remember(offeredTags) { offeredTags.map { it to viewModel.songRenderer.normalizeForSearch(it) } }
     val matches = remember(searchableTags, query) {
-        val normalizedQuery = viewModel.normalizeForSearch(query)
+        val normalizedQuery = viewModel.songRenderer.normalizeForSearch(query)
         searchableTags.mapNotNull { (tag, name) -> tag.takeIf { normalizedQuery in name } }
     }
     val checkedTagKeys = selectedTags.toSet()

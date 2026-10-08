@@ -26,11 +26,14 @@ internal fun RevertOnRequest(
     fileName: String,
     textFieldState: TextFieldState,
     summaryCache: ChordProSummaryCache,
-) = LaunchedEffect(textFieldState, fileName) {
-    viewModel.editorRevertRequests.collect {
-        viewModel.songTexts.value[fileName]?.let { text ->
-            summaryCache.clear()
-            textFieldState.replaceAll(viewModel.editorTextOf(text), isSelectionMapped = false)
+) {
+    val notation = viewModel.editorNotation
+    LaunchedEffect(textFieldState, fileName) {
+        viewModel.editorRevertRequests.collect {
+            viewModel.songTexts.value[fileName]?.let { text ->
+                summaryCache.clear()
+                textFieldState.replaceAll(viewModel.songRenderer.editorTextOf(text, notation), isSelectionMapped = false)
+            }
         }
     }
 }

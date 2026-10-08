@@ -284,7 +284,7 @@ internal fun SongList(
                     val capo = effectiveCapo(song = song, setlistFileName = null, capos = capos)
                     val tempo = effectiveTempo(song = song, setlistFileName = null, tempos = tempos)
                     val key = remember(song.key, song.transpose, transposition, capo, chordSpelling) {
-                        viewModel.renderKey(song = song, transposition = transposition, capo = capo.fret, spelling = chordSpelling)
+                        viewModel.songRenderer.renderKey(song = song, transposition = transposition, capo = capo.fret, spelling = chordSpelling)
                     }
                     // Worked out here rather than inside the row's actions, so that they capture what changes for this row
                     // alone rather than the set that is new on every write to any setlist.

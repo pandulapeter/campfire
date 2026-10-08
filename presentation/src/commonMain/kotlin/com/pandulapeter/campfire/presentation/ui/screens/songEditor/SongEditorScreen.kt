@@ -80,16 +80,18 @@ internal fun SongEditorScreen(
     //
     // The field is in the editor's notation, so every text of the file it is compared with or replaced by is too.
     var hasOpened by rememberSaveable(destination.fileName) { mutableStateOf(false) }
+    val notation = viewModel.editorNotation
+    val editorTextOf = remember(notation) { { text: String -> viewModel.songRenderer.editorTextOf(text, notation) } }
     var initialText by remember(destination.fileName) {
         mutableStateOf(
-            viewModel.songTexts.value[destination.fileName]?.let(viewModel::editorTextOf)
+            viewModel.songTexts.value[destination.fileName]?.let(editorTextOf)
                 ?: viewModel.retainedEditorField(destination.fileName)?.let { "" }
         )
     }
     LaunchedEffect(destination.fileName) {
         viewModel.loadSongContent(destination.fileName).join()
-        if (initialText == null && hasOpened) initialText = viewModel.songTexts.value[destination.fileName]?.let(viewModel::editorTextOf) ?: ""
-        initialText = initialText ?: viewModel.songTexts.mapNotNull { it[destination.fileName] }.first().let(viewModel::editorTextOf)
+        if (initialText == null && hasOpened) initialText = viewModel.songTexts.value[destination.fileName]?.let(editorTextOf) ?: ""
+        initialText = initialText ?: viewModel.songTexts.mapNotNull { it[destination.fileName] }.first().let(editorTextOf)
         hasOpened = true
     }
     AnimatedContent(
