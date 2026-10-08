@@ -326,8 +326,8 @@ private data class EditorInsertion(
 
         /**
          * A custom metadata item, which is how ChordPro carries what it has no directive of its own for — the
-         * language of a song, its cover and its links being the three Campfire reads, see `ChordProSyntax.language`,
-         * `ChordProSyntax.cover` and `ChordProSyntax.link`. Part of the header like every other [metadata] item, whatever it is spelled as.
+         * language of a song, its cover and its links being the three Campfire reads, see `ChordProMetaItems.language`,
+         * `ChordProMetaItems.cover` and `ChordProMetaItems.link`. Part of the header like every other [metadata] item, whatever it is spelled as.
          */
         fun meta(label: String, key: String) = EditorInsertion(
             label = label,

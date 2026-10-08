@@ -14,7 +14,7 @@ import platform.Foundation.NSLocaleLanguageCode
 
 /**
  * The language code key rather than the identifier one: asked about `en-US` the latter answers "English (United
- * States)", which is a name for a dialect the library does not file songs under, see `ChordProSyntax.languageCode`.
+ * States)", which is a name for a dialect the library does not file songs under, see `ChordProMetaItems.languageCode`.
  */
 internal actual fun languageDisplayName(code: String, inLocaleCode: String): String? =
     NSLocale(localeIdentifier = inLocaleCode).displayNameForKey(key = NSLocaleLanguageCode, value = code)?.takeIf { it.isNotEmpty() }

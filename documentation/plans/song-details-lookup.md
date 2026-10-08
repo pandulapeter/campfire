@@ -40,7 +40,7 @@ editor).
   state across an Android activity being recreated and drops it in `setVisibleDialog` once the sheet is gone.
 - **The writing is already there too**: `SetChordProMetadataUseCase` (`ChordProMetadataFields.set`, which rewrites the
   line a field is read from in place, in the spelling it was written in, and inserts a missing one where
-  `ChordProSyntax.metadataInsertionIndex` puts it), `SetChordProCoverArtUseCase` and `SetChordProLanguagesUseCase`,
+  `ChordProHeaderLayout.metadataInsertionIndex` puts it), `SetChordProCoverArtUseCase` and `SetChordProLanguagesUseCase`,
   all reached through `CampfireViewModel.editSong`, which hands an editor draft's change to `editorTextEdits` and
   writes a library file through `editSongText`, re-reading a file that changed underneath it.
 - **The limiter is not shared yet, and has to be before anything else lands.** `DataRemoteSourceModule
