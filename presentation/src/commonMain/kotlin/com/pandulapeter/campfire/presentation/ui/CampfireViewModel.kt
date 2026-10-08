@@ -61,7 +61,6 @@ import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeController
 import com.pandulapeter.campfire.presentation.ui.playing.Transpositions
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
-import com.pandulapeter.campfire.domain.api.models.ScreenData
 import com.pandulapeter.campfire.domain.api.models.SongFilter
 import com.pandulapeter.campfire.domain.api.useCases.CancelSyncConnectionUseCase
 import com.pandulapeter.campfire.domain.api.useCases.CancelSynchronizationUseCase
@@ -169,20 +168,18 @@ import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.Companion.BACK_STACK_KEY
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.Companion.SETLISTS_SEARCH_KEY
-import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.Companion.SONGS_SEARCH_KEY
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.Companion.SONG_FILTER_KEY
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.Companion.SONG_PICKER_LANGUAGES_KEY
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.Companion.SONG_PICKER_TAGS_KEY
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.SavedSongFilter
+import com.pandulapeter.campfire.presentation.ui.state.SongListState
 import com.pandulapeter.campfire.presentation.ui.state.SyncController
 import com.pandulapeter.campfire.presentation.ui.state.asState
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.EditorTextEdit
-import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroups
 import com.pandulapeter.campfire.presentation.ui.search.PickerFilterOptions
 import com.pandulapeter.campfire.presentation.ui.search.PickerSongs
 import com.pandulapeter.campfire.presentation.ui.search.SearchableSong
 import com.pandulapeter.campfire.presentation.ui.search.pickerFilterOptions
-import com.pandulapeter.campfire.presentation.ui.search.songGroupsFor
 import com.pandulapeter.campfire.presentation.ui.search.toPickableSong
 import kotlin.math.ceil
 import kotlin.math.floor
@@ -191,6 +188,7 @@ import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeMark
 import kotlin.time.TimeSource
+import com.pandulapeter.campfire.presentation.ui.state.emptyPlaceholder
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
@@ -302,7 +300,6 @@ class CampfireViewModel(
             ?.let { SongFilter(selectedTags = it.selectedTags.toSet(), selectedLanguages = it.selectedLanguages.toSet()) }
             ?: SongFilter()
     )
-    val songFilter = _songFilter.asStateFlow()
 
     /** Assignment-sheet tags survive reopening the sheet, independently of the main Songs filter. Same run lifetime. */
     private val _songPickerSelectedTags = MutableStateFlow<Set<String>>(
@@ -390,7 +387,6 @@ class CampfireViewModel(
      * tabs scrolls on its own - kept here because a tab that is left is taken off the back stack and loses everything
      * it remembered with it, see [ScrollPosition].
      */
-    internal val songsScrollPosition = ScrollPosition()
     internal val setlistsScrollPosition = ScrollPosition()
     internal val metronomeScrollPosition = ScrollPosition()
     internal val settingsScrollPositions = SettingsTab.entries.associateWith { ScrollPosition() }
@@ -417,11 +413,6 @@ class CampfireViewModel(
      */
     private val songDetailsCurrentSongs = mutableStateMapOf<String, String>()
 
-    /**
-     * The search of each of the two list screens, held here for the same reason their scroll positions are, see
-     * [SearchState]. They are separate because the two lists are searched for different things.
-     */
-    internal val songsSearch = restoreSearch(SONGS_SEARCH_KEY)
     internal val setlistsSearch = restoreSearch(SETLISTS_SEARCH_KEY)
 
     /** Transient mode shared with desktop Escape and browser history; never restored after leaving the screen. */
@@ -768,24 +759,6 @@ class CampfireViewModel(
     /** See [PlayingOverrides.playingOverrides]. */
     internal val playingOverrides: StateFlow<PlayingOverridesSnapshot> get() = overrides.playingOverrides
 
-    /**
-     * Whether the filter controls have anything to offer: a tag, or a choice between two languages. Without either,
-     * the songs screen leaves out both the controls and the action that opens them rather than showing an empty sheet.
-     */
-    val hasSongFilters = combine(tags, languages) { tags, languages -> tags.isNotEmpty() || languages.size > 1 }.asState(false)
-
-    /**
-     * Whether the song list is narrowed by anything the filter controls show as selected, which is what the badge on
-     * their app bar action says while they are out of sight. It asks the chips rather than [songFilter]: a selected
-     * tag the library no longer has is kept but narrows nothing, and the language group is only offered at all once
-     * there are two languages to choose between, so a badge counting either would point at a filter that cannot be
-     * found in the controls it opens.
-     */
-    val isSongFilterActive = combine(songFilter, tags, languages) { filter, tags, languages ->
-        val selectedTags = filter.selectedTags.mapTo(mutableSetOf()) { it.lowercase() }
-        tags.any { it.name.lowercase() in selectedTags } || (languages.size > 1 && languages.any { it.code in filter.selectedLanguages })
-    }.asState(false)
-
     // Metronome
 
     private val metronomeController = MetronomeController(
@@ -852,16 +825,6 @@ class CampfireViewModel(
     /** See [CoverArtSearchController.coverArtCacheSize]. */
     val coverArtCacheSize get() = coverArtSearchController.coverArtCacheSize
 
-    // The sections arrive cut, from the same pass that sorted them. Cutting them here would take the sorting mode
-    // from the preferences, which change before the list sorted by them arrives.
-    val songGroups = combine(indexedSongs, songsSearch.activeQuery) { indexed, query ->
-        val normalizedQuery = normalizeSearchText(query)
-        SongGroups(
-            filterKey = "$normalizedQuery|${indexed.filterKey}",
-            groups = songGroupsFor(sections = indexed.sections, filtered = indexed.search.filtered, normalizedQuery = normalizedQuery),
-        )
-    }.flowOn(Dispatchers.Default).asState(SongGroups(filterKey = "", groups = emptyList()))
-
     /** True while an import is running, which the screens that can start one show as a progress bar. */
     private val _isImporting = MutableStateFlow(false)
     val isImporting: StateFlow<Boolean> = _isImporting.asStateFlow()
@@ -915,22 +878,39 @@ class CampfireViewModel(
         }
     }.asState(null)
 
-    /**
-     * What the song list has to show instead of songs, null while it has songs. A library that is empty because
-     * the search matched nothing is told apart from one that is empty because the load has not finished (or has
-     * failed) here, so that a list without data never sits on a loading indicator that nothing will ever replace.
-     */
-    val songsPlaceholder = combine(screenData, songGroups, _isImporting) { screenData, songGroups, isImporting ->
-        val data = screenData.data
-        when {
-            songGroups.groups.isNotEmpty() -> null
-            // The library itself, not the filtered list: a library that only holds songs the filters hide is not an
-            // empty one, and offering to create a first song there would be answering a question nobody asked.
-            data == null || data.unfilteredSongs.isEmpty() -> screenData.emptyPlaceholder(Placeholder.NO_SONGS, isImporting)
-            data.songs.isEmpty() -> Placeholder.ALL_SONGS_HIDDEN
-            else -> Placeholder.NO_MATCHING_SONGS
-        }
-    }.asState(Placeholder.LOADING)
+    private val songListState = SongListState(
+        scope = viewModelScope,
+        savedStateStore = savedStateStore,
+        mutableSongFilter = _songFilter,
+        screenData = screenData,
+        indexedSongs = indexedSongs,
+        tags = tags,
+        languages = languages,
+        isImporting = _isImporting,
+        normalizeSearchText = normalizeSearchText,
+        changeUserPreferences = { changeUserPreferences(it) },
+    )
+
+    /** See [SongListState.songsScrollPosition]. */
+    internal val songsScrollPosition get() = songListState.songsScrollPosition
+
+    /** See [SongListState.songsSearch]. */
+    internal val songsSearch get() = songListState.songsSearch
+
+    /** See [SongListState.songFilter]. */
+    val songFilter get() = songListState.songFilter
+
+    /** See [SongListState.hasSongFilters]. */
+    val hasSongFilters get() = songListState.hasSongFilters
+
+    /** See [SongListState.isSongFilterActive]. */
+    val isSongFilterActive get() = songListState.isSongFilterActive
+
+    /** See [SongListState.songGroups]. */
+    val songGroups get() = songListState.songGroups
+
+    /** See [SongListState.songsPlaceholder]. */
+    val songsPlaceholder get() = songListState.songsPlaceholder
 
     private val shouldShowArchivedSetlists = userPreferences.map { it?.shouldShowArchivedSetlists == true }.distinctUntilChanged()
 
@@ -2932,11 +2912,7 @@ class CampfireViewModel(
 
     fun setSetlistSortingMode(value: UserPreferences.SetlistSortingMode) = changeUserPreferences { copy(setlistSortingMode = value) }
 
-    /** A selected tag is matched the way the filter itself matches it, without regard to case. */
-    fun toggleTagFilter(tag: String) = _songFilter.update { filter ->
-        val without = filter.selectedTags.filterNotTo(mutableSetOf()) { it.equals(tag, ignoreCase = true) }
-        filter.copy(selectedTags = if (without.size == filter.selectedTags.size) filter.selectedTags + tag else without)
-    }
+    fun toggleTagFilter(tag: String) = songListState.toggleTagFilter(tag)
 
     internal fun toggleSongPickerTag(tag: String) = _songPickerSelectedTags.update { selected ->
         val key = tag.lowercase()
@@ -2947,46 +2923,21 @@ class CampfireViewModel(
         if (code in selected) selected - code else selected + code
     }
 
-    /** Only the tags the library still has are cleared: a selection this screen never showed is not a tap's to lose. */
-    fun clearTagFilter() = _songFilter.update { filter ->
-        val libraryTags = tags.value.mapTo(mutableSetOf()) { it.name.lowercase() }
-        filter.copy(selectedTags = filter.selectedTags.filterNotTo(mutableSetOf()) { it.lowercase() in libraryTags })
-    }
+    fun clearTagFilter() = songListState.clearTagFilter()
 
-    fun setTagMatchMode(value: UserPreferences.MatchMode) = changeUserPreferences { copy(tagMatchMode = value) }
+    fun setTagMatchMode(value: UserPreferences.MatchMode) = songListState.setTagMatchMode(value)
 
-    fun setLanguageMatchMode(value: UserPreferences.MatchMode) = changeUserPreferences { copy(languageMatchMode = value) }
+    fun setLanguageMatchMode(value: UserPreferences.MatchMode) = songListState.setLanguageMatchMode(value)
 
     fun setTagSortingMode(value: UserPreferences.LabelSortingMode) = preferencesController.setTagSortingMode(value)
 
     fun setLanguageSortingMode(value: UserPreferences.LabelSortingMode) = preferencesController.setLanguageSortingMode(value)
 
-    /** The codes are normalized by the parser, so a selected language is the string the filter chip carries. */
-    fun toggleLanguageFilter(code: String) = _songFilter.update { filter ->
-        filter.copy(
-            selectedLanguages = if (code in filter.selectedLanguages) filter.selectedLanguages - code else filter.selectedLanguages + code,
-        )
-    }
+    fun toggleLanguageFilter(code: String) = songListState.toggleLanguageFilter(code)
 
-    /** Only the languages the library still has are cleared, for the same reason [clearTagFilter] is careful. */
-    fun clearLanguageFilter() = _songFilter.update { filter ->
-        val libraryLanguages = languages.value.mapTo(mutableSetOf()) { it.code }
-        filter.copy(selectedLanguages = filter.selectedLanguages.filterNotTo(mutableSetOf()) { it in libraryLanguages })
-    }
+    fun clearLanguageFilter() = songListState.clearLanguageFilter()
 
-    /**
-     * Both groups at once, each as careful as its own clear action, so that what is reset is what [isSongFilterActive]
-     * counted. One update rather than the two clear actions in a row, which would filter the list twice and could show
-     * it with only the tags reset for a frame.
-     */
-    fun clearSongFilter() = _songFilter.update { filter ->
-        val libraryTags = tags.value.mapTo(mutableSetOf()) { it.name.lowercase() }
-        val libraryLanguages = languages.value.mapTo(mutableSetOf()) { it.code }
-        filter.copy(
-            selectedTags = filter.selectedTags.filterNotTo(mutableSetOf()) { it.lowercase() in libraryTags },
-            selectedLanguages = filter.selectedLanguages.filterNotTo(mutableSetOf()) { it in libraryLanguages },
-        )
-    }
+    fun clearSongFilter() = songListState.clearSongFilter()
 
     fun setUiMode(value: UserPreferences.UiMode) = preferencesController.setUiMode(value)
 
@@ -3095,22 +3046,6 @@ class CampfireViewModel(
         val plan: ImportPlan,
         val request: ImportRequest,
     )
-
-    /**
-     * What an empty list has in its place: it is only an error once the load that would have filled it has actually
-     * failed, and only [whenEmpty] once a load has finished - until then it is still loading, and saying anything
-     * else would have the screen answer a question it cannot answer yet.
-     *
-     * @param isImporting An empty library with an import running is a library being filled rather than an empty
-     *   one, and is worth the same answer as a scan that has not finished. It is what keeps the first launch of the
-     *   app from flashing "Your library is empty" over the songs it is planting, and any import into an empty
-     *   library from doing the same.
-     */
-    private fun DataState<ScreenData>.emptyPlaceholder(whenEmpty: Placeholder, isImporting: Boolean) = when {
-        this is DataState.Loading || isImporting -> Placeholder.LOADING
-        this is DataState.Failure -> Placeholder.ERROR
-        else -> whenEmpty
-    }
 
     companion object {
         private const val PREFERENCE_WRITE_DEBOUNCE_MILLIS = 500L
