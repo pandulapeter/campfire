@@ -38,9 +38,10 @@ and why each of them is load bearing, are spelled out in the KDoc of `SyncFolder
   outcome (which may be `Redirected`) instead of a URL, and `consumePendingRedirect` picks the answer up at the next
   start (the web always, Android after process death). `prepareRedirectUri` is separate because the desktop's redirect URI is a loopback socket that does not
   exist until it is opened.
-- `SystemBrowser` — opening a URL in the user's browser, which only the desktop's authorization needs from outside
-  itself (the other three open theirs through an API of their own). A contract here because the one implementation
-  is the desktop shell's URL opener in `:presentation`, which the data layer cannot see.
+- `SystemBrowser` (in `:data:model`) — opening a URL in the user's browser, which only the desktop's authorization
+  needs from outside itself (the other three open theirs through an API of their own). A port in the data model
+  because the one implementation is the desktop shell's URL opener in `:presentation`, which sees neither this module
+  nor the data layer below the domain.
 - `PendingAuthorizationStore` — the authorization that has been started and not finished, for the same reason: the
   PKCE verifier has to outlive a full page reload.
 - `hashing/` — `Sha256` (written out; a multiplatform hashing library would be one more dependency on four targets
@@ -49,7 +50,8 @@ and why each of them is load bearing, are spelled out in the KDoc of `SyncFolder
   timestamp, since the platforms disagree about those and the web has none.
 - `model/` — `RemoteFile`, `RemoteListing`, `RemoteWriteResult`, the authorization request and response, and
   `redirectParameters`, which picks a redirect URI apart (four platforms, four URL libraries, one URL to parse).
-  `AuthorizationCompletionPage` is the odd one: the desktop has no custom scheme to be redirected to and answers the
+  `AuthorizationCompletionPage` (in `:data:model`, since the UI builds it and the UI does not see this module) is the
+  odd one: the desktop has no custom scheme to be redirected to and answers the
   browser with a page of its own, which is the only Campfire text rendered outside the app — so its two strings are
   handed down from the UI, which is the only layer that knows the translations and the chosen language. The other
   three platforms ignore it, because their browser closes itself.

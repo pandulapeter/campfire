@@ -28,6 +28,11 @@ become separators — and `NORMALIZED_ARTIST_TITLE_SEPARATOR` the bare dash that
   `ImportPlan.unreadableDocumentFileNames` distinguishes no readable text from unsupported files. `SongEntry.isConverted`
   travels only as far as the result's actual-write conversion count and optional single-song Open action.
 
+- `AuthorizationCompletionPage` and `SystemBrowser` — the two pieces of the sync authorization the UI hands down: the
+  words of the page the desktop's browser lands on after consent, and the port through which the desktop shell's URL
+  opener opens that page. Here rather than in `:data:source:remote:api` so that nothing above the repositories has to
+  see the remote source's contracts to connect an account.
+
 These types are the layer-crossing currency: stored documents and file bytes are mapped to/from them and never leak past their own module.
 
 Tags have no store of their own: they live in the songs' own text as ChordPro directives (see `:chordpro`), so the set of them is whatever the library happens to carry, and a tagged song takes its tags with it when it is exported or synced. `Tag` is the counted view of that set, built per library scan rather than kept anywhere.
