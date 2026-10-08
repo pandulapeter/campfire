@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.domain.implementation.useCases
 
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
@@ -24,6 +25,7 @@ class RenameSongFileUseCaseImpl internal constructor(
     private val songRepository: SongRepository,
     private val setlistRepository: SetlistRepository,
     private val userPreferencesRepository: UserPreferencesRepository,
+    private val logger: Logger,
 ) : RenameSongFileUseCase {
 
     /**
@@ -42,7 +44,7 @@ class RenameSongFileUseCaseImpl internal constructor(
     override suspend operator fun invoke(song: Song): SongFileRename? {
         val renamed = songRepository.renameSong(song)?.fileName ?: return null
         val haveReferencesFollowed = withContext(NonCancellable) {
-            followSongReferences(setlistRepository, userPreferencesRepository, fileName = song.fileName, newFileName = renamed)
+            followSongReferences(setlistRepository, userPreferencesRepository, logger, fileName = song.fileName, newFileName = renamed)
         }
         return SongFileRename(fileName = renamed, haveReferencesFollowed = haveReferencesFollowed)
     }

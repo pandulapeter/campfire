@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.data.model.domain.ImportProgress
 import com.pandulapeter.campfire.data.model.domain.ImportPlan
 import com.pandulapeter.campfire.data.model.domain.ImportResult
 import com.pandulapeter.campfire.data.model.domain.LibraryFiles
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
@@ -31,6 +32,7 @@ import org.koin.core.annotation.Factory
 class ImportFilesUseCaseImpl internal constructor(
     private val songRepository: SongRepository,
     private val setlistRepository: SetlistRepository,
+    private val logger: Logger,
 ) : ImportFilesUseCase {
 
     /**
@@ -221,7 +223,7 @@ class ImportFilesUseCaseImpl internal constructor(
         }
 
         fun failAt(exception: Exception) {
-            println("Could not import ${currentFileName ?: "the batch"}: ${exception.message}")
+            logger.log("Could not import ${currentFileName ?: "the batch"}: ${exception.message}")
             isFailed = true
             failedFileNames = listOfNotNull(currentFileName)
             val remaining = plan.songs.drop(processedSongs).map { it.sourceFileName ?: it.fileName } +

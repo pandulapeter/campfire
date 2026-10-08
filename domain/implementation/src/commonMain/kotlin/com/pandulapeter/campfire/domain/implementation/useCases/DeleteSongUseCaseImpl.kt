@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.domain.implementation.useCases
 
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
@@ -22,6 +23,7 @@ class DeleteSongUseCaseImpl internal constructor(
     private val songRepository: SongRepository,
     private val setlistRepository: SetlistRepository,
     private val userPreferencesRepository: UserPreferencesRepository,
+    private val logger: Logger,
 ) : DeleteSongUseCase {
 
     /**
@@ -33,7 +35,7 @@ class DeleteSongUseCaseImpl internal constructor(
     override suspend operator fun invoke(fileName: String): Boolean {
         songRepository.deleteSong(fileName)
         return withContext(NonCancellable) {
-            followSongReferences(setlistRepository, userPreferencesRepository, fileName = fileName, newFileName = null)
+            followSongReferences(setlistRepository, userPreferencesRepository, logger, fileName = fileName, newFileName = null)
         }
     }
 }

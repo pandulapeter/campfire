@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.domain.implementation.useCases
 
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
@@ -26,6 +27,7 @@ class DeleteLibraryUseCaseImpl internal constructor(
     private val setlistRepository: SetlistRepository,
     private val userPreferencesRepository: UserPreferencesRepository,
     private val syncRepository: SyncRepository,
+    private val logger: Logger,
 ) : DeleteLibraryUseCase {
 
     /**
@@ -44,7 +46,7 @@ class DeleteLibraryUseCaseImpl internal constructor(
         val setlistsFailure = runCatchingFailure { setlistRepository.deleteAllSetlists() }
         userPreferencesRepository.updateUserPreferences { it.withoutSongOverrides() }
         if (!syncRepository.synchronize(SyncDeletionPolicy.DELETE_REMOTELY)) {
-            println("The deletion's sync run could not be started, a run was already going.")
+            logger.log("The deletion's sync run could not be started, a run was already going.")
         }
         (songsFailure ?: setlistsFailure)?.let { throw it } ?: Unit
     }

@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.domain.implementation.useCases
 
 import com.pandulapeter.campfire.data.model.DataState
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.SongContent
@@ -88,6 +89,7 @@ class DeleteLibraryUseCaseImplTest {
         setlistRepository = FakeSetlistRepository(events),
         userPreferencesRepository = preferences,
         syncRepository = FakeSyncRepository(events),
+        logger = Logger.Standard,
     )
 
     private class FakeSongRepository(private val events: MutableList<String>, private val failure: Exception?) : SongRepository {

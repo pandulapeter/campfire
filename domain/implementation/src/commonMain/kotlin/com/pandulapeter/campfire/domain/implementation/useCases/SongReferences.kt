@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.domain.implementation.useCases
 
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
 import kotlinx.coroutines.CancellationException
@@ -27,6 +28,7 @@ import kotlinx.coroutines.CancellationException
 internal suspend fun followSongReferences(
     setlistRepository: SetlistRepository,
     userPreferencesRepository: UserPreferencesRepository,
+    logger: Logger,
     fileName: String,
     newFileName: String?,
 ): Boolean {
@@ -55,6 +57,6 @@ internal suspend fun followSongReferences(
     attempt {
         userPreferencesRepository.updateUserPreferences { it.withSongRenamed(fileName, newFileName) }
     }
-    failures.forEach { println("A reference to \"$fileName\" could not be updated: ${it.message}") }
+    failures.forEach { logger.log("A reference to \"$fileName\" could not be updated: ${it.message}") }
     return failures.isEmpty()
 }

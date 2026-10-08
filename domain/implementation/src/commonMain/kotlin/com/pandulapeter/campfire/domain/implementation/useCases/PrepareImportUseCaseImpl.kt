@@ -20,6 +20,7 @@ import com.pandulapeter.campfire.data.model.domain.ImportProgress
 import com.pandulapeter.campfire.data.model.domain.ImportPlan
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.data.model.domain.LibraryFiles
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.model.domain.decodeLibraryText
 import com.pandulapeter.campfire.data.model.domain.normalizedToNfc
 import com.pandulapeter.campfire.data.repository.api.ArchiveRepository
@@ -43,6 +44,7 @@ class PrepareImportUseCaseImpl internal constructor(
     private val songContentRepository: SongContentRepository,
     private val setlistRepository: SetlistRepository,
     private val documentRepository: DocumentRepository,
+    private val logger: Logger,
 ) : PrepareImportUseCase {
 
     /**
@@ -109,7 +111,7 @@ class PrepareImportUseCaseImpl internal constructor(
                 } catch (exception: CancellationException) {
                     throw exception
                 } catch (exception: Exception) {
-                    println("Could not unpack \"${file.name}\": ${exception.message}")
+                    logger.log("Could not unpack \"${file.name}\": ${exception.message}")
                     triage.skippedFileNames += file.name
                 }
             }

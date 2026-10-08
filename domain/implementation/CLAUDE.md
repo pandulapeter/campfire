@@ -11,7 +11,8 @@
 
 Implements `:domain:api` on top of `:data:repository:api`. Koin wiring: `Module.kt` holds the
 `@Module @ComponentScan object DomainModule`, and every use case is a `@Factory`. Impl classes are public with an
-`internal constructor`.
+`internal constructor`. A use case that notes a failure it does not throw (an archive it could not unpack, a reference
+that did not follow) writes it to the injected `Logger` of `:data:model`.
 
 The ones that carry real logic:
 

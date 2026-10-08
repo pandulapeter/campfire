@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.domain.implementation.useCases
 
 import com.pandulapeter.campfire.data.model.DataState
+import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.SongContent
@@ -87,10 +88,10 @@ class SongReferencesTest {
     fun `the folded sections follow a rename and go with a deletion`() = runTest {
         val folded = FakeUserPreferencesRepository(transpositions = emptyMap(), foldedSections = mapOf("a.cho" to setOf("chorus#1"), "b.cho" to setOf("verse#2")))
 
-        assertTrue(followSongReferences(setlistRepository = setlists, userPreferencesRepository = folded, fileName = "a.cho", newFileName = "c.cho"))
+        assertTrue(followSongReferences(setlistRepository = setlists, userPreferencesRepository = folded, logger = Logger.Standard, fileName = "a.cho", newFileName = "c.cho"))
         assertEquals(mapOf("b.cho" to setOf("verse#2"), "c.cho" to setOf("chorus#1")), folded.foldedSections)
 
-        assertTrue(followSongReferences(setlistRepository = setlists, userPreferencesRepository = folded, fileName = "c.cho", newFileName = null))
+        assertTrue(followSongReferences(setlistRepository = setlists, userPreferencesRepository = folded, logger = Logger.Standard, fileName = "c.cho", newFileName = null))
         assertEquals(mapOf("b.cho" to setOf("verse#2")), folded.foldedSections)
     }
 
@@ -107,7 +108,7 @@ class SongReferencesTest {
         setlists.unwritable = setOf("first.setlist.json")
         val songs = FakeSongRepository()
 
-        assertFalse(DeleteSongUseCaseImpl(songs, setlists, preferences).invoke("a.cho"))
+        assertFalse(DeleteSongUseCaseImpl(songs, setlists, preferences, Logger.Standard).invoke("a.cho"))
         assertEquals(listOf("a.cho"), songs.deleted)
     }
 
@@ -115,13 +116,14 @@ class SongReferencesTest {
     fun `a song that could not be deleted is not walked`() = runTest {
         val songs = FakeSongRepository(isBroken = true)
 
-        assertFailsWith<IllegalStateException> { DeleteSongUseCaseImpl(songs, setlists, preferences).invoke("a.cho") }
+        assertFailsWith<IllegalStateException> { DeleteSongUseCaseImpl(songs, setlists, preferences, Logger.Standard).invoke("a.cho") }
         assertEquals(listOf("a.cho", "b.cho"), setlists.entriesOf("first.setlist.json"))
         assertEquals(mapOf("a.cho" to 2, "b.cho" to 1), preferences.transpositions)
     }
 
     private suspend fun follow(newFileName: String?, fileName: String = "a.cho") = followSongReferences(
         setlistRepository = setlists,
+        logger = Logger.Standard,
         userPreferencesRepository = preferences,
         fileName = fileName,
         newFileName = newFileName,
