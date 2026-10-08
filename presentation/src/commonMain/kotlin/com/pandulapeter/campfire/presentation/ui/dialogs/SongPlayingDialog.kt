@@ -68,10 +68,10 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.rememberClearTextButton
 import com.pandulapeter.campfire.presentation.ui.metronome.TimeSignaturePicker
-import com.pandulapeter.campfire.presentation.ui.metronome.effectiveTempo
+import com.pandulapeter.campfire.presentation.ui.playing.effectiveTempo
 import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
 import com.pandulapeter.campfire.presentation.ui.platform.numericPlatformImeOptions
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.effectiveCapo
+import com.pandulapeter.campfire.presentation.ui.playing.effectiveCapo
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.transpositionLabel
 import kotlin.math.absoluteValue
 

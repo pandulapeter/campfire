@@ -70,11 +70,11 @@ import com.pandulapeter.campfire.presentation.ui.components.rememberSectionHeade
 import com.pandulapeter.campfire.presentation.ui.components.songCardPadding
 import com.pandulapeter.campfire.presentation.ui.components.searchTravelSpec
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
-import com.pandulapeter.campfire.presentation.ui.metronome.effectiveTempo
+import com.pandulapeter.campfire.presentation.ui.playing.effectiveTempo
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableContent
 import com.pandulapeter.campfire.presentation.ui.platform.isDesktopPlatform
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.effectiveCapo
+import com.pandulapeter.campfire.presentation.ui.playing.effectiveCapo
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.songLabelActions
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt

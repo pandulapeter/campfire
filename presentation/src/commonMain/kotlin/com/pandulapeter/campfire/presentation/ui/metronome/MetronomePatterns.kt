@@ -17,6 +17,8 @@ import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
 import com.pandulapeter.campfire.metronome.api.model.MetronomeSound
 import com.pandulapeter.campfire.metronome.api.model.Subdivision
 import com.pandulapeter.campfire.metronome.api.model.TimeSignature
+import com.pandulapeter.campfire.presentation.ui.playing.Tempos
+import com.pandulapeter.campfire.presentation.ui.playing.effectiveTempo
 
 /**
  * The complete pattern the click plays for [context]: a song's tempo and time signature (4/4 where it names none

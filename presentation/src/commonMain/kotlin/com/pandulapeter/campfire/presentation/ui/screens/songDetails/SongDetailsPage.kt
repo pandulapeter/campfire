@@ -59,7 +59,8 @@ import com.pandulapeter.campfire.presentation.ui.components.EmptyState
 import com.pandulapeter.campfire.presentation.ui.components.EmptyStateAction
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
-import com.pandulapeter.campfire.presentation.ui.metronome.withTempo
+import com.pandulapeter.campfire.presentation.ui.playing.withCapo
+import com.pandulapeter.campfire.presentation.ui.playing.withTempo
 import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged

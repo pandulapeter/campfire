@@ -21,6 +21,7 @@ import com.pandulapeter.campfire.presentation.resources.ic_subtract
 import com.pandulapeter.campfire.presentation.resources.song_details_capo_decrease
 import com.pandulapeter.campfire.presentation.resources.song_details_capo_increase
 import com.pandulapeter.campfire.presentation.resources.song_details_capo_reset
+import com.pandulapeter.campfire.presentation.ui.playing.EffectiveCapo
 import org.jetbrains.compose.resources.painterResource
 
 /**

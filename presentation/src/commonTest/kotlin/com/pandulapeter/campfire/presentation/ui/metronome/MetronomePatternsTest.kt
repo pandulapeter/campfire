@@ -15,6 +15,8 @@ import com.pandulapeter.campfire.metronome.api.model.BeatLevel
 import com.pandulapeter.campfire.metronome.api.model.MetronomeSound
 import com.pandulapeter.campfire.metronome.api.model.Subdivision
 import com.pandulapeter.campfire.metronome.api.model.TimeSignature
+import com.pandulapeter.campfire.presentation.ui.playing.TempoKey
+import com.pandulapeter.campfire.presentation.ui.playing.Tempos
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

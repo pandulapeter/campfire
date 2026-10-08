@@ -34,7 +34,8 @@ import com.pandulapeter.campfire.presentation.resources.song_details_tags_manage
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ActionsMenuItem
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
-import com.pandulapeter.campfire.presentation.ui.metronome.EffectiveTempo
+import com.pandulapeter.campfire.presentation.ui.playing.EffectiveCapo
+import com.pandulapeter.campfire.presentation.ui.playing.EffectiveTempo
 import com.pandulapeter.campfire.presentation.ui.metronome.timeSignatureOrDefault
 import org.jetbrains.compose.resources.painterResource
 

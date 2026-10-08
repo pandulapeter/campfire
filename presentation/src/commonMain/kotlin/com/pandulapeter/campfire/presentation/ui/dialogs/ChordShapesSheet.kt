@@ -66,7 +66,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.ChordCell
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.Stepper
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.chordCellDescription
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.effectiveCapo
+import com.pandulapeter.campfire.presentation.ui.playing.effectiveCapo
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

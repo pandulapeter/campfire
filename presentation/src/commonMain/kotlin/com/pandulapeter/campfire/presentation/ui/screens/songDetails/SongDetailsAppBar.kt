@@ -88,7 +88,8 @@ import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeButton
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomePanel
 import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
-import com.pandulapeter.campfire.presentation.ui.metronome.effectiveTempo
+import com.pandulapeter.campfire.presentation.ui.playing.effectiveCapo
+import com.pandulapeter.campfire.presentation.ui.playing.effectiveTempo
 import com.pandulapeter.campfire.presentation.ui.metronome.metronomeAction
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import kotlinx.coroutines.CoroutineScope

@@ -10,7 +10,8 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import androidx.compose.runtime.Immutable
-import com.pandulapeter.campfire.presentation.ui.metronome.EffectiveTempo
+import com.pandulapeter.campfire.presentation.ui.playing.EffectiveCapo
+import com.pandulapeter.campfire.presentation.ui.playing.EffectiveTempo
 
 /**
  * What sets the four values a song is played by, from the song's own first section, see [SongPlayingControlsRow]. The
