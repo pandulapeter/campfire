@@ -141,7 +141,8 @@ localized in both languages.
   `campfire-compose-library` when they contain Compose). These configure the Android, `desktop` (JVM), `iosArm64`,
   `iosSimulatorArm64` and `wasmJs` (browser) targets and derive the Android namespace from the Gradle path. Sources live
   in `src/commonMain/kotlin`; platform code goes in `androidMain` / `desktopMain` / `iosMain` / `wasmJsMain` via
-  `expect`/`actual`.
+  `expect`/`actual`, and JVM code both Android and the desktop need in `jvmSharedMain`, a group the convention plugin
+  adds to the default hierarchy template.
 - Shared code must stay JVM-free: no `java.*`, `KoinJavaComponent`, or JVM-only libraries. Use `kotlin.uuid.Uuid`,
   `androidx.compose.ui.text.intl.Locale`, `KoinPlatform.getKoin()`, and `import kotlinx.coroutines.IO` for
   `Dispatchers.IO`.

@@ -17,6 +17,7 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.withType
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
@@ -24,7 +25,7 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
  * Configures the shared set of targets every Campfire library module compiles for: Android, desktop (JVM), iOS and web (wasmJs).
  * The Android namespace is derived from the Gradle path, so modules only need to override it when they want something else.
  */
-@OptIn(ExperimentalWasmDsl::class)
+@OptIn(ExperimentalWasmDsl::class, ExperimentalKotlinGradlePluginApi::class)
 internal fun Project.configureKotlinMultiplatform(
     extension: KotlinMultiplatformExtension,
 ) {
@@ -60,6 +61,18 @@ internal fun Project.configureKotlinMultiplatform(
         iosSimulatorArm64()
         wasmJs {
             browser()
+        }
+        // The default template has no group for the two JVM targets, so code both of them need (java.io.File) would
+        // otherwise be kept twice. Extended rather than replaced: a dependsOn written by hand switches the default
+        // template off for the whole module. The Android target is matched by its type, the AGP KMP library target,
+        // since it is not one of the targets the template's own withAndroidTarget() knows.
+        applyDefaultHierarchyTemplate {
+            common {
+                group("jvmShared") {
+                    withJvm()
+                    withCompilations { it.target is KotlinMultiplatformAndroidLibraryTarget }
+                }
+            }
         }
         sourceSets.commonTest.dependencies {
             implementation(kotlin("test"))

@@ -26,8 +26,9 @@ an object with no constructor, still prints its one line.
   so the first batch waits for 64 files rather than a stat of every one of them — on the web one `getFile()` per song
   instead of two. iOS lists with its attributes prefetched and goes through the defaults, which carry them. The Koin definition
   is a `@Single` class in each platform source set, found by the module's component scan: `AndroidFileStorage` and
-  `DesktopFileStorage`, both delegating to `JvmFileStorage` over `java.io.File` (the same class in `androidMain` and
-  `desktopMain`, one copy each because the `campfire-library` convention plugin declares no source set the two share),
+  `DesktopFileStorage`, both delegating to `JvmFileStorage` over `java.io.File` (one class in `jvmSharedMain`, the source
+  set the `campfire-library` convention plugin gives the two JVM targets, so `JvmFileStorageTest` covers what Android
+  runs too),
   `IosFileStorage` over `NSFileManager` and `OpfsFileStorage` over the browser's Origin Private File System. The Android one takes the `Context` the app shell
   hands to Koin, marked `@Provided` since no shared module declares it. Everything above this line is `commonMain`.
   - The directories are `library/songs`, `library/setlists`, `preferences` and `covers` — songs and setlists sit next

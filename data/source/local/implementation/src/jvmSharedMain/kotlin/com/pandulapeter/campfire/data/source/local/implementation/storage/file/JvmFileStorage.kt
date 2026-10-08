@@ -39,8 +39,7 @@ import java.util.concurrent.ConcurrentHashMap
  * Writes go to a temporary file first and are moved into place afterwards, so that a crash in the middle of one leaves
  * the previous content intact instead of a half written file.
  *
- * The desktop copy of this class is identical: the `campfire-library` convention plugin declares no source set shared
- * by `androidMain` and `desktopMain`, so a JVM class both need is kept twice, and a change to one is made to the other.
+ * Shared by Android and desktop through the `jvmShared` source set the `campfire-library` convention plugin declares.
  */
 internal class JvmFileStorage(
     private val root: File,
