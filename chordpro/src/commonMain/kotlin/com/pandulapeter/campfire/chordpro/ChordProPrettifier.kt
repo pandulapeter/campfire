@@ -290,11 +290,7 @@ object ChordProPrettifier {
             directive?.name?.let(ChordProEnvironments::startOfEnvironment)?.let { environments += it.lowercase() }
             if (end != null) environments.indexOfLast { it == end.lowercase() }.takeIf { it >= 0 }?.let { environments.subList(it, environments.size).clear() }
             val value = directive?.let { (ChordProMetaItems.standardMeta(it) ?: it).value }
-            val isReadable = when (kind) {
-                TEMPO -> ChordProTempo.parse(value) != null
-                TIME -> ChordProTime.parse(value) != null
-                else -> false
-            }
+            val isReadable = (kind == TEMPO || kind == TIME) && value != null && ChordProMetaItems.isReadableValue(kind, value)
             if (isReadable && kind != null && kind !in found) found[kind] = index
         }
         finishSong()

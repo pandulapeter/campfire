@@ -166,10 +166,7 @@ object ChordProHighlighter {
             return ChordProDefinitions.read(value, selector.takeIf { it.isNotEmpty() }) == ChordProDefinitions.Reading.Invalid
         }
         return when {
-            directive.name == "time" -> ChordProTime.parse(value) == null
-            directive.name == "tempo" -> ChordProTempo.parse(value) == null
-            directive.name == "capo" -> value.toIntOrNull()?.takeIf { it >= 0 } == null
-            directive.name == "duration" -> ChordProDuration.parse(value) == null
+            !ChordProMetaItems.isReadableValue(directive.name, value) -> true
             directive.name == TRANSPOSE -> ChordProParser.transposeSemitones(value) == null
             ChordProMetaItems.isCoverMeta(directive) -> ChordProMetaItems.cover(directive) == null
             ChordProMetaItems.isLinkMeta(directive) -> ChordProMetaItems.link(directive) == null

@@ -114,13 +114,7 @@ object ChordProMetadataFields {
     }
 
     /** Whether the parser can use [value] for this field, which it reads past where it cannot, as the editor marks it. */
-    private fun Field.canRead(value: String) = when (this) {
-        Field.TEMPO -> ChordProTempo.parse(value) != null
-        Field.TIME -> ChordProTime.parse(value) != null
-        Field.CAPO -> value.toIntOrNull()?.let { it >= 0 } == true
-        Field.DURATION -> ChordProDuration.parse(value) != null
-        else -> true
-    }
+    private fun Field.canRead(value: String) = ChordProMetaItems.isReadableValue(directiveName, value)
 
     /** Whether a later line of this field is a change from where it stands rather than a duplicate the parser reads past. */
     private val Field.isChangedInTheBody get() = this == Field.KEY || this == Field.TEMPO || this == Field.TIME

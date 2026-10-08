@@ -11,6 +11,8 @@ package com.pandulapeter.campfire.chordpro
 
 import com.pandulapeter.campfire.chordpro.ChordProDirectives.Directive
 import com.pandulapeter.campfire.chordpro.ChordProVocabulary.META
+import com.pandulapeter.campfire.chordpro.ChordProVocabulary.TEMPO
+import com.pandulapeter.campfire.chordpro.ChordProVocabulary.TIME
 import com.pandulapeter.campfire.chordpro.model.ChordProLink
 
 /**
@@ -31,6 +33,8 @@ internal object ChordProMetaItems {
     /** The `{meta}` key a link about the song is written under, one directive per link. */
     const val LINK_NAME = "link"
     internal const val LANGUAGE_SHORT_NAME = "lang"
+    private const val CAPO = "capo"
+    private const val DURATION = "duration"
 
     /**
      * The two ISO codes that mean "there is no language here" — undetermined and no linguistic content. They say
@@ -69,6 +73,19 @@ internal object ChordProMetaItems {
         val value = directive.value?.trim() ?: return null
         val name = value.substringBefore(' ').trim().lowercase()
         return if (name in standardMetaNames) Directive(name, value.substringAfter(' ', missingDelimiterValue = "").trim()) else null
+    }
+
+    /**
+     * Whether the parser can use [value] for the metadata of [kind] (see [ChordProHeaderLayout.metadataKind]), which it
+     * reads past where it cannot and the editor marks as unreadable: a tempo, a time signature, a capo and a duration
+     * have a form, every other kind is read as it is written.
+     */
+    fun isReadableValue(kind: String, value: String) = when (kind) {
+        TEMPO -> ChordProTempo.parse(value) != null
+        TIME -> ChordProTime.parse(value) != null
+        CAPO -> value.toIntOrNull()?.let { it >= 0 } == true
+        DURATION -> ChordProDuration.parse(value) != null
+        else -> true
     }
 
     /**

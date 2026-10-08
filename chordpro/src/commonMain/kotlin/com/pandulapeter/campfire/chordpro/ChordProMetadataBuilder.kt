@@ -70,9 +70,9 @@ internal class MetadataBuilder {
     private var coverArt: String? = null
     private val key = ChangeableValue()
     private var capo: Int? = null
-    val tempo = ChangeableValue { ChordProTempo.parse(it) != null }
-    val time = ChangeableValue { ChordProTime.parse(it) != null }
-    private val duration = OnceValue { ChordProDuration.parse(it) != null }
+    val tempo = ChangeableValue { ChordProMetaItems.isReadableValue("tempo", it) }
+    val time = ChangeableValue { ChordProMetaItems.isReadableValue("time", it) }
+    private val duration = OnceValue { ChordProMetaItems.isReadableValue("duration", it) }
     private val tags = mutableListOf<String>()
     private val tagKeys = mutableSetOf<String>()
     private val languages = mutableListOf<String>()
@@ -94,7 +94,7 @@ internal class MetadataBuilder {
             "album" -> album.consume(value)
             "year" -> year.consume(value)
             "key" -> key.consume(value, isInBody)
-            "capo" -> if (capo == null) capo = value.toIntOrNull()?.takeIf { it >= 0 }
+            "capo" -> if (capo == null && ChordProMetaItems.isReadableValue("capo", value)) capo = value.toInt()
             "tempo" -> tempo.consume(value, isInBody)
             "time" -> time.consume(value, isInBody)
             "duration" -> duration.consume(value)
