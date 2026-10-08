@@ -17,13 +17,13 @@ import com.pandulapeter.campfire.data.source.remote.api.CoverArtSearchRemoteSour
 import com.pandulapeter.campfire.data.source.remote.implementation.coverArt.coverArtSearchTransport
 import com.pandulapeter.campfire.data.source.remote.implementation.coverArt.parseCoverArtSearchAnswer
 import com.pandulapeter.campfire.data.source.remote.implementation.network.HttpClientHolder
+import com.pandulapeter.campfire.data.source.remote.implementation.network.exponentialBackoffSeconds
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.isSuccess
 import kotlinx.coroutines.delay
-import kotlin.math.min
 
 /**
  * The cover search on MusicBrainz. Every request waits its turn at [rateLimiter], and a refusal — 503, which is how
@@ -58,7 +58,7 @@ internal class MusicBrainzCoverArtSearchRemoteSource(
                 status == HttpStatusCode.ServiceUnavailable || status == HttpStatusCode.TooManyRequests -> {
                     if (attempt >= MAXIMUM_RETRIES) throw CoverArtSearchException("$SERVICE_NAME is busy.")
                     onBusy()
-                    delay((retryAfterSeconds ?: min(DEFAULT_RETRY_SECONDS shl attempt, MAXIMUM_RETRY_SECONDS)) * 1000L)
+                    delay((retryAfterSeconds ?: exponentialBackoffSeconds(attempt)) * 1000L)
                     attempt++
                 }
 
@@ -70,7 +70,5 @@ internal class MusicBrainzCoverArtSearchRemoteSource(
     private companion object {
         const val SERVICE_NAME = "MusicBrainz"
         const val MAXIMUM_RETRIES = 5
-        const val DEFAULT_RETRY_SECONDS = 2L
-        const val MAXIMUM_RETRY_SECONDS = 32L
     }
 }

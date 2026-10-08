@@ -27,6 +27,7 @@ import com.pandulapeter.campfire.data.source.remote.implementation.auth.SyncCred
 import com.pandulapeter.campfire.data.source.remote.implementation.crypto.Pkce
 import com.pandulapeter.campfire.data.source.remote.implementation.crypto.dropboxContentHash
 import com.pandulapeter.campfire.data.source.remote.implementation.network.HttpClientHolder
+import com.pandulapeter.campfire.data.source.remote.implementation.network.exponentialBackoffSeconds
 import com.pandulapeter.campfire.data.source.remote.implementation.network.toAsciiJsonString
 import com.pandulapeter.campfire.data.source.remote.implementation.network.urlEncode
 import io.ktor.client.request.header
@@ -39,7 +40,6 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import kotlinx.coroutines.CancellationException
-import kotlin.math.min
 import kotlin.random.Random
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeoutOrNull
@@ -336,10 +336,7 @@ internal class DropboxSyncProvider(
                 }
             }
             if (busy.isNotEmpty()) {
-                delay(
-                    min(DropboxTransport.DEFAULT_RETRY_SECONDS shl attempt, DropboxTransport.MAXIMUM_RETRY_SECONDS) * 1000L +
-                        Random.nextLong(DropboxTransport.RETRY_JITTER_MILLIS),
-                )
+                delay(exponentialBackoffSeconds(attempt) * 1000L + Random.nextLong(DropboxTransport.RETRY_JITTER_MILLIS))
                 attempt++
             }
             pending = busy

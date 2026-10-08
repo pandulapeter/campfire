@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.data.source.remote.api.SyncAuthorizationExcepti
 import com.pandulapeter.campfire.data.source.remote.api.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.SyncRemoteStorageFullException
 import com.pandulapeter.campfire.data.source.remote.implementation.network.HttpClientHolder
+import com.pandulapeter.campfire.data.source.remote.implementation.network.exponentialBackoffSeconds
 import io.ktor.client.network.sockets.ConnectTimeoutException
 import io.ktor.client.network.sockets.SocketTimeoutException
 import io.ktor.client.plugins.HttpRequestTimeoutException
@@ -26,7 +27,6 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import kotlinx.coroutines.CancellationException
-import kotlin.math.min
 import kotlin.random.Random
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
@@ -99,7 +99,7 @@ internal class DropboxTransport(
                 }
             }
             if (response == null) {
-                delay(min(DEFAULT_RETRY_SECONDS shl attempt, MAXIMUM_RETRY_SECONDS) * 1000L + Random.nextLong(RETRY_JITTER_MILLIS))
+                delay(exponentialBackoffSeconds(attempt) * 1000L + Random.nextLong(RETRY_JITTER_MILLIS))
                 attempt++
                 continue
             }
@@ -122,7 +122,7 @@ internal class DropboxTransport(
             status.value >= 500 ||
             (status == HttpStatusCode.Conflict && errorSummary().contains("too_many_write_operations")) ->
             (retryAfterSecondsInBody() ?: headers["Retry-After"]?.toLongOrNull()
-                ?: min(DEFAULT_RETRY_SECONDS shl attempt, MAXIMUM_RETRY_SECONDS)) * 1000L
+                ?: exponentialBackoffSeconds(attempt)) * 1000L
 
         else -> null
     }
@@ -139,9 +139,6 @@ internal class DropboxTransport(
         /** Six waits of 2, 4, 8, 16, 32 and 32 seconds: about a minute and a half of patience. */
         const val MAXIMUM_RETRIES = 6
 
-        /** What to wait first when Dropbox asks to slow down without saying for how long, doubled on every attempt. */
-        const val DEFAULT_RETRY_SECONDS = 2L
-        const val MAXIMUM_RETRY_SECONDS = 32L
         const val RETRY_JITTER_MILLIS = 500L
     }
 }
