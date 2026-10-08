@@ -62,7 +62,6 @@ import com.pandulapeter.campfire.presentation.ui.firstRun.canShowWhatsNew
 import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.playing.Transpositions
-import com.pandulapeter.campfire.presentation.ui.playing.wrapTransposition
 import com.pandulapeter.campfire.presentation.ui.print.PdfExportProgress
 import com.pandulapeter.campfire.presentation.ui.print.PrintSource
 import com.pandulapeter.campfire.presentation.ui.print.PrintSong
@@ -134,13 +133,10 @@ import com.pandulapeter.campfire.presentation.ui.components.isAnyOverflowMenuOpe
 import com.pandulapeter.campfire.presentation.ui.dialogs.SONG_METADATA_FIELDS
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeContext
 import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
-import com.pandulapeter.campfire.presentation.ui.playing.PendingOverrides
+import com.pandulapeter.campfire.presentation.ui.playing.PlayingOverrides
 import com.pandulapeter.campfire.presentation.ui.playing.PlayingOverridesSnapshot
 import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
-import com.pandulapeter.campfire.presentation.ui.playing.SongPlace
-import com.pandulapeter.campfire.presentation.ui.playing.withEntry
 import com.pandulapeter.campfire.presentation.ui.playing.Tempos
-import com.pandulapeter.campfire.presentation.ui.playing.effectiveTempo
 import com.pandulapeter.campfire.presentation.ui.metronome.isMetronomeContextMoved
 import com.pandulapeter.campfire.presentation.ui.metronome.isMetronomeScreenLeft
 import com.pandulapeter.campfire.presentation.ui.metronome.isMetronomeStartable
@@ -305,6 +301,9 @@ class CampfireViewModel(
 ) : ViewModel() {
 
     private val savedStateStore = SavedStateStore(savedStateHandle, viewModelScope)
+
+    /** Read by holders built before the snackbar's own members, so built first; it starts nothing. */
+    private val messageSink = MessageSink(viewModelScope)
 
     /**
      * The tags and languages the song list is narrowed to. Held here and in [savedStateStore] only, so it lasts
@@ -782,13 +781,28 @@ class CampfireViewModel(
         draft != null && draft.text != songTexts[draft.fileName]?.let(::editorTextOf)
     }.asState(false)
 
-    /**
-     * Where a song's transposition is kept depends on how it was opened, so both places are folded into one lookup:
-     * a song opened from a setlist reads the setlist's entry, one opened from the library reads the preferences.
-     */
-    internal val transpositions = combine(userPreferences, setlists) { userPreferences, setlists ->
-        Transpositions(SongOverrides.of(userPreferences?.transpositions.orEmpty(), setlists) { it.transposition.takeIf { semitones -> semitones != 0 } })
-    }.asState(Transpositions())
+    private val overrides = PlayingOverrides(
+        scope = viewModelScope,
+        userPreferences = userPreferences,
+        setlists = setlists,
+        songsByFileName = { songsByFileName.value },
+        updateUserPreferences = updateUserPreferences,
+        updateEditableSetlist = { fileName, transform -> updateEditableSetlist(fileName, transform) },
+        messageSink = messageSink,
+        writeDelayMillis = PREFERENCE_WRITE_DEBOUNCE_MILLIS,
+    )
+
+    /** See [PlayingOverrides.transpositions]. */
+    internal val transpositions: StateFlow<Transpositions> get() = overrides.transpositions
+
+    /** See [PlayingOverrides.tempos]. */
+    internal val tempos: StateFlow<Tempos> get() = overrides.tempos
+
+    /** See [PlayingOverrides.capos]. */
+    internal val capos: StateFlow<Capos> get() = overrides.capos
+
+    /** See [PlayingOverrides.playingOverrides]. */
+    internal val playingOverrides: StateFlow<PlayingOverridesSnapshot> get() = overrides.playingOverrides
 
     /**
      * The whole library, whatever the filters hide, which is what everything that looks a song up by its file name
@@ -880,61 +894,6 @@ class CampfireViewModel(
     val songsByFileName = indexedSongs.map { it.search.songsByFileName }.asState(emptyMap())
 
     // Metronome
-
-    /** The tempo overrides as the preferences and the setlists hold them, folded the way [transpositions] are. */
-    private val storedTempos = combine(userPreferences, setlists) { userPreferences, setlists ->
-        SongOverrides.of(userPreferences?.tempos.orEmpty(), setlists) { it.tempo }
-    }.asState(Tempos())
-
-    /** The tempos set here whose writes are waiting or still on their way back, see [changeTempo]. */
-    private val tempoOverrides = PendingOverrides(
-        scope = viewModelScope,
-        delayMillis = PREFERENCE_WRITE_DEBOUNCE_MILLIS,
-        stored = storedTempos,
-        name = "tempo",
-        write = { place, bpm ->
-            writeOverride(
-                place = place,
-                value = bpm,
-                library = { it.tempos },
-                withLibrary = { preferences, tempos -> preferences.copy(tempos = tempos) },
-                withEntry = { entry, value -> entry.copy(tempo = value) },
-            )
-        },
-        onFailed = { sendMessage(Message.OperationFailed) },
-    )
-
-    /** Every song's tempo override, as the screens and the click read it. */
-    internal val tempos = tempoOverrides.effective.asState(Tempos())
-
-    /** The capo overrides as the preferences and the setlists hold them, folded the way [tempos] are. */
-    private val storedCapos = combine(userPreferences, setlists) { userPreferences, setlists ->
-        SongOverrides.of(userPreferences?.capos.orEmpty(), setlists) { it.capo }
-    }.asState(Capos())
-
-    /** The capos set here whose writes are waiting or still on their way back, exactly as [tempoOverrides] are. */
-    private val capoOverrides = PendingOverrides(
-        scope = viewModelScope,
-        delayMillis = PREFERENCE_WRITE_DEBOUNCE_MILLIS,
-        stored = storedCapos,
-        name = "capo",
-        write = { place, fret ->
-            writeOverride(
-                place = place,
-                value = fret,
-                library = { it.capos },
-                withLibrary = { preferences, capos -> preferences.copy(capos = capos) },
-                withEntry = { entry, value -> entry.copy(capo = value) },
-            )
-        },
-        onFailed = { sendMessage(Message.OperationFailed) },
-    )
-
-    /** Every song's capo override, as the song details screen and the lists that name a sounding key read it. */
-    internal val capos = capoOverrides.effective.asState(Capos())
-
-    /** The three overrides of how a song is played as one value, for the screens that read all three. */
-    internal val playingOverrides = combine(transpositions, capos, tempos, ::PlayingOverridesSnapshot).asState(PlayingOverridesSnapshot())
 
     /** Saved like [pendingPrintSettings]: a dragged slider is a new value every frame. */
     private val metronomeSettingsPreference = DebouncedPreference<MetronomeSettings> { copy(metronomeSettings = it) }
@@ -1273,8 +1232,6 @@ class CampfireViewModel(
     private val _isSavingSong = MutableStateFlow(false)
     val isSavingSong: StateFlow<Boolean> = _isSavingSong.asStateFlow()
 
-    private val messageSink = MessageSink(viewModelScope)
-
     /** See [MessageSink.messageQueue]. */
     val messageQueue: StateFlow<List<IndexedValue<Message>>> get() = messageSink.messageQueue
 
@@ -1405,8 +1362,7 @@ class CampfireViewModel(
         fontScalePreference.start(viewModelScope, PREFERENCE_WRITE_DEBOUNCE_MILLIS, updateUserPreferences::invoke)
         printSettingsPreference.start(viewModelScope, PREFERENCE_WRITE_DEBOUNCE_MILLIS, updateUserPreferences::invoke)
         metronomeSettingsPreference.start(viewModelScope, PREFERENCE_WRITE_DEBOUNCE_MILLIS, updateUserPreferences::invoke)
-        tempoOverrides.start()
-        capoOverrides.start()
+        overrides.startSettling()
         viewModelScope.launch {
             // One collector for everything that changes what a playing click plays, so that a context change and the
             // pattern it brings are one update: paging to another song moves the click to it from beat one, and
@@ -2460,48 +2416,9 @@ class CampfireViewModel(
     /** The editor's text as the file is to hold it, in the standard notation. */
     private fun fileTextOf(editorText: String) = songRenderer.fileTextOf(editorText, editorNotation)
 
-    /**
-     * One step of the transposition stepper. A song opened from a setlist transposes inside that setlist; one opened from
-     * the library, in the preferences.
-     */
-    fun stepTransposition(songFileName: String, setlistFileName: String?, semitones: Int) =
-        changeTransposition(songFileName = songFileName, setlistFileName = setlistFileName) { it + semitones }
+    fun stepTransposition(songFileName: String, setlistFileName: String?, semitones: Int) = overrides.stepTransposition(songFileName, setlistFileName, semitones)
 
-    /** The stepper's value tapped: the song goes back to the key its file is written in. */
-    fun resetTransposition(songFileName: String, setlistFileName: String?) =
-        changeTransposition(songFileName = songFileName, setlistFileName = setlistFileName) { 0 }
-
-    /**
-     * Applies [change] to the transposition the store holds when the write runs rather than to the one the stepper was
-     * drawn with. A setlist's entry only reaches the screen once its write has been round tripped through the
-     * repository, and every tap inside that round trip reads the same number off the stepper, so an absolute value would
-     * turn five quick taps into two. The setlist's transform is handed the latest version of the file, one write at a
-     * time ([UpdateSetlistUseCase]), and the preferences' is applied to what the repository holds when it runs
-     * ([UpdateUserPreferencesUseCase]): [userPreferences] is a few hops downstream of it and may not have the previous
-     * tap yet.
-     *
-     * A setlist that is gone by now is not brought back, and saying nothing would leave a stepper that does nothing.
-     *
-     * The result is wrapped around the octave ([wrapTransposition]), so the stepper never runs into an end.
-     */
-    private fun changeTransposition(songFileName: String, setlistFileName: String?, change: (Int) -> Int) = launchLibraryChange {
-        if (setlistFileName == null) {
-            updateUserPreferences { preferences ->
-                val transposition = wrapTransposition(change(preferences.transpositions[songFileName] ?: 0))
-                preferences.copy(
-                    transpositions = if (transposition == 0) {
-                        preferences.transpositions - songFileName
-                    } else {
-                        preferences.transpositions + (songFileName to transposition)
-                    }
-                )
-            }
-        } else {
-            updateEditableSetlist(setlistFileName) { setlist ->
-                setlist.withEntry(songFileName) { it.copy(transposition = wrapTransposition(change(it.transposition))) } ?: setlist
-            } ?: sendMessage(Message.OperationFailed)
-        }
-    }
+    fun resetTransposition(songFileName: String, setlistFileName: String?) = overrides.resetTransposition(songFileName, setlistFileName)
 
     /**
      * Reported by the song details screen whenever its pager heads for a page, or the page it heads for for another
@@ -2580,90 +2497,19 @@ class CampfireViewModel(
     fun updateMetronomeSettings(change: MetronomeSettings.() -> MetronomeSettings) =
         metronomeSettingsPreference.update { (it ?: metronomeSettings.value).change() }
 
-    /** The tempo a song plays at where it is opened, the override waiting to be written included. */
-    internal fun effectiveTempoOf(songFileName: String, setlistFileName: String?) =
-        effectiveTempo(song = songsByFileName.value[songFileName], setlistFileName = setlistFileName, tempos = tempos.value, songFileName = songFileName)
+    internal fun effectiveTempoOf(songFileName: String, setlistFileName: String?) = overrides.effectiveTempoOf(songFileName, setlistFileName)
 
-    /** One step of the tempo stepper, in the setlist the song was opened from or in the preferences, like a transposition. */
-    fun stepTempo(songFileName: String, setlistFileName: String?, delta: Int) =
-        changeTempo(songFileName = songFileName, setlistFileName = setlistFileName) { it + delta }
+    fun stepTempo(songFileName: String, setlistFileName: String?, delta: Int) = overrides.stepTempo(songFileName, setlistFileName, delta)
 
-    /** A tempo tapped in. */
-    fun setTempo(songFileName: String, setlistFileName: String?, bpm: Int) =
-        changeTempo(songFileName = songFileName, setlistFileName = setlistFileName) { bpm }
+    fun setTempo(songFileName: String, setlistFileName: String?, bpm: Int) = overrides.setTempo(songFileName, setlistFileName, bpm)
 
-    /**
-     * The stepper's value tapped: the override is removed rather than set to the file's number, so that a `{tempo}`
-     * edited later shows through. Written at once, and a step still waiting to be written is dropped, so that it cannot
-     * land after the reset.
-     */
-    fun resetTempo(songFileName: String, setlistFileName: String?) {
-        tempoOverrides.reset(SongPlace(songFileName = songFileName, setlistFileName = setlistFileName))
-    }
+    fun resetTempo(songFileName: String, setlistFileName: String?) = overrides.resetTempo(songFileName, setlistFileName)
 
-    /**
-     * Sets the override to [change] of the tempo on screen, and writes it once the stepper has held still: a setlist
-     * write is a sync run, and a held stepper is a step every few frames. Unlike [changeTransposition] the value is
-     * absolute, which is safe here because while a value is pending nothing reads the store's instead. A value equal to
-     * the song's own removes the override.
-     */
-    private fun changeTempo(songFileName: String, setlistFileName: String?, change: (Int) -> Int) {
-        val effective = effectiveTempoOf(songFileName, setlistFileName)
-        val bpm = MetronomePattern.coerceBpm(change(effective.bpm))
-        tempoOverrides.set(SongPlace(songFileName = songFileName, setlistFileName = setlistFileName), bpm.takeIf { it != effective.songBpm })
-    }
+    internal fun effectiveCapoOf(songFileName: String, setlistFileName: String?) = overrides.effectiveCapoOf(songFileName, setlistFileName)
 
-    /**
-     * Writes a tempo or capo override, null removing it: into the setlist the song was opened from, or into the
-     * preferences for one opened from the library. Answers whether it was written and is expected to come back from the
-     * store, see [PendingOverrides].
-     */
-    private suspend fun writeOverride(
-        place: SongPlace,
-        value: Int?,
-        library: (UserPreferences) -> Map<String, Int>,
-        withLibrary: (UserPreferences, Map<String, Int>) -> UserPreferences,
-        withEntry: (Setlist.Entry, Int?) -> Setlist.Entry,
-    ): Boolean {
-        val setlistFileName = place.setlistFileName
-        return if (setlistFileName == null) {
-            updateUserPreferences { preferences ->
-                val overrides = library(preferences)
-                withLibrary(preferences, if (value == null) overrides - place.songFileName else overrides + (place.songFileName to value))
-            }
-            true
-        } else {
-            // A song a sync run took out of the setlist while its screen stayed open has no entry to hold the value,
-            // and nothing would ever settle it. A reset has nothing left to clear there, so that one still counts.
-            var hasEntry = false
-            updateEditableSetlist(setlistFileName) { setlist ->
-                setlist.withEntry(place.songFileName) { withEntry(it, value) }.also { hasEntry = it != null } ?: setlist
-            }?.takeUnless { it.isArchived } != null && (hasEntry || value == null)
-        }
-    }
+    fun stepCapo(songFileName: String, setlistFileName: String?, delta: Int) = overrides.stepCapo(songFileName, setlistFileName, delta)
 
-    /** The fret a song is capoed at where it is opened, the override waiting to be written included. */
-    internal fun effectiveCapoOf(songFileName: String, setlistFileName: String?) =
-        effectiveCapo(song = songsByFileName.value[songFileName], setlistFileName = setlistFileName, capos = capos.value, songFileName = songFileName)
-
-    /** One step of the capo stepper, in the setlist the song was opened from or in the preferences, like a tempo. */
-    fun stepCapo(songFileName: String, setlistFileName: String?, delta: Int) =
-        changeCapo(songFileName = songFileName, setlistFileName = setlistFileName) { it + delta }
-
-    /**
-     * The stepper's value tapped: the override is removed rather than set to the file's fret, so that a `{capo}` edited
-     * later shows through, and a step still waiting to be written is dropped, exactly as [resetTempo] does it.
-     */
-    fun resetCapo(songFileName: String, setlistFileName: String?) {
-        capoOverrides.reset(SongPlace(songFileName = songFileName, setlistFileName = setlistFileName))
-    }
-
-    /** [changeTempo] for a fret: absolute, debounced, and a value equal to the song's own removing the override. */
-    private fun changeCapo(songFileName: String, setlistFileName: String?, change: (Int) -> Int) {
-        val effective = effectiveCapoOf(songFileName, setlistFileName)
-        val fret = change(effective.fret).coerceIn(Song.CAPO_RANGE)
-        capoOverrides.set(SongPlace(songFileName = songFileName, setlistFileName = setlistFileName), fret.takeIf { it != effective.songFret })
-    }
+    fun resetCapo(songFileName: String, setlistFileName: String?) = overrides.resetCapo(songFileName, setlistFileName)
 
     /**
      * Opens the "Song defaults" sheet on what the file declares for the four values the song is played by, the key in
@@ -2749,18 +2595,8 @@ class CampfireViewModel(
         write = updateUserPreferences::invoke,
     )
 
-    /**
-     * Takes the tempo and capo overrides still waiting for their debounce out of it and returns their writes, for a view
-     * model or a process that is about to go, see [PendingOverrides.takeWaiting].
-     */
-    private fun takeWaitingOverrideWrites(): suspend () -> Unit {
-        val waitingTempos = tempoOverrides.takeWaiting()
-        val waitingCapos = capoOverrides.takeWaiting()
-        return {
-            waitingTempos()
-            waitingCapos()
-        }
-    }
+    /** See [PlayingOverrides.takeWaitingOverrideWrites]. */
+    private fun takeWaitingOverrideWrites() = overrides.takeWaitingOverrideWrites()
 
     // Import and export
 
