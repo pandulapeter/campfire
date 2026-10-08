@@ -5,9 +5,11 @@ description: Code style, commenting, and documentation conventions for the Campf
 
 # Campfire code style
 
-Conventions for matching the pre-established style of this codebase. Architecture, the module graph
-and the build are in the root `CLAUDE.md` and the per-module ones; this skill is about how the code
-reads.
+Conventions for matching the pre-established style of this codebase. Architecture, the module graph,
+the build, the coding conventions and a one-line index of the product rules are in the root `CLAUDE.md`;
+the release pipeline is in `.github/CLAUDE.md`; everything else is in the nearest directory-scoped
+`CLAUDE.md` (each module's, and inside `:presentation` each package's and source set's). This skill is
+about how the code reads.
 
 ## License header
 
@@ -188,22 +190,30 @@ wrong or undo it".
 
 ## Tests
 
-- Only pure logic is tested, in `commonTest`, run on the desktop target: `:chordpro`, `:domain:implementation`
-  (`ImportPlanner`), `:data:source:local:implementation` (zip, file storage), `:data:source:remote:*` (hashing, encoders,
-  the authorization URL), `:data:repository:implementation` (`SyncPlanner`) and `:presentation` (pure helpers pulled
-  out of the screens and the view model, never a Composable). The UI itself is untested.
+- Only pure logic is tested, in `commonTest`, run on the desktop target: `:data:model` (name identity, tags),
+  `:chordpro`, `:domain:implementation` (`ImportPlanner`), `:data:formats` (zip, PDF/Word readers),
+  `:data:source:local:implementation` (file storage), `:data:source:remote:*` (hashing, encoders, the authorization
+  URL), `:data:repository:implementation` (the caches), `:data:sync:implementation` (`SyncPlanner`, the engine),
+  `:metronome:*` and `:presentation` (pure helpers pulled out of the screens and the view model, never a Composable).
+  The root `CLAUDE.md` has the full list. The UI itself is untested.
 - **When you change any of those, add or update the tests in the same change**, and run:
   ```bash
-  ./gradlew :chordpro:desktopTest :domain:implementation:desktopTest :data:source:local:implementation:desktopTest :data:source:remote:api:desktopTest :data:source:remote:implementation:desktopTest :data:repository:implementation:desktopTest :presentation:desktopTest
+  ./gradlew :data:model:desktopTest :data:formats:desktopTest :chordpro:desktopTest :domain:implementation:desktopTest :data:source:local:implementation:desktopTest :data:source:remote:api:desktopTest :data:source:remote:implementation:desktopTest :data:repository:implementation:desktopTest :data:sync:implementation:desktopTest :metronome:api:desktopTest :metronome:implementation:desktopTest :presentation:desktopTest
   ```
 - Don't add a test module or a UI test framework for a change that doesn't warrant one.
 
 ## Keep the CLAUDE.md files in sync
 
-- **After a significant change, update the relevant `CLAUDE.md`** — the module's own and the root one
-  where it describes what you changed (module responsibilities, the data flow, a screen's behavior, the
-  sync rules, the library layout, build properties). These files are unusually detailed here, and their
-  value is that they are true.
+- **After a significant change, update the relevant `CLAUDE.md`** — the nearest directory-scoped one: the
+  module's own, or inside `:presentation` the one of the package or source set the change is in (a screen's
+  behavior goes into `ui/screens/<screen>/CLAUDE.md`, a shared component's into `ui/components/CLAUDE.md`,
+  a rule several modules enforce into `ui/CLAUDE.md`). The root `CLAUDE.md` changes only for a coding
+  convention, the architecture, the library layout, the build, or a line of its `## Product rules` index;
+  the release pipeline and the workflows are `.github/CLAUDE.md`'s. These files are unusually detailed here,
+  and their value is that they are true.
+- **No paragraph runs past ~1,500 characters**, and lines are hard-wrapped at ~120 columns: a topic that
+  outgrows that is cut at sentence boundaries into paragraphs or bullets under `###` headings, so `grep -n`
+  and a diff still point at something readable.
 - Match their prose voice and keep it terse. Routine edits that change nothing documented need no doc
   update, and don't add a new section for something that was never documented unless it earns one.
 

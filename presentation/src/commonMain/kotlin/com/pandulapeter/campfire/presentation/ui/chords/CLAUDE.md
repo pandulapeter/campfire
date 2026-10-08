@@ -80,7 +80,7 @@ first, a search for every other one after it. Which shape a chord is drawn with 
 with the file; the player's own choice from the Chord shapes sheet, **one per chord and instrument for the whole
 library**, since which F somebody plays is a habit of their hands rather than a reading of one song, stored as the shape
 rather than its number and keyed by the chord's notes so every spelling shares it (`UserPreferences.chordVoicings`,
-synced, see Sync); and the app's first shape.
+synced, see `data/sync/implementation/CLAUDE.md`); and the app's first shape.
 
 A definition for another instrument is not used on the page, nor translated: a guitar shape's fingers make another chord
 on a ukulele, and a keyboard plays the chord's own notes. A definition follows its chord through every transposition —

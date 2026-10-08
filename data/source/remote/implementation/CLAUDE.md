@@ -160,7 +160,7 @@ remembered).
 
 ## Cover art as the app sees it
 
-A song names its cover in its own file (`{meta: cover …}`, see Conventions); the app shows it as a thumbnail at the start of
+A song names its cover in its own file (`{meta: cover …}`, see `:presentation`'s `ui/CLAUDE.md`); the app shows it as a thumbnail at the start of
 the song cards, on the Songs and the Setlists screen alike, at the end of the Choose songs sheet's rows, in the song details app bar before the title, at the start of the About the song sheet's and the editor preview's details (where a tap opens the cover search), and in the editor's app bar, where it follows the text as it is typed, and keeps a copy of every one it has shown.
 
 - **Every request is in `:data:source:remote`**, through the one Ktor client sync uses: `CoverArtRemoteSource`

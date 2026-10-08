@@ -46,7 +46,7 @@ each chord, by instrument id and then by the chord's id, never exported but sync
 unknown instrument kept as it is), `shouldNumberSections`, whether the unlabeled sections of a kind are headed "Verse
 1", "Verse 2" (on by default), plus the library-wide transpositions, tempos and capos (`tempos` and `capos`, song file
 name to BPM and to fret for songs opened from the library, never exported, but synced through the cloud folder's
-`preferences.json` (see the root Sync section)), `metronomeSettings` (`MetronomeSettings`: the sound, subdivision and
+`preferences.json` (see `data/sync/implementation/CLAUDE.md`)), `metronomeSettings` (`MetronomeSettings`: the sound, subdivision and
 accents stored as the metronome's own ids, so this module depends on nothing, the volume, whose zero is the mute, the
 two switches, the Metronome tab's own tempo and time signature, with `TEMPO_RANGE`, and `isSongPanelShown`, whether the
 song details screen opens with the metronome panel in its app bar), the folded sections of each song (`foldedSections`,

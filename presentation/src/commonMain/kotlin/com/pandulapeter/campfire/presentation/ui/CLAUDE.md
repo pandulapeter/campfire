@@ -367,14 +367,14 @@ only read there). They are part of the song, so they grow and shrink with its te
 floor: `UserPreferences.MIN_FONT_SCALE` is the size below which the song details screen is not worth reading — the
 lyrics, and the controls with them. Starting the click stays the app bar's button, which is in reach wherever the song
 has been scrolled to. Three of them are overridden where the song is read, so they belong to the setlist the band plays
-it in or to this device (see the Metronome section); the time signature alone is written into the file as a `{time}`
+it in or to this device (see `ui/playing/CLAUDE.md`); the time signature alone is written into the file as a `{time}`
 directive, since it is the song rather than one band's reading of it, and it is what the click counts the bar by.
 
 **What the file declares for all four is edited in the Song defaults sheet**, an entry of the song details editing menu
 and of the About the song sheet's Song defaults group, and nowhere on the page (the editor's overflow menu has it too,
 writing into the text being typed, without the line and the card below, since the editor has no steppers): it opens with
 a line saying that the steppers change them for this setlist only, or, opened from the library, outside every setlist —
-never naming a device, since the library's own overrides are synced (see Sync) — then a card naming what is adjusted
+never naming a device, since the library's own overrides are synced (see `data/sync/implementation/CLAUDE.md`) — then a card naming what is adjusted
 there, with a Reset, while there is any, then the key, capo, tempo and time signature fields, each optional, an empty
 one leaving the default in force. A new song's template carries an empty `{key}` line and `{capo: 0}`, `{tempo: 120}`
 and `{time: 4/4}`, the defaults written out, for them to be edited. **Read only mode reads them instead**: performance

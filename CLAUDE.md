@@ -189,6 +189,9 @@ tab reaches the export screen. The detail is in `:presentation`'s `ui/screens/ex
   which tells that check not to look for it. **Never inject a `List<T>`**: the plugin resolves a list parameter as
   `getAll<T>()`, every definition bound to `T`, and not as a definition whose type is the list, so it compiles, passes
   that check and arrives empty. A list that is itself a definition is wrapped in a type of its own (`SyncProviders`).
+  **Never give a defaulted parameter to the constructor of a `@Single` / `@Factory` / `@KoinViewModel` class, or to
+  a `@Single` module function**: the plugin runs with `skipDefaultValues = true`, so it compiles, passes `:app:di`'s
+  check and silently uses the default.
   `:chordpro` has none of this: it is a set of stateless objects, reached
   through use cases.
 - Implementation classes are `internal` and named `<Interface>Impl`. Use cases are `operator fun invoke`.
@@ -364,7 +367,7 @@ detail is in `metronome/implementation/CLAUDE.md` (timing, playback as media), a
 
 ## Cover art
 
-A song names its cover in its own file (`{meta: cover …}`, see Conventions), and the app keeps a copy of every one it
+A song names its cover in its own file (`{meta: cover …}`, see `:presentation`'s `ui/CLAUDE.md`), and the app keeps a copy of every one it
 has shown. Every request is in `:data:source:remote`, the search only ever runs from the sheet the user opens for it,
 and the "Cover art" switch in Settings → Features turns all of it off. The detail is in
 `data/source/remote/implementation/CLAUDE.md` (the download, the search, the switch) and

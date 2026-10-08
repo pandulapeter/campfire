@@ -150,8 +150,8 @@ as `Remove the review plans.` without asking. If skipped plans remain, the folde
 - **Plans folder:** `documentation/issues/` (`README.md`, `EXECUTION.md`, `NN-*.md`). Branch: `master`.
 - **Areas that have worked as reviewer splits:** `:chordpro`; storage and sync (`:data:*`, `SyncPlanner`,
   `SyncEngine`, Dropbox); `:domain`; `:presentation`; the platform shells, docs and CI (`app/*`, `.github/`).
-- **Unit tests** (pure logic only; see CLAUDE.md for what may be tested):
-  `./gradlew :chordpro:desktopTest :domain:implementation:desktopTest :data:source:local:implementation:desktopTest :data:source:remote:api:desktopTest :data:source:remote:implementation:desktopTest :data:repository:implementation:desktopTest :presentation:desktopTest`
+- **Unit tests** (pure logic only; see the root CLAUDE.md for what may be tested):
+  `./gradlew :data:model:desktopTest :data:formats:desktopTest :chordpro:desktopTest :domain:implementation:desktopTest :data:source:local:implementation:desktopTest :data:source:remote:api:desktopTest :data:source:remote:implementation:desktopTest :data:repository:implementation:desktopTest :data:sync:implementation:desktopTest :metronome:api:desktopTest :metronome:implementation:desktopTest :presentation:desktopTest`
 - **Per-platform compile checks:** desktop `:<module>:compileKotlinDesktop` (`:app:desktop:compileKotlin` for
   `:presentation` and the apps); `androidMain` → `:app:android:compileDebugKotlin`; `iosMain` →
   `:app:ios:linkDebugFrameworkIosSimulatorArm64`; `wasmJsMain` → `:app:web:compileKotlinWasmJs`; the packaged
@@ -161,8 +161,9 @@ as `Remove the review plans.` without asking. If skipped plans remain, the folde
 - Known false alarms: `DesktopSyncAuthenticatorTest` holds port 53682, so rerun it alone before calling a lane red;
   a corrupt incremental cache is retried with `-Pkotlin.incremental=false`.
 - `local.properties` is not in a worktree; copy it in only for lanes whose manual check needs the Dropbox key.
-- Strings go into both `values/strings.xml` and `values-hu/strings.xml`. A changed behaviour updates the module
-  `CLAUDE.md` and, where the root one describes it, the root `CLAUDE.md`.
+- Strings go into both `values/strings.xml` and `values-hu/strings.xml`. A changed behaviour updates the nearest
+  directory-scoped `CLAUDE.md` (the module's, or the `:presentation` package's or source set's), and the root one only
+  for a convention or a product-rule line; the release pipeline is `.github/CLAUDE.md`'s.
 - Manual checks owed after execution belong in the memory note, the ones a release would be blocked by among them —
   never a per-platform suite.
 - Commit examples in this repo's voice: `Stop a sync run that would empty the cloud folder, and ask which way to
