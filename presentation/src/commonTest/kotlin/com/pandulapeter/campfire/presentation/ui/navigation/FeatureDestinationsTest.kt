@@ -9,7 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.navigation
 
-import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsTab
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse

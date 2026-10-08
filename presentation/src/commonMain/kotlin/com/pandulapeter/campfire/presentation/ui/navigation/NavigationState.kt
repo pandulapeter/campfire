@@ -9,7 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.navigation
 
-import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsTab
 
 /**
  * Everything that decides where the user is in the app, which is more than the back stack: the search of a list

@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_features
 import com.pandulapeter.campfire.presentation.resources.settings_general
 import com.pandulapeter.campfire.presentation.resources.settings_library
 import com.pandulapeter.campfire.presentation.resources.settings_songs
+import com.pandulapeter.campfire.presentation.ui.navigation.SettingsTab
 
 /** What a tab of the settings screen is called. */
 @Composable

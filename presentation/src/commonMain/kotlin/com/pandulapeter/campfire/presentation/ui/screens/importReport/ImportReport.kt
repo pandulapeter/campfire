@@ -29,3 +29,16 @@ sealed interface ImportReport {
     /** What the import came to; null for one that failed before it could say. */
     data class Finished(val result: ImportResult?) : ImportReport
 }
+
+/**
+ * The result with every library file it names passed through [fileName]: the new name of a file that was renamed, or
+ * null for one that was deleted, which then leaves the result. Only the names of songs and setlists the import put in
+ * the library are touched; what it left out never became a library file, so nothing the library does can change it.
+ */
+internal fun ImportResult.followingLibraryFileNames(fileName: (String) -> String?) = copy(
+    importedSongFileNames = importedSongFileNames.mapNotNull(fileName),
+    importedSetlistFileNames = importedSetlistFileNames.mapNotNull(fileName),
+    duplicateFileNames = duplicateFileNames.mapNotNull(fileName),
+    convertedSongFileNames = convertedSongFileNames.mapNotNull(fileName),
+    convertedSongToOpen = convertedSongToOpen?.let(fileName),
+)

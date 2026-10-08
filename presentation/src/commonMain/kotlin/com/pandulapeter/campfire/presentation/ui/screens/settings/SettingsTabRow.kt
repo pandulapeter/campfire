@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.presentation.ui.navigation.SettingsTab
 
 /**
  * The tabs of the settings screen, which stay where they are while a page scrolls under them.

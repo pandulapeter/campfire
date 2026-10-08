@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.presentation.ui.navigation.SettingsTab
 
 /**
  * The tabs of the settings screen as a list at the start of the screen, for a window wide enough to hold the selected

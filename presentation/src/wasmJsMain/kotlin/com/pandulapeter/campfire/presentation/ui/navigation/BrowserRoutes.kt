@@ -16,7 +16,6 @@ import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
-import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsTab
 import kotlin.js.ExperimentalWasmJsInterop
 
 /**

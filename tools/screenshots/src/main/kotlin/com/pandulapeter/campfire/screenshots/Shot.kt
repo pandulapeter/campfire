@@ -24,7 +24,7 @@ import com.pandulapeter.campfire.presentation.localization.StringsHu
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
-import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsTab
+import com.pandulapeter.campfire.presentation.ui.navigation.SettingsTab
 import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroups
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.JsonElement

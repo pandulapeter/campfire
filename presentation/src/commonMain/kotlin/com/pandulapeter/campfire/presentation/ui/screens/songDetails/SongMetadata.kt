@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
 import com.pandulapeter.campfire.metronome.api.model.TimeSignature
 import com.pandulapeter.campfire.presentation.ui.metronome.timeSignatureOf
+import com.pandulapeter.campfire.presentation.ui.songInfo.hasSongInfo
 
 /**
  * What the song says about itself is the first section of its own grid, so it shares the rows, columns, stepping and
@@ -71,13 +72,6 @@ internal fun withMetadataSection(
         sections
     }
 }
-
-private val ChordProMetadata.hasInfoRows
-    get() = listOf(album, year, composer, lyricist, duration).any { !it.isNullOrBlank() }
-
-/** Whether the song says anything about itself beyond how it is played, which is what the card and the sheet hold. */
-internal val ChordProMetadata.hasSongInfo
-    get() = hasInfoRows || tags.isNotEmpty() || languages.isNotEmpty() || links.isNotEmpty()
 
 private val ChordProMetadata.hasPlayingValues
     get() = !key.isNullOrBlank() || (capo ?: 0) != 0 || !tempo.isNullOrBlank() || !time.isNullOrBlank()

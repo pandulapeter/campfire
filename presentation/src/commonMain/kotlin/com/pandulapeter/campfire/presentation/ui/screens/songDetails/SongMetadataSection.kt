@@ -22,6 +22,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_capo
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo
 import com.pandulapeter.campfire.presentation.resources.song_details_time
 import com.pandulapeter.campfire.presentation.ui.components.textResource
+import com.pandulapeter.campfire.presentation.ui.songInfo.hasSongInfo
 
 /**
  * The first section of the song: the card of what the song is, where [isSongInfoShown] and the song says anything for

@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.screens.settings
+package com.pandulapeter.campfire.presentation.ui.navigation
 
 /**
  * The tabs of the settings screen, in the order they are read in: what the app looks like, then which of its parts it

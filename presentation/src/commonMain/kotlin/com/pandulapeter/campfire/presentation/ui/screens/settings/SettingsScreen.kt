@@ -44,6 +44,7 @@ import com.pandulapeter.campfire.presentation.ui.components.ImportProgress
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedScrollState
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
+import com.pandulapeter.campfire.presentation.ui.navigation.SettingsTab
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 

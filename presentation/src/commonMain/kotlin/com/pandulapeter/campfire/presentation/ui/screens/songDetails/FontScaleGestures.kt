@@ -20,6 +20,8 @@ import androidx.compose.ui.input.pointer.isCtrlPressed
 import androidx.compose.ui.input.pointer.isMetaPressed
 import androidx.compose.ui.input.pointer.pointerInput
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.fontScale.FontScaleAccumulator
+import com.pandulapeter.campfire.presentation.ui.fontScale.PINCH_SENSITIVITY
 import com.pandulapeter.campfire.presentation.ui.platform.verticalWheelNotches
 import kotlin.math.pow
 import kotlinx.coroutines.channels.Channel
@@ -126,11 +128,5 @@ private data class PinchStart(
     val spread: Float,
     val fontScale: Float,
 )
-
-/**
- * The exponent applied to the spread ratio of the fingers, on a touchscreen and on a touchpad alike
- * ([CampfireViewModel.magnifyByTouchpad]), so that the same movement of the same fingers resizes the text as much on both.
- */
-internal const val PINCH_SENSITIVITY = 0.4f
 
 private const val SCROLL_SENSITIVITY = 0.05f // Font scale change per notch of the scroll wheel.

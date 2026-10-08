@@ -118,19 +118,6 @@ internal fun importReportSections(
 }
 
 /**
- * The result with every library file it names passed through [fileName]: the new name of a file that was renamed, or
- * null for one that was deleted, which then leaves the result. Only the names of songs and setlists the import put in
- * the library are touched; what it left out never became a library file, so nothing the library does can change it.
- */
-internal fun ImportResult.followingLibraryFileNames(fileName: (String) -> String?) = copy(
-    importedSongFileNames = importedSongFileNames.mapNotNull(fileName),
-    importedSetlistFileNames = importedSetlistFileNames.mapNotNull(fileName),
-    duplicateFileNames = duplicateFileNames.mapNotNull(fileName),
-    convertedSongFileNames = convertedSongFileNames.mapNotNull(fileName),
-    convertedSongToOpen = convertedSongToOpen?.let(fileName),
-)
-
-/**
  * The sections with only the rows whose file name, title or artist holds [query], both folded by [normalize] the way
  * the library's searches fold, so that case, accents, spaces and punctuation do not count, and without the sections
  * that are left with none. A query that folds to nothing is no filter at all.

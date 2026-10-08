@@ -172,6 +172,10 @@ import com.pandulapeter.campfire.presentation.ui.screens.songDetails.FONT_SCALE_
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.FontScaleAccumulator
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.PINCH_SENSITIVITY
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.hasSongInfo
+import com.pandulapeter.campfire.presentation.ui.navigation.SettingsTab
+import com.pandulapeter.campfire.presentation.ui.fontScale.FontScaleAccumulator
+import com.pandulapeter.campfire.presentation.ui.fontScale.PINCH_SENSITIVITY
+import com.pandulapeter.campfire.presentation.ui.songInfo.hasSongInfo
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.EditorTextEdit
 import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroups
 import com.pandulapeter.campfire.presentation.ui.search.PickerFilterOptions
