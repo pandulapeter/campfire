@@ -38,7 +38,7 @@ Repository interfaces only. Consumed by `:domain:implementation`; implemented by
   `cancelSynchronization`; `forgetStoredConnection` is the local-only wipe a first launch does, with no request — retried by
   `restore` until it has worked. Unlike the others it caches no list — the library keeps
   living in `SongRepository` and `SetlistRepository`, which is why a run hands the files it changed to their
-  `refresh`, done by `SyncRepositoryImpl` itself. It is also the only thing above the data layer that knows a
+  `refresh`, done by the implementation itself. It is also the only thing above the data layer that knows a
   service is involved: the screens see a `SyncState` and never learn which provider produced it.
 - `DemoLibraryRepository` — `rememberDemoLibraryFiles` records the content hash of the demo files just planted (in
   `UserPreferences`, local only), so that a first sync comparison with a cloud folder holding another version of an

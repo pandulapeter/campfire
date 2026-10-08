@@ -135,6 +135,19 @@ a deletion of one of those files lands before its reads or after its update and 
 - `ArchiveRepositoryImpl` is a pass-through to the zip code in the local source implementation; it exists so the domain
   layer can reach it without depending on a local source.
 - `sync/` is where local and remote meet, which is why it is in a repository rather than in either source.
+  `SyncRepositoryImpl` is a facade over the classes that do the work, each a `@Single` of the `sync` package:
+  `SyncStateHolder` (the one `SyncState`), `SyncConnectionManager` (restore, connect, disconnect, forgetting),
+  `SyncRunScheduler` (when a run starts, the debounce), `SyncRunner` (one run: the engine, `preferences.json`, the index
+  writes, the outcome), `SyncIndexStore` (`sync-index.json` as a document) and `SyncLibraryRefresher` (the song and
+  setlist repositories told what a run changed). `SyncEngine` is built by `DataRepositoryModule.syncEngine`. Who holds
+  which lock:
+  - `SyncConnectionManager`'s restore lock — never held across a run; forgetting the stored connection runs under it.
+  - `SyncRunner`'s run lock (`withRunLock`) — held by a run, and by `disconnect` around the index deletion only.
+  - `LibraryFileLock` — held by the engine around local file calls, and by the song and setlist repositories inside
+    their own locks; never held across a request.
+  - `SyncLibraryRefresher`'s `changedFilesMutex` — innermost: the engine reports a changed file both inside
+    `LibraryFileLock` and outside it, so it is taken under `LibraryFileLock` and must never be held while anything
+    takes `LibraryFileLock` — which is why the refresh lets go of it before it calls `refresh`.
   `SyncPlanner` is a **pure function** of (local hashes, remote listing, the index of what the last run saw) and is
   the one part of sync worth testing — `commonTest` covers every way a file can differ between two devices,
   including the ones that would otherwise only show up as a song someone lost. `SyncEngine` carries the plan out and
@@ -166,8 +179,9 @@ a deletion of one of those files lands before its reads or after its update and 
   one that still hashes to what `UserPreferences.demoLibraryContentHashes` recorded when it was planted, met with no
   index entry (the first time this device compares that name with this folder), takes the folder's version the same
   way, since it is another version's demo; the record is written by `DemoLibraryRepositoryImpl`, under the same
-  `SyncKey.path` and `localContentHash` the engine looks it up by, and the engine asks for it through a lookup
-  `SyncRepositoryImpl` hands it, and one with an index entry that is back at its planted bytes was changed back on purpose and keeps its copy. A
+  `SyncKey.path` and `localContentHash` the engine looks it up by, and the engine asks for it through the lookup
+  `DataRepositoryModule.syncEngine` builds it with — a `@Single` function rather than an annotated class, since the
+  Koin compiler plugin would hand an annotated constructor its `{ null }` default instead — and one with an index entry that is back at its planted bytes was changed back on purpose and keeps its copy. A
   device that planted before the record existed has none and still makes copies. A download is decided about twice — before its request, so that a file already in step is
   not transferred, and again just before the write, so that a save made while the request was in flight is resolved
   as a conflict rather than written over; the index records the revision the download fetched rather than the one the
@@ -185,16 +199,17 @@ a deletion of one of those files lands before its reads or after its update and 
   address the user can change; an index an earlier version filed under the e-mail address is adopted on the next run
   (`adoptedBy`) rather than ignored, since a run without an index brings back every file deleted since.
   It is told as the run goes rather than when a pass completes: every finished operation
-  hands `SyncRepositoryImpl` a way to take a snapshot, which it does at most every `INDEX_WRITE_INTERVAL` —
+  hands `SyncRunner` a way to take a snapshot, which it does at most every `INDEX_WRITE_INTERVAL` —
   building one costs as much as the index is long — and once more on the way out of a stopped or failed run (the
   periodic writer waited for first, not cancelled: on the web a cancelled write carries on in the browser, so it could
-  land after the final write). Those writes and the periodic one never throw (`saveIndexQuietly`): only the write
+  land after the final write). Those writes and the periodic one never throw (`SyncIndexStore.saveQuietly`): only the write
   that opens a run and the one that completes it do, which is how a device that cannot write ends a run as
   `SyncFailureReason.STORAGE`. Reading it is the same: an index that is there and cannot be read ends the run as
   `STORAGE` before anything is written, and start up and a new connection leave such a file alone. Only one that reads
   and does not decode is taken for none. The scope, the time source, the wall clock and the dispatcher documents are
   coded on come from `base/RepositoryEnvironment` (a `@Single` function of `DataRepositoryModule`, shared with
-  `CoverArtRepositoryImpl`), which is what lets `SyncRepositoryImplTest` and `CoverArtRepositoryImplTest` run every
+  `CoverArtRepositoryImpl`), which is what lets `SyncRepositoryImplTest`, `SyncRunSchedulerTest`,
+  `SyncLibraryRefresherTest` and `CoverArtRepositoryImplTest` run every
   launched job, the ten-second debounce and the retry minute on the test scheduler's virtual time — the scope being
   background work there, so a test advances it with `runCurrent` or `advanceTimeBy`, never `advanceUntilIdle`. The
   repository's scope carries a `CoroutineExceptionHandler` that logs, since nothing
@@ -253,9 +268,9 @@ a deletion of one of those files lands before its reads or after its update and 
   trip times added up. The remote deletions are the exception: they go to `SyncProvider.delete` in one call, so that
   a large deletion spends as little time as possible half done, which is what another device's guard would see. On
   Dropbox that is still about seven files a second, so a device that syncs during a large approved deletion can
-  still see less than half of it gone and follow that part without asking; its next run asks about the rest. `SyncRepositoryImpl` owns an application-lifetime scope, so a run outlives the screen and
-  (on Android) the activity that started it, and it is what tells the song and setlist repositories to read the files
-  it changed again (`refresh`, never a whole rescan) — after a completed run, and after a stopped or failed one
+  still see less than half of it gone and follow that part without asking; its next run asks about the rest. `SyncRunScheduler` owns an application-lifetime scope, so a run outlives the screen and
+  (on Android) the activity that started it, and `SyncLibraryRefresher` is what tells the song and setlist
+  repositories to read the files it changed again (`refresh`, never a whole rescan) — after a completed run, and after a stopped or failed one
   (`finishRunCutShort`, always under `NonCancellable`), since files that moved before the run ended are on disk
   whichever way it ended. A live refresh that is stopped puts back what it had not read. Only a run that ends in a
   throwable that is not an `Exception`, which may have come from the middle of a write, rescans the whole library. The use case cannot, now that it returns before the run does. A run
