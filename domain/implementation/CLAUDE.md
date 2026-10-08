@@ -18,7 +18,9 @@ The ones that carry real logic:
 - `GetScreenDataUseCaseImpl` — combines the setlist, song and preference flows, and the `SongFilter` flow the caller
   passes in, into one `Flow<DataState<ScreenData>>` — in two halves, songs and setlists, combined at the end, so that
   a setlist being written does not filter and sort the whole library again — built on `Dispatchers.Default` since
-  the view model collects it on the main thread. Applies the tag and language filters and
+  the view model collects it on the main thread. Its pure helpers sit beside it in `useCases/`: the tags and languages
+  and their filters in `SongCatalog.kt`, the song order and its sections in `SongSorting.kt`, and the combining of data
+  states in `DataStates.kt`. Applies the tag and language filters and
   the sorting and the sections it is listed under (by title or artist, through
   `NormalizeTextUseCase`, so accents are ignored; one key decides both, and whatever starts with no letter comes
   first; the whole library is sorted once per change of the library or the sorting mode, kept in `sortMemo`, and the

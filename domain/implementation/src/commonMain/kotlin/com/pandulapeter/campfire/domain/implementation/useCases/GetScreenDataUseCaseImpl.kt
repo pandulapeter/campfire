@@ -148,15 +148,11 @@ class GetScreenDataUseCaseImpl internal constructor(
         )
     }
 
-    /** A value whose first read failed stands in as [default]; a value that is merely not read yet stays missing. */
-    private fun <T> DataState<T>.orWhenUnreadable(default: T): DataState<T> =
-        if (this is DataState.Failure && data == null) DataState.Failure(default) else this
-
     private fun List<Song>.toSongPart(songListPreferences: SongListPreferences, filter: SongFilter): SongPart {
         // What the library holds, whatever is selected: the two filter groups are counted over the songs the other one
         // leaves, but both of them decide what is still a tag and what is still a language from here, or narrowing by
         // one would quietly switch the other one off.
-        val availableTags = toTags()
+        val availableTags = toTags(normalizeText::invoke)
         val availableLanguages = toLanguages()
         // The filters are predicates over the library in its order, so what they leave is already sorted.
         val sorted = sorted(songListPreferences.sortingMode)
@@ -169,7 +165,7 @@ class GetScreenDataUseCaseImpl internal constructor(
         return SongPart(
             songs = songSections.flatMap { it.songs },
             songSections = songSections,
-            tags = availableTags.recountedTagsOver(songsByLanguage),
+            tags = availableTags.recountedTagsOver(songsByLanguage, normalizeText::invoke),
             languages = availableLanguages.recountedLanguagesOver(songsByTag),
             unfilteredSongs = this,
             sortedSongs = sorted.songs,
@@ -195,16 +191,6 @@ class GetScreenDataUseCaseImpl internal constructor(
     )
 
     /**
-     * [data] in the state of the inputs it was built from: a failure anywhere beats a load anywhere, which beats every
-     * input being idle. An idle state always carries data, so an idle input never leaves [data] without it.
-     */
-    private fun <T> List<DataState<*>>.combinedState(data: T?): DataState<T> = when {
-        any { it is DataState.Failure } -> DataState.Failure(data)
-        any { it is DataState.Loading } -> DataState.Loading(data)
-        else -> DataState.Idle(data ?: throw IllegalStateException("No data available while all data states are idle."))
-    }
-
-    /**
      * The setlists in the order the screen lists them. The archived ones come last whichever order that is: they are
      * only on the screen at all because the user asked to see what has been put away, and mixing them in among the
      * setlists still in use would undo the putting away.
@@ -223,203 +209,10 @@ class GetScreenDataUseCaseImpl internal constructor(
         }.thenBy { normalizeText(it.title) }.thenBy { it.fileName }
     )
 
-    /**
-     * Tags are matched without regard to case, here and everywhere else, so both sides are folded to lower case
-     * before they meet. A selected tag no song carries any more is dropped instead of emptying the list: it is kept
-     * in the filter on purpose, see [SongFilter.selectedTags].
-     */
-    private fun List<Song>.filterTags(songFilter: SongFilter, matchMode: UserPreferences.MatchMode, tags: List<Tag>): List<Song> {
-        val available = tags.mapTo(mutableSetOf()) { it.name.lowercase() }
-        val selected = songFilter.selectedTags.map { it.lowercase() }.filter { it in available }
-        if (selected.isEmpty()) return this
-        return filter { song ->
-            val songTags = song.tags.mapTo(mutableSetOf()) { it.lowercase() }
-            when (matchMode) {
-                UserPreferences.MatchMode.ANY -> selected.any { it in songTags }
-                UserPreferences.MatchMode.ALL -> selected.all { it in songTags }
-            }
-        }
-    }
-
-    /**
-     * The songs left by the language filter. A song carries its languages the way it carries its tags, so several
-     * selected languages combine the way several tags do; [SongLanguage.UNKNOWN] selects the songs that declare none,
-     * which no song can name itself, see [SongLanguage.Companion.UNKNOWN]. Such a song is taken to be in that one
-     * "language", so asking for every one of several selected languages never finds it next to a named one.
-     */
-    private fun List<Song>.filterLanguages(songFilter: SongFilter, matchMode: UserPreferences.MatchMode, languages: List<SongLanguage>): List<Song> {
-        val available = languages.mapTo(mutableSetOf()) { it.code }
-        val selected = songFilter.selectedLanguages.filter { it in available }
-        if (selected.isEmpty()) return this
-        return filter { song ->
-            val songLanguages = song.languages.ifEmpty { listOf(SongLanguage.UNKNOWN) }
-            when (matchMode) {
-                UserPreferences.MatchMode.ANY -> selected.any { it in songLanguages }
-                UserPreferences.MatchMode.ALL -> selected.all { it in songLanguages }
-            }
-        }
-    }
-
-    /**
-     * Every tag of the library as the filter controls show it, counted over [songs] - the ones the language filter
-     * leaves. A tag the language filter has counted down to nothing stays on the list with a zero rather than
-     * dropping off it: the chips would otherwise come and go under the user's finger as the other group changes, and
-     * a zero says exactly what it means - this combination of the two groups selects nothing. The zeros sort last,
-     * which keeps the tags that still do something among the ones shown before "show all".
-     */
-    private fun List<Tag>.recountedTagsOver(songs: List<Song>): List<Tag> {
-        val counts = mutableMapOf<String, Int>()
-        songs.forEach { song ->
-            song.tags.mapTo(mutableSetOf()) { it.lowercase() }.forEach { tag -> counts[tag] = (counts[tag] ?: 0) + 1 }
-        }
-        return map { it.copy(songCount = counts[it.name.lowercase()] ?: 0) }.sortedWith(tagOrder)
-    }
-
-    /** Every language of the library counted over [songs] - the ones the tag filter leaves - the way [recountedTagsOver] counts the tags. */
-    private fun List<SongLanguage>.recountedLanguagesOver(songs: List<Song>): List<SongLanguage> {
-        val counts = songs.toLanguages().associate { it.code to it.songCount }
-        return map { it.copy(songCount = counts[it.code] ?: 0) }.sortedWith(languageOrder)
-    }
-
-    /**
-     * The languages of the library with the number of songs singing in each, most used first, and the songs that
-     * declare none after them however many they are: "unknown" is where the work that is still to be done sits,
-     * not a language competing with the rest for the top of the list.
-     */
-    private fun List<Song>.toLanguages(): List<SongLanguage> {
-        val countsByCode = linkedMapOf<String, Int>()
-        forEach { song ->
-            if (song.languages.isEmpty()) {
-                countsByCode[SongLanguage.UNKNOWN] = (countsByCode[SongLanguage.UNKNOWN] ?: 0) + 1
-            } else {
-                song.languages.forEach { code -> countsByCode[code] = (countsByCode[code] ?: 0) + 1 }
-            }
-        }
-        return countsByCode
-            .map { (code, songCount) -> SongLanguage(code = code, songCount = songCount) }
-            .sortedWith(languageOrder)
-    }
-
-    /**
-     * The tags of the library with the number of songs carrying each, most used first. Two spellings of the same word
-     * are one tag, shown the way the song that comes first by file name spells it - by file name rather than by where
-     * the song is in the list, because the repository's list is in no particular order (a song that was just saved is
-     * at its end), and the chip would change its capitals after an edit to a song and back after the next rescan.
-     */
-    private fun List<Song>.toTags(): List<Tag> {
-        val tagsByName = linkedMapOf<String, SpelledTag>()
-        forEach { song ->
-            song.tags.forEach { tag ->
-                val spelled = tagsByName.getOrPut(tag.lowercase()) { SpelledTag(name = tag, fileName = song.fileName) }
-                spelled.songCount++
-                if (song.fileName < spelled.fileName) {
-                    spelled.name = tag
-                    spelled.fileName = song.fileName
-                }
-            }
-        }
-        return tagsByName.values
-            .map { Tag(name = it.name, songCount = it.songCount) }
-            .sortedWith(tagOrder)
-    }
-
-    /** Most used first, and the songs that declare none last, see [toLanguages]. */
-    private val languageOrder = compareBy<SongLanguage> { it.code == SongLanguage.UNKNOWN }.thenByDescending { it.songCount }.thenBy { it.code }
-
-    /** Most used first. Tags fold case but not accents, so two of them can share the text they are sorted by. */
-    private val tagOrder = compareByDescending<Tag> { it.songCount }.thenBy { normalizeText(it.name) }.thenBy { it.name }
-
-    /**
-     * A tag while it is being counted.
-     *
-     * @param fileName The song [name] is spelled after: the first by file name of the ones counted so far.
-     */
-    private class SpelledTag(
-        var name: String,
-        var fileName: String,
-        var songCount: Int = 0,
-    )
-
-    /**
-     * The whole library in the order [sortingMode] asks for, sorted again only when the library or the mode has changed
-     * (see [sortMemo]). The keys are computed once per song, since the selector of a comparator runs on every
-     * comparison.
-     */
+    /** The library sorted for [sortingMode], sorted again only when the library or the mode has changed (see [sortMemo]). */
     private fun List<Song>.sorted(sortingMode: UserPreferences.SortingMode): SortMemo =
-        sortMemo?.takeIf { it.input === this && it.sortingMode == sortingMode } ?: run {
-            val sortable = map { SortableSong(song = it, sortingMode = sortingMode, artist = normalizeText(it.artist), title = normalizeText(it.title)) }
-                .sortedWith(SortableSong.ORDER)
-            SortMemo(input = this, sortingMode = sortingMode, songs = sortable.map { it.song }, byFileName = sortable.associateBy { it.song.fileName })
-        }.also { sortMemo = it }
-
-    /**
-     * The library [input] sorted by [sortingMode]: [songs] in that order, and the sort keys of each song by its file
-     * name, which is unique in the library.
-     */
-    private class SortMemo(
-        val input: List<Song>,
-        val sortingMode: UserPreferences.SortingMode,
-        val songs: List<Song>,
-        val byFileName: Map<String, SortableSong>,
-    )
-
-    /**
-     * Songs already in the order [sortingMode] asks for, cut into the sections that order is listed under.
-     *
-     * Both come from [SortableSong.sectionKey]: it is what the songs are ordered by before anything else and the only
-     * thing they are filed by, so a section is one run of the list, and collecting the runs in a map keyed by it means
-     * that no header can come up twice whatever a title starts with.
-     */
-    private fun List<SortableSong>.cutIntoSections(sortingMode: UserPreferences.SortingMode): List<SongSection> {
-        val sections = linkedMapOf<String, MutableList<SortableSong>>()
-        forEach { sections.getOrPut(it.sectionKey) { mutableListOf() } += it }
-        return sections.map { (key, songs) ->
-            val first = songs.first()
-            SongSection(
-                header = when (sortingMode) {
-                    UserPreferences.SortingMode.BY_ARTIST -> SongSection.Header.Artist(name = first.song.artist, initial = first.initial, key = key)
-                    UserPreferences.SortingMode.BY_TITLE -> first.initial?.let { SongSection.Header.Letter(it) } ?: SongSection.Header.Symbols
-                },
-                songs = songs.map { it.song },
-            )
-        }
-    }
-
-    /** @param artist Normalized, like [title]. */
-    private class SortableSong(
-        val song: Song,
-        sortingMode: UserPreferences.SortingMode,
-        artist: String,
-        title: String,
-    ) {
-        /** The text the list is sorted by, and the one that orders the songs the first one ties. */
-        val primaryText = if (sortingMode == UserPreferences.SortingMode.BY_ARTIST) artist else title
-        val secondaryText = if (sortingMode == UserPreferences.SortingMode.BY_ARTIST) title else artist
-
-        /** The upper case first character of [primaryText] where that is a letter, of any script. */
-        val initial = primaryText.firstOrNull()?.takeIf { it.isLetter() }?.uppercaseChar()
-
-        /**
-         * By artist a section is an artist; by title it is an initial, the empty key standing for every title that
-         * has none. The upper case initial rather than the first character: two lower case letters can share an
-         * upper case one (`ı` and `i`), and they share a header then.
-         */
-        val sectionKey = if (sortingMode == UserPreferences.SortingMode.BY_ARTIST) artist else initial?.toString().orEmpty()
-
-        companion object {
-
-            /**
-             * Whatever starts with something other than a letter comes first, in either order. Left to the order of
-             * the strings those texts land on both sides of the alphabet - a digit sorts before `a`, while `¿`, `…`,
-             * a curly quote and every emoji sort after `z` - which is two runs under one header.
-             *
-             * The file name comes last because it is the one thing two songs cannot share: two arrangements of a
-             * song tie on everything before it, and would otherwise be listed in the order of the repository's
-             * list, where a song moves to the end every time it is saved.
-             */
-            val ORDER = compareBy<SortableSong>({ it.initial != null }, { it.sectionKey }, { it.primaryText }, { it.secondaryText }, { it.song.fileName })
-        }
-    }
+        sortMemo?.takeIf { it.input === this && it.sortingMode == sortingMode }
+            ?: sortedFor(sortingMode, normalizeText::invoke).also { sortMemo = it }
 
     /** The part of the preferences the song list depends on. */
     private data class SongListPreferences(
@@ -433,12 +226,6 @@ class GetScreenDataUseCaseImpl internal constructor(
         tagMatchMode = tagMatchMode,
         languageMatchMode = languageMatchMode,
     )
-
-    private fun <T, R> DataState<T>.mapData(transform: (T) -> R): DataState<R> = when (this) {
-        is DataState.Idle -> DataState.Idle(transform(data))
-        is DataState.Loading -> DataState.Loading(data?.let(transform))
-        is DataState.Failure -> DataState.Failure(data?.let(transform))
-    }
 
     private companion object {
 
