@@ -63,7 +63,6 @@ import com.pandulapeter.campfire.presentation.ui.playing.Transpositions
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.domain.api.models.ScreenData
 import com.pandulapeter.campfire.domain.api.models.SongFilter
-import com.pandulapeter.campfire.domain.api.models.SongSection
 import com.pandulapeter.campfire.domain.api.useCases.CancelSyncConnectionUseCase
 import com.pandulapeter.campfire.domain.api.useCases.CancelSynchronizationUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ClearCoverArtCacheUseCase
@@ -165,6 +164,7 @@ import com.pandulapeter.campfire.presentation.ui.fontScale.PINCH_SENSITIVITY
 import com.pandulapeter.campfire.presentation.ui.songInfo.hasSongInfo
 import com.pandulapeter.campfire.presentation.ui.state.CoverArtSearchController
 import com.pandulapeter.campfire.presentation.ui.state.DebouncedPreference
+import com.pandulapeter.campfire.presentation.ui.state.LibraryState
 import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.Companion.BACK_STACK_KEY
@@ -181,8 +181,6 @@ import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroups
 import com.pandulapeter.campfire.presentation.ui.search.PickerFilterOptions
 import com.pandulapeter.campfire.presentation.ui.search.PickerSongs
 import com.pandulapeter.campfire.presentation.ui.search.SearchableSong
-import com.pandulapeter.campfire.presentation.ui.search.SongSearchIndex
-import com.pandulapeter.campfire.presentation.ui.search.SongSearchSnapshot
 import com.pandulapeter.campfire.presentation.ui.search.pickerFilterOptions
 import com.pandulapeter.campfire.presentation.ui.search.songGroupsFor
 import com.pandulapeter.campfire.presentation.ui.search.toPickableSong
@@ -211,7 +209,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -222,7 +219,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.runningFold
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -320,17 +316,45 @@ class CampfireViewModel(
     )
     internal val songPickerSelectedLanguages = _songPickerSelectedLanguages.asStateFlow()
 
-    /**
-     * The single subscription to the domain layer: every state below maps over this instead of over
-     * [GetScreenDataUseCase] directly, which would re-run the whole repository combine once per state. Started
-     * eagerly so that the data is loaded into memory as the app starts, rather than when a screen first asks for it.
-     */
-    private val screenData: StateFlow<DataState<ScreenData>> = getScreenData(_songFilter).stateIn(
+    private val libraryState = LibraryState(
         scope = viewModelScope,
-        started = SharingStarted.Eagerly,
-        // Loading, not Failure: nothing has been asked for yet, which is not something to show an error for.
-        initialValue = DataState.Loading(null),
+        getScreenData = getScreenData,
+        songFilter = _songFilter,
+        loadScreenData = loadScreenData,
+        normalizeSearchText = normalizeSearchText,
     )
+
+    /** See [LibraryState.screenData]. */
+    private val screenData get() = libraryState.screenData
+
+    /** See [LibraryState.isLoading]. */
+    val isLoading: StateFlow<Boolean> get() = libraryState.isLoading
+
+    /** See [LibraryState.setlists]. */
+    val setlists: StateFlow<List<Setlist>> get() = libraryState.setlists
+
+    /** See [LibraryState.songFileNamesInSetlists]. */
+    val songFileNamesInSetlists: StateFlow<Set<String>> get() = libraryState.songFileNamesInSetlists
+
+    /** See [LibraryState.allSongs]. */
+    val allSongs: StateFlow<List<Song>> get() = libraryState.allSongs
+
+    /** See [LibraryState.labelsOnEverySong]. */
+    val labelsOnEverySong get() = libraryState.labelsOnEverySong
+
+    /** See [LibraryState.tags]. */
+    val tags get() = libraryState.tags
+
+    /** See [LibraryState.languages]. */
+    val languages get() = libraryState.languages
+
+    private val indexedSongs get() = libraryState.indexedSongs
+
+    /** See [LibraryState.songsByFileName]. */
+    val songsByFileName: StateFlow<Map<String, Song>> get() = libraryState.songsByFileName
+
+    /** See [LibraryState.librarySummary]. */
+    val librarySummary get() = libraryState.librarySummary
 
     // Navigation
     /** Written into [savedStateStore] on every change, see [persistBackStack], and read back from it here. */
@@ -518,21 +542,6 @@ class CampfireViewModel(
     /** See [FontScaleController.settledFontScale]. */
     val settledFontScale: Float get() = fontScaleController.settledFontScale
 
-    // Data
-    /**
-     * True while the library is being read for the first time, its partial batches included. A rescan of a library
-     * that has been read once is not a loading state: it publishes no partial data, so what is on screen meanwhile is
-     * the previous, complete library, and flipping this would only recompose every screen twice for nothing. A first
-     * read that failed has not been read, so the retry after it still shows loading.
-     */
-    val isLoading = screenData
-        .runningFold(LoadingLatch(isLoading = true, hasBeenRead = false)) { latch, state ->
-            val hasBeenRead = latch.hasBeenRead || state is DataState.Idle
-            LoadingLatch(isLoading = state is DataState.Loading && !hasBeenRead, hasBeenRead = hasBeenRead)
-        }
-        .map { it.isLoading }
-        .asState(true)
-
     /**
      * True until the app has settled whether it is planting the demo library, and until it has finished if it is,
      * see [plantDemoLibraryOnFirstRun]. It starts out true rather than being set when the planting begins, because
@@ -663,17 +672,6 @@ class CampfireViewModel(
     /** See [SyncController.syncProviders]. */
     val syncProviders get() = syncController.syncProviders
 
-    val setlists = screenData.map { it.data?.setlists.orEmpty() }.asState(emptyList())
-
-    /**
-     * The file names of every song that is in at least one setlist, which is what decides whether the "add to
-     * setlist" action is drawn as a filled star or an outlined one. Worked out once per change to the setlists
-     * rather than per song shown, since every row of the song list asks the same question.
-     */
-    val songFileNamesInSetlists = setlists
-        .map { setlists -> setlists.flatMapTo(mutableSetOf()) { setlist -> setlist.entries.map { it.songFileName } } }
-        .asState(emptySet())
-
     /**
      * The text of the songs the back stack can reach, by file name, read one file at a time as they are opened. Kept in
      * step with the files by [GetSongContentInvalidationsUseCase], see the collector in `init`, and left with only what
@@ -771,45 +769,6 @@ class CampfireViewModel(
     internal val playingOverrides: StateFlow<PlayingOverridesSnapshot> get() = overrides.playingOverrides
 
     /**
-     * The whole library, whatever the filters hide, which is what everything that looks a song up by its file name
-     * reads: a setlist lists what somebody wrote down rather than what the song list is currently narrowed to, and
-     * the details screen it opens has to find every one of those songs.
-     */
-    val allSongs = screenData.map { it.data?.unfilteredSongs.orEmpty() }.asState(emptyList())
-
-    /**
-     * The labels every song in the library carries, which the song rows leave off: a tag that is on every song tells
-     * one song from no other, and a library that sings in one language has nothing to mark a song with. Counted over
-     * the whole library rather than over what the filters leave, since a tag filter narrows the list to songs that
-     * all carry that tag, and the rows would then lose the very label the reader narrowed them by. Tags are folded
-     * to lowercase the way the filters count them, so two spellings of one word are one tag here too.
-     */
-    val labelsOnEverySong = allSongs.map { songs ->
-        // Folded one song at a time, stopping at the first song that leaves both empty, which in most libraries is the
-        // second one.
-        var tags: Set<String>? = null
-        var languages: Set<String>? = null
-        for (song in songs) {
-            if (tags?.isEmpty() != true) song.tags.mapTo(HashSet()) { it.lowercase() }.let { tags = tags?.intersect(it) ?: it }
-            if (languages?.isEmpty() != true) song.languages.toSet().let { languages = languages?.intersect(it) ?: it }
-            if (tags?.isEmpty() == true && languages?.isEmpty() == true) break
-        }
-        LabelsOnEverySong(tags = tags.orEmpty(), languages = languages.orEmpty())
-    }.flowOn(Dispatchers.Default).asState(LabelsOnEverySong())
-
-    /**
-     * Every tag the library uses, most used first, as both the filter controls and the suggestions of the tag
-     * dialog offer them.
-     */
-    val tags = screenData.map { it.data?.tags.orEmpty() }.asState(emptyList())
-
-    /**
-     * Every language the library sings in, most used first and the songs that declare none last, as the filter
-     * controls offer them. Empty, or a single entry, is a library with nothing to filter by.
-     */
-    val languages = screenData.map { it.data?.languages.orEmpty() }.asState(emptyList())
-
-    /**
      * Whether the filter controls have anything to offer: a tag, or a choice between two languages. Without either,
      * the songs screen leaves out both the controls and the action that opens them rather than showing an empty sheet.
      */
@@ -826,38 +785,6 @@ class CampfireViewModel(
         val selectedTags = filter.selectedTags.mapTo(mutableSetOf()) { it.lowercase() }
         tags.any { it.name.lowercase() in selectedTags } || (languages.size > 1 && languages.any { it.code in filter.selectedLanguages })
     }.asState(false)
-
-    /**
-     * The library as the song list shows it and as the search reads it, taken from one [screenData] value: the sections
-     * as the domain layer cut them, the filtered songs with their title, artist and tags normalized for searching, and
-     * the whole library by file name, which is what the setlists and the song details screen read - a setlist names its
-     * songs whatever the song filters hide. Built from one value so that a library change can never pair a new filtered
-     * list with an old lookup, and normalized once per library rather than once per keystroke, a song whose searchable
-     * text did not change keeping what it was folded to.
-     *
-     * Distinct, because [screenData] also emits for every write to a setlist with the songs exactly as they were, and
-     * each of those would otherwise have the whole library indexed again for nothing. Built on [Dispatchers.Default],
-     * as the domain layer builds [screenData], since a whole library is too much to fold between two frames.
-     */
-    private val songSearchIndex = SongSearchIndex { normalizeSearchText(it) }
-    private val indexedSongs = screenData.map { state ->
-        val data = state.data
-        IndexedSongInput(
-            all = data?.unfilteredSongs.orEmpty(),
-            filtered = data?.songs.orEmpty(),
-            sections = data?.songSections.orEmpty(),
-            sorted = data?.sortedSongs.orEmpty(),
-            filterKey = data?.let {
-                "${it.sortingMode.name}|${it.songFilter.selectedTags.sorted()}|${it.tagMatchMode.name}|" +
-                    "${it.songFilter.selectedLanguages.sorted()}|${it.languageMatchMode.name}"
-            }.orEmpty(),
-        )
-    }.distinctUntilChanged().map { input ->
-        IndexedSongs(input.sections, songSearchIndex.update(input.all, input.filtered), input.filterKey, input.sorted)
-    }.flowOn(Dispatchers.Default).asState(IndexedSongs(emptyList(), SongSearchSnapshot.Empty, "", emptyList()))
-
-    /** Shared file-name lookup for screens that resolve songs from a destination or a setlist. */
-    val songsByFileName = indexedSongs.map { it.search.songsByFileName }.asState(emptyMap())
 
     // Metronome
 
@@ -912,24 +839,6 @@ class CampfireViewModel(
         .map(::pickerFilterOptions)
         .flowOn(Dispatchers.Default)
         .asState(PickerFilterOptions.Empty)
-
-    /**
-     * Null until the library has actually been read, so that the settings screen never flashes a count of zero. The size
-     * is added up from what the scan read off every file, so it costs no listing of its own and arrives in the same value
-     * as the counts.
-     */
-    val librarySummary = screenData
-        .map { state ->
-            // A library with an unreadable part standing in empty is not one to count.
-            state.data?.takeIf { it.isWholeLibrary }?.let { data ->
-                LibrarySummary(
-                    songCount = data.unfilteredSongs.size,
-                    setlistCount = data.setlists.size,
-                    size = data.unfilteredSongs.sumOf { it.size } + data.setlists.sumOf { it.size },
-                )
-            }
-        }
-        .asState(null)
 
     private val coverArtSearchController = CoverArtSearchController(
         scope = viewModelScope,
@@ -1229,7 +1138,7 @@ class CampfireViewModel(
     }
 
     init {
-        viewModelScope.launch { loadScreenData(false) }
+        libraryState.startLoading()
         viewModelScope.launch { plantDemoLibraryOnFirstRun() }
         viewModelScope.launch { showWelcomeOnFirstRun() }
         viewModelScope.launch { showWhatsNewOnVersionChange() }
@@ -1723,26 +1632,9 @@ class CampfireViewModel(
 
     // Songs
 
-    /** When the last rescan started or, once it has finished, finished; see [refreshIfStale]. */
-    private var lastRescanAt: TimeMark? = null
+    fun refresh() = libraryState.refresh()
 
-    fun refresh() = viewModelScope.launch {
-        // Marked as it starts as well, so that the focus that follows a start, which comes right behind it on the
-        // desktop, does not ask for a second rescan while the first is still running.
-        lastRescanAt = TimeSource.Monotonic.markNow()
-        loadScreenData(true)
-        lastRescanAt = TimeSource.Monotonic.markNow()
-    }
-
-    /**
-     * [refresh], unless the library has been read again within the last [MIN_RESCAN_INTERVAL]: for the desktop
-     * window regaining the focus, which a user editing a song in another window next to it does often, and each time
-     * of which re-reading the whole library would be a cost with nothing new to show for it.
-     */
-    fun refreshIfStale() {
-        if (lastRescanAt?.let { it.elapsedNow() < MIN_RESCAN_INTERVAL } == true) return
-        refresh()
-    }
+    fun refreshIfStale() = libraryState.refreshIfStale()
 
     /** Creates the file and opens it in the editor, which is the only useful thing to do with an empty song. */
     fun createSong(values: Map<ChordProMetadataFields.Field, String>) = launchLibraryChange {
@@ -3186,12 +3078,6 @@ class CampfireViewModel(
         val settled: CompletableDeferred<Unit> = CompletableDeferred(),
     )
 
-    /** The state [isLoading] is folded from. */
-    private data class LoadingLatch(
-        val isLoading: Boolean,
-        val hasBeenRead: Boolean,
-    )
-
     /**
      * Whether an import went the one way a snackbar is enough for: everything written, nothing left out and nothing
      * stopped. Files that were already in the library count as written, since nothing of them is lost.
@@ -3226,29 +3112,11 @@ class CampfireViewModel(
         else -> whenEmpty
     }
 
-    /** @param filterKey The filter and the preferences [filtered] was built for, see [SongGroups]. */
-    private data class IndexedSongInput(
-        val all: List<Song>,
-        val filtered: List<Song>,
-        val sections: List<SongSection>,
-        val sorted: List<Song>,
-        val filterKey: String,
-    )
-
-    /** @param sorted The whole library in the songs screen's order, see [pickerSongs]. */
-    private data class IndexedSongs(
-        val sections: List<SongSection>,
-        val search: SongSearchSnapshot,
-        val filterKey: String,
-        val sorted: List<Song>,
-    )
-
     companion object {
         private const val PREFERENCE_WRITE_DEBOUNCE_MILLIS = 500L
         private const val SONG_EDIT_ATTEMPTS = 2
         private const val DEMO_LIBRARY_READ_TIMEOUT_MILLIS = 10_000L // Past the drawables' five seconds: it cuts short a first impression, not a frame.
         private const val MAX_SAVED_BACK_STACK_LENGTH = 100_000 // Characters of JSON, about 200 KB as the UTF-16 a Bundle writes.
-        private val MIN_RESCAN_INTERVAL = 10.seconds
         /**
          * Long enough for the run an edit asks for, short enough to never look hung. The desktop's `SingleInstance.kt`
          * waits `CLOSING_INSTANCE_WAIT_MILLIS` for a closing process, which has to stay above this, [EXIT_SYNC_STOP_GRACE]
