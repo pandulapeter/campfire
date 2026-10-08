@@ -428,6 +428,11 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   leave out; `all` runs the search. `write` and `read` are a stored choice
   (`x 3 2 0 1 0`, `4 7 12 / 0`), and reading one back for a chord the tables know gives it their fingering; `read`
   takes a keyboard key in four octaves and a bass as a pitch class, since a stored choice arrives through sync.
+  `ChordVoicings` itself is only the cache, the stored format and the public entry points: the table lookup, the search
+  and the keyboard's inversions are the stateless internal `ChordVoicingSearch`, and what a hand does with a shape
+  (`baseFret`, `fingerCount`, `isHoldable`, `pitchClasses`) is `ChordShapeGeometry`, with public delegates for what
+  `:presentation` calls. `resetCache` empties the cache for `ChordVoicingsTest`, so `needsSearch` there does not depend
+  on which test ran first; `:presentation`'s tests cannot call it and keep to chords no other test asks for.
   `ChordVoicingTablesTest` checks that every shape of the tables sounds the chord it is filed under, and the
   `desktopTest` contact sheet draws them all into `CAMPFIRE_CHORD_QA_DIR` where that is set, for a player to look over.
 - `ChordProDefinitions` — a song's own shapes (`model/ChordDefinition`). `read` takes a definition's value: frets
