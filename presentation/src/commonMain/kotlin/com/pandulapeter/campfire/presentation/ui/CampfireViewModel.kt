@@ -168,6 +168,7 @@ import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.SavedSong
 import com.pandulapeter.campfire.presentation.ui.state.SetlistsController
 import com.pandulapeter.campfire.presentation.ui.state.SongListState
 import com.pandulapeter.campfire.presentation.ui.state.SongPickerState
+import com.pandulapeter.campfire.presentation.ui.state.SongTextStore
 import com.pandulapeter.campfire.presentation.ui.state.SyncController
 import com.pandulapeter.campfire.presentation.ui.state.asState
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.EditorTextEdit
@@ -204,7 +205,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.runningFold
@@ -633,34 +633,26 @@ class CampfireViewModel(
     /** See [SyncController.syncProviders]. */
     val syncProviders get() = syncController.syncProviders
 
-    /**
-     * The text of the songs the back stack can reach, by file name, read one file at a time as they are opened. Kept in
-     * step with the files by [GetSongContentInvalidationsUseCase], see the collector in `init`, and left with only what
-     * the screens on the back stack name once a navigation transition has ended, see [pruneSongTexts].
-     */
-    private val _songTexts = MutableStateFlow(emptyMap<String, String>())
-    val songTexts: StateFlow<Map<String, String>> = _songTexts.asStateFlow()
+    private val songTextStore = SongTextStore(
+        scope = viewModelScope,
+        backStack = backStack,
+        editorDraftFileName = { _editorDraft.value?.fileName },
+        messageSink = messageSink,
+        getSongContent = getSongContent,
+        saveSongContent = saveSongContent,
+        getSongContentInvalidations = getSongContentInvalidations,
+    )
 
-    /**
-     * The songs whose files are being renamed right now, under the names they had when it started.
-     *
-     * A rename moves the file - and with it the song in the library - before the screens that were opened on the old
-     * name have been rewritten, since every setlist naming the song and its saved transposition are written in
-     * between (see [updateSongFileName]). For those few writes the details screen's destination names a song the
-     * library no longer holds, and a screen that resolved that as "gone" closed itself, or dropped a page and left a
-     * setlist on the next song. Resolved through rather than waited out: the song is here from before the file moves
-     * until after the back stack names it by its new name, so there is no window to miss and no delay to tune.
-     */
-    private val _songsBeingRenamed = MutableStateFlow(emptyMap<String, Song>())
-    val songsBeingRenamed: StateFlow<Map<String, Song>> = _songsBeingRenamed.asStateFlow()
+    /** See [SongTextStore.songTexts]. */
+    val songTexts: StateFlow<Map<String, String>> get() = songTextStore.songTexts
 
-    /**
-     * Held by every write to a song file, from the read the write is built on until [songTexts] has the result. The
-     * header's edits are tapped in quick succession on the same file, and two of them working from the same text would
-     * each write back the tag the other took off; two saves from the editor would land in whatever order they finished.
-     * One lock for every file rather than one per file: the writes are rare and short.
-     */
-    private val songWriteMutex = Mutex()
+    /** See [SongTextStore.songsBeingRenamed]. */
+    val songsBeingRenamed: StateFlow<Map<String, Song>> get() = songTextStore.songsBeingRenamed
+
+    private val songWriteMutex get() = songTextStore.songWriteMutex
+
+    /** See [SongTextStore.failedSongFileNames]. */
+    val failedSongFileNames: StateFlow<Set<String>> get() = songTextStore.failedSongFileNames
 
     /**
      * What the open editor currently has in it, reported by the screen as it is typed but never written until the
@@ -702,7 +694,7 @@ class CampfireViewModel(
     val editorTextEdits = _editorTextEdits.asSharedFlow()
 
     /** True while the editor's text differs from what is on disk, which is what [navigateBack] asks before it leaves. */
-    val hasUnsavedEditorChanges = combine(_editorDraft, _songTexts, userPreferences) { draft, songTexts, _ ->
+    val hasUnsavedEditorChanges = combine(_editorDraft, songTexts, userPreferences) { draft, songTexts, _ ->
         draft != null && draft.text != songTexts[draft.fileName]?.let(::editorTextOf)
     }.asState(false)
 
@@ -740,7 +732,7 @@ class CampfireViewModel(
         userPreferences = userPreferences,
         tempos = tempos,
         songsByFileName = songsByFileName,
-        songsBeingRenamed = _songsBeingRenamed,
+        songsBeingRenamed = songsBeingRenamed,
         messageSink = messageSink,
         updateUserPreferences = updateUserPreferences,
         writeDelayMillis = PREFERENCE_WRITE_DEBOUNCE_MILLIS,
@@ -926,10 +918,6 @@ class CampfireViewModel(
     /** See [SetlistsController.setlistsPlaceholder]. */
     val setlistsPlaceholder get() = setlistsController.setlistsPlaceholder
 
-    /** The file names of the songs whose text could not be read. */
-    private val _failedSongFileNames = MutableStateFlow(emptySet<String>())
-    val failedSongFileNames: StateFlow<Set<String>> = _failedSongFileNames.asStateFlow()
-
     private val exportController: ExportController = ExportController(
         scope = viewModelScope,
         dialogHost = dialogHost,
@@ -1075,19 +1063,7 @@ class CampfireViewModel(
         viewModelScope.launch { showWelcomeOnFirstRun() }
         viewModelScope.launch { showWhatsNewOnVersionChange() }
         syncController.startRestoring(isFirstLaunch = isFirstLaunch, onConsentAnswered = ::openSyncSettingsAfterConsent)
-        // A sync run, a rescan or a save replaces files underneath the texts held here, and the details header builds
-        // its writes on them: without this, toggling a tag would write the text that was open over the version sync
-        // had just brought in. The texts are read again rather than only dropped, so a song that is on screen changes
-        // in place instead of flashing a loading indicator. An editor with nothing typed in it follows its file (see
-        // the editor's FollowFileWhileUntouched); one with text of its own now has unsaved changes, which is what asks
-        // the user before their draft replaces the new version — an editor whose file is gone included, where the
-        // draft is all there is.
-        // Every text held here is read again, not only the one that was named: the invalidations are a state, so that
-        // none of them can be lost while this is busy reading, and that state names no file. The texts are few (the
-        // screens on the back stack), and those that did not change come out of the repository's cache.
-        viewModelScope.launch {
-            getSongContentInvalidations().drop(1).collect { rereadSongTexts() }
-        }
+        songTextStore.startFollowingFiles()
         viewModelScope.launch {
             demoLibraryDecision.await()
             for (request in importQueue) {
@@ -1110,7 +1086,7 @@ class CampfireViewModel(
                 }
             }
         }
-        dialogHost.startClosingWithSong(allSongs = allSongs, isLoading = isLoading, songsBeingRenamed = _songsBeingRenamed)
+        dialogHost.startClosingWithSong(allSongs = allSongs, isLoading = isLoading, songsBeingRenamed = songsBeingRenamed)
         // The editor's unsaved text as a previous run left it, when the process ended in the background (see
         // onAppPaused). Once that is settled, whatever leaves the editor with nothing unsaved takes the stored
         // draft with it - a save, a discard, a revert, the song deleted - so a crash after a save never brings back
@@ -1152,56 +1128,7 @@ class CampfireViewModel(
         if (hasTransitionEnded) pruneSongTexts()
     }
 
-    /**
-     * Lets go of the texts no screen on the back stack names, which would otherwise pile up for as long as the process
-     * lives - one per page of every setlist paged through - and be read again by every rescan and sync run. Kept: every
-     * file a song details screen names (the pages of a setlist next to the current one are read ahead), the editor's
-     * file and the draft's, since [hasUnsavedEditorChanges] compares against them and a missing one reads as unsaved.
-     *
-     * Once the transition has ended rather than as the back stack changes, because a screen that has been popped is
-     * still composed while it slides away, and its page losing its text would put a loading indicator in its place
-     * halfway out.
-     */
-    private fun pruneSongTexts() {
-        val reachable = buildSet {
-            backStack.forEach { destination ->
-                when (destination) {
-                    is CampfireDestination.SongDetails -> addAll(destination.songFileNames)
-                    is CampfireDestination.SongEditor -> add(destination.fileName)
-                    else -> Unit
-                }
-            }
-            _editorDraft.value?.fileName?.let(::add)
-        }
-        _songTexts.update { texts -> if (texts.keys.all { it in reachable }) texts else texts.filterKeys { it in reachable } }
-    }
-
-    /**
-     * Reads the held texts of [fileNames] - every held one for null - back from the files, and applies them in one
-     * update, so that the screens reading [songTexts] recompose once rather than once per file. Only to texts that are
-     * still held when the reads are done, so that one pruned meanwhile is not brought back.
-     */
-    private suspend fun rereadSongTexts() {
-        val affected = _songTexts.value.keys
-        if (affected.isEmpty()) return
-        val results = affected.map { name -> name to getSongContent(name)?.text }
-        _songTexts.update { texts ->
-            results.fold(texts) { updated, (name, text) ->
-                when {
-                    name !in updated -> updated
-                    text == null -> updated - name
-                    else -> updated + (name to text)
-                }
-            }
-        }
-        // The editor keeps what it has, and with no text to compare it to that now counts as unsaved. It is said out
-        // loud because saving is what puts the file back, which the user would otherwise have no reason to do.
-        results.forEach { (name, text) ->
-            if (text == null && _editorDraft.value?.fileName == name) {
-                sendMessage(Message.EditedSongFileGone)
-            }
-        }
-    }
+    private fun pruneSongTexts() = songTextStore.pruneSongTexts()
 
     private fun updateBackStack(
         isPredictiveBackCompleted: Boolean = false,
@@ -1554,7 +1481,7 @@ class CampfireViewModel(
     }
 
     /** [hasUnsavedEditorChanges] as of this moment, for a decision taken right after a write rather than drawn. */
-    private fun hasUnsavedEditorText() = _editorDraft.value?.let { it.text != _songTexts.value[it.fileName]?.let(::editorTextOf) } == true
+    private fun hasUnsavedEditorText() = _editorDraft.value?.let { it.text != songTexts.value[it.fileName]?.let(::editorTextOf) } == true
 
     private fun popBackStack(isPredictiveBackCompleted: Boolean = false) {
         if (backStack.size > 1) {
@@ -1588,14 +1515,14 @@ class CampfireViewModel(
      */
     fun updateSongFileName(song: Song) = launchLibraryChange {
         // Before the file moves, so that the moment the library drops the old name is already covered.
-        _songsBeingRenamed.update { it + (song.fileName to song) }
+        songTextStore.updateSongsBeingRenamed { it + (song.fileName to song) }
         try {
             val rename = renameSongFile(song) ?: return@launchLibraryChange
             val fileName = rename.fileName
             // Only while the screen being rewritten is the one on top, which is what makes sure the context moves off
             // the old name and the entry is taken out again.
             if ((metronomeContext as? MetronomeContext.Song)?.songFileName == song.fileName) metronomeRenames[song.fileName] = fileName
-            _songTexts.update { texts -> texts[song.fileName]?.let { texts - song.fileName + (fileName to it) } ?: texts }
+            songTextStore.updateSongTexts { texts -> texts[song.fileName]?.let { texts - song.fileName + (fileName to it) } ?: texts }
             // The details screen is named after the songs it pages through, so the entry showing this one is rewritten
             // rather than popped: the action can be taken from that screen, and a song that has just been renamed is
             // still the song being read.
@@ -1627,7 +1554,7 @@ class CampfireViewModel(
         } finally {
             // Cleared once the screens name the new file - and on the paths that never got that far: a rename that
             // found nothing to do, one that threw, and a view model going away mid-rename.
-            _songsBeingRenamed.update { it - song.fileName }
+            songTextStore.updateSongsBeingRenamed { it - song.fileName }
         }
     }
 
@@ -1640,7 +1567,7 @@ class CampfireViewModel(
         while (backStack.lastOrNull().let { it is CampfireDestination.SongEditor && it.fileName == fileName || it is CampfireDestination.SongDetails && fileName in it.songFileNames }) {
             popBackStack()
         }
-        _songTexts.update { it - fileName }
+        songTextStore.updateSongTexts { it - fileName }
         followReportedFileNames { it.takeUnless { it == fileName } }
         // Said once the screens have let go of the file, which is gone whatever else could not be rewritten.
         if (!haveReferencesBeenRemoved) sendMessage(Message.SongDeletedPartly)
@@ -1787,24 +1714,7 @@ class CampfireViewModel(
         }
     }
 
-    /**
-     * Applies [edit] to the text of a song and writes the result, but only over the text the edit was built on: a
-     * file that changed underneath it (a sync run that has not reached [songTexts] yet) is read again and the edit
-     * applied to that instead, so the other change is kept rather than written over. Once is enough; a file that
-     * keeps changing between the read and the write is reported instead of being chased.
-     */
-    private suspend fun editSongText(fileName: String, edit: (String) -> String) {
-        songWriteMutex.withLock {
-            repeat(SONG_EDIT_ATTEMPTS) { attempt ->
-                // Read inside the lock, so that an edit tapped right after another one starts from what that one wrote.
-                // The first attempt may use the text on screen; a retry has to go back to the file.
-                val text = songTexts.value[fileName]?.takeIf { attempt == 0 } ?: getSongContent(fileName)?.text ?: return
-                val edited = edit(text)
-                if (edited == text || withContext(NonCancellable) { writeSongContent(fileName = fileName, text = edited, expectedText = text) }) return
-            }
-        }
-        sendMessage(Message.OperationFailed)
-    }
+    private suspend fun editSongText(fileName: String, edit: (String) -> String) = songTextStore.editSongText(fileName, edit)
 
     // The editor
 
@@ -1918,7 +1828,7 @@ class CampfireViewModel(
             storeEditorDraft(null)
             return false
         }
-        content?.let { _songTexts.update { texts -> texts + (it.fileName to it.text) } }
+        content?.let { songTextStore.updateSongTexts { texts -> texts + (it.fileName to it.text) } }
         // The draft is the editor's before the editor exists, so that nothing asking whether there is unsaved text in
         // the moments before it composes - a pause, the update gate - hears "no".
         onEditorTextChanged(fileName = draft.fileName, text = text)
@@ -2013,28 +1923,10 @@ class CampfireViewModel(
         _isSavingSong.update { false }
     }
 
-    /**
-     * The write itself, and [songTexts] brought up to date with it before anything else can read them. The caller holds
-     * [songWriteMutex] and runs this on [NonCancellable]: a write that stopped halfway through would leave the file
-     * written and the text on screen not.
-     *
-     * @param expectedText See [SaveSongContentUseCase]: false, and nothing written, when the file no longer holds it.
-     */
     private suspend fun writeSongContent(fileName: String, text: String, expectedText: String? = null) =
-        saveSongContent.invoke(content = SongContent(fileName = fileName, text = text), expectedText = expectedText).also { isWritten ->
-            if (isWritten) _songTexts.update { it + (fileName to text) }
-        }
+        songTextStore.writeSongContent(fileName, text, expectedText)
 
-    fun loadSongContent(fileName: String) = viewModelScope.launch {
-        // Cleared first, so that a retry shows the loading state again instead of staying on the error.
-        _failedSongFileNames.update { it - fileName }
-        val content = getSongContent(fileName)
-        if (content == null) {
-            _failedSongFileNames.update { it + fileName }
-        } else {
-            _songTexts.update { it + (content.fileName to content.text) }
-        }
-    }
+    fun loadSongContent(fileName: String) = songTextStore.loadSongContent(fileName)
 
     /**
      * The notation the editor's field is written in, the reader's own: the file is converted out of the standard one
@@ -2583,7 +2475,7 @@ class CampfireViewModel(
         val request = ++importReportRequest
         _importReport.value = report
         viewModelScope.launch {
-            combine(visibleDialog, _editorDraft, _songTexts, snapshotFlow { backStack.toList() }) { dialog, _, _, stack ->
+            combine(visibleDialog, _editorDraft, songTexts, snapshotFlow { backStack.toList() }) { dialog, _, _, stack ->
                 dialog == null && !(hasUnsavedEditorText() && stack.any { it is CampfireDestination.SongEditor })
             }.first { it }
             if (importReportRequest == request && _importReport.value != null && !isImportReportOnBackStack) {
@@ -2853,7 +2745,6 @@ class CampfireViewModel(
 
     companion object {
         private const val PREFERENCE_WRITE_DEBOUNCE_MILLIS = 500L
-        private const val SONG_EDIT_ATTEMPTS = 2
         private const val DEMO_LIBRARY_READ_TIMEOUT_MILLIS = 10_000L // Past the drawables' five seconds: it cuts short a first impression, not a frame.
         private const val MAX_SAVED_BACK_STACK_LENGTH = 100_000 // Characters of JSON, about 200 KB as the UTF-16 a Bundle writes.
         /**
