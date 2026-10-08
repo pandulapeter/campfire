@@ -230,7 +230,7 @@ private const val NANOS_PER_MILLI = 1_000_000L
 
 /**
  * How long a newcomer waits for a holder that has stopped listening, which is one that is closing. It has to exceed
- * what a quit may still take once the window is gone - `CampfireViewModel.EXIT_IMPORT_GRACE`, `EXIT_SYNC_GRACE` and
+ * what a quit may still take once the window is gone - `AppExitController.EXIT_IMPORT_GRACE`, `EXIT_SYNC_GRACE` and
  * `EXIT_SYNC_STOP_GRACE`, 30 seconds of letting an import finish and 15 + 2 of letting a sync run finish - plus the
  * JVM's own shutdown, with a margin; raising those means raising this.
  */
