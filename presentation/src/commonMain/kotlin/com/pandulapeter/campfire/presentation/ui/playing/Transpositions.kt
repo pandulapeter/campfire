@@ -10,22 +10,15 @@
 package com.pandulapeter.campfire.presentation.ui.playing
 
 /**
- * The transposition of every song the UI can currently show, from both places one can be stored. Looked up by
- * how the song was opened rather than by a composite key, so callers cannot accidentally mix the two up.
+ * The transposition of every song the UI can currently show, from both places one can be stored (see
+ * [SongOverrides]), none being a transposition of zero.
  */
-data class Transpositions(
-    private val library: Map<String, Int> = emptyMap(),
-    private val bySetlist: Map<String, Map<String, Int>> = emptyMap(),
+internal data class Transpositions(
+    private val overrides: SongOverrides<Int> = SongOverrides(),
 ) {
 
     /** Wrapped on the way out too, since a file or a preferences document may hold any amount (see [wrapTransposition]). */
-    operator fun get(songFileName: String, setlistFileName: String?): Int = wrapTransposition(
-        if (setlistFileName == null) {
-            library[songFileName] ?: 0
-        } else {
-            bySetlist[setlistFileName]?.get(songFileName) ?: 0
-        }
-    )
+    operator fun get(songFileName: String, setlistFileName: String?): Int = wrapTransposition(overrides[songFileName, setlistFileName] ?: 0)
 }
 
 private const val SEMITONES_PER_OCTAVE = 12

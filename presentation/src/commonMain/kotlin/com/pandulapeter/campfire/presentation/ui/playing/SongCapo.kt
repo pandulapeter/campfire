@@ -13,36 +13,10 @@ import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.data.model.domain.Song
 
 /**
- * Where a song's capo is kept, folded into one lookup the way the transpositions and the tempos are: a song opened
- * from a setlist reads that setlist's entry, one opened from the library reads the preferences, and neither ever reads
- * the other. One band plays a song capoed at the second fret and the next set plays it open, which is the setlist's
- * business rather than the file's, so nothing here writes `{capo}`.
+ * Every song's capo override, see [SongOverrides]. One band plays a song capoed at the second fret and the next set
+ * plays it open, which is the setlist's business rather than the file's, so nothing here writes `{capo}`.
  */
-internal data class Capos(
-    private val library: Map<String, Int> = emptyMap(),
-    private val bySetlist: Map<String, Map<String, Int>> = emptyMap(),
-) {
-
-    operator fun get(songFileName: String, setlistFileName: String?): Int? = if (setlistFileName == null) {
-        library[songFileName]
-    } else {
-        bySetlist[setlistFileName]?.get(songFileName)
-    }
-
-    /** These overrides with the one of [key] set to [fret], or removed where that is null. */
-    fun with(key: CapoKey, fret: Int?) = if (key.setlistFileName == null) {
-        copy(library = if (fret == null) library - key.songFileName else library + (key.songFileName to fret))
-    } else {
-        val entries = bySetlist[key.setlistFileName].orEmpty()
-        copy(bySetlist = bySetlist + (key.setlistFileName to if (fret == null) entries - key.songFileName else entries + (key.songFileName to fret)))
-    }
-}
-
-/** A song as it is opened: from the library, or from one setlist. */
-internal data class CapoKey(
-    val songFileName: String,
-    val setlistFileName: String?,
-)
+internal typealias Capos = SongOverrides<Int>
 
 /**
  * The fret a song is capoed at where it is opened.

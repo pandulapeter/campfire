@@ -62,7 +62,7 @@ class SongCapoTest {
 
     @Test
     fun overridesAreSetAndRemovedByKey() {
-        val changed = capos.with(CapoKey(FILE_NAME, SETLIST), null).with(CapoKey(FILE_NAME, null), 3)
+        val changed = capos.with(SongPlace(FILE_NAME, SETLIST), null).with(SongPlace(FILE_NAME, null), 3)
         assertEquals(null, changed[FILE_NAME, SETLIST])
         assertEquals(3, changed[FILE_NAME, null])
     }

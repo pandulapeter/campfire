@@ -15,7 +15,7 @@ import com.pandulapeter.campfire.metronome.api.model.BeatLevel
 import com.pandulapeter.campfire.metronome.api.model.MetronomeSound
 import com.pandulapeter.campfire.metronome.api.model.Subdivision
 import com.pandulapeter.campfire.metronome.api.model.TimeSignature
-import com.pandulapeter.campfire.presentation.ui.playing.TempoKey
+import com.pandulapeter.campfire.presentation.ui.playing.SongPlace
 import com.pandulapeter.campfire.presentation.ui.playing.Tempos
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -70,7 +70,7 @@ class MetronomePatternsTest {
     @Test
     fun aStretchWithNoTempoPlaysTheSongsOwn() {
         val timing = SongTiming(index = 0, bpm = null, timeSignature = TimeSignature(6, 8))
-        val tempos = Tempos().with(TempoKey("a.cho", null), 110)
+        val tempos = Tempos().with(SongPlace("a.cho", null), 110)
         val pattern = metronomePatternOf(MetronomeContext.Song("a.cho", null, timing), settings, mapOf("a.cho" to song)::get, tempos)
         assertEquals(110, pattern.bpm)
         assertEquals(TimeSignature(6, 8), pattern.timeSignature)

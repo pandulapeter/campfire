@@ -75,7 +75,7 @@ class SongTempoTest {
 
     @Test
     fun overridesAreSetAndRemovedByKey() {
-        val changed = tempos.with(TempoKey(FILE_NAME, SETLIST), null).with(TempoKey(FILE_NAME, null), 80)
+        val changed = tempos.with(SongPlace(FILE_NAME, SETLIST), null).with(SongPlace(FILE_NAME, null), 80)
         assertEquals(null, changed[FILE_NAME, SETLIST])
         assertEquals(80, changed[FILE_NAME, null])
     }

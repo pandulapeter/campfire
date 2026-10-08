@@ -16,36 +16,8 @@ import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
 import kotlin.math.roundToInt
 
-/**
- * Where a song's tempo override is kept, folded into one lookup the way the transpositions are: a song opened from a
- * setlist reads the setlist's entry, one opened from the library reads the preferences, and neither ever reads the
- * other, so that a setlist reads the same on every device.
- */
-internal data class Tempos(
-    private val library: Map<String, Int> = emptyMap(),
-    private val bySetlist: Map<String, Map<String, Int>> = emptyMap(),
-) {
-
-    operator fun get(songFileName: String, setlistFileName: String?): Int? = if (setlistFileName == null) {
-        library[songFileName]
-    } else {
-        bySetlist[setlistFileName]?.get(songFileName)
-    }
-
-    /** These overrides with the one of [key] set to [bpm], or removed where that is null. */
-    fun with(key: TempoKey, bpm: Int?) = if (key.setlistFileName == null) {
-        copy(library = if (bpm == null) library - key.songFileName else library + (key.songFileName to bpm))
-    } else {
-        val entries = bySetlist[key.setlistFileName].orEmpty()
-        copy(bySetlist = bySetlist + (key.setlistFileName to if (bpm == null) entries - key.songFileName else entries + (key.songFileName to bpm)))
-    }
-}
-
-/** A song as it is opened: from the library, or from one setlist. */
-internal data class TempoKey(
-    val songFileName: String,
-    val setlistFileName: String?,
-)
+/** Every song's tempo override, see [SongOverrides]. */
+internal typealias Tempos = SongOverrides<Int>
 
 /**
  * The tempo a song plays at where it is opened.
