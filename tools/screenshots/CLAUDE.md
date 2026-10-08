@@ -36,7 +36,8 @@ graphic and the website's link preview - from the same shots, in their own theme
   and the title bars of the desktops, which `SystemChrome` then draws over the app in the shot's theme, all at 9:41
   with a full battery. Fonts: Roboto and Droid Sans Mono for Android and ChromeOS, Open Sans for Windows (the closest
   open relative of Segoe UI, whose license keeps it on Windows), the Mac's own SF for the Apple platforms; the build
-  downloads the three into `build/fonts`.
+  downloads the three into `build/fonts`, each pinned to a commit of its repository and checked against its SHA-256 in
+  `build.gradle.kts` — updating one means a new commit in its address and a new checksum there.
 - **Nothing reaches outside** (`Fakes.kt`): sync is a repository that shows a connected account and runs nothing, the
   metronome is silent and lights only the beat a shot asks for, the file picker writes nothing. Covers come from the
   copied cache.

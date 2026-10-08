@@ -8,6 +8,7 @@
  * https://mozilla.org/MPL/2.0/.
  */
 import java.net.URI
+import java.security.MessageDigest
 
 plugins {
     alias(libs.plugins.kotlin.jvm)
@@ -52,19 +53,40 @@ application {
  * Android and ChromeOS shots, and for the Windows ones Open Sans, the closest open relative of Segoe UI (the two share
  * their designer), which the license keeps on Windows. All three may be redistributed, but nothing needs them but this
  * tool, so they are fetched into the build folder rather than committed.
+ *
+ * Each is pinned to a commit of its repository and checked against its SHA-256, so that a font changed upstream never
+ * lays the text of two retakes out differently, and an error page is never taken for a font. These are the files the
+ * published shots were rendered with. Updating one is a new commit in its address and a new checksum here, which is
+ * also what makes the task download it again.
  */
 val fonts: Provider<Directory> = layout.buildDirectory.dir("fonts")
 val downloadFonts by tasks.registering {
+    val fontSources = mapOf(
+        "Roboto.ttf" to Pair(
+            "https://raw.githubusercontent.com/google/fonts/5e8a3ba899557829a76cfdac30fa512bda91d7ca/ofl/roboto/Roboto%5Bwdth,wght%5D.ttf",
+            "d7598e12c5dbef095ff8272cfc55da0250bd07fbdecbac8a530b9b277872a134",
+        ),
+        "DroidSansMono.ttf" to Pair(
+            "https://raw.githubusercontent.com/aosp-mirror/platform_frameworks_base/1cdfff555f4a21f71ccc978290e2e212e2f8b168/data/fonts/DroidSansMono.ttf",
+            "db19a1fdaba41cc4a2fec0330e5c15e71c6dd68a3ef074f4f28268828b45c862",
+        ),
+        "OpenSans.ttf" to Pair(
+            "https://raw.githubusercontent.com/google/fonts/5e8a3ba899557829a76cfdac30fa512bda91d7ca/ofl/opensans/OpenSans%5Bwdth,wght%5D.ttf",
+            "36643644f318a812aab2d2ed3bb98f8cf0872527f835fe9398d95fe6b9adb878",
+        ),
+    )
     val fontDirectory = fonts
+    inputs.property("fonts", fontSources.toString())
     outputs.dir(fontDirectory)
     doLast {
         val directory = fontDirectory.get().asFile.apply { mkdirs() }
-        fun download(url: String) = URI(url).toURL().openStream().use { it.readBytes() }
-        File(directory, "Roboto.ttf").writeBytes(download("https://github.com/google/fonts/raw/main/ofl/roboto/Roboto%5Bwdth,wght%5D.ttf"))
-        File(directory, "DroidSansMono.ttf").writeBytes(
-            download("https://raw.githubusercontent.com/aosp-mirror/platform_frameworks_base/main/data/fonts/DroidSansMono.ttf"),
-        )
-        File(directory, "OpenSans.ttf").writeBytes(download("https://github.com/google/fonts/raw/main/ofl/opensans/OpenSans%5Bwdth,wght%5D.ttf"))
+        fontSources.forEach { (name, source) ->
+            val (url, expected) = source
+            val bytes = URI(url).toURL().openStream().use { it.readBytes() }
+            val actual = MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
+            if (actual != expected) throw GradleException("$name from $url has SHA-256 $actual, expected $expected")
+            File(directory, name).writeBytes(bytes)
+        }
     }
 }
 
