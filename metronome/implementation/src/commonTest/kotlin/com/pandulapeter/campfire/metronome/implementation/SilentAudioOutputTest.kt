@@ -36,7 +36,7 @@ class SilentAudioOutputTest {
 
     private object NoListener : AudioOutputListener {
         override fun onLost(reason: MetronomeStopReason) = Unit
-        
+
         override fun onAudioIssueChanged(issue: MetronomeAudioIssue?) = Unit
     }
 }

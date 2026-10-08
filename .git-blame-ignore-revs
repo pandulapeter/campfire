@@ -9,4 +9,4 @@
 # Commits that only reformat, left out of git blame with: git config blame.ignoreRevsFile .git-blame-ignore-revs
 
 # Apply the enabled ktlint rules and replace the last wildcard imports.
-69a1a20bbecb9d765b6a89b6fad927e0dca37f9d
+32b2607507baa40f51546d264a6a1c1b80955da7
