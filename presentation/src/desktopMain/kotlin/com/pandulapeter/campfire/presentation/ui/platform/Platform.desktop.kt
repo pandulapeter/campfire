@@ -20,6 +20,8 @@ internal actual val isDesktopPlatform
 
 internal actual val isLaunchScreenWholeStartup = true
 
+internal actual val isCtrlWheelZoomOwnedByApp = true
+
 internal actual val isStartupScreenHeldUntilAppReady = false
 
 // The library is in the platform's application data folder, which the user can open and edit files in.

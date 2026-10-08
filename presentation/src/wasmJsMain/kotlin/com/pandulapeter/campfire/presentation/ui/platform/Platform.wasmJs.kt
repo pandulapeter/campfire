@@ -23,6 +23,8 @@ internal actual val isDesktopPlatform = !hasTouchScreen()
 // The page's own loading screen is over the app until the launch screen has gone, whatever the input.
 internal actual val isLaunchScreenWholeStartup = false
 
+internal actual val isCtrlWheelZoomOwnedByApp = false
+
 internal actual val isStartupScreenHeldUntilAppReady = true
 
 // The Origin Private File System is not reachable from outside the page.

@@ -70,7 +70,7 @@ import com.pandulapeter.campfire.presentation.ui.components.fadingUnderStartOver
 import com.pandulapeter.campfire.presentation.ui.components.fadingVerticalEdges
 import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableContent
 import com.pandulapeter.campfire.presentation.ui.platform.isDesktopPlatform
-import com.pandulapeter.campfire.presentation.ui.platform.isLaunchScreenWholeStartup
+import com.pandulapeter.campfire.presentation.ui.platform.isCtrlWheelZoomOwnedByApp
 import com.pandulapeter.campfire.presentation.ui.platform.verticalWheelNotches
 import com.pandulapeter.campfire.presentation.ui.print.PrintRenderer
 import kotlin.math.pow
@@ -322,11 +322,8 @@ private fun Modifier.doubleTapZoom(
     }
 }
 
-/**
- * Ctrl or Cmd and the scroll wheel, in the desktop application only: in a browser that chord is the page's own zoom,
- * which the app leaves alone. [isLaunchScreenWholeStartup] is the one platform flag that is true there and nowhere else.
- */
-private fun Modifier.wheelZoom(onZoom: (notches: Float, position: Offset) -> Unit) = if (!isLaunchScreenWholeStartup) {
+/** Ctrl or Cmd and the scroll wheel, where the app rather than the browser answers it ([isCtrlWheelZoomOwnedByApp]). */
+private fun Modifier.wheelZoom(onZoom: (notches: Float, position: Offset) -> Unit) = if (!isCtrlWheelZoomOwnedByApp) {
     this
 } else {
     pointerInput(Unit) {

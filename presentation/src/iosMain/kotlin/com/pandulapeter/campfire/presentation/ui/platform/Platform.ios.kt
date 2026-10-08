@@ -15,6 +15,8 @@ internal actual val isDesktopPlatform = false
 
 internal actual val isLaunchScreenWholeStartup = false
 
+internal actual val isCtrlWheelZoomOwnedByApp = false
+
 internal actual val isStartupScreenHeldUntilAppReady = false
 
 // Info.plist declares UIFileSharingEnabled and LSSupportsOpeningDocumentsInPlace, so the documents directory the
