@@ -60,6 +60,8 @@ compose-ui-backhandler = { module = "org.jetbrains.compose.ui:ui-backhandler", v
 google-playAppUpdate = { module = "com.google.android.play:app-update", version.ref = "google-playAppUpdate" }
 gradle = { module = "com.android.tools.build:gradle", version.ref = "gradle" }
 jbr-api = { module = "org.jetbrains.runtime:jbr-api", version.ref = "jbr-api" }
+# Versioned by the JUnit BOM that kotlin-test brings in; Gradle no longer puts the launcher on the test runtime itself.
+junit-platformLauncher = { module = "org.junit.platform:junit-platform-launcher" }
 koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin" }
 koin-annotations = { module = "io.insert-koin:koin-annotations", version.ref = "koin" }
 koin-compilerPlugin = { module = "io.insert-koin:koin-compiler-gradle-plugin", version.ref = "koin-compilerPlugin" }

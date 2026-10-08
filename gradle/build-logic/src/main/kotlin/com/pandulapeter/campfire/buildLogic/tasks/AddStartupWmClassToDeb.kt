@@ -56,17 +56,12 @@ abstract class AddStartupWmClassToDeb : DefaultTask() {
                 .toList()
             val entry = entries.singleOrNull()
                 ?: throw GradleException("Expected one desktop entry in ${deb.name}, found ${entries.size}.")
-            val lines = entry.readLines().filterNot { it.startsWith("StartupWMClass=") }
-            entry.writeText((lines + "StartupWMClass=${windowClassName.get()}").joinToString(separator = "\n", postfix = "\n"))
+            entry.writeText(withStartupWmClass(entry.readLines(), windowClassName.get()))
             val md5sums = extracted.resolve("DEBIAN/md5sums")
             if (md5sums.isFile) {
                 val entryPath = entry.relativeTo(extracted).invariantSeparatorsPath
                 val entryHash = MessageDigest.getInstance("MD5").digest(entry.readBytes()).joinToString("") { "%02x".format(it) }
-                md5sums.writeText(
-                    md5sums.readLines().joinToString(separator = "\n", postfix = "\n") { line ->
-                        if (line.substringAfter("  ") == entryPath) "$entryHash  $entryPath" else line
-                    }
-                )
+                md5sums.writeText(withUpdatedMd5(md5sums.readLines(), entryPath, entryHash))
             }
             execOperations.exec { commandLine("fakeroot", "dpkg-deb", "--build", extracted.absolutePath, deb.absolutePath) }
             extracted.deleteRecursively()

@@ -11,6 +11,7 @@ import com.pandulapeter.campfire.buildLogic.tasks.AddLaunchAfterInstallToMsi
 import com.pandulapeter.campfire.buildLogic.tasks.AddStartupWmClassToDeb
 import com.pandulapeter.campfire.buildLogic.tasks.PackageMsix
 import com.pandulapeter.campfire.buildLogic.tasks.RecordClassDataArchive
+import com.pandulapeter.campfire.buildLogic.tasks.msixPackageVersion
 import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.util.zip.ZipFile
@@ -363,7 +364,7 @@ tasks.register<PackageMsix>("packageReleaseMsix") {
     publisher = project.property("campfire.windows.publisher").toString()
     publisherDisplayName = project.property("campfire.windows.publisherDisplayName").toString()
     // A package version has four parts, and the Store keeps the last one for itself.
-    packageVersion = (versionName.split('.') + listOf("0", "0")).take(3).joinToString(".") + ".0"
+    packageVersion = msixPackageVersion(versionName)
     sdkBinDirectory = project.property("campfire.windows.sdkBinDirectory").toString()
     outputFile = layout.buildDirectory.file("compose/binaries/main-release/msix/Campfire-$versionName.msix")
 }

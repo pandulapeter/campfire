@@ -24,7 +24,6 @@ import java.awt.RenderingHints
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
 import java.io.File
-import java.security.MessageDigest
 import javax.imageio.ImageIO
 import javax.inject.Inject
 
@@ -90,10 +89,10 @@ abstract class PackageMsix : DefaultTask() {
         resources.deleteRecursively()
         writeLogos(resources.resolve("assets"))
         val manifestText = manifest.get().asFile.readText()
-            .replace("@DISPLAY_NAME@", displayName.get().escapedForXml())
-            .replace("@IDENTITY_NAME@", identityName.get().escapedForXml())
-            .replace("@PUBLISHER@", publisher.get().escapedForXml())
-            .replace("@PUBLISHER_DISPLAY_NAME@", publisherDisplayName.get().escapedForXml())
+            .replace("@DISPLAY_NAME@", xmlEscaped(displayName.get()))
+            .replace("@IDENTITY_NAME@", xmlEscaped(identityName.get()))
+            .replace("@PUBLISHER@", xmlEscaped(publisher.get()))
+            .replace("@PUBLISHER_DISPLAY_NAME@", xmlEscaped(publisherDisplayName.get()))
             .replace("@VERSION@", packageVersion.get())
         resources.resolve("AppxManifest.xml").writeText(manifestText)
         val priConfig = temporaryDir.resolve("priconfig.xml")
@@ -124,21 +123,11 @@ abstract class PackageMsix : DefaultTask() {
      */
     private fun addPackageFamilyNameToLauncher(configuration: File) {
         val lines = configuration.takeIf { it.isFile }?.readLines().orEmpty()
-        val section = lines.indexOf("[JavaOptions]")
-        if (section < 0) throw GradleException("There is no [JavaOptions] section in $configuration to add the package family name to.")
-        val option = "java-options=-Dcampfire.packageFamilyName=${identityName.get()}_${publisherId(publisher.get())}"
-        configuration.writeText((lines.take(section + 1) + option + lines.drop(section + 1)).joinToString(System.lineSeparator(), postfix = System.lineSeparator()))
-    }
-
-    /**
-     * The half of the package family name Windows derives from the publisher: the first eight bytes of the SHA-256 of
-     * its UTF-16LE text, as thirteen characters of Crockford's base32. Partner Center shows the result on the Product
-     * identity page, as "Package/Identity/PublisherId" and as the end of the package family name.
-     */
-    private fun publisherId(publisher: String): String {
-        val hash = MessageDigest.getInstance("SHA-256").digest(publisher.toByteArray(Charsets.UTF_16LE)).take(8)
-        val bits = hash.joinToString("") { (it.toInt() and 0xFF).toString(2).padStart(8, '0') } + "0"
-        return bits.chunked(5).map { "0123456789abcdefghjkmnpqrstvwxyz"[it.toInt(2)] }.joinToString("")
+        val option = "java-options=-Dcampfire.packageFamilyName=${identityName.get()}_${msixPublisherId(publisher.get())}"
+        val withFamilyName = withJavaOption(lines, option) {
+            "There is no [JavaOptions] section in $configuration to add the package family name to."
+        }
+        configuration.writeText(withFamilyName.joinToString(System.lineSeparator(), postfix = System.lineSeparator()))
     }
 
     /**
@@ -184,9 +173,7 @@ abstract class PackageMsix : DefaultTask() {
         return kits.listFiles { file -> file.isDirectory && file.name.startsWith("10.") }.orEmpty()
             .map { it.resolve("x64") }
             .filter { it.resolve("makeappx.exe").isFile }
-            .maxByOrNull { directory -> directory.parentFile.name.split('.').map { it.toIntOrNull() ?: 0 }.fold(0L) { total, part -> total * 100_000 + part } }
+            .maxByOrNull { directory -> newestSdkVersionKey(directory.parentFile.name) }
             ?: kits
     }
-
-    private fun String.escapedForXml() = replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;")
 }

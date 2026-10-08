@@ -46,7 +46,7 @@ abstract class RecordClassDataArchive : DefaultTask() {
         }
         // The image may be up to date from an earlier run, and a JVM given a dynamic archive cannot record another on
         // top of it. A run that failed after the dump leaves the archive read-only, which on Windows refuses the delete.
-        val lines = configuration.readLines().filterNot { it.startsWith(ARCHIVE_OPTION) }
+        val lines = withoutJavaOptionsStartingWith(configuration.readLines(), ARCHIVE_OPTION)
         configuration.writeText(lines.joinToString(System.lineSeparator(), postfix = System.lineSeparator()))
         if (archive.exists()) {
             archive.setWritable(true)
@@ -89,10 +89,9 @@ abstract class RecordClassDataArchive : DefaultTask() {
         }
         // The JVM writes it read-only, which on Windows stops the next jlink or jpackage run from clearing the image.
         archive.setWritable(true)
-        val section = lines.indexOf("[JavaOptions]")
-        if (section < 0) throw GradleException("There is no [JavaOptions] section in $configuration to add the archive to.")
         val option = "$ARCHIVE_OPTION\$APPDIR/${archive.name}"
-        configuration.writeText((lines.take(section + 1) + option + lines.drop(section + 1)).joinToString(System.lineSeparator(), postfix = System.lineSeparator()))
+        val withArchive = withJavaOption(lines, option) { "There is no [JavaOptions] section in $configuration to add the archive to." }
+        configuration.writeText(withArchive.joinToString(System.lineSeparator(), postfix = System.lineSeparator()))
         logger.lifecycle("Recorded ${archive.length() / (1024 * 1024)} MB of class data sharing archive into $archive")
     }
 

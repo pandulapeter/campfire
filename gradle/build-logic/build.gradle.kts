@@ -31,6 +31,12 @@ dependencies {
     implementation(libs.kotlin)
     implementation(libs.kotlin.composeCompiler)
     implementation(libs.spotless.gradlePlugin)
+    testImplementation(kotlin("test"))
+    testRuntimeOnly(libs.junit.platformLauncher)
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
 
 gradlePlugin {

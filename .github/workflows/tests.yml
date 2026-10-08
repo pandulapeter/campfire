@@ -53,6 +53,9 @@ jobs:
       # (spotlessCheck) together with them.
       - name: Run the unit tests
         run: ./gradlew spotlessCheck desktopTest --continue
+      # The build logic is a build of its own (gradle/), whose tests the unqualified task above does not reach.
+      - name: Run the build logic's tests
+        run: ./gradlew -p gradle :build-logic:test
       - name: Upload failed unit test reports
         if: ${{ failure() }}
         uses: actions/upload-artifact@v7
@@ -61,6 +64,7 @@ jobs:
           path: |
             **/build/reports/tests/desktopTest/**
             **/build/test-results/desktopTest/*.xml
+            gradle/build-logic/build/reports/tests/test/**
           retention-days: 7
       # The web build's storage worker and what keeps the build in the browser are JavaScript, tested by Node rather
       # than by Gradle.

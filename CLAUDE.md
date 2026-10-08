@@ -520,6 +520,8 @@ localized in both languages.
   shape each is drawn with, the diagrams' geometry and what the editor's Chord shape button writes), run on
   the desktop target with
   `./gradlew :data:model:desktopTest :data:formats:desktopTest :chordpro:desktopTest :domain:implementation:desktopTest :data:source:local:implementation:desktopTest :data:source:remote:api:desktopTest :data:source:remote:implementation:desktopTest :data:repository:implementation:desktopTest :data:sync:implementation:desktopTest :metronome:api:desktopTest :metronome:implementation:desktopTest :presentation:desktopTest`.
+  The build logic's packaging helpers (the `.msix` version and publisher id, the launcher configuration and `.deb`
+  rewrites) are tested in `gradle/build-logic` with `./gradlew -p gradle :build-logic:test`.
   The web build's JavaScript — its storage worker, its service worker's routing and the page's decisions about the
   build it keeps — has Node tests of its own (see `app/web`), and the parser of a
   release's description, which is Python, a `unittest` next to it in `.github/scripts`.
