@@ -88,10 +88,12 @@ done
 ls "$DATA/library/songs/"*.cho > /dev/null 2>&1 || fail "The release build did not write the demo library in two minutes."
 sleep 15
 is_running || fail "The release build exited on its own after it had written the library."
+[ -f "$LOG" ] || fail "The release build wrote no log."
 grep -q "Exception" "$LOG" && fail "The release build logged an exception."
 stop
 cat "$LOG"
 if [ -n "$CLASS_LOAD" ]; then
+  [ -s "$CLASS_LOAD" ] || fail "The release build logged no class loading."
   LOADED=$(wc -l < "$CLASS_LOAD")
   SHARED=$(grep -c 'source: shared objects file' "$CLASS_LOAD" || true)
   echo "$SHARED of $LOADED classes came from the class data sharing archives."
