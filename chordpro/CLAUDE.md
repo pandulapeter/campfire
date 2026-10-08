@@ -257,7 +257,7 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
 - `ChordProTransposer` — moves chords by semitones, on the model (the viewer) or directly on the text keeping every
   byte of formatting (the editor's transpose action). Chooses sharps or flats from the song's key, follows the bass
   note after `/`, understands German `H`, moves a key spelled out in words (`G major`, `A minor`, `Bb-Dur`, `C-dúr`) by
-  its note and keeps the words (`renameKey`), which is also what the notation and the library scan use for the key, and leaves
+  its note and keeps the words (`ChordProChordRewriter.renameKey`), which is also what the notation and the library scan use for the key, and leaves
   annotations alone. The brackets of a comment (`{comment}`, `{ci}`, `{cb}`, `{highlight}`) and of a label (a section's,
   a chorus recall's) are read as a line of lyrics and moved the same way on the model and in the text
   (`ChordProDirectives.hasChordsInValue` names those directives), since that is where an intro is written down as a row of
@@ -267,14 +267,15 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   the `*` is left where it is, and does not vote on the spelling either — the same question `ChordProNotation` has
   always asked. A caller that knows better passes `preferFlats` and gets that spelling instead, which is what the accidentals preference does; forced that way it is
   worth running for no semitones at all, so only `semitones == 0` *and* no forced spelling short-circuits. Its walk
-  over the model is `rewriteChords`, which takes the rename as a function so that `ChordProNotation` can reuse it;
-  the two differ only in what a tab is, a fingerboard to one and a page of chord names to the other. A modulation
+  over the model is `ChordProChordRewriter.rewriteChords`, which takes the rename as a function so that
+  `ChordProNotation` uses it too, as it does `ChordProChordRewriter.rewriteChordNamesInText` for the text; the two
+  differ only in what a tab is, a fingerboard to one and a page of chord names to the other. A modulation
   moves the stretch after it by its offset on top of the transposition asked for, spelled for the key it lands in — its
   own `key` with it, which makes that the key the song is in from there on — and
   a recall is moved by the offset where it stands; the text transposition leaves the `{transpose}` directives alone,
   which keeps them right, since each is relative to the song as written.
   `transposedOffset` maps a caret through a text transposition (same line, same place between the brackets), which
-  is what keeps the editor's caret next to the text it was at.
+  is what keeps the editor's caret next to the text it was at; it hands the work to `ChordProOffsetMapping`.
 - `ChordProTabTransposer` — the same move inside a `{start_of_tab}` environment, where it means the fret numbers and
   not the notes: the tuning stays what it was. A tab environment is transposed as a whole, so that a transposition
   that would take a fret off the fingerboard moves all of it by octaves instead of producing an unplayable number,
@@ -311,7 +312,7 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   numberings, Nashville and Roman numerals) is only a way of showing that or of typing it, and is converted at exactly
   those two boundaries: `toNotation` writes a parsed song in the reader's notation as the last step of rendering, after the
   transposition, which works in the standard one; `convertText` rewrites a raw document from one notation to another,
-  leaving every other character where it was (`ChordProTransposer.rewriteChordNamesInText`, with the tabs' chord rows
+  leaving every other character where it was (`ChordProChordRewriter.rewriteChordNamesInText`, with the tabs' chord rows
   renamed in their columns rather than transposed), which is how the editor shows a file in the reader's notation and
   writes what was typed back. `{define}` / `{chord}` names are converted with the chords (outside an environment
   handed to another program, a selector's instrument included), and a transposition moves their shapes as well (see

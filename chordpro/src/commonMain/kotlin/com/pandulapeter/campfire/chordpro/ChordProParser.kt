@@ -146,7 +146,7 @@ object ChordProParser {
         transposition.finish()
         val declared = metadata.build(transpose = transposition.wholeSong)
         val isGerman = isGermanNotated || declared.key?.let(ChordProNotation::isGermanName) == true
-        val key = declared.key?.let { written -> ChordProTransposer.renameKey(written) { name -> ChordProNotation.read(name, isGerman) } }
+        val key = declared.key?.let { written -> ChordProChordRewriter.renameKey(written) { name -> ChordProNotation.read(name, isGerman) } }
         return ChordProSummary(
             metadata = declared.copy(key = key),
             hasChords = hasChords,

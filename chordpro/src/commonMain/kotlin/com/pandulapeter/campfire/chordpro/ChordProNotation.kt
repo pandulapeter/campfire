@@ -43,7 +43,7 @@ object ChordProNotation {
      * key it moved to, so that a chorus reads `1 4 5` before it and after it. A song whose key is not a note is left in
      * letters, since the first chord is too weak a guess to give every number on the page its meaning.
      */
-    fun toNotation(song: ChordProSong, notation: ChordNotation) = rewriteAt(song, notation)?.let { ChordProTransposer.rewriteChords(song, it) } ?: song
+    fun toNotation(song: ChordProSong, notation: ChordNotation) = rewriteAt(song, notation)?.let { ChordProChordRewriter.rewriteChords(song, it) } ?: song
 
     /**
      * Every name [ChordProChords.namesIn] lists for [song], which is in [ChordNotation.STANDARD], mapped to the name
@@ -91,10 +91,10 @@ object ChordProNotation {
         val renameWritten = if (to == ChordNotation.LATIN) {
             { name: String -> toLatin(fromWritten(ChordProChordNames.lowercaseMinorExpanded(name) ?: name)) }
         } else {
-            ChordProTransposer.keepingLowercaseMinors { name -> shownName(fromWritten(name), to) }
+            ChordProChordRewriter.keepingLowercaseMinors { name -> shownName(fromWritten(name), to) }
         }
         val rename = { name: String -> ChordProChordNames.latinExpanded(name)?.let { shownName(withAsciiAccidentals(it), to) } ?: renameWritten(name) }
-        return ChordProTransposer.rewriteChordNamesInText(
+        return ChordProChordRewriter.rewriteChordNamesInText(
             text = text,
             rewriteTab = { lines -> ChordProTabTransposer.rewriteChordNames(lines, rename) },
             rename = rename,
@@ -137,7 +137,7 @@ object ChordProNotation {
     }
 
     /** Whether a file's song was written in German notation, which it says by using an `H` chord anywhere. */
-    internal fun isGermanNotated(song: ChordProSong) = ChordProTransposer.writtenChordNames(song).any(::isGermanName)
+    internal fun isGermanNotated(song: ChordProSong) = ChordProChordRewriter.writtenChordNames(song).any(::isGermanName)
 
     /** Reads a German-notated chord into the notation the rest of the app works in. */
     internal fun fromGerman(name: String): String {
@@ -146,14 +146,14 @@ object ChordProNotation {
     }
 
     /** The same for a whole song as its file spells it. */
-    internal fun fromGerman(song: ChordProSong) = ChordProTransposer.rewriteChords(
+    internal fun fromGerman(song: ChordProSong) = ChordProChordRewriter.rewriteChords(
         song = song,
         rewriteTabLines = { lines -> ChordProTabTransposer.rewriteChordNames(lines, ::fromGerman) },
         rename = ::fromGerman,
     )
 
     /** [song] with its lowercase minor chords spelled out, and nothing else changed. */
-    internal fun withLowercaseMinorsExpanded(song: ChordProSong) = ChordProTransposer.rewriteChords(
+    internal fun withLowercaseMinorsExpanded(song: ChordProSong) = ChordProChordRewriter.rewriteChords(
         song = song,
         rewriteTabLines = { lines -> lines },
         rename = { name -> ChordProChordNames.lowercaseMinorExpanded(name) ?: name },
@@ -164,13 +164,13 @@ object ChordProNotation {
 
     /** [song], its file written in [notation], in the app's own: English note names and ASCII accidentals. */
     internal fun normalized(song: ChordProSong, notation: ChordNotation): ChordProSong {
-        val names = ChordProTransposer.writtenChordNames(song).toList()
+        val names = ChordProChordRewriter.writtenChordNames(song).toList()
         val german = notation == ChordNotation.GERMAN || names.any(::isGermanName)
         val hasLowercaseMinors = names.any { ChordProChordNames.lowercaseMinorExpanded(it) != null }
         if (!german && !hasLowercaseMinors && !hasLatinName(song) && names.none { SHARP_SIGN in it || FLAT_SIGN in it }) return song
         val rename = { name: String -> read(name, german) }
-        return ChordProTransposer.rewriteChords(song) {
-            ChordProTransposer.ChordRewrite(
+        return ChordProChordRewriter.rewriteChords(song) {
+            ChordProChordRewriter.ChordRewrite(
                 rewriteTabLines = { lines -> ChordProTabTransposer.rewriteChordNames(lines, rename) },
                 rename = rename,
                 rewriteDefinition = { ChordProDefinitions.renamedFromNotation(it, rename) },
@@ -181,31 +181,31 @@ object ChordProNotation {
     /**
      * Whether [song], as its file spells it, names a chord in Latin, its key and its definitions included. Like the German
      * `H`, a Latin name in a comment or a label only counts where another one does: they do not vote, see
-     * [ChordProTransposer.rewriteChords]. A definition's name is no prose, so it counts on its own.
+     * [ChordProChordRewriter.rewriteChords]. A definition's name is no prose, so it counts on its own.
      */
-    private fun hasLatinName(song: ChordProSong) = ChordProTransposer.writtenChordNames(song).any { ChordProChordNames.latinExpanded(it) != null } ||
+    private fun hasLatinName(song: ChordProSong) = ChordProChordRewriter.writtenChordNames(song).any { ChordProChordNames.latinExpanded(it) != null } ||
         song.metadata.definitions.any { ChordProChordNames.latinExpanded(it.name) != null } ||
-        song.metadata.key?.let { key -> ChordProTransposer.renameKey(key) { ChordProChordNames.latinExpanded(it) ?: it } != key } == true
+        song.metadata.key?.let { key -> ChordProChordRewriter.renameKey(key) { ChordProChordNames.latinExpanded(it) ?: it } != key } == true
 
     /**
      * The rewrite of each stretch of [song] in [notation], by the offset a `{transpose}` moved it by, or null where the
      * song stays as it is: in the standard notation, and in a numbering for a song whose key is not a note.
      */
-    private fun rewriteAt(song: ChordProSong, notation: ChordNotation): ((Int) -> ChordProTransposer.ChordRewrite)? {
+    private fun rewriteAt(song: ChordProSong, notation: ChordNotation): ((Int) -> ChordProChordRewriter.ChordRewrite)? {
         if (notation.isNumbering) {
             val tonic = song.metadata.key?.let(ChordProNashville::tonicOf) ?: return null
-            val rewrites = mutableMapOf<Int, ChordProTransposer.ChordRewrite>()
+            val rewrites = mutableMapOf<Int, ChordProChordRewriter.ChordRewrite>()
             return { offset -> rewrites.getOrPut(offset) { numbering(tonic + offset, isRoman = notation == ChordNotation.ROMAN) } }
         }
         if (notation == ChordNotation.STANDARD) return null
         val rename = { name: String -> shownName(name, notation) }
-        val rewrite = ChordProTransposer.ChordRewrite(rewriteTabLines = { lines -> ChordProTabTransposer.rewriteChordNames(lines, rename) }, rename = rename)
+        val rewrite = ChordProChordRewriter.ChordRewrite(rewriteTabLines = { lines -> ChordProTabTransposer.rewriteChordNames(lines, rename) }, rename = rename)
         return { rewrite }
     }
 
-    private fun numbering(tonic: Int, isRoman: Boolean): ChordProTransposer.ChordRewrite {
+    private fun numbering(tonic: Int, isRoman: Boolean): ChordProChordRewriter.ChordRewrite {
         val rename = { name: String -> ChordProNashville.number(name, tonic, isRoman) }
-        return ChordProTransposer.ChordRewrite(
+        return ChordProChordRewriter.ChordRewrite(
             rewriteTabLines = { lines -> ChordProTabTransposer.rewriteChordNames(lines, rename) },
             rename = rename,
             renameInKey = { it },

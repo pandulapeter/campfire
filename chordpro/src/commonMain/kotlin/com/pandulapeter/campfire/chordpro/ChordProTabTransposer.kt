@@ -117,7 +117,7 @@ internal object ChordProTabTransposer {
     private fun rewriteChordLine(line: String, rename: (String) -> String): String {
         val trimmedLine = line.trim()
         if (trimmedLine.isEmpty() || trimmedLine.startsWith(SOURCE_COMMENT) || ChordProDirectives.matchDirective(trimmedLine) != null) return line
-        if (ChordProDirectives.hasBrackets(line)) return ChordProTransposer.rewriteLyricsLineChords(line, rename)
+        if (ChordProDirectives.hasBrackets(line)) return ChordProChordRewriter.rewriteLyricsLineChords(line, rename)
         val replacements = chordWords(line)?.map { word ->
             word.range to rename(word.value)
         } ?: return line

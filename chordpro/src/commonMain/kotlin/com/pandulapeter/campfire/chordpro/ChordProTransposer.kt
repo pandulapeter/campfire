@@ -9,11 +9,15 @@
  */
 package com.pandulapeter.campfire.chordpro
 
-import com.pandulapeter.campfire.chordpro.model.ChordDefinition
+import com.pandulapeter.campfire.chordpro.ChordProChordRewriter.ChordRewrite
+import com.pandulapeter.campfire.chordpro.ChordProChordRewriter.keepingLowercaseMinors
+import com.pandulapeter.campfire.chordpro.ChordProChordRewriter.keyWordOf
+import com.pandulapeter.campfire.chordpro.ChordProChordRewriter.keyWords
+import com.pandulapeter.campfire.chordpro.ChordProChordRewriter.rewriteChordNamesInText
+import com.pandulapeter.campfire.chordpro.ChordProChordRewriter.rewriteChords
+import com.pandulapeter.campfire.chordpro.ChordProChordRewriter.writtenChordNames
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
-import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
-import com.pandulapeter.campfire.chordpro.model.GridToken
 
 /**
  * Moves chords up or down by a number of semitones, either on the model or directly on the raw text.
@@ -64,164 +68,6 @@ object ChordProTransposer {
         )
     }
 
-    /**
-     * What [rewriteChords] does to the chords of one stretch of a song. A definition is renamed like any chord unless
-     * [rewriteDefinition] says otherwise, which is what a change of notation wants and a transposition does not, and so
-     * is the note of a key unless [renameInKey] does, which is what a numbering wants: a key is what the numbers are
-     * counted from, so it stays in letters.
-     */
-    internal class ChordRewrite(
-        val rewriteTabLines: (List<String>) -> List<String>,
-        val rename: (String) -> String,
-        val renameInKey: (String) -> String = rename,
-        val rewriteDefinition: (ChordDefinition) -> ChordDefinition = { it.copy(name = rename(it.name)) },
-    )
-
-    /**
-     * Applies [rename] to every chord of a song — its key, the chords over its lyrics and the chords of its grids,
-     * never an annotation — and hands the raw lines of each run of tablature to [rewriteTabLines]. A run and not a
-     * section: tablature is a way of writing lines down, so a single section may hold several of them with lyrics
-     * in between, and each one is a fingerboard of its own to move.
-     *
-     * Both the transposition and [ChordProNotation] are written in terms of it, and they differ in exactly one thing:
-     * what a tab is. To the transposition it is a fingerboard, so the frets move; to a notation it is a page, so only
-     * the chord names above the staff are rewritten.
-     */
-    internal fun rewriteChords(
-        song: ChordProSong,
-        rewriteTabLines: (List<String>) -> List<String>,
-        rename: (String) -> String,
-    ): ChordProSong = ChordRewrite(rewriteTabLines, rename).let { rewrite -> rewriteChords(song) { rewrite } }
-
-    /**
-     * [rewriteChords] for a rewrite that depends on where in the song a chord is: [rewriteAt] is asked for the one of
-     * each stretch a `{transpose}` moved by the given offset, 0 before the first. A recall is rewritten with the
-     * offset in effect where it stands, which is what makes a chorus recalled after `{transpose: 2}` the key change it
-     * is written as.
-     */
-    internal fun rewriteChords(song: ChordProSong, rewriteAt: (Int) -> ChordRewrite): ChordProSong {
-        var offset = 0
-        val opening = rewriteAt(0)
-        return song.copy(
-            metadata = song.metadata.copy(
-                key = song.metadata.key?.let { key -> renameKey(key, opening.renameInKey) },
-                // Moved by what the whole song is moved by: a modulation further down does not move them again, and a
-                // chord after it is matched by the name it is shown under.
-                definitions = song.metadata.definitions.map(opening.rewriteDefinition),
-            ),
-            blocks = song.blocks.map { block ->
-                if (block is ChordProBlock.Transpose) offset = block.semitones
-                rewriteBlock(block, rewriteAt(offset))
-            },
-        )
-    }
-
-    /**
-     * A comment and a label are where an intro or an outro is written down as a row of chords (`Intro: [G] [Em]`), and
-     * a Campfire 3 file wrote its headings as comments, so their brackets are chords to be moved like those of a line of
-     * lyrics. They are not in [writtenChordNames]: the library scan never reads a directive's value, and letting them
-     * decide the notation or the spelling would make the song list and the viewer disagree about the song.
-     */
-    private fun rewriteBlock(block: ChordProBlock, rewrite: ChordRewrite): ChordProBlock = when (block) {
-        is ChordProBlock.Section -> block.copy(
-            label = block.label?.let { rewriteLyricsLineChords(it, rewrite.rename) },
-            lines = rewriteLines(block.lines, rewrite.rewriteTabLines, rewrite.rename),
-        )
-        // The chorus a recall repeats travels inside it, so it is spelled and moved the way the chorus itself is.
-        is ChordProBlock.ChorusRecall -> block.copy(
-            label = block.label?.let { rewriteLyricsLineChords(it, rewrite.rename) },
-            blocks = block.blocks.map { rewriteBlock(it, rewrite) },
-        )
-        is ChordProBlock.Comment -> block.copy(text = rewriteLyricsLineChords(block.text, rewrite.rename))
-        // Handed the rewrite of the stretch it starts, so the key it names is the one that stretch is in.
-        is ChordProBlock.Transpose -> block.copy(key = block.key?.let { renameKey(it, rewrite.renameInKey) })
-        else -> block
-    }
-
-    /**
-     * [rename] applied to a key: a chord name is renamed whole, and a key spelled out in words (`G major`, `A minor`,
-     * `Bb-Dur`, `C-dúr`, `Sol mayor`) has its note renamed and its words kept. Anything else — `Dm (capo 2)` — is handed to [rename]
-     * as it is, which leaves what is not a chord name alone.
-     */
-    internal fun renameKey(key: String, rename: (String) -> String): String {
-        val noteLength = spelledOutKeyNoteLength(key) ?: return rename(key)
-        return rename(key.substring(0, noteLength)) + key.substring(noteLength)
-    }
-
-    /**
-     * The length of the note a key spelled out in words starts with, or null for a key that is not one. The note has
-     * to start with a capital, in the standard notation or the Latin one: a lowercase root is how a Central European
-     * chart writes a minor chord (`a` is `Am`), which the normalization would expand into an `Am-moll`, so `a-moll` is
-     * left as it is written.
-     */
-    private fun spelledOutKeyNoteLength(key: String): Int? {
-        val letterLength = if (key.firstOrNull() in 'A'..'H') 1 else ChordProChordNames.latinNoteLength(key) ?: return null
-        val noteLength = if (key.getOrNull(letterLength)?.let { it in ACCIDENTAL_SIGNS } == true) letterLength + 1 else letterLength
-        return noteLength.takeIf { keyWordOf(key.substring(noteLength)) in keyWords }
-    }
-
-    /** The word a key spelled out in words names its mode with, in lowercase: `minor` for `A minor`, `moll` for `a-moll`. */
-    private fun keyWordOf(suffix: String) = suffix.trimStart { it.isWhitespace() || it == '-' }.lowercase()
-
-    /** Every name [rewriteChords] would hand to its rename, without rewriting anything. */
-    internal fun writtenChordNames(song: ChordProSong): Sequence<String> = sequence {
-        song.metadata.key?.let { yield(it) }
-        song.blocks.asSequence().filterIsInstance<ChordProBlock.Section>().flatMap { it.lines }.forEach { line ->
-            when (line) {
-                is ChordProLine.Lyrics -> yieldAll(line.chords.filter { !it.isAnnotation }.map { it.name })
-                is ChordProLine.Grid -> yieldAll(line.tokens.filterIsInstance<GridToken.Chord>().flatMap { ChordProTokens.cellChords(it.name) })
-                is ChordProLine.Tab -> yieldAll(ChordProTabTransposer.chordNames(listOf(line.text)))
-                ChordProLine.Blank -> Unit
-            }
-        }
-    }
-
-    /**
-     * Splits the lines into runs of tablature and everything else, and rewrites each the way it has to be.
-     *
-     * A blank line does not end a run, a second environment does: a tab environment keeps its blank lines, and the text
-     * path moves an environment as one fingerboard however many systems it is written in, and every environment as a
-     * fingerboard of its own, so the model has to make the same octave decisions for the same lines. Only the tab lines
-     * are handed to [rewriteTabLines]; the blanks go back where they were.
-     */
-    private fun rewriteLines(
-        lines: List<ChordProLine>,
-        rewriteTabLines: (List<String>) -> List<String>,
-        rename: (String) -> String,
-    ): List<ChordProLine> {
-        if (lines.none { it is ChordProLine.Tab }) return lines.map { line -> rewriteLine(line, rename) }
-        val rewritten = mutableListOf<ChordProLine>()
-        var run = mutableListOf<ChordProLine>()
-        fun flushRun() {
-            if (run.isEmpty()) return
-            val tabLines = rewriteTabLines(run.filterIsInstance<ChordProLine.Tab>().map { it.text }).iterator()
-            rewritten += run.map { line ->
-                if (line is ChordProLine.Tab) {
-                    line.copy(text = tabLines.next(), label = line.label?.let { rewriteLyricsLineChords(it, rename) })
-                } else {
-                    line
-                }
-            }
-            run = mutableListOf()
-        }
-        lines.forEach { line ->
-            when {
-                line is ChordProLine.Tab -> {
-                    // A second environment is a fingerboard of its own, whatever stands between the two.
-                    if (!line.continuesEnvironment) flushRun()
-                    run += line
-                }
-                line == ChordProLine.Blank && run.isNotEmpty() -> run += line
-                else -> {
-                    flushRun()
-                    rewritten += rewriteLine(line, rename)
-                }
-            }
-        }
-        flushRun()
-        return rewritten
-    }
-
     /** Transposes raw ChordPro text in place, keeping its formatting and original notation. */
     fun transposeText(text: String, semitones: Int, preferFlats: Boolean? = null): String {
         if (semitones == 0 && preferFlats == null) return text
@@ -245,14 +91,6 @@ object ChordProTransposer {
     }
 
     /**
-     * [rename] for a chord as the file writes it: a lowercase minor is spelled out for it and folded back afterwards,
-     * so that the file keeps its own convention.
-     */
-    internal fun keepingLowercaseMinors(rename: (String) -> String) = { name: String ->
-        ChordProChordNames.lowercaseMinorExpanded(name)?.let { ChordProChordNames.lowercaseMinorFolded(rename(it)) } ?: rename(name)
-    }
-
-    /**
      * Where [offset] of [before] is in [after], for an [after] that [transposeText] made of [before]: an editor that
      * transposes the document under the caret keeps the caret next to the text it was next to, rather than at the
      * same character count, which every chord name that grew or shrank above it would have moved.
@@ -261,65 +99,7 @@ object ChordProTransposer {
      * keeps its line, and inside the line it keeps its place between the brackets; a line with no brackets to go by
      * (a `{key}`, a grid or a tab line) keeps the text in front of its first change and behind its last one.
      */
-    fun transposedOffset(before: String, after: String, offset: Int): Int {
-        val clamped = offset.coerceIn(0, before.length)
-        if (before == after) return clamped
-        val beforeStarts = ChordProLines.lineStartOffsets(before)
-        val afterStarts = ChordProLines.lineStartOffsets(after)
-        if (beforeStarts.size != afterStarts.size) return clamped.coerceAtMost(after.length)
-        val line = lastLineStartingAtOrBefore(beforeStarts, clamped)
-        val column = clamped - beforeStarts[line]
-        val beforeLine = ChordProLines.splitLines(before)[line]
-        val afterLine = ChordProLines.splitLines(after)[line]
-        val afterLineStart = afterStarts[line]
-        if (column > beforeLine.length) {
-            // On the line break, or past the final one. The break is measured on the new text, since joinLines may
-            // have given a file that mixed its endings a different separator.
-            val limit = if (line + 1 < afterStarts.size) afterStarts[line + 1] - 1 else after.length
-            return (afterLineStart + afterLine.length + (column - beforeLine.length)).coerceAtMost(limit)
-        }
-        return afterLineStart + transposedColumn(beforeLine, afterLine, column).coerceIn(0, afterLine.length)
-    }
-
-    private fun lastLineStartingAtOrBefore(starts: IntArray, offset: Int): Int {
-        var low = 0
-        var high = starts.lastIndex
-        while (low < high) {
-            val middle = (low + high + 1) / 2
-            if (starts[middle] <= offset) low = middle else high = middle - 1
-        }
-        return low
-    }
-
-    private fun transposedColumn(before: String, after: String, column: Int): Int {
-        if (before == after) return column
-        val beforeBrackets = ChordProDirectives.brackets(before)
-        val afterBrackets = ChordProDirectives.brackets(after)
-        if (beforeBrackets.size == afterBrackets.size && beforeBrackets.isNotEmpty()) {
-            var shift = 0
-            beforeBrackets.forEachIndexed { index, bracket ->
-                val oldRange = bracket.range
-                val newRange = afterBrackets[index].range
-                when {
-                    column <= oldRange.first -> return column + shift
-                    // Right before the "]" is after the whole chord name, which is where it stays.
-                    column == oldRange.last -> return newRange.last
-                    column < oldRange.last -> return (newRange.first + (column - oldRange.first)).coerceAtMost(newRange.last)
-                    else -> shift = newRange.last - oldRange.last
-                }
-            }
-            return column + shift
-        }
-        val prefix = before.commonPrefixWith(after).length
-        val suffix = minOf(before.commonSuffixWith(after).length, minOf(before.length, after.length) - prefix)
-        // The two ends meet only where the line merely grew at the caret (a key of C becoming C#), and a caret there
-        // stays after what grew, the way it stays after the whole of a chord name that did.
-        return when {
-            column >= before.length - suffix -> after.length - (before.length - column)
-            column <= prefix -> column
-            else -> (after.length - suffix).coerceAtLeast(prefix)
-        }
-    }
+    fun transposedOffset(before: String, after: String, offset: Int): Int = ChordProOffsetMapping.transposedOffset(before, after, offset)
 
     private fun rewriteText(text: String, semitones: Int, rename: (String) -> String) = rewriteChordNamesInText(
         text = text,
@@ -327,71 +107,6 @@ object ChordProTransposer {
         rename = rename,
         rewriteDefinition = { rawLine, selector -> ChordProDefinitions.rewrittenLine(rawLine, selector, rename, semitones) },
     )
-
-    /**
-     * Applies [rename] to every chord a raw document names - in brackets, in grids, in its key and in directives whose
-     * value holds chords - and [rewriteTab] to each run of tablature as a whole, leaving every other character of the
-     * text exactly where it was.
-     *
-     * Every `{define}` and `{chord}` line is handed to [rewriteDefinition], with the directive's selector: a change of
-     * notation renames the chords it names, and a transposition moves its shape along the neck with them (see
-     * [ChordProDefinitions.rewrittenLine]).
-     */
-    internal fun rewriteChordNamesInText(
-        text: String,
-        rewriteTab: (List<String>) -> List<String>,
-        rename: (String) -> String,
-        rewriteDefinition: (rawLine: String, selector: String) -> String = { rawLine, _ -> rawLine },
-    ): String {
-        val lines = ChordProLines.splitLines(text).toMutableList()
-        val tabLineIndices = mutableListOf<Int>() // The tab environment being collected: it is rewritten as a whole.
-        var environment: String? = null
-        lines.forEachIndexed { index, rawLine ->
-            val trimmedLine = rawLine.trim()
-            // Inside an environment handed to another program a `#` and a brace are that program's syntax.
-            val isDelegated = environment in ChordProEnvironments.delegateEnvironments
-            val isSourceComment = trimmedLine.startsWith(SOURCE_COMMENT) && !isDelegated
-            val directive = when {
-                isSourceComment -> null
-                isDelegated -> ChordProDirectives.matchDelegatedDirective(trimmedLine)
-                else -> ChordProDirectives.matchDirective(trimmedLine)
-            }
-            when {
-                isSourceComment -> Unit
-                directive != null -> {
-                    // A definition inside an environment handed to another program is that program's text. One with a
-                    // selector is read whichever instrument it names, so it is renamed with the rest.
-                    if (!isDelegated) ChordProDefinitions.selectorOf(directive.name)?.let { lines[index] = rewriteDefinition(rawLine, it) }
-                    if (ChordProDirectives.hasSelectorSuffix(directive.name)) return@forEachIndexed
-                    ChordProEnvironments.startOfEnvironment(directive.name)?.let {
-                        lines.rewriteTab(tabLineIndices, rewriteTab)
-                        environment = it.lowercase()
-                    }
-                    ChordProEnvironments.endOfEnvironment(directive.name)?.let {
-                        lines.rewriteTab(tabLineIndices, rewriteTab)
-                        environment = null
-                    }
-                    if (directive.name in ChordProHeaderLayout.blockNames || directive.name == TRANSPOSE) {
-                        // The parser cuts the section in two here, and each half of the tab is a run of its own in the model;
-                        // moving them as one fingerboard would let the viewer and the editor disagree about the octave.
-                        lines.rewriteTab(tabLineIndices, rewriteTab)
-                    }
-                    (ChordProMetaItems.standardMeta(directive) ?: directive).takeIf { it.name == KEY }?.value?.takeIf { it.isNotEmpty() }?.let { key ->
-                        lines[index] = rewriteKeyLine(rawLine, key, rename)
-                    }
-                    // The directive's name holds no brackets, so the line can be read as a line of lyrics whole.
-                    if (ChordProDirectives.hasChordsInValue(directive.name)) lines[index] = rewriteLyricsLineChords(rawLine, rename)
-                }
-
-                environment == TAB -> tabLineIndices += index
-                environment == GRID -> lines[index] = rewriteGridLine(rawLine, trimmedLine, rename)
-                environment in ChordProEnvironments.delegateEnvironments -> Unit
-                else -> lines[index] = rewriteLyricsLineChords(rawLine, rename)
-            }
-        }
-        lines.rewriteTab(tabLineIndices, rewriteTab) // An environment the file never closes.
-        return ChordProLines.joinLines(lines, text)
-    }
 
     /** Whether flats should be preferred for the key this song arrives in after the transposition. */
     fun prefersFlats(song: ChordProSong, semitones: Int): Boolean {
@@ -430,37 +145,6 @@ object ChordProTransposer {
         return flats > sharps
     }
 
-    /** Rewrites the collected lines of one tab environment in place and starts collecting the next one. */
-    private fun MutableList<String>.rewriteTab(indices: MutableList<Int>, rewriteTab: (List<String>) -> List<String>) {
-        if (indices.isEmpty()) return
-        val transposed = rewriteTab(indices.map { this[it] })
-        indices.forEachIndexed { index, lineIndex -> this[lineIndex] = transposed[index] }
-        indices.clear()
-    }
-
-    private fun rewriteLine(line: ChordProLine, rename: (String) -> String) = when (line) {
-        is ChordProLine.Lyrics -> line.copy(
-            chords = line.chords.map { chord ->
-                if (chord.isAnnotation) chord else chord.copy(name = rename(chord.name))
-            }
-        )
-
-        is ChordProLine.Grid -> line.copy(
-            tokens = line.tokens.map { token ->
-                if (token is GridToken.Chord) {
-                    GridToken.Chord(ChordProTokens.cellChords(token.name).joinToString(ChordProTokens.GRID_CELL_CHORD_SEPARATOR, transform = rename))
-                } else {
-                    token
-                }
-            },
-            label = line.label?.let { rewriteLyricsLineChords(it, rename) },
-        )
-
-        is ChordProLine.Tab -> line.copy(label = line.label?.let { rewriteLyricsLineChords(it, rename) })
-
-        ChordProLine.Blank -> line
-    }
-
     private fun transposeNote(part: String, semitones: Int, preferFlats: Boolean): String {
         val noteIndex = noteIndices[part.getOrNull(0)] ?: return part
         val accidental = accidentals[part.getOrNull(1)]
@@ -469,81 +153,7 @@ object ChordProTransposer {
         return (if (preferFlats) flatNames else sharpNames)[transposedNoteIndex] + part.substring(suffixStartIndex)
     }
 
-    /** Applies [rename] to every `[chord]` of a raw line, leaving the annotations, the empty brackets and the text. */
-    internal fun rewriteLyricsLineChords(rawLine: String, rename: (String) -> String): String {
-        val brackets = ChordProDirectives.brackets(rawLine)
-        if (brackets.isEmpty()) return rawLine
-        return buildString(rawLine.length) {
-            var consumedUntil = 0
-            brackets.forEach { bracket ->
-                val content = bracket.content.trim()
-                val isChord = content.isNotEmpty() && !content.startsWith(ANNOTATION_MARKER)
-                append(rawLine, consumedUntil, if (isChord) bracket.range.first else bracket.range.last + 1)
-                if (isChord) {
-                    // The spaces a file puts inside its brackets are its own formatting, and the transposition keeps it.
-                    val leading = bracket.content.length - bracket.content.trimStart().length
-                    append(BRACKET_OPEN)
-                        .append(bracket.content, 0, leading)
-                        .append(rename(content))
-                        .append(bracket.content, bracket.content.trimEnd().length, bracket.content.length)
-                        .append(BRACKET_CLOSE)
-                }
-                consumedUntil = bracket.range.last + 1
-            }
-            append(rawLine, consumedUntil, rawLine.length)
-        }
-    }
-
-    private fun rewriteGridLine(rawLine: String, trimmedLine: String, rename: (String) -> String): String {
-        // The ranges and the tokens are zipped by index, which is only safe because both are the same list of words:
-        // parseGridTokens reads the line through ChordProTokens.words as well.
-        val matches = ChordProTokens.words(trimmedLine)
-        val tokens = ChordProTokens.parseGridTokens(trimmedLine)
-        val body = buildString {
-            var consumedUntil = 0
-            matches.forEachIndexed { index, match ->
-                append(trimmedLine, consumedUntil, match.range.first)
-                append(
-                    if (tokens[index] is GridToken.Chord) {
-                        ChordProTokens.cellChords(match.value).joinToString(ChordProTokens.GRID_CELL_CHORD_SEPARATOR, transform = rename)
-                    } else {
-                        match.value
-                    }
-                )
-                consumedUntil = match.range.last + 1
-            }
-            append(trimmedLine, consumedUntil, trimmedLine.length)
-        }
-        return rawLine.replaceTrimmedPart(trimmedLine, body)
-    }
-
-    /**
-     * Renames the value of a key directive in place. Only the value's own characters are replaced, so the directive
-     * keeps the spelling and the spacing the file gives it; the value is the last thing before the closing brace, give
-     * or take whitespace, however the directive is written.
-     */
-    private fun rewriteKeyLine(rawLine: String, key: String, rename: (String) -> String): String {
-        val valueEnd = rawLine.substring(0, rawLine.trimEnd().lastIndex).trimEnd().length
-        return rawLine.substring(0, valueEnd - key.length) + renameKey(key, rename) + rawLine.substring(valueEnd)
-    }
-
-    /** Swaps the trimmed part of a line for [replacement], keeping the surrounding whitespace. */
-    private fun String.replaceTrimmedPart(trimmedLine: String, replacement: String): String {
-        val start = length - trimStart().length
-        return substring(0, start) + replacement + substring(start + trimmedLine.length)
-    }
-
     private const val NOTE_COUNT = 12
-    private const val SOURCE_COMMENT = "#"
-    private const val ANNOTATION_MARKER = "*"
-    private const val KEY = "key"
-    private const val ACCIDENTAL_SIGNS = "#b♯♭"
-    private const val TRANSPOSE = "transpose"
-    private const val TAB = "tab"
-    private const val GRID = "grid"
-    private const val BRACKET_OPEN = '['
-    private const val BRACKET_CLOSE = ']'
-    private val keyWords = setOf("major", "minor", "maj", "min", "dur", "dúr", "moll", "mayor", "menor", "majeur", "mineur", "maggiore", "minore")
     private val minorKeyWords = setOf("minor", "min", "moll", "menor", "mineur", "minore")
     private val sharpNames = listOf("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
     private val flatNames = listOf("C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B")

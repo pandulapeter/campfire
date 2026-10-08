@@ -181,7 +181,7 @@ object ChordProChords {
         val move = { chord: String ->
             ChordProNotation.shownName(ChordProTransposer.transposeChord(ChordProNotation.read(chord, isGerman = notation == ChordNotation.GERMAN), semitones, preferFlats), notation)
         }
-        return if (notation == ChordNotation.LATIN) move(name) else ChordProTransposer.keepingLowercaseMinors(move)(name)
+        return if (notation == ChordNotation.LATIN) move(name) else ChordProChordRewriter.keepingLowercaseMinors(move)(name)
     }
 
     /** The pitch class of a note as written: a capital or lowercase letter, `H` as `B`, and an accidental or none. */
