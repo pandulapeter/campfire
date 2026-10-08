@@ -13,7 +13,7 @@ import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.SongContent
 import com.pandulapeter.campfire.data.repository.api.SongContentRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
-import com.pandulapeter.campfire.data.repository.implementation.base.BaseLocalDataRepository
+import com.pandulapeter.campfire.data.repository.implementation.base.LibraryListRepository
 import com.pandulapeter.campfire.data.source.local.api.SongLocalSource
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
@@ -32,9 +32,11 @@ internal class SongRepositoryImpl(
     private val songContentRepository: SongContentRepository,
     private val libraryFileLock: LibraryFileLock,
     private val libraryChanges: LibraryChanges,
-) : BaseLocalDataRepository<List<Song>>(), SongRepository {
+) : LibraryListRepository<Song>(), SongRepository {
 
     override val songs = dataState
+
+    override fun fileNameOf(item: Song) = item.fileName
 
     /**
      * Held by everything that asks the storage for a free name and then writes under it. The two are separate trips
@@ -66,7 +68,7 @@ internal class SongRepositoryImpl(
                 coroutineScope { batch.map { fileName -> async { loadSongOrNull(fileName) } }.awaitAll() }
             }.filterNotNull()
             songContentRepository.invalidate(fileNames)
-            updateData { current -> current.orEmpty().filterNot { it.fileName in fileNames } + reloaded }
+            replaceInCache(fileNames, reloaded)
         }
     }
 
@@ -100,7 +102,7 @@ internal class SongRepositoryImpl(
                 songLocalSource.saveSongContent(content)
                 songContentRepository.invalidate(content.fileName)
                 songLocalSource.loadSong(content.fileName)?.let { updated ->
-                    updateData { current -> current.orEmpty().filterNot { it.fileName == updated.fileName } + updated }
+                    putInCache(updated)
                 }
             }
             libraryChanges.onLibraryChanged()
@@ -113,7 +115,7 @@ internal class SongRepositoryImpl(
             // Replaced rather than appended, like every other change to the list: the file name is what the lists key
             // their rows by, so a name that is in the cache already - a file deleted behind the app's back whose name
             // has just been given out again - must not end up in it twice.
-            updateData { current -> current.orEmpty().filterNot { it.fileName == song.fileName } + song }
+            putInCache(song)
             libraryChanges.onLibraryChanged()
         }
     }
@@ -130,15 +132,13 @@ internal class SongRepositoryImpl(
         val fileNames = songs.mapTo(hashSetOf()) { it.fileName }
         songContentRepository.invalidate(fileNames)
         // The last write of a name is the file, should an import ever write one twice.
-        updateData { current -> current.orEmpty().filterNot { it.fileName in fileNames } + songs.associateBy { it.fileName }.values }
+        replaceInCache(fileNames, songs.associateBy { it.fileName }.values)
     }
 
     override suspend fun renameSong(song: Song): Song? = naming {
         val renamed = songLocalSource.renameSong(song) ?: return@naming null
         songContentRepository.invalidate(song.fileName)
-        updateData { current ->
-            current.orEmpty().filterNot { it.fileName == song.fileName || it.fileName == renamed.fileName } + renamed
-        }
+        putInCache(renamed, replacing = song.fileName)
         libraryChanges.onLibraryChanged()
         renamed
     }
@@ -147,7 +147,7 @@ internal class SongRepositoryImpl(
         withContext(NonCancellable) {
             songLocalSource.deleteSong(fileName)
             songContentRepository.invalidate(fileName)
-            updateData { current -> current.orEmpty().filterNot { it.fileName == fileName } }
+            dropFromCache(fileName)
             libraryChanges.onLibraryChanged()
         }
     }
@@ -156,7 +156,7 @@ internal class SongRepositoryImpl(
         withContext(NonCancellable) {
             val remaining = deleteEach(songLocalSource.loadSongFileSizes().keys, songLocalSource::deleteSong)
             songContentRepository.invalidate()
-            updateData { current -> current.orEmpty().filter { it.fileName in remaining } }
+            keepOnlyInCache(remaining)
             libraryChanges.onLibraryChanged()
             remaining.throwFirstFailure()
         }

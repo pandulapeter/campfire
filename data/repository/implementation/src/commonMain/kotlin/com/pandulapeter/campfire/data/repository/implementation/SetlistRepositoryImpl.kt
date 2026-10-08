@@ -11,7 +11,7 @@ package com.pandulapeter.campfire.data.repository.implementation
 
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
-import com.pandulapeter.campfire.data.repository.implementation.base.BaseLocalDataRepository
+import com.pandulapeter.campfire.data.repository.implementation.base.LibraryListRepository
 import com.pandulapeter.campfire.data.source.local.api.SetlistLocalSource
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
@@ -30,9 +30,11 @@ internal class SetlistRepositoryImpl(
     private val setlistLocalSource: SetlistLocalSource,
     private val libraryFileLock: LibraryFileLock,
     private val libraryChanges: LibraryChanges,
-) : BaseLocalDataRepository<List<Setlist>>(), SetlistRepository {
+) : LibraryListRepository<Setlist>(), SetlistRepository {
 
     override val setlists = dataState
+
+    override fun fileNameOf(item: Setlist) = item.fileName
 
     /**
      * Held from reading a setlist to having its write in the cache, so that the next change reads what this one
@@ -107,13 +109,13 @@ internal class SetlistRepositoryImpl(
                     null
                 }
             }
-            updateData { current -> current.orEmpty().filterNot { it.fileName in fileNames } + reloaded }
+            replaceInCache(fileNames, reloaded)
         }
     }
 
     override suspend fun createSetlist(title: String, description: String, date: LocalDate, isCountdownShown: Boolean): Setlist = writing {
         setlistLocalSource.createSetlist(title = title, description = description, date = date, isCountdownShown = isCountdownShown).also { created ->
-            updateData { current -> current.orEmpty().filterNot { it.fileName == created.fileName } + created }
+            putInCache(created)
             libraryChanges.onLibraryChanged()
         }
     }
@@ -130,9 +132,7 @@ internal class SetlistRepositoryImpl(
         latest(fileName)?.let { setlist ->
             val edited = setlist.copy(description = description, date = date, isCountdownShown = isCountdownShown)
             setlistLocalSource.renameSetlist(setlist = edited, title = title).also { renamed ->
-                updateData { current ->
-                    current.orEmpty().filterNot { it.fileName == fileName || it.fileName == renamed.fileName } + renamed
-                }
+                putInCache(renamed, replacing = fileName)
                 libraryChanges.onLibraryChanged()
             }
         }
@@ -149,7 +149,7 @@ internal class SetlistRepositoryImpl(
         if (this.setlists.first().data == null) return rescan()
         val fileNames = setlists.mapTo(hashSetOf()) { it.fileName }
         // The last write of a name is the file, should an import ever write one twice.
-        updateData { current -> current.orEmpty().filterNot { it.fileName in fileNames } + setlists.associateBy { it.fileName }.values }
+        replaceInCache(fileNames, setlists.associateBy { it.fileName }.values)
     }
 
     override suspend fun loadSetlistFileSizes() = setlistLocalSource.loadSetlistFileSizes()
@@ -159,13 +159,13 @@ internal class SetlistRepositoryImpl(
 
     override suspend fun deleteSetlist(fileName: String) = writing {
         setlistLocalSource.deleteSetlist(fileName)
-        forget(fileName)
+        dropFromCache(fileName)
         libraryChanges.onLibraryChanged()
     }
 
     override suspend fun deleteAllSetlists() = writing {
         val remaining = deleteEach(setlistLocalSource.loadSetlistFileSizes().keys, setlistLocalSource::deleteSetlist)
-        updateData { current -> current.orEmpty().filter { it.fileName in remaining } }
+        keepOnlyInCache(remaining)
         libraryChanges.onLibraryChanged()
         remaining.throwFirstFailure()
     }
@@ -188,7 +188,7 @@ internal class SetlistRepositoryImpl(
     private suspend fun latest(fileName: String): Setlist? {
         val cached = loadDataIfNeeded()?.firstOrNull { it.fileName == fileName }
         return try {
-            setlistLocalSource.loadSetlist(fileName).also { if (it == null && cached != null) forget(fileName) }
+            setlistLocalSource.loadSetlist(fileName).also { if (it == null && cached != null) dropFromCache(fileName) }
         } catch (exception: CancellationException) {
             throw exception
         } catch (exception: Exception) {
@@ -205,16 +205,14 @@ internal class SetlistRepositoryImpl(
      */
     private suspend fun writeDays() = dayWriteMutex.withLock {
         undatedFileNames.getAndUpdate { emptySet() }.forEach { fileName ->
-            writing { latest(fileName)?.let { dated -> updateData { current -> current.orEmpty().filterNot { it.fileName == dated.fileName } + dated } } }
+            writing { latest(fileName)?.let { dated -> putInCache(dated) } }
         }
     }
-
-    private fun forget(fileName: String) = updateData { current -> current.orEmpty().filterNot { it.fileName == fileName } }
 
     /** Callers hold [writeMutex]. Returns the setlist as it was written, carrying its file's size. */
     private suspend fun write(setlist: Setlist): Setlist {
         val saved = setlistLocalSource.saveSetlist(setlist)
-        updateData { current -> current.orEmpty().filterNot { it.fileName == saved.fileName } + saved }
+        putInCache(saved)
         libraryChanges.onLibraryChanged()
         return saved
     }

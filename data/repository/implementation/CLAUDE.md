@@ -49,7 +49,8 @@ Writing is deliberately **not** part of that shape. Songs and setlists are one f
 and updates the one cached entry (`updateData`, which takes a transform of the current list and applies it atomically,
 so a save landing during a rescan cannot overwrite what the rescan found). The cached lists are in no particular order
 — a scan leaves them by file name, a write moves its item to the end — and ordering them is the domain layer's
-business. Only the preferences are persisted as a whole (`writeData`). What `writeData` publishes is `Idle` from the
+business. The two lists share those transforms through `base/LibraryListRepository` (`putInCache`, `replaceInCache`,
+`dropFromCache`, `keepOnlyInCache`). Only the preferences are persisted as a whole (`writeData`). What `writeData` publishes is `Idle` from the
 first moment, never a `Loading` the write then resolves: the data being written is already what every reader should
 show, and it stays that way even when the write fails, while a `Loading` would tell whoever reads this state for
 "nothing has been read yet" exactly that — for as long as the storage takes to answer. The publish also comes before
