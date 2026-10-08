@@ -87,11 +87,11 @@ internal fun BrowserHistoryEffect(viewModel: CampfireViewModel) {
             launch {
                 // The searches and the dialog are flows rather than snapshot states, so they are combined in rather than read.
                 combine(
-                    snapshotFlow { BrowserRoutes.paths(viewModel) },
+                    snapshotFlow { BrowserRoutes.paths(viewModel.routeInputs()) },
                     viewModel.songsSearch.isOpen,
                     viewModel.setlistsSearch.isOpen,
                     viewModel.visibleDialog,
-                ) { _, _, _, _ -> BrowserRoutes.paths(viewModel) }
+                ) { _, _, _, _ -> BrowserRoutes.paths(viewModel.routeInputs()) }
                     .distinctUntilChanged()
                     .collect { events.send(HistoryEvent.Changed) }
             }
@@ -172,13 +172,13 @@ private class BrowserHistory(
         current = to
         entries[current] = entries[current].copy(path = path)
         for (step in 1..steps) {
-            val depth = BrowserRoutes.paths(viewModel).size
+            val depth = BrowserRoutes.paths(viewModel.routeInputs()).size
             input.backCompleted()
             if (step == steps) break
             // The next back has to reach whatever is on top once this one has been answered, and the handlers are
             // registered by the composition: two frames, since the first one resumes while it is still being built.
             repeat(2) { withFrameNanos { } }
-            if (BrowserRoutes.paths(viewModel).size != depth - 1) break
+            if (BrowserRoutes.paths(viewModel.routeInputs()).size != depth - 1) break
         }
         synchronize()
     }
@@ -236,7 +236,7 @@ private class BrowserHistory(
      */
     private suspend fun synchronize() {
         repeat(MAX_TRAVERSALS) {
-            val paths = BrowserRoutes.paths(viewModel)
+            val paths = BrowserRoutes.paths(viewModel.routeInputs())
             val target = paths.lastIndex
             val canGoForward = target > current &&
                     entries[current].path == paths[current] &&

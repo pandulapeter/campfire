@@ -7,16 +7,11 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-@file:OptIn(ExperimentalWasmJsInterop::class)
-
 package com.pandulapeter.campfire.presentation.ui.navigation
 
 import com.pandulapeter.campfire.data.model.domain.LibraryFiles
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
-import kotlin.js.ExperimentalWasmJsInterop
 
 /**
  * The addresses of the web build, relative to the folder the page is served from and still percent-encoded. Every
@@ -48,31 +43,32 @@ internal object BrowserRoutes {
     /**
      * The path of every history entry the app should have, in order, from the songs at the bottom to the screen on
      * top: one per step a back gesture would take, which is a screen of the back stack, an open search, the setlist
-     * reorder mode, or a dialog, a sheet or a menu open over them all. A pure function of states, so that it can be observed.
+     * reorder mode, or a dialog, a sheet or a menu open over them all. A pure function of [inputs], which are read from
+     * states, so that it can be observed.
      */
-    fun paths(viewModel: CampfireViewModel) = buildList {
-        viewModel.backStack.forEach { destination ->
+    fun paths(inputs: RouteInputs) = buildList {
+        inputs.backStack.forEach { destination ->
             when (destination) {
                 CampfireDestination.Songs -> {
                     add(ROOT)
-                    if (viewModel.songsSearch.isOpen.value) add(SEARCH)
+                    if (inputs.isSongsSearchOpen) add(SEARCH)
                 }
 
                 CampfireDestination.Setlists -> {
                     add(SETLISTS)
-                    if (viewModel.setlistsSearch.isOpen.value) add("$SETLISTS/$SEARCH")
+                    if (inputs.isSetlistsSearchOpen) add("$SETLISTS/$SEARCH")
                     // A transient step with the same address gives browser Back a mode to dismiss before the tab.
-                    if (viewModel.isSetlistReordering && !viewModel.setlistsSearch.isOpen.value) add(SETLISTS)
+                    if (inputs.isSetlistReordering && !inputs.isSetlistsSearchOpen) add(SETLISTS)
                 }
 
                 CampfireDestination.Metronome -> add(METRONOME)
 
                 CampfireDestination.Settings -> {
                     add("$SETTINGS/${SettingsTab.GENERAL.pathSegment}")
-                    if (viewModel.settingsTab != SettingsTab.GENERAL) add("$SETTINGS/${viewModel.settingsTab.pathSegment}")
+                    if (inputs.settingsTab != SettingsTab.GENERAL) add("$SETTINGS/${inputs.settingsTab.pathSegment}")
                 }
                 is CampfireDestination.SongDetails -> {
-                    val song = viewModel.currentSongFileName(destination)?.let(::songPathSegment).orEmpty()
+                    val song = inputs.currentSongFileNames[destination.id]?.let(::songPathSegment).orEmpty()
                     add(destination.setlistFileName?.let { "$SETLIST/${setlistPathSegment(it)}/$song" } ?: "$SONG/$song")
                 }
 
@@ -85,8 +81,7 @@ internal object BrowserRoutes {
         // The unsaved changes question gets none: it is asked in answer to a Back, whose entry is then gone forward to
         // again, and an entry for it would be one more pushed on top of that without a user gesture, which Chrome's
         // Back skips the entry under.
-        val dialog = viewModel.visibleDialog.value
-        if (dialog != null && dialog != DialogType.UnsavedChanges || viewModel.overlayState.isAnyMenuOpen) lastOrNull()?.let(::add)
+        if (inputs.hasOverlay) lastOrNull()?.let(::add)
     }
 
     /**
@@ -235,20 +230,3 @@ internal object BrowserRoutes {
     private const val IMPORT = "import"
 }
 
-/**
- * `encodeURIComponent`, and a tilde too, which it leaves alone: GitHub Pages hands a deep address to the app through
- * its 404 page, which carries `&` in the query as `~and~`, and a name that held those five characters would come
- * back as an ampersand.
- */
-private fun encodePathSegment(value: String): String = js("encodeURIComponent(value).replace(/~/g, '%7E')")
-
-/** Null for a segment that is not valid percent-encoding, which is an address the app did not write. */
-private fun decodePathSegment(value: String): String? = js(
-    """(function () {
-        try {
-            return decodeURIComponent(value);
-        } catch (error) {
-            return null;
-        }
-    })()"""
-)
