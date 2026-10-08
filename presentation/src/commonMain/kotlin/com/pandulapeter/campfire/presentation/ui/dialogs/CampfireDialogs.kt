@@ -50,6 +50,8 @@ import com.pandulapeter.campfire.presentation.resources.songs_filter
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.SongFilters
 import com.pandulapeter.campfire.presentation.ui.components.textResource
+import com.pandulapeter.campfire.presentation.ui.screens.rememberSongFilterActions
+import com.pandulapeter.campfire.presentation.ui.screens.rememberSongFilterUiState
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.seconds
 
@@ -144,7 +146,8 @@ internal fun CampfireDialogs(
             onDismiss = { viewModel.dismissSheet(DialogType.SongFilters) },
         ) { contentPadding ->
             SongFilters(
-                viewModel = viewModel,
+                state = rememberSongFilterUiState(viewModel),
+                actions = rememberSongFilterActions(viewModel),
                 contentPadding = contentPadding,
                 uncoveredTopInset = uncoveredTopInset,
                 fadeBackgroundColor = sheetContainerColor(),

@@ -67,6 +67,8 @@ import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedLazy
 import com.pandulapeter.campfire.presentation.ui.components.underAppBar
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
+import com.pandulapeter.campfire.presentation.ui.screens.rememberSongFilterActions
+import com.pandulapeter.campfire.presentation.ui.screens.rememberSongFilterUiState
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
@@ -188,7 +190,8 @@ internal fun SongsScreen(
             ) { panelModifier, panelContentPadding ->
                 SongFilters(
                     modifier = panelModifier,
-                    viewModel = viewModel,
+                    state = rememberSongFilterUiState(viewModel),
+                    actions = rememberSongFilterActions(viewModel),
                     contentPadding = panelContentPadding,
                     fadeBackgroundColor = MaterialTheme.colorScheme.background,
                 )

@@ -52,7 +52,6 @@ import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.domain.SongLanguage
 import com.pandulapeter.campfire.data.model.domain.Tag
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
@@ -84,6 +83,8 @@ import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
  * The groups share the height of the panel or the sheet between them ([FilterGroupsLayout]), so that as much of both
  * is in sight at once as fits, and each keeps the rest of its chips behind a "Show all" of its own.
  *
+ * @param state What the filters show, see [SongFilterUiState].
+ * @param actions What their controls change.
  * @param uncoveredTopInset The sheet's `BottomSheetContentScope.uncoveredTopInset`, for the height of the sheet at
  *   its tallest rather than at the offset it happens to be at.
  * @param fadeBackgroundColor The opaque color the filters stand on, the screen's or the sheet's, which their top edge
@@ -92,7 +93,8 @@ import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
 @Composable
 internal fun SongFilters(
     modifier: Modifier = Modifier,
-    viewModel: CampfireViewModel,
+    state: SongFilterUiState,
+    actions: SongFilterActions,
     contentPadding: PaddingValues = PaddingValues(),
     uncoveredTopInset: () -> Dp = { 0.dp },
     fadeBackgroundColor: Color,
@@ -116,7 +118,8 @@ internal fun SongFilters(
             FilterGroups(
                 lookaheadScope = this,
                 availableHeight = availableHeight,
-                viewModel = viewModel,
+                state = state,
+                actions = actions,
             )
         }
     }
@@ -127,13 +130,9 @@ internal fun SongFilters(
 private fun FilterGroups(
     lookaheadScope: LookaheadScope,
     availableHeight: Dp,
-    viewModel: CampfireViewModel,
+    state: SongFilterUiState,
+    actions: SongFilterActions,
 ) {
-    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
-    val songFilter by viewModel.songFilter.collectAsStateWithLifecycle()
-    val tags by viewModel.tags.collectAsStateWithLifecycle()
-    val languages by viewModel.languages.collectAsStateWithLifecycle()
-    val isSongFilterActive by viewModel.isSongFilterActive.collectAsStateWithLifecycle()
     FilterGroupsLayout(
         modifier = Modifier.fillMaxWidth(),
         availableHeight = availableHeight,
@@ -142,34 +141,34 @@ private fun FilterGroups(
         // ask a question the songs cannot answer yet.
         TagFilters(
             lookaheadScope = lookaheadScope,
-            isVisible = tags.isNotEmpty(),
-            tags = tags,
-            selectedTags = songFilter.selectedTags,
-            matchMode = userPreferences?.tagMatchMode ?: UserPreferences.MatchMode.ANY,
-            sortingMode = userPreferences?.tagSortingMode ?: UserPreferences.LabelSortingMode.BY_USAGE,
-            onTagClicked = viewModel::toggleTagFilter,
-            onClear = viewModel::clearTagFilter,
-            onMatchModeSelected = viewModel::setTagMatchMode,
-            onSortingModeSelected = viewModel::setTagSortingMode,
+            isVisible = state.tags.isNotEmpty(),
+            tags = state.tags,
+            selectedTags = state.selectedTags,
+            matchMode = state.tagMatchMode,
+            sortingMode = state.tagSortingMode,
+            onTagClicked = actions::toggleTagFilter,
+            onClear = actions::clearTagFilter,
+            onMatchModeSelected = actions::setTagMatchMode,
+            onSortingModeSelected = actions::setTagSortingMode,
         )
         // A library that sings in one language has nothing to choose between, and the one group it would offer
         // ("Unknown", against the single language) is a question about a library nobody has filled in yet.
         LanguageFilters(
             lookaheadScope = lookaheadScope,
-            isVisible = languages.size > 1,
-            languages = languages,
-            selectedLanguages = songFilter.selectedLanguages,
-            matchMode = userPreferences?.languageMatchMode ?: UserPreferences.MatchMode.ANY,
-            sortingMode = userPreferences?.languageSortingMode ?: UserPreferences.LabelSortingMode.BY_USAGE,
-            onLanguageClicked = viewModel::toggleLanguageFilter,
-            onClear = viewModel::clearLanguageFilter,
-            onMatchModeSelected = viewModel::setLanguageMatchMode,
-            onSortingModeSelected = viewModel::setLanguageSortingMode,
+            isVisible = state.languages.size > 1,
+            languages = state.languages,
+            selectedLanguages = state.selectedLanguages,
+            matchMode = state.languageMatchMode,
+            sortingMode = state.languageSortingMode,
+            onLanguageClicked = actions::toggleLanguageFilter,
+            onClear = actions::clearLanguageFilter,
+            onMatchModeSelected = actions::setLanguageMatchMode,
+            onSortingModeSelected = actions::setLanguageSortingMode,
         )
         ResetFiltersButton(
             modifier = Modifier.layoutId(FilterSlot.TRANSIENT),
-            isVisible = isSongFilterActive,
-            onClick = viewModel::clearSongFilter,
+            isVisible = state.isActive,
+            onClick = actions::clearSongFilter,
         )
     }
 }
