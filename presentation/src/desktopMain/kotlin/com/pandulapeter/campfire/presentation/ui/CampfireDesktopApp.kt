@@ -115,28 +115,16 @@ fun CampfireDesktopApp(
  *   [CampfireViewModel.confirmExit] and [CampfireViewModel.requestExit].
  */
 fun CampfireViewModel.handleKeyEvent(keyEvent: KeyEvent, onExit: () -> Unit): Boolean {
-    if (keyEvent.type == KeyEventType.KeyDown && keyEvent.key == Key.F && (keyEvent.isCtrlPressed || keyEvent.isMetaPressed) && !keyEvent.isAltPressed) {
-        return openCurrentSearch()
-    }
-    // Alt is left out because AltGr arrives as Ctrl + Alt on Windows, and AltGr with these keys types a character on
-    // some layouts. Shift is not: the plus of a US layout is Shift + equals.
-    if (keyEvent.type == KeyEventType.KeyDown && (keyEvent.isCtrlPressed || keyEvent.isMetaPressed) && !keyEvent.isAltPressed) {
-        val steps = when (keyEvent.key) {
-            Key.Equals, Key.Plus, Key.NumPadAdd -> 1
-            Key.Minus, Key.NumPadSubtract -> -1
-            Key.Zero, Key.NumPad0 -> null
-            else -> return false
+    if (keyEvent.type == KeyEventType.KeyDown) {
+        val isCtrlOrMeta = keyEvent.isCtrlPressed || keyEvent.isMetaPressed
+        keyEvent.key.toShortcutKey()?.let { appShortcutOf(it, isCtrlOrMeta = isCtrlOrMeta, isAlt = keyEvent.isAltPressed) }?.let { shortcut ->
+            // A held key repeats its key-down; only the first press is a request, the rest would start and stop the
+            // click thirty times a second.
+            return if (shortcut is AppShortcut.ToggleMetronome && isMetronomeKeyRepeat) false else perform(shortcut)
         }
-        return zoomSongText(steps)
-    }
-    if (
-        keyEvent.type == KeyEventType.KeyDown && (keyEvent.key == Key.Spacebar || keyEvent.key == Key.M) &&
-        !keyEvent.isCtrlPressed && !keyEvent.isMetaPressed && !keyEvent.isAltPressed
-    ) {
-        // A held key repeats its key-down; only the first press is a request, the rest would start and stop the click
-        // thirty times a second.
-        if (isMetronomeKeyRepeat) return false
-        return toggleMetronomeByKey(isSpace = keyEvent.key == Key.Spacebar)
+        // Any other key with Ctrl or Cmd and without Alt is not this handler's, Ctrl / Cmd + Escape included, which
+        // neither goes back nor asks to close the app.
+        if (isCtrlOrMeta && !keyEvent.isAltPressed) return false
     }
     if (keyEvent.type == KeyEventType.KeyDown && keyEvent.key == Key.Escape) {
         // Window key handlers run before Compose turns Escape into a back event, so consuming it here would pop the
@@ -162,6 +150,17 @@ fun CampfireViewModel.handleKeyEvent(keyEvent: KeyEvent, onExit: () -> Unit): Bo
         return true
     }
     return false
+}
+
+/** The app-wide shortcut key this physical key is, see [appShortcutOf]. */
+private fun Key.toShortcutKey() = when (this) {
+    Key.F -> ShortcutKey.F
+    Key.Equals, Key.Plus, Key.NumPadAdd -> ShortcutKey.PLUS
+    Key.Minus, Key.NumPadSubtract -> ShortcutKey.MINUS
+    Key.Zero, Key.NumPad0 -> ShortcutKey.ZERO
+    Key.Spacebar -> ShortcutKey.SPACE
+    Key.M -> ShortcutKey.M
+    else -> null
 }
 
 /**

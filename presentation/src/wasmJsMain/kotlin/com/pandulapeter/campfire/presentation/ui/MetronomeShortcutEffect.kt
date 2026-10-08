@@ -29,16 +29,17 @@ import kotlin.js.unsafeCast
 internal fun MetronomeShortcutEffect(viewModel: CampfireViewModel) = DisposableEffect(viewModel) {
     val listener: (Event) -> Unit = listener@{ event ->
         val keyEvent = event.unsafeCast<KeyboardEvent>()
-        if (keyEvent.defaultPrevented || keyEvent.ctrlKey || keyEvent.metaKey || keyEvent.altKey || isTypingTarget(keyEvent)) return@listener
-        val isSpace = when (keyEvent.code) {
-            "Space" -> true
-            "KeyM" -> false
+        if (keyEvent.defaultPrevented || isTypingTarget(keyEvent)) return@listener
+        val key = when (keyEvent.code) {
+            "Space" -> ShortcutKey.SPACE
+            "KeyM" -> ShortcutKey.M
             else -> return@listener
         }
+        val shortcut = appShortcutOf(key, isCtrlOrMeta = keyEvent.ctrlKey || keyEvent.metaKey, isAlt = keyEvent.altKey)
         // A held key repeats its key-down; only the first press is a request, the rest would start and stop the click
         // thirty times a second.
-        if (keyEvent.repeat) return@listener
-        if (viewModel.toggleMetronomeByKey(isSpace)) keyEvent.preventDefault()
+        if (shortcut !is AppShortcut.ToggleMetronome || keyEvent.repeat) return@listener
+        if (viewModel.perform(shortcut)) keyEvent.preventDefault()
     }
     window.addEventListener(EVENT_KEY_DOWN, listener)
     onDispose { window.removeEventListener(EVENT_KEY_DOWN, listener) }

@@ -49,15 +49,14 @@ internal fun SongTextZoomEffect(viewModel: CampfireViewModel) = DisposableEffect
         val keyEvent = event.unsafeCast<KeyboardEvent>()
         if (keyEvent.key == KEY_CONTROL) isControlKeyDown = true
         // key rather than code, as the browser's own zoom goes by it: the plus of a Hungarian layout is Shift + 3.
-        // Alt is left out because AltGr arrives as Ctrl + Alt on Windows, and AltGr with these keys types a character
-        // on some layouts.
-        val steps = when (keyEvent.key) {
-            "+", "=" -> 1
-            "-", "_" -> -1
-            "0" -> null
+        val key = when (keyEvent.key) {
+            "+", "=" -> ShortcutKey.PLUS
+            "-", "_" -> ShortcutKey.MINUS
+            "0" -> ShortcutKey.ZERO
             else -> return@listener
         }
-        if ((keyEvent.ctrlKey || keyEvent.metaKey) && !keyEvent.altKey && viewModel.zoomSongText(steps)) {
+        val shortcut = appShortcutOf(key, isCtrlOrMeta = keyEvent.ctrlKey || keyEvent.metaKey, isAlt = keyEvent.altKey)
+        if (shortcut is AppShortcut.ZoomSongText && viewModel.perform(shortcut)) {
             keyEvent.preventDefault()
         }
     }

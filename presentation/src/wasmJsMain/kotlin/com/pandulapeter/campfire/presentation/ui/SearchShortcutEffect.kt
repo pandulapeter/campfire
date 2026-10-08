@@ -38,7 +38,8 @@ internal fun SearchShortcutEffect(viewModel: CampfireViewModel) = DisposableEffe
         val keyEvent = event.unsafeCast<KeyboardEvent>()
         // code, as Compose goes by it (Key.F is the physical key); key for a virtual keyboard, which has none.
         val isF = keyEvent.code == "KeyF" || keyEvent.key == "f" || keyEvent.key == "F"
-        if ((keyEvent.ctrlKey || keyEvent.metaKey) && !keyEvent.altKey && isF && viewModel.openCurrentSearch()) {
+        val shortcut = if (isF) appShortcutOf(ShortcutKey.F, isCtrlOrMeta = keyEvent.ctrlKey || keyEvent.metaKey, isAlt = keyEvent.altKey) else null
+        if (shortcut is AppShortcut.OpenSearch && viewModel.perform(shortcut)) {
             keyEvent.preventDefault()
         }
     }
