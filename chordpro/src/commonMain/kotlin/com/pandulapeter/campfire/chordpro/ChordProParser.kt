@@ -112,17 +112,13 @@ object ChordProParser {
         val metadata = MetadataBuilder()
         val transposition = Transposition()
         var hasChords = false
-        var environment: String? = null
         var isGermanNotated = notation == ChordNotation.GERMAN
-        ChordProLines.splitLines(text).forEach { rawLine ->
-            val trimmedLine = rawLine.trim()
-            val isDelegated = environment in ChordProEnvironments.delegateEnvironments
-            if (trimmedLine.startsWith(SOURCE_COMMENT) && !isDelegated) return@forEach
-            val directive = when {
-                !trimmedLine.startsWith(DIRECTIVE_START) -> null
-                isDelegated -> ChordProDirectives.matchDelegatedDirective(trimmedLine)
-                else -> ChordProDirectives.matchDirective(trimmedLine)
-            }
+        ChordProLineScanner.scan(text).forEach { line ->
+            if (line.isSourceComment) return@forEach
+            val rawLine = line.raw
+            val trimmedLine = line.trimmed
+            val environment = line.environment
+            val directive = line.directive
             if (directive != null) {
                 if (!ChordProDirectives.hasSelectorSuffix(directive.name)) {
                     if (directive.name == TRANSPOSE) {
@@ -130,8 +126,6 @@ object ChordProParser {
                     } else if (ChordProHeaderLayout.startsBody(directive)) {
                         transposition.startBody()
                     }
-                    ChordProEnvironments.startOfEnvironment(directive.name)?.let { environment = it.lowercase() }
-                    ChordProEnvironments.endOfEnvironment(directive.name)?.let { environment = null }
                     metadata.consume(directive, isInBody = transposition.isInBody)
                 }
                 return@forEach
@@ -341,7 +335,6 @@ object ChordProParser {
         return ChordProLine.Lyrics(text = text.toString(), chords = chords)
     }
 
-    private const val DIRECTIVE_START = "{"
     private const val VERSE = "verse"
     private const val CHORUS = "chorus"
     private const val BRIDGE = "bridge"
