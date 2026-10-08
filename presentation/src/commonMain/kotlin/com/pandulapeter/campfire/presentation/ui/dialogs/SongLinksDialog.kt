@@ -158,11 +158,11 @@ internal fun SongLinksDialog(
                 enabled = linksToSave != null,
                 onClick = {
                     if (linksToSave != null) {
-                        viewModel.setSongLinks(fileName = dialog.song.fileName, isEditorDraft = dialog.isEditorDraft, links = linksToSave, offeredLinks = dialog.links)
+                        viewModel.setSongLinks(target = dialog.target, links = linksToSave, offeredLinks = dialog.links)
                         close()
                     }
                 },
-            ) { Text(stringResource(if (dialog.isEditorDraft) Res.string.done else Res.string.save)) }
+            ) { Text(stringResource(if (dialog.target is SongEditTarget.EditorDraft) Res.string.done else Res.string.save)) }
         },
     )
 }

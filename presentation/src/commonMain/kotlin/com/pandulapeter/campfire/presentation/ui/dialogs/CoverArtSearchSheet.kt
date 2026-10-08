@@ -73,7 +73,7 @@ internal fun CoverArtSearchSheet(
     dialog: DialogType.CoverArtSearch,
 ) {
     val searchState by viewModel.coverArtSearch.collectAsStateWithLifecycle()
-    val initialQuery = remember(dialog.song.fileName) { viewModel.coverArtQueryOf(song = dialog.song, isEditorDraft = dialog.isEditorDraft) }
+    val initialQuery = remember(dialog.song.fileName) { viewModel.coverArtQueryOf(song = dialog.song, target = dialog.target) }
     var mode by rememberSaveable { mutableStateOf(CoverArtSheetMode.SEARCH) }
     var artist by rememberSaveable { mutableStateOf(initialQuery.artist) }
     var album by rememberSaveable { mutableStateOf(initialQuery.album) }
@@ -98,19 +98,18 @@ internal fun CoverArtSearchSheet(
         sheetMaxWidth = SHEET_MAX_WIDTH,
         actions = { close ->
             CoverArtSearchActions(
-                isEditorDraft = dialog.isEditorDraft,
+                target = dialog.target,
                 canRemove = dialog.song.coverArtUrl != null,
                 canSave = when (mode) {
                     CoverArtSheetMode.SEARCH -> selectedUrl != null && selectedUrl != dialog.song.coverArtUrl
                     CoverArtSheetMode.ADDRESS -> usableAddress != null && usableAddress != dialog.song.coverArtUrl
                 },
                 onRemove = {
-                    viewModel.showDialog(DialogType.RemoveSongCoverArt(song = dialog.song, isEditorDraft = dialog.isEditorDraft))
+                    viewModel.showDialog(DialogType.RemoveSongCoverArt(song = dialog.song, target = dialog.target))
                 },
                 onSave = {
                     viewModel.setSongCoverArt(
-                        fileName = dialog.song.fileName,
-                        isEditorDraft = dialog.isEditorDraft,
+                        target = dialog.target,
                         url = when (mode) {
                             CoverArtSheetMode.SEARCH -> selectedUrl
                             CoverArtSheetMode.ADDRESS -> usableAddress
@@ -207,7 +206,7 @@ private enum class CoverArtSheetMode {
  */
 @Composable
 private fun CoverArtSearchActions(
-    isEditorDraft: Boolean,
+    target: SongEditTarget,
     canRemove: Boolean,
     canSave: Boolean,
     onRemove: () -> Unit,
@@ -228,7 +227,7 @@ private fun CoverArtSearchActions(
         enabled = canSave,
         onClick = onSave,
     ) {
-        Text(stringResource(if (isEditorDraft) Res.string.done else Res.string.save))
+        Text(stringResource(if (target is SongEditTarget.EditorDraft) Res.string.done else Res.string.save))
     }
 }
 

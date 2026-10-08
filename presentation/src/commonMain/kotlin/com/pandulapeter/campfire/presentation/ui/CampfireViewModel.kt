@@ -142,6 +142,8 @@ import com.pandulapeter.campfire.presentation.ui.metronome.isMetronomeContextMov
 import com.pandulapeter.campfire.presentation.ui.metronome.isMetronomeScreenLeft
 import com.pandulapeter.campfire.presentation.ui.metronome.metronomeContextOf
 import com.pandulapeter.campfire.presentation.ui.metronome.metronomePatternOf
+import com.pandulapeter.campfire.presentation.ui.playing.withTempo
+import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.NavigationState
 import com.pandulapeter.campfire.presentation.ui.navigation.reportedSongPages
@@ -155,7 +157,6 @@ import com.pandulapeter.campfire.presentation.ui.playing.TempoKey
 import com.pandulapeter.campfire.presentation.ui.playing.Transpositions
 import com.pandulapeter.campfire.presentation.ui.playing.effectiveCapo
 import com.pandulapeter.campfire.presentation.ui.playing.withCapo
-import com.pandulapeter.campfire.presentation.ui.playing.withTempo
 import com.pandulapeter.campfire.presentation.ui.playing.wrapTransposition
 import com.pandulapeter.campfire.presentation.ui.print.PdfExportProgress
 import com.pandulapeter.campfire.presentation.ui.print.PrintSong
@@ -2001,10 +2002,10 @@ class CampfireViewModel(
      * edit is built on rather than from the list entry the dialog was opened with, so a tag another device synced in
      * while the dialog was open, and which it therefore never offered, is left on.
      */
-    fun setSongTags(fileName: String, isEditorDraft: Boolean, tags: List<String>, offeredTags: List<String>) {
+    fun setSongTags(target: SongEditTarget, tags: List<String>, offeredTags: List<String>) {
         val keptKeys = tags.mapTo(mutableSetOf()) { it.lowercase() }
         val offeredKeys = offeredTags.mapTo(mutableSetOf()) { it.lowercase() }
-        editSong(fileName = fileName, isEditorDraft = isEditorDraft) { text ->
+        editSong(target) { text ->
             val removed = parseChordPro(text).metadata.tags.filter { it.lowercase() in offeredKeys && it.lowercase() !in keptKeys }
             val withoutRemoved = removed.fold(text) { current, tag -> setChordProTag(text = current, tag = tag, isSelected = false) }
             tags.fold(withoutRemoved) { current, tag -> setChordProTag(text = current, tag = tag, isSelected = true) }
@@ -2016,24 +2017,24 @@ class CampfireViewModel(
      * once rather than one language at a time, because the picker asks for all of them before it is closed and a
      * file the user owns is better rewritten once than once per checkbox.
      */
-    fun setSongLanguages(fileName: String, isEditorDraft: Boolean, codes: List<String>) = editSong(fileName = fileName, isEditorDraft = isEditorDraft) { text ->
+    fun setSongLanguages(target: SongEditTarget, codes: List<String>) = editSong(target) { text ->
         setChordProLanguages(text = text, codes = codes)
     }
 
     /** Opens the label pickers on the current draft when invoked from the editor. */
-    fun showSongTagsDialog(song: Song, isEditorDraft: Boolean) {
-        val currentSong = songForLabelEditing(song, isEditorDraft) ?: return
-        showDialog(DialogType.SongTags(song = currentSong, isEditorDraft = isEditorDraft))
+    fun showSongTagsDialog(song: Song, target: SongEditTarget) {
+        val currentSong = songForLabelEditing(song, target) ?: return
+        showDialog(DialogType.SongTags(song = currentSong, target = target))
     }
 
-    fun showSongLanguagesDialog(song: Song, isEditorDraft: Boolean) {
-        val currentSong = songForLabelEditing(song, isEditorDraft) ?: return
-        showDialog(DialogType.SongLanguages(song = currentSong, isEditorDraft = isEditorDraft))
+    fun showSongLanguagesDialog(song: Song, target: SongEditTarget) {
+        val currentSong = songForLabelEditing(song, target) ?: return
+        showDialog(DialogType.SongLanguages(song = currentSong, target = target))
     }
 
-    private fun songForLabelEditing(song: Song, isEditorDraft: Boolean): Song? {
-        if (!isEditorDraft) return song
-        val metadata = parseChordPro(songTextOf(song.fileName, isEditorDraft = true) ?: return null).metadata
+    private fun songForLabelEditing(song: Song, target: SongEditTarget): Song? {
+        if (target is SongEditTarget.File) return song
+        val metadata = parseChordPro(songTextOf(target) ?: return null).metadata
         return song.copy(tags = normalizedTags(metadata.tags), languages = metadata.languages)
     }
 
@@ -2041,13 +2042,13 @@ class CampfireViewModel(
      * Opens the metadata editor on the source text, since the album, the composer and the rest are not part of the
      * song list's lighter metadata, and the title there already has the subtitle in it.
      */
-    fun showSongMetadataDialog(song: Song, isEditorDraft: Boolean) {
-        val metadata = parseChordPro(songTextOf(song.fileName, isEditorDraft) ?: return).metadata
+    fun showSongMetadataDialog(song: Song, target: SongEditTarget) {
+        val metadata = parseChordPro(songTextOf(target) ?: return).metadata
         showDialog(
             DialogType.SongMetadata(
                 song = song,
                 values = SONG_METADATA_FIELDS.associateWith { ChordProMetadataFields.valueOf(metadata, it).orEmpty() },
-                isEditorDraft = isEditorDraft,
+                target = target,
             )
         )
     }
@@ -2057,19 +2058,18 @@ class CampfireViewModel(
      * while the dialog was open, and which the user left as it was offered, keeps the other device's value.
      */
     fun setSongMetadata(
-        fileName: String,
-        isEditorDraft: Boolean,
+        target: SongEditTarget,
         values: Map<ChordProMetadataFields.Field, String>,
         offeredValues: Map<ChordProMetadataFields.Field, String>,
     ) {
         val changed = values.filter { (field, value) -> value.trim() != offeredValues[field]?.trim() }
-        if (changed.isNotEmpty()) editSong(fileName = fileName, isEditorDraft = isEditorDraft) { text -> setChordProMetadata(text = text, values = changed) }
+        if (changed.isNotEmpty()) editSong(target) { text -> setChordProMetadata(text = text, values = changed) }
     }
 
     /** Opens the link editor on the source text, since links are not part of the song list's lighter metadata. */
-    fun showSongLinksDialog(song: Song, isEditorDraft: Boolean) {
-        val text = songTextOf(song.fileName, isEditorDraft) ?: return
-        showDialog(DialogType.SongLinks(song = song, links = parseChordPro(text).metadata.links, isEditorDraft = isEditorDraft))
+    fun showSongLinksDialog(song: Song, target: SongEditTarget) {
+        val text = songTextOf(target) ?: return
+        showDialog(DialogType.SongLinks(song = song, links = parseChordPro(text).metadata.links, target = target))
     }
 
     /** What [text] says about the song beyond its lines, for the sheet of what the song is (see [hasSongInfo] for the button opening it). */
@@ -2086,28 +2086,28 @@ class CampfireViewModel(
      * Writes the link dialog's changes together. Links added by sync while it was open and never offered there stay
      * in the file, as tags do: a snapshot of one dialog is not a request to erase another device's additions.
      */
-    fun setSongLinks(fileName: String, isEditorDraft: Boolean, links: List<ChordProLink>, offeredLinks: List<ChordProLink>) {
+    fun setSongLinks(target: SongEditTarget, links: List<ChordProLink>, offeredLinks: List<ChordProLink>) {
         val offeredUrls = offeredLinks.mapTo(mutableSetOf()) { it.url }
-        editSong(fileName = fileName, isEditorDraft = isEditorDraft) { text ->
+        editSong(target) { text ->
             val addedElsewhere = parseChordPro(text).metadata.links.filterNot { it.url in offeredUrls }
             setChordProLinks(text = text, links = links + addedElsewhere)
         }
     }
 
     /** Opens the cover sheet with the cover currently declared in the editor's text. */
-    fun showSongCoverArtDialog(song: Song, isEditorDraft: Boolean) {
-        val currentSong = if (isEditorDraft) {
-            val metadata = parseChordPro(songTextOf(song.fileName, isEditorDraft = true) ?: return).metadata
-            song.copy(coverArtUrl = metadata.coverArt)
-        } else song
-        showDialog(DialogType.CoverArtSearch(song = currentSong, isEditorDraft = isEditorDraft))
+    fun showSongCoverArtDialog(song: Song, target: SongEditTarget) {
+        val currentSong = when (target) {
+            is SongEditTarget.File -> song
+            is SongEditTarget.EditorDraft -> song.copy(coverArtUrl = parseChordPro(songTextOf(target) ?: return).metadata.coverArt)
+        }
+        showDialog(DialogType.CoverArtSearch(song = currentSong, target = target))
     }
 
     /**
      * Makes [url] the song's cover, or takes the cover off for null, from the cover search sheet. Written into the
      * file like a tag is, so that the cover travels with the song wherever it goes.
      */
-    fun setSongCoverArt(fileName: String, isEditorDraft: Boolean, url: String?) = editSong(fileName = fileName, isEditorDraft = isEditorDraft) { text ->
+    fun setSongCoverArt(target: SongEditTarget, url: String?) = editSong(target) { text ->
         setChordProCoverArt(text = text, url = url)
     }
 
@@ -2116,7 +2116,7 @@ class CampfireViewModel(
      * read from the text the details screen holds, and from the library's entry where that is not at hand, which has
      * no album and a title with the subtitle after it.
      */
-    fun coverArtQueryOf(song: Song, isEditorDraft: Boolean) = songTextOf(song.fileName, isEditorDraft)?.let { text ->
+    fun coverArtQueryOf(song: Song, target: SongEditTarget) = songTextOf(target)?.let { text ->
         val metadata = parseChordPro(text).metadata
         CoverArtQuery(
             artist = metadata.artist.orEmpty(),
@@ -2149,19 +2149,18 @@ class CampfireViewModel(
      * The text a metadata dialog is built on: the editor's own while it is the editor's draft the dialog edits, since
      * that is what its edit is applied to, and the file's otherwise.
      */
-    private fun songTextOf(fileName: String, isEditorDraft: Boolean) = if (isEditorDraft) {
+    private fun songTextOf(target: SongEditTarget) = when (target) {
         // Read the field itself: draft reporting runs asynchronously and can still be one edit behind a tap.
-        retainedEditorField(fileName)?.text?.toString() ?: _editorDraft.value?.takeIf { it.fileName == fileName }?.text
-    } else {
-        songTexts.value[fileName]
+        is SongEditTarget.EditorDraft ->
+            retainedEditorField(target.fileName)?.text?.toString() ?: _editorDraft.value?.takeIf { it.fileName == target.fileName }?.text
+        is SongEditTarget.File -> songTexts.value[target.fileName]
     }
 
     /** Writes [edit] into the file, or hands it to the editor where the dialog asking for it edits the editor's draft. */
-    private fun editSong(fileName: String, isEditorDraft: Boolean, edit: (String) -> String) {
-        if (isEditorDraft) {
-            _editorTextEdits.tryEmit(EditorTextEdit(fileName = fileName, edit = edit))
-        } else {
-            launchLibraryChange { editSongText(fileName, edit) }
+    private fun editSong(target: SongEditTarget, edit: (String) -> String) {
+        when (target) {
+            is SongEditTarget.EditorDraft -> _editorTextEdits.tryEmit(EditorTextEdit(fileName = target.fileName, edit = edit))
+            is SongEditTarget.File -> launchLibraryChange { editSongText(target.fileName, edit) }
         }
     }
 
@@ -2765,15 +2764,15 @@ class CampfireViewModel(
      * [setlistFileName] is where the song is being read, whose overrides the sheet names and can take back. Opened from
      * the editor, it reads and changes the text being typed there instead, which is read through no setlist.
      */
-    fun showSongPlayingDialog(song: Song, setlistFileName: String?, isEditorDraft: Boolean = false) {
-        val metadata = parseChordPro(songTextOf(song.fileName, isEditorDraft) ?: return).metadata
+    fun showSongPlayingDialog(song: Song, setlistFileName: String?, target: SongEditTarget) {
+        val metadata = parseChordPro(songTextOf(target) ?: return).metadata
         showDialog(
             DialogType.SongPlaying(
                 // The sheet's key field notes a {transpose} the text opens with, which the draft may have changed since
                 // the editor last read it.
-                song = if (isEditorDraft) song.copy(transpose = metadata.transpose) else song,
-                setlistFileName = setlistFileName.takeUnless { isEditorDraft },
-                isEditorDraft = isEditorDraft,
+                song = if (target is SongEditTarget.EditorDraft) song.copy(transpose = metadata.transpose) else song,
+                setlistFileName = setlistFileName.takeIf { target is SongEditTarget.File },
+                target = target,
                 values = mapOf(
                     ChordProMetadataFields.Field.KEY to metadata.key?.takeIf { it.isNotBlank() }?.let(::editorKeyOf).orEmpty(),
                     ChordProMetadataFields.Field.CAPO to metadata.capo?.toString().orEmpty(),
@@ -2790,15 +2789,14 @@ class CampfireViewModel(
      * than with the file around it, which is already in the standard notation; a blank value takes a directive off.
      */
     fun setSongPlaying(
-        fileName: String,
-        isEditorDraft: Boolean,
+        target: SongEditTarget,
         values: Map<ChordProMetadataFields.Field, String>,
         offeredValues: Map<ChordProMetadataFields.Field, String>,
     ) {
         val changed = values
             .filter { (field, value) -> value.trim() != offeredValues[field]?.trim() }
             .mapValues { (field, value) -> if (field == ChordProMetadataFields.Field.KEY) fileKeyOf(value) else value }
-        if (changed.isNotEmpty()) editSong(fileName = fileName, isEditorDraft = isEditorDraft) { text -> setChordProMetadata(text = text, values = changed) }
+        if (changed.isNotEmpty()) editSong(target) { text -> setChordProMetadata(text = text, values = changed) }
     }
 
     /** A key typed in the editor's notation, as the file is to hold it; the inverse of [editorKeyOf]. */
@@ -3963,7 +3961,7 @@ class CampfireViewModel(
             previousDialog is DialogType.RemoveSongCoverArt && dialogType is DialogType.CoverArtSearch -> _underlyingSongInfo.value
             else -> (previousDialog as? DialogType.SongInfo)
         }?.takeIf { parent ->
-            dialogType is DialogType.SongEdit && !dialogType.isEditorDraft && dialogType.song.fileName == parent.song.fileName &&
+            dialogType is DialogType.SongEdit && dialogType.target is SongEditTarget.File && dialogType.song.fileName == parent.song.fileName &&
                 (dialogType is DialogType.SongMetadata || dialogType is DialogType.SongTags ||
                     dialogType is DialogType.SongLinks || dialogType is DialogType.SongLanguages ||
                     dialogType is DialogType.SongPlaying || dialogType is DialogType.CoverArtSearch ||
@@ -3984,7 +3982,7 @@ class CampfireViewModel(
         _visibleDialog.update { dialogType }
         // Asked as the sheet is put up rather than by the sheet once it is composed, so that its first frame already
         // says that the search is running instead of crossfading from the hint to it while it slides up.
-        if (dialogType is DialogType.CoverArtSearch && previousDialog !is DialogType.CoverArtSearch) searchCoverArt(coverArtQueryOf(song = dialogType.song, isEditorDraft = dialogType.isEditorDraft))
+        if (dialogType is DialogType.CoverArtSearch && previousDialog !is DialogType.CoverArtSearch) searchCoverArt(coverArtQueryOf(song = dialogType.song, target = dialogType.target))
     }
 
     fun showDialog(dialogType: DialogType) = setVisibleDialog(dialogType)
@@ -4012,7 +4010,7 @@ class CampfireViewModel(
             is DialogType.SongInfo -> song.fileName
             is DialogType.ChordShapes -> song.fileName
             // The editor's draft is the editor's to keep, whatever became of the file it was opened on.
-            is DialogType.SongEdit -> song.fileName.takeUnless { isEditorDraft }
+            is DialogType.SongEdit -> song.fileName.takeIf { target is SongEditTarget.File }
             else -> null
         }
 

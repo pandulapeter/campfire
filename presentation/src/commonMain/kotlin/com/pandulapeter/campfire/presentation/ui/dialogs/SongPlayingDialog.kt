@@ -153,7 +153,7 @@ internal fun SongPlayingDialog(
                 modifier = Modifier.fillMaxWidth().fadingTopEdge(scrollState, sheetContainerColor()).bounceVerticalScroll(scrollState).padding(contentPadding),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                if (!dialog.isEditorDraft) {
+                if (dialog.target is SongEditTarget.File) {
                     Text(
                         text = stringResource(
                             if (dialog.setlistFileName == null) {
@@ -202,8 +202,7 @@ internal fun SongPlayingDialog(
                 enabled = isValid && SONG_PLAYING_FIELDS.any { values[it].orEmpty().trim() != offeredValues[it].orEmpty().trim() },
                 onClick = {
                     viewModel.setSongPlaying(
-                        fileName = dialog.song.fileName,
-                        isEditorDraft = dialog.isEditorDraft,
+                        target = dialog.target,
                         values = values,
                         offeredValues = offeredValues,
                     )

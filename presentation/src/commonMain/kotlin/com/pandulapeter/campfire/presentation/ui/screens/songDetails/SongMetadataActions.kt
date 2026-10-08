@@ -34,6 +34,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_tags_manage
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ActionsMenuItem
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
+import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.playing.EffectiveCapo
 import com.pandulapeter.campfire.presentation.ui.playing.EffectiveTempo
 import com.pandulapeter.campfire.presentation.ui.metronome.timeSignatureOrDefault
@@ -120,7 +121,7 @@ internal fun rememberSongPlayingControls(
 
 /**
  * What the header and group edit buttons open: the dialog of each group, on the song details screen's sheet and on the
- * editor preview's card alike. From the editor ([isEditorDraft]) they edit the text being typed rather than the file,
+ * editor preview's card alike. From the editor (a [SongEditTarget.EditorDraft] [target]) they edit the text being typed rather than the file,
  * see [DialogType.SongEdit], and [song] is that text's description of the song, which follows every
  * keystroke, so the latest one is what a button opens its dialog on.
  */
@@ -128,20 +129,20 @@ internal fun rememberSongPlayingControls(
 internal fun rememberSongInfoEditing(
     viewModel: CampfireViewModel,
     song: Song,
-    isEditorDraft: Boolean,
+    target: SongEditTarget,
 ): SongInfoEditing {
     val latestSong by rememberUpdatedState(song)
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val isCoverArtEnabled = userPreferences?.isCoverArtEnabled == true
-    return remember(viewModel, isEditorDraft, isCoverArtEnabled) {
+    return remember(viewModel, target, isCoverArtEnabled) {
         SongInfoEditing(
             onEditCoverArt = if (isCoverArtEnabled) {
-                { viewModel.showSongCoverArtDialog(song = latestSong, isEditorDraft = isEditorDraft) }
+                { viewModel.showSongCoverArtDialog(song = latestSong, target = target) }
             } else null,
-            onEditMetadata = { viewModel.showSongMetadataDialog(song = latestSong, isEditorDraft = isEditorDraft) },
-            onEditTags = { viewModel.showSongTagsDialog(song = latestSong, isEditorDraft = isEditorDraft) },
-            onEditLanguages = { viewModel.showSongLanguagesDialog(song = latestSong, isEditorDraft = isEditorDraft) },
-            onEditLinks = { viewModel.showSongLinksDialog(song = latestSong, isEditorDraft = isEditorDraft) },
+            onEditMetadata = { viewModel.showSongMetadataDialog(song = latestSong, target = target) },
+            onEditTags = { viewModel.showSongTagsDialog(song = latestSong, target = target) },
+            onEditLanguages = { viewModel.showSongLanguagesDialog(song = latestSong, target = target) },
+            onEditLinks = { viewModel.showSongLinksDialog(song = latestSong, target = target) },
         )
     }
 }
@@ -188,12 +189,12 @@ internal fun songPlayingAction(
     viewModel: CampfireViewModel,
     song: Song,
     setlistFileName: String?,
-    isEditorDraft: Boolean,
+    target: SongEditTarget,
 ) = ActionsMenuItem(
     title = stringResource(Res.string.song_details_playing_edit),
     icon = painterResource(Res.drawable.ic_tune),
     isAlwaysInMenu = true,
-    onClick = { viewModel.showSongPlayingDialog(song = song, setlistFileName = setlistFileName, isEditorDraft = isEditorDraft) },
+    onClick = { viewModel.showSongPlayingDialog(song = song, setlistFileName = setlistFileName, target = target) },
 )
 
 /**
@@ -203,12 +204,12 @@ internal fun songPlayingAction(
 internal fun coverArtAction(
     viewModel: CampfireViewModel,
     song: Song,
-    isEditorDraft: Boolean,
+    target: SongEditTarget,
 ) = ActionsMenuItem(
     title = stringResource(if (song.coverArtUrl == null) Res.string.song_details_set_cover_art else Res.string.song_details_change_cover_art),
     icon = painterResource(Res.drawable.ic_album),
     isAlwaysInMenu = true,
-    onClick = { viewModel.showSongCoverArtDialog(song = song, isEditorDraft = isEditorDraft) },
+    onClick = { viewModel.showSongCoverArtDialog(song = song, target = target) },
 )
 
 /**
@@ -220,18 +221,18 @@ internal fun coverArtAction(
 internal fun songLabelActions(
     viewModel: CampfireViewModel,
     song: Song,
-    isEditorDraft: Boolean,
+    target: SongEditTarget,
 ): List<ActionsMenuItem> = listOf(
     ActionsMenuItem(
         title = stringResource(Res.string.song_details_tags_manage),
         icon = painterResource(Res.drawable.ic_label),
         isAlwaysInMenu = true,
-        onClick = { viewModel.showDialog(DialogType.SongTags(song = song, isEditorDraft = isEditorDraft)) },
+        onClick = { viewModel.showDialog(DialogType.SongTags(song = song, target = target)) },
     ),
     ActionsMenuItem(
         title = stringResource(Res.string.song_details_languages_edit),
         icon = painterResource(Res.drawable.ic_language),
         isAlwaysInMenu = true,
-        onClick = { viewModel.showDialog(DialogType.SongLanguages(song = song, isEditorDraft = isEditorDraft)) },
+        onClick = { viewModel.showDialog(DialogType.SongLanguages(song = song, target = target)) },
     ),
 )

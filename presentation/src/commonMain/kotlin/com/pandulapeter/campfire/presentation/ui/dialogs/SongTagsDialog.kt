@@ -223,10 +223,10 @@ internal fun SongTagsDialog(
             BottomSheetConfirmButton(
                 enabled = hasTagChanges,
                 onClick = {
-                    viewModel.setSongTags(fileName = dialog.song.fileName, isEditorDraft = dialog.isEditorDraft, tags = tagsToSave, offeredTags = offeredTags)
+                    viewModel.setSongTags(target = dialog.target, tags = tagsToSave, offeredTags = offeredTags)
                     close()
                 },
-            ) { Text(stringResource(if (dialog.isEditorDraft) Res.string.done else Res.string.save)) }
+            ) { Text(stringResource(if (dialog.target is SongEditTarget.EditorDraft) Res.string.done else Res.string.save)) }
         },
     )
 }

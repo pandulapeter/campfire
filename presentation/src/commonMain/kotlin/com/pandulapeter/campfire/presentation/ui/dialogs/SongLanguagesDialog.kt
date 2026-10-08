@@ -191,10 +191,10 @@ internal fun SongLanguagesDialog(
             BottomSheetConfirmButton(
                 enabled = selectedCodes != dialog.song.languages.toSet(),
                 onClick = {
-                    viewModel.setSongLanguages(fileName = dialog.song.fileName, isEditorDraft = dialog.isEditorDraft, codes = selectedCodes.toList())
+                    viewModel.setSongLanguages(target = dialog.target, codes = selectedCodes.toList())
                     close()
                 },
-            ) { Text(stringResource(if (dialog.isEditorDraft) Res.string.done else Res.string.save)) }
+            ) { Text(stringResource(if (dialog.target is SongEditTarget.EditorDraft) Res.string.done else Res.string.save)) }
         },
     )
 }

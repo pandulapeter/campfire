@@ -210,9 +210,9 @@ internal fun CampfireDialogs(
             text = textResource(Res.string.song_details_remove_cover_art_confirmation, dialog.song.title),
             confirmLabel = stringResource(Res.string.cover_art_search_remove),
             // Not removing the cover is not being done with it: the sheet the bin was tapped in comes back.
-            onDismiss = { viewModel.showDialog(DialogType.CoverArtSearch(song = dialog.song, isEditorDraft = dialog.isEditorDraft)) },
+            onDismiss = { viewModel.showDialog(DialogType.CoverArtSearch(song = dialog.song, target = dialog.target)) },
             onConfirm = {
-                viewModel.setSongCoverArt(fileName = dialog.song.fileName, isEditorDraft = dialog.isEditorDraft, url = null)
+                viewModel.setSongCoverArt(target = dialog.target, url = null)
                 viewModel.dismissDialog()
             },
         )

@@ -81,14 +81,13 @@ internal fun SongMetadataDialog(
                 enabled = SONG_METADATA_FIELDS.any { values[it].orEmpty().trim() != offeredValues[it].orEmpty().trim() },
                 onClick = {
                     viewModel.setSongMetadata(
-                        fileName = dialog.song.fileName,
-                        isEditorDraft = dialog.isEditorDraft,
+                        target = dialog.target,
                         values = values.fromSongMetadataDraft(),
                         offeredValues = offeredValues.fromSongMetadataDraft(),
                     )
                     close()
                 },
-            ) { Text(stringResource(if (dialog.isEditorDraft) Res.string.done else Res.string.save)) }
+            ) { Text(stringResource(if (dialog.target is SongEditTarget.EditorDraft) Res.string.done else Res.string.save)) }
         },
     )
 }

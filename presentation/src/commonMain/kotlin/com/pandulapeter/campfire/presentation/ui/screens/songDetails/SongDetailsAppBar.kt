@@ -85,6 +85,7 @@ import com.pandulapeter.campfire.presentation.ui.components.SongEditingActions
 import com.pandulapeter.campfire.presentation.ui.components.overlappingAction
 import com.pandulapeter.campfire.presentation.ui.components.setlistAssignmentsAction
 import com.pandulapeter.campfire.presentation.ui.components.textResource
+import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeButton
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomePanel
 import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
@@ -379,8 +380,8 @@ internal fun SongDetailsAppBar(
                 )
             }
             currentSong?.takeIf { !isPerformanceModeEnabled }?.let { song ->
-                val editingActions = songInfoEditingActions(rememberSongInfoEditing(viewModel = viewModel, song = song, isEditorDraft = false))
-                val coverArtAction = if (isCoverArtEnabled) coverArtAction(viewModel = viewModel, song = song, isEditorDraft = false) else null
+                val editingActions = songInfoEditingActions(rememberSongInfoEditing(viewModel = viewModel, song = song, target = SongEditTarget.File(song.fileName)))
+                val coverArtAction = if (isCoverArtEnabled) coverArtAction(viewModel = viewModel, song = song, target = SongEditTarget.File(song.fileName)) else null
                 val isInSetlist = song.fileName in songFileNamesInSetlists
                 AnimatedVisibility(
                     visible = !isReadOnly && isMetronomeEnabled,
@@ -421,7 +422,7 @@ internal fun SongDetailsAppBar(
                                         viewModel = viewModel,
                                         song = song,
                                         setlistFileName = destination.setlistFileName,
-                                        isEditorDraft = false,
+                                        target = SongEditTarget.File(song.fileName),
                                     )
                                 } else {
                                     null

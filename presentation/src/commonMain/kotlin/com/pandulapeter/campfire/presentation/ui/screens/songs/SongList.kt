@@ -70,6 +70,7 @@ import com.pandulapeter.campfire.presentation.ui.components.rememberSectionHeade
 import com.pandulapeter.campfire.presentation.ui.components.songCardPadding
 import com.pandulapeter.campfire.presentation.ui.components.searchTravelSpec
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
+import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.playing.effectiveTempo
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableContent
@@ -345,7 +346,7 @@ internal fun SongList(
                                             fileEditItems = songLabelActions(
                                                 viewModel = viewModel,
                                                 song = song,
-                                                isEditorDraft = false,
+                                                target = SongEditTarget.File(song.fileName),
                                             ),
                                         )
                                     }

@@ -64,7 +64,7 @@ internal fun SongInfoSheet(
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val shouldShowChords = userPreferences?.areChordsEnabled != false
     val shouldShowTempo = userPreferences?.isMetronomeEnabled != false
-    val editing = rememberSongInfoEditing(viewModel = viewModel, song = song, isEditorDraft = false)
+    val editing = rememberSongInfoEditing(viewModel = viewModel, song = song, target = SongEditTarget.File(song.fileName))
     val overrides = songPlayingOverrides(viewModel = viewModel, song = song, setlistFileName = setlistFileName)
     CampfireBottomSheet(
         title = stringResource(Res.string.song_details_song_info),
@@ -117,7 +117,7 @@ internal fun SongInfoSheet(
                         time = metadata.time?.takeIf { shouldShowTempo },
                         overrides = overrides.labels,
                         isReadFromSetlist = setlistFileName != null,
-                        onEdit = if (isReadOnly) null else ({ viewModel.showSongPlayingDialog(song = song, setlistFileName = setlistFileName) }),
+                        onEdit = if (isReadOnly) null else ({ viewModel.showSongPlayingDialog(song = song, setlistFileName = setlistFileName, target = SongEditTarget.File(song.fileName)) }),
                     )
                 } else {
                     null

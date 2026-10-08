@@ -54,13 +54,13 @@ sealed interface DialogType {
      * Opened from the song details overflow menu, and offers the song's own tags and
      * the rest of the library's.
      */
-    data class SongTags(override val song: Song, override val isEditorDraft: Boolean = false) : SongEdit
+    data class SongTags(override val song: Song, override val target: SongEditTarget) : SongEdit
     /** A snapshot of what the song says for each field the overflow menu's metadata editor offers, blank for nothing. */
-    data class SongMetadata(override val song: Song, val values: Map<ChordProMetadataFields.Field, String>, override val isEditorDraft: Boolean = false) : SongEdit
+    data class SongMetadata(override val song: Song, val values: Map<ChordProMetadataFields.Field, String>, override val target: SongEditTarget) : SongEdit
     /** A snapshot of the links offered by the overflow menu's link editor. */
-    data class SongLinks(override val song: Song, val links: List<ChordProLink>, override val isEditorDraft: Boolean = false) : SongEdit
+    data class SongLinks(override val song: Song, val links: List<ChordProLink>, override val target: SongEditTarget) : SongEdit
     /** Opened from the same menu, and asking about every language at once rather than one at a time. */
-    data class SongLanguages(override val song: Song, override val isEditorDraft: Boolean = false) : SongEdit
+    data class SongLanguages(override val song: Song, override val target: SongEditTarget) : SongEdit
 
     /**
      * What the song's file declares for the four values it is played by, opened from the song details editing
@@ -71,16 +71,16 @@ sealed interface DialogType {
     data class SongPlaying(
         override val song: Song,
         val setlistFileName: String?,
-        override val isEditorDraft: Boolean = false,
+        override val target: SongEditTarget,
         val values: Map<ChordProMetadataFields.Field, String>,
     ) : SongEdit
     /**
      * The records the song may have come out on, whose front cover can be made the song's, see
      * [CampfireViewModel.searchCoverArt].
      */
-    data class CoverArtSearch(override val song: Song, override val isEditorDraft: Boolean = false) : SongEdit
+    data class CoverArtSearch(override val song: Song, override val target: SongEditTarget) : SongEdit
     /** Removing a cover rewrites the file, so the cover art sheet asks before doing it. */
-    data class RemoveSongCoverArt(override val song: Song, override val isEditorDraft: Boolean = false) : SongEdit
+    data class RemoveSongCoverArt(override val song: Song, override val target: SongEditTarget) : SongEdit
 
     /**
      * A dialog that edits the metadata of one song, opened from the song details overflow menu or from the editor's.
@@ -89,7 +89,7 @@ sealed interface DialogType {
      */
     sealed interface SongEdit : DialogType {
         val song: Song
-        val isEditorDraft: Boolean
+        val target: SongEditTarget
     }
     /**
      * Asked before the connected account is forgotten. Nothing is deleted either way, but reconnecting means

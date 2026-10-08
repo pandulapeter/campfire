@@ -93,6 +93,7 @@ import com.pandulapeter.campfire.presentation.ui.components.saveShortcut
 import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
+import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.TextTranspositionControls
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.coverArtAction
@@ -172,7 +173,7 @@ internal fun LoadedSongEditor(
     RevertOnRequest(viewModel = viewModel, fileName = destination.fileName, textFieldState = textFieldState, summaryCache = summaryCache)
     EditOnRequest(viewModel = viewModel, fileName = destination.fileName, textFieldState = textFieldState, summaryCache = summaryCache)
     val editorSong = summary.toEditorSong(destination.fileName)
-    val songInfoEditing = rememberSongInfoEditing(viewModel = viewModel, song = editorSong, isEditorDraft = true)
+    val songInfoEditing = rememberSongInfoEditing(viewModel = viewModel, song = editorSong, target = SongEditTarget.EditorDraft(editorSong.fileName))
     FollowFileWhileUntouched(viewModel = viewModel, fileName = destination.fileName, textFieldState = textFieldState, summaryCache = summaryCache)
     // The one way the file is ever written, reached from the app bar's button and from Ctrl / Cmd + S alike.
     val onSaveRequested = {
@@ -323,12 +324,12 @@ internal fun LoadedSongEditor(
                     editingActions = songInfoEditingActions(songInfoEditing),
                     // The sheet edits what the two features show, so it goes once both are switched off.
                     songPlayingAction = if (userPreferences?.areChordsEnabled != false || userPreferences?.isMetronomeEnabled != false) {
-                        songPlayingAction(viewModel = viewModel, song = editorSong, setlistFileName = null, isEditorDraft = true)
+                        songPlayingAction(viewModel = viewModel, song = editorSong, setlistFileName = null, target = SongEditTarget.EditorDraft(editorSong.fileName))
                     } else {
                         null
                     },
                     coverArtAction = if (userPreferences?.isCoverArtEnabled == true) {
-                        coverArtAction(viewModel = viewModel, song = editorSong, isEditorDraft = true)
+                        coverArtAction(viewModel = viewModel, song = editorSong, target = SongEditTarget.EditorDraft(editorSong.fileName))
                     } else {
                         null
                     },
