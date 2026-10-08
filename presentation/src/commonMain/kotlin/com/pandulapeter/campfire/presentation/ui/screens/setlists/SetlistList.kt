@@ -102,6 +102,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.ui.playing.songPlaybackOf
+import com.pandulapeter.campfire.presentation.ui.screens.rememberSongActionHandler
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
@@ -126,6 +127,7 @@ internal fun SetlistList(
     isScreenActive: Boolean,
     onReorderingSetlistChanged: (String?) -> Unit,
 ) {
+    val songActions = rememberSongActionHandler(viewModel)
     val setlistsWithSongs by viewModel.setlistsWithSongs.collectAsStateWithLifecycle()
     // Keep validation and writes tied to the full library; only the rendered list is narrowed by this mode.
     var narrowedSetlistFileName by remember { mutableStateOf<String?>(null) }
@@ -501,6 +503,7 @@ internal fun SetlistList(
                                             }
                                             SetlistEntryActions(
                                                 viewModel = viewModel,
+                                                songActions = songActions,
                                                 entry = entry,
                                                 setlistFileName = setlistWithSongs.setlist.fileName,
                                                 isArchived = setlistWithSongs.setlist.isArchived,

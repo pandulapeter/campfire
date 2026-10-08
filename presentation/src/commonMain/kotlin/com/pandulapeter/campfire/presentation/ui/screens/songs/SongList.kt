@@ -75,6 +75,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableContent
 import com.pandulapeter.campfire.presentation.ui.platform.isDesktopPlatform
 import com.pandulapeter.campfire.presentation.ui.playing.songPlaybackOf
+import com.pandulapeter.campfire.presentation.ui.screens.rememberSongActionHandler
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.songLabelActions
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
@@ -92,6 +93,7 @@ internal fun SongList(
     contentPadding: PaddingValues,
     appBarOverlap: () -> AppBarOverlap,
 ) {
+    val songActions = rememberSongActionHandler(viewModel)
     // Keep section boundaries (including incomplete grid rows) while their header rows collapse. This makes
     // opening and closing exact reverses and keeps every card in the active section in its original column.
     val groups = songGroups.groups
@@ -328,14 +330,14 @@ internal fun SongList(
                                     ) {
                                         if (userPreferences?.areSetlistsEnabled != false) {
                                             SetlistAssignmentsButton(
-                                                viewModel = viewModel,
+                                                actions = songActions,
                                                 song = song,
                                                 isInSetlist = isInSetlist,
                                             )
                                         }
                                         SongActions(
                                             state = actionsMenuState,
-                                            viewModel = viewModel,
+                                            actions = songActions,
                                             song = song,
                                             isDeletable = true,
                                             fileEditItems = songLabelActions(

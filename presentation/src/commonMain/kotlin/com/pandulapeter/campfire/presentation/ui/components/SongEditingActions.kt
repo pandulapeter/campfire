@@ -16,7 +16,6 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_edit
 import com.pandulapeter.campfire.presentation.resources.song_details_editing_actions
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -31,7 +30,7 @@ import org.jetbrains.compose.resources.painterResource
 @Composable
 internal fun SongEditingActions(
     modifier: Modifier = Modifier,
-    viewModel: CampfireViewModel,
+    actions: SongActionHandler,
     song: Song,
     fileEditItems: List<ActionsMenuItem>,
 ) = ActionsMenu(
@@ -39,5 +38,5 @@ internal fun SongEditingActions(
     contentDescription = stringResource(Res.string.song_details_editing_actions),
     icon = painterResource(Res.drawable.ic_edit),
     isExpandable = false,
-    items = listOf(editSongAction(viewModel = viewModel, song = song)) + fileEditItems,
+    items = listOf(editSongAction(actions = actions, song = song)) + fileEditItems,
 )

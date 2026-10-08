@@ -22,8 +22,6 @@ import com.pandulapeter.campfire.presentation.resources.ic_rename
 import com.pandulapeter.campfire.presentation.resources.songs_delete_song
 import com.pandulapeter.campfire.presentation.resources.songs_edit_song
 import com.pandulapeter.campfire.presentation.resources.songs_update_file_name
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -58,7 +56,7 @@ import org.jetbrains.compose.resources.painterResource
 internal fun SongActions(
     modifier: Modifier = Modifier,
     state: OverflowMenuState = rememberOverflowMenuState(),
-    viewModel: CampfireViewModel,
+    actions: SongActionHandler,
     song: Song,
     isDeletable: Boolean,
     isEditAndExportOnly: Boolean = false,
@@ -68,7 +66,7 @@ internal fun SongActions(
     fileEditItems: List<ActionsMenuItem> = emptyList(),
     menuFooter: (@Composable () -> Unit)? = null,
 ) {
-    val editItems = if (isEditShown) listOf(editSongAction(viewModel = viewModel, song = song)) + fileEditItems.takeUnless { isEditAndExportOnly }.orEmpty() else emptyList()
+    val editItems = if (isEditShown) listOf(editSongAction(actions = actions, song = song)) + fileEditItems.takeUnless { isEditAndExportOnly }.orEmpty() else emptyList()
     ActionsMenu(
         modifier = modifier,
         state = state,
@@ -82,7 +80,7 @@ internal fun SongActions(
                     title = stringResource(Res.string.songs_update_file_name),
                     icon = painterResource(Res.drawable.ic_rename),
                     isAlwaysInMenu = true,
-                    onClick = { viewModel.updateSongFileName(song) },
+                    onClick = { actions.updateFileName(song) },
                 )
             } else {
                 null
@@ -91,14 +89,14 @@ internal fun SongActions(
                 title = stringResource(Res.string.songs_export_song),
                 icon = painterResource(Res.drawable.ic_export),
                 isAlwaysInMenu = true,
-                onClick = { viewModel.showDialog(DialogType.Export(song = song, songSetlistFileName = setlistFileName)) },
+                onClick = { actions.export(song, setlistFileName) },
             ),
             if (isDeletable && !isEditAndExportOnly) {
                 ActionsMenuItem(
                     title = stringResource(Res.string.songs_delete_song),
                     icon = painterResource(Res.drawable.ic_delete),
                     isAlwaysInMenu = true,
-                    onClick = { viewModel.showDialog(DialogType.DeleteSong(song)) },
+                    onClick = { actions.delete(song) },
                 )
             } else {
                 null
@@ -109,10 +107,10 @@ internal fun SongActions(
 
 @Composable
 internal fun editSongAction(
-    viewModel: CampfireViewModel,
+    actions: SongActionHandler,
     song: Song,
 ) = ActionsMenuItem(
     title = stringResource(Res.string.songs_edit_song),
     icon = painterResource(Res.drawable.ic_edit),
-    onClick = { viewModel.openEditor(song.fileName) },
+    onClick = { actions.edit(song) },
 )

@@ -92,6 +92,7 @@ import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
 import com.pandulapeter.campfire.presentation.ui.metronome.metronomeAction
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.playing.songPlaybackOf
+import com.pandulapeter.campfire.presentation.ui.screens.rememberSongActionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
@@ -135,6 +136,7 @@ internal fun SongDetailsAppBar(
     coroutineScope: CoroutineScope,
     onBack: () -> Unit,
 ) {
+    val songActions = rememberSongActionHandler(viewModel)
     val playingOverrides by viewModel.playingOverrides.collectAsStateWithLifecycle()
     val songFileNamesInSetlists by viewModel.songFileNamesInSetlists.collectAsStateWithLifecycle()
     val layoutDirection = LocalLayoutDirection.current
@@ -395,7 +397,7 @@ internal fun SongDetailsAppBar(
                     exit = fadeOut() + shrinkHorizontally(),
                 ) {
                     SetlistAssignmentsButton(
-                        viewModel = viewModel,
+                        actions = songActions,
                         song = song,
                         isInSetlist = isInSetlist,
                         setlistFileName = destination.setlistFileName,
@@ -410,7 +412,7 @@ internal fun SongDetailsAppBar(
                     exit = fadeOut() + shrinkHorizontally(),
                 ) {
                     SongEditingActions(
-                        viewModel = viewModel,
+                        actions = songActions,
                         song = song,
                         fileEditItems = editingActions.take(1) +
                             // The sheet edits what the two features show, so it goes once both are switched off.
@@ -432,7 +434,7 @@ internal fun SongDetailsAppBar(
                 }
                 SongActions(
                     modifier = Modifier.overlappingAction(start = ACTION_BUTTON_OVERLAP, end = 0.dp),
-                    viewModel = viewModel,
+                    actions = songActions,
                     song = song,
                     isDeletable = destination.setlistFileName == null,
                     isEditAndExportOnly = isReadOnly,
@@ -444,7 +446,7 @@ internal fun SongDetailsAppBar(
                                 null
                             } else {
                                 setlistAssignmentsAction(
-                                    viewModel = viewModel,
+                                    actions = songActions,
                                     song = song,
                                     isInSetlist = isInSetlist,
                                     setlistFileName = destination.setlistFileName,

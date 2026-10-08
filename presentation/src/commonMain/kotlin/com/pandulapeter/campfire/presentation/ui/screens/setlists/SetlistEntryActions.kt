@@ -20,6 +20,7 @@ import com.pandulapeter.campfire.presentation.resources.setlists_remove_song
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ActionsMenu
 import com.pandulapeter.campfire.presentation.ui.components.ActionsMenuItem
+import com.pandulapeter.campfire.presentation.ui.components.SongActionHandler
 import com.pandulapeter.campfire.presentation.ui.components.SongActions
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.setlistAssignmentsAction
@@ -38,6 +39,7 @@ import org.jetbrains.compose.resources.painterResource
 @Composable
 internal fun SetlistEntryActions(
     viewModel: CampfireViewModel,
+    songActions: SongActionHandler,
     entry: SetlistWithSongs.Entry,
     setlistFileName: String,
     isArchived: Boolean,
@@ -55,7 +57,7 @@ internal fun SetlistEntryActions(
     }
     when (entry) {
         is SetlistWithSongs.Entry.Present -> SongActions(
-            viewModel = viewModel,
+            actions = songActions,
             song = entry.song,
             isDeletable = false,
             isEditAndExportOnly = isArchived,
@@ -67,7 +69,7 @@ internal fun SetlistEntryActions(
                 // locked the way the song details screen locks it: unticking it takes the row out from under the sheet,
                 // which leaves nothing behind it to pull the reader away from.
                 setlistRowActions(onMoveUp, onMoveDown, onRemove) + setlistAssignmentsAction(
-                    viewModel = viewModel,
+                    actions = songActions,
                     song = entry.song,
                     isInSetlist = true,
                 )

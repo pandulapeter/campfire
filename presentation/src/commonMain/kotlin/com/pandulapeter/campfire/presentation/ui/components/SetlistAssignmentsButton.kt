@@ -30,8 +30,6 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.songs_choose_setlists
 import com.pandulapeter.campfire.presentation.resources.ic_setlists
 import com.pandulapeter.campfire.presentation.resources.ic_setlists_outline
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -49,13 +47,13 @@ import org.jetbrains.compose.resources.painterResource
 @Composable
 internal fun SetlistAssignmentsButton(
     modifier: Modifier = Modifier,
-    viewModel: CampfireViewModel,
+    actions: SongActionHandler,
     song: Song,
     isInSetlist: Boolean,
     setlistFileName: String? = null,
 ) = IconButton(
     modifier = modifier,
-    onClick = { viewModel.showDialog(DialogType.SetlistPicker(song = song, setlistFileName = setlistFileName)) },
+    onClick = { actions.chooseSetlists(song, setlistFileName) },
 ) {
     // Both stars are drawn on top of each other and the one being left fades out as the other fades in, the pair turning
     // clockwise by two fifths of a turn meanwhile, whichever way the star is going: a star has five points, so the turn
@@ -104,14 +102,14 @@ internal fun SetlistAssignmentsButton(
 /** [SetlistAssignmentsButton] as an entry of a menu, for an app bar that has run out of room for the button. */
 @Composable
 internal fun setlistAssignmentsAction(
-    viewModel: CampfireViewModel,
+    actions: SongActionHandler,
     song: Song,
     isInSetlist: Boolean,
     setlistFileName: String? = null,
 ) = ActionsMenuItem(
     title = stringResource(Res.string.songs_choose_setlists),
     icon = painterResource(if (isInSetlist) Res.drawable.ic_setlists else Res.drawable.ic_setlists_outline),
-    onClick = { viewModel.showDialog(DialogType.SetlistPicker(song = song, setlistFileName = setlistFileName)) },
+    onClick = { actions.chooseSetlists(song, setlistFileName) },
 )
 
 /** How far [SetlistAssignmentsButton]'s star turns between its two states: two points of five, in degrees. */
