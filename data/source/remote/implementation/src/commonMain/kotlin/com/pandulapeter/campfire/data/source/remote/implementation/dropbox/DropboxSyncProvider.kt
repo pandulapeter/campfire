@@ -7,8 +7,6 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-@file:OptIn(ExperimentalTime::class)
-
 package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 
 import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
@@ -17,7 +15,6 @@ import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.source.remote.api.SyncAuthorizationException
 import com.pandulapeter.campfire.data.source.remote.api.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.SyncProvider
-import com.pandulapeter.campfire.data.source.remote.api.SyncRemoteStorageFullException
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteAuthorizationRequest
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteAuthorizationResponse
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteDeletion
@@ -32,9 +29,6 @@ import com.pandulapeter.campfire.data.source.remote.implementation.crypto.dropbo
 import com.pandulapeter.campfire.data.source.remote.implementation.network.HttpClientHolder
 import com.pandulapeter.campfire.data.source.remote.implementation.network.toAsciiJsonString
 import com.pandulapeter.campfire.data.source.remote.implementation.network.urlEncode
-import io.ktor.client.network.sockets.ConnectTimeoutException
-import io.ktor.client.network.sockets.SocketTimeoutException
-import io.ktor.client.plugins.HttpRequestTimeoutException
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -44,18 +38,12 @@ import io.ktor.client.statement.readRawBytes
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import io.ktor.http.isSuccess
 import kotlinx.coroutines.CancellationException
 import kotlin.math.min
 import kotlin.random.Random
-import kotlin.time.Clock
-import kotlin.time.ExperimentalTime
-import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.SerializationException
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
@@ -77,6 +65,15 @@ internal class DropboxSyncProvider(
 ) : SyncProvider {
 
     override val id = SyncProviderId.DROPBOX
+
+    private val tokens = DropboxTokens(
+        httpClientHolder = httpClientHolder,
+        credentialsStore = credentialsStore,
+        appKey = appKey,
+        providerId = id,
+    )
+
+    private val requests = DropboxTransport(httpClientHolder = httpClientHolder, tokens = tokens)
 
     override suspend fun isConnected() = credentialsStore.load()?.takeIf { it.providerId == id.id }?.refreshToken?.isNotEmpty() == true
 
@@ -105,7 +102,7 @@ internal class DropboxSyncProvider(
         verifier: String,
         redirectUri: String?,
     ): SyncAccount {
-        val token = exchange(
+        val token = tokens.exchange(
             buildString {
                 append("grant_type=authorization_code")
                 append("&code=${response.code.urlEncode()}")
@@ -123,7 +120,7 @@ internal class DropboxSyncProvider(
                 providerId = id.id,
                 accessToken = token.accessToken,
                 refreshToken = refreshToken,
-                expiresAt = expiryOf(token.expiresInSeconds),
+                expiresAt = tokens.expiryOf(token.expiresInSeconds),
                 accountId = token.accountId,
             )
         )
@@ -139,7 +136,7 @@ internal class DropboxSyncProvider(
         // hours, so it is renewed first if needed. Nothing connected, or no answer in time, leaves nothing to revoke
         // with; the time limit is what keeps a dead network from keeping the user connected.
         val accessToken = try {
-            withTimeoutOrNull(REVOKE_TIMEOUT_MILLIS) { accessToken() }
+            withTimeoutOrNull(REVOKE_TIMEOUT_MILLIS) { tokens.accessToken() }
         } catch (exception: CancellationException) {
             throw exception
         } catch (exception: Exception) {
@@ -162,7 +159,7 @@ internal class DropboxSyncProvider(
     override suspend fun loadAccount(): SyncAccount? {
         val credentials = credentialsStore.load()?.takeIf { it.providerId == id.id } ?: return null
         return try {
-            val account = json.decodeFromString<DropboxAccountResponse>(rpc(ACCOUNT_URL, body = null))
+            val account = json.decodeFromString<DropboxAccountResponse>(requests.rpc(ACCOUNT_URL, body = null))
             credentialsStore.update { current ->
                 current?.copy(
                     accountId = account.accountId,
@@ -213,11 +210,11 @@ internal class DropboxSyncProvider(
     override suspend fun list(): RemoteListing {
         val files = mutableListOf<RemoteFile>()
         var response = json.decodeFromString<DropboxListFolderResponse>(
-            rpc(LIST_FOLDER_URL, """{"path":"","recursive":true,"include_deleted":false}""")
+            requests.rpc(LIST_FOLDER_URL, """{"path":"","recursive":true,"include_deleted":false}""")
         )
         files += response.entries.toRemoteFiles()
         while (response.hasMore) {
-            response = json.decodeFromString(rpc(LIST_FOLDER_CONTINUE_URL, """{"cursor":${response.cursor.toAsciiJsonString()}}"""))
+            response = json.decodeFromString(requests.rpc(LIST_FOLDER_CONTINUE_URL, """{"cursor":${response.cursor.toAsciiJsonString()}}"""))
             files += response.entries.toRemoteFiles()
         }
         return RemoteListing(files = files)
@@ -246,7 +243,7 @@ internal class DropboxSyncProvider(
         null
     }?.rev ?: throw DropboxApiException(response.status.value, "the download named no revision")
 
-    private suspend fun downloadResponse(path: String) = request { accessToken ->
+    private suspend fun downloadResponse(path: String) = requests.request { accessToken ->
         httpClientHolder.client().post(DOWNLOAD_URL) {
             header("Authorization", "Bearer $accessToken")
             header("Dropbox-API-Arg", """{"path":${path.toAsciiJsonString()}}""")
@@ -280,7 +277,7 @@ internal class DropboxSyncProvider(
         } else {
             """{".tag":"update","update":${expectedRevision.toAsciiJsonString()}}"""
         }
-        val response = request { accessToken ->
+        val response = requests.request { accessToken ->
             httpClientHolder.client().post(UPLOAD_URL) {
                 header("Authorization", "Bearer $accessToken")
                 header(
@@ -314,7 +311,7 @@ internal class DropboxSyncProvider(
      * file a second; a job takes the lock once and removes about seven a second. It is not atomic - the files go one
      * after another while it runs - so it shortens the time the folder spends half deleted rather than removing it.
      * Its entries can still be turned away as busy, and those go again in a job of their own after the same wait
-     * [request] would give a single write.
+     * [DropboxTransport.request] would give a single write.
      */
     private suspend fun deleteBatch(deletions: List<RemoteDeletion>): Map<RemoteDeletion, String> {
         val failures = mutableMapOf<RemoteDeletion, String>()
@@ -334,12 +331,15 @@ internal class DropboxSyncProvider(
                     // Already gone is the outcome that was asked for, and a file that changed since is one the next
                     // run will see and bring back rather than destroy.
                     reason.startsWith("path_lookup/not_found") || reason.startsWith("path_write/conflict") -> Unit
-                    reason.startsWith("too_many_write_operations") && attempt < MAXIMUM_RETRIES -> busy += deletion
+                    reason.startsWith("too_many_write_operations") && attempt < DropboxTransport.MAXIMUM_RETRIES -> busy += deletion
                     else -> failures[deletion] = reason
                 }
             }
             if (busy.isNotEmpty()) {
-                delay(min(DEFAULT_RETRY_SECONDS shl attempt, MAXIMUM_RETRY_SECONDS) * 1000L + Random.nextLong(RETRY_JITTER_MILLIS))
+                delay(
+                    min(DropboxTransport.DEFAULT_RETRY_SECONDS shl attempt, DropboxTransport.MAXIMUM_RETRY_SECONDS) * 1000L +
+                        Random.nextLong(DropboxTransport.RETRY_JITTER_MILLIS),
+                )
                 attempt++
             }
             pending = busy
@@ -360,12 +360,12 @@ internal class DropboxSyncProvider(
                 append("}")
             }
         }
-        var response = json.decodeFromString<DropboxDeleteBatchResponse>(rpc(DELETE_BATCH_URL, body))
+        var response = json.decodeFromString<DropboxDeleteBatchResponse>(requests.rpc(DELETE_BATCH_URL, body))
         val jobId = response.asyncJobId
         while (response.tag == "async_job_id" || response.tag == "in_progress") {
             delay(DELETE_BATCH_POLL_MILLIS)
             response = json.decodeFromString<DropboxDeleteBatchResponse>(
-                rpc(DELETE_BATCH_CHECK_URL, """{"async_job_id":${jobId.toAsciiJsonString()}}"""),
+                requests.rpc(DELETE_BATCH_CHECK_URL, """{"async_job_id":${jobId.toAsciiJsonString()}}"""),
             )
         }
         if (response.tag == "complete") return response.entries
@@ -392,219 +392,8 @@ internal class DropboxSyncProvider(
     /** At the top of the app folder, where [toRemoteFiles] never looks, beside the two library folders. */
     private fun documentPath(name: String) = "/$name"
 
-    // Requests
-
-    /** A Dropbox "RPC" call: JSON in, JSON out, everything above the transport reported in the body. */
-    private suspend fun rpc(url: String, body: String?): String {
-        val response = request { accessToken ->
-            httpClientHolder.client().post(url) {
-                header("Authorization", "Bearer $accessToken")
-                if (body != null) {
-                    contentType(ContentType.Application.Json)
-                    setBody(body)
-                }
-            }
-        }
-        response.ensureSuccessful()
-        return transport { response.bodyAsText() }
-    }
-
-    /**
-     * One call, retried while Dropbox asks it to slow down.
-     *
-     * A first sync of a whole library is a few hundred calls in quick succession, so being rate limited is the
-     * expected answer rather than an exceptional one - and giving up on the run because of it would mean a library
-     * that can never finish its first sync. Writes are limited separately: several of them landing in one folder at
-     * once are answered with a 409 whose summary says `too_many_write_operations`, which Dropbox documents as "back off
-     * and retry" rather than as a failure of that file. Dropbox says how long to wait in a `retry_after` field of the
-     * body or in `Retry-After`, and that is waited as given. Where it says nothing - typically its own trouble, a 5xx -
-     * the wait doubles from two seconds up to half a minute, so that an outage of a minute or so is sat out rather than
-     * ending the run. The jitter is there because several transfers are in flight at once and would otherwise all
-     * come back at the same moment and be limited again together.
-     *
-     * A 401 is answered once with a refresh before it is believed. Whether the stored token is still good is worked
-     * out from the device's clock, and a clock that was wrong when the token was issued keeps saying "fresh" long after
-     * Dropbox has stopped accepting it - while the refresh token that would fix that is perfectly good. [block] is
-     * handed the token it sends, so that the one refused is known and only that one is renewed: the transfers of a run
-     * refused together share one renewal. A second 401 is the real refusal.
-     *
-     * A timeout produces no answer at all, and is retried with the same doubling wait: on a phone it is more often a
-     * cell handover or a moment in a tunnel than a service that is gone, and one of them ending the run would leave a
-     * large library on a poor connection never finishing a sync. Anything else the transport throws is not retried.
-     */
-    private suspend fun request(block: suspend (accessToken: String) -> HttpResponse): HttpResponse {
-        var attempt = 0
-        var refusedToken: String? = null
-        while (true) {
-            var token = ""
-            // The token is asked for inside transport, like the call: a renewal whose answer cannot be decoded must
-            // stay a network failure of the run rather than become one of this file.
-            val response = transport {
-                token = accessToken(refused = refusedToken)
-                try {
-                    block(token)
-                } catch (exception: Exception) {
-                    // Null asks for another attempt; the last one is left to transport, which makes it the run's
-                    // network failure as before.
-                    currentCoroutineContext().ensureActive()
-                    if (attempt >= MAXIMUM_RETRIES || !exception.isTimeout()) throw exception
-                    null
-                }
-            }
-            if (response == null) {
-                delay(min(DEFAULT_RETRY_SECONDS shl attempt, MAXIMUM_RETRY_SECONDS) * 1000L + Random.nextLong(RETRY_JITTER_MILLIS))
-                attempt++
-                continue
-            }
-            if (response.status == HttpStatusCode.Unauthorized && refusedToken == null) {
-                refusedToken = token
-                continue
-            }
-            val retryAfterMillis = response.retryAfterMillis(attempt)
-            if (retryAfterMillis == null || attempt >= MAXIMUM_RETRIES) return response
-            attempt++
-            delay(retryAfterMillis + Random.nextLong(RETRY_JITTER_MILLIS))
-        }
-    }
-
-    private fun Exception.isTimeout() = this is HttpRequestTimeoutException || this is ConnectTimeoutException || this is SocketTimeoutException
-
-    /** Null when the answer is one to act on rather than to wait out. */
-    private suspend fun HttpResponse.retryAfterMillis(attempt: Int): Long? = when {
-        status == HttpStatusCode.TooManyRequests ||
-            status.value >= 500 ||
-            (status == HttpStatusCode.Conflict && errorSummary().contains("too_many_write_operations")) ->
-            (retryAfterSecondsInBody() ?: headers["Retry-After"]?.toLongOrNull()
-                ?: min(DEFAULT_RETRY_SECONDS shl attempt, MAXIMUM_RETRY_SECONDS)) * 1000L
-
-        else -> null
-    }
-
-    private suspend fun HttpResponse.retryAfterSecondsInBody() = try {
-        json.decodeFromString<DropboxRateLimitResponse>(bodyAsText()).error.retryAfter
-    } catch (exception: CancellationException) {
-        throw exception
-    } catch (exception: Exception) {
-        null
-    }
-
-    /**
-     * Anything the transport throws - no route to the host, a dropped connection, a timeout - is one thing to the
-     * user: the service could not be reached, and trying again later is worth doing. Only the call itself is
-     * wrapped, so that a body Campfire cannot make sense of stays the programming error it is. The browser engine
-     * reports a failed `fetch` as a `kotlin.Error`, not an `Exception`, so the last branch takes any `Throwable`:
-     * everything `block` can throw that is not a cancellation is the call failing.
-     *
-     * A cancellation is the one exception that says nothing about the network. Stopping a run or giving up on a
-     * consent page resumes every suspended request with one, and it has to leave here as what it is: the engine and
-     * the repository both answer a stopped run differently from a failed one, and can only do so if they are told.
-     */
-    private suspend fun <T> transport(block: suspend () -> T): T = try {
-        block()
-    } catch (exception: CancellationException) {
-        // Thrown on again only while this coroutine really is cancelled. A cancellation that reaches a coroutine
-        // nobody cancelled belongs to something underneath - a client that was closed, a timeout surfacing as one -
-        // and passed on it would end a transfer of the engine's without a word, as though the user had stopped it.
-        currentCoroutineContext().ensureActive()
-        throw SyncNetworkException(exception.message ?: "Dropbox could not be reached.", exception)
-    } catch (exception: SyncAuthorizationException) {
-        throw exception
-    } catch (exception: SyncNetworkException) {
-        throw exception
-    } catch (exception: DropboxApiException) {
-        throw exception
-    } catch (throwable: Throwable) {
-        throw SyncNetworkException(throwable.message ?: "Dropbox could not be reached.", throwable)
-    }
-
-    private suspend fun HttpResponse.ensureSuccessful() {
-        if (status.isSuccess()) return
-        val summary = errorSummary()
-        throw when {
-            status == HttpStatusCode.Unauthorized -> SyncAuthorizationException("Dropbox refused the token: $summary")
-            // Dropbox says 429 for rate limiting and 5xx for its own trouble; both are worth trying again later.
-            status == HttpStatusCode.TooManyRequests || status.value >= 500 -> SyncNetworkException("Dropbox is busy: ${status.value}")
-            // A full account, which Dropbox reports per write: "path/insufficient_space/..".
-            status == HttpStatusCode.Conflict && summary.contains("insufficient_space") ->
-                SyncRemoteStorageFullException("Dropbox is full: $summary")
-            else -> DropboxApiException(status.value, summary)
-        }
-    }
-
-    private suspend fun HttpResponse.errorSummary() = try {
-        json.decodeFromString<DropboxErrorResponse>(bodyAsText()).errorSummary
-    } catch (exception: CancellationException) {
-        throw exception
-    } catch (exception: Exception) {
-        ""
-    }
-
-    /**
-     * The stored access token, renewed first if it is about to expire, or regardless when it is the one [refused]
-     * says Dropbox has already turned down. The whole check and renewal happen inside one [SyncCredentialsStore.update],
-     * so that the several requests of a sync run cannot each start a refresh of their own and have the last one to
-     * finish overwrite the tokens the others are using. A token that was refused is renewed only while it is still the
-     * stored one: six transfers refused at once make one renewal, and the other five use its result.
-     */
-    private suspend fun accessToken(refused: String? = null): String = credentialsStore.update { credentials ->
-        if (credentials == null || credentials.providerId != id.id) {
-            throw SyncAuthorizationException("Dropbox is not connected.")
-        }
-        if (credentials.accessToken != refused &&
-            credentials.accessToken.isNotEmpty() &&
-            Clock.System.now().toEpochMilliseconds() < credentials.expiresAt - EXPIRY_MARGIN_MILLIS
-        ) {
-            return@update credentials to credentials.accessToken
-        }
-        val token = exchange("grant_type=refresh_token&refresh_token=${credentials.refreshToken.urlEncode()}&client_id=${appKey.urlEncode()}")
-        credentials.copy(
-            accessToken = token.accessToken,
-            expiresAt = expiryOf(token.expiresInSeconds),
-            // Dropbox may hand out a new refresh token, and keeping the old one would end the connection silently.
-            refreshToken = token.refreshToken ?: credentials.refreshToken,
-        ) to token.accessToken
-    }
-
-    private suspend fun exchange(form: String): DropboxTokenResponse {
-        val response = transport {
-            httpClientHolder.client().post(TOKEN_URL) {
-                contentType(ContentType.Application.FormUrlEncoded)
-                setBody(form)
-            }
-        }
-        if (!response.status.isSuccess()) {
-            // Being told to wait, or the service having trouble of its own, says nothing about the credentials, and
-            // reporting it as a refusal would send the user off to connect an account that is perfectly fine.
-            if (response.status == HttpStatusCode.TooManyRequests || response.status.value >= 500) {
-                throw SyncNetworkException("Dropbox is busy: ${response.status.value}")
-            }
-            throw SyncAuthorizationException("Dropbox refused the authorization: ${response.status.value} ${response.oAuthError()}")
-        }
-        return json.decodeFromString(response.bodyAsText())
-    }
-
-    /** The token endpoint speaks standard OAuth rather than the API's own `error_summary`. */
-    private suspend fun HttpResponse.oAuthError(): String {
-        val error = try {
-            json.decodeFromString<DropboxOAuthErrorResponse>(bodyAsText())
-        } catch (exception: CancellationException) {
-            throw exception
-        } catch (exception: Exception) {
-            DropboxOAuthErrorResponse()
-        }
-        return if (error.error.isEmpty() && error.errorDescription.isEmpty()) {
-            errorSummary()
-        } else {
-            "${error.error}: ${error.errorDescription}"
-        }
-    }
-
-    private fun expiryOf(expiresInSeconds: Long) =
-        if (expiresInSeconds <= 0) 0 else Clock.System.now().toEpochMilliseconds() + expiresInSeconds * 1000
-
     private companion object {
         const val AUTHORIZE_URL = "https://www.dropbox.com/oauth2/authorize"
-        const val TOKEN_URL = "https://api.dropboxapi.com/oauth2/token"
         const val REVOKE_URL = "https://api.dropboxapi.com/2/auth/token/revoke"
         const val ACCOUNT_URL = "https://api.dropboxapi.com/2/users/get_current_account"
         const val LIST_FOLDER_URL = "https://api.dropboxapi.com/2/files/list_folder"
@@ -623,22 +412,5 @@ internal class DropboxSyncProvider(
 
         /** How often a running `delete_batch` job is asked about. It removes about seven files a second. */
         const val DELETE_BATCH_POLL_MILLIS = 1_000L
-
-        /** Tokens are renewed slightly early, so that one does not expire between the check and the request. */
-        const val EXPIRY_MARGIN_MILLIS = 60_000L
-
-        /** Six waits of 2, 4, 8, 16, 32 and 32 seconds: about a minute and a half of patience. */
-        const val MAXIMUM_RETRIES = 6
-
-        /** What to wait first when Dropbox asks to slow down without saying for how long, doubled on every attempt. */
-        const val DEFAULT_RETRY_SECONDS = 2L
-        const val MAXIMUM_RETRY_SECONDS = 32L
-        const val RETRY_JITTER_MILLIS = 500L
-
-        val json = Json { ignoreUnknownKeys = true }
     }
 }
-
-/** A call Dropbox answered, with something other than success. */
-internal class DropboxApiException(val statusCode: Int, val errorSummary: String) :
-    Exception("Dropbox answered $statusCode: $errorSummary")

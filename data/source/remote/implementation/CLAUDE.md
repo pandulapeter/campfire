@@ -62,6 +62,9 @@ redirect URIs character for character, which is why the desktop port is fixed.
   finish its first sync.
 - A 409 whose summary says `insufficient_space` is a full account and becomes `SyncRemoteStorageFullException`,
   which ends the run; any other 409 is the refusal of that one file.
+- `dropbox/DropboxTransport` carries every call of the provider's — the retries and the 401 renewal below, and what a
+  failure is turned into — and `dropbox/DropboxTokens` the token exchange and renewal; the provider builds both itself,
+  so neither is a Koin definition.
 - `dropbox/DropboxModels` — the parts of the API's answers that are read. Everything defaulted, unknown keys
   ignored: a field added on the other side must never turn into a parse failure the user sees as a broken sync.
 - OAuth is **PKCE with no client secret**, which is what lets this work with no server of Campfire's own. Tokens are

@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
@@ -123,3 +124,6 @@ internal data class DropboxRateLimitResponse(
 internal data class DropboxRateLimitError(
     @SerialName("retry_after") val retryAfter: Long? = null,
 )
+
+/** What every Dropbox answer is read with, unknown keys ignored for the reason above. */
+internal val json = Json { ignoreUnknownKeys = true }
