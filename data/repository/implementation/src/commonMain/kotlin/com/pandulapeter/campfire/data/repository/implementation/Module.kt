@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
 import com.pandulapeter.campfire.data.repository.implementation.base.RepositoryEnvironment
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncEngine
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
+import com.pandulapeter.campfire.data.source.local.api.LibraryFileLock
 import com.pandulapeter.campfire.data.source.local.api.SetlistComparison
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

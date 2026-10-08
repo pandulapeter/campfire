@@ -14,7 +14,7 @@ package com.pandulapeter.campfire.data.repository.implementation.sync
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.domain.SyncProgress
 import com.pandulapeter.campfire.data.model.domain.SyncState
-import com.pandulapeter.campfire.data.repository.implementation.LibraryChanges
+import com.pandulapeter.campfire.data.source.local.api.LibraryChanges
 import com.pandulapeter.campfire.data.repository.implementation.base.RepositoryEnvironment
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job

@@ -15,6 +15,8 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(project(":data:model"))
+            // LibraryFileLock is a Mutex held across suspending calls, and LibraryChanges a SharedFlow.
+            api(libs.kotlin.coroutines)
         }
     }
 }

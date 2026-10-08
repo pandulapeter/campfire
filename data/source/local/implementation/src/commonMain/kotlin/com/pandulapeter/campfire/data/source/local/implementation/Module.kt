@@ -9,9 +9,21 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation
 
+import com.pandulapeter.campfire.data.source.local.api.LibraryChanges
+import com.pandulapeter.campfire.data.source.local.api.LibraryFileLock
 import org.koin.core.annotation.ComponentScan
 import org.koin.core.annotation.Module
+import org.koin.core.annotation.Single
 
 @Module
 @ComponentScan
-object DataLocalSourceModule
+object DataLocalSourceModule {
+
+    /** The one lock every write to a library file is made under, by the repositories and by sync alike. */
+    @Single
+    internal fun libraryFileLock(): LibraryFileLock = LibraryFileLock()
+
+    /** What tells sync that the app changed the library, announced by the repositories. */
+    @Single
+    internal fun libraryChanges(): LibraryChanges = LibraryChanges()
+}

@@ -12,7 +12,7 @@ package com.pandulapeter.campfire.data.repository.implementation.sync
 import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
 import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.model.domain.SyncSummary
-import com.pandulapeter.campfire.data.repository.implementation.LibraryFileLock
+import com.pandulapeter.campfire.data.source.local.api.LibraryFileLock
 import com.pandulapeter.campfire.data.repository.implementation.base.recovering
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
 import com.pandulapeter.campfire.data.source.local.api.SetlistComparison

@@ -16,6 +16,8 @@ import com.pandulapeter.campfire.data.repository.api.SongContentRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.data.repository.implementation.base.LibraryListRepository
 import com.pandulapeter.campfire.data.repository.implementation.base.recovering
+import com.pandulapeter.campfire.data.source.local.api.LibraryChanges
+import com.pandulapeter.campfire.data.source.local.api.LibraryFileLock
 import com.pandulapeter.campfire.data.source.local.api.SongLocalSource
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async

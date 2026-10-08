@@ -17,8 +17,8 @@ import com.pandulapeter.campfire.data.model.domain.SyncAccount
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionDirection
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
-import com.pandulapeter.campfire.data.repository.implementation.LibraryChanges
-import com.pandulapeter.campfire.data.repository.implementation.LibraryFileLock
+import com.pandulapeter.campfire.data.source.local.api.LibraryChanges
+import com.pandulapeter.campfire.data.source.local.api.LibraryFileLock
 import com.pandulapeter.campfire.data.repository.implementation.SongContentRepositoryImpl
 import com.pandulapeter.campfire.data.repository.implementation.SongRepositoryImpl
 import com.pandulapeter.campfire.data.repository.implementation.base.RecordingLogger

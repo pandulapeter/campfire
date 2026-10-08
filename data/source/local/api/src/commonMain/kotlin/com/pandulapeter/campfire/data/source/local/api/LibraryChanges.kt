@@ -7,12 +7,11 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.data.repository.implementation
+package com.pandulapeter.campfire.data.source.local.api
 
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import org.koin.core.annotation.Single
 
 /**
  * Says that the app itself has changed a song or setlist file - a save, a creation, an import, a rename, a deletion -
@@ -25,9 +24,10 @@ import org.koin.core.annotation.Single
  *
  * Says nothing about which file changed, since a run compares the whole library anyway, and keeps only the latest
  * announcement for a collector that is behind, since ten of them mean no more than one.
+ *
+ * One instance for the app, provided by `DataLocalSourceModule`, like [LibraryFileLock].
  */
-@Single
-internal class LibraryChanges {
+class LibraryChanges {
 
     private val _changes = MutableSharedFlow<Unit>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val changes = _changes.asSharedFlow()

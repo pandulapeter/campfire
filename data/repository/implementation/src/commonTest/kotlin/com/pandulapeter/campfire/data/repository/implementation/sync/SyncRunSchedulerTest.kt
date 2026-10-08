@@ -16,8 +16,8 @@ import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.model.domain.SyncState
 import com.pandulapeter.campfire.data.repository.implementation.DataRepositoryModule
-import com.pandulapeter.campfire.data.repository.implementation.LibraryChanges
-import com.pandulapeter.campfire.data.repository.implementation.LibraryFileLock
+import com.pandulapeter.campfire.data.source.local.api.LibraryChanges
+import com.pandulapeter.campfire.data.source.local.api.LibraryFileLock
 import com.pandulapeter.campfire.data.repository.implementation.base.testEnvironment
 import com.pandulapeter.campfire.data.source.remote.api.SyncProviders
 import kotlinx.coroutines.CompletableDeferred

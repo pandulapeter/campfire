@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.data.repository.implementation.sync.FakeLibrary
 import com.pandulapeter.campfire.data.repository.implementation.sync.FakeUserPreferencesRepository
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncKey
 import com.pandulapeter.campfire.data.repository.implementation.sync.defaultUserPreferences
+import com.pandulapeter.campfire.data.source.local.api.LibraryFileLock
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
 import kotlinx.coroutines.test.runTest

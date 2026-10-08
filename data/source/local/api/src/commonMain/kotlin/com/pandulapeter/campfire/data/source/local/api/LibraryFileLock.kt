@@ -7,11 +7,10 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.data.repository.implementation
+package com.pandulapeter.campfire.data.source.local.api
 
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import org.koin.core.annotation.Single
 
 /**
  * Held by every change the app makes to a song or setlist file, from whatever it checks the file against to the write
@@ -23,9 +22,11 @@ import org.koin.core.annotation.Single
  * Only ever held around local reads and writes, never around a request: a run waits for the network with it free, so
  * an editor's save never waits on a transfer. It is not reentrant, so nothing that holds it may call anything that
  * takes it - the repositories take their own locks first and this one inside them, and the engine takes no other.
+ *
+ * Here rather than in either of its two users, the repositories and sync, since they are modules of their own; one
+ * instance for the app, provided by `DataLocalSourceModule`. Nothing above the data layer sees this module.
  */
-@Single
-internal class LibraryFileLock {
+class LibraryFileLock {
 
     private val mutex = Mutex()
 
