@@ -85,7 +85,7 @@ kotlin {
         androidMain.dependencies {
             // Edge-to-edge system bar styling, done by the Android shell in ui/CampfireAndroidApp.kt.
             implementation(libs.androidx.activity.compose)
-            // Play's in-app update flow, the one thing only the Android build has, see ui/platform/AppUpdate.kt.
+            // Play's in-app update flow, the one thing only the Android build has, see ui/update/AppUpdate.kt.
             implementation(libs.google.playAppUpdate)
         }
         wasmJsMain.dependencies {

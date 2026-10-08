@@ -57,7 +57,7 @@ internal fun languageName(code: String, appLanguageCode: String) = (
  * Foundation name nearly all of them. Listing a code the platform has no name for would fill the picker with four
  * hundred rows of capitals; leaving it out entirely would mean a library that already holds a song in Romani could
  * not have a second one filed under it. So an unnamed language is not listed but is still *there*, and a search for
- * its code finds it — see the dialog in `Dialogs.kt`.
+ * its code finds it — see the dialog in `SongLanguagesDialog.kt`.
  *
  * Whether the library's own languages are lifted above that alphabet is the dialog's to decide, since it is what
  * the order the user picked for them says.

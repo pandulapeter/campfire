@@ -268,7 +268,7 @@ unreachable in performance mode already.
 **Settings → Features**: a `SwitchListItem` before Cover art, `setSongDetailsLookupEnabled` in the view model next to
 `setCoverArtEnabled`.
 
-**`Dialogs.kt`**: `CampfireDialogs` renders `DialogType.SongDetailsLookup`. Like the other editor-draft sheets it is not
+**`CampfireDialogs.kt`**: `CampfireDialogs` renders `DialogType.SongDetailsLookup`. Like the other editor-draft sheets it is not
 taken down when the file leaves the library while it edits a draft; a library one closes with its song as the cover
 search does.
 

@@ -234,7 +234,7 @@ their own after the read; that is the system's and is not suppressed.
 - **Desktop shortcut**: `CampfireViewModel.handleKeyEvent` answers Ctrl / Cmd + V (not with Alt, for AltGr's sake as
   the zoom keys say) when `isNewSongPasteAvailable`, with `newSongFromClipboard { awtClipboardText() }`. The handler
   only hears keys nothing focused took, so a focused field still pastes into itself.
-- **Web shortcut**: a `PasteShortcutEffect` in `CampfireWebApp.kt` beside `SearchShortcutEffect`: a `paste` listener on
+- **Web shortcut**: a `PasteShortcutEffect` in a file of its own beside `SearchShortcutEffect.kt`: a `paste` listener on
   the window in the capture phase that leaves alone a paste into an `input`, a `textarea` or anything editable (the
   hidden input of a focused Compose field), and otherwise, when `isNewSongPasteAvailable`, takes
   `event.clipboardData.getData('text/plain')`, calls `preventDefault` and `newSongFromText`. The `paste` event carries
@@ -273,7 +273,7 @@ text from elsewhere is a plain `stringResource`.
 
 ## 5. The two surfaces
 
-### 5.1 The sheet (`dialogs/Dialogs.kt`)
+### 5.1 The sheet (`dialogs/CampfireDialogs.kt`)
 
 `NewSongDialog` gains `initialValues: Map<Field, String> = emptyMap()` and `note: String? = null`, and
 `DialogType.NewSongFromText` renders it with them, `onCreate` going to `createSongFromText`. Everything else is New
@@ -287,7 +287,7 @@ under the sheet loses it, as it loses any open sheet — nothing was written, an
 The song from the clipboard often has no artist and a title guessed from its first line. Once it is in the editor, the
 lookup of `documentation/plans/song-details-lookup.md` is offered there the normal way; this plan adds nothing for it.
 
-### 5.2 Messages (`CampfireViewModel.Message`, rendered in `CampfireApp`'s snackbar host)
+### 5.2 Messages (`Message`, rendered by `messages/Messages.kt`)
 
 `ClipboardEmpty`, `PastedOnlyLinks`, `PastedTextTooLarge`, `ClipboardRefused` (the platform's string chosen by an
 `expect val` beside `isDesktopPlatform`, the desktop and Android never sending it), and

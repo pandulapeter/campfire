@@ -263,7 +263,7 @@ internal val STEPPER_HEIGHT = 40.dp
 /**
  * How tall those same controls are drawn in a song's own first section, where they stand among its sections: exactly a
  * section's header pill, which is built the other way round from a bar's button — the [titleStyle] of its name grows
- * with the song while the padding around it stays as it is (`SectionHeaderPill` in `SongLyrics.kt`). Scaling a whole
+ * with the song while the padding around it stays as it is (`SectionHeaderPill` in `SectionHeaderPill.kt`). Scaling a whole
  * 40dp pill instead left the four controls towering over the page they are part of at a large text size.
  */
 @Composable
