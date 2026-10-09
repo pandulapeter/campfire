@@ -61,6 +61,7 @@ internal fun TunerOptions(
                         TunerInputIssue.WAITING_FOR_GESTURE -> Res.string.tuner_notice_waiting
                     }
                 ),
+                isAnnounced = true,
             )
             val openSettings = permission.openSettings
             if (shownIssue == TunerInputIssue.SILENT && openSettings != null) {

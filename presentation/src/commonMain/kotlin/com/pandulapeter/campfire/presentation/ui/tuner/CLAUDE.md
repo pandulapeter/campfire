@@ -26,8 +26,9 @@ share.
   stopped wins, then a refusal, then a question never asked — on the platforms that cannot say, one not asked by a tap
   in this run) and whether the microphone may be opened without a tap (`canListenWithoutTap`). Tested.
 - `TunerNoticeCard` — one sentence and at most two buttons: **Use the microphone** (the platform's request, or opening
-  the input on the desktop and the web, where that is the question), **Open settings** where the platform has a page
-  to open and **Ask again** where the system would still ask, **Try again** for a missing, busy or failed microphone.
+  the input on the desktop and the web, where that is the question), **Open settings** where the platform has a page to
+  open and **Ask again** where the system would still ask, **Try again** for a missing, busy or failed microphone; its
+  sentence a polite live region, as is the input issue line of `TunerOptions`, since both arrive without a tap.
 - `TunerDisplay` / `TunerMeter` — the note with its octave, the cents meter (a marker on a spring, a notch that closes
   into a check in tune, so it is never said by color alone, the second accent color with it), and the frequencies; a
   tone being played is named instead and the meter rests. Compact (note beside meter, in a label of one width so the

@@ -21,6 +21,9 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -53,6 +56,9 @@ internal fun TunerNoticeCard(
     onListen: () -> Unit,
 ) = Column(modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
     Text(
+        // What stops the tuner hearing mostly arrives without a tap: a refusal in the system's prompt, a call, a
+        // microphone pulled out.
+        modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
         text = stringResource(
             when (notice) {
                 TunerNotice.NOT_ASKED -> Res.string.tuner_notice_not_asked
