@@ -52,13 +52,14 @@ none ever starts Bluetooth SCO, so a headset never becomes the input. Every tone
   by a thread of its own; refused before anything is opened without `RECORD_AUDIO`; a client silenced by a call
   (`AudioRecordingCallback`, Android 10+) is busy. The tone is a static `AudioTrack` with `setLoopPoints` and a
   `VolumeShaper`, under transient audio focus whose loss ends it.
-- **iOS** — `IosTunerSession` is the session both share, active while either is in use: `playAndRecord` in
-  `measurement` mode with `defaultToSpeaker` and no Bluetooth option where the record permission is granted, `playback`
-  for a tone alone otherwise (touching a recording category without it makes the system ask on its own). The input is
+- **iOS** — `IosTunerSession` is the session both share, active while either is in use: `playAndRecord` in `measurement`
+  mode with `defaultToSpeaker` and no Bluetooth option where the record permission is granted, `playback` for a tone
+  alone otherwise (touching a recording category without it makes the system ask on its own). The input is
   `AVAudioEngine`'s input node with a 4096-frame tap (its block runs on the engine's queue, not the real-time thread);
-  started only when `recordPermission` is granted; an interruption is busy, a configuration change disconnected, a
-  media services reset failed. The tone is an `AVAudioPlayerNode` on an engine of its own: one faded copy of the loop,
-  then the loop scheduled to repeat.
+  started only when `recordPermission` is granted; an interruption is busy, a configuration change disconnected, a media
+  services reset failed. The tone is an `AVAudioPlayerNode` on an engine of its own: one faded copy of the loop, then
+  the loop scheduled to repeat, ended by an interruption, a configuration change of its engine or a media services
+  reset.
 - **Desktop** — a `TargetDataLine` at 48 kHz read by a daemon thread; no line is no microphone. The JVM cannot ask
   whether it may record and a refusal arrives as silence, so a line that has heard only zeros for three seconds is
   opened again (macOS answers its own prompt after the line is open). The tone is a `SourceDataLine` fed the loop by a

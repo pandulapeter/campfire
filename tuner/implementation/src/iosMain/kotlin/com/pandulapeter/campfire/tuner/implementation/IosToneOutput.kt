@@ -20,6 +20,7 @@ import kotlinx.cinterop.ptr
 import kotlinx.cinterop.set
 import org.koin.core.annotation.Single
 import platform.AVFAudio.AVAudioEngine
+import platform.AVFAudio.AVAudioEngineConfigurationChangeNotification
 import platform.AVFAudio.AVAudioFormat
 import platform.AVFAudio.AVAudioPCMBuffer
 import platform.AVFAudio.AVAudioPlayerNode
@@ -28,6 +29,7 @@ import platform.AVFAudio.AVAudioSession
 import platform.AVFAudio.AVAudioSessionInterruptionNotification
 import platform.AVFAudio.AVAudioSessionInterruptionTypeBegan
 import platform.AVFAudio.AVAudioSessionInterruptionTypeKey
+import platform.AVFAudio.AVAudioSessionMediaServicesWereResetNotification
 import platform.AVFAudio.sampleRate
 import platform.Foundation.NSError
 import platform.Foundation.NSNotificationCenter
@@ -45,7 +47,7 @@ internal class IosToneOutput(private val session: IosTunerSession) : ToneOutput 
 
     private var engine: AVAudioEngine? = null
     private var player: AVAudioPlayerNode? = null
-    private var observer: NSObjectProtocol? = null
+    private var observers = emptyList<NSObjectProtocol>()
 
     override fun play(render: (sampleRate: Int) -> ShortArray, onLost: () -> Unit): Boolean {
         stop()
@@ -74,12 +76,25 @@ internal class IosToneOutput(private val session: IosTunerSession) : ToneOutput 
         player.play()
         this.engine = engine
         this.player = player
-        // A call stops the engine on its own; the tone is then over rather than shown as sounding.
-        observer = NSNotificationCenter.defaultCenter.addObserverForName(AVAudioSessionInterruptionNotification, null, null) { notification ->
-            val type = (notification?.userInfo?.get(AVAudioSessionInterruptionTypeKey) as? NSNumber)?.unsignedLongValue
-            if (type == AVAudioSessionInterruptionTypeBegan) onLost()
-        }
+        observers = observe(engine, onLost)
         return true
+    }
+
+    /**
+     * A call, a new route and the media services being reset each stop the engine on their own; the tone is then over
+     * rather than shown as sounding, which would also keep every reading hidden. The configuration change is observed on
+     * this engine only, so that the input's engine changing does not end the tone by itself.
+     */
+    private fun observe(engine: AVAudioEngine, onLost: () -> Unit): List<NSObjectProtocol> {
+        val center = NSNotificationCenter.defaultCenter
+        return listOf(
+            center.addObserverForName(AVAudioSessionInterruptionNotification, null, null) { notification ->
+                val type = (notification?.userInfo?.get(AVAudioSessionInterruptionTypeKey) as? NSNumber)?.unsignedLongValue
+                if (type == AVAudioSessionInterruptionTypeBegan) onLost()
+            },
+            center.addObserverForName(AVAudioEngineConfigurationChangeNotification, engine, null) { onLost() },
+            center.addObserverForName(AVAudioSessionMediaServicesWereResetNotification, null, null) { onLost() },
+        )
     }
 
     private fun buffer(format: AVAudioFormat, loop: ShortArray, gain: (Int) -> Float) =
@@ -92,8 +107,8 @@ internal class IosToneOutput(private val session: IosTunerSession) : ToneOutput 
     override fun stop() {
         val player = player ?: return
         this.player = null
-        observer?.let(NSNotificationCenter.defaultCenter::removeObserver)
-        observer = null
+        observers.forEach(NSNotificationCenter.defaultCenter::removeObserver)
+        observers = emptyList()
         repeat(FADE_STEPS) { step ->
             player.volume = 1f - (step + 1f) / FADE_STEPS
             usleep((ToneOutput.FADE_SECONDS * 1_000_000 / FADE_STEPS).toUInt())
