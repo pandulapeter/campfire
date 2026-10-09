@@ -393,8 +393,14 @@
     <string name="tuner_flat">Mély</string>
     <string name="tuner_sharp">Magas</string>
     <!-- How a screen reader reads the meter: the note, then how far it is off, e.g. "E2, 12 cents flat". -->
-    <string name="tuner_reading_flat">%1$s, %2$d cent mély</string>
-    <string name="tuner_reading_sharp">%1$s, %2$d cent magas</string>
+    <plurals name="tuner_reading_flat">
+        <item quantity="one">%1$s, %2$d cent mély</item>
+        <item quantity="other">%1$s, %2$d cent mély</item>
+    </plurals>
+    <plurals name="tuner_reading_sharp">
+        <item quantity="one">%1$s, %2$d cent magas</item>
+        <item quantity="other">%1$s, %2$d cent magas</item>
+    </plurals>
     <string name="tuner_reading_in_tune">%1$s, tiszta</string>
     <!-- What a screen reader announces once a reading has settled: the note, and roughly how far it is off. -->
     <string name="tuner_reading_far_flat">%1$s, nagyon mély</string>

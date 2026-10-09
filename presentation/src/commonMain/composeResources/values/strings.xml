@@ -393,8 +393,14 @@
     <string name="tuner_flat">Flat</string>
     <string name="tuner_sharp">Sharp</string>
     <!-- How a screen reader reads the meter: the note, then how far it is off, e.g. "E2, 12 cents flat". -->
-    <string name="tuner_reading_flat">%1$s, %2$d cents flat</string>
-    <string name="tuner_reading_sharp">%1$s, %2$d cents sharp</string>
+    <plurals name="tuner_reading_flat">
+        <item quantity="one">%1$s, %2$d cent flat</item>
+        <item quantity="other">%1$s, %2$d cents flat</item>
+    </plurals>
+    <plurals name="tuner_reading_sharp">
+        <item quantity="one">%1$s, %2$d cent sharp</item>
+        <item quantity="other">%1$s, %2$d cents sharp</item>
+    </plurals>
     <string name="tuner_reading_in_tune">%1$s, in tune</string>
     <!-- What a screen reader announces once a reading has settled: the note, and roughly how far it is off. -->
     <string name="tuner_reading_far_flat">%1$s, far flat</string>

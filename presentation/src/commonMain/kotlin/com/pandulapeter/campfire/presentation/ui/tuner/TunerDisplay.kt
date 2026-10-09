@@ -41,17 +41,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.chordpro.ChordNotation
+import com.pandulapeter.campfire.presentation.localization.pluralStringResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.tuner_frequency
 import com.pandulapeter.campfire.presentation.resources.tuner_play_a_note
+import com.pandulapeter.campfire.presentation.resources.tuner_reading_flat
+import com.pandulapeter.campfire.presentation.resources.tuner_reading_sharp
 import com.pandulapeter.campfire.presentation.resources.tuner_reading_coarse_flat
 import com.pandulapeter.campfire.presentation.resources.tuner_reading_coarse_sharp
 import com.pandulapeter.campfire.presentation.resources.tuner_reading_far_flat
 import com.pandulapeter.campfire.presentation.resources.tuner_reading_far_sharp
-import com.pandulapeter.campfire.presentation.resources.tuner_reading_flat
 import com.pandulapeter.campfire.presentation.resources.tuner_reading_in_tune
-import com.pandulapeter.campfire.presentation.resources.tuner_reading_sharp
 import com.pandulapeter.campfire.presentation.resources.tuner_reading_tone
 import com.pandulapeter.campfire.presentation.resources.tuner_reference_tone
 import com.pandulapeter.campfire.presentation.resources.tuner_target_frequency
@@ -60,7 +61,6 @@ import com.pandulapeter.campfire.tuner.api.Pitch
 import com.pandulapeter.campfire.tuner.api.model.TunerListening
 import com.pandulapeter.campfire.tuner.api.model.TunerState
 import kotlinx.coroutines.delay
-import kotlin.math.abs
 import kotlin.math.roundToInt
 
 /**
@@ -86,9 +86,16 @@ internal fun TunerDisplay(
     val exactDescription = when {
         tone != null -> stringResource(Res.string.tuner_reading_tone, noteNameWithOctave(tone, notation))
         reading == null -> stringResource(Res.string.tuner_play_a_note)
-        isInTune -> stringResource(Res.string.tuner_reading_in_tune, noteNameWithOctave(reading.note, notation))
-        reading.cents < 0 -> stringResource(Res.string.tuner_reading_flat, noteNameWithOctave(reading.note, notation), abs(reading.cents).roundToInt())
-        else -> stringResource(Res.string.tuner_reading_sharp, noteNameWithOctave(reading.note, notation), reading.cents.roundToInt())
+        else -> {
+            val name = noteNameWithOctave(reading.note, notation)
+            val cents = reading.cents.roundToInt()
+            when {
+                isInTune -> stringResource(Res.string.tuner_reading_in_tune, name)
+                cents == 0 -> name
+                cents < 0 -> pluralStringResource(Res.plurals.tuner_reading_flat, -cents, name, -cents)
+                else -> pluralStringResource(Res.plurals.tuner_reading_sharp, cents, name, cents)
+            }
+        }
     }
     val current = reading?.let { TunerAnnouncement(note = it.note, offset = tunerOffsetOf(it.cents, it.isInTune)) }
     var announced by remember { mutableStateOf<TunerAnnouncement?>(null) }
