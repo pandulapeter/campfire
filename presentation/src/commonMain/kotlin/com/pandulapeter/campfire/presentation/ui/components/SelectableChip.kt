@@ -16,7 +16,7 @@ import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.material3.FilterChipDefaults
@@ -76,7 +76,7 @@ internal fun SelectableChip(
                 role = role,
                 onClick = onClick,
             )
-            .height(FilterChipDefaults.Height)
+            .defaultMinSize(minHeight = FilterChipDefaults.Height)
             .padding(horizontal = CHIP_PADDING),
         verticalAlignment = Alignment.CenterVertically,
         content = { content(contentColor) },
