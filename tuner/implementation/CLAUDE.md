@@ -18,7 +18,10 @@ this module. Nothing here reaches the network, and nothing heard is kept beyond 
 
 - `TunerEngine` runs every call on one confined coroutine, as `MetronomeEngine` does, each start a session whose late
   callbacks are ignored. While listening it polls the input's latest window every 33 ms, runs the detector and the
-  tracker over it and publishes a state only when it differs. A `MICROPHONE_DISCONNECTED` (a new route: headphones
+  tracker over it and publishes a state only when it differs. Each window comes with the input's frame position: one
+  that has not moved for half a second (an input that stopped delivering frames without saying so, a suspended web
+  context), or an input waiting for a gesture, is heard as nothing, since the tracker would hold a repeated window of a
+  clear note for ever. A `MICROPHONE_DISCONNECTED` (a new route: headphones
   plugged in or pulled) opens the input again once before it is reported.
 - `PitchDetector` — the McLeod pitch method over about 85 ms of input (4096 frames at 44.1 or 48 kHz, the next power of
   two for another rate): the normalized square difference function, its autocorrelation through two FFTs of the window
@@ -35,7 +38,8 @@ this module. Nothing here reaches the network, and nothing heard is kept beyond 
   frequency moved to the one that fits, never more than 0.02 cents off), the fundamental with three falling harmonics,
   since a phone's speaker cannot play a low string's fundamental.
 - `SampleRing` — the latest frames of the three inputs that are handed chunks, one writer and one reader without a
-  lock: the writer publishes its count after the samples, and the ring holds several windows.
+  lock: the writer publishes its count after the samples, and the ring holds several windows. `latest` answers that
+  count, the position of the window's end.
 
 ### The platforms
 

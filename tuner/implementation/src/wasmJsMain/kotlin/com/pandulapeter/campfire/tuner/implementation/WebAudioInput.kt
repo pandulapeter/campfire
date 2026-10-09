@@ -48,20 +48,20 @@ internal class WebAudioInput : AudioInput {
         return AudioInputStart.Started(sampleRate, issue = if (isRunning) null else TunerInputIssue.WAITING_FOR_GESTURE)
     }
 
-    override fun latest(window: FloatArray): Boolean {
-        val listener = listener ?: return false
+    override fun latest(window: FloatArray): Long {
+        val listener = listener ?: return AudioInput.NO_WINDOW
         if (isTunerInputEnded()) {
             listener.onLost(TunerStopReason.MICROPHONE_DISCONNECTED)
-            return false
+            return AudioInput.NO_WINDOW
         }
         val running = isTunerContextRunning()
         if (running != isRunning) {
             isRunning = running
             listener.onIssueChanged(if (running) null else TunerInputIssue.WAITING_FOR_GESTURE)
         }
-        if (!readTunerWindow()) return false
+        if (!readTunerWindow()) return AudioInput.NO_WINDOW
         for (index in window.indices) window[index] = tunerSample(index)
-        return true
+        return tunerFramePosition().toLong()
     }
 
     /** Closes whatever is open, a request still waiting for the browser's answer included. */

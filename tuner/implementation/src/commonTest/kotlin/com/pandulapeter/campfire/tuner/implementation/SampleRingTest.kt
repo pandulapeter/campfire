@@ -11,8 +11,7 @@ package com.pandulapeter.campfire.tuner.implementation
 
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
+import kotlin.test.assertEquals
 
 class SampleRingTest {
 
@@ -20,9 +19,9 @@ class SampleRingTest {
     fun `nothing is handed out before a whole window has been written`() {
         val ring = SampleRing(16)
         val window = FloatArray(4)
-        assertFalse(ring.latest(window))
+        assertEquals(AudioInput.NO_WINDOW, ring.latest(window))
         ring.write(FloatArray(3) { it.toFloat() }, 3)
-        assertFalse(ring.latest(window))
+        assertEquals(AudioInput.NO_WINDOW, ring.latest(window))
     }
 
     @Test
@@ -34,7 +33,7 @@ class SampleRingTest {
             ring.write(FloatArray(chunk) { (written + it).toFloat() }, chunk)
             written += chunk
             if (index > 0) {
-                assertTrue(ring.latest(window))
+                assertEquals(written.toLong(), ring.latest(window))
                 assertContentEquals(FloatArray(4) { (written - 4 + it).toFloat() }, window)
             }
         }
@@ -45,7 +44,7 @@ class SampleRingTest {
         val ring = SampleRing(16)
         val window = FloatArray(2)
         ring.write(shortArrayOf(16_384, -32_768, 7), 2)
-        assertTrue(ring.latest(window))
+        assertEquals(2L, ring.latest(window))
         assertContentEquals(floatArrayOf(0.5f, -1f), window)
     }
 
@@ -55,6 +54,17 @@ class SampleRingTest {
         val window = FloatArray(4)
         ring.write(FloatArray(8), 8)
         ring.clear()
-        assertFalse(ring.latest(window))
+        assertEquals(AudioInput.NO_WINDOW, ring.latest(window))
+    }
+
+    @Test
+    fun `a window handed out again has the same position`() {
+        val ring = SampleRing(16)
+        val window = FloatArray(4)
+        ring.write(FloatArray(6), 6)
+        assertEquals(6L, ring.latest(window))
+        assertEquals(6L, ring.latest(window))
+        ring.write(FloatArray(2), 2)
+        assertEquals(8L, ring.latest(window))
     }
 }

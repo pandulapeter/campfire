@@ -22,14 +22,22 @@ internal interface AudioInput {
     /** Opens the microphone. Suspends since the web's answer is a promise; never throws and never asks for a permission. */
     suspend fun start(listener: AudioInputListener): AudioInputStart
 
-    /** Copies the latest `window.size` frames into [window], full scale being ±1, and answers whether that many have arrived yet. */
-    fun latest(window: FloatArray): Boolean
+    /**
+     * Copies the latest `window.size` frames into [window], full scale being ±1, and answers how many frames the input
+     * has delivered up to the end of that window: a position that grows only while frames arrive, so that a window
+     * handed out twice is known for one. [NO_WINDOW] while fewer than a window have arrived.
+     */
+    fun latest(window: FloatArray): Long
 
     /** Closes the microphone. Does nothing when not started. */
     fun stop()
 
     /** Whether to listen for the presses that allow a page's audio to start, see `Tuner.setStartable`. Only the web has such a rule. */
     fun setGestureListening(isEnabled: Boolean) = Unit
+
+    companion object {
+        const val NO_WINDOW = -1L
+    }
 }
 
 /** What an input tells the engine after it started. Called from any thread. */

@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.tuner.implementation
 import com.pandulapeter.campfire.tuner.api.Pitch
 import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 import com.pandulapeter.campfire.tuner.api.model.TunerConfig
+import com.pandulapeter.campfire.tuner.api.model.TunerInputIssue
 import com.pandulapeter.campfire.tuner.api.model.TunerListening
 import com.pandulapeter.campfire.tuner.api.model.TunerStopReason
 import kotlinx.coroutines.CompletableDeferred
@@ -171,6 +172,49 @@ class TunerEngineTest {
         runCurrent()
         assertNull(engine.state.value.tone)
         assertEquals(1, output.stopCount)
+    }
+
+    @Test
+    fun `an input that stops delivering frames lets go of the reading`() = runTest {
+        val engine = engine()
+        input.signal = sine(330f)
+        engine.listen(chromatic)
+        advanceTimeBy(1_000)
+        assertEquals(64, assertNotNull(engine.hearing().reading).note)
+        input.isFrozen = true
+        advanceTimeBy(600)
+        assertNull(engine.hearing().reading)
+        advanceTimeBy(4_400)
+        assertNull(engine.hearing().reading)
+    }
+
+    @Test
+    fun `an input waiting for a gesture shows no reading`() = runTest {
+        val engine = engine()
+        input.signal = sine(330f)
+        engine.listen(chromatic)
+        advanceTimeBy(1_000)
+        assertEquals(64, assertNotNull(engine.hearing().reading).note)
+        assertNotNull(input.listener).onIssueChanged(TunerInputIssue.WAITING_FOR_GESTURE)
+        advanceTimeBy(40)
+        assertEquals(TunerListening.Hearing(reading = null, issue = TunerInputIssue.WAITING_FOR_GESTURE), engine.state.value.listening)
+        assertNotNull(input.listener).onIssueChanged(null)
+        advanceTimeBy(1_000)
+        assertEquals(64, assertNotNull(engine.hearing().reading).note)
+    }
+
+    @Test
+    fun `a window repeated for less than the hold is still read`() = runTest {
+        val engine = engine()
+        input.signal = sine(330f)
+        input.advanceEvery = 3
+        engine.listen(chromatic)
+        advanceTimeBy(1_000)
+        assertEquals(64, assertNotNull(engine.hearing().reading).note)
+        repeat(50) {
+            advanceTimeBy(100)
+            assertEquals(64, assertNotNull(engine.hearing().reading).note)
+        }
     }
 
     /**

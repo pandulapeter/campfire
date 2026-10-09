@@ -127,6 +127,11 @@ internal fun readTunerWindow(): Boolean = js(
     }"""
 )
 
+/** The frames the tuner's context has rendered, which stand still while it is suspended. */
+internal fun tunerFramePosition(): Double = js(
+    "window.__campfireTuner.context ? Math.round(window.__campfireTuner.context.currentTime * window.__campfireTuner.context.sampleRate) : -1"
+)
+
 internal fun tunerSample(index: Int): Float = js("window.__campfireTuner.samples[index]")
 
 internal fun isTunerInputEnded(): Boolean = js("window.__campfireTuner.ended")

@@ -106,13 +106,26 @@ internal class TunerEngine(
         val window = FloatArray(detector.windowSize)
         val start = timeSource.markNow()
         var trackedConfig = config
+        var lastPosition = AudioInput.NO_WINDOW
+        var movedAt = timeSource.markNow()
         while (sessionId == session) {
             val config = config ?: break
             if (config != trackedConfig) {
                 trackedConfig = config
                 tracker.reset()
             }
-            if (input.latest(window)) {
+            val position = input.latest(window)
+            if (position != AudioInput.NO_WINDOW && position != lastPosition) {
+                lastPosition = position
+                movedAt = timeSource.markNow()
+            }
+            // A window handed out again is still a clear note to the tracker, which would hold it for ever: an input that
+            // has stopped delivering frames, or a context waiting for a gesture, is heard as nothing. The hold stays above
+            // the 400 ms an iOS tap may be handed at worst, so a window repeated between two taps is still read.
+            if (gestureIssue != null || movedAt.elapsedNow().inWholeMilliseconds >= PitchTracker.HOLD_MILLIS) {
+                tracker.reset()
+                setListening(TunerListening.Hearing(issue = gestureIssue))
+            } else if (position != AudioInput.NO_WINDOW) {
                 val range = PitchDetector.rangeFor(config.tuning, config.referencePitch)
                 val estimate = detector.detect(window, range.start, range.endInclusive)
                 val tracked = tracker.step(estimate, start.elapsedNow().inWholeMilliseconds, config)

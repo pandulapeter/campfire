@@ -13,7 +13,10 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
 
-/** An input that records what the engine asks of it and hands out whatever window [signal] writes. */
+/**
+ * An input that records what the engine asks of it and hands out whatever window [signal] writes (false meaning no
+ * window yet), at a position that moves on by a poll's worth of frames every [advanceEvery]th call unless [isFrozen].
+ */
 internal class FakeAudioInput : AudioInput {
     var result: AudioInputStart = AudioInputStart.Started(SAMPLE_RATE)
 
@@ -26,6 +29,12 @@ internal class FakeAudioInput : AudioInput {
         window.fill(0f)
         true
     }
+
+    /** Whether the input has stopped delivering frames without saying so, handing out the same window again. */
+    var isFrozen = false
+
+    /** How many polls in a row see the same window, as they do between two of an iOS tap's buffers. */
+    var advanceEvery = 1
     var listener: AudioInputListener? = null
         private set
     var startCount = 0
@@ -40,7 +49,14 @@ internal class FakeAudioInput : AudioInput {
         return result
     }
 
-    override fun latest(window: FloatArray) = signal(window)
+    private var position = 0L
+    private var latestCount = 0
+
+    override fun latest(window: FloatArray): Long {
+        if (!signal(window)) return AudioInput.NO_WINDOW
+        if (!isFrozen && latestCount++ % advanceEvery == 0) position += FRAMES_PER_POLL
+        return position
+    }
 
     override fun stop() {
         stopCount++
@@ -48,5 +64,8 @@ internal class FakeAudioInput : AudioInput {
 
     companion object {
         const val SAMPLE_RATE = 48_000
+
+        /** 33 ms at [SAMPLE_RATE]. */
+        private const val FRAMES_PER_POLL = 1_584L
     }
 }

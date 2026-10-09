@@ -45,13 +45,16 @@ internal class SampleRing(private val capacity: Int) {
         written = start + count
     }
 
-    /** Copies the latest `window.size` samples into [window], and answers whether that many have been written yet. */
-    fun latest(window: FloatArray): Boolean {
+    /**
+     * Copies the latest `window.size` samples into [window], and answers the position of the window's end, the number of
+     * samples written so far, or [AudioInput.NO_WINDOW] while fewer than a window have been.
+     */
+    fun latest(window: FloatArray): Long {
         val end = written
-        if (end < window.size) return false
+        if (end < window.size) return AudioInput.NO_WINDOW
         val start = end - window.size
         for (index in window.indices) window[index] = samples[((start + index) % capacity).toInt()]
-        return true
+        return end
     }
 
     companion object {
