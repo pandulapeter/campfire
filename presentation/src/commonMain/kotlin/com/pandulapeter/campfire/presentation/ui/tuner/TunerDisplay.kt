@@ -15,6 +15,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -24,6 +25,11 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -39,6 +45,10 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.tuner_frequency
 import com.pandulapeter.campfire.presentation.resources.tuner_play_a_note
+import com.pandulapeter.campfire.presentation.resources.tuner_reading_coarse_flat
+import com.pandulapeter.campfire.presentation.resources.tuner_reading_coarse_sharp
+import com.pandulapeter.campfire.presentation.resources.tuner_reading_far_flat
+import com.pandulapeter.campfire.presentation.resources.tuner_reading_far_sharp
 import com.pandulapeter.campfire.presentation.resources.tuner_reading_flat
 import com.pandulapeter.campfire.presentation.resources.tuner_reading_in_tune
 import com.pandulapeter.campfire.presentation.resources.tuner_reading_sharp
@@ -48,6 +58,7 @@ import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 import com.pandulapeter.campfire.tuner.api.Pitch
 import com.pandulapeter.campfire.tuner.api.model.TunerListening
 import com.pandulapeter.campfire.tuner.api.model.TunerState
+import kotlinx.coroutines.delay
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -70,11 +81,31 @@ internal fun TunerDisplay(
     val note = state.tone ?: reading?.note
     val isInTune = reading?.isInTune == true
     val accent = animateColorAsState(if (isInTune) LocalSecondAccentColor.current else MaterialTheme.colorScheme.onSurface).value
-    val description = when {
+    val exactDescription = when {
         reading == null -> null
         isInTune -> stringResource(Res.string.tuner_reading_in_tune, noteNameWithOctave(reading.note, notation))
         reading.cents < 0 -> stringResource(Res.string.tuner_reading_flat, noteNameWithOctave(reading.note, notation), abs(reading.cents).roundToInt())
         else -> stringResource(Res.string.tuner_reading_sharp, noteNameWithOctave(reading.note, notation), reading.cents.roundToInt())
+    }
+    val current = reading?.let { TunerAnnouncement(note = it.note, offset = tunerOffsetOf(it.cents, it.isInTune)) }
+    var announced by remember { mutableStateOf<TunerAnnouncement?>(null) }
+    LaunchedEffect(current) {
+        // Said only once it has held: a reading crossing a step and back within a breath is not news to anyone tuning. The
+        // hold covers nothing heard too, so the announcement goes with the reading rather than staying over the prompt.
+        delay(ANNOUNCEMENT_HOLD_MILLIS)
+        announced = current
+    }
+    val announcedText = announced?.let {
+        stringResource(
+            when (it.offset) {
+                TunerOffset.FAR_FLAT -> Res.string.tuner_reading_far_flat
+                TunerOffset.FLAT -> Res.string.tuner_reading_coarse_flat
+                TunerOffset.IN_TUNE -> Res.string.tuner_reading_in_tune
+                TunerOffset.SHARP -> Res.string.tuner_reading_coarse_sharp
+                TunerOffset.FAR_SHARP -> Res.string.tuner_reading_far_sharp
+            },
+            noteNameWithOctave(it.note, notation),
+        )
     }
     val noteLabel: @Composable (Modifier) -> Unit = { labelModifier ->
         TunerNoteLabel(modifier = labelModifier, note = note, notation = notation, color = accent, isCompact = isCompact)
@@ -94,32 +125,42 @@ internal fun TunerDisplay(
             isTone = state.tone != null,
         )
     }
-    Column(
-        // Read out as one, and whenever the note or how far it is off changes, rather than as the pieces it is drawn in.
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = if (isCompact) 4.dp else 12.dp)
-            .clearAndSetSemantics {
-                description?.let { contentDescription = it }
+    Box(modifier = modifier) {
+        // A reading every 33 ms would be a queue of speech the microphone hears too, so what is announced is a node of its
+        // own that changes only with the note and a coarse step. It draws nothing, and comes first so that touch finds the
+        // exact reading over it; hiding it from accessibility would silence it too.
+        Box(
+            modifier = Modifier.matchParentSize().clearAndSetSemantics {
+                announcedText?.let { contentDescription = it }
                 liveRegion = LiveRegionMode.Polite
             },
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        if (isCompact) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                noteLabel(Modifier.widthIn(min = 96.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    meter(Modifier.fillMaxWidth())
-                    frequencies()
+        )
+        Column(
+            // Explored as one, with the exact reading, rather than as the pieces it is drawn in.
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = if (isCompact) 4.dp else 12.dp)
+                .clearAndSetSemantics { exactDescription?.let { contentDescription = it } },
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            if (isCompact) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    noteLabel(Modifier.widthIn(min = 96.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        meter(Modifier.fillMaxWidth())
+                        frequencies()
+                    }
                 }
+            } else {
+                noteLabel(Modifier)
+                meter(Modifier.fillMaxWidth().padding(top = 8.dp))
+                frequencies()
             }
-        } else {
-            noteLabel(Modifier)
-            meter(Modifier.fillMaxWidth().padding(top = 8.dp))
-            frequencies()
         }
     }
 }
+
+private const val ANNOUNCEMENT_HOLD_MILLIS = 700L
 
 /** The note and its octave, or the line asking for one, crossfading as it changes. */
 @Composable

@@ -394,6 +394,11 @@
     <string name="tuner_reading_flat">%1$s, %2$d cents flat</string>
     <string name="tuner_reading_sharp">%1$s, %2$d cents sharp</string>
     <string name="tuner_reading_in_tune">%1$s, in tune</string>
+    <!-- What a screen reader announces once a reading has settled: the note, and roughly how far it is off. -->
+    <string name="tuner_reading_far_flat">%1$s, far flat</string>
+    <string name="tuner_reading_coarse_flat">%1$s, flat</string>
+    <string name="tuner_reading_coarse_sharp">%1$s, sharp</string>
+    <string name="tuner_reading_far_sharp">%1$s, far sharp</string>
     <string name="tuner_instrument">Instrument</string>
     <string name="tuner_instrument_chromatic">Chromatic</string>
     <string name="tuner_instrument_guitar">Guitar</string>

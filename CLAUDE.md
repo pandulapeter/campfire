@@ -228,7 +228,7 @@ tab reaches the export screen. The detail is in `:presentation`'s `ui/screens/ex
   decides what happens to every file in a sync run, the engine and the synced preferences), `:metronome:*` (the sequencer, the synthesizer, the mixer, the engine's state machine, tap tempo and time signatures), `:tuner:*` (the note arithmetic and the presets, the FFT, the pitch detector against synthesized strings and any recording dropped into its `desktopTest` resources, the tracker, the tones, the engine's state machine, the sample ring and the FFT) and
   `:presentation` (the pure helpers behind its screens: the search index and ranking, the song picker's filter chips, the fast scroller's section
   index, the setlist slots, stepper labels, section grid and the cutting of sections into columns, row snapping and section measurements of the details screen, the editor's token cache, where a song's tempo comes from and what a click plays for, which chords a song plays and which
-  shape each is drawn with, the tuner's note names and which notice its page shows, the diagrams' geometry and what the editor's Chord shape button writes, the setlist reorder merge and
+  shape each is drawn with, the tuner's note names, the step its reading is announced at and which notice its page shows, the diagrams' geometry and what the editor's Chord shape button writes, the setlist reorder merge and
   search and the list placeholders; and, over small fakes of their use cases, the song text writes, the metadata sheets'
   edits, the playing overrides and the song filters), run on
   the desktop target with
