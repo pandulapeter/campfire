@@ -34,6 +34,7 @@ import com.pandulapeter.campfire.presentation.resources.ic_add
 import com.pandulapeter.campfire.presentation.resources.ic_subtract
 import com.pandulapeter.campfire.presentation.resources.metronome_tap
 import com.pandulapeter.campfire.presentation.resources.metronome_tap_description
+import com.pandulapeter.campfire.presentation.resources.song_details_tempo
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo_decrease
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo_increase
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo_reset
@@ -69,6 +70,7 @@ internal fun TempoStepper(
 ) = Stepper(
     modifier = modifier,
     value = bpm.toString(),
+    valueDescription = stringResource(Res.string.song_details_tempo, bpm.toString()),
     fontScale = fontScale,
     height = height,
     valueKey = valueKey,

@@ -46,6 +46,9 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -70,6 +73,8 @@ import kotlinx.coroutines.delay
  * steppers that are part of a song rather than of a bar or a menu (see [SongPlayingControls]). The padding around them
  * does not grow with it, exactly as a section's header pill keeps its own while its title scales.
  * @param height The pill's height, which the caller that scales its content gives as [songControlHeight].
+ * @param valueDescription How a screen reader says [value], where its written form reads badly aloud — `1 / 24`, a bare
+ * number of BPM; the value itself when left out.
  * @param valueKey What decides whether a new [value] cross-fades in or replaces the old one in place: only a change
  * of the key is animated.
  * @param repeatsOnHold Whether a button held down keeps stepping, faster the longer it is held, for a value that is a
@@ -82,6 +87,7 @@ import kotlinx.coroutines.delay
 internal fun Stepper(
     modifier: Modifier = Modifier,
     value: String,
+    valueDescription: String? = null,
     fontScale: Float = 1f,
     height: Dp = STEPPER_HEIGHT,
     valueKey: Any = value,
@@ -104,6 +110,7 @@ internal fun Stepper(
     color = MaterialTheme.colorScheme.surfaceContainerHighest,
 ) {
     val buttonLength = stepperButtonLength(fontScale)
+    val spokenValue = valueDescription ?: value
     // The buttons are laid out at the size of the pill, so the touch target enforcement of the icon buttons has
     // to be lowered to match, or it would grow them back to 48dp and the pill would no longer fit them.
     CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides minOf(height, buttonLength)) {
@@ -111,6 +118,7 @@ internal fun Stepper(
             StepperButton(
                 icon = decreaseIcon,
                 label = decreaseLabel,
+                stateDescription = spokenValue,
                 isEnabled = canDecrease,
                 repeatsOnHold = repeatsOnHold,
                 fontScale = fontScale,
@@ -122,6 +130,7 @@ internal fun Stepper(
         val stepperValue = @Composable {
             StepperValue(
                 value = value,
+                valueDescription = valueDescription,
                 valueKey = valueKey,
                 isDefault = isDefault,
                 resetLabel = resetLabel,
@@ -133,6 +142,7 @@ internal fun Stepper(
             StepperButton(
                 icon = increaseIcon,
                 label = increaseLabel,
+                stateDescription = spokenValue,
                 isEnabled = canIncrease,
                 repeatsOnHold = repeatsOnHold,
                 fontScale = fontScale,
@@ -166,6 +176,7 @@ internal fun Stepper(
 private fun StepperButton(
     icon: Painter,
     label: String,
+    stateDescription: String,
     isEnabled: Boolean,
     repeatsOnHold: Boolean,
     fontScale: Float,
@@ -196,7 +207,11 @@ private fun StepperButton(
         }
     }
     IconButton(
-        modifier = Modifier.size(width = buttonLength, height = height),
+        modifier = Modifier
+            .size(width = buttonLength, height = height)
+            // The value is what a step changes, so the button says it: a screen reader re-reads the state of the node
+            // it is on, and the value is a node of its own the focus is not on.
+            .semantics { this.stateDescription = stateDescription },
         enabled = isEnabled,
         interactionSource = interactionSource,
         onClick = { if (holdState.hasRepeated) holdState.hasRepeated = false else onClick() },
@@ -216,6 +231,7 @@ private class HoldState(var hasRepeated: Boolean = false)
 @Composable
 private fun StepperValue(
     value: String,
+    valueDescription: String?,
     valueKey: Any,
     isDefault: Boolean,
     resetLabel: String?,
@@ -239,7 +255,8 @@ private fun StepperValue(
             modifier = Modifier.fillMaxHeight()
                 .clickable(enabled = !isDefault && onReset != null, onClickLabel = resetLabel) { onReset?.invoke() }
                 .widthIn(min = VALUE_MIN_WIDTH * fontScale)
-                .wrapContentHeight(),
+                .wrapContentHeight()
+                .then(if (valueDescription != null) Modifier.semantics { contentDescription = valueDescription } else Modifier),
             text = label.value,
             style = MaterialTheme.typography.labelLarge.scaled(fontScale),
             textAlign = TextAlign.Center,

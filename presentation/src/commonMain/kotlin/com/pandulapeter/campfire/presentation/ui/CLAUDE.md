@@ -404,6 +404,11 @@ held down (not a tap), every tap of Tap tempo, and a `SwitchListItem` flipped. A
 through Foundation's `combinedClickable` (a missing song's row in a setlist, which has no click, performs the same). Plain buttons, menus, sheets and checkboxes are not: a buzz on every tap
 stops saying anything. The metronome's Vibrate on the beat is a feature rather than feedback, see `ui/platform/`.
 
+## Accessibility
+
+- **A stepper says its value**: both of a `Stepper`'s buttons carry it as their state description, so a step is heard
+  from the button that made it; `valueDescription` gives it a spoken form where the written one reads badly.
+
 ## Features
 
 ### Features are switched on and off as a whole
