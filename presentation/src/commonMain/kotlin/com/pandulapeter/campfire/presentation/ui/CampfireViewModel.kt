@@ -388,8 +388,12 @@ class CampfireViewModel(
         }
         addOnBackStackChanged { previousTop, stack ->
             // Nothing of the tuner outlives the screen it is used on: the tab, or the song its sheet is opened over. The
-            // screen starts it again once it is composed, and only that screen does.
-            if (previousTop?.contentKey != stack.lastOrNull()?.contentKey) stopTuner()
+            // screen starts it again once it is composed, and only that screen does - which a sheet left over another screen
+            // never is, so the sheet goes with the song it was opened over.
+            if (previousTop?.contentKey != stack.lastOrNull()?.contentKey) {
+                stopTuner()
+                this@CampfireViewModel.dismissSheet(DialogType.Tuner)
+            }
         }
         addOnBackStackChanged { _, _ -> editorSession.onBackStackChanged() }
         addOnBackStackChanged { _, stack ->

@@ -13,15 +13,15 @@ What the Tuner tab (`ui/screens/tuner/TunerScreen`) and the song details screen'
 share.
 
 - `TunerController` (a view model holder) — the settings (`UserPreferences.tunerSettings`, saved through a
-  `DebouncedPreference` like the metronome's and written with the others on the way out), listening on the screens'
-  say, the tones, and `hasRequestedMicrophone`, whether a tap asked for the microphone in this run. It follows the
-  settings: a listening tuner reads against the new ones, a tone ends with its instrument and moves with the reference
-  pitch. **Nothing of the tuner outlives its screen**: the view model stops it whenever the top of the back stack
-  changes and whenever the tuner sheet stops being the dialog on screen, and `AppExitController` with the view model;
-  the screens' `TunerListeningEffect` stops it as they stop (the app out of sight, the screen locked) and starts it
-  again as they start, so the system's recording indicator is lit exactly while a tuner shows. Opening the sheet stops a click playing on the
-  song, since the two never hold the audio together. The web's
-  `setStartable` follows the Tuner tab or the sheet being on top.
+  `DebouncedPreference` like the metronome's and written with the others on the way out), listening on the screens' say,
+  the tones, and `hasRequestedMicrophone`, whether a tap asked for the microphone in this run. It follows the settings:
+  a listening tuner reads against the new ones, a tone ends with its instrument and moves with the reference pitch.
+  **Nothing of the tuner outlives its screen**: the view model stops it whenever the top of the back stack changes -
+  closing the sheet with it, since the sheet belongs to the song under it - and whenever the tuner sheet stops being the
+  dialog on screen, and `AppExitController` with the view model; the screens' `TunerListeningEffect` stops it as they
+  stop (the app out of sight, the screen locked) and starts it again as they start, so the system's recording indicator
+  is lit exactly while a tuner shows. Opening the sheet stops a click playing on the song, since the two never hold the
+  audio together. The web's `setStartable` follows the Tuner tab or the sheet being on top.
 - `TunerNotice.kt` — pure: which notice the page shows in place of the display (`tunerNoticeOf`: a reason listening
   stopped wins, then a refusal, then a question never asked — on the platforms that cannot say, one not asked by a tap
   in this run) and whether the microphone may be opened without a tap (`canListenWithoutTap`). Tested.
