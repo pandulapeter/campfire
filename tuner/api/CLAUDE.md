@@ -19,7 +19,7 @@ so that no data or domain type leaks into it and the engine reads no settings of
   rule, as on `Metronome`). Every call returns at once and never throws. **It never asks for a permission**: `listen`
   opens the input only where the platform already allows it and ends in `Stopped(PERMISSION_DENIED)` where it does not,
   except on the desktop and the web, where opening the input is the only question there is. A reading is never
-  published while a tone sounds, since the speaker is what the microphone would hear.
+  published while a tone sounds, or for a moment after it stops, since the speaker is what the microphone would hear.
 - `model/` — `TunerConfig` (the reference pitch and an `InstrumentTuning`, null being chromatic), `TunerListening`
   (`Stopped(reason?)`, `Starting`, `Hearing(reading?, issue?)`), `TunerReading` (the target note as a MIDI number, the
   cents off it — beyond ±50 where a preset's nearest string is further than half a semitone — the frequency heard and

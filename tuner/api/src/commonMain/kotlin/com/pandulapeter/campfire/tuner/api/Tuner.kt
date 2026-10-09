@@ -27,7 +27,10 @@ import kotlinx.coroutines.flow.StateFlow
  */
 public interface Tuner {
 
-    /** What the tuner hears and plays. A reading is never published while a tone sounds, since the speaker is what it would hear. */
+    /**
+     * What the tuner hears and plays. A reading is never published while a tone sounds, or for a moment after it stops,
+     * since the speaker is what it would hear.
+     */
     public val state: StateFlow<TunerState>
 
     /** Opens the microphone and reads what it hears against [config]. Listening already is [update]. */

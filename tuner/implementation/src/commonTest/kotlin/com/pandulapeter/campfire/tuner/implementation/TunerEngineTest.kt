@@ -14,11 +14,15 @@ import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 import com.pandulapeter.campfire.tuner.api.model.TunerConfig
 import com.pandulapeter.campfire.tuner.api.model.TunerInputIssue
 import com.pandulapeter.campfire.tuner.api.model.TunerListening
+import com.pandulapeter.campfire.tuner.api.model.TunerState
 import com.pandulapeter.campfire.tuner.api.model.TunerStopReason
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -217,6 +221,58 @@ class TunerEngineTest {
         }
     }
 
+    @Test
+    fun `the tone itself is never read after it stops`() = runTest {
+        val engine = engine()
+        val states = recordedStates(engine)
+        input.signal = sine(440f)
+        engine.listen(chromatic)
+        engine.playTone(note = 69, referencePitch = 440)
+        advanceTimeBy(1_000)
+        engine.stopTone()
+        val stoppedAt = states.size
+        advanceTimeBy(100)
+        input.signal = silence()
+        advanceTimeBy(1_000)
+        val afterStop = states.drop(stoppedAt).map { it.listening }
+        assertTrue(afterStop.all { (it as? TunerListening.Hearing)?.reading == null }, "$afterStop")
+    }
+
+    @Test
+    fun `a string plucked after the tone's tail is read`() = runTest {
+        val engine = engine()
+        input.signal = sine(440f)
+        engine.listen(chromatic)
+        engine.playTone(note = 69, referencePitch = 440)
+        advanceTimeBy(1_000)
+        engine.stopTone()
+        advanceTimeBy(100)
+        input.signal = silence()
+        advanceTimeBy(200)
+        input.signal = sine(330f)
+        advanceTimeBy(1_000)
+        assertEquals(64, assertNotNull(engine.hearing().reading).note)
+    }
+
+    @Test
+    fun `a tone that fails to replace a sounding one ends it for the reading too`() = runTest {
+        val engine = engine()
+        val states = recordedStates(engine)
+        input.signal = sine(440f)
+        engine.listen(chromatic)
+        engine.playTone(note = 69, referencePitch = 440)
+        advanceTimeBy(1_000)
+        output.isPlayable = false
+        engine.playTone(note = 64, referencePitch = 440)
+        runCurrent()
+        assertNull(engine.state.value.tone)
+        val endedAt = states.size
+        advanceTimeBy(200)
+        val afterEnd = states.drop(endedAt).map { it.listening }
+        assertTrue(afterEnd.all { (it as? TunerListening.Hearing)?.reading == null }, "$afterEnd")
+        assertNull(engine.hearing().reading)
+    }
+
     /**
      * The engine runs in [TestScope.backgroundScope], which ends with the test: its poll never idles, so time is only
      * ever advanced by a given amount (never advanceUntilIdle). The scheduler's own time source is the engine's clock,
@@ -229,6 +285,15 @@ class TunerEngineTest {
         dispatcher = StandardTestDispatcher(testScheduler),
         timeSource = testScheduler.timeSource,
     )
+
+    private fun TestScope.recordedStates(engine: TunerEngine) = mutableListOf<TunerState>().also { states ->
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { engine.state.toList(states) }
+    }
+
+    private fun silence(): (FloatArray) -> Boolean = { window ->
+        window.fill(0f)
+        true
+    }
 
     private fun TunerEngine.hearing() = assertIs<TunerListening.Hearing>(state.value.listening)
 

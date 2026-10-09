@@ -23,6 +23,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.TimeMark
 import kotlin.time.TimeSource
 
 /**
@@ -50,6 +52,7 @@ internal class TunerEngine(
     private var job: Job? = null
     private var gestureIssue: TunerInputIssue? = null
     private var canReopen = true
+    private var toneEndedAt: TimeMark? = null
 
     override fun listen(config: TunerConfig) = onEngine {
         val current = _state.value.listening
@@ -93,7 +96,7 @@ internal class TunerEngine(
             render = { sampleRate -> ToneSynthesizer.loopOf(frequency, sampleRate) },
             onLost = { onEngine { if (toneId == toneSession) stopToneNow() } },
         )
-        _state.value = _state.value.copy(tone = note.takeIf { isPlaying })
+        setTone(note.takeIf { isPlaying })
     }
 
     override fun stopTone() = onEngine { stopToneNow() }
@@ -104,6 +107,8 @@ internal class TunerEngine(
         val detector = PitchDetector(sampleRate)
         val tracker = PitchTracker()
         val window = FloatArray(detector.windowSize)
+        // The window still holds the tone for its own length after the speaker stops, and the input's latency on top.
+        val toneTail = (detector.windowSize * 1_000L / sampleRate + TONE_TAIL_MARGIN_MILLIS).milliseconds
         val start = timeSource.markNow()
         var trackedConfig = config
         var lastPosition = AudioInput.NO_WINDOW
@@ -119,20 +124,24 @@ internal class TunerEngine(
                 lastPosition = position
                 movedAt = timeSource.markNow()
             }
-            // A window handed out again is still a clear note to the tracker, which would hold it for ever: an input that
-            // has stopped delivering frames, or a context waiting for a gesture, is heard as nothing. The hold stays above
-            // the 400 ms an iOS tap may be handed at worst, so a window repeated between two taps is still read.
-            if (gestureIssue != null || movedAt.elapsedNow().inWholeMilliseconds >= PitchTracker.HOLD_MILLIS) {
+            val isHearingSpeaker = _state.value.tone != null || toneEndedAt?.let { it.elapsedNow() < toneTail } == true
+            // The hold stays above the 400 ms an iOS tap may be handed at worst, so a window repeated between two taps
+            // is still read.
+            val isStalled = movedAt.elapsedNow().inWholeMilliseconds >= PitchTracker.HOLD_MILLIS
+            // What the microphone hears while a tone sounds (and for its tail) is the speaker, a window handed out again
+            // is still a clear note to the tracker, and a context waiting for a gesture hears nothing: all three are
+            // heard as nothing. The tracker is reset rather than only hidden, or it would come out of the tone, or of
+            // the repeated window, still holding what it read there.
+            if (isHearingSpeaker || gestureIssue != null || isStalled) {
                 tracker.reset()
                 setListening(TunerListening.Hearing(issue = gestureIssue))
             } else if (position != AudioInput.NO_WINDOW) {
                 val range = PitchDetector.rangeFor(config.tuning, config.referencePitch)
                 val estimate = detector.detect(window, range.start, range.endInclusive)
                 val tracked = tracker.step(estimate, start.elapsedNow().inWholeMilliseconds, config)
-                // What the microphone hears while a tone sounds is the speaker, so it is not read.
                 setListening(
                     TunerListening.Hearing(
-                        reading = tracked.reading.takeIf { _state.value.tone == null },
+                        reading = tracked.reading,
                         issue = gestureIssue ?: TunerInputIssue.SILENT.takeIf { tracked.isSilent },
                     )
                 )
@@ -166,7 +175,12 @@ internal class TunerEngine(
     private fun stopToneNow() {
         toneSession++
         output.stop()
-        _state.value = _state.value.copy(tone = null)
+        setTone(null)
+    }
+
+    private fun setTone(note: Int?) {
+        if (_state.value.tone != null && note == null) toneEndedAt = timeSource.markNow()
+        _state.value = _state.value.copy(tone = note)
     }
 
     private fun closeInput() {
@@ -187,5 +201,6 @@ internal class TunerEngine(
 
     private companion object {
         const val POLL_INTERVAL_MILLIS = 33L
+        const val TONE_TAIL_MARGIN_MILLIS = 150L
     }
 }
