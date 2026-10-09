@@ -21,7 +21,11 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.inset
 import androidx.compose.ui.unit.dp
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.sin
 
 /** The three arcs and the dot of a full Wi-Fi signal, opening upwards from the bottom middle of the area. */
 internal fun DrawScope.drawWifi(color: Color) {
@@ -84,6 +88,40 @@ internal fun DrawScope.drawBattery(color: Color, hasNub: Boolean) {
         )
     }
 }
+
+/**
+ * iOS 27's status ring, the iPhone Duo's status bar when it stands on its side: a full battery as an arc around the
+ * area, open at the bottom, where four dots of a full cellular signal sit, and Wi-Fi in the middle.
+ */
+internal fun DrawScope.drawStatusRing(color: Color) {
+    val stroke = size.minDimension * 0.075f
+    val radius = (size.minDimension - stroke) / 2
+    drawArc(
+        color = color,
+        startAngle = 90f + STATUS_RING_OPENING / 2,
+        sweepAngle = 360f - STATUS_RING_OPENING,
+        useCenter = false,
+        topLeft = Offset(center.x - radius, center.y - radius),
+        size = Size(radius * 2, radius * 2),
+        style = Stroke(width = stroke, cap = StrokeCap.Round),
+    )
+    listOf(-16.5f, -5.5f, 5.5f, 16.5f).forEach { degrees ->
+        val angle = (90.0 + degrees) * PI / 180
+        drawCircle(
+            color = color,
+            radius = stroke * 0.4f,
+            center = Offset(center.x + radius * cos(angle).toFloat(), center.y + radius * sin(angle).toFloat()),
+        )
+    }
+    val wifiWidth = size.width * 0.4f
+    val wifiHeight = wifiWidth * 0.72f
+    val left = center.x - wifiWidth / 2
+    val top = center.y - wifiHeight * 0.6f
+    inset(left = left, top = top, right = size.width - left - wifiWidth, bottom = size.height - top - wifiHeight) { drawWifi(color) }
+}
+
+/** How much of the status ring, in degrees, is left open at its bottom for the cellular dots. */
+private const val STATUS_RING_OPENING = 70f
 
 /** A magnifier, its lens at the top left and its handle running to the bottom right. */
 internal fun DrawScope.drawMagnifier(color: Color) {

@@ -266,8 +266,11 @@ private class DeviceInsets(chrome: SystemChrome, private val density: Float) : P
     override val statusBars = PlatformInsets(top = chrome.statusBar.toPx())
     override val navigationBars = PlatformInsets(bottom = chrome.navigationBar.toPx())
     override val captionBar = PlatformInsets(top = chrome.captionBar.toPx())
+    // Compose on iOS reports a safe area at the side both as the system bars and, in landscape, as the display cutout.
+    override val displayCutout = PlatformInsets(right = chrome.trailingBar.toPx())
     override val systemBars = PlatformInsets(
         top = maxOf(chrome.statusBar, chrome.captionBar).toPx(),
+        right = chrome.trailingBar.toPx(),
         bottom = chrome.navigationBar.toPx(),
     )
 }

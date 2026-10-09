@@ -48,8 +48,8 @@ import androidx.compose.ui.unit.sp
 /**
  * What a platform draws around an app, which the desktop build being rendered has none of: where the app's window is
  * on the screen ([windowTop], [windowBottom], the room a menu bar, a shelf or a taskbar keeps), which of its edges the
- * system draws over ([statusBar], [navigationBar] and, on the desktops, [captionBar], each reported to the app as
- * the inset the platform would report), and the drawing itself, laid over the whole screen once the app is in place.
+ * system draws over ([statusBar], [navigationBar], on the iPhone Duo [trailingBar] and on the desktops [captionBar],
+ * each reported to the app as the inset the platform would report), and the drawing itself, laid over the whole screen once the app is in place.
  *
  * Every shot is taken at the same moment, 9:41 on Wednesday, October 7, with a full battery and a strong signal, as
  * the stores' own screenshots are. The phones' and tablets' bars are laid out to the dp and the point as the current
@@ -61,6 +61,7 @@ internal sealed interface SystemChrome {
     val statusBar: Dp get() = 0.dp
     val navigationBar: Dp get() = 0.dp
     val captionBar: Dp get() = 0.dp
+    val trailingBar: Dp get() = 0.dp
 
     @Composable
     fun Overlay(appearance: ChromeAppearance)
@@ -184,6 +185,34 @@ internal sealed interface SystemChrome {
                 }
             }
             HomeIndicator(appearance = appearance, width = 144.dp, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 8.dp))
+        }
+    }
+
+    /**
+     * The iPhone Duo open and on its side, where iOS 27 takes the bars off the top and the bottom edges: the status bar
+     * stands at the top of an 84pt strip along the trailing edge, which the app is laid out beside and draws its
+     * background under, and only the home indicator stays at the bottom. The strip is a 48pt column with 12pt before
+     * and 24pt after it, its content starting 24pt from the top: the time over the status ring, as the iOS 27 UI Kit
+     * draws them and the Duo simulator reports the insets (none at the top, 34pt at the bottom, 84pt on the right).
+     */
+    data object IPhoneDuo : SystemChrome {
+        override val navigationBar = 34.dp
+        override val trailingBar = 84.dp
+
+        @Composable
+        override fun Overlay(appearance: ChromeAppearance) = Box(Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier.align(Alignment.TopEnd).padding(top = 24.dp, end = 24.dp).width(48.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Spacer(Modifier.height(11.dp))
+                Box(Modifier.height(19.dp), contentAlignment = Alignment.Center) {
+                    ChromeText(text = "9:41", appearance = appearance, size = 16.sp, weight = FontWeight.Bold)
+                }
+                Spacer(Modifier.height(5.dp))
+                Canvas(Modifier.size(46.dp)) { drawStatusRing(appearance.content) }
+            }
+            HomeIndicator(appearance = appearance, width = 208.dp, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 8.dp))
         }
     }
 

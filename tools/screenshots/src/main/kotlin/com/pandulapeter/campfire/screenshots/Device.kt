@@ -77,8 +77,8 @@ internal enum class Device(
     ),
 
     /**
-     * The iPhone Duo opened into its inner display and held on its side, at the iPhone's 3x, where iOS lays the app out
-     * like an iPad's and draws the iPad's status bar over it.
+     * The iPhone Duo opened into its inner display and held on its side: 951 by 669 points at the iPhone's 3x, with the
+     * status bar in a strip along its trailing edge rather than across its top.
      */
     IPHONE_DUO(
         folder = "App Store - iPhone Duo",
@@ -86,7 +86,7 @@ internal enum class Device(
         widthPx = 2853,
         heightPx = 2007,
         density = 3f,
-        chrome = SystemChrome.IPad,
+        chrome = SystemChrome.IPhoneDuo,
     ),
     IPAD(
         folder = "App Store - iPad",

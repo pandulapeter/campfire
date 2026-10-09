@@ -11,6 +11,7 @@
 ## Short-term (in this version)
 ### Bugs / issues
 - Changing filters should not scroll to top
+- PDF export screen: the page preview should be vertically centered between the floating components (if they exist)
 
 ### Improvements
 - Improve haptic effects (fast scroll is inconsistent, tap tempo should not have one)

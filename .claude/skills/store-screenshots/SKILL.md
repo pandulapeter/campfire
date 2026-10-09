@@ -106,8 +106,9 @@ repository; the user reviews and commits.
 The listing alternates two dark, two light: 1–2 dark, 3–4 light, 5–6 dark, 7–8 light. Shared rules: the store
 screenshots are shown at 9:41 on Wednesday, October 7, 2026 (setlist dates are moved with the run's day, so their
 countdowns always read the same); the iPhone Duo is always part of the listing, shown unfolded and on its side
-(its inner display, 2853×2007 at 3x, under the iPad's status bar); the app icon anywhere in the system chrome is the default gradient one; Android
-phone frames are Screenshot Bro's Pixel frame; Share is shown on Android and iOS only; sync is a fake connected
+(its inner display, 2853×2007 at 3x, as iOS 27 lays it out: no status bar across the top, but an 84pt strip along
+the right edge that the app is inset from and draws under, with the time and the status ring at its top, and the home
+indicator at the bottom); the app icon anywhere in the system chrome is the default gradient one; Android phone frames are Screenshot Bro's Pixel frame; Share is shown on Android and iOS only; sync is a fake connected
 account, "Connected as Péter Pandula"; only public domain songs are opened full screen in the listing.
 
 | # | Headline | Shot |
