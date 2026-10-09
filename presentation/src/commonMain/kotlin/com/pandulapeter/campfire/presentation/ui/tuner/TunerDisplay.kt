@@ -21,7 +21,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,6 +33,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -155,7 +156,7 @@ internal fun TunerDisplay(
         ) {
             if (isCompact) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    noteLabel(Modifier.widthIn(min = 96.dp))
+                    noteLabel(Modifier.width(COMPACT_NOTE_WIDTH * LocalDensity.current.fontScale))
                     Column(modifier = Modifier.weight(1f)) {
                         meter(Modifier.fillMaxWidth())
                         frequencies()
@@ -171,6 +172,13 @@ internal fun TunerDisplay(
 }
 
 private const val ANNOUNCEMENT_HOLD_MILLIS = 700L
+
+/**
+ * The compact label's width: the widest note the notations write, Latin `Sol#4`, with room to spare, and two lines of the
+ * prompt. One width whatever the label says, so the meter beside it never moves as a note comes and goes; it grows with
+ * the text size, since the note is never wrapped.
+ */
+private val COMPACT_NOTE_WIDTH = 128.dp
 
 /** The note and its octave, or the line asking for one, crossfading as it changes. */
 @Composable
@@ -189,11 +197,13 @@ private fun TunerNoteLabel(
 ) { shownNote ->
     if (shownNote == null) {
         Text(
-            modifier = Modifier.padding(vertical = if (isCompact) 12.dp else 24.dp),
+            modifier = Modifier.padding(vertical = if (isCompact) 4.dp else 24.dp),
             text = stringResource(Res.string.tuner_play_a_note),
-            style = MaterialTheme.typography.titleLarge,
+            style = if (isCompact) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
+            // Two lines of it stay within the compact label's minimum height, so the row keeps one height as a note arrives.
+            maxLines = if (isCompact) 2 else Int.MAX_VALUE,
         )
     } else {
         Row(verticalAlignment = Alignment.Bottom) {
@@ -202,12 +212,16 @@ private fun TunerNoteLabel(
                 style = if (isCompact) MaterialTheme.typography.displayMedium else MaterialTheme.typography.displayLarge,
                 fontWeight = FontWeight.Bold,
                 color = color,
+                softWrap = false,
+                maxLines = 1,
             )
             Text(
                 modifier = Modifier.padding(start = 2.dp, bottom = 8.dp),
                 text = noteOctave(shownNote).toString(),
                 style = MaterialTheme.typography.titleLarge,
                 color = color,
+                softWrap = false,
+                maxLines = 1,
             )
         }
     }
