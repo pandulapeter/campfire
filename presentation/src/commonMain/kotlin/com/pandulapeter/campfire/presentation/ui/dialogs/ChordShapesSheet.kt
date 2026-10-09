@@ -32,6 +32,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
@@ -199,8 +200,10 @@ private fun ChordShapeCell(
     ) {
         // The name wraps at the diagram's width, so a name that does not fit it, a step with its letters or a chord with the
         // one that sounds, takes a second line rather than losing the half that says what the shape is, or widening the cell.
+        // The diagram's description names the chord, both of its names included (chordCellDescription), so the names drawn
+        // above it are left out of what a screen reader reads rather than heard twice.
         FlowRow(
-            modifier = Modifier.widthIn(max = cellWidth),
+            modifier = Modifier.widthIn(max = cellWidth).clearAndSetSemantics {},
             horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
             itemVerticalAlignment = Alignment.Bottom,
         ) {
