@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeMark
 import kotlin.time.TimeSource
 
@@ -113,6 +114,7 @@ internal class TunerEngine(
         var trackedConfig = config
         var lastPosition = AudioInput.NO_WINDOW
         var movedAt = timeSource.markNow()
+        var firstWindowAt: TimeMark? = null
         while (sessionId == session) {
             val config = config ?: break
             if (config != trackedConfig) {
@@ -123,6 +125,10 @@ internal class TunerEngine(
             if (position != AudioInput.NO_WINDOW && position != lastPosition) {
                 lastPosition = position
                 movedAt = timeSource.markNow()
+                val heardSince = firstWindowAt ?: movedAt.also { firstWindowAt = it }
+                // An input that came back from a new route and has kept working may be opened again the next time one
+                // changes. Only fresh windows count, so a stalled input does not re-arm itself.
+                if (!canReopen && heardSince.elapsedNow() >= REOPEN_REARM_DELAY) canReopen = true
             }
             val isHearingSpeaker = _state.value.tone != null || toneEndedAt?.let { it.elapsedNow() < toneTail } == true
             // The hold stays above the 400 ms an iOS tap may be handed at worst, so a window repeated between two taps
@@ -202,5 +208,6 @@ internal class TunerEngine(
     private companion object {
         const val POLL_INTERVAL_MILLIS = 33L
         const val TONE_TAIL_MARGIN_MILLIS = 150L
+        val REOPEN_REARM_DELAY = 2.seconds
     }
 }

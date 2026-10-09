@@ -112,6 +112,37 @@ class TunerEngineTest {
     }
 
     @Test
+    fun `a disconnect long after a reopen is opened again`() = runTest {
+        val engine = engine()
+        input.signal = sine(330f)
+        engine.listen(chromatic)
+        runCurrent()
+        assertNotNull(input.listener).onLost(TunerStopReason.MICROPHONE_DISCONNECTED)
+        runCurrent()
+        advanceTimeBy(3_000)
+        assertNotNull(input.listener).onLost(TunerStopReason.MICROPHONE_DISCONNECTED)
+        runCurrent()
+        assertIs<TunerListening.Hearing>(engine.state.value.listening)
+        assertEquals(3, input.startCount)
+    }
+
+    @Test
+    fun `a reopened input that stopped delivering is not opened again`() = runTest {
+        val engine = engine()
+        input.signal = sine(330f)
+        engine.listen(chromatic)
+        runCurrent()
+        assertNotNull(input.listener).onLost(TunerStopReason.MICROPHONE_DISCONNECTED)
+        runCurrent()
+        input.isFrozen = true
+        advanceTimeBy(3_000)
+        assertNotNull(input.listener).onLost(TunerStopReason.MICROPHONE_DISCONNECTED)
+        runCurrent()
+        assertEquals(TunerListening.Stopped(TunerStopReason.MICROPHONE_DISCONNECTED), engine.state.value.listening)
+        assertEquals(2, input.startCount)
+    }
+
+    @Test
     fun `a lost input of an earlier session is ignored`() = runTest {
         val engine = engine()
         engine.listen(chromatic)

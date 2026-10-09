@@ -23,7 +23,8 @@ this module. Nothing here reaches the network, and nothing heard is kept beyond 
   context), or an input waiting for a gesture, is heard as nothing, since the tracker would hold a repeated window of a
   clear note for ever. While a tone sounds, and for a window plus 150 ms after it stops, the tracker is reset and
   nothing is read, since the microphone hears the speaker. A `MICROPHONE_DISCONNECTED` (a new route: headphones
-  plugged in or pulled) opens the input again once before it is reported.
+  plugged in or pulled) opens the input again, once until the reopened input has worked for two seconds, before it is
+  reported.
 - `PitchDetector` — the McLeod pitch method over about 85 ms of input (4096 frames at 44.1 or 48 kHz, the next power of
   two for another rate): the normalized square difference function, its autocorrelation through two FFTs of the window
   padded to twice its length (`Fft`, a radix-2 one of its own), the first key maximum reaching 0.9 of the highest,
