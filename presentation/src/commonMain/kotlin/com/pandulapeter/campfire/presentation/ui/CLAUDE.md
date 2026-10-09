@@ -412,6 +412,7 @@ stops saying anything. The metronome's Vibrate on the beat is a feature rather t
   than adding a node.
 - **A notice that appears on its own is a polite live region** (`SettingsMessage(isAnnounced = true)`); one that is
   there from the start is not.
+- **A row of `Role.RadioButton` chips is a `selectableGroup()`**, as the radio lists are.
 
 ## Features
 
