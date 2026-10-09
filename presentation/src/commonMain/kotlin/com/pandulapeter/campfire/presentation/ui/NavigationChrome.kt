@@ -11,7 +11,9 @@ package com.pandulapeter.campfire.presentation.ui
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -55,6 +57,9 @@ private val EXPANDED_NAVIGATION_RAIL_LABEL_WIDTH = 116.dp
 
 /** The weight of a navigation bar item that has all but left, since a weight of zero is refused. */
 private const val MIN_NAVIGATION_ITEM_WEIGHT = 0.001f
+
+/** How far a navigation label that does not fit its item is made smaller before it is cut short instead. */
+private const val MIN_NAVIGATION_LABEL_SCALE = 0.75f
 
 /** The gap the collapsed [NavigationRail] leaves above its first item. */
 private val EXPANDED_NAVIGATION_RAIL_TOP_PADDING = 4.dp
@@ -130,7 +135,7 @@ internal fun NavigationChrome(
                             it.copy(disabledIconColor = it.unselectedIconColor, disabledTextColor = it.unselectedTextColor)
                         },
                         icon = { DestinationIcon(destination = destination, metronomeBeat = metronomeBeat) },
-                        label = { Text(stringResource(destination.label)) },
+                        label = { NavigationItemLabel(stringResource(destination.label)) },
                     )
                 }
             }
@@ -152,7 +157,7 @@ internal fun NavigationChrome(
                             it.copy(disabledIconColor = it.unselectedIconColor, disabledTextColor = it.unselectedTextColor)
                         },
                         icon = { DestinationIcon(destination = destination, metronomeBeat = metronomeBeat) },
-                        label = { Text(stringResource(destination.label)) },
+                        label = { NavigationItemLabel(stringResource(destination.label)) },
                     )
                 }
             }
@@ -171,6 +176,26 @@ private fun DestinationIcon(
     CampfireDestination.Metronome -> MetronomeIcon(beat = metronomeBeat, contentDescription = null)
     CampfireDestination.Tuner -> Icon(painter = painterResource(Res.drawable.ic_tuner), contentDescription = null)
     CampfireDestination.Settings -> Icon(painter = painterResource(Res.drawable.ic_settings), contentDescription = null)
+}
+
+/**
+ * A navigation item's label, on one line however large the text: one that does not fit its item is made smaller
+ * rather than broken, since a word broken between its letters - five items share a phone's width - reads as two, and
+ * past the floor it is cut short.
+ */
+@Composable
+private fun NavigationItemLabel(text: String) {
+    val fontSize = LocalTextStyle.current.fontSize
+    Text(
+        text = text,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        autoSize = TextAutoSize.StepBased(
+            minFontSize = fontSize * MIN_NAVIGATION_LABEL_SCALE,
+            // The style's own size, or the auto size would grow a short label to fill its item.
+            maxFontSize = fontSize,
+        ),
+    )
 }
 
 private val CampfireDestination.TopLevel.label: StringResource
