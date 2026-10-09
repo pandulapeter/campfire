@@ -81,7 +81,11 @@ internal fun SettingsScreen(
     val coroutineScope = rememberCoroutineScope()
     val scrollTabToTop = { tab: SettingsTab -> coroutineScope.launch { scrollStates[tab.ordinal].animateScrollTo(0) }; Unit }
     LaunchedEffect(viewModel, scrollStates) {
-        viewModel.scrollToTopRequests.collect {
+        // Latest rather than plain collect: a finger that touches the page while it scrolls takes the scroll over, and
+        // the animation it interrupts ends in a CancellationException, which inside a plain collect would end the whole
+        // collector, and every later press of the item with it, without a word. collectLatest runs each request in a
+        // child of its own, so an interruption ends that request alone.
+        viewModel.scrollToTopRequests.collectLatest {
             if (it == CampfireDestination.Settings) {
                 viewModel.settingsTab = SettingsTab.GENERAL
                 scrollStates[SettingsTab.GENERAL.ordinal].animateScrollTo(0)

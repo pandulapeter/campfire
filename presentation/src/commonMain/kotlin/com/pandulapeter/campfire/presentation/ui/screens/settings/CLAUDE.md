@@ -53,8 +53,9 @@ there, and a cancel back).
 
 Pressing the Settings item while it is open goes to General, scrolled to the top; pressing the tab that is open scrolls
 it to the top, as does pressing the Songs, Setlists or Metronome item on its screen (`CampfireViewModel.scrollToTopRequests`,
-which every top level screen collects). The two layouts crossfade when a window is resized across the line between them,
-and so do the pages of the wide one as a category is picked (a pager slides only where a finger drags it). Each page
+which every top level screen collects with `collectLatest`: a touch that interrupts the scroll ends its animation in a
+`CancellationException`, which would end a plain `collect`, and every later press with it). The two layouts crossfade
+when a window is resized across the line between them, and so do the pages of the wide one as a category is picked (a pager slides only where a finger drags it). Each page
 (`SettingsPage`, `SettingsPage.kt`) is a `SettingsSection` or two: side by side where the settled width has room for
 both at 380dp each, stacked otherwise, each column capped at `THEME_COLOR_CHOICE_WIDTH` (every color disc in one row)
 and starting at the start edge, the room next to the category pane being what the columns are counted in. Sections have

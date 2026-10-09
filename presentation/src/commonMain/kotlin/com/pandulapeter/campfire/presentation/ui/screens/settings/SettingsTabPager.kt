@@ -69,9 +69,10 @@ internal fun SettingsTabPager(
         snapshotFlow { pagerState.settledPage }.collect { viewModel.settingsTab = SettingsTab.entries[it] }
     }
     // The other direction: the wide layout's pane and the web build's address set the tab from outside, and the pager
-    // has to follow it, which it only does for a value it did not settle on itself.
+    // has to follow it, which it only does for a value it did not settle on itself. Latest, so that a swipe interrupting
+    // the animation ends that animation rather than the collector (see the settings screen's scroll to top requests).
     LaunchedEffect(pagerState) {
-        snapshotFlow { viewModel.settingsTab }.collect {
+        snapshotFlow { viewModel.settingsTab }.collectLatest {
             if (it.ordinal != pagerState.targetPage) pagerState.animateScrollToPage(it.ordinal)
         }
     }

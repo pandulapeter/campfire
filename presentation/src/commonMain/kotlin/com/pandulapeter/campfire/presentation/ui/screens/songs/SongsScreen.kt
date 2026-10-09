@@ -69,6 +69,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.screens.rememberSongFilterActions
 import com.pandulapeter.campfire.presentation.ui.screens.rememberSongFilterUiState
+import kotlinx.coroutines.flow.collectLatest
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
@@ -94,7 +95,8 @@ internal fun SongsScreen(
     val hasLoadedLibrary = rememberHasLoadedLibrary(isLoading)
     HideKeyboardWhenScrolledDown(listState, isEnabled = visibleDialog == null)
     LaunchedEffect(viewModel, listState) {
-        viewModel.scrollToTopRequests.collect { if (it == CampfireDestination.Songs) listState.animateScrollToItem(0) }
+        // Latest, for the reason the settings screen gives.
+        viewModel.scrollToTopRequests.collectLatest { if (it == CampfireDestination.Songs) listState.animateScrollToItem(0) }
     }
     DismissSheetWhenSidePanelAppears(
         isSidePanelVisible = isSidePanelVisible,

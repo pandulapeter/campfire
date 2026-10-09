@@ -60,6 +60,7 @@ import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsPage
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsSection
 import com.pandulapeter.campfire.presentation.ui.components.SettingsSubsection
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsWidthLayout
+import kotlinx.coroutines.flow.collectLatest
 
 /**
  * The whole instrument: the song details screen's own metronome panel ([MetronomePanel]) pinned at the top - the bar as
@@ -85,7 +86,8 @@ internal fun MetronomeScreen(
     val layoutDirection = LocalLayoutDirection.current
     val scrollState = rememberRetainedScrollState(scrollPosition)
     LaunchedEffect(viewModel, scrollState) {
-        viewModel.scrollToTopRequests.collect { if (it == CampfireDestination.Metronome) scrollState.animateScrollTo(0) }
+        // Latest, for the reason the settings screen gives.
+        viewModel.scrollToTopRequests.collectLatest { if (it == CampfireDestination.Metronome) scrollState.animateScrollTo(0) }
     }
     Column(
         // A metronome is practised with both hands on the instrument, and a screen that dims and locks takes the beat row

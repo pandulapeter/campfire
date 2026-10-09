@@ -45,6 +45,7 @@ import com.pandulapeter.campfire.presentation.ui.components.overlappingAction
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedLazyGridState
 import com.pandulapeter.campfire.presentation.ui.components.underAppBar
 import com.pandulapeter.campfire.presentation.localization.stringResource
+import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 internal fun SetlistsScreen(
@@ -73,7 +74,8 @@ internal fun SetlistsScreen(
     val columnCount = layout.setlistColumnCount
     HideKeyboardWhenScrolledDown(listState, isEnabled = visibleDialog == null)
     LaunchedEffect(viewModel, listState) {
-        viewModel.scrollToTopRequests.collect { if (it == CampfireDestination.Setlists) listState.animateScrollToItem(0) }
+        // Latest, for the reason the settings screen gives.
+        viewModel.scrollToTopRequests.collectLatest { if (it == CampfireDestination.Setlists) listState.animateScrollToItem(0) }
     }
     // See the songs screen: how far the app bar's buttons reach in over a pinned header, which it narrows to clear.
     var appBarReach by remember { mutableStateOf(0.dp) }
