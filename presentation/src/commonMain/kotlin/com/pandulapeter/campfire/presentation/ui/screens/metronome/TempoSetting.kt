@@ -10,7 +10,6 @@
 package com.pandulapeter.campfire.presentation.ui.screens.metronome
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
@@ -21,7 +20,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -33,6 +31,8 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.metronome_tempo_slider
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_tempo
+import com.pandulapeter.campfire.presentation.ui.components.LabeledControlRow
+import com.pandulapeter.campfire.presentation.ui.metronome.TEMPO_MARKING_NAMES
 import com.pandulapeter.campfire.presentation.ui.metronome.TempoStepper
 import com.pandulapeter.campfire.presentation.ui.metronome.tempoMarking
 import kotlin.math.roundToInt
@@ -51,22 +51,14 @@ internal fun TempoSetting(
     // The pill's number cross-fades for a change made on the pill and is replaced in place for one the slider makes: a
     // drag changes it many times a second, and a fade restarted that often never gets as far as showing a number.
     var pillChanges by remember { mutableIntStateOf(0) }
-    Row(
+    val name = stringResource(Res.string.song_editor_insert_tempo)
+    LabeledControlRow(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
+        label = { TempoLabel(name = name, markings = listOf(tempoMarking(bpm))) },
+        // Every marking rather than the one shown, which changes many times a second under a dragged slider: the row
+        // takes the form the widest of them needs, so it never changes form, and moves the slider, while it is dragged.
+        decidingLabel = { TempoLabel(name = name, markings = TEMPO_MARKING_NAMES) },
     ) {
-        Column(modifier = Modifier.weight(1f).padding(end = 16.dp)) {
-            Text(
-                text = stringResource(Res.string.song_editor_insert_tempo),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-            Text(
-                text = tempoMarking(bpm),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
         TempoStepper(
             bpm = bpm,
             // The tab's tempo is nobody's override of anything, so no value of it is set apart or reset.
@@ -98,4 +90,24 @@ internal fun TempoSetting(
         onValueChange = { onBpmChanged(it.roundToInt()) },
         valueRange = MetronomePattern.BPM_RANGE.first.toFloat()..MetronomePattern.BPM_RANGE.last.toFloat(),
     )
+}
+
+/** The tempo's name over the Italian marking it falls under, each in the style it is drawn in. */
+@Composable
+private fun TempoLabel(
+    name: String,
+    markings: List<String>,
+) = Column {
+    Text(
+        text = name,
+        style = MaterialTheme.typography.bodyLarge,
+        color = MaterialTheme.colorScheme.onSurface,
+    )
+    markings.forEach { marking ->
+        Text(
+            text = marking,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
 }

@@ -18,7 +18,6 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -34,7 +33,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TriStateCheckbox
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
@@ -87,6 +85,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_text_size_d
 import com.pandulapeter.campfire.presentation.resources.song_details_text_size_increase
 import com.pandulapeter.campfire.presentation.ui.components.CheckboxListItem
 import com.pandulapeter.campfire.presentation.ui.components.LIST_ITEM_KEYLINE
+import com.pandulapeter.campfire.presentation.ui.components.LabeledControlRow
 import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
 import com.pandulapeter.campfire.presentation.ui.components.SettingsSectionTitle
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
@@ -370,18 +369,19 @@ private fun SelectAllListItem(
     leadingContent = { TriStateCheckbox(state = state, onClick = null) },
 )
 
-/** A label and a stepper on one line, built like the overflow menus' `MenuStepperRow`, at the screen's own keyline. */
+/**
+ * A label and a stepper on one line at the screen's own keyline, the label going above the stepper where a word of it
+ * would no longer fit beside it.
+ */
 @Composable
 private fun PrintStepperRow(
     label: String,
     stepper: @Composable () -> Unit,
-) = Row(
+) = LabeledControlRow(
     modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 16.dp),
-    verticalAlignment = Alignment.CenterVertically,
-) {
-    Text(label, Modifier.weight(1f).padding(end = 16.dp), style = MaterialTheme.typography.bodyLarge)
-    stepper()
-}
+    label = { Text(label, style = MaterialTheme.typography.bodyLarge) },
+    controls = stepper,
+)
 
 private const val MIN_FONT_SIZE = 8
 

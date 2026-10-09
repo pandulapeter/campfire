@@ -33,6 +33,7 @@ import com.pandulapeter.campfire.presentation.resources.tuner_reference_pitch_de
 import com.pandulapeter.campfire.presentation.resources.tuner_reference_pitch_increase
 import com.pandulapeter.campfire.presentation.resources.tuner_reference_pitch_reset
 import com.pandulapeter.campfire.presentation.resources.tuner_reference_pitch_value
+import com.pandulapeter.campfire.presentation.ui.components.LabeledControlRow
 import com.pandulapeter.campfire.presentation.ui.components.SelectableChip
 import com.pandulapeter.campfire.presentation.ui.components.Stepper
 import com.pandulapeter.campfire.presentation.ui.metronome.PlayStopMark
@@ -50,47 +51,53 @@ internal fun ReferencePitchSetting(
     isReferenceTonePlaying: Boolean,
     onReferencePitchChanged: (Int) -> Unit,
     onToggleReferenceTone: () -> Unit,
-) = Row(
-    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
-    verticalAlignment = Alignment.CenterVertically,
-    horizontalArrangement = Arrangement.spacedBy(8.dp),
 ) {
-    Text(
-        modifier = Modifier.weight(1f),
-        text = stringResource(Res.string.tuner_reference_pitch),
-        style = MaterialTheme.typography.bodyLarge,
-        color = MaterialTheme.colorScheme.onSurface,
-    )
     val referenceName = noteNameWithOctave(REFERENCE_NOTE, notation)
-    Stepper(
-        value = stringResource(Res.string.tuner_reference_pitch_value, referenceName, referencePitch),
-        isDefault = referencePitch == Pitch.DEFAULT_REFERENCE_PITCH,
-        decreaseIcon = painterResource(Res.drawable.ic_subtract),
-        decreaseLabel = stringResource(Res.string.tuner_reference_pitch_decrease),
-        canDecrease = referencePitch > Pitch.REFERENCE_PITCH_RANGE.first,
-        onDecrease = { onReferencePitchChanged(referencePitch - 1) },
-        increaseIcon = painterResource(Res.drawable.ic_add),
-        increaseLabel = stringResource(Res.string.tuner_reference_pitch_increase),
-        canIncrease = referencePitch < Pitch.REFERENCE_PITCH_RANGE.last,
-        onIncrease = { onReferencePitchChanged(referencePitch + 1) },
-        resetLabel = stringResource(Res.string.tuner_reference_pitch_reset),
-        onReset = { onReferencePitchChanged(Pitch.DEFAULT_REFERENCE_PITCH) }.takeIf { referencePitch != Pitch.DEFAULT_REFERENCE_PITCH },
-        repeatsOnHold = true,
-    )
-    val description = stringResource(Res.string.tuner_play_reference)
-    SelectableChip(
-        modifier = Modifier.semantics { contentDescription = description },
-        isSelected = isReferenceTonePlaying,
-        role = Role.Switch,
-        onClick = onToggleReferenceTone,
-    ) { contentColor ->
-        PlayStopMark(isPlaying = isReferenceTonePlaying, size = 18.dp, color = contentColor)
-        Text(
-            modifier = Modifier.padding(start = 4.dp),
-            text = referenceName,
-            style = MaterialTheme.typography.labelLarge,
-            color = contentColor,
-        )
+    LabeledControlRow(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+        label = {
+            Text(
+                text = stringResource(Res.string.tuner_reference_pitch),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+        },
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Stepper(
+                value = stringResource(Res.string.tuner_reference_pitch_value, referenceName, referencePitch),
+                isDefault = referencePitch == Pitch.DEFAULT_REFERENCE_PITCH,
+                decreaseIcon = painterResource(Res.drawable.ic_subtract),
+                decreaseLabel = stringResource(Res.string.tuner_reference_pitch_decrease),
+                canDecrease = referencePitch > Pitch.REFERENCE_PITCH_RANGE.first,
+                onDecrease = { onReferencePitchChanged(referencePitch - 1) },
+                increaseIcon = painterResource(Res.drawable.ic_add),
+                increaseLabel = stringResource(Res.string.tuner_reference_pitch_increase),
+                canIncrease = referencePitch < Pitch.REFERENCE_PITCH_RANGE.last,
+                onIncrease = { onReferencePitchChanged(referencePitch + 1) },
+                resetLabel = stringResource(Res.string.tuner_reference_pitch_reset),
+                onReset = { onReferencePitchChanged(Pitch.DEFAULT_REFERENCE_PITCH) }.takeIf { referencePitch != Pitch.DEFAULT_REFERENCE_PITCH },
+                repeatsOnHold = true,
+            )
+            val description = stringResource(Res.string.tuner_play_reference)
+            SelectableChip(
+                modifier = Modifier.semantics { contentDescription = description },
+                isSelected = isReferenceTonePlaying,
+                role = Role.Switch,
+                onClick = onToggleReferenceTone,
+            ) { contentColor ->
+                PlayStopMark(isPlaying = isReferenceTonePlaying, size = 18.dp, color = contentColor)
+                Text(
+                    modifier = Modifier.padding(start = 4.dp),
+                    text = referenceName,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = contentColor,
+                )
+            }
+        }
     }
 }
 

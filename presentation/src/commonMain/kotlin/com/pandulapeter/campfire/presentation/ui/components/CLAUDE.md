@@ -246,6 +246,17 @@ portrait. The Setlists screen's columns are at least 416dp (`MIN_SETLIST_COLUMN_
 `ListLayout.setlistColumnCount`), since its cards also carry the slot number, the key, the tempo and the duration, and
 at the songs' 360dp a laptop's maximized window cut all of them short across four columns.
 
+### `ui/components/LabeledControlRow.kt`
+
+A setting whose label stands beside a wide control that grows with the text and never wraps — the tuner's reference
+pitch, the Metronome tab's tempo, the export screen's text size and margins — is a `LabeledControlRow`: the label stays
+beside the controls while its longest word fits there (its min intrinsic width), and goes above them, the
+`SettingsSubsection` way, when a word would otherwise be broken between its letters. So nothing changes at 1.0x, and a
+large text size on a phone stacks the row. The form never changes with the value: a label that changes width with it
+names its widest form as `decidingLabel` (every tempo marking), measured and never drawn, and a row that stacked at a
+width stays stacked at that width (`isLabelBesideControls`, tested), so a dragged slider or a held stepper button never
+moves under the finger. The change is not animated, since it comes from the text size or the window.
+
 ### `ui/components/Languages.kt`
 
 `ui/components/Languages.kt` — what a language is called, and the only part of the language feature the app ships:

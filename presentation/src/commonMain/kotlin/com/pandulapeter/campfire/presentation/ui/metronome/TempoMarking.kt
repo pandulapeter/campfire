@@ -26,3 +26,6 @@ private val TEMPO_MARKINGS = listOf(
     170 to "Presto",
     200 to "Prestissimo",
 )
+
+/** Every marking [tempoMarking] can name, for the room the widest of them takes. */
+internal val TEMPO_MARKING_NAMES = TEMPO_MARKINGS.map { it.second }

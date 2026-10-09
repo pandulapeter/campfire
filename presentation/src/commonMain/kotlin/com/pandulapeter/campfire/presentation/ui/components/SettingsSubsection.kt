@@ -58,5 +58,5 @@ internal fun SettingsSubsection(
 /** The room a [SettingsSubsection] keeps above and below itself, which is what a list item pads itself by. */
 private val SUBSECTION_PADDING = 12.dp
 
-/** The gap between the text of a [SettingsSubsection] and its control. */
-private val SUBSECTION_CONTROL_GAP = 12.dp
+/** The gap between the text of a [SettingsSubsection] and its control, and of a stacked [LabeledControlRow]. */
+internal val SUBSECTION_CONTROL_GAP = 12.dp
