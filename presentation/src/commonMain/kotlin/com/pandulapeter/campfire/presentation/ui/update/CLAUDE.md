@@ -21,8 +21,8 @@ network). `AppUpdateGate` wraps the whole app inside `CampfireApp`, so the hint 
 and the language chosen *in the app*. The policy is the Play release's own `updatePriority` and nothing else, and the
 screen a required update puts up is drawn over the app (both below). Dialogs, sheets and menus are windows of their own
 on Android, which that screen cannot cover, so none of them is composed while it is up
-(`LocalIsCoveredByRequiredUpdate`, read by `CampfireContent` and `OverflowMenu`); what they were showing stays in their
-state and comes back if the screen goes.
+(`LocalIsCoveredByRequiredUpdate`, read by `CampfireContent`, `OverflowMenu` and `TunerListeningEffect`, which stops the
+Tuner tab listening under it); what they were showing stays in their state and comes back if the screen goes.
 
 The controller reports and the gate decides when to act: the immediate flow is started by the gate as its screen goes
 up, and both that and the Restart offer wait for an editor holding unsaved text (Restart also for a sync run). What Play
