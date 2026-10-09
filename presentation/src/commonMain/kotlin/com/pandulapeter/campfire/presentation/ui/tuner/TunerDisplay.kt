@@ -84,10 +84,10 @@ internal fun TunerDisplay(
     val isInTune = reading?.isInTune == true
     val accent = animateColorAsState(if (isInTune) LocalSecondAccentColor.current else MaterialTheme.colorScheme.onSurface).value
     val exactDescription = when {
-        tone != null -> stringResource(Res.string.tuner_reading_tone, noteNameWithOctave(tone, notation))
+        tone != null -> stringResource(Res.string.tuner_reading_tone, spokenNoteName(tone, notation))
         reading == null -> stringResource(Res.string.tuner_play_a_note)
         else -> {
-            val name = noteNameWithOctave(reading.note, notation)
+            val name = spokenNoteName(reading.note, notation)
             val cents = reading.cents.roundToInt()
             when {
                 isInTune -> stringResource(Res.string.tuner_reading_in_tune, name)
@@ -114,7 +114,7 @@ internal fun TunerDisplay(
                 TunerOffset.SHARP -> Res.string.tuner_reading_coarse_sharp
                 TunerOffset.FAR_SHARP -> Res.string.tuner_reading_far_sharp
             },
-            noteNameWithOctave(it.note, notation),
+            spokenNoteName(it.note, notation),
         )
     }
     val noteLabel: @Composable (Modifier) -> Unit = { labelModifier ->

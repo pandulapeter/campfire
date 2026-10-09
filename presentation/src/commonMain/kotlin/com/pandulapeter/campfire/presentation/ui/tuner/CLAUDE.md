@@ -39,7 +39,8 @@ share.
   `TunerStrings` (a chip per string, the tone's or the heard one selected, a tap toggling its tone) and
   `ReferencePitchSetting` (a `Stepper` reset by a tap on its value, and a chip playing A4).
 - `NoteNames.kt` — a MIDI note in the reader's chord notation with sharps (`H` in German, `La` in Latin, letters for a
-  numbering) and its octave in scientific numbering. Tested.
+  numbering) and its octave in scientific numbering, and, for screen readers, with the sharp spoken (`spokenNoteName`: "C
+  sharp", Hungarian "Cisz", and "Do kereszt" for the syllables). Tested.
 - `tunerAction` — the song details screen's entry: in its overflow menu (let out into the bar where it has room), in
   read only mode too, since nothing about it writes a file.
 

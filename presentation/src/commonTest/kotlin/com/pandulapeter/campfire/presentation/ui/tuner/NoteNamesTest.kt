@@ -32,4 +32,17 @@ class NoteNamesTest {
         assertEquals("E", noteName(40, ChordNotation.NASHVILLE))
         assertEquals("G", noteName(55, ChordNotation.ROMAN))
     }
+
+    @Test
+    fun `a sharp is spoken by the template given its name without the sign`() {
+        assertEquals("G sharp 4", spokenNoteNameWithOctave(68, ChordNotation.STANDARD) { "$it sharp" })
+        assertEquals("Fa kereszt 4", spokenNoteNameWithOctave(66, ChordNotation.LATIN) { "$it kereszt" })
+        assertEquals("Aisz 4", spokenNoteNameWithOctave(70, ChordNotation.GERMAN) { "${it}isz" })
+    }
+
+    @Test
+    fun `a natural note is spoken by its name, then its octave`() {
+        assertEquals("H 3", spokenNoteNameWithOctave(59, ChordNotation.GERMAN) { error("") })
+        assertEquals("E 2", spokenNoteNameWithOctave(40, ChordNotation.STANDARD) { error("") })
+    }
 }

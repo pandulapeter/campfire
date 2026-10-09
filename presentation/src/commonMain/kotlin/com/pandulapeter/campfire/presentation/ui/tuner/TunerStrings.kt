@@ -51,7 +51,7 @@ internal fun TunerStrings(
 ) {
     tuning.strings.forEachIndexed { index, note ->
         val name = noteNameWithOctave(note, notation)
-        val description = stringResource(Res.string.tuner_string, tuning.strings.size - index, name)
+        val description = stringResource(Res.string.tuner_string, tuning.strings.size - index, spokenNoteName(note, notation))
         SelectableChip(
             modifier = Modifier.semantics { contentDescription = description },
             isSelected = if (tone != null) tone == note else heardNote == note,

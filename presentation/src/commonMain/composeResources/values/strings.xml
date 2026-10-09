@@ -420,6 +420,10 @@
     <string name="tuner_strings_description">Tap a string to hear its note, and again to stop it.</string>
     <!-- A string chip as a screen reader reads it, e.g. "String 6, E2". -->
     <string name="tuner_string">String %1$d, %2$s</string>
+    <!-- A sharp note as a screen reader says it, given its name without the sign: "C sharp", or for the syllables of the
+         Latin notation, "Do sharp". -->
+    <string name="tuner_note_sharp_letter">%1$s sharp</string>
+    <string name="tuner_note_sharp_syllable">%1$s sharp</string>
     <string name="tuner_reference_pitch">Reference pitch</string>
     <string name="tuner_reference_pitch_value">%1$s = %2$d Hz</string>
     <string name="tuner_reference_pitch_decrease">Lower the reference pitch</string>

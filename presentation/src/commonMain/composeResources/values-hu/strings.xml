@@ -420,6 +420,10 @@
     <string name="tuner_strings_description">Koppints egy húrra, hogy meghalld a hangját, majd újra, hogy leállítsd.</string>
     <!-- A string chip as a screen reader reads it, e.g. "String 6, E2". -->
     <string name="tuner_string">%1$d. húr, %2$s</string>
+    <!-- A sharp note as a screen reader says it, given its name without the sign: "C sharp", or for the syllables of the
+         Latin notation, "Do sharp". -->
+    <string name="tuner_note_sharp_letter">%1$sisz</string>
+    <string name="tuner_note_sharp_syllable">%1$s kereszt</string>
     <string name="tuner_reference_pitch">Alaphang</string>
     <string name="tuner_reference_pitch_value">%1$s = %2$d Hz</string>
     <string name="tuner_reference_pitch_decrease">Alaphang mélyítése</string>

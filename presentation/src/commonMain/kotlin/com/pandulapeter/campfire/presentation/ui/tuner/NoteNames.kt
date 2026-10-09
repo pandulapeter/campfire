@@ -26,4 +26,14 @@ internal fun noteOctave(note: Int): Int = note.floorDiv(SEMITONES) - 1
 /** The note with its octave, `E2`, the way the strings are named. */
 internal fun noteNameWithOctave(note: Int, notation: ChordNotation) = "${noteName(note, notation)}${noteOctave(note)}"
 
+/**
+ * [noteNameWithOctave] as it is spoken: a sharp is said by [sharp], given the name without its sign, since a screen reader
+ * reads `#` as the character rather than as the note, and the octave is a word of its own ("G sharp 4" rather than
+ * "sharp4").
+ */
+internal fun spokenNoteNameWithOctave(note: Int, notation: ChordNotation, sharp: (String) -> String): String {
+    val name = noteName(note, notation)
+    return "${if (name.endsWith('#')) sharp(name.dropLast(1)) else name} ${noteOctave(note)}"
+}
+
 private const val SEMITONES = 12
