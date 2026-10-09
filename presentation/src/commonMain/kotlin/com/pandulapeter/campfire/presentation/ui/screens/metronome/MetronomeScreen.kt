@@ -148,6 +148,7 @@ private fun MetronomeBarOptions(
                     MetronomeAudioIssue.WAITING_FOR_GESTURE -> Res.string.metronome_audio_waiting
                 }
             ),
+            isAnnounced = true,
         )
     }
     TempoSetting(

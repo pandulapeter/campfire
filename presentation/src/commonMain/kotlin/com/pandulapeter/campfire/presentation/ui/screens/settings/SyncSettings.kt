@@ -174,6 +174,7 @@ private fun ColumnScope.DisconnectedSyncSettings(
                     SyncFailureReason.UNKNOWN -> Res.string.settings_sync_connection_failed_unknown
                 }
             ),
+            isAnnounced = true,
         )
     }
 }

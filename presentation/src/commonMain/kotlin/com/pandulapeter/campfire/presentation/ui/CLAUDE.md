@@ -410,6 +410,8 @@ stops saying anything. The metronome's Vibrate on the beat is a feature rather t
   from the button that made it; `valueDescription` gives it a spoken form where the written one reads badly.
 - **A section title is a heading**: `heading()` on the title's own `Text`, so it merges into a clickable header rather
   than adding a node.
+- **A notice that appears on its own is a polite live region** (`SettingsMessage(isAnnounced = true)`); one that is
+  there from the start is not.
 
 ## Features
 
