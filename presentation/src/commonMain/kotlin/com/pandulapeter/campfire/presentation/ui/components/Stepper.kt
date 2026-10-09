@@ -254,7 +254,7 @@ private fun StepperValue(
         Text(
             modifier = Modifier.fillMaxHeight()
                 .clickable(enabled = !isDefault && onReset != null, onClickLabel = resetLabel) { onReset?.invoke() }
-                .widthIn(min = VALUE_MIN_WIDTH * fontScale)
+                .widthIn(min = STEPPER_VALUE_MIN_WIDTH * fontScale)
                 .wrapContentHeight()
                 .then(if (valueDescription != null) Modifier.semantics { contentDescription = valueDescription } else Modifier),
             text = label.value,
@@ -302,10 +302,15 @@ private fun stepperButtonLength(fontScale: Float) = ICON_SIZE * fontScale + BUTT
 
 private val ICON_SIZE = 20.dp
 private val BUTTON_ICON_PADDING = 8.dp
-private val VALUE_MIN_WIDTH = 44.dp
+
+/** How wide a stepper's value is drawn at least, where the stepper is not scaled by a song's text size. */
+internal val STEPPER_VALUE_MIN_WIDTH = 44.dp
+
+/** How far along the pill each of a stepper's two buttons reaches, where the stepper is not scaled by a song's text size. */
+internal val STEPPER_BUTTON_LENGTH = stepperButtonLength(fontScale = 1f)
 
 /** How far short of the pill's own edges the divider in front of a [Stepper]'s trailing control stops. */
 private val STEPPER_DIVIDER_PADDING = 8.dp
 
 /** How wide a stepper is drawn, at least, for the app bar that has to leave its title room beside one. */
-internal val STEPPER_WIDTH = stepperButtonLength(fontScale = 1f) * 2 + VALUE_MIN_WIDTH
+internal val STEPPER_WIDTH = STEPPER_BUTTON_LENGTH * 2 + STEPPER_VALUE_MIN_WIDTH

@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -30,6 +31,9 @@ import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -48,6 +52,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_chord_defin
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_defined_moved
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_shape_next
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_shape_position
+import com.pandulapeter.campfire.presentation.resources.song_details_chord_shape_position_description
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_shape_previous
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_shapes
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
@@ -63,6 +68,8 @@ import com.pandulapeter.campfire.presentation.ui.chords.songChordsOf
 import com.pandulapeter.campfire.presentation.ui.chords.toChordInstrument
 import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.components.ChordDiagram
+import com.pandulapeter.campfire.presentation.ui.components.STEPPER_BUTTON_LENGTH
+import com.pandulapeter.campfire.presentation.ui.components.STEPPER_VALUE_MIN_WIDTH
 import com.pandulapeter.campfire.presentation.ui.components.Stepper
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.textResource
@@ -149,10 +156,8 @@ private fun ChordShapeCell(
     notation: ChordNotation,
     selection: SelectedShape,
     onShapeSelected: (ChordVoicing?) -> Unit,
-) = Column(
-    modifier = Modifier.width(if (instrument.isFretted) FRETTED_CELL_WIDTH else KEYBOARD_CELL_WIDTH),
-    horizontalAlignment = Alignment.CenterHorizontally,
 ) {
+    val cellWidth = if (instrument.isFretted) FRETTED_CELL_WIDTH else KEYBOARD_CELL_WIDTH
     // The search for every shape of one chord is quick, but a sheet of thirty of them is not, so each cell asks for its
     // own away from the main thread and has its stepper once they are there. A chord the song defines has none.
     val shapes by produceState<List<ChordVoicing>?>(null, chord.chord, instrument, selection.source) {
@@ -175,80 +180,100 @@ private fun ChordShapeCell(
         selection = selection,
     )
     val description = chordCellDescription(cell)
-    // The cell is as wide as its diagram, so a name that does not fit it, a step with its letters or a chord with the one
-    // that sounds, wraps onto a second line rather than losing the half that says what the shape is.
-    FlowRow(
-        horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
-        itemVerticalAlignment = Alignment.Bottom,
+    val textMeasurer = rememberTextMeasurer()
+    val positionStyle = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
+    val widestPosition = options?.size?.let { stringResource(Res.string.song_details_chord_shape_position, it, it) }
+    val density = LocalDensity.current
+    // At least the diagram's cell, and as wide as the stepper at its widest position: two buttons, and a value that grows
+    // with the text. Measured from the widest value rather than the current one, so stepping never resizes the cell and
+    // the cells around it never slide under the finger.
+    val stepperWidth = remember(widestPosition, positionStyle, density) {
+        widestPosition?.let {
+            with(density) { textMeasurer.measure(it, positionStyle).size.width.toDp() }.coerceAtLeast(STEPPER_VALUE_MIN_WIDTH) +
+                STEPPER_BUTTON_LENGTH * 2
+        } ?: 0.dp
+    }
+    Column(
+        modifier = Modifier.width(maxOf(cellWidth, stepperWidth)),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(
-            text = chord.name,
-            style = MaterialTheme.typography.titleMedium,
-            color = LocalSecondAccentColor.current,
-            textAlign = TextAlign.Center,
-        )
-        chord.secondaryName?.let {
+        // The name wraps at the diagram's width, so a name that does not fit it, a step with its letters or a chord with the
+        // one that sounds, takes a second line rather than losing the half that says what the shape is, or widening the cell.
+        FlowRow(
+            modifier = Modifier.widthIn(max = cellWidth),
+            horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+            itemVerticalAlignment = Alignment.Bottom,
+        ) {
             Text(
-                text = it,
+                text = chord.name,
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = LocalSecondAccentColor.current,
                 textAlign = TextAlign.Center,
             )
+            chord.secondaryName?.let {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                )
+            }
         }
-    }
-    Crossfade(targetState = current) { shape ->
-        ChordDiagram(
-            modifier = Modifier
-                .padding(top = 4.dp)
-                .size(
-                    width = if (instrument.isFretted) FRETTED_WIDTH else KEYBOARD_WIDTH,
-                    height = if (instrument.isFretted) FRETTED_HEIGHT else KEYBOARD_HEIGHT,
-                ),
-            geometry = remember(shape, instrument, chord.chord.root) {
-                shape?.let { chordDiagramGeometryOf(it, instrument, chord.chord.root) } ?: emptyChordDiagramGeometryOf(instrument)
-            },
-            description = description,
-            showsFingers = true,
-        )
-    }
-    Text(
-        modifier = Modifier.padding(top = 4.dp),
-        text = (chord.spelling?.let { ChordProChords.spelledNoteNames(it, notation) } ?: ChordProChords.noteNames(chord.chord, notation)).joinToString(" "),
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        textAlign = TextAlign.Center,
-    )
-    if (selection.source == SelectedShape.Source.DEFINED) {
+        Crossfade(targetState = current) { shape ->
+            ChordDiagram(
+                modifier = Modifier
+                    .padding(top = 4.dp)
+                    .size(
+                        width = if (instrument.isFretted) FRETTED_WIDTH else KEYBOARD_WIDTH,
+                        height = if (instrument.isFretted) FRETTED_HEIGHT else KEYBOARD_HEIGHT,
+                    ),
+                geometry = remember(shape, instrument, chord.chord.root) {
+                    shape?.let { chordDiagramGeometryOf(it, instrument, chord.chord.root) } ?: emptyChordDiagramGeometryOf(instrument)
+                },
+                description = description,
+                showsFingers = true,
+            )
+        }
         Text(
-            modifier = Modifier.padding(top = 8.dp).heightIn(min = STEPPER_PLACEHOLDER_HEIGHT),
-            text = if (selection.movedBy == 0) {
-                stringResource(Res.string.song_details_chord_defined)
-            } else {
-                pluralStringResource(Res.plurals.song_details_chord_defined_moved, abs(selection.movedBy), abs(selection.movedBy))
-            },
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.widthIn(max = cellWidth).padding(top = 4.dp),
+            text = (chord.spelling?.let { ChordProChords.spelledNoteNames(it, notation) } ?: ChordProChords.noteNames(chord.chord, notation)).joinToString(" "),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
-    } else if (options != null && options.size > 1) {
-        Stepper(
-            modifier = Modifier.padding(top = 8.dp),
-            value = stringResource(Res.string.song_details_chord_shape_position, index + 1, options.size),
-            isDefault = true,
-            decreaseIcon = painterResource(Res.drawable.ic_previous),
-            decreaseLabel = textResource(Res.string.song_details_chord_shape_previous, chord.name),
-            canDecrease = true,
-            onDecrease = { select(options[(index - 1).mod(options.size)]) },
-            increaseIcon = painterResource(Res.drawable.ic_next),
-            increaseLabel = textResource(Res.string.song_details_chord_shape_next, chord.name),
-            canIncrease = true,
-            onIncrease = { select(options[(index + 1).mod(options.size)]) },
-            resetLabel = null,
-            onReset = null,
-        )
-    } else {
-        // The stepper's room is kept while the shapes are looked for, so that the cells do not grow under the finger.
-        Spacer(modifier = Modifier.padding(top = 8.dp).height(STEPPER_PLACEHOLDER_HEIGHT))
+        if (selection.source == SelectedShape.Source.DEFINED) {
+            Text(
+                modifier = Modifier.widthIn(max = cellWidth).padding(top = 8.dp).heightIn(min = STEPPER_PLACEHOLDER_HEIGHT),
+                text = if (selection.movedBy == 0) {
+                    stringResource(Res.string.song_details_chord_defined)
+                } else {
+                    pluralStringResource(Res.plurals.song_details_chord_defined_moved, abs(selection.movedBy), abs(selection.movedBy))
+                },
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary,
+                textAlign = TextAlign.Center,
+            )
+        } else if (options != null && options.size > 1) {
+            Stepper(
+                modifier = Modifier.padding(top = 8.dp),
+                value = stringResource(Res.string.song_details_chord_shape_position, index + 1, options.size),
+                valueDescription = stringResource(Res.string.song_details_chord_shape_position_description, index + 1, options.size),
+                isDefault = true,
+                decreaseIcon = painterResource(Res.drawable.ic_previous),
+                decreaseLabel = textResource(Res.string.song_details_chord_shape_previous, chord.name),
+                canDecrease = true,
+                onDecrease = { select(options[(index - 1).mod(options.size)]) },
+                increaseIcon = painterResource(Res.drawable.ic_next),
+                increaseLabel = textResource(Res.string.song_details_chord_shape_next, chord.name),
+                canIncrease = true,
+                onIncrease = { select(options[(index + 1).mod(options.size)]) },
+                resetLabel = null,
+                onReset = null,
+            )
+        } else {
+            // The stepper's room is kept while the shapes are looked for, so that the cells do not grow under the finger.
+            Spacer(modifier = Modifier.padding(top = 8.dp).height(STEPPER_PLACEHOLDER_HEIGHT))
+        }
     }
 }
 

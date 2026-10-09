@@ -594,6 +594,8 @@
     <string name="song_details_chord_shape_previous">A(z) %1$s előző fogása</string>
     <string name="song_details_chord_shape_next">A(z) %1$s következő fogása</string>
     <string name="song_details_chord_shape_position">%1$d / %2$d</string>
+    <!-- How a screen reader reads song_details_chord_shape_position, e.g. "Shape 1 of 5". -->
+    <string name="song_details_chord_shape_position_description">%1$d. fogás (%2$d közül)</string>
     <string name="song_details_chord_defined">A dal határozza meg</string>
     <plurals name="song_details_chord_defined_moved">
         <item quantity="one">A dal határozza meg, %1$d bunddal eltolva</item>
