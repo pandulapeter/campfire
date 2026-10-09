@@ -50,6 +50,9 @@ sealed interface DialogType {
      * is now.
      */
     data class ChordShapes(val song: Song, val setlistFileName: String?) : DialogType
+
+    /** The tuner over the song being read, opened from the song details overflow menu; it listens while it is up. */
+    data object Tuner : DialogType
     /**
      * Opened from the song details overflow menu, and offers the song's own tags and
      * the rest of the library's.

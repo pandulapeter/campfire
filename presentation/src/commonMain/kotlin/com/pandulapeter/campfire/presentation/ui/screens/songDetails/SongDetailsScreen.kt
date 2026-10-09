@@ -145,6 +145,7 @@ internal fun SongDetailsScreen(
     val shouldShowChords = userPreferences?.areChordsEnabled != false
     val chordDiagrams = rememberChordDiagrams(viewModel = viewModel, userPreferences = userPreferences, shouldShowChords = shouldShowChords)
     val isMetronomeEnabled = userPreferences?.isMetronomeEnabled != false
+    val isTunerEnabled = userPreferences?.isTunerEnabled != false
     val areSetlistsEnabled = userPreferences?.areSetlistsEnabled != false
     val isCoverArtEnabled = userPreferences?.isCoverArtEnabled == true
     val currentSongText = currentSong?.let { songTexts[it.fileName] }
@@ -239,6 +240,7 @@ internal fun SongDetailsScreen(
             isPerformanceModeEnabled = isPerformanceModeEnabled,
             shouldShowChords = shouldShowChords,
             isMetronomeEnabled = isMetronomeEnabled,
+            isTunerEnabled = isTunerEnabled,
             areSetlistsEnabled = areSetlistsEnabled,
             isCoverArtEnabled = isCoverArtEnabled,
             chordSpelling = chordSpelling,

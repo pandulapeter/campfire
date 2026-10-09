@@ -23,7 +23,7 @@ other holders it calls, so that there are no cycles), and every member the scree
 `SetlistsController`, `SongTextStore`, `SongMetadataEditing`, `ImportController`, `SyncController`,
 `CoverArtSearchController` and `AppExitController` (`ui/state`), `DialogHost` (`ui/dialogs`), `Navigator`
 (`ui/navigation`), `FontScaleController` (`ui/fontScale`), `PlayingOverrides` (`ui/playing`), `MetronomeController`
-(`ui/metronome`), `ExportController` (`ui/screens/export`), `EditorSession` (`ui/screens/songEditor`) and
+(`ui/metronome`), `TunerController` (`ui/tuner`), `ExportController` (`ui/screens/export`), `EditorSession` (`ui/screens/songEditor`) and
 `FirstRunController` (`ui/firstRun`). Construction order is behaviour: the holders are declared in the order their
 states used to start, and `init` starts their collectors in the order they were always launched.
 
@@ -418,7 +418,8 @@ capo wherever a song is read, and leaving the chord spelling rows of the Songs t
 (`areChordDiagramsEnabled`), disabled while the chords are off, off taking the Chords section off every song and leaving
 the Songs tab's Instrument row disabled, the chosen shapes kept; **Metronome** (`isMetronomeEnabled`), off taking its
 tab, the song details screen's click button and panel, its M key and the tempo and the time signature wherever a song is
-read; **Setlists** (`areSetlistsEnabled`), off taking their tab and every way of putting a song into one, while setlist
+read; **Tuner** (`isTunerEnabled`), off taking its tab and the song details screen's way to the tuner sheet, and with
+them every way the app could ask for the microphone; **Setlists** (`areSetlistsEnabled`), off taking their tab and every way of putting a song into one, while setlist
 files still travel through an import, an export and a sync run; and **Cover art**, last since it is the one that decides
 whether the app reaches the network on its own.
 
@@ -428,5 +429,5 @@ menu entry and the group once both are off), and an override nobody is shown is 
 switched off leaves the navigation chrome (`CampfireViewModel.topLevelDestinations`), shrinking out of the bar or the
 rail as the others close the gap (`components/NavigationItemPresence.kt`), and a back stack restored or an address
 opened is cut short at the first screen that belongs to one (`NavigationState.withoutDisabledFeatures`), a song read
-from a setlist included — so on the web `/metronome` with the metronome off opens the songs, and the address is written
+from a setlist included — so on the web `/metronome` with the metronome off (or `/tuner` with the tuner off) opens the songs, and the address is written
 over with theirs.

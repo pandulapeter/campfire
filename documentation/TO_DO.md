@@ -26,7 +26,6 @@
 - Duplicate song button
 - Search field for tags / languages
 - Find a way to allow entering tempo using the keyboard
-- Tuner: documentation/plans/tuner.md (question - do we want to add it to the toolbar?)
 - Comments in setlists (between songs)
 - Simplify adding comments / annotations to songs
 

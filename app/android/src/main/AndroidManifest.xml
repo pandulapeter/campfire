@@ -37,6 +37,16 @@
     <uses-permission android:name="android.permission.VIBRATE" />
 
     <!--
+      The tuner listens through the microphone, asked for only by the button on its page and only while that page is
+      on screen; nothing it hears is kept or sent anywhere. Not a required feature, or Play would hide the app from
+      every device without a microphone, where the tuner still plays its reference tones.
+    -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-feature
+        android:name="android.hardware.microphone"
+        android:required="false" />
+
+    <!--
       The library is the only copy of the user's own work, so it is in the device's backup and in a transfer to a
       new phone, together with the settings: see the two rules files, one per generation of Android. That copy is
       made by the system, to wherever the user's device backs up to - the app's own process still makes no request

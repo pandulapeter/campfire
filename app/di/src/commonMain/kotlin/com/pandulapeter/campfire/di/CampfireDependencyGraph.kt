@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.domain.api.useCases.LoadScreenDataUseCase
 import com.pandulapeter.campfire.domain.implementation.DomainModule
 import com.pandulapeter.campfire.metronome.implementation.MetronomeModule
 import com.pandulapeter.campfire.presentation.PresentationModule
+import com.pandulapeter.campfire.tuner.implementation.TunerModule
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -40,6 +41,7 @@ import org.koin.plugin.module.dsl.startKoin
         DomainModule::class,
         MetronomeModule::class,
         PresentationModule::class,
+        TunerModule::class,
     ],
 )
 private object CampfireDependencyGraph

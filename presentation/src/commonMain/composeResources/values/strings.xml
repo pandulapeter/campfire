@@ -254,6 +254,7 @@
     <string name="settings_chord_diagrams">Chord diagrams</string>
     <string name="settings_chord_diagrams_description">Show how every chord of a song is played, at the top of the song.</string>
     <string name="settings_metronome_description">The Metronome tab and the click on a song\'s screen, along with the tempo and the time signature of every song</string>
+    <string name="settings_tuner_description">The Tuner tab, and the microphone it listens through</string>
     <string name="settings_setlists_description">The Setlists tab and adding songs to setlists. Off, they are only hidden: no setlist is deleted.</string>
     <string name="settings_cover_art">Cover art</string>
     <string name="settings_cover_art_description">Show the album cover a song names next to it, downloading it once and keeping a copy on this device</string>
@@ -376,6 +377,53 @@
     <string name="metronome_stopped_silent">The metronome stopped when Campfire went out of sight, since with the volume at zero or every beat muted there was nothing to hear.</string>
     <!-- The channel of the notification a playing metronome keeps up, as the system's settings list it. -->
     <string name="metronome_notification_channel">Metronome</string>
+
+    <!-- Tuner screen, and the tuner sheet over a song -->
+    <string name="tuner">Tuner</string>
+    <string name="tuner_play_a_note">Play a note</string>
+    <string name="tuner_reference_tone">Reference tone</string>
+    <!-- What is heard and what it is tuned to, in Hz. -->
+    <string name="tuner_frequency">%1$s Hz</string>
+    <string name="tuner_target_frequency">Target %1$s Hz</string>
+    <string name="tuner_in_tune">In tune</string>
+    <string name="tuner_flat">Flat</string>
+    <string name="tuner_sharp">Sharp</string>
+    <!-- How a screen reader reads the meter: the note, then how far it is off, e.g. "E2, 12 cents flat". -->
+    <string name="tuner_reading_flat">%1$s, %2$d cents flat</string>
+    <string name="tuner_reading_sharp">%1$s, %2$d cents sharp</string>
+    <string name="tuner_reading_in_tune">%1$s, in tune</string>
+    <string name="tuner_instrument">Instrument</string>
+    <string name="tuner_instrument_chromatic">Chromatic</string>
+    <string name="tuner_instrument_guitar">Guitar</string>
+    <string name="tuner_instrument_guitar_drop_d">Guitar, drop D</string>
+    <string name="tuner_instrument_bass">Bass</string>
+    <string name="tuner_instrument_ukulele">Ukulele</string>
+    <string name="tuner_instrument_violin">Violin</string>
+    <string name="tuner_instrument_mandolin">Mandolin</string>
+    <string name="tuner_instrument_banjo">Banjo</string>
+    <string name="tuner_strings">Strings</string>
+    <string name="tuner_strings_description">Tap a string to hear its note, and again to stop it.</string>
+    <!-- A string chip as a screen reader reads it, e.g. "String 6, E2". -->
+    <string name="tuner_string">String %1$d, %2$s</string>
+    <string name="tuner_reference_pitch">Reference pitch</string>
+    <string name="tuner_reference_pitch_value">%1$s = %2$d Hz</string>
+    <string name="tuner_reference_pitch_decrease">Lower the reference pitch</string>
+    <string name="tuner_reference_pitch_increase">Raise the reference pitch</string>
+    <string name="tuner_reference_pitch_reset">Reset the reference pitch to 440 Hz</string>
+    <string name="tuner_play_reference">Play the reference A</string>
+    <string name="tuner_notice_not_asked">Campfire listens through the microphone to hear the instrument. The sound is analyzed on this device, and is never recorded or sent anywhere.</string>
+    <string name="tuner_notice_refused">The microphone is switched off for Campfire. The strings below still play their notes.</string>
+    <string name="tuner_notice_refused_web">The microphone is switched off for Campfire. It is allowed in the browser\'s site settings, next to the address. The strings below still play their notes.</string>
+    <string name="tuner_notice_no_microphone">No microphone was found.</string>
+    <string name="tuner_notice_busy">The microphone is in use by a call or another app.</string>
+    <string name="tuner_notice_not_supported">This browser does not let a page use the microphone.</string>
+    <string name="tuner_notice_failed">The microphone could not be opened.</string>
+    <string name="tuner_notice_silent">Nothing at all is heard. Check that the microphone is not muted and that Campfire may use it.</string>
+    <string name="tuner_notice_waiting">Tap anywhere to let the browser listen.</string>
+    <string name="tuner_use_microphone">Use the microphone</string>
+    <string name="tuner_open_settings">Open settings</string>
+    <string name="tuner_ask_again">Ask again</string>
+    <string name="tuner_try_again">Try again</string>
 
     <!-- Song editor screen -->
     <string name="song_editor_edit">Edit</string>

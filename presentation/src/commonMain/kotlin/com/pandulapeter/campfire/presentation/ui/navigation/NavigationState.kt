@@ -32,9 +32,14 @@ internal data class NavigationState(
  * typed or bookmarked, a history entry gone back to or a state saved before the switch was flipped may each name one.
  * The setlists' search is closed with their screen. What is left may be the songs alone, which is where the app then is.
  */
-internal fun NavigationState.withoutDisabledFeatures(areSetlistsEnabled: Boolean, isMetronomeEnabled: Boolean): NavigationState {
+internal fun NavigationState.withoutDisabledFeatures(areSetlistsEnabled: Boolean, isMetronomeEnabled: Boolean, isTunerEnabled: Boolean): NavigationState {
     val backStack = backStack.takeWhile {
-        CampfireDestination.isEnabled(destination = it, areSetlistsEnabled = areSetlistsEnabled, isMetronomeEnabled = isMetronomeEnabled)
+        CampfireDestination.isEnabled(
+            destination = it,
+            areSetlistsEnabled = areSetlistsEnabled,
+            isMetronomeEnabled = isMetronomeEnabled,
+            isTunerEnabled = isTunerEnabled,
+        )
     }
     return copy(
         backStack = backStack,

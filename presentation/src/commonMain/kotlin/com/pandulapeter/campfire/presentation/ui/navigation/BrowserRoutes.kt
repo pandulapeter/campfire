@@ -20,6 +20,7 @@ import com.pandulapeter.campfire.data.model.domain.Song
  * - `` — the songs, and `search` over them while their search is open;
  * - `setlists`, and `setlists/search`;
  * - `metronome`;
+ * - `tuner`;
  * - `settings/general`, directly on top of the songs, and `settings/features`, `settings/songs`, `settings/library` or
  *   `settings/about` on top of that while another tab is open — a Back from any other tab goes to General before it
  *   leaves the screen, so General is a step of its own, while one tab picked after another replaces the entry rather
@@ -62,6 +63,7 @@ internal object BrowserRoutes {
                 }
 
                 CampfireDestination.Metronome -> add(METRONOME)
+                CampfireDestination.Tuner -> add(TUNER)
 
                 CampfireDestination.Settings -> {
                     add("$SETTINGS/${SettingsTab.GENERAL.pathSegment}")
@@ -123,6 +125,7 @@ internal object BrowserRoutes {
                 SEARCH -> home.copy(isSongsSearchOpen = true)
                 SETLISTS -> home.copy(backStack = home.backStack + CampfireDestination.Setlists)
                 METRONOME -> home.copy(backStack = home.backStack + CampfireDestination.Metronome)
+                TUNER -> home.copy(backStack = home.backStack + CampfireDestination.Tuner)
                 SETTINGS -> home.copy(backStack = home.backStack + CampfireDestination.Settings)
                 else -> null
             }
@@ -223,6 +226,7 @@ internal object BrowserRoutes {
     private const val SEARCH = "search"
     private const val SETLISTS = "setlists"
     private const val METRONOME = "metronome"
+    private const val TUNER = "tuner"
     private const val SETTINGS = "settings"
     private const val SONG = "song"
     private const val SETLIST = "setlist"

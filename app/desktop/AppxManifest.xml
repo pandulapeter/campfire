@@ -66,10 +66,13 @@
     </Applications>
 
     <!--
-     Nothing else: the library is kept in the package's own folder (see packageReleaseMsix) rather than in AppData, which
-     Windows virtualizes for a packaged app, since the Store turns down the unvirtualizedResources that would stop it.
+     The microphone is the tuner's; declared, Windows lists Campfire by name under its microphone privacy settings, where
+     it is allowed or refused. Nothing else: the library is kept in the package's own folder (see packageReleaseMsix)
+     rather than in AppData, which Windows virtualizes for a packaged app, since the Store turns down the
+     unvirtualizedResources that would stop it.
     -->
     <Capabilities>
         <rescap:Capability Name="runFullTrust" />
+        <DeviceCapability Name="microphone" />
     </Capabilities>
 </Package>

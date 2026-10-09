@@ -80,7 +80,9 @@ so a `file://` URI into shared storage could not be read. Keep the Open with ext
 It also registers the `campfire://oauth` scheme and holds every permission the app asks for — `INTERNET`,
 `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_DATA_SYNC` and `POST_NOTIFICATIONS` for sync, and
 `FOREGROUND_SERVICE_MEDIA_PLAYBACK` and `VIBRATE` (a normal permission, no prompt; the beat in the hand, in the
-background too, which the metronome's foreground service is what allows) for the metronome. The consent page opens in
+background too, which the metronome's foreground service is what allows) for the metronome, and `RECORD_AUDIO` for the
+tuner, asked only from its page, with `android.hardware.microphone` declared not required so that Play still offers the
+app to a device without one. The consent page opens in
 the user's own browser (never a WebView — a page asking for a password has to be somewhere the address bar is visible)
 and the redirect comes back as an `ACTION_VIEW` intent, which `CampfireMainActivity.handle` tells apart from a file
 being opened and forwards to `onSyncRedirectReceived`. `handle(intent)` runs before `setContent`, so that a redirect

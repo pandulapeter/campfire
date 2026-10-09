@@ -198,7 +198,7 @@ wrong or undo it".
   The root `CLAUDE.md` has the full list. The UI itself is untested.
 - **When you change any of those, add or update the tests in the same change**, and run:
   ```bash
-  ./gradlew :data:model:desktopTest :data:formats:desktopTest :chordpro:desktopTest :domain:implementation:desktopTest :data:source:local:implementation:desktopTest :data:source:remote:api:desktopTest :data:source:remote:implementation:desktopTest :data:repository:implementation:desktopTest :data:sync:implementation:desktopTest :metronome:api:desktopTest :metronome:implementation:desktopTest :presentation:desktopTest
+  ./gradlew :data:model:desktopTest :data:formats:desktopTest :chordpro:desktopTest :domain:implementation:desktopTest :data:source:local:implementation:desktopTest :data:source:remote:api:desktopTest :data:source:remote:implementation:desktopTest :data:repository:implementation:desktopTest :data:sync:implementation:desktopTest :metronome:api:desktopTest :metronome:implementation:desktopTest :tuner:api:desktopTest :tuner:implementation:desktopTest :presentation:desktopTest
   ```
 - Don't add a test module or a UI test framework for a change that doesn't warrant one.
 - **Tests assert behaviour, not implementation.** Check what a user or a caller could observe — a returned value, a

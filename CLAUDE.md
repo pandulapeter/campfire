@@ -38,7 +38,7 @@ app:android / app:desktop / app:ios / app:web   entry points, platform chrome, "
   app:di                                     the Koin application: the one place every module is named, and the
                                              function the four entry points start Koin with
   presentation                               CampfireViewModel, Navigation 3 back stack, Material 3 theme + every screen
-                                             (Songs, Setlists, Metronome, Settings, SongDetails, SongEditor), string resources; the
+                                             (Songs, Setlists, Metronome, Tuner, Settings, SongDetails, SongEditor), string resources; the
                                              platform shells (system bars, file pickers, drag and drop, URL opening,
                                              desktop key handling) are its platform source sets
   domain:api / :implementation               use cases (single-method interfaces)
@@ -55,6 +55,10 @@ app:android / app:desktop / app:ios / app:web   entry points, platform chrome, "
   metronome:api / :implementation            the click: the Metronome contract, its patterns and tap tempo, and the
                                              engine with one audio output per platform (see Metronome below). Depends
                                              on nothing of the app's; used by :presentation, :app:android and :app:ios
+  tuner:api / :implementation                the tuner: the Tuner contract, the note arithmetic and the instrument
+                                             presets, and the pitch detector, the tracker, the tones and one microphone
+                                             input and one tone output per platform (see Tuner below). Depends on
+                                             nothing of the app's; used by :presentation
   tools:screenshots                          the store screenshots, rendered offscreen from the desktop build drawn as
                                              each platform (see tools/screenshots); nothing depends on it
   chordpro                                   dependency-free ChordPro model, parser, serializer, transposer, tab
@@ -182,7 +186,7 @@ tab reaches the export screen. The detail is in `:presentation`'s `ui/screens/ex
   annotate themselves and holding a `@Single` function where a definition is built rather than constructed (the
   HTTP client, the list of sync providers). Platform definitions are ordinary annotated classes in the platform
   source sets (`AndroidFileStorage`, `IosSyncAuthenticator`, …), found by the same scan, so there is no
-  `expect`/`actual` factory between a platform and its Koin definition. `:app:di` names the seven module objects in
+  `expect`/`actual` factory between a platform and its Koin definition. `:app:di` names the eight module objects in
   the one `@KoinApplication`, and `startCampfireDependencyGraph()` is what the four entry points start Koin with;
   the plugin checks the whole graph there at compile time, so a definition asking for something nobody declares
   fails the build. A dependency only a platform shell provides — the Android `Context` — is marked `@Provided`,
@@ -221,14 +225,14 @@ tab reaches the export screen. The detail is in `:presentation`'s `ui/screens/ex
   `:data:formats` (zip, bounded PDF/Word readers), `:data:source:local:implementation` (the JVM file storage, with independent-producer document goldens in `desktopTest`), `:data:source:remote:*` (hashing, encoders,
   the OAuth authorization URL, the cover search's queries, its `User-Agent` and its pace, the cover download),
   `:data:repository:implementation` (the caches and the cover cache), `:data:sync:implementation` (`SyncPlanner`, which
-  decides what happens to every file in a sync run, the engine and the synced preferences), `:metronome:*` (the sequencer, the synthesizer, the mixer, the engine's state machine, tap tempo and time signatures) and
+  decides what happens to every file in a sync run, the engine and the synced preferences), `:metronome:*` (the sequencer, the synthesizer, the mixer, the engine's state machine, tap tempo and time signatures), `:tuner:*` (the note arithmetic and the presets, the FFT, the pitch detector against synthesized strings and any recording dropped into its `desktopTest` resources, the tracker and the tones) and
   `:presentation` (the pure helpers behind its screens: the search index and ranking, the song picker's filter chips, the fast scroller's section
   index, the setlist slots, stepper labels, section grid and the cutting of sections into columns, row snapping and section measurements of the details screen, the editor's token cache, where a song's tempo comes from and what a click plays for, which chords a song plays and which
-  shape each is drawn with, the diagrams' geometry and what the editor's Chord shape button writes, the setlist reorder merge and
+  shape each is drawn with, the tuner's note names and which notice its page shows, the diagrams' geometry and what the editor's Chord shape button writes, the setlist reorder merge and
   search and the list placeholders; and, over small fakes of their use cases, the song text writes, the metadata sheets'
   edits, the playing overrides and the song filters), run on
   the desktop target with
-  `./gradlew :data:model:desktopTest :data:formats:desktopTest :chordpro:desktopTest :domain:implementation:desktopTest :data:source:local:implementation:desktopTest :data:source:remote:api:desktopTest :data:source:remote:implementation:desktopTest :data:repository:implementation:desktopTest :data:sync:implementation:desktopTest :metronome:api:desktopTest :metronome:implementation:desktopTest :presentation:desktopTest`.
+  `./gradlew :data:model:desktopTest :data:formats:desktopTest :chordpro:desktopTest :domain:implementation:desktopTest :data:source:local:implementation:desktopTest :data:source:remote:api:desktopTest :data:source:remote:implementation:desktopTest :data:repository:implementation:desktopTest :data:sync:implementation:desktopTest :metronome:api:desktopTest :metronome:implementation:desktopTest :tuner:api:desktopTest :tuner:implementation:desktopTest :presentation:desktopTest`.
   The build logic's packaging helpers (the `.msix` version and publisher id, the launcher configuration and `.deb`
   rewrites, the web build manifest) are tested in `gradle/build-logic` with `./gradlew -p gradle :build-logic:test`.
   The web build's JavaScript — its storage worker, its service worker's routing and the page's decisions about the
@@ -257,6 +261,8 @@ What the app does, one line each; the full text is in the file named (`:presenta
 - How a song is played (transposition, capo, tempo, time signature) is the first section of the song itself; the time
   signature alone is written into the file, the other three are overridden per setlist or per device: `:presentation`'s
   `ui/CLAUDE.md`.
+- The tuner asks for the microphone only from the button on its page, listens only while that page is on screen, and
+  keeps nothing it hears: `:presentation`'s `ui/tuner/CLAUDE.md`.
 - Features are switched on and off as a whole in Settings → Features; a switch only hides, never writes or deletes:
   `:presentation`'s `ui/CLAUDE.md`.
 - Haptics tell the hand only what the eye cannot easily follow (the fast scroller above all), through the platform's
@@ -368,6 +374,16 @@ Nothing about it reaches the network. Timing is by sample count, never by a time
 was started on; a tempo override lives where a transposition does (a setlist's entry or `UserPreferences.tempos`). The
 detail is in `metronome/implementation/CLAUDE.md` (timing, playback as media), and in `:presentation`'s
 `ui/metronome/CLAUDE.md` (the panel, the tab, tempo changes) and `ui/playing/CLAUDE.md` (where a tempo lives).
+
+## Tuner
+
+A fourth tab, and a sheet over the song details screen opened from its menu, hearing one note at a time through the
+microphone and playing reference tones. Nothing it hears is kept or reaches the network. The microphone is asked for
+only by the button on its page, never at launch or by opening the tab; it is listened to only while that page is on
+screen and the app is in front, so the system's recording indicator is lit exactly then; and nothing of it outlives
+its screen. The Tuner switch in Settings → Features takes the tab, the sheet's menu entry and every way the app could ask
+for the microphone. The detail is in `tuner/implementation/CLAUDE.md` (the detector, the tracker, the platforms) and
+`:presentation`'s `ui/tuner/CLAUDE.md` (the page, the permission, the sheet).
 
 ## Cover art
 

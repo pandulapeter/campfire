@@ -10,8 +10,10 @@
 package com.pandulapeter.campfire.data.source.local.implementation.mapper
 
 import com.pandulapeter.campfire.data.model.domain.MetronomeSettings
+import com.pandulapeter.campfire.data.model.domain.TunerSettings
 import com.pandulapeter.campfire.data.model.domain.PrintSettings
 import com.pandulapeter.campfire.data.source.local.implementation.model.MetronomeSettingsDocument
+import com.pandulapeter.campfire.data.source.local.implementation.model.TunerSettingsDocument
 import com.pandulapeter.campfire.data.source.local.implementation.model.PrintSettingsDocument
 import com.pandulapeter.campfire.data.source.local.implementation.model.UserPreferencesDocumentFormat
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
@@ -82,6 +84,7 @@ internal class UserPreferencesMappersTest {
         assertEquals(true, defaults.areChordsEnabled)
         assertEquals(true, defaults.areSetlistsEnabled)
         assertEquals(true, defaults.isMetronomeEnabled)
+        assertEquals(true, defaults.isTunerEnabled)
         val lyricsOnly = UserPreferencesDocumentFormat.decode("""{"isLyricsOnlyModeEnabled":true}""").document
         assertEquals(false, lyricsOnly.toModel().areChordsEnabled)
         assertEquals(true, lyricsOnly.toModel().toDocument().isLyricsOnlyModeEnabled)
@@ -180,6 +183,17 @@ internal class UserPreferencesMappersTest {
         assertEquals(settings, reloaded.metronomeSettings)
         assertEquals(mapOf("a.cho" to 96), reloaded.tempos)
         assertEquals(MetronomeSettings(), UserPreferencesDocumentFormat.decode("{}").document.toModel().metronomeSettings)
+    }
+
+    @Test
+    fun `tuner settings survive saving and reloading and a reference pitch out of range is held within it`() {
+        val settings = TunerSettings(instrumentId = "ukulele", referencePitch = 432)
+        val preferences = UserPreferencesDocument().toModel().copy(isTunerEnabled = false, tunerSettings = settings)
+        val reloaded = UserPreferencesDocumentFormat.decode(UserPreferencesDocumentFormat.encode(preferences.toDocument())).document.toModel()
+        assertEquals(settings, reloaded.tunerSettings)
+        assertEquals(false, reloaded.isTunerEnabled)
+        assertEquals(TunerSettings(), UserPreferencesDocumentFormat.decode("{}").document.toModel().tunerSettings)
+        assertEquals(466, UserPreferencesDocument(tunerSettings = TunerSettingsDocument(referencePitch = 1_000)).toModel().tunerSettings.referencePitch)
     }
 
     @Test

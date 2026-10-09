@@ -135,7 +135,8 @@ click, since there is no paused state. It only draws and answers: the audio sess
 interruptions belong to the audio output in `:metronome:implementation`, so a call stops the click whether or not this
 is around. It follows the engine's own `playback` for taking Now Playing down, since the composition stops as the app
 leaves the front. `Info.plist`'s `UIBackgroundModes` holds `audio` for it, the session being active only while a click
-plays, which is what App Review checks the mode against. A click that cannot sound is stopped by `:presentation` a few
+plays, which is what App Review checks the mode against. The tuner adds no background mode, only
+`NSMicrophoneUsageDescription`, since it never listens with the app out of sight. A click that cannot sound is stopped by `:presentation` a few
 seconds after the app leaves the front, so the mode never keeps a silent session alive.
 
 Because the Files app can change the library behind the app's back, `CampfireApp` rescans whenever the app enters the

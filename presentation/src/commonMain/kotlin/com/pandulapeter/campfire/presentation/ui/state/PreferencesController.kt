@@ -70,7 +70,13 @@ internal class PreferencesController(
 
     /** The top level screens the navigation chrome offers, which are only those of the features switched on. */
     val topLevelDestinations = userPreferences
-        .map { CampfireDestination.TopLevel.entries(areSetlistsEnabled = it?.areSetlistsEnabled != false, isMetronomeEnabled = it?.isMetronomeEnabled != false) }
+        .map {
+            CampfireDestination.TopLevel.entries(
+                areSetlistsEnabled = it?.areSetlistsEnabled != false,
+                isMetronomeEnabled = it?.isMetronomeEnabled != false,
+                isTunerEnabled = it?.isTunerEnabled != false,
+            )
+        }
         .asState(scope, CampfireDestination.TopLevel.entries)
 
     /**
@@ -106,6 +112,8 @@ internal class PreferencesController(
     fun setSetlistsEnabled(value: Boolean) = changeUserPreferences { copy(areSetlistsEnabled = value) }
 
     fun setMetronomeEnabled(value: Boolean) = changeUserPreferences { copy(isMetronomeEnabled = value) }
+
+    fun setTunerEnabled(value: Boolean) = changeUserPreferences { copy(isTunerEnabled = value) }
 
     /**
      * Folds or unfolds one section of a song (or one tab or grid inside it), [key] being the name the song details

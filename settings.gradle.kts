@@ -107,4 +107,6 @@ include(
     ":metronome:implementation",
     ":presentation",
     ":tools:screenshots",
+    ":tuner:api",
+    ":tuner:implementation",
 )

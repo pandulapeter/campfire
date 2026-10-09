@@ -51,6 +51,7 @@ import androidx.navigation3.ui.NavDisplay
 import com.pandulapeter.campfire.presentation.ui.messages.Messages
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeIconBeat
 import com.pandulapeter.campfire.presentation.ui.screens.metronome.MetronomeScreen
+import com.pandulapeter.campfire.presentation.ui.screens.tuner.TunerScreen
 import com.pandulapeter.campfire.presentation.ui.components.ListLayout
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
 import com.pandulapeter.campfire.presentation.ui.dialogs.CampfireDialogs
@@ -294,6 +295,23 @@ internal fun CampfireScreens(
                             viewModel = viewModel,
                             layout = settingsLayout,
                             scrollPosition = viewModel.metronomeScrollPosition,
+                            contentPadding = shellContentPadding,
+                        )
+                    }
+                }
+                entry<CampfireDestination.Tuner>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
+                    ReportNavigationTransition(viewModel, onNavigationTransitionRunningChanged)
+                    TopLevelScreenSurface(
+                        scrim = navigationScrim,
+                        windowSize = windowSize,
+                        railWidth = railWidth,
+                        navigationBarHeight = navigationBarHeight,
+                        chrome = screenChrome(destination),
+                    ) {
+                        TunerScreen(
+                            viewModel = viewModel,
+                            layout = settingsLayout,
+                            scrollPosition = viewModel.tunerScrollPosition,
                             contentPadding = shellContentPadding,
                         )
                     }

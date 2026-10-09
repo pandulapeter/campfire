@@ -38,8 +38,8 @@ owns the text size range, `MIN_FONT_SCALE` to `MAX_FONT_SCALE` — the floor bou
 controls of a song's first section included, rather than the lyrics alone — with `SortingMode`, `SetlistSortingMode`,
 `UiMode`, `ThemeColor`, `Language`, `Accidentals` and `MatchMode` enums whose `id` values are persisted, the
 display-only `ChordSpelling`, `isPerformanceModeEnabled` — read only mode for the whole app, see `:presentation` — the
-feature switches `areChordsEnabled` (stored as the inverse `isLyricsOnlyModeEnabled` it replaced), `areSetlistsEnabled`
-and `isMetronomeEnabled`, `isCoverArtEnabled`, which is what lets the app fetch the covers the songs name at all, the
+feature switches `areChordsEnabled` (stored as the inverse `isLyricsOnlyModeEnabled` it replaced), `areSetlistsEnabled`,
+`isMetronomeEnabled` and `isTunerEnabled`, `isCoverArtEnabled`, which is what lets the app fetch the covers the songs name at all, the
 chord diagrams' `areChordDiagramsEnabled`, `chordInstrument` (`ChordInstrument`, the twin of `:chordpro`'s, which this
 module does not see), `isChordSectionFolded` (one fold for every song) and `chordVoicings` (the player's own shape of
 each chord, by instrument id and then by the chord's id, never exported but synced through `preferences.json`, an
@@ -49,7 +49,8 @@ name to BPM and to fret for songs opened from the library, never exported, but s
 `preferences.json` (see `data/sync/implementation/CLAUDE.md`)), `metronomeSettings` (`MetronomeSettings`: the sound, subdivision and
 accents stored as the metronome's own ids, so this module depends on nothing, the volume, whose zero is the mute, the
 two switches, the Metronome tab's own tempo and time signature, with `TEMPO_RANGE`, and `isSongPanelShown`, whether the
-song details screen opens with the metronome panel in its app bar), the folded sections of each song (`foldedSections`,
+song details screen opens with the metronome panel in its app bar), `tunerSettings` (`TunerSettings`: the tuner's
+instrument as its own id and the reference pitch within `REFERENCE_PITCH_RANGE`, never exported or synced), the folded sections of each song (`foldedSections`,
 one set per song wherever it is opened from, since how much of a song one reader keeps open is theirs alone and never
 goes into a setlist, an export or a sync run), — the four maps keyed by a song's file name, which `withSongRenamed`
 moves with a renamed song or drops with a deleted one and `withoutSongOverrides` empties with the library, so that a new

@@ -23,6 +23,7 @@
    machine.
  - user-selected.read-write is the import and export dialogs, and the files opened from Finder or dropped on the
    window.
+ - device.audio-input is the tuner, which listens only while its page is on screen and asks the system first.
  - The last two tie the build to the App ID its provisioning profile was made for; TestFlight refuses a build
    without them.
 -->
@@ -42,6 +43,8 @@
     <key>com.apple.security.network.server</key>
     <true/>
     <key>com.apple.security.files.user-selected.read-write</key>
+    <true/>
+    <key>com.apple.security.device.audio-input</key>
     <true/>
     <key>com.apple.application-identifier</key>
     <string>N45A6ZHDGY.com.pandulapeter.campfire</string>

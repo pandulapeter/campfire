@@ -91,6 +91,8 @@ import com.pandulapeter.campfire.presentation.ui.metronome.MetronomePanel
 import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
 import com.pandulapeter.campfire.presentation.ui.metronome.metronomeAction
 import com.pandulapeter.campfire.presentation.ui.metronome.withBeatLevels
+import com.pandulapeter.campfire.presentation.ui.tuner.tunerAction
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.playing.songPlaybackOf
 import com.pandulapeter.campfire.presentation.ui.screens.rememberMetronomePanelState
@@ -121,6 +123,7 @@ internal fun SongDetailsAppBar(
     isPerformanceModeEnabled: Boolean,
     shouldShowChords: Boolean,
     isMetronomeEnabled: Boolean,
+    isTunerEnabled: Boolean,
     areSetlistsEnabled: Boolean,
     isCoverArtEnabled: Boolean,
     chordSpelling: UserPreferences.ChordSpelling,
@@ -174,6 +177,7 @@ internal fun SongDetailsAppBar(
     } else {
         null
     }
+    val tunerAction = if (isTunerEnabled) tunerAction(onClick = { viewModel.showDialog(DialogType.Tuner) }) else null
     CampfireTopAppBar(
         scrollBehavior = scrollBehavior,
         navigationIcon = {
@@ -351,7 +355,12 @@ internal fun SongDetailsAppBar(
                 exit = fadeOut() + shrinkHorizontally(),
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    ActionsMenu(items = listOfNotNull(metronomeAction?.takeUnless { showsMetronomeInBar || !isPerformanceModeEnabled }))
+                    ActionsMenu(
+                        items = listOfNotNull(
+                            metronomeAction?.takeUnless { showsMetronomeInBar || !isPerformanceModeEnabled },
+                            tunerAction?.takeIf { isPerformanceModeEnabled },
+                        ),
+                    )
                     AnimatedVisibility(
                         visible = showsMetronomeInBar && isMetronomeEnabled,
                         enter = fadeIn() + expandHorizontally(),
@@ -373,7 +382,7 @@ internal fun SongDetailsAppBar(
                 exit = fadeOut() + shrinkHorizontally(),
             ) {
                 ActionsMenu(
-                    items = listOfNotNull(metronomeAction),
+                    items = listOfNotNull(metronomeAction, tunerAction),
                     menuFooter = {
                         MenuStepperRow(label = stringResource(Res.string.song_details_text_size)) {
                             LiveFontScaleControls(viewModel = viewModel)
@@ -454,9 +463,10 @@ internal fun SongDetailsAppBar(
                                     setlistFileName = destination.setlistFileName,
                                 )
                             },
+                            tunerAction,
                         )
-                        showsFontScaleInBar -> listOfNotNull(metronomeAction?.takeUnless { showsMetronomeInBar })
-                        else -> listOfNotNull(metronomeAction)
+                        showsFontScaleInBar -> listOfNotNull(metronomeAction?.takeUnless { showsMetronomeInBar }, tunerAction)
+                        else -> listOfNotNull(metronomeAction, tunerAction)
                     },
                     // The transposition, the capo and the tempo are set in the song's own first section now; what
                     // is left for the menu is the text size, which belongs to the reader rather than to the song.

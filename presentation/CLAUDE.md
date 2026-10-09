@@ -50,6 +50,7 @@ The notes on it are split by directory, each in the `CLAUDE.md` of the package i
 - `ui/screens/settings/` — the five settings tabs and the sync rows.
 - `ui/screens/importReport/` — the import screen.
 - `ui/screens/metronome/` — the Metronome tab.
+- `ui/screens/tuner/` — the Tuner tab; `ui/tuner/` — what it and the song details screen's tuner sheet share.
 - `ui/screens/export/` — the export screen; `ui/print/` — the PDF pipeline behind it.
 - `ui/components/` — the shared components (list items, tags, covers, the fast scroller, the app bar) and scrolling
   performance.

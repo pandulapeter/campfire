@@ -1,0 +1,2 @@
+<key>NSMicrophoneUsageDescription</key>
+<string>Campfire listens through the microphone to hear your instrument while the tuner is open. The sound is analyzed on this device, and is never recorded or sent anywhere.</string>

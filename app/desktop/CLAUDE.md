@@ -166,7 +166,9 @@ Asking for a `.pkg` (`packagePkg`, `packageReleasePkg`) is what turns on the Mac
 is made for nothing else and every other Mac build has to start where it was made: `appStore`, the App Sandbox through
 `app-store.entitlements` (the app's executable, which the JVM runs in) and `app-store-runtime.entitlements` (everything
 in the bundled runtime, sandboxed and inheriting, as the store wants every executable), and the two provisioning
-profiles.
+profiles. `app-store.entitlements` holds `device.audio-input` for the tuner, and every Mac build's `Info.plist` its
+`NSMicrophoneUsageDescription` (`macos/microphone.plist`, through `extraKeysRawXml`), without which macOS ends the
+process at the first read of the microphone.
 
 The store build is signed once `campfire.mac.signingIdentity` names the certificates — as `Name (TEAMID)`, since the
 plugin adds the `3rd Party Mac Developer …` prefix itself — and a checkout without it builds it signed ad hoc. A `.dmg`
@@ -276,7 +278,7 @@ what Partner Center shows as `PublisherId` — and `desktopDataDirectory()` (in 
 `:data:source:local:implementation`) keeps everything in `%LOCALAPPDATA%\Packages\<family name>\LocalState` when that
 property is set: the package's own folder, which is not virtualized and which Explorer shows as it is. It is removed
 with the app, as a Store app's data is, and it is not the `.msi` build's library; the manifest asks for `runFullTrust`
-alone. The manifest declares English alone, because Partner Center wants a listing in every language a package declares.
+and the `microphone` device capability, which is what lists Campfire by name under Windows' microphone privacy settings. The manifest declares English alone, because Partner Center wants a listing in every language a package declares.
 To try a package on the machine that built it, turn on Developer Mode and `Add-AppxPackage -Register
 app/desktop/build/tmp/packageReleaseMsix/package/AppxManifest.xml`, which installs the unpacked package;
 `Get-AppxPackage Campfire* | Remove-AppxPackage` removes it.

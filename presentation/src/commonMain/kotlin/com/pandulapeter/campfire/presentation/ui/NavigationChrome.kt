@@ -34,7 +34,9 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_setlists
 import com.pandulapeter.campfire.presentation.resources.ic_settings
+import com.pandulapeter.campfire.presentation.resources.ic_tuner
 import com.pandulapeter.campfire.presentation.resources.metronome
+import com.pandulapeter.campfire.presentation.resources.tuner
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeIcon
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeIconBeat
 import com.pandulapeter.campfire.presentation.ui.metronome.rememberMetronomeIconBeat
@@ -167,6 +169,7 @@ private fun DestinationIcon(
     CampfireDestination.Songs -> Icon(painter = painterResource(Res.drawable.ic_songs), contentDescription = null)
     CampfireDestination.Setlists -> Icon(painter = painterResource(Res.drawable.ic_setlists), contentDescription = null)
     CampfireDestination.Metronome -> MetronomeIcon(beat = metronomeBeat, contentDescription = null)
+    CampfireDestination.Tuner -> Icon(painter = painterResource(Res.drawable.ic_tuner), contentDescription = null)
     CampfireDestination.Settings -> Icon(painter = painterResource(Res.drawable.ic_settings), contentDescription = null)
 }
 
@@ -175,5 +178,6 @@ private val CampfireDestination.TopLevel.label: StringResource
         CampfireDestination.Songs -> Res.string.songs
         CampfireDestination.Setlists -> Res.string.setlists
         CampfireDestination.Metronome -> Res.string.metronome
+        CampfireDestination.Tuner -> Res.string.tuner
         CampfireDestination.Settings -> Res.string.settings
     }

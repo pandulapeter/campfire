@@ -59,6 +59,9 @@
 	<array>
 		<string>audio</string>
 	</array>
+	<!-- What the system's question names the microphone's use as: the tuner, asked from the button on its page. -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Campfire listens through the microphone to hear your instrument while the tuner is open. The sound is analyzed on this device, and is never recorded or sent anywhere.</string>
 	<!-- Answers App Store Connect's export compliance question up front, so an upload does not wait for it by hand.
 	     The only cryptography is exempt: HTTPS through the system's networking, SHA-256 for content hashes and the
 	     PKCE challenge, and the Keychain. Anything that adds encryption of its own has to revisit this. -->

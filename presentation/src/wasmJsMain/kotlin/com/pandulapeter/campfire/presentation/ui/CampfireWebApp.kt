@@ -19,6 +19,7 @@ import androidx.compose.runtime.remember
 import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
 import com.pandulapeter.campfire.presentation.ui.navigation.BrowserHistoryEffect
 import com.pandulapeter.campfire.presentation.ui.navigation.navigateToBrowserAddress
+import com.pandulapeter.campfire.presentation.ui.platform.refreshMicrophoneStatus
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.LocalMetronomeNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.ProvideKeyboardInsets
@@ -49,6 +50,8 @@ fun CampfireWebApp(
     LocalFilePicker provides WebFilePicker,
     LocalMetronomeNotifier provides WebMetronomeNotifier,
 ) {
+    // Asked as the app starts rather than as the tuner opens, so that the tab's first frame already knows the answer.
+    LaunchedEffect(Unit) { refreshMicrophoneStatus() }
     DisposableEffect(Unit) {
         startForwardingEscapeKey()
         startSuppressingBrowserSave()

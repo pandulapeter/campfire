@@ -1,0 +1,23 @@
+/*
+ * This file is part of Campfire.
+ * Copyright (c) Pandula Péter 2017-2026.
+ * https://github.com/pandulapeter/campfire
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * https://mozilla.org/MPL/2.0/.
+ */
+plugins {
+    id("campfire-library")
+}
+
+kotlin {
+    // The public surface of a module every other one sees is written on purpose: a declaration says it is public.
+    explicitApi()
+    sourceSets {
+        commonMain.dependencies {
+            // The tuner's state is a StateFlow; nothing else is depended on.
+            api(libs.kotlin.coroutines)
+        }
+    }
+}

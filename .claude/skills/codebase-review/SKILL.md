@@ -194,7 +194,7 @@ land the simple ones in the same session. Everything above still holds, with the
 - **Areas that have worked as reviewer splits:** `:chordpro`; storage and sync (`:data:*`, `SyncPlanner`,
   `SyncEngine`, Dropbox); `:domain`; `:presentation`; the platform shells, docs and CI (`app/*`, `.github/`).
 - **Unit tests** (pure logic only; see the root CLAUDE.md for what may be tested):
-  `./gradlew :data:model:desktopTest :data:formats:desktopTest :chordpro:desktopTest :domain:implementation:desktopTest :data:source:local:implementation:desktopTest :data:source:remote:api:desktopTest :data:source:remote:implementation:desktopTest :data:repository:implementation:desktopTest :data:sync:implementation:desktopTest :metronome:api:desktopTest :metronome:implementation:desktopTest :presentation:desktopTest`
+  `./gradlew :data:model:desktopTest :data:formats:desktopTest :chordpro:desktopTest :domain:implementation:desktopTest :data:source:local:implementation:desktopTest :data:source:remote:api:desktopTest :data:source:remote:implementation:desktopTest :data:repository:implementation:desktopTest :data:sync:implementation:desktopTest :metronome:api:desktopTest :metronome:implementation:desktopTest :tuner:api:desktopTest :tuner:implementation:desktopTest :presentation:desktopTest`
 - **Per-platform compile checks:** desktop `:<module>:compileKotlinDesktop` (`:app:desktop:compileKotlin` for
   `:presentation` and the apps); `androidMain` → `:app:android:compileDebugKotlin`; `iosMain` →
   `:app:ios:linkDebugFrameworkIosSimulatorArm64`; `wasmJsMain` → `:app:web:compileKotlinWasmJs`; the packaged

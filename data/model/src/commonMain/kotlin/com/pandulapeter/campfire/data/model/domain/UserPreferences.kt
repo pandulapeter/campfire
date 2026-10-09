@@ -43,6 +43,11 @@ data class UserPreferences(
      */
     val isMetronomeEnabled: Boolean,
     /**
+     * Whether the app has a tuner: its tab, and the song details screen's way to it. Off, nothing in the app can ask for
+     * the microphone; [tunerSettings] stays as it was.
+     */
+    val isTunerEnabled: Boolean = true,
+    /**
      * Multiplier applied to the text size of the song details screen, [DEFAULT_FONT_SCALE] being the default, and
      * never outside [MIN_FONT_SCALE] to [MAX_FONT_SCALE].
      */
@@ -134,6 +139,8 @@ data class UserPreferences(
     val languageSortingMode: LabelSortingMode,
     val printSettings: PrintSettings = PrintSettings(),
     val metronomeSettings: MetronomeSettings = MetronomeSettings(),
+    /** Never exported or synced: which instrument one device tunes is that device's business. */
+    val tunerSettings: TunerSettings = TunerSettings(),
     /** Versions already introduced here, including the first installed version whose introduction is skipped. */
     val seenWhatsNewVersions: Set<String> = emptySet(),
     /**

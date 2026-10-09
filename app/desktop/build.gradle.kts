@@ -164,7 +164,7 @@ compose.desktop {
                 // of its own has to change both. The fragments carry no comment, since every line of them lands in the
                 // bundle's Info.plist.
                 infoPlist {
-                    extraKeysRawXml = listOf("document-types.plist", "export-compliance.plist")
+                    extraKeysRawXml = listOf("document-types.plist", "export-compliance.plist", "microphone.plist")
                         .joinToString("\n") { project.file("macos/$it").readText().trim() }
                 }
                 if (isMacAppStoreBuild) {

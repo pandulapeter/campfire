@@ -12,8 +12,10 @@ package com.pandulapeter.campfire.data.source.local.implementation.mapper
 import com.pandulapeter.campfire.data.model.domain.MetronomeSettings
 import com.pandulapeter.campfire.data.model.domain.PrintSettings
 import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.data.model.domain.TunerSettings
 import com.pandulapeter.campfire.data.source.local.implementation.model.MetronomeSettingsDocument
 import com.pandulapeter.campfire.data.source.local.implementation.model.PrintSettingsDocument
+import com.pandulapeter.campfire.data.source.local.implementation.model.TunerSettingsDocument
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.data.source.local.implementation.model.UserPreferencesDocument
 
@@ -23,6 +25,7 @@ internal fun UserPreferencesDocument.toModel() = UserPreferences(
     areChordsEnabled = !isLyricsOnlyModeEnabled,
     areSetlistsEnabled = areSetlistsEnabled,
     isMetronomeEnabled = isMetronomeEnabled,
+    isTunerEnabled = isTunerEnabled,
     // A hand edit or a newer version's wider range must not reach the screen as it is: a size of 40 is a column per
     // word. Not a number at all is no size, and is the default.
     fontScale = fontScale.takeIf { it.isFinite() }?.coerceIn(UserPreferences.MIN_FONT_SCALE, UserPreferences.MAX_FONT_SCALE)
@@ -55,6 +58,7 @@ internal fun UserPreferencesDocument.toModel() = UserPreferences(
     languageSortingMode = UserPreferences.LabelSortingMode.entries.firstOrNull { it.id == languageSortingMode } ?: UserPreferences.LabelSortingMode.BY_USAGE,
     printSettings = printSettings.toModel(),
     metronomeSettings = metronomeSettings.toModel(),
+    tunerSettings = tunerSettings.toModel(),
     seenWhatsNewVersions = seenWhatsNewVersions,
     demoLibraryContentHashes = demoLibraryContentHashes.filterValues { it.isNotBlank() },
 )
@@ -65,6 +69,7 @@ internal fun UserPreferences.toDocument() = UserPreferencesDocument(
     isLyricsOnlyModeEnabled = !areChordsEnabled,
     areSetlistsEnabled = areSetlistsEnabled,
     isMetronomeEnabled = isMetronomeEnabled,
+    isTunerEnabled = isTunerEnabled,
     fontScale = fontScale,
     sortingMode = sortingMode.id,
     setlistSortingMode = setlistSortingMode.id,
@@ -91,6 +96,7 @@ internal fun UserPreferences.toDocument() = UserPreferencesDocument(
     languageSortingMode = languageSortingMode.id,
     printSettings = printSettings.toDocument(),
     metronomeSettings = metronomeSettings.toDocument(),
+    tunerSettings = tunerSettings.toDocument(),
     seenWhatsNewVersions = seenWhatsNewVersions,
     demoLibraryContentHashes = demoLibraryContentHashes,
 )
@@ -157,4 +163,14 @@ internal fun MetronomeSettings.toDocument() = MetronomeSettingsDocument(
     bpm = bpm,
     timeSignature = timeSignature,
     isSongPanelShown = isSongPanelShown,
+)
+
+internal fun TunerSettingsDocument.toModel() = TunerSettings(
+    instrumentId = instrument,
+    referencePitch = referencePitch.coerceIn(TunerSettings.REFERENCE_PITCH_RANGE),
+)
+
+internal fun TunerSettings.toDocument() = TunerSettingsDocument(
+    instrument = instrumentId,
+    referencePitch = referencePitch,
 )

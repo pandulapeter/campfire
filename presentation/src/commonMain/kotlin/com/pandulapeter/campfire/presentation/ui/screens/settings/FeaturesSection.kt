@@ -25,6 +25,8 @@ import com.pandulapeter.campfire.presentation.resources.settings_metronome_descr
 import com.pandulapeter.campfire.presentation.resources.settings_read_only_mode
 import com.pandulapeter.campfire.presentation.resources.settings_read_only_mode_description
 import com.pandulapeter.campfire.presentation.resources.settings_setlists_description
+import com.pandulapeter.campfire.presentation.resources.settings_tuner_description
+import com.pandulapeter.campfire.presentation.resources.tuner
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.SwitchListItem
 
@@ -67,6 +69,13 @@ internal fun FeaturesSection(
         description = stringResource(Res.string.settings_metronome_description),
         isChecked = userPreferences?.isMetronomeEnabled != false,
         onCheckedChange = viewModel::setMetronomeEnabled,
+    )
+    // Off, nothing in the app can ask for the microphone.
+    SwitchListItem(
+        title = stringResource(Res.string.tuner),
+        description = stringResource(Res.string.settings_tuner_description),
+        isChecked = userPreferences?.isTunerEnabled != false,
+        onCheckedChange = viewModel::setTunerEnabled,
     )
     SwitchListItem(
         title = stringResource(Res.string.setlists),

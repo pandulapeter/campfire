@@ -26,6 +26,7 @@ internal data class UserPreferencesDocument(
     val isLyricsOnlyModeEnabled: Boolean = false,
     val areSetlistsEnabled: Boolean = true,
     val isMetronomeEnabled: Boolean = true,
+    val isTunerEnabled: Boolean = true,
     val fontScale: Float = 1f,
     val sortingMode: String = "",
     val setlistSortingMode: String = "",
@@ -54,6 +55,7 @@ internal data class UserPreferencesDocument(
     val languageSortingMode: String = "",
     val printSettings: PrintSettingsDocument = PrintSettingsDocument(),
     val metronomeSettings: MetronomeSettingsDocument = MetronomeSettingsDocument(),
+    val tunerSettings: TunerSettingsDocument = TunerSettingsDocument(),
     val seenWhatsNewVersions: Set<String> = emptySet(),
     val demoLibraryContentHashes: Map<String, String> = emptyMap(),
 )
@@ -95,4 +97,11 @@ internal data class MetronomeSettingsDocument(
     val bpm: Int = 120,
     val timeSignature: String = "4/4",
     val isSongPanelShown: Boolean = false,
+)
+
+/** The instrument is the tuner's own id, checked where it is read into its presets, in `:presentation`. */
+@Serializable
+internal data class TunerSettingsDocument(
+    val instrument: String = "chromatic",
+    val referencePitch: Int = 440,
 )

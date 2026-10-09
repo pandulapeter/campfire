@@ -36,11 +36,11 @@ sealed interface CampfireDestination : NavKey {
     sealed interface TopLevel : CampfireDestination {
 
         companion object {
-            val entries: List<TopLevel> get() = listOf(Songs, Setlists, Metronome, Settings)
+            val entries: List<TopLevel> get() = listOf(Songs, Setlists, Metronome, Tuner, Settings)
 
             /** The top level screens the navigation chrome offers, which leaves out those of the features switched off. */
-            fun entries(areSetlistsEnabled: Boolean, isMetronomeEnabled: Boolean) = entries.filter {
-                CampfireDestination.isEnabled(it, areSetlistsEnabled = areSetlistsEnabled, isMetronomeEnabled = isMetronomeEnabled)
+            fun entries(areSetlistsEnabled: Boolean, isMetronomeEnabled: Boolean, isTunerEnabled: Boolean) = entries.filter {
+                CampfireDestination.isEnabled(it, areSetlistsEnabled = areSetlistsEnabled, isMetronomeEnabled = isMetronomeEnabled, isTunerEnabled = isTunerEnabled)
             }
 
             /**
@@ -55,11 +55,13 @@ sealed interface CampfireDestination : NavKey {
 
         /**
          * Whether [destination] belongs to a feature that is switched on: the setlists screen and a song read from a
-         * setlist to the setlists, the metronome screen to the metronome. Everything else is always there.
+         * setlist to the setlists, the metronome screen to the metronome, the tuner screen to the tuner. Everything else is
+         * always there.
          */
-        fun isEnabled(destination: CampfireDestination, areSetlistsEnabled: Boolean, isMetronomeEnabled: Boolean) = when (destination) {
+        fun isEnabled(destination: CampfireDestination, areSetlistsEnabled: Boolean, isMetronomeEnabled: Boolean, isTunerEnabled: Boolean) = when (destination) {
             Setlists -> areSetlistsEnabled
             Metronome -> isMetronomeEnabled
+            Tuner -> isTunerEnabled
             is SongDetails -> areSetlistsEnabled || destination.setlistFileName == null
             else -> true
         }
@@ -78,6 +80,11 @@ sealed interface CampfireDestination : NavKey {
     @Serializable
     data object Metronome : TopLevel {
         override val contentKey = "metronome"
+    }
+
+    @Serializable
+    data object Tuner : TopLevel {
+        override val contentKey = "tuner"
     }
 
     @Serializable

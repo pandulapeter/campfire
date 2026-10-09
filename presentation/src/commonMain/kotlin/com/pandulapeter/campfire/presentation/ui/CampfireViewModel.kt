@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui
 
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -25,6 +26,7 @@ import com.pandulapeter.campfire.data.model.domain.ImportProgress
 import com.pandulapeter.campfire.data.model.domain.ImportResult
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.data.model.domain.MetronomeSettings
+import com.pandulapeter.campfire.data.model.domain.TunerSettings
 import com.pandulapeter.campfire.data.model.domain.PrintSettings
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song
@@ -101,6 +103,8 @@ import com.pandulapeter.campfire.domain.api.useCases.UpdateUserPreferencesUseCas
 import com.pandulapeter.campfire.presentation.ui.components.SearchState
 import com.pandulapeter.campfire.metronome.api.Metronome
 import com.pandulapeter.campfire.metronome.api.model.MetronomeSound
+import com.pandulapeter.campfire.presentation.ui.tuner.TunerController
+import com.pandulapeter.campfire.tuner.api.Tuner
 import com.pandulapeter.campfire.presentation.ui.dialogs.SONG_METADATA_FIELDS
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeContext
 import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
@@ -176,6 +180,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
@@ -235,6 +240,7 @@ class CampfireViewModel(
     /** What the screens draw a song, a key and a search with, see [SongRenderer]. */
     internal val songRenderer: SongRenderer,
     private val metronome: Metronome,
+    private val tuner: Tuner,
     /** What survives the system killing the process while the app is in the background, see [SavedStateStore]. */
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
@@ -329,6 +335,10 @@ class CampfireViewModel(
             // to stop it, so it stops a click the way pushing a destination does (see updateBackStack).
             if (dialogType is DialogType.Export) metronome.stop()
         }
+        addBeforeDialogChange { previousDialog, dialogType ->
+            // The tuner sheet listens for as long as it is up and not a moment longer, as the Tuner tab does.
+            if (previousDialog is DialogType.Tuner && dialogType !is DialogType.Tuner) stopTuner()
+        }
         addAfterDialogChange { previousDialog, dialogType ->
             // Asked as the sheet is put up rather than by the sheet once it is composed, so that its first frame already
             // says that the search is running instead of crossfading from the hint to it while it slides up.
@@ -362,6 +372,11 @@ class CampfireViewModel(
             // where the user put it, so the next song is read to a click without asking for the instrument again.
             if (isMetronomeScreenLeft(previousTop = previousTop, top = stack.lastOrNull())) metronome.stop()
         }
+        addOnBackStackChanged { previousTop, stack ->
+            // Nothing of the tuner outlives the screen it is used on: the tab, or the song its sheet is opened over. The
+            // screen starts it again once it is composed, and only that screen does.
+            if (previousTop?.contentKey != stack.lastOrNull()?.contentKey) stopTuner()
+        }
         addOnBackStackChanged { _, _ -> editorSession.onBackStackChanged() }
         addOnBackStackChanged { _, stack ->
             stack.mapNotNullTo(mutableSetOf()) { (it as? CampfireDestination.SongDetails)?.id }.let { ids ->
@@ -381,6 +396,9 @@ class CampfireViewModel(
 
     /** See [Navigator.metronomeScrollPosition]. */
     internal val metronomeScrollPosition get() = navigator.metronomeScrollPosition
+
+    /** See [Navigator.tunerScrollPosition]. */
+    internal val tunerScrollPosition get() = navigator.tunerScrollPosition
 
     /** See [Navigator.settingsScrollPositions]. */
     internal val settingsScrollPositions get() = navigator.settingsScrollPositions
@@ -772,6 +790,25 @@ class CampfireViewModel(
     val pendingPrintSettings get() = exportController.pendingPrintSettings
 
     /** See [ExportController.isFileTransferActive]. */
+    // Tuner
+
+    private val tunerController: TunerController = TunerController(
+        scope = viewModelScope,
+        tuner = tuner,
+        userPreferences = userPreferences,
+        updateUserPreferences = updateUserPreferences,
+        writeDelayMillis = PREFERENCE_WRITE_DEBOUNCE_MILLIS,
+    )
+
+    /** See [TunerController.tunerSettings]. */
+    val tunerSettings: StateFlow<TunerSettings> get() = tunerController.tunerSettings
+
+    /** See [TunerController.tunerState]. */
+    val tunerState get() = tunerController.tunerState
+
+    /** See [TunerController.hasRequestedMicrophone]. */
+    val hasRequestedMicrophone get() = tunerController.hasRequestedMicrophone
+
     val isFileTransferActive get() = exportController.isFileTransferActive
 
     /** See [ExportController.pdfExportProgress]. */
@@ -783,6 +820,7 @@ class CampfireViewModel(
     private val appExitController: AppExitController = AppExitController(
         scope = viewModelScope,
         metronome = metronome,
+        tuner = tuner,
         dialogHost = dialogHost,
         backStack = backStack,
         editorSession = editorSession,
@@ -792,6 +830,7 @@ class CampfireViewModel(
         waitingPreferences = listOf(
             fontScaleController.fontScalePreference,
             metronomeController.metronomeSettingsPreference,
+            tunerController.tunerSettingsPreference,
             exportController.printSettingsPreference,
         ),
         updateUserPreferences = updateUserPreferences,
@@ -906,6 +945,15 @@ class CampfireViewModel(
         fontScaleController.startEcho(userPreferences)
         fontScaleController.startSettle()
         metronomeController.startStartableRule()
+        tunerController.startSettingsWriter()
+        tunerController.startFollowingSettings()
+        tunerController.startStartableRule(
+            combine(
+                snapshotFlow { backStack.lastOrNull() },
+                dialogHost.visibleDialog,
+                userPreferences.map { it?.isTunerEnabled != false },
+            ) { top, dialog, isTunerEnabled -> isTunerEnabled && (top == CampfireDestination.Tuner || dialog is DialogType.Tuner) },
+        )
     }
 
     // Navigation
@@ -1134,6 +1182,19 @@ class CampfireViewModel(
 
     fun updateMetronomeSettings(change: MetronomeSettings.() -> MetronomeSettings) = metronomeController.updateMetronomeSettings(change)
 
+    /** See [TunerController.setTunerListening]. */
+    fun setTunerListening(isListening: Boolean) = tunerController.setTunerListening(isListening)
+
+    /** See [TunerController.requestMicrophone]. */
+    fun requestMicrophone() = tunerController.requestMicrophone()
+
+    /** See [TunerController.toggleTunerTone]. */
+    fun toggleTunerTone(note: Int) = tunerController.toggleTunerTone(note)
+
+    fun stopTuner() = tunerController.stopTuner()
+
+    fun updateTunerSettings(change: TunerSettings.() -> TunerSettings) = tunerController.updateTunerSettings(change)
+
     internal fun effectiveTempoOf(songFileName: String, setlistFileName: String?) = overrides.effectiveTempoOf(songFileName, setlistFileName)
 
     fun stepTempo(songFileName: String, setlistFileName: String?, delta: Int) = overrides.stepTempo(songFileName, setlistFileName, delta)
@@ -1269,6 +1330,8 @@ class CampfireViewModel(
     fun setSetlistsEnabled(value: Boolean) = preferencesController.setSetlistsEnabled(value)
 
     fun setMetronomeEnabled(value: Boolean) = preferencesController.setMetronomeEnabled(value)
+
+    fun setTunerEnabled(value: Boolean) = preferencesController.setTunerEnabled(value)
 
     fun toggleSectionFold(songFileName: String, key: String) = preferencesController.toggleSectionFold(songFileName, key)
 

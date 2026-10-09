@@ -94,6 +94,8 @@ internal class Navigator(
      */
     val metronomeScrollPosition = ScrollPosition()
 
+    val tunerScrollPosition = ScrollPosition()
+
     val settingsScrollPositions = SettingsTab.entries.associateWith { ScrollPosition() }
 
     /**
@@ -251,6 +253,7 @@ internal class Navigator(
         val allowedState = state.withoutDisabledFeatures(
             areSetlistsEnabled = preferences?.areSetlistsEnabled != false,
             isMetronomeEnabled = preferences?.isMetronomeEnabled != false,
+            isTunerEnabled = preferences?.isTunerEnabled != false,
         )
         if (allowedState.backStack.isEmpty()) return false
         settingsTab = allowedState.settingsTab

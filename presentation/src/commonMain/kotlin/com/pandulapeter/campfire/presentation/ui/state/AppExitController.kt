@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.domain.api.useCases.GetSyncStateUseCase
 import com.pandulapeter.campfire.domain.api.useCases.StartScheduledSynchronizationUseCase
 import com.pandulapeter.campfire.domain.api.useCases.UpdateUserPreferencesUseCase
 import com.pandulapeter.campfire.metronome.api.Metronome
+import com.pandulapeter.campfire.tuner.api.Tuner
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
@@ -37,6 +38,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 internal class AppExitController(
     private val scope: CoroutineScope,
     private val metronome: Metronome,
+    private val tuner: Tuner,
     private val dialogHost: DialogHost,
     private val backStack: List<CampfireDestination>,
     private val editorSession: EditorSession,
@@ -144,6 +146,8 @@ internal class AppExitController(
         if (!editorSession.isEditorDraftRecoveryPending.value) editorSession.storeEditorDraft(editorSession.currentEditorDraftToStore())
         // The window is already hidden, so a click still sounding while the run is waited for would come from nowhere.
         metronome.stop()
+        tuner.stopListening()
+        tuner.stopTone()
         // The process ends right after this, and onCleared's detached write would race it - or, on a macOS Quit, never
         // run. Before the sync wait, so that an override written now is in the library a run that is still to start carries.
         writeWaitingPreferences()
@@ -195,6 +199,9 @@ internal class AppExitController(
      */
     fun onCleared() {
         metronome.stop()
+        // Nothing of the tuner outlives its screen, and with the view model every screen is gone.
+        tuner.stopListening()
+        tuner.stopTone()
         val writeWaitingOverrides = overrides.takeWaitingOverrideWrites()
         // Written on a scope of their own, since this one is being cancelled: each was waiting for its debounce, which
         // this scope's cancellation would otherwise drop.

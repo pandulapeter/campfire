@@ -254,6 +254,7 @@
     <string name="settings_chord_diagrams">Akkordábrák</string>
     <string name="settings_chord_diagrams_description">A dal elején megmutatja, hogyan kell lefogni a dal minden akkordját.</string>
     <string name="settings_metronome_description">A Metronóm fül és a dalok képernyőjén a metronóm, a dalok tempójával és ütemmutatójával együtt</string>
+    <string name="settings_tuner_description">A Hangoló fül, és a mikrofon, amelyen keresztül hallgat</string>
     <string name="settings_setlists_description">A Listák fül és a dalok listákhoz adása. Kikapcsolva csak elrejti őket, egyetlen lista sem törlődik.</string>
     <string name="settings_cover_art">Borítóképek</string>
     <string name="settings_cover_art_description">A dalokban megadott albumborítók megjelenítése, amelyeket az alkalmazás egyszer letölt, majd ezen az eszközön tárol</string>
@@ -376,6 +377,53 @@
     <string name="metronome_stopped_silent">A metronóm leállt, amikor a Campfire a háttérbe került, mert nulla hangerőn vagy minden ütést elnémítva semmi sem hallatszott.</string>
     <!-- The channel of the notification a playing metronome keeps up, as the system's settings list it. -->
     <string name="metronome_notification_channel">Metronóm</string>
+
+    <!-- Tuner screen, and the tuner sheet over a song -->
+    <string name="tuner">Hangoló</string>
+    <string name="tuner_play_a_note">Szólaltass meg egy hangot</string>
+    <string name="tuner_reference_tone">Referenciahang</string>
+    <!-- What is heard and what it is tuned to, in Hz. -->
+    <string name="tuner_frequency">%1$s Hz</string>
+    <string name="tuner_target_frequency">Cél: %1$s Hz</string>
+    <string name="tuner_in_tune">Tiszta</string>
+    <string name="tuner_flat">Mély</string>
+    <string name="tuner_sharp">Magas</string>
+    <!-- How a screen reader reads the meter: the note, then how far it is off, e.g. "E2, 12 cents flat". -->
+    <string name="tuner_reading_flat">%1$s, %2$d cent mély</string>
+    <string name="tuner_reading_sharp">%1$s, %2$d cent magas</string>
+    <string name="tuner_reading_in_tune">%1$s, tiszta</string>
+    <string name="tuner_instrument">Hangszer</string>
+    <string name="tuner_instrument_chromatic">Kromatikus</string>
+    <string name="tuner_instrument_guitar">Gitár</string>
+    <string name="tuner_instrument_guitar_drop_d">Gitár, drop D</string>
+    <string name="tuner_instrument_bass">Basszusgitár</string>
+    <string name="tuner_instrument_ukulele">Ukulele</string>
+    <string name="tuner_instrument_violin">Hegedű</string>
+    <string name="tuner_instrument_mandolin">Mandolin</string>
+    <string name="tuner_instrument_banjo">Bendzsó</string>
+    <string name="tuner_strings">Húrok</string>
+    <string name="tuner_strings_description">Koppints egy húrra, hogy meghalld a hangját, majd újra, hogy leállítsd.</string>
+    <!-- A string chip as a screen reader reads it, e.g. "String 6, E2". -->
+    <string name="tuner_string">%1$d. húr, %2$s</string>
+    <string name="tuner_reference_pitch">Alaphang</string>
+    <string name="tuner_reference_pitch_value">%1$s = %2$d Hz</string>
+    <string name="tuner_reference_pitch_decrease">Alaphang mélyítése</string>
+    <string name="tuner_reference_pitch_increase">Alaphang emelése</string>
+    <string name="tuner_reference_pitch_reset">Alaphang visszaállítása 440 Hz-re</string>
+    <string name="tuner_play_reference">A referencia A lejátszása</string>
+    <string name="tuner_notice_not_asked">A Campfire a mikrofonon keresztül hallja a hangszert. A hangot ez az eszköz elemzi, és soha nem rögzíti vagy küldi el sehová.</string>
+    <string name="tuner_notice_refused">A mikrofon ki van kapcsolva a Campfire számára. Az alábbi húrok hangja így is lejátszható.</string>
+    <string name="tuner_notice_refused_web">A mikrofon ki van kapcsolva a Campfire számára. A böngésző webhelybeállításaiban engedélyezhető, a cím mellett. Az alábbi húrok hangja így is lejátszható.</string>
+    <string name="tuner_notice_no_microphone">Nem található mikrofon.</string>
+    <string name="tuner_notice_busy">A mikrofont egy hívás vagy egy másik alkalmazás használja.</string>
+    <string name="tuner_notice_not_supported">Ez a böngésző nem engedi, hogy egy oldal a mikrofont használja.</string>
+    <string name="tuner_notice_failed">A mikrofont nem sikerült megnyitni.</string>
+    <string name="tuner_notice_silent">Semmi sem hallatszik. Ellenőrizd, hogy a mikrofon nincs-e elnémítva, és hogy a Campfire használhatja-e.</string>
+    <string name="tuner_notice_waiting">Koppints bárhová, hogy a böngésző hallgathasson.</string>
+    <string name="tuner_use_microphone">Mikrofon használata</string>
+    <string name="tuner_open_settings">Beállítások megnyitása</string>
+    <string name="tuner_ask_again">Újbóli kérés</string>
+    <string name="tuner_try_again">Újra</string>
 
     <!-- Song editor screen -->
     <string name="song_editor_edit">Szöveg</string>

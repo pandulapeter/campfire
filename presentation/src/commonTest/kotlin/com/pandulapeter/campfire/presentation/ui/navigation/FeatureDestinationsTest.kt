@@ -19,10 +19,14 @@ internal class FeatureDestinationsTest {
 
     @Test
     fun `the tabs of the features switched off are left out`() {
-        assertEquals(CampfireDestination.TopLevel.entries, CampfireDestination.TopLevel.entries(areSetlistsEnabled = true, isMetronomeEnabled = true))
+        assertEquals(CampfireDestination.TopLevel.entries, CampfireDestination.TopLevel.entries(areSetlistsEnabled = true, isMetronomeEnabled = true, isTunerEnabled = true))
         assertEquals(
             listOf(CampfireDestination.Songs, CampfireDestination.Settings),
-            CampfireDestination.TopLevel.entries(areSetlistsEnabled = false, isMetronomeEnabled = false),
+            CampfireDestination.TopLevel.entries(areSetlistsEnabled = false, isMetronomeEnabled = false, isTunerEnabled = false),
+        )
+        assertEquals(
+            listOf(CampfireDestination.Songs, CampfireDestination.Setlists, CampfireDestination.Metronome, CampfireDestination.Settings),
+            CampfireDestination.TopLevel.entries(areSetlistsEnabled = true, isMetronomeEnabled = true, isTunerEnabled = false),
         )
     }
 
@@ -31,10 +35,11 @@ internal class FeatureDestinationsTest {
         val fromSetlist = CampfireDestination.SongDetails(songFileNames = listOf("a.cho"), setlistFileName = "set.setlist.json", initialIndex = 0)
         val fromLibrary = fromSetlist.copy(setlistFileName = null)
 
-        assertFalse(CampfireDestination.isEnabled(fromSetlist, areSetlistsEnabled = false, isMetronomeEnabled = true))
-        assertTrue(CampfireDestination.isEnabled(fromLibrary, areSetlistsEnabled = false, isMetronomeEnabled = false))
-        assertTrue(CampfireDestination.isEnabled(CampfireDestination.Settings, areSetlistsEnabled = false, isMetronomeEnabled = false))
-        assertFalse(CampfireDestination.isEnabled(CampfireDestination.Metronome, areSetlistsEnabled = true, isMetronomeEnabled = false))
+        assertFalse(CampfireDestination.isEnabled(fromSetlist, areSetlistsEnabled = false, isMetronomeEnabled = true, isTunerEnabled = true))
+        assertTrue(CampfireDestination.isEnabled(fromLibrary, areSetlistsEnabled = false, isMetronomeEnabled = false, isTunerEnabled = true))
+        assertTrue(CampfireDestination.isEnabled(CampfireDestination.Settings, areSetlistsEnabled = false, isMetronomeEnabled = false, isTunerEnabled = true))
+        assertFalse(CampfireDestination.isEnabled(CampfireDestination.Metronome, areSetlistsEnabled = true, isMetronomeEnabled = false, isTunerEnabled = true))
+        assertFalse(CampfireDestination.isEnabled(CampfireDestination.Tuner, areSetlistsEnabled = true, isMetronomeEnabled = true, isTunerEnabled = false))
     }
 
     @Test
@@ -43,9 +48,12 @@ internal class FeatureDestinationsTest {
         val metronome = songs.copy(backStack = songs.backStack + CampfireDestination.Metronome)
         val setlistsSearch = songs.copy(backStack = songs.backStack + CampfireDestination.Setlists, isSetlistsSearchOpen = true)
 
-        assertEquals(songs, metronome.withoutDisabledFeatures(areSetlistsEnabled = true, isMetronomeEnabled = false))
-        assertEquals(metronome, metronome.withoutDisabledFeatures(areSetlistsEnabled = false, isMetronomeEnabled = true))
-        assertEquals(songs, setlistsSearch.withoutDisabledFeatures(areSetlistsEnabled = false, isMetronomeEnabled = true))
+        assertEquals(songs, metronome.withoutDisabledFeatures(areSetlistsEnabled = true, isMetronomeEnabled = false, isTunerEnabled = true))
+        assertEquals(metronome, metronome.withoutDisabledFeatures(areSetlistsEnabled = false, isMetronomeEnabled = true, isTunerEnabled = true))
+        assertEquals(songs, setlistsSearch.withoutDisabledFeatures(areSetlistsEnabled = false, isMetronomeEnabled = true, isTunerEnabled = true))
+        val tuner = songs.copy(backStack = songs.backStack + CampfireDestination.Tuner)
+        assertEquals(songs, tuner.withoutDisabledFeatures(areSetlistsEnabled = true, isMetronomeEnabled = true, isTunerEnabled = false))
+        assertEquals(tuner, tuner.withoutDisabledFeatures(areSetlistsEnabled = true, isMetronomeEnabled = false, isTunerEnabled = true))
     }
 
     @Test
@@ -58,6 +66,6 @@ internal class FeatureDestinationsTest {
             settingsTab = SettingsTab.GENERAL,
         )
 
-        assertEquals(listOf(CampfireDestination.Songs), state.withoutDisabledFeatures(areSetlistsEnabled = false, isMetronomeEnabled = true).backStack)
+        assertEquals(listOf(CampfireDestination.Songs), state.withoutDisabledFeatures(areSetlistsEnabled = false, isMetronomeEnabled = true, isTunerEnabled = true).backStack)
     }
 }
