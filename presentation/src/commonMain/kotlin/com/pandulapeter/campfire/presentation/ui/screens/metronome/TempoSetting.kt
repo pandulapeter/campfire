@@ -25,11 +25,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.metronome_tempo_slider
+import com.pandulapeter.campfire.presentation.resources.song_details_tempo
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_tempo
 import com.pandulapeter.campfire.presentation.ui.metronome.TempoStepper
 import com.pandulapeter.campfire.presentation.ui.metronome.tempoMarking
@@ -82,8 +84,16 @@ internal fun TempoSetting(
         )
     }
     val sliderDescription = stringResource(Res.string.metronome_tempo_slider)
+    val sliderState = stringResource(Res.string.song_details_tempo, bpm.toString())
     Slider(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).semantics { contentDescription = sliderDescription },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .semantics {
+                contentDescription = sliderDescription
+                // The range info alone is read as a percentage of the range, which says nothing about a tempo.
+                stateDescription = sliderState
+            },
         value = bpm.toFloat(),
         onValueChange = { onBpmChanged(it.roundToInt()) },
         valueRange = MetronomePattern.BPM_RANGE.first.toFloat()..MetronomePattern.BPM_RANGE.last.toFloat(),
