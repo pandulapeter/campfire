@@ -10,7 +10,6 @@
 # To do
 ## Short-term (in this version)
 ### Bugs / issues
-- Cord shapes bottom sheet glitching while dragging it down
 
 ### Improvements
 - Improve haptic effects (fast scroll is inconsistent, tap tempo should not have one)

@@ -273,9 +273,18 @@ internal fun CampfireBottomSheet(
         ) {
             val consumedInsets = remember { MutableWindowInsets() }
             val heightAnimation = remember { SheetHeightAnimation() }
+            val topInset = WindowInsets.safeDrawing.only(WindowInsetsSides.Top)
+            // Material pads the sheet by as much of the top inset as its offset has not taken up yet (an offset not decided
+            // yet takes up none of it).
+            val uncoveredTopInset = remember(sheetState, topInset, density) {
+                derivedStateOf {
+                    val offset = runCatching { sheetState.requireOffset() }.getOrDefault(0f)
+                    with(density) { offset.coerceIn(0f, topInset.getTop(density).toFloat()).toDp() }
+                }
+            }
             Column(
                 modifier = (if (isCompactKeyboard) Modifier.height(windowHeight) else Modifier)
-                    .animateSheetContentHeight(heightAnimation)
+                    .animateSheetContentHeight(heightAnimation) { uncoveredTopInset.value }
                     .onConsumedWindowInsetsChanged { consumedInsets.insets = it },
             ) {
                 CompositionLocalProvider(
@@ -295,15 +304,6 @@ internal fun CampfireBottomSheet(
                     // also covers the navigation bar; reserve only the bottom space still left to this content.
                     val bottomPadding = WindowInsets.safeDrawing.exclude(consumedInsets)
                         .only(WindowInsetsSides.Bottom).asPaddingValues()
-                    val topInset = WindowInsets.safeDrawing.only(WindowInsetsSides.Top)
-                    // Material pads the sheet by as much of the top inset as its offset has not taken up yet (an offset not
-                    // decided yet takes up none of it).
-                    val uncoveredTopInset = remember(sheetState, topInset, density) {
-                        derivedStateOf {
-                            val offset = runCatching { sheetState.requireOffset() }.getOrDefault(0f)
-                            with(density) { offset.coerceIn(0f, topInset.getTop(density).toFloat()).toDp() }
-                        }
-                    }
                     BottomSheetContentScope(
                         columnScope = this,
                         close = close,
@@ -325,14 +325,22 @@ internal fun CampfireBottomSheet(
  * would trail behind the keyboard and leave a gap over it. While the sheet is growing the content is already measured
  * at its new height and placed under the animated one, so the content is uncovered from the sheet's bottom edge, which
  * the sheet's shape clips, and how much of it is still covered is [SheetHeightAnimation.pendingGrowth].
+ *
+ * Content that fills the sheet at its tallest keeps filling the room offered at every offset, whether or not it would
+ * still need all of it. Material anchors the expanded sheet at the window's height less the sheet's, and the sheet's
+ * height includes the part of the top inset it is still padded by, which shrinks as the sheet is dragged down off the
+ * status bar ([uncoveredTopInset]). Content that overflows by less than that inset comes to fit part of the way down;
+ * measured at its own height there, it would make the sheet shorter than the window, move the expanded anchor with every
+ * frame of the drag and put the sheet back at the top over and over while the finger is still pulling it.
  */
 @Composable
-private fun Modifier.animateSheetContentHeight(state: SheetHeightAnimation): Modifier {
+private fun Modifier.animateSheetContentHeight(state: SheetHeightAnimation, uncoveredTopInset: () -> Dp): Modifier {
     val coroutineScope = rememberCoroutineScope()
     val spec = MaterialTheme.motionScheme.defaultSpatialSpec<Float>()
     return layout { measurable, constraints ->
         val placeable = measurable.measure(constraints)
-        val targetHeight = placeable.height
+        val fillsTallestSheet = constraints.hasBoundedHeight && placeable.height >= constraints.maxHeight - uncoveredTopInset().roundToPx()
+        val targetHeight = if (fillsTallestSheet) constraints.maxHeight else placeable.height
         val animatable = state.animatable
         val snappedHeight = state.snappedHeight
         val height = if (animatable == null || constraints.maxHeight != state.maxHeight) {

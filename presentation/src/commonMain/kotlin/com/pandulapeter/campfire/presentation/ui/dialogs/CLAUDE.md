@@ -225,7 +225,11 @@ It also **animates every change of its content's height** (`animateSheetContentH
 away, an error appearing, content swapped — the sheet's top edge follows with the default spatial spring, while a change
 of the room offered (the keyboard sliding, the window resizing) is followed in the same frame, so the sheet never trails
 the keyboard. The checklists' lists shift their rows up by what the sheet still has to grow (`followSheetGrowth`), so a
-row ticked in a short sheet stays under the finger while the sheet rises around it. The close button hides the sheet
+row ticked in a short sheet stays under the finger while the sheet rises around it. Content that fills the sheet at its
+tallest keeps filling the room offered at every offset (`uncoveredTopInset`): Material anchors the expanded sheet at
+the window's height less the sheet's, which includes the top inset still padded, so a grid that overflows by less than
+the status bar's height would come to fit as the sheet is dragged off it, shrink the sheet and move the anchor on every
+frame, putting the sheet back at the top under the finger. The close button hides the sheet
 (`sheetState.hide()`) and then clears `visibleDialog` itself: Material's `ModalBottomSheet` only calls
 `onDismissRequest` for a swipe, a tap on the scrim or a back press, and a hidden sheet whose state is still set keeps
 its invisible modal layer over the screen, swallowing the next tap. From the moment a sheet starts closing — its close

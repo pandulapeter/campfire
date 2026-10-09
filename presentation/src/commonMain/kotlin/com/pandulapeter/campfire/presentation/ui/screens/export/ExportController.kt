@@ -142,7 +142,7 @@ internal class ExportController(
         // Collected whether or not the export asks for the diagrams, so that ticking them lays the pages out again rather
         // than reading the songs again; with the feature switched off the export does not offer them at all.
         val chordInstrument = preferences?.takeIf { it.areChordsEnabled && it.areChordDiagramsEnabled }?.chordInstrument?.toChordInstrument()
-        val storedChordShapes = chordInstrument?.let { preferences?.chordVoicings?.get(it.id) }.orEmpty()
+        val storedChordShapes = chordInstrument?.let { preferences.chordVoicings[it.id] }.orEmpty()
         val printSongs = entries.mapIndexed { index, entry ->
             val song = songs[entry.songFileName] ?: dialog.song
             val content = getSongContent(entry.songFileName)
