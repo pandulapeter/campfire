@@ -1,0 +1,12 @@
+/*
+ * This file is part of Campfire.
+ * Copyright (c) Pandula Péter 2017-2026.
+ * https://github.com/pandulapeter/campfire
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * https://mozilla.org/MPL/2.0/.
+ */
+
+/* The question the system asks before the tuner first listens. Keep it in step with NSMicrophoneUsageDescription in Info.plist. */
+"NSMicrophoneUsageDescription" = "A Campfire a mikrofonon keresztül hallja a hangszeredet, amíg a hangoló nyitva van. A hangot ez az eszköz elemzi, és soha nem rögzíti vagy küldi el sehová.";

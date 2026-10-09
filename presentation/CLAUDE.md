@@ -75,7 +75,8 @@ into Kotlin string tables (`build/generated/compose/resourceGenerator/kotlin/com
 `com.pandulapeter.campfire.presentation.localization`): `StringsDefault`, `StringsHu`, `AppLocale`, `currentLanguage`,
 `LocalizedStrings` and the language-aware `stringResource` overloads. Adding a new `values-xx` folder needs a clean
 build so the plugin regenerates `AppLocale`. It also needs the language added to `CFBundleLocalizations` in the iOS
-`Info.plist`, which is how iOS learns that the app speaks it (see `app/ios`).
+`Info.plist`, which is how iOS learns that the app speaks it, and an `InfoPlist.strings` for the microphone prompt (see
+`app/ios`).
 
 The plugin's `generateTranslateFile` task only declares the resources folder *path* as an input, so `build.gradle.kts`
 registers the `strings.xml` files as inputs too; without that, new strings render as "???" until a clean build. A
