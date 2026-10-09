@@ -38,11 +38,12 @@ internal class EditorField(
  * What this gives up is only ever wanted after a configuration change - a change of language or dark mode restores
  * through here as well - and the view model lives through those, so the field itself is handed to it ([retain]) and
  * taken back as it is, undo history included and however long. A new process gets the text and the caret, or for a
- * long document the file.
+ * long document the draft the pause put on disk ([recovered]), or failing that the file.
  */
 internal class EditorFieldSaver(
     private val retain: (TextFieldState) -> Unit,
     private val retained: () -> TextFieldState?,
+    private val recovered: () -> TextFieldState?,
     private val fileText: () -> String,
 ) : Saver<EditorField, Any> {
 
@@ -62,7 +63,8 @@ internal class EditorFieldSaver(
         retained()?.let { return EditorField(it) }
         val saved = value as List<*>
         return if (saved.size == 1) {
-            EditorField(textFieldState = TextFieldState(initialText = fileText()), isDraftLost = saved[0] as Boolean)
+            recovered()?.let { EditorField(it) }
+                ?: EditorField(textFieldState = TextFieldState(initialText = fileText()), isDraftLost = saved[0] as Boolean)
         } else {
             EditorField(
                 TextFieldState(

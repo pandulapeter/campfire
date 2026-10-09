@@ -84,12 +84,19 @@ internal fun SongEditorScreen(
     val editorTextOf = remember(notation) { { text: String -> viewModel.songRenderer.editorTextOf(text, notation) } }
     var initialText by remember(destination.fileName) {
         mutableStateOf(
-            viewModel.songTexts.value[destination.fileName]?.let(editorTextOf)
-                ?: viewModel.retainedEditorField(destination.fileName)?.let { "" }
+            // Not before the draft a previous run left has been looked at: an Android process restored on a long document
+            // gets its text from there, and the field's saved state is only read once, as the loaded editor composes.
+            if (viewModel.isEditorDraftRecoveryPending.value) {
+                null
+            } else {
+                viewModel.songTexts.value[destination.fileName]?.let(editorTextOf)
+                    ?: viewModel.retainedEditorField(destination.fileName)?.let { "" }
+            }
         )
     }
     LaunchedEffect(destination.fileName) {
         viewModel.loadSongContent(destination.fileName).join()
+        viewModel.awaitEditorDraftRecovery()
         if (initialText == null && hasOpened) initialText = viewModel.songTexts.value[destination.fileName]?.let(editorTextOf) ?: ""
         initialText = initialText ?: viewModel.songTexts.mapNotNull { it[destination.fileName] }.first().let(editorTextOf)
         hasOpened = true

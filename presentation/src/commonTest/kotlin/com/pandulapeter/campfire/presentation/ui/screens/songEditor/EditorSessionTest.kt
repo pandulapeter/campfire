@@ -133,6 +133,23 @@ class EditorSessionTest {
         fixture.session.startRecovery()
         assertFalse(fixture.session.editorDraftRecovery.await())
         assertEquals(CampfireDestination.SongEditor(fileName = "b.cho"), backStack.last())
+        assertNull(fixture.session.recoveredEditorField("a.cho"))
+        assertNull(fixture.session.recoveredEditorField("b.cho"))
+        assertEquals(emptyList(), fixture.messages)
+    }
+
+    @Test
+    fun `a stored draft is handed to an editor the restored stack has for its file, and kept`() = runTest {
+        files["a.cho"] = "[C]One"
+        storedDraft = SongContent(fileName = "a.cho", text = "[C]Two")
+        backStack += CampfireDestination.SongEditor(fileName = "a.cho")
+        val fixture = fixture()
+        fixture.session.startRecovery()
+        assertFalse(fixture.session.editorDraftRecovery.await())
+        runCurrent()
+        assertEquals("[C]Two", fixture.session.recoveredEditorField("a.cho")?.text?.toString())
+        assertEquals("[C]Two", fixture.session.editorDraft.value?.text)
+        assertEquals(SongContent(fileName = "a.cho", text = "[C]Two"), storedDraft)
         assertEquals(emptyList(), fixture.messages)
     }
 

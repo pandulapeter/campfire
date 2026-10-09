@@ -180,4 +180,6 @@ screen. Its app bar starts with Close rather than Back. The whole bar is one sur
   dialog's Save leaves only once the write has reported success (`saveEditorChangesAndLeave`): until then the editor
   holds the only copy of the text, so a write that fails takes the dialog away and leaves the editor, the text and the
   ordinary `SaveFailed` message — and a desktop window that was being closed stays open. A first read that fails shows
-  the details screen's failed state, with Retry and Close, instead of the loading indicator.
+  the details screen's failed state, with Retry and Close, instead of the loading indicator. An editor composed in a
+  restored process waits for the draft recovery before it opens (`awaitEditorDraftRecovery`), so that a long document
+  gets its unsaved text back from the draft on disk rather than from its file.

@@ -107,6 +107,14 @@ internal class EditorSession(
      */
     private var retainedEditorField: Pair<String, TextFieldState>? = null
 
+    /**
+     * The draft a previous run left, for the editor an Android process was restored on. Its saved state holds the
+     * text and the caret, except for a long document, which comes back with only whether anything was unsaved (see
+     * EditorFieldSaver): that one is given this instead of its file. Written at the same pause as the saved state,
+     * so it is the same text.
+     */
+    private var recoveredEditorField: Pair<String, TextFieldState>? = null
+
     /** Asked for by the confirmation dialog and answered by the editor screen, see [revertEditorChanges]. */
     private val _editorRevertRequests = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
     val editorRevertRequests = _editorRevertRequests.asSharedFlow()
@@ -182,6 +190,8 @@ internal class EditorSession(
 
     fun retainedEditorField(fileName: String) = retainedEditorField?.takeIf { it.first == fileName }?.second
 
+    fun recoveredEditorField(fileName: String) = recoveredEditorField?.takeIf { it.first == fileName }?.second
+
     /** Reported by the editor when it came back from a saved state that could not hold its unsaved text. */
     fun onEditorDraftLost() {
         messageSink.sendMessage(Message.EditorDraftLost)
@@ -211,7 +221,8 @@ internal class EditorSession(
 
     /**
      * Reopens the editor on the draft a previous run left, answering whether it did. Not over a stack that already has
-     * an editor - an Android process restored on the editor has its text from the saved state - and not for a draft the
+     * an editor - an Android process restored on the editor has its text from the saved state, or for a long document
+     * from [recoveredEditorField] - and not for a draft the
      * file already holds. A file that is gone is reopened all the same: the draft is all there is, and saving puts the
      * file back, which is what an editor whose file goes while it is open does too.
      */
@@ -225,7 +236,19 @@ internal class EditorSession(
             null
         }
         editorDraftStoreMutex.withLock { storedEditorDraft = draft }
-        if (draft == null || backStack.any { it is CampfireDestination.SongEditor }) return false
+        if (draft == null) return false
+        if (backStack.any { it is CampfireDestination.SongEditor }) {
+            // An Android process restored on the editor. Its own saved state decides what the field holds, but the draft is
+            // reported as the editor's text before the editor composes, so that the collector below does not take the
+            // stored draft for a stale one and delete the only copy of a long document's text.
+            if (backStack.any { it is CampfireDestination.SongEditor && it.fileName == draft.fileName }) {
+                arePreferencesLoaded.first { it }
+                val text = editorTextOf(draft.text)
+                onEditorTextChanged(fileName = draft.fileName, text = text)
+                recoveredEditorField = draft.fileName to TextFieldState(initialText = text)
+            }
+            return false
+        }
         val content = getSongContent(draft.fileName)
         // The draft is in the file's notation and the field shows the reader's, which only the preferences can say.
         arePreferencesLoaded.first { it }
@@ -355,9 +378,12 @@ internal class EditorSession(
         hasUnsavedEditorChanges.collect { if (!it && !hasUnsavedEditorText()) storeEditorDraft(null) }
     }
 
-    /** Drops the field kept for an editor once no editor is left on the back stack. */
+    /** Drops the fields kept for an editor once no editor is left on the back stack. */
     fun onBackStackChanged() {
-        if (backStack.none { it is CampfireDestination.SongEditor }) retainedEditorField = null
+        if (backStack.none { it is CampfireDestination.SongEditor }) {
+            retainedEditorField = null
+            recoveredEditorField = null
+        }
     }
 
     /** Lets go of the editor's text, for a song that has just been deleted, which nobody is asked to save. */

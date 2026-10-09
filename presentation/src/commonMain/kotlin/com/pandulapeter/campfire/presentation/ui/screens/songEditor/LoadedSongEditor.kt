@@ -126,6 +126,7 @@ internal fun LoadedSongEditor(
             EditorFieldSaver(
                 retain = { viewModel.retainEditorField(destination.fileName, it) },
                 retained = { viewModel.retainedEditorField(destination.fileName) },
+                recovered = { viewModel.recoveredEditorField(destination.fileName) },
                 fileText = { fileText },
             )
         },

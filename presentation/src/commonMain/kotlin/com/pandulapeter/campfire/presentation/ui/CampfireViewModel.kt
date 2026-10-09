@@ -1138,6 +1138,12 @@ class CampfireViewModel(
 
     fun retainedEditorField(fileName: String) = editorSession.retainedEditorField(fileName)
 
+    fun recoveredEditorField(fileName: String) = editorSession.recoveredEditorField(fileName)
+
+    internal val isEditorDraftRecoveryPending get() = editorSession.isEditorDraftRecoveryPending
+
+    internal suspend fun awaitEditorDraftRecovery() = editorSession.editorDraftRecovery.await()
+
     fun onEditorDraftLost() = editorSession.onEditorDraftLost()
 
     /** See [AppExitController.onAppPaused]. */

@@ -33,13 +33,15 @@ state is one Binder transaction, and the field's own saver writes an undo histor
 per transposition. For the same reason the view model saves a back stack only as far as it fits 100,000 characters of
 JSON (a song opened from a setlist of thousands names every one of them, and a restored process then comes back one
 screen short). The field itself, undo history included, is kept by the view model across a configuration change
-(`retainEditorField`), and a long document that came back from a killed process without its unsaved text says so in a
-snackbar. Where no process is restored — iOS, the desktop, the web, an Android task swiped away — the editor's unsaved
+(`retainEditorField`), and a long document that came back from a killed process takes its unsaved text from the draft
+the pause put on disk (below), which the editor waits for. Only when that is missing too does it open on the file and
+say so in a snackbar. Where no process is restored — iOS, the desktop, the web, an Android task swiped away — the editor's unsaved
 text is put in `preferences/editor-draft.json` whenever the app is paused (`onAppPaused`, which also starts an automatic
 sync run that is still waiting, see the root `CLAUDE.md`) and removed as soon as nothing is unsaved — on a desktop quit,
 written or removed before the process ends (`settleSynchronizationBeforeExit`), since the removal otherwise trails the
 editor by a few hops; a start that finds it reopens the editor on it behind the launch screen, with a snackbar, unless
-the restored stack already has an editor.
+the restored stack already has an editor, which is handed the draft instead (`recoveredEditorField`), and keeps the file
+for as long as it holds unsaved text.
 
 The song filter and the two searches are saved the same way; a search field takes at most 100 characters
 (`MAX_SEARCH_QUERY_LENGTH`, the pickers' fields included), since its text goes into that saved state as well; on every
