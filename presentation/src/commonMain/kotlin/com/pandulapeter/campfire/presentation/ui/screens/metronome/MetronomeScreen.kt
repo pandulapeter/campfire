@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.keepScreenOn
@@ -49,6 +50,7 @@ import com.pandulapeter.campfire.presentation.ui.metronome.sound
 import com.pandulapeter.campfire.presentation.ui.metronome.subdivision
 import com.pandulapeter.campfire.presentation.ui.metronome.timeSignatureOrDefault
 import com.pandulapeter.campfire.presentation.ui.metronome.withBeatLevels
+import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.rememberBeatHaptics
 import com.pandulapeter.campfire.presentation.ui.screens.rememberMetronomePanelState
 import com.pandulapeter.campfire.presentation.ui.screens.settings.AnimatedSettingsRow
@@ -81,6 +83,10 @@ internal fun MetronomeScreen(
     val playback by viewModel.metronomePlayback.collectAsStateWithLifecycle()
     val isPlaying = playback is MetronomePlayback.Playing
     val layoutDirection = LocalLayoutDirection.current
+    val scrollState = rememberRetainedScrollState(scrollPosition)
+    LaunchedEffect(viewModel, scrollState) {
+        viewModel.scrollToTopRequests.collect { if (it == CampfireDestination.Metronome) scrollState.animateScrollTo(0) }
+    }
     Column(
         // A metronome is practised with both hands on the instrument, and a screen that dims and locks takes the beat row
         // with it.
@@ -108,7 +114,7 @@ internal fun MetronomeScreen(
         SettingsPage(
             modifier = Modifier.weight(1f),
             sectionColumns = layout.sectionColumns,
-            scrollState = rememberRetainedScrollState(scrollPosition),
+            scrollState = scrollState,
             contentPadding = contentPadding.only(start = true, end = true, bottom = true),
             section = {
                 MetronomeBarOptions(

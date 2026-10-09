@@ -52,8 +52,8 @@ wide layout's crossfade is a `SeekableTransitionState` held at the gesture's fra
 there, and a cancel back).
 
 Pressing the Settings item while it is open goes to General, scrolled to the top; pressing the tab that is open scrolls
-it to the top, as does pressing the Songs or Setlists item on its screen (`CampfireViewModel.scrollToTopRequests`, which
-the three top level screens collect). The two layouts crossfade when a window is resized across the line between them,
+it to the top, as does pressing the Songs, Setlists or Metronome item on its screen (`CampfireViewModel.scrollToTopRequests`,
+which every top level screen collects). The two layouts crossfade when a window is resized across the line between them,
 and so do the pages of the wide one as a category is picked (a pager slides only where a finger drags it). Each page
 (`SettingsPage`, `SettingsPage.kt`) is a `SettingsSection` or two: side by side where the settled width has room for
 both at 380dp each, stacked otherwise, each column capped at `THEME_COLOR_CHOICE_WIDTH` (every color disc in one row)
