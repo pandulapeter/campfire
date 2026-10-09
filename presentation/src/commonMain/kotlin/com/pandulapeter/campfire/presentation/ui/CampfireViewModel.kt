@@ -341,8 +341,9 @@ class CampfireViewModel(
         }
         addBeforeDialogChange { _, dialogType ->
             // The export screen covers the song the click is played from as a screen of its own would, and leaves no way
-            // to stop it, so it stops a click the way pushing a destination does (see updateBackStack).
-            if (dialogType is DialogType.Export) metronome.stop()
+            // to stop it, so it stops a click the way pushing a destination does (see updateBackStack). The tuner sheet
+            // listens to the room through the audio session the click plays in, and the two never hold the audio together.
+            if (dialogType is DialogType.Export || dialogType is DialogType.Tuner) metronome.stop()
         }
         addBeforeDialogChange { previousDialog, dialogType ->
             // The tuner sheet listens for as long as it is up and not a moment longer, as the Tuner tab does.

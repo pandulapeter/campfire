@@ -44,8 +44,9 @@ Space (on the tab) and M (on a song) toggle it on the desktop and the web (`togg
 menu, only on the first press of a held key. **Three rules stop a click outright**, and between them they are the whole
 of the lifecycle: `updateBackStack`, whenever what is on top is neither a song nor the Metronome tab - the editor opened
 over a song, a song closed or deleted, a tab selected - so that nothing plays under a screen with no way to stop it;
-`setVisibleDialog`, as the export screen is dealt in over the song, for the same reason, since it is a dialog to the
-view model and never reaches the back stack; and `onCleared`, which is the app being left rather than being sent to the
+`setVisibleDialog`, as the export screen or the tuner sheet is dealt in over the song, for the same reason (and, for the
+sheet, because it listens through the audio the click plays in), since each is a dialog to the view model and never
+reaches the back stack; and `onCleared`, which is the app being left rather than being sent to the
 background (a finished Activity rather than a paused one; an Android activity destroyed without finishing, as "Don't
 keep activities" does on every trip to the background, keeps a click that can sound), where a singleton metronome would
 otherwise go on clicking, with its notification, under a process nobody is looking at.
@@ -98,9 +99,9 @@ A `{key}` further down is still only read past.
 
 **The click belongs to the screen it is played from, and there are two of them**: the Metronome tab, whose whole screen
 is the instrument, and the song details screen, where it is a panel in the app bar. Nowhere else has a metronome, and a
-click never outlives the screen it was started on - going back to the songs, selecting a tab, opening the editor or the
-export screen over the song, deleting it, a song opened over the tab or over another song (an "Open with", an import's
-Open), all stop it - so there is never a click playing with nothing on screen to stop it with. On a song details screen
+click never outlives the screen it was started on - going back to the songs, selecting a tab, opening the editor, the
+export screen or the tuner sheet over the song, deleting it, a song opened over the tab or over another song (an "Open
+with", an import's Open), all stop it - so there is never a click playing with nothing on screen to stop it with. On a song details screen
 it follows the page the pager is heading for, so paging to the next song moves the click to its tempo from beat one.
 Every way onto the tab clears the back stack.
 
