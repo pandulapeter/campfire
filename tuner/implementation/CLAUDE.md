@@ -28,7 +28,7 @@ this module. Nothing here reaches the network, and nothing heard is kept beyond 
   (`rangeFor`), which is most of what keeps a bass from being read an octave up. Buffers are allocated once.
 - `PitchTracker` — pure, driven by the time it is handed: the 60 ms after an onset (the level doubling) skipped, the
   median of the last five answers, the cents smoothed over about 80 ms, a target that only changes once a new one has
-  held for three answers, the last reading held for half a second after the sound falls under twice the noise floor
+  held for three answers, the previous reading held meanwhile, the last reading held for half a second after the sound falls under twice the noise floor
   (tracked from the windows with no pitch in them: the room, not the strings), in tune once within ±5 cents for
   300 ms, `SILENT` after two seconds of exact zeros.
 - `ToneSynthesizer` — about a second of a note, a whole number of periods so that the buffer loops without a seam (the

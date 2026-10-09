@@ -75,8 +75,7 @@ internal class PitchTracker {
         if (recent.size > MEDIAN_SIZE) recent.removeFirst()
         val median = recent.sorted()[recent.size / 2]
         val heardTarget = Pitch.targetOf(median, config.tuning, config.referencePitch).note
-        val current = target
-        if (heardTarget == current) {
+        if (heardTarget == target) {
             candidate = null
             candidateCount = 0
         } else {
@@ -84,15 +83,14 @@ internal class PitchTracker {
                 candidate = heardTarget
                 candidateCount = 1
             }
-            if (candidateCount < TARGET_HOLD_COUNT) {
-                if (current == null) return
-            } else {
-                target = heardTarget
-                candidate = null
-                candidateCount = 0
-                smoothedCents = Pitch.centsBetween(median, heardTarget, config.referencePitch)
-                inTuneSince = null
-            }
+            // Until the new target holds, whatever is shown stays: reading the new pitch against the old note would
+            // show it hundreds of cents off for the frames it takes to be confirmed.
+            if (candidateCount < TARGET_HOLD_COUNT) return
+            target = heardTarget
+            candidate = null
+            candidateCount = 0
+            smoothedCents = Pitch.centsBetween(median, heardTarget, config.referencePitch)
+            inTuneSince = null
         }
         val note = target ?: return
         val cents = Pitch.centsBetween(median, note, config.referencePitch)

@@ -58,6 +58,30 @@ class PitchTrackerTest {
     }
 
     @Test
+    fun `a new note is never read against the old one`() {
+        val tracker = steadyTracker(note = 57)
+        val steady = tracker.step(heard(frequencyOf(57)), next(), chromatic).reading
+        val readings = (0 until 8).map { tracker.step(heard(frequencyOf(64)), next(), chromatic).reading }
+        readings.forEach { reading -> assertTrue(reading == steady || abs(assertNotNull(reading).cents) <= 50f, "$reading") }
+        assertEquals(64, readings.last()?.note)
+    }
+
+    @Test
+    fun `a jump to another string keeps the previous string until the new one holds`() {
+        val guitar = TunerConfig(referencePitch = 440, tuning = InstrumentTuning.GUITAR)
+        val tracker = PitchTracker()
+        tracker.step(silence(), next(), guitar)
+        repeat(12) { tracker.step(heard(frequencyOf(45)), next(), guitar) }
+        val steady = assertNotNull(tracker.step(heard(frequencyOf(45)), next(), guitar).reading)
+        val readings = (0 until 8).map { assertNotNull(tracker.step(heard(frequencyOf(50)), next(), guitar).reading) }
+        readings.forEach { reading ->
+            val isPrevious = reading.note == steady.note && reading.cents == steady.cents
+            assertTrue(isPrevious || (reading.note == 50 && abs(reading.cents) < 10f), "$reading")
+        }
+        assertEquals(50, readings.last().note)
+    }
+
+    @Test
     fun `the last reading is held for a moment after the sound fades and then let go`() {
         val tracker = steadyTracker(note = 57)
         time += PitchTracker.HOLD_MILLIS / 2
