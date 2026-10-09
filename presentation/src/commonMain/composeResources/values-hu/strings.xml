@@ -384,6 +384,8 @@
     <string name="tuner">Hangoló</string>
     <string name="tuner_play_a_note">Szólaltass meg egy hangot</string>
     <string name="tuner_reference_tone">Referenciahang</string>
+    <!-- The display as a screen reader reads it while a reference tone sounds, e.g. "Reference tone, A4". -->
+    <string name="tuner_reading_tone">Referenciahang, %1$s</string>
     <!-- What is heard and what it is tuned to, in Hz. -->
     <string name="tuner_frequency">%1$s Hz</string>
     <string name="tuner_target_frequency">Cél: %1$s Hz</string>

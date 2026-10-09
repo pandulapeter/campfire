@@ -52,6 +52,7 @@ import com.pandulapeter.campfire.presentation.resources.tuner_reading_far_sharp
 import com.pandulapeter.campfire.presentation.resources.tuner_reading_flat
 import com.pandulapeter.campfire.presentation.resources.tuner_reading_in_tune
 import com.pandulapeter.campfire.presentation.resources.tuner_reading_sharp
+import com.pandulapeter.campfire.presentation.resources.tuner_reading_tone
 import com.pandulapeter.campfire.presentation.resources.tuner_reference_tone
 import com.pandulapeter.campfire.presentation.resources.tuner_target_frequency
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
@@ -77,12 +78,14 @@ internal fun TunerDisplay(
     referencePitch: Int,
     isCompact: Boolean,
 ) {
-    val reading = (state.listening as? TunerListening.Hearing)?.reading?.takeIf { state.tone == null }
-    val note = state.tone ?: reading?.note
+    val tone = state.tone
+    val reading = (state.listening as? TunerListening.Hearing)?.reading?.takeIf { tone == null }
+    val note = tone ?: reading?.note
     val isInTune = reading?.isInTune == true
     val accent = animateColorAsState(if (isInTune) LocalSecondAccentColor.current else MaterialTheme.colorScheme.onSurface).value
     val exactDescription = when {
-        reading == null -> null
+        tone != null -> stringResource(Res.string.tuner_reading_tone, noteNameWithOctave(tone, notation))
+        reading == null -> stringResource(Res.string.tuner_play_a_note)
         isInTune -> stringResource(Res.string.tuner_reading_in_tune, noteNameWithOctave(reading.note, notation))
         reading.cents < 0 -> stringResource(Res.string.tuner_reading_flat, noteNameWithOctave(reading.note, notation), abs(reading.cents).roundToInt())
         else -> stringResource(Res.string.tuner_reading_sharp, noteNameWithOctave(reading.note, notation), reading.cents.roundToInt())
@@ -122,7 +125,7 @@ internal fun TunerDisplay(
         TunerFrequencies(
             heard = reading?.frequency,
             target = note?.let { Pitch.frequencyOf(it, referencePitch) },
-            isTone = state.tone != null,
+            isTone = tone != null,
         )
     }
     Box(modifier = modifier) {
@@ -140,7 +143,7 @@ internal fun TunerDisplay(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = if (isCompact) 4.dp else 12.dp)
-                .clearAndSetSemantics { exactDescription?.let { contentDescription = it } },
+                .clearAndSetSemantics { contentDescription = exactDescription },
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             if (isCompact) {
