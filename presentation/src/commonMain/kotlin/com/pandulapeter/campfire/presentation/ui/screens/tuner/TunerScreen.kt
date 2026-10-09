@@ -58,8 +58,8 @@ import kotlinx.coroutines.flow.collectLatest
 /**
  * The Tuner tab: what is heard ([TunerDisplay]) pinned at the top, capped at the page's width, and under it, scrolling,
  * what the tuner is set to ([TunerOptions]). While the microphone cannot be listened to, the display gives way to a
- * notice that is the page's first item ([TunerNoticeCard]) and scrolls with it, which costs a short window nothing; the
- * strings still play their notes then.
+ * notice that is the page's first item ([TunerNoticeCard]) and scrolls with it, which costs a short window nothing; its
+ * tones still play then.
  *
  * It listens while it is on screen and the app is in front ([TunerListeningEffect]) and nothing longer, keeping the
  * display on meanwhile, and asks for the microphone only from the notice's button.

@@ -431,8 +431,8 @@
     <string name="tuner_reference_pitch_reset">Reset the reference pitch to 440 Hz</string>
     <string name="tuner_play_reference">Play the reference A</string>
     <string name="tuner_notice_not_asked">Campfire listens through the microphone to hear the instrument. The sound is analyzed on this device, and is never recorded or sent anywhere.</string>
-    <string name="tuner_notice_refused">The microphone is switched off for Campfire. The strings below still play their notes.</string>
-    <string name="tuner_notice_refused_web">The microphone is switched off for Campfire. It is allowed in the browser\'s site settings, next to the address. The strings below still play their notes.</string>
+    <string name="tuner_notice_refused">The microphone is switched off for Campfire. The tones below can still be played.</string>
+    <string name="tuner_notice_refused_web">The microphone is switched off for Campfire. It is allowed in the browser\'s site settings, next to the address. The tones below can still be played.</string>
     <string name="tuner_notice_no_microphone">No microphone was found.</string>
     <string name="tuner_notice_busy">The microphone is in use by a call or another app.</string>
     <string name="tuner_notice_not_supported">This browser does not let a page use the microphone.</string>

@@ -431,8 +431,8 @@
     <string name="tuner_reference_pitch_reset">Alaphang visszaállítása 440 Hz-re</string>
     <string name="tuner_play_reference">A referencia A lejátszása</string>
     <string name="tuner_notice_not_asked">A Campfire a mikrofonon keresztül hallja a hangszert. A hangot ez az eszköz elemzi, és soha nem rögzíti vagy küldi el sehová.</string>
-    <string name="tuner_notice_refused">A mikrofon ki van kapcsolva a Campfire számára. Az alábbi húrok hangja így is lejátszható.</string>
-    <string name="tuner_notice_refused_web">A mikrofon ki van kapcsolva a Campfire számára. A böngésző webhelybeállításaiban engedélyezhető, a cím mellett. Az alábbi húrok hangja így is lejátszható.</string>
+    <string name="tuner_notice_refused">A mikrofon ki van kapcsolva a Campfire számára. Az alábbi hangok így is lejátszhatók.</string>
+    <string name="tuner_notice_refused_web">A mikrofon ki van kapcsolva a Campfire számára. A böngésző webhelybeállításaiban engedélyezhető, a cím mellett. Az alábbi hangok így is lejátszhatók.</string>
     <string name="tuner_notice_no_microphone">Nem található mikrofon.</string>
     <string name="tuner_notice_busy">A mikrofont egy hívás vagy egy másik alkalmazás használja.</string>
     <string name="tuner_notice_not_supported">Ez a böngésző nem engedi, hogy egy oldal a mikrofont használja.</string>
