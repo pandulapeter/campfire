@@ -23,10 +23,11 @@ so that no data or domain type leaks into it and the engine reads no settings of
 - `model/` — `TunerConfig` (the reference pitch and an `InstrumentTuning`, null being chromatic), `TunerListening`
   (`Stopped(reason?)`, `Starting`, `Hearing(reading?, issue?)`), `TunerReading` (the target note as a MIDI number, the
   cents off it — beyond ±50 where a preset's nearest string is further than half a semitone — the frequency heard and
-  `isInTune`), `TunerStopReason`, `TunerInputIssue` (`SILENT`: digital silence for two seconds, which is how the
-  desktop operating systems answer an app that may not record; `WAITING_FOR_GESTURE`), `NoteOffset`, and
-  `InstrumentTuning` — the presets (guitar, drop D, bass, ukulele, violin, mandolin, banjo), each string a MIDI note in
-  the order the tuning is written (`gCEA`), with the stable `id` a stored setting names one by (`chromatic` for none).
+  `isInTune`), `TunerStopReason`, `TunerInputIssue` (`SILENT`: digital silence for two seconds, which is how the desktop
+  operating systems answer an app that may not record; `WAITING_FOR_GESTURE`), `NoteOffset`, and `InstrumentTuning` —
+  the presets (guitar, drop D, bass, five-string bass, ukulele, low-G ukulele, violin, mandolin, banjo), each string a
+  MIDI note in the order the tuning is written (`gCEA`), with the stable `id` a stored setting names one by (`chromatic`
+  for none).
 - `Pitch` — equal temperament from A4: `frequencyOf`, `centsBetween`, `noteOf` (the nearest semitone),
   `nearestString` and `targetOf`, and `REFERENCE_PITCH_RANGE` (415–466 Hz).
 

@@ -35,7 +35,9 @@ class InstrumentTuningTest {
         assertEquals(listOf("E2", "A2", "D3", "G3", "B3", "E4"), InstrumentTuning.GUITAR.strings.map(::name))
         assertEquals(listOf("D2", "A2", "D3", "G3", "B3", "E4"), InstrumentTuning.GUITAR_DROP_D.strings.map(::name))
         assertEquals(listOf("E1", "A1", "D2", "G2"), InstrumentTuning.BASS.strings.map(::name))
+        assertEquals(listOf("B0", "E1", "A1", "D2", "G2"), InstrumentTuning.BASS_FIVE_STRING.strings.map(::name))
         assertEquals(listOf("G4", "C4", "E4", "A4"), InstrumentTuning.UKULELE.strings.map(::name))
+        assertEquals(listOf("G3", "C4", "E4", "A4"), InstrumentTuning.UKULELE_LOW_G.strings.map(::name))
         assertEquals(listOf("G3", "D4", "A4", "E5"), InstrumentTuning.VIOLIN.strings.map(::name))
         assertEquals(listOf("G4", "D3", "G3", "B3", "D4"), InstrumentTuning.BANJO.strings.map(::name))
     }

@@ -25,11 +25,13 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.tuner_instrument_banjo
 import com.pandulapeter.campfire.presentation.resources.tuner_instrument_bass
+import com.pandulapeter.campfire.presentation.resources.tuner_instrument_bass_five_string
 import com.pandulapeter.campfire.presentation.resources.tuner_instrument_chromatic
 import com.pandulapeter.campfire.presentation.resources.tuner_instrument_guitar
 import com.pandulapeter.campfire.presentation.resources.tuner_instrument_guitar_drop_d
 import com.pandulapeter.campfire.presentation.resources.tuner_instrument_mandolin
 import com.pandulapeter.campfire.presentation.resources.tuner_instrument_ukulele
+import com.pandulapeter.campfire.presentation.resources.tuner_instrument_ukulele_low_g
 import com.pandulapeter.campfire.presentation.resources.tuner_instrument_violin
 import com.pandulapeter.campfire.presentation.ui.components.CHIP_GAP
 import com.pandulapeter.campfire.presentation.ui.components.SelectableChip
@@ -68,7 +70,9 @@ private fun instrumentLabel(tuning: InstrumentTuning?) = stringResource(
         InstrumentTuning.GUITAR -> Res.string.tuner_instrument_guitar
         InstrumentTuning.GUITAR_DROP_D -> Res.string.tuner_instrument_guitar_drop_d
         InstrumentTuning.BASS -> Res.string.tuner_instrument_bass
+        InstrumentTuning.BASS_FIVE_STRING -> Res.string.tuner_instrument_bass_five_string
         InstrumentTuning.UKULELE -> Res.string.tuner_instrument_ukulele
+        InstrumentTuning.UKULELE_LOW_G -> Res.string.tuner_instrument_ukulele_low_g
         InstrumentTuning.VIOLIN -> Res.string.tuner_instrument_violin
         InstrumentTuning.MANDOLIN -> Res.string.tuner_instrument_mandolin
         InstrumentTuning.BANJO -> Res.string.tuner_instrument_banjo

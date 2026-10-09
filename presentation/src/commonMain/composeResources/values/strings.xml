@@ -411,7 +411,9 @@
     <string name="tuner_instrument_guitar">Guitar</string>
     <string name="tuner_instrument_guitar_drop_d">Guitar, drop D</string>
     <string name="tuner_instrument_bass">Bass</string>
+    <string name="tuner_instrument_bass_five_string">Bass, five-string</string>
     <string name="tuner_instrument_ukulele">Ukulele</string>
+    <string name="tuner_instrument_ukulele_low_g">Ukulele, low G</string>
     <string name="tuner_instrument_violin">Violin</string>
     <string name="tuner_instrument_mandolin">Mandolin</string>
     <string name="tuner_instrument_banjo">Banjo</string>

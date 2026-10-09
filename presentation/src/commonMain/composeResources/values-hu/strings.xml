@@ -411,7 +411,9 @@
     <string name="tuner_instrument_guitar">Gitár</string>
     <string name="tuner_instrument_guitar_drop_d">Gitár, drop D</string>
     <string name="tuner_instrument_bass">Basszusgitár</string>
+    <string name="tuner_instrument_bass_five_string">Basszusgitár, öthúros</string>
     <string name="tuner_instrument_ukulele">Ukulele</string>
+    <string name="tuner_instrument_ukulele_low_g">Ukulele, mély G</string>
     <string name="tuner_instrument_violin">Hegedű</string>
     <string name="tuner_instrument_mandolin">Mandolin</string>
     <string name="tuner_instrument_banjo">Bendzsó</string>

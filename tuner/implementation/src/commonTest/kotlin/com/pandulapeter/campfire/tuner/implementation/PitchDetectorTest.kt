@@ -74,7 +74,7 @@ class PitchDetectorTest {
     fun `a low string whose fundamental is 20 dB under its second harmonic is read at the right octave`() {
         val sampleRate = 48_000
         val detector = PitchDetector(sampleRate)
-        listOf(InstrumentTuning.GUITAR to 40, InstrumentTuning.BASS to 28, null to 40).forEach { (tuning, note) ->
+        listOf(InstrumentTuning.GUITAR to 40, InstrumentTuning.BASS to 28, InstrumentTuning.BASS_FIVE_STRING to 23, null to 40).forEach { (tuning, note) ->
             val frequency = Pitch.frequencyOf(note, 440)
             val window = TestSignals.harmonics(frequency, sampleRate, detector.windowSize, listOf(0.1f, 1f, 0.7f, 0.5f, 0.35f, 0.25f, 0.15f))
             val range = PitchDetector.rangeFor(tuning, 440)

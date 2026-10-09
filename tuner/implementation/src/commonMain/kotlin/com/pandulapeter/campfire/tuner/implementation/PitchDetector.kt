@@ -29,6 +29,7 @@ internal class PitchDetector(private val sampleRate: Int) {
     private val imaginary = FloatArray(windowSize * 2)
     private val samples = FloatArray(windowSize)
     private val nsdf = FloatArray(windowSize / 2 + 2)
+    private val maxima = IntArray(MAX_KEY_MAXIMA)
 
     /** Reads [window], the latest [windowSize] samples, for a pitch between [minFrequency] and [maxFrequency] Hz. */
     fun detect(window: FloatArray, minFrequency: Float, maxFrequency: Float): PitchEstimate {
@@ -91,7 +92,6 @@ internal class PitchDetector(private val sampleRate: Int) {
         while (lag < maxLag && nsdf[lag] > 0) lag++
         var highest = 0f
         var first = -1
-        val maxima = IntArray(MAX_KEY_MAXIMA)
         var count = 0
         while (lag < maxLag && count < MAX_KEY_MAXIMA) {
             while (lag < maxLag && nsdf[lag] <= 0) lag++
@@ -130,7 +130,11 @@ internal class PitchDetector(private val sampleRate: Int) {
         const val LEVEL_FLOOR = 0.001f
         const val MIN_CLARITY = 0.8f
         const val PEAK_THRESHOLD = 0.9f
-        private const val MAX_KEY_MAXIMA = 64
+        /**
+         * How many key maxima are weighed: a bright string at a long lag (a five-string bass's B0 is about 1 500 frames
+         * at 48 kHz) crosses zero many times within one period, and its true peak is past the first few dozen lobes.
+         */
+        private const val MAX_KEY_MAXIMA = 256
 
         const val CHROMATIC_MIN_FREQUENCY = 30f
         const val CHROMATIC_MAX_FREQUENCY = 2_100f
