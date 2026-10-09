@@ -133,6 +133,7 @@ import com.pandulapeter.campfire.presentation.ui.screens.settings.LibrarySummary
 import com.pandulapeter.campfire.presentation.ui.navigation.SettingsTab
 import com.pandulapeter.campfire.presentation.ui.playing.SongOverrides
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.FONT_SCALE_STEP
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongLookup
 import com.pandulapeter.campfire.presentation.ui.fontScale.FontScaleAccumulator
 import com.pandulapeter.campfire.presentation.ui.fontScale.PINCH_SENSITIVITY
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.EditorSession
@@ -299,6 +300,9 @@ class CampfireViewModel(
 
     /** See [LibraryState.songsByFileName]. */
     val songsByFileName: StateFlow<Map<String, Song>> get() = libraryState.songsByFileName
+
+    /** See [LibraryState.songLookup]. */
+    internal val songLookup: StateFlow<SongLookup> get() = libraryState.songLookup
 
     /** See [LibraryState.librarySummary]. */
     val librarySummary get() = libraryState.librarySummary

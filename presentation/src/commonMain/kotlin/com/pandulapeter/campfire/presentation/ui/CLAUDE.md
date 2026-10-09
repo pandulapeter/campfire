@@ -61,7 +61,7 @@ grouping and matching the setlists also run for library changes made while their
 runs over `indexedSongs` (`ui/search/SearchIndex.kt`), the library with every title, artist and tag normalized once,
 rather than normalizing per keystroke, and a song whose searchable text did not change keeping what it was folded to
 across library changes; it is one value holding both the filtered songs the song search ranks and the *unfiltered*
-library by file name, which the setlists search and the details screen (`songsByFileName`) read, since a setlist names
+library by file name, which the setlists search and the details screen (`songLookup`, the lookup and whether the library has been read in one value) read, since a setlist names
 its songs whatever the song filters hide. The ranking puts every match into one of eight buckets as the list is scanned
 rather than sorting the matches.
 

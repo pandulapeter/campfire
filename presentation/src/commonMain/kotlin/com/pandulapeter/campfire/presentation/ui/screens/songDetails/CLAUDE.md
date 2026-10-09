@@ -12,6 +12,14 @@
 
 The song details screen.
 
+### The songs it pages through
+
+The screen resolves the songs its destination names against `songLookup`, the library by file name and whether it has
+been read in one value, since the index arrives on `Dispatchers.Default` after `isLoading` has turned false
+(`songDetailsSongsOf`). Before the read it only resolves a destination whose songs are all in the lookup, so a restored
+setlist pager never lays out over a partial batch, which would restore its saved page index onto the wrong song. Once
+every song it names is gone from a library that has been read, it closes itself, as if the song had been deleted there.
+
 ### `screens/songDetails/SongLyrics.kt`
 
 `screens/songDetails/SongLyrics.kt` (with `SongSectionContent.kt`, `SongComment.kt`, `SongTabBlock.kt`,

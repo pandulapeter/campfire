@@ -20,6 +20,7 @@ import com.pandulapeter.campfire.domain.api.useCases.NormalizeSearchTextUseCase
 import com.pandulapeter.campfire.presentation.ui.components.LabelsOnEverySong
 import com.pandulapeter.campfire.presentation.ui.components.labelsOnEverySongOf
 import com.pandulapeter.campfire.presentation.ui.screens.settings.LibrarySummary
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongLookup
 import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroups
 import com.pandulapeter.campfire.presentation.ui.search.SongSearchIndex
 import com.pandulapeter.campfire.presentation.ui.search.SongSearchSnapshot
@@ -31,6 +32,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.runningFold
@@ -69,10 +71,7 @@ internal class LibraryState(
      * read that failed has not been read, so the retry after it still shows loading.
      */
     val isLoading = screenData
-        .runningFold(LoadingLatch(isLoading = true, hasBeenRead = false)) { latch, state ->
-            val hasBeenRead = latch.hasBeenRead || state is DataState.Idle
-            LoadingLatch(isLoading = state is DataState.Loading && !hasBeenRead, hasBeenRead = hasBeenRead)
-        }
+        .runningFold(LoadingLatch.Initial, LoadingLatch::next)
         .map { it.isLoading }
         .asState(scope, true)
 
@@ -129,8 +128,10 @@ internal class LibraryState(
      */
     private val songSearchIndex = SongSearchIndex { normalizeSearchText(it) }
 
-    val indexedSongs = screenData.map { state ->
-        val data = state.data
+    val indexedSongs = screenData.runningFold(LoadingLatch.Initial, LoadingLatch::next).drop(1).map { latch ->
+        // Folded here rather than shared with isLoading, which is collected on another dispatcher: the read state has to
+        // arrive in the same value as the lookup built from it, see songLookup.
+        val data = latch.state?.data
         IndexedSongInput(
             all = data?.unfilteredSongs.orEmpty(),
             filtered = data?.songs.orEmpty(),
@@ -140,13 +141,30 @@ internal class LibraryState(
                 "${it.sortingMode.name}|${it.songFilter.selectedTags.sorted()}|${it.tagMatchMode.name}|" +
                     "${it.songFilter.selectedLanguages.sorted()}|${it.languageMatchMode.name}"
             }.orEmpty(),
+            isLibraryRead = !latch.isLoading,
         )
     }.distinctUntilChanged().map { input ->
-        IndexedSongs(input.sections, songSearchIndex.update(input.all, input.filtered), input.filterKey, input.sorted)
-    }.flowOn(Dispatchers.Default).asState(scope, IndexedSongs(emptyList(), SongSearchSnapshot.Empty, "", emptyList()))
+        IndexedSongs(
+            sections = input.sections,
+            search = songSearchIndex.update(input.all, input.filtered),
+            filterKey = input.filterKey,
+            sorted = input.sorted,
+            isLibraryRead = input.isLibraryRead,
+        )
+    }.flowOn(Dispatchers.Default).asState(
+        scope,
+        IndexedSongs(emptyList(), SongSearchSnapshot.Empty, "", emptyList(), isLibraryRead = false),
+    )
+
+    /**
+     * The whole library by file name, together with whether it has been read: one value, so that a screen resolving
+     * songs from a destination never hears "read" before the songs it names are in the lookup (the index is built on
+     * Dispatchers.Default and arrives after screenData, and with it isLoading).
+     */
+    val songLookup = indexedSongs.map { SongLookup(it.search.songsByFileName, it.isLibraryRead) }.asState(scope, SongLookup.Empty)
 
     /** Shared file-name lookup for screens that resolve songs from a destination or a setlist. */
-    val songsByFileName = indexedSongs.map { it.search.songsByFileName }.asState(scope, emptyMap())
+    val songsByFileName = songLookup.map { it.songsByFileName }.asState(scope, emptyMap())
 
     /**
      * Null until the library has actually been read, so that the settings screen never flashes a count of zero. The size
@@ -190,11 +208,26 @@ internal class LibraryState(
     /** Reads the library for the first time. */
     fun startLoading() = scope.launch { loadScreenData(false) }
 
-    /** The state [isLoading] is folded from. */
+    /**
+     * The state [isLoading] and [indexedSongs] are folded from.
+     *
+     * @param state The value of [screenData] this was folded with, null only for [Initial].
+     */
     private data class LoadingLatch(
         val isLoading: Boolean,
         val hasBeenRead: Boolean,
-    )
+        val state: DataState<ScreenData>?,
+    ) {
+
+        fun next(state: DataState<ScreenData>): LoadingLatch {
+            val hasBeenRead = hasBeenRead || state is DataState.Idle
+            return LoadingLatch(isLoading = state is DataState.Loading && !hasBeenRead, hasBeenRead = hasBeenRead, state = state)
+        }
+
+        companion object {
+            val Initial = LoadingLatch(isLoading = true, hasBeenRead = false, state = null)
+        }
+    }
 
     /** @param filterKey The filter and the preferences [filtered] was built for, see [SongGroups]. */
     private data class IndexedSongInput(
@@ -203,14 +236,19 @@ internal class LibraryState(
         val sections: List<SongSection>,
         val sorted: List<Song>,
         val filterKey: String,
+        val isLibraryRead: Boolean,
     )
 
-    /** @param sorted The whole library in the songs screen's order, see [pickerSongs]. */
+    /**
+     * @param sorted The whole library in the songs screen's order, see [pickerSongs].
+     * @param isLibraryRead False while the library is being read for the first time, as [isLoading] says.
+     */
     data class IndexedSongs(
         val sections: List<SongSection>,
         val search: SongSearchSnapshot,
         val filterKey: String,
         val sorted: List<Song>,
+        val isLibraryRead: Boolean,
     )
 
     private companion object {
