@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -219,7 +220,7 @@ private fun ChordShapeCell(
     )
     if (selection.source == SelectedShape.Source.DEFINED) {
         Text(
-            modifier = Modifier.padding(top = 8.dp).height(STEPPER_PLACEHOLDER_HEIGHT),
+            modifier = Modifier.padding(top = 8.dp).heightIn(min = STEPPER_PLACEHOLDER_HEIGHT),
             text = if (selection.movedBy == 0) {
                 stringResource(Res.string.song_details_chord_defined)
             } else {
