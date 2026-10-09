@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.tuner.implementation
 
 import com.pandulapeter.campfire.tuner.api.model.TunerStopReason
 import org.koin.core.annotation.Single
+import java.util.concurrent.atomic.AtomicReference
 import javax.sound.sampled.AudioFormat
 import javax.sound.sampled.AudioSystem
 import javax.sound.sampled.DataLine
@@ -30,8 +31,7 @@ internal class DesktopAudioInput : AudioInput {
 
     private val ring = SampleRing(SampleRing.CAPACITY)
 
-    @Volatile
-    private var line: TargetDataLine? = null
+    private val current = AtomicReference<TargetDataLine?>(null)
 
     override suspend fun start(listener: AudioInputListener): AudioInputStart {
         stop()
@@ -45,7 +45,7 @@ internal class DesktopAudioInput : AudioInput {
             return AudioInputStart.Refused(TunerStopReason.FAILED)
         }
         ring.clear()
-        this.line = line
+        current.set(line)
         Thread({ capture(line, listener) }, "Tuner").apply {
             isDaemon = true
             start()
@@ -64,9 +64,9 @@ internal class DesktopAudioInput : AudioInput {
         val samples = ShortArray(CHUNK_FRAMES)
         var silentFrames = 0
         try {
-            while (this.line === line) {
+            while (current.get() === line) {
                 val read = line.read(bytes, 0, bytes.size)
-                if (this.line !== line) break
+                if (current.get() !== line) break
                 if (read <= 0) {
                     listener.onLost(TunerStopReason.MICROPHONE_DISCONNECTED)
                     break
@@ -84,24 +84,29 @@ internal class DesktopAudioInput : AudioInput {
                     silentFrames = 0
                     line.stop()
                     line.close()
-                    line = open()
-                    if (this.line == null) {
-                        line.close()
+                    val reopened = open()
+                    // A stop, or a stop and a new start, may have come while the line was being opened: the new line then
+                    // belongs to nobody and is closed here, or it would hold the microphone with nothing reading it.
+                    if (!current.compareAndSet(line, reopened)) {
+                        reopened.close()
                         break
                     }
-                    this.line = line
+                    line = reopened
                 }
             }
         } catch (_: Exception) {
-            if (this.line === line) listener.onLost(TunerStopReason.FAILED)
+            if (current.get() === line) listener.onLost(TunerStopReason.FAILED)
+        } finally {
+            // Whatever ended the thread, the line it ends with is closed; closing one stop() already closed is harmless.
+            line.stop()
+            line.close()
         }
     }
 
     override fun latest(window: FloatArray) = ring.latest(window)
 
     override fun stop() {
-        val line = line ?: return
-        this.line = null
+        val line = current.getAndSet(null) ?: return
         // Stopping first is what returns a read blocked on the line, so that the thread sees it is no longer wanted.
         line.stop()
         line.flush()

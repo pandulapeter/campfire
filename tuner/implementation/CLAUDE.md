@@ -62,8 +62,9 @@ none ever starts Bluetooth SCO, so a headset never becomes the input. Every tone
   reset.
 - **Desktop** — a `TargetDataLine` at 48 kHz read by a daemon thread; no line is no microphone. The JVM cannot ask
   whether it may record and a refusal arrives as silence, so a line that has heard only zeros for three seconds is
-  opened again (macOS answers its own prompt after the line is open). The tone is a `SourceDataLine` fed the loop by a
-  daemon thread that writes the fades itself.
+  opened again (the new line swapped in only if listening has not stopped or restarted meanwhile, and every capture
+  thread closing the line it ends with; macOS answers its own prompt after the line is open). The tone is a
+  `SourceDataLine` fed the loop by a daemon thread that writes the fades itself.
 - **Web** — `getUserMedia` with the processing off into an `AnalyserNode` of the tuner's own `AudioContext`, shared with
   the tone (`WebTunerAudio`, on `window.__campfireTuner`); the rejection's name is the reason, no secure context or
   `mediaDevices` is not supported. The stream is kept only once the analyser is connected to it, and a graph that cannot
