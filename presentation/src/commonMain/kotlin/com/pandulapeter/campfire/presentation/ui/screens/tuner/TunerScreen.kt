@@ -23,7 +23,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.keepScreenOn
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -70,13 +72,23 @@ internal fun TunerScreen(
     scrollPosition: ScrollPosition,
     contentPadding: PaddingValues,
 ) {
-    val state by viewModel.tunerState.collectAsStateWithLifecycle()
+    // The state changes with every reading, thirty times a second, so it is handed down as a State for the display to
+    // read, and the rest of the page only reads what changes with a note or a setting.
+    val state = viewModel.tunerState.collectAsStateWithLifecycle()
     val settings by viewModel.tunerSettings.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val hasRequested by viewModel.hasRequestedMicrophone.collectAsStateWithLifecycle()
     val notation = (userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default).notation.toChordNotation()
     val permission = rememberMicrophonePermission()
-    val notice = tunerNoticeOf(status = permission.status, listening = state.listening, hasRequested = hasRequested)
+    val status = permission.status
+    val notice by remember(status, hasRequested) {
+        derivedStateOf { tunerNoticeOf(status = status, listening = state.value.listening, hasRequested = hasRequested) }
+    }
+    val isHearing by remember { derivedStateOf { state.value.listening is TunerListening.Hearing } }
+    val tone by remember { derivedStateOf { state.value.tone } }
+    val issue by remember { derivedStateOf { (state.value.listening as? TunerListening.Hearing)?.issue } }
+    val heardNote by remember { derivedStateOf { (state.value.listening as? TunerListening.Hearing)?.reading?.note } }
+    val config = remember(settings) { settings.toConfig() }
     TunerListeningEffect(
         canListen = canListenWithoutTap(status = permission.status, hasRequested = hasRequested),
         onListeningChanged = viewModel::setTunerListening,
@@ -89,7 +101,7 @@ internal fun TunerScreen(
     }
     Column(
         // A tuner is used with both hands on the instrument, and a screen that dims and locks stops the listening.
-        modifier = modifier.fillMaxSize().then(if (state.listening is TunerListening.Hearing) Modifier.keepScreenOn() else Modifier),
+        modifier = modifier.fillMaxSize().then(if (isHearing) Modifier.keepScreenOn() else Modifier),
     ) {
         AnimatedVisibility(
             visible = notice == null,
@@ -107,7 +119,7 @@ internal fun TunerScreen(
                     ),
                 state = state,
                 notation = notation,
-                referencePitch = settings.toConfig().referencePitch,
+                referencePitch = config.referencePitch,
                 isCompact = LocalWindowInfo.current.containerDpSize.height < SHORT_WINDOW_HEIGHT,
             )
         }
@@ -126,8 +138,10 @@ internal fun TunerScreen(
                         )
                     }
                     TunerOptions(
-                        state = state,
-                        settings = settings,
+                        tone = tone,
+                        issue = issue,
+                        heardNote = heardNote,
+                        config = config,
                         notation = notation,
                         permission = permission,
                         onSettingsChanged = viewModel::updateTunerSettings,

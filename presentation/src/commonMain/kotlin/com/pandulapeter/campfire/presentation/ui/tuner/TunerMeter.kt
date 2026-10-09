@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -54,6 +55,7 @@ internal fun TunerMeter(
     )
     val markerAlpha = animateFloatAsState(if (cents == null) 0.3f else 1f, label = "tunerMarkerAlpha")
     val check = animateFloatAsState(if (isInTune) 1f else 0f, label = "tunerCheck")
+    val checkPath = remember { Path() }
     val trackColor = MaterialTheme.colorScheme.surfaceContainerHighest
     val tickColor = MaterialTheme.colorScheme.outline
     val notchColor = animateColorAsState(if (isInTune) markerColor else MaterialTheme.colorScheme.onSurfaceVariant, label = "tunerNotch").value
@@ -87,13 +89,12 @@ internal fun TunerMeter(
         }
         if (check.value > 0f) {
             val unit = notchHeight / 4
-            val path = Path().apply {
-                moveTo(centerX - unit, centerY - unit * 1.6f)
-                lineTo(centerX - unit * 0.2f, centerY - unit * 0.8f)
-                lineTo(centerX + unit * 1.2f, centerY - unit * 2.4f)
-            }
+            checkPath.reset()
+            checkPath.moveTo(centerX - unit, centerY - unit * 1.6f)
+            checkPath.lineTo(centerX - unit * 0.2f, centerY - unit * 0.8f)
+            checkPath.lineTo(centerX + unit * 1.2f, centerY - unit * 2.4f)
             drawPath(
-                path = path,
+                path = checkPath,
                 color = notchColor.copy(alpha = check.value),
                 style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round),
             )

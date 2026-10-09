@@ -26,6 +26,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -74,13 +75,14 @@ import kotlin.math.roundToInt
 @Composable
 internal fun TunerDisplay(
     modifier: Modifier = Modifier,
-    state: TunerState,
+    state: State<TunerState>,
     notation: ChordNotation,
     referencePitch: Int,
     isCompact: Boolean,
 ) {
-    val tone = state.tone
-    val reading = (state.listening as? TunerListening.Hearing)?.reading?.takeIf { tone == null }
+    val tunerState = state.value
+    val tone = tunerState.tone
+    val reading = (tunerState.listening as? TunerListening.Hearing)?.reading?.takeIf { tone == null }
     val note = tone ?: reading?.note
     val isInTune = reading?.isInTune == true
     val accent = animateColorAsState(if (isInTune) LocalSecondAccentColor.current else MaterialTheme.colorScheme.onSurface).value

@@ -34,7 +34,9 @@ share.
   meter never moves) in a short window and in the sheet. Explored as one node with the exact reading; a second node
   announces only the note and a coarse step (far flat, flat, in tune, sharp, far sharp, `TunerAnnouncement.kt`, tested)
   once it has held for 700 ms, since a reading every 33 ms would be a queue of speech the microphone hears too. With
-  nothing heard it is read as the prompt, and while a tone plays as that tone.
+  nothing heard it is read as the prompt, and while a tone plays as that tone. It reads the tuner's state itself (a
+  `State`), so the readings, thirty a second, recompose the display and nothing around it; the screens pass the rest of
+  the page only what changes with a note or a setting.
 - `TunerOptions` — the input issue line (`SILENT`, with Open settings, and `WAITING_FOR_GESTURE`), `InstrumentChoice`,
   `TunerStrings` (a chip per string, the tone's or the heard one selected, a tap toggling its tone) and
   `ReferencePitchSetting` (a `Stepper` reset by a tap on its value, and a chip playing A4).

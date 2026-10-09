@@ -19,7 +19,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -39,6 +41,7 @@ import com.pandulapeter.campfire.presentation.ui.tuner.TunerOptions
 import com.pandulapeter.campfire.presentation.ui.tuner.canListenWithoutTap
 import com.pandulapeter.campfire.presentation.ui.tuner.toConfig
 import com.pandulapeter.campfire.presentation.ui.tuner.tunerNoticeOf
+import com.pandulapeter.campfire.tuner.api.model.TunerListening
 
 /**
  * The tuner over the song being read, opened from the song details overflow menu, so that a string that went flat
@@ -51,13 +54,23 @@ internal fun TunerSheet(
     viewModel: CampfireViewModel,
     dialog: DialogType.Tuner,
 ) {
-    val state by viewModel.tunerState.collectAsStateWithLifecycle()
+    // The state changes with every reading, thirty times a second, so it is handed down as a State for the display to
+    // read, and the rest of the page only reads what changes with a note or a setting.
+    val state = viewModel.tunerState.collectAsStateWithLifecycle()
     val settings by viewModel.tunerSettings.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val hasRequested by viewModel.hasRequestedMicrophone.collectAsStateWithLifecycle()
     val notation = (userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default).notation.toChordNotation()
     val permission = rememberMicrophonePermission()
-    val notice = tunerNoticeOf(status = permission.status, listening = state.listening, hasRequested = hasRequested)
+    val status = permission.status
+    val notice by remember(status, hasRequested) {
+        derivedStateOf { tunerNoticeOf(status = status, listening = state.value.listening, hasRequested = hasRequested) }
+    }
+    val isHearing by remember { derivedStateOf { state.value.listening is TunerListening.Hearing } }
+    val tone by remember { derivedStateOf { state.value.tone } }
+    val issue by remember { derivedStateOf { (state.value.listening as? TunerListening.Hearing)?.issue } }
+    val heardNote by remember { derivedStateOf { (state.value.listening as? TunerListening.Hearing)?.reading?.note } }
+    val config = remember(settings) { settings.toConfig() }
     TunerListeningEffect(
         canListen = canListenWithoutTap(status = permission.status, hasRequested = hasRequested),
         onListeningChanged = viewModel::setTunerListening,
@@ -85,7 +98,7 @@ internal fun TunerSheet(
                     TunerDisplay(
                         state = state,
                         notation = notation,
-                        referencePitch = settings.toConfig().referencePitch,
+                        referencePitch = config.referencePitch,
                         isCompact = true,
                     )
                 } else {
@@ -97,8 +110,10 @@ internal fun TunerSheet(
                 }
             }
             TunerOptions(
-                state = state,
-                settings = settings,
+                tone = tone,
+                issue = issue,
+                heardNote = heardNote,
+                config = config,
                 notation = notation,
                 permission = permission,
                 onSettingsChanged = viewModel::updateTunerSettings,

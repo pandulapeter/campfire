@@ -32,9 +32,8 @@ import com.pandulapeter.campfire.presentation.ui.platform.MicrophonePermission
 import com.pandulapeter.campfire.presentation.ui.screens.settings.AnimatedSettingsRow
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsMessage
 import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
+import com.pandulapeter.campfire.tuner.api.model.TunerConfig
 import com.pandulapeter.campfire.tuner.api.model.TunerInputIssue
-import com.pandulapeter.campfire.tuner.api.model.TunerListening
-import com.pandulapeter.campfire.tuner.api.model.TunerState
 
 /**
  * What the tuner is set to, the same on the tab and in the sheet over a song: what keeps an open microphone from
@@ -44,27 +43,27 @@ import com.pandulapeter.campfire.tuner.api.model.TunerState
 @Composable
 internal fun TunerOptions(
     modifier: Modifier = Modifier,
-    state: TunerState,
-    settings: TunerSettings,
+    tone: Int?,
+    issue: TunerInputIssue?,
+    heardNote: Int?,
+    config: TunerConfig,
     notation: ChordNotation,
     permission: MicrophonePermission,
     onSettingsChanged: (TunerSettings.() -> TunerSettings) -> Unit,
     onToggleTone: (Int) -> Unit,
 ) = Column(modifier = modifier.fillMaxWidth()) {
-    val config = settings.toConfig()
-    val hearing = state.listening as? TunerListening.Hearing
-    AnimatedSettingsRow(value = hearing?.issue) { issue ->
+    AnimatedSettingsRow(value = issue) { shownIssue ->
         Column {
             SettingsMessage(
                 text = stringResource(
-                    when (issue) {
+                    when (shownIssue) {
                         TunerInputIssue.SILENT -> Res.string.tuner_notice_silent
                         TunerInputIssue.WAITING_FOR_GESTURE -> Res.string.tuner_notice_waiting
                     }
                 ),
             )
             val openSettings = permission.openSettings
-            if (issue == TunerInputIssue.SILENT && openSettings != null) {
+            if (shownIssue == TunerInputIssue.SILENT && openSettings != null) {
                 TextButton(modifier = Modifier.padding(horizontal = 4.dp), onClick = openSettings) {
                     Text(stringResource(Res.string.tuner_open_settings))
                 }
@@ -85,8 +84,8 @@ internal fun TunerOptions(
             TunerStrings(
                 tuning = tuning,
                 notation = notation,
-                tone = state.tone,
-                heardNote = hearing?.reading?.note,
+                tone = tone,
+                heardNote = heardNote,
                 onToggleTone = onToggleTone,
             )
         }
@@ -94,7 +93,7 @@ internal fun TunerOptions(
     ReferencePitchSetting(
         referencePitch = config.referencePitch,
         notation = notation,
-        isReferenceTonePlaying = state.tone == REFERENCE_NOTE,
+        isReferenceTonePlaying = tone == REFERENCE_NOTE,
         onReferencePitchChanged = { value -> onSettingsChanged { copy(referencePitch = value) } },
         onToggleReferenceTone = { onToggleTone(REFERENCE_NOTE) },
     )
