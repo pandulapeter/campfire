@@ -63,6 +63,29 @@ class TunerEngineTest {
     }
 
     @Test
+    fun `a start that throws stops as failed and closes the input`() = runTest {
+        input.startFailure = IllegalStateException()
+        val engine = engine()
+        engine.listen(chromatic)
+        runCurrent()
+        assertEquals(TunerListening.Stopped(TunerStopReason.FAILED), engine.state.value.listening)
+        assertEquals(1, input.stopCount)
+    }
+
+    @Test
+    fun `after a failed start listening can be asked for again`() = runTest {
+        input.startFailure = IllegalStateException()
+        val engine = engine()
+        engine.listen(chromatic)
+        runCurrent()
+        input.startFailure = null
+        engine.listen(chromatic)
+        runCurrent()
+        assertIs<TunerListening.Hearing>(engine.state.value.listening)
+        assertEquals(2, input.startCount)
+    }
+
+    @Test
     fun `a stop while the start is pending stops, and the late answer is ignored`() = runTest {
         val gate = CompletableDeferred<Unit>()
         input.gate = gate

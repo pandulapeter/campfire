@@ -17,14 +17,14 @@ this module. Nothing here reaches the network, and nothing heard is kept beyond 
 ### Hearing a note (`commonMain`, all of it tested)
 
 - `TunerEngine` runs every call on one confined coroutine, as `MetronomeEngine` does, each start a session whose late
-  callbacks are ignored. While listening it polls the input's latest window every 33 ms, runs the detector and the
-  tracker over it and publishes a state only when it differs. Each window comes with the input's frame position: one
-  that has not moved for half a second (an input that stopped delivering frames without saying so, a suspended web
-  context), or an input waiting for a gesture, is heard as nothing, since the tracker would hold a repeated window of a
-  clear note for ever. While a tone sounds, and for a window plus 150 ms after it stops, the tracker is reset and
-  nothing is read, since the microphone hears the speaker. A `MICROPHONE_DISCONNECTED` (a new route: headphones
-  plugged in or pulled) opens the input again, once until the reopened input has worked for two seconds, before it is
-  reported.
+  callbacks are ignored; a start that throws, against the contract, is a failed one and closes the input. While
+  listening it polls the input's latest window every 33 ms, runs the detector and the tracker over it and publishes a
+  state only when it differs. Each window comes with the input's frame position: one that has not moved for half a
+  second (an input that stopped delivering frames without saying so, a suspended web context), or an input waiting for a
+  gesture, is heard as nothing, since the tracker would hold a repeated window of a clear note for ever. While a tone
+  sounds, and for a window plus 150 ms after it stops, the tracker is reset and nothing is read, since the microphone
+  hears the speaker. A `MICROPHONE_DISCONNECTED` (a new route: headphones plugged in or pulled) opens the input again,
+  once until the reopened input has worked for two seconds, before it is reported.
 - `PitchDetector` — the McLeod pitch method over about 85 ms of input (4096 frames at 44.1 or 48 kHz, the next power of
   two for another rate): the normalized square difference function, its autocorrelation through two FFTs of the window
   padded to twice its length (`Fft`, a radix-2 one of its own), the first key maximum reaching 0.9 of the highest,
@@ -63,13 +63,13 @@ none ever starts Bluetooth SCO, so a headset never becomes the input. Every tone
   whether it may record and a refusal arrives as silence, so a line that has heard only zeros for three seconds is
   opened again (macOS answers its own prompt after the line is open). The tone is a `SourceDataLine` fed the loop by a
   daemon thread that writes the fades itself.
-- **Web** — `getUserMedia` with the processing off into an `AnalyserNode` of the tuner's own `AudioContext`, shared
-  with the tone (`WebTunerAudio`, on `window.__campfireTuner`); the rejection's name is the reason, no secure context or
-  `mediaDevices` is not supported. A capture-phase listener resumes the context while a tuner screen shows
-  (`setStartable`), and until it runs the input reports `WAITING_FOR_GESTURE`. Closing ends the stream's tracks, which
-  puts the browser's indicator out, and a generation counter ends the tracks of an answer that arrives after a close.
-  Nothing calls back into Kotlin, so an ended track and the context's state are read on every poll. No static file is
-  added.
+- **Web** — `getUserMedia` with the processing off into an `AnalyserNode` of the tuner's own `AudioContext`, shared with
+  the tone (`WebTunerAudio`, on `window.__campfireTuner`); the rejection's name is the reason, no secure context or
+  `mediaDevices` is not supported. The stream is kept only once the analyser is connected to it, and a graph that cannot
+  be built ends its tracks. A capture-phase listener resumes the context while a tuner screen shows (`setStartable`),
+  and until it runs the input reports `WAITING_FOR_GESTURE`. Closing ends the stream's tracks, which puts the browser's
+  indicator out, and a generation counter ends the tracks of an answer that arrives after a close. Nothing calls back
+  into Kotlin, so an ended track and the context's state are read on every poll. No static file is added.
 
 Tests (`desktopTest`): `PitchDetectorTest` (sines and Karplus-Strong strings at every preset's strings, 16, 44.1 and
 48 kHz, under noise, a fundamental 20 dB under its second harmonic, silence, noise and a chord), `PitchTrackerTest`,

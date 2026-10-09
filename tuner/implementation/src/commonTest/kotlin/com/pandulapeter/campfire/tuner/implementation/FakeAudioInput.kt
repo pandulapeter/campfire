@@ -35,6 +35,8 @@ internal class FakeAudioInput : AudioInput {
 
     /** How many polls in a row see the same window, as they do between two of an iOS tap's buffers. */
     var advanceEvery = 1
+    /** When set, a start throws it, against the contract, as a platform call that was not guarded would. */
+    var startFailure: Exception? = null
     var listener: AudioInputListener? = null
         private set
     var startCount = 0
@@ -44,6 +46,7 @@ internal class FakeAudioInput : AudioInput {
 
     override suspend fun start(listener: AudioInputListener): AudioInputStart {
         startCount++
+        startFailure?.let { throw it }
         this.listener = listener
         gate?.let { gate -> if (isStartNonCancellable) withContext(NonCancellable) { gate.await() } else gate.await() }
         return result

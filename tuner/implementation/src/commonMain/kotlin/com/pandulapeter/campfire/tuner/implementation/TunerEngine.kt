@@ -23,6 +23,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeMark
@@ -67,7 +68,17 @@ internal class TunerEngine(
         val sessionId = ++session
         setListening(TunerListening.Starting)
         job = scope.launch(confined) {
-            when (val result = input.start(listenerFor(sessionId))) {
+            val result = try {
+                input.start(listenerFor(sessionId))
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (_: Throwable) {
+                // The contract says a start never throws; one that does is a failed start, and whatever it opened is closed.
+                input.stop()
+                if (sessionId == session) setListening(TunerListening.Stopped(TunerStopReason.FAILED))
+                return@launch
+            }
+            when (result) {
                 is AudioInputStart.Refused -> if (sessionId == session) setListening(TunerListening.Stopped(result.reason))
                 is AudioInputStart.Started -> if (sessionId == session) {
                     gestureIssue = result.issue

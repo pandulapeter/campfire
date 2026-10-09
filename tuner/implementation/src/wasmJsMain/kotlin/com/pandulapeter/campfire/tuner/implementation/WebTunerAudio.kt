@@ -83,22 +83,33 @@ internal fun openTunerMicrophone(): Promise<JsString> = js(
         var generation = tuner.generation;
         if (!window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return Promise.resolve('NotSupportedError');
         return navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } }).then(function (stream) {
+            var stopTracks = function () { stream.getTracks().forEach(function (track) { track.stop(); }); };
             if (generation !== tuner.generation) {
-                stream.getTracks().forEach(function (track) { track.stop(); });
+                stopTracks();
                 return 'AbortError';
             }
-            var context = tuner.ensureContext();
-            if (!context) {
-                stream.getTracks().forEach(function (track) { track.stop(); });
-                return 'NotSupportedError';
+            var source = null;
+            try {
+                var context = tuner.ensureContext();
+                if (!context) {
+                    stopTracks();
+                    return 'NotSupportedError';
+                }
+                source = context.createMediaStreamSource(stream);
+                var analyser = context.createAnalyser();
+                source.connect(analyser);
+                stream.getAudioTracks().forEach(function (track) { track.addEventListener('ended', function () { if (tuner.stream === stream) tuner.ended = true; }); });
+                tuner.ended = false;
+                tuner.source = source;
+                tuner.analyser = analyser;
+                tuner.stream = stream;
+                return 'ok';
+            } catch (error) {
+                // A graph that could not be built must not leave the browser's recording indicator on for a stream nothing reads.
+                if (source) { try { source.disconnect(); } catch (ignored) {} }
+                stopTracks();
+                return (error && error.name) || 'Error';
             }
-            tuner.stream = stream;
-            tuner.ended = false;
-            stream.getAudioTracks().forEach(function (track) { track.addEventListener('ended', function () { if (tuner.stream === stream) tuner.ended = true; }); });
-            tuner.source = context.createMediaStreamSource(stream);
-            tuner.analyser = context.createAnalyser();
-            tuner.source.connect(tuner.analyser);
-            return 'ok';
         }, function (error) {
             return (error && error.name) || 'Error';
         });
