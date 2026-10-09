@@ -22,6 +22,7 @@ import androidx.compose.animation.core.updateTransition
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -51,11 +52,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusTarget
 import androidx.compose.ui.geometry.Offset
@@ -332,11 +335,20 @@ internal fun ExportScreen(
     // Ctrl / Cmd + S press Save, which it only does while the button is there and is not counting pages.
     val rootFocus = remember { FocusRequester() }
     LaunchedEffect(Unit) { rootFocus.requestFocus() }
+    // Read when focus tries to leave, not at composition: the screen stays drawn while it slides away, and by then the
+    // song under it is taking the focus back.
+    val isTrappingFocus by rememberUpdatedState(isOpen)
     // A Surface, so that nothing of the app under it can be pressed through it.
     Surface(
         modifier = Modifier
             .fillMaxSize()
             .saveShortcut { if (canSaveNow && exportProgress == null) requestExport(ExportRequest.SAVE) }
+            // The screen under this one is still in the same window and still focusable, before this one in the
+            // order, so Tab and Shift + Tab would walk into it - onto the buttons of a screen nobody can see. The focus
+            // group around the root target keeps every move inside; a group is consulted only when focus leaves a
+            // child of it, which is why the root target is a node of its own inside it.
+            .focusProperties { onExit = { if (isTrappingFocus) cancelFocusChange() } }
+            .focusGroup()
             .focusRequester(rootFocus)
             .focusTarget(),
         color = MaterialTheme.colorScheme.background,

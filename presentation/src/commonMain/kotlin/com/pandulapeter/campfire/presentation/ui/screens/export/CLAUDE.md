@@ -22,7 +22,9 @@ everything and takes it away again however the dialog goes, exactly as a destina
 right, on the same spring (`slideFractionSpec`, `slideSpec` as a fraction of the width), with the `NavDisplay` giving
 way by the same 12% (`ExportTransition` is the one progress both read), and following a predictive back gesture with the
 finger. It is an opaque `Surface` under the host's `NavigationBackHandler`, so that Escape, the browser's Back and the
-back gesture close it as they closed every sheet, and the snackbar of a failed export still shows over it. The preview's
+back gesture close it as they closed every sheet, and the snackbar of a failed export still shows over it. It is a focus
+group that cancels every exit while it is the dialog shown (not while it slides away), so Tab never reaches the screen
+under it, which `clearAndSetSemantics` only hides from a screen reader. The preview's
 pager fades into nothing under the app bar and towards the options (below it, or at its start beside them) as far as a
 zoomed, panned or turning page has moved past where it rests, so a page at rest is drawn whole.
 
