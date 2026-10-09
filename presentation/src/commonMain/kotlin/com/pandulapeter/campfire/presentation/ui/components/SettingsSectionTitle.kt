@@ -16,6 +16,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 
 /**
@@ -31,7 +33,7 @@ internal fun SettingsSectionTitle(
     text: String,
     contentPadding: PaddingValues = PaddingValues(start = LIST_ITEM_KEYLINE, end = LIST_ITEM_KEYLINE, top = 24.dp, bottom = 8.dp),
 ) = Text(
-    modifier = modifier.fillMaxWidth().padding(contentPadding),
+    modifier = modifier.fillMaxWidth().padding(contentPadding).semantics { heading() },
     text = text,
     style = MaterialTheme.typography.titleSmall,
     color = MaterialTheme.colorScheme.primary,

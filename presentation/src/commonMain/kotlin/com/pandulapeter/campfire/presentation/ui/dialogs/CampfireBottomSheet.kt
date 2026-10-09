@@ -71,6 +71,8 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
@@ -476,6 +478,7 @@ private fun SheetHeader(
         modifier = Modifier.weight(1f),
     ) {
         Text(
+            modifier = Modifier.semantics { heading() },
             text = title,
             style = MaterialTheme.typography.titleMedium,
             maxLines = 1,

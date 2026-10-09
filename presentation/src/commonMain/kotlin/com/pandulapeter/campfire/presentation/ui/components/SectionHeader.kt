@@ -50,6 +50,8 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
@@ -189,6 +191,7 @@ internal fun SectionHeader(
                     modifier = Modifier.weight(1f, fill = false),
                 ) {
                     Text(
+                        modifier = Modifier.semantics { heading() },
                         text = text,
                         // The settings screen's tab labels, the other thing that stands at the top of a top level screen.
                         style = MaterialTheme.typography.titleSmall,
