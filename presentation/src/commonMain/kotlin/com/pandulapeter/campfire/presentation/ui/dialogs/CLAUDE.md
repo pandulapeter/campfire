@@ -10,7 +10,9 @@
 
 # :presentation — ui/dialogs
 
-Dialog and sheet content. The export screen is `ui/screens/export` (see its notes).
+Dialog and sheet content. The export screen is `ui/screens/export` (see its notes). A new form sheet with typed or
+picked input gets a `SavedDialog` variant, so that a process Android restores reopens it (see `ui/navigation`), and a new
+confirmation deliberately does not: a question nobody answered is not one to put back.
 
 ### `ui/dialogs/CoverArtSearchSheet.kt`
 

@@ -43,7 +43,9 @@ editor by a few hops; a start that finds it reopens the editor on it behind the 
 the restored stack already has an editor, which is handed the draft instead (`recoveredEditorField`), and keeps the file
 for as long as it holds unsaved text.
 
-The song filter and the two searches are saved the same way; a search field takes at most 100 characters
+The song filter and the two searches are saved the same way, and so is the form sheet that was up (`SavedDialog`: its
+kind and file names), reopened through its ordinary opener once the library has been read, where the sheet's own saved
+fields find it again; confirmations, the export screen and the tuner are never reopened. A search field takes at most 100 characters
 (`MAX_SEARCH_QUERY_LENGTH`, the pickers' fields included), since its text goes into that saved state as well; on every
 real start, and on the platforms that never restore a process, the handle is empty. Songs and setlists are addressed by
 **file name** everywhere, which is their identity on disk. `NavigationState` next to it is where the user is as more
