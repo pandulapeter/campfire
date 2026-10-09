@@ -120,6 +120,16 @@
                 return isComplete && (!updateWaiting || updateWaiting === ownId) ? ANSWER_TIMEOUT_WHEN_KEPT : ANSWER_TIMEOUT;
             }
 
+            /**
+             * Whether a page restored from the back/forward cache has to start again: another page launched the app while this
+             * one was away, and may have changed every file this one remembers. [own] is the claim this page made as it
+             * launched, [latest] the one the origin holds now; either missing means it cannot tell, which is answered the
+             * safe way.
+             */
+            function isClaimedElsewhere(own, latest) {
+                return !own || own !== latest;
+            }
+
             return {
                 ANSWER_TIMEOUT: ANSWER_TIMEOUT,
                 addressOf: addressOf,
@@ -129,7 +139,8 @@
                 parseAnswer: parseAnswer,
                 nextStep: nextStep,
                 isComplete: isComplete,
-                answerWindow: answerWindow
+                answerWindow: answerWindow,
+                isClaimedElsewhere: isClaimedElsewhere
             };
         })();
     </script>
@@ -631,6 +642,27 @@
         // that is turned away has fetched this page and its icon, and nothing else.
         var LOCK_NAME = 'campfire-library';
         var hasStarted = false;
+        // Written by every launch that is granted the library, so that a page coming back from the back/forward cache can
+        // tell whether another one had it in the meantime (local storage is shared by every tab of the origin).
+        var LIBRARY_CLAIM = 'campfire-library-claim';
+        var ownClaim = null;
+
+        function noteClaim() {
+            try {
+                ownClaim = String(Date.now()) + '-' + Math.random().toString(36).slice(2);
+                window.localStorage.setItem(LIBRARY_CLAIM, ownClaim);
+            } catch (error) {
+                ownClaim = null;
+            }
+        }
+
+        function latestClaim() {
+            try {
+                return window.localStorage.getItem(LIBRARY_CLAIM);
+            } catch (error) {
+                return null;
+            }
+        }
 
         function startApp() {
             if (hasStarted) {
@@ -700,6 +732,7 @@
             if (hasStarted) {
                 return;
             }
+            noteClaim();
             if (!BUILD || !window.caches || !window.crypto || !window.crypto.subtle) {
                 startApp();
                 return;
@@ -1071,10 +1104,19 @@
 
         // A page that is put into the back/forward cache loses its locks, and gets none back when it is restored -
         // pressing Back on the consent page is how that happens. It asks again, and if another tab has taken the
-        // library in the meantime it reloads, which lands on the page above.
+        // library in the meantime it reloads, which lands on the page above. It also reloads when the lock is free but
+        // another page launched the app while this one was away, since it remembers every file as it was. A page with
+        // unsaved text keeps a beforeunload listener, which keeps it out of the back/forward cache, so a reload here
+        // loses nothing.
         window.addEventListener('pageshow', function (event) {
             if (event.persisted && hasStarted) {
-                claimLibrary(function () {}, function () {
+                claimLibrary(function () {
+                    // The lock is free again, but the library may have been another page's while this one was cached, and the
+                    // app remembers it as it was: only a fresh start reads every file again.
+                    if (window.campfireLaunch.isClaimedElsewhere(ownClaim, latestClaim())) {
+                        location.reload();
+                    }
+                }, function () {
                     location.reload();
                 });
             }

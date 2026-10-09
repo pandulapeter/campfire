@@ -157,3 +157,10 @@ test('build.json is waited for briefly only for a whole kept build that no late 
     assert.equal(launch.answerWindow(false, 'other', 'a'), 3000);
     assert.equal(launch.answerWindow(true, 'a', 'a'), 800);
 });
+
+test('a page restored from the back/forward cache starts again only when another page claimed the library meanwhile', () => {
+    assert.equal(launch.isClaimedElsewhere('a', 'a'), false);
+    assert.equal(launch.isClaimedElsewhere('a', 'b'), true);
+    assert.equal(launch.isClaimedElsewhere('a', null), true);
+    assert.equal(launch.isClaimedElsewhere(null, 'a'), true);
+});

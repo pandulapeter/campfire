@@ -28,7 +28,9 @@ direction.
   `campfire-library` Web Lock, which can report no progress,
   but it is 3% of a cold start. The lock is held by a promise that never settles, so one tab owns the library; a
   second gets a localized "already open" page with a Retry button that asks again in place, preserving an OAuth
-  answer in the address bar. A page restored from the back/forward cache reclaims the lock in `pageshow`, and the
+  answer in the address bar. A page restored from the back/forward cache reclaims the lock in `pageshow`, and reloads if another tab holds it, or if
+  another page launched the app while it was cached (`campfire-library-claim` in local storage, `isClaimedElsewhere`),
+  since its repositories remember the library as it was. The
   page's English or Hungarian texts follow `navigator.language`. A `.wasm` or
   `campfire.js` download that fails, or an error or unhandled rejection before `campfireReady()`, stops the bar and shows a message with a
   "Try again" button that reloads the page — saying that a first visit needs a connection when the kept build was not
