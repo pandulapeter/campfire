@@ -352,8 +352,10 @@
     <string name="metronome_beats_increase">More beats</string>
     <string name="metronome_beat_unit_decrease">Longer note</string>
     <string name="metronome_beat_unit_increase">Shorter note</string>
-    <!-- One beat of the bar as a screen reader reads it: its number and how it sounds (metronome_level_…). -->
-    <string name="metronome_beat_description">Beat %1$d, %2$s</string>
+    <!-- One beat of the bar as a screen reader names it; how it sounds (metronome_level_…) is read as its state. -->
+    <string name="metronome_beat">Beat %1$d</string>
+    <!-- What tapping a beat does, read by a screen reader as "double-tap to change the accent". -->
+    <string name="metronome_beat_change">Change the accent</string>
     <string name="metronome_level_accent">accent</string>
     <string name="metronome_level_normal">plain</string>
     <string name="metronome_level_muted">muted</string>

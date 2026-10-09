@@ -352,8 +352,10 @@
     <string name="metronome_beats_increase">Több ütés</string>
     <string name="metronome_beat_unit_decrease">Hosszabb hang</string>
     <string name="metronome_beat_unit_increase">Rövidebb hang</string>
-    <!-- One beat of the bar as a screen reader reads it: its number and how it sounds (metronome_level_…). -->
-    <string name="metronome_beat_description">%1$d. ütés, %2$s</string>
+    <!-- One beat of the bar as a screen reader names it; how it sounds (metronome_level_…) is read as its state. -->
+    <string name="metronome_beat">%1$d. ütés</string>
+    <!-- What tapping a beat does, read by a screen reader as "double-tap to change the accent". -->
+    <string name="metronome_beat_change">Hangsúly módosítása</string>
     <string name="metronome_level_accent">hangsúlyos</string>
     <string name="metronome_level_normal">egyszerű</string>
     <string name="metronome_level_muted">néma</string>

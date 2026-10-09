@@ -43,6 +43,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -50,7 +51,8 @@ import com.pandulapeter.campfire.metronome.api.model.BeatLevel
 import com.pandulapeter.campfire.metronome.api.model.MetronomeBeat
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.metronome_beat_description
+import com.pandulapeter.campfire.presentation.resources.metronome_beat
+import com.pandulapeter.campfire.presentation.resources.metronome_beat_change
 import com.pandulapeter.campfire.presentation.resources.metronome_level_accent
 import com.pandulapeter.campfire.presentation.resources.metronome_level_muted
 import com.pandulapeter.campfire.presentation.resources.metronome_level_normal
@@ -188,17 +190,15 @@ private fun BeatBlock(
         }
     )
     val outlineColor = MaterialTheme.colorScheme.outline
-    val description = stringResource(
-        Res.string.metronome_beat_description,
-        index + 1,
-        stringResource(
-            when (level) {
-                BeatLevel.ACCENT -> Res.string.metronome_level_accent
-                BeatLevel.NORMAL -> Res.string.metronome_level_normal
-                BeatLevel.MUTED -> Res.string.metronome_level_muted
-            }
-        ),
+    val name = stringResource(Res.string.metronome_beat, index + 1)
+    val levelName = stringResource(
+        when (level) {
+            BeatLevel.ACCENT -> Res.string.metronome_level_accent
+            BeatLevel.NORMAL -> Res.string.metronome_level_normal
+            BeatLevel.MUTED -> Res.string.metronome_level_muted
+        }
     )
+    val changeLabel = stringResource(Res.string.metronome_beat_change)
     val shape = RoundedCornerShape(minOf(8.dp, maxHeight / 6))
     // The press belongs to the whole column rather than to the block drawn in it: a muted beat is a sliver less than a
     // third as tall as an accent, and in the song details panel's small row it would be a few millimeters of a target.
@@ -211,10 +211,22 @@ private fun BeatBlock(
                 interactionSource = interactionSource,
                 indication = null,
                 enabled = !isLeaving,
+                onClickLabel = changeLabel,
                 role = Role.Button,
                 onClick = onClick,
             )
-            .then(if (isLeaving) Modifier.clearAndSetSemantics {} else Modifier.semantics { contentDescription = description }),
+            .then(
+                if (isLeaving) {
+                    Modifier.clearAndSetSemantics {}
+                } else {
+                    // The level is the beat's state rather than part of its name, so that a tap is heard as the level
+                    // it moved the beat to.
+                    Modifier.semantics {
+                        contentDescription = name
+                        stateDescription = levelName
+                    }
+                },
+            ),
         contentAlignment = Alignment.BottomCenter,
     ) {
         Box(
