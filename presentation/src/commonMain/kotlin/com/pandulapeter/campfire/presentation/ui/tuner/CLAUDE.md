@@ -50,9 +50,10 @@ share.
 
 The microphone permission is `ui/platform/MicrophonePermission.kt`, an `expect` read where a tuner shows: Android's
 `checkSelfPermission` and the Activity's launcher, iOS's `recordPermission` and `requestRecordPermission`, each read
-again on every resume, with the app's page of the system settings; the web's `navigator.permissions.query`, asked as
-the app starts (`CampfireWebApp`) so the tab's first frame knows; the desktop always unknown, with the macOS and
-Windows microphone privacy pages. Nothing asks at launch or by opening a tab: only the notice's button.
+again on every resume, with the app's page of the system settings; the web's `navigator.permissions.query`, asked as the
+app starts (`CampfireWebApp`) so the tab's first frame knows, and followed through its change events, so an answer given
+in the browser's prompt is known by the next frame too; the desktop always unknown, with the macOS and Windows
+microphone privacy pages. Nothing asks at launch or by opening a tab: only the notice's button.
 
 The tab (`ui/screens/tuner/`) pins the display above a `SettingsPage` whose first row is the notice while there is one
 (the display giving way to it), keeps the screen on while it hears, and scrolls to the top on a second tap of its item.

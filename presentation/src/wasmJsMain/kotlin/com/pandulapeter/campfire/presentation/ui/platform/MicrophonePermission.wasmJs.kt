@@ -28,13 +28,13 @@ import kotlin.js.Promise
  */
 @Composable
 internal actual fun rememberMicrophonePermission(): MicrophonePermission {
-    var status by remember { mutableStateOf(lastKnownStatus) }
+    val status = lastKnownStatus
     var checks by remember { mutableStateOf(0) }
     LifecycleResumeEffect(Unit) {
         checks++
         onPauseOrDispose { }
     }
-    LaunchedEffect(checks) { status = refreshMicrophoneStatus() }
+    LaunchedEffect(checks) { refreshMicrophoneStatus() }
     return MicrophonePermission(
         status = status,
         canAskAgain = status != MicrophoneStatus.DENIED,
@@ -47,17 +47,28 @@ internal actual fun rememberMicrophonePermission(): MicrophonePermission {
 /**
  * The answer of the last query, which the tuner's first frame starts from: the query is a promise, and a first frame
  * that showed the notice of a microphone already allowed would have it flash in and out. `CampfireWebApp` asks once as
- * the app starts, for the first time the tab is opened.
+ * the app starts, for the first time the tab is opened. Kept current between queries by the browser's change events, so
+ * that an answer given in its prompt is known by the next frame rather than by the next resume.
  */
-private var lastKnownStatus = MicrophoneStatus.UNKNOWN
+private var lastKnownStatus by mutableStateOf(MicrophoneStatus.UNKNOWN)
+
+private var isWatchingStatus = false
 
 /** Asks the browser again and keeps the answer, see [lastKnownStatus]. */
-internal suspend fun refreshMicrophoneStatus() = when (queryMicrophonePermission().await<JsString>().toString()) {
+internal suspend fun refreshMicrophoneStatus() = microphoneStatusOf(queryMicrophonePermission().await<JsString>().toString()).also {
+    lastKnownStatus = it
+    if (!isWatchingStatus) {
+        isWatchingStatus = true
+        watchMicrophonePermission { state -> lastKnownStatus = microphoneStatusOf(state.toString()) }
+    }
+}
+
+private fun microphoneStatusOf(state: String) = when (state) {
     "granted" -> MicrophoneStatus.GRANTED
     "denied" -> MicrophoneStatus.DENIED
     "prompt" -> MicrophoneStatus.NOT_ASKED
     else -> MicrophoneStatus.UNKNOWN
-}.also { lastKnownStatus = it }
+}
 
 private fun queryMicrophonePermission(): Promise<JsString> = js(
     """(function () {
@@ -67,5 +78,16 @@ private fun queryMicrophonePermission(): Promise<JsString> = js(
         } catch (error) {
             return Promise.resolve('unknown');
         }
+    })()"""
+)
+
+private fun watchMicrophonePermission(onChange: (JsString) -> Unit): Unit = js(
+    """(function () {
+        try {
+            if (!navigator.permissions || !navigator.permissions.query) return;
+            navigator.permissions.query({ name: 'microphone' }).then(function (result) {
+                result.onchange = function () { onChange(result.state); };
+            }, function () {});
+        } catch (error) {}
     })()"""
 )
