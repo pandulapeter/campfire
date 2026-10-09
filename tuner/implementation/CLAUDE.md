@@ -67,6 +67,9 @@ none ever starts Bluetooth SCO, so a headset never becomes the input. Every tone
 
 Tests (`desktopTest`): `PitchDetectorTest` (sines and Karplus-Strong strings at every preset's strings, 16, 44.1 and
 48 kHz, under noise, a fundamental 20 dB under its second harmonic, silence, noise and a chord), `PitchTrackerTest`,
-`ToneSynthesizerTest` (the seam, the level, the tone read back by the detector), and `RecordedStringsTest`, which reads
+`ToneSynthesizerTest` (the seam, the level, the tone read back by the detector), `TunerEngineTest` (sessions, the late
+answer of a stopped start, the refused start, the one reopen, updates, tones over readings, over `FakeAudioInput` and
+`FakeToneOutput` on virtual time), `SampleRingTest` (wraparounds, full scale, clearing), `FftTest` (the round trip, an
+impulse against the direct DFT), and `RecordedStringsTest`, which reads
 every 16-bit WAV dropped into `desktopTest/resources/tuner/`, named by the note it holds (see its README), the way the
 microphone is read.
