@@ -46,8 +46,9 @@ of the lifecycle: `updateBackStack`, whenever what is on top is neither a song n
 over a song, a song closed or deleted, a tab selected - so that nothing plays under a screen with no way to stop it;
 `setVisibleDialog`, as the export screen is dealt in over the song, for the same reason, since it is a dialog to the
 view model and never reaches the back stack; and `onCleared`, which is the app being left rather than being sent to the
-background (a finished Activity rather than a paused one), where a singleton metronome would otherwise go on clicking,
-with its notification, under a process nobody is looking at.
+background (a finished Activity rather than a paused one; an Android activity destroyed without finishing, as "Don't
+keep activities" does on every trip to the background, keeps a click that can sound), where a singleton metronome would
+otherwise go on clicking, with its notification, under a process nobody is looking at.
 
 ### The song details screen's metronome
 

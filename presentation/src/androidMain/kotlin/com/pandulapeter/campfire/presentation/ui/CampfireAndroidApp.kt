@@ -16,9 +16,12 @@ import androidx.activity.compose.LocalActivity
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.data.model.domain.SyncState
@@ -78,6 +81,21 @@ fun CampfireAndroidApp(
     }.collectAsStateWithLifecycle(viewModel.syncState.value is SyncState.Connected)
     SyncNotificationPermissionEffect(isSyncConnected = isSyncConnected)
     val activity = LocalActivity.current as? ComponentActivity
+    // Android clears the view model with every activity that is destroyed outside a configuration change, finishing
+    // or not ("Don't keep activities" destroys it on every trip to the background), and only a finishing one is the
+    // app being left. Registered after ComponentActivity's own observer, so it hears ON_DESTROY first: the lifecycle
+    // tells observers of a downward move newest first, and the view model is cleared by that older observer.
+    DisposableEffect(activity, viewModel) {
+        val observer = LifecycleEventObserver { _, event ->
+            // Not for a configuration change, which keeps the view model: a flag set then would outlive it and answer a
+            // later clear that this observer did not hear (an activity destroyed before its first composition).
+            if (event == Lifecycle.Event.ON_DESTROY && activity != null && !activity.isChangingConfigurations) {
+                viewModel.onHostDestroyed(isFinishing = activity.isFinishing)
+            }
+        }
+        activity?.lifecycle?.addObserver(observer)
+        onDispose { activity?.lifecycle?.removeObserver(observer) }
+    }
     LaunchedEffect(activity, isDarkTheme) {
         activity?.enableEdgeToEdge(
             statusBarStyle = if (isDarkTheme) SystemBarStyle.dark(Color.TRANSPARENT) else SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),

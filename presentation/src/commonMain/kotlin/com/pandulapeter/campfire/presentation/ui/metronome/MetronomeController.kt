@@ -104,6 +104,9 @@ internal class MetronomeController(
 
     private var silentClickStopJob: Job? = null
 
+    /** What the last [onAppStopped] was told, for [stopSilentClick]. */
+    private var lastAreBeatsFeltInBackground = false
+
     /**
      * Reported by the song details screen whenever its pager heads for a page, or the page it heads for for another
      * stretch of its song, see [songDetailsTargetSongs] and [songDetailsTargetTimings].
@@ -192,16 +195,31 @@ internal class MetronomeController(
      * is not to be stopped by that.
      */
     fun onAppStopped(areBeatsFeltInBackground: Boolean) {
+        lastAreBeatsFeltInBackground = areBeatsFeltInBackground
         silentClickStopJob?.cancel()
         silentClickStopJob = scope.launch {
             delay(SILENT_CLICK_GRACE_MILLIS)
-            val playing = metronome.playback.value as? MetronomePlayback.Playing ?: return@launch
-            val isFelt = areBeatsFeltInBackground && metronomeSettings.value.isHapticBeatEnabled && playing.pattern.hasUnmutedBeat
-            if (!playing.pattern.canSound && !isFelt) {
-                metronome.stop()
-                messageSink.sendMessage(Message.SilentMetronomeStopped)
-            }
+            if (stopClickThatIsNotHeard()) messageSink.sendMessage(Message.SilentMetronomeStopped)
         }
+    }
+
+    /**
+     * The stop [onAppStopped] makes after its grace, made at once for a view model that is going (see
+     * AppExitController.onCleared). Nothing is said about it: a view model that is going has no snackbar left to say
+     * it in.
+     */
+    fun stopSilentClick() {
+        silentClickStopJob?.cancel()
+        stopClickThatIsNotHeard()
+    }
+
+    /** Stops a playing click that can neither be heard nor felt in the background, answering whether it did. */
+    private fun stopClickThatIsNotHeard(): Boolean {
+        val playing = metronome.playback.value as? MetronomePlayback.Playing ?: return false
+        val isFelt = lastAreBeatsFeltInBackground && metronomeSettings.value.isHapticBeatEnabled && playing.pattern.hasUnmutedBeat
+        if (playing.pattern.canSound || isFelt) return false
+        metronome.stop()
+        return true
     }
 
     /** Called whenever the app is in sight again (ON_START), which takes back a stop [onAppStopped] has not made yet. */

@@ -840,6 +840,7 @@ class CampfireViewModel(
         updateUserPreferences = updateUserPreferences,
         getSyncState = getSyncState,
         startScheduledSynchronization = startScheduledSynchronization,
+        stopSilentClick = metronomeController::stopSilentClick,
     )
 
     private val isLeaving get() = appExitController.isLeaving
@@ -1152,6 +1153,9 @@ class CampfireViewModel(
 
     /** See [AppExitController.onAppPaused]. */
     fun onAppPaused(): SyncProgress? = appExitController.onAppPaused()
+
+    /** See [AppExitController.onHostDestroyed]. */
+    fun onHostDestroyed(isFinishing: Boolean) = appExitController.onHostDestroyed(isFinishing)
 
     fun onAppStopped(areBeatsFeltInBackground: Boolean) = metronomeController.onAppStopped(areBeatsFeltInBackground)
 

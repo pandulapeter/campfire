@@ -49,6 +49,7 @@ internal class AppExitController(
     private val updateUserPreferences: UpdateUserPreferencesUseCase,
     private val getSyncState: GetSyncStateUseCase,
     private val startScheduledSynchronization: StartScheduledSynchronizationUseCase,
+    private val stopSilentClick: () -> Unit,
 ) {
 
     /**
@@ -65,6 +66,16 @@ internal class AppExitController(
      * request, which has to be answered either way (see the desktop app module).
      */
     private var pendingExit: PendingExit? = null
+
+    /**
+     * Set as an Android activity is destroyed without finishing, which clears the view model all the same while the
+     * process, the metronome singleton and its service go on: the user has gone to the background, not left.
+     */
+    private var isHostKeptForLater = false
+
+    fun onHostDestroyed(isFinishing: Boolean) {
+        isHostKeptForLater = !isFinishing
+    }
 
     /**
      * Taken rather than read, so that exactly one of an exit's two callbacks can ever run: the branch that is about to
@@ -195,10 +206,13 @@ internal class AppExitController(
      * It does take the click, though. This is the app being left rather than being sent to the background - the one is
      * a finished Activity, the other a paused one - and the click is kept alive across the background for a phone on a
      * music stand with its screen off, not for an app the user has closed; the metronome is a singleton that would
-     * otherwise go on clicking, with its notification, under a process nobody is looking at any more.
+     * otherwise go on clicking, with its notification, under a process nobody is looking at any more. Unless the
+     * platform only let go of its window (an Android activity destroyed without finishing, see [onHostDestroyed]),
+     * where the click goes on as it does in the background, except one that cannot sound, which is stopped now instead
+     * of after its grace.
      */
     fun onCleared() {
-        metronome.stop()
+        if (isHostKeptForLater) stopSilentClick() else metronome.stop()
         // Nothing of the tuner outlives its screen, and with the view model every screen is gone.
         tuner.stopListening()
         tuner.stopTone()
