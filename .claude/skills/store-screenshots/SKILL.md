@@ -35,7 +35,7 @@ app never sets. See `tools/screenshots/CLAUDE.md` for how the tool works.
 
 | What | Made from | Ends up in |
 |---|---|---|
-| Store listings (8 rows × 8 shots), Play Store banner, link preview, Apple header and search results | `Shot.kt`, `Banners.kt` → Screenshot Bro | `~/Desktop/Campfire store images <date>/`, one folder per row (with the project's icon, poster and box art rows, which have no shots) |
+| Store listings (9 rows × 8 shots), Play Store banner, link preview, Apple header and search results | `Shot.kt`, `Banners.kt` → Screenshot Bro | `~/Desktop/Campfire store images <date>/`, one folder per row (with the project's icon, poster and box art rows, which have no shots) |
 | README banners (GitHub - Banner 1 / 2) | `Banners.kt` → Screenshot Bro | `documentation/screenshots/01–06.webp`, 1200×900 |
 | Website screenshots | `Website.kt`, no Screenshot Bro | `../CampfireWebsite/assets/screenshots/*.webp` at each file's own size |
 | Website link preview | the exported `Website - Link preview` row | `../CampfireWebsite/assets/og-image.jpg`, 1200×630 |
@@ -61,7 +61,7 @@ repository; the user reviews and commits.
    column order, the rearmost frame of each column**, and **resizes every frame it fills to the image's aspect ratio**,
    so after every import put each frame's `x`, `width` and `height` back. Extra images append columns: never pass more
    than the row has.
-   - The eight listing rows (one frame per column): import the row's eight images in order.
+   - The nine listing rows (one frame per column): import the row's eight images in order.
    - Rows with several frames in a column (the README banners, the Play Store banner, the link preview, Apple's header
      and search results): give each extra frame a temporary column (`add_template`, `delete_shape` the default device
      it drops in, move the frame's `x` there), import, move it back, `remove_template`. Then restore the stacking with
@@ -74,6 +74,7 @@ repository; the user reviews and commits.
    | Play Store - Android Large Tablet | `4AB75520-E483-4E51-93A8-568848CE24BB` |
    | Play Store - Chromebook | `15F6D06E-114E-468A-BEA1-E074FA445ECA` |
    | App Store - iPhone | `CA8CB67F-AD3B-4CE6-95F1-1A23555C1320` |
+   | App Store - iPhone Duo | `755F5064-0A7F-4F17-828A-E985A26E2A8E` |
    | App Store - iPad | `5B53E8FA-F8D5-4D72-B0A6-58D1F847CB0E` |
    | Mac App Store - Mac | `09A157EA-A360-4800-B9F6-72E4ED90178F` |
    | Microsoft Store - Windows | `C369F36A-B693-46C7-A53C-E8AA13CC6D53` |
@@ -104,13 +105,14 @@ repository; the user reviews and commits.
 
 The listing alternates two dark, two light: 1–2 dark, 3–4 light, 5–6 dark, 7–8 light. Shared rules: the store
 screenshots are shown at 9:41 on Wednesday, October 7, 2026 (setlist dates are moved with the run's day, so their
-countdowns always read the same); the app icon anywhere in the system chrome is the default gradient one; Android
+countdowns always read the same); the iPhone Duo is always part of the listing, shown unfolded and on its side
+(its inner display, 2853×2007 at 3x, under the iPad's status bar); the app icon anywhere in the system chrome is the default gradient one; Android
 phone frames are Screenshot Bro's Pixel frame; Share is shown on Android and iOS only; sync is a fake connected
 account, "Connected as Péter Pandula"; only public domain songs are opened full screen in the listing.
 
 | # | Headline | Shot |
 |---|---|---|
-| 1 | Your songbook, on any screen | Songs, English filter, by artist, scrolled to Gotthard (pinned), "+" menu open |
+| 1 | Your songbook, on any screen | Songs, English only, by artist, scrolled to Bob Dylan (pinned), "+" menu open |
 | 2 | Laid out for the way you play | House of the Rising Sun (Traditional American); phones at 100% text with the Picking pattern folded, Chromebook at 100%, so the whole first verse shows |
 | 3 | A metronome that knows each song | Metronome tab playing 6/8 at 236, beats 1 and 4 accented, caught on beat 1 |
 | 4 | Setlists ready for the gig | Setlists by date: Frey-Tully Nuptials "In 2 days", Friday Night by the Lake "Tomorrow" |

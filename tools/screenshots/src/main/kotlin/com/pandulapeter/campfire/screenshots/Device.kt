@@ -18,7 +18,8 @@ import com.pandulapeter.campfire.presentation.ui.platform.ImpersonatedPlatform
  * density the platform draws that screen at, and the system chrome around the app there.
  *
  * The pixel sizes are the screens of the frames' devices, so an image fills its frame exactly: the iPhone 17 Pro Max,
- * the 13" iPad Pro, the Pixel 9, and the 14" and 16" MacBook Pros the desktop rows are framed in. The Android tablet
+ * the iPhone Duo's inner display unfolded and on its side, the 13" iPad Pro, the Pixel 9, and the 14" and 16" MacBook Pros
+ * the desktop rows are framed in. The Android tablet
  * frame is a generic one, whose screen (556 by 916 inside its 600 by 960) is a little narrower than a 16:10 tablet's,
  * and which fills it by cropping the image's sides, so its shots are rendered at that screen's own shape. The densities are the platforms' own for those screens (2x on a Retina display, which is also Windows at 200%),
  * which decides how much of the app fits, so the shots show as much of a song as the device would.
@@ -73,6 +74,19 @@ internal enum class Device(
         heightPx = 2868,
         density = 3f,
         chrome = SystemChrome.IPhone,
+    ),
+
+    /**
+     * The iPhone Duo opened into its inner display and held on its side, at the iPhone's 3x, where iOS lays the app out
+     * like an iPad's and draws the iPad's status bar over it.
+     */
+    IPHONE_DUO(
+        folder = "App Store - iPhone Duo",
+        platform = ImpersonatedPlatform.IOS,
+        widthPx = 2853,
+        heightPx = 2007,
+        density = 3f,
+        chrome = SystemChrome.IPad,
     ),
     IPAD(
         folder = "App Store - iPad",

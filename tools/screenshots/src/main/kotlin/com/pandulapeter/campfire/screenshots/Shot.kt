@@ -160,8 +160,8 @@ internal class ShotScope(
 
 /** The listing, in the order the stores show it. */
 internal val shots = listOf(
-    // The library: the songs in English, sorted by artist and scrolled down to Gotthard, whose header is pinned under
-    // the app bar, with the "New song" menu open over the list, offering to create a song or import files.
+    // The library: the songs in English only, sorted by artist and scrolled down to Bob Dylan, whose header is pinned
+    // under the app bar, with the "New song" menu open over the list, offering to create a song or import files.
     Shot(
         id = "01-songs",
         uiMode = UserPreferences.UiMode.DARK,
@@ -170,7 +170,7 @@ internal val shots = listOf(
             val unfiltered = awaitSongGroups { it.groups.isNotEmpty() }.filterKey
             viewModel.toggleLanguageFilter("en")
             awaitSongGroups { it.filterKey != unfiltered }
-            scrollSongsTo(artist = "Gotthard")
+            scrollSongsTo(artist = "Bob Dylan")
         },
         drive = { tap(string("songs_new_song")) },
     ),
