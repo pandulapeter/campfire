@@ -40,7 +40,7 @@ import org.jetbrains.compose.resources.painterResource
  * [setlistAssignmentsAction] where its bar runs out of room, and a setlist row puts the same entry among its
  * [leadingItems], after the row's own "Remove from setlist".
  *
- * @param state Whether the menu is open, hoisted by the songs screen, whose rows also open it from a long press.
+ * @param state Whether the menu is open, hoisted by the song rows of the songs and setlists screens, which also open it from a long press.
  * @param isDeletable Whether the song can be deleted from here, which it only can where the song is read as part of
  *   the library. A setlist is the list somebody wrote down to play from, and a song reached through one is taken out
  *   of it rather than removed from every setlist and the library at once.

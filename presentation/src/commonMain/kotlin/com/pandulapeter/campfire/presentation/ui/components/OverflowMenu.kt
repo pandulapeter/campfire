@@ -88,7 +88,7 @@ internal fun OverflowMenu(
 }
 
 /**
- * Whether an [OverflowMenu] is open. A song row on the songs screen holds its own, because a long press on the row
+ * Whether an [OverflowMenu] is open. A song row on the songs screen and in a setlist holds its own, because a long press on the row
  * opens the very menu its overflow button does, hanging from that button, rather than showing the same entries in a
  * different way.
  */

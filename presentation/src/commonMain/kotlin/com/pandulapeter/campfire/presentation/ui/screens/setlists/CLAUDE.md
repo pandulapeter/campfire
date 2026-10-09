@@ -27,7 +27,8 @@ stand aside.
 Back, Escape and the web's Back end it first (it is a history entry of its own there); so does leaving the screen,
 performance mode, the setlist dropping below two songs or being archived or deleted, and opening its Edit, Duplicate or
 Export, since editing may rename the file the mode is keyed by. Outside it a song leaves the setlist through the row's
-overflow menu. That menu is the song list's own, behind the same `SongActions` every song row carries, headed by the
+overflow menu, which a long press on the row opens on touch platforms as on the songs screen (a missing song's row
+included, through a long press alone, since it has no tap to offer). That menu is the song list's own, behind the same `SongActions` every song row carries, headed by the
 entries that are about the row rather than the song (`setlistRowActions`): Move up, Move down and **Remove from
 setlist**, then **Choose setlists**, the sheet of every setlist, where unticking this one takes the row away behind the
 sheet; Remove from setlist carrying a list with a minus rather than the bin, since the song stays in the library and

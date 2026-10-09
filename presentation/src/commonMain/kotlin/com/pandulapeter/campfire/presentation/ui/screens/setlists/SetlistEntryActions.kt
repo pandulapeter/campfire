@@ -20,6 +20,7 @@ import com.pandulapeter.campfire.presentation.resources.setlists_remove_song
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ActionsMenu
 import com.pandulapeter.campfire.presentation.ui.components.ActionsMenuItem
+import com.pandulapeter.campfire.presentation.ui.components.OverflowMenuState
 import com.pandulapeter.campfire.presentation.ui.components.SongActionHandler
 import com.pandulapeter.campfire.presentation.ui.components.SongActions
 import com.pandulapeter.campfire.presentation.ui.components.only
@@ -33,11 +34,13 @@ import org.jetbrains.compose.resources.painterResource
  * song to act on, so it is offered only what still applies to it - moving it and taking it out of the setlist -
  * rather than a list full of entries that would all fail.
  *
+ * @param state Whether the menu is open, hoisted by the row, which also opens it from a long press.
  * @param onMoveUp Null where the row cannot move that way, or cannot be moved at all.
  * @param onMoveDown Null where the row cannot move that way, or cannot be moved at all.
  */
 @Composable
 internal fun SetlistEntryActions(
+    state: OverflowMenuState,
     viewModel: CampfireViewModel,
     songActions: SongActionHandler,
     entry: SetlistWithSongs.Entry,
@@ -57,6 +60,7 @@ internal fun SetlistEntryActions(
     }
     when (entry) {
         is SetlistWithSongs.Entry.Present -> SongActions(
+            state = state,
             actions = songActions,
             song = entry.song,
             isDeletable = false,
@@ -77,6 +81,7 @@ internal fun SetlistEntryActions(
         )
 
         is SetlistWithSongs.Entry.Missing -> ActionsMenu(
+            state = state,
             isExpandable = false,
             items = setlistRowActions(onMoveUp, onMoveDown, onRemove),
         )

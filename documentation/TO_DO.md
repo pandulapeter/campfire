@@ -10,6 +10,9 @@
 # To do
 ## Short-term (in this version)
 ### Bugs / issues
+- Cord shapes bottom sheet glitching while dragging it down
+- Scroll to top when reselecting the metronome menu item
+- Go to General when reselecting the Settings menu item - didn't always work
 
 ### Improvements
 - Improve haptic effects (fast scroll is inconsistent, tap tempo should not have one)

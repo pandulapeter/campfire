@@ -55,6 +55,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
@@ -92,6 +93,7 @@ import com.pandulapeter.campfire.presentation.ui.components.draggedListItemConta
 import com.pandulapeter.campfire.presentation.ui.components.songCardTextKeyline
 import com.pandulapeter.campfire.presentation.ui.components.listItemAnimation
 import com.pandulapeter.campfire.presentation.ui.components.rememberListTopFade
+import com.pandulapeter.campfire.presentation.ui.components.rememberOverflowMenuState
 import com.pandulapeter.campfire.presentation.ui.components.listTopFadeViewport
 import com.pandulapeter.campfire.presentation.ui.components.fadingUnderListTop
 import com.pandulapeter.campfire.presentation.ui.components.only
@@ -102,6 +104,7 @@ import com.pandulapeter.campfire.presentation.ui.components.songCardPadding
 import com.pandulapeter.campfire.presentation.ui.components.sectionHeaderBottomGap
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
+import com.pandulapeter.campfire.presentation.ui.platform.isDesktopPlatform
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.ui.playing.songPlaybackOf
 import com.pandulapeter.campfire.presentation.ui.screens.rememberSetlistActionHandler
@@ -219,6 +222,7 @@ internal fun SetlistList(
     // A row lifted, every place it moves to and the row set down are felt: the row is under the finger moving it, which
     // covers the slot number that would otherwise say where it has got to.
     val hapticFeedback = LocalHapticFeedback.current
+    val keyboardController = LocalSoftwareKeyboardController.current
     val reorderableState = rememberReorderableLazyGridState(listState) { from, to ->
         val fromKey = SetlistItemKey(from.key as? String)
         val toKey = SetlistItemKey(to.key as? String)
@@ -423,6 +427,20 @@ internal fun SetlistList(
                         // the list being shown rather than changed.
                         val handleVisibility = remember { MutableTransitionState(isReorderable) }
                         handleVisibility.targetState = isReorderable
+                        // Above the branch too, so that a menu opened by a long press is the one the row's button still
+                        // holds after the row is composed anew.
+                        val actionsMenuState = rememberOverflowMenuState()
+                        val hasActions = !isPerformanceModeEnabled && (!setlistWithSongs.setlist.isArchived || entry is SetlistWithSongs.Entry.Present)
+                        // The songs screen's shortcut to the row's own overflow menu. In reorder mode a long press lifts
+                        // the row instead, which is what a long press on a row of the setlist being reordered has to do.
+                        val onLongClick: (() -> Unit)? = if (isDesktopPlatform || !hasActions || isReorderable) {
+                            null
+                        } else {
+                            {
+                                keyboardController?.hide()
+                                actionsMenuState.open()
+                            }
+                        }
                         // The drag written as two steps, for whoever cannot drag: a screen reader, a keyboard. Each is the
                         // same single write a finished drag makes, and a row with nowhere to go in a direction is offered
                         // no step that way.
@@ -491,7 +509,7 @@ internal fun SetlistList(
                             } else {
                                 {
                                     AnimatedVisibility(
-                                        visible = !setlistWithSongs.setlist.isArchived || entry is SetlistWithSongs.Entry.Present,
+                                        visible = hasActions,
                                         enter = fadeIn() + expandHorizontally(),
                                         exit = fadeOut() + shrinkHorizontally(),
                                     ) {
@@ -514,6 +532,7 @@ internal fun SetlistList(
                                                 )
                                             }
                                             SetlistEntryActions(
+                                                state = actionsMenuState,
                                                 viewModel = viewModel,
                                                 songActions = songActions,
                                                 entry = entry,
@@ -549,6 +568,7 @@ internal fun SetlistList(
                                         containerColor = containerColor,
                                         shadowElevation = elevation,
                                         onClick = { viewModel.openSongInSetlist(setlistWithSongs, entry.song) },
+                                        onLongClick = onLongClick,
                                         actions = actions,
                                     )
                                 }
@@ -561,6 +581,7 @@ internal fun SetlistList(
                                     cardPadding = songCardPadding(rowIndex, columnCount),
                                     containerColor = containerColor,
                                     shadowElevation = elevation,
+                                    onLongClick = onLongClick,
                                     actions = actions,
                                 )
                             }
