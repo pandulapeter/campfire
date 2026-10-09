@@ -91,7 +91,16 @@ internal class AndroidAudioInput(
         }
         ring.clear()
         this.record = record
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) registerSilencing(record, listener)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            registerSilencing(record, listener)
+            // The callback hears only changes, and the change that silenced a record started under a call is its own start.
+            // No capture thread holds the record yet, so it is released here.
+            if (record.activeRecordingConfiguration?.isClientSilenced == true) {
+                stop()
+                record.release()
+                return AudioInputStart.Refused(TunerStopReason.MICROPHONE_BUSY)
+            }
+        }
         Thread({ capture(record, listener) }, "Tuner").start()
         return AudioInputStart.Started(SAMPLE_RATE)
     }
