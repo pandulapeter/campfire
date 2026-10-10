@@ -196,6 +196,10 @@ class SectionCuttingTest {
             piecePadding = piecePadding,
             sectionGap = SECTION_GAP,
             maxRowHeight = maxRowHeight,
+            lineHeight = LINE_HEIGHT,
+            lineCount = { 1 },
+            isStanzaBreakBefore = { false },
+            wrappedLines = { _, _ -> 0 },
         )
     }
 
@@ -209,6 +213,11 @@ class SectionCuttingTest {
             piecePadding = IntArray(2),
             sectionGap = 20,
             maxRowHeight = 450,
+            lineHeight = LINE_HEIGHT,
+            // The first section is a line, the second the rows of chord diagrams, which are no lines of lyrics.
+            lineCount = { if (it == 0) 1 else 0 },
+            isStanzaBreakBefore = { false },
+            wrappedLines = { _, _ -> 0 },
         )
         val cut = grid(isCuttable = true)
         assertContentEquals(intArrayOf(0, 0, 0, 0, 0), cut.rows)

@@ -11,22 +11,21 @@
 ## Short-term (in this version)
 ### Bugs / issues
 - Changing filters should not scroll to top
-- Cover art archive thumbnails load really slowly
-- Get rid of the border around metronome bars
+- CoverArtArchive thumbnails load really slowly
 
 ### Improvements
-- Song layout as a designer would set it (scored cuts, narrow columns, fitted text): documentation/plans/song-layout.md
+- Improve song details layout: documentation/plans/song-layout.md
 - Improve haptic effects (fast scroll is inconsistent, tap tempo should not have one)
-- Clean up all the edit links, about the song bottom sheet, song details menus. Too much duplicated content, not super intuitive
+- Clean up all the Song details / Song editor / About the song bottom sheet menus. Too much duplicated content, not super intuitive.
+- Multi-select for songs: documentation/plans/multi-select.md
+- Duplicate song button
 - Review / update website support page (FAQ)
 
 ## Midterm (in the next versions)
-- Multi-select for songs: documentation/plans/multi-select.md
 - New song from the clipboard: documentation/plans/clipboard-import.md
 - Share to Campfire (iOS share extension, Android audit): documentation/plans/share-extension.md (after the clipboard plan)
 - Find song details online: documentation/plans/song-details-lookup.md
 - Song links and QR codes: documentation/plans/song-links.md
-- Duplicate song button
 - Search field for tags / languages
 - Find a way to allow entering tempo using the keyboard
 - Comments in setlists (between songs)

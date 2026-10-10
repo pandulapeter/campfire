@@ -12,9 +12,11 @@ package com.pandulapeter.campfire.presentation.ui.screens.settings
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.MaterialTheme
@@ -44,6 +46,8 @@ import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
  * @param sectionColumns How many [MIN_COLUMN_WIDTH] wide columns the page has room for, see [SettingsWidthLayout].
  * @param contentPadding The window insets left to the screen, applied inside the scroll so the rows pass under the
  *   system bars instead of stopping short of them.
+ * @param header Rows above the sections that span every column, so that a control which reads as one row (the Tuner
+ *   tab's strings) is not cut to the width of one column of a wide window.
  */
 @Composable
 internal fun SettingsPage(
@@ -51,28 +55,37 @@ internal fun SettingsPage(
     sectionColumns: Int,
     scrollState: ScrollState,
     contentPadding: PaddingValues,
+    header: (@Composable ColumnScope.() -> Unit)? = null,
     section: @Composable () -> Unit,
     secondSection: (@Composable () -> Unit)? = null,
 ) {
     val sections = listOfNotNull(section, secondSection)
     val columns = if (sectionColumns >= sections.size) sections.map { listOf(it) } else listOf(sections)
-    Row(
+    Column(
         modifier = modifier
             .fillMaxSize()
             .fadingTopEdge(scrollState, MaterialTheme.colorScheme.background)
             .bounceVerticalScroll(scrollState)
             // Asked while measuring rather than while composing, since the bottom follows the keyboard of a sheet's field.
             .padding(contentPadding.only(start = true, end = true, bottom = true, extraTop = PAGE_TOP_PADDING, extraBottom = 16.dp)),
-        horizontalArrangement = Arrangement.spacedBy(SECTION_GAP, Alignment.Start),
     ) {
-        columns.forEach { column ->
+        if (header != null) {
             Column(
-                // Not filling its share, or the share would win over the maximum width and the columns of a wide
-                // window would never stop growing; the sections fill whatever this settles at.
-                modifier = Modifier.weight(1f, fill = false).widthIn(max = MAX_COLUMN_WIDTH),
-                verticalArrangement = Arrangement.spacedBy(SECTION_GAP),
-            ) {
-                column.forEach { section -> section() }
+                // As wide as the columns under it at most, so that it ends where they do.
+                modifier = Modifier.widthIn(max = MAX_COLUMN_WIDTH * columns.size + SECTION_GAP * (columns.size - 1)).fillMaxWidth(),
+                content = header,
+            )
+        }
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(SECTION_GAP, Alignment.Start)) {
+            columns.forEach { column ->
+                Column(
+                    // Not filling its share, or the share would win over the maximum width and the columns of a wide
+                    // window would never stop growing; the sections fill whatever this settles at.
+                    modifier = Modifier.weight(1f, fill = false).widthIn(max = MAX_COLUMN_WIDTH),
+                    verticalArrangement = Arrangement.spacedBy(SECTION_GAP),
+                ) {
+                    column.forEach { section -> section() }
+                }
             }
         }
     }

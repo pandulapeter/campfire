@@ -15,5 +15,8 @@ internal const val SECTION_GAP = 20
 /** The gap between two rows of sections in the grid, cutting and paging tests. */
 internal const val ROW_GAP = 40
 
+/** The height of a chorded line in the cutting and paging tests, the unit a column's empty space is scored in. */
+internal const val LINE_HEIGHT = 100
+
 /** The section each unit of [sectionUnits] belongs to, as the grid takes it: one entry per unit, in order. */
 internal fun unitSections(sectionUnits: List<List<Int>>) = sectionUnits.flatMapIndexed { section, units -> List(units.size) { section } }.toIntArray()

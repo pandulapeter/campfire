@@ -49,10 +49,10 @@ internal fun flowLikeAMagazine(
     piecePadding: IntArray,
     sectionGap: Int,
     maxRowHeight: Int,
-    lineHeight: Int = 0,
-    lineCount: (unit: Int) -> Int = { 0 },
-    isStanzaBreakBefore: (unit: Int) -> Boolean = { false },
-    wrappedLines: (unit: Int, columnCount: Int) -> Int = { _, _ -> 0 },
+    lineHeight: Int,
+    lineCount: (unit: Int) -> Int,
+    isStanzaBreakBefore: (unit: Int) -> Boolean,
+    wrappedLines: (unit: Int, columnCount: Int) -> Int,
 ): SectionGrid {
     val sectionCount = sectionStarts.size - 1
     if (sectionCount <= 0) return emptyGrid()
@@ -191,10 +191,10 @@ internal fun flowIntoPages(
     piecePadding: IntArray,
     sectionGap: Int,
     maxRowHeight: Int,
-    lineHeight: Int = 0,
-    lineCount: (unit: Int) -> Int = { 0 },
-    isStanzaBreakBefore: (unit: Int) -> Boolean = { false },
-    wrappedLines: (unit: Int, columnCount: Int) -> Int = { _, _ -> 0 },
+    lineHeight: Int,
+    lineCount: (unit: Int) -> Int,
+    isStanzaBreakBefore: (unit: Int) -> Boolean,
+    wrappedLines: (unit: Int, columnCount: Int) -> Int,
 ): SectionGrid {
     val sectionCount = sectionStarts.size - 1
     if (sectionCount <= 0) return emptyGrid()

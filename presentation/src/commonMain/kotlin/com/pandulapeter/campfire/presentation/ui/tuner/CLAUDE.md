@@ -31,8 +31,9 @@ share.
   the input on the desktop and the web, where that is the question), **Open settings** where the platform has a page to
   open and **Ask again** where the system would still ask, **Try again** for a missing, busy or failed microphone; its
   sentence a polite live region, as is `TunerInputIssueMessage`, since both arrive without a tap.
-- `TunerDisplay` / `TunerMeter` — the note with its octave, sized to the display's width (`TextAutoSize`, 57 to 96sp)
-  so that it is the instrument on a phone and not a caption on a tablet; the cents meter: a scale of ticks every five
+- `TunerDisplay` / `TunerMeter` — the note with its octave, sized to the display's width (`TextAutoSize`, 57 to 96sp, and
+  to 144sp on a tab with room for two columns, `isLarge`) so that it is the instrument on a phone and not a caption on a
+  tablet or a laptop; the cents meter: a scale of ticks every five
   cents between the words for its ends, rather than a track with a knob, which reads as a slider and is reached for; the
   in-tune window around the centre tinted with the second accent color; a needle on a spring, gone while nothing is
   heard, and giving way to the notch closing into a check in tune, so it is never said by color alone (the note and the
@@ -64,6 +65,10 @@ share.
   `TunerInstrument.kt` (`instrumentOf`; every preset under exactly one instrument, its standard tuning first, tested).
 - `ReferencePitchSetting` — **the tab's alone**: a `Stepper` reset by a tap on its value, and a play / stop toggle
   button sounding A4.
+- **The tab's layout** follows the Metronome tab's: the display pinned and as wide as a page of two sections, and on a
+  window with room for two columns the notice, the issue line and the strings as the page's `header`, spanning both,
+  with the instrument and its tuning in the first column and the reference pitch on a card in the second. A narrower
+  window keeps all of it in one column, in that order.
 - **The sheet offers neither the instrument nor the reference pitch**, as the song details' metronome panel plays with
   the Metronome tab's presets without offering them: it tunes to what the tab was set to, and holds the display, the
   issue line and the strings.

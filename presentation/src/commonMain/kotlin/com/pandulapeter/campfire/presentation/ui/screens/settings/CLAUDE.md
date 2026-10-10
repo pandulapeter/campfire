@@ -60,7 +60,8 @@ when a window is resized across the line between them, and so do the pages of th
 both at 380dp each, stacked otherwise, each column capped at `THEME_COLOR_CHOICE_WIDTH` (every color disc in one row)
 and starting at the start edge, the room next to the category pane being what the columns are counted in. Sections have
 no background and no title of their own, so their rows keep the keylines of the app bar and of every list, and the tab
-names them; the Library tab, the one with two, sets the first apart by putting it on a card.
+names them; the Library tab, the one with two, sets the first apart by putting it on a card. A page may have a `header`
+above its sections, spanning every column and capped where they end: the Tuner tab's strings, on a wide window.
 
 It is a `verticalScroll` and not a lazy list: a lazy list has no notion of a section holding several rows, a tab is a
 few dozen rows, and **every row is first composed in the state it is in** — what comes and goes afterwards (the demo

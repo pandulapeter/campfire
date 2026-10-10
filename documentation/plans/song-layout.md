@@ -87,10 +87,8 @@ Status, by the steps of section 8:
     over a piece's chunks, which this fits), and `isStanzaBreakBefore: BooleanArray`, true where the item before the
     chunk is `BLANK` or the chunk's first item is `COMMENT`, never for a section's first chunk, only under `Lines`.
   - `SectionCutting.kt`: `flowLikeAMagazine` and `flowIntoPages` take four trailing parameters that their bodies do
-    not read yet, **with defaults so that the existing tests compile unchanged**: `lineHeight: Int = 0`,
-    `lineCount: (unit: Int) -> Int = { 0 }`, `isStanzaBreakBefore: (unit: Int) -> Boolean = { false }`,
-    `wrappedLines: (unit: Int, columnCount: Int) -> Int = { _, _ -> 0 }`. Step 2 gives the fixtures real values
-    (`lineHeight` 100, every chunk one line) and drops the defaults.
+    not read yet, required, no defaults: `lineHeight: Int`, `lineCount: (unit: Int) -> Int`,
+    `isStanzaBreakBefore: (unit: Int) -> Boolean`, `wrappedLines: (unit: Int, columnCount: Int) -> Int`.
   - `SongSectionsLayout.kt`: a new `lyricsLineHeight: Int` parameter after `sectionMeasurements`;
     `lineHeightPx = 2 * lyricsLineHeight`; inside `searchSegment` a `wrappedLinesAt(unit, columnWidth)` that is 0 for
     a chunk with no lines and otherwise the chunk's height at the column (through `unitHeightAt`, so a card's capped
@@ -103,8 +101,17 @@ Status, by the steps of section 8:
   - Open for step 2: `SectionGridKey` does not carry `lyricsLineHeight`; the heights already change with the text
     scale and a new scale means a new `SectionMeasurements`, so it is probably not needed in the key, but check once
     the flows read it.
-- **Steps 2 to 8** — not started. Step 2 is next: section 3.1 to 3.3 in `flowLikeAMagazine`, its tests as section 7
-  lists them, checked by eye on the laptop and tablet sizes.
+- **Step 2 — the fixtures done 2026-10-10, uncommitted; the algorithm not started** (`./gradlew
+  :presentation:desktopTest :presentation:spotlessCheck`: 752 tests, 0 failures). `SectionGridFixtures.kt` has
+  `LINE_HEIGHT = 100`, the height of a chorded line in every cutting and paging test; `SectionCuttingTest`'s `flow`
+  helper and `SectionPagingTest`'s pass `lineHeight = LINE_HEIGHT`, every chunk one line, no stanza breaks and no
+  wraps, and the two direct calls that model a Chords section give its rows a line count of 0; the four parameters
+  lost their defaults. Every existing test keeps its expectations, since the flows still read none of it. What is
+  next is the algorithm itself: sections 3.1 to 3.3 in `flowLikeAMagazine`, the tests section 7 lists for it (the
+  rewritten `a section is cut to even the columns out` first, since it is the one whose expectation flips), then
+  3.4 in `flowIntoPages`, checked by eye on the laptop and tablet sizes and the 800 × 600 desktop window. A test that
+  needs a stanza break or a wrapped line passes its own lambdas to the flow in place of the helper's.
+- **Steps 3 to 8** — not started.
 
 ## 1. What is being built
 
