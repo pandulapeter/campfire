@@ -43,7 +43,7 @@ internal class WebAudioInput : AudioInput {
         if (reason != null) return AudioInputStart.Refused(reason)
         this.listener = listener
         val sampleRate = tunerSampleRate()
-        prepareTunerAnalyser(PitchDetector.windowSizeFor(sampleRate))
+        prepareTunerAnalyser(PitchDetector.inputSizeFor(sampleRate))
         isRunning = isTunerContextRunning()
         return AudioInputStart.Started(sampleRate, issue = if (isRunning) null else TunerInputIssue.WAITING_FOR_GESTURE)
     }
@@ -60,7 +60,9 @@ internal class WebAudioInput : AudioInput {
             listener.onIssueChanged(if (running) null else TunerInputIssue.WAITING_FOR_GESTURE)
         }
         if (!readTunerWindow()) return AudioInput.NO_WINDOW
-        for (index in window.indices) window[index] = tunerSample(index)
+        // The analyser holds a power of two, the detector's input is the latest frames of it.
+        val offset = tunerSampleCount() - window.size
+        for (index in window.indices) window[index] = tunerSample(offset + index)
         return tunerFramePosition().toLong()
     }
 

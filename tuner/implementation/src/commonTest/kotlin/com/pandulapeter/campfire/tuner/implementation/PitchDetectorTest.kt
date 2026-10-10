@@ -35,7 +35,7 @@ class PitchDetectorTest {
             (24..96).forEach { note ->
                 val frequency = Pitch.frequencyOf(note, 440)
                 if (frequency < PitchDetector.CHROMATIC_MIN_FREQUENCY || frequency > PitchDetector.CHROMATIC_MAX_FREQUENCY) return@forEach
-                val window = TestSignals.sine(frequency, sampleRate, detector.windowSize)
+                val window = TestSignals.sine(frequency, sampleRate, detector.inputSize)
                 assertReads(detector, window, frequency, tolerance = if (frequency <= 1_000f) 1f else 3f, label = "sine $note at $sampleRate")
             }
         }
@@ -49,7 +49,7 @@ class PitchDetectorTest {
                 val range = PitchDetector.rangeFor(tuning, 440)
                 tuning.strings.forEach { note ->
                     val frequency = Pitch.frequencyOf(note, 440)
-                    val window = TestSignals.pluckedString(frequency, sampleRate, detector.windowSize, seed = note, skip = sampleRate / 10)
+                    val window = TestSignals.pluckedString(frequency, sampleRate, detector.inputSize, seed = note, skip = sampleRate / 10)
                     val estimate = detector.detect(window, range.start, range.endInclusive)
                     assertReads(estimate, frequency, tolerance = 1f, label = "${tuning.id} $note at $sampleRate")
                 }
@@ -63,7 +63,7 @@ class PitchDetectorTest {
         val detector = PitchDetector(sampleRate)
         InstrumentTuning.GUITAR.strings.forEach { note ->
             val frequency = Pitch.frequencyOf(note, 440)
-            val string = TestSignals.pluckedString(frequency, sampleRate, detector.windowSize, seed = note, skip = sampleRate / 10)
+            val string = TestSignals.pluckedString(frequency, sampleRate, detector.inputSize, seed = note, skip = sampleRate / 10)
             val window = TestSignals.mixed(string, TestSignals.noiseUnder(string, decibels = 20f))
             val range = PitchDetector.rangeFor(InstrumentTuning.GUITAR, 440)
             assertReads(detector.detect(window, range.start, range.endInclusive), frequency, tolerance = 2f, label = "guitar $note in noise")
@@ -76,7 +76,7 @@ class PitchDetectorTest {
         val detector = PitchDetector(sampleRate)
         listOf(InstrumentTuning.GUITAR to 40, InstrumentTuning.BASS to 28, InstrumentTuning.BASS_FIVE_STRING to 23, null to 40).forEach { (tuning, note) ->
             val frequency = Pitch.frequencyOf(note, 440)
-            val window = TestSignals.harmonics(frequency, sampleRate, detector.windowSize, listOf(0.1f, 1f, 0.7f, 0.5f, 0.35f, 0.25f, 0.15f))
+            val window = TestSignals.harmonics(frequency, sampleRate, detector.inputSize, listOf(0.1f, 1f, 0.7f, 0.5f, 0.35f, 0.25f, 0.15f))
             val range = PitchDetector.rangeFor(tuning, 440)
             assertReads(detector.detect(window, range.start, range.endInclusive), frequency, tolerance = 1f, label = "weak fundamental $note")
         }
@@ -87,12 +87,12 @@ class PitchDetectorTest {
         val sampleRate = 48_000
         val detector = PitchDetector(sampleRate)
         val range = PitchDetector.rangeFor(null, 440)
-        val silence = detector.detect(FloatArray(detector.windowSize), range.start, range.endInclusive)
+        val silence = detector.detect(FloatArray(detector.inputSize), range.start, range.endInclusive)
         assertNull(silence.frequency)
         assertEquals(0f, silence.level)
-        assertNull(detector.detect(TestSignals.noise(detector.windowSize, 0.3f), range.start, range.endInclusive).frequency)
+        assertNull(detector.detect(TestSignals.noise(detector.inputSize, 0.3f), range.start, range.endInclusive).frequency)
         val chord = TestSignals.mixed(
-            *listOf(48, 52, 55, 59).map { TestSignals.sine(Pitch.frequencyOf(it, 440) * 1.003f, sampleRate, detector.windowSize, 0.2f, phase = it * 0.4) }.toTypedArray(),
+            *listOf(48, 52, 55, 59).map { TestSignals.sine(Pitch.frequencyOf(it, 440) * 1.003f, sampleRate, detector.inputSize, 0.2f, phase = it * 0.4) }.toTypedArray(),
         )
         assertNull(detector.detect(chord, range.start, range.endInclusive).frequency)
     }

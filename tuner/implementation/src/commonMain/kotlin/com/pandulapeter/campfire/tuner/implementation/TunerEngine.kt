@@ -118,9 +118,9 @@ internal class TunerEngine(
     private suspend fun hear(sessionId: Int, sampleRate: Int) {
         val detector = PitchDetector(sampleRate)
         val tracker = PitchTracker()
-        val window = FloatArray(detector.windowSize)
+        val window = FloatArray(detector.inputSize)
         // The window still holds the tone for its own length after the speaker stops, and the input's latency on top.
-        val toneTail = (detector.windowSize * 1_000L / sampleRate + TONE_TAIL_MARGIN_MILLIS).milliseconds
+        val toneTail = (detector.inputSize * 1_000L / sampleRate + TONE_TAIL_MARGIN_MILLIS).milliseconds
         val start = timeSource.markNow()
         var trackedConfig = config
         var lastPosition = AudioInput.NO_WINDOW

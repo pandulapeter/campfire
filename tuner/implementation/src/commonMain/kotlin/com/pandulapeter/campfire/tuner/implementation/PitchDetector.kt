@@ -19,29 +19,38 @@ import kotlin.math.sqrt
  * keeps it from reading an octave down, where an autocorrelation peak two periods away is about as high as the one at
  * one period. The autocorrelation is two FFTs of the window padded to twice its length, and every buffer is allocated
  * once, here.
+ *
+ * The window is high-passed first: a laptop's or a phone's microphone hears the room's rumble below 100 Hz louder than
+ * an acoustic low string's fundamental, which is weak there anyway, and the rumble is what keeps a low string's clarity
+ * under the threshold. The period survives in the harmonics, so what the filter takes is noise rather than the note.
+ * It runs from rest over [inputSize] frames, the window and half a window before it, so that its own ringing has died
+ * away by the time the window starts: read from the first frame, it pulls a low string's pitch by cents.
  */
 internal class PitchDetector(private val sampleRate: Int) {
 
     /** About 85 ms of the input, which holds two periods of anything above 24 Hz. */
     val windowSize = windowSizeFor(sampleRate)
+
+    /** The frames [detect] takes: the window, and the frames the high-pass runs over before it. */
+    val inputSize = inputSizeFor(sampleRate)
     private val fft = Fft(windowSize * 2)
     private val real = FloatArray(windowSize * 2)
     private val imaginary = FloatArray(windowSize * 2)
-    private val samples = FloatArray(windowSize)
+    private val samples = FloatArray(inputSize)
     private val nsdf = FloatArray(windowSize / 2 + 2)
     private val maxima = IntArray(MAX_KEY_MAXIMA)
+    private val highPass = HighPassFilter(sampleRate, HIGH_PASS_FREQUENCY)
 
-    /** Reads [window], the latest [windowSize] samples, for a pitch between [minFrequency] and [maxFrequency] Hz. */
-    fun detect(window: FloatArray, minFrequency: Float, maxFrequency: Float): PitchEstimate {
+    /** Reads [input], the latest [inputSize] samples, for a pitch between [minFrequency] and [maxFrequency] Hz. */
+    fun detect(input: FloatArray, minFrequency: Float, maxFrequency: Float): PitchEstimate {
         var mean = 0.0
-        for (index in 0 until windowSize) mean += window[index]
-        mean /= windowSize
+        for (index in 0 until inputSize) mean += input[index]
+        mean /= inputSize
+        for (index in 0 until inputSize) samples[index] = (input[index] - mean).toFloat()
+        highPass.filter(samples, inputSize)
+        samples.copyInto(samples, 0, inputSize - windowSize, inputSize)
         var energy = 0.0
-        for (index in 0 until windowSize) {
-            val sample = (window[index] - mean).toFloat()
-            samples[index] = sample
-            energy += sample * sample
-        }
+        for (index in 0 until windowSize) energy += samples[index] * samples[index]
         val level = sqrt(energy / windowSize).toFloat()
         if (level < LEVEL_FLOOR) return PitchEstimate(frequency = null, clarity = 0f, level = level)
         val minLag = (sampleRate / maxFrequency).toInt().coerceAtLeast(2)
@@ -126,9 +135,14 @@ internal class PitchDetector(private val sampleRate: Int) {
     }
 
     companion object {
-        /** Below this RMS (−60 dBFS) nothing is read: there is nothing to read in it. */
-        const val LEVEL_FLOOR = 0.001f
-        const val MIN_CLARITY = 0.8f
+        /** Below this RMS (−80 dBFS, after the high-pass) nothing is read: there is nothing to read in it. */
+        const val LEVEL_FLOOR = 0.0001f
+        /**
+         * Low enough for a low string heard by a laptop across a quiet room, 10 dB over its noise; a chord of four
+         * sines, which is not one note, is just under it.
+         */
+        const val MIN_CLARITY = 0.65f
+        const val HIGH_PASS_FREQUENCY = 100f
         const val PEAK_THRESHOLD = 0.9f
         /**
          * How many key maxima are weighed: a bright string at a long lag (a five-string bass's B0 is about 1 500 frames
@@ -148,6 +162,9 @@ internal class PitchDetector(private val sampleRate: Int) {
             while (size < frames) size *= 2
             return size
         }
+
+        /** The window and half of one more for the high-pass to settle in: 6144 frames at 44.1 and 48 kHz. */
+        fun inputSizeFor(sampleRate: Int) = windowSizeFor(sampleRate).let { it + it / 2 }
 
         /**
          * The frequencies searched: B0 to C7 in chromatic mode, and from four semitones under a preset's lowest string to

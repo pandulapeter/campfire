@@ -31,14 +31,14 @@ class RecordedStringsTest {
         val (samples, sampleRate) = readWav(file)
         val detector = PitchDetector(sampleRate)
         val tracker = PitchTracker()
-        val window = FloatArray(detector.windowSize)
+        val window = FloatArray(detector.inputSize)
         val step = sampleRate * STEP_MILLIS / 1_000
         val config = TunerConfig(referencePitch = 440, tuning = null)
         val range = PitchDetector.rangeFor(null, 440)
         val notes = mutableListOf<Int>()
-        var end = detector.windowSize
+        var end = detector.inputSize
         while (end <= samples.size) {
-            samples.copyInto(window, 0, end - detector.windowSize, end)
+            samples.copyInto(window, 0, end - detector.inputSize, end)
             val estimate = detector.detect(window, range.start, range.endInclusive)
             tracker.step(estimate, end * 1_000L / sampleRate, config).reading?.let { notes += it.note }
             end += step

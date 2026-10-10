@@ -41,7 +41,7 @@ class ToneSynthesizerTest {
         notes.forEach { note ->
             val frequency = Pitch.frequencyOf(note, 440)
             val loop = ToneSynthesizer.loopOf(frequency, SAMPLE_RATE)
-            val window = FloatArray(detector.windowSize) { loop[it % loop.size] / 32_768f }
+            val window = FloatArray(detector.inputSize) { loop[it % loop.size] / 32_768f }
             val heard = assertNotNull(detector.detect(window, 30f, 2_100f).frequency, "note $note")
             assertTrue(abs(1_200 * log2(heard / frequency.toDouble())) < 1, "note $note: $heard Hz for $frequency Hz")
         }

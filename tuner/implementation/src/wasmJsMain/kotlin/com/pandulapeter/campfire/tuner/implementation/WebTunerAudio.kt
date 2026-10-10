@@ -116,12 +116,17 @@ internal fun openTunerMicrophone(): Promise<JsString> = js(
     })()"""
 )
 
-/** Sizes the analyser to the window the detector reads and answers the context's sample rate. */
-internal fun prepareTunerAnalyser(windowSize: Int): Int = js(
+/**
+ * Sizes the analyser to hold the input the detector reads, in the power of two an `fftSize` has to be, and answers the
+ * context's sample rate.
+ */
+internal fun prepareTunerAnalyser(inputSize: Int): Int = js(
     """{
         var tuner = window.__campfireTuner;
-        tuner.analyser.fftSize = windowSize;
-        tuner.samples = new Float32Array(windowSize);
+        var size = 32;
+        while (size < inputSize) size *= 2;
+        tuner.analyser.fftSize = size;
+        tuner.samples = new Float32Array(size);
         return tuner.context.sampleRate;
     }"""
 )
@@ -144,6 +149,8 @@ internal fun tunerFramePosition(): Double = js(
 )
 
 internal fun tunerSample(index: Int): Float = js("window.__campfireTuner.samples[index]")
+
+internal fun tunerSampleCount(): Int = js("window.__campfireTuner.samples.length")
 
 internal fun isTunerInputEnded(): Boolean = js("window.__campfireTuner.ended")
 

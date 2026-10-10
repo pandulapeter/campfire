@@ -124,9 +124,33 @@ class PitchTrackerTest {
         assertFalse(tracker.step(quiet(), next(), chromatic).isSilent)
     }
 
-    private fun steadyTracker(note: Int, cents: Float = 0f) = PitchTracker().also { tracker ->
+    @Test
+    fun `a ringing string read an octave away now and then keeps its note`() {
+        val tracker = steadyTracker(note = 45)
+        val notes = (0 until 12).map { index ->
+            val note = if (index % 3 == 2) 45 else 33
+            tracker.step(heard(frequencyOf(note), level = 0.15f), next(), chromatic).reading?.note
+        }
+        assertEquals(setOf(45), notes.toSet(), "$notes")
+    }
+
+    @Test
+    fun `an octave struck anew is taken`() {
+        val tracker = steadyTracker(note = 45, level = 0.05f)
+        val notes = (0 until 12).map { tracker.step(heard(frequencyOf(57), level = 0.2f), next(), chromatic).reading?.note }
+        assertEquals(57, notes.last(), "$notes")
+    }
+
+    @Test
+    fun `an octave too soft to be heard as struck is taken once the held note is let go`() {
+        val tracker = steadyTracker(note = 45)
+        val notes = (0 until 40).map { tracker.step(heard(frequencyOf(57), level = 0.2f), next(), chromatic).reading?.note }
+        assertEquals(57, notes.last(), "$notes")
+    }
+
+    private fun steadyTracker(note: Int, cents: Float = 0f, level: Float = 0.2f) = PitchTracker().also { tracker ->
         tracker.step(silence(), next(), chromatic)
-        repeat(12) { tracker.step(heard(frequencyOf(note, cents)), next(), chromatic) }
+        repeat(12) { tracker.step(heard(frequencyOf(note, cents), level), next(), chromatic) }
     }
 
     private fun next() = (time + STEP_MILLIS).also { time = it }

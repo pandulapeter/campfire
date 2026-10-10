@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.tuner.api.model.TunerReading
 import kotlin.math.abs
 import kotlin.math.exp
 import kotlin.math.pow
+import kotlin.math.roundToInt
 
 /**
  * Turns the thirty raw answers a second [PitchDetector] gives into a reading that can be read: the attack of a pluck
@@ -32,6 +33,7 @@ internal class PitchTracker {
     private var target: Int? = null
     private var candidate: Int? = null
     private var candidateCount = 0
+    private var isStruck = false
     private var smoothedCents = 0f
     private var reading: TunerReading? = null
     private var lastHeardTime = Long.MIN_VALUE
@@ -46,6 +48,7 @@ internal class PitchTracker {
         if (estimate.level > previousLevel * ONSET_RATIO && estimate.level > PitchDetector.LEVEL_FLOOR) {
             attackUntil = timeMillis + ATTACK_MILLIS
             recent.clear()
+            isStruck = true
         }
         previousLevel = estimate.level
         val frequency = estimate.frequency
@@ -70,6 +73,14 @@ internal class PitchTracker {
     }
 
     private fun hear(frequency: Float, timeMillis: Long, elapsed: Long, config: TunerConfig) {
+        val current = target
+        // A string that is ringing cannot change its octave, but its reading can: as it dies into the noise the
+        // detector finds twice the period now and then. Only a new strike moves the target by whole octaves; an
+        // octave struck too softly to be heard as one is read once the held note has been let go.
+        if (current != null && !isStruck && isOctaveOf(frequency, current, config)) {
+            if (timeMillis - lastHeardTime <= HOLD_MILLIS) return
+            release()
+        }
         lastHeardTime = timeMillis
         recent.addLast(frequency)
         if (recent.size > MEDIAN_SIZE) recent.removeFirst()
@@ -78,6 +89,7 @@ internal class PitchTracker {
         if (heardTarget == target) {
             candidate = null
             candidateCount = 0
+            isStruck = false
         } else {
             if (heardTarget == candidate) candidateCount++ else {
                 candidate = heardTarget
@@ -89,6 +101,7 @@ internal class PitchTracker {
             target = heardTarget
             candidate = null
             candidateCount = 0
+            isStruck = false
             smoothedCents = Pitch.centsBetween(median, heardTarget, config.referencePitch)
             inTuneSince = null
         }
@@ -108,8 +121,16 @@ internal class PitchTracker {
         )
     }
 
+    /** Whether [frequency] is a whole number of octaves away from [note], rather than a note of its own. */
+    private fun isOctaveOf(frequency: Float, note: Int, config: TunerConfig): Boolean {
+        val cents = Pitch.centsBetween(frequency, note, config.referencePitch)
+        val octaves = (cents / CENTS_PER_OCTAVE).roundToInt()
+        return octaves != 0 && abs(cents - octaves * CENTS_PER_OCTAVE) < OCTAVE_TOLERANCE_CENTS
+    }
+
     private fun release() {
         recent.clear()
+        isStruck = false
         target = null
         candidate = null
         candidateCount = 0
@@ -149,5 +170,8 @@ internal class PitchTracker {
         /** Twice the noise floor is the quietest a note may be and still be read. */
         private const val GATE_RATIO = 2f
         private const val CENTS_PER_OCTAVE = 1_200f
+
+        /** How far from a whole octave a reading may be and still be the ringing string's octave, under a semitone. */
+        private const val OCTAVE_TOLERANCE_CENTS = 50f
     }
 }

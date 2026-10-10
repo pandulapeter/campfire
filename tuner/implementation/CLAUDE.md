@@ -26,17 +26,24 @@ this module. Nothing here reaches the network, and nothing heard is kept beyond 
   hears the speaker. A `MICROPHONE_DISCONNECTED` (a new route: headphones plugged in or pulled) opens the input again,
   once until the reopened input has worked for two seconds, before it is reported.
 - `PitchDetector` — the McLeod pitch method over about 85 ms of input (4096 frames at 44.1 or 48 kHz, the next power of
-  two for another rate): the normalized square difference function, its autocorrelation through two FFTs of the window
-  padded to twice its length (`Fft`, a radix-2 one of its own), the first key maximum reaching 0.9 of the highest of up
-  to 256 (a five-string bass's B0 crosses zero more often than 64 times within one period), refined by a parabola.
-  Nothing is reported below −60 dBFS or a clarity of 0.8. The range searched is 30–2100 Hz in chromatic mode and from
-  four semitones under a preset's lowest string to an octave over its highest (`rangeFor`), which is most of what keeps
-  a bass from being read an octave up. Buffers are allocated once.
+  two for another rate), high-passed at 100 Hz first (`HighPassFilter`, a fourth-order Butterworth): a laptop's or a
+  phone's microphone hears the room's rumble louder than a low string's fundamental, and the period survives in the
+  harmonics. The filter runs from rest over half a window more than it reads (`inputSize`, which is what the engine and
+  the web's analyser take), since its ringing at the start of a window pulls a low string by cents. Then: the normalized
+  square difference function, its autocorrelation through two FFTs of the window padded to twice its length (`Fft`, a
+  radix-2 one of its own), the first key maximum reaching 0.9 of the highest of up to 256 (a five-string bass's B0
+  crosses zero more often than 64 times within one period), refined by a parabola. Nothing is reported below −80 dBFS
+  (after the filter) or a clarity of 0.65, which is what a low string heard across a quiet room by a laptop reaches, and
+  what a chord of four sines does not. The range searched is 30–2100 Hz in chromatic mode and from four semitones under
+  a preset's lowest string to an octave over its highest (`rangeFor`), which is most of what keeps a bass from being
+  read an octave up. Buffers are allocated once.
 - `PitchTracker` — pure, driven by the time it is handed: the 60 ms after an onset (the level doubling) skipped, the
   median of the last five answers, the cents smoothed over about 80 ms, a target that only changes once a new one has
-  held for three answers, the previous reading held meanwhile, the last reading held for half a second after the sound falls under twice the noise floor
-  (tracked from the windows with no pitch in them: the room, not the strings), in tune once within ±5 cents for
-  300 ms, `SILENT` after two seconds of exact zeros.
+  held for three answers, the previous reading held meanwhile, an answer a whole octave from the target ignored until a
+  new onset (a dying string is read at twice its period now and then) or until the held reading is let go, the last
+  reading held for half a second after the sound falls under twice the noise floor (tracked from the windows with no
+  pitch in them: the room, not the strings), in tune once within ±5 cents for 300 ms, `SILENT` after two seconds of
+  exact zeros.
 - `ToneSynthesizer` — about a second of a note, a whole number of periods so that the buffer loops without a seam (the
   frequency moved to the one that fits, never more than 0.02 cents off), the fundamental with three falling harmonics,
   since a phone's speaker cannot play a low string's fundamental.
