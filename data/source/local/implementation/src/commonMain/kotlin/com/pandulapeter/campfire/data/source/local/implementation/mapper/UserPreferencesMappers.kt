@@ -168,9 +168,11 @@ internal fun MetronomeSettings.toDocument() = MetronomeSettingsDocument(
 internal fun TunerSettingsDocument.toModel() = TunerSettings(
     instrumentId = instrument,
     referencePitch = referencePitch.coerceIn(TunerSettings.REFERENCE_PITCH_RANGE),
+    hasTurnedOnMicrophone = hasTurnedOnMicrophone,
 )
 
 internal fun TunerSettings.toDocument() = TunerSettingsDocument(
     instrument = instrumentId,
     referencePitch = referencePitch,
+    hasTurnedOnMicrophone = hasTurnedOnMicrophone,
 )

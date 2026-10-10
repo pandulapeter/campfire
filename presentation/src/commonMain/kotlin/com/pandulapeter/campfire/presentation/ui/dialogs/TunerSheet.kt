@@ -59,7 +59,7 @@ internal fun TunerSheet(
     val state = viewModel.tunerState.collectAsStateWithLifecycle()
     val settings by viewModel.tunerSettings.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
-    val hasRequested by viewModel.hasRequestedMicrophone.collectAsStateWithLifecycle()
+    val hasRequested by viewModel.hasTurnedOnMicrophone.collectAsStateWithLifecycle()
     val notation = (userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default).notation.toChordNotation()
     val permission = rememberMicrophonePermission()
     val status = permission.status

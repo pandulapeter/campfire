@@ -26,8 +26,8 @@ internal enum class TunerNotice {
 /**
  * The notice for the microphone's [status] and what the tuner says about [listening], null where the display is up: a
  * reason listening stopped for wins, since it is what just happened, then a refusal the platform reports, then a
- * question never asked - which, where the platform cannot say ([MicrophoneStatus.UNKNOWN]), is one not asked by a tap
- * in this run ([hasRequested]).
+ * question never asked - which, where the platform cannot say ([MicrophoneStatus.UNKNOWN]), is one no tap on this
+ * device has asked yet ([hasRequested], `TunerSettings.hasTurnedOnMicrophone`).
  */
 internal fun tunerNoticeOf(status: MicrophoneStatus, listening: TunerListening, hasRequested: Boolean): TunerNotice? {
     when ((listening as? TunerListening.Stopped)?.reason) {
@@ -48,7 +48,8 @@ internal fun tunerNoticeOf(status: MicrophoneStatus, listening: TunerListening, 
 
 /**
  * Whether the page may open the microphone without a tap: where the platform says it is allowed, or where it cannot say
- * and a tap in this run has asked already. Never where a notice is up, since that is waiting for a tap of its own.
+ * and a tap on this device has asked already, in this run or an earlier one: a refusal given since then arrives as
+ * silence, which the page says with a way to the system's settings. Never where a notice is up, since that is waiting for a tap of its own.
  */
 internal fun canListenWithoutTap(status: MicrophoneStatus, hasRequested: Boolean) = when (status) {
     MicrophoneStatus.GRANTED -> true

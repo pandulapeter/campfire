@@ -379,7 +379,8 @@ detail is in `metronome/implementation/CLAUDE.md` (timing, playback as media), a
 
 A fourth tab, and a sheet over the song details screen opened from its menu, hearing one note at a time through the
 microphone and playing reference tones. Nothing it hears is kept or reaches the network. The microphone is asked for
-only by the button on its page, never at launch or by opening the tab; it is listened to only while that page is on
+only by the button on its page, never at launch or by opening the tab (on the desktop, which cannot tell whether it is
+allowed, that first tap is remembered and opening the tab listens from then on); it is listened to only while that page is on
 screen and the app is in front, so the system's recording indicator is lit exactly then; and nothing of it outlives
 its screen. The Tuner switch in Settings → Features takes the tab, the sheet's menu entry and every way the app could ask
 for the microphone. The detail is in `tuner/implementation/CLAUDE.md` (the detector, the tracker, the platforms) and

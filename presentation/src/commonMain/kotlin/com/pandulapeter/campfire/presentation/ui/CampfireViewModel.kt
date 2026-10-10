@@ -824,8 +824,8 @@ class CampfireViewModel(
     /** See [TunerController.tunerState]. */
     val tunerState get() = tunerController.tunerState
 
-    /** See [TunerController.hasRequestedMicrophone]. */
-    val hasRequestedMicrophone get() = tunerController.hasRequestedMicrophone
+    /** See [TunerController.hasTurnedOnMicrophone]. */
+    val hasTurnedOnMicrophone get() = tunerController.hasTurnedOnMicrophone
 
     val isFileTransferActive get() = exportController.isFileTransferActive
 

@@ -36,7 +36,8 @@ class TunerNoticeTest {
     }
 
     @Test
-    fun `where the platform cannot say, a tap in this run is the answer until listening says otherwise`() {
+    fun `where the platform cannot say, a tap on this device is the answer until listening says otherwise`() {
+        assertNull(tunerNoticeOf(MicrophoneStatus.UNKNOWN, stopped, hasRequested = true))
         assertNull(tunerNoticeOf(MicrophoneStatus.UNKNOWN, TunerListening.Starting, hasRequested = true))
         assertNull(tunerNoticeOf(MicrophoneStatus.UNKNOWN, hearing, hasRequested = true))
         assertEquals(TunerNotice.REFUSED, tunerNoticeOf(MicrophoneStatus.UNKNOWN, TunerListening.Stopped(TunerStopReason.PERMISSION_DENIED), hasRequested = true))

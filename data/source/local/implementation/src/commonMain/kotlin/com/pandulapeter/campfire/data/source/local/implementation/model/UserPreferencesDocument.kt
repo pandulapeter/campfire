@@ -104,4 +104,5 @@ internal data class MetronomeSettingsDocument(
 internal data class TunerSettingsDocument(
     val instrument: String = "chromatic",
     val referencePitch: Int = 440,
+    val hasTurnedOnMicrophone: Boolean = false,
 )

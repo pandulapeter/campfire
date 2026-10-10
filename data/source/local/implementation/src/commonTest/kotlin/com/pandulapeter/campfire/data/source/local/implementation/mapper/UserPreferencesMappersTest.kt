@@ -187,7 +187,7 @@ internal class UserPreferencesMappersTest {
 
     @Test
     fun `tuner settings survive saving and reloading and a reference pitch out of range is held within it`() {
-        val settings = TunerSettings(instrumentId = "ukulele", referencePitch = 432)
+        val settings = TunerSettings(instrumentId = "ukulele", referencePitch = 432, hasTurnedOnMicrophone = true)
         val preferences = UserPreferencesDocument().toModel().copy(isTunerEnabled = false, tunerSettings = settings)
         val reloaded = UserPreferencesDocumentFormat.decode(UserPreferencesDocumentFormat.encode(preferences.toDocument())).document.toModel()
         assertEquals(settings, reloaded.tunerSettings)

@@ -15,10 +15,14 @@ package com.pandulapeter.campfire.data.model.domain
  *
  * @param instrumentId The preset strings are tuned against, `chromatic` for the nearest semitone.
  * @param referencePitch The frequency of A4 in Hz, within [REFERENCE_PITCH_RANGE].
+ * @param hasTurnedOnMicrophone Whether the tuner's page has ever been told to use the microphone on this device, which
+ * is what the platforms that cannot say whether it is allowed (the desktop, a browser without the Permissions API) go by:
+ * there opening the input is the question, so it is only opened without a tap once a tap has asked, in any run since.
  */
 data class TunerSettings(
     val instrumentId: String = "chromatic",
     val referencePitch: Int = 440,
+    val hasTurnedOnMicrophone: Boolean = false,
 ) {
 
     companion object {

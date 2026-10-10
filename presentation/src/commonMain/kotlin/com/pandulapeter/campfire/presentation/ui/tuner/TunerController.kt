@@ -21,11 +21,10 @@ import com.pandulapeter.campfire.tuner.api.model.TunerConfig
 import com.pandulapeter.campfire.tuner.api.model.TunerListening
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 /**
@@ -52,14 +51,8 @@ internal class TunerController(
 
     val tunerState = tuner.state
 
-    private val _hasRequestedMicrophone = MutableStateFlow(false)
-
-    /**
-     * Whether the microphone was asked for by a tap in this run of the app, which is what the platforms that cannot say
-     * whether it is allowed (the desktop, a browser without the Permissions API) go by: there opening the input is the
-     * question, and it is only opened without a tap once one has asked.
-     */
-    val hasRequestedMicrophone = _hasRequestedMicrophone.asStateFlow()
+    /** See [TunerSettings.hasTurnedOnMicrophone]. */
+    val hasTurnedOnMicrophone = tunerSettings.map { it.hasTurnedOnMicrophone }.asState(scope, tunerSettings.value.hasTurnedOnMicrophone)
 
     private val config get() = tunerSettings.value.toConfig()
 
@@ -74,7 +67,7 @@ internal class TunerController(
 
     /** The page's button: what asks, on the platforms where opening the input is what asks. */
     fun requestMicrophone() {
-        _hasRequestedMicrophone.value = true
+        if (!tunerSettings.value.hasTurnedOnMicrophone) updateTunerSettings { copy(hasTurnedOnMicrophone = true) }
         tuner.listen(config)
     }
 
