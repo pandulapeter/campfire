@@ -64,7 +64,10 @@ import androidx.compose.ui.focus.focusTarget
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.layout.LookaheadScope
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFontFamilyResolver
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.Density
@@ -91,6 +94,7 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_insert_tempo
 import com.pandulapeter.campfire.presentation.resources.songs_export_song
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.DelayedLoadingIndicator
+import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.components.saveShortcut
 import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.contentEdges
@@ -354,6 +358,13 @@ internal fun ExportScreen(
         color = MaterialTheme.colorScheme.background,
     ) {
         val bottomInset = WindowInsets.contentEdges.only(WindowInsetsSides.Bottom).asPaddingValues().calculateBottomPadding()
+        // In a short window the two floating controls, stacked at the end of the preview's pane, would leave a page
+        // between their bands no taller than one of them, so there the page sits beside them instead, in the pane less
+        // the column they take, which is as wide as the wider of the two: the pill's width depends on its text.
+        val isShortWindow = LocalWindowInfo.current.containerDpSize.height < SHORT_WINDOW_HEIGHT
+        val density = LocalDensity.current
+        var pageButtonsWidth by remember { mutableStateOf(0.dp) }
+        var saveButtonWidth by remember { mutableStateOf(0.dp) }
         Box(Modifier.fillMaxSize()) {
             Column(Modifier.fillMaxSize()) {
                 PrintTopAppBar(
@@ -379,6 +390,12 @@ internal fun ExportScreen(
                         else -> null
                     }
                     val isSideBySide = optionsWidth != null
+                    val pageFit = when {
+                        // Under the options only the pill floats over the preview, in the list the save button floats over.
+                        !isSideBySide -> PageFit(top = FLOATING_CONTROLS_CLEARANCE)
+                        isShortWindow -> PageFit(end = maxOf(pageButtonsWidth, saveButtonWidth) + PAGE_MARGIN * 2, bottom = bottomInset + PAGE_MARGIN)
+                        else -> PageFit(top = FLOATING_CONTROLS_CLEARANCE, bottom = bottomInset + FLOATING_CONTROLS_CLEARANCE)
+                    }
                     val turnPage: (Int) -> Unit = { target -> pageScope.launch { pagerState.animateScrollToPage(target.coerceIn(0, pageCount - 1)) } }
                     AnimatedContent(content, Modifier.fillMaxSize(), transitionSpec = { fadeIn() togetherWith fadeOut() }) { shown ->
                         when (shown) {
@@ -401,7 +418,7 @@ internal fun ExportScreen(
                                                 setlistFileName = dialog.setlist?.fileName,
                                                 selected = state.selected.orEmpty(),
                                                 // Beside the options the save button floats over the end of this pane.
-                                                bottomPadding = if (isSideBySide) bottomInset + SAVE_BUTTON_CLEARANCE else 8.dp,
+                                                bottomPadding = if (isSideBySide) bottomInset + FLOATING_CONTROLS_CLEARANCE else 8.dp,
                                                 isBottomAnchored = isSideBySide,
                                             )
                                         } else {
@@ -419,8 +436,7 @@ internal fun ExportScreen(
                                                     isCurrent = isCurrent,
                                                     renderer = renderer,
                                                     emptyMessage = emptyMessage,
-                                                    // Only the full-height preview needs room to fit a page above the floating controls.
-                                                    bottomInset = if (isSideBySide) bottomInset else 0.dp,
+                                                    fit = pageFit,
                                                     areOptionsBelow = !isSideBySide,
                                                     pagerState = pagerState,
                                                     magnifications = viewModel.printPreviewMagnifications,
@@ -453,8 +469,8 @@ internal fun ExportScreen(
                                         isMetronomeEnabled = isMetronomeEnabled,
                                         selected = state.selected.orEmpty(),
                                         // Scroll under the controls, with enough trailing space to bring the last option above them.
-                                        bottomPadding = bottomInset + if (isSideBySide) 8.dp else SAVE_BUTTON_CLEARANCE,
-                                        header = if (isSideBySide) null else { { preview(Modifier.fillMaxWidth().height(360.dp)) } },
+                                        bottomPadding = bottomInset + if (isSideBySide) 8.dp else FLOATING_CONTROLS_CLEARANCE,
+                                        header = if (isSideBySide) null else { { preview(Modifier.fillMaxWidth().height(STACKED_PREVIEW_HEIGHT)) } },
                                         onSelected = { if (isOpen) state.selected = it },
                                         onSettings = update,
                                     )
@@ -468,7 +484,10 @@ internal fun ExportScreen(
                         }
                     }
                     PageButtons(
-                        modifier = Modifier.align(Alignment.TopEnd).padding(PAGE_MARGIN),
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(PAGE_MARGIN)
+                            .onSizeChanged { pageButtonsWidth = with(density) { it.width.toDp() } },
                         isVisible = isSideBySide && content == PrintScreenContent.LOADED && !isFiles && hasPages,
                         page = pagerState.currentPage,
                         pageCount = pageCount,
@@ -480,7 +499,8 @@ internal fun ExportScreen(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .windowInsetsPadding(WindowInsets.contentEdges.only(WindowInsetsSides.Bottom + WindowInsetsSides.End))
-                    .padding(16.dp),
+                    .padding(PAGE_MARGIN)
+                    .onSizeChanged { saveButtonWidth = with(density) { it.width.toDp() } },
                 isVisible = exportProgress != null && content == PrintScreenContent.LOADED || canSaveNow,
                 progress = exportProgress,
                 onSave = { requestExport(ExportRequest.SAVE) },

@@ -18,12 +18,27 @@ import kotlin.test.assertEquals
 class PrintPreviewGeometryTest {
 
     private val viewport = Size(400f, 600f)
-    private val area = fitArea(viewport, margin = 20f, bottom = 80f)
+    private val area = fitArea(viewport, left = 20f, top = 20f, right = 20f, bottom = 80f)
 
     @Test
     fun `the area leaves the margins and never turns inside out`() {
         assertEquals(Rect(20f, 20f, 380f, 520f), area)
-        assertEquals(Rect(20f, 20f, 20f, 20f), fitArea(Size(30f, 50f), margin = 20f, bottom = 80f))
+        assertEquals(Rect(20f, 20f, 20f, 20f), fitArea(Size(30f, 50f), left = 20f, top = 20f, right = 20f, bottom = 80f))
+        assertEquals(Rect(20f, 60f, 20f, 60f), fitArea(Size(30f, 50f), left = 20f, top = 60f, right = 20f, bottom = 80f))
+    }
+
+    @Test
+    fun `a page is centered between the bands the floating controls take`() {
+        val between = fitArea(viewport, left = 20f, top = 80f, right = 20f, bottom = 80f)
+        assertEquals(Rect(20f, 80f, 380f, 520f), between)
+        assertEquals(Offset(90f, 80f), centeredTopLeft(fittedPageSize(between.size, ASPECT_RATIO), between))
+    }
+
+    @Test
+    fun `a page sits beside the column the floating controls take, at the end of the pane`() {
+        val beside = fitArea(Size(600f, 300f), left = 20f, top = 20f, right = 200f, bottom = 20f)
+        assertEquals(Rect(20f, 20f, 400f, 280f), beside)
+        assertEquals(Offset(145f, 20f), centeredTopLeft(fittedPageSize(beside.size, ASPECT_RATIO), beside))
     }
 
     @Test

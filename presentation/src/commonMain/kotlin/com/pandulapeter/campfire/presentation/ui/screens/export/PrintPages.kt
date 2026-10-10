@@ -85,7 +85,7 @@ import kotlinx.coroutines.launch
  * or, on the desktop, Ctrl / Cmd and the scroll wheel. It is the whole sheet of paper that grows, edges and all, past
  * the pane that cuts it off and under the buttons floating over it, the way a document viewer zooms, rather than its
  * content growing inside a page that keeps its size, which read as the text being enlarged for the file. At a zoom of 1
- * the page fits what the floating buttons leave of the pane. A zoomed page is drawn again at its new size rather than
+ * the page fits what the floating controls leave of the pane ([fit]), centered in it. A zoomed page is drawn again at its new size rather than
  * scaled up, so it stays sharp, and the pager does not take a swipe while it is zoomed, since the swipe is the pan.
  * The zoom and the pan are [pageView], a point of the page rather than an offset in pixels, so that a pane laid out at
  * another size keeps the same part of the page in its middle.
@@ -95,7 +95,7 @@ internal fun PrintPages(
     laidOut: LaidOutDocument,
     isCurrent: Boolean,
     renderer: PrintRenderer,
-    bottomInset: Dp,
+    fit: PageFit,
     areOptionsBelow: Boolean,
     pagerState: PagerState,
     magnifications: Flow<Float>,
@@ -110,10 +110,9 @@ internal fun PrintPages(
     var viewportSize by remember { mutableStateOf(Size.Zero) }
     var pointerPosition by remember { mutableStateOf<Offset?>(null) }
     val aspectRatio = laidOut.document.width / laidOut.document.height
-    val fitBottom = if (areOptionsBelow) PAGE_MARGIN else bottomInset + SAVE_BUTTON_CLEARANCE
     val zoomAnimationSpec = MaterialTheme.motionScheme.defaultSpatialSpec<Float>()
     var zoomAnimation by remember { mutableStateOf<Job?>(null) }
-    fun fitArea() = with(density) { fitArea(viewportSize, PAGE_MARGIN.toPx(), fitBottom.toPx()) }
+    fun fitArea() = fit.area(viewportSize, density, layoutDirection)
     // Stop a double-tap zoom when paging hands control to the screen's animated reset.
     LaunchedEffect(pagerState) {
         var previous = pagerState.settledPage
@@ -256,7 +255,7 @@ internal fun PrintPages(
                     document = document,
                     page = shownPage,
                     renderer = renderer,
-                    fitBottom = fitBottom,
+                    fit = fit,
                     pageView = if (isShownPage) pageView() else PageView(),
                     description = pageLabel,
                 )

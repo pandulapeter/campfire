@@ -21,7 +21,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.Dp
 import com.pandulapeter.campfire.presentation.ui.components.DelayedLoadingIndicator
 import com.pandulapeter.campfire.presentation.ui.print.PrintRenderer
 import kotlinx.coroutines.flow.Flow
@@ -39,7 +38,7 @@ private sealed interface PreviewContent {
  *
  * @param emptyMessage What to say instead of the pages where there are none to show: a setlist with no songs, or none
  *   of them chosen.
- * @param bottomInset What of the bottom of the pane the system bars take.
+ * @param fit What the floating controls leave of the pane for a page at a zoom of 1.
  * @param areOptionsBelow Whether the options are under the pane rather than beside it, at its start.
  * @param pagerState The pager shared with the page selector floating over the screen.
  * @param magnifications The touchpad pinches the window hears, see [CampfireViewModel.magnifyByTouchpad].
@@ -53,7 +52,7 @@ internal fun PrintPreview(
     isCurrent: Boolean,
     renderer: PrintRenderer,
     emptyMessage: String?,
-    bottomInset: Dp,
+    fit: PageFit,
     areOptionsBelow: Boolean,
     pagerState: PagerState,
     magnifications: Flow<Float>,
@@ -80,7 +79,7 @@ internal fun PrintPreview(
                 laidOut = shown.laidOut,
                 isCurrent = isCurrent,
                 renderer = renderer,
-                bottomInset = bottomInset,
+                fit = fit,
                 areOptionsBelow = areOptionsBelow,
                 pagerState = pagerState,
                 magnifications = magnifications,

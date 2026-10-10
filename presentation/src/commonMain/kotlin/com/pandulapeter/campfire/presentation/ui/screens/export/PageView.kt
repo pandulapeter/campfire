@@ -15,14 +15,41 @@ import androidx.compose.runtime.saveable.Saver
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 
-/** What a page fits into at a zoom of 1: the [viewport] less [margin] at its top and sides and [bottom] under it. */
-internal fun fitArea(viewport: Size, margin: Float, bottom: Float) = Rect(
-    left = margin,
-    top = margin,
-    right = maxOf(margin, viewport.width - margin),
-    bottom = maxOf(margin, viewport.height - bottom),
+/** What a page fits into at a zoom of 1: the [viewport] less [left], [top], [right] and [bottom] at each of its edges. */
+internal fun fitArea(viewport: Size, left: Float, top: Float, right: Float, bottom: Float) = Rect(
+    left = left,
+    top = top,
+    right = maxOf(left, viewport.width - right),
+    bottom = maxOf(top, viewport.height - bottom),
 )
+
+/**
+ * What a page at a zoom of 1 keeps clear of at each edge of its pane: [PAGE_MARGIN] where nothing floats over that edge,
+ * and the band or the column a floating control takes where one does, so that a page at rest is never under a control.
+ */
+@Immutable
+internal data class PageFit(
+    val start: Dp = PAGE_MARGIN,
+    val top: Dp = PAGE_MARGIN,
+    val end: Dp = PAGE_MARGIN,
+    val bottom: Dp = PAGE_MARGIN,
+) {
+    /** The [fitArea] of a pane as large as [viewport], read in [layoutDirection]. */
+    fun area(viewport: Size, density: Density, layoutDirection: LayoutDirection) = with(density) {
+        val isRtl = layoutDirection == LayoutDirection.Rtl
+        fitArea(
+            viewport = viewport,
+            left = (if (isRtl) end else start).toPx(),
+            top = top.toPx(),
+            right = (if (isRtl) start else end).toPx(),
+            bottom = bottom.toPx(),
+        )
+    }
+}
 
 /** The largest page of [aspectRatio] that fits in [area]. */
 internal fun fittedPageSize(area: Size, aspectRatio: Float): Size {

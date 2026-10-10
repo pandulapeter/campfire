@@ -24,16 +24,15 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.ui.print.PrintDocument
 import com.pandulapeter.campfire.presentation.ui.print.PrintPage
 import com.pandulapeter.campfire.presentation.ui.print.PrintRenderer
 
 /**
- * One page, white under a hairline border, as large as fits in the canvas less [PAGE_MARGIN] around it and [fitBottom]
- * under it at a zoom of 1 and the zoom of [pageView] times that otherwise, moved to the point of it [pageView] looks at;
- * the canvas cuts off whatever of it reaches past its edges.
+ * One page, white under a hairline border, as large as fits in the canvas less what [fit] keeps clear at its edges at a
+ * zoom of 1 and the zoom of [pageView] times that otherwise, moved to the point of it [pageView] looks at; the canvas cuts
+ * off whatever of it reaches past its edges.
  */
 @Composable
 internal fun PrintPageCanvas(
@@ -41,7 +40,7 @@ internal fun PrintPageCanvas(
     document: PrintDocument,
     page: PrintPage,
     renderer: PrintRenderer,
-    fitBottom: Dp,
+    fit: PageFit,
     pageView: PageView,
     description: String,
 ) {
@@ -56,7 +55,7 @@ internal fun PrintPageCanvas(
                 role = Role.Image
             },
     ) {
-        val area = fitArea(size, PAGE_MARGIN.toPx(), fitBottom.toPx())
+        val area = fit.area(size, this, layoutDirection)
         val bounds = pageBounds(size, area, document.width / document.height, pageView)
         clipRect(bounds.left, bounds.top, bounds.right, bounds.bottom) {
             drawRect(Color.White, bounds.topLeft, bounds.size)

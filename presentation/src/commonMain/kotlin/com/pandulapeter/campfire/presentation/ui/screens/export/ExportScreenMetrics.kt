@@ -14,5 +14,16 @@ import androidx.compose.ui.unit.dp
 /** The room around a page at a zoom of 1, and between two pages of the pager. */
 internal val PAGE_MARGIN = 16.dp
 
-/** Trailing scroll space to bring the last item above the floating controls. */
-internal val SAVE_BUTTON_CLEARANCE = 88.dp
+/**
+ * The band a floating control takes at an end of the preview: [PAGE_MARGIN] on either side of the save button's 56dp, and
+ * the same for the page buttons' pill at the other end, though it is 8dp shorter, so that a page at rest is centered in
+ * its pane with the same room over it as under it. The options' list ends above the same band, so the button never rests
+ * on an option.
+ */
+internal val FLOATING_CONTROLS_CLEARANCE = 88.dp
+
+/**
+ * The preview as the first item of the options' list on a phone: 360dp for the page, large enough to judge it by, plus
+ * the band the page buttons' pill takes over it, so the pill never sits on the page.
+ */
+internal val STACKED_PREVIEW_HEIGHT = 360.dp + FLOATING_CONTROLS_CLEARANCE - PAGE_MARGIN
