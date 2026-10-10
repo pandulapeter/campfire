@@ -16,7 +16,7 @@ The Metronome tab.
 
 **The Metronome tab** (`ui/screens/metronome/`) is the third top level destination and the whole instrument: the song
 details screen's own `MetronomePanel` pinned at the top and never hidden (`isVisible` always true) — the beat row
-(`BeatRow`, every block outlined in `outline` so that it meets 3:1 against the page, resting in fainter shades of the
+(`BeatRow`, a muted block only an `outline`, the others resting in fainter shades of the
 second accent color and lit from the heard beats in the full one — shades
 of one color, since every palette but the app's own has no second accent apart from the primary — a tap cycling a beat
 through accent, plain and muted, stored per signature, and a bar that changes length gaining or losing its blocks one

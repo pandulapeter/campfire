@@ -64,7 +64,7 @@ import kotlin.math.ceil
 import kotlin.math.roundToInt
 
 /**
- * One block per beat of the bar, as tall as the beat is loud (every one outlined, a muted one only that) and resting in a fainter shade
+ * One block per beat of the bar, as tall as the beat is loud (a muted one only an outline) and resting in a fainter shade
  * of the second accent color, lit in the full color as each is heard - from the heard-time beats alone, so the flash agrees with the ear - and fading down to the
  * next. A tap moves a beat on from accent to plain to muted and round again, which is the whole of the accent editor.
  *
@@ -242,9 +242,9 @@ private fun BeatBlock(
                 }
                 .clip(shape)
                 .indication(interactionSource, ripple())
-                // Every block is outlined, not only a muted one: the faint shades it rests in are what lets the flash
-                // stand out, and too faint to show on their own where the beats are.
-                .border(1.dp, outlineColor, shape)
+                // Only a muted block is outlined, so that the outline itself says the beat is off: the others are told
+                // apart by their heights and their fills, and an edge on them would ring the flash.
+                .then(if (level == BeatLevel.MUTED) Modifier.border(1.dp, outlineColor, shape) else Modifier)
                 // Drawn rather than composed from the flash, so that a beat repaints the block instead of recomposing the row.
                 .drawBehind { drawRect(lerp(baseColor, flashColor, flash())) },
         )
@@ -253,4 +253,4 @@ private fun BeatBlock(
 
 private const val ACCENT_REST_ALPHA = 0.5f
 private const val FLASH_SCALE = 0.06f
-private const val NORMAL_REST_ALPHA = 0.22f
+private const val NORMAL_REST_ALPHA = 0.3f
