@@ -37,7 +37,8 @@ import com.pandulapeter.campfire.presentation.ui.platform.rememberMicrophonePerm
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerDisplay
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerListeningEffect
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerNoticeCard
-import com.pandulapeter.campfire.presentation.ui.tuner.TunerOptions
+import com.pandulapeter.campfire.presentation.ui.tuner.TunerStringsSetting
+import com.pandulapeter.campfire.presentation.ui.tuner.TunerInputIssueMessage
 import com.pandulapeter.campfire.presentation.ui.tuner.canListenWithoutTap
 import com.pandulapeter.campfire.presentation.ui.tuner.toConfig
 import com.pandulapeter.campfire.presentation.ui.tuner.tunerNoticeOf
@@ -45,9 +46,11 @@ import com.pandulapeter.campfire.tuner.api.model.TunerListening
 
 /**
  * The tuner over the song being read, opened from the song details overflow menu, so that a string that went flat
- * between two songs is tuned without leaving the setlist: the Tuner tab's own display (or its notice) and options, all
- * of it scrolling under the sheet's header, the display first since it is what the sheet is opened for. It listens
- * while it is up and the app is in front, and the view model stops it as the sheet closes.
+ * between two songs is tuned without leaving the setlist: the Tuner tab's own display (or its notice) and the strings of
+ * the instrument picked there, all of it scrolling under the sheet's header, the display first since it is what the
+ * sheet is opened for. The instrument and the reference pitch are set on the tab alone, the way the metronome panel
+ * plays with the Metronome tab's presets without offering them: the instrument in hand between two songs is the one the
+ * tab was set to. It listens while it is up and the app is in front, and the view model stops it as the sheet closes.
  */
 @Composable
 internal fun TunerSheet(
@@ -110,15 +113,13 @@ internal fun TunerSheet(
                     )
                 }
             }
-            TunerOptions(
+            TunerInputIssueMessage(issue = issue, permission = permission)
+            TunerStringsSetting(
+                tuning = config.tuning,
+                notation = notation,
                 tone = tone,
-                issue = issue,
                 heardNote = heardNote,
                 tunedNotes = tunedNotes,
-                config = config,
-                notation = notation,
-                permission = permission,
-                onSettingsChanged = viewModel::updateTunerSettings,
                 onToggleTone = viewModel::toggleTunerTone,
             )
         }

@@ -16,44 +16,51 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.pandulapeter.campfire.chordpro.ChordNotation
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_check
 import com.pandulapeter.campfire.presentation.resources.tuner_in_tune
 import com.pandulapeter.campfire.presentation.resources.tuner_string
-import com.pandulapeter.campfire.presentation.ui.components.CHIP_GAP
-import com.pandulapeter.campfire.presentation.ui.components.SelectableChip
 import com.pandulapeter.campfire.presentation.ui.metronome.PlayStopMark
 import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * One chip per string of [tuning], in the order the tuning is written and numbered down to the first, each named by its
- * note. A tap plays the string's tone, a second tap or another chip ends it; the chip of the tone sounding is selected
- * and carries the stop mark, and so is the one being heard while none sounds, so the hand finds the string the tuner is
- * reading. A string heard in tune since the microphone was opened is ticked ([tunedNotes]), so that the player sees
- * which strings are still to do.
+ * One segment per string of [tuning], in the order the tuning is written and numbered down to the first, each named by
+ * its note: the strings are one instrument, so they are one row of equal parts rather than chips wrapping wherever their
+ * names end. A tap plays the string's tone, a second tap or another string ends it; the segment of the tone sounding is
+ * selected and carries the stop mark, and so is the one being heard while none sounds, so the hand finds the string the
+ * tuner is reading. A string heard in tune since the microphone was opened is ticked ([tunedNotes]), so that the player
+ * sees which strings are still to do.
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun TunerStrings(
     tuning: InstrumentTuning,
@@ -62,10 +69,8 @@ internal fun TunerStrings(
     heardNote: Int?,
     tunedNotes: Set<Int>,
     onToggleTone: (Int) -> Unit,
-) = FlowRow(
+) = SingleChoiceSegmentedButtonRow(
     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-    horizontalArrangement = Arrangement.spacedBy(CHIP_GAP),
-    verticalArrangement = Arrangement.spacedBy(CHIP_GAP),
 ) {
     val inTune = stringResource(Res.string.tuner_in_tune)
     tuning.strings.forEachIndexed { index, note ->
@@ -73,33 +78,49 @@ internal fun TunerStrings(
         val description = stringResource(Res.string.tuner_string, tuning.strings.size - index, spokenNoteName(note, notation))
         val isSounding = tone == note
         val isTuned = note in tunedNotes
-        SelectableChip(
-            modifier = Modifier.semantics {
+        val isSelected = if (tone != null) isSounding else heardNote == note
+        SegmentedButton(
+            // A segment is a radio button to Material, but a string is a button playing its tone, which a second tap
+            // stops, and being selected only says which string is sounding or heard.
+            modifier = Modifier.clearAndSetSemantics {
+                role = Role.Button
                 contentDescription = description
+                selected = isSelected
                 if (isTuned) stateDescription = inTune
+                onClick {
+                    onToggleTone(note)
+                    true
+                }
             },
-            isSelected = if (tone != null) isSounding else heardNote == note,
-            role = Role.Button,
+            selected = isSelected,
             onClick = { onToggleTone(note) },
-        ) { contentColor ->
-            AnimatedVisibility(
-                visible = isSounding || isTuned,
-                enter = fadeIn() + expandHorizontally(),
-                exit = fadeOut() + shrinkHorizontally(),
-            ) {
-                StringMark(isSounding = isSounding, color = contentColor)
+            shape = SegmentedButtonDefaults.itemShape(index = index, count = tuning.strings.size),
+            icon = {},
+            contentPadding = STRING_CONTENT_PADDING,
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                AnimatedVisibility(
+                    visible = isSounding || isTuned,
+                    enter = fadeIn() + expandHorizontally(),
+                    exit = fadeOut() + shrinkHorizontally(),
+                ) {
+                    StringMark(isSounding = isSounding, color = LocalContentColor.current)
+                }
+                val style = MaterialTheme.typography.labelLarge
+                Text(
+                    text = name,
+                    style = style,
+                    fontWeight = if (isSounding) FontWeight.Bold else null,
+                    softWrap = false,
+                    maxLines = 1,
+                    autoSize = TextAutoSize.StepBased(minFontSize = STRING_MIN_FONT_SIZE, maxFontSize = style.fontSize),
+                )
             }
-            Text(
-                text = name,
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = if (isSounding) FontWeight.Bold else null,
-                color = contentColor,
-            )
         }
     }
 }
 
-/** What a string's chip carries before its name: the stop mark while its tone sounds, the tick once it was in tune. */
+/** What a string's segment carries before its name: the stop mark while its tone sounds, the tick once it was in tune. */
 @Composable
 private fun StringMark(
     isSounding: Boolean,
@@ -122,5 +143,22 @@ private fun StringMark(
     }
 }
 
-private val STRING_MARK_SIZE = 18.dp
-private val STRING_MARK_GAP = 6.dp
+private val STRING_MARK_SIZE = 16.dp
+private val STRING_MARK_GAP = 4.dp
+
+/**
+ * How far a string's name shrinks before it is cut: an eight-string guitar leaves each string about 40dp on a 360dp
+ * phone, which a name with its mark beside it only fits in smaller.
+ */
+private val STRING_MIN_FONT_SIZE = 9.sp
+
+/**
+ * Six strings share the width of a 360dp phone, about 53dp each, and Material's 12dp at each side of a label would leave
+ * a Latin `Sol3` with its mark no room. The vertical padding stays Material's, so the row keeps its height.
+ */
+private val STRING_CONTENT_PADDING = PaddingValues(
+    start = 4.dp,
+    top = SegmentedButtonDefaults.ContentPadding.calculateTopPadding(),
+    end = 4.dp,
+    bottom = SegmentedButtonDefaults.ContentPadding.calculateBottomPadding(),
+)

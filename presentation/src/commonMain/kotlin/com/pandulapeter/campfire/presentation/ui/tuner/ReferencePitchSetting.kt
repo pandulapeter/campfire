@@ -13,12 +13,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.FilledTonalIconToggleButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -34,7 +35,6 @@ import com.pandulapeter.campfire.presentation.resources.tuner_reference_pitch_in
 import com.pandulapeter.campfire.presentation.resources.tuner_reference_pitch_reset
 import com.pandulapeter.campfire.presentation.resources.tuner_reference_pitch_value
 import com.pandulapeter.campfire.presentation.ui.components.LabeledControlRow
-import com.pandulapeter.campfire.presentation.ui.components.SelectableChip
 import com.pandulapeter.campfire.presentation.ui.components.Stepper
 import com.pandulapeter.campfire.presentation.ui.metronome.PlayStopMark
 import com.pandulapeter.campfire.tuner.api.Pitch
@@ -42,7 +42,7 @@ import org.jetbrains.compose.resources.painterResource
 
 /**
  * The frequency of A4 everything is tuned from, stepped by a hertz the way the tempo is and reset to 440 by a tap on its
- * value, next to a chip that plays that A until it is tapped again.
+ * value, next to a toggle that plays that A until it is tapped again.
  */
 @Composable
 internal fun ReferencePitchSetting(
@@ -83,18 +83,15 @@ internal fun ReferencePitchSetting(
                 repeatsOnHold = true,
             )
             val description = stringResource(Res.string.tuner_play_reference)
-            SelectableChip(
-                modifier = Modifier.semantics { contentDescription = description },
-                isSelected = isReferenceTonePlaying,
-                role = Role.Switch,
-                onClick = onToggleReferenceTone,
-            ) { contentColor ->
-                PlayStopMark(isPlaying = isReferenceTonePlaying, size = 18.dp, color = contentColor)
-                Text(
-                    modifier = Modifier.padding(start = 4.dp),
-                    text = referenceName,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = contentColor,
+            FilledTonalIconToggleButton(
+                checked = isReferenceTonePlaying,
+                onCheckedChange = { onToggleReferenceTone() },
+            ) {
+                PlayStopMark(
+                    modifier = Modifier.semantics { contentDescription = description },
+                    isPlaying = isReferenceTonePlaying,
+                    size = 18.dp,
+                    color = LocalContentColor.current,
                 )
             }
         }

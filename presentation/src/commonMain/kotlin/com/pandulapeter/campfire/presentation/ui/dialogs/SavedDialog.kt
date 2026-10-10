@@ -20,7 +20,7 @@ import kotlinx.serialization.Serializable
  * question nobody answered is worse than losing it, and `DeleteLibrary` above all, whose typed answer must never outlive
  * the moment; so are the export screen, which has a pipeline of its own, the tuner, which only ever listens from a tap,
  * the welcome and what's new, which the start decides on by itself, and the sheets that hold nothing typed (Song info,
- * Chord shapes, the song filters).
+ * Chord shapes, the song filters, the tuner's instrument).
  */
 @Serializable
 internal sealed interface SavedDialog {

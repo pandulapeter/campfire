@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.TextAutoSize
@@ -34,6 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -199,20 +199,18 @@ private const val ANNOUNCEMENT_HOLD_MILLIS = 700L
  */
 private val COMPACT_NOTE_WIDTH = 128.dp
 
-/**
- * The note's size on the page: as large as the display's width lets the widest note be, down to the display style's
- * own where there is no room for that, and at least as tall as that size of it, so that the prompt and a note hold the
- * same height and the meter does not move as one gives way to the other.
- */
+/** The note's size on the page: as large as the display's width lets it be, down to the display style's own. */
 private val NOTE_MAX_FONT_SIZE = 96.sp
 private val NOTE_MIN_FONT_SIZE = 57.sp
-private val NOTE_MIN_HEIGHT = 112.dp
-private val COMPACT_NOTE_MIN_HEIGHT = 56.dp
 
 private val METER_HEIGHT = 48.dp
 private val COMPACT_METER_HEIGHT = 40.dp
 
-/** The note and its octave, or the line asking for one, crossfading as it changes. */
+/**
+ * The note and its octave, or the line asking for one, crossfading as it changes. The prompt is laid out over an invisible
+ * note, so that the two states are one height whatever the text size and the room make of either, and nothing under the
+ * label moves as a note comes and goes.
+ */
 @Composable
 private fun TunerNoteLabel(
     modifier: Modifier,
@@ -227,61 +225,83 @@ private fun TunerNoteLabel(
     label = "tunerNote",
 ) { shownNote ->
     Box(
-        // Each state fills the label's whole room, so that a note and the prompt are centred in the same box rather than
+        // Each state fills the label's whole width, so that a note and the prompt are centred in the same box rather than
         // aligned inside whatever size the other left.
-        modifier = Modifier.fillMaxWidth().heightIn(min = if (isCompact) COMPACT_NOTE_MIN_HEIGHT else NOTE_MIN_HEIGHT),
+        modifier = Modifier.fillMaxWidth(),
         contentAlignment = Alignment.Center,
     ) {
         if (shownNote == null) {
+            TunerNoteName(
+                modifier = Modifier.alpha(0f),
+                note = REFERENCE_NOTE,
+                notation = notation,
+                color = color,
+                isCompact = isCompact,
+            )
             Text(
                 text = stringResource(Res.string.tuner_play_a_note),
                 style = if (isCompact) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
-                // Two lines of it stay within the compact label's minimum height, so the row keeps one height as a note arrives.
+                // Two lines of it stay within the height of a compact note, so the row keeps one height as a note arrives.
                 maxLines = if (isCompact) 2 else Int.MAX_VALUE,
             )
         } else {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.Bottom,
-            ) {
-                if (isCompact) {
-                    Text(
-                        text = noteName(shownNote, notation),
-                        style = MaterialTheme.typography.displayMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = color,
-                        softWrap = false,
-                        maxLines = 1,
-                    )
-                } else {
-                    Text(
-                        // Sized to the room rather than wrapped: a note is one word, and the width it has differs between
-                        // a phone held upright and the page of a tablet. The weight leaves the octave its room, and not
-                        // filling it is what lets the arrangement centre the pair.
-                        modifier = Modifier.weight(1f, fill = false),
-                        text = noteName(shownNote, notation),
-                        style = MaterialTheme.typography.displayLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = color,
-                        softWrap = false,
-                        maxLines = 1,
-                        autoSize = TextAutoSize.StepBased(minFontSize = NOTE_MIN_FONT_SIZE, maxFontSize = NOTE_MAX_FONT_SIZE),
-                    )
-                }
-                Text(
-                    modifier = Modifier.padding(start = 2.dp, bottom = if (isCompact) 8.dp else 14.dp),
-                    text = noteOctave(shownNote).toString(),
-                    style = if (isCompact) MaterialTheme.typography.titleLarge else MaterialTheme.typography.headlineMedium,
-                    color = color,
-                    softWrap = false,
-                    maxLines = 1,
-                )
-            }
+            TunerNoteName(
+                note = shownNote,
+                notation = notation,
+                color = color,
+                isCompact = isCompact,
+            )
         }
     }
+}
+
+/** A note in the reader's notation, with its octave set smaller after it. */
+@Composable
+private fun TunerNoteName(
+    modifier: Modifier = Modifier,
+    note: Int,
+    notation: ChordNotation,
+    color: Color,
+    isCompact: Boolean,
+) = Row(
+    modifier = modifier.fillMaxWidth(),
+    horizontalArrangement = Arrangement.Center,
+    verticalAlignment = Alignment.Bottom,
+) {
+    if (isCompact) {
+        Text(
+            text = noteName(note, notation),
+            style = MaterialTheme.typography.displayMedium,
+            fontWeight = FontWeight.Bold,
+            color = color,
+            softWrap = false,
+            maxLines = 1,
+        )
+    } else {
+        Text(
+            // Sized to the room rather than wrapped: a note is one word, and the width it has differs between a phone held
+            // upright and the page of a tablet. The weight leaves the octave its room, and not filling it is what lets the
+            // arrangement centre the pair.
+            modifier = Modifier.weight(1f, fill = false),
+            text = noteName(note, notation),
+            style = MaterialTheme.typography.displayLarge,
+            fontWeight = FontWeight.Bold,
+            color = color,
+            softWrap = false,
+            maxLines = 1,
+            autoSize = TextAutoSize.StepBased(minFontSize = NOTE_MIN_FONT_SIZE, maxFontSize = NOTE_MAX_FONT_SIZE),
+        )
+    }
+    Text(
+        modifier = Modifier.padding(start = 2.dp, bottom = if (isCompact) 8.dp else 14.dp),
+        text = noteOctave(note).toString(),
+        style = if (isCompact) MaterialTheme.typography.titleLarge else MaterialTheme.typography.headlineMedium,
+        color = color,
+        softWrap = false,
+        maxLines = 1,
+    )
 }
 
 /** The reading in words: how many cents off, with its sign, or that it is in tune; nothing while nothing is heard. */

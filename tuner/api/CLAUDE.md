@@ -25,9 +25,11 @@ so that no data or domain type leaks into it and the engine reads no settings of
   cents off it — beyond ±50 where a preset's nearest string is further than half a semitone — the frequency heard and
   `isInTune`), `TunerStopReason`, `TunerInputIssue` (`SILENT`: digital silence for two seconds, which is how the desktop
   operating systems answer an app that may not record; `WAITING_FOR_GESTURE`), `NoteOffset`, and `InstrumentTuning` —
-  the presets (guitar, drop D, bass, five-string bass, ukulele, low-G ukulele, violin, mandolin, banjo), each string a
-  MIDI note in the order the tuning is written (`gCEA`), with the stable `id` a stored setting names one by (`chromatic`
-  for none).
+  the presets (six-string guitar in standard, drop D, half and full step down, drop C, open G, open D, and DADGAD;
+  seven-string guitar in standard and drop A; eight-string guitar in standard and drop E; four-string bass in standard,
+  drop D, and half and full step down; five-string bass in standard and high C; ukulele, low-G, and baritone ukulele;
+  banjo in open G and double C; violin; and mandolin), each string a MIDI note in the order the tuning is written
+  (`gCEA`), with the stable `id` a stored setting names one by (`chromatic` for none). How they are grouped on screen is `:presentation`'s.
 - `Pitch` — equal temperament from A4: `frequencyOf`, `centsBetween`, `noteOf` (the nearest semitone),
   `nearestString` and `targetOf`, and `REFERENCE_PITCH_RANGE` (415–466 Hz).
 

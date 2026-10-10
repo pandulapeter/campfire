@@ -39,16 +39,21 @@ import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.components.ScrollPosition
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedScrollState
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.rememberMicrophonePermission
 import com.pandulapeter.campfire.presentation.ui.screens.settings.AnimatedSettingsRow
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsPage
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsSection
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsWidthLayout
+import com.pandulapeter.campfire.presentation.ui.tuner.InstrumentChoice
+import com.pandulapeter.campfire.presentation.ui.tuner.REFERENCE_NOTE
+import com.pandulapeter.campfire.presentation.ui.tuner.ReferencePitchSetting
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerDisplay
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerListeningEffect
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerNoticeCard
-import com.pandulapeter.campfire.presentation.ui.tuner.TunerOptions
+import com.pandulapeter.campfire.presentation.ui.tuner.TunerStringsSetting
+import com.pandulapeter.campfire.presentation.ui.tuner.TunerInputIssueMessage
 import com.pandulapeter.campfire.presentation.ui.tuner.canListenWithoutTap
 import com.pandulapeter.campfire.presentation.ui.tuner.toConfig
 import com.pandulapeter.campfire.presentation.ui.tuner.tunerNoticeOf
@@ -57,9 +62,10 @@ import kotlinx.coroutines.flow.collectLatest
 
 /**
  * The Tuner tab: what is heard ([TunerDisplay]) pinned at the top, capped at the page's width, and under it, scrolling,
- * what the tuner is set to ([TunerOptions]). While the microphone cannot be listened to, the display gives way to a
- * notice that is the page's first item ([TunerNoticeCard]) and scrolls with it, which costs a short window nothing; its
- * tones still play then.
+ * what the tuner is set to: the instrument ([InstrumentChoice], a button opening the sheet it is picked in), its
+ * strings ([TunerStringsSetting]) and the reference pitch ([ReferencePitchSetting]), the first and the last offered only
+ * here, since the sheet over a song tunes to what they are set to. While the microphone cannot be listened to, the display gives way to a notice that is the page's
+ * first item ([TunerNoticeCard]) and scrolls with it, which costs a short window nothing; its tones still play then.
  *
  * It listens while it is on screen and the app is in front ([TunerListeningEffect]) and nothing longer, keeping the
  * display on meanwhile, and asks for the microphone only from the notice's button.
@@ -138,16 +144,25 @@ internal fun TunerScreen(
                             onListen = viewModel::requestMicrophone,
                         )
                     }
-                    TunerOptions(
+                    TunerInputIssueMessage(issue = issue, permission = permission)
+                    InstrumentChoice(
+                        selected = config.tuning,
+                        onClick = { viewModel.showDialog(DialogType.TunerInstrument) },
+                    )
+                    TunerStringsSetting(
+                        tuning = config.tuning,
+                        notation = notation,
                         tone = tone,
-                        issue = issue,
                         heardNote = heardNote,
                         tunedNotes = tunedNotes,
-                        config = config,
-                        notation = notation,
-                        permission = permission,
-                        onSettingsChanged = viewModel::updateTunerSettings,
                         onToggleTone = viewModel::toggleTunerTone,
+                    )
+                    ReferencePitchSetting(
+                        referencePitch = config.referencePitch,
+                        notation = notation,
+                        isReferenceTonePlaying = tone == REFERENCE_NOTE,
+                        onReferencePitchChanged = { value -> viewModel.updateTunerSettings { copy(referencePitch = value) } },
+                        onToggleReferenceTone = { viewModel.toggleTunerTone(REFERENCE_NOTE) },
                     )
                 }
             },
