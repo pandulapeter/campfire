@@ -389,6 +389,12 @@
     <!-- What is heard and what it is tuned to, in Hz. -->
     <string name="tuner_frequency">%1$s Hz</string>
     <string name="tuner_target_frequency">Target %1$s Hz</string>
+    <!-- The reading under the meter: how many cents off, with its sign ("−18", "+3", "0"), or that the note is in tune. -->
+    <plurals name="tuner_cents">
+        <item quantity="one">%1$s cent</item>
+        <item quantity="other">%1$s cents</item>
+    </plurals>
+    <string name="tuner_in_tune">In tune</string>
     <string name="tuner_flat">Flat</string>
     <string name="tuner_sharp">Sharp</string>
     <!-- How a screen reader reads the meter: the note, then how far it is off, e.g. "E2, 12 cents flat". -->

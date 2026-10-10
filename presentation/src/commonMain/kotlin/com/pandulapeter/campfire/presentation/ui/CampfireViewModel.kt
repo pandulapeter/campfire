@@ -827,6 +827,9 @@ class CampfireViewModel(
     /** See [TunerController.hasTurnedOnMicrophone]. */
     val hasTurnedOnMicrophone get() = tunerController.hasTurnedOnMicrophone
 
+    /** See [TunerController.tunedNotes]. */
+    val tunedNotes get() = tunerController.tunedNotes
+
     val isFileTransferActive get() = exportController.isFileTransferActive
 
     /** See [ExportController.pdfExportProgress]. */
@@ -967,6 +970,7 @@ class CampfireViewModel(
         metronomeController.startStartableRule()
         tunerController.startSettingsWriter()
         tunerController.startFollowingSettings()
+        tunerController.startTrackingTunedNotes()
         tunerController.startStartableRule(
             combine(
                 snapshotFlow { backStack.lastOrNull() },

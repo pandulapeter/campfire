@@ -233,6 +233,13 @@ private fun BeatBlock(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(height)
+                // The lit block also swells a little, since in the light theme an accent at rest is already half the
+                // color it flashes in and the color alone would be a faint change.
+                .graphicsLayer {
+                    val pulse = 1f + flash() * FLASH_SCALE
+                    scaleX = pulse
+                    scaleY = pulse
+                }
                 .clip(shape)
                 .indication(interactionSource, ripple())
                 // Every block is outlined, not only a muted one: the faint shades it rests in are what lets the flash
@@ -245,4 +252,5 @@ private fun BeatBlock(
 }
 
 private const val ACCENT_REST_ALPHA = 0.5f
+private const val FLASH_SCALE = 0.06f
 private const val NORMAL_REST_ALPHA = 0.22f

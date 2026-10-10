@@ -46,6 +46,7 @@ internal fun TunerOptions(
     tone: Int?,
     issue: TunerInputIssue?,
     heardNote: Int?,
+    tunedNotes: Set<Int>,
     config: TunerConfig,
     notation: ChordNotation,
     permission: MicrophonePermission,
@@ -87,6 +88,7 @@ internal fun TunerOptions(
                 notation = notation,
                 tone = tone,
                 heardNote = heardNote,
+                tunedNotes = tunedNotes,
                 onToggleTone = onToggleTone,
             )
         }

@@ -21,10 +21,13 @@ import com.pandulapeter.campfire.tuner.api.model.TunerConfig
 import com.pandulapeter.campfire.tuner.api.model.TunerListening
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
@@ -53,6 +56,11 @@ internal class TunerController(
 
     /** See [TunerSettings.hasTurnedOnMicrophone]. */
     val hasTurnedOnMicrophone = tunerSettings.map { it.hasTurnedOnMicrophone }.asState(scope, tunerSettings.value.hasTurnedOnMicrophone)
+
+    private val _tunedNotes = MutableStateFlow(emptySet<Int>())
+
+    /** The notes heard in tune since the microphone was opened, which the strings row ticks off, see [tunedNotesAfter]. */
+    val tunedNotes = _tunedNotes.asStateFlow()
 
     private val config get() = tunerSettings.value.toConfig()
 
@@ -83,6 +91,11 @@ internal class TunerController(
 
     fun updateTunerSettings(change: TunerSettings.() -> TunerSettings) = tunerSettingsPreference.update { (it ?: tunerSettings.value).change() }
 
+    /** Follows what is heard with [tunedNotes]. */
+    fun startTrackingTunedNotes() = scope.launch {
+        tuner.state.collect { state -> _tunedNotes.update { tunedNotesAfter(it, state.listening) } }
+    }
+
     /** Writes the settings once they have held still, see [tunerSettingsPreference]. */
     fun startSettingsWriter() = tunerSettingsPreference.start(scope, writeDelayMillis, updateUserPreferences::invoke)
 
@@ -98,6 +111,8 @@ internal class TunerController(
             previous = settings
             if (last == null || last == settings) return@collect
             if (tuner.state.value.listening !is TunerListening.Stopped) tuner.update(settings.toConfig())
+            // The strings ticked off belong to the instrument they were tuned for.
+            if (last.instrumentId != settings.instrumentId) _tunedNotes.value = emptySet()
             val tone = tuner.state.value.tone ?: return@collect
             when {
                 last.instrumentId != settings.instrumentId -> tuner.stopTone()

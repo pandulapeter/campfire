@@ -70,6 +70,7 @@ internal fun TunerSheet(
     val tone by remember { derivedStateOf { state.value.tone } }
     val issue by remember { derivedStateOf { (state.value.listening as? TunerListening.Hearing)?.issue } }
     val heardNote by remember { derivedStateOf { (state.value.listening as? TunerListening.Hearing)?.reading?.note } }
+    val tunedNotes by viewModel.tunedNotes.collectAsStateWithLifecycle()
     val config = remember(settings) { settings.toConfig() }
     TunerListeningEffect(
         canListen = canListenWithoutTap(status = permission.status, hasRequested = hasRequested),
@@ -113,6 +114,7 @@ internal fun TunerSheet(
                 tone = tone,
                 issue = issue,
                 heardNote = heardNote,
+                tunedNotes = tunedNotes,
                 config = config,
                 notation = notation,
                 permission = permission,

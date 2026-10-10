@@ -11,12 +11,14 @@
 ## Short-term (in this version)
 ### Bugs / issues
 - Changing filters should not scroll to top
-- PDF export screen: the page preview should be vertically centered between the floating components (if they exist)
-- Cover art archive thumbnails load really slowly 
+- Cover art archive thumbnails load really slowly
+- Get rid of the border around metronome bars
+- Tuner UI improvements
 
 ### Improvements
 - Improve haptic effects (fast scroll is inconsistent, tap tempo should not have one)
 - Clean up all the edit links, about the song bottom sheet, song details menus. Too much duplicated content, not super intuitive
+- Review / update website support page (FAQ)
 
 ## Midterm (in the next versions)
 - Multi-select for songs: documentation/plans/multi-select.md

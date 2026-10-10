@@ -60,7 +60,9 @@ toolbar is part of its bar), which grows and shrinks the bar as it comes and goe
 and squash towards the top on the bar's own timing (the beat row vertically, the play button whole), so they always fit
 the room the bar has. Being inside the screen is the whole design: it is laid out, pushed and popped with it, covers
 none of the song, and no scaffold wraps the app to make room for it. It holds a small `BeatRow` of the bar the click
-counts, taking the row's width, and play and stop at the end of it (`PlayStopMark`, morphing while it turns a quarter
+counts, taking the row's width — each block lit in the full second accent color as its beat is heard and swelling a
+little with it, since in the light theme an accent at rest is already half that color and the color alone is a faint
+change — and play and stop at the end of it (`PlayStopMark`, morphing while it turns a quarter
 turn clockwise either way, easing in, in a `FilledIconButton`) — at the end because the phone is held there, and the row
 it would otherwise push aside is the panel's content — and nothing else: the tempo is a line below it in the song's own
 first section, where it is both shown and set, and the sound, the subdivision and the volume are the tab's.

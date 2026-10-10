@@ -31,17 +31,27 @@ share.
   the input on the desktop and the web, where that is the question), **Open settings** where the platform has a page to
   open and **Ask again** where the system would still ask, **Try again** for a missing, busy or failed microphone; its
   sentence a polite live region, as is the input issue line of `TunerOptions`, since both arrive without a tap.
-- `TunerDisplay` / `TunerMeter` — the note with its octave, the cents meter (a marker on a spring, a notch that closes
-  into a check in tune, so it is never said by color alone, the second accent color with it), and the frequencies; a
-  tone being played is named instead and the meter rests. Compact (note beside meter, in a label of one width so the
-  meter never moves) in a short window and in the sheet. Explored as one node with the exact reading; a second node
-  announces only the note and a coarse step (far flat, flat, in tune, sharp, far sharp, `TunerAnnouncement.kt`, tested)
-  once it has held for 700 ms, since a reading every 33 ms would be a queue of speech the microphone hears too. With
-  nothing heard it is read as the prompt, and while a tone plays as that tone. It reads the tuner's state itself (a
-  `State`), so the readings, thirty a second, recompose the display and nothing around it; the screens pass the rest of
-  the page only what changes with a note or a setting.
+- `TunerDisplay` / `TunerMeter` — the note with its octave, sized to the display's width (`TextAutoSize`, 57 to 96sp)
+  so that it is the instrument on a phone and not a caption on a tablet; the cents meter: a scale of ticks every five
+  cents between the words for its ends, rather than a track with a knob, which reads as a slider and is reached for; the
+  in-tune window around the centre tinted with the second accent color; a needle on a spring, gone while nothing is
+  heard, and giving way to the notch closing into a check in tune, so it is never said by color alone (the note and the
+  reading take the second accent color with it); under the meter the reading in words, the signed cents (`CentsText.kt`,
+  `signedCents`: a typographic minus, tested) or "In tune"; and last the frequency heard and the target's. A tone being
+  played is named instead and the meter rests. Compact (note beside the rest, in a label of one width so the meter never
+  moves) in a short window and in the sheet. Explored as one node with the exact reading; a second node announces only
+  the note and a coarse step (far flat, flat, in tune, sharp, far sharp, `TunerAnnouncement.kt`, tested) once it has
+  held for 700 ms, since a reading every 33 ms would be a queue of speech the microphone hears too. With nothing heard it
+  is read as the prompt, and while a tone plays as that tone. It reads the tuner's state itself (a `State`), so the
+  readings, thirty a second, recompose the display and nothing around it; the screens pass the rest of the page only
+  what changes with a note or a setting.
+- `TunedStrings.kt` — pure, tested: the notes heard in tune since the microphone was opened (`tunedNotesAfter`), which
+  `TunerController.tunedNotes` keeps and the strings row ticks off, so the player sees which strings are still to do;
+  forgotten as the microphone closes, since a string in tune when the instrument was put down is not known to be when it
+  is picked up again, and as the instrument changes.
 - `TunerOptions` — the input issue line (`SILENT`, with Open settings, and `WAITING_FOR_GESTURE`), `InstrumentChoice`,
-  `TunerStrings` (a chip per string, the tone's or the heard one selected, a tap toggling its tone) and
+  `TunerStrings` (a chip per string, the tone's or the heard one selected, a tap toggling its tone, the sounding one
+  carrying the stop mark and a tuned one a check) and
   `ReferencePitchSetting` (a `Stepper` reset by a tap on its value, and a chip playing A4).
 - `NoteNames.kt` — a MIDI note in the reader's chord notation with sharps (`H` in German, `La` in Latin, letters for a
   numbering) and its octave in scientific numbering, and, for screen readers, with the sharp spoken (`spokenNoteName`: "C
