@@ -12,14 +12,14 @@ package com.pandulapeter.campfire.presentation.ui.tuner
 import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 
 /**
- * One instrument and the tunings [InstrumentPicker] offers for it as chips, under the instrument's name where its
- * [InstrumentFamily] holds more than one. A guitar or a bass with more strings is an instrument of its own, since a
- * tuning of one is never a tuning of the other.
+ * The instruments [InstrumentChoice] offers, in the order of its chips, and the tunings of each, in the order of the
+ * chips under it, the standard one first. A guitar or a bass with more strings is an instrument of its own, since a
+ * tuning of one is never a tuning of the other. Chromatic tuning is no instrument at all, null where one is asked for.
  */
-internal enum class TuningGroup(
+internal enum class TunerInstrument(
     val tunings: List<InstrumentTuning>,
 ) {
-    SIX_STRING_GUITAR(
+    GUITAR(
         listOf(
             InstrumentTuning.GUITAR,
             InstrumentTuning.GUITAR_DROP_D,
@@ -33,7 +33,7 @@ internal enum class TuningGroup(
     ),
     SEVEN_STRING_GUITAR(listOf(InstrumentTuning.GUITAR_SEVEN_STRING, InstrumentTuning.GUITAR_SEVEN_STRING_DROP_A)),
     EIGHT_STRING_GUITAR(listOf(InstrumentTuning.GUITAR_EIGHT_STRING, InstrumentTuning.GUITAR_EIGHT_STRING_DROP_E)),
-    FOUR_STRING_BASS(
+    BASS(
         listOf(
             InstrumentTuning.BASS,
             InstrumentTuning.BASS_DROP_D,
@@ -47,3 +47,6 @@ internal enum class TuningGroup(
     VIOLIN(listOf(InstrumentTuning.VIOLIN)),
     MANDOLIN(listOf(InstrumentTuning.MANDOLIN)),
 }
+
+/** The instrument [tuning] is a tuning of, null for chromatic tuning. */
+internal fun instrumentOf(tuning: InstrumentTuning?) = TunerInstrument.entries.firstOrNull { tuning in it.tunings }

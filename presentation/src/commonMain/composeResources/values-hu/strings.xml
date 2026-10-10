@@ -413,19 +413,17 @@
     <string name="tuner_reading_coarse_sharp">%1$s, magas</string>
     <string name="tuner_reading_far_sharp">%1$s, nagyon magas</string>
     <string name="tuner_instrument">Hangszer</string>
-    <string name="tuner_chromatic_description">Bármilyen hangszeren a legközelebbi hangot olvassa le, nem a legközelebbi húrt.</string>
+    <string name="tuner_instrument_description">A kromatikus mód a legközelebbi hangot olvassa le, egy hangszer a legközelebbi húrját.</string>
     <string name="tuner_instrument_chromatic">Kromatikus</string>
     <string name="tuner_instrument_guitar">Gitár</string>
-    <string name="tuner_instrument_bass">Basszus</string>
+    <string name="tuner_instrument_bass">Basszusgitár</string>
     <string name="tuner_instrument_ukulele">Ukulele</string>
     <string name="tuner_instrument_violin">Hegedű</string>
     <string name="tuner_instrument_mandolin">Mandolin</string>
     <string name="tuner_instrument_banjo">Bendzsó</string>
-    <string name="tuner_instrument_more">Egyéb</string>
     <string name="tuner_instrument_guitar_strings">%1$d húros gitár</string>
     <string name="tuner_instrument_bass_strings">%1$d húros basszusgitár</string>
-    <!-- A tuning chip as a screen reader reads it, its instrument first, e.g. "4-string bass, Drop D". -->
-    <string name="tuner_tuning_of_instrument">%1$s, %2$s</string>
+    <string name="tuner_tuning">Hangolás</string>
     <string name="tuner_tuning_standard">Normál</string>
     <string name="tuner_tuning_drop_d">Drop D</string>
     <string name="tuner_tuning_half_step_down">Fél hanggal lejjebb</string>

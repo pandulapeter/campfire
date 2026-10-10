@@ -393,7 +393,6 @@ class CampfireViewModel(
             if (previousTop?.contentKey != stack.lastOrNull()?.contentKey) {
                 stopTuner()
                 this@CampfireViewModel.dismissSheet(DialogType.Tuner)
-                this@CampfireViewModel.dismissSheet(DialogType.TunerInstrument)
             }
         }
         addOnBackStackChanged { _, _ -> editorSession.onBackStackChanged() }

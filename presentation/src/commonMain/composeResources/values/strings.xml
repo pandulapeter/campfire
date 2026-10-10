@@ -413,7 +413,7 @@
     <string name="tuner_reading_coarse_sharp">%1$s, sharp</string>
     <string name="tuner_reading_far_sharp">%1$s, far sharp</string>
     <string name="tuner_instrument">Instrument</string>
-    <string name="tuner_chromatic_description">Reads the nearest note, whatever the instrument, rather than the nearest of its strings.</string>
+    <string name="tuner_instrument_description">Chromatic reads the nearest note, an instrument the nearest of its strings.</string>
     <string name="tuner_instrument_chromatic">Chromatic</string>
     <string name="tuner_instrument_guitar">Guitar</string>
     <string name="tuner_instrument_bass">Bass</string>
@@ -421,11 +421,9 @@
     <string name="tuner_instrument_violin">Violin</string>
     <string name="tuner_instrument_mandolin">Mandolin</string>
     <string name="tuner_instrument_banjo">Banjo</string>
-    <string name="tuner_instrument_more">More</string>
     <string name="tuner_instrument_guitar_strings">%1$d-string guitar</string>
     <string name="tuner_instrument_bass_strings">%1$d-string bass</string>
-    <!-- A tuning chip as a screen reader reads it, its instrument first, e.g. "4-string bass, Drop D". -->
-    <string name="tuner_tuning_of_instrument">%1$s, %2$s</string>
+    <string name="tuner_tuning">Tuning</string>
     <string name="tuner_tuning_standard">Standard</string>
     <string name="tuner_tuning_drop_d">Drop D</string>
     <string name="tuner_tuning_half_step_down">Half step down</string>

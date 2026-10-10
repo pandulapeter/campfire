@@ -13,8 +13,10 @@ import androidx.compose.runtime.Composable
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.tuner_instrument_banjo
+import com.pandulapeter.campfire.presentation.resources.tuner_instrument_bass
 import com.pandulapeter.campfire.presentation.resources.tuner_instrument_bass_strings
 import com.pandulapeter.campfire.presentation.resources.tuner_instrument_chromatic
+import com.pandulapeter.campfire.presentation.resources.tuner_instrument_guitar
 import com.pandulapeter.campfire.presentation.resources.tuner_instrument_guitar_strings
 import com.pandulapeter.campfire.presentation.resources.tuner_instrument_mandolin
 import com.pandulapeter.campfire.presentation.resources.tuner_instrument_ukulele
@@ -30,27 +32,27 @@ import com.pandulapeter.campfire.presentation.resources.tuner_tuning_full_step_d
 import com.pandulapeter.campfire.presentation.resources.tuner_tuning_half_step_down
 import com.pandulapeter.campfire.presentation.resources.tuner_tuning_high_c
 import com.pandulapeter.campfire.presentation.resources.tuner_tuning_low_g
-import com.pandulapeter.campfire.presentation.resources.tuner_tuning_of_instrument
 import com.pandulapeter.campfire.presentation.resources.tuner_tuning_open_d
 import com.pandulapeter.campfire.presentation.resources.tuner_tuning_open_g
 import com.pandulapeter.campfire.presentation.resources.tuner_tuning_standard
 import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 
-/** The name of [group] as an instrument of its own: "7-string guitar", "Banjo". */
+/** The name of [instrument] on its chip, chromatic tuning's for null: "7-string guitar", "Banjo". */
 @Composable
-internal fun groupLabel(group: TuningGroup) = when (group) {
-    TuningGroup.SIX_STRING_GUITAR -> stringResource(Res.string.tuner_instrument_guitar_strings, 6)
-    TuningGroup.SEVEN_STRING_GUITAR -> stringResource(Res.string.tuner_instrument_guitar_strings, 7)
-    TuningGroup.EIGHT_STRING_GUITAR -> stringResource(Res.string.tuner_instrument_guitar_strings, 8)
-    TuningGroup.FOUR_STRING_BASS -> stringResource(Res.string.tuner_instrument_bass_strings, 4)
-    TuningGroup.FIVE_STRING_BASS -> stringResource(Res.string.tuner_instrument_bass_strings, 5)
-    TuningGroup.UKULELE -> stringResource(Res.string.tuner_instrument_ukulele)
-    TuningGroup.BANJO -> stringResource(Res.string.tuner_instrument_banjo)
-    TuningGroup.VIOLIN -> stringResource(Res.string.tuner_instrument_violin)
-    TuningGroup.MANDOLIN -> stringResource(Res.string.tuner_instrument_mandolin)
+internal fun instrumentLabel(instrument: TunerInstrument?) = when (instrument) {
+    null -> stringResource(Res.string.tuner_instrument_chromatic)
+    TunerInstrument.GUITAR -> stringResource(Res.string.tuner_instrument_guitar)
+    TunerInstrument.SEVEN_STRING_GUITAR -> stringResource(Res.string.tuner_instrument_guitar_strings, 7)
+    TunerInstrument.EIGHT_STRING_GUITAR -> stringResource(Res.string.tuner_instrument_guitar_strings, 8)
+    TunerInstrument.BASS -> stringResource(Res.string.tuner_instrument_bass)
+    TunerInstrument.FIVE_STRING_BASS -> stringResource(Res.string.tuner_instrument_bass_strings, 5)
+    TunerInstrument.UKULELE -> stringResource(Res.string.tuner_instrument_ukulele)
+    TunerInstrument.BANJO -> stringResource(Res.string.tuner_instrument_banjo)
+    TunerInstrument.VIOLIN -> stringResource(Res.string.tuner_instrument_violin)
+    TunerInstrument.MANDOLIN -> stringResource(Res.string.tuner_instrument_mandolin)
 }
 
-/** The name of [tuning] under its instrument's name: "Drop D", or "Standard" for the one most of them are strung in. */
+/** The name of [tuning] on its chip, its instrument named above it: "Drop D", or "Standard" for the one most are strung in. */
 @Composable
 internal fun tuningLabel(tuning: InstrumentTuning) = stringResource(
     when (tuning) {
@@ -77,11 +79,3 @@ internal fun tuningLabel(tuning: InstrumentTuning) = stringResource(
         InstrumentTuning.BANJO_DOUBLE_C -> Res.string.tuner_tuning_double_c
     }
 )
-
-/** [tuning] named with its instrument, where it is named without the instrument's heading over it: "4-string bass, Drop D". */
-@Composable
-internal fun instrumentLabel(tuning: InstrumentTuning?) = if (tuning == null) {
-    stringResource(Res.string.tuner_instrument_chromatic)
-} else {
-    stringResource(Res.string.tuner_tuning_of_instrument, groupLabel(groupOf(tuning)), tuningLabel(tuning))
-}

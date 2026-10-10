@@ -53,9 +53,6 @@ sealed interface DialogType {
 
     /** The tuner over the song being read, opened from the song details overflow menu; it listens while it is up. */
     data object Tuner : DialogType
-
-    /** The instrument and the tuning the tuner reads against, opened from the Tuner tab; a pick is written at once. */
-    data object TunerInstrument : DialogType
     /**
      * Opened from the song details overflow menu, and offers the song's own tags and
      * the rest of the library's.

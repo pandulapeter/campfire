@@ -13,14 +13,12 @@
 - Changing filters should not scroll to top
 - Cover art archive thumbnails load really slowly
 - Get rid of the border around metronome bars
-- Song layout improvements: documentation/plans/song-layout.md
 
 ### Improvements
 - Song layout as a designer would set it (scored cuts, narrow columns, fitted text): documentation/plans/song-layout.md
 - Improve haptic effects (fast scroll is inconsistent, tap tempo should not have one)
 - Clean up all the edit links, about the song bottom sheet, song details menus. Too much duplicated content, not super intuitive
 - Review / update website support page (FAQ)
-- Improve tuner UI
 
 ## Midterm (in the next versions)
 - Multi-select for songs: documentation/plans/multi-select.md
