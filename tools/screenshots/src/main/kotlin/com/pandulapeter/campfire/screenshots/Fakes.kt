@@ -103,9 +103,11 @@ internal class SilentMetronome : Metronome {
         _playback.value = MetronomePlayback.Playing(pattern)
     }
 
-    override fun update(pattern: MetronomePattern, restartBar: Boolean) {
+    override fun update(pattern: MetronomePattern, fromNextBar: Boolean) {
         if (_playback.value is MetronomePlayback.Playing) _playback.value = MetronomePlayback.Playing(pattern)
     }
+
+    override fun applyPendingNow() = Unit
 
     override fun preview(sound: MetronomeSound, level: BeatLevel) = Unit
 

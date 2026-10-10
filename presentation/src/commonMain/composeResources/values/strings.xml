@@ -603,6 +603,9 @@
     <string name="cover_art_address_failed">No image could be loaded from this address</string>
     <string name="song_details_capo">Capo %1$d</string>
     <string name="song_details_tempo">%1$s BPM</string>
+    <string name="song_details_tempo_pending">%1$s → %2$s BPM</string>
+    <string name="song_details_tempo_pending_description">From the next bar: %2$s BPM, now %1$s BPM</string>
+    <string name="song_details_tempo_apply_now">Switch now</string>
     <string name="song_details_time">%1$s</string>
     <string name="song_details_key_change">Key: %1$s</string>
     <string name="song_details_chords">Chords</string>

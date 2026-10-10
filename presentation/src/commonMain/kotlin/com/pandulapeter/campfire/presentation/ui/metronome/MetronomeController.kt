@@ -179,6 +179,9 @@ internal class MetronomeController(
 
     fun stopMetronome() = metronome.stop()
 
+    /** Starts the song or the stretch the click is moving to on the next beat rather than once the bar has ended. */
+    fun applyPendingMetronomeChange() = metronome.applyPendingNow()
+
     fun previewMetronomeSound(sound: MetronomeSound) = metronome.preview(sound, BeatLevel.ACCENT)
 
     fun updateMetronomeSettings(change: MetronomeSettings.() -> MetronomeSettings) =
@@ -216,8 +219,10 @@ internal class MetronomeController(
     /** Stops a playing click that can neither be heard nor felt in the background, answering whether it did. */
     private fun stopClickThatIsNotHeard(): Boolean {
         val playing = metronome.playback.value as? MetronomePlayback.Playing ?: return false
-        val isFelt = lastAreBeatsFeltInBackground && metronomeSettings.value.isHapticBeatEnabled && playing.pattern.hasUnmutedBeat
-        if (playing.pattern.canSound || isFelt) return false
+        // What waits for the next bar already decides how the click sounds.
+        val pattern = playing.pendingPattern ?: playing.pattern
+        val isFelt = lastAreBeatsFeltInBackground && metronomeSettings.value.isHapticBeatEnabled && pattern.hasUnmutedBeat
+        if (pattern.canSound || isFelt) return false
         metronome.stop()
         return true
     }
@@ -234,9 +239,9 @@ internal class MetronomeController(
     /** Follows what a playing click plays, see the comment inside. */
     fun startFollowingPattern() = scope.launch {
         // One collector for everything that changes what a playing click plays, so that a context change and the
-        // pattern it brings are one update: paging to another song moves the click to it from beat one, and
-        // anything else - a tempo stepped, a setting, a song's {tempo} saved or synced - is applied from the next
-        // beat. Leaving the song is not among them, since a click does not outlive the screen it is played from.
+        // pattern it brings are one update: paging to another song (or another stretch of one) moves the click to
+        // it once the bar being played has ended, from beat one, and anything else - a tempo stepped, a setting, a
+        // song's {tempo} saved or synced - is applied from the next beat. Leaving the song is not among them, since a click does not outlive the screen it is played from.
         // The first value is only remembered: a view model built again while a click plays (an activity recreated)
         // starts from a back stack it has not moved. What was applied is compared rather than the values repeating,
         // since a pattern that changed while the click was held is emitted again unchanged once the hold ends.
@@ -266,7 +271,7 @@ internal class MetronomeController(
             if (last != null) {
                 val isMoved = isMetronomeContextMoved(last = last, context = context, renames = metronomeRenames)
                 if (last is MetronomeContext.Song && context != last) metronomeRenames.remove(last.songFileName)
-                if (context != last || pattern != applied) metronome.update(pattern, restartBar = isMoved)
+                if (context != last || pattern != applied) metronome.update(pattern, fromNextBar = isMoved)
             }
             applied = pattern
         }

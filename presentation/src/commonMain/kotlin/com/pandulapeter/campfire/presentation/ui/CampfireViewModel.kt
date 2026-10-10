@@ -1207,6 +1207,8 @@ class CampfireViewModel(
 
     fun stopMetronome() = metronomeController.stopMetronome()
 
+    internal fun applyPendingMetronomeChange() = metronomeController.applyPendingMetronomeChange()
+
     fun previewMetronomeSound(sound: MetronomeSound) = metronomeController.previewMetronomeSound(sound)
 
     fun updateMetronomeSettings(change: MetronomeSettings.() -> MetronomeSettings) = metronomeController.updateMetronomeSettings(change)

@@ -19,7 +19,11 @@ the most tested class here) answers which ticks fall before a frame: each tick's
 started at plus `ticks × sampleRate × 60 / (bpm × clicksPerBeat)` in one integer division, so it is never more than a
 frame off however long it runs, where adding rounded intervals drifts. A pattern change replaces the pattern of every
 tick not yet handed out — what sounds from the next tick, what places them from the next beat, so a subdivided beat is
-never cut in two lengths. `ClickSynthesizer` computes every sound's three voices (accent, normal, subdivision) once per
+never cut in two lengths, or, for a change made `fromNextBar` (another song, another stretch of one), once the bar being
+played has ended, as beat one of bar zero; a later change waits with it rather than bringing it forward, and
+`applyPendingNow` brings it forward to the next beat. Such a change has an id, carried by every tick it places, and the
+engine reports it as `Playing.pendingPattern` until the first of those ticks is heard: `Playing.pattern` is always what
+reaches the ear. `ClickSynthesizer` computes every sound's three voices (accent, normal, subdivision) once per
 sample rate — decaying sines, partial pairs, first-differenced noise from a seeded `Random`, the same generator on
 every platform — with ramps at both ends and peaks below full scale; its golden test compares checksums of the 16-bit
 samples, never the floats, which may differ by an ulp between the JVM's interpreter and JIT. `ClickMixer` mixes clicks
@@ -51,7 +55,10 @@ durations, the frames they come to at a rate and the 48 kHz default are declared
   buys nothing audible and costs underruns with the screen off), fed from a thread at `THREAD_PRIORITY_URGENT_AUDIO`
   that also releases the track. It owns the `AudioFocusRequest` (a refusal is `Refused`, any loss stops) and the
   `ACTION_AUDIO_BECOMING_NOISY` receiver, so a click stops for a call or pulled headphones whether or not the service is
-  up. `heardFrame` from `getTimestamp`, else the playback head.
+  up. `heardFrame` from `getTimestamp` (the speaker's frame, latency included), extrapolated from the last one when one
+  is missed; never the playback head, which starts at zero on `play()` and runs ahead by the whole latency, so a beat
+  released by it is felt and seen before it is heard — nothing is heard until the first timestamp, and only a track
+  that has reported none for 1.5 s is clocked by its head (`AudioClock.heardFrameBeforeTimestamp`).
 - **iOS** — `AVAudioEngine` with an `AVAudioPlayerNode` fed five buffers in flight from a Kotlin `NSThread`, the
   completion handler only signalling a semaphore (never an `AVAudioSourceNode`, which would run Kotlin/Native on the
   real-time thread). The player starts once the first five buffers are queued, in `start` and never from the feed

@@ -16,12 +16,17 @@ public sealed interface MetronomePlayback {
     public data class Stopped(val reason: MetronomeStopReason? = null) : MetronomePlayback
 
     /**
+     * @param pattern What is heard: its tempo, time signature and subdivision are those of the clicks reaching the ear.
      * @param audioIssue Set where nothing can be heard although the click runs, the beats included: no output could
      *   be opened, or the browser has not let the page start its audio yet.
+     * @param pendingPattern What takes over once the bar being heard has ended (see [com.pandulapeter.campfire.metronome.api.Metronome.update]'s
+     *   `fromNextBar`), becoming [pattern] with the first click of the next bar that reaches the ear; null when nothing
+     *   waits. Its sound, volume and accents are already heard.
      */
     public data class Playing(
         val pattern: MetronomePattern,
         val audioIssue: MetronomeAudioIssue? = null,
+        val pendingPattern: MetronomePattern? = null,
     ) : MetronomePlayback
 }
 

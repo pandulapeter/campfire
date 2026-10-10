@@ -64,7 +64,7 @@ class MetronomeSequencerTest {
     fun `a tempo change mid-bar lands on the next click`() {
         val sequencer = sequencer(MetronomePattern(bpm = 60))
         sequencer.ticksUntil(1L)
-        sequencer.update(MetronomePattern(bpm = 120), restartBar = false)
+        sequencer.update(MetronomePattern(bpm = 120), barChangeId = null)
         val ticks = sequencer.ticksUntil(SAMPLE_RATE * 2L)
         assertEquals(listOf(48_000L, 72_000L), ticks.map { it.frame })
         assertEquals(listOf(1, 2), ticks.map { it.beatIndex })
@@ -74,7 +74,7 @@ class MetronomeSequencerTest {
     fun `a timing change waits for the beat to end`() {
         val sequencer = sequencer(MetronomePattern(bpm = 60, subdivision = Subdivision.EIGHTHS))
         sequencer.ticksUntil(1L)
-        sequencer.update(MetronomePattern(bpm = 120), restartBar = false)
+        sequencer.update(MetronomePattern(bpm = 120), barChangeId = null)
         assertEquals(listOf(24_000L, 48_000L, 72_000L), sequencer.ticksUntil(SAMPLE_RATE * 2L).map { it.frame })
     }
 
@@ -82,26 +82,83 @@ class MetronomeSequencerTest {
     fun `a sound change lands on the next click`() {
         val sequencer = sequencer(MetronomePattern(bpm = 60, subdivision = Subdivision.EIGHTHS))
         sequencer.ticksUntil(1L)
-        sequencer.update(MetronomePattern(bpm = 60, subdivision = Subdivision.EIGHTHS, sound = MetronomeSound.COWBELL), restartBar = false)
+        sequencer.update(MetronomePattern(bpm = 60, subdivision = Subdivision.EIGHTHS, sound = MetronomeSound.COWBELL), barChangeId = null)
         assertEquals(MetronomeSound.COWBELL, sequencer.ticksUntil(SAMPLE_RATE * 1L).single().sound)
     }
 
     @Test
-    fun `restarting the bar makes the next click beat one`() {
+    fun `a change from the next bar lets the bar being played end, then counts a new one from beat one`() {
+        val sequencer = sequencer(MetronomePattern(bpm = 60))
+        val before = sequencer.ticksUntil(SAMPLE_RATE * 6L)
+        assertEquals(listOf(0L, 0L, 0L, 0L, 1L, 1L), before.map { it.barIndex })
+        sequencer.update(MetronomePattern(bpm = 120, timeSignature = TimeSignature(3, 4)), barChangeId = 1)
+        val ticks = sequencer.ticksUntil(SAMPLE_RATE * 10L)
+        assertEquals(listOf(2, 3, 0, 1, 2, 0), ticks.map { it.beatIndex })
+        assertEquals(listOf(1L, 1L, 0L, 0L, 0L, 1L), ticks.map { it.barIndex })
+        assertEquals(listOf(6L, 7L, 8L).map { it * SAMPLE_RATE }, ticks.take(3).map { it.frame })
+        assertEquals(listOf(8L * SAMPLE_RATE + 24_000, 8L * SAMPLE_RATE + 48_000), ticks.slice(3..4).map { it.frame })
+        assertEquals(BeatLevel.ACCENT, ticks[2].level)
+    }
+
+    @Test
+    fun `a change from the next bar made before a bar's first click starts with it`() {
+        val sequencer = sequencer(MetronomePattern(bpm = 60))
+        sequencer.ticksUntil(SAMPLE_RATE * 4L)
+        sequencer.update(MetronomePattern(bpm = 120), barChangeId = 1)
+        val ticks = sequencer.ticksUntil(SAMPLE_RATE * 5L)
+        assertEquals(listOf(4L * SAMPLE_RATE, 4L * SAMPLE_RATE + 24_000), ticks.map { it.frame })
+        assertEquals(listOf(0L, 0L), ticks.map { it.barIndex })
+    }
+
+    @Test
+    fun `a tempo stepped while a change from the next bar waits waits with it`() {
+        val sequencer = sequencer(MetronomePattern(bpm = 60))
+        sequencer.ticksUntil(1L)
+        sequencer.update(MetronomePattern(bpm = 120), barChangeId = 1)
+        sequencer.update(MetronomePattern(bpm = 30), barChangeId = null)
+        val ticks = sequencer.ticksUntil(SAMPLE_RATE * 7L)
+        assertEquals(listOf(1L, 2L, 3L, 4L, 6L).map { it * SAMPLE_RATE }, ticks.map { it.frame })
+        assertEquals(listOf(1, 2, 3, 0, 1), ticks.map { it.beatIndex })
+    }
+
+    @Test
+    fun `a change waiting for the next bar applied now makes the next beat beat one`() {
         val sequencer = sequencer(MetronomePattern(bpm = 60))
         sequencer.ticksUntil(SAMPLE_RATE * 2L)
-        sequencer.update(MetronomePattern(bpm = 60, timeSignature = TimeSignature(3, 4)), restartBar = true)
+        sequencer.update(MetronomePattern(bpm = 120), barChangeId = 7)
+        sequencer.applyPendingBarChangeNow()
+        val ticks = sequencer.ticksUntil(SAMPLE_RATE * 3L)
+        assertEquals(listOf(2L * SAMPLE_RATE, 2L * SAMPLE_RATE + 24_000), ticks.map { it.frame })
+        assertEquals(listOf(0, 1), ticks.map { it.beatIndex })
+        assertEquals(listOf(7, 7), ticks.map { it.barChangeId })
+    }
+
+    @Test
+    fun `applying now with nothing waiting changes nothing`() {
+        val sequencer = sequencer(MetronomePattern(bpm = 60))
+        sequencer.ticksUntil(SAMPLE_RATE * 2L)
+        sequencer.applyPendingBarChangeNow()
+        sequencer.update(MetronomePattern(bpm = 60, timeSignature = TimeSignature(3, 4)), barChangeId = 1)
         val ticks = sequencer.ticksUntil(SAMPLE_RATE * 5L)
-        assertEquals(listOf(0, 1, 2), ticks.map { it.beatIndex })
-        assertEquals(BeatLevel.ACCENT, ticks.first().level)
-        assertEquals(SAMPLE_RATE * 2L, ticks.first().frame)
+        assertEquals(listOf(2, 3, 0), ticks.map { it.beatIndex })
+        assertEquals(listOf(null, null, 1), ticks.map { it.barChangeId })
+    }
+
+    @Test
+    fun `a sound change waiting on the next bar still lands on the next click`() {
+        val sequencer = sequencer(MetronomePattern(bpm = 60))
+        sequencer.ticksUntil(1L)
+        sequencer.update(MetronomePattern(bpm = 120, sound = MetronomeSound.COWBELL), barChangeId = 1)
+        val ticks = sequencer.ticksUntil(SAMPLE_RATE * 2L)
+        assertEquals(listOf(SAMPLE_RATE.toLong()), ticks.map { it.frame })
+        assertEquals(MetronomeSound.COWBELL, ticks.single().sound)
     }
 
     @Test
     fun `a shorter bar after the current beat starts a new one`() {
         val sequencer = sequencer(MetronomePattern(bpm = 60))
         sequencer.ticksUntil(SAMPLE_RATE * 3L)
-        sequencer.update(MetronomePattern(bpm = 60, timeSignature = TimeSignature(2, 4)), restartBar = false)
+        sequencer.update(MetronomePattern(bpm = 60, timeSignature = TimeSignature(2, 4)), barChangeId = null)
         assertEquals(listOf(0, 1), sequencer.ticksUntil(SAMPLE_RATE * 5L).map { it.beatIndex })
     }
 

@@ -603,6 +603,9 @@
     <string name="cover_art_address_failed">Erről a címről nem sikerült képet betölteni</string>
     <string name="song_details_capo">Capo %1$d</string>
     <string name="song_details_tempo">%1$s BPM</string>
+    <string name="song_details_tempo_pending">%1$s → %2$s BPM</string>
+    <string name="song_details_tempo_pending_description">A következő ütemtől: %2$s BPM, most %1$s BPM</string>
+    <string name="song_details_tempo_apply_now">Váltás most</string>
     <string name="song_details_time">%1$s</string>
     <string name="song_details_key_change">Hangnem: %1$s</string>
     <string name="song_details_chords">Akkordok</string>

@@ -46,15 +46,23 @@ public interface Metronome {
      */
     public val beats: SharedFlow<MetronomeBeat>
 
-    /** Starts the click with [pattern] on its first beat. Starting while it already plays is [update] with the bar restarted. */
+    /** Starts the click with [pattern] on its first beat. Starting while it already plays is [update] from the next bar. */
     public fun start(pattern: MetronomePattern)
 
     /**
      * Replaces the pattern of a playing click; ignored when it is stopped. What decides the timing - the tempo, the
-     * time signature and the subdivision - changes on the next beat, which [restartBar] makes beat one of a new bar;
-     * the sound, the volume and the accents change from the next click.
+     * time signature and the subdivision - changes on the next beat, or, with [fromNextBar], once the bar being played
+     * has ended, its first click beat one of a new count of bars (another song, another stretch of one); the sound, the
+     * volume and the accents change from the next click either way. A change from the next bar stays one: an update
+     * without it that arrives before that bar has ended waits with it.
      */
-    public fun update(pattern: MetronomePattern, restartBar: Boolean)
+    public fun update(pattern: MetronomePattern, fromNextBar: Boolean)
+
+    /**
+     * Brings a change waiting for the next bar forward to the next beat, which becomes beat one of a new bar: the song
+     * moved to starts now rather than after the rest of the bar. Does nothing when no change waits.
+     */
+    public fun applyPendingNow()
 
     /**
      * Plays the one click [sound] makes at [level], for choosing a sound: mixed into a playing click, or on its own

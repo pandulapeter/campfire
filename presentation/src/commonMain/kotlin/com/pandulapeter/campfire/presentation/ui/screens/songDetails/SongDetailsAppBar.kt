@@ -71,6 +71,9 @@ import com.pandulapeter.campfire.presentation.resources.ic_expand
 import com.pandulapeter.campfire.presentation.resources.song_details_scroll_to_top
 import com.pandulapeter.campfire.presentation.resources.song_details_song_info
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo
+import com.pandulapeter.campfire.presentation.resources.song_details_tempo_apply_now
+import com.pandulapeter.campfire.presentation.resources.song_details_tempo_pending
+import com.pandulapeter.campfire.presentation.resources.song_details_tempo_pending_description
 import com.pandulapeter.campfire.presentation.resources.song_details_text_size
 import com.pandulapeter.campfire.presentation.resources.songs_key
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
@@ -90,6 +93,7 @@ import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeButton
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomePanel
 import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
 import com.pandulapeter.campfire.presentation.ui.metronome.metronomeAction
+import com.pandulapeter.campfire.presentation.ui.metronome.pendingTempoOf
 import com.pandulapeter.campfire.presentation.ui.metronome.withBeatLevels
 import com.pandulapeter.campfire.presentation.ui.tuner.tunerAction
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
@@ -144,6 +148,8 @@ internal fun SongDetailsAppBar(
     val songActions = rememberSongActionHandler(viewModel)
     val playingOverrides by viewModel.playingOverrides.collectAsStateWithLifecycle()
     val songFileNamesInSetlists by viewModel.songFileNamesInSetlists.collectAsStateWithLifecycle()
+    val metronomePlayback by viewModel.metronomePlayback.collectAsStateWithLifecycle()
+    val pendingTempo = pendingTempoOf(metronomePlayback)
     val layoutDirection = LocalLayoutDirection.current
     val appBarWidth = settledWidth - contentPadding.calculateStartPadding(layoutDirection) - contentPadding.calculateEndPadding(layoutDirection)
     // Decided from the settled width and for every song of the pager at once, like the song actions, so that the
@@ -233,11 +239,18 @@ internal fun SongDetailsAppBar(
                         spelling = chordSpelling,
                     )
                 }
-                // The stretch the page is on where the song changes its tempo further down, as the click plays it.
-                val headerTempo = song
-                    ?.takeIf { isMetronomeEnabled }
-                    ?.let { songTimings[it.fileName]?.bpm ?: songPlaybackOf(song = it, setlistFileName = destination.setlistFileName, overrides = playingOverrides).tempo.displayedBpm }
-                    ?.let { stringResource(Res.string.song_details_tempo, it.toString()) }
+                // The stretch the page is on where the song changes its tempo further down, as the click plays it. A
+                // click moving to it at another tempo waits for the end of the bar it is in, and says so meanwhile with
+                // the tempo still heard, which a tap gives up for the new one at once.
+                val songPendingTempo = pendingTempo?.takeIf { song != null && song.fileName == currentSong?.fileName }
+                val headerTempo = if (songPendingTempo != null) {
+                    stringResource(Res.string.song_details_tempo_pending, songPendingTempo.fromBpm.toString(), songPendingTempo.toBpm.toString())
+                } else {
+                    song
+                        ?.takeIf { isMetronomeEnabled }
+                        ?.let { songTimings[it.fileName]?.bpm ?: songPlaybackOf(song = it, setlistFileName = destination.setlistFileName, overrides = playingOverrides).tempo.displayedBpm }
+                        ?.let { stringResource(Res.string.song_details_tempo, it.toString()) }
+                }
                 // The duration only inside a setlist, as the song's card there says it, since a set is what is
                 // timed by its songs; and, as there, with the chords switched off too, since the singer is timed by it alike.
                 val headerDuration = song?.takeIf { destination.setlistFileName != null }?.duration?.let(ChordProDuration::format)
@@ -331,8 +344,14 @@ internal fun SongDetailsAppBar(
                             )
                             SongHeaderNote(
                                 text = headerTempo,
+                                description = songPendingTempo?.let {
+                                    stringResource(Res.string.song_details_tempo_pending_description, it.fromBpm.toString(), it.toBpm.toString())
+                                },
                                 isEmphasized = false,
                                 hasPrecedingContent = song?.artist?.isNotBlank() == true || headerKey != null,
+                                isPending = songPendingTempo != null,
+                                onClickLabel = stringResource(Res.string.song_details_tempo_apply_now),
+                                onClick = songPendingTempo?.let { viewModel::applyPendingMetronomeChange },
                             )
                             SongHeaderNote(
                                 text = headerDuration,

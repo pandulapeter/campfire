@@ -25,7 +25,7 @@ the page its pager is heading for (`onSongDetailsPageChanged`, from `targetPage`
 slides in) and at the stretch of that song the page is headed for where it changes its tempo or time signature further
 down (`SongTiming`: which change, and the tempo and the signature its line shows, from `timingIndexAt` over the stops
 and `SongStepper.headedOffset` — a step's or a fling's target, never a finger still dragging; a song paged back to is
-put at its end first, so it reports its last stretch; another stretch restarts the bar like another song, while the same
+put at its end first, so it reports its last stretch; another stretch moves the click like another song, while the same
 stretch at a scaled tempo is applied from the next beat, and the panel's beat row and the app bar's tempo follow it), or
 `Standalone`, the Metronome tab's own pattern (`metronomePatternOf`, in `MetronomePatterns.kt`: a song's tempo and
 `{time}`, 4/4 where it names none, the accents drawn for that signature in any context, everything else from the
@@ -33,7 +33,8 @@ settings).
 
 Only the top of the stack is asked, since a click does not outlive the screen it is played from. One collector in the
 view model's `init` follows the context, the tempos, the settings and the library: a song paged to moves the click to it
-from beat one, anything else is applied from the next beat, and the first value is only remembered, so a view model
+once the bar being played has ended (`Metronome.update`'s `fromNextBar`), from beat one, so the band finishes the bar it
+is in; anything else — a tempo stepped, a setting — is applied from the next beat, and the first value is only remembered, so a view model
 built again over a playing click does not stop it. The last collector of `init` tells the engine whether the Metronome
 tab or a song is on top with the feature on (`isMetronomeStartable`, the only screens whose taps may open the web's
 audio device, `Metronome.setStartable`, a no-op elsewhere). `toggleMetronome` starts the context's pattern or stops it,
@@ -82,8 +83,11 @@ too, since it is saved with the rest of the metronome's settings.
 where the band is: on the song details screen a change starts a page of its own (one written before the song's first
 line stands on the first page, played from there), headed by one read only line naming the tempo and the time signature
 from there on as the click plays them, and a playing click follows the page being read — the one a step or a fling is
-headed for, never one a finger is still dragging past — from beat one, the panel's beat row and the app bar's tempo with
-it. A change inside a section cuts it there, the rest heading the new page with its fold toggle alone; a recalled chorus
+headed for, never one a finger is still dragging past — from beat one of the next bar, the panel's beat row and the app
+bar's tempo with it once the bar being played has ended. **Until then the screen says what is heard**: the beat row
+draws the bar heard (`Playing.pattern`), and the app bar's tempo reads `96 → 120 BPM`, pulsing (`PendingTempo.kt`,
+tested; only where the tempo changes), a tap on it starting the new song or stretch on the next beat
+(`applyPendingMetronomeChange`) for a band that has already stopped. A change inside a section cuts it there, the rest heading the new page with its fold toggle alone; a recalled chorus
 is played in whatever is in force where it is recalled.
 
 The stepper, a setlist's entry and the library's override still hold one number, the song's opening tempo, and a later
@@ -102,7 +106,7 @@ is the instrument, and the song details screen, where it is a panel in the app b
 click never outlives the screen it was started on - going back to the songs, selecting a tab, opening the editor, the
 export screen or the tuner sheet over the song, deleting it, a song opened over the tab or over another song (an "Open
 with", an import's Open), all stop it - so there is never a click playing with nothing on screen to stop it with. On a song details screen
-it follows the page the pager is heading for, so paging to the next song moves the click to its tempo from beat one.
+it follows the page the pager is heading for, so paging to the next song moves the click to its tempo from the next bar.
 Every way onto the tab clears the back stack.
 
 ### Both are played from the same panel

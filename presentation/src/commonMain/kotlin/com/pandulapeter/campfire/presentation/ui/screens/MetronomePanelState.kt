@@ -36,7 +36,8 @@ internal data class MetronomePanelState(
 /**
  * The [MetronomePanelState] of [viewModel], collected in the composition rather than read off the view model's flows'
  * current values, so that a `{time}` saved or synced while the panel is up redraws the bar, and in the same frame as the
- * pager's page change that makes another song the click's.
+ * pager's page change that makes another song the click's. A playing click draws the bar that is heard instead: the
+ * song paged to waits for the end of the bar, and only then does the row take its signature.
  */
 @Composable
 internal fun rememberMetronomePanelState(viewModel: CampfireViewModel): MetronomePanelState {
@@ -44,7 +45,8 @@ internal fun rememberMetronomePanelState(viewModel: CampfireViewModel): Metronom
     val settings by viewModel.metronomeSettings.collectAsStateWithLifecycle()
     val songsByFileName by viewModel.songsByFileName.collectAsStateWithLifecycle()
     val songsBeingRenamed by viewModel.songsBeingRenamed.collectAsStateWithLifecycle()
-    val timeSignature = metronomeTimeSignatureOf(viewModel.metronomeContext, settings) { songsByFileName[it] ?: songsBeingRenamed[it] }
+    val timeSignature = (playback as? MetronomePlayback.Playing)?.pattern?.timeSignature
+        ?: metronomeTimeSignatureOf(viewModel.metronomeContext, settings) { songsByFileName[it] ?: songsBeingRenamed[it] }
     return MetronomePanelState(
         timeSignature = timeSignature,
         beatLevels = settings.beatLevelsOf(timeSignature),

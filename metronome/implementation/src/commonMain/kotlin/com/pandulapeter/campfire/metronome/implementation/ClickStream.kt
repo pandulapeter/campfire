@@ -34,8 +34,13 @@ internal class ClickStream(
     val renderedTicks = Channel<MetronomeSequencer.Tick>(Channel.UNLIMITED)
     private val addToMixer = mixer::add
 
-    fun update(pattern: MetronomePattern, restartBar: Boolean) {
-        commands.trySend(Command.Update(pattern, restartBar))
+    /** See [MetronomeSequencer.update]. */
+    fun update(pattern: MetronomePattern, barChangeId: Int?) {
+        commands.trySend(Command.Update(pattern, barChangeId))
+    }
+
+    fun applyPendingBarChangeNow() {
+        commands.trySend(Command.ApplyPendingBarChangeNow)
     }
 
     fun preview(sound: MetronomeSound, level: BeatLevel) {
@@ -59,7 +64,8 @@ internal class ClickStream(
     fun schedule(nowFrame: Long, untilFrame: Long, onClick: (frame: Long, sound: MetronomeSound, voice: ClickVoice, gain: Float) -> Unit) {
         while (true) {
             when (val command = commands.tryReceive().getOrNull() ?: break) {
-                is Command.Update -> sequencer?.update(command.pattern, command.restartBar)
+                is Command.Update -> sequencer?.update(command.pattern, command.barChangeId)
+                Command.ApplyPendingBarChangeNow -> sequencer?.applyPendingBarChangeNow()
                 is Command.Preview -> onClick(nowFrame, command.sound, command.voice, 1f)
             }
         }
@@ -75,8 +81,10 @@ internal class ClickStream(
 
         data class Update(
             val pattern: MetronomePattern,
-            val restartBar: Boolean,
+            val barChangeId: Int?,
         ) : Command
+
+        data object ApplyPendingBarChangeNow : Command
 
         data class Preview(
             val sound: MetronomeSound,

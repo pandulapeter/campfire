@@ -85,7 +85,7 @@ class MetronomeEngineTest {
     }
 
     @Test
-    fun `a start while playing changes the pattern without opening the output again`() = runTest {
+    fun `a start while playing changes the pattern from the next bar without opening the output again`() = runTest {
         val engine = engine()
         engine.start(pattern)
         runCurrent()
@@ -93,27 +93,83 @@ class MetronomeEngineTest {
         engine.start(faster)
         runCurrent()
         assertEquals(listOf(false), output.starts)
-        assertEquals(MetronomePlayback.Playing(faster, null), engine.playback.value)
+        assertEquals(MetronomePlayback.Playing(pattern, pendingPattern = faster), engine.playback.value)
     }
 
     @Test
-    fun `an update without a restart keeps counting the bar, and one with a restart starts it again`() = runTest {
+    fun `an update keeps counting the bar, and one from the next bar counts bars again once it has ended`() = runTest {
         val engine = engine()
         val beats = beatsOf(engine)
         engine.start(pattern)
         runCurrent()
         output.heardFrame = Long.MAX_VALUE
         output.scheduleBeats(from = 0, to = 2)
-        engine.update(pattern, restartBar = false)
+        engine.update(pattern, fromNextBar = false)
         runCurrent()
-        output.scheduleBeats(from = 2, to = 4)
-        engine.update(pattern, restartBar = true)
+        output.scheduleBeats(from = 2, to = 7)
+        engine.update(pattern, fromNextBar = true)
         runCurrent()
-        output.scheduleBeats(from = 4, to = 6)
+        output.scheduleBeats(from = 7, to = 10)
         advanceTimeBy(RELEASE_STEP_MILLIS)
         runCurrent()
-        assertEquals(listOf(0, 1, 2, 3, 0, 1), beats.map { it.beatIndex })
+        assertEquals(listOf(0, 1, 2, 3, 0, 1, 2, 3, 0, 1), beats.map { it.beatIndex })
+        assertEquals(listOf(0L, 0L, 0L, 0L, 1L, 1L, 1L, 1L, 0L, 0L), beats.map { it.barIndex })
         assertEquals(MetronomePlayback.Playing(pattern, null), engine.playback.value)
+    }
+
+    @Test
+    fun `a change from the next bar is pending until its first click is heard`() = runTest {
+        val engine = engine()
+        val beats = beatsOf(engine)
+        val next = MetronomePattern(bpm = 90)
+        engine.start(pattern)
+        runCurrent()
+        output.scheduleBeats(from = 0, to = 2)
+        engine.update(next, fromNextBar = true)
+        runCurrent()
+        assertEquals(MetronomePlayback.Playing(pattern, pendingPattern = next), engine.playback.value)
+        output.scheduleBeats(from = 2, to = 5)
+        output.heardFrame = 3 * BEAT_FRAMES
+        advanceTimeBy(RELEASE_STEP_MILLIS)
+        runCurrent()
+        assertEquals(MetronomePlayback.Playing(pattern, pendingPattern = next), engine.playback.value)
+        output.heardFrame = 4 * BEAT_FRAMES
+        advanceTimeBy(RELEASE_STEP_MILLIS)
+        runCurrent()
+        assertEquals(MetronomePlayback.Playing(next), engine.playback.value)
+        assertEquals(listOf(0, 1, 2, 3, 0), beats.map { it.beatIndex })
+    }
+
+    @Test
+    fun `a tempo stepped while a change waits for the next bar replaces what waits`() = runTest {
+        val engine = engine()
+        val next = MetronomePattern(bpm = 90)
+        val stepped = MetronomePattern(bpm = 95)
+        engine.start(pattern)
+        runCurrent()
+        engine.update(next, fromNextBar = true)
+        engine.update(stepped, fromNextBar = false)
+        runCurrent()
+        assertEquals(MetronomePlayback.Playing(pattern, pendingPattern = stepped), engine.playback.value)
+    }
+
+    @Test
+    fun `a change waiting for the next bar applied now is heard from the next beat`() = runTest {
+        val engine = engine()
+        val beats = beatsOf(engine)
+        val next = MetronomePattern(bpm = 90)
+        engine.start(pattern)
+        runCurrent()
+        output.scheduleBeats(from = 0, to = 2)
+        engine.update(next, fromNextBar = true)
+        engine.applyPendingNow()
+        runCurrent()
+        output.stream!!.schedule(nowFrame = 2 * BEAT_FRAMES, untilFrame = 3 * BEAT_FRAMES) { _, _, _, _ -> }
+        output.heardFrame = 2 * BEAT_FRAMES
+        advanceTimeBy(RELEASE_STEP_MILLIS)
+        runCurrent()
+        assertEquals(MetronomePlayback.Playing(next), engine.playback.value)
+        assertEquals(listOf(0, 1, 0), beats.map { it.beatIndex })
     }
 
     @Test

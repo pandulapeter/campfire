@@ -24,7 +24,10 @@ import com.pandulapeter.campfire.metronome.api.model.MetronomeSound
  * A pattern change replaces the pattern of every tick not yet handed out. What sounds - the levels, the sound, the
  * volume - changes from the next tick; what places the ticks - the tempo, the signature, the subdivision - from
  * the next beat, so that a subdivided beat is never cut in two different lengths, and the timing restarts there,
- * counted from that beat's frame as the old timing placed it.
+ * counted from that beat's frame as the old timing placed it. A change made from the next bar (one with a bar change
+ * id) waits for the bar being played to end, so that a band moving to another song or another stretch of one finishes
+ * the bar it is in, and its first click is beat one of bar zero; every tick carries the id of the last such change it
+ * was placed by, which is how the engine tells when one is heard.
  */
 internal class MetronomeSequencer(
     private val sampleRate: Int,
@@ -33,17 +36,27 @@ internal class MetronomeSequencer(
     private var pattern = pattern
     private var timing = pattern
     private var pendingTiming: MetronomePattern? = null
-    private var isBarRestartPending = false
+    private var pendingBarChangeId: Int? = null
+    private var appliedBarChangeId: Int? = null
+    private var isBarChangeDue = false
     private var anchorFrame = 0L
     private var ticksSinceAnchor = 0L
     private var beatIndex = 0
     private var subdivisionIndex = 0
     private var barIndex = 0L
 
-    fun update(pattern: MetronomePattern, restartBar: Boolean) {
+    /** @param barChangeId Set for a change made from the next bar, null for one made from the next beat. */
+    fun update(pattern: MetronomePattern, barChangeId: Int?) {
         this.pattern = pattern
         pendingTiming = pattern
-        isBarRestartPending = isBarRestartPending || restartBar
+        // A change from the next beat made while one from the next bar waits waits with it: a tempo stepped on the song
+        // being moved to is part of that move, not a change of its own that could bring it forward.
+        if (barChangeId != null) pendingBarChangeId = barChangeId
+    }
+
+    /** Brings a change waiting for the next bar forward to the next beat, which it makes beat one of a new bar. */
+    fun applyPendingBarChangeNow() {
+        if (pendingBarChangeId != null) isBarChangeDue = true
     }
 
     /** Hands out the ticks before [frame] that have not been handed out yet, in order. */
@@ -61,6 +74,7 @@ internal class MetronomeSequencer(
                 isSubdivision = subdivisionIndex != 0,
                 sound = pattern.sound,
                 volume = pattern.volume,
+                barChangeId = appliedBarChangeId,
             )
             ticksSinceAnchor++
             subdivisionIndex++
@@ -80,14 +94,18 @@ internal class MetronomeSequencer(
 
     private fun applyPendingTiming() {
         val pending = pendingTiming ?: return
+        val barChangeId = pendingBarChangeId
+        if (barChangeId != null && beatIndex != 0 && !isBarChangeDue) return
         anchorFrame = nextTickFrame()
         ticksSinceAnchor = 0
         timing = pending
         pendingTiming = null
-        if (isBarRestartPending) {
+        if (barChangeId != null) {
             beatIndex = 0
             barIndex = 0
-            isBarRestartPending = false
+            appliedBarChangeId = barChangeId
+            pendingBarChangeId = null
+            isBarChangeDue = false
         } else if (beatIndex >= timing.timeSignature.beats) {
             beatIndex = 0
             barIndex++
@@ -98,6 +116,7 @@ internal class MetronomeSequencer(
      * One click, with everything about how it sounds taken from the pattern of the moment it was handed out.
      *
      * @param level The level of its beat; a subdivision carries its beat's, so that a muted beat mutes them too.
+     * @param barChangeId The last change made from the next bar that placed it, null before the first.
      */
     data class Tick(
         val frame: Long,
@@ -107,6 +126,7 @@ internal class MetronomeSequencer(
         val isSubdivision: Boolean,
         val sound: MetronomeSound,
         val volume: Float,
+        val barChangeId: Int?,
     ) {
         /** The voice that sounds, or null for a click that only counts. */
         val voice
