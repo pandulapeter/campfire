@@ -42,14 +42,23 @@ class InstrumentTuningTest {
         assertEquals(listOf("D2", "A2", "D3", "G3", "A3", "D4"), InstrumentTuning.GUITAR_DADGAD.strings.map(::name))
         assertEquals(listOf("B1", "E2", "A2", "D3", "G3", "B3", "E4"), InstrumentTuning.GUITAR_SEVEN_STRING.strings.map(::name))
         assertEquals(listOf("A1", "E2", "A2", "D3", "G3", "B3", "E4"), InstrumentTuning.GUITAR_SEVEN_STRING_DROP_A.strings.map(::name))
+        assertEquals(listOf("A#1", "D#2", "G#2", "C#3", "F#3", "A#3", "D#4"), InstrumentTuning.GUITAR_SEVEN_STRING_HALF_STEP_DOWN.strings.map(::name))
+        assertEquals(listOf("A1", "D2", "G2", "C3", "F3", "A3", "D4"), InstrumentTuning.GUITAR_SEVEN_STRING_FULL_STEP_DOWN.strings.map(::name))
         assertEquals(listOf("F#1", "B1", "E2", "A2", "D3", "G3", "B3", "E4"), InstrumentTuning.GUITAR_EIGHT_STRING.strings.map(::name))
         assertEquals(listOf("E1", "B1", "E2", "A2", "D3", "G3", "B3", "E4"), InstrumentTuning.GUITAR_EIGHT_STRING_DROP_E.strings.map(::name))
+        assertEquals(
+            listOf("F1", "A#1", "D#2", "G#2", "C#3", "F#3", "A#3", "D#4"),
+            InstrumentTuning.GUITAR_EIGHT_STRING_HALF_STEP_DOWN.strings.map(::name),
+        )
+        assertEquals(listOf("E1", "A1", "D2", "G2", "C3", "F3", "A3", "D4"), InstrumentTuning.GUITAR_EIGHT_STRING_FULL_STEP_DOWN.strings.map(::name))
         assertEquals(listOf("E1", "A1", "D2", "G2"), InstrumentTuning.BASS.strings.map(::name))
         assertEquals(listOf("D1", "A1", "D2", "G2"), InstrumentTuning.BASS_DROP_D.strings.map(::name))
         assertEquals(listOf("D#1", "G#1", "C#2", "F#2"), InstrumentTuning.BASS_HALF_STEP_DOWN.strings.map(::name))
         assertEquals(listOf("D1", "G1", "C2", "F2"), InstrumentTuning.BASS_FULL_STEP_DOWN.strings.map(::name))
         assertEquals(listOf("B0", "E1", "A1", "D2", "G2"), InstrumentTuning.BASS_FIVE_STRING.strings.map(::name))
         assertEquals(listOf("E1", "A1", "D2", "G2", "C3"), InstrumentTuning.BASS_FIVE_STRING_HIGH_C.strings.map(::name))
+        assertEquals(listOf("A#0", "D#1", "G#1", "C#2", "F#2"), InstrumentTuning.BASS_FIVE_STRING_HALF_STEP_DOWN.strings.map(::name))
+        assertEquals(listOf("A0", "D1", "G1", "C2", "F2"), InstrumentTuning.BASS_FIVE_STRING_FULL_STEP_DOWN.strings.map(::name))
         assertEquals(listOf("G4", "C4", "E4", "A4"), InstrumentTuning.UKULELE.strings.map(::name))
         assertEquals(listOf("G3", "C4", "E4", "A4"), InstrumentTuning.UKULELE_LOW_G.strings.map(::name))
         assertEquals(listOf("D3", "G3", "B3", "E4"), InstrumentTuning.UKULELE_BARITONE.strings.map(::name))

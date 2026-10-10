@@ -150,7 +150,11 @@ internal class PitchDetector(private val sampleRate: Int) {
          */
         private const val MAX_KEY_MAXIMA = 256
 
-        const val CHROMATIC_MIN_FREQUENCY = 30f
+        /**
+         * A semitone under A0, the lowest string of a five-string bass tuned a full step down, so that chromatic mode tunes
+         * every string a preset does. The longest lag a window holds, half of it, is about 23 Hz at 48 kHz, so it is in reach.
+         */
+        const val CHROMATIC_MIN_FREQUENCY = 26f
         const val CHROMATIC_MAX_FREQUENCY = 2_100f
         private const val SEMITONES_UNDER_LOWEST_STRING = 4
         private const val SEMITONES_OVER_HIGHEST_STRING = 12
@@ -167,7 +171,7 @@ internal class PitchDetector(private val sampleRate: Int) {
         fun inputSizeFor(sampleRate: Int) = windowSizeFor(sampleRate).let { it + it / 2 }
 
         /**
-         * The frequencies searched: B0 to C7 in chromatic mode, and from four semitones under a preset's lowest string to
+         * The frequencies searched: G#0 to C7 in chromatic mode, and from four semitones under a preset's lowest string to
          * an octave over its highest, which is most of what keeps a bass from being read an octave up.
          */
         fun rangeFor(tuning: InstrumentTuning?, referencePitch: Int): ClosedFloatingPointRange<Float> = if (tuning == null) {

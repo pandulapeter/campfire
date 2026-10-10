@@ -65,8 +65,16 @@ internal fun tuningLabel(tuning: InstrumentTuning) = stringResource(
         InstrumentTuning.VIOLIN,
         InstrumentTuning.MANDOLIN -> Res.string.tuner_tuning_standard
         InstrumentTuning.GUITAR_DROP_D, InstrumentTuning.BASS_DROP_D -> Res.string.tuner_tuning_drop_d
-        InstrumentTuning.GUITAR_HALF_STEP_DOWN, InstrumentTuning.BASS_HALF_STEP_DOWN -> Res.string.tuner_tuning_half_step_down
-        InstrumentTuning.GUITAR_FULL_STEP_DOWN, InstrumentTuning.BASS_FULL_STEP_DOWN -> Res.string.tuner_tuning_full_step_down
+        InstrumentTuning.GUITAR_HALF_STEP_DOWN,
+        InstrumentTuning.GUITAR_SEVEN_STRING_HALF_STEP_DOWN,
+        InstrumentTuning.GUITAR_EIGHT_STRING_HALF_STEP_DOWN,
+        InstrumentTuning.BASS_HALF_STEP_DOWN,
+        InstrumentTuning.BASS_FIVE_STRING_HALF_STEP_DOWN -> Res.string.tuner_tuning_half_step_down
+        InstrumentTuning.GUITAR_FULL_STEP_DOWN,
+        InstrumentTuning.GUITAR_SEVEN_STRING_FULL_STEP_DOWN,
+        InstrumentTuning.GUITAR_EIGHT_STRING_FULL_STEP_DOWN,
+        InstrumentTuning.BASS_FULL_STEP_DOWN,
+        InstrumentTuning.BASS_FIVE_STRING_FULL_STEP_DOWN -> Res.string.tuner_tuning_full_step_down
         InstrumentTuning.GUITAR_DROP_C -> Res.string.tuner_tuning_drop_c
         InstrumentTuning.GUITAR_OPEN_G, InstrumentTuning.BANJO -> Res.string.tuner_tuning_open_g
         InstrumentTuning.GUITAR_OPEN_D -> Res.string.tuner_tuning_open_d

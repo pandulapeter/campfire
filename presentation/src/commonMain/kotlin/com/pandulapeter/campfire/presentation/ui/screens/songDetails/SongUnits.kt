@@ -47,6 +47,15 @@ internal data class UnitContent(
  * than every stretch between two places a cut may fall, so that the layout knows where every line starts, which is
  * where a step through a section taller than the screen brings the next page to (see [SongRows.lineTops]).
  *
+ * What a layout is judged by is in the chunks too. [lineCount] is how many lines of lyrics a chunk is, with or without
+ * their chords: a line of a [RenderSection.Lines] is one, and an empty line, a comment, a key change, a piece of a run
+ * of tablature or grid lines (which [RenderSection.Lines.itemKinds] tells apart as [SectionItemKind.RUN]), a row of
+ * chord diagrams, the song's metadata and everything else between two sections are none, since a piece of a section
+ * left with only one of those is no stranded line of the song. A section that is not cut is one chunk of all of its
+ * lines. [isStanzaBreakBefore] says of a chunk whether a cut in front of it falls where the song's writer already
+ * marked a boundary - after an empty line, or in front of a comment - which is never true of a section's first chunk,
+ * since that is no cut of the section at all.
+ *
  * A section on a card is drawn on as many cards as it has chunks, since no more pieces of it can ever be placed than
  * that: its first is [cardStarts]`[s]` of the [cardCount] the layout is handed, -1 for a section drawn without a card.
  *
@@ -61,6 +70,8 @@ internal class SongUnits(
     val unitSections: IntArray,
     val itemRanges: List<IntRange>,
     val isCuttableBefore: BooleanArray,
+    val lineCount: IntArray,
+    val isStanzaBreakBefore: BooleanArray,
     val cardStarts: IntArray,
     val cardCount: Int,
     val timingStarts: IntArray = intArrayOf(0),
@@ -86,6 +97,8 @@ internal class SongUnits(
             unitSections = IntArray(unitUntil - unitFrom) { unitSections[unitFrom + it] - from },
             itemRanges = itemRanges.subList(unitFrom, unitUntil),
             isCuttableBefore = isCuttableBefore.copyOfRange(unitFrom, unitUntil),
+            lineCount = lineCount.copyOfRange(unitFrom, unitUntil),
+            isStanzaBreakBefore = isStanzaBreakBefore.copyOfRange(unitFrom, unitUntil),
             cardStarts = cardStarts.copyOfRange(from, until),
             cardCount = cardCount,
         )
@@ -102,6 +115,8 @@ internal class SongUnits(
             val unitSections = mutableListOf<Int>()
             val itemRanges = mutableListOf<IntRange>()
             val isCuttableBefore = mutableListOf<Boolean>()
+            val lineCount = mutableListOf<Int>()
+            val isStanzaBreakBefore = mutableListOf<Boolean>()
             val cardStarts = IntArray(sections.size) { -1 }
             var cardCount = 0
             sections.forEachIndexed { index, section ->
@@ -116,10 +131,14 @@ internal class SongUnits(
                     is RenderSection.Chords -> section.chunkStarts
                     else -> null
                 }
+                val kinds = (section as? RenderSection.Lines)?.itemKinds
                 ranges.forEach { range ->
                     unitSections += index
                     itemRanges += range
                     isCuttableBefore += range.first > 0 && cutStarts?.contains(range.first) == true
+                    lineCount += kinds?.let { range.count { item -> it[item] == SectionItemKind.CONTENT } } ?: 0
+                    isStanzaBreakBefore += kinds != null && range.first > 0 &&
+                        (kinds[range.first - 1] == SectionItemKind.BLANK || kinds[range.first] == SectionItemKind.COMMENT)
                 }
                 sectionStarts[index + 1] = sectionStarts[index] + ranges.size
                 if (section is RenderSection.Lines && section.isOnCard) {
@@ -133,6 +152,8 @@ internal class SongUnits(
                 unitSections = unitSections.toIntArray(),
                 itemRanges = itemRanges,
                 isCuttableBefore = isCuttableBefore.toBooleanArray(),
+                lineCount = lineCount.toIntArray(),
+                isStanzaBreakBefore = isStanzaBreakBefore.toBooleanArray(),
                 cardStarts = cardStarts,
                 cardCount = cardCount,
                 timingStarts = stretches.starts,

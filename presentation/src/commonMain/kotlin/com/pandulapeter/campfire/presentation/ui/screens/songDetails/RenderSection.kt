@@ -104,7 +104,7 @@ internal sealed interface RenderSection {
                 is SectionPart.Lines -> part.runs.flatMap { run ->
                     val kind = run.first().foldableKind()
                     if (kind != null) {
-                        List(run.runSlotCount(kind)) { SectionItemKind.CONTENT }
+                        List(run.runSlotCount(kind)) { SectionItemKind.RUN }
                     } else {
                         run.map { line -> if (line == ChordProLine.Blank) SectionItemKind.BLANK else SectionItemKind.CONTENT }
                     }

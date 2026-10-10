@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.isSpecified
 import com.pandulapeter.campfire.presentation.ui.components.EDGE_FADE_SIZE
+import kotlin.math.roundToInt
 
 /**
  * Flows its children (the song sections, followed by the dividers that may be drawn between rows of them) into
@@ -95,6 +96,10 @@ import com.pandulapeter.campfire.presentation.ui.components.EDGE_FADE_SIZE
  * to prevent. A song of a single row that fits the screen gets none, since it is read whole. A row shorter than the screen
  * is then read in the middle of it, the space split above and below it, rather than at the top of a screen that is
  * otherwise empty. The grid is still decided without that space, since it is not something a shorter song could save.
+ *
+ * [lyricsLineHeight] is the height of one line of lyrics in pixels, at the size the song is drawn at: twice it is the
+ * height of a chorded line, which the flows are handed as what the empty space of a column is counted in, and a unit
+ * wraps a line more wherever a width makes it a line of lyrics taller than at the width that wraps nothing.
  */
 @Composable
 internal fun SongSectionsLayout(
@@ -120,6 +125,7 @@ internal fun SongSectionsLayout(
     isSingleColumn: Boolean,
     sectionGlides: SectionGlides?,
     sectionMeasurements: SectionMeasurements,
+    lyricsLineHeight: Int,
     onRowsPlaced: (SongRows) -> Unit,
     content: @Composable () -> Unit,
 ) = Layout(
@@ -141,6 +147,7 @@ internal fun SongSectionsLayout(
     val maxRowHeightPx = if (maxRowHeight.isSpecified && maxRowHeight > 0.dp) maxRowHeight.roundToPx() else Int.MAX_VALUE
     val endInsetPx = stepButtonInset.roundToPx()
     val piecePadding = IntArray(sectionCount) { if (units.cardStarts[it] >= 0) cardPadding.roundToPx() else 0 }
+    val lineHeightPx = 2 * lyricsLineHeight
     // A songbook too long to be cut into pages is stepped by rows where it has columns, each named by its first section,
     // so a change of tempo or time in a row's second column would only be heard on the next row: one that changes is a
     // single column, stepped by its sections, which the click follows past every change.
@@ -207,6 +214,18 @@ internal fun SongSectionsLayout(
             measure = measurables[unit + unitOffset]::maxIntrinsicHeight,
         )
 
+        // A chorded line that wraps counts twice, since its continuation carries a row of chords too.
+        fun wrappedLinesAt(unit: Int, columnWidth: Int): Int {
+            if (segment.lineCount[unit] == 0 || lyricsLineHeight <= 0) return 0
+            val index = unit + unitOffset
+            val unwrappedHeight = sectionMeasurements.height(
+                index = index,
+                width = sectionMeasurements.maxWidth(index, measurables[index]::maxIntrinsicWidth),
+                measure = measurables[index]::maxIntrinsicHeight,
+            )
+            return ((unitHeightAt(unit, columnWidth) - unwrappedHeight).toFloat() / lyricsLineHeight).roundToInt().coerceAtLeast(0)
+        }
+
         fun sectionHeightAt(section: Int, columnWidth: Int) =
             (segment.sectionStarts[section] until segment.sectionStarts[section + 1]).sumOf { unitHeightAt(it, columnWidth) }
 
@@ -266,6 +285,10 @@ internal fun SongSectionsLayout(
                 piecePadding = piecePadding,
                 sectionGap = sectionGapPx,
                 maxRowHeight = maxRowHeightPx,
+                lineHeight = lineHeightPx,
+                lineCount = { unit -> segment.lineCount[unit] },
+                isStanzaBreakBefore = { unit -> segment.isStanzaBreakBefore[unit] },
+                wrappedLines = { unit, columns -> wrappedLinesAt(unit, columnWidthFor(totalWidth, columns)) },
             )
             val height = if (paged.pageCount == 1) paged.height() else Int.MAX_VALUE
             return SearchedGrid(paged, fits = height <= availableHeightPx, height = height)
@@ -305,6 +328,10 @@ internal fun SongSectionsLayout(
                 piecePadding = piecePadding,
                 sectionGap = sectionGapPx,
                 maxRowHeight = maxRowHeightPx,
+                lineHeight = lineHeightPx,
+                lineCount = { unit -> segment.lineCount[unit] },
+                isStanzaBreakBefore = { unit -> segment.isStanzaBreakBefore[unit] },
+                wrappedLines = { unit, columns -> wrappedLinesAt(unit, columnWidthFor(totalWidth, columns)) },
             )
             val pageCount = grid.pageCount()
             if (pageCount < flowedPageCount) {

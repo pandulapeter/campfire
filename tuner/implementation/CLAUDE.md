@@ -34,9 +34,10 @@ this module. Nothing here reaches the network, and nothing heard is kept beyond 
   radix-2 one of its own), the first key maximum reaching 0.9 of the highest of up to 256 (a five-string bass's B0
   crosses zero more often than 64 times within one period), refined by a parabola. Nothing is reported below −80 dBFS
   (after the filter) or a clarity of 0.65, which is what a low string heard across a quiet room by a laptop reaches, and
-  what a chord of four sines does not. The range searched is 30–2100 Hz in chromatic mode and from four semitones under
-  a preset's lowest string to an octave over its highest (`rangeFor`), which is most of what keeps a bass from being
-  read an octave up. Buffers are allocated once.
+  what a chord of four sines does not. The range searched is 26–2100 Hz in chromatic mode (a semitone under A0, a
+  five-string bass's lowest string a full step down) and from four semitones under a preset's lowest string to an
+  octave over its highest (`rangeFor`), which is most of what keeps a bass from being read an octave up. Buffers are
+  allocated once.
 - `PitchTracker` — pure, driven by the time it is handed: the 60 ms after an onset (the level doubling) skipped, the
   median of the last five answers, the cents smoothed over about 80 ms, a target that only changes once a new one has
   held for three answers, the previous reading held meanwhile, an answer a whole octave from the target ignored until a

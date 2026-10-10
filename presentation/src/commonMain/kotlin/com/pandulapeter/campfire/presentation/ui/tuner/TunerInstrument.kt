@@ -31,8 +31,22 @@ internal enum class TunerInstrument(
             InstrumentTuning.GUITAR_DADGAD,
         ),
     ),
-    SEVEN_STRING_GUITAR(listOf(InstrumentTuning.GUITAR_SEVEN_STRING, InstrumentTuning.GUITAR_SEVEN_STRING_DROP_A)),
-    EIGHT_STRING_GUITAR(listOf(InstrumentTuning.GUITAR_EIGHT_STRING, InstrumentTuning.GUITAR_EIGHT_STRING_DROP_E)),
+    SEVEN_STRING_GUITAR(
+        listOf(
+            InstrumentTuning.GUITAR_SEVEN_STRING,
+            InstrumentTuning.GUITAR_SEVEN_STRING_DROP_A,
+            InstrumentTuning.GUITAR_SEVEN_STRING_HALF_STEP_DOWN,
+            InstrumentTuning.GUITAR_SEVEN_STRING_FULL_STEP_DOWN,
+        ),
+    ),
+    EIGHT_STRING_GUITAR(
+        listOf(
+            InstrumentTuning.GUITAR_EIGHT_STRING,
+            InstrumentTuning.GUITAR_EIGHT_STRING_DROP_E,
+            InstrumentTuning.GUITAR_EIGHT_STRING_HALF_STEP_DOWN,
+            InstrumentTuning.GUITAR_EIGHT_STRING_FULL_STEP_DOWN,
+        ),
+    ),
     BASS(
         listOf(
             InstrumentTuning.BASS,
@@ -41,7 +55,14 @@ internal enum class TunerInstrument(
             InstrumentTuning.BASS_FULL_STEP_DOWN,
         ),
     ),
-    FIVE_STRING_BASS(listOf(InstrumentTuning.BASS_FIVE_STRING, InstrumentTuning.BASS_FIVE_STRING_HIGH_C)),
+    FIVE_STRING_BASS(
+        listOf(
+            InstrumentTuning.BASS_FIVE_STRING,
+            InstrumentTuning.BASS_FIVE_STRING_HIGH_C,
+            InstrumentTuning.BASS_FIVE_STRING_HALF_STEP_DOWN,
+            InstrumentTuning.BASS_FIVE_STRING_FULL_STEP_DOWN,
+        ),
+    ),
     UKULELE(listOf(InstrumentTuning.UKULELE, InstrumentTuning.UKULELE_LOW_G, InstrumentTuning.UKULELE_BARITONE)),
     BANJO(listOf(InstrumentTuning.BANJO, InstrumentTuning.BANJO_DOUBLE_C)),
     VIOLIN(listOf(InstrumentTuning.VIOLIN)),

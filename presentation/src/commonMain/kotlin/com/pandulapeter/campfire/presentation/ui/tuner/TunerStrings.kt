@@ -47,9 +47,9 @@ import com.pandulapeter.campfire.chordpro.ChordNotation
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_check
+import com.pandulapeter.campfire.presentation.resources.ic_sound
 import com.pandulapeter.campfire.presentation.resources.tuner_in_tune
 import com.pandulapeter.campfire.presentation.resources.tuner_string
-import com.pandulapeter.campfire.presentation.ui.metronome.PlayStopMark
 import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 import org.jetbrains.compose.resources.painterResource
 
@@ -57,7 +57,7 @@ import org.jetbrains.compose.resources.painterResource
  * One segment per string of [tuning], in the order the tuning is written and numbered down to the first, each named by
  * its note: the strings are one instrument, so they are one row of equal parts rather than chips wrapping wherever their
  * names end. A tap plays the string's tone, a second tap or another string ends it; the segment of the tone sounding is
- * selected and carries the stop mark, and so is the one being heard while none sounds, so the hand finds the string the
+ * selected and carries the sound mark, and so is the one being heard while none sounds, so the hand finds the string the
  * tuner is reading. A string heard in tune since the microphone was opened is ticked ([tunedNotes]), so that the player
  * sees which strings are still to do.
  */
@@ -120,7 +120,10 @@ internal fun TunerStrings(
     }
 }
 
-/** What a string's segment carries before its name: the stop mark while its tone sounds, the tick once it was in tune. */
+/**
+ * What a string's segment carries before its name: a speaker while its tone sounds, which says what the segment is doing
+ * rather than what a tap would do (a stop square reads as a media control), and the tick once it was in tune.
+ */
 @Composable
 private fun StringMark(
     isSounding: Boolean,
@@ -131,16 +134,12 @@ private fun StringMark(
     transitionSpec = { fadeIn() togetherWith fadeOut() },
     label = "tunerStringMark",
 ) { sounding ->
-    if (sounding) {
-        PlayStopMark(isPlaying = true, size = STRING_MARK_SIZE, color = color)
-    } else {
-        Icon(
-            modifier = Modifier.size(STRING_MARK_SIZE),
-            painter = painterResource(Res.drawable.ic_check),
-            contentDescription = null,
-            tint = color,
-        )
-    }
+    Icon(
+        modifier = Modifier.size(STRING_MARK_SIZE),
+        painter = painterResource(if (sounding) Res.drawable.ic_sound else Res.drawable.ic_check),
+        contentDescription = null,
+        tint = color,
+    )
 }
 
 private val STRING_MARK_SIZE = 16.dp

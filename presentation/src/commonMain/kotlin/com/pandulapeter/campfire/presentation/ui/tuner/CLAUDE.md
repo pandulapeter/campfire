@@ -39,7 +39,7 @@ share.
   reading take the second accent color with it); under the meter the reading in words, the signed cents (`CentsText.kt`,
   `signedCents`: a typographic minus, tested) or "In tune"; and last the frequency heard and the target's. A tone being
   played is named instead and the meter rests. Compact (note beside the rest, in a label of one width so the meter never
-  moves) in a short window and in the sheet. The prompt is laid out over an invisible note, so the label is one height
+  moves) in a short window, on the tab and in the sheet alike. The prompt is laid out over an invisible note, so the label is one height
   either way and nothing under it moves as a note comes and goes. Explored as one node with the exact reading; a second
   node announces only the note and a coarse step (far flat, flat, in tune, sharp, far sharp, `TunerAnnouncement.kt`, tested) once it has
   held for 700 ms, since a reading every 33 ms would be a queue of speech the microphone hears too. With nothing heard it
@@ -52,12 +52,13 @@ share.
   is picked up again, and as the instrument changes.
 - `TunerInputIssueMessage` — the input issue line (`SILENT`, with Open settings, and `WAITING_FOR_GESTURE`), on both.
 - `TunerStringsSetting` / `TunerStrings` — on both: one segmented row, a segment per string, so the strings read as one
-  instrument: the tone's or the heard one selected, a tap toggling its tone, the sounding one carrying the stop mark and
-  a tuned one a check; read as buttons rather than the radio buttons Material makes segments; the names shrinking to fit
+  instrument: the tone's or the heard one selected, a tap toggling its tone, the sounding one carrying a speaker (what it is
+  doing, where a stop square read as a media control) and a tuned one a check; read as buttons rather than the radio buttons Material makes segments; the names shrinking to fit
   eight strings on a phone. Gone in chromatic mode.
 - `InstrumentChoice` — **the tab's alone**: two settings of chips, like the Metronome tab's time signatures. Instrument:
   Chromatic first, then every instrument, each string count one of its own (`TunerInstrument`: guitar, seven- and
-  eight-string guitar, bass, five-string bass, ukulele, banjo, violin, mandolin); a chip picks its standard tuning.
+  eight-string guitar, bass, five-string bass, ukulele, banjo, violin, mandolin); a chip picks its standard tuning. Every
+  guitar and bass, whatever its strings, offers a half and a full step down.
   Tuning: that instrument's tunings, named without the instrument picked right above them (`TuningLabels.kt`), there only
   for an instrument with more than one, the chips crossfading as one such instrument follows another.
   `TunerInstrument.kt` (`instrumentOf`; every preset under exactly one instrument, its standard tuning first, tested).
@@ -85,4 +86,5 @@ said with Open settings, and a permission the system has forgotten is asked agai
 The tab (`ui/screens/tuner/`) pins the display above a `SettingsPage` whose first row is the notice while there is one
 (the display giving way to it), then the issue line, the strings, the instrument, its tuning, and the reference pitch;
 it keeps the screen on while it hears, and scrolls to the top on a second tap of its item.
-The sheet scrolls all it has under its header, the display first.
+The sheet is laid out like the tab, scrolling all it has under its header: the same display at the same size (compact
+in a short window only), collapsing for the notice row under it, then the issue line and the strings.

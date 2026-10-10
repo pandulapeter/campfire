@@ -34,6 +34,12 @@ import kotlin.math.max
  * hold it, which wrap the least, as a song that fits the screen does. A stretch of a section that cannot be cut and is
  * taller than the screen on its own - a single system of tablature at a large text size - is a single column row of
  * its own, paged through.
+ *
+ * What a layout is judged by besides its pages is handed in with the units, and does not change where the columns end:
+ * [lineHeight], the height of a chorded line in pixels, [lineCount], how many lines of lyrics a unit is
+ * ([SongUnits.lineCount]), [isStanzaBreakBefore], whether a cut in front of a unit falls between two stanzas
+ * ([SongUnits.isStanzaBreakBefore]), and [wrappedLines], how many lines of lyrics a unit wraps into more in a row of a
+ * given number of columns than it is written in. Left out, every unit is no line of lyrics.
  */
 internal fun flowLikeAMagazine(
     sectionStarts: IntArray,
@@ -43,6 +49,10 @@ internal fun flowLikeAMagazine(
     piecePadding: IntArray,
     sectionGap: Int,
     maxRowHeight: Int,
+    lineHeight: Int = 0,
+    lineCount: (unit: Int) -> Int = { 0 },
+    isStanzaBreakBefore: (unit: Int) -> Boolean = { false },
+    wrappedLines: (unit: Int, columnCount: Int) -> Int = { _, _ -> 0 },
 ): SectionGrid {
     val sectionCount = sectionStarts.size - 1
     if (sectionCount <= 0) return emptyGrid()
@@ -169,6 +179,9 @@ internal fun flowLikeAMagazine(
  * What cannot be cut to fit what is left of a page - a staff of tablature, a pair - starts the next page only where this
  * one is at least half full: a page mostly empty because the next thing on it is long is worse than a page that runs
  * on past the screen, which is paged through like a stretch too tall for any screen, and ends there.
+ *
+ * [lineHeight], [lineCount], [isStanzaBreakBefore] and [wrappedLines] are those of [flowLikeAMagazine], and do not
+ * change where the pages end either.
  */
 internal fun flowIntoPages(
     sectionStarts: IntArray,
@@ -178,6 +191,10 @@ internal fun flowIntoPages(
     piecePadding: IntArray,
     sectionGap: Int,
     maxRowHeight: Int,
+    lineHeight: Int = 0,
+    lineCount: (unit: Int) -> Int = { 0 },
+    isStanzaBreakBefore: (unit: Int) -> Boolean = { false },
+    wrappedLines: (unit: Int, columnCount: Int) -> Int = { _, _ -> 0 },
 ): SectionGrid {
     val sectionCount = sectionStarts.size - 1
     if (sectionCount <= 0) return emptyGrid()

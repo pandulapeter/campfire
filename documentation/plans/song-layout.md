@@ -37,6 +37,75 @@ on the iPad at 90%, 33 of 318 on a 1024 × 768dp tablet); a 5% smaller text take
 (16 of 34, 20 of 37 and 34 of 50 of the songs whose last page is under a third full), and a fourth column of about
 300dp makes 77 of the iPad's 144 two-page songs one page, at about five wrapped lines per song.
 
+## 0. Status and handoff — read this first
+
+This plan is executed in steps by separate sessions, each starting with no context but this file and the repository.
+A session that picks it up: reads this section, then sections 1, 2 and 8, then only the sections the next step names;
+invokes the `code-style` skill before its first edit of a `.kt` file and the `commit-messages` skill before any
+commit; runs `./gradlew :presentation:spotlessApply` and `./gradlew :presentation:desktopTest` (filtered with
+`--tests '*songDetails*'` while iterating, the whole module once at the end, `--quiet --console=plain` to keep the
+output short) before calling a step done; and updates the status list below before it ends, saying what landed, what
+the tests say, and anything the next step should know. Nothing is committed unless the person asks for it; when they
+do, one commit per step with a one-line message in the repository's own format.
+
+Where the pieces live, so nothing has to be searched for:
+
+- The flows and the grid: `presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/screens/songDetails/SectionGrid.kt`
+  (`flowIntoRows` for whole sections, `flowLikeAMagazine` for cut sections in columns, `flowIntoPages` for a single
+  column, `searchColumnCount`, `arrange`, `pageCount`, `balanceIntoCells`).
+- The search that chooses between them, the column widths and the step buttons' inset: `SongSectionsLayout.kt` in the
+  same package (`widthColumnCountFor`, `columnWidthFor`, `searchSegment`, `searchGrid`, `SectionGridKey`,
+  `DecidedGrid`).
+- The chunks a section is cut into: `SongUnits.kt` (built in `SongLyrics.kt`), `SectionChunks.kt`
+  (`sectionChunkStarts`, `SectionItemKind`), `SectionCutting.kt`, `RenderSection.kt`.
+- What hands the layout its inputs: `SongLyrics.kt` (the styles, `SongTextMeasurements`, the call to
+  `SongSectionsLayout`), `SongDetailsPage.kt` (the settled height, the text scale, `canCutSections = true`).
+- The measurements cache: `SectionMeasurements.kt`.
+- The tests: `presentation/src/commonTest/kotlin/com/pandulapeter/campfire/presentation/ui/screens/songDetails/`
+  — `SectionCuttingTest.kt` (`flowLikeAMagazine`), `SectionPagingTest.kt` (`flowIntoPages`), `SectionGridTest.kt`
+  (`flowIntoRows`, `arrange`, `searchColumnCount`), `SectionGridFixtures.kt` (`SECTION_GAP`, `unitSections`).
+- The notes to update at the end (step 7): the same package's `CLAUDE.md`, section "`screens/songDetails/SongLyrics.kt`",
+  the paragraphs on the fewest pages, cutting and the columns.
+- The songs to judge by: the demo `presentation/src/commonMain/composeResources/files/demo/traditional_american-house_of_the_rising_sun.cho`
+  and, if present, the gitignored `tools/screenshots/library/library/songs/` (the three website songs are
+  `the_rembrandts-ill_be_there_for_you.cho`, `jonathan_coulton-still_alive.cho` and
+  `counting_crows-accidentally_in_love.cho`). The simulation the numbers above came from was a throwaway Python model
+  in a session scratchpad and is gone; the plan carries its results, and a new one is not needed to execute it.
+
+Status, by the steps of section 8:
+
+- **Step 1 — done 2026-10-10, uncommitted** (`./gradlew :presentation:desktopTest :presentation:spotlessCheck`: 752
+  tests, 0 failures; the license header check passes; no compiler warning from the new code). Nothing decides
+  differently yet. What it added, and what step 2 inherits from it:
+  - `SectionChunks.kt`: a new `SectionItemKind.RUN` for every slot of a run of tablature or grid lines, which were
+    `CONTENT` before and could not be told from a line of lyrics; `sectionChunkStarts` treats `RUN` exactly as
+    `CONTENT` (a private `isLine`), so where a section may be cut is unchanged. `RenderSection.Lines.itemKinds` makes
+    the run slots `RUN`.
+  - `SongUnits.kt`: two required fields after `isCuttableBefore`, carried by `slice`: `lineCount: IntArray`, the
+    number of `CONTENT` items in the chunk's range for a `Lines` section and 0 for every other section (so a section
+    that is not cut is one chunk whose `lineCount` is all of its lines — the stub penalties of section 2 are summed
+    over a piece's chunks, which this fits), and `isStanzaBreakBefore: BooleanArray`, true where the item before the
+    chunk is `BLANK` or the chunk's first item is `COMMENT`, never for a section's first chunk, only under `Lines`.
+  - `SectionCutting.kt`: `flowLikeAMagazine` and `flowIntoPages` take four trailing parameters that their bodies do
+    not read yet, **with defaults so that the existing tests compile unchanged**: `lineHeight: Int = 0`,
+    `lineCount: (unit: Int) -> Int = { 0 }`, `isStanzaBreakBefore: (unit: Int) -> Boolean = { false }`,
+    `wrappedLines: (unit: Int, columnCount: Int) -> Int = { _, _ -> 0 }`. Step 2 gives the fixtures real values
+    (`lineHeight` 100, every chunk one line) and drops the defaults.
+  - `SongSectionsLayout.kt`: a new `lyricsLineHeight: Int` parameter after `sectionMeasurements`;
+    `lineHeightPx = 2 * lyricsLineHeight`; inside `searchSegment` a `wrappedLinesAt(unit, columnWidth)` that is 0 for
+    a chunk with no lines and otherwise the chunk's height at the column (through `unitHeightAt`, so a card's capped
+    width) less its height at its `maxWidth`, in `lyricsLineHeight`s, rounded and clamped at 0; both flow calls pass
+    all four. `wrappedLines` is never called yet, so no extra intrinsic measurement happens.
+  - `SongLyrics.kt` passes `lyricsLineHeight = textMeasurements.lyricsLineHeight`, which now measures its sample
+    once per set of styles during composition.
+  - `SongUnitsTest.kt` (new, six tests) builds `RenderSection`s by hand and checks `lineCount`, `isStanzaBreakBefore`,
+    the cut points of a grid, and `slice`.
+  - Open for step 2: `SectionGridKey` does not carry `lyricsLineHeight`; the heights already change with the text
+    scale and a new scale means a new `SectionMeasurements`, so it is probably not needed in the key, but check once
+    the flows read it.
+- **Steps 2 to 8** — not started. Step 2 is next: section 3.1 to 3.3 in `flowLikeAMagazine`, its tests as section 7
+  lists them, checked by eye on the laptop and tablet sizes.
+
 ## 1. What is being built
 
 1. **A score for a layout** (`SectionGrid.kt`): points for every stub a cut leaves, for every cut, for every wrapped
@@ -72,10 +141,9 @@ on the iPad at 90%, 33 of 318 on a 1024 × 768dp tablet); a 5% smaller text take
   any width, cached, and `maxWidth(unit)` the width at which nothing in it wraps, so the lines a width wraps are the
   difference of the two heights in line heights. `SongTextMeasurements.lyricsLineHeight` is the height of one line
   of lyrics.
-- What the score does not have yet: which chunks are lines of lyrics as opposed to a row of chord diagrams, a comment
-  or an empty line (`RenderSection.Lines` keeps `itemKinds` for `sectionChunkStarts`, but `SongUnits` only keeps the
-  `isCuttableBefore` it derives from them), and the height of a chorded line in pixels, which is the unit empty space
-  is counted in.
+- What the score did not have before step 1 (see section 0 for what step 1 added): which chunks are lines of lyrics
+  as opposed to a row of chord diagrams, a run of tablature, a comment or an empty line, and the height of a chorded
+  line in pixels, which is the unit empty space is counted in.
 - The column count is bounded by `MIN_COLUMN_WIDTH * fontScale` (384dp) in `widthColumnCountFor`, and nothing asks
   how wide a song's lines are before deciding it: a song of short lines gets the same three columns on a laptop as a
   song whose every line is a sentence.
@@ -120,11 +188,14 @@ screen: the unit is `lineHeight`, the height of a line of chords over a line of 
 `ReadingWindow.overlap`). The flows take, besides what they take today:
 
 - `lineHeight`: the unit above, in pixels.
-- `lineCount(unit)`: how many lines of lyrics a chunk is — 1 for a line of lyrics with or without chords, 0 for an
-  empty line, a comment, a row of chord diagrams, a grid, a tab system or the first section's controls. `SongUnits`
-  gets it from the sections it is built over (`RenderSection.Lines.itemKinds`, `CONTENT` under a `Lines` section only).
+- `lineCount(unit)`: how many lines of lyrics a chunk holds — 1 for a chunk that is one line of lyrics with or without
+  chords, all of a section's lines for a section that is one chunk, 0 for an empty line, a comment, a row of chord
+  diagrams, a grid, a tab system or the first section's controls. `SongUnits` gets it from the sections it is built
+  over (`RenderSection.Lines.itemKinds`, `CONTENT` under a `Lines` section only; a run of tablature or grid lines is
+  `RUN` there since step 1). A piece's line count is the sum over its chunks.
 - `isStanzaBreakBefore(unit)`: whether a cut in front of this chunk falls after an empty line or in front of a
-  comment — a place the writer of the song already marked as a boundary. From the same kinds.
+  comment — a place the writer of the song already marked as a boundary. From the same kinds; never true for a
+  section's first chunk.
 - `wrappedLines(unit, columnCount)`: how many extra line heights the chunk takes at that width compared with its
   `maxWidth`, `(height(unit, width) - height(unit, maxWidth)) / lyricsLineHeight` rounded, 0 for everything but a
   line of lyrics. A chorded line that wraps counts twice, since its continuation carries a chord row too, which is

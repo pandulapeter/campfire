@@ -308,6 +308,7 @@ internal fun SongLyrics(
                 isSingleColumn = isSingleColumn,
                 sectionGlides = sectionGlides,
                 sectionMeasurements = sectionMeasurements,
+                lyricsLineHeight = textMeasurements.lyricsLineHeight,
                 onRowsPlaced = { rows -> onRowsPlaced?.invoke(rows) },
             ) {
                 // Whether a chunk or a card is placed by animateBounds: not while the layout follows a change that keeps

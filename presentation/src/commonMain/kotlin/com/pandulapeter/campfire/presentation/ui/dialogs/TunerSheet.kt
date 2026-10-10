@@ -9,11 +9,11 @@
  */
 package com.pandulapeter.campfire.presentation.ui.dialogs
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -23,6 +23,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
@@ -31,9 +32,11 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.tuner
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
+import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
 import com.pandulapeter.campfire.presentation.ui.platform.rememberMicrophonePermission
+import com.pandulapeter.campfire.presentation.ui.screens.settings.AnimatedSettingsRow
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerDisplay
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerListeningEffect
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerNoticeCard
@@ -46,9 +49,9 @@ import com.pandulapeter.campfire.tuner.api.model.TunerListening
 
 /**
  * The tuner over the song being read, opened from the song details overflow menu, so that a string that went flat
- * between two songs is tuned without leaving the setlist: the Tuner tab's own display (or its notice) and the strings of
- * the instrument picked there, all of it scrolling under the sheet's header, the display first since it is what the
- * sheet is opened for. The instrument and the reference pitch are set on the tab alone, the way the metronome panel
+ * between two songs is tuned without leaving the setlist, laid out as the Tuner tab is: its display at full size (compact
+ * only in a short window, as on the tab), giving way to its notice the same way, and under them the strings of the
+ * instrument picked there, all of it scrolling under the sheet's header. The instrument and the reference pitch are set on the tab alone, the way the metronome panel
  * plays with the Metronome tab's presets without offering them: the instrument in hand between two songs is the one the
  * tab was set to. It listens while it is up and the app is in front, and the view model stops it as the sheet closes.
  */
@@ -93,25 +96,24 @@ internal fun TunerSheet(
                 .padding(contentPadding)
                 .padding(bottom = 8.dp),
         ) {
-            AnimatedContent(
-                targetState = notice,
-                transitionSpec = { fadeIn() togetherWith fadeOut() using SizeTransform(clip = false) },
-                label = "tunerSheetHeader",
-            ) { shownNotice ->
-                if (shownNotice == null) {
-                    TunerDisplay(
-                        state = state,
-                        notation = notation,
-                        referencePitch = config.referencePitch,
-                        isCompact = true,
-                    )
-                } else {
-                    TunerNoticeCard(
-                        notice = shownNotice,
-                        permission = permission,
-                        onListen = viewModel::requestMicrophone,
-                    )
-                }
+            AnimatedVisibility(
+                visible = notice == null,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically(),
+            ) {
+                TunerDisplay(
+                    state = state,
+                    notation = notation,
+                    referencePitch = config.referencePitch,
+                    isCompact = LocalWindowInfo.current.containerDpSize.height < SHORT_WINDOW_HEIGHT,
+                )
+            }
+            AnimatedSettingsRow(value = notice) { shownNotice ->
+                TunerNoticeCard(
+                    notice = shownNotice,
+                    permission = permission,
+                    onListen = viewModel::requestMicrophone,
+                )
             }
             TunerInputIssueMessage(issue = issue, permission = permission)
             TunerStringsSetting(

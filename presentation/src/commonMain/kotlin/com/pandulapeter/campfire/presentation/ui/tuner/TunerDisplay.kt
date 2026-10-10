@@ -77,7 +77,7 @@ import kotlin.math.roundToInt
  * and the meter's notch closes into a check, so it is never said by color alone. With nothing heard the meter rests
  * and the note's place says to play one; while a reference tone sounds, it names that note and the meter rests.
  *
- * A short window and the sheet set the note beside the rest, in one row, at a size the row has room for.
+ * A short window sets the note beside the rest, in one row, at a size the row has room for.
  */
 @Composable
 internal fun TunerDisplay(

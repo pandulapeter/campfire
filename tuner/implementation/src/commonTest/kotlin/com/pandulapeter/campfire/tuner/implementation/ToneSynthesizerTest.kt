@@ -36,13 +36,15 @@ class ToneSynthesizerTest {
     }
 
     @Test
-    fun `the tone is heard as its note`() {
+    fun `the tone is heard as its note by a tuner set to its tuning`() {
         val detector = PitchDetector(SAMPLE_RATE)
-        notes.forEach { note ->
+        val tunings = InstrumentTuning.entries.flatMap { tuning -> tuning.strings.map { it to tuning } } + (69 to null)
+        tunings.forEach { (note, tuning) ->
             val frequency = Pitch.frequencyOf(note, 440)
             val loop = ToneSynthesizer.loopOf(frequency, SAMPLE_RATE)
             val window = FloatArray(detector.inputSize) { loop[it % loop.size] / 32_768f }
-            val heard = assertNotNull(detector.detect(window, 30f, 2_100f).frequency, "note $note")
+            val range = PitchDetector.rangeFor(tuning, 440)
+            val heard = assertNotNull(detector.detect(window, range.start, range.endInclusive).frequency, "note $note")
             assertTrue(abs(1_200 * log2(heard / frequency.toDouble())) < 1, "note $note: $heard Hz for $frequency Hz")
         }
     }
