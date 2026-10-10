@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.platform
 
 import androidx.compose.runtime.Composable
+import kotlinx.coroutines.CoroutineDispatcher
 
 /** A tap on the hand for every beat of the metronome, heavier on an accent. */
 internal fun interface BeatHaptics {
@@ -30,3 +31,10 @@ internal expect fun rememberBeatHaptics(): BeatHaptics?
  * the volume at zero is a click worth keeping. iOS plays no haptics for an app in the background at all.
  */
 internal expect val areBeatHapticsFeltInBackground: Boolean
+
+/**
+ * Where a beat is handed to [BeatHaptics]: off the main thread wherever the platform allows it, since a beat that waits
+ * there for a frame being composed - a page of a song swiped to, the very moment a click changes tempo - is felt that
+ * much after it is heard.
+ */
+internal expect val beatHapticsDispatcher: CoroutineDispatcher

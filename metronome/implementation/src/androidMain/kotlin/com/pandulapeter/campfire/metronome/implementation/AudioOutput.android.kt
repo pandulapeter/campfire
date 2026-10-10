@@ -49,6 +49,9 @@ internal class AndroidAudioOutput(
     private val context = context.applicationContext
     private val audioManager = this.context.getSystemService(AudioManager::class.java)
     private val timestamp = AudioTimestamp()
+    private var playNanos = 0L
+    private var lastTimestampFrame = -1L
+    private var lastTimestampNanos = 0L
 
     @Volatile
     private var track: AudioTrack? = null
@@ -107,7 +110,9 @@ internal class AndroidAudioOutput(
         if (!isPreview) registerNoisyReceiver(listener)
         this.track = track
         val stream = createStream(sampleRate)
+        lastTimestampFrame = -1L
         track.play()
+        playNanos = System.nanoTime()
         Thread({ feed(track, stream, listener) }, "Metronome").start()
         return AudioOutputStart.Started()
     }
@@ -133,13 +138,25 @@ internal class AndroidAudioOutput(
         }
     }
 
+    /**
+     * The timestamp is the frame at the speaker, the route's latency included; the playback head is only the frame
+     * handed to the mixer, ahead of the speaker by all of it, and starts at zero the moment the track plays. The head
+     * is therefore never mixed with a timestamp: until the track's first one (which it reports some time after it
+     * starts playing) nothing has been heard, and a timestamp it misses afterwards is extrapolated from the last one.
+     * Only a track that never reports one is clocked by its head, see [AudioClock.heardFrameBeforeTimestamp].
+     */
     override fun heardFrame(): Long {
         val track = track ?: return -1L
         return try {
+            val nowNanos = System.nanoTime()
             if (track.getTimestamp(timestamp)) {
-                AudioClock.extrapolatedFrame(timestamp.framePosition, timestamp.nanoTime, System.nanoTime(), sampleRate)
+                lastTimestampFrame = timestamp.framePosition
+                lastTimestampNanos = timestamp.nanoTime
+            }
+            if (lastTimestampFrame >= 0) {
+                AudioClock.extrapolatedFrame(lastTimestampFrame, lastTimestampNanos, nowNanos, sampleRate)
             } else {
-                track.playbackHeadPosition.toLong() and 0xFFFFFFFFL
+                AudioClock.heardFrameBeforeTimestamp(track.playbackHeadPosition.toLong() and 0xFFFFFFFFL, nowNanos - playNanos)
             }
         } catch (_: IllegalStateException) {
             -1L

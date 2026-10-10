@@ -11,12 +11,17 @@ package com.pandulapeter.campfire.presentation.ui.platform
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import platform.UIKit.UIImpactFeedbackGenerator
 import platform.UIKit.UIImpactFeedbackStyle
 
-/** Prepared ahead, so that the first beat is not late by the time the engine takes to wake up. */
 internal actual val areBeatHapticsFeltInBackground = false
 
+/** UIKit's feedback generators may only be used on the main thread. */
+internal actual val beatHapticsDispatcher: CoroutineDispatcher = Dispatchers.Main
+
+/** Prepared ahead, so that the first beat is not late by the time the engine takes to wake up. */
 @Composable
 internal actual fun rememberBeatHaptics(): BeatHaptics? = remember {
     val heavy = UIImpactFeedbackGenerator(style = UIImpactFeedbackStyle.UIImpactFeedbackStyleHeavy).apply { prepare() }

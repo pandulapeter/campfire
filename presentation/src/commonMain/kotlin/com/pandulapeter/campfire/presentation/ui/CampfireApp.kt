@@ -54,6 +54,7 @@ import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeContext
 import com.pandulapeter.campfire.presentation.ui.platform.LocalMetronomeNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.MetronomeNotification
 import com.pandulapeter.campfire.presentation.ui.platform.areBeatHapticsFeltInBackground
+import com.pandulapeter.campfire.presentation.ui.platform.beatHapticsDispatcher
 import com.pandulapeter.campfire.presentation.ui.platform.rememberBeatHaptics
 import com.pandulapeter.campfire.presentation.ui.components.KEY_SEPARATOR
 import androidx.lifecycle.repeatOnLifecycle
@@ -81,6 +82,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -421,8 +423,10 @@ private fun MetronomeHapticsEffect(viewModel: CampfireViewModel) {
     val lifecycleOwner = LocalLifecycleOwner.current
     LaunchedEffect(haptics, lifecycleOwner) {
         lifecycleOwner.repeatOnLifecycle(if (areBeatHapticsFeltInBackground) Lifecycle.State.CREATED else Lifecycle.State.RESUMED) {
-            viewModel.metronomeBeats.collect { beat ->
-                if (!beat.isSubdivision && beat.level != BeatLevel.MUTED) haptics.onBeat(isAccent = beat.level == BeatLevel.ACCENT)
+            withContext(beatHapticsDispatcher) {
+                viewModel.metronomeBeats.collect { beat ->
+                    if (!beat.isSubdivision && beat.level != BeatLevel.MUTED) haptics.onBeat(isAccent = beat.level == BeatLevel.ACCENT)
+                }
             }
         }
     }

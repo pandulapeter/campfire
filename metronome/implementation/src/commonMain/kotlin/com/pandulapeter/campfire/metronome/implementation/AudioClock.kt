@@ -28,4 +28,15 @@ internal object AudioClock {
 
     /** The frames a latency of [latencySeconds] holds at [sampleRate], truncated. */
     fun latencyFrames(latencySeconds: Double, sampleRate: Int): Long = (latencySeconds * sampleRate).toLong()
+
+    /**
+     * The frame heard on an output that has not reported a timestamp yet, [elapsedNanos] after it started playing:
+     * nothing (-1) while one may still come, since the [headFrame] it could go by runs ahead of the speaker by the whole
+     * of the route's latency, and a first beat released by it is felt and seen that much before it is heard - the
+     * first bar's first beat longer than the rest. An output that has reported none by then is clocked by its head.
+     */
+    fun heardFrameBeforeTimestamp(headFrame: Long, elapsedNanos: Long): Long = if (elapsedNanos < TIMESTAMP_WAIT_NANOS) -1L else headFrame
+
+    /** How long a track may take to report its first timestamp: a few hundred milliseconds is usual, more over Bluetooth. */
+    const val TIMESTAMP_WAIT_NANOS = 1_500_000_000L
 }

@@ -12,10 +12,15 @@
 package com.pandulapeter.campfire.presentation.ui.platform
 
 import androidx.compose.runtime.Composable
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlin.js.ExperimentalWasmJsInterop
 
 // A browser only vibrates while its page is the one showing.
 internal actual val areBeatHapticsFeltInBackground = false
+
+/** A page has one thread. */
+internal actual val beatHapticsDispatcher: CoroutineDispatcher = Dispatchers.Main
 
 @Composable
 internal actual fun rememberBeatHaptics(): BeatHaptics? = webBeatHaptics

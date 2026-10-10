@@ -14,11 +14,16 @@ import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
+import kotlinx.coroutines.CoroutineDispatcher
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.Dispatchers
 
 internal actual val areBeatHapticsFeltInBackground = true
+
+/** The vibrator service may be called from any thread. */
+internal actual val beatHapticsDispatcher: CoroutineDispatcher = Dispatchers.Default
 
 @Composable
 internal actual fun rememberBeatHaptics(): BeatHaptics? {
