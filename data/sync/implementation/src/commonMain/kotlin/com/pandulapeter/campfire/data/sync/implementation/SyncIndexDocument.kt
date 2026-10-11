@@ -47,6 +47,11 @@ internal data class SyncIndexDocument(
      * tells a change from a removal by (see [SyncedPreferencesDocument]), or null where no run has settled it yet.
      */
     val syncedPreferences: JsonObject? = null,
+    /**
+     * The [SyncedPreferencesDocument] fields the version that wrote [syncedPreferences] owned, or null for an index
+     * written by 4.7.0, which did not write it. See [syncedPreferencesBase].
+     */
+    val syncedPreferencesFields: Set<String>? = null,
 ) {
 
     @Serializable
@@ -58,6 +63,11 @@ internal data class SyncIndexDocument(
     fun toIndex(): Map<SyncKey, SyncIndexEntry> = entries.mapNotNull { (path, entry) ->
         SyncKey.fromPath(path)?.let { it to SyncIndexEntry(localHash = entry.localHash, remoteRevision = entry.remoteRevision) }
     }.toMap()
+
+    /** [syncedPreferences] as a base this version can merge against: what its writer did not own taken out. */
+    fun syncedPreferencesBase() = syncedPreferences?.let {
+        SyncedPreferencesDocument.withoutFieldsNotOwnedBy(it, syncedPreferencesFields ?: SyncedPreferencesDocument.OWNED_FIELDS_OF_4_7_0)
+    }
 
     /** This document with the marker saying a run is going, and whether it is an automatic one. */
     fun markedAsRunning(isAutomatic: Boolean) = copy(isRunInProgress = true, isAutomaticRunInProgress = isAutomatic)
@@ -94,6 +104,7 @@ internal data class SyncIndexDocument(
             accountId = accountId,
             lastSyncedAt = lastSyncedAt,
             syncedPreferences = syncedPreferences,
+            syncedPreferencesFields = SyncedPreferencesDocument.OWNED_FIELDS,
             isRunInProgress = false,
             isAutomaticRunInProgress = false,
             entries = index.entries.associate { (key, entry) ->

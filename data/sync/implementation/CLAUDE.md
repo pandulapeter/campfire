@@ -183,7 +183,12 @@ moment earlier has finished writing it, and a run only ever writes its outcome i
 completed: the songs it may name are then the ones the run left on both sides. `SyncedPreferencesDocument` keeps it
 as a JSON tree and merges it three ways, value by value, against the document the last run settled
 (`SyncIndexDocument.syncedPreferences`, carried through every snapshot the engine hands out and dropped with the rest
-of an index written for another account); this device's side is that base with this version's own fields replaced
+of an index written for another account). The index names the fields the base's writer owned
+(`syncedPreferencesFields`, absent for 4.7.0's, which owned the transposition, tempo, capo, and chords), and the engine
+takes the others out of the base before the run reads it (`syncedPreferencesBase`), so a field this version newly owns
+is merged as with no base (only adding) on the first run after an upgrade, rather than this device's empty value
+reading as a removal of every other device's; a later field joins `SyncedPreferencesDocument.OWNED_FIELDS`. This
+device's side is that base with this version's own fields replaced
 by the preferences (`localDocument`), so whatever a later version writes passes through untouched — a value of one of
 those fields that this version cannot read (a tempo of 400, a capo of 13, a song's accents holding one signature that
 is not a list of strings, which are read and passed through as a whole) included, like an unknown field. A document that

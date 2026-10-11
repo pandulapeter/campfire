@@ -47,7 +47,8 @@ class SyncIndexDocumentTest {
                 },
                 "syncedPreferences": {
                     "version": 1
-                }
+                },
+                "syncedPreferencesFields": ["capo", "tags"]
             }
             """.trimIndent(),
         )
@@ -64,6 +65,7 @@ class SyncIndexDocumentTest {
                     "setlists/Summer tour.setlist.json" to SyncIndexDocument.Entry(localHash = "hash2", remoteRevision = "r2"),
                 ),
                 syncedPreferences = JsonObject(mapOf("version" to JsonPrimitive(1))),
+                syncedPreferencesFields = setOf("capo", "tags"),
             ),
             document,
         )

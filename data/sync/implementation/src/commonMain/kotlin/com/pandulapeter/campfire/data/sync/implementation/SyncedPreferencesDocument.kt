@@ -65,6 +65,12 @@ internal object SyncedPreferencesDocument {
     private const val CHORDS = "chords"
     private const val TAGS = "tags"
 
+    /** The fields this version owns ([localDocument] replaces them), as written into the index beside the base. */
+    val OWNED_FIELDS = setOf(TRANSPOSITION, TEMPO, CAPO, BEAT_LEVELS, CHORDS, TAGS)
+
+    /** What 4.7.0, the first version that synced this document, owned: an index with no list was written by it. */
+    val OWNED_FIELDS_OF_4_7_0 = setOf(TRANSPOSITION, TEMPO, CAPO, CHORDS)
+
     /** The furthest a transposition can sensibly be from the key the song is written in: an octave either way. */
     private val TRANSPOSITION_RANGE = -11..11
 
@@ -148,6 +154,22 @@ internal object SyncedPreferencesDocument {
                 chordsMember +
                 tagsMember,
         )
+    }
+
+    /**
+     * [base] without the fields [ownedByWriter] does not name: the version that wrote it passed them through and never
+     * read them, so it has no opinion on them, and read as this device's they would be removals of everything another
+     * device set. A song's entry left empty is dropped, as [localDocument] never writes one.
+     */
+    fun withoutFieldsNotOwnedBy(base: JsonObject, ownedByWriter: Set<String>): JsonObject {
+        val songFields = setOf(TRANSPOSITION, TEMPO, CAPO, BEAT_LEVELS) - ownedByWriter
+        val topLevelFields = setOf(CHORDS, TAGS) - ownedByWriter
+        val songs = base[SONGS] as? JsonObject
+        val strippedSongs = songs?.takeIf { songFields.isNotEmpty() }?.mapNotNull { (name, entry) ->
+            if (entry is JsonObject) (entry - songFields).takeIf { it.isNotEmpty() }?.let { name to JsonObject(it) } else name to entry
+        }?.toMap()
+        if (topLevelFields.none { it in base } && (strippedSongs == null || strippedSongs == songs)) return base
+        return JsonObject(base - topLevelFields + listOfNotNull(strippedSongs?.let { SONGS to JsonObject(it) }))
     }
 
     /** A shape or a color this version reads, which is a string: anything else in [CHORDS] or [TAGS] is passed through. */

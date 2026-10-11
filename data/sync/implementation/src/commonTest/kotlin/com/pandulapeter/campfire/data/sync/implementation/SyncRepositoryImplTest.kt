@@ -28,6 +28,8 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -511,5 +513,77 @@ class SyncRepositoryImplTest {
         assertEquals(emptyList(), assertIs<SyncOutcome.Success>(state.lastOutcome).summary.conflicts)
         assertEquals(setOf(song(1)), libraryFileLocalSource.files.keys)
         assertContentEquals(there, libraryFileLocalSource.files[song(1)])
+    }
+
+    /** As 4.7.0 left it: that version passed the tag colors and the accents through without owning them. */
+    @Test
+    fun `a base written by the version that passed the tag colors and the accents through does not read them as removed here`() = runTest {
+        val (provider, stateLocalSource, preferences) = upgradedDevice(syncedPreferencesFields = null)
+        val repository = syncRepository(
+            provider = provider,
+            stateLocalSource = stateLocalSource,
+            libraryFileLocalSource = FakeLibraryFileLocalSource(files = mapOf(song(1) to SONG_BYTES)),
+            userPreferencesRepository = preferences,
+        )
+
+        repository.restore()
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        val state = repository.awaitOutcome()
+
+        assertIs<SyncOutcome.Success>(state.lastOutcome)
+        val (bytes, revision) = provider.documents.getValue(SyncedPreferencesDocument.FILE_NAME)
+        assertEquals(Json.parseToJsonElement(UPGRADE_BASE), Json.parseToJsonElement(bytes.decodeToString()))
+        assertEquals("d1", revision)
+        assertEquals(mapOf("christmas" to "red"), preferences.current.tagColors)
+        assertEquals(mapOf("song_1.cho" to mapOf("3/4" to listOf("accent", "normal", "muted"))), preferences.current.beatLevels)
+        assertEquals(SyncedPreferencesDocument.OWNED_FIELDS, stateLocalSource.document?.syncedPreferencesFields)
+    }
+
+    @Test
+    fun `a base written by a version that owned the tag colors and the accents still reads them as removed here`() = runTest {
+        val (provider, stateLocalSource, preferences) = upgradedDevice(syncedPreferencesFields = SyncedPreferencesDocument.OWNED_FIELDS)
+        val repository = syncRepository(
+            provider = provider,
+            stateLocalSource = stateLocalSource,
+            libraryFileLocalSource = FakeLibraryFileLocalSource(files = mapOf(song(1) to SONG_BYTES)),
+            userPreferencesRepository = preferences,
+        )
+
+        repository.restore()
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        val state = repository.awaitOutcome()
+
+        assertIs<SyncOutcome.Success>(state.lastOutcome)
+        val (bytes, _) = provider.documents.getValue(SyncedPreferencesDocument.FILE_NAME)
+        assertEquals(
+            Json.parseToJsonElement("""{"version":1,"songs":{"song_1.cho":{"capo":2}},"tags":{}}"""),
+            Json.parseToJsonElement(bytes.decodeToString()),
+        )
+        assertEquals(emptyMap(), preferences.current.tagColors)
+    }
+
+    /** A device whose last run settled [UPGRADE_BASE] and whose preferences hold only the capo of that base. */
+    private fun upgradedDevice(syncedPreferencesFields: Set<String>?): Triple<FakeSyncProvider, FakeSyncIndexLocalSource, FakeUserPreferencesRepository> {
+        val base = Json.parseToJsonElement(UPGRADE_BASE).jsonObject
+        val index = SyncIndexDocument.of(
+            providerId = SyncProviderId.DROPBOX.id,
+            accountId = TEST_ACCOUNT.indexKey(),
+            lastSyncedAt = 1,
+            syncedPreferences = base,
+            index = mapOf(song(1) to SyncIndexEntry(localHash = localContentHash(SONG_BYTES), remoteRevision = "r1")),
+        ).copy(syncedPreferencesFields = syncedPreferencesFields)
+        val provider = FakeSyncProvider(files = mapOf(song(1) to SONG_BYTES), account = TEST_ACCOUNT)
+        provider.documents[SyncedPreferencesDocument.FILE_NAME] = SyncedPreferencesDocument.encode(base) to "d1"
+        return Triple(
+            provider,
+            FakeSyncIndexLocalSource(index = index.encoded()),
+            FakeUserPreferencesRepository(defaultUserPreferences(capos = mapOf("song_1.cho" to 2))),
+        )
+    }
+
+    private companion object {
+        val SONG_BYTES = "Song 1".encodeToByteArray()
+        const val UPGRADE_BASE =
+            """{"version":1,"songs":{"song_1.cho":{"capo":2,"beatLevels":{"3/4":["accent","normal","muted"]}}},"tags":{"christmas":"red"}}"""
     }
 }

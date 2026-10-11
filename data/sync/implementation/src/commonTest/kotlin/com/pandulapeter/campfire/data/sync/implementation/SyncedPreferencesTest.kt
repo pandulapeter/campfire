@@ -26,6 +26,31 @@ import kotlin.test.assertTrue
 
 class SyncedPreferencesTest {
 
+    // The base's writer
+
+    @Test
+    fun `a base written by 4_7_0 loses the fields it did not own`() = assertEquals(
+        Json.parseToJsonElement(
+            """{"version":1,"songs":{"a.cho":{"transposition":1,"tempo":90,"capo":2,"later":true}},"chords":{"guitar":{"F:0.4.7":"x x 3 2 1 1"}},"other":1}""",
+        ),
+        SyncedPreferencesDocument.withoutFieldsNotOwnedBy(
+            Json.parseToJsonElement(
+                """{"version":1,"songs":{"a.cho":{"transposition":1,"tempo":90,"capo":2,"later":true,"beatLevels":{"3/4":["accent","normal","muted"]}},""" +
+                    """"b.cho":{"beatLevels":{"4/4":["accent","normal","normal","normal"]}}},"chords":{"guitar":{"F:0.4.7":"x x 3 2 1 1"}},""" +
+                    """"tags":{"christmas":"red"},"other":1}""",
+            ).jsonObject,
+            SyncedPreferencesDocument.OWNED_FIELDS_OF_4_7_0,
+        ),
+    )
+
+    @Test
+    fun `a base written by a version that owns every field is kept as it is`() {
+        val base = Json.parseToJsonElement(
+            """{"version":1,"songs":{"a.cho":{"beatLevels":{"3/4":["accent","normal","muted"]}}},"tags":{"christmas":"red"}}""",
+        ).jsonObject
+        assertEquals(base, SyncedPreferencesDocument.withoutFieldsNotOwnedBy(base, SyncedPreferencesDocument.OWNED_FIELDS))
+    }
+
     // The merge
 
     @Test

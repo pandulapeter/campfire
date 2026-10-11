@@ -88,7 +88,7 @@ internal class SyncEngine(
         // An index written for a different account describes a different remote folder, and acting on it would read
         // that folder's absent files as deletions of this one's songs.
         var index = document.takeIf { it.accountId == accountId }?.toIndex().orEmpty()
-        var syncedPreferences = document.syncedPreferences.takeIf { document.accountId == accountId }
+        var syncedPreferences = document.syncedPreferencesBase().takeIf { document.accountId == accountId }
         var summary = SyncSummary()
         val run = SyncRun(
             provider = provider,
