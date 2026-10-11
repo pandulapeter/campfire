@@ -13,7 +13,7 @@ import androidx.compose.runtime.Stable
 import com.pandulapeter.campfire.data.model.domain.Song
 
 /**
- * What the song menus ([SongActions], [SetlistAssignmentsButton]) and the song details screen's edit button do with their song. One per
+ * What the song menus ([SongActions]) and the Choose setlists button ([SetlistAssignmentsButton]) do with their song. One per
  * screen, remembered, whose methods take the song, so that a row composed again as a list scrolls is handed the same
  * object rather than new lambdas that would keep it from skipping.
  */

@@ -36,9 +36,10 @@ import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
 /**
  * What a song is, as a form: every field is edited as a draft and only the ones changed are written, together, on Save.
  * How it is played — its key, capo, tempo and time — is not here but in the "Song defaults" sheet (`SongPlayingDialog`),
- * opened from the song details editing menu and from the About the song sheet's Song defaults group. The values are saved as a list of strings in [SONG_METADATA_FIELDS] order,
- * which is what Android's saved state takes. Unlike the dialogs that ask for one thing it opens with no field focused: it is opened to look the song
- * up as often as to correct one field of it, and a keyboard brought up over the title would hide half the form.
+ * opened from the Song defaults group of the About the song sheet and of the editor preview's card. The values are
+ * saved as a list of strings in [SONG_METADATA_FIELDS] order, which is what Android's saved state takes. Unlike the
+ * dialogs that ask for one thing it opens with no field focused: it is opened to look the song up as often as to
+ * correct one field of it, and a keyboard brought up over the title would hide half the form.
  */
 @Composable
 internal fun SongMetadataDialog(

@@ -42,8 +42,8 @@ import com.pandulapeter.campfire.presentation.ui.metronome.TempoStepper
  * two and two they stand in a column of their own at the end of either row (see [playingToolPlaces]).
  *
  * The steppers change how the song is played where it is read and never touch the file. What the file itself
- * declares, the time signature among it, is edited in the "Song defaults" sheet of the editing menu, which is also
- * where that difference is explained, so the page carries nothing but the song and its controls.
+ * declares, the time signature among it, is edited in the "Song defaults" sheet the About the song sheet opens, which
+ * is also where that difference is explained, so the page carries nothing but the song and its controls.
  *
  * Labels and controls grow and shrink with the lyrics, since they are part of the song's own first section — but the
  * way the sections' own header pills do rather than as a bar's buttons scaled up: what is written in them is scaled and

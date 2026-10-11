@@ -20,7 +20,8 @@ import com.pandulapeter.campfire.presentation.ui.playing.EffectiveTempo
  *
  * Three of the four are set where the song is read — a transposition, a capo and a tempo belong to the setlist the
  * band plays it in, or to this device for a song opened from the library — while what the file itself declares, the
- * time signature among it, is edited in the editing menu's "Song defaults" sheet (`SongPlayingDialog`).
+ * time signature among it, is edited in the "Song defaults" sheet (`SongPlayingDialog`), opened from the About the song
+ * sheet.
  */
 @Immutable
 internal class SongPlayingControls(
