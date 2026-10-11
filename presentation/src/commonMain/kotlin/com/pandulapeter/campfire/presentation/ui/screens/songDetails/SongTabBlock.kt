@@ -96,6 +96,8 @@ internal fun SongTabBlock(
  * and drawn at the one that won, so the widths it has been asked about most recently are kept: the same few come
  * back on every pass, and a row's text is laid out once rather than once per measurement. Only the last few
  * ([MAX_TAB_WIDTHS]), since a window being resized asks about a new width on every frame and none of those comes back.
+ * One instance is shared by every slot of the run ([SongTextMeasurements.tabRows]), which is why the same few widths
+ * asked about by each of its slots cost one wrap per width rather than one per slot.
  */
 internal class TabRows(
     private val lines: List<String>,

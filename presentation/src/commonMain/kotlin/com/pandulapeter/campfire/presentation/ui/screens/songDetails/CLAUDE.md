@@ -73,7 +73,8 @@ intrinsic measurement by running its measure block, so the height it reports for
 the rows the tab wraps into there. Every text the page measures by hand goes through one `TextMeasurer` per page, and
 what the chorded lines ask of it (the chord names, the width of each piece of lyrics, the height of a line) is kept in
 `SongTextMeasurements` for the page rather than per line, keyed on the styles and the measurer and not on the song, so
-that a transposition only lays out the chord names it has not drawn yet. The lyrics take their direction from their own
+that a transposition only lays out the chord names it has not drawn yet; the rows of each tab run and the aligned bars of
+each grid run are kept there too, once for all the chunks the run is drawn as. The lyrics take their direction from their own
 content (`TextDirection.Content`) rather than from the app's, so a Hebrew or Arabic line is a right to left paragraph
 starting at the right edge, and a chorded one is drawn that way too (`TextLayoutResult.getParagraphDirection`): its
 chords hang to the left of the characters they name and are kept apart leftwards, since x falls as the offset grows

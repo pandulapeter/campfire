@@ -16,7 +16,9 @@ import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.TextUnit
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
+import com.pandulapeter.campfire.presentation.ui.songLayout.GridCell
 import com.pandulapeter.campfire.presentation.ui.songLayout.PADDING
+import com.pandulapeter.campfire.presentation.ui.songLayout.alignedGridBars
 
 /**
  * What the chorded lines of one page have had measured, shared between them because they keep asking for the
@@ -28,6 +30,10 @@ import com.pandulapeter.campfire.presentation.ui.songLayout.PADDING
  * styles carry the text size, the measurer is rebuilt with the density, the layout direction and the font
  * resolver - and deliberately not for as long as the song does. A transposition renames the chords and leaves
  * the lyrics alone, so the fragment widths it measured before are the ones it needs after.
+ *
+ * The runs of tablature and grids are kept here too: a run is drawn as several chunks the section may be cut
+ * between, and every chunk of a run shares its one set of rows (and its one alignment of bars) rather than wrapping and
+ * measuring the whole run again for itself.
  *
  * None of this is state: it is filled in by whoever asks first, and the answers never change.
  */
@@ -54,6 +60,8 @@ internal class SongTextMeasurements(
     private val chordLayouts = HashMap<String, TextLayoutResult>()
     private val annotationLayouts = HashMap<String, TextLayoutResult>()
     private val fragmentWidths = HashMap<String, Float>()
+    private val tabRows = HashMap<TabRunKey, TabRows>()
+    private val gridBars = HashMap<List<ChordProLine>, List<List<List<GridCell>>>>()
 
     /** The laid out name of [chord], which is drawn as it is: the colour is given where it is drawn. */
     fun chordLayout(chord: ChordProLine.Lyrics.Chord) = if (chord.isAnnotation) {
@@ -65,6 +73,15 @@ internal class SongTextMeasurements(
     /** The width of a piece of lyrics. Only the number is kept, since nothing is ever drawn from this layout. */
     fun fragmentWidth(fragment: String) = fragmentWidths.bounded().getOrPut(fragment) { measureFragment(fragment) }
 
+    /** The rows of the tab run of [lines] in [style], one for every chunk the run is drawn as. */
+    fun tabRows(lines: List<String>, style: TextStyle) =
+        tabRows.boundedTo(MAX_TAB_RUNS).getOrPut(TabRunKey(lines, style)) { TabRows(lines, style, textMeasurer) }
+
+    /** The bars of the grid run [run], aligned once for every chunk the run is drawn as. */
+    fun gridBars(run: List<ChordProLine>) = gridBars.boundedTo(MAX_TAB_RUNS).getOrPut(run) {
+        run.filterIsInstance<ChordProLine.Grid>().map { it.tokens }.alignedGridBars { it.displayText() }
+    }
+
     private fun measureFragment(fragment: String) = textMeasurer.measure(AnnotatedString(fragment), lyricsStyle).size.width.toFloat()
 
     /**
@@ -72,9 +89,17 @@ internal class SongTextMeasurements(
      * so a map that only grew would grow for the whole session. Starting over costs one measurement of whatever is
      * still on screen, which is what opening the page cost.
      */
-    private fun <T> HashMap<String, T>.bounded() = also { if (size >= MAX_MEASURED_TEXTS) clear() }
+    private fun <T> HashMap<String, T>.bounded() = boundedTo(MAX_MEASURED_TEXTS)
+
+    private fun <K, V> HashMap<K, V>.boundedTo(max: Int) = also { if (size >= max) clear() }
+
+    /** The style is part of the key, since the monospace style a run is drawn in is none of the three this is keyed by. */
+    private data class TabRunKey(val lines: List<String>, val style: TextStyle)
 }
 
 internal const val LINE_HEIGHT_SAMPLE = "X"
 
 private const val MAX_MEASURED_TEXTS = 4096
+
+/** A song has a handful of runs; the bound is for the editor's preview, which makes a new run on every keystroke typed into one. */
+internal const val MAX_TAB_RUNS = 64

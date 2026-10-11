@@ -37,7 +37,6 @@ import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
 import com.pandulapeter.campfire.presentation.ui.songLayout.FoldableKind
 import com.pandulapeter.campfire.presentation.ui.songLayout.UNNAMED_SECTION_HEADER
-import com.pandulapeter.campfire.presentation.ui.songLayout.alignedGridBars
 import com.pandulapeter.campfire.presentation.ui.songLayout.labelOf
 import com.pandulapeter.campfire.presentation.ui.theme.LocalMonospaceFontFamily
 
@@ -250,8 +249,8 @@ internal fun SongSectionContent(
                     when (kind) {
                         FoldableKind.TAB -> {
                             val lines = remember(group) { group.map { (it as? ChordProLine.Tab)?.text.orEmpty() } }
-                            val rows = remember(lines, monospaceLyricsStyle, textMeasurements.textMeasurer) {
-                                TabRows(lines, monospaceLyricsStyle, textMeasurements.textMeasurer)
+                            val rows = remember(lines, monospaceLyricsStyle, textMeasurements) {
+                                textMeasurements.tabRows(lines, monospaceLyricsStyle)
                             }
                             shownSlots.forEach { slot ->
                                 SongTabBlock(
@@ -265,9 +264,7 @@ internal fun SongSectionContent(
                         }
 
                         FoldableKind.GRID -> Column(modifier = runModifier.fillMaxWidth()) {
-                            val alignedLines = remember(group) {
-                                group.filterIsInstance<ChordProLine.Grid>().map { it.tokens }.alignedGridBars { it.displayText() }
-                            }
+                            val alignedLines = remember(group, textMeasurements) { textMeasurements.gridBars(group) }
                             shownSlots.forEach { slot ->
                                 alignedLines.getOrNull(slot)?.let { bars ->
                                     SongGridLine(
