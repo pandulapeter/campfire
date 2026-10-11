@@ -96,7 +96,6 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableContent
-import com.pandulapeter.campfire.presentation.ui.platform.isDesktopPlatform
 import com.pandulapeter.campfire.presentation.ui.playing.songPlaybackOf
 import com.pandulapeter.campfire.presentation.ui.screens.rememberSongActionHandler
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.songLabelActions
@@ -360,11 +359,11 @@ internal fun SongList(
                                     viewModel.openSong(song)
                                 }
                             },
-                            // A shortcut to the row's own overflow menu, where holding a row is a natural way to ask for
-                            // it: the same menu, hanging from the same button, since the same entries shown two different
-                            // ways would read as two different things. In performance mode there is nothing to open
-                            // either way, so a row does nothing but open a song.
-                            onLongClick = if (isDesktopPlatform || isPerformanceModeEnabled || isSelecting) {
+                            // A shortcut to the row's own overflow menu, for a right click and, where holding a row is a
+                            // natural way to ask for it, a long press: the same menu, hanging from the same button, since
+                            // the same entries shown two different ways would read as two different things. In
+                            // performance mode there is nothing to open either way, so a row does nothing but open a song.
+                            onContextClick = if (isPerformanceModeEnabled || isSelecting) {
                                 null
                             } else {
                                 {
@@ -408,19 +407,17 @@ internal fun SongList(
                                                     song = song,
                                                     isDeletable = true,
                                                     isDuplicable = true,
-                                                    // The row's own way into the mode rather than one of the song's: it
-                                                    // starts with this song ticked.
-                                                    fileEditItems = listOf(
-                                                        ActionsMenuItem(
-                                                            title = selectMultipleTitle,
-                                                            icon = selectSongsIcon,
-                                                            isAlwaysInMenu = true,
-                                                            onClick = { viewModel.startSongSelection(song.fileName) },
-                                                        ),
-                                                    ) + songLabelActions(
+                                                    // After the song's own metadata editors, the row's way into the
+                                                    // mode, which starts with this song ticked.
+                                                    fileEditItems = songLabelActions(
                                                         viewModel = viewModel,
                                                         song = song,
                                                         target = SongEditTarget.File(song.fileName),
+                                                    ) + ActionsMenuItem(
+                                                        title = selectMultipleTitle,
+                                                        icon = selectSongsIcon,
+                                                        isAlwaysInMenu = true,
+                                                        onClick = { viewModel.startSongSelection(song.fileName) },
                                                     ),
                                                 )
                                             }

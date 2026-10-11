@@ -13,7 +13,8 @@ import androidx.compose.ui.input.pointer.PointerEvent
 
 /**
  * True on platforms driven by a pointer rather than touch, where holding a song row opens nothing: the long press
- * that opens the row's overflow menu is a touch gesture, and the button that opens the same menu is one click away.
+ * that opens the row's overflow menu is a touch gesture, and the button and the right click that open the same menu are
+ * one click away.
  * It is also what the interface scale is decided by (see `interfaceScale`).
  */
 internal expect val isDesktopPlatform: Boolean

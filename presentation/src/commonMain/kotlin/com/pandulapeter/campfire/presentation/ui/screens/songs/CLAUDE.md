@@ -18,8 +18,8 @@ mask is absent at the real top and grows over the first 24dp of scrolling, inclu
 
 ## Selecting songs
 
-- **A selection mode, started from a song's own menu** ("Select multiple", right under "Edit song file", the first
-  of `SongActions`' `fileEditItems`), which starts with that song ticked; a long press keeps opening the menu, and the
+- **A selection mode, started from a song's own menu** ("Select multiple", right under "Manage languages", the last
+  of `SongActions`' `fileEditItems`), which starts with that song ticked; a long press and a right click keep opening the menu, and the
   bar gets no button of its own. It is `CampfireViewModel`'s `SongSelection` (`ui/state`): snapshot state, by file name, so the search,
   the sorting and the filters keep working and keep the selection; a song that leaves a library read whole leaves the
   selection (a rescan's batches do not prune). It ends with the floating **Done** button, Back, Escape (after an open

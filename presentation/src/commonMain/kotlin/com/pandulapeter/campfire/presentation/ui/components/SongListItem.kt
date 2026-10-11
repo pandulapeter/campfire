@@ -51,6 +51,7 @@ import com.pandulapeter.campfire.presentation.resources.ic_dot
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo
 import com.pandulapeter.campfire.presentation.resources.songs_key
 import com.pandulapeter.campfire.presentation.resources.songs_lyrics_only
+import com.pandulapeter.campfire.presentation.ui.platform.isDesktopPlatform
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 import org.jetbrains.compose.resources.painterResource
 import kotlin.time.Duration
@@ -75,8 +76,8 @@ import kotlin.time.Duration
  * @param onTagClicked Toggles a tag in the song list's filter, exactly as its chip in the filters does. Null, together
  *   with [onLanguageClicked], leaves the pills to be read only.
  * @param onLanguageClicked The same for a language.
- * @param onLongClick A shortcut to the row's overflow menu, on the touch platforms where holding a row is a natural
- *   way to ask what can be done to it.
+ * @param onContextClick A shortcut to the row's overflow menu: a mouse's right click wherever there is a mouse, and a
+ *   long press on the touch platforms, where holding a row is a natural way to ask what can be done to it.
  * @param cardPadding The card's space from the edges of its grid cell, adjusted for inner columns in wide grids.
  * @param containerColor The card color, raised while the row is dragged ([draggedListItemContainerColor]).
  * @param coverArtUrl The song's cover, drawn as a thumbnail at the start of the card, in front of the text rather than
@@ -105,7 +106,7 @@ internal fun SongListItem(
     shadowElevation: Dp = 0.dp,
     coverArtUrl: String? = null,
     onClick: () -> Unit,
-    onLongClick: (() -> Unit)? = null,
+    onContextClick: (() -> Unit)? = null,
     actions: (@Composable () -> Unit)? = null,
 ) {
     val displayedDuration = duration?.let(ChordProDuration::format)
@@ -151,7 +152,9 @@ internal fun SongListItem(
         shadowElevation = shadowElevation,
     ) {
         CenteredSongCardContent(
-            modifier = Modifier.combinedClickable(onClick = onClick, onLongClick = onLongClick),
+            modifier = Modifier
+                .onContextClick(onContextClick)
+                .combinedClickable(onClick = onClick, onLongClick = onContextClick.takeUnless { isDesktopPlatform }),
             coverArtUrl = coverArtUrl,
             actions = actions,
             headlineContent = {

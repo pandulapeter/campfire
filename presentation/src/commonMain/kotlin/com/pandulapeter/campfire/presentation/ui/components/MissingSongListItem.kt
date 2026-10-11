@@ -32,14 +32,15 @@ import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.setlists_missing_song
+import com.pandulapeter.campfire.presentation.ui.platform.isDesktopPlatform
 
 /**
  * A setlist entry whose file is no longer in the library: it cannot be opened, but it can still be removed, so it is
  * shown greyed out rather than silently dropped - a setlist that quietly loses a song would look like the app lost it.
  *
- * @param onLongClick A shortcut to the row's overflow menu, as on a present song's row ([SongListItem]). It is a long
- *   press alone rather than a clickable, since a tap has nothing to open and a clickable would offer one to a screen
- *   reader all the same.
+ * @param onContextClick A shortcut to the row's overflow menu, as on a present song's row ([SongListItem]). It is a
+ *   right click and a long press alone rather than a clickable, since a tap has nothing to open and a clickable would
+ *   offer one to a screen reader all the same.
  */
 @Composable
 internal fun MissingSongListItem(
@@ -49,7 +50,7 @@ internal fun MissingSongListItem(
     cardPadding: PaddingValues = PaddingValues(horizontal = SONG_CARD_OUTER_PADDING, vertical = SONG_CARD_VERTICAL_PADDING),
     containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow,
     shadowElevation: Dp = 0.dp,
-    onLongClick: (() -> Unit)? = null,
+    onContextClick: (() -> Unit)? = null,
     actions: (@Composable () -> Unit)? = null,
 ) = Surface(
     modifier = modifier.fillMaxWidth().padding(cardPadding).alpha(0.5f),
@@ -58,20 +59,22 @@ internal fun MissingSongListItem(
     shadowElevation = shadowElevation,
 ) {
     val hapticFeedback = LocalHapticFeedback.current
-    val currentOnLongClick by rememberUpdatedState(onLongClick)
+    val currentOnContextClick by rememberUpdatedState(onContextClick)
     CenteredSongCardContent(
-        modifier = if (onLongClick == null) {
-            Modifier
-        } else {
-            Modifier.pointerInput(Unit) {
-                detectTapGestures(
-                    onLongPress = {
-                        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                        currentOnLongClick?.invoke()
-                    },
-                )
-            }
-        },
+        modifier = Modifier.onContextClick(onContextClick).then(
+            if (onContextClick == null || isDesktopPlatform) {
+                Modifier
+            } else {
+                Modifier.pointerInput(Unit) {
+                    detectTapGestures(
+                        onLongPress = {
+                            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                            currentOnContextClick?.invoke()
+                        },
+                    )
+                }
+            },
+        ),
         actions = actions,
         headlineContent = {
             ListItemHeadline(text = songCardTitle(songFileName, index))

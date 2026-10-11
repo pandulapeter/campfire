@@ -15,7 +15,6 @@
 ### Improvements
 - Improve haptic effects (fast scroll is inconsistent, tap tempo should not have one)
 - Review / update website support page (FAQ)
-- Mouse right click should trigger long tap actions
 
 ## Midterm (in the next versions)
 - New song from the clipboard: documentation/plans/clipboard-import.md

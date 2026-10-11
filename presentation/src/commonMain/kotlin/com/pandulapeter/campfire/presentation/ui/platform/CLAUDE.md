@@ -43,7 +43,8 @@ the first day of the week follows the system's region rather than the app's lang
 ### `ui/platform/Platform.kt`
 
 `ui/platform/Platform.kt` — `expect` declarations with one actual per platform: `isDesktopPlatform` (a long press on a
-song row opens nothing at all, the overflow button that opens the same menu being one click away already; also what the
+song row opens nothing at all, the overflow button and a right click that open the same menu being one click away
+already; also what the
 interface scale is decided by), `isLaunchScreenWholeStartup` (true in the desktop application only, the one platform
 with no startup screen of its own over the app's), `isStartupScreenHeldUntilAppReady` (true on Android and the web,
 whose startup screens stay over the app until `onAppReady` so that the launch screen is taken away without its fade;

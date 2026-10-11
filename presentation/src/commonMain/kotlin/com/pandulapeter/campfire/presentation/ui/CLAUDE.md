@@ -292,7 +292,7 @@ every screen rather than one of them, so `CampfireViewModel` exposes it as `isPe
 each screen collects that instead of reading it out of the preferences.
 
 It is read only mode for the app while it is being played from: the two "New" buttons, the per-song menu (and the long
-press that opens it on touch), the actions menu of a setlist header, the drag handle and the overflow menu a setlist row
+press and the right click that open it), the actions menu of a setlist header, the drag handle and the overflow menu a setlist row
 is reordered and removed by, the "Add to setlist" action, the "Choose songs" row ending every setlist, the song details
 menu's Edit song file and the controls of the four playing values all leave, which is also every way into the editor — the
 screen stays reachable by nothing. What is left is what a song is read with: the search, the sorting, the tag and

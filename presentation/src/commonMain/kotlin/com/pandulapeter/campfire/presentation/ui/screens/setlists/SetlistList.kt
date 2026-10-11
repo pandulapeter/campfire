@@ -104,7 +104,6 @@ import com.pandulapeter.campfire.presentation.ui.components.songCardPadding
 import com.pandulapeter.campfire.presentation.ui.components.sectionHeaderBottomGap
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
-import com.pandulapeter.campfire.presentation.ui.platform.isDesktopPlatform
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.ui.playing.songPlaybackOf
 import com.pandulapeter.campfire.presentation.ui.screens.rememberSetlistActionHandler
@@ -427,13 +426,13 @@ internal fun SetlistList(
                         // the list being shown rather than changed.
                         val handleVisibility = remember { MutableTransitionState(isReorderable) }
                         handleVisibility.targetState = isReorderable
-                        // Above the branch too, so that a menu opened by a long press is the one the row's button still
-                        // holds after the row is composed anew.
+                        // Above the branch too, so that a menu opened by a long press or a right click is the one the
+                        // row's button still holds after the row is composed anew.
                         val actionsMenuState = rememberOverflowMenuState()
                         val hasActions = !isPerformanceModeEnabled && (!setlistWithSongs.setlist.isArchived || entry is SetlistWithSongs.Entry.Present)
                         // The songs screen's shortcut to the row's own overflow menu. In reorder mode a long press lifts
                         // the row instead, which is what a long press on a row of the setlist being reordered has to do.
-                        val onLongClick: (() -> Unit)? = if (isDesktopPlatform || !hasActions || isReorderable) {
+                        val onContextClick: (() -> Unit)? = if (!hasActions || isReorderable) {
                             null
                         } else {
                             {
@@ -568,7 +567,7 @@ internal fun SetlistList(
                                         containerColor = containerColor,
                                         shadowElevation = elevation,
                                         onClick = { viewModel.openSongInSetlist(setlistWithSongs, entry.song) },
-                                        onLongClick = onLongClick,
+                                        onContextClick = onContextClick,
                                         actions = actions,
                                     )
                                 }
@@ -581,7 +580,7 @@ internal fun SetlistList(
                                     cardPadding = songCardPadding(rowIndex, columnCount),
                                     containerColor = containerColor,
                                     shadowElevation = elevation,
-                                    onLongClick = onLongClick,
+                                    onContextClick = onContextClick,
                                     actions = actions,
                                 )
                             }

@@ -187,7 +187,9 @@ same order otherwise - which is an overflow button on every platform wherever th
 their own - a gesture announces itself to nobody, so touch cannot be left with one - and **every overflow button in the
 app opens a dropdown**, touch included, since that is what an overflow button promises. A long press on a song row of
 the songs screen or of a setlist (outside reorder mode, where it lifts the row) opens that very dropdown on touch
-platforms, hanging from the row's button (the row holds the menu's `OverflowMenuState`), since the same entries shown two ways would read as two different things; it is a shortcut for the
+platforms, and so does a mouse's right click on every platform (`onContextClick`, `components/ContextClick.kt`, which
+takes the press before the row's clickable does, since Android's clickables answer a right click like a left one),
+hanging from the row's button (the row holds the menu's `OverflowMenuState`), since the same entries shown two ways would read as two different things; it is a shortcut for the
 reader who knows about it rather than the way in, which is why the button is there whatever is pointing at it),
 `SetlistActions` (the per-setlist actions at the end of its `SectionHeader` pill: edit, Choose songs, reorder songs
 (Done reordering while the mode is on, offered for an unarchived setlist of two songs or more), duplicate, archive or
