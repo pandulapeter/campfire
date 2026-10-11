@@ -12,8 +12,12 @@
 ### Bugs / issues
 - Changing filters should not scroll to top
 - CoverArtArchive thumbnails load really slowly
+- Page scroll triggered by home gesture on Android
 
 ### Improvements
+- Tuner icon next to Transpose, Metronome icon next to Tempo
+- The metronome should remember beat setup per song
+- Setting tempo when no default is added - save to file?
 - Improve song details layout: documentation/plans/song-layout.md
 - Improve haptic effects (fast scroll is inconsistent, tap tempo should not have one)
 - Clean up all the Song details / Song editor / About the song bottom sheet menus. Too much duplicated content, not super intuitive.

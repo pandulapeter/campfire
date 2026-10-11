@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.tuner
 
 import androidx.compose.runtime.Composable
+import com.pandulapeter.campfire.chordpro.ChordNotation
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.tuner_instrument_banjo
@@ -22,18 +23,16 @@ import com.pandulapeter.campfire.presentation.resources.tuner_instrument_mandoli
 import com.pandulapeter.campfire.presentation.resources.tuner_instrument_ukulele
 import com.pandulapeter.campfire.presentation.resources.tuner_instrument_violin
 import com.pandulapeter.campfire.presentation.resources.tuner_tuning_baritone
-import com.pandulapeter.campfire.presentation.resources.tuner_tuning_dadgad
-import com.pandulapeter.campfire.presentation.resources.tuner_tuning_double_c
-import com.pandulapeter.campfire.presentation.resources.tuner_tuning_drop_a
-import com.pandulapeter.campfire.presentation.resources.tuner_tuning_drop_c
-import com.pandulapeter.campfire.presentation.resources.tuner_tuning_drop_d
-import com.pandulapeter.campfire.presentation.resources.tuner_tuning_drop_e
+import com.pandulapeter.campfire.presentation.resources.tuner_tuning_double
+import com.pandulapeter.campfire.presentation.resources.tuner_tuning_double_drop
+import com.pandulapeter.campfire.presentation.resources.tuner_tuning_drop
 import com.pandulapeter.campfire.presentation.resources.tuner_tuning_full_step_down
 import com.pandulapeter.campfire.presentation.resources.tuner_tuning_half_step_down
-import com.pandulapeter.campfire.presentation.resources.tuner_tuning_high_c
-import com.pandulapeter.campfire.presentation.resources.tuner_tuning_low_g
-import com.pandulapeter.campfire.presentation.resources.tuner_tuning_open_d
-import com.pandulapeter.campfire.presentation.resources.tuner_tuning_open_g
+import com.pandulapeter.campfire.presentation.resources.tuner_tuning_high
+import com.pandulapeter.campfire.presentation.resources.tuner_tuning_key
+import com.pandulapeter.campfire.presentation.resources.tuner_tuning_low
+import com.pandulapeter.campfire.presentation.resources.tuner_tuning_modal
+import com.pandulapeter.campfire.presentation.resources.tuner_tuning_open
 import com.pandulapeter.campfire.presentation.resources.tuner_tuning_standard
 import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 
@@ -52,38 +51,29 @@ internal fun instrumentLabel(instrument: TunerInstrument?) = when (instrument) {
     TunerInstrument.MANDOLIN -> stringResource(Res.string.tuner_instrument_mandolin)
 }
 
-/** The name of [tuning] on its chip, its instrument named above it: "Drop D", or "Standard" for the one most are strung in. */
+/**
+ * The name of [tuning] on its chip, its instrument named above it: "Drop D", or "Standard" for the one most are strung in.
+ * Its note is written in the reader's chord [notation] rather than in the app's language, since it is the same note the
+ * strings and the chords on a page are named by.
+ */
 @Composable
-internal fun tuningLabel(tuning: InstrumentTuning) = stringResource(
-    when (tuning) {
-        InstrumentTuning.GUITAR,
-        InstrumentTuning.GUITAR_SEVEN_STRING,
-        InstrumentTuning.GUITAR_EIGHT_STRING,
-        InstrumentTuning.BASS,
-        InstrumentTuning.BASS_FIVE_STRING,
-        InstrumentTuning.UKULELE,
-        InstrumentTuning.VIOLIN,
-        InstrumentTuning.MANDOLIN -> Res.string.tuner_tuning_standard
-        InstrumentTuning.GUITAR_DROP_D, InstrumentTuning.BASS_DROP_D -> Res.string.tuner_tuning_drop_d
-        InstrumentTuning.GUITAR_HALF_STEP_DOWN,
-        InstrumentTuning.GUITAR_SEVEN_STRING_HALF_STEP_DOWN,
-        InstrumentTuning.GUITAR_EIGHT_STRING_HALF_STEP_DOWN,
-        InstrumentTuning.BASS_HALF_STEP_DOWN,
-        InstrumentTuning.BASS_FIVE_STRING_HALF_STEP_DOWN -> Res.string.tuner_tuning_half_step_down
-        InstrumentTuning.GUITAR_FULL_STEP_DOWN,
-        InstrumentTuning.GUITAR_SEVEN_STRING_FULL_STEP_DOWN,
-        InstrumentTuning.GUITAR_EIGHT_STRING_FULL_STEP_DOWN,
-        InstrumentTuning.BASS_FULL_STEP_DOWN,
-        InstrumentTuning.BASS_FIVE_STRING_FULL_STEP_DOWN -> Res.string.tuner_tuning_full_step_down
-        InstrumentTuning.GUITAR_DROP_C -> Res.string.tuner_tuning_drop_c
-        InstrumentTuning.GUITAR_OPEN_G, InstrumentTuning.BANJO -> Res.string.tuner_tuning_open_g
-        InstrumentTuning.GUITAR_OPEN_D -> Res.string.tuner_tuning_open_d
-        InstrumentTuning.GUITAR_DADGAD -> Res.string.tuner_tuning_dadgad
-        InstrumentTuning.GUITAR_SEVEN_STRING_DROP_A -> Res.string.tuner_tuning_drop_a
-        InstrumentTuning.GUITAR_EIGHT_STRING_DROP_E -> Res.string.tuner_tuning_drop_e
-        InstrumentTuning.BASS_FIVE_STRING_HIGH_C -> Res.string.tuner_tuning_high_c
-        InstrumentTuning.UKULELE_LOW_G -> Res.string.tuner_tuning_low_g
-        InstrumentTuning.UKULELE_BARITONE -> Res.string.tuner_tuning_baritone
-        InstrumentTuning.BANJO_DOUBLE_C -> Res.string.tuner_tuning_double_c
-    }
-)
+internal fun tuningLabel(tuning: InstrumentTuning, notation: ChordNotation) = when (val name = tuningNameOf(tuning)) {
+    TuningName.Plain.STANDARD -> stringResource(Res.string.tuner_tuning_standard)
+    TuningName.Plain.HALF_STEP_DOWN -> stringResource(Res.string.tuner_tuning_half_step_down)
+    TuningName.Plain.FULL_STEP_DOWN -> stringResource(Res.string.tuner_tuning_full_step_down)
+    TuningName.Plain.BARITONE -> stringResource(Res.string.tuner_tuning_baritone)
+    is TuningName.Noted -> stringResource(
+        when (name.kind) {
+            TuningName.Noted.Kind.DROP -> Res.string.tuner_tuning_drop
+            TuningName.Noted.Kind.DOUBLE_DROP -> Res.string.tuner_tuning_double_drop
+            TuningName.Noted.Kind.OPEN -> Res.string.tuner_tuning_open
+            TuningName.Noted.Kind.HIGH -> Res.string.tuner_tuning_high
+            TuningName.Noted.Kind.LOW -> Res.string.tuner_tuning_low
+            TuningName.Noted.Kind.DOUBLE -> Res.string.tuner_tuning_double
+            TuningName.Noted.Kind.KEY -> Res.string.tuner_tuning_key
+            TuningName.Noted.Kind.MODAL -> Res.string.tuner_tuning_modal
+        },
+        noteName(name.note, notation),
+    )
+    is TuningName.Spelled -> spelledTuning(name.strings, notation)
+}

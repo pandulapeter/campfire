@@ -71,7 +71,10 @@ own instrument, whatever the switches say.
 ### How every chord of a song is fingered is shown at its top
 
 **How every chord of a song is fingered is shown at its top**, on the guitar, the ukulele or the keyboard (the Songs
-tab's Instrument): a Chords section after the controls of how it is played, one diagram per chord in the order they are
+tab's Instrument, a list naming the standard tuning's strings under each in the reader's chord notation, since that is the only tuning
+the shapes are for;
+its Other, for every other instrument and tuning, draws no diagram at all, as the Features switch does, and the editor's
+Chord shape button writes a guitar's): a Chords section after the controls of how it is played, one diagram per chord in the order they are
 first played, folded by one preference for every song and cut between its rows of diagrams wherever a page ends inside
 it, like any other section. Nothing is shipped for it and nothing is fetched: `:chordpro` reads what notes a chord name
 stands for (`ChordProChords`) and finds its shapes (`ChordVoicings`) — a hand-typed table of the shapes everybody knows

@@ -28,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.chordpro.ChordNotation
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.tuner_instrument
@@ -43,11 +44,12 @@ import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
  * What a sound is read against, on the Tuner tab alone (the sheet over a song tunes to whatever is picked here): the
  * instrument as chips, like the Metronome tab's time signatures, chromatic first, and under it the instrument's tunings
  * as chips of their own, where it has more than one. An instrument picks its standard tuning, and a tuning chip needs
- * no instrument in its name, since the instrument is the one picked right above it.
+ * no instrument in its name, since the instrument is the one picked right above it; its note is in the reader's [notation].
  */
 @Composable
 internal fun ColumnScope.InstrumentChoice(
     selected: InstrumentTuning?,
+    notation: ChordNotation,
     onSelected: (InstrumentTuning?) -> Unit,
 ) {
     val selectedInstrument = instrumentOf(selected)
@@ -74,7 +76,7 @@ internal fun ColumnScope.InstrumentChoice(
                 Chips(
                     options = shownInstrument.tunings,
                     isSelected = { it == selected },
-                    label = { tuningLabel(it) },
+                    label = { tuningLabel(it, notation) },
                     onClick = onSelected,
                 )
             }

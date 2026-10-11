@@ -107,6 +107,8 @@ internal class UserPreferencesMappersTest {
             UserPreferences.ChordInstrument.GUITAR,
             UserPreferencesDocument(chordInstrument = "theremin").toModel().chordInstrument,
         )
+        val other = defaults.copy(chordInstrument = UserPreferences.ChordInstrument.OTHER)
+        assertEquals(other, UserPreferencesDocumentFormat.decode(UserPreferencesDocumentFormat.encode(other.toDocument())).document.toModel())
         assertEquals(emptyMap(), UserPreferencesDocument(chordVoicings = mapOf("guitar" to mapOf("F:0.4.7" to " "))).toModel().chordVoicings)
     }
 

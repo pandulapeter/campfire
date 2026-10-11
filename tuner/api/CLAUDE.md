@@ -25,11 +25,14 @@ so that no data or domain type leaks into it and the engine reads no settings of
   cents off it — beyond ±50 where a preset's nearest string is further than half a semitone — the frequency heard and
   `isInTune`), `TunerStopReason`, `TunerInputIssue` (`SILENT`: digital silence for two seconds, which is how the desktop
   operating systems answer an app that may not record; `WAITING_FOR_GESTURE`), `NoteOffset`, and `InstrumentTuning` —
-  the presets (six-string guitar in standard, drop D, half and full step down, drop C, open G, open D, and DADGAD;
-  seven-string guitar in standard and drop A; eight-string guitar in standard and drop E; four-string bass in standard,
-  drop D, and half and full step down; five-string bass in standard and high C; ukulele, low-G, and baritone ukulele;
-  banjo in open G and double C; violin; and mandolin), each string a MIDI note in the order the tuning is written
-  (`gCEA`), with the stable `id` a stored setting names one by (`chromatic` for none). How they are grouped on screen is `:presentation`'s.
+  the presets (six-string guitar in standard, drop D, half and full step down, drop C#, drop C, drop B, double drop D,
+  open G, D, E, A, and C, and DADGAD; seven-string guitar in standard, drop A, and half and full step down; eight-string
+  guitar in standard, drop E, and half and full step down; four-string bass in standard, drop D, half and full step
+  down, and drop C; five-string bass in standard, drop A, high C, and half and full step down; ukulele in standard,
+  low G, D tuning, and baritone; banjo in open G, double C, C, open D, and G modal; violin in standard, half step down,
+  and the fiddle's AEAE, ADAE, and GDGD cross tunings; and mandolin in standard, half step down, AEAE, and GDGD),
+  each string a MIDI note in the order the tuning is written (`gCEA`), with the stable `id` a stored setting names one
+  by (`chromatic` for none). How they are grouped on screen is `:presentation`'s.
 - `Pitch` — equal temperament from A4: `frequencyOf`, `centsBetween`, `noteOf` (the nearest semitone),
   `nearestString` and `targetOf`, and `REFERENCE_PITCH_RANGE` (415–466 Hz).
 

@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.pandulapeter.campfire.chordpro.ChordNotation
+import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -26,6 +28,11 @@ import com.pandulapeter.campfire.presentation.resources.settings_chord_instrumen
 import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_guitar
 import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_keyboard
 import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_ukulele
+import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_guitar_description
+import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_keyboard_description
+import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_other
+import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_other_description
+import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_ukulele_description
 import com.pandulapeter.campfire.presentation.resources.settings_notation
 import com.pandulapeter.campfire.presentation.resources.settings_notation_description
 import com.pandulapeter.campfire.presentation.resources.settings_notation_german
@@ -41,6 +48,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_notation_standa
 import com.pandulapeter.campfire.presentation.resources.settings_number_sections
 import com.pandulapeter.campfire.presentation.resources.settings_number_sections_description
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.components.RadioListItem
 import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
 import com.pandulapeter.campfire.presentation.ui.components.SettingsSubsection
@@ -62,6 +70,8 @@ internal fun SongDisplaySection(
     // like as soon as they are shown again. The accidentals stay enabled under a numbering, since they still spell the
     // key it counts from.
     val isChordSpellingEnabled = userPreferences?.areChordsEnabled != false
+    // The examples under the settings below are written in the notation picked here, so they change with it.
+    val notation = (userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default).notation.toChordNotation()
     NotationChoice(
         selected = userPreferences?.chordSpelling?.notation,
         isEnabled = isChordSpellingEnabled,
@@ -69,7 +79,11 @@ internal fun SongDisplaySection(
     )
     SettingsSubsection(
         title = stringResource(Res.string.settings_accidentals),
-        description = stringResource(Res.string.settings_accidentals_description),
+        description = stringResource(
+            Res.string.settings_accidentals_description,
+            ChordProNotation.shownName("Bb", notation),
+            ChordProNotation.shownName("A#", notation),
+        ),
         isEnabled = isChordSpellingEnabled,
     ) {
         SegmentedChoice(
@@ -83,24 +97,70 @@ internal fun SongDisplaySection(
             onSelected = viewModel::setAccidentals,
         )
     }
-    val isChordInstrumentEnabled = isChordSpellingEnabled && userPreferences?.areChordDiagramsEnabled != false
-    SettingsSubsection(
-        title = stringResource(Res.string.settings_chord_instrument),
-        description = stringResource(Res.string.settings_chord_instrument_description),
-        isEnabled = isChordInstrumentEnabled,
-    ) {
-        SegmentedChoice(
-            options = listOf(
-                UserPreferences.ChordInstrument.GUITAR to stringResource(Res.string.settings_chord_instrument_guitar),
-                UserPreferences.ChordInstrument.UKULELE to stringResource(Res.string.settings_chord_instrument_ukulele),
-                UserPreferences.ChordInstrument.KEYBOARD to stringResource(Res.string.settings_chord_instrument_keyboard),
+    ChordInstrumentChoice(
+        selected = userPreferences?.chordInstrument,
+        notation = notation,
+        isEnabled = isChordSpellingEnabled && userPreferences?.areChordDiagramsEnabled != false,
+        onSelected = viewModel::setChordInstrument,
+    )
+}
+
+/**
+ * The instrument the chord diagrams are drawn for, as a list for the reason the notation is one: the strings under each
+ * name are what say that the shapes are for that instrument in its standard tuning, so a player whose instrument is not
+ * one of these picks Other rather than reading diagrams their strings do not match. The strings are named in the chord
+ * [notation] picked above, as the diagrams' chords are, rather than in the app's language.
+ */
+@Composable
+private fun ChordInstrumentChoice(
+    selected: UserPreferences.ChordInstrument?,
+    notation: ChordNotation,
+    isEnabled: Boolean,
+    onSelected: (UserPreferences.ChordInstrument) -> Unit,
+) = SettingsSubsection(
+    title = stringResource(Res.string.settings_chord_instrument),
+    description = stringResource(Res.string.settings_chord_instrument_description),
+    isEnabled = isEnabled,
+) {
+    Column(modifier = Modifier.selectableGroup()) {
+        listOf(
+            Triple(
+                UserPreferences.ChordInstrument.GUITAR,
+                stringResource(Res.string.settings_chord_instrument_guitar),
+                stringResource(Res.string.settings_chord_instrument_guitar_description, stringNames(GUITAR_STRINGS, notation)),
             ),
-            selected = userPreferences?.chordInstrument,
-            isEnabled = isChordInstrumentEnabled,
-            onSelected = viewModel::setChordInstrument,
-        )
+            Triple(
+                UserPreferences.ChordInstrument.UKULELE,
+                stringResource(Res.string.settings_chord_instrument_ukulele),
+                stringResource(Res.string.settings_chord_instrument_ukulele_description, stringNames(UKULELE_STRINGS, notation)),
+            ),
+            Triple(
+                UserPreferences.ChordInstrument.KEYBOARD,
+                stringResource(Res.string.settings_chord_instrument_keyboard),
+                stringResource(Res.string.settings_chord_instrument_keyboard_description),
+            ),
+            Triple(
+                UserPreferences.ChordInstrument.OTHER,
+                stringResource(Res.string.settings_chord_instrument_other),
+                stringResource(Res.string.settings_chord_instrument_other_description),
+            ),
+        ).forEach { (instrument, title, description) ->
+            RadioListItem(
+                title = title,
+                description = description,
+                isSelected = selected == instrument,
+                isEnabled = isEnabled,
+                onSelected = { onSelected(instrument) },
+            )
+        }
     }
 }
+
+/** The open strings of an instrument in the standard notation, lowest first, written in [notation], `E A D G B E`. */
+private fun stringNames(strings: List<String>, notation: ChordNotation) = strings.joinToString(" ") { ChordProNotation.shownName(it, notation) }
+
+private val GUITAR_STRINGS = listOf("E", "A", "D", "G", "B", "E")
+private val UKULELE_STRINGS = listOf("G", "C", "E", "A")
 
 /**
  * The notation chords are written in, as a list rather than a segmented control: five names with an example under each

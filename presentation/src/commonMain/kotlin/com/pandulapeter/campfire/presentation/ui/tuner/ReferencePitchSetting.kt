@@ -82,7 +82,7 @@ internal fun ReferencePitchSetting(
                 onReset = { onReferencePitchChanged(Pitch.DEFAULT_REFERENCE_PITCH) }.takeIf { referencePitch != Pitch.DEFAULT_REFERENCE_PITCH },
                 repeatsOnHold = true,
             )
-            val description = stringResource(Res.string.tuner_play_reference)
+            val description = stringResource(Res.string.tuner_play_reference, noteName(REFERENCE_NOTE, notation))
             FilledTonalIconToggleButton(
                 checked = isReferenceTonePlaying,
                 onCheckedChange = { onToggleReferenceTone() },

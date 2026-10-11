@@ -25,6 +25,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.produceState
@@ -100,7 +101,9 @@ internal fun ChordShapesSheet(
     val transpositions by viewModel.transpositions.collectAsStateWithLifecycle()
     val capos by viewModel.capos.collectAsStateWithLifecycle()
     val instrumentPreference = userPreferences?.chordInstrument ?: UserPreferences.ChordInstrument.GUITAR
-    val instrument = instrumentPreference.toChordInstrument()
+    // The sheet is opened from a song's Chords section, which Other leaves out, so only a preference changed while it was
+    // open gets here without an instrument; there are no shapes to offer then.
+    val instrument = instrumentPreference.toChordInstrument() ?: return LaunchedEffect(Unit) { viewModel.dismissSheet(dialog) }
     val spelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
     val notation = spelling.notation.toChordNotation()
     val text = songTexts[song.fileName]

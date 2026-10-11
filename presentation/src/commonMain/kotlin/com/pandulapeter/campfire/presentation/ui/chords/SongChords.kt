@@ -126,11 +126,12 @@ internal fun List<SongChord>.withSearchedShapes(instrument: ChordInstrument) = i
     map { if (it.isShapePending) it.copy(defaultShape = ChordVoicings.default(it.chord, instrument), isShapePending = false) else it }
 }
 
-/** `:chordpro`'s instrument for the one the preferences name. */
+/** `:chordpro`'s instrument for the one the preferences name, null for [UserPreferences.ChordInstrument.OTHER], which has none. */
 internal fun UserPreferences.ChordInstrument.toChordInstrument() = when (this) {
     UserPreferences.ChordInstrument.GUITAR -> ChordInstrument.GUITAR
     UserPreferences.ChordInstrument.UKULELE -> ChordInstrument.UKULELE
     UserPreferences.ChordInstrument.KEYBOARD -> ChordInstrument.KEYBOARD
+    UserPreferences.ChordInstrument.OTHER -> null
 }
 
 /** `:chordpro`'s notation for the one the preferences name. */

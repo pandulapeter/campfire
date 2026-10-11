@@ -85,7 +85,7 @@ data class UserPreferences(
      * played. Only while [areChordsEnabled]: with the chords gone there is nothing to finger.
      */
     val areChordDiagramsEnabled: Boolean = true,
-    /** The instrument the diagrams are drawn for. */
+    /** The instrument the diagrams are drawn for, or [ChordInstrument.OTHER] for none. */
     val chordInstrument: ChordInstrument = ChordInstrument.GUITAR,
     /**
      * The shape the player has chosen for a chord, by [ChordInstrument.id] and then by the chord's id (its notes, the
@@ -320,11 +320,16 @@ data class UserPreferences(
         SHARPS("sharps"),
     }
 
-    /** The instrument the chord diagrams are drawn for, the twin of `:chordpro`'s, which this module does not see. */
+    /**
+     * The instrument the chord diagrams are drawn for, the twin of `:chordpro`'s, which this module does not see. [OTHER]
+     * is an instrument `:chordpro` has no shapes for (a bass, an eight-string guitar, a guitar in another tuning), so no
+     * diagram is drawn: one for the six strings of a standard guitar would be wrong on it, which is worse than none.
+     */
     enum class ChordInstrument(val id: String) {
         GUITAR("guitar"),
         UKULELE("ukulele"),
         KEYBOARD("keyboard"),
+        OTHER("other"),
     }
 
     enum class Language(val id: String) {

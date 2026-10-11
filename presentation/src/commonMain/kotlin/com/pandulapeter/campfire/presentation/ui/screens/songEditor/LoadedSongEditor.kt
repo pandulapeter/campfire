@@ -400,7 +400,9 @@ internal fun LoadedSongEditor(
                         text = text,
                         contentPadding = contentPadding,
                         chordShapes = remember(userPreferences) {
-                            val instrument = (userPreferences?.chordInstrument ?: UserPreferences.ChordInstrument.GUITAR).toChordInstrument()
+                            // Other draws no diagrams, but a definition is still worth writing for whoever reads the
+                            // file on a guitar, the instrument ChordPro takes a `{define}` without one to be for.
+                            val instrument = userPreferences?.chordInstrument?.toChordInstrument() ?: ChordInstrument.GUITAR
                             EditorChordShapes(
                                 notation = notation.toChordNotation(),
                                 instrument = instrument,

@@ -25,9 +25,15 @@ internal enum class TunerInstrument(
             InstrumentTuning.GUITAR_DROP_D,
             InstrumentTuning.GUITAR_HALF_STEP_DOWN,
             InstrumentTuning.GUITAR_FULL_STEP_DOWN,
+            InstrumentTuning.GUITAR_DROP_C_SHARP,
             InstrumentTuning.GUITAR_DROP_C,
+            InstrumentTuning.GUITAR_DROP_B,
+            InstrumentTuning.GUITAR_DOUBLE_DROP_D,
             InstrumentTuning.GUITAR_OPEN_G,
             InstrumentTuning.GUITAR_OPEN_D,
+            InstrumentTuning.GUITAR_OPEN_E,
+            InstrumentTuning.GUITAR_OPEN_A,
+            InstrumentTuning.GUITAR_OPEN_C,
             InstrumentTuning.GUITAR_DADGAD,
         ),
     ),
@@ -53,20 +59,52 @@ internal enum class TunerInstrument(
             InstrumentTuning.BASS_DROP_D,
             InstrumentTuning.BASS_HALF_STEP_DOWN,
             InstrumentTuning.BASS_FULL_STEP_DOWN,
+            InstrumentTuning.BASS_DROP_C,
         ),
     ),
     FIVE_STRING_BASS(
         listOf(
             InstrumentTuning.BASS_FIVE_STRING,
+            InstrumentTuning.BASS_FIVE_STRING_DROP_A,
             InstrumentTuning.BASS_FIVE_STRING_HIGH_C,
             InstrumentTuning.BASS_FIVE_STRING_HALF_STEP_DOWN,
             InstrumentTuning.BASS_FIVE_STRING_FULL_STEP_DOWN,
         ),
     ),
-    UKULELE(listOf(InstrumentTuning.UKULELE, InstrumentTuning.UKULELE_LOW_G, InstrumentTuning.UKULELE_BARITONE)),
-    BANJO(listOf(InstrumentTuning.BANJO, InstrumentTuning.BANJO_DOUBLE_C)),
-    VIOLIN(listOf(InstrumentTuning.VIOLIN)),
-    MANDOLIN(listOf(InstrumentTuning.MANDOLIN)),
+    UKULELE(
+        listOf(
+            InstrumentTuning.UKULELE,
+            InstrumentTuning.UKULELE_LOW_G,
+            InstrumentTuning.UKULELE_D,
+            InstrumentTuning.UKULELE_BARITONE,
+        ),
+    ),
+    BANJO(
+        listOf(
+            InstrumentTuning.BANJO,
+            InstrumentTuning.BANJO_DOUBLE_C,
+            InstrumentTuning.BANJO_C,
+            InstrumentTuning.BANJO_OPEN_D,
+            InstrumentTuning.BANJO_G_MODAL,
+        ),
+    ),
+    VIOLIN(
+        listOf(
+            InstrumentTuning.VIOLIN,
+            InstrumentTuning.VIOLIN_HALF_STEP_DOWN,
+            InstrumentTuning.VIOLIN_AEAE,
+            InstrumentTuning.VIOLIN_ADAE,
+            InstrumentTuning.VIOLIN_GDGD,
+        ),
+    ),
+    MANDOLIN(
+        listOf(
+            InstrumentTuning.MANDOLIN,
+            InstrumentTuning.MANDOLIN_HALF_STEP_DOWN,
+            InstrumentTuning.MANDOLIN_AEAE,
+            InstrumentTuning.MANDOLIN_GDGD,
+        ),
+    ),
 }
 
 /** The instrument [tuning] is a tuning of, null for chromatic tuning. */

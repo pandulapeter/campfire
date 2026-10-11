@@ -178,6 +178,7 @@ internal fun TunerScreen(
                     if (!isWide) playing()
                     InstrumentChoice(
                         selected = config.tuning,
+                        notation = notation,
                         onSelected = { tuning ->
                             viewModel.updateTunerSettings { copy(instrumentId = tuning?.id ?: InstrumentTuning.CHROMATIC_ID) }
                         },

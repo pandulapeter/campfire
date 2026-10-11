@@ -61,7 +61,10 @@ share.
   eight-string guitar, bass, five-string bass, ukulele, banjo, violin, mandolin); a chip picks its standard tuning. Every
   guitar and bass, whatever its strings, offers a half and a full step down.
   Tuning: that instrument's tunings, named without the instrument picked right above them (`TuningLabels.kt`), there only
-  for an instrument with more than one, the chips crossfading as one such instrument follows another.
+  for an instrument with more than one, the chips crossfading as one such instrument follows another. **A tuning's note
+  follows the chord notation, not the language** (`TuningName.kt`, pure, tested): the name holds a MIDI note rather than
+  a letter, so Drop B is Drop H in German and Drop Si in Latin, and DADGAD and the fiddle's cross tunings are spelled
+  from their strings (`Re La Re Sol La Re`). The reference tone button says its note the same way.
   `TunerInstrument.kt` (`instrumentOf`; every preset under exactly one instrument, its standard tuning first, tested).
 - `ReferencePitchSetting` — **the tab's alone**: a `Stepper` reset by a tap on its value, and a play / stop toggle
   button sounding A4.
