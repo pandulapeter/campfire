@@ -78,8 +78,9 @@ over — the pill's at the top everywhere, the save button's at the bottom where
 decided by the screen, which places the controls, and `fitArea`) — so it is centered between the two with the same room
 over it as under it. In a short window (`SHORT_WINDOW_HEIGHT`, a phone on its side) the two bands would leave a page no
 taller than a control, so there the page sits beside the two, which stack at the pane's end, in the pane less the column
-they take — as wide as the wider of the two, measured, since the pill's width is its text's. A zoomed page grows out to
-the pane's edges and under them, which is what says that the sheet of paper is what grew. Pages are turned by a swipe, the
+they take — as wide as the wider of the two, the pill set as wide as its text at its widest for the PDF's page count,
+every digit counted as the widest one, so the page beside it does not move as the pages are turned. A zoomed page grows
+out to the pane's edges and under them, which is what says that the sheet of paper is what grew. Pages are turned by a swipe, the
 buttons, or the arrow, Page Up / Down, Home and End keys, and zoomed by a pinch (around its centroid), a double tap, on
 a touch screen the second tap held and dragged (`doubleTapZoom`: down zooms in, up out, doubling every 120dp, around
 where it landed; the second press is consumed so neither the pager nor the pan moves under it) or a touchpad pinch

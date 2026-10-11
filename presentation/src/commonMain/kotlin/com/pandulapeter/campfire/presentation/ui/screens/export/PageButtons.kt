@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -28,10 +29,16 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.offset
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -42,6 +49,7 @@ import com.pandulapeter.campfire.presentation.resources.print_next
 import com.pandulapeter.campfire.presentation.resources.print_page
 import com.pandulapeter.campfire.presentation.resources.print_previous
 import org.jetbrains.compose.resources.painterResource
+import kotlin.math.ceil
 
 /**
  * The page buttons and the count between them, on a pill floating below the toolbar, coming and going with the preview
@@ -94,19 +102,60 @@ private fun PageButtonsPill(
     color = MaterialTheme.colorScheme.surfaceContainerHigh,
     shadowElevation = 6.dp,
 ) {
+    val textWidth = pageCountTextWidth(pageCount)
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(PAGE_BUTTONS_GAP),
     ) {
         IconButton(enabled = page > 0, onClick = { onTurn(page - 1) }) {
             Icon(painterResource(Res.drawable.ic_previous), contentDescription = stringResource(Res.string.print_previous))
         }
-        Text(stringResource(Res.string.print_page, page + 1, pageCount), style = MaterialTheme.typography.bodySmall)
+        Text(
+            text = stringResource(Res.string.print_page, page + 1, pageCount),
+            modifier = Modifier.widthIn(min = textWidth),
+            style = pageCountStyle(),
+            textAlign = TextAlign.Center,
+        )
         IconButton(enabled = page + 1 < pageCount, onClick = { onTurn(page + 1) }) {
             Icon(painterResource(Res.drawable.ic_next), contentDescription = stringResource(Res.string.print_next))
         }
     }
 }
+
+/**
+ * How wide the page buttons are for a PDF of [pageCount] pages, whichever page is shown: what the screen reserves for
+ * them beside the page in a short window before they are laid out.
+ */
+@Composable
+internal fun pageButtonsWidthFor(pageCount: Int) = PAGE_BUTTON_SIZE * 2 + PAGE_BUTTONS_GAP * 2 + pageCountTextWidth(pageCount)
+
+/**
+ * The widest the count between the page buttons can read for [pageCount] pages: the page number never has more digits
+ * than the count, and every digit is counted as the font's widest one, since the platform's default font may have no
+ * tabular figures for `tnum` to turn on. Rounded up, so that the pill is never a pixel wider than what was reserved.
+ */
+@Composable
+private fun pageCountTextWidth(pageCount: Int): Dp {
+    val textMeasurer = rememberTextMeasurer()
+    val style = pageCountStyle()
+    val text = stringResource(Res.string.print_page, pageCount, pageCount)
+    val density = LocalDensity.current.density
+    return remember(textMeasurer, style, text, density) {
+        val widestDigit = ('0'..'9').maxBy { textMeasurer.measure(it.toString(), style).size.width }
+        val widestText = text.map { if (it in '0'..'9') widestDigit else it }.joinToString("")
+        ceil(textMeasurer.measure(widestText, style).size.width / density).dp
+    }
+}
+
+/** The count's style, in tabular figures where the font has them, so that the text does not wobble as the pages turn. */
+@Composable
+private fun pageCountStyle(): TextStyle = MaterialTheme.typography.bodySmall.copy(fontFeatureSettings = "tnum")
+
+/** The width an icon button takes, Material's minimum interactive size. */
+private val PAGE_BUTTON_SIZE = 48.dp
+
+/** The gap between the page buttons and the count. */
+private val PAGE_BUTTONS_GAP = 8.dp
 
 /** The height of the floating page buttons. */
 private val PAGE_BUTTONS_HEIGHT = 48.dp

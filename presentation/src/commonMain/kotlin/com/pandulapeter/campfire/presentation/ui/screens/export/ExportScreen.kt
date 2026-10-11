@@ -373,10 +373,12 @@ internal fun ExportScreen(
         val bottomInset = WindowInsets.contentEdges.only(WindowInsetsSides.Bottom).asPaddingValues().calculateBottomPadding()
         // In a short window the two floating controls, stacked at the end of the preview's pane, would leave a page
         // between their bands no taller than one of them, so there the page sits beside them instead, in the pane less
-        // the column they take, which is as wide as the wider of the two: the pill's width depends on its text.
+        // the column they take, which is as wide as the wider of the two. The pill is set as wide as its text at its
+        // widest for the PDF's page count, every digit counted as the widest one, and known before it is laid out, so the
+        // page beside it is right from the first frame and does not move as the pages are turned.
         val isShortWindow = LocalWindowInfo.current.containerDpSize.height < SHORT_WINDOW_HEIGHT
         val density = LocalDensity.current
-        var pageButtonsWidth by remember { mutableStateOf(0.dp) }
+        val pageButtonsWidth = pageButtonsWidthFor(pageCount)
         var saveButtonWidth by remember { mutableStateOf(0.dp) }
         Box(Modifier.fillMaxSize()) {
             Column(Modifier.fillMaxSize()) {
@@ -505,8 +507,7 @@ internal fun ExportScreen(
                     PageButtons(
                         modifier = Modifier
                             .align(Alignment.TopEnd)
-                            .padding(PAGE_MARGIN)
-                            .onSizeChanged { pageButtonsWidth = with(density) { it.width.toDp() } },
+                            .padding(PAGE_MARGIN),
                         isVisible = isSideBySide && content == PrintScreenContent.LOADED && !isFiles && hasPages,
                         page = pagerState.currentPage,
                         pageCount = pageCount,
