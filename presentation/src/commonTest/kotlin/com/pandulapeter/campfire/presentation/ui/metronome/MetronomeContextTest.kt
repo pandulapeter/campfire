@@ -11,11 +11,16 @@ package com.pandulapeter.campfire.presentation.ui.metronome
 
 import com.pandulapeter.campfire.data.model.domain.MetronomeSettings
 import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.metronome.api.model.BeatLevel
+import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
+import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
 import com.pandulapeter.campfire.metronome.api.model.TimeSignature
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class MetronomeContextTest {
@@ -169,5 +174,19 @@ class MetronomeContextTest {
         )
         assertEquals(TimeSignature.COMMON_TIME, metronomeTimeSignatureOf(MetronomeContext.Song("gone.cho", null), settings, songOf))
         assertEquals(TimeSignature(3, 4), metronomeTimeSignatureOf(MetronomeContext.Standalone, settings, songOf))
+    }
+
+    @Test
+    fun `the bar being left is only one of another signature`() {
+        val a = MetronomePattern(bpm = 100, beatLevels = listOf(BeatLevel.ACCENT, BeatLevel.MUTED, BeatLevel.NORMAL, BeatLevel.MUTED))
+        assertNull(MetronomePlayback.Stopped().barBeingLeft)
+        assertNull(MetronomePlayback.Playing(a).barBeingLeft)
+        assertNull(MetronomePlayback.Playing(a, pendingPattern = MetronomePattern(bpm = 90)).barBeingLeft)
+        val barBeingLeft = assertNotNull(MetronomePlayback.Playing(a, pendingPattern = MetronomePattern(bpm = 90, timeSignature = TimeSignature(3, 4))).barBeingLeft)
+        assertEquals(a, barBeingLeft)
+        assertEquals(
+            listOf(BeatLevel.ACCENT, BeatLevel.MUTED, BeatLevel.NORMAL, BeatLevel.MUTED),
+            List(barBeingLeft.timeSignature.beats) { index -> barBeingLeft.beatLevel(index) },
+        )
     }
 }

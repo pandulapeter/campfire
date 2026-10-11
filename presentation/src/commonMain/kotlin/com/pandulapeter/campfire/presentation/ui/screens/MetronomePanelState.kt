@@ -18,6 +18,7 @@ import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
 import com.pandulapeter.campfire.metronome.api.model.TimeSignature
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeContext
+import com.pandulapeter.campfire.presentation.ui.metronome.barBeingLeft
 import com.pandulapeter.campfire.presentation.ui.metronome.beatLevelsOf
 import com.pandulapeter.campfire.presentation.ui.metronome.metronomeTimeSignatureOf
 
@@ -39,7 +40,8 @@ internal data class MetronomePanelState(
  * The [MetronomePanelState] of [viewModel], collected in the composition rather than read off the view model's flows'
  * current values, so that a `{time}` saved or synced while the panel is up redraws the bar, and in the same frame as the
  * pager's page change that makes another song the click's. A playing click draws the bar that is heard instead: the
- * song paged to waits for the end of the bar, and only then does the row take its signature.
+ * song paged to waits for the end of the bar, and only then does the row take its signature. While a change to another
+ * signature waits, the accents drawn are the heard bar's own too, since the click finishes it with them.
  */
 @Composable
 internal fun rememberMetronomePanelState(viewModel: CampfireViewModel): MetronomePanelState {
@@ -51,9 +53,11 @@ internal fun rememberMetronomePanelState(viewModel: CampfireViewModel): Metronom
     val context = viewModel.metronomeContext
     val timeSignature = (playback as? MetronomePlayback.Playing)?.pattern?.timeSignature
         ?: metronomeTimeSignatureOf(context, settings) { songsByFileName[it] ?: songsBeingRenamed[it] }
+    val barBeingLeft = playback.barBeingLeft
     return MetronomePanelState(
         timeSignature = timeSignature,
-        beatLevels = settings.beatLevelsOf(timeSignature, songBeatLevels = (context as? MetronomeContext.Song)?.let { songBeatLevels[it.songFileName] }),
+        beatLevels = barBeingLeft?.let { pattern -> List(pattern.timeSignature.beats) { index -> pattern.beatLevel(index) } }
+            ?: settings.beatLevelsOf(timeSignature, songBeatLevels = (context as? MetronomeContext.Song)?.let { songBeatLevels[it.songFileName] }),
         isPlaying = playback is MetronomePlayback.Playing,
         isFlashEnabled = settings.isVisualBeatEnabled,
     )

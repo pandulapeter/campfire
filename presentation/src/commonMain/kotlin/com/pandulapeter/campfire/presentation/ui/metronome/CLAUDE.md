@@ -92,8 +92,10 @@ line stands on the first page, played from there), headed by one read only line 
 from there on as the click plays them, and a playing click follows the page being read — the one a step or a fling is
 headed for, never one a finger is still dragging past — from beat one of the next bar, the panel's beat row with it
 once the bar being played has ended. **Until then the screen says what is heard**: the beat row draws the bar heard
-(`Playing.pattern`). A change inside a section cuts it there, the rest heading the new page with its fold toggle alone; a recalled chorus
-is played in whatever is in force where it is recalled.
+(`Playing.pattern`), with its own accents where its signature differs from the one waiting (`barBeingLeft`), and a tap
+on it is ignored, since the song it belongs to is no longer the one the accents would be written for. A change inside a
+section cuts it there, the rest heading the new page with its fold toggle alone; a recalled chorus is played in whatever
+is in force where it is recalled.
 
 The stepper, a setlist's entry and the library's override still hold one number, the song's opening tempo, and a later
 tempo keeps its ratio to the file's opening one (120 → 60, played at 110 → 55), so nothing new is stored. A song that

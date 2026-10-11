@@ -196,6 +196,10 @@ internal class MetronomeController(
      * they are when it runs, so a rename or a sync run landing meanwhile is not undone by it.
      */
     fun setBeatLevels(timeSignature: TimeSignature, levels: List<BeatLevel>) {
+        // The bar on screen is the one being left, whose song is no longer the context, so a tap could only be written
+        // under the wrong song; this lasts until the barline. It is checked here rather than in the composable so that a
+        // tap composed a frame before the change is caught too.
+        if (metronome.playback.value.barBeingLeft != null) return
         when (val context = metronomeContext) {
             MetronomeContext.Standalone -> updateMetronomeSettings { withBeatLevels(timeSignature, levels) }
             is MetronomeContext.Song -> {

@@ -11,6 +11,8 @@ package com.pandulapeter.campfire.presentation.ui.metronome
 
 import com.pandulapeter.campfire.data.model.domain.MetronomeSettings
 import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
+import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
 import com.pandulapeter.campfire.metronome.api.model.TimeSignature
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 
@@ -97,3 +99,14 @@ internal fun metronomeTimeSignatureOf(context: MetronomeContext, settings: Metro
     MetronomeContext.Standalone -> settings.timeSignatureOrDefault
     is MetronomeContext.Song -> context.timing?.timeSignature ?: songOf(context.songFileName).timeSignatureOrDefault
 }
+
+/**
+ * The pattern of the bar being heard while a change to another time signature waits for it to end, or null when the
+ * bar heard is the one the panel would draw anyway. The click finishes that bar with its own accents, which belong
+ * to the song (or the stretch of it) being left, so the panel draws them and takes no taps until the change lands.
+ */
+internal val MetronomePlayback.barBeingLeft: MetronomePattern?
+    get() = (this as? MetronomePlayback.Playing)?.takeIf { playing ->
+        // No smart cast: Playing is declared in another module.
+        playing.pendingPattern?.let { it.timeSignature != playing.pattern.timeSignature } == true
+    }?.pattern
