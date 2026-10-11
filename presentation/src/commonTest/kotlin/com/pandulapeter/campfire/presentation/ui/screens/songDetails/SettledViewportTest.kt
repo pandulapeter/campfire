@@ -40,4 +40,14 @@ class SettledViewportTest {
     fun `the settled height takes the live one once the viewport is at rest`() {
         assertEquals(344.dp, settledHeight(previous = 400.dp, live = 344.dp, isSettled = true))
     }
+
+    @Test
+    fun `a page that follows the viewport takes the live height`() {
+        assertEquals(372.dp, pageViewportHeight(live = 372.dp, settled = 400.dp, followsViewport = true))
+    }
+
+    @Test
+    fun `a page beside it keeps the settled height`() {
+        assertEquals(400.dp, pageViewportHeight(live = 372.dp, settled = 400.dp, followsViewport = false))
+    }
 }

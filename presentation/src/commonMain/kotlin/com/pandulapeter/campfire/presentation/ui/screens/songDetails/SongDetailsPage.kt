@@ -74,6 +74,8 @@ import org.jetbrains.compose.resources.painterResource
  *   background, see [buildsModelInPlace] and [rememberSongLyricsModel].
  * @param isViewportSettled Whether the app bar and the metronome panel above the pager are at rest, read while
  *   composing: the grid is decided against the height the page has then, see [settledHeight].
+ * @param followsViewport Whether the page follows the viewport's height frame by frame: the page being read and the one
+ *   a swipe is heading to; the others keep the height it last rested at, see [pageViewportHeight].
  * @param hasFailed Whether the file could not be read. The page then offers a retry rather than a loading indicator
  *   that has nothing left to wait for.
  * @param scrollState Owned by the pager rather than by the page, so that the arrow keys can reach the scroll of the
@@ -105,6 +107,7 @@ internal fun SongDetailsPage(
     text: String?,
     buildsModelInPlace: Boolean,
     isViewportSettled: () -> Boolean,
+    followsViewport: Boolean,
     hasFailed: Boolean,
     transposition: Int,
     tempoOverride: Int?,
@@ -228,18 +231,24 @@ internal fun SongDetailsPage(
             // they are at rest is what recomposes this once they come to rest.
             val settled = remember { SettledHeight(maxHeight) }
             settled.height = settledHeight(previous = settled.height, live = maxHeight, isSettled = isViewportSettled())
+            // The pages beside the one being read are off screen, so they keep the height the viewport last rested at
+            // rather than laying themselves out again on every frame of it moving.
+            val viewportHeight = pageViewportHeight(live = maxHeight, settled = settled.height, followsViewport = followsViewport)
             // A single change - a window maximised, a stepper tapped - springs the sections to their new place; a burst
             // of them, from a pinch or a window edge being dragged, is followed, gliding only over the grid's jumps. The
-            // live height is one of them, since every row is padded to it: a bottom edge dragged, the short window's
+            // viewport's height is one of them, since every row is padded to it: a bottom edge dragged, the short window's
             // title row collapsing over the frames of a scroll and the metronome panel opening or closing above the
             // pager are bursts of height changes alike, and the grid they settle into glides too.
-            val isChangingContinuously = rememberContinuousChange(maxWidth, maxHeight, currentFontScale)
+            val isChangingContinuously = rememberContinuousChange(maxWidth, viewportHeight, currentFontScale)
             // Fitting the text to its pages is left until what the grid is decided for holds still, which is not the
             // same burst: an app bar, the short window's title row or the metronome panel moves the live height over
             // many frames but the settled one once, as it comes to rest, and its one search fits as it always did,
             // while a pinch or a window edge being dragged changes the settled size on every frame.
             val isGridChangingContinuously = rememberContinuousChange(maxWidth, settled.height, currentFontScale)
             val density = LocalDensity.current
+            // Computed here rather than in onRowsPlaced, which would otherwise read the constraints of this scope and be a
+            // new lambda on every frame of the height, recomposing the lyrics of a page that does not follow it.
+            val viewport = with(density) { IntSize(maxWidth.roundToPx(), viewportHeight.roundToPx()) }
             val lyricsLineHeight = MaterialTheme.typography.bodyLarge.lineHeight
             val readingWindow = with(density) {
                 ReadingWindow(
@@ -287,10 +296,10 @@ internal fun SongDetailsPage(
                 onRowsPlaced = { rows ->
                     flingBehavior.onRowsPlaced(
                         placedRows = rows.belowPadding(topPaddingPx),
-                        viewport = with(density) { IntSize(maxWidth.roundToPx(), maxHeight.roundToPx()) },
+                        viewport = viewport,
                     )
                 },
-                rowViewportHeight = maxHeight,
+                rowViewportHeight = viewportHeight,
                 rowViewportBottomPadding = bottomPadding,
                 // The buttons are as far from the end of the screen as the text is, so the text only has to leave
                 // them their own width and a gap.
@@ -330,6 +339,9 @@ private fun rememberContinuousChange(vararg values: Any): Boolean {
 
 /** The height a page's grid is decided against: the [live] one while the viewport is settled, the [previous] one otherwise. */
 internal fun settledHeight(previous: Dp, live: Dp, isSettled: Boolean) = if (isSettled) live else previous
+
+/** The height a page pads its rows to: the [live] one where it [followsViewport], the [settled] one otherwise. */
+internal fun pageViewportHeight(live: Dp, settled: Dp, followsViewport: Boolean) = if (followsViewport) live else settled
 
 /**
  * The page's height when the viewport was last at rest. Not state: it is written while composing, and that composition

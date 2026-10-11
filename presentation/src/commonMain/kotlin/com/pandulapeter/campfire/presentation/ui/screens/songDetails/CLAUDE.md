@@ -543,7 +543,9 @@ the reader's own is left alone.
 A viewport that only changes height — the metronome panel opening or closing, the short window's title row collapsing —
 moves nothing but the padding after each row, so that one is followed in the very layout pass that places the rows
 (`RowSnapFlingBehavior.onRowsPlaced`), before the scroll places the song, and the divider above the row being read never
-slides into view while it changes. A section whose minimum intrinsic width is more than a column's — a staff of
+slides into view while it changes. Only the page being read (and the one a swipe is heading to) follows it frame by
+frame; the pages composed beside it keep the height the viewport last rested at (`pageViewportHeight`), as they keep the
+settled text size during a pinch. A section whose minimum intrinsic width is more than a column's — a staff of
 tablature, which the column would cut into systems — may instead have a row as wide as that, up to the whole width, and
 takes it wherever that saves a page, makes the row longer or lowers the same row (a tab exactly as wide as its block is
 never wrapped, whatever the estimated character width says); the sections next to it may be stacked in that row's single

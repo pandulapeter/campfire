@@ -106,9 +106,9 @@ internal fun SongPages(
             onDispose { songTimings.remove(song.fileName) }
         }
         if (page == pagerState.currentPage) SideEffect { onCurrentPage(scrollState, stepper) }
-        // Only the song being read follows a pinch frame by frame; the pages beside it are composed and laid out
-        // too, and take the scale once it has settled, or as soon as the pager starts moving. A swipe makes its page the
-        // target, which follows at once.
+        // Only the song being read follows a pinch, and the viewport's height, frame by frame; the pages beside it are
+        // composed and laid out too, and take the scale once it has settled, or as soon as the pager starts moving, and
+        // the height the viewport last rested at. A swipe makes its page the target, which follows at once.
         val isFollowingGesture = page == pagerState.currentPage || page == pagerState.targetPage
         // Derived, so that a swipe recomposes the page only when the answer flips rather than on every frame.
         val buildsInPlace by remember(pagerState, page) {
@@ -143,6 +143,7 @@ internal fun SongPages(
             scrollState = scrollState,
             flingBehavior = flingBehavior,
             text = shownText,
+            followsViewport = isFollowingGesture,
             buildsModelInPlace = buildsInPlace,
             isViewportSettled = isViewportSettled,
             hasFailed = song.fileName in failedSongFileNames,
