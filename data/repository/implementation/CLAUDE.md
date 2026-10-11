@@ -105,8 +105,9 @@ a deletion of one of those files lands before its reads or after its update and 
   list as one `NonCancellable` step as well, the locks themselves still being waited for cancellably. `editSongs`, the
   selection mode's tags and languages, reads and writes each file under `LibraryFileLock` (from the file rather than
   the cache, so there is no guard to compare), each write `NonCancellable` once begun, names a file it could not read
-  or write and carries on, and then puts the files it changed into the list, drops their cached texts and announces
-  the change once, whatever happened to the caller, as an import ends: three hundred `saveSong`s would be three
+  or write and carries on, and then reads the files it changed again under `LibraryFileLock` and puts them into the list
+  as `refresh` does, so that a save, deletion, or rename that landed on one of them after it was written is not undone,
+  drops their cached texts and announces the change once, whatever happened to the caller, as an import ends: three hundred `saveSong`s would be three
   hundred emissions of the whole library, each sorted and sectioned again. Every change to either cached list replaces by file name and never
   appends, since the file name is what the lists key their rows by.
 - `EditorDraftRepositoryImpl` is not a `BaseLocalDataRepository` either, and holds no cache: the draft is read once

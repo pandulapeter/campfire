@@ -68,13 +68,16 @@ internal class SongRepositoryImpl(
         // Under the lock every write holds from its write to its cache update, so that a save or a deletion lands either
         // before these reads, which then see it, or after the list has been updated with them - never between, where the
         // version read here would be put back over it.
-        libraryFileLock.withLock {
-            val reloaded = fileNames.chunked(REFRESH_BATCH_SIZE).flatMap { batch ->
-                coroutineScope { batch.map { fileName -> async { loadSongOrNull(fileName) } }.awaitAll() }
-            }.filterNotNull()
-            songContentRepository.invalidate(fileNames)
-            replaceInCache(fileNames, reloaded)
-        }
+        reloadIntoCache(fileNames)
+    }
+
+    /** Reads [fileNames] again and puts them in the list under [libraryFileLock], see [refresh]. */
+    private suspend fun reloadIntoCache(fileNames: Set<String>) = libraryFileLock.withLock {
+        val reloaded = fileNames.chunked(REFRESH_BATCH_SIZE).flatMap { batch ->
+            coroutineScope { batch.map { fileName -> async { loadSongOrNull(fileName) } }.awaitAll() }
+        }.filterNotNull()
+        songContentRepository.invalidate(fileNames)
+        replaceInCache(fileNames, reloaded)
     }
 
     private suspend fun loadSongOrNull(fileName: String) = logger.recovering(
@@ -114,7 +117,6 @@ internal class SongRepositoryImpl(
     override suspend fun editSongs(fileNames: Collection<String>, edit: (text: String) -> String): EditedSongs {
         val changed = mutableSetOf<String>()
         val failed = mutableListOf<String>()
-        val reloaded = mutableListOf<Song>()
         try {
             fileNames.distinct().forEach { fileName ->
                 val isEdited = libraryFileLock.withLock {
@@ -131,7 +133,6 @@ internal class SongRepositoryImpl(
                                 withContext(NonCancellable) {
                                     songLocalSource.saveSongContent(SongContent(fileName = fileName, text = edited))
                                     changed += fileName
-                                    loadSongOrNull(fileName)?.let(reloaded::add)
                                 }
                             }
                             true
@@ -141,11 +142,12 @@ internal class SongRepositoryImpl(
                 if (!isEdited) failed += fileName
             }
         } finally {
-            // Whatever was written is announced, a run cut short included, since those files have changed on disk.
+            // Whatever was written is announced, a run cut short included, since those files have changed on disk. They
+            // are read again here, under the lock, rather than as each was written: the lock is let go between files, and
+            // a save, deletion, or rename of one already written would otherwise be undone by the version read then.
             if (changed.isNotEmpty()) {
                 withContext(NonCancellable) {
-                    songContentRepository.invalidate(changed)
-                    replaceInCache(reloaded.mapTo(hashSetOf()) { it.fileName }, reloaded)
+                    reloadIntoCache(changed)
                     libraryChanges.onLibraryChanged()
                 }
             }

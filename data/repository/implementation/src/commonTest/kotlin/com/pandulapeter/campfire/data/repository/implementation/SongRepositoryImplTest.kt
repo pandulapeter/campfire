@@ -320,6 +320,51 @@ class SongRepositoryImplTest {
         assertTrue(result.changedFileNames.isEmpty())
     }
 
+    @Test
+    fun `a deletion made while an edit of several songs runs is not undone by it`() = runTest {
+        val localSource = FakeSongLocalSource(mapOf("a.cho" to "a", "b.cho" to "b", "c.cho" to "c"))
+        val repository = SongRepositoryImpl(localSource, SongContentRepositoryImpl(localSource, Logger.Standard), LibraryFileLock(), LibraryChanges(), Logger.Standard)
+        repository.loadSongsIfNeeded()
+        val first = CompletableDeferred<Unit>().also { localSource.readGate = it }
+
+        val edit = launch { repository.editSongs(listOf("a.cho", "b.cho", "c.cho")) { "$it, tagged" } }
+        runCurrent()
+        val second = CompletableDeferred<Unit>().also { localSource.readGate = it }
+        first.complete(Unit)
+        runCurrent()
+        // a.cho is written and the edit holds the lock on b.cho's read, so the deletion waits for the lock and is next.
+        val deletion = launch { repository.deleteSong("a.cho") }
+        runCurrent()
+        localSource.readGate = null
+        second.complete(Unit)
+        edit.join()
+        deletion.join()
+
+        assertEquals(listOf("b.cho", "c.cho"), repository.loadSongsIfNeeded()?.map { it.fileName }?.sorted())
+    }
+
+    @Test
+    fun `a save made while an edit of several songs runs is not undone by it`() = runTest {
+        val localSource = FakeSongLocalSource(mapOf("a.cho" to "a", "b.cho" to "b", "c.cho" to "c"))
+        val repository = SongRepositoryImpl(localSource, SongContentRepositoryImpl(localSource, Logger.Standard), LibraryFileLock(), LibraryChanges(), Logger.Standard)
+        repository.loadSongsIfNeeded()
+        val first = CompletableDeferred<Unit>().also { localSource.readGate = it }
+
+        val edit = launch { repository.editSongs(listOf("a.cho", "b.cho", "c.cho")) { "$it, tagged" } }
+        runCurrent()
+        val second = CompletableDeferred<Unit>().also { localSource.readGate = it }
+        first.complete(Unit)
+        runCurrent()
+        val save = launch { repository.saveSong(SongContent("a.cho", "retitled")) }
+        runCurrent()
+        localSource.readGate = null
+        second.complete(Unit)
+        edit.join()
+        save.join()
+
+        assertEquals("retitled", repository.loadSongsIfNeeded()?.first { it.fileName == "a.cho" }?.title)
+    }
+
     private companion object {
         const val FILE_NAME = "song.cho"
     }
