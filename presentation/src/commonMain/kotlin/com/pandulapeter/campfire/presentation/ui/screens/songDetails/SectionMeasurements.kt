@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.Constraints
 internal class SectionMeasurements(private val sizes: List<SectionSizes>) {
 
     private var lastGridKey: SectionGridKey? = null
-    private var lastGrid = DecidedGrid(emptyGrid(), isInset = false)
+    private var lastGrid = DecidedGrid(emptyGrid(), isInset = false, fitScale = 1f)
 
     /** The intrinsic height of the section at [index] when it is [width] wide. */
     fun height(index: Int, width: Int, measure: (Int) -> Int): Int = sizes[index].heightsByWidth.getOrPut(width) { measure(width) }
@@ -92,14 +92,18 @@ internal data class SectionGridKey(
     val keepsEndInset: Boolean,
 )
 
-/** The grid [SongSectionsLayout] decided on, and whether it was decided for the width less the end inset. */
+/**
+ * The grid [SongSectionsLayout] decided on, whether it was decided for the width less the end inset, and the scale of
+ * the reader's text size its text is drawn at to fit its pages (see [fitScalesFor]).
+ */
 internal data class DecidedGrid(
     val grid: SectionGrid,
     val isInset: Boolean,
+    val fitScale: Float,
 ) {
 
-    /** Whether [other] lays every section out in the same cell and in the same width as this one. */
-    fun hasSameCellsAs(other: DecidedGrid) = isInset == other.isInset && grid.hasSameCellsAs(other.grid)
+    /** Whether [other] lays every section out in the same cell, in the same width and at the same size as this one. */
+    fun hasSameCellsAs(other: DecidedGrid) = isInset == other.isInset && fitScale == other.fitScale && grid.hasSameCellsAs(other.grid)
 }
 
 private const val MAX_SECTION_WIDTHS = 32

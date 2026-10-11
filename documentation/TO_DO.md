@@ -15,7 +15,6 @@
 
 ### Improvements
 - The metronome should remember beat setup per song
-- Improve song details layout: documentation/plans/song-layout.md
 - Improve haptic effects (fast scroll is inconsistent, tap tempo should not have one)
 - Multi-select for songs: documentation/plans/multi-select.md
 - Duplicate song button
@@ -40,7 +39,6 @@
 ## Ideas (not detailed enough yet)
 - Global sync status display
 - Fast scroller on the song details screen
-- Alternative tuning support for chord diagrams?
 - External monitor support for lyrics only...? Maybe as a new window on desktop, lyric projection via AirPlay / Chromecast, etc
 - Backing tracks?
 - Native iOS, macOS, feel (overscroll, touch feedback, fonts, icons, colors, themes - Liquid Glass)

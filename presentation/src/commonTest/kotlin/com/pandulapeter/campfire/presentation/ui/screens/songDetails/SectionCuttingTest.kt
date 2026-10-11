@@ -80,18 +80,36 @@ class SectionCuttingTest {
     }
 
     @Test
-    fun `a section is cut to even the columns out`() {
-        // Kept whole, the second section would leave the first column 250 tall and the second 400.
+    fun `a section is not cut to even the columns out where the cut would strand a line`() {
+        // Kept whole, the second section leaves the first column 250 tall and the second 400; cut to even them out, one of
+        // its four lines would be left on its own.
         val sections = listOf(listOf(250), listOf(100, 100, 100, 100))
         val grid = flow(sectionUnits = sections, columnCount = 2, maxRowHeight = 500)
-        assertTrue(cutsAnySection(grid, unitSections(sections)))
-        assertContentEquals(intArrayOf(2), grid.columnCounts)
+        assertFalse(cutsAnySection(grid, unitSections(sections)))
+        assertContentEquals(intArrayOf(0, 1, 1, 1, 1), grid.columns)
+    }
+
+    @Test
+    fun `a section is cut to even the columns out where the cut falls between two stanzas`() {
+        // Two stanzas of three lines, the empty line between them part of the third one's chunk.
+        val sections = listOf(listOf(200), listOf(100, 100, 130, 100, 100, 100))
+        val grid = flow(sectionUnits = sections, columnCount = 2, maxRowHeight = 650, isStanzaBreakBefore = { it == 4 })
+        assertContentEquals(intArrayOf(0, 0, 0, 0, 1, 1, 1), grid.columns)
+    }
+
+    @Test
+    fun `a cut between two stanzas is not taken where a column would hold a single line`() {
+        // A stanza of one line then one of four: a cut between them is cheap, but it leaves the line on its own.
+        val sections = listOf(listOf(300), listOf(130, 100, 100, 100, 100))
+        val grid = flow(sectionUnits = sections, columnCount = 2, maxRowHeight = 560, isStanzaBreakBefore = { it == 2 })
+        assertFalse(cutsAnySection(grid, unitSections(sections)))
     }
 
     @Test
     fun `a section runs on from the last column of a row into the next row`() {
+        // Twelve lines, which two rows of two columns only hold where the second section is cut across them.
         val sections = List(3) { List(4) { 100 } }
-        val grid = flow(sectionUnits = sections, columnCount = 2, maxRowHeight = 300)
+        val grid = flow(sectionUnits = sections, columnCount = 2, maxRowHeight = 320)
         val units = unitSections(sections)
         assertTrue((1 until units.size).any { units[it] == units[it - 1] && grid.rows[it] != grid.rows[it - 1] })
     }
@@ -183,6 +201,7 @@ class SectionCuttingTest {
         maxRowHeight: Int,
         piecePadding: IntArray = IntArray(sectionUnits.size),
         isCuttableBefore: (Int) -> Boolean = { true },
+        isStanzaBreakBefore: (Int) -> Boolean = { false },
     ): SectionGrid {
         val heights = sectionUnits.flatten()
         val sectionStarts = IntArray(sectionUnits.size + 1).also { starts ->
@@ -198,8 +217,7 @@ class SectionCuttingTest {
             maxRowHeight = maxRowHeight,
             lineHeight = LINE_HEIGHT,
             lineCount = { 1 },
-            isStanzaBreakBefore = { false },
-            wrappedLines = { _, _ -> 0 },
+            isStanzaBreakBefore = isStanzaBreakBefore,
         )
     }
 
@@ -217,7 +235,6 @@ class SectionCuttingTest {
             // The first section is a line, the second the rows of chord diagrams, which are no lines of lyrics.
             lineCount = { if (it == 0) 1 else 0 },
             isStanzaBreakBefore = { false },
-            wrappedLines = { _, _ -> 0 },
         )
         val cut = grid(isCuttable = true)
         assertContentEquals(intArrayOf(0, 0, 0, 0, 0), cut.rows)

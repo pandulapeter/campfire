@@ -306,7 +306,7 @@ rows are stepped through even where all of them fit, and only otherwise the fewe
 through where the chords are one row): the candidates are evaluated from the sections' intrinsic heights (the winner is
 the only width they are measured at, and a candidate that does not fit jumps straight to the smallest count that could)
 and a window with room for a single column asks for none of them, since it is paged instead (below); column widths are
-clamped to 384–560dp scaled by `fontScale`, and once the grid is decided every column is narrowed to the widest thing in
+clamped to 384–560dp scaled by `fontScale` (288dp where narrow columns save a page, below), and once the grid is decided every column is narrowed to the widest thing in
 it and **the space every row leaves is shared out evenly** before, between and after its columns (never less than a
 column gap between two), by what the row holds rather than by the columns it was given, whatever the rows around it
 hold; the whole width is shared out wherever that keeps the row clear of the step buttons, and the width left beside
@@ -327,24 +327,51 @@ color), the other sections are indented to match the card's content.
 column is filled down to the screen and a section that does not fit what is left of one runs on at the top of the next —
 from the last column of a row into the first of the next row too — since a page that ends with a section rather than
 with the screen is a page turn more for a reader who has to find the step buttons, and more for a pedal player to keep
-up with. Each row is then shared out again between its columns to even bottoms, cutting sections wherever that lowers
-them: keeping a section in one piece is never worth a page or a short column; the last row, and one ending before a
-stretch that cannot be cut and is taller than the screen (which is a single column row of its own, paged through), takes
-the fewest columns that hold it. It is tried at every column count the width allows, and the fewest pages win
-(`SectionGrid.pageCount`), the most columns of those, unless the sections whole (`flowIntoRows`, with its wide tab rows)
-take fewer still. A song read whole in a single row is never cut.
+up with. **The fewest pages decide first, and then a score decides how they read** (`LayoutScoring` in `LayoutScore.kt`):
+the pages are as many as filling every column as full as it goes reaches, and where the columns of those pages end is a
+dynamic program over the ends of every column (`ColumnFlow.program`) that pays for every cut, more for one inside a
+section of four lines or fewer and almost nothing for one after an empty line or in front of a comment, for every piece
+of a cut section holding one or two lines of lyrics, and for the empty space at the end of every column of a page that is
+not the last, by its square in chorded lines. So a verse moves to the next column whole rather than leave a line of itself
+behind, and a column ends a line short rather than strand one, unless that costs a page. A row of chord diagrams, a tab
+system, a comment and the song's first section are no stranded lines; they pay for the cut alone.
+
+Each page is then evened out on its own (`ColumnFlow.evenOut`): set under the lowest height it fits in its columns, one,
+two and three lines more and the screen, the one taken whose cuts and whose spread of column bottoms cost least. The last
+page, and one ending before a stretch that cannot be cut and is taller than the screen (a single column row of its own,
+paged through), takes the fewest columns that hold it; the slack stays there, at the end of the song. It is tried at
+every column count the width allows and compared, with the sections whole (`flowIntoRows`, with its wide tab rows), by
+pages (`SectionGrid.pageCount`) and then by score (`SectionGrid.score`, which also counts the lines a width wraps): the
+sections whole keep a full tie, the most columns the rest. A song read whole in a single row is never cut.
+
+**A song still stepped through may take columns narrower than a readable one** (`NARROW_COLUMN_WIDTH`, 288dp scaled by
+`fontScale`, three quarters of the minimum): every count up to what fits at that width is a candidate wherever no more
+than a quarter of the song's lines of lyrics wrap there (`fitsNarrowColumns`), the fewest that hold the song whole in one
+row first — read without stepping at all — and otherwise cut like a magazine, taken only where it has strictly fewer
+pages than the best readable layout, never on a tie (`withNarrowColumns`). A phone held upright stays one column; the
+default 800 × 600 desktop window can become two.
+
+**A song a few lines too long for its pages is set a little smaller** (`TextFitting.kt`): 97.5%, then 95% of the reader's
+size, never below `UserPreferences.MIN_FONT_SCALE`, the first at which the whole search takes a page fewer
+(`chooseFitScale`), searched only where the song could fit a page fewer even without its gaps. The heights are read at a
+width that much wider and scaled down, and the song is drawn the same way — every chunk laid out wider and placed through
+a scaled layer, which scales its hit testing with it — so nothing is composed again and the first frame is already the
+fitted one; `DecidedGrid.fitScale` keeps it with the grid, a change of it is a grid change that glides like any other, and
+the stepper, the menu and the app bar keep the reader's own size. The editor's preview and a songbook are neither
+narrowed nor fitted.
 
 **A width with room for one column is paged the same way** (`flowIntoPages`, also in `SectionCutting.kt`): the column is
 filled down to the screen, a section running on onto the next page, so that a step turns a screen of the song rather
-than a section of it — a phone held upright is where the reader has the least of the song in view. Two neighboring
+than a section of it — a phone held upright is where the reader has the least of the song in view. Where the pages end
+is the same score's dynamic program, a page at a time. Two neighboring
 sections that both fit half the column without wrapping (a run of chords, a short refrain, a folded section) are set
 side by side there, in a row of two columns that joins the page (`SectionGrid.joinsPrevious`: a section gap under the
 row above rather than a divider and a page of its own), wherever that is lower than stacking them; such a pair is never
 cut, so where it does not fit what is left of a page the two are stacked and cut instead wherever the first can start
-there, and the pair only moves to the next page where it cannot. Whatever cannot be cut to fit what is left of a page (a
-staff of tablature, such a pair) only starts the next page where this one is at least half full; otherwise it starts
-here and the page runs on past the screen, paged through like a stretch too tall for any screen, since a page left
-mostly empty is never acceptable.
+there, and the score decides whether the page ends there or before the pair. Whatever cannot be cut to fit what is left
+of a page (a staff of tablature, such a pair) may only start the next page where this one is at least half full;
+otherwise it starts here and the page runs on past the screen, paged through like a stretch too tall for any screen,
+since a page left mostly empty is never acceptable.
 
 The rows of these pages share one start edge (`sharesKeyline`), the pair's second section starting from the middle, and
 a page shorter than the screen is read from its top rather than centered, since the pages are one column cut into

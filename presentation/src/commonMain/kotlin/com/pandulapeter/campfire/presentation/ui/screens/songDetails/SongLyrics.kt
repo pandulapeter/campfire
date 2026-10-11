@@ -306,11 +306,14 @@ internal fun SongLyrics(
     val chordLayouts = remember(chordsSection?.cells, chordStyle, textMeasurer, density, fontScale) {
         chordsSection?.let { ChordCellLayouts(it.cells, chordStyle, textMeasurer, density, fontScale) }
     }
+    // Only a song cut into pages is set smaller to save one; the editor's preview is set as it is typed.
+    val fitScales = remember(fontScale, canCutSections) { if (canCutSections) fitScalesFor(fontScale) else emptyList() }
     Box(modifier = modifier) {
         LookaheadScope {
             SongSectionsLayout(
                 modifier = Modifier.semantics { isTraversalGroup = true },
                 minColumnWidth = MIN_COLUMN_WIDTH * fontScale,
+                narrowColumnWidth = NARROW_COLUMN_WIDTH * fontScale,
                 maxColumnWidth = MAX_COLUMN_WIDTH * fontScale,
                 columnGap = COLUMN_GAP,
                 sectionGap = SECTION_GAP,
@@ -332,6 +335,7 @@ internal fun SongLyrics(
                 sectionGlides = sectionGlides,
                 sectionMeasurements = sectionMeasurements,
                 lyricsLineHeight = textMeasurements.lyricsLineHeight,
+                fitScales = fitScales,
                 onRowsPlaced = { rows -> onRowsPlaced?.invoke(rows) },
             ) {
                 // Whether a chunk or a card is placed by animateBounds: not while the layout follows a change that keeps
@@ -502,6 +506,13 @@ private fun CutSongNotice(
 private val CARD_ELEVATION = 1.dp
 
 private val MIN_COLUMN_WIDTH = 384.dp
+
+/**
+ * The narrowest a column may be, three quarters of [MIN_COLUMN_WIDTH]: taken only by a song whose lines mostly fit it,
+ * and only where that saves a page (see [fitsNarrowColumns]).
+ */
+private val NARROW_COLUMN_WIDTH = 288.dp
+
 private val MAX_COLUMN_WIDTH = 560.dp
 private val COLUMN_GAP = 16.dp
 private val SECTION_GAP = 16.dp

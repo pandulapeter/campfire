@@ -100,10 +100,10 @@ private fun metronome(isSongPanelShown: Boolean): Map<String, JsonElement> = map
 )
 
 /**
- * A song from the library at [fontScale], chosen per song by trying every size from 80% to 130% in steps of 2.5%: a
- * song longer than a page is cut wherever a column ends, so the size is one at which the page ends exactly where a
- * section does, never inside one (and, for Still Alive, Verse 2 stays in one column). A change to the song, the device
- * or the layout calls for trying again. The Chords section is never folded to make room.
+ * A song from the library at [fontScale], chosen per song for how its first page reads on the device (for Still Alive,
+ * Verse 2 in one column). The layout itself avoids stranding a line at any size, so the scale is a matter of what the
+ * page shows rather than of where it is cut; a change to the song, the device or the layout calls for looking again.
+ * The Chords section is never folded to make room.
  */
 private fun song(id: String, fileName: String, fontScale: Float = 1f, extra: Map<String, JsonElement> = emptyMap()) = Shot(
     id = id,

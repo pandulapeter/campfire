@@ -26,25 +26,26 @@ class SectionPagingTest {
 
     @Test
     fun `pages are filled rather than ended with a section`() {
-        // Three sections of four 100 high lines on 550 high pages: every page is filled, the sections running on.
-        val grid = page(List(3) { List(4) { 100 } }, maxRowHeight = 550)
-        assertEquals(3, grid.pageCount)
-        assertEquals(listOf(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2), grid.pageOfEveryUnit())
+        // Three sections of three 100 high lines on 550 high pages: whole, they take a page each, and running on, two.
+        val grid = page(List(3) { List(3) { 100 } }, maxRowHeight = 550)
+        assertEquals(2, grid.pageCount)
+        // Of the two places the second section can be cut at, the one that leaves no line on its own on the first page.
+        assertEquals(listOf(0, 0, 0, 0, 0, 1, 1, 1, 1), grid.pageOfEveryUnit())
     }
 
     @Test
     fun `a section is only cut where it may be`() {
-        val sections = listOf(listOf(100, 100), listOf(100, 100, 100, 100))
-        // The second section may only be cut after its second line, so the page ends after its first two lines.
-        val grid = page(sections, maxRowHeight = 450, isCuttableBefore = { it == 4 })
-        assertEquals(listOf(0, 0, 0, 0, 1, 1), grid.pageOfEveryUnit())
+        val sections = listOf(listOf(100, 100), listOf(100, 100, 100, 100, 100, 100))
+        // The second section may only be cut after its fourth line, so the page ends after its first four lines.
+        val grid = page(sections, maxRowHeight = 650, isCuttableBefore = { it == 6 })
+        assertEquals(listOf(0, 0, 0, 0, 0, 0, 1, 1), grid.pageOfEveryUnit())
     }
 
     @Test
     fun `nothing is cut in front of a unit with no height`() {
-        // The run of a tab drawn in slots, the last two of them empty at this width: the page may not end before them.
-        val grid = page(listOf(listOf(300), listOf(100, 100, 0, 0)), maxRowHeight = 450)
-        assertEquals(listOf(0, 0, 1, 1, 1), grid.pageOfEveryUnit())
+        // The run of a tab drawn in slots, two of them empty at this width: no page may start with them.
+        val grid = page(listOf(listOf(100, 100, 0, 0, 100, 100)), maxRowHeight = 250)
+        assertEquals(listOf(0, 0, 0, 0, 1, 1), grid.pageOfEveryUnit())
     }
 
     @Test
@@ -76,11 +77,23 @@ class SectionPagingTest {
 
     @Test
     fun `a pair that does not fit what is left is stacked where its first section can start there`() {
-        // The pair would be 200 tall, which the 180 left of the first page does not hold, but the first line of its first
+        // The pair would be 180 tall, which the 130 left of the first page does not hold, but the first stanza of its first
         // section does.
-        val grid = page(listOf(listOf(300), listOf(100, 100), listOf(100)), maxRowHeight = 500, narrow = setOf(1, 2))
+        val grid = page(
+            sectionUnits = listOf(listOf(350), List(6) { 30 }, listOf(100)),
+            maxRowHeight = 500,
+            narrow = setOf(1, 2),
+            isStanzaBreakBefore = { it == 4 },
+        )
         assertContentEquals(intArrayOf(1, 1), grid.columnCounts)
-        assertEquals(listOf(0, 0, 1, 1), grid.pageOfEveryUnit())
+        assertEquals(listOf(0, 0, 0, 0, 1, 1, 1, 1), grid.pageOfEveryUnit())
+    }
+
+    @Test
+    fun `a pair that does not fit what is left starts the next page where stacking it would strand a line`() {
+        val grid = page(listOf(listOf(300), listOf(100, 100), listOf(100)), maxRowHeight = 500, narrow = setOf(1, 2))
+        assertContentEquals(intArrayOf(1, 2), grid.columnCounts)
+        assertEquals(listOf(0, 1, 1, 1), grid.pageOfEveryUnit())
     }
 
     @Test
@@ -141,6 +154,7 @@ class SectionPagingTest {
         maxRowHeight: Int,
         narrow: Set<Int> = emptySet(),
         isCuttableBefore: (Int) -> Boolean = { true },
+        isStanzaBreakBefore: (Int) -> Boolean = { false },
     ): SectionGrid {
         val heights = sectionUnits.flatten()
         val sectionStarts = IntArray(sectionUnits.size + 1).also { starts ->
@@ -156,8 +170,7 @@ class SectionPagingTest {
             maxRowHeight = maxRowHeight,
             lineHeight = LINE_HEIGHT,
             lineCount = { 1 },
-            isStanzaBreakBefore = { false },
-            wrappedLines = { _, _ -> 0 },
+            isStanzaBreakBefore = isStanzaBreakBefore,
         )
     }
 
@@ -175,7 +188,6 @@ class SectionPagingTest {
             // The first section is a line, the second the rows of chord diagrams, which are no lines of lyrics.
             lineCount = { if (it == 0) 1 else 0 },
             isStanzaBreakBefore = { false },
-            wrappedLines = { _, _ -> 0 },
         )
         assertContentEquals(intArrayOf(0, 1, 2, 3), grid.rows)
         assertContentEquals(intArrayOf(1, 1, 1, 1), grid.columnCounts)

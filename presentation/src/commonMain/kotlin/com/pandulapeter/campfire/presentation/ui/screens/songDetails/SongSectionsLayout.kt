@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.layoutId
@@ -24,6 +25,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.isSpecified
 import com.pandulapeter.campfire.presentation.ui.components.EDGE_FADE_SIZE
+import kotlin.math.ceil
 import kotlin.math.roundToInt
 
 /**
@@ -59,9 +61,16 @@ import kotlin.math.roundToInt
  * What it places are the chunks of [units]: every section whole, or as the chunks it may be cut into, which follow each
  * other in one cell unless the grid cuts between them. Where the song is not read whole in a single row with its
  * sections whole and [canCutSections], it is flowed like a magazine instead, every column filled down to the screen and
- * a section running on into the next column or row, in whichever number of columns takes the fewest pages, the most
- * columns of those - unless the sections whole take fewer pages still (see [flowLikeAMagazine]). The cards of the sections drawn on
- * one are placed here, one behind every piece, from as many as each section could be cut into ([cardKeys]).
+ * a section running on into the next column or row (see [flowLikeAMagazine]). Of every number of columns the width
+ * allows, and of the sections whole, the layout taken is the one of the fewest pages and then of the lowest score (see
+ * [LayoutScoring]), the sections whole keeping a full tie and the most columns the rest. The cards of the sections
+ * drawn on one are placed here, one behind every piece, from as many as each section could be cut into ([cardKeys]).
+ *
+ * A song that is stepped through all the same may be set in columns narrower than [minColumnWidth], down to
+ * [narrowColumnWidth], wherever its lines mostly fit them and that takes a page away - read without stepping at all
+ * where the fewest of them hold it in one row (see [withNarrowColumns]) - and a song a few lines too long for its pages
+ * is set a little smaller, at the first of [fitScales] at which it takes a page fewer. The smaller text is the text at
+ * its own size laid out in a column that much wider and drawn through a scaled layer, so nothing is composed again.
  *
  * The candidate column counts are evaluated with the sections' intrinsic heights (they are only measured once, with
  * the width that won), starting from a single column and jumping straight to the smallest count that could possibly
@@ -105,6 +114,7 @@ import kotlin.math.roundToInt
 internal fun SongSectionsLayout(
     modifier: Modifier = Modifier,
     minColumnWidth: Dp,
+    narrowColumnWidth: Dp,
     maxColumnWidth: Dp,
     columnGap: Dp,
     sectionGap: Dp,
@@ -126,6 +136,7 @@ internal fun SongSectionsLayout(
     sectionGlides: SectionGlides?,
     sectionMeasurements: SectionMeasurements,
     lyricsLineHeight: Int,
+    fitScales: List<Float>,
     onRowsPlaced: (SongRows) -> Unit,
     content: @Composable () -> Unit,
 ) = Layout(
@@ -148,44 +159,55 @@ internal fun SongSectionsLayout(
     val endInsetPx = stepButtonInset.roundToPx()
     val piecePadding = IntArray(sectionCount) { if (units.cardStarts[it] >= 0) cardPadding.roundToPx() else 0 }
     val lineHeightPx = 2 * lyricsLineHeight
+    val isPagedBySections = isSingleColumn || (sectionCount > MAX_CUT_SECTION_COUNT && units.timingStarts.size > 1)
     // A songbook too long to be cut into pages is stepped by rows where it has columns, each named by its first section,
     // so a change of tempo or time in a row's second column would only be heard on the next row: one that changes is a
     // single column, stepped by its sections, which the click follows past every change.
-    fun widthColumnCountFor(totalWidth: Int) = if (isSingleColumn || (sectionCount > MAX_CUT_SECTION_COUNT && units.timingStarts.size > 1)) {
+    fun widthColumnCountFor(totalWidth: Int) = if (isPagedBySections) {
         1
     } else {
         ((totalWidth + columnGapPx) / (minColumnWidth.roundToPx() + columnGapPx)).coerceAtLeast(1)
     }
-    fun maxColumnCountFor(totalWidth: Int) = widthColumnCountFor(totalWidth).coerceAtMost(maxOf(1, sectionCount))
+    // Columns narrower than a readable one are only ever set where a song is cut into pages, since that is where they
+    // can save one.
+    fun narrowColumnCountFor(totalWidth: Int) = if (isPagedBySections || !canCutSections || sectionCount > MAX_CUT_SECTION_COUNT) {
+        widthColumnCountFor(totalWidth)
+    } else {
+        maxOf(widthColumnCountFor(totalWidth), (totalWidth + columnGapPx) / (narrowColumnWidth.roundToPx() + columnGapPx))
+    }
     fun columnWidthFor(totalWidth: Int, columnCount: Int) = ((totalWidth - columnGapPx * (columnCount - 1)) / columnCount).coerceIn(0, maxColumnWidthPx)
     fun unitsOf(section: Int) = units.sectionStarts[section] until units.sectionStarts[section + 1]
+    fun maxWidthOf(unit: Int) = sectionMeasurements.maxWidth(unit, measurables[unit]::maxIntrinsicWidth)
 
     // A card is as wide as its widest line, up to the width of its column, so that a short chorus does not stretch a wide
     // empty surface across the column, and every chunk of it is laid out at that width, so that its pieces are as wide
-    // as each other. A line that is wider still wraps at the column.
-    fun unitWidthFor(unit: Int, columnWidth: Int): Int {
+    // as each other. A line that is wider still wraps at the column. Every width here is the one a unit takes on the
+    // screen, which for text set at fitScale is that much less than the width it is measured at (see measuredWidthOf).
+    fun unitWidthFor(unit: Int, columnWidth: Int, fitScale: Float): Int {
         val section = units.unitSections[unit]
         if (units.cardStarts[section] < 0) return columnWidth
-        return minOf(columnWidth, unitsOf(section).maxOf { sectionMeasurements.maxWidth(it, measurables[it]::maxIntrinsicWidth) })
+        return minOf(columnWidth, unitsOf(section).maxOf(::maxWidthOf).scaledBy(fitScale))
     }
 
     // The width of a row the section has to itself, or null where that would be no
     // wider than a column: a section can be narrower than its minimum intrinsic width only by breaking the lines that
     // do not wrap (a staff of tablature, the bars of a grid), while everything else in it wraps as a column's would.
-    fun wideWidthFor(section: Int, totalWidth: Int) = unitsOf(section).maxOf { sectionMeasurements.minWidth(it, measurables[it]::minIntrinsicWidth) }
+    fun wideWidthFor(section: Int, totalWidth: Int, fitScale: Float) = unitsOf(section)
+        .maxOf { sectionMeasurements.minWidth(it, measurables[it]::minIntrinsicWidth) }
+        .scaledBy(fitScale)
         .takeIf { it > maxColumnWidthPx && totalWidth > maxColumnWidthPx }
         ?.let { minOf(it, totalWidth) }
 
     // A section is narrow where every line of it fits half the column without wrapping, so that setting it beside
     // another costs it nothing. A change of tempo or time is never one, since it heads its page rather than sharing a row.
-    fun isNarrowSection(section: Int, halfColumnWidth: Int) = !units.isTiming(section) &&
-        unitsOf(section).all { sectionMeasurements.maxWidth(it, measurables[it]::maxIntrinsicWidth) <= halfColumnWidth }
+    fun isNarrowSection(section: Int, halfColumnWidth: Int, fitScale: Float) = !units.isTiming(section) &&
+        unitsOf(section).all { maxWidthOf(it).scaledBy(fitScale) <= halfColumnWidth }
 
     // A wide row is a single column in which every section is as wide as it needs: the ones whose lines do not wrap as
     // wide as those lines, and the rest as wide as a single column, so that what wraps is not read in lines longer
     // than a column's because a staff of tablature shares the row.
-    fun SectionGrid.columnWidthOf(unit: Int, totalWidth: Int) = if (wideRows[rows[unit]]) {
-        wideWidthFor(units.unitSections[unit], totalWidth) ?: columnWidthFor(totalWidth, 1)
+    fun SectionGrid.columnWidthOf(unit: Int, totalWidth: Int, fitScale: Float) = if (wideRows[rows[unit]]) {
+        wideWidthFor(units.unitSections[unit], totalWidth, fitScale) ?: columnWidthFor(totalWidth, 1)
     } else {
         columnWidthFor(totalWidth, columnCounts[rows[unit]])
     }
@@ -194,36 +216,40 @@ internal fun SongSectionsLayout(
         settledWidth = settledWidth,
         availableHeight = availableHeightPx,
         maxRowHeight = maxRowHeightPx,
-        maxColumnCount = maxColumnCountFor(settledWidth),
+        maxColumnCount = narrowColumnCountFor(settledWidth).coerceAtMost(maxOf(1, unitCount)),
         endInset = endInsetPx,
         keepsEndInset = keepsStepButtonInset,
     )
 
     // The grid of the sections of [segment], the units of a stretch of the song that starts at [sectionOffset], every
-    // index in it counted from the stretch's first section: the whole song where it is one stretch.
-    fun searchSegment(totalWidth: Int, segment: SongUnits, sectionOffset: Int, availableHeightPx: Int): SearchedGrid {
+    // index in it counted from the stretch's first section: the whole song where it is one stretch. Its text is set at
+    // fitScale of the reader's size, which reads every height at a width that much wider and scales it down: a line
+    // set smaller in a column is the same line at its own size in a proportionally wider one.
+    fun searchSegment(totalWidth: Int, segment: SongUnits, sectionOffset: Int, availableHeightPx: Int, fitScale: Float): SegmentLayout {
         val unitOffset = units.sectionStarts[sectionOffset]
         val sectionCount = segment.sectionStarts.size - 1
         val unitCount = segment.unitSections.size
-        val maxColumnCount = widthColumnCountFor(totalWidth).coerceAtMost(maxOf(1, sectionCount))
+        val readableColumnCount = widthColumnCountFor(totalWidth)
+        val maxColumnCount = readableColumnCount.coerceAtMost(maxOf(1, sectionCount))
         val piecePadding = piecePadding.copyOfRange(sectionOffset, sectionOffset + sectionCount)
 
-        fun unitHeightAt(unit: Int, columnWidth: Int) = sectionMeasurements.height(
-            index = unit + unitOffset,
-            width = unitWidthFor(unit + unitOffset, columnWidth),
-            measure = measurables[unit + unitOffset]::maxIntrinsicHeight,
-        )
+        fun unitHeightAt(unit: Int, columnWidth: Int): Int {
+            val index = unit + unitOffset
+            val width = measuredWidthOf(unitWidthFor(index, columnWidth, fitScale), fitScale)
+            return sectionMeasurements.height(index = index, width = width, measure = measurables[index]::maxIntrinsicHeight).scaledBy(fitScale)
+        }
 
-        // A chorded line that wraps counts twice, since its continuation carries a row of chords too.
+        // A chorded line that wraps counts twice, since its continuation carries a row of chords too. A line no wider
+        // than its column wraps nothing, which is what most lines are, and is not measured again to find that out.
         fun wrappedLinesAt(unit: Int, columnWidth: Int): Int {
             if (segment.lineCount[unit] == 0 || lyricsLineHeight <= 0) return 0
             val index = unit + unitOffset
-            val unwrappedHeight = sectionMeasurements.height(
-                index = index,
-                width = sectionMeasurements.maxWidth(index, measurables[index]::maxIntrinsicWidth),
-                measure = measurables[index]::maxIntrinsicHeight,
-            )
-            return ((unitHeightAt(unit, columnWidth) - unwrappedHeight).toFloat() / lyricsLineHeight).roundToInt().coerceAtLeast(0)
+            val width = measuredWidthOf(unitWidthFor(index, columnWidth, fitScale), fitScale)
+            val maxWidth = maxWidthOf(index)
+            if (maxWidth <= width) return 0
+            val wrappedHeight = sectionMeasurements.height(index = index, width = width, measure = measurables[index]::maxIntrinsicHeight)
+            val unwrappedHeight = sectionMeasurements.height(index = index, width = maxWidth, measure = measurables[index]::maxIntrinsicHeight)
+            return ((wrappedHeight - unwrappedHeight).toFloat() / lyricsLineHeight).roundToInt().coerceAtLeast(0)
         }
 
         fun sectionHeightAt(section: Int, columnWidth: Int) =
@@ -231,10 +257,10 @@ internal fun SongSectionsLayout(
 
         fun heightAt(section: Int, columnCount: Int) = sectionHeightAt(section, columnWidthFor(totalWidth, columnCount))
 
-        fun wideHeightAt(section: Int) = wideWidthFor(section + sectionOffset, totalWidth)?.let { sectionHeightAt(section, it) }
+        fun wideHeightAt(section: Int) = wideWidthFor(section + sectionOffset, totalWidth, fitScale)?.let { sectionHeightAt(section, it) }
 
         fun SectionGrid.unitColumnWidth(unit: Int) = if (wideRows[rows[unit]]) {
-            wideWidthFor(segment.unitSections[unit] + sectionOffset, totalWidth) ?: columnWidthFor(totalWidth, 1)
+            wideWidthFor(segment.unitSections[unit] + sectionOffset, totalWidth, fitScale) ?: columnWidthFor(totalWidth, 1)
         } else {
             columnWidthFor(totalWidth, columnCounts[rows[unit]])
         }
@@ -265,22 +291,78 @@ internal fun SongSectionsLayout(
             piecePadding = piecePadding,
         ).height
 
-        fun SectionGrid.pageCount() = pageCount(
-            heights = unitHeights(),
+        fun SectionGrid.pageCount(heights: IntArray = unitHeights()) = pageCount(
+            heights = heights,
             sectionGap = sectionGapPx,
             maxRowHeight = maxRowHeightPx,
             unitSections = segment.unitSections,
             piecePadding = piecePadding,
         )
 
+        val scoring = LayoutScoring(
+            sectionStarts = segment.sectionStarts,
+            lineHeight = lineHeightPx,
+            lineCount = { segment.lineCount[it] },
+            isStanzaBreakBefore = { segment.isStanzaBreakBefore[it] },
+        )
+
+        fun SectionGrid.scored(): ScoredGrid {
+            val heights = unitHeights()
+            return ScoredGrid(
+                grid = this,
+                pageCount = pageCount(heights),
+                score = score(heights, scoring, piecePadding, sectionGapPx, maxRowHeightPx) { wrappedLinesAt(it, unitColumnWidth(it)) },
+            )
+        }
+
+        fun SearchedGrid.laidOut(pageCount: Int = grid.pageCount()) = SegmentLayout(this, pageCount, grid.unitHeights().sumOf { it.toLong() })
+
+        fun ScoredGrid.laidOut(): SegmentLayout {
+            val height = if (grid.pageCount == 1) grid.height() else Int.MAX_VALUE
+            return SearchedGrid(grid, fits = height <= availableHeightPx, height = height).laidOut(pageCount)
+        }
+
+        fun magazine(columnCount: Int) = flowLikeAMagazine(
+            sectionStarts = segment.sectionStarts,
+            columnCount = columnCount,
+            heightAt = { unit, columns -> unitHeightAt(unit, columnWidthFor(totalWidth, columns)) },
+            isCuttableBefore = { unit -> segment.isCuttableBefore[unit] },
+            piecePadding = piecePadding,
+            sectionGap = sectionGapPx,
+            maxRowHeight = maxRowHeightPx,
+            lineHeight = lineHeightPx,
+            lineCount = { unit -> segment.lineCount[unit] },
+            isStanzaBreakBefore = { unit -> segment.isStanzaBreakBefore[unit] },
+        )
+
+        // A song set in readable columns but still stepped through may be set in narrower ones that its lines fit, where
+        // that takes a page away (see withNarrowColumns): read whole in one row of them, the sections whole, wherever the
+        // fewest such columns hold it so, and otherwise cut like a magazine.
+        fun withNarrowColumns(readable: ScoredGrid): SegmentLayout {
+            val narrowColumnCount = narrowColumnCountFor(totalWidth).coerceAtMost(unitCount)
+            if (narrowColumnCount <= readableColumnCount || readable.pageCount <= 1) return readable.laidOut()
+            val fittingCounts = (readableColumnCount + 1..narrowColumnCount).filter { columnCount ->
+                val columnWidth = columnWidthFor(totalWidth, columnCount)
+                fitsNarrowColumns(segment.lineCount) { wrappedLinesAt(it, columnWidth) }
+            }
+            fittingCounts.filter { it <= sectionCount }.forEach { columnCount ->
+                val grid = gridFor(columnCount)
+                if (grid.pageCount == 1) {
+                    val height = grid.height()
+                    if (height <= availableHeightPx) return SearchedGrid(grid, fits = true, height = height).laidOut(pageCount = 1)
+                }
+            }
+            return withNarrowColumns(readable, fittingCounts.reversed().map { magazine(it).scored() }).laidOut()
+        }
+
         // A width with room for one column is stepped through a page at a time, the pages filled the way the rows of
         // several columns are below, so that a step turns a screen of the song rather than a section of it.
-        if (canCutSections && availableHeightPx > 0 && widthColumnCountFor(totalWidth) == 1 && sectionCount <= MAX_CUT_SECTION_COUNT) {
+        if (canCutSections && availableHeightPx > 0 && readableColumnCount == 1 && sectionCount <= MAX_CUT_SECTION_COUNT) {
             val halfColumnWidth = columnWidthFor(totalWidth, 2)
             val paged = flowIntoPages(
                 sectionStarts = segment.sectionStarts,
                 heightAt = { unit, columns -> unitHeightAt(unit, columnWidthFor(totalWidth, columns)) },
-                isNarrow = { section -> isNarrowSection(section + sectionOffset, halfColumnWidth) },
+                isNarrow = { section -> isNarrowSection(section + sectionOffset, halfColumnWidth, fitScale) },
                 isCuttableBefore = { unit -> segment.isCuttableBefore[unit] },
                 piecePadding = piecePadding,
                 sectionGap = sectionGapPx,
@@ -288,10 +370,8 @@ internal fun SongSectionsLayout(
                 lineHeight = lineHeightPx,
                 lineCount = { unit -> segment.lineCount[unit] },
                 isStanzaBreakBefore = { unit -> segment.isStanzaBreakBefore[unit] },
-                wrappedLines = { unit, columns -> wrappedLinesAt(unit, columnWidthFor(totalWidth, columns)) },
             )
-            val height = if (paged.pageCount == 1) paged.height() else Int.MAX_VALUE
-            return SearchedGrid(paged, fits = height <= availableHeightPx, height = height)
+            return withNarrowColumns(paged.scored())
         }
 
         val searched = if (availableHeightPx > 0) {
@@ -309,58 +389,58 @@ internal fun SongSectionsLayout(
         // A song read whole in a single row is never cut. Anything else is stepped through a page at a time, so it is
         // flowed the way a magazine is set wherever the width has room for two columns, since a page holds the most of
         // the song that way, and every page saved is one the reader does not have to turn.
-        val cutColumnCount = widthColumnCountFor(totalWidth).coerceAtMost(unitCount)
-        if (isReadWithoutStepping(searched.fits, searched.grid.pageCount) || !canCutSections || availableHeightPx <= 0 ||
-            cutColumnCount < 2 || sectionCount > MAX_CUT_SECTION_COUNT
-        ) {
-            return searched
-        }
-        // Every count of columns is tried, the most first, so that a count that saves no page leaves the page full: a
-        // narrower count is only taken where its wider columns, which wrap less, take fewer pages.
-        var flowed: SectionGrid? = null
-        var flowedPageCount = Int.MAX_VALUE
+        val cutColumnCount = readableColumnCount.coerceAtMost(unitCount)
+        if (isReadWithoutStepping(searched.fits, searched.grid.pageCount)) return searched.laidOut(pageCount = 1)
+        if (!canCutSections || availableHeightPx <= 0 || sectionCount > MAX_CUT_SECTION_COUNT) return searched.laidOut()
+        // The sections whole first, so that they keep a full tie: a song whose sections fill the columns as they are is
+        // not cut to look the same. Then every count of columns, the most first, a narrower count being taken only
+        // where its wider columns, which wrap less, score better.
+        var best = searched.grid.scored()
         for (columnCount in cutColumnCount downTo 2) {
-            val grid = flowLikeAMagazine(
-                sectionStarts = segment.sectionStarts,
-                columnCount = columnCount,
-                heightAt = { unit, columns -> unitHeightAt(unit, columnWidthFor(totalWidth, columns)) },
-                isCuttableBefore = { unit -> segment.isCuttableBefore[unit] },
-                piecePadding = piecePadding,
-                sectionGap = sectionGapPx,
-                maxRowHeight = maxRowHeightPx,
-                lineHeight = lineHeightPx,
-                lineCount = { unit -> segment.lineCount[unit] },
-                isStanzaBreakBefore = { unit -> segment.isStanzaBreakBefore[unit] },
-                wrappedLines = { unit, columns -> wrappedLinesAt(unit, columnWidthFor(totalWidth, columns)) },
-            )
-            val pageCount = grid.pageCount()
-            if (pageCount < flowedPageCount) {
-                flowed = grid
-                flowedPageCount = pageCount
-            }
+            val candidate = magazine(columnCount).scored()
+            if (candidate.isBetterThan(best)) best = candidate
         }
-        // The sections whole are only kept where they take fewer pages still, which a staff of tablature with a row as
-        // wide as it needs can.
-        if (flowed == null || searched.grid.pageCount() < flowedPageCount) return searched
-        val height = if (flowed.pageCount == 1) flowed.height() else Int.MAX_VALUE
-        return SearchedGrid(flowed, fits = height <= availableHeightPx, height = height)
+        return withNarrowColumns(best)
     }
 
     // A song that changes its tempo or time signature is laid out a stretch at a time, each searched for as a song of
     // its own against the height of a page, and the grids put end to end, so that every stretch starts a page: the page
     // being read is what the click follows. Such a song is always stepped through, whatever its stretches fit. Where
     // nothing is paged anyway the changes are lines of the one column.
-    fun searchGrid(totalWidth: Int): SearchedGrid {
+    fun searchGrid(totalWidth: Int, fitScale: Float): SegmentLayout {
         val timingStarts = units.timingStarts
         if (timingStarts.size < 2 || !canCutSections || availableHeightPx <= 0 || sectionCount > MAX_CUT_SECTION_COUNT) {
-            return searchSegment(totalWidth, units, sectionOffset = 0, availableHeightPx = availableHeightPx)
+            return searchSegment(totalWidth, units, sectionOffset = 0, availableHeightPx = availableHeightPx, fitScale = fitScale)
         }
-        val grids = timingStarts.indices.map { index ->
+        val segments = timingStarts.indices.map { index ->
             val from = timingStarts[index]
             val until = timingStarts.getOrElse(index + 1) { sectionCount }
-            searchSegment(totalWidth, units.slice(from, until), sectionOffset = from, availableHeightPx = maxRowHeightPx).grid
+            searchSegment(totalWidth, units.slice(from, until), sectionOffset = from, availableHeightPx = maxRowHeightPx, fitScale = fitScale)
         }
-        return SearchedGrid(grids.concatenated(), fits = false, height = Int.MAX_VALUE)
+        return SegmentLayout(
+            searched = SearchedGrid(segments.map { it.searched.grid }.concatenated(), fits = false, height = Int.MAX_VALUE),
+            pageCount = segments.sumOf { it.pageCount },
+            contentHeight = segments.sumOf { it.contentHeight },
+        )
+    }
+
+    // A song a few lines too long for its pages is set a little smaller where that takes its last page away (see
+    // fitScalesFor). A scale is only searched at where the song could fit one page fewer even with no gap between two
+    // sections, which a song a whole page over never does, so that the search that runs again on every frame of a pinch
+    // does not lay the whole song out at two more widths for nothing.
+    fun searchFitted(totalWidth: Int): FittedLayout {
+        val plain = searchGrid(totalWidth, fitScale = 1f)
+        if (fitScales.isEmpty() || plain.isReadWithoutStepping() || plain.pageCount < 2 || maxRowHeightPx == Int.MAX_VALUE) return FittedLayout(plain, 1f)
+        val pageCapacity = narrowColumnCountFor(totalWidth).toLong() * maxRowHeightPx
+        val fitted = HashMap<Float, SegmentLayout>()
+        val fitScale = chooseFitScale(plain.pageCount, fitScales) { scale ->
+            if (plain.contentHeight * scale > (plain.pageCount - 1) * pageCapacity) {
+                null
+            } else {
+                searchGrid(totalWidth, scale).also { fitted[scale] = it }.pageCount
+            }
+        }
+        return FittedLayout(fitted[fitScale] ?: plain, fitScale)
     }
 
     val decidedGrid = sectionMeasurements.grid(gridKey) {
@@ -369,19 +449,18 @@ internal fun SongSectionsLayout(
         // across the whole width - but only where it still fits there, since the grid found for the whole width may be
         // one of fewer, taller columns, which would scroll with the buttons over it. Several rows read across are
         // stepped through however short they are, since each is followed by empty space down to the bottom of the screen.
-        val insetSearch = if (endInsetPx > 0) searchGrid(settledWidth - endInsetPx) else null
-        fun SearchedGrid.isReadWithoutStepping() = isReadWithoutStepping(fits, grid.pageCount)
+        val insetSearch = if (endInsetPx > 0) searchFitted(settledWidth - endInsetPx) else null
         when {
-            insetSearch == null -> DecidedGrid(searchGrid(settledWidth).grid, isInset = false)
-            keepsStepButtonInset || !insetSearch.isReadWithoutStepping() -> DecidedGrid(insetSearch.grid, isInset = true)
-            else -> searchGrid(settledWidth).let { full ->
-                if (full.isReadWithoutStepping()) DecidedGrid(full.grid, isInset = false) else DecidedGrid(insetSearch.grid, isInset = true)
+            insetSearch == null -> searchFitted(settledWidth).decided(isInset = false)
+            keepsStepButtonInset || !insetSearch.layout.isReadWithoutStepping() -> insetSearch.decided(isInset = true)
+            else -> searchFitted(settledWidth).let { full ->
+                if (full.layout.isReadWithoutStepping()) full.decided(isInset = false) else insetSearch.decided(isInset = true)
             }
         }
     }
-    val (grid, isInset) = decidedGrid
+    val (grid, isInset, fitScale) = decidedGrid
     val layoutWidth = if (isInset) (width - endInsetPx).coerceAtLeast(0) else width
-    val columnWidths = IntArray(unitCount) { grid.columnWidthOf(it, layoutWidth) }
+    val columnWidths = IntArray(unitCount) { grid.columnWidthOf(it, layoutWidth, fitScale) }
     // A column is only as wide as the widest thing in it, up to the width it was given, so that a row can be centered
     // by what it shows rather than by the empty space its columns leave after short lines. Only a card needs its width
     // to decide the grid; everything else wraps at the column's width, which is the same height at any width it fits
@@ -391,9 +470,9 @@ internal fun SongSectionsLayout(
         val row = grid.rows[unit]
         val columnWidth = columnWidths[unit]
         val contentWidth = if (units.cardStarts[units.unitSections[unit]] >= 0) {
-            unitWidthFor(unit, columnWidth)
+            unitWidthFor(unit, columnWidth, fitScale)
         } else {
-            minOf(columnWidth, sectionMeasurements.maxWidth(unit, measurables[unit]::maxIntrinsicWidth))
+            minOf(columnWidth, maxWidthOf(unit).scaledBy(fitScale))
         }
         cellWidths[row][grid.columns[unit]] = maxOf(cellWidths[row][grid.columns[unit]], contentWidth)
     }
@@ -409,15 +488,15 @@ internal fun SongSectionsLayout(
     val unitWidths = IntArray(unitCount) { unit ->
         val section = units.unitSections[unit]
         when {
-            units.cardStarts[section] >= 0 -> unitWidthFor(unit, columnWidths[unit])
-            grid.wideRows[grid.rows[unit]] -> unitsOf(section).maxOf {
-                minOf(columnWidths[it], sectionMeasurements.maxWidth(it, measurables[it]::maxIntrinsicWidth))
-            }
+            units.cardStarts[section] >= 0 -> unitWidthFor(unit, columnWidths[unit], fitScale)
+            grid.wideRows[grid.rows[unit]] -> unitsOf(section).maxOf { minOf(columnWidths[it], maxWidthOf(it).scaledBy(fitScale)) }
             else -> cellWidths[grid.rows[unit]][grid.columns[unit]]
         }
     }
+    // Text set smaller to fit the page is the text at its own size laid out wider and drawn scaled down, so that the
+    // song is never composed a second time at the smaller style, and its first frame is already the fitted one.
     val placeables = measurables.mapIndexed { index, measurable ->
-        val unitWidth = unitWidths[index]
+        val unitWidth = measuredWidthOf(unitWidths[index], fitScale)
         val heightLimit = maxAnimatedSectionHeight(unitWidth)
         // Only a section that is being animated is held to the limit. One that reaches it is cut short for the one
         // frame it takes the composition to take the animation off it, which happens far below the screen.
@@ -429,7 +508,7 @@ internal fun SongSectionsLayout(
         placeable
     }
     val hasSeveralPages = grid.pageCount > 1
-    val unitHeights = IntArray(placeables.size) { placeables[it].height }
+    val unitHeights = IntArray(placeables.size) { placeables[it].height.scaledBy(fitScale) }
     // A single column that is not paged has no rows to tell apart, so it is laid out as one, without dividers or space
     // under it. Rows read across only scroll where they are taller than the screen, or where there are several pages of
     // them, each followed by the rest of the screen. A song of one page that fits the screen is left as it is: space
@@ -580,7 +659,7 @@ internal fun SongSectionsLayout(
         if (!isLastOfSection && grid.rows[index + 1] == grid.rows[index] && grid.columns[index + 1] == grid.columns[index]) continue
         if (units.cardStarts[section] >= 0) {
             val top = positions[pieceStart].y - if (pieceStart > units.sectionStarts[section]) piecePadding[section] else 0
-            val bottom = positions[index].y + placeables[index].height + if (isLastOfSection) 0 else piecePadding[section]
+            val bottom = positions[index].y + unitHeights[index] + if (isLastOfSection) 0 else piecePadding[section]
             val left = positions[pieceStart].x
             cards += (units.cardStarts[section] + piece) to IntRect(left, top, left + unitWidths[pieceStart], bottom)
         }
@@ -612,10 +691,55 @@ internal fun SongSectionsLayout(
             val (card, bounds) = cards[index]
             placeable.place(bounds.topLeft + glideOf(cardKeys[card]))
         }
-        placeables.forEachIndexed { index, placeable -> placeable.place(positions[index] + glideOf(unitKeys[index])) }
+        placeables.forEachIndexed { index, placeable ->
+            val position = positions[index] + glideOf(unitKeys[index])
+            // A layer scales the hit testing with the drawing, so the fold toggles and the steppers of a fitted song are
+            // still where they are drawn, and the text is drawn through the canvas transform, as sharp as at any size.
+            if (fitScale == 1f) {
+                placeable.place(position)
+            } else {
+                placeable.placeWithLayer(position) {
+                    scaleX = fitScale
+                    scaleY = fitScale
+                    transformOrigin = TransformOrigin(0f, 0f)
+                }
+            }
+        }
         dividers.forEach { (placeable, position) -> placeable.place(position) }
     }
 }
+
+/**
+ * What a stretch of the song, or the whole of it, was set as: its grid, how many pages it takes as [pageCount] counts
+ * them, and how tall all of its units are together, which is the least room any setting of it could take.
+ */
+private class SegmentLayout(
+    val searched: SearchedGrid,
+    val pageCount: Int,
+    val contentHeight: Long,
+) {
+
+    /** Whether the song is read whole, with nothing to step through. */
+    fun isReadWithoutStepping() = isReadWithoutStepping(searched.fits, searched.grid.pageCount)
+}
+
+/** A song set as [layout], its text at [fitScale] of the reader's size. */
+private class FittedLayout(
+    val layout: SegmentLayout,
+    val fitScale: Float,
+) {
+
+    fun decided(isInset: Boolean) = DecidedGrid(layout.searched.grid, isInset = isInset, fitScale = fitScale)
+}
+
+/** This width or height of text at the reader's size as it is drawn at [fitScale] of it. */
+private fun Int.scaledBy(fitScale: Float) = if (fitScale == 1f) this else (this * fitScale).roundToInt()
+
+/**
+ * The width text drawn [width] wide at [fitScale] of the reader's size is laid out at, at its own size: rounded up, so
+ * that a line drawn exactly as wide as itself is never laid out a pixel too narrow for its last word.
+ */
+private fun measuredWidthOf(width: Int, fitScale: Float) = if (fitScale == 1f) width else ceil(width / fitScale).toInt()
 
 /**
  * The tallest a section of [columnWidth] is measured while it carries `animateBounds`, which measures its content
