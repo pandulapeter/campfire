@@ -84,6 +84,7 @@ import org.jetbrains.compose.resources.painterResource
  *   same way as [tempoOverride].
  * @param playingControls What sets the key, the capo, the tempo and the time signature from the song's own first
  *   section, null in read only mode, see [SongPlayingControls].
+ * @param playingTools The tuner and metronome buttons of that section, in read only mode too, see [SongPlayingTools].
  * @param shouldShowCapo False on the keyboard, whose [transposition] already counts the capo in, see `withCapoSounding`:
  *   neither the page nor its read only line names a capo then, the file's own included.
  * @param shouldShowTempo False with the metronome switched off, which takes the tempo and the time signature off the page,
@@ -109,6 +110,7 @@ internal fun SongDetailsPage(
     tempoOverride: Int?,
     capoOverride: Int?,
     playingControls: SongPlayingControls?,
+    playingTools: SongPlayingTools?,
     shouldShowChords: Boolean,
     shouldShowCapo: Boolean,
     shouldShowTempo: Boolean,
@@ -268,6 +270,7 @@ internal fun SongDetailsPage(
                 foldedSections = foldedSections,
                 onFoldToggled = onFoldToggled,
                 playingControls = playingControls,
+                playingTools = playingTools,
                 // Read only, the page is the one place left that says how the song is played, so a capo of none and the
                 // time the click counts are said rather than left to be guessed from nothing.
                 readsCapoAndTime = playingControls == null,

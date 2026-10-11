@@ -37,8 +37,9 @@ import com.pandulapeter.campfire.presentation.ui.metronome.TempoStepper
  * is named as such and reads the key it takes the chords on the page to, the capo and the tempo with their own
  * steppers, the tempo's pill ending in the segment that taps one in, and the time signature after them, read rather
  * than set. They are laid out in balanced rows ([BalancedRows]) — all four side by side, two and two, or one under the
- * other — rather than flowed, since three over one reads as an accident. Starting a click is the app bar's button, which is
- * in reach wherever the song has been scrolled to; this row only says what it would play.
+ * other — rather than flowed, since three over one reads as an accident. The [tools] end the groups they belong to: the
+ * tuner after the capo (or the transposition where there is no capo), the metronome after the time signature, so that
+ * two and two they stand in a column of their own at the end of either row (see [playingToolPlaces]).
  *
  * The steppers change how the song is played where it is read and never touch the file. What the file itself
  * declares, the time signature among it, is edited in the "Song defaults" sheet of the editing menu, which is also
@@ -54,11 +55,29 @@ import com.pandulapeter.campfire.presentation.ui.metronome.TempoStepper
 internal fun SongPlayingControlsRow(
     modifier: Modifier = Modifier,
     controls: SongPlayingControls,
+    tools: SongPlayingTools?,
     isAnimated: Boolean,
     titleStyle: TextStyle,
     fontScale: Float,
 ) {
     val height = songControlHeight(titleStyle)
+    val places = tools?.places(
+        hasChordValues = controls.key != null || controls.capo != null,
+        hasClickValues = controls.tempo != null || controls.timeSignature != null,
+    )
+    val groupEnd = Modifier.padding(start = PLAYING_CONTROL_GAP)
+    val toolButtons = @Composable { place: PlayingToolPlace, modifier: Modifier ->
+        if (tools != null && places != null) {
+            SongPlayingToolButtons(
+                modifier = modifier,
+                tools = tools,
+                places = places,
+                place = place,
+                height = height,
+                fontScale = fontScale,
+            )
+        }
+    }
     BalancedRows(
         modifier = modifier.padding(horizontal = 12.dp),
         gap = PLAYING_CONTROL_GAP,
@@ -69,6 +88,7 @@ internal fun SongPlayingControlsRow(
                 modifier = Modifier.layoutId(PlayingControlId.KEY),
                 label = stringResource(Res.string.song_details_transposition),
                 fontScale = fontScale,
+                trailing = { if (controls.capo == null) toolButtons(PlayingToolPlace.AFTER_CHORD_VALUES, groupEnd) },
             ) {
                 TranspositionControls(
                     transposition = key.transposition,
@@ -86,6 +106,7 @@ internal fun SongPlayingControlsRow(
                 modifier = Modifier.layoutId(PlayingControlId.CAPO),
                 label = stringResource(Res.string.song_editor_insert_capo),
                 fontScale = fontScale,
+                trailing = { toolButtons(PlayingToolPlace.AFTER_CHORD_VALUES, groupEnd) },
             ) {
                 CapoControls(
                     capo = capo.capo,
@@ -101,6 +122,7 @@ internal fun SongPlayingControlsRow(
                 modifier = Modifier.layoutId(PlayingControlId.TEMPO),
                 label = stringResource(Res.string.song_editor_insert_tempo),
                 fontScale = fontScale,
+                trailing = { if (controls.timeSignature == null) toolButtons(PlayingToolPlace.AFTER_CLICK_VALUES, groupEnd) },
             ) {
                 TempoStepper(
                     bpm = tempo.tempo.bpm,
@@ -121,6 +143,7 @@ internal fun SongPlayingControlsRow(
                 modifier = Modifier.layoutId(PlayingControlId.TIME),
                 label = stringResource(Res.string.song_editor_insert_time),
                 fontScale = fontScale,
+                trailing = { toolButtons(PlayingToolPlace.AFTER_CLICK_VALUES, groupEnd) },
             ) {
                 Text(
                     text = timeSignature,
@@ -129,21 +152,24 @@ internal fun SongPlayingControlsRow(
                 )
             }
         }
+        toolButtons(PlayingToolPlace.ALONE, Modifier.layoutId(PlayingControlId.TOOLS))
     }
 }
 
 /** What [BalancedRows] follows each of [SongPlayingControlsRow]'s items by, since not all four are always among them. */
-private enum class PlayingControlId { KEY, CAPO, TEMPO, TIME }
+private enum class PlayingControlId { KEY, CAPO, TEMPO, TIME, TOOLS }
 
 /**
- * One of [SongPlayingControlsRow]'s items: what it is and what sets it. The label is in the content color, since the
- * controls themselves already set the row apart.
+ * One of [SongPlayingControlsRow]'s items: what it is and what sets it, and the tool buttons that end its group where
+ * it is the last of it ([trailing]). The label is in the content color, since the controls themselves already set the
+ * row apart.
  */
 @Composable
 private fun PlayingControl(
     modifier: Modifier = Modifier,
     label: String,
     fontScale: Float,
+    trailing: @Composable () -> Unit,
     control: @Composable RowScope.() -> Unit,
 ) = Row(
     modifier = modifier,
@@ -155,6 +181,7 @@ private fun PlayingControl(
         style = MaterialTheme.typography.labelLarge.scaled(fontScale),
     )
     control()
+    trailing()
 }
 
 /**

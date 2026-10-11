@@ -29,23 +29,20 @@ class PerformanceModeAppBarTest {
     @Test
     fun `a tablet keeps every control of the performance bar`() {
         assertTrue(showsCoverInPerformanceMode(800.dp))
-        assertTrue(showsMetronomeInPerformanceBar(800.dp))
         assertTrue(showsFontScaleInPerformanceBar(800.dp))
     }
 
     @Test
-    fun `the performance bar loses the cover first, then the metronome button, then the text size stepper`() {
+    fun `the performance bar loses the cover before the text size stepper`() {
         widths.forEach { width ->
-            if (showsCoverInPerformanceMode(width)) assertTrue(showsMetronomeInPerformanceBar(width), "$width")
-            if (showsMetronomeInPerformanceBar(width)) assertTrue(showsFontScaleInPerformanceBar(width), "$width")
+            if (showsCoverInPerformanceMode(width)) assertTrue(showsFontScaleInPerformanceBar(width), "$width")
         }
-        assertTrue(widths.any { showsMetronomeInPerformanceBar(it) && !showsCoverInPerformanceMode(it) })
-        assertTrue(widths.any { showsFontScaleInPerformanceBar(it) && !showsMetronomeInPerformanceBar(it) })
+        assertTrue(widths.any { showsFontScaleInPerformanceBar(it) && !showsCoverInPerformanceMode(it) })
     }
 
     @Test
     fun `a control of the performance bar that fits at one width fits at every wider one`() {
-        listOf(::showsCoverInPerformanceMode, ::showsMetronomeInPerformanceBar, ::showsFontScaleInPerformanceBar).forEach { shows ->
+        listOf(::showsCoverInPerformanceMode, ::showsFontScaleInPerformanceBar).forEach { shows ->
             widths.zipWithNext().forEach { (narrower, wider) ->
                 if (shows(narrower)) assertTrue(shows(wider), "$narrower, $wider")
             }
@@ -70,8 +67,8 @@ class PerformanceModeAppBarTest {
     }
 
     @Test
-    fun `the smallest supported phone still leaves the title its room`() {
-        assertEquals(buttons(cover = false, setlistAssignments = false), appBarButtons(360.dp, hasCover = true))
+    fun `the smallest supported phone keeps the cover but leaves the setlist assignments to the menu`() {
+        assertEquals(buttons(cover = true, setlistAssignments = false), appBarButtons(360.dp, hasCover = true))
     }
 
     private fun buttons(cover: Boolean, setlistAssignments: Boolean) = AppBarButtons(

@@ -18,8 +18,8 @@ import com.pandulapeter.campfire.presentation.ui.components.ActionsMenuItem
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * The song details screen's way to the tuner sheet, which tunes an instrument without leaving the song being read: an
- * entry of its menu, let out into the bar as a button where the bar has the room for one.
+ * The song details screen's way to the tuner sheet as an entry of its menu, for a song with no first section to hold the
+ * [TunerButton]: with both the chords and the metronome switched off there is nothing played left to put it next to.
  */
 @Composable
 internal fun tunerAction(onClick: () -> Unit) = ActionsMenuItem(

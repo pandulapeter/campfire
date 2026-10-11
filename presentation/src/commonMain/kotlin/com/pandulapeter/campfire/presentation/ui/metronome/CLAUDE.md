@@ -73,7 +73,7 @@ about 4/4 would be two settings. Each beat's whole column takes the press, not t
 is a sliver at a muted beat. It reads no tempo at all, only the time signature the row's blocks are drawn for
 (`metronomeTimeSignatureOf`, tested, which its two screens feed through `screens/MetronomePanelState.kt`, the panel
 itself taking that state and two callbacks rather than the view model). `MetronomeSettings.isSongPanelShown` is what
-keeps it up: written by the app bar's button and by a click started here (`CampfireViewModel.toggleMetronomePanel`),
+keeps it up: written by the song's `MetronomeButton` and by a click started here (`CampfireViewModel.toggleMetronomePanel`),
 left alone when the screen is left, so the next song opens with the instrument the user last chose - and the next launch
 too, since it is saved with the rest of the metronome's settings.
 

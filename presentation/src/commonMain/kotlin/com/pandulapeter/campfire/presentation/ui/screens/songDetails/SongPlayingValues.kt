@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -30,18 +31,24 @@ internal fun SongPlayingValues(
     values: List<Pair<String, Boolean>>,
     style: TextStyle,
 ) {
-    val accentColor = LocalSecondAccentColor.current
     if (values.isNotEmpty()) {
         Text(
             modifier = modifier.padding(horizontal = 12.dp),
-            text = buildAnnotatedString {
-                values.forEachIndexed { index, (value, isAccented) ->
-                    if (index > 0) append(PLAYING_VALUE_SEPARATOR)
-                    if (isAccented) withStyle(SpanStyle(color = accentColor)) { append(value) } else append(value)
-                }
-            },
+            text = playingValuesText(values),
             style = style,
         )
+    }
+}
+
+/** [values] as [SongPlayingValues] writes them, for a line that draws them among other things. */
+@Composable
+internal fun playingValuesText(values: List<Pair<String, Boolean>>): AnnotatedString {
+    val accentColor = LocalSecondAccentColor.current
+    return buildAnnotatedString {
+        values.forEachIndexed { index, (value, isAccented) ->
+            if (index > 0) append(PLAYING_VALUE_SEPARATOR)
+            if (isAccented) withStyle(SpanStyle(color = accentColor)) { append(value) } else append(value)
+        }
     }
 }
 

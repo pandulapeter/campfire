@@ -62,7 +62,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.chordpro.ChordProDuration
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
-import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.back
@@ -89,10 +88,8 @@ import com.pandulapeter.campfire.presentation.ui.components.overlappingAction
 import com.pandulapeter.campfire.presentation.ui.components.setlistAssignmentsAction
 import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
-import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeButton
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomePanel
 import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
-import com.pandulapeter.campfire.presentation.ui.metronome.metronomeAction
 import com.pandulapeter.campfire.presentation.ui.metronome.pendingTempoOf
 import com.pandulapeter.campfire.presentation.ui.metronome.withBeatLevels
 import com.pandulapeter.campfire.presentation.ui.tuner.tunerAction
@@ -136,8 +133,6 @@ internal fun SongDetailsAppBar(
     openCurrentSongInfo: (() -> Unit)?,
     songs: List<Song>,
     settledWidth: Dp,
-    isMetronomePanelShown: Boolean,
-    isBeatFlashEnabled: Boolean,
     isMetronomePanelVisible: Boolean,
     metronomePanelState: MutableTransitionState<Boolean>,
     scrollBehavior: TopAppBarScrollBehavior?,
@@ -160,30 +155,14 @@ internal fun SongDetailsAppBar(
     val showsCoverInBar = isCoverArtEnabled && if (isReadOnly) showsCoverInPerformanceMode(appBarWidth) else appBarButtons.isCoverShown
     val showsFontScaleInBar = isReadOnly && showsFontScaleInPerformanceBar(appBarWidth)
     val showsSetlistAssignmentsInBar = !isReadOnly && areSetlistsEnabled && appBarButtons.isSetlistAssignmentsShown
-    // Read only, the button stands next to the text size stepper, which is all that bar holds; otherwise it is always
-    // in the bar, see appBarButtons.
-    val showsMetronomeInBar = !isReadOnly || showsMetronomeInPerformanceBar(appBarWidth)
-    val currentTempo = currentSong?.let { songPlaybackOf(song = it, setlistFileName = destination.setlistFileName, overrides = playingOverrides).tempo }
-    val metronomeButton: @Composable () -> Unit = {
-        MetronomeButton(
-            isPanelShown = isMetronomePanelShown,
-            playback = viewModel.metronomePlayback,
-            bpm = currentTempo?.bpm ?: MetronomePattern.DEFAULT_BPM,
-            beats = viewModel.metronomeBeats,
-            isFlashEnabled = isBeatFlashEnabled,
-            onClick = viewModel::toggleMetronomePanel,
-        )
-    }
-    val metronomeAction = if (isMetronomeEnabled) {
-        metronomeAction(
-            isPanelShown = isMetronomePanelShown,
-            bpm = currentTempo?.bpm ?: MetronomePattern.DEFAULT_BPM,
-            onClick = viewModel::toggleMetronomePanel,
-        )
+    // The metronome and the tuner are buttons of the song's first section (SongPlayingTools), which is there wherever
+    // the chords or the metronome are switched on; with both off there is nothing to put the tuner next to, so the menu
+    // holds it then.
+    val tunerAction = if (isTunerEnabled && !shouldShowChords && !isMetronomeEnabled) {
+        tunerAction(onClick = { viewModel.showDialog(DialogType.Tuner) })
     } else {
         null
     }
-    val tunerAction = if (isTunerEnabled) tunerAction(onClick = { viewModel.showDialog(DialogType.Tuner) }) else null
     CampfireTopAppBar(
         scrollBehavior = scrollBehavior,
         navigationIcon = {
@@ -374,19 +353,7 @@ internal fun SongDetailsAppBar(
                 exit = fadeOut() + shrinkHorizontally(),
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    ActionsMenu(
-                        items = listOfNotNull(
-                            metronomeAction?.takeUnless { showsMetronomeInBar || !isPerformanceModeEnabled },
-                            tunerAction?.takeIf { isPerformanceModeEnabled },
-                        ),
-                    )
-                    AnimatedVisibility(
-                        visible = showsMetronomeInBar && isMetronomeEnabled,
-                        enter = fadeIn() + expandHorizontally(),
-                        exit = fadeOut() + shrinkHorizontally(),
-                    ) {
-                        metronomeButton()
-                    }
+                    ActionsMenu(items = listOfNotNull(tunerAction?.takeIf { isPerformanceModeEnabled }))
                     LiveFontScaleControls(
                         modifier = Modifier.padding(end = APP_BAR_STEPPER_END_PADDING),
                         viewModel = viewModel,
@@ -401,7 +368,7 @@ internal fun SongDetailsAppBar(
                 exit = fadeOut() + shrinkHorizontally(),
             ) {
                 ActionsMenu(
-                    items = listOfNotNull(metronomeAction, tunerAction),
+                    items = listOfNotNull(tunerAction),
                     menuFooter = {
                         MenuStepperRow(label = stringResource(Res.string.song_details_text_size)) {
                             LiveFontScaleControls(viewModel = viewModel)
@@ -413,15 +380,9 @@ internal fun SongDetailsAppBar(
                 val editingActions = songInfoEditingActions(rememberSongInfoEditing(viewModel = viewModel, song = song, target = SongEditTarget.File(song.fileName)))
                 val coverArtAction = if (isCoverArtEnabled) coverArtAction(viewModel = viewModel, song = song, target = SongEditTarget.File(song.fileName)) else null
                 val isInSetlist = song.fileName in songFileNamesInSetlists
+                // The first of the bar's actions, so it reaches into the editing menu after it rather than into the title.
                 AnimatedVisibility(
-                    visible = !isReadOnly && isMetronomeEnabled,
-                    enter = fadeIn() + expandHorizontally(),
-                    exit = fadeOut() + shrinkHorizontally(),
-                ) {
-                    metronomeButton()
-                }
-                AnimatedVisibility(
-                    modifier = Modifier.overlappingAction(start = ACTION_BUTTON_OVERLAP, end = 0.dp),
+                    modifier = Modifier.overlappingAction(start = 0.dp, end = ACTION_BUTTON_OVERLAP),
                     visible = showsSetlistAssignmentsInBar,
                     enter = fadeIn() + expandHorizontally(),
                     exit = fadeOut() + shrinkHorizontally(),
@@ -436,7 +397,6 @@ internal fun SongDetailsAppBar(
                 // An archived setlist's song keeps the editor alone, which is no menu of its own, so it stays in
                 // the one menu next to Export.
                 AnimatedVisibility(
-                    modifier = Modifier.overlappingAction(start = ACTION_BUTTON_OVERLAP, end = 0.dp),
                     visible = !isReadOnly,
                     enter = fadeIn() + expandHorizontally(),
                     exit = fadeOut() + shrinkHorizontally(),
@@ -470,23 +430,19 @@ internal fun SongDetailsAppBar(
                     isEditAndExportOnly = isReadOnly,
                     isEditShown = isReadOnly,
                     setlistFileName = destination.setlistFileName,
-                    leadingItems = when {
-                        !isReadOnly -> listOfNotNull(
-                            if (showsSetlistAssignmentsInBar || !areSetlistsEnabled) {
-                                null
-                            } else {
-                                setlistAssignmentsAction(
-                                    actions = songActions,
-                                    song = song,
-                                    isInSetlist = isInSetlist,
-                                    setlistFileName = destination.setlistFileName,
-                                )
-                            },
-                            tunerAction,
-                        )
-                        showsFontScaleInBar -> listOfNotNull(metronomeAction?.takeUnless { showsMetronomeInBar }, tunerAction)
-                        else -> listOfNotNull(metronomeAction, tunerAction)
-                    },
+                    leadingItems = listOfNotNull(
+                        if (isReadOnly || showsSetlistAssignmentsInBar || !areSetlistsEnabled) {
+                            null
+                        } else {
+                            setlistAssignmentsAction(
+                                actions = songActions,
+                                song = song,
+                                isInSetlist = isInSetlist,
+                                setlistFileName = destination.setlistFileName,
+                            )
+                        },
+                        tunerAction,
+                    ),
                     // The transposition, the capo and the tempo are set in the song's own first section now; what
                     // is left for the menu is the text size, which belongs to the reader rather than to the song.
                     menuFooter = if (showsFontScaleInBar) {

@@ -169,19 +169,33 @@ with the lyrics together, the way the sections' own header pills do** rather tha
 stays as it is, so every one of them is exactly as tall as the pill heading the section under it (`songControlHeight` in
 `components/Stepper.kt`, the pills' `titleStyle` over their own `HEADER_VERTICAL_PADDING`; a pill scaled whole towered
 over the page at a large text size). What keeps them big enough to hit at the other end is
-`UserPreferences.MIN_FONT_SCALE`, the size below which this screen is not read at all. Starting a click is not among
-them — that is the app bar's button, in reach wherever the song has been scrolled to.
+`UserPreferences.MIN_FONT_SCALE`, the size below which this screen is not read at all.
+
+**The tools the song is played with end the groups they belong to** (`SongPlayingTools`, built per page by
+`rememberSongPlayingTools`, drawn by `SongPlayingToolButtons`): the tuner after the capo (or the transposition where
+there is no capo), since the strings are tuned for what those two ask of them, and the metronome after the time
+signature, the click it plays. Each is a `SongToolButton` (`components/`), the tonal circle the steppers are pills of
+and exactly as tall, its icon scaled with them, the metronome's drawn in the secondary container colour while its panel
+is up and the tuner's while its sheet is open. Two and two, they stand in a column of their own at the end of either
+row. A button whose values are not on the page goes after the other group, and both stand alone where neither group is
+(`playingToolPlaces`, tested), so with the chords switched off the tuner sits by the metronome. The section is there
+wherever the chords or the metronome are on; with both off the tuner is an entry of the overflow menu (`tunerAction`),
+since there is nothing played to stand next to. Whether a section holds either button is part of
+`RenderSection.Metadata`, since its measured size is kept by it.
 
 Read only mode (performance mode, a song from an archived setlist) and the editor's preview get a **line of text**, set
 in the chords' size and weight (the key and the capo in the accent colour, the tempo and the time signature in the
 content colour), those four used to be instead; the chords switched off leave out the key and the capo, the metronome
 switched off the tempo and the time signature (in read only mode: the editor's preview says all four whatever the
 switches, since it shows what is being written), and both leave out the line and the controls entirely. On the song
-details screen that line always names the capo and the time signature (`withMetadataSection`'s `readsCapoAndTime`: "Capo
-0", and the 4/4 the click counts where the file names no `{time}`), so read only mode is there for every song too. The
-line reads the values the way the click and the steppers do — the tempo as a number held to the click's range, the time
-signature as one it can count (a `C` as 4/4, one it cannot count as 4/4 where the line always names one and left out
-elsewhere), the capo held to the neck — so it says what is played rather than the directive's text.
+details screen the line keeps the tool buttons too, split in two around them — the key and the capo with the tuner, the
+tempo and the time signature with the metronome — side by side where they fit and one under the other where not; the
+editor's preview, which plays nothing, keeps the one line. On the song details screen that line always names the capo
+and the time signature (`withMetadataSection`'s `readsCapoAndTime`: "Capo 0", and the 4/4 the click counts where the
+file names no `{time}`), so read only mode is there for every song too. The line reads the values the way the click and
+the steppers do — the tempo as a number held to the click's range, the time signature as one it can count (a `C` as 4/4,
+one it cannot count as 4/4 where the line always names one and left out elsewhere), the capo held to the neck — so it
+says what is played rather than the directive's text.
 
 The section is there for every song where the controls are, since a capo and a tempo can be set on one that names
 neither, and whether it has them is part of `RenderSection.Metadata`, which is what the measured sizes of a section are
@@ -508,15 +522,15 @@ website does), both when it is stepped and when a stored amount is read, so its 
 **The transposition stepper belongs to the song's first section** (`SongPlayingControlsRow.kt`), next to the key it
 reads, and is in neither the bar nor the menu; what the menu keeps is the text size (`MenuStepperRow`, handed to
 `SongActions` as its `menuFooter`, drawn at a menu entry's height after the entries), which stays open while its buttons
-are pressed and which is the reader's own rather than the song's. Outside read only mode the metronome, the editing menu
-and the overflow button are always in the bar, since the click and the way into the editor are what the screen is opened
-for; as it narrows, the Choose setlists button goes into the menu and then the cover leaves the title, each while the
-title keeps 160dp (`appBarButtons`, decided from the settled width for every song of the pager at once), so the smallest
-phone has the back button, the title and those three. Performance mode leaves only the text size and empties the app bar
-of everything else, so there the one stepper is in the bar (`LiveFontScaleControls`) wherever that leaves the title
-160dp (`showsFontScaleInPerformanceBar`) and alone in an overflow menu otherwise; the cover is only in that bar next to
-the stepper and only where the title still keeps its 160dp beside both (`showsCoverInPerformanceMode`): the title is
-what tells the player which song is up.
+are pressed and which is the reader's own rather than the song's. Outside read only mode the editing menu and the
+overflow button are always in the bar, since the way into the editor is what the screen is opened for (the metronome and
+the tuner are the song's first section's, above); as it narrows, the Choose setlists button goes into the menu and then
+the cover leaves the title, each while the title keeps 160dp (`appBarButtons`, decided from the settled width for every
+song of the pager at once), so the smallest phone has the back button, the cover, the title and those two. Performance
+mode leaves only the text size and empties the app bar of everything else, so there the one stepper is in the bar
+(`LiveFontScaleControls`) wherever that leaves the title 160dp (`showsFontScaleInPerformanceBar`) and alone in an
+overflow menu otherwise; the cover is only in that bar next to the stepper and only where the title still keeps its
+160dp beside both (`showsCoverInPerformanceMode`): the title is what tells the player which song is up.
 
 `Modifier.fontScaleGestures` handles pinch (damped with an exponent, so it is slow and precise) and Ctrl / Cmd + scroll
 wheel (counted in notches of the wheel: the web reports the browser's own pixel or line delta, which
@@ -606,11 +620,10 @@ to the other over one beat at the playing tempo, which is read from `playback` a
 the swing from wherever the pendulum is, so it never drifts from the ear; the Animate switch stills both, and a stopped
 click lets the pendulum back to the mark as drawn.
 
-Outside read only mode it is always in the bar, whatever its width; read only, it stands next to the text size stepper
-(`showsMetronomeInPerformanceBar`), going into the menu before the stepper. M still starts and stops the click itself,
-which opens the panel with it. The tempo (`TempoStepper`: the stepper, highlighted while overridden and reset by a tap
-on its value, with the Tap segment inside its own pill behind a divider — `Stepper`'s `trailing`, since tapping a tempo
-in sets the number the stepper steps rather than a value of its own) is in the song's own first section outside read
-only mode; starting a click stays the bar's button alone, since the song's first section scrolls away and the bar does
-not. The page's tempo line shows the effective tempo (`withTempo`), as the key line shows the transposed key; the PDF
+It is the last control of the song's own first section, after the time signature, in read only mode too (see the tools
+above), so it scrolls away with the song; M still starts and stops the click from anywhere in it, which opens the panel
+with it. The tempo (`TempoStepper`: the stepper, highlighted while overridden and reset by a tap on its value, with the
+Tap segment inside its own pill behind a divider — `Stepper`'s `trailing`, since tapping a tempo in sets the number the
+stepper steps rather than a value of its own) is in the song's own first section outside read only mode, beside the
+button. The page's tempo line shows the effective tempo (`withTempo`), as the key line shows the transposed key; the PDF
 prints a setlist's tempo the same way and a library export the file's own.

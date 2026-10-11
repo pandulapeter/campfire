@@ -78,8 +78,10 @@ share.
 - `NoteNames.kt` — a MIDI note in the reader's chord notation with sharps (`H` in German, `La` in Latin, letters for a
   numbering) and its octave in scientific numbering, and, for screen readers, with the sharp spoken (`spokenNoteName`: "C
   sharp", Hungarian "Cisz", and "Do kereszt" for the syllables). Tested.
-- `tunerAction` — the song details screen's entry: in its overflow menu (let out into the bar where it has room), in
-  read only mode too, since nothing about it writes a file.
+- `TunerButton` — the song details screen's way in: a button of the song's first section after the transposition and
+  the capo (see `screens/songDetails/CLAUDE.md`), in read only mode too, since nothing about it writes a file;
+  `tunerAction`, an entry of the overflow menu instead, only where that section is not there (the chords and the
+  metronome both switched off).
 
 The microphone permission is `ui/platform/MicrophonePermission.kt`, an `expect` read where a tuner shows: Android's
 `checkSelfPermission` and the Activity's launcher, iOS's `recordPermission` and `requestRecordPermission`, each read

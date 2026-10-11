@@ -88,6 +88,8 @@ import com.pandulapeter.campfire.presentation.ui.songLayout.rememberDefaultSecti
  * @param playingControls What sets the song's key, capo, tempo and time signature, drawn in place of the line that
  * only reads them; null leaves that line, which is what read only mode and the editor's preview get. Each control goes
  * with the values it sets, see [SongPlayingControls].
+ * @param playingTools The tuner and metronome buttons the song's first section holds next to those values, whether they
+ * are set there or read; null where it holds none, which is the editor's preview.
  * @param readsCapoAndTime Whether that line names the capo and the time signature where the file names neither, which
  * read only mode on the song details screen asks for, see [withMetadataSection].
  * @param shouldShowCapo False on the keyboard, which reads the capo as a transposition, see [withMetadataSection].
@@ -130,6 +132,7 @@ internal fun SongLyrics(
     isSongInfoShown: Boolean = false,
     songInfoEditing: SongInfoEditing? = null,
     playingControls: SongPlayingControls? = null,
+    playingTools: SongPlayingTools? = null,
     readsCapoAndTime: Boolean = false,
     shouldShowCapo: Boolean = true,
     shouldShowTempo: Boolean = true,
@@ -147,7 +150,21 @@ internal fun SongLyrics(
     val isSongInfoEditable = songInfoEditing != null
     // The controls are only drawn where the values they set are, so a change of either decides the section's content.
     val shownPlayingControls = playingControls?.takeIf { model.shouldShowChords || shouldShowTempo }
-    val sections = remember(model.sections, model.song.metadata, model.shouldShowChords, shouldShowTempo, isSongInfoShown, isSongInfoEditable, shownPlayingControls != null, readsCapoAndTime, shouldShowCapo) {
+    val hasTuner = playingTools?.onTunerClicked != null
+    val hasMetronome = playingTools?.metronome != null
+    val sections = remember(
+        model.sections,
+        model.song.metadata,
+        model.shouldShowChords,
+        shouldShowTempo,
+        isSongInfoShown,
+        isSongInfoEditable,
+        shownPlayingControls != null,
+        readsCapoAndTime,
+        shouldShowCapo,
+        hasTuner,
+        hasMetronome,
+    ) {
         withMetadataSection(
             sections = model.sections,
             metadata = model.song.metadata,
@@ -158,6 +175,8 @@ internal fun SongLyrics(
             isSongInfoEditable = isSongInfoEditable,
             hasPlayingControls = shownPlayingControls != null,
             readsCapoAndTime = readsCapoAndTime,
+            hasTuner = hasTuner,
+            hasMetronome = hasMetronome,
         )
     }.let { sections ->
         val cells = remember(model, chordDiagrams?.instrument, chordDiagrams?.storedShapes, chordDiagrams?.showsDefinitionsOnly) {
@@ -343,6 +362,7 @@ internal fun SongLyrics(
                                 isSongInfoShown = isSongInfoShown,
                                 songInfoEditing = songInfoEditing,
                                 playingControls = shownPlayingControls,
+                                playingTools = playingTools,
                                 readsCapoAndTime = section.readsCapoAndTime,
                                 animatesControls = sectionMotion == SectionMotion.SPRING && extraWidth <= 0.dp,
                                 titleStyle = headerStyle,

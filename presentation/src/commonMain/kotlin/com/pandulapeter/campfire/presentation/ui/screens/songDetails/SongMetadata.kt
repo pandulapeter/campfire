@@ -39,6 +39,9 @@ import com.pandulapeter.campfire.presentation.ui.songInfo.hasSongInfo
  * time signature, a capo of none and the common time the click counts where the file names neither: a player reading
  * from a music stand has no control left to look at to tell that nothing was set, and the absence of a value is a
  * value to the hands on the guitar. The section is then there for every song too.
+ * @param hasTuner Whether the section holds the tuner's button, see [SongPlayingTools]. It is never there on its own:
+ * the section that holds it is the one the values above put there.
+ * @param hasMetronome Whether the section holds the metronome's button, the same way.
  */
 internal fun withMetadataSection(
     sections: List<RenderSection>,
@@ -50,6 +53,8 @@ internal fun withMetadataSection(
     isSongInfoEditable: Boolean = false,
     hasPlayingControls: Boolean = false,
     readsCapoAndTime: Boolean = false,
+    hasTuner: Boolean = false,
+    hasMetronome: Boolean = false,
 ): List<RenderSection> {
     val hasControls = (shouldShowChords || shouldShowTempo) && hasPlayingControls
     val readsBoth = (shouldShowChords || shouldShowTempo) && !hasControls && readsCapoAndTime
@@ -70,7 +75,14 @@ internal fun withMetadataSection(
         },
     )
     return if ((isSongInfoShown && (isSongInfoEditable || shownMetadata.hasSongInfo)) || hasControls || readsBoth || shownMetadata.hasPlayingValues) {
-        listOf(RenderSection.Metadata(metadata = shownMetadata, hasPlayingControls = hasControls, readsCapoAndTime = readsBoth)) + sections
+        val section = RenderSection.Metadata(
+            metadata = shownMetadata,
+            hasPlayingControls = hasControls,
+            readsCapoAndTime = readsBoth,
+            hasTuner = hasTuner,
+            hasMetronome = hasMetronome,
+        )
+        listOf(section) + sections
     } else {
         sections
     }

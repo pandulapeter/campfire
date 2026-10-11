@@ -366,10 +366,11 @@ the amount next to the key it takes the chords on the page to, the capo stepper,
 Tap segment, since tapping a tempo in sets the very number the stepper steps, and after it the time signature, which is
 only read there). They are part of the song, so they grow and shrink with its text, which is also why the text has a
 floor: `UserPreferences.MIN_FONT_SCALE` is the size below which the song details screen is not worth reading — the
-lyrics, and the controls with them. Starting the click stays the app bar's button, which is in reach wherever the song
-has been scrolled to. Three of them are overridden where the song is read, so they belong to the setlist the band plays
-it in or to this device (see `ui/playing/CLAUDE.md`); the time signature alone is written into the file as a `{time}`
-directive, since it is the song rather than one band's reading of it, and it is what the click counts the bar by.
+lyrics, and the controls with them. The metronome that plays the click and the tuner that tunes for the key and the capo
+are buttons of that section too, next to the values they are about, read only mode included. Three of them are
+overridden where the song is read, so they belong to the setlist the band plays it in or to this device (see
+`ui/playing/CLAUDE.md`); the time signature alone is written into the file as a `{time}` directive, since it is the song
+rather than one band's reading of it, and it is what the click counts the bar by.
 
 **What the file declares for all four is edited in the Song defaults sheet**, an entry of the song details editing menu
 and of the About the song sheet's Song defaults group, and nowhere on the page (the editor's overflow menu has it too,
@@ -387,12 +388,13 @@ being typed is what says them.
 With the chords switched off the key and the capo leave the line and the controls alike, and with the metronome switched
 off the tempo and the time signature do (see Features below) — everywhere but in the editor's preview, which says all
 four whatever the switches and in the key it is written in, since it shows what is being written. What is left in the
-app bar is about the song rather than about how it is played — the click, the Choose setlists and the menu, the title
-opening the About the song sheet — with the text size, which is the reader's own, at the end of that menu. **The key the
-band actually hears is named in the app bar**, after the artist and the way a song card names it: the transposition
-*and* the capo applied, so it is the key the song sounds in rather than the one the chords on the page spell, which is
-the Transposition control's — the two read differently wherever the capo is not zero, but on the keyboard. The tempo the click would play at
-follows it there, as it does on a card, and inside a setlist the song's duration after that, as its card there has it.
+app bar is about the song rather than about how it is played — the Choose setlists, the editing menu and the menu, the
+title opening the About the song sheet — with the text size, which is the reader's own, at the end of that menu. **The
+key the band actually hears is named in the app bar**, after the artist and the way a song card names it: the
+transposition *and* the capo applied, so it is the key the song sounds in rather than the one the chords on the page
+spell, which is the Transposition control's — the two read differently wherever the capo is not zero, but on the
+keyboard. The tempo the click would play at follows it there, as it does on a card, and inside a setlist the song's
+duration after that, as its card there has it.
 
 ### How a song is played on the keyboard
 
