@@ -116,7 +116,8 @@ The ones that carry real logic:
   rather than one after another as each family comes up. Preparing owns the import's size budget: every archive unpacks into what the ones before it
   left, and a file over its limit goes to `ImportPlan.oversizedFileNames`, which the UI reports on its own line.
 - `ExportLibraryUseCaseImpl` / `ExportSongsUseCaseImpl` / `ExportSetlistUseCaseImpl` — decide what leaves as what: a
-  single song is the `.cho` file as it is on disk, everything else is a zip. The user's transposition is never baked in.
+  single song exported on its own is the `.cho` file as it is on disk, everything else — the selection's several songs
+  included, however many of them are chosen — is a zip. The user's transposition is never baked in.
   The name the file leaves under goes through `ExportFileNames.kt` (`campfire_library.zip`, `campfire_songs.zip`, the
   song's or setlist's own title otherwise); what is *inside* an archive keeps its library names, since a
   setlist points at its songs by file name and the import follows those names. A setlist exported with only some of its

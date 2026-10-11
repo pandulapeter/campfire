@@ -22,8 +22,8 @@ The source says which of the three it is (`PrintSource.Kind`), and the screen as
 there is a running order (`hasRunningOrder`, a setlist's: the setlist content choice, the overview and the zip's
 manifest) and whether there are several songs (`hasSeveralSongs`: the song ticks with Select all, "Start each song on a
 new page", the Zip format and its preview). Several songs are listed unnumbered, printed in the keys the library plays
-them in as one song exported from the library is, zipped as `campfire_songs.zip` by `ExportSongsUseCase` and saved as
-`campfire_songs.pdf`, the PDF titled with how many songs it holds; the screen closes onto the selection as it was. It is
+them in as one song exported from the library is, zipped as `campfire_songs.zip` by `ExportSongsUseCase` even when
+only one of them is left chosen, and saved as `campfire_songs.pdf`, the PDF titled with how many songs it holds; the screen closes onto the selection as it was. It is
 a dialog to the view model and a screen to the user: `ExportHost`, composed by `CampfireScreens` after the `NavDisplay`
 and before the dialogs and the snackbars, deals it in over everything and takes it away again however the dialog goes,
 exactly as a destination is pushed and popped: from the right, on the same spring (`slideFractionSpec`, `slideSpec` as a

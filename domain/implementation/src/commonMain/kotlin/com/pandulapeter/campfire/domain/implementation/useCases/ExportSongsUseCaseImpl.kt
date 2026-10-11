@@ -24,14 +24,15 @@ class ExportSongsUseCaseImpl internal constructor(
     private val archiveRepository: ArchiveRepository,
 ) : ExportSongsUseCase {
 
-    override suspend operator fun invoke(fileNames: List<String>): ExportedFile? {
+    override suspend operator fun invoke(fileNames: List<String>, isArchive: Boolean): ExportedFile? {
         // Read from the files rather than from the cache, which may hold a version a file has left behind since.
         val contents = fileNames.mapNotNull { songContentRepository.loadSongContent(it, useCache = false) }
-        return when (contents.size) {
-            0 -> null
+        return when {
+            contents.isEmpty() -> null
             // One song leaves as itself, named by its own header: a zip around a single text file would only be
-            // something to unpack again.
-            1 -> contents.first().let {
+            // something to unpack again. Not where a zip is what the caller's screen showed and the user picked, which
+            // is what saving has to give them however many of the songs are left.
+            contents.size == 1 && !isArchive -> contents.first().let {
                 ExportedFile(
                     name = songRepository.songExportFileName(it),
                     mimeType = ExportedFile.TEXT_MIME_TYPE,

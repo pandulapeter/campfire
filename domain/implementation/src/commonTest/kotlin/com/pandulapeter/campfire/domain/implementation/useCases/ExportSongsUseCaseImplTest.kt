@@ -22,24 +22,32 @@ class ExportSongsUseCaseImplTest {
 
     @Test
     fun `a single song is named by its header`() = runTest {
-        val exported = useCase(mapOf("old_title" to "new_title.cho"), "old_title.cho" to "{title: New title}\n").invoke(listOf("old_title.cho"))
+        val exported = useCase(mapOf("old_title" to "new_title.cho"), "old_title.cho" to "{title: New title}\n").invoke(listOf("old_title.cho"), isArchive = false)
 
         assertEquals("new_title.cho", assertNotNull(exported).name)
     }
 
     @Test
     fun `the stored extension is kept`() = runTest {
-        val exported = useCase(mapOf("song" to "song.cho"), "song.crd" to "{title: Song}\n").invoke(listOf("song.crd"))
+        val exported = useCase(mapOf("song" to "song.cho"), "song.crd" to "{title: Song}\n").invoke(listOf("song.crd"), isArchive = false)
 
         assertEquals("song.crd", assertNotNull(exported).name)
     }
 
     @Test
     fun `several songs keep their library names inside the archive`() = runTest {
-        val exported = useCase(emptyMap(), "a.cho" to "{title: A}\n", "b_2.cho" to "{title: B}\n").invoke(listOf("a.cho", "b_2.cho"))
+        val exported = useCase(emptyMap(), "a.cho" to "{title: A}\n", "b_2.cho" to "{title: B}\n").invoke(listOf("a.cho", "b_2.cho"), isArchive = false)
 
         assertEquals("campfire_songs.zip", assertNotNull(exported).name)
         assertEquals(setOf("a.cho", "b_2.cho"), archive.packed.keys)
+    }
+
+    @Test
+    fun `songs asked for as an archive are zipped even when one is left`() = runTest {
+        val exported = useCase(emptyMap(), "a.cho" to "{title: A}\n").invoke(listOf("a.cho", "gone.cho"), isArchive = true)
+
+        assertEquals("campfire_songs.zip", assertNotNull(exported).name)
+        assertEquals(setOf("a.cho"), archive.packed.keys)
     }
 
     /** @param names What the import would name a song, by the fallback title it is asked with. */

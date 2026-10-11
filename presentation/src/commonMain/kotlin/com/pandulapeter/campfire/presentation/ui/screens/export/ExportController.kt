@@ -275,8 +275,11 @@ internal class ExportController(
             ) {
                 when {
                     setlist != null -> exportSetlist.invoke(setlist.fileName, songFileNames)
-                    dialog.songs.isNotEmpty() -> exportSongs(dialog.songs.map { it.fileName }.filter { songFileNames == null || it in songFileNames })
-                    else -> exportSongs(listOf(requireNotNull(dialog.song).fileName))
+                    dialog.songs.isNotEmpty() -> exportSongs(
+                        fileNames = dialog.songs.map { it.fileName }.filter { songFileNames == null || it in songFileNames },
+                        isArchive = true,
+                    )
+                    else -> exportSongs(fileNames = listOf(requireNotNull(dialog.song).fileName), isArchive = false)
                 }
             }
         }
