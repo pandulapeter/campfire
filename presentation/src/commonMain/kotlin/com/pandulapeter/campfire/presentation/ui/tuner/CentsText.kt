@@ -25,5 +25,15 @@ internal fun signedCents(cents: Float): String {
     }
 }
 
+/** What the reading line says: nothing while nothing is heard, that the string is in tune, or how far off it is. */
+internal enum class TunerReadingKind { NONE, IN_TUNE, CENTS }
+
+/** The kind of reading the line shows, which is all its crossfade is keyed by: the number of a reading changes in place. */
+internal fun tunerReadingKindOf(cents: Float?, isInTune: Boolean) = when {
+    cents == null -> TunerReadingKind.NONE
+    isInTune -> TunerReadingKind.IN_TUNE
+    else -> TunerReadingKind.CENTS
+}
+
 private const val MINUS_SIGN = '−'
 private const val PLUS_SIGN = '+'

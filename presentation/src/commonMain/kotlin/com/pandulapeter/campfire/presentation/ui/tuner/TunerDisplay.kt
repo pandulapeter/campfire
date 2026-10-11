@@ -320,25 +320,32 @@ private fun TunerReadingLine(
     cents: Float?,
     isInTune: Boolean,
     color: Color,
-) = AnimatedContent(
-    modifier = Modifier.padding(top = 4.dp),
-    targetState = when {
-        cents == null -> null
-        isInTune -> stringResource(Res.string.tuner_in_tune)
-        else -> abs(cents.roundToInt()).let { pluralStringResource(Res.plurals.tuner_cents, it, signedCents(cents)) }
-    },
-    transitionSpec = { fadeIn() togetherWith fadeOut() },
-    contentAlignment = Alignment.Center,
-    label = "tunerReading",
-) { text ->
-    Text(
-        // The line keeps its height with nothing to say, so the frequencies under it do not move as a note arrives.
-        text = text.orEmpty(),
-        style = MaterialTheme.typography.titleMedium,
-        color = if (isInTune) color else MaterialTheme.colorScheme.onSurface,
-        textAlign = TextAlign.Center,
-        maxLines = 1,
-    )
+) {
+    // The crossfade is for the line changing what it says, so it is keyed by the kind of reading; the number of a reading
+    // changes in place, read from here by the shown content alone. A fading-out reading keeps the last number heard once
+    // the string has died, and the write is during composition so that the first frame already shows the number.
+    var lastCents by remember { mutableStateOf(0f) }
+    if (cents != null) lastCents = cents
+    AnimatedContent(
+        modifier = Modifier.padding(top = 4.dp),
+        targetState = tunerReadingKindOf(cents, isInTune),
+        transitionSpec = { fadeIn() togetherWith fadeOut() },
+        contentAlignment = Alignment.Center,
+        label = "tunerReading",
+    ) { kind ->
+        Text(
+            // The line keeps its height with nothing to say, so the frequencies under it do not move as a note arrives.
+            text = when (kind) {
+                TunerReadingKind.NONE -> ""
+                TunerReadingKind.IN_TUNE -> stringResource(Res.string.tuner_in_tune)
+                TunerReadingKind.CENTS -> pluralStringResource(Res.plurals.tuner_cents, abs(lastCents.roundToInt()), signedCents(lastCents))
+            },
+            style = MaterialTheme.typography.titleMedium,
+            color = if (isInTune) color else MaterialTheme.colorScheme.onSurface,
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+        )
+    }
 }
 
 /** What is heard and what it is tuned to, or that what sounds is the reference tone. */

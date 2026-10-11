@@ -38,7 +38,8 @@ share.
   in-tune window around the centre tinted with the second accent color; a needle on a spring, gone while nothing is
   heard, and giving way to the notch closing into a check in tune, so it is never said by color alone (the note and the
   reading take the second accent color with it); under the meter the reading in words, the signed cents (`CentsText.kt`,
-  `signedCents`: a typographic minus, tested) or "In tune"; and last the frequency heard and the target's. A tone being
+  `signedCents`: a typographic minus, tested) or "In tune", crossfading only when what it says changes kind
+  (`tunerReadingKindOf`, tested) while the number changes in place; and last the frequency heard and the target's. A tone being
   played is named instead and the meter rests. Compact (note beside the rest, in a label of one width so the meter never
   moves) in a short window, on the tab and in the sheet alike. The prompt is laid out over an invisible note, so the label is one height
   either way and nothing under it moves as a note comes and goes. Explored as one node with the exact reading; a second

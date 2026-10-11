@@ -25,4 +25,23 @@ class CentsTextTest {
         assertEquals("0", signedCents(0.3f))
         assertEquals("0", signedCents(-0.4f))
     }
+
+    @Test
+    fun `nothing heard is no reading whatever the in tune flag says`() {
+        assertEquals(TunerReadingKind.NONE, tunerReadingKindOf(cents = null, isInTune = false))
+        assertEquals(TunerReadingKind.NONE, tunerReadingKindOf(cents = null, isInTune = true))
+    }
+
+    @Test
+    fun `a reading in tune is in tune at any cents`() {
+        assertEquals(TunerReadingKind.IN_TUNE, tunerReadingKindOf(cents = 0f, isInTune = true))
+        assertEquals(TunerReadingKind.IN_TUNE, tunerReadingKindOf(cents = 3.2f, isInTune = true))
+    }
+
+    @Test
+    fun `a reading not in tune is a number of cents however close it is`() {
+        assertEquals(TunerReadingKind.CENTS, tunerReadingKindOf(cents = 0f, isInTune = false))
+        assertEquals(TunerReadingKind.CENTS, tunerReadingKindOf(cents = -12.6f, isInTune = false))
+        assertEquals(TunerReadingKind.CENTS, tunerReadingKindOf(cents = 7.1f, isInTune = false))
+    }
 }
