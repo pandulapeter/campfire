@@ -30,7 +30,7 @@ internal object ToneSynthesizer {
         val periods = frequency.roundToInt().coerceAtLeast(1)
         val length = (periods * sampleRate / frequency.toDouble()).roundToInt()
         val playedFrequency = periods.toDouble() * sampleRate / length
-        val audible = HARMONICS.indices.filter { (it + 1) * playedFrequency < sampleRate / 2 }
+        val audible = HARMONICS.indices.filter { (it + 1) * playedFrequency < sampleRate / 2 }.toIntArray()
         val total = audible.sumOf { HARMONICS[it].toDouble() }
         return ShortArray(length) { frame ->
             var value = 0.0

@@ -148,9 +148,15 @@ internal fun tunerFramePosition(): Double = js(
     "window.__campfireTuner.context ? Math.round(window.__campfireTuner.context.currentTime * window.__campfireTuner.context.sampleRate) : -1"
 )
 
-internal fun tunerSample(index: Int): Float = js("window.__campfireTuner.samples[index]")
+/**
+ * The analyser's buffer, which [readTunerWindow] has just filled, handed over once per poll so that each sample is read
+ * by [tunerSampleOf] as one indexed read of its argument rather than a walk down from the global object.
+ */
+internal fun tunerSamples(): JsAny = js("window.__campfireTuner.samples")
 
-internal fun tunerSampleCount(): Int = js("window.__campfireTuner.samples.length")
+internal fun tunerSampleCountOf(samples: JsAny): Int = js("samples.length")
+
+internal fun tunerSampleOf(samples: JsAny, index: Int): Float = js("samples[index]")
 
 internal fun isTunerInputEnded(): Boolean = js("window.__campfireTuner.ended")
 

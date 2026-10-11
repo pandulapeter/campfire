@@ -60,9 +60,10 @@ internal class WebAudioInput : AudioInput {
             listener.onIssueChanged(if (running) null else TunerInputIssue.WAITING_FOR_GESTURE)
         }
         if (!readTunerWindow()) return AudioInput.NO_WINDOW
+        val samples = tunerSamples()
         // The analyser holds a power of two, the detector's input is the latest frames of it.
-        val offset = tunerSampleCount() - window.size
-        for (index in window.indices) window[index] = tunerSample(offset + index)
+        val offset = tunerSampleCountOf(samples) - window.size
+        for (index in window.indices) window[index] = tunerSampleOf(samples, offset + index)
         return tunerFramePosition().toLong()
     }
 
