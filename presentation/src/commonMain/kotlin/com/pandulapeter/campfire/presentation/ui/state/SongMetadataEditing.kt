@@ -19,6 +19,7 @@ import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.SongContent
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.data.model.domain.normalizedTags
+import com.pandulapeter.campfire.data.model.domain.tagKey
 import com.pandulapeter.campfire.domain.api.useCases.ParseChordProUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SetChordProCoverArtUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SetChordProLanguagesUseCase
@@ -63,16 +64,16 @@ internal class SongMetadataEditing(
 
     /**
      * Makes [tags] the tags a song carries, from the tag dialog: every one of [offeredTags] the dialog left unticked is
-     * taken off and every ticked one put on, compared without regard to case, as the file's tags always are. The file
-     * is rewritten once for the whole set, as [setSongLanguages] writes one. What it carries is read from the text the
-     * edit is built on rather than from the list entry the dialog was opened with, so a tag another device synced in
-     * while the dialog was open, and which it therefore never offered, is left on.
+     * taken off and every ticked one put on, compared without regard to case and Unicode form, as the file's tags always
+     * are. The file is rewritten once for the whole set, as [setSongLanguages] writes one. What it carries is read from
+     * the text the edit is built on rather than from the list entry the dialog was opened with, so a tag another device
+     * synced in while the dialog was open, and which it therefore never offered, is left on.
      */
     fun setSongTags(target: SongEditTarget, tags: List<String>, offeredTags: List<String>) {
-        val keptKeys = tags.mapTo(mutableSetOf()) { it.lowercase() }
-        val offeredKeys = offeredTags.mapTo(mutableSetOf()) { it.lowercase() }
+        val keptKeys = tags.mapTo(mutableSetOf(), ::tagKey)
+        val offeredKeys = offeredTags.mapTo(mutableSetOf(), ::tagKey)
         editSong(target) { text ->
-            val removed = parseChordPro(text).metadata.tags.filter { it.lowercase() in offeredKeys && it.lowercase() !in keptKeys }
+            val removed = parseChordPro(text).metadata.tags.filter { tagKey(it).let { key -> key in offeredKeys && key !in keptKeys } }
             val withoutRemoved = removed.fold(text) { current, tag -> setChordProTag(text = current, tag = tag, isSelected = false) }
             tags.fold(withoutRemoved) { current, tag -> setChordProTag(text = current, tag = tag, isSelected = true) }
         }

@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.state
 
+import com.pandulapeter.campfire.data.model.domain.tagKey
 import com.pandulapeter.campfire.domain.api.useCases.EditSongsUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ParseChordProUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SetChordProLanguagesUseCase
@@ -43,12 +44,16 @@ internal class SelectionEditing(
     val isEditingSongs: StateFlow<Boolean> = runningEdits.map { it > 0 }.asState(scope, false)
 
     /**
-     * Puts [added] on every song of [fileNames] and takes the tags of [removed] (folded by case) off every one of them.
+     * Puts [added] on every song of [fileNames] and takes the tags of [removed] (folded by case and Unicode form, as
+     * `tagKey` folds them) off every one of them.
      */
-    fun setSelectionTags(fileNames: List<String>, added: List<String>, removed: Set<String>) = edit(fileNames) { text ->
-        val removedTags = parseChordPro(text).metadata.tags.filter { it.lowercase() in removed }
-        val withoutRemoved = removedTags.fold(text) { current, tag -> setChordProTag(text = current, tag = tag, isSelected = false) }
-        added.fold(withoutRemoved) { current, tag -> setChordProTag(text = current, tag = tag, isSelected = true) }
+    fun setSelectionTags(fileNames: List<String>, added: List<String>, removed: Set<String>) {
+        val removedKeys = removed.mapTo(hashSetOf(), ::tagKey)
+        edit(fileNames) { text ->
+            val removedTags = parseChordPro(text).metadata.tags.filter { tagKey(it) in removedKeys }
+            val withoutRemoved = removedTags.fold(text) { current, tag -> setChordProTag(text = current, tag = tag, isSelected = false) }
+            added.fold(withoutRemoved) { current, tag -> setChordProTag(text = current, tag = tag, isSelected = true) }
+        }
     }
 
     /** Each song's own languages, less [removed] and with [added] after them. */

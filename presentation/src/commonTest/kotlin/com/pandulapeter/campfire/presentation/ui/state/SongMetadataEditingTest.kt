@@ -18,6 +18,7 @@ import com.pandulapeter.campfire.chordpro.edit.ChordProTags
 import com.pandulapeter.campfire.chordpro.model.ChordProLink
 import com.pandulapeter.campfire.data.model.domain.SongContent
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.data.model.domain.normalizedToNfc
 import com.pandulapeter.campfire.domain.api.useCases.ParseChordProUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SetChordProCoverArtUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SetChordProLanguagesUseCase
@@ -54,6 +55,14 @@ class SongMetadataEditingTest {
         editing().setSongTags(draftTarget, tags = listOf("Pop"), offeredTags = listOf("rock", "Pop"))
         val text = "{title: A}\n{tag: Rock}\n{tag: Synced}"
         assertEquals(setOf("Synced", "Pop"), ChordProParser.parse(editedText(text)).metadata.tags.toSet())
+    }
+
+    @Test
+    fun `a decomposed tag the sheet offered and left unticked is taken off`() = runTest {
+        editing().setSongTags(draftTarget, tags = emptyList(), offeredTags = listOf("Ünnep"))
+        // The decomposed letter is spelled as an escape, since a literal one would not survive a tool that normalizes text.
+        val text = "{title: A}\n{tag: U\u0308nnep}"
+        assertEquals(emptyList(), ChordProParser.parse(editedText(text)).metadata.tags)
     }
 
     @Test
@@ -129,8 +138,11 @@ class SongMetadataEditingTest {
                 override fun invoke(text: String, codes: List<String>) = error("Not used")
             },
             setChordProTag = object : SetChordProTagUseCase {
-                override fun invoke(text: String, tag: String, isSelected: Boolean) =
-                    if (isSelected) ChordProTags.addTag(text, tag) else ChordProTags.removeTag(text, tag)
+                override fun invoke(text: String, tag: String, isSelected: Boolean) = if (isSelected) {
+                    ChordProTags.addTag(text, tag, fold = String::normalizedToNfc)
+                } else {
+                    ChordProTags.removeTag(text, tag, fold = String::normalizedToNfc)
+                }
             },
             setChordProLinks = object : SetChordProLinksUseCase {
                 override fun invoke(text: String, links: List<ChordProLink>) = ChordProLinks.setLinks(text = text, links = links)
