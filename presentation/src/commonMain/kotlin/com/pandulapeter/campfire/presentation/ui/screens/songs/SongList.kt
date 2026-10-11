@@ -235,6 +235,7 @@ internal fun SongList(
         listState = listState,
         songGroups = songGroups,
         hasPlaceholder = placeholder != null,
+        anchor = filterAnchor,
     )
     // The last row's box would otherwise end up under the Done button, which stands over the end of the list.
     val selectionBottomPadding by animateDpAsState(if (isSelecting) DONE_BUTTON_ROOM else 0.dp)
@@ -442,6 +443,7 @@ internal fun SongList(
                         // the bar's pill as it scrolls under them.
                         HorizontalDivider(
                             modifier = listItemAnimation(listState, hasLoadedLibrary, placementSpec = if (areHeadersCollapsing) null else itemPlacementSpec)
+                                .anchoredTransition(filterAnchor, listState, SELECTION_DIVIDER_KEY)
                                 .fadingUnderListTop(topFade)
                                 .padding(horizontal = SONG_CARD_OUTER_PADDING, vertical = SELECTION_DIVIDER_PADDING),
                         )

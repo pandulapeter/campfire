@@ -41,8 +41,9 @@ mask is absent at the real top and grows over the first 24dp of scrolling, inclu
   (`rememberSongGroupsWithSelection`).
 - **Nothing on screen moves under a tick**: `KeepCardsInPlaceUnderTick` asks the grid, in the composition the new order
   arrives in, to keep the first card in sight outside the group where it was, the group above it moving out of the way,
-  as `KeepChecklistRowsInPlace` keeps the sheet's rows; the copies, the header and the divider fade in and out with the
-  list's item animation.
+  as `KeepChecklistRowsInPlace` keeps the sheet's rows. That request is a jump the grid forgets its item animation over,
+  so the tick is narrated by the list's `ListAnchor` instead: the cards above the held one slide out of the way, and the
+  copy, the header and the divider fade in. A tick that needs no request is the grid's own item animation.
 - **The bar** keeps the search, the sort and the filter; behind its divider New gives way to the selection menu
   (`SongSelectionMenu`), which stays while the search is open (`areClosedSearchActionsKeptInSearch`): Select all (what
   is listed now, added to what is ticked) and Deselect all, always in the menu, then Choose setlists, Manage tags,

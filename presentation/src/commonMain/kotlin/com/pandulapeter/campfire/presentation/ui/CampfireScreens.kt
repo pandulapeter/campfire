@@ -117,7 +117,8 @@ private class KeyboardAwarePadding(
  *
  * While [chromeInScreens] is set, every top level screen draws a navigation chrome of its own, under itself and
  * selected on its own destination, so that the bar or the rail moves with the screen when a card is dealt over it or
- * taken off it, the predictive back gesture included, instead of standing still while the screen slides past it.
+ * taken off it, the predictive back gesture included, instead of standing still while the screen slides past it. The
+ * export screen moves the deck by [exportTransition], which the caller holds for the same decision.
  */
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -129,6 +130,7 @@ internal fun CampfireScreens(
     chromeKind: NavigationChromeKind,
     chromeSize: NavigationChromeSize,
     chromeInScreens: Boolean,
+    exportTransition: ExportTransition,
     metronomeBeat: MetronomeIconBeat,
     onNavigationTransitionRunningChanged: (Boolean) -> Unit,
 ) {
@@ -219,7 +221,6 @@ internal fun CampfireScreens(
     }
     // What the screens' own lifecycles are compared with, see ScreenSurface.
     val hostLifecycle = LocalLifecycleOwner.current.lifecycle
-    val exportTransition = remember { ExportTransition() }
     val navigationScrim = remember { NavigationScrim() }
     val scrimColor = MaterialTheme.colorScheme.scrim
     // The export screen is drawn in this layout rather than in a window of its own, which a screen reader would take for

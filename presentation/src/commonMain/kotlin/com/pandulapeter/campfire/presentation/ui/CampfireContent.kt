@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -22,8 +23,10 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.metronome.rememberMetronomeIconBeat
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
+import com.pandulapeter.campfire.presentation.ui.screens.export.ExportTransition
 import kotlinx.coroutines.flow.first
 
 @Composable
@@ -50,7 +53,13 @@ internal fun CampfireContent(
             isChromeInScreens = false
         }
     }
-    val chromeInScreens = isChromeInScreens || isTopLevelScreenCovered
+    // The export screen is not a destination: it slides the whole deck aside instead, the chrome placed under it
+    // included, so the screens draw their own copy of it from the frame it is asked for until it has slid all the way
+    // off again, the way they do under a card. The copy swaps for the shared one only where both sit still.
+    val exportTransition = remember { ExportTransition() }
+    val visibleDialog by viewModel.visibleDialog.collectAsStateWithLifecycle()
+    val isExportMovingDeck by remember { derivedStateOf { exportTransition.progress.value > 0f } }
+    val chromeInScreens = isChromeInScreens || isTopLevelScreenCovered || visibleDialog is DialogType.Export || isExportMovingDeck
     val metronomeSettings by viewModel.metronomeSettings.collectAsStateWithLifecycle()
     val metronomeBeat = rememberMetronomeIconBeat(
         playback = viewModel.metronomePlayback,
@@ -81,6 +90,7 @@ internal fun CampfireContent(
             chromeKind = chromeKind,
             chromeSize = chromeSize,
             chromeInScreens = chromeInScreens,
+            exportTransition = exportTransition,
             metronomeBeat = metronomeBeat,
             onNavigationTransitionRunningChanged = { isNavigationTransitionRunning = it },
         )

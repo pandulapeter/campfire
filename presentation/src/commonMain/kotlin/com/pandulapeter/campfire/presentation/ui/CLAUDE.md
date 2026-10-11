@@ -224,7 +224,8 @@ settled (a pop starts animating a frame after the back stack changes, so the set
 scaffold measures its chrome without placing it and every top level screen draws a copy of its own under itself
 (`TopLevelScreenSurface`'s `chrome`), selected on that screen's destination, so the bar or the rail travels with the
 screen's 12% parallax, the predictive gesture included; the tabs keep the one shared chrome, which is what lets its
-selection animate while they fade through in place. **No top level screen has a title bar of its own, and the rail goes
+selection animate while they fade through in place. The export screen, which slides the whole `NavDisplay` aside rather
+than being a destination, does the same from the frame it is asked for until its `ExportTransition` is back at zero. **No top level screen has a title bar of its own, and the rail goes
 all the way to the top of the window**: the navigation chrome already says which screen is showing.
 
 `TopLevelScreenSurface` is an opaque `Surface` inset by the rail (or the bar) and padded below the status bar — by at

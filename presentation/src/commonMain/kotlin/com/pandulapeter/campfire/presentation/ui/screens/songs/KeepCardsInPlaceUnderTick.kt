@@ -13,6 +13,8 @@ import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import com.pandulapeter.campfire.presentation.ui.components.ListAnchor
 
 /**
  * Holds the cards of the song list where they are on screen while the Selection section above them changes: a tick
@@ -23,6 +25,14 @@ import androidx.compose.runtime.remember
  * top is in sight exactly where it is, by its index in the new groups, the content above it moving out of the way, as
  * the Choose songs sheet keeps its rows ([com.pandulapeter.campfire.presentation.ui.components.KeepChecklistRowsInPlace]).
  *
+ * A request for a different position is a jump to the grid, which answers it by forgetting where every item was: the
+ * copy that joins the section, and the header and the divider the first tick brings, would simply be there, and the
+ * rows of the section above the held card would snap up rather than slide. So the change is narrated by [anchor]
+ * instead, as a tag tapped on a row narrates its filter
+ * ([com.pandulapeter.campfire.presentation.ui.components.anchoredTransition]): what was on screen slides from where it
+ * was, and what was not fades in. A request for the position the grid is already at resets nothing, and the grid's own
+ * item animation is left to it.
+ *
  * Called after [com.pandulapeter.campfire.presentation.ui.components.ScrollToTopWhenChanged], so that its request is
  * the one the grid measures with. A change of the search, the sorting or a filter is that one's to answer, and a list
  * being scrolled is left alone, since a request would cancel the scroll.
@@ -32,8 +42,10 @@ internal fun KeepCardsInPlaceUnderTick(
     listState: LazyGridState,
     songGroups: SongGroups,
     hasPlaceholder: Boolean,
+    anchor: ListAnchor,
 ) {
     val previous = remember { arrayOfNulls<SongGroups>(1) }
+    val coroutineScope = rememberCoroutineScope()
     SideEffect {
         val last = previous[0]
         previous[0] = songGroups
@@ -46,10 +58,17 @@ internal fun KeepCardsInPlaceUnderTick(
         // items, and holding by it would let a row the change put under it push every card on screen down, so the
         // first card whose top is in sight is what is held. A card the change took away (a copy) is not in the new
         // groups, and the next one stands in for it.
-        val cards = listState.layoutInfo.visibleItemsInfo.filter { it.contentType == "song" }
+        val visibleItems = listState.layoutInfo.visibleItemsInfo
+        val cards = visibleItems.filter { it.contentType == "song" }
             .sortedWith(compareBy({ it.key in lastSelectionKeys }, { it.offset.y < 0 }))
         cards.firstNotNullOfOrNull { card ->
             songGroups.groups.itemIndexOf(card.key, hasPlaceholder = hasPlaceholder)?.let { index -> index to card.offset.y }
-        }?.let { (index, offset) -> listState.requestScrollToItem(index = index, scrollOffset = -offset) }
+        }?.let { (index, offset) ->
+            val isJump = index != listState.firstVisibleItemIndex || -offset != listState.firstVisibleItemScrollOffset
+            listState.requestScrollToItem(index = index, scrollOffset = -offset)
+            if (isJump) {
+                anchor.animateFrom(visibleItems.associate { it.key to it.offset }, coroutineScope)
+            }
+        }
     }
 }
