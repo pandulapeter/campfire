@@ -170,112 +170,143 @@ internal fun SongSectionContent(
         // Tablature and grids are runs of lines inside a section rather than sections of their own, so the lines are
         // grouped: each run is folded as one and drawn as pieces the section may be cut between (see [runSlotCount]) -
         // a system of tablature with all of its strings, a line of a grid - and everything else is laid out line by
-        // line around them. A comment
-        // that cut the section stands where the file has it, between the lines around it. A section that is nothing
-        // but one run is folded as the section it is, so its run has no toggle of its own.
-        // Every item is counted, drawn or not, and so is every run's fold, since a run is named by how many
-        // runs of its name came before it in the section.
-        val runNameCounts = mutableMapOf<String, Int>()
-        var item = 0
-        section.parts.forEach { part ->
-            when (part) {
-                is RenderSection.Comment -> if (item++ in items) {
-                    SongComment(
+        // line around them. A comment that cut the section stands where the file has it, between the lines around it.
+        // A section that is nothing but one run is folded as the section it is, so its run has no toggle of its own.
+        val sectionItems = section.sectionItems
+        val lastItem = minOf(items.last, sectionItems.lastIndex)
+        var item = maxOf(items.first, 0)
+        while (item <= lastItem) {
+            when (val sectionItem = sectionItems[item]) {
+                is SectionItem.Inline -> when (val part = sectionItem.part) {
+                    is RenderSection.Comment -> SongComment(
                         modifier = Modifier.padding(vertical = INLINE_COMMENT_GAP),
                         comment = part,
                         notation = notation,
                         fontScale = fontScale,
                     )
-                }
 
-                is RenderSection.KeyChange -> if (item++ in items) {
-                    SongKeyChange(
+                    is RenderSection.KeyChange -> SongKeyChange(
                         modifier = Modifier.padding(vertical = INLINE_COMMENT_GAP),
                         keyChange = part,
                         chordStyle = chordStyle,
                     )
+
+                    is SectionPart.Lines -> Unit
                 }
 
-                is SectionPart.Lines -> part.runs.forEach { group ->
-                    val kind = group.first().foldableKind()
-                    if (kind == null) {
-                        group.forEach { line ->
-                            if (item++ in items) when (line) {
-                                is ChordProLine.Lyrics -> if (line.chords.isEmpty()) {
-                                    Text(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        text = line.text,
-                                        style = lyricsStyle,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                    )
-                                } else {
-                                    SongLineWithChords(
-                                        line = line,
-                                        lyricsStyle = lyricsStyle,
-                                        textMeasurements = textMeasurements,
-                                    )
-                                }
-
-                                // Never reached: tablature and grid lines are always part of a run of their own.
-                                is ChordProLine.Tab, is ChordProLine.Grid -> Unit
-
-                                ChordProLine.Blank -> Text(
-                                    text = "",
-                                    style = lyricsStyle,
-                                )
-                            }
-                        }
-                        return@forEach
-                    }
-                    val firstSlotItem = item
-                    val slotCount = group.runSlotCount(kind)
-                    item += slotCount
-                    val shownSlots = (0 until slotCount).filter { firstSlotItem + it in items }
-                    val runModifier = if (wholeSectionKind != null || foldedRuns == null) {
-                        Modifier
-                    } else {
-                        val run = runNameCounts.nextRunFoldKey(sectionFold = sectionFold, label = group.first().environmentLabel, kind = kind)
-                        if (0 in shownSlots) FoldToggleRow(
-                            kind = kind,
-                            label = group.first().environmentLabel ?: defaultLabels.labelOf(kind),
-                            toggle = FoldToggle(isExpanded = !foldedRuns.isCollapsed(run), onToggled = { foldedRuns.toggle(run) }),
-                            style = headerStyle,
-                            chevronSize = chevronSize,
+                is SectionItem.Line -> when (val line = sectionItem.line) {
+                    is ChordProLine.Lyrics -> if (line.chords.isEmpty()) {
+                        Text(
+                            modifier = Modifier.fillMaxWidth(),
+                            text = line.text,
+                            style = lyricsStyle,
+                            color = MaterialTheme.colorScheme.onSurface,
                         )
-                        if (foldedRuns.isCollapsed(run)) return@forEach
-                        Modifier.fadingIn(isFadingIn = foldedRuns.hasBeenToggled(run))
+                    } else {
+                        SongLineWithChords(
+                            line = line,
+                            lyricsStyle = lyricsStyle,
+                            textMeasurements = textMeasurements,
+                        )
                     }
-                    if (shownSlots.isEmpty()) return@forEach
-                    when (kind) {
-                        FoldableKind.TAB -> {
-                            val lines = remember(group) { group.map { (it as? ChordProLine.Tab)?.text.orEmpty() } }
-                            val rows = remember(lines, monospaceLyricsStyle, textMeasurements) {
-                                textMeasurements.tabRows(lines, monospaceLyricsStyle)
-                            }
-                            shownSlots.forEach { slot ->
-                                SongTabBlock(
-                                    modifier = runModifier.fillMaxWidth(),
-                                    lines = lines,
-                                    rows = rows,
-                                    slot = slot,
-                                    isLastSlot = slot == slotCount - 1,
-                                )
-                            }
-                        }
 
-                        FoldableKind.GRID -> Column(modifier = runModifier.fillMaxWidth()) {
-                            val alignedLines = remember(group, textMeasurements) { textMeasurements.gridBars(group) }
-                            shownSlots.forEach { slot ->
-                                alignedLines.getOrNull(slot)?.let { bars ->
-                                    SongGridLine(
-                                        bars = bars,
-                                        lyricsStyle = monospaceLyricsStyle,
-                                        chordStyle = monospaceChordStyle,
-                                    )
-                                }
-                            }
-                        }
+                    // Never reached: tablature and grid lines are always part of a run of their own.
+                    is ChordProLine.Tab, is ChordProLine.Grid -> Unit
+
+                    ChordProLine.Blank -> Text(
+                        text = "",
+                        style = lyricsStyle,
+                    )
+                }
+
+                is SectionItem.RunSlot -> {
+                    // The slots of one run this chunk holds are drawn together, under the run's one toggle.
+                    var lastSlotItem = item
+                    while (lastSlotItem < lastItem && (sectionItems[lastSlotItem + 1] as? SectionItem.RunSlot)?.runFoldKey == sectionItem.runFoldKey) {
+                        lastSlotItem++
                     }
+                    SectionRun(
+                        run = sectionItem.run,
+                        kind = sectionItem.kind,
+                        runFoldKey = sectionItem.runFoldKey,
+                        slotCount = sectionItem.slotCount,
+                        shownSlots = sectionItem.slot..sectionItem.slot + lastSlotItem - item,
+                        hasToggle = wholeSectionKind == null,
+                        foldedRuns = foldedRuns,
+                        defaultLabels = defaultLabels,
+                        headerStyle = headerStyle,
+                        chevronSize = chevronSize,
+                        monospaceLyricsStyle = monospaceLyricsStyle,
+                        monospaceChordStyle = monospaceChordStyle,
+                        textMeasurements = textMeasurements,
+                    )
+                    item = lastSlotItem
+                }
+            }
+            item++
+        }
+    }
+}
+
+/**
+ * The [shownSlots] of one run of tablature or grid lines, under the run's own toggle where it has one ([hasToggle], and
+ * [foldedRuns] given): the toggle is drawn with the run's first slot, and a folded run draws nothing else.
+ */
+@Composable
+private fun SectionRun(
+    run: List<ChordProLine>,
+    kind: FoldableKind,
+    runFoldKey: String,
+    slotCount: Int,
+    shownSlots: IntRange,
+    hasToggle: Boolean,
+    foldedRuns: FoldedRuns?,
+    defaultLabels: DefaultSectionLabels,
+    headerStyle: TextStyle,
+    chevronSize: Dp,
+    monospaceLyricsStyle: TextStyle,
+    monospaceChordStyle: TextStyle,
+    textMeasurements: SongTextMeasurements,
+) {
+    val runModifier = if (!hasToggle || foldedRuns == null) {
+        Modifier
+    } else {
+        if (0 in shownSlots) FoldToggleRow(
+            kind = kind,
+            label = run.first().environmentLabel ?: defaultLabels.labelOf(kind),
+            toggle = FoldToggle(isExpanded = !foldedRuns.isCollapsed(runFoldKey), onToggled = { foldedRuns.toggle(runFoldKey) }),
+            style = headerStyle,
+            chevronSize = chevronSize,
+        )
+        if (foldedRuns.isCollapsed(runFoldKey)) return
+        Modifier.fadingIn(isFadingIn = foldedRuns.hasBeenToggled(runFoldKey))
+    }
+    when (kind) {
+        FoldableKind.TAB -> {
+            val lines = remember(run) { run.map { (it as? ChordProLine.Tab)?.text.orEmpty() } }
+            val rows = remember(lines, monospaceLyricsStyle, textMeasurements) {
+                textMeasurements.tabRows(lines, monospaceLyricsStyle)
+            }
+            shownSlots.forEach { slot ->
+                SongTabBlock(
+                    modifier = runModifier.fillMaxWidth(),
+                    lines = lines,
+                    rows = rows,
+                    slot = slot,
+                    isLastSlot = slot == slotCount - 1,
+                )
+            }
+        }
+
+        FoldableKind.GRID -> Column(modifier = runModifier.fillMaxWidth()) {
+            val alignedLines = remember(run, textMeasurements) { textMeasurements.gridBars(run) }
+            shownSlots.forEach { slot ->
+                alignedLines.getOrNull(slot)?.let { bars ->
+                    SongGridLine(
+                        bars = bars,
+                        lyricsStyle = monospaceLyricsStyle,
+                        chordStyle = monospaceChordStyle,
+                    )
                 }
             }
         }

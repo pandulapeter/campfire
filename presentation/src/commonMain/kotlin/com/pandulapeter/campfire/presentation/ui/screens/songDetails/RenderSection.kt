@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 import com.pandulapeter.campfire.chordpro.model.CommentStyle
 import com.pandulapeter.campfire.presentation.ui.chords.ChordCell
+import com.pandulapeter.campfire.presentation.ui.songLayout.FoldableKind
 import com.pandulapeter.campfire.presentation.ui.songLayout.chordSlotCount
 
 /**
@@ -118,6 +119,9 @@ internal sealed interface RenderSection {
         }
         val itemCount get() = itemKinds.size
 
+        /** What each of the section's items is, in the order [itemKinds] counts them, see [SectionItem]. */
+        val sectionItems: List<SectionItem> = buildSectionItems(parts, foldKey)
+
         /** Where the section may be cut, see [sectionChunkStarts]. */
         val chunkStarts = sectionChunkStarts(itemKinds)
         val wholeFoldableKind = lines.wholeFoldableKind()
@@ -162,5 +166,55 @@ internal sealed interface SectionPart {
     data class Lines(val lines: List<ChordProLine>) : SectionPart {
         /** Run boundaries depend on the lines alone, including their environment labels. */
         val runs = lines.groupIntoRuns()
+    }
+}
+
+/**
+ * One item of a [RenderSection.Lines], worked out with the section rather than while it is composed: a section that may
+ * be cut is composed as one chunk per item, and a chunk that had to walk the section to find its own items would make a
+ * section of thousands of lines cost the square of that on every step of a pinch.
+ */
+@Immutable
+internal sealed interface SectionItem {
+
+    /** A comment or a key change standing between two lines. */
+    @Immutable
+    data class Inline(val part: SectionPart) : SectionItem
+
+    /** A line that is not part of a run of tablature or a grid. */
+    @Immutable
+    data class Line(val line: ChordProLine) : SectionItem
+
+    /** The [slot]-th of the [slotCount] pieces of a run of tablature or grid lines, folded under [runFoldKey]. */
+    @Immutable
+    data class RunSlot(
+        val run: List<ChordProLine>,
+        val kind: FoldableKind,
+        val slot: Int,
+        val slotCount: Int,
+        val runFoldKey: String,
+    ) : SectionItem
+}
+
+/**
+ * The items of the section folded as [sectionFold] that consists of [parts], one for each of its [RenderSection.Lines.itemKinds].
+ * Every run's fold is counted, drawn or not, since a run is named by how many runs of its name came before it in the section.
+ */
+private fun buildSectionItems(parts: List<SectionPart>, sectionFold: String): List<SectionItem> {
+    val runNameCounts = mutableMapOf<String, Int>()
+    return parts.flatMap { part ->
+        when (part) {
+            is RenderSection.Comment, is RenderSection.KeyChange -> listOf(SectionItem.Inline(part))
+            is SectionPart.Lines -> part.runs.flatMap { run ->
+                val kind = run.first().foldableKind()
+                if (kind == null) {
+                    run.map { SectionItem.Line(it) }
+                } else {
+                    val runFoldKey = runNameCounts.nextRunFoldKey(sectionFold = sectionFold, label = run.first().environmentLabel, kind = kind)
+                    val slotCount = run.runSlotCount(kind)
+                    List(slotCount) { slot -> SectionItem.RunSlot(run = run, kind = kind, slot = slot, slotCount = slotCount, runFoldKey = runFoldKey) }
+                }
+            }
+        }
     }
 }

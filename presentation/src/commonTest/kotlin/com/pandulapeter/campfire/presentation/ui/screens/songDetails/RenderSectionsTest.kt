@@ -12,7 +12,11 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.chords.ChordProTransposer
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
+import com.pandulapeter.campfire.chordpro.model.ChordProLine
+import com.pandulapeter.campfire.chordpro.model.CommentStyle
+import com.pandulapeter.campfire.chordpro.model.GridToken
 import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
+import com.pandulapeter.campfire.presentation.ui.songLayout.FoldableKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -291,5 +295,39 @@ class RenderSectionsTest {
         val searched = model.withSearchedShapes()
         assertFalse(searched.hasPendingShapes)
         assertSame(model.sections, searched.sections)
+    }
+
+    @Test
+    fun `every item of a section is worked out with the section`() {
+        val tab = listOf(ChordProLine.Tab("e|---0---|"), ChordProLine.Tab("B|---1---|", continuesEnvironment = true))
+        val grid = List(3) { ChordProLine.Grid(listOf(GridToken.Bar("|"), GridToken.Chord("G"), GridToken.Bar("|")), label = "Rhythm") }
+        val secondTab = listOf(ChordProLine.Tab("e|---3---|"))
+        val section = RenderSection.Lines(
+            header = "Intro",
+            foldKey = "intro#1",
+            parts = listOf(
+                SectionPart.Lines(listOf(ChordProLine.Lyrics(text = "Sung", chords = emptyList()))),
+                RenderSection.Comment(text = "Slower", style = CommentStyle.ITALIC),
+                SectionPart.Lines(tab + ChordProLine.Blank + grid + secondTab),
+            ),
+            isOnCard = false,
+        )
+        val items = section.sectionItems
+        assertEquals(section.itemKinds.size, items.size)
+        section.itemKinds.zip(items).forEach { (kind, item) ->
+            when (kind) {
+                SectionItemKind.COMMENT -> assertTrue(item is SectionItem.Inline)
+                SectionItemKind.RUN -> assertTrue(item is SectionItem.RunSlot)
+                SectionItemKind.BLANK -> assertEquals(SectionItem.Line(ChordProLine.Blank), item)
+                SectionItemKind.CONTENT -> assertTrue(item is SectionItem.Line)
+            }
+        }
+        val slots = items.filterIsInstance<SectionItem.RunSlot>()
+        assertEquals(listOf("intro#1/tab#1", "intro#1/Rhythm#1", "intro#1/tab#2"), slots.map { it.runFoldKey }.distinct())
+        val gridSlots = slots.filter { it.kind == FoldableKind.GRID }
+        assertEquals(listOf(0, 1, 2), gridSlots.map { it.slot })
+        assertTrue(gridSlots.all { it.slotCount == 3 })
+        assertEquals(tab.runSlotCount(FoldableKind.TAB), slots.count { it.runFoldKey == "intro#1/tab#1" })
+        assertEquals(secondTab.runSlotCount(FoldableKind.TAB), slots.count { it.runFoldKey == "intro#1/tab#2" })
     }
 }
