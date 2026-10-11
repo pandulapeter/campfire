@@ -117,6 +117,7 @@ internal class TunerEngine(
 
     private suspend fun hear(sessionId: Int, sampleRate: Int) {
         val detector = PitchDetector(sampleRate)
+        val estimates = LatestEstimate(detector::detect)
         val tracker = PitchTracker()
         val window = FloatArray(detector.inputSize)
         // The window still holds the tone for its own length after the speaker stops, and the input's latency on top.
@@ -154,7 +155,7 @@ internal class TunerEngine(
                 setListening(TunerListening.Hearing(issue = gestureIssue))
             } else if (position != AudioInput.NO_WINDOW) {
                 val range = PitchDetector.rangeFor(config.tuning, config.referencePitch)
-                val estimate = detector.detect(window, range.start, range.endInclusive)
+                val estimate = estimates.of(window, position, range)
                 val tracked = tracker.step(estimate, start.elapsedNow().inWholeMilliseconds, config)
                 setListening(
                     TunerListening.Hearing(

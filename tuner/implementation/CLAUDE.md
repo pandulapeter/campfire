@@ -19,7 +19,8 @@ this module. Nothing here reaches the network, and nothing heard is kept beyond 
 - `TunerEngine` runs every call on one confined coroutine, as `MetronomeEngine` does, each start a session whose late
   callbacks are ignored; a start that throws, against the contract, is a failed one and closes the input. While
   listening it polls the input's latest window every 33 ms, runs the detector and the tracker over it and publishes a
-  state only when it differs. Each window comes with the input's frame position: one that has not moved for half a
+  state only when it differs. A window handed out again (an iOS tap is read over about three polls) is not analysed
+  again, but its answer is still stepped through the tracker, whose timings expect a step every poll (`LatestEstimate`). Each window comes with the input's frame position: one that has not moved for half a
   second (an input that stopped delivering frames without saying so, a suspended web context), or an input waiting for a
   gesture, is heard as nothing, since the tracker would hold a repeated window of a clear note for ever. While a tone
   sounds, and for a window plus 150 ms after it stops, the tracker is reset and nothing is read, since the microphone
@@ -87,7 +88,7 @@ Tests (`desktopTest`): `PitchDetectorTest` (sines and Karplus-Strong strings at 
 48 kHz, under noise, a fundamental 20 dB under its second harmonic, silence, noise and a chord), `PitchTrackerTest`,
 `ToneSynthesizerTest` (the seam, the level, the tone read back by the detector), `TunerEngineTest` (sessions, the late
 answer of a stopped start, the refused start, the one reopen, updates, tones over readings, over `FakeAudioInput` and
-`FakeToneOutput` on virtual time), `SampleRingTest` (wraparounds, full scale, clearing), `FftTest` (the round trip, an
-impulse against the direct DFT), and `RecordedStringsTest`, which reads
-every 16-bit WAV dropped into `desktopTest/resources/tuner/`, named by the note it holds (see its README), the way the
+`FakeToneOutput` on virtual time), `SampleRingTest` (wraparounds, full scale, clearing), `LatestEstimateTest` (a
+window handed out again is not analysed twice), `FftTest` (the round trip, an impulse against the direct DFT), and
+`RecordedStringsTest`, which reads every 16-bit WAV dropped into `desktopTest/resources/tuner/`, named by the note it holds (see its README), the way the
 microphone is read.
