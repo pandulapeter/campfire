@@ -58,6 +58,8 @@ import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.currentLanguage
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.ic_label
+import com.pandulapeter.campfire.presentation.resources.ic_language
 import com.pandulapeter.campfire.presentation.resources.songs_languages
 import com.pandulapeter.campfire.presentation.resources.songs_languages_clear
 import com.pandulapeter.campfire.presentation.resources.songs_languages_match_mode
@@ -73,6 +75,7 @@ import com.pandulapeter.campfire.presentation.resources.songs_filters_reset
 import com.pandulapeter.campfire.presentation.resources.songs_filters_show_less
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
+import org.jetbrains.compose.resources.painterResource
 
 /**
  * The filters of the song list, shown in a side panel on wide enough screens and in a bottom sheet otherwise, and
@@ -259,6 +262,8 @@ private fun TagFilters(
             songCount = tag.songCount,
             isSelected = tag.name.lowercase() in selected,
             onClick = { onTagClicked(tag.name) },
+            leadingIcon = painterResource(Res.drawable.ic_label),
+            leadingIconFill = tagColor(tag.name)?.color() ?: Color.Unspecified,
         )
     }
     MatchModeChoice(
@@ -324,6 +329,7 @@ private fun LanguageFilters(
             songCount = language.songCount,
             isSelected = language.code in selectedLanguages,
             onClick = { onLanguageClicked(language.code) },
+            leadingIcon = painterResource(Res.drawable.ic_language),
         )
     }
     MatchModeChoice(

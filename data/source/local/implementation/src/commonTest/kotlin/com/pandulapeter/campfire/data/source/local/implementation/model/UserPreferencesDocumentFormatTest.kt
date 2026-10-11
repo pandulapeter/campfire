@@ -104,6 +104,14 @@ internal class UserPreferencesDocumentFormatTest {
     }
 
     @Test
+    fun `gives up only the tag colors that are not text`() {
+        val decoded = UserPreferencesDocumentFormat.decode("""{"tagColors": {"christmas": "red", "folk": 3, "rock": "blue"}}""")
+
+        assertEquals(mapOf("christmas" to "red", "rock" to "blue"), decoded.document.tagColors)
+        assertFalse(decoded.isIntact)
+    }
+
+    @Test
     fun `gives up transpositions that are not an object`() {
         val decoded = UserPreferencesDocumentFormat.decode("""{"transpositions": [1, 2], "themeColor": "forest"}""")
 

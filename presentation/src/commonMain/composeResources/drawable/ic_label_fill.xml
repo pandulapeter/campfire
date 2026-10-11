@@ -1,0 +1,25 @@
+<!--
+ This file is part of Campfire.
+ Copyright (c) Pandula Péter 2017-2026.
+ https://github.com/pandulapeter/campfire
+
+ This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ If a copy of the MPL was not distributed with this file, You can obtain one at
+ https://mozilla.org/MPL/2.0/.
+-->
+<!--
+ The inside of ic_label, drawn under it in a tag's color. The stroke takes the fill half a unit under the outline, so
+ that no seam of the background shows between the two where their antialiased edges meet.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#000000"
+        android:strokeColor="#000000"
+        android:strokeWidth="1"
+        android:strokeLineJoin="round"
+        android:pathData="M13 20L4 11V4H11L20 13Z" />
+</vector>

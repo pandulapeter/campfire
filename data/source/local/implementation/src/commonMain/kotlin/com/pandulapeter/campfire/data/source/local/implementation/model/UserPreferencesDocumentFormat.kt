@@ -64,9 +64,9 @@ internal object UserPreferencesDocumentFormat {
     /**
      * The field if a document holding nothing else decodes, which asks the serializer itself instead of repeating
      * the type of every field here - a field added to the document later is covered without being named. The
-     * transpositions, the tempos, the capos, the songs' accents and the folded sections are the fields looked into, because
-     * they are the ones that are a collection of the user's own choices: a single entry of the wrong shape costs that
-     * entry and not the map.
+     * transpositions, the tempos, the capos, the songs' accents, the folded sections and the tag colors are the fields
+     * looked into, because they are the ones that are a collection of the user's own choices: a single entry of the
+     * wrong shape costs that entry and not the map.
      */
     private fun readableField(key: String, value: JsonElement): Pair<String, JsonElement>? {
         val field = when {
@@ -83,6 +83,8 @@ internal object UserPreferencesDocumentFormat {
                 value.filterValues { it is JsonArray }.mapValues { (_, keys) -> JsonArray((keys as JsonArray).filter { it is JsonPrimitive && it.isString }) }
             )
 
+            key == TAG_COLORS_KEY && value is JsonObject -> JsonObject(value.filterValues { it is JsonPrimitive && it.isString })
+
             else -> value
         }
         return try {
@@ -98,4 +100,5 @@ internal object UserPreferencesDocumentFormat {
     private const val CAPOS_KEY = "capos"
     private const val BEAT_LEVELS_KEY = "beatLevels"
     private const val FOLDED_SECTIONS_KEY = "foldedSections"
+    private const val TAG_COLORS_KEY = "tagColors"
 }

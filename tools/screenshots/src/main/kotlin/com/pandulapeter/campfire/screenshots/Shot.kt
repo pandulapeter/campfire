@@ -25,6 +25,7 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.SettingsTab
+import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroupHeader
 import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroups
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.JsonElement
@@ -104,7 +105,7 @@ internal open class PrepareScope(
     /** Has the Songs screen open with the section of [artist] at its top, its header pinned under the app bar. */
     suspend fun scrollSongsTo(artist: String) {
         val groups = awaitSongGroups { it.groups.isNotEmpty() }.groups
-        val section = groups.indexOfFirst { (it.header as? SongSection.Header.Artist)?.name == artist }
+        val section = groups.indexOfFirst { ((it.header as? SongGroupHeader.Section)?.header as? SongSection.Header.Artist)?.name == artist }
         check(section >= 0) { "The song list has no section for $artist." }
         // Every group is its header's item followed by one item per song.
         viewModel.songsScrollPosition.index = groups.take(section).sumOf { (if (it.header == null) 0 else 1) + it.songs.size }

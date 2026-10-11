@@ -13,8 +13,8 @@ import com.pandulapeter.campfire.data.model.domain.UserPreferences
 
 /**
  * The part of [UserPreferences] every device connected to one cloud folder shares: how each song of the library is
- * played when it is opened from the library rather than from a setlist, and the shape the player chose for each chord
- * ([chords], [UserPreferences.chordVoicings]). A setlist's own overrides are in its file and travel with it, and
+ * played when it is opened from the library rather than from a setlist, the shape the player chose for each chord
+ * ([chords], [UserPreferences.chordVoicings]) and the color of each tag ([tags], [UserPreferences.tagColors]). A setlist's own overrides are in its file and travel with it, and
  * everything else in the preferences - the folded sections included - is one reader's own.
  */
 internal data class SyncedPreferences(
@@ -23,6 +23,7 @@ internal data class SyncedPreferences(
     val capos: Map<String, Int> = emptyMap(),
     val beatLevels: Map<String, Map<String, List<String>>> = emptyMap(),
     val chords: Map<String, Map<String, String>> = emptyMap(),
+    val tags: Map<String, String> = emptyMap(),
 ) {
 
     /**
@@ -36,6 +37,7 @@ internal data class SyncedPreferences(
         capos = preferences.capos.updated(from = since.capos, to = capos),
         beatLevels = preferences.beatLevels.updated(from = since.beatLevels, to = beatLevels),
         chordVoicings = preferences.chordVoicings.flattened().updated(from = since.chords.flattened(), to = chords.flattened()).nested(),
+        tagColors = preferences.tagColors.updated(from = since.tags, to = tags),
     )
 
     /**
@@ -48,6 +50,7 @@ internal data class SyncedPreferences(
         capos = capos.respelled(spelling, isPreferred),
         beatLevels = beatLevels.respelled(spelling, isPreferred),
         chords = chords,
+        tags = tags,
     )
 
     private fun <T> Map<String, T>.respelled(spelling: (String) -> String, isPreferred: (String) -> Boolean) =
@@ -80,6 +83,7 @@ internal data class SyncedPreferences(
             capos = preferences.capos,
             beatLevels = preferences.beatLevels,
             chords = preferences.chordVoicings,
+            tags = preferences.tagColors,
         )
 
         /** No instrument id has one. */

@@ -606,6 +606,13 @@
     <string name="song_details_tags_add">Add tags</string>
     <string name="song_details_tags_search">Find or create a tag</string>
     <string name="song_details_tag_create">Create the \"%1$s\" tag</string>
+    <string name="song_details_tag_color">Color of the \"%1$s\" tag</string>
+    <string name="song_details_tag_color_none">No color</string>
+    <string name="song_details_tag_color_lime">Lime</string>
+    <string name="song_details_tag_color_cyan">Cyan</string>
+    <string name="song_details_tag_color_indigo">Indigo</string>
+    <string name="song_details_tag_color_brown">Brown</string>
+    <string name="song_details_tag_color_black">Black</string>
     <string name="song_details_metadata_edit">Edit song details</string>
     <string name="song_details_song_info">About the song</string>
     <string name="song_details_info_tags">Tags</string>

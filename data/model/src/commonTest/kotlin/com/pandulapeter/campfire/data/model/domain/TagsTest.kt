@@ -28,4 +28,9 @@ class TagsTest {
     fun `the order is kept`() {
         assertEquals(listOf("Demo", "Folk", "Rock"), normalizedTags(listOf("Demo", "Folk", "demo", "Rock")))
     }
+
+    @Test
+    fun `a tag's key is the same for every case and Unicode form of it`() {
+        assertEquals(tagKey("café"), tagKey("CAFE\u0301"))
+    }
 }

@@ -52,6 +52,7 @@ import com.pandulapeter.campfire.presentation.ui.components.KeepChecklistRowsInP
 import com.pandulapeter.campfire.presentation.ui.components.checklistItems
 import com.pandulapeter.campfire.presentation.ui.components.rememberChecklistOrder
 import com.pandulapeter.campfire.presentation.ui.components.sortedAlphabeticallyBy
+import com.pandulapeter.campfire.presentation.ui.components.tagColorOf
 import com.pandulapeter.campfire.presentation.ui.components.ScrollToStartWhenChanged
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.listItemAnimation
@@ -66,7 +67,8 @@ import org.jetbrains.compose.resources.painterResource
  * ticked and at the top, and a field that narrows the list and creates a tag the library does not have yet. As with the
  * languages ([LanguagesSheet]), the whole set is written when the sheet is confirmed, so a file the user owns is
  * rewritten once rather than once per checkbox. The checked tags lead the list as a selected group ([ChecklistOrder]),
- * which a tag checked later joins as a copy while the row itself stays where it was tapped.
+ * which a tag checked later joins as a copy while the row itself stays where it was tapped. Each row ends in the tag's
+ * mark, which gives it a color ([TagColorButton]), a tag typed but not yet saved included.
  *
  * Offering the library's tags before anything is typed is the point of the list, because a library where the same idea
  * is filed under "christmas", "Christmas" and "xmas" is a library whose tags filter nothing. For the same reason what is
@@ -92,6 +94,7 @@ internal fun TagsSheet(
     val libraryTags by viewModel.tags.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val sortingMode = userPreferences?.tagSortingMode ?: UserPreferences.LabelSortingMode.BY_USAGE
+    val tagColors = userPreferences?.tagColors.orEmpty()
     var query by rememberSaveable { mutableStateOf("") }
     // Saved, since the sheet outlives a recreated Activity and Save writes whatever is ticked at that moment.
     var draft by rememberSaveable(sheetKey, stateSaver = BulkLabelDraft.saver) {
@@ -212,6 +215,13 @@ internal fun TagsSheet(
                                 title = tag,
                                 state = draft.stateOf(tag.lowercase()),
                                 horizontalInset = DIALOG_CHECKLIST_ROW_INSET,
+                                trailingContent = {
+                                    TagColorButton(
+                                        tag = tag,
+                                        color = tagColorOf(tagColors, tag),
+                                        onColorSelected = { viewModel.setTagColor(tag, it) },
+                                    )
+                                },
                                 onClick = { draft = draft.toggled(tag.lowercase()) },
                             )
                         }

@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -41,6 +40,8 @@ import androidx.compose.ui.unit.dp
  * than the song title above it.
  *
  * @param onClick Null where the pill is only read, which is what the editor's preview shows.
+ * @param leadingIconFill The color the tag was given, painted inside its mark ([TagIcon]); unspecified for none, and
+ *   for a language, which has no color.
  * @param fontScale The song details' zoom, which the pills of its info card follow along with the lyrics; the text, the
  *   mark and the widest a pill may grow scale together, so that a zoomed tag is not ellipsized sooner than at rest.
  */
@@ -51,6 +52,7 @@ internal fun TagPill(
     isSelected: Boolean = false,
     onClick: (() -> Unit)? = null,
     leadingIcon: Painter? = null,
+    leadingIconFill: Color = Color.Unspecified,
     fontScale: Float = 1f,
 ) {
     val contentColor = if (isSelected) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
@@ -70,10 +72,10 @@ internal fun TagPill(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (leadingIcon != null) {
-                Icon(
+                TagIcon(
                     modifier = Modifier.padding(end = TAG_ICON_INSET).size(TAG_ICON_SIZE * fontScale),
                     painter = leadingIcon,
-                    contentDescription = null,
+                    fill = leadingIconFill,
                 )
             }
             Text(

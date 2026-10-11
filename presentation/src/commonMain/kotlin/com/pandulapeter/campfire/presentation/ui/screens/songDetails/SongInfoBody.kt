@@ -29,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
@@ -64,6 +65,7 @@ import com.pandulapeter.campfire.presentation.ui.components.TagFlowRow
 import com.pandulapeter.campfire.presentation.ui.components.TagPill
 import com.pandulapeter.campfire.presentation.ui.components.languageLabel
 import com.pandulapeter.campfire.presentation.ui.components.sortedAlphabeticallyBy
+import com.pandulapeter.campfire.presentation.ui.components.tagColor
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -162,7 +164,14 @@ internal fun SongInfoBody(
                 emptyLabel = stringResource(Res.string.song_details_tags_add),
             ) {
                 val tags = remember(metadata.tags) { metadata.tags.sortedAlphabeticallyBy { it } }
-                tags.forEach { TagPill(text = it, leadingIcon = painterResource(Res.drawable.ic_label), fontScale = fontScale) }
+                tags.forEach { tag ->
+                    TagPill(
+                        text = tag,
+                        leadingIcon = painterResource(Res.drawable.ic_label),
+                        leadingIconFill = tagColor(tag)?.color() ?: Color.Unspecified,
+                        fontScale = fontScale,
+                    )
+                }
             }
         }
         if (SongInfoGroupKind.LANGUAGES in groups) {

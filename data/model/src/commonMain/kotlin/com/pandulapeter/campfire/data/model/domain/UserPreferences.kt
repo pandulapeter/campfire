@@ -145,6 +145,16 @@ data class UserPreferences(
     val tagSortingMode: LabelSortingMode,
     /** The order the library's languages are offered in, a standing choice of its own like [tagSortingMode]. */
     val languageSortingMode: LabelSortingMode,
+    /**
+     * The color the user gave a tag, by its [tagKey] and then the color's id, which `:presentation` reads into its
+     * palette (an id it does not know, a later version's, is drawn as no color and kept as it is). A tag left at the
+     * default has no entry. One color per tag for the whole library, never exported but synced, like [chordVoicings].
+     *
+     * Nothing is ever dropped from it when the last song loses a tag: a tag only exists while a song carries it, so
+     * the library not holding one is as often a moment (the editor between two saves, a sync run halfway done, a library
+     * not read yet) as a decision, and a tag that comes back gets its color back.
+     */
+    val tagColors: Map<String, String> = emptyMap(),
     val printSettings: PrintSettings = PrintSettings(),
     val metronomeSettings: MetronomeSettings = MetronomeSettings(),
     /** Never exported or synced: which instrument one device tunes is that device's business. */

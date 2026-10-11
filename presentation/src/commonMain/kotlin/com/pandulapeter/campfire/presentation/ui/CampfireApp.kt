@@ -65,6 +65,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_sync_notificati
 import com.pandulapeter.campfire.presentation.resources.settings_sync_preparing
 import com.pandulapeter.campfire.presentation.resources.settings_sync_progress
 import com.pandulapeter.campfire.presentation.ui.components.LocalOverlayState
+import com.pandulapeter.campfire.presentation.ui.components.LocalTagColors
 import com.pandulapeter.campfire.presentation.ui.components.ProvideCoverArtImageLoader
 import com.pandulapeter.campfire.presentation.ui.platform.LocalSyncNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.SyncNotification
@@ -156,7 +157,10 @@ fun CampfireApp(
     ApplyLanguagePreference(userPreferences?.language)
     // Menus are counted into the view model's own overlay state rather than a global, so the key handlers and the web
     // build's history that read it read the one this app is composed with.
-    CompositionLocalProvider(LocalOverlayState provides viewModel.overlayState) {
+    CompositionLocalProvider(
+        LocalOverlayState provides viewModel.overlayState,
+        LocalTagColors provides (userPreferences?.tagColors ?: emptyMap()),
+    ) {
         CampfireTheme(
             uiMode = userPreferences?.uiMode,
             themeColor = userPreferences?.themeColor,

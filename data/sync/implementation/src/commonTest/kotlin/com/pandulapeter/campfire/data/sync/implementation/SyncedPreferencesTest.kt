@@ -290,6 +290,44 @@ class SyncedPreferencesTest {
         assertEquals(document["chords"], SyncedPreferencesDocument.withSongsWhere(document) { false }["chords"])
     }
 
+    // The tags
+
+    private fun tagsDocument(tags: String) = JsonObject(
+        mapOf("version" to JsonPrimitive(1), "songs" to JsonObject(emptyMap()), "tags" to Json.parseToJsonElement(tags)),
+    )
+
+    @Test
+    fun `two devices that colored different tags both keep their color, and a reset on one side gives way to a change`() = assertEquals(
+        tagsDocument("""{"christmas":"green","folk":"blue","rock":"pink"}"""),
+        SyncedPreferencesDocument.merge(
+            base = tagsDocument("""{"christmas":"red","rock":"red"}"""),
+            local = tagsDocument("""{"christmas":"green","folk":"blue","rock":"red"}"""),
+            remote = tagsDocument("""{"rock":"pink"}"""),
+        ),
+    )
+
+    @Test
+    fun `the tag colors are read and written beside the songs, what this version cannot read passing through`() {
+        val base = tagsDocument("""{"christmas":"red","folk":7}""")
+        assertEquals(SyncedPreferences(tags = mapOf("christmas" to "red")), SyncedPreferencesDocument.preferencesOf(base))
+        assertEquals(
+            tagsDocument("""{"folk":7,"rock":"ultraviolet"}"""),
+            SyncedPreferencesDocument.localDocument(base = base, preferences = SyncedPreferences(tags = mapOf("rock" to "ultraviolet"))),
+        )
+    }
+
+    @Test
+    fun `a tag's color is applied value by value, and never dropped with a song`() {
+        val preferences = defaultUserPreferences().copy(tagColors = mapOf("christmas" to "red", "folk" to "blue", "rock" to "pink"))
+        val applied = SyncedPreferences(tags = mapOf("christmas" to "green", "jazz" to "teal")).applyTo(
+            preferences = preferences,
+            since = SyncedPreferences(tags = mapOf("christmas" to "red", "folk" to "blue")),
+        )
+        assertEquals(mapOf("christmas" to "green", "jazz" to "teal", "rock" to "pink"), applied.tagColors)
+        val document = tagsDocument("""{"christmas":"green"}""")
+        assertEquals(document["tags"], SyncedPreferencesDocument.withSongsWhere(document) { false }["tags"])
+    }
+
     // The run's step
 
     @Test

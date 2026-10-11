@@ -71,6 +71,7 @@ internal fun SongLabels(
                 isSelected = onTagClicked != null && selectedTags.any { it.equals(tag, ignoreCase = true) },
                 onClick = onTagClicked?.let { { it(tag) } },
                 leadingIcon = painterResource(Res.drawable.ic_label),
+                leadingIconFill = tagColor(tag)?.color() ?: Color.Unspecified,
             )
         }
         // Each kind of label carries the mark the song details card and the overflow menu give it: without them a pill

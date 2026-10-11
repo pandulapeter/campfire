@@ -113,6 +113,15 @@ internal class UserPreferencesMappersTest {
     }
 
     @Test
+    fun `tag colors survive a round trip, a color this version does not know included`() {
+        val defaults = UserPreferencesDocumentFormat.decode("{}").document.toModel()
+        assertEquals(emptyMap(), defaults.tagColors)
+        val chosen = defaults.copy(tagColors = mapOf("christmas" to "red", "folk" to "ultraviolet"))
+        assertEquals(chosen, UserPreferencesDocumentFormat.decode(UserPreferencesDocumentFormat.encode(chosen.toDocument())).document.toModel())
+        assertEquals(emptyMap(), UserPreferencesDocument(tagColors = mapOf("christmas" to " ")).toModel().tagColors)
+    }
+
+    @Test
     fun `an unknown enum ID falls back for that field only`() {
         val preferences = UserPreferencesDocument(
             sortingMode = "by_mood",

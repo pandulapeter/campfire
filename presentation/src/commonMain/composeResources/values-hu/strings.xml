@@ -606,6 +606,13 @@
     <string name="song_details_tags_add">Címkék hozzáadása</string>
     <string name="song_details_tags_search">Címke keresése vagy létrehozása</string>
     <string name="song_details_tag_create">A(z) „%1$s” címke létrehozása</string>
+    <string name="song_details_tag_color">A(z) „%1$s” címke színe</string>
+    <string name="song_details_tag_color_none">Nincs szín</string>
+    <string name="song_details_tag_color_lime">Citromzöld</string>
+    <string name="song_details_tag_color_cyan">Cián</string>
+    <string name="song_details_tag_color_indigo">Indigó</string>
+    <string name="song_details_tag_color_brown">Barna</string>
+    <string name="song_details_tag_color_black">Fekete</string>
     <string name="song_details_metadata_edit">Daladatok szerkesztése</string>
     <string name="song_details_song_info">A dalról</string>
     <string name="song_details_info_tags">Címkék</string>

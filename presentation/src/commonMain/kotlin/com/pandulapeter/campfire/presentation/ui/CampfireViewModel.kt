@@ -41,6 +41,7 @@ import com.pandulapeter.campfire.presentation.ui.chords.toChordInstrument
 import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.components.LabelsOnEverySong
 import com.pandulapeter.campfire.presentation.ui.components.Placeholder
+import com.pandulapeter.campfire.presentation.ui.components.TagColor
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.firstRun.FirstRunController
@@ -1526,6 +1527,8 @@ class CampfireViewModel(
     fun setLanguageMatchMode(value: UserPreferences.MatchMode) = songListState.setLanguageMatchMode(value)
 
     fun setTagSortingMode(value: UserPreferences.LabelSortingMode) = preferencesController.setTagSortingMode(value)
+
+    internal fun setTagColor(tag: String, color: TagColor?) = preferencesController.setTagColor(tag, color?.id)
 
     fun setLanguageSortingMode(value: UserPreferences.LabelSortingMode) = preferencesController.setLanguageSortingMode(value)
 

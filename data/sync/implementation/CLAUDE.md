@@ -205,8 +205,11 @@ The player's chord shapes (`UserPreferences.chordVoicings`) are a `chords` membe
 then by the chord's id, merged the same way value by value; a shape is any string and an instrument this version does
 not know is kept, a non-string value passes through, nothing in it is ever dropped with a song, and the member is only
 written once there is something in it, so a document from before it stays the same bytes.
-`localChanges` is what schedules a run when the four maps or the chord shapes change, filtering out the values the
-step wrote itself.
+The tags' colors (`UserPreferences.tagColors`) are a `tags` member beside them, tag (`tagKey`) to palette id, read and
+written exactly as the chords are: any string is a color, a non-string passes through, nothing is dropped with a song,
+and the member only appears once something is in it.
+`localChanges` is what schedules a run when the four maps, the chord shapes or the tag colors change, filtering out
+the values the step wrote itself.
 `SyncedPreferencesTest` covers the merge, the document and the step against the fakes.
 `cancelConnection` is the way out of `Connecting` that does not need the `connect()` that got there to be running
 still — on the web it never is, and a page restored from the back/forward cache is otherwise connecting for good.
@@ -307,8 +310,9 @@ Tested with `commonTest`, run with `./gradlew :data:sync:implementation:desktopT
   (`UserPreferences.chordVoicings`): a `chords` member beside `songs`, by instrument and then by the chord's notes
   (`{"guitar": {"F:0.4.7": "x x 3 2 1 1"}}`), merged value by value, so two devices that chose for different chords both
   keep their choice and two choices for one chord keep this device's; an instrument this version does not know passes
-  through, and no entry is ever dropped with a song, since none belongs to one. A change to those four maps or to the
-  chord shapes schedules a run like a change to a file does; the run's own write does not.
+  through, and no entry is ever dropped with a song, since none belongs to one. The tags' colors
+  (`UserPreferences.tagColors`) are a `tags` member of the same kind (`{"christmas": "red"}`). A change to those four
+  maps, the chord shapes or the tag colors schedules a run like a change to a file does; the run's own write does not.
 - Authorization is OAuth 2.0 with PKCE and no client secret, which is what lets this work with no backend. The four
   platforms get back from the consent page in four different ways, all behind `SyncAuthenticator`.
 

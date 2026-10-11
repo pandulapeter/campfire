@@ -313,6 +313,18 @@ takes them off — opened from the song details' About the song sheet, the edito
 the Songs screen — shares; one preference per group, `UserPreferences.tagSortingMode` and `languageSortingMode`, the
 languages being ordered the same way).
 
+### A tag's color is the library's, not the song's
+
+**A tag's color is a preference rather than part of any file** (`UserPreferences.tagColors`, by `tagKey`, so every
+case and Unicode form of a tag shares one): a tag belongs to every song that carries it, and a color written into one
+file would have to be written into all of them and would disagree the moment one was edited elsewhere. It is synced
+with the other library-wide choices (see `data/sync/implementation/CLAUDE.md`), never exported, and never dropped when
+the last song loses the tag, since that is as often a moment as a decision and a tag that comes back keeps its color.
+It is painted inside the tag's mark wherever a tag carries one (`TagIcon`, see `components/CLAUDE.md`) and given in the
+tag sheet, from the mark at the end of each row, which opens a popup of the colors (`dialogs/TagColorButton.kt`) and
+writes the choice at once rather than with the sheet's Done, since it is not part of the songs the sheet edits. The
+Songs screen's filters carry the marks too (a language its own), so a colored tag is found by its color there as well.
+
 ### The language of a song is carried the same way, and is its own category rather than one more tag
 
 **The language of a song is carried the same way, and is its own category rather than one more tag**: a `{meta: language

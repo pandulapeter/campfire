@@ -15,3 +15,10 @@ package com.pandulapeter.campfire.data.model.domain
  * through this, or a sheet opened from the editor would show a different set from the list.
  */
 fun normalizedTags(tags: Iterable<String>): List<String> = tags.map { it.normalizedToNfc() }.distinctBy { it.lowercase() }
+
+/**
+ * What a tag is told apart from every other by, which [normalizedTags] keeps one spelling per: its NFC form, whatever
+ * its case. A setting kept for a tag ([UserPreferences.tagColors]) is filed under it, so that "Christmas" written on one
+ * song and "christmas" on another, or one spelled decomposed by a Mac, share it.
+ */
+fun tagKey(tag: String) = tag.normalizedToNfc().lowercase()

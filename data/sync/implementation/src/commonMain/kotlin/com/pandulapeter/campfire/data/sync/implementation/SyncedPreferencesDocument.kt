@@ -25,8 +25,8 @@ import kotlinx.serialization.json.intOrNull
  * The document is kept as a JSON tree rather than decoded into a class, so that it can grow without an older version
  * losing what a newer one wrote: a song's entry may gain a field, and settings that have nothing to do with the songs
  * may join [SONGS] at the top level, and a version that does not know them passes them through untouched. This
- * version only ever writes the paths it owns ([TRANSPOSITION], [TEMPO], [CAPO] and [BEAT_LEVELS] under each song of [SONGS], and the
- * shape of each chord under its instrument in [CHORDS]), and of those only the values it can read; everything else in
+ * version only ever writes the paths it owns ([TRANSPOSITION], [TEMPO], [CAPO] and [BEAT_LEVELS] under each song of [SONGS], the
+ * shape of each chord under its instrument in [CHORDS] and the color of each tag in [TAGS]), and of those only the values it can read; everything else in
  * the document is carried over from the last synced one ([localDocument]), so to the merge it is simply unchanged here.
  *
  * ```json
@@ -37,13 +37,16 @@ import kotlinx.serialization.json.intOrNull
  *   },
  *   "chords": {
  *     "guitar": { "F:0.4.7": "x x 3 2 1 1" }
- *   }
+ *   },
+ *   "tags": { "christmas": "red" }
  * }
  * ```
  *
  * A chord is keyed by its notes rather than by its name (`C#:0.3.7.10` is every spelling of C#m7), and its shape is
  * whatever the app wrote, which this version does not need to understand to keep: an instrument it does not know is
  * kept as it is, for the version that does. A chord's choice belongs to no song, so none is ever dropped with one.
+ * Neither is a tag's color, which is keyed by the tag as `tagKey` files it and is a palette id this version does not
+ * need to know either: a color a later version added travels on untouched.
  *
  * Songs are keyed by file name, as the library keys them, and an entry left with no fields is dropped, so the
  * document only ever names songs that something is set for.
@@ -60,6 +63,7 @@ internal object SyncedPreferencesDocument {
     private const val CAPO = "capo"
     private const val BEAT_LEVELS = "beatLevels"
     private const val CHORDS = "chords"
+    private const val TAGS = "tags"
 
     /** The furthest a transposition can sensibly be from the key the song is written in: an octave either way. */
     private val TRANSPOSITION_RANGE = -11..11
@@ -133,15 +137,20 @@ internal object SyncedPreferencesDocument {
         }.toMap()
         // Written only once there is something in it, so that a document from before the chords is left as it was.
         val chordsMember = if (chords.isEmpty() && baseChords == null) emptyMap() else mapOf(CHORDS to JsonObject(chords))
+        val baseTags = base?.get(TAGS) as? JsonObject
+        val tags = baseTags.orEmpty().filterValues { !it.isReadableShape } + preferences.tags.mapValues { JsonPrimitive(it.value) }
+        // As the chords, so that a document from before the tag colors is left as it was too.
+        val tagsMember = if (tags.isEmpty() && baseTags == null) emptyMap() else mapOf(TAGS to JsonObject(tags))
         return JsonObject(
             base.orEmpty() +
                 (VERSION to (base?.get(VERSION) ?: JsonPrimitive(FORMAT_VERSION))) +
                 (SONGS to JsonObject(songs)) +
-                chordsMember,
+                chordsMember +
+                tagsMember,
         )
     }
 
-    /** A shape this version reads, which is a string: anything else in [CHORDS] is passed through. */
+    /** A shape or a color this version reads, which is a string: anything else in [CHORDS] or [TAGS] is passed through. */
     private val JsonElement.isReadableShape get() = this is JsonPrimitive && isString
 
     /**
@@ -177,6 +186,9 @@ internal object SyncedPreferencesDocument {
                     ?.takeIf { it.isNotEmpty() }
                     ?.let { instrument to it }
             }.toMap(),
+            tags = (document[TAGS] as? JsonObject).orEmpty()
+                .filterValues { it.isReadableShape && (it as JsonPrimitive).content.isNotBlank() }
+                .mapValues { (it.value as JsonPrimitive).content },
         )
     }
 

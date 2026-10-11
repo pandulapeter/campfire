@@ -290,3 +290,9 @@ selection's are written by `CampfireViewModel.setSelectionTags` / `setSelectionL
 file edited as it is on disk through `EditSongsUseCase`, which announces the change once, and the whole of it ends in
 one snackbar: how many songs were updated, or how many could not be.
 
+Every row of Manage tags ends in the tag's mark (`TagColorButton`), drawn in its color, which opens a popup of the
+colors as `ColorChoice` discs — no color first, then the palette, in rows of five, which fit a 360dp phone — rather
+than a second sheet over a sheet that may have the keyboard up. The choice is written at once
+(`CampfireViewModel.setTagColor`), not with Save, and stays when the sheet is closed without saving, since the color is
+the tag's in the whole library rather than part of the songs being edited.
+

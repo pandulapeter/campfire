@@ -60,6 +60,9 @@ internal fun CheckboxListItem(
  * The same row with a box that can also be half ticked, for a list about several things at once - the songs ticked
  * in the selection mode - where a row can hold for some of them and not for the others. What a tap does is the
  * caller's, since the next state depends on where the row started.
+ *
+ * @param trailingContent A control of its own at the end of the row, which takes its own taps rather than ticking the
+ *   box: the tag sheet's color of each tag. Not drawn where the row has a cover, which takes that place.
  */
 @Composable
 internal fun CheckboxListItem(
@@ -70,6 +73,7 @@ internal fun CheckboxListItem(
     isEnabled: Boolean = true,
     horizontalInset: Dp = 0.dp,
     coverArtUrl: String? = null,
+    trailingContent: (@Composable () -> Unit)? = null,
     onClick: () -> Unit,
 ) = ListItem(
     modifier = modifier
@@ -88,7 +92,7 @@ internal fun CheckboxListItem(
                 shape = MaterialTheme.shapes.small,
             )
         }
-    },
+    } ?: trailingContent,
 )
 
 /** A checklist row's cover as large as Material's leading avatar, which fits a row that is only a title. */

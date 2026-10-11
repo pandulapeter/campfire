@@ -15,11 +15,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.isUnspecified
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
@@ -36,9 +37,10 @@ import androidx.compose.ui.unit.dp
  *
  * It is a [SelectableChip], for the reason that one exists.
  *
- * @param leadingIcon What the chip is, for a group that is not told apart by a section title of its own: the song
- *   picker lists the languages and the tags in one row. The check takes its place while the chip is selected, the
- *   way Material swaps a filter chip's leading icon, so the chip keeps its width either way.
+ * @param leadingIcon What the chip is, the mark a tag or a language carries wherever it is drawn: the song picker lists
+ *   the two in one row, where nothing else tells them apart, and the song filters give them the same marks, a tag's
+ *   being where its color is painted.
+ * @param leadingIconFill The color a tag was given, painted inside its mark ([TagIcon]); unspecified for none.
  */
 @Composable
 internal fun CountedFilterChip(
@@ -48,6 +50,7 @@ internal fun CountedFilterChip(
     isSelected: Boolean,
     onClick: () -> Unit,
     leadingIcon: Painter? = null,
+    leadingIconFill: Color = Color.Unspecified,
 ) {
     val isEnabled = songCount > 0 || isSelected
     val colors = FilterChipDefaults.filterChipColors()
@@ -60,10 +63,10 @@ internal fun CountedFilterChip(
     ) { contentColor ->
         if (leadingIcon != null) {
             Crossfade(targetState = isSelected) { isChecked ->
-                Icon(
+                TagIcon(
                     modifier = Modifier.padding(end = CHIP_ICON_GAP).size(FilterChipDefaults.IconSize),
                     painter = leadingIcon,
-                    contentDescription = null,
+                    fill = if (isEnabled || leadingIconFill.isUnspecified) leadingIconFill else leadingIconFill.copy(alpha = DISABLED_FILL_ALPHA),
                     tint = animateColorAsState(
                         when {
                             !isEnabled -> colors.disabledLeadingIconColor
@@ -97,3 +100,6 @@ internal fun CountedFilterChip(
 private val MAX_TAG_WIDTH = 160.dp
 
 private val CHIP_ICON_GAP = 8.dp
+
+/** What Material dims a disabled chip's content to, which a color inside its mark has to follow too. */
+private const val DISABLED_FILL_ALPHA = 0.38f

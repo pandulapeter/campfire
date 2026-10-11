@@ -353,6 +353,16 @@ are Material filter chips instead, since there the selected state is the point â
 rather than by `FilterChip`, which puts its state layer around the label instead of around the chip, so only a band
 hugging the text lit up under the pointer.
 
+A tag the user gave a color has its mark filled with it (`TagIcon`: `ic_label_fill` under the outline, which stays in
+the content color, so the color only ever tells tags apart and never stands alone), in the pills, the song filters' tag
+chips and the song picker's alike (a language chip carries `ic_language` in both, for the same look), read from
+`LocalTagColors`, which `CampfireApp` provides once from the preferences rather than every caller handing the map down.
+`TagColor` is the palette: fourteen fixed colors, eleven hues around the circle and then brown, gray and black, the ones
+the theme has too under its names, each with a saturated middle tone for a light scheme and a lighter one for a dark
+scheme (told by the surface's luminance, so the theme's cross fade and the sepia need nothing of their own; black is a
+charcoal there, since a black fill is what a mark with no color already shows on a dark background), and an id that is what every device stores â€” one this version does
+not know is drawn as no color.
+
 Every color, the border, the shape and the height still come from `FilterChipDefaults`; what the chip is built out of
 here is a `selectable` whose `indication` is a node of its own, placed outside the chip's padding so the state layer
 covers what can be clicked, under a `clip` that rounds it (nothing else binds it, which is what let it spill past the

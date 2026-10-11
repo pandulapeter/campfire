@@ -54,6 +54,7 @@ internal data class UserPreferencesDocument(
     val languageMatchMode: String = "",
     val tagSortingMode: String = "",
     val languageSortingMode: String = "",
+    val tagColors: Map<String, String> = emptyMap(),
     val printSettings: PrintSettingsDocument = PrintSettingsDocument(),
     val metronomeSettings: MetronomeSettingsDocument = MetronomeSettingsDocument(),
     val tunerSettings: TunerSettingsDocument = TunerSettingsDocument(),

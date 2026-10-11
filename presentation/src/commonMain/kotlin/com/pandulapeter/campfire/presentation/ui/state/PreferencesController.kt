@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.state
 
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.data.model.domain.tagKey
 import com.pandulapeter.campfire.domain.api.useCases.GetUserPreferencesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.UpdateUserPreferencesUseCase
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
@@ -129,6 +130,12 @@ internal class PreferencesController(
     fun setSortingMode(value: UserPreferences.SortingMode) = changeUserPreferences { copy(sortingMode = value) }
 
     fun setTagSortingMode(value: UserPreferences.LabelSortingMode) = changeUserPreferences { copy(tagSortingMode = value) }
+
+    /** [colorId] null puts the tag back to the default, which is no entry rather than an entry saying so. */
+    fun setTagColor(tag: String, colorId: String?) = changeUserPreferences {
+        val key = tagKey(tag)
+        copy(tagColors = if (colorId == null) tagColors - key else tagColors + (key to colorId))
+    }
 
     fun setLanguageSortingMode(value: UserPreferences.LabelSortingMode) = changeUserPreferences { copy(languageSortingMode = value) }
 

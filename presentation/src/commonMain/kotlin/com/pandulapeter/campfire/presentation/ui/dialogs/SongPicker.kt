@@ -19,6 +19,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.layout
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
@@ -46,6 +47,7 @@ import com.pandulapeter.campfire.presentation.ui.components.languageLabel
 import com.pandulapeter.campfire.presentation.ui.components.languageName
 import com.pandulapeter.campfire.presentation.ui.components.listItemAnimation
 import com.pandulapeter.campfire.presentation.ui.components.orderedBy
+import com.pandulapeter.campfire.presentation.ui.components.tagColor
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -244,6 +246,7 @@ private fun PickerFilters(
                     isSelected = key in selectedTags,
                     onClick = { onTagClicked(key) },
                     leadingIcon = painterResource(Res.drawable.ic_label),
+                    leadingIconFill = tagColor(tag.name)?.color() ?: Color.Unspecified,
                 )
             }
         }
