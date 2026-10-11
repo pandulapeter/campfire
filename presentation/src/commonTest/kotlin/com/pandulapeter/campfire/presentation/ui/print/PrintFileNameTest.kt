@@ -39,6 +39,22 @@ internal class PrintFileNameTest {
         pdfFileName(setlistSource(), PrintSettings(setlistMode = PrintSettings.SetlistMode.RUNNING_ORDER)),
     )
 
+    @Test
+    fun `several songs are named the way their zip is`() = assertEquals(
+        "campfire_songs.pdf",
+        pdfFileName(
+            PrintSource(
+                title = "2 songs",
+                kind = PrintSource.Kind.SONGS,
+                songs = listOf(
+                    PrintSong(fileName = "a.cho", title = "A", artist = null, song = null),
+                    PrintSong(fileName = "b.cho", title = "B", artist = null, song = null),
+                ),
+            ),
+            PrintSettings(),
+        ),
+    )
+
     private fun songSource(fileName: String, title: String, artist: String) = PrintSource(
         title = title,
         songs = listOf(PrintSong(fileName = fileName, title = title, artist = artist, song = null)),
@@ -46,7 +62,7 @@ internal class PrintFileNameTest {
 
     private fun setlistSource() = PrintSource(
         title = "Summer set 2026",
-        isSetlist = true,
+        kind = PrintSource.Kind.SETLIST,
         songs = listOf(
             PrintSong(fileName = "a.cho", title = "A", artist = null, index = 1, song = null),
             PrintSong(fileName = "b.cho", title = "B", artist = null, index = 2, song = null),

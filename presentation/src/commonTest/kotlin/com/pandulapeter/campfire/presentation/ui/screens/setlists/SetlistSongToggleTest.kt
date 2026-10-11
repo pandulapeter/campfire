@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.setlists
 
+import androidx.compose.ui.state.ToggleableState
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import kotlinx.datetime.LocalDate
 import kotlin.test.Test
@@ -58,5 +59,29 @@ internal class SetlistSongToggleTest {
             listOf("b", "c", "x"),
             synced.withSongTicked(songFileName = "a", isTicked = false).entries.map { it.songFileName },
         )
+    }
+
+    @Test
+    fun `songs added together go to the end in the order given, skipping the ones it names`() = assertEquals(
+        listOf("a", "b", "c", "e", "d"),
+        setlist.withSongsAdded(listOf("e", "b", "d", "e")).entries.map { it.songFileName },
+    )
+
+    @Test
+    fun `adding only songs it names changes nothing`() = assertEquals(setlist, setlist.withSongsAdded(listOf("a", "c")))
+
+    @Test
+    fun `taking songs out keeps the rest with their overrides`() = assertEquals(
+        listOf(Setlist.Entry(songFileName = "b", transposition = 2)),
+        setlist.withSongsTakenOut(setOf("a", "c", "x")).entries,
+    )
+
+    @Test
+    fun `a selection box is ticked, empty or half ticked by what the setlist holds of the selection`() {
+        val selection = listOf("a", "b")
+        assertEquals(ToggleableState.Off, selectionBoxState(selection, held = emptySet(), added = emptySet()))
+        assertEquals(ToggleableState.Indeterminate, selectionBoxState(selection, held = setOf("a"), added = emptySet()))
+        assertEquals(ToggleableState.On, selectionBoxState(selection, held = setOf("a"), added = setOf("b")))
+        assertEquals(ToggleableState.On, selectionBoxState(selection, held = setOf("a", "b", "x"), added = emptySet()))
     }
 }

@@ -281,6 +281,45 @@ class SongRepositoryImplTest {
         assertEquals(listOf("a.cho", "imported.cho"), repository.songs.first().data?.map { it.fileName }?.sorted())
     }
 
+    @Test
+    fun `an edit of several songs writes the files it changes and names the ones it could not read`() = runTest {
+        val localSource = FakeSongLocalSource(mapOf("a.cho" to "a", "b.cho" to "b", "c.cho" to "c"))
+        val repository = SongRepositoryImpl(localSource, SongContentRepositoryImpl(localSource, Logger.Standard), LibraryFileLock(), LibraryChanges(), Logger.Standard)
+
+        val result = repository.editSongs(listOf("a.cho", "b.cho", "gone.cho")) { text -> if (text == "b") text else "$text, tagged" }
+
+        assertEquals(setOf("a.cho"), result.changedFileNames)
+        assertEquals(listOf("gone.cho"), result.failedFileNames)
+        assertEquals(mapOf("a.cho" to "a, tagged", "b.cho" to "b", "c.cho" to "c"), localSource.files.toMap())
+    }
+
+    @Test
+    fun `an edit of several songs announces the library change once`() = runTest {
+        val localSource = FakeSongLocalSource(mapOf("a.cho" to "a", "b.cho" to "b"))
+        val libraryChanges = LibraryChanges()
+        val repository = SongRepositoryImpl(localSource, SongContentRepositoryImpl(localSource, Logger.Standard), LibraryFileLock(), libraryChanges, Logger.Standard)
+        var announcements = 0
+        backgroundScope.launch(Dispatchers.Unconfined) { libraryChanges.changes.collect { announcements++ } }
+
+        repository.editSongs(listOf("a.cho", "b.cho")) { "$it, tagged" }
+
+        assertEquals(1, announcements)
+    }
+
+    @Test
+    fun `an edit that changes nothing announces nothing`() = runTest {
+        val localSource = FakeSongLocalSource(mapOf("a.cho" to "a"))
+        val libraryChanges = LibraryChanges()
+        val repository = SongRepositoryImpl(localSource, SongContentRepositoryImpl(localSource, Logger.Standard), LibraryFileLock(), libraryChanges, Logger.Standard)
+        var announcements = 0
+        backgroundScope.launch(Dispatchers.Unconfined) { libraryChanges.changes.collect { announcements++ } }
+
+        val result = repository.editSongs(listOf("a.cho")) { it }
+
+        assertEquals(0, announcements)
+        assertTrue(result.changedFileNames.isEmpty())
+    }
+
     private companion object {
         const val FILE_NAME = "song.cho"
     }

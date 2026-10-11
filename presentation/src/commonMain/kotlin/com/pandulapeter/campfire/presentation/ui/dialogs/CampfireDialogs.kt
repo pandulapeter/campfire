@@ -174,6 +174,21 @@ internal fun CampfireDialogs(
             dialog = dialog,
         )
 
+        is DialogType.SelectionSetlists -> SelectionSetlistsSheet(
+            viewModel = viewModel,
+            dialog = dialog,
+        )
+
+        is DialogType.SelectionTags -> SelectionTagsSheet(
+            viewModel = viewModel,
+            dialog = dialog,
+        )
+
+        is DialogType.SelectionLanguages -> SelectionLanguagesSheet(
+            viewModel = viewModel,
+            dialog = dialog,
+        )
+
         is DialogType.SongPicker -> SongPicker(
             viewModel = viewModel,
             dialog = dialog,

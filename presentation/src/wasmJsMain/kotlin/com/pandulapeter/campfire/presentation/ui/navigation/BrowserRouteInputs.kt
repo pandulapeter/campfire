@@ -20,6 +20,7 @@ internal fun CampfireViewModel.routeInputs() = RouteInputs(
     isSongsSearchOpen = songsSearch.isOpen.value,
     isSetlistsSearchOpen = setlistsSearch.isOpen.value,
     isSetlistReordering = isSetlistReordering,
+    isSongSelecting = isSongSelecting,
     settingsTab = settingsTab,
     currentSongFileNames = backStack.filterIsInstance<CampfireDestination.SongDetails>().associate { it.id to currentSongFileName(it) },
     hasOverlay = RouteInputs.hasOverlay(dialog = visibleDialog.value, isAnyMenuOpen = overlayState.isAnyMenuOpen),

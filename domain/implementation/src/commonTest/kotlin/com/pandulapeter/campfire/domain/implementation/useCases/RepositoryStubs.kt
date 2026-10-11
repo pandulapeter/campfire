@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.domain.implementation.useCases
 
+import com.pandulapeter.campfire.data.model.domain.EditedSongs
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.AuthorizationCompletionPage
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
@@ -51,6 +52,9 @@ internal open class SongRepositoryStub : SongRepository {
     override suspend fun renameSong(song: Song): Song? = unexpected()
     override suspend fun deleteSong(fileName: String): Unit = unexpected()
     override suspend fun deleteAllSongs(): Unit = unexpected()
+
+    override suspend fun editSongs(fileNames: Collection<String>, edit: (text: String) -> String): EditedSongs =
+        unexpected()
 }
 
 /** A [SetlistRepository] whose every member fails the same way, see [SongRepositoryStub]. */

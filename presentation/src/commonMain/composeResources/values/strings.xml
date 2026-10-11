@@ -18,6 +18,8 @@
     <string name="create">Create</string>
     <string name="duplicate">Duplicate</string>
     <string name="save">Save</string>
+    <string name="select_all">Select all</string>
+    <string name="deselect_all">Deselect all</string>
     <string name="retry">Retry</string>
     <string name="add_demo_songs">Add the demo songs</string>
     <string name="confirm_exit_title">Close Campfire?</string>
@@ -70,6 +72,7 @@
     <string name="export_pdf_saved">PDF saved</string>
     <string name="export_song_saved">Song exported</string>
     <string name="export_setlist_saved">Setlist exported</string>
+    <string name="export_songs_saved">Songs exported</string>
     <string name="export_library_saved">Library exported</string>
     <string name="export_too_large_to_import">This archive is larger than the 24 MB Campfire can import at once. It is a complete copy of your library; to bring it back, unzip it and import the songs a few thousand at a time.</string>
     <plurals name="export_skipped_files">
@@ -139,6 +142,25 @@
     <string name="songs_delete_song">Delete song</string>
     <string name="songs_export_song">Export song</string>
     <string name="songs_delete_song_confirmation">Delete \"%1$s\"? The file is removed from the library and from every setlist.</string>
+    <string name="songs_select_multiple">Select multiple</string>
+    <string name="songs_selection_actions">Selection actions</string>
+    <string name="songs_export_songs">Export songs</string>
+    <plurals name="songs_selection_done">
+        <item quantity="one">Done, %1$d song selected</item>
+        <item quantity="other">Done, %1$d songs selected</item>
+    </plurals>
+    <plurals name="songs_selection_count">
+        <item quantity="one">%1$d song</item>
+        <item quantity="other">%1$d songs</item>
+    </plurals>
+    <plurals name="songs_selection_updated">
+        <item quantity="one">%1$d song updated</item>
+        <item quantity="other">%1$d songs updated</item>
+    </plurals>
+    <plurals name="songs_selection_failed">
+        <item quantity="one">%1$d song could not be updated</item>
+        <item quantity="other">%1$d songs could not be updated</item>
+    </plurals>
     <string name="songs_all_hidden">Every song is hidden</string>
     <string name="songs_all_hidden_hint">The filters are hiding your whole library.</string>
     <string name="songs_no_search_results">No matching songs</string>
@@ -746,6 +768,7 @@
     <string name="print_format_pdf_description">Ideal for printing. It opens on any device, but cannot be edited or transposed afterwards.</string>
     <string name="print_format_chordpro_song_description">Ideal for sharing with other Campfire users, who can import, edit and transpose the song.</string>
     <string name="print_format_zip_description">Ideal for other Campfire users: the setlist manifest and its songs as ChordPro files.</string>
+    <string name="print_format_zip_songs_description">Ideal for other Campfire users: the chosen songs as ChordPro files.</string>
     <string name="print_zip_contents">In the zip file</string>
     <string name="print_zip_manifest">Setlist manifest</string>
     <string name="print_zip_manifest_description">%1$s, with the running order and the key of every song</string>
@@ -775,7 +798,6 @@
     <string name="print_overview">Include running order</string>
     <string name="print_new_page">Start each song on a new page</string>
     <string name="print_songs">Songs to export</string>
-    <string name="print_select_all">Select all</string>
     <string name="print_missing">Song file missing or unreadable</string>
     <string name="print_load_failed">Could not prepare the PDF.</string>
     <string name="print_no_songs">Select at least one song to export.</string>

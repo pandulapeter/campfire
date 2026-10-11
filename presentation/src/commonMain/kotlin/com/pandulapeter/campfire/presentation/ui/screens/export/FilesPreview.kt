@@ -9,8 +9,13 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.export
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -43,6 +48,7 @@ import com.pandulapeter.campfire.presentation.resources.print_zip_song_descripti
 import com.pandulapeter.campfire.presentation.ui.components.SettingsSectionTitle
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.fadingVerticalEdges
+import com.pandulapeter.campfire.presentation.ui.components.listItemAnimation
 import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.platform.bounceHorizontalScroll
 import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableContent
@@ -68,30 +74,48 @@ internal fun FilesPreview(
     isBottomAnchored: Boolean,
 ) {
     val text = source.songs.firstOrNull()?.text
-    when {
-        source.isSetlist && source.songs.isNotEmpty() && selected.isEmpty() -> FilesPreviewMessage(modifier, stringResource(Res.string.print_no_songs))
-        source.isSetlist -> ZipContents(
-            modifier = modifier,
-            setlistFileName = setlistFileName.orEmpty(),
-            songs = source.songs.filterIndexed { index, _ -> index in selected },
-            bottomPadding = bottomPadding,
-            isBottomAnchored = isBottomAnchored,
-        )
-        text == null -> FilesPreviewMessage(modifier, stringResource(Res.string.print_missing))
-        else -> {
-            val scrollState = rememberScrollState()
-            Text(
-                text = text,
-                modifier = modifier
-                    .fadingTopEdge(scrollState, MaterialTheme.colorScheme.background)
-                    .bounceVerticalScroll(scrollState)
-                    .bounceHorizontalScroll(rememberScrollState())
-                    .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = bottomPadding),
-                style = MaterialTheme.typography.bodyMedium.copy(fontFamily = LocalMonospaceFontFamily.current),
-                softWrap = false,
+    val content = when {
+        source.hasSeveralSongs && source.songs.isNotEmpty() && selected.isEmpty() -> FilesPreviewContent.NO_SONGS
+        source.hasSeveralSongs -> FilesPreviewContent.ZIP
+        text == null -> FilesPreviewContent.MISSING
+        else -> FilesPreviewContent.TEXT
+    }
+    // Unticking the last song empties the zip, and ticking one back fills it, so the message and the list cross over
+    // rather than swapping in one frame.
+    AnimatedContent(content, modifier, transitionSpec = { fadeIn() togetherWith fadeOut() }) { shown ->
+        when (shown) {
+            FilesPreviewContent.NO_SONGS -> FilesPreviewMessage(Modifier.fillMaxSize(), stringResource(Res.string.print_no_songs))
+            FilesPreviewContent.ZIP -> ZipContents(
+                modifier = Modifier.fillMaxSize(),
+                setlistFileName = setlistFileName.takeIf { source.hasRunningOrder },
+                songs = source.songs.withIndex().filter { it.index in selected },
+                bottomPadding = bottomPadding,
+                isBottomAnchored = isBottomAnchored,
             )
+            FilesPreviewContent.MISSING -> FilesPreviewMessage(Modifier.fillMaxSize(), stringResource(Res.string.print_missing))
+            FilesPreviewContent.TEXT -> {
+                val scrollState = rememberScrollState()
+                Text(
+                    text = text.orEmpty(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .fadingTopEdge(scrollState, MaterialTheme.colorScheme.background)
+                        .bounceVerticalScroll(scrollState)
+                        .bounceHorizontalScroll(rememberScrollState())
+                        .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = bottomPadding),
+                    style = MaterialTheme.typography.bodyMedium.copy(fontFamily = LocalMonospaceFontFamily.current),
+                    softWrap = false,
+                )
+            }
         }
     }
+}
+
+private enum class FilesPreviewContent {
+    NO_SONGS,
+    ZIP,
+    MISSING,
+    TEXT,
 }
 
 @Composable
@@ -101,16 +125,18 @@ private fun FilesPreviewMessage(
 ) = Box(modifier.padding(PAGE_MARGIN), contentAlignment = Alignment.Center) { Text(message) }
 
 /**
- * The files of a setlist's zip, as an import will find them: the setlist manifest under its own file name, which keeps
- * the running order and every song's key and names only the [songs] that were chosen, and each of those as the ChordPro
- * file it is in the library. A chosen song whose file is missing stays named by the manifest but has no file of its own,
- * which its dimmed row says.
+ * The files of a zip, as an import will find them: a setlist's manifest under its own file name, which keeps the running
+ * order and every song's key and names only the [songs] that were chosen, and each of those as the ChordPro file it is
+ * in the library. A chosen song whose file is missing stays named by the manifest but has no file of its own, which its
+ * dimmed row says. Several songs that are not a setlist ([setlistFileName] null) are their files alone. Each song comes
+ * with its place among the source's songs, which keys its row, so that ticking or unticking one fades that row in or
+ * out and slides the rest, a setlist that names a song twice included.
  */
 @Composable
 private fun ZipContents(
     modifier: Modifier,
-    setlistFileName: String,
-    songs: List<PrintSong>,
+    setlistFileName: String?,
+    songs: List<IndexedValue<PrintSong>>,
     bottomPadding: Dp,
     isBottomAnchored: Boolean,
 ) {
@@ -123,20 +149,23 @@ private fun ZipContents(
         Modifier.fadingVerticalEdges(state, MaterialTheme.colorScheme.background)
     }
     LazyColumn(modifier.bounceScrollableContent(state).then(edgeFade), state = state, contentPadding = PaddingValues(top = 8.dp, bottom = bottomPadding)) {
-        item {
+        item(key = "contents") {
             SettingsSectionTitle(text = stringResource(Res.string.print_zip_contents))
-            ZipFileRow(
-                icon = painterResource(Res.drawable.ic_setlists),
-                title = stringResource(Res.string.print_zip_manifest),
-                description = textResource(Res.string.print_zip_manifest_description, setlistFileName),
-            )
+            if (setlistFileName != null) {
+                ZipFileRow(
+                    icon = painterResource(Res.drawable.ic_setlists),
+                    title = stringResource(Res.string.print_zip_manifest),
+                    description = textResource(Res.string.print_zip_manifest_description, setlistFileName),
+                )
+            }
         }
         // One list under one heading: the songs are in the zip as much as the manifest is, and a heading of their own
         // read as if the first one held only the manifest.
-        items(songs) { entry ->
+        items(songs, key = { it.index }) { (_, entry) ->
             ZipFileRow(
+                modifier = listItemAnimation(state),
                 icon = painterResource(Res.drawable.ic_songs),
-                title = "${entry.index}. ${entry.title}",
+                title = entry.index?.let { "$it. ${entry.title}" } ?: entry.title,
                 description = if (entry.text == null) {
                     stringResource(Res.string.print_zip_missing)
                 } else {
@@ -151,12 +180,13 @@ private fun ZipContents(
 /** One file of a setlist's zip, dimmed where it is named by the setlist but left out of the zip, its file missing. */
 @Composable
 private fun ZipFileRow(
+    modifier: Modifier = Modifier,
     icon: Painter,
     title: String,
     description: String?,
     isIncluded: Boolean = true,
 ) = ListItem(
-    modifier = Modifier.alpha(if (isIncluded) 1f else 0.5f),
+    modifier = modifier.alpha(if (isIncluded) 1f else 0.5f),
     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
     headlineContent = { Text(title) },
     supportingContent = description?.let { { Text(it) } },

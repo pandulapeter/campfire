@@ -15,7 +15,7 @@ It runs natively on Android, iOS, macOS, Windows, Linux and the web.
 
 <img src="documentation/screenshots/01.webp" width="32%" /> <img src="documentation/screenshots/02.webp" width="32%" /> <img src="documentation/screenshots/03.webp" width="32%" />
 
-The interface is designed around practical use, whether you’re organizing a song library, building setlists, or playing a gig.
+The interface is designed around practical use, whether you’re organizing a song library, building setlists, or playing a gig, and a selection of songs can be filed into setlists, tagged, given languages, or exported in one go.
 Songs automatically adapt with multi-column layouts and customizable section ordering to make reading easier on stage.
 It also includes on-the-fly transposition, chord diagrams for guitar, ukulele and keyboard (with every other way to play each chord one tap away, and the shapes a song defines for itself), adjustable font sizing, a lyrics-only view for singers, customizable themes, a read only mode to lock the app against accidental edits, and a Features tab that switches off whatever a reader does not need, from the metronome and the tuner to the setlists.
 A built-in metronome starts at each song's own tempo and time signature, with tap tempo, accents, subdivisions and five sounds, and keeps clicking with the screen locked. Setlists can play a song in its own key, with its own capo and tempo, count down to the date of the gig, and add up their running time.

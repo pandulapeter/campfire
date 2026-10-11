@@ -18,24 +18,24 @@ class SongSectionIndexTest {
     @Test
     fun `matches expanded labels at every boundary`() {
         val groups = listOf(
-            SongSectionIndex.Group(0, SongSection.Header.Letter('A')),
-            SongSectionIndex.Group(3, SongSection.Header.Letter('B')),
-            SongSectionIndex.Group(1, SongSection.Header.Symbols),
+            SongSectionIndex.Group(0, SongGroupHeader.Section(SongSection.Header.Letter('A'))),
+            SongSectionIndex.Group(3, SongGroupHeader.Section(SongSection.Header.Letter('B'))),
+            SongSectionIndex.Group(1, SongGroupHeader.Section(SongSection.Header.Symbols)),
             SongSectionIndex.Group(0, null),
-            SongSectionIndex.Group(2, SongSection.Header.Artist("Zed", 'Z', "zed")),
+            SongSectionIndex.Group(2, SongGroupHeader.Section(SongSection.Header.Artist("Zed", 'Z', "zed"))),
         )
         val index = SongSectionIndex(groups)
         val expanded = groups.flatMap { group ->
-            val label = when (val header = group.header) {
+            val label = when (val header = (group.header as? SongGroupHeader.Section)?.header) {
                 is SongSection.Header.Letter -> header.letter.toString()
                 is SongSection.Header.Artist -> header.initial?.toString() ?: "#"
                 SongSection.Header.Symbols -> "#"
                 null -> null
             }
-            List(group.songCount + if (group.header == null) 0 else 1) { label }
+            List(group.itemCount + if (group.header == null) 0 else 1) { label }
         }
         for (position in -1..expanded.size) assertEquals(expanded.getOrNull(position), index.labelForItem(position))
-        assertEquals(SongSection.Header.Letter('B'), index.headerForKey("header_B"))
+        assertEquals(SongGroupHeader.Section(SongSection.Header.Letter('B')), index.headerForKey("header_B"))
         assertEquals(null, index.headerForKey("header_missing"))
     }
 
@@ -44,5 +44,18 @@ class SongSectionIndexTest {
         assertEquals(null, SongSectionIndex(emptyList()).labelForItem(0))
         val index = SongSectionIndex(listOf(SongSectionIndex.Group(3, null)))
         for (position in 0..2) assertEquals(null, index.labelForItem(position))
+    }
+
+    @Test
+    fun `the selection is labelled with a check mark and found by its key`() {
+        val index = SongSectionIndex(
+            listOf(
+                SongSectionIndex.Group(2, SongGroupHeader.Selection),
+                SongSectionIndex.Group(1, SongGroupHeader.Section(SongSection.Header.Letter('A'))),
+            ),
+        )
+        assertEquals("\u2713", index.labelForItem(2))
+        assertEquals("A", index.labelForItem(3))
+        assertEquals(SongGroupHeader.Selection, index.headerForKey("header_${SongGroupHeader.Selection.key}"))
     }
 }

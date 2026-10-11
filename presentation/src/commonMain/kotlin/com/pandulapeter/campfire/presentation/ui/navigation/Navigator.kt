@@ -55,6 +55,8 @@ internal class Navigator(
     private val hasUnsavedEditorChanges: () -> Boolean,
     private val isSetlistReordering: () -> Boolean,
     private val endSetlistReordering: () -> Unit,
+    private val isSongSelecting: () -> Boolean,
+    private val endSongSelection: () -> Unit,
     private val onTransitionEnded: () -> Unit,
 ) {
 
@@ -360,6 +362,8 @@ internal class Navigator(
     fun navigateBack(isPredictiveBackCompleted: Boolean = false) {
         when {
             isSetlistReordering() -> endSetlistReordering()
+            // An open search is closed first, by the field's own handler: ending the mode is the step that loses something.
+            isSongSelecting() && !songsSearch().isOpen.value -> endSongSelection()
             hasUnsavedEditorChanges() && backStack.lastOrNull() is CampfireDestination.SongEditor -> {
                 dialogHost.showDialog(DialogType.UnsavedChanges)
             }

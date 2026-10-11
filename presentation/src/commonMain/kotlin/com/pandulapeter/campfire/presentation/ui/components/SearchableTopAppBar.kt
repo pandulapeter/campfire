@@ -136,6 +136,9 @@ import com.pandulapeter.campfire.presentation.ui.platform.CompactKeyboardEffect
  *   new - which come last, after [actions] and a divider that sets them apart, while the search is closed and make way
  *   for the field while it is open, leaving and coming back on the spring the search action travels on so that the
  *   field's edge and they move as one.
+ * @param areClosedSearchActionsKeptInSearch Keeps [closedSearchActions] in the bar while the search is open, the divider
+ *   in front of them included: the songs screen's selection menu, since the search is where a selection is put
+ *   together. New still makes way for the field, which is the case this is false for.
  * @param actions The screen's other actions, which stay whether or not the search is open. Each is laid out with
  *   [overlappingAction], as every action of the pill is.
  */
@@ -150,6 +153,7 @@ internal fun SearchableTopAppBar(
     onReachChanged: (Dp) -> Unit,
     isSearchEnabled: Boolean = true,
     areClosedSearchActionsShown: Boolean = false,
+    areClosedSearchActionsKeptInSearch: Boolean = false,
     closedSearchActions: @Composable RowScope.() -> Unit = {},
     actions: @Composable RowScope.() -> Unit,
 ) {
@@ -297,12 +301,12 @@ internal fun SearchableTopAppBar(
                     actions()
                     AnimatedVisibility(visible = areClosedSearchActionsShown) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            ClosedSearchActionsDivider(searchProgress = { pillProgress.value })
+                            ClosedSearchActionsDivider(searchProgress = { if (areClosedSearchActionsKeptInSearch) 0f else pillProgress.value })
                             val closedSearchActionsSizeSpec = searchTravelSpec(visibilityThreshold = IntSize.VisibilityThreshold)
                             val closedSearchActionsFadeSpec = searchTravelSpec<Float>()
                             searchTransition.AnimatedVisibility(
                                 modifier = Modifier.overlappingAction(),
-                                visible = { !it },
+                                visible = { !it || areClosedSearchActionsKeptInSearch },
                                 enter = fadeIn(closedSearchActionsFadeSpec) + expandHorizontally(closedSearchActionsSizeSpec),
                                 exit = fadeOut(closedSearchActionsFadeSpec) + shrinkHorizontally(closedSearchActionsSizeSpec),
                             ) {

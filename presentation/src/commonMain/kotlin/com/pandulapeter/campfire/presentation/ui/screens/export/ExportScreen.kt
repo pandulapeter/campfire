@@ -77,6 +77,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.domain.PrintSettings
 import com.pandulapeter.campfire.presentation.localization.currentLanguage
+import com.pandulapeter.campfire.presentation.localization.pluralStringResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.print_load_failed
@@ -92,6 +93,8 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_insert_capo
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_key
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_tempo
 import com.pandulapeter.campfire.presentation.resources.songs_export_song
+import com.pandulapeter.campfire.presentation.resources.songs_export_songs
+import com.pandulapeter.campfire.presentation.resources.songs_selection_count
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.DelayedLoadingIndicator
 import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
@@ -102,6 +105,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.songLabel
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.calendarLocale
+import com.pandulapeter.campfire.presentation.ui.print.PrintSource
 import com.pandulapeter.campfire.presentation.ui.print.PrintLabels
 import com.pandulapeter.campfire.presentation.ui.print.PrintRenderer
 import com.pandulapeter.campfire.presentation.ui.print.TEMPO_VALUE
@@ -180,9 +184,17 @@ internal fun ExportScreen(
     val date = dialog.setlist?.date?.let { day ->
         dateFormatter.formatDate(day.atStartOfDayIn(TimeZone.UTC).toEpochMilliseconds(), locale) ?: day.toString()
     }
-    val chosenSource = remember(state.source, state.selected, date) {
+    val songsCount = pluralStringResource(Res.plurals.songs_selection_count, dialog.songs.size, dialog.songs.size)
+    // Several songs have no title of their own, so the file is titled with how many of them it holds.
+    val chosenCount = state.selected.orEmpty().size
+    val chosenSongsTitle = pluralStringResource(Res.plurals.songs_selection_count, chosenCount, chosenCount)
+    val chosenSource = remember(state.source, state.selected, date, chosenSongsTitle) {
         state.source?.let { source ->
-            source.copy(date = date, songs = source.songs.filterIndexed { index, _ -> index in state.selected.orEmpty() })
+            source.copy(
+                title = if (source.kind == PrintSource.Kind.SONGS) chosenSongsTitle else source.title,
+                date = date,
+                songs = source.songs.filterIndexed { index, _ -> index in state.selected.orEmpty() },
+            )
         }
     }
     // The last document stays on screen while the next one is laid out, so that a step of an option fades from one
@@ -250,7 +262,7 @@ internal fun ExportScreen(
     val isFiles = state.settings.format == PrintSettings.Format.FILES
     // The songs a setlist's zip is narrowed to, by the same ticks a PDF is: null where every one of them is chosen, which
     // hands the setlist's manifest out exactly as it is stored.
-    val chosenSongFileNames = state.source?.takeIf { it.isSetlist }?.let { source ->
+    val chosenSongFileNames = state.source?.takeIf { it.hasSeveralSongs }?.let { source ->
         val selected = state.selected.orEmpty()
         if (source.songs.indices.all { it in selected }) null else source.songs.filterIndexed { index, _ -> index in selected }.mapTo(mutableSetOf()) { it.fileName }
     }
@@ -259,7 +271,8 @@ internal fun ExportScreen(
     val canExportFiles = state.source.let { source ->
         when {
             source == null -> false
-            source.isSetlist -> source.songs.isEmpty() || state.selected.orEmpty().isNotEmpty()
+            source.hasRunningOrder -> source.songs.isEmpty() || state.selected.orEmpty().isNotEmpty()
+            source.hasSeveralSongs -> state.selected.orEmpty().isNotEmpty()
             else -> source.songs.firstOrNull()?.text != null
         }
     }
@@ -368,8 +381,14 @@ internal fun ExportScreen(
         Box(Modifier.fillMaxSize()) {
             Column(Modifier.fillMaxSize()) {
                 PrintTopAppBar(
-                    title = stringResource(if (dialog.setlist != null) Res.string.setlists_export else Res.string.songs_export_song),
-                    subtitle = dialog.setlist?.title ?: dialog.song?.let { songLabel(it) }.orEmpty(),
+                    title = stringResource(
+                        when {
+                            dialog.setlist != null -> Res.string.setlists_export
+                            dialog.songs.isNotEmpty() -> Res.string.songs_export_songs
+                            else -> Res.string.songs_export_song
+                        },
+                    ),
+                    subtitle = dialog.setlist?.title ?: dialog.song?.let { songLabel(it) } ?: songsCount,
                     canShare = filePicker.canShare && content == PrintScreenContent.LOADED && exportProgress == null &&
                         if (isFiles) canExportFiles else hasPages,
                     onShare = { requestExport(ExportRequest.SHARE) },

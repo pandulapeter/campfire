@@ -58,6 +58,7 @@ import com.pandulapeter.campfire.presentation.resources.print_format_pdf
 import com.pandulapeter.campfire.presentation.resources.print_format_pdf_description
 import com.pandulapeter.campfire.presentation.resources.print_format_zip
 import com.pandulapeter.campfire.presentation.resources.print_format_zip_description
+import com.pandulapeter.campfire.presentation.resources.print_format_zip_songs_description
 import com.pandulapeter.campfire.presentation.resources.print_landscape
 import com.pandulapeter.campfire.presentation.resources.print_letter
 import com.pandulapeter.campfire.presentation.resources.print_margin
@@ -74,7 +75,7 @@ import com.pandulapeter.campfire.presentation.resources.print_page_numbers
 import com.pandulapeter.campfire.presentation.resources.print_paper
 import com.pandulapeter.campfire.presentation.resources.print_portrait
 import com.pandulapeter.campfire.presentation.resources.print_running_order
-import com.pandulapeter.campfire.presentation.resources.print_select_all
+import com.pandulapeter.campfire.presentation.resources.select_all
 import com.pandulapeter.campfire.presentation.resources.print_setlist_content
 import com.pandulapeter.campfire.presentation.resources.print_song_sheets
 import com.pandulapeter.campfire.presentation.resources.print_songs
@@ -89,6 +90,7 @@ import com.pandulapeter.campfire.presentation.ui.components.LabeledControlRow
 import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
 import com.pandulapeter.campfire.presentation.ui.components.SettingsSectionTitle
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
+import com.pandulapeter.campfire.presentation.ui.components.listItemAnimation
 import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableContent
 import com.pandulapeter.campfire.presentation.ui.print.PrintSource
 import com.pandulapeter.campfire.presentation.ui.components.Stepper
@@ -114,20 +116,23 @@ internal fun PrintOptions(
     onSettings: (PrintSettings) -> Unit,
 ) {
     val state = rememberLazyListState()
+    // Every row here is moved only by the options above it folding out or away, which it follows as they fold, so its
+    // animation is the fade alone.
     val isPdf = settings.format == PrintSettings.Format.PDF
     LazyColumn(modifier.bounceScrollableContent(state).fadingTopEdge(state, MaterialTheme.colorScheme.background), state = state, contentPadding = PaddingValues(top = 8.dp, bottom = bottomPadding)) {
         if (header != null) {
             item(key = "preview") { header() }
         }
-        item {
+        item(key = "format") {
             FormatChoice(
+                modifier = listItemAnimation(state, placementSpec = null),
                 format = settings.format,
-                isSetlist = source.isSetlist,
+                kind = source.kind,
                 onSelected = { onSettings(settings.copy(format = it)) },
             )
         }
-        item {
-            PdfOption(isPdf) {
+        item(key = "pdf") {
+            PdfOption(modifier = listItemAnimation(state, placementSpec = null), isPdf = isPdf) {
                 SettingsSectionTitle(text = stringResource(Res.string.print_paper))
                 SegmentedChoice(
                     options = PrintSettings.Paper.entries.map { paper ->
@@ -223,7 +228,7 @@ internal fun PrintOptions(
                     onCheckedChange = { onSettings(settings.copy(showComments = it)) },
                 )
                 CheckboxListItem(
-                    title = stringResource(if (source.isSetlist) Res.string.print_metadata_setlist else Res.string.print_metadata),
+                    title = stringResource(if (source.hasRunningOrder) Res.string.print_metadata_setlist else Res.string.print_metadata),
                     isChecked = settings.showMetadata,
                     onCheckedChange = { onSettings(settings.copy(showMetadata = it)) },
                 )
@@ -234,30 +239,21 @@ internal fun PrintOptions(
                 )
             }
         }
-        if (source.isSetlist) {
-            item {
-                PdfOption(isPdf) {
-                    SettingsSectionTitle(text = stringResource(Res.string.print_setlist_content))
-                    SegmentedChoice(
-                        options = PrintSettings.SetlistMode.entries.map { mode ->
-                            mode to stringResource(
-                                if (mode == PrintSettings.SetlistMode.SONG_SHEETS) {
-                                    Res.string.print_song_sheets
-                                } else {
-                                    Res.string.print_running_order
-                                },
+        if (source.hasSeveralSongs) {
+            item(key = "songSheets") {
+                PdfOption(modifier = listItemAnimation(state, placementSpec = null), isPdf = isPdf) {
+                    if (source.hasRunningOrder) SetlistContentChoice(settings = settings, onSettings = onSettings)
+                    // Several songs that are not a setlist have no running order to print, so they are always song sheets.
+                    // A setlist printed as its running order has no sheets to arrange, so these fold away with that choice.
+                    FoldingOption(isVisible = !source.hasRunningOrder || settings.setlistMode == PrintSettings.SetlistMode.SONG_SHEETS) {
+                        if (source.hasRunningOrder) {
+                            Spacer(Modifier.height(8.dp))
+                            CheckboxListItem(
+                                title = stringResource(Res.string.print_overview),
+                                isChecked = settings.includeSetlistOverview,
+                                onCheckedChange = { onSettings(settings.copy(includeSetlistOverview = it)) },
                             )
-                        },
-                        selected = settings.setlistMode,
-                        onSelected = { onSettings(settings.copy(setlistMode = it)) },
-                    )
-                    if (settings.setlistMode == PrintSettings.SetlistMode.SONG_SHEETS) {
-                        Spacer(Modifier.height(8.dp))
-                        CheckboxListItem(
-                            title = stringResource(Res.string.print_overview),
-                            isChecked = settings.includeSetlistOverview,
-                            onCheckedChange = { onSettings(settings.copy(includeSetlistOverview = it)) },
-                        )
+                        }
                         CheckboxListItem(
                             title = stringResource(Res.string.print_new_page),
                             isChecked = settings.startSongsOnNewPage,
@@ -269,9 +265,9 @@ internal fun PrintOptions(
             // Which songs go out is a question for either format, and one answer to both: the same ticks narrow the PDF and
             // the zip, so switching between the two does not quietly put back the songs that were left out.
             if (source.songs.isNotEmpty()) {
-                item {
-                    SettingsSectionTitle(text = stringResource(Res.string.print_songs))
+                item(key = "selectAll") {
                     SelectAllListItem(
+                        modifier = listItemAnimation(state, placementSpec = null),
                         state = when (selected.size) {
                             0 -> ToggleableState.Off
                             source.songs.size -> ToggleableState.On
@@ -281,19 +277,21 @@ internal fun PrintOptions(
                     )
                 }
             }
-            itemsIndexed(source.songs) { index, entry ->
+            itemsIndexed(source.songs, key = { index, _ -> index }) { index, entry ->
                 CheckboxListItem(
-                    title = "${entry.index}. ${entry.title}",
+                    modifier = listItemAnimation(state, placementSpec = null),
+                    // Several songs that are not a setlist are in no order of anyone's making, so they are not numbered.
+                    title = entry.index?.let { "$it. ${entry.title}" } ?: entry.title,
                     description = if (entry.song == null) stringResource(Res.string.print_missing) else entry.artist,
                     isChecked = index in selected,
                     onCheckedChange = { onSelected(if (it) selected + index else selected - index) },
                 )
             }
         } else if (source.songs.any { it.song == null }) {
-            item {
+            item(key = "missing") {
                 Text(
                     text = stringResource(Res.string.print_missing),
-                    modifier = Modifier.padding(horizontal = 16.dp),
+                    modifier = listItemAnimation(state, placementSpec = null).padding(horizontal = 16.dp),
                     color = MaterialTheme.colorScheme.error,
                 )
             }
@@ -302,16 +300,17 @@ internal fun PrintOptions(
 }
 
 /**
- * The first of the options, PDF or the library's own files - ChordPro for a song, a zip for a setlist - and a line under
- * it saying what the chosen one is for and, for the zip, what is in it, since the two are told apart by what the person
- * receiving the file can do with it rather than by anything the names say.
+ * The first of the options, PDF or the library's own files - ChordPro for a song, a zip for a setlist or for several
+ * songs - and a line under it saying what the chosen one is for and, for the zip, what is in it, since the two are told
+ * apart by what the person receiving the file can do with it rather than by anything the names say.
  */
 @Composable
 private fun FormatChoice(
+    modifier: Modifier,
     format: PrintSettings.Format,
-    isSetlist: Boolean,
+    kind: PrintSource.Kind,
     onSelected: (PrintSettings.Format) -> Unit,
-) = Column {
+) = Column(modifier) {
     SettingsSectionTitle(
         text = stringResource(Res.string.print_format),
         contentPadding = PaddingValues(start = LIST_ITEM_KEYLINE, end = LIST_ITEM_KEYLINE, top = 8.dp, bottom = 8.dp),
@@ -321,7 +320,7 @@ private fun FormatChoice(
             option to stringResource(
                 when {
                     option == PrintSettings.Format.PDF -> Res.string.print_format_pdf
-                    isSetlist -> Res.string.print_format_zip
+                    kind != PrintSource.Kind.SONG -> Res.string.print_format_zip
                     else -> Res.string.print_format_chordpro
                 },
             )
@@ -331,7 +330,8 @@ private fun FormatChoice(
     )
     val description = when {
         format == PrintSettings.Format.PDF -> stringResource(Res.string.print_format_pdf_description)
-        isSetlist -> stringResource(Res.string.print_format_zip_description)
+        kind == PrintSource.Kind.SETLIST -> stringResource(Res.string.print_format_zip_description)
+        kind == PrintSource.Kind.SONGS -> stringResource(Res.string.print_format_zip_songs_description)
         else -> stringResource(Res.string.print_format_chordpro_song_description)
     }
     AnimatedContent(description, transitionSpec = { fadeIn() togetherWith fadeOut() }) { shown ->
@@ -347,9 +347,18 @@ private fun FormatChoice(
 /** One group of the options that only a PDF has, folding away while the library's own files are the format. */
 @Composable
 private fun PdfOption(
+    modifier: Modifier,
     isPdf: Boolean,
     content: @Composable () -> Unit,
-) = AnimatedVisibility(isPdf, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
+) = FoldingOption(modifier = modifier, isVisible = isPdf, content = content)
+
+/** Options that only some other choice makes sense with, folding out under it and away again as it changes. */
+@Composable
+private fun FoldingOption(
+    modifier: Modifier = Modifier,
+    isVisible: Boolean,
+    content: @Composable () -> Unit,
+) = AnimatedVisibility(isVisible, modifier, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
     Column { content() }
 }
 
@@ -360,12 +369,22 @@ private fun PdfOption(
  */
 @Composable
 private fun SelectAllListItem(
+    modifier: Modifier,
+    state: ToggleableState,
+    onClick: () -> Unit,
+) = Column(modifier) {
+    SettingsSectionTitle(text = stringResource(Res.string.print_songs))
+    SelectAllRow(state = state, onClick = onClick)
+}
+
+@Composable
+private fun SelectAllRow(
     state: ToggleableState,
     onClick: () -> Unit,
 ) = ListItem(
     modifier = Modifier.triStateToggleable(state = state, role = Role.Checkbox, onClick = onClick),
     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-    headlineContent = { Text(stringResource(Res.string.print_select_all)) },
+    headlineContent = { Text(stringResource(Res.string.select_all)) },
     leadingContent = { TriStateCheckbox(state = state, onClick = null) },
 )
 
@@ -392,3 +411,25 @@ private const val MIN_MARGIN_MM = 10
 private const val MAX_MARGIN_MM = 25
 
 private const val MARGIN_STEP_MM = 5
+
+/** Whether a setlist is printed as its song sheets or as its running order on one page. */
+@Composable
+private fun SetlistContentChoice(
+    settings: PrintSettings,
+    onSettings: (PrintSettings) -> Unit,
+) {
+    SettingsSectionTitle(text = stringResource(Res.string.print_setlist_content))
+    SegmentedChoice(
+        options = PrintSettings.SetlistMode.entries.map { mode ->
+            mode to stringResource(
+                if (mode == PrintSettings.SetlistMode.SONG_SHEETS) {
+                    Res.string.print_song_sheets
+                } else {
+                    Res.string.print_running_order
+                },
+            )
+        },
+        selected = settings.setlistMode,
+        onSelected = { onSettings(settings.copy(setlistMode = it)) },
+    )
+}

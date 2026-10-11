@@ -13,11 +13,19 @@ import androidx.compose.runtime.Composable
 import com.pandulapeter.campfire.domain.api.models.SongSection
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.checklist_selected
 import com.pandulapeter.campfire.presentation.resources.songs_unknown_artist
 import com.pandulapeter.campfire.presentation.resources.songs_unsorted_label
 
+/** @param selectionCount What is ticked, which the Selection header counts as the sheets' checklists count theirs. */
 @Composable
-internal fun SongSection.Header.displayText(): String = when (this) {
+internal fun SongGroupHeader.displayText(selectionCount: Int): String = when (this) {
+    is SongGroupHeader.Section -> header.displayText()
+    SongGroupHeader.Selection -> stringResource(Res.string.checklist_selected, selectionCount)
+}
+
+@Composable
+private fun SongSection.Header.displayText(): String = when (this) {
     // A song can be created without an artist, so the section still needs a name.
     is SongSection.Header.Artist -> name.ifBlank { stringResource(Res.string.songs_unknown_artist) }
     is SongSection.Header.Letter -> letter.toString()

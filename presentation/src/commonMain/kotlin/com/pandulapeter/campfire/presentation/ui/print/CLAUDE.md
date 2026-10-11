@@ -103,7 +103,7 @@ them; from 520dp of width it stands beside them) and, on Android and iOS, Share 
 share or file export entry. Its first option is the format, with a line saying what each is for — a **PDF**, for
 printing, or the library's own files, for sharing with other Campfire users: **ChordPro** for a song, the `.cho` file as
 the library holds it, and **Zip** for a setlist, a setlist manifest (its `*.setlist.json`) next to its songs as ChordPro
-files.
+files — and **Zip** too for several songs ticked in the songs screen's selection mode, the songs alone with no manifest.
 
 A setlist's songs are ticked off for either format alike, and a zip of only some of them carries a manifest naming only
 those (`ExportSetlistUseCase`'s `songFileNames`, everything else in the document kept), so that the archive never names

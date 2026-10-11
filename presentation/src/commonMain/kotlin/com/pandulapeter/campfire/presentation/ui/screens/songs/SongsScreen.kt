@@ -9,12 +9,14 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songs
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -29,6 +31,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -36,6 +39,9 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigationevent.NavigationEventInfo
+import androidx.navigationevent.compose.NavigationBackHandler
+import androidx.navigationevent.compose.rememberNavigationEventState
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_filter
@@ -53,6 +59,7 @@ import com.pandulapeter.campfire.presentation.ui.components.HideKeyboardWhenScro
 import com.pandulapeter.campfire.presentation.ui.components.ListLayout
 import com.pandulapeter.campfire.presentation.ui.components.ImportProgress
 import com.pandulapeter.campfire.presentation.ui.components.ListUnderAppBar
+import com.pandulapeter.campfire.presentation.ui.components.LocalOverlayState
 import com.pandulapeter.campfire.presentation.ui.components.NewItemMenu
 import com.pandulapeter.campfire.presentation.ui.components.SearchableTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.SongFilters
@@ -89,6 +96,15 @@ internal fun SongsScreen(
     val isSongFilterActive by viewModel.isSongFilterActive.collectAsStateWithLifecycle()
     val hasSongFilters by viewModel.hasSongFilters.collectAsStateWithLifecycle()
     val listState = rememberRetainedLazyGridState(viewModel.songsScrollPosition)
+    val isEditingSongs by viewModel.isEditingSongs.collectAsStateWithLifecycle()
+    // Snapshot state, read here so that a tick recomposes the screen it changes and nothing above it.
+    val selection = viewModel.selectedSongFileNames
+    val isSelecting = selection != null && viewModel.isSongSelecting && !isPerformanceModeEnabled
+    val shownSongGroups = if (isSelecting && selection != null) {
+        key(viewModel.songSelectionSession) { rememberSongGroupsWithSelection(songGroups, selection, viewModel.songSelectAllCount) }
+    } else {
+        songGroups
+    }
     val isSidePanelVisible = hasSongFilters && layout.hasRoomForSidePanel
     val listContentPadding = contentPadding.besideSidePanel(isSidePanelVisible)
     val columnCount = if (isSidePanelVisible) layout.columnCountBesideSidePanel else layout.columnCount
@@ -113,13 +129,13 @@ internal fun SongsScreen(
     val appBarReveal = animateAppBarReveal(
         searchState = viewModel.songsSearch,
         // The ranked results of a search come in one group with no header, and a placeholder has none either.
-        isShownWithoutSearch = placeholder != null || songGroups.groups.none { it.header != null },
+        isShownWithoutSearch = placeholder != null || shownSongGroups.groups.none { it.header != null },
     )
     // Loading can replace a headerless placeholder with the first section. Before search has ever opened,
     // lay that section out fully expanded on its first frame so the grid cannot retain a collapsed first row.
     var hasOpenedSearch by remember { mutableStateOf(isSearchOpen) }
     SideEffect { if (isSearchOpen) hasOpenedSearch = true }
-    val isHeaderless = placeholder != null || songGroups.groups.none { it.header != null }
+    val isHeaderless = placeholder != null || shownSongGroups.groups.none { it.header != null }
     val appBarProgress = remember(appBarReveal, isSearchOpen, hasOpenedSearch, isHeaderless) {
         { if (isSearchOpen || hasOpenedSearch) appBarReveal.value else if (isHeaderless) 1f else 0f }
     }
@@ -141,11 +157,13 @@ internal fun SongsScreen(
                         listState = listState,
                         placeholder = placeholder,
                         isSearchOpen = isSearchOpen,
-                        songGroups = songGroups,
+                        songGroups = shownSongGroups,
                         columnCount = columnCount,
                         hasLoadedLibrary = hasLoadedLibrary,
                         contentPadding = listContentPadding,
                         appBarOverlap = appBarOverlap,
+                        isSelecting = isSelecting,
+                        selection = selection.orEmpty(),
                     )
                 },
             ) {
@@ -155,14 +173,40 @@ internal fun SongsScreen(
                     placeholder = stringResource(Res.string.songs_search),
                     searchState = viewModel.songsSearch,
                     onReachChanged = { appBarReach = it },
-                    areClosedSearchActionsShown = !isPerformanceModeEnabled && placeholder.allowsNewItemMenu,
+                    areClosedSearchActionsShown = isSelecting || !isPerformanceModeEnabled && placeholder.allowsNewItemMenu,
+                    // The search is where most of a selection is put together, so its menu stays while the search is open.
+                    areClosedSearchActionsKeptInSearch = isSelecting,
                     closedSearchActions = {
-                        NewItemMenu(
-                            contentDescription = stringResource(Res.string.songs_new_song),
-                            createLabel = stringResource(Res.string.songs_create_song),
-                            onCreate = { viewModel.showDialog(DialogType.NewSong) },
-                            onImport = viewModel::importFiles,
-                        )
+                        AnimatedContent(
+                            targetState = isSelecting,
+                            transitionSpec = { fadeIn() togetherWith fadeOut() },
+                        ) { isShowingSelectionMenu ->
+                            if (isShowingSelectionMenu) {
+                                val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+                                val listedFileNames = remember(songGroups) { songGroups.groups.flatMap { group -> group.songs.map { it.fileName } } }
+                                val ticked = selection.orEmpty()
+                                SongSelectionMenu(
+                                    isRoomy = layout.columnCount > 1,
+                                    canSelectAll = listedFileNames.any { it !in ticked },
+                                    hasSelection = ticked.isNotEmpty(),
+                                    areActionsEnabled = ticked.isNotEmpty() && !isEditingSongs,
+                                    areSetlistsEnabled = userPreferences?.areSetlistsEnabled != false,
+                                    onSelectAll = { viewModel.selectSongs(listedFileNames) },
+                                    onDeselectAll = viewModel::deselectAllSongs,
+                                    onChooseSetlists = viewModel::showSelectionSetlists,
+                                    onManageTags = viewModel::showSelectionTags,
+                                    onManageLanguages = viewModel::showSelectionLanguages,
+                                    onExport = viewModel::exportSelection,
+                                )
+                            } else {
+                                NewItemMenu(
+                                    contentDescription = stringResource(Res.string.songs_new_song),
+                                    createLabel = stringResource(Res.string.songs_create_song),
+                                    onCreate = { viewModel.showDialog(DialogType.NewSong) },
+                                    onImport = viewModel::importFiles,
+                                )
+                            }
+                        }
                     },
                     actions = {
                         // Read here rather than by the screen, so that a preference changing recomposes the bar's
@@ -199,8 +243,14 @@ internal fun SongsScreen(
                 )
             }
         }
-        ImportProgress(isImporting = isImporting)
+        ImportProgress(isImporting = isImporting || isEditingSongs)
     }
+    val backGesture = rememberNavigationEventState(currentInfo = NavigationEventInfo.None)
+    NavigationBackHandler(
+        state = backGesture,
+        isBackEnabled = isSelecting && !isSearchOpen && visibleDialog == null && !LocalOverlayState.current.isAnyMenuOpen,
+        onBackCompleted = viewModel::endSongSelection,
+    )
 }
 
 /**

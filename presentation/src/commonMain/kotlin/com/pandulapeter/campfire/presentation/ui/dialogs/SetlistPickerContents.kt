@@ -12,8 +12,9 @@ package com.pandulapeter.campfire.presentation.ui.dialogs
 import com.pandulapeter.campfire.data.model.domain.Setlist
 
 /**
- * Whether the setlist picker for [songFileName] would list any setlist at all as it opens: an archived one only counts
- * while it holds the song, the way the sheet's own rows leave the other archived ones out.
+ * Whether the setlist picker for [songFileNames] - one song, or the songs ticked in the selection mode - would list any
+ * setlist at all as it opens: an archived one only counts while it holds one of the songs, the way the sheet's own rows
+ * leave the other archived ones out.
  */
-internal fun hasListableSetlist(setlists: List<Setlist>, songFileName: String) =
-    setlists.any { setlist -> !setlist.isArchived || setlist.entries.any { it.songFileName == songFileName } }
+internal fun hasListableSetlist(setlists: List<Setlist>, songFileNames: Collection<String>) =
+    setlists.any { setlist -> !setlist.isArchived || setlist.entries.any { it.songFileName in songFileNames } }

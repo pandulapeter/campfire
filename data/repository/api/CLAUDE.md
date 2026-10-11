@@ -15,7 +15,8 @@ Repository interfaces only. Consumed by `:domain:implementation`; implemented by
   the folder: the app back in front where the folder can be edited outside it, a retry, a sync run cut short by
   something that is not an exception), `refresh(fileNames)` (re-read only the files a sync run changed, which the run hands over while it goes and whichever
   way it ends), `adoptImported` (put the songs an import wrote into the list in one change, the way an import ends),
-  `saveSong`, `createSong`, `importFileName`, `importSong`, `deleteSong`.
+  `saveSong`, `editSongs` (an edit of many files at once, the selection's tags and languages, announced once),
+  `createSong`, `importFileName`, `importSong`, `deleteSong`.
 - `SetlistRepository` — the same shape over `*.setlist.json`, plus `parseSetlist` / `loadSetlistDocument` for the export
   and import paths (the latter optionally narrowed to some of the setlist's songs, for a zip of only those). A setlist that is already in the library is changed through `updateSetlist` (read the latest,
   transform, write, one change at a time), never by saving a copy the caller read earlier: that copy lags a write

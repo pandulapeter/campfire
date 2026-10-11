@@ -136,7 +136,11 @@ internal class ExportController(
     suspend fun preparePrintSource(dialog: DialogType.Export): PrintSource {
         val preferences = userPreferencesState.value.data
         val setlist = dialog.setlist
-        val entries = setlist?.entries ?: listOf(Setlist.Entry(requireNotNull(dialog.song).fileName))
+        val entries = when {
+            setlist != null -> setlist.entries
+            dialog.songs.isNotEmpty() -> dialog.songs.map { Setlist.Entry(it.fileName) }
+            else -> listOf(Setlist.Entry(requireNotNull(dialog.song).fileName))
+        }
         val songs = screenData.value.data?.unfilteredSongs.orEmpty().associateBy { it.fileName }
         // Read the way the viewer reads it, so that the page is in the key the screen shows: wrapped, and for a song a
         // setlist names more than once, the one amount the viewer settles on rather than whichever entry comes first.
@@ -148,7 +152,7 @@ internal class ExportController(
         val storedChordShapes = chordInstrument?.let { preferences.chordVoicings[it.id] }.orEmpty()
         val readsCapoAsTransposition = preferences.readsCapoAsTransposition
         val printSongs = entries.mapIndexed { index, entry ->
-            val song = songs[entry.songFileName] ?: dialog.song
+            val song = songs[entry.songFileName] ?: dialog.songs.firstOrNull { it.fileName == entry.songFileName } ?: dialog.song
             val content = getSongContent(entry.songFileName)
             val playedTransposition = transpositions.value[entry.songFileName, setlistFileName]
             // A setlist's tempo and capo are printed as its key is, being how the band plays it; the library's
@@ -177,8 +181,17 @@ internal class ExportController(
             PrintSong(entry.songFileName, song?.title ?: entry.songFileName.substringBeforeLast('.'), song?.artist,
                 index = if (setlist == null) null else index + 1, transposition = transposition, song = rendered, text = content?.text, chords = chords)
         }
-        return PrintSource(title = setlist?.title ?: requireNotNull(dialog.song).title,
-            description = setlist?.description.orEmpty(), isSetlist = setlist != null, songs = printSongs)
+        // Several songs are titled by the screen, which counts them in the app's language.
+        return PrintSource(
+            title = setlist?.title ?: dialog.song?.title.orEmpty(),
+            description = setlist?.description.orEmpty(),
+            kind = when {
+                setlist != null -> PrintSource.Kind.SETLIST
+                dialog.songs.isNotEmpty() -> PrintSource.Kind.SONGS
+                else -> PrintSource.Kind.SONG
+            },
+            songs = printSongs,
+        )
     }
 
     fun setPrintSettings(value: PrintSettings) = printSettingsPreference.set(value.normalized())
@@ -241,7 +254,8 @@ internal class ExportController(
 
     /**
      * The export screen's other format: a song as the `.cho` file it already is, a setlist as a zip of its manifest and
-     * the songs it names, narrowed to [songFileNames] where some were left out (null being all of them). A saved file
+     * the songs it names, and several songs as a zip of those songs alone, each narrowed to [songFileNames] where some
+     * were left out (null being all of them). A saved file
      * closes the screen, as a saved PDF does, and the same guard keeps a tap that lands while the screen slides away from
      * bringing a picker up over whatever is under it.
      */
@@ -251,14 +265,18 @@ internal class ExportController(
         launchFileTransfer {
             save(
                 filePicker = filePicker,
-                savedMessage = if (setlist == null) Message.SongExported else Message.SetlistExported,
+                savedMessage = when {
+                    setlist != null -> Message.SetlistExported
+                    dialog.songs.isNotEmpty() -> Message.SongsExported
+                    else -> Message.SongExported
+                },
                 isShare = isShare,
                 onSaved = { dialogHost.dismissSheet(dialog) },
             ) {
-                if (setlist == null) {
-                    exportSongs(listOf(requireNotNull(dialog.song).fileName))
-                } else {
-                    exportSetlist.invoke(setlist.fileName, songFileNames)
+                when {
+                    setlist != null -> exportSetlist.invoke(setlist.fileName, songFileNames)
+                    dialog.songs.isNotEmpty() -> exportSongs(dialog.songs.map { it.fileName }.filter { songFileNames == null || it in songFileNames })
+                    else -> exportSongs(listOf(requireNotNull(dialog.song).fileName))
                 }
             }
         }

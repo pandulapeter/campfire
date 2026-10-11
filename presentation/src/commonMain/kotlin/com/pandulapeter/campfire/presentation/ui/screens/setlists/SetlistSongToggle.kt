@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.setlists
 
+import androidx.compose.ui.state.ToggleableState
 import com.pandulapeter.campfire.data.model.domain.Setlist
 
 /**
@@ -20,4 +21,32 @@ internal fun Setlist.withSongTicked(songFileName: String, isTicked: Boolean): Se
     isTicked && entries.none { it.songFileName == songFileName } -> copy(entries = entries + Setlist.Entry(songFileName = songFileName))
     isTicked -> this
     else -> copy(entries = entries.filterNot { it.songFileName == songFileName })
+}
+
+/**
+ * The setlist with every one of [songFileNames] it does not name yet added to its end, in the order given, as one write
+ * of the selection's Choose setlists sheet. The songs it names already keep their places and their overrides.
+ */
+internal fun Setlist.withSongsAdded(songFileNames: List<String>): Setlist {
+    val named = entries.mapTo(hashSetOf()) { it.songFileName }
+    val added = songFileNames.distinct().filterNot { it in named }
+    return if (added.isEmpty()) this else copy(entries = entries + added.map { Setlist.Entry(songFileName = it) })
+}
+
+/** The setlist without the entries of [songFileNames], which is how the selection's sheet takes back what it added. */
+internal fun Setlist.withSongsTakenOut(songFileNames: Collection<String>): Setlist =
+    copy(entries = entries.filterNot { it.songFileName in songFileNames })
+
+/**
+ * The box of a setlist in the selection's Choose setlists sheet: ticked when it holds every one of [selection], empty
+ * when it holds none of them, and half ticked in between. [held] is what it held when the sheet opened and [added] what
+ * the sheet has put into it since, since the boxes follow the sheet's own record rather than the library.
+ */
+internal fun selectionBoxState(selection: Collection<String>, held: Set<String>, added: Set<String>): ToggleableState {
+    val count = selection.count { it in held || it in added }
+    return when {
+        count == 0 -> ToggleableState.Off
+        count == selection.size -> ToggleableState.On
+        else -> ToggleableState.Indeterminate
+    }
 }

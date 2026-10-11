@@ -144,6 +144,9 @@ fun CampfireViewModel.handleKeyEvent(keyEvent: KeyEvent, onExit: () -> Unit): Bo
         when {
             isSetlistReordering -> navigateBack()
             search?.isOpen?.value == true -> search.close()
+            // After the search rather than before it, unlike the reorder mode: the selection is put together through
+            // the search, and ending the mode is the step that loses something.
+            isSongSelecting -> navigateBack()
             backStack.size > 1 -> navigateBack()
             else -> confirmExit(onExit)
         }

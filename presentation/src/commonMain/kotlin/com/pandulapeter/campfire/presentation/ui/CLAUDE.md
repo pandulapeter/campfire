@@ -20,7 +20,8 @@ builds itself (no Koin definitions, each taking `viewModelScope`, the use cases 
 other holders it calls, so that there are no cycles), and every member the screens, the shells, `app/desktop` and
 `tools/screenshots` call is a one-line delegation to one of them — `MessageSink` (`ui/messages`, the snackbar queue and
 `launchLibraryChange`), `SavedStateStore`, `PreferencesController`, `LibraryState`, `SongListState`, `SongPickerState`,
-`SetlistsController`, `SongTextStore`, `SongMetadataEditing`, `ImportController`, `SyncController`,
+`SetlistsController`, `SongSelection` (the songs screen's selection mode), `SongTextStore`, `SongMetadataEditing`,
+`SelectionEditing` (the selection's tags and languages, through `EditSongsUseCase`), `ImportController`, `SyncController`,
 `CoverArtSearchController` and `AppExitController` (`ui/state`), `DialogHost` (`ui/dialogs`), `Navigator`
 (`ui/navigation`), `FontScaleController` (`ui/fontScale`), `PlayingOverrides` (`ui/playing`), `MetronomeController`
 (`ui/metronome`), `TunerController` (`ui/tuner`), `ExportController` (`ui/screens/export`), `EditorSession` (`ui/screens/songEditor`) and

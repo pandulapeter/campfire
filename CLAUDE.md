@@ -104,8 +104,9 @@ uninstall and nothing else does.
 
 ## Printing
 
-Every song and setlist has one export entry, which opens the export screen: a PDF for printing, or the library's own
-files (ChordPro, a zip for a setlist) for other Campfire users. Only what is printed goes into a PDF, and the Features
+Every song and setlist has one export entry, which opens the export screen, and so do the songs ticked in the songs
+screen's selection mode: a PDF for printing, or the library's own files (ChordPro, a zip for a setlist or for several
+songs) for other Campfire users. Only what is printed goes into a PDF, and the Features
 tab reaches the export screen. The detail is in `:presentation`'s `ui/screens/export/CLAUDE.md` (the screen) and
 `ui/print/CLAUDE.md` (the format choice, the options and the PDF pipeline).
 
@@ -224,12 +225,13 @@ tab reaches the export screen. The detail is in `:presentation`'s `ui/screens/ex
   predicates and the tag normalization), `:chordpro` (including chord-sheet conversion, and chord names, shapes and definitions, every shape of the tables checked against the chord it is filed under), `:domain:implementation` (`ImportPlanner` and conversion import plumbing),
   `:data:formats` (zip, bounded PDF/Word readers), `:data:source:local:implementation` (the JVM file storage, with independent-producer document goldens in `desktopTest`), `:data:source:remote:*` (hashing, encoders,
   the OAuth authorization URL, the cover search's queries, its `User-Agent` and its pace, the cover download),
-  `:data:repository:implementation` (the caches and the cover cache), `:data:sync:implementation` (`SyncPlanner`, which
+  `:data:repository:implementation` (the caches, the edit of many songs at once and the cover cache), `:data:sync:implementation` (`SyncPlanner`, which
   decides what happens to every file in a sync run, the engine and the synced preferences), `:metronome:*` (the sequencer, the synthesizer, the mixer, the engine's state machine, tap tempo and time signatures), `:tuner:*` (the note arithmetic and the presets, the FFT, the pitch detector against synthesized strings and any recording dropped into its `desktopTest` resources, the tracker, the tones, the engine's state machine, the sample ring and the FFT) and
   `:presentation` (the pure helpers behind its screens: the search index and ranking, the song picker's filter chips, the fast scroller's section
   index, the setlist slots, stepper labels, section grid and the cutting of sections into columns, the score a layout is chosen by, the narrow columns and the text fitted to a page, row snapping and section measurements of the details screen, the editor's token cache, where a song's tempo comes from, what a click plays for, which chords a song plays and which
   shape each is drawn with, the tuner's note names, the instruments its presets are offered under and what its tunings are called in each notation, the cents it writes, the strings it ticks off, the step its reading is announced at and which notice its page shows, the diagrams' geometry and what the editor's Chord shape button writes, the setlist reorder merge and
-  search and the list placeholders; and, over small fakes of their use cases, the song text writes, the metadata sheets'
+  search and the list placeholders, the selection mode's Selection section, its tag and language draft and what its
+  Choose setlists sheet adds; and, over small fakes of their use cases, the song text writes, the metadata sheets'
   edits, the playing overrides and the song filters), run on
   the desktop target with
   `./gradlew :data:model:desktopTest :data:formats:desktopTest :chordpro:desktopTest :domain:implementation:desktopTest :data:source:local:implementation:desktopTest :data:source:remote:api:desktopTest :data:source:remote:implementation:desktopTest :data:repository:implementation:desktopTest :data:sync:implementation:desktopTest :metronome:api:desktopTest :metronome:implementation:desktopTest :tuner:api:desktopTest :tuner:implementation:desktopTest :presentation:desktopTest`.
@@ -256,6 +258,9 @@ What the app does, one line each; the full text is in the file named (`:presenta
   and the countdown are fields of its file: `:presentation`'s `ui/screens/setlists/CLAUDE.md`.
 - Both list screens are searched from a button rather than an ever-present field, and a setlist that answers a search is
   shown whole: `:presentation`'s `ui/screens/CLAUDE.md`.
+- Songs are selected in a mode started from a song's menu, which lives only while the Songs screen is on top; what is
+  ticked is put into setlists, tagged, given languages or exported in one go, and never deleted in bulk:
+  `:presentation`'s `ui/screens/songs/CLAUDE.md`.
 - Tags, languages, the cover and links are part of the song file (ChordPro directives), so they travel with it through
   an export, an import or a sync run: `:presentation`'s `ui/CLAUDE.md`.
 - How a song is played (transposition, capo, tempo, time signature) is the first section of the song itself; the time

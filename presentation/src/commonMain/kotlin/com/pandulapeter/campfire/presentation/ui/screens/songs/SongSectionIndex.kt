@@ -13,16 +13,17 @@ import com.pandulapeter.campfire.domain.api.models.SongSection
 
 /** Cumulative lazy-grid boundaries keep fast-scroll lookup and pushed-header lookup proportional to sections. */
 internal class SongSectionIndex(groups: List<Group>) {
-    data class Group(val songCount: Int, val header: SongSection.Header?)
+    /** @param itemCount The items of the group under its header: its songs, and the Selection section's divider. */
+    data class Group(val itemCount: Int, val header: SongGroupHeader?)
 
     private val ends = IntArray(groups.size)
     private val labels = ArrayList<String?>(groups.size)
-    private val headersByKey = mutableMapOf<String, SongSection.Header>()
+    private val headersByKey = mutableMapOf<String, SongGroupHeader>()
 
     init {
         var end = 0
         groups.forEachIndexed { index, group ->
-            end += group.songCount + if (group.header == null) 0 else 1
+            end += group.itemCount + if (group.header == null) 0 else 1
             ends[index] = end
             labels += group.header?.fastScrollerLabel
             group.header?.let { headersByKey["header_${it.key}"] = it }
@@ -40,17 +41,24 @@ internal class SongSectionIndex(groups: List<Group>) {
         return labels[low]
     }
 
-    fun headerForKey(key: Any): SongSection.Header? = headersByKey[key]
+    fun headerForKey(key: Any): SongGroupHeader? = headersByKey[key]
 }
 
 /**
  * The single character shown in the bubble of the fast scroller while this section is at the top of the list.
  */
-private val SongSection.Header.fastScrollerLabel: String
+private val SongGroupHeader.fastScrollerLabel: String
     get() = when (this) {
-        is SongSection.Header.Artist -> initial?.toString() ?: SYMBOLS_LABEL
-        is SongSection.Header.Letter -> letter.toString()
-        SongSection.Header.Symbols -> SYMBOLS_LABEL
+        is SongGroupHeader.Section -> when (val header = header) {
+            is SongSection.Header.Artist -> header.initial?.toString() ?: SYMBOLS_LABEL
+            is SongSection.Header.Letter -> header.letter.toString()
+            SongSection.Header.Symbols -> SYMBOLS_LABEL
+        }
+
+        SongGroupHeader.Selection -> SELECTION_LABEL
     }
 
 private const val SYMBOLS_LABEL = "#"
+
+/** The selection has no letter, and a check mark is what its boxes are ticked with. */
+private const val SELECTION_LABEL = "\u2713"

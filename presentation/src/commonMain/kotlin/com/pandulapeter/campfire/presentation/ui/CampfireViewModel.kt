@@ -66,6 +66,7 @@ import com.pandulapeter.campfire.domain.api.useCases.DeleteSongUseCase
 import com.pandulapeter.campfire.domain.api.useCases.DuplicateSongUseCase
 import com.pandulapeter.campfire.domain.api.useCases.DisconnectSyncProviderUseCase
 import com.pandulapeter.campfire.domain.api.useCases.EditSetlistUseCase
+import com.pandulapeter.campfire.domain.api.useCases.EditSongsUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ExportLibraryUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ExportSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ExportSongsUseCase
@@ -150,12 +151,14 @@ import com.pandulapeter.campfire.presentation.ui.state.ImportController.ImportRe
 import com.pandulapeter.campfire.presentation.ui.state.LibraryState
 import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
+import com.pandulapeter.campfire.presentation.ui.state.SelectionEditing
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.Companion.SONG_FILTER_KEY
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.SavedSongFilter
 import com.pandulapeter.campfire.presentation.ui.state.SetlistsController
 import com.pandulapeter.campfire.presentation.ui.state.SongListState
 import com.pandulapeter.campfire.presentation.ui.state.SongMetadataEditing
 import com.pandulapeter.campfire.presentation.ui.state.SongPickerState
+import com.pandulapeter.campfire.presentation.ui.state.SongSelection
 import com.pandulapeter.campfire.presentation.ui.state.SongTextStore
 import com.pandulapeter.campfire.presentation.ui.state.SyncController
 import com.pandulapeter.campfire.presentation.ui.state.asState
@@ -213,6 +216,7 @@ class CampfireViewModel(
     getSongContentInvalidations: GetSongContentInvalidationsUseCase,
     private val createSong: CreateSongUseCase,
     private val duplicateSong: DuplicateSongUseCase,
+    private val editSongs: EditSongsUseCase,
     private val deleteSong: DeleteSongUseCase,
     private val deleteLibrary: DeleteLibraryUseCase,
     private val prepareImport: PrepareImportUseCase,
@@ -377,10 +381,17 @@ class CampfireViewModel(
         hasUnsavedEditorChanges = { hasUnsavedEditorChanges.value },
         isSetlistReordering = { isSetlistReordering },
         endSetlistReordering = { reorderingSetlistFileName = null },
+        isSongSelecting = { isSongSelecting },
+        endSongSelection = { endSongSelection() },
         onTransitionEnded = { pruneSongTexts() },
     ).apply {
         addOnBackStackChanged { _, stack ->
             if (stack.lastOrNull() != CampfireDestination.Setlists) reorderingSetlistFileName = null
+        }
+        addOnBackStackChanged { _, stack ->
+            // A tab tapped, a song opened by an import, the import screen: none of them may stand over a mode nobody can
+            // see, so leaving the songs drops the selection, as the reorder mode is dropped with its screen.
+            if (stack.lastOrNull() != CampfireDestination.Songs) endSongSelection()
         }
         addOnBackStackChanged { previousTop, stack ->
             // The two screens that hold a metronome are the two it can be stopped from, so a click never outlives the one
@@ -412,6 +423,30 @@ class CampfireViewModel(
 
     /** See [Navigator.backStack]. */
     val backStack: SnapshotStateList<CampfireDestination> get() = navigator.backStack
+
+    private val songSelection: SongSelection = SongSelection(scope = viewModelScope, backStack = backStack)
+
+    /** See [SongSelection.selectedSongFileNames]. */
+    internal val selectedSongFileNames: Set<String>? get() = songSelection.selectedSongFileNames
+
+    /** See [SongSelection.session]. */
+    internal val songSelectionSession: Int get() = songSelection.session
+
+    /** See [SongSelection.selectAllCount]. */
+    internal val songSelectAllCount: Int get() = songSelection.selectAllCount
+
+    /** See [SongSelection.isSongSelecting]. */
+    internal val isSongSelecting: Boolean get() = songSelection.isSongSelecting
+
+    internal fun startSongSelection(fileName: String) = songSelection.start(fileName)
+
+    internal fun toggleSongSelection(fileName: String) = songSelection.toggle(fileName)
+
+    internal fun selectSongs(fileNames: Collection<String>) = songSelection.select(fileNames)
+
+    internal fun deselectAllSongs() = songSelection.deselectAll()
+
+    internal fun endSongSelection() = songSelection.end()
 
     /** See [Navigator.navigationGeneration]. */
     val navigationGeneration: Int get() = navigator.navigationGeneration
@@ -548,6 +583,25 @@ class CampfireViewModel(
         setChordProLinks = setChordProLinks,
         setChordProMetadata = setChordProMetadata,
     )
+
+    private val selectionEditing: SelectionEditing = SelectionEditing(
+        scope = viewModelScope,
+        messageSink = messageSink,
+        editSongs = editSongs,
+        parseChordPro = parseChordPro,
+        setChordProTag = setChordProTag,
+        setChordProLanguages = setChordProLanguages,
+    )
+
+    /** See [SelectionEditing.isEditingSongs]. */
+    val isEditingSongs: StateFlow<Boolean> get() = selectionEditing.isEditingSongs
+
+    /** See [SelectionEditing.setSelectionTags]. */
+    fun setSelectionTags(fileNames: List<String>, added: List<String>, removed: Set<String>) = selectionEditing.setSelectionTags(fileNames, added, removed)
+
+    /** See [SelectionEditing.setSelectionLanguages]. */
+    fun setSelectionLanguages(fileNames: List<String>, added: Set<String>, removed: Set<String>) =
+        selectionEditing.setSelectionLanguages(fileNames, added, removed)
 
     /** See [SongTextStore.songTexts]. */
     val songTexts: StateFlow<Map<String, String>> get() = songTextStore.songTexts
@@ -959,6 +1013,11 @@ class CampfireViewModel(
         dialogHost.startClosingWithSong(allSongs = allSongs, isLoading = isLoading, songsBeingRenamed = songsBeingRenamed)
         editorSession.startRecovery()
         restoreVisibleDialog()
+        songSelection.startPruning(screenData)
+        viewModelScope.launch {
+            // Performance mode leaves no row menu to start the mode from, and no way to act on what is ticked.
+            isPerformanceModeEnabled.collect { if (it) endSongSelection() }
+        }
         savedStateStore.startPersisting(
             songFilter = _songFilter,
             songPickerSelectedTags = songPickerSelectedTags,
@@ -1054,6 +1113,43 @@ class CampfireViewModel(
     private fun popBackStack(isPredictiveBackCompleted: Boolean = false) = navigator.popBackStack(isPredictiveBackCompleted)
 
     // Songs
+
+    /**
+     * What is ticked in the selection mode, in the order the songs screen sorts by rather than the order it was ticked
+     * in, which is the order its sheets list and write the songs in and its export prints them in.
+     */
+    private fun selectionInListOrder(): List<String> {
+        val selected = selectedSongFileNames ?: return emptyList()
+        val sorted = screenData.value.data?.sortedSongs.orEmpty().mapNotNull { song -> song.fileName.takeIf { it in selected } }
+        return sorted + (selected - sorted.toSet())
+    }
+
+    /** The selection's Choose setlists sheet, or the naming sheet straight away where there is no setlist to list. */
+    internal fun showSelectionSetlists() {
+        selectionInListOrder().takeIf { it.isNotEmpty() }?.let { showDialog(DialogType.SelectionSetlists(it)) }
+    }
+
+    internal fun showSelectionTags() {
+        selectionInListOrder().takeIf { it.isNotEmpty() }?.let { showDialog(DialogType.SelectionTags(it)) }
+    }
+
+    internal fun showSelectionLanguages() {
+        selectionInListOrder().takeIf { it.isNotEmpty() }?.let { showDialog(DialogType.SelectionLanguages(it)) }
+    }
+
+    /**
+     * The export screen over what is ticked: one song is exactly the row's own Export, several are a third kind of
+     * source next to a song and a setlist, printed in the order the screen sorts by and in the keys the library plays
+     * them in.
+     */
+    internal fun exportSelection() {
+        val songs = selectionInListOrder().mapNotNull { songsByFileName.value[it] }
+        when (songs.size) {
+            0 -> Unit
+            1 -> showDialog(DialogType.Export(song = songs.single()))
+            else -> showDialog(DialogType.Export(songs = songs))
+        }
+    }
 
     fun refresh() = libraryState.refresh()
 
@@ -1351,7 +1447,14 @@ class CampfireViewModel(
 
     fun createSetlist(title: String, description: String, date: LocalDate, isCountdownShown: Boolean) = setlistsController.createSetlist(title, description, date, isCountdownShown)
 
-    fun createSetlistWithSong(title: String, description: String, date: LocalDate, isCountdownShown: Boolean, songFileName: String) = setlistsController.createSetlistWithSong(title, description, date, isCountdownShown, songFileName)
+    fun createSetlistWithSongs(title: String, description: String, date: LocalDate, isCountdownShown: Boolean, songFileNames: List<String>) =
+        setlistsController.createSetlistWithSongs(title, description, date, isCountdownShown, songFileNames)
+
+    /** See [SetlistsController.addSongsToSetlist]. */
+    fun addSongsToSetlist(songFileNames: List<String>, setlistFileName: String) = setlistsController.addSongsToSetlist(songFileNames, setlistFileName)
+
+    /** See [SetlistsController.takeSongsOutOfSetlist]. */
+    fun takeSongsOutOfSetlist(songFileNames: Collection<String>, setlistFileName: String) = setlistsController.takeSongsOutOfSetlist(songFileNames, setlistFileName)
 
     fun addSongToSetlist(songFileName: String, setlistFileName: String) = setlistsController.addSongToSetlist(songFileName, setlistFileName)
 

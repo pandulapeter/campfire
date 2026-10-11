@@ -16,7 +16,16 @@ import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 
 sealed interface DialogType {
-    data class Export(val song: Song? = null, val setlist: Setlist? = null, val songSetlistFileName: String? = null) : DialogType
+    /**
+     * The export screen over one [song], a [setlist], or [songs] ticked in the selection mode, which are several songs in
+     * no running order of anyone's making.
+     */
+    data class Export(
+        val song: Song? = null,
+        val setlist: Setlist? = null,
+        val songSetlistFileName: String? = null,
+        val songs: List<Song> = emptyList(),
+    ) : DialogType
     data object NewSetlist : DialogType
     data object NewSong : DialogType
     /**
@@ -39,6 +48,17 @@ sealed interface DialogType {
      * moment ago may not have.
      */
     data class SongPicker(val setlist: Setlist) : DialogType
+    /**
+     * Every setlist with a three-state box for the songs ticked in the selection mode ([songFileNames], in the order the
+     * songs screen sorts by), which only ever adds them and takes back only what it added.
+     */
+    data class SelectionSetlists(val songFileNames: List<String>) : DialogType
+
+    /** The tags of the songs ticked in the selection mode, a row half ticked where only some of them carry it. */
+    data class SelectionTags(val songFileNames: List<String>) : DialogType
+
+    /** The languages of the songs ticked in the selection mode, the way [SelectionTags] asks about their tags. */
+    data class SelectionLanguages(val songFileNames: List<String>) : DialogType
     data class DeleteSetlist(val setlist: Setlist) : DialogType
     data class RemoveSongFromSetlist(val songFileName: String, val songTitle: String, val setlistFileName: String) : DialogType
     data class EditSetlist(val setlist: Setlist) : DialogType

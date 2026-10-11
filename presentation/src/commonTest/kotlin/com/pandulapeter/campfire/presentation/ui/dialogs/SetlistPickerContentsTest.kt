@@ -35,23 +35,29 @@ class SetlistPickerContentsTest {
 
     @Test
     fun `no setlists list nothing`() {
-        assertFalse(hasListableSetlist(setlists = emptyList(), songFileName = songFileName))
+        assertFalse(hasListableSetlist(setlists = emptyList(), songFileNames = listOf(songFileName)))
     }
 
     @Test
     fun `archived setlists without the song list nothing`() {
         val setlists = listOf(setlist("a.setlist.json", true, "other.cho"), setlist("b.setlist.json", true))
-        assertFalse(hasListableSetlist(setlists = setlists, songFileName = songFileName))
+        assertFalse(hasListableSetlist(setlists = setlists, songFileNames = listOf(songFileName)))
     }
 
     @Test
     fun `an archived setlist holding the song is listed`() {
         val setlists = listOf(setlist("a.setlist.json", true, songFileName), setlist("b.setlist.json", true))
-        assertTrue(hasListableSetlist(setlists = setlists, songFileName = songFileName))
+        assertTrue(hasListableSetlist(setlists = setlists, songFileNames = listOf(songFileName)))
     }
 
     @Test
     fun `an unarchived setlist without the song is listed`() {
-        assertTrue(hasListableSetlist(setlists = listOf(setlist("a.setlist.json", false)), songFileName = songFileName))
+        assertTrue(hasListableSetlist(setlists = listOf(setlist("a.setlist.json", false)), songFileNames = listOf(songFileName)))
+    }
+
+    @Test
+    fun `an archived setlist holding one of the selected songs is listed`() {
+        val setlists = listOf(setlist("a.setlist.json", true, "other.cho"))
+        assertTrue(hasListableSetlist(setlists = setlists, songFileNames = listOf(songFileName, "other.cho")))
     }
 }

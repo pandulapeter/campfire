@@ -266,3 +266,27 @@ dialog is up rather than covering whatever is typed into it. Its Cancel, offered
 phases stay uncancellable, and tapping outside or Back never cancels. Comparing and the final library update have no
 count, so their bar is indeterminate. It is only the happy path's: the import screen shows the progress of an import it
 reports on itself, with the same `ImportProgressContent`. The first-run demo import shows none of it.
+
+### The selection mode's sheets
+
+The songs ticked in the songs screen's selection mode (see `ui/screens/songs`) get three sheets, each subtitled with
+how many songs it is about and holding the selection as it was when it opened, in the order the screen sorts by; none
+of them has a `SavedDialog`, since the mode is not restored either. **Choose setlists** (`SelectionSetlistsSheet`) is
+the setlist picker with a box per setlist that is ticked where it holds all of the songs, empty where it holds none and
+half ticked in between (`selectionBoxState`, following the sheet's own record of what each setlist held as it opened
+and what the sheet added since rather than the library): a tap on an empty or half ticked box adds the songs it lacks
+to its end as one write (`Setlist.withSongsAdded`), and a tap on a box the sheet filled takes out exactly those
+(`withSongsTakenOut`) — a song the setlist held already is never taken out from here, since that loses its place and
+its key in it. A setlist that held them all is ticked and disabled, an archived one is listed only where it holds one of
+them, and a library with nothing to list skips to the naming sheet, whose setlist is created holding the whole
+selection (`createSetlistWithSongs`, which the one-song picker goes through too).
+
+**Manage tags** and **Manage languages** are the one-song sheets' bodies (`TagsSheet`, `LanguagesSheet`), which both the
+one-song dialogs and the selection's use, driven by `BulkLabelDraft`: a row starts on where every song carries the label,
+off where none does and half ticked otherwise, a half ticked row goes on, off and back to half ticked, the rest only on
+and off, and Save writes only what was turned on (onto every song) and what was turned off (off every song), leaving a
+half ticked row alone in every file — for one song no row is ever half ticked, which is why the two share a body. The
+selection's are written by `CampfireViewModel.setSelectionTags` / `setSelectionLanguages` (`SelectionEditing`), each
+file edited as it is on disk through `EditSongsUseCase`, which announces the change once, and the whole of it ends in
+one snackbar: how many songs were updated, or how many could not be.
+

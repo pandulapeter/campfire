@@ -51,7 +51,8 @@ import org.jetbrains.compose.resources.painterResource
  * @param leadingItems Actions put before the song's own: the ones that belong to the row rather than to the song
  *   (moving a row of a setlist up or down, and taking it out of the setlist), and on the song details screen whichever
  *   of its bar's buttons the bar has no room for: the setlist assignments and the tuner.
- * @param fileEditItems Metadata editors, kept after the editor in the menu: tags and languages on a song card.
+ * @param fileEditItems Entries kept after the editor in the menu: on a song card, the way into the selection mode and
+ *   then the metadata editors (tags and languages).
  * @param menuFooter The song details screen's text size stepper, see [ActionsMenu].
  */
 @Composable

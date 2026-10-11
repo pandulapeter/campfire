@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.repository.api
 
 import com.pandulapeter.campfire.data.model.DataState
+import com.pandulapeter.campfire.data.model.domain.EditedSongs
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.SongContent
 import kotlinx.coroutines.flow.Flow
@@ -56,6 +57,19 @@ interface SongRepository {
 
     /** See `SongLocalSource.importFileName`: the name an imported song wants, before anything is written. */
     fun importFileName(fallbackTitle: String, text: String): String
+
+    /**
+     * Applies [edit] to each of [fileNames] as the file holds it on disk, and writes the ones whose text it changed: the
+     * selection's tags and languages, written into many songs at once. Each file is read and written under the library's
+     * file lock, so no sync run writes it in between and there is no expected text to compare, and each write, once
+     * begun, is finished whatever happens to the caller. The list and the cached texts are then updated once and the
+     * library change announced once, as an import is, rather than once per file - three hundred songs tagged one at a
+     * time would be three hundred emissions of the whole library.
+     *
+     * A file that cannot be read or written is named among the failed ones and the rest carry on; a file whose text
+     * the edit leaves as it was is neither written nor named.
+     */
+    suspend fun editSongs(fileNames: Collection<String>, edit: (text: String) -> String): EditedSongs
 
     /**
      * Writes an imported song under [fileName] and returns it, suffixing the name until it is free unless

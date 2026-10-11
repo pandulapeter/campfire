@@ -33,6 +33,7 @@ class NavigatorTest {
 
     private var hasUnsavedText = false
     private var isReordering = false
+    private var isSelecting = false
     private var topLevelDestinations = CampfireDestination.TopLevel.entries
     private val savedStateHandle = SavedStateHandle()
     private val songsSearch = SearchState()
@@ -50,6 +51,8 @@ class NavigatorTest {
         hasUnsavedEditorChanges = { hasUnsavedText },
         isSetlistReordering = { isReordering },
         endSetlistReordering = { isReordering = false },
+        isSongSelecting = { isSelecting },
+        endSongSelection = { isSelecting = false },
         onTransitionEnded = {},
     )
 

@@ -132,6 +132,8 @@ The ones that carry real logic:
   be read, or is larger than a song or a setlist can be (and so is never opened), is named beside the archive. The
   view model says so after the save.
 - `CreateSongUseCaseImpl` — writes the new-song template (`{title}`, `{artist}` — empty where New song gave none — an empty `{key}`, `{capo: 0}`, `{tempo: 120}` and `{time: 4/4}`, the values a song declaring none is played by, and an empty verse), adding any nonblank subtitle, album, composer, lyricist, year and duration from New song through `ChordProMetadataFields`. The title and artist arguments remain authoritative for the metadata and file naming; blank optional fields add no directives.
+- `EditSongsUseCaseImpl` — `SongRepository.editSongs`, the selection mode's tags and languages written into many songs
+  with one announcement of the change.
 - `DuplicateSongUseCaseImpl` — the copy behind Duplicate song: the original's text as the file holds it when the copy is made, with only the fields the user changed set through `ChordProMetadataFields`, written as a new song named by the copy's own display title and artist (so a "Live" subtitle gives it a name of its own, and an unchanged copy is numbered). Null, writing nothing, where the original can no longer be read.
 - `TransposeChordProUseCaseImpl` / `TransposeChordProTextUseCaseImpl` / `ParseChordProUseCaseImpl` /
   `ConvertChordProNotationUseCaseImpl` / `ConvertChordProTextNotationUseCaseImpl` / `PrettifyChordProUseCaseImpl` — thin wrappers over `:chordpro`, so

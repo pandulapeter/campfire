@@ -63,12 +63,14 @@ class BrowserRoutesTest {
     private fun inputs(
         state: NavigationState,
         isSetlistReordering: Boolean = false,
+        isSongSelecting: Boolean = false,
         hasOverlay: Boolean = false,
     ) = RouteInputs(
         backStack = state.backStack,
         isSongsSearchOpen = state.isSongsSearchOpen,
         isSetlistsSearchOpen = state.isSetlistsSearchOpen,
         isSetlistReordering = isSetlistReordering,
+        isSongSelecting = isSongSelecting,
         settingsTab = state.settingsTab,
         currentSongFileNames = state.backStack.filterIsInstance<CampfireDestination.SongDetails>()
             .associate { it.id to it.songFileNames.getOrNull(it.initialIndex) },
@@ -101,6 +103,12 @@ class BrowserRoutesTest {
     @Test
     fun `every screen, search and settings tab is an entry of its own`() =
         statesWithPaths.forEach { (state, paths) -> assertEquals(paths, BrowserRoutes.paths(inputs(state))) }
+
+    @Test
+    fun `the selection mode repeats the songs under their search`() {
+        assertEquals(listOf("", ""), BrowserRoutes.paths(inputs(home, isSongSelecting = true)))
+        assertEquals(listOf("", "", "search"), BrowserRoutes.paths(inputs(home.copy(isSongsSearchOpen = true), isSongSelecting = true)))
+    }
 
     @Test
     fun `the reorder mode repeats the setlists only while their search is closed`() {

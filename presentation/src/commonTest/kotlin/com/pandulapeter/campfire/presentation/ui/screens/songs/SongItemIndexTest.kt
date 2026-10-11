@@ -18,8 +18,8 @@ import kotlin.test.assertNull
 class SongItemIndexTest {
 
     private val groups = listOf(
-        SongGroup(header = SongSection.Header.Letter('A'), songs = listOf(song("a1"), song("a2"))),
-        SongGroup(header = SongSection.Header.Letter('B'), songs = listOf(song("b1"))),
+        SongGroup(header = SongGroupHeader.Section(SongSection.Header.Letter('A')), songs = listOf(song("a1"), song("a2"))),
+        SongGroup(header = SongGroupHeader.Section(SongSection.Header.Letter('B')), songs = listOf(song("b1"))),
     )
 
     @Test
@@ -40,6 +40,21 @@ class SongItemIndexTest {
 
     @Test
     fun `a key no song has is nowhere`() = assertNull(groups.itemIndexOf("song_c1.cho", hasPlaceholder = false))
+
+    @Test
+    fun `the divider under the selection is counted`() {
+        val selected = listOf(SongGroup(header = SongGroupHeader.Selection, songs = listOf(song("b1")))) + groups
+        assertEquals(1, selected.itemIndexOf(songItemKey(song("b1")), hasPlaceholder = false))
+        assertEquals(4, selected.itemIndexOf(songItemKey(song("a1")), hasPlaceholder = false))
+    }
+
+    @Test
+    fun `a copy in the selection is an item apart from its song`() {
+        val selection = SongGroup(header = SongGroupHeader.Selection, songs = listOf(song("b1")), copiedFileNames = setOf("b1.cho"))
+        val selected = listOf(selection) + groups
+        assertEquals(1, selected.itemIndexOf(selection.itemKey(song("b1")), hasPlaceholder = false))
+        assertEquals(7, selected.itemIndexOf(songItemKey(song("b1")), hasPlaceholder = false))
+    }
 
     private fun song(name: String) = Song(
         fileName = "$name.cho",

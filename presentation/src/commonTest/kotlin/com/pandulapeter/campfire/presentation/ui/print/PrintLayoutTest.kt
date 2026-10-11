@@ -197,7 +197,7 @@ internal class PrintLayoutTest {
         val first = song(listOf(ChordProLine.Lyrics("First lyrics", emptyList()))).copy(title = "First", index = 1)
         val missing = first.copy(fileName = "missing.cho", title = "Missing song", index = 3, song = null)
         val last = first.copy(title = "Last", index = 5)
-        val source = PrintSource("Concert", isSetlist = true, songs = listOf(first, missing, last))
+        val source = PrintSource("Concert", kind = PrintSource.Kind.SETLIST, songs = listOf(first, missing, last))
         val text = layout(source, PrintSettings(setlistMode = PrintSettings.SetlistMode.RUNNING_ORDER)).pages.flatMap { it.texts }.map { it.text }
         assertEquals(listOf("1. First (Key: D)", "3. Missing song [Missing]", "5. Last (Key: D)"), text.filter { it.firstOrNull()?.isDigit() == true && it.length > 8 })
         assertFalse("First lyrics" in text)
@@ -206,7 +206,7 @@ internal class PrintLayoutTest {
     @Test fun `setlist songs start on new pages and keep original order`() = runTest {
         val first = song(listOf(ChordProLine.Lyrics("First lyrics", emptyList()))).copy(title = "First", index = 1)
         val last = first.copy(title = "Last", index = 2)
-        val document = layout(PrintSource("Concert", isSetlist = true, songs = listOf(first, last)))
+        val document = layout(PrintSource("Concert", kind = PrintSource.Kind.SETLIST, songs = listOf(first, last)))
         assertEquals(3, document.pages.size)
         assertEquals(listOf("Concert", "1. First", "2. Last"), document.pages.map { it.texts.first().text })
     }
@@ -385,7 +385,7 @@ internal class PrintLayoutTest {
 
     @Test fun `a multi line description takes a row per line`() = runTest {
         val entry = song(lyrics(1)).copy(index = 1)
-        val document = layout(PrintSource("Concert", "a\nb", isSetlist = true, songs = listOf(entry)), PrintSettings(setlistMode = PrintSettings.SetlistMode.RUNNING_ORDER))
+        val document = layout(PrintSource("Concert", "a\nb", kind = PrintSource.Kind.SETLIST, songs = listOf(entry)), PrintSettings(setlistMode = PrintSettings.SetlistMode.RUNNING_ORDER))
         val texts = document.pages.flatMap { it.texts }
         assertEquals(texts.first { it.text == "a" }.y + 12 * 1.45f, texts.first { it.text == "b" }.y, 0.01f)
         assertFalse(texts.any { '\n' in it.text || '\r' in it.text })

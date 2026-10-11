@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.search
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.domain.api.models.SongSection
 import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroup
+import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroupHeader
 
 /** A song with the title, artist and tags the search compares, normalized for searching. */
 internal data class SearchableSong(
@@ -121,7 +122,7 @@ internal fun songGroupsFor(
     filtered: List<SearchableSong>,
     normalizedQuery: String,
 ): List<SongGroup> = if (normalizedQuery.isEmpty()) {
-    sections.map { SongGroup(header = it.header, songs = it.songs) }
+    sections.map { SongGroup(header = SongGroupHeader.Section(it.header), songs = it.songs) }
 } else {
     rankSongs(filtered, normalizedQuery).takeIf { it.isNotEmpty() }?.let { listOf(SongGroup(header = null, songs = it)) }.orEmpty()
 }

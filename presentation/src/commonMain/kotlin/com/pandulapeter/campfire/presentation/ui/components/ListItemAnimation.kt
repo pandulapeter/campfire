@@ -195,11 +195,18 @@ internal fun LazyGridItemScope.listItemAnimation(
 /**
  * [listItemAnimation] for a row of a lazy list rather than a grid: the lists of the sheets and the dialogs, which are
  * never rearranged by a drag and never filled in batches, and so need neither of the grid's exceptions.
+ *
+ * @param placementSpec Null for a list whose rows only ever move because a row above them folds out or away: they
+ *   already follow that fold frame by frame, and a placement animation on top of it would spring after every one of
+ *   those frames and settle again once the fold had finished.
  */
 @Composable
-internal fun LazyItemScope.listItemAnimation(listState: ScrollableState) = Modifier.animateItem(
+internal fun LazyItemScope.listItemAnimation(
+    listState: ScrollableState,
+    placementSpec: FiniteAnimationSpec<IntOffset>? = ITEM_PLACEMENT_SPEC,
+) = Modifier.animateItem(
     fadeInSpec = ITEM_FADE_SPEC,
-    placementSpec = if (listState.isScrollInProgress) null else ITEM_PLACEMENT_SPEC,
+    placementSpec = if (listState.isScrollInProgress) null else placementSpec,
     fadeOutSpec = ITEM_FADE_SPEC,
 )
 

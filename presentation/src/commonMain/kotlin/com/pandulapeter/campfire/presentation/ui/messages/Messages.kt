@@ -23,6 +23,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.presentation.localization.stringResource
+import com.pandulapeter.campfire.presentation.localization.pluralStringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.error_link_not_opened
 import com.pandulapeter.campfire.presentation.resources.error_operation_failed
@@ -32,6 +33,7 @@ import com.pandulapeter.campfire.presentation.resources.export_pdf_saved
 import com.pandulapeter.campfire.presentation.resources.export_setlist_saved
 import com.pandulapeter.campfire.presentation.resources.export_skipped_files
 import com.pandulapeter.campfire.presentation.resources.export_song_saved
+import com.pandulapeter.campfire.presentation.resources.export_songs_saved
 import com.pandulapeter.campfire.presentation.resources.export_too_large_to_import
 import com.pandulapeter.campfire.metronome.api.model.MetronomeStopReason
 import com.pandulapeter.campfire.presentation.resources.metronome_stopped_disconnected
@@ -50,6 +52,8 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_draft_restor
 import com.pandulapeter.campfire.presentation.resources.song_editor_file_gone
 import com.pandulapeter.campfire.presentation.resources.song_editor_save_failed
 import com.pandulapeter.campfire.presentation.resources.songs_delete_song_partly
+import com.pandulapeter.campfire.presentation.resources.songs_selection_failed
+import com.pandulapeter.campfire.presentation.resources.songs_selection_updated
 import com.pandulapeter.campfire.presentation.resources.songs_update_file_name_partly
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.pluralTextResource
@@ -91,6 +95,7 @@ internal fun Messages(
         Message.ExportFailed -> stringResource(Res.string.export_failed)
         Message.PdfSaved -> stringResource(Res.string.export_pdf_saved)
         Message.SongExported -> stringResource(Res.string.export_song_saved)
+        Message.SongsExported -> stringResource(Res.string.export_songs_saved)
         Message.SetlistExported -> stringResource(Res.string.export_setlist_saved)
         Message.LibraryExported -> stringResource(Res.string.export_library_saved)
         Message.ExportTooLargeToImport -> stringResource(Res.string.export_too_large_to_import)
@@ -106,6 +111,8 @@ internal fun Messages(
         Message.EditorDraftRestored -> stringResource(Res.string.song_editor_draft_restored)
         Message.EditedSongFileGone -> stringResource(Res.string.song_editor_file_gone)
         Message.OperationFailed -> stringResource(Res.string.error_operation_failed)
+        is Message.SongsUpdated -> pluralStringResource(Res.plurals.songs_selection_updated, current.count, current.count)
+        is Message.SongsNotUpdated -> pluralStringResource(Res.plurals.songs_selection_failed, current.count, current.count)
         Message.SongFileRenamedPartly -> stringResource(Res.string.songs_update_file_name_partly)
         Message.SongDeletedPartly -> stringResource(Res.string.songs_delete_song_partly)
         is Message.LinkNotOpened -> textResource(Res.string.error_link_not_opened, current.url)

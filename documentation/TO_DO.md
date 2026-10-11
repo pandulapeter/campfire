@@ -14,9 +14,8 @@
 
 ### Improvements
 - Improve haptic effects (fast scroll is inconsistent, tap tempo should not have one)
-- Multi-select for songs: documentation/plans/multi-select.md
 - Review / update website support page (FAQ)
-- KotlinX Serialization
+- Mouse right click should trigger long tap actions
 
 ## Midterm (in the next versions)
 - New song from the clipboard: documentation/plans/clipboard-import.md

@@ -35,6 +35,8 @@ import com.pandulapeter.campfire.presentation.ui.screens.setlists.SetlistWithSon
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.details
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.mergedSetlistDetails
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.withSongTicked
+import com.pandulapeter.campfire.presentation.ui.screens.setlists.withSongsAdded
+import com.pandulapeter.campfire.presentation.ui.screens.setlists.withSongsTakenOut
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.Companion.SETLISTS_SEARCH_KEY
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -158,15 +160,29 @@ internal class SetlistsController(
     }
 
     /**
-     * Creating a setlist from the setlist picker of one song, where the only reason it is being created at that
-     * moment is that the song should go into it. Both happen in the same library change, so the picker's tick is
-     * already there when the new setlist appears in it.
+     * Creating a setlist from a setlist picker - of one song, or of the songs ticked in the selection mode - where the
+     * only reason it is being created at that moment is that the songs should go into it. Both happen in the same
+     * library change, so the picker's tick is already there when the new setlist appears in it.
      */
-    fun createSetlistWithSong(title: String, description: String, date: LocalDate, isCountdownShown: Boolean, songFileName: String) = messageSink.launchLibraryChange {
-        saveSetlist(
-            createSetlist.invoke(title = title, description = description, date = date, isCountdownShown = isCountdownShown)
-                .copy(entries = listOf(Setlist.Entry(songFileName = songFileName))),
-        )
+    fun createSetlistWithSongs(title: String, description: String, date: LocalDate, isCountdownShown: Boolean, songFileNames: List<String>) =
+        messageSink.launchLibraryChange {
+            saveSetlist(
+                createSetlist.invoke(title = title, description = description, date = date, isCountdownShown = isCountdownShown)
+                    .copy(entries = songFileNames.distinct().map { Setlist.Entry(songFileName = it) }),
+            )
+        }
+
+    /**
+     * Adds every one of [songFileNames] the setlist does not name yet to its end, as one write: the selection's Choose
+     * setlists sheet, ticking a setlist for the songs. The ones it names already keep their places and their keys.
+     */
+    fun addSongsToSetlist(songFileNames: List<String>, setlistFileName: String) = messageSink.launchLibraryChange {
+        updateEditableSetlist(setlistFileName) { it.withSongsAdded(songFileNames) } ?: messageSink.sendMessage(Message.OperationFailed)
+    }
+
+    /** Takes back what the selection's sheet added to the setlist, and nothing else, see [addSongsToSetlist]. */
+    fun takeSongsOutOfSetlist(songFileNames: Collection<String>, setlistFileName: String) = messageSink.launchLibraryChange {
+        updateEditableSetlist(setlistFileName) { it.withSongsTakenOut(songFileNames) }
     }
 
     fun addSongToSetlist(songFileName: String, setlistFileName: String) = messageSink.launchLibraryChange {

@@ -26,6 +26,7 @@ sealed interface Message {
     data object ExportFailed : Message
     data object PdfSaved : Message
     data object SongExported : Message
+    data object SongsExported : Message
     data object SetlistExported : Message
     data object LibraryExported : Message
 
@@ -47,6 +48,12 @@ sealed interface Message {
 
     /** A change to the library (a new setlist, a deleted song, a moved entry) that could not be written. */
     data object OperationFailed : Message
+
+    /** The tags or the languages of the selection, written into [count] songs. */
+    data class SongsUpdated(val count: Int) : Message
+
+    /** The tags or the languages of the selection, which [count] of its songs could not be read or written for. */
+    data class SongsNotUpdated(val count: Int) : Message
 
     /** The song's file was renamed, but a setlist or its saved transposition still names the old file. */
     data object SongFileRenamedPartly : Message

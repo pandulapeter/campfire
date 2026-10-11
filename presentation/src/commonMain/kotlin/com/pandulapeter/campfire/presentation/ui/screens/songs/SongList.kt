@@ -10,6 +10,29 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songs
 
 import androidx.compose.animation.core.VisibilityThreshold
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.toggleableState
+import androidx.compose.ui.state.ToggleableState
+import com.pandulapeter.campfire.presentation.localization.stringResource
+import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.ic_select
+import com.pandulapeter.campfire.presentation.resources.songs_select_multiple
+import com.pandulapeter.campfire.presentation.ui.components.ActionsMenuItem
+import com.pandulapeter.campfire.presentation.ui.components.SONG_CARD_OUTER_PADDING
+import org.jetbrains.compose.resources.painterResource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -92,8 +115,12 @@ internal fun SongList(
     hasLoadedLibrary: Boolean,
     contentPadding: PaddingValues,
     appBarOverlap: () -> AppBarOverlap,
+    isSelecting: Boolean,
+    selection: Set<String>,
 ) {
     val songActions = rememberSongActionHandler(viewModel)
+    val selectMultipleTitle = stringResource(Res.string.songs_select_multiple)
+    val selectSongsIcon = painterResource(Res.drawable.ic_select)
     // Keep section boundaries (including incomplete grid rows) while their header rows collapse. This makes
     // opening and closing exact reverses and keeps every card in the active section in its original column.
     val groups = songGroups.groups
@@ -107,7 +134,7 @@ internal fun SongList(
             inset = (appBarHeightPx * (1f - appBarOverlap().coverage)).roundToInt(),
         ) {
             listState.layoutInfo.visibleItemsInfo.firstOrNull { it.contentType == "song" }?.let { card ->
-                val activeGroup = groups.indexOfFirst { group -> group.songs.any { songItemKey(it) == card.key } }
+                val activeGroup = groups.indexOfFirst { group -> group.songs.any { group.itemKey(it) == card.key } }
                 SongSearchScrollAnchor.Snapshot(
                     cardIndex = card.index,
                     cardTop = card.offset.y,
@@ -149,7 +176,11 @@ internal fun SongList(
     val coroutineScope = rememberCoroutineScope()
     // One boundary and label per group, in lazy-grid item coordinates, for the fast scroller and pushed header.
     val sectionIndex = remember(groups) {
-        SongSectionIndex(groups.map { SongSectionIndex.Group(songCount = it.songs.size, header = it.header) })
+        SongSectionIndex(
+            groups.mapIndexed { index, group ->
+                SongSectionIndex.Group(itemCount = group.songs.size + if (groups.hasSelectionDividerAfter(index)) 1 else 0, header = group.header)
+            },
+        )
     }
     val coveredHeightFraction = remember(appBarOverlap) { { appBarOverlap().coverage } }
     // Zero-height header slots are not scroll distance: the first card can be item 1 at the exact top.
@@ -177,15 +208,15 @@ internal fun SongList(
     // A tag or a language tapped on a row is one the song carries, so the list it filters to still holds that song,
     // and the song stays where the tap left it rather than the list keeping whichever row happened to be first.
     val filterAnchor = remember { ListAnchor() }
-    val onTagClicked: (Song, String) -> Unit = remember(viewModel, listState) {
-        { song, tag ->
-            filterAnchor.set(listState, songItemKey(song))
+    val onTagClicked: (itemKey: String, String) -> Unit = remember(viewModel, listState) {
+        { itemKey, tag ->
+            filterAnchor.set(listState, itemKey)
             viewModel.toggleTagFilter(tag)
         }
     }
-    val onLanguageClicked: (Song, String) -> Unit = remember(viewModel, listState) {
-        { song, language ->
-            filterAnchor.set(listState, songItemKey(song))
+    val onLanguageClicked: (itemKey: String, String) -> Unit = remember(viewModel, listState) {
+        { itemKey, language ->
+            filterAnchor.set(listState, itemKey)
             viewModel.toggleLanguageFilter(language)
         }
     }
@@ -200,6 +231,13 @@ internal fun SongList(
         itemIndex = { key -> groups.itemIndexOf(key, hasPlaceholder = placeholder != null) },
         topKey = songGroups.orderKey,
     )
+    KeepCardsInPlaceUnderTick(
+        listState = listState,
+        songGroups = songGroups,
+        hasPlaceholder = placeholder != null,
+    )
+    // The last row's box would otherwise end up under the Done button, which stands over the end of the list.
+    val selectionBottomPadding by animateDpAsState(if (isSelecting) DONE_BUTTON_ROOM else 0.dp)
 
     // A lazy grid holds on to the key of its first visible item across a change of its contents, which is right for
     // an edit and wrong for the library arriving: the read publishes a batch at a time in the order the files are
@@ -226,7 +264,13 @@ internal fun SongList(
             columns = ListColumns(columnCount),
             modifier = gridModifier.bounceScrollableContent(listState, pull = topFade.overscrollPull),
             state = listState,
-            contentPadding = contentPadding.only(start = true, end = true, bottom = true, extraEnd = FAST_SCROLLER_WIDTH, extraBottom = 8.dp),
+            contentPadding = contentPadding.only(
+                start = true,
+                end = true,
+                bottom = true,
+                extraEnd = FAST_SCROLLER_WIDTH,
+                extraBottom = 8.dp + selectionBottomPadding,
+            ),
         ) {
             placeholder?.let {
                 item(
@@ -250,7 +294,7 @@ internal fun SongList(
                     )
                 }
             }
-            groups.forEach { group ->
+            groups.forEachIndexed { groupIndex, group ->
                 group.header?.let { header ->
                     stickyHeader(
                         key = "header_${header.key}",
@@ -263,7 +307,7 @@ internal fun SongList(
                                 .collapseSearchHeader { appBarOverlap().coverage },
                             state = { headerState.value },
                             endPadding = headerEndPadding,
-                            text = header.displayText(),
+                            text = header.displayText(selectionCount = selection.size),
                             onClick = if (isSearchOpen) null else { { coroutineScope.launch { listState.animateScrollToItem(headerIndex) } } },
                             opacity = { if (headerState.value.visibleFraction < 1f) 0f else appBarOverlap().coverage },
                             appBarOverlap = appBarOverlap,
@@ -272,9 +316,10 @@ internal fun SongList(
                 }
                 itemsIndexed(
                     items = group.songs,
-                    key = { _, song -> songItemKey(song) },
+                    key = { _, song -> group.itemKey(song) },
                     contentType = { _, _ -> "song" },
                 ) { songIndex, song ->
+                    val itemKey = group.itemKey(song)
                     val actionsMenuState = rememberOverflowMenuState()
                     // A song opened from the library is transposed, capoed and timed in the preferences, so those are
                     // the only values this list knows about: the setlists each hold their own. The key is remembered,
@@ -287,14 +332,15 @@ internal fun SongList(
                     // Worked out here rather than inside the row's actions, so that they capture what changes for this row
                     // alone rather than the set that is new on every write to any setlist.
                     val isInSetlist = song.fileName in songFileNamesInSetlists
+                    val isTicked = song.fileName in selection
                     // The placement animation changes as a scroll starts and ends, so it goes on a box of its own: on
                     // the row, it would be a new modifier each time, and the whole row would be composed again with it.
                     Box(
                         modifier = listItemAnimation(listState, hasLoadedLibrary, placementSpec = if (areHeadersCollapsing) null else itemPlacementSpec)
-                            .anchoredTransition(filterAnchor, listState, songItemKey(song)),
+                            .anchoredTransition(filterAnchor, listState, itemKey),
                     ) {
                         SongListItem(
-                            modifier = Modifier.fadingUnderListTop(topFade),
+                            modifier = Modifier.fadingUnderListTop(topFade).selectionSemantics(isSelecting = isSelecting, isTicked = isTicked),
                             song = song,
                             cardPadding = songCardPadding(songIndex, columnCount),
                             key = key,
@@ -303,17 +349,21 @@ internal fun SongList(
                             coverArtUrl = song.coverArtUrl?.takeIf { isCoverArtEnabled },
                             labelsOnEverySong = labelsOnEverySong,
                             songFilter = songFilter,
-                            onTagClicked = { onTagClicked(song, it) },
-                            onLanguageClicked = { onLanguageClicked(song, it) },
-                            onClick = {
-                                keyboardController?.hide()
-                                viewModel.openSong(song)
+                            onTagClicked = { onTagClicked(itemKey, it) },
+                            onLanguageClicked = { onLanguageClicked(itemKey, it) },
+                            onClick = if (isSelecting) {
+                                { viewModel.toggleSongSelection(song.fileName) }
+                            } else {
+                                {
+                                    keyboardController?.hide()
+                                    viewModel.openSong(song)
+                                }
                             },
                             // A shortcut to the row's own overflow menu, where holding a row is a natural way to ask for
                             // it: the same menu, hanging from the same button, since the same entries shown two different
                             // ways would read as two different things. In performance mode there is nothing to open
                             // either way, so a row does nothing but open a song.
-                            onLongClick = if (isDesktopPlatform || isPerformanceModeEnabled) {
+                            onLongClick = if (isDesktopPlatform || isPerformanceModeEnabled || isSelecting) {
                                 null
                             } else {
                                 {
@@ -325,32 +375,75 @@ internal fun SongList(
                                 null
                             } else {
                                 {
-                                    Row(
-                                        horizontalArrangement = Arrangement.spacedBy(-ACTION_BUTTON_OVERLAP),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                    ) {
-                                        if (userPreferences?.areSetlistsEnabled != false) {
-                                            SetlistAssignmentsButton(
-                                                actions = songActions,
-                                                song = song,
-                                                isInSetlist = isInSetlist,
-                                            )
+                                    AnimatedContent(
+                                        targetState = isSelecting,
+                                        transitionSpec = { fadeIn() togetherWith fadeOut() },
+                                        contentAlignment = Alignment.CenterEnd,
+                                    ) { isShowingBox ->
+                                        if (isShowingBox) {
+                                            // The card is what ticks it, so the box takes no click of its own; it stands
+                                            // in a touch target's room, where the menu button stood.
+                                            Box(
+                                                modifier = Modifier.size(SELECTION_BOX_SIZE),
+                                                contentAlignment = Alignment.Center,
+                                            ) {
+                                                Checkbox(checked = isTicked, onCheckedChange = null)
+                                            }
+                                        } else {
+                                            Row(
+                                                horizontalArrangement = Arrangement.spacedBy(-ACTION_BUTTON_OVERLAP),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                            ) {
+                                                if (userPreferences?.areSetlistsEnabled != false) {
+                                                    SetlistAssignmentsButton(
+                                                        actions = songActions,
+                                                        song = song,
+                                                        isInSetlist = isInSetlist,
+                                                    )
+                                                }
+                                                SongActions(
+                                                    state = actionsMenuState,
+                                                    actions = songActions,
+                                                    song = song,
+                                                    isDeletable = true,
+                                                    isDuplicable = true,
+                                                    // The row's own way into the mode rather than one of the song's: it
+                                                    // starts with this song ticked.
+                                                    fileEditItems = listOf(
+                                                        ActionsMenuItem(
+                                                            title = selectMultipleTitle,
+                                                            icon = selectSongsIcon,
+                                                            isAlwaysInMenu = true,
+                                                            onClick = { viewModel.startSongSelection(song.fileName) },
+                                                        ),
+                                                    ) + songLabelActions(
+                                                        viewModel = viewModel,
+                                                        song = song,
+                                                        target = SongEditTarget.File(song.fileName),
+                                                    ),
+                                                )
+                                            }
                                         }
-                                        SongActions(
-                                            state = actionsMenuState,
-                                            actions = songActions,
-                                            song = song,
-                                            isDeletable = true,
-                                            isDuplicable = true,
-                                            fileEditItems = songLabelActions(
-                                                viewModel = viewModel,
-                                                song = song,
-                                                target = SongEditTarget.File(song.fileName),
-                                            ),
-                                        )
                                     }
                                 }
                             },
+                        )
+                    }
+                }
+                // The two parts are told apart the way the sheets tell them apart, and an open search collapses every
+                // header there is, the Selection one included, which leaves the divider the only thing between them.
+                if (groups.hasSelectionDividerAfter(groupIndex)) {
+                    item(
+                        key = SELECTION_DIVIDER_KEY,
+                        span = { GridItemSpan(maxLineSpan) },
+                        contentType = "selection_divider",
+                    ) {
+                        // Faded under the top of the list like a card, or it would be drawn across the pinned header and
+                        // the bar's pill as it scrolls under them.
+                        HorizontalDivider(
+                            modifier = listItemAnimation(listState, hasLoadedLibrary, placementSpec = if (areHeadersCollapsing) null else itemPlacementSpec)
+                                .fadingUnderListTop(topFade)
+                                .padding(horizontal = SONG_CARD_OUTER_PADDING, vertical = SELECTION_DIVIDER_PADDING),
                         )
                     }
                 }
@@ -373,8 +466,22 @@ internal fun SongList(
             listState = listState,
             sectionIndex = sectionIndex,
             endPadding = headerEndPadding,
+            selectionCount = selection.size,
             appBarOverlap = appBarOverlap,
         )
+        AnimatedVisibility(
+            visible = isSelecting,
+            modifier = Modifier.align(Alignment.BottomEnd)
+                .padding(contentPadding.only(end = true, bottom = true, extraEnd = FAST_SCROLLER_WIDTH))
+                .padding(DONE_BUTTON_MARGIN),
+            enter = fadeIn() + scaleIn(),
+            exit = fadeOut() + scaleOut(),
+        ) {
+            SongSelectionDoneButton(
+                count = selection.size,
+                onClick = viewModel::endSongSelection,
+            )
+        }
         FastScroller(
             modifier = Modifier.align(Alignment.TopEnd).belowAppBarOverlap(appBarOverlap).padding(contentPadding.only(top = true, end = true, bottom = true)),
             gridState = listState,
@@ -383,19 +490,26 @@ internal fun SongList(
     }
 }
 
-internal fun songItemKey(song: Song) = "song_${song.fileName}"
+internal fun songItemKey(song: Song) = "$SONG_ITEM_KEY_PREFIX${song.fileName}"
+
+/** What [songItemKey] puts in front of a song's file name. */
+private const val SONG_ITEM_KEY_PREFIX = "song_"
 
 /** The grid index of the item with [key], counted the way [SongList] emits its items. */
 internal fun List<SongGroup>.itemIndexOf(key: Any, hasPlaceholder: Boolean): Int? {
     var index = if (hasPlaceholder) 1 else 0
-    forEach { group ->
+    forEachIndexed { groupIndex, group ->
         if (group.header != null) index++
-        val songIndex = group.songs.indexOfFirst { songItemKey(it) == key }
+        val songIndex = group.songs.indexOfFirst { group.itemKey(it) == key }
         if (songIndex >= 0) return index + songIndex
         index += group.songs.size
+        if (hasSelectionDividerAfter(groupIndex)) index++
     }
     return null
 }
+
+/** Whether [SongList] follows the group at [index] with the divider that sets the Selection section off from the rest. */
+internal fun List<SongGroup>.hasSelectionDividerAfter(index: Int) = this[index].header == SongGroupHeader.Selection && index < lastIndex
 
 /** The key of the spacer that keeps the room the search anchor needs at the end of the list. */
 private const val SEARCH_ANCHOR_SPACE_KEY = "search_anchor_space"
@@ -408,3 +522,28 @@ private fun Modifier.collapseSearchHeader(fraction: () -> Float) = clipToBounds(
     val height = (placeable.height - removedHeight).coerceAtLeast(0)
     layout(placeable.width, height) { placeable.placeRelative(0, 0) }
 }
+
+/** A card of the selection mode is one checkbox to a screen reader, the card being what ticks it. */
+private fun Modifier.selectionSemantics(isSelecting: Boolean, isTicked: Boolean) = if (isSelecting) {
+    semantics(mergeDescendants = true) {
+        role = Role.Checkbox
+        toggleableState = ToggleableState(isTicked)
+    }
+} else {
+    this
+}
+
+/** The key of the divider under the Selection section. */
+private const val SELECTION_DIVIDER_KEY = "selection_divider"
+
+/** The room above and below the divider under the Selection section. */
+private val SELECTION_DIVIDER_PADDING = 8.dp
+
+/** The room a card's box stands in, which is a touch target's, where the menu button stood. */
+private val SELECTION_BOX_SIZE = 48.dp
+
+/** How far the Done button stands from the list's edges, as the setlist reorder mode's does. */
+private val DONE_BUTTON_MARGIN = 16.dp
+
+/** What the Done button takes of the end of the list: an extended button's height and its margin. */
+private val DONE_BUTTON_ROOM = 56.dp + DONE_BUTTON_MARGIN

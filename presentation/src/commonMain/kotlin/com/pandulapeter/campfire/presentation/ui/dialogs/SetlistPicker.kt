@@ -71,7 +71,7 @@ internal fun SetlistPicker(
             normalizedQuery in viewModel.songRenderer.normalizeForSearch(setlist.title) || normalizedQuery in viewModel.songRenderer.normalizeForSearch(setlist.description)
         }
     }
-    val isSkippingToNewSetlist = rememberSaveable { !hasListableSetlist(setlists, dialog.song.fileName) }
+    val isSkippingToNewSetlist = rememberSaveable { !hasListableSetlist(setlists, listOf(dialog.song.fileName)) }
     var isNamingNewSetlist by rememberSaveable { mutableStateOf(isSkippingToNewSetlist) }
     val closeNamingDialog = { if (isSkippingToNewSetlist) viewModel.dismissSheet(dialog) else isNamingNewSetlist = false }
     if (!isSkippingToNewSetlist) {
@@ -133,12 +133,12 @@ internal fun SetlistPicker(
             confirmLabel = stringResource(Res.string.create),
             onDismiss = closeNamingDialog,
             onConfirm = { setlistTitle, description, date, isCountdownShown ->
-                viewModel.createSetlistWithSong(
+                viewModel.createSetlistWithSongs(
                     title = setlistTitle,
                     description = description,
                     date = date,
                     isCountdownShown = isCountdownShown,
-                    songFileName = dialog.song.fileName,
+                    songFileNames = listOf(dialog.song.fileName),
                 )
             },
         )

@@ -160,9 +160,17 @@ internal fun <T> LazyListScope.checklistItems(
     items(remaining, key = { "$ROW_KEY_PREFIX${key(it)}" }, itemContent = itemContent)
 }
 
-/** Keeps the selected group across selection edits and Activity recreation, until search, sorting or filters change. */
+/**
+ * Keeps the selected group across selection edits and Activity recreation, until search, sorting or filters change.
+ *
+ * @param heldKeys What the group is seeded with at each refresh; anything else checked by then joins it as a copy.
+ */
 @Composable
-internal fun rememberChecklistOrder(checkedKeys: Set<String>, refreshKey: Any?): ChecklistOrder {
+internal fun rememberChecklistOrder(
+    checkedKeys: Set<String>,
+    refreshKey: Any?,
+    heldKeys: () -> Set<String> = { checkedKeys },
+): ChecklistOrder {
     var savedOrder by rememberSaveable(
         refreshKey,
         stateSaver = mapSaver(
@@ -175,7 +183,7 @@ internal fun rememberChecklistOrder(checkedKeys: Set<String>, refreshKey: Any?):
                 )
             },
         ),
-    ) { mutableStateOf(ChecklistOrder(checkedKeys)) }
+    ) { mutableStateOf(ChecklistOrder(heldKeys())) }
     val order = remember(savedOrder, checkedKeys) { savedOrder.withCheckedKeys(checkedKeys) }
     SideEffect { savedOrder = order }
     return order

@@ -27,9 +27,18 @@ internal data class PrintSource(
     val title: String,
     val description: String = "",
     val date: String? = null,
-    val isSetlist: Boolean = false,
+    val kind: Kind = Kind.SONG,
     val songs: List<PrintSong>,
-)
+) {
+    /** What is being exported: one song, a setlist, or several songs ticked in the songs screen's selection mode. */
+    enum class Kind { SONG, SETLIST, SONGS }
+
+    /** Whether the songs are in an order of somebody's making, which is what a running order and a manifest are of. */
+    val hasRunningOrder get() = kind == Kind.SETLIST
+
+    /** Whether the songs can be ticked off, put on pages of their own and zipped together. */
+    val hasSeveralSongs get() = kind != Kind.SONG
+}
 
 /**
  * One song of a [PrintSource], [index] being its one-based slot in a setlist, kept when songs are left out, and

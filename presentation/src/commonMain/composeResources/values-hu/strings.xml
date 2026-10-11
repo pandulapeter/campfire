@@ -18,6 +18,8 @@
     <string name="create">Létrehozás</string>
     <string name="duplicate">Megkettőzés</string>
     <string name="save">Mentés</string>
+    <string name="select_all">Mind kijelölése</string>
+    <string name="deselect_all">Kijelölés megszüntetése</string>
     <string name="retry">Újra</string>
     <string name="add_demo_songs">Bemutató dalok hozzáadása</string>
     <string name="confirm_exit_title">Bezárod a Campfire-t?</string>
@@ -70,6 +72,7 @@
     <string name="export_pdf_saved">PDF elmentve</string>
     <string name="export_song_saved">Dal exportálva</string>
     <string name="export_setlist_saved">Lista exportálva</string>
+    <string name="export_songs_saved">Dalok exportálva</string>
     <string name="export_library_saved">Könyvtár exportálva</string>
     <string name="export_too_large_to_import">Ez az archívum nagyobb annál a 24 MB-nál, amennyit a Campfire egyszerre importálni tud. A könyvtárad teljes másolata; a visszatöltéshez csomagold ki, és importáld a dalokat néhány ezres adagokban.</string>
     <plurals name="export_skipped_files">
@@ -139,6 +142,25 @@
     <string name="songs_delete_song">Dal törlése</string>
     <string name="songs_export_song">Dal exportálása</string>
     <string name="songs_delete_song_confirmation">Törlöd a(z) „%1$s” dalt? A fájl törlődik a könyvtárból és minden listából.</string>
+    <string name="songs_select_multiple">Több dal kijelölése</string>
+    <string name="songs_selection_actions">Műveletek a kijelöléssel</string>
+    <string name="songs_export_songs">Dalok exportálása</string>
+    <plurals name="songs_selection_done">
+        <item quantity="one">Kész, %1$d dal kijelölve</item>
+        <item quantity="other">Kész, %1$d dal kijelölve</item>
+    </plurals>
+    <plurals name="songs_selection_count">
+        <item quantity="one">%1$d dal</item>
+        <item quantity="other">%1$d dal</item>
+    </plurals>
+    <plurals name="songs_selection_updated">
+        <item quantity="one">%1$d dal frissítve</item>
+        <item quantity="other">%1$d dal frissítve</item>
+    </plurals>
+    <plurals name="songs_selection_failed">
+        <item quantity="one">%1$d dalt nem sikerült frissíteni</item>
+        <item quantity="other">%1$d dalt nem sikerült frissíteni</item>
+    </plurals>
     <string name="songs_all_hidden">Minden dal rejtve van</string>
     <string name="songs_all_hidden_hint">A szűrők a teljes könyvtárat elrejtik.</string>
     <string name="songs_no_search_results">Nincs találat</string>
@@ -746,6 +768,7 @@
     <string name="print_format_pdf_description">Nyomtatáshoz ideális. Bármilyen eszközön megnyitható, de utólag nem szerkeszthető és nem transzponálható.</string>
     <string name="print_format_chordpro_song_description">Más Campfire-felhasználóknak ideális: importálhatják, szerkeszthetik és transzponálhatják a dalt.</string>
     <string name="print_format_zip_description">Más Campfire-felhasználóknak ideális: a lista-leírófájl és a dalok ChordPro-fájlként.</string>
+    <string name="print_format_zip_songs_description">Más Campfire-felhasználóknak ideális: a kiválasztott dalok ChordPro-fájlként.</string>
     <string name="print_zip_contents">A zip-fájl tartalma</string>
     <string name="print_zip_manifest">Lista-leírófájl</string>
     <string name="print_zip_manifest_description">%1$s, a sorrenddel és minden dal hangnemével</string>
@@ -775,7 +798,6 @@
     <string name="print_overview">Dalsorrend hozzáadása</string>
     <string name="print_new_page">Minden dal új oldalon kezdődjön</string>
     <string name="print_songs">Exportálandó dalok</string>
-    <string name="print_select_all">Mind kijelölése</string>
     <string name="print_missing">A dal fájlja hiányzik vagy nem olvasható</string>
     <string name="print_load_failed">Nem sikerült elkészíteni a PDF-et.</string>
     <string name="print_no_songs">Jelölj ki legalább egy dalt az exportáláshoz.</string>

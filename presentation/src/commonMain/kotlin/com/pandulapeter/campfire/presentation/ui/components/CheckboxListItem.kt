@@ -11,17 +11,18 @@ package com.pandulapeter.campfire.presentation.ui.components
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.selection.toggleable
-import androidx.compose.material3.Checkbox
+import androidx.compose.foundation.selection.triStateToggleable
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TriStateCheckbox
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
@@ -44,15 +45,41 @@ internal fun CheckboxListItem(
     horizontalInset: Dp = 0.dp,
     coverArtUrl: String? = null,
     onCheckedChange: (Boolean) -> Unit,
+) = CheckboxListItem(
+    modifier = modifier,
+    title = title,
+    description = description,
+    state = ToggleableState(isChecked),
+    isEnabled = isEnabled,
+    horizontalInset = horizontalInset,
+    coverArtUrl = coverArtUrl,
+    onClick = { onCheckedChange(!isChecked) },
+)
+
+/**
+ * The same row with a box that can also be half ticked, for a list about several things at once - the songs ticked
+ * in the selection mode - where a row can hold for some of them and not for the others. What a tap does is the
+ * caller's, since the next state depends on where the row started.
+ */
+@Composable
+internal fun CheckboxListItem(
+    modifier: Modifier = Modifier,
+    title: String,
+    description: String? = null,
+    state: ToggleableState,
+    isEnabled: Boolean = true,
+    horizontalInset: Dp = 0.dp,
+    coverArtUrl: String? = null,
+    onClick: () -> Unit,
 ) = ListItem(
     modifier = modifier
-        .toggleable(value = isChecked, enabled = isEnabled, role = Role.Checkbox, onValueChange = onCheckedChange)
+        .triStateToggleable(state = state, enabled = isEnabled, role = Role.Checkbox, onClick = onClick)
         .alpha(if (isEnabled) 1f else 0.5f)
         .padding(horizontal = horizontalInset),
     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
     headlineContent = { Text(title) },
     supportingContent = description?.let { { Text(it) } },
-    leadingContent = { Checkbox(checked = isChecked, enabled = isEnabled, onCheckedChange = null) },
+    leadingContent = { TriStateCheckbox(state = state, enabled = isEnabled, onClick = null) },
     trailingContent = coverArtUrl?.let {
         {
             CoverArtImage(

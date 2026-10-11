@@ -14,8 +14,9 @@ The shared building blocks of the screens.
 
 ### `ui/components/`
 
-`ui/components/` — Material 3 list items (`SongListItem`, `SectionHeader`, `SwitchListItem`, `CheckboxListItem`, ...; a
-song listed inside a setlist prefixes its one-based place to the title, including when its file is missing.
+`ui/components/` — Material 3 list items (`SongListItem`, `SectionHeader`, `SwitchListItem`, `CheckboxListItem` — which
+also comes with a box that can be half ticked, for the selection mode's sheets —, ...; a song listed inside a setlist
+prefixes its one-based place to the title, including when its file is missing.
 `CenteredSongCardContent` measures the body and actions together so both stay vertically centered however many lines the
 card has — the body is laid out by hand with a list item's paddings, minimum heights and text styles rather than as a
 `ListItem`, which pins a three-line item's content to its top and grows it to 88dp, leaving empty card under the labels;
@@ -71,8 +72,10 @@ loses its covered header row on that same transition, ending directly beneath th
 moves down on the search action's spring and its headers pin under the bar instead.
 
 The "New" menu makes way for the field on the same spring (`closedSearchActions`), since making something is not what a
-search is for; the bar also stays filled in while the list has no header to stand in its place (a placeholder, or a
-search's ranked results, which come in one headerless group). The bar spans the list alone, never the side panel beside
+search is for — the songs screen's selection menu, which takes its place in the selection mode, stays instead
+(`areClosedSearchActionsKeptInSearch`), since the search is where a selection is put together; the bar also stays
+filled in while the list has no header to stand in its place (a placeholder, or a search's ranked results, which come
+in one headerless group). The bar spans the list alone, never the side panel beside
 it, so the buttons and the open search stay at the top of the list they act on and the panel reaches the top of the
 screen; plus `SearchBackHandler`, which closes an open search before a back gesture leaves the screen. It is a
 navigation event handler (`NavigationBackHandler` over a hoisted `NavigationEventState`) rather than the plain

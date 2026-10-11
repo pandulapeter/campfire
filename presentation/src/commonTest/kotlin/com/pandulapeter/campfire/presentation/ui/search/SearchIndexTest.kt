@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.search
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.domain.api.models.SongSection
 import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroup
+import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroupHeader
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -99,8 +100,8 @@ class SearchIndexTest {
         )
         assertEquals(
             listOf(
-                SongGroup(header = SongSection.Header.Letter('F'), songs = listOf(first.song)),
-                SongGroup(header = SongSection.Header.Letter('S'), songs = listOf(second.song)),
+                SongGroup(header = SongGroupHeader.Section(SongSection.Header.Letter('F')), songs = listOf(first.song)),
+                SongGroup(header = SongGroupHeader.Section(SongSection.Header.Letter('S')), songs = listOf(second.song)),
             ),
             songGroupsFor(sections, listOf(first, second), ""),
         )

@@ -17,13 +17,15 @@ import com.pandulapeter.campfire.data.model.domain.PrintSettings
  * library and every other export name a song by - whatever its library file happens to be called, a numbered sibling
  * or a name from before its title changed. That rule lives in the local source, which this module does not see, so it
  * is spelled out here from [LibraryFiles]. A setlist's running order is told apart from its song sheets, so that the
- * two exports of one setlist do not take each other's name either.
+ * two exports of one setlist do not take each other's name either. Several songs that are not a setlist have no title of
+ * their own, and are named the way their zip is.
  */
 internal fun pdfFileName(source: PrintSource, settings: PrintSettings): String {
     val song = source.songs.singleOrNull()
     val base = when {
-        source.isSetlist -> LibraryFiles.normalizedName(source.title) +
+        source.kind == PrintSource.Kind.SETLIST -> LibraryFiles.normalizedName(source.title) +
                 if (settings.setlistMode == PrintSettings.SetlistMode.RUNNING_ORDER) RUNNING_ORDER_SUFFIX else ""
+        source.kind == PrintSource.Kind.SONGS -> SONGS_FILE_NAME
         song == null -> LibraryFiles.normalizedName(source.title)
         song.artist.isNullOrBlank() -> LibraryFiles.normalizedName(song.title)
         else -> LibraryFiles.normalizedName(song.artist) + LibraryFiles.NORMALIZED_ARTIST_TITLE_SEPARATOR +
@@ -33,4 +35,7 @@ internal fun pdfFileName(source: PrintSource, settings: PrintSettings): String {
 }
 
 private const val RUNNING_ORDER_SUFFIX = "-running_order"
+
+/** What several songs exported together are called, as `ExportSongsUseCase` calls their zip. */
+private const val SONGS_FILE_NAME = "campfire_songs"
 private const val PDF_EXTENSION = ".pdf"

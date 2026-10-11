@@ -34,6 +34,7 @@ internal fun PushedSongSectionHeader(
     listState: LazyGridState,
     sectionIndex: SongSectionIndex,
     endPadding: Dp,
+    selectionCount: Int,
     appBarOverlap: () -> AppBarOverlap,
 ) {
     val pushed = pushedSectionHeader(listState, contentType = "header")
@@ -41,7 +42,7 @@ internal fun PushedSongSectionHeader(
     val header = key?.let(sectionIndex::headerForKey) ?: return
     SectionHeader(
         modifier = Modifier.pushedSectionHeaderPlacement(pushed).clearAndSetSemantics {},
-        text = header.displayText(),
+        text = header.displayText(selectionCount = selectionCount),
         // Pinned for as long as it is being pushed away: it keeps the width it had in the bar's place rather than
         // widening again as it leaves.
         state = { SectionHeaderState(visibleFraction = pushed.value?.visibleFraction ?: 0f, pinnedFraction = 1f) },

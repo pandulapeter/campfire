@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation
 
+import com.pandulapeter.campfire.data.model.domain.EditedSongs
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.ParsedSetlist
 import com.pandulapeter.campfire.data.model.domain.Setlist
@@ -203,6 +204,9 @@ internal class RecordingSongRepository(
 
     override suspend fun deleteSong(fileName: String): Unit = throw UnsupportedOperationException()
     override suspend fun deleteAllSongs(): Unit = throw UnsupportedOperationException()
+
+    override suspend fun editSongs(fileNames: Collection<String>, edit: (text: String) -> String): EditedSongs =
+        throw UnsupportedOperationException()
 }
 
 /** Stands in for the setlist list that sync tells to read the library again, and counts how often it was told. */

@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.repository.implementation
 
+import com.pandulapeter.campfire.data.model.domain.EditedSongs
 import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.SongContent
@@ -108,6 +109,48 @@ internal class SongRepositoryImpl(
             libraryChanges.onLibraryChanged()
             true
         }
+    }
+
+    override suspend fun editSongs(fileNames: Collection<String>, edit: (text: String) -> String): EditedSongs {
+        val changed = mutableSetOf<String>()
+        val failed = mutableListOf<String>()
+        val reloaded = mutableListOf<Song>()
+        try {
+            fileNames.distinct().forEach { fileName ->
+                val isEdited = libraryFileLock.withLock {
+                    logger.recovering(
+                        describe = { "Could not edit the song \"$fileName\": ${it.message}" },
+                        fallback = { false },
+                    ) {
+                        val text = songLocalSource.loadSongContent(fileName)?.text
+                        if (text == null) {
+                            false
+                        } else {
+                            val edited = edit(text)
+                            if (edited != text) {
+                                withContext(NonCancellable) {
+                                    songLocalSource.saveSongContent(SongContent(fileName = fileName, text = edited))
+                                    changed += fileName
+                                    loadSongOrNull(fileName)?.let(reloaded::add)
+                                }
+                            }
+                            true
+                        }
+                    }
+                }
+                if (!isEdited) failed += fileName
+            }
+        } finally {
+            // Whatever was written is announced, a run cut short included, since those files have changed on disk.
+            if (changed.isNotEmpty()) {
+                withContext(NonCancellable) {
+                    songContentRepository.invalidate(changed)
+                    replaceInCache(reloaded.mapTo(hashSetOf()) { it.fileName }, reloaded)
+                    libraryChanges.onLibraryChanged()
+                }
+            }
+        }
+        return EditedSongs(changedFileNames = changed, failedFileNames = failed)
     }
 
     override suspend fun createSong(title: String, artist: String, text: String): Song = naming {

@@ -31,6 +31,8 @@ import com.pandulapeter.campfire.data.model.domain.Song
  *   import running in the page that is gone;
  * - `setlists` again while a setlist's songs are being reordered with the search closed, so that Back ends the mode
  *   before it leaves the screen;
+ * - `` again while songs are being selected, under `search` where the search is open too, so that Back closes the
+ *   search, then ends the mode, and only then leaves the page;
  * - and, on top of any of them, the same address again while a dialog, a sheet or a menu is open over it.
  *
  * A song is named by its file name without the `.cho` every song the app writes ends in, and a setlist without its
@@ -44,7 +46,7 @@ internal object BrowserRoutes {
     /**
      * The path of every history entry the app should have, in order, from the songs at the bottom to the screen on
      * top: one per step a back gesture would take, which is a screen of the back stack, an open search, the setlist
-     * reorder mode, or a dialog, a sheet or a menu open over them all. A pure function of [inputs], which are read from
+     * reorder mode, the song selection mode, or a dialog, a sheet or a menu open over them all. A pure function of [inputs], which are read from
      * states, so that it can be observed.
      */
     fun paths(inputs: RouteInputs) = buildList {
@@ -52,6 +54,8 @@ internal object BrowserRoutes {
             when (destination) {
                 CampfireDestination.Songs -> {
                     add(ROOT)
+                    // The selection mode is a step of its own under an open search, which Back closes first.
+                    if (inputs.isSongSelecting) add(ROOT)
                     if (inputs.isSongsSearchOpen) add(SEARCH)
                 }
 
@@ -89,8 +93,8 @@ internal object BrowserRoutes {
     /**
      * How many history entries [state] makes, which is the size [paths] has once the app is there: one per screen of
      * the back stack, one more for each list screen whose search is open, and one more for a settings screen open on a
-     * tab other than General. A dialog and the setlist reorder mode are never part of [state], so Forward to the entry
-     * of one that was closed is refused, and the browser is taken back to the screen under it.
+     * tab other than General. A dialog, the setlist reorder mode and the song selection mode are never part of [state], so
+     * Forward to the entry of one that was closed is refused, and the browser is taken back to the screen under it.
      */
     fun entryCount(state: NavigationState) = state.backStack.size + state.backStack.count { destination ->
         destination == CampfireDestination.Songs && state.isSongsSearchOpen ||

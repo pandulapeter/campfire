@@ -103,7 +103,7 @@ private class PrintLayouter(
 
     suspend fun layout(source: PrintSource): PrintDocument {
         page()
-        if (source.isSetlist && (options.includeSetlistOverview || options.setlistMode == PrintSettings.SetlistMode.RUNNING_ORDER)) {
+        if (source.hasRunningOrder && (options.includeSetlistOverview || options.setlistMode == PrintSettings.SetlistMode.RUNNING_ORDER)) {
             overview(source)
             if (options.setlistMode == PrintSettings.SetlistMode.RUNNING_ORDER) return finish()
             // Song sheets follow the running order on a fresh page, including in the compact layout.
