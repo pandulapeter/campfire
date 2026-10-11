@@ -106,7 +106,6 @@ internal fun TunerSheet(
                     notation = notation,
                     referencePitch = config.referencePitch,
                     isCompact = LocalWindowInfo.current.containerDpSize.height < SHORT_WINDOW_HEIGHT,
-                    isLarge = false,
                 )
             }
             AnimatedSettingsRow(value = notice) { shownNotice ->

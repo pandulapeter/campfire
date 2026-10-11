@@ -77,8 +77,8 @@ import kotlin.math.roundToInt
  * and the meter's notch closes into a check, so it is never said by color alone. With nothing heard the meter rests
  * and the note's place says to play one; while a reference tone sounds, it names that note and the meter rests.
  *
- * A short window sets the note beside the rest, in one row, at a size the row has room for; a wide one ([isLarge]) lets
- * the note grow further, since the display spans the page of a laptop and is read from an arm's length or more away.
+ * A short window sets the note beside the rest, in one row, at a size the row has room for. The Tuner tab and the sheet
+ * over a song draw it at the same height, however wide the tab's page is, since what scrolls under it is the room left.
  */
 @Composable
 internal fun TunerDisplay(
@@ -87,7 +87,6 @@ internal fun TunerDisplay(
     notation: ChordNotation,
     referencePitch: Int,
     isCompact: Boolean,
-    isLarge: Boolean,
 ) {
     val tunerState = state.value
     val tone = tunerState.tone
@@ -136,7 +135,6 @@ internal fun TunerDisplay(
             notation = notation,
             color = accent,
             isCompact = isCompact,
-            isLarge = isLarge,
         )
     }
     val meter: @Composable (Modifier) -> Unit = { meterModifier ->
@@ -211,7 +209,6 @@ private val COMPACT_NOTE_WIDTH = 128.dp
 /** The note's size on the page: as large as the display's width lets it be, down to the display style's own. */
 private val NOTE_MAX_FONT_SIZE = 96.sp
 private val NOTE_MIN_FONT_SIZE = 57.sp
-private val LARGE_NOTE_MAX_FONT_SIZE = 144.sp
 
 private val METER_HEIGHT = 48.dp
 private val COMPACT_METER_HEIGHT = 40.dp
@@ -228,7 +225,6 @@ private fun TunerNoteLabel(
     notation: ChordNotation,
     color: Color,
     isCompact: Boolean,
-    isLarge: Boolean,
 ) = AnimatedContent(
     modifier = modifier,
     targetState = note,
@@ -248,7 +244,6 @@ private fun TunerNoteLabel(
                 notation = notation,
                 color = color,
                 isCompact = isCompact,
-                isLarge = isLarge,
             )
             Text(
                 text = stringResource(Res.string.tuner_play_a_note),
@@ -264,7 +259,6 @@ private fun TunerNoteLabel(
                 notation = notation,
                 color = color,
                 isCompact = isCompact,
-                isLarge = isLarge,
             )
         }
     }
@@ -278,7 +272,6 @@ private fun TunerNoteName(
     notation: ChordNotation,
     color: Color,
     isCompact: Boolean,
-    isLarge: Boolean,
 ) = Row(
     modifier = modifier.fillMaxWidth(),
     horizontalArrangement = Arrangement.Center,
@@ -307,18 +300,14 @@ private fun TunerNoteName(
             maxLines = 1,
             autoSize = TextAutoSize.StepBased(
                 minFontSize = NOTE_MIN_FONT_SIZE,
-                maxFontSize = if (isLarge) LARGE_NOTE_MAX_FONT_SIZE else NOTE_MAX_FONT_SIZE,
+                maxFontSize = NOTE_MAX_FONT_SIZE,
             ),
         )
     }
     Text(
-        modifier = Modifier.padding(start = 2.dp, bottom = if (isCompact) 8.dp else if (isLarge) 22.dp else 14.dp),
+        modifier = Modifier.padding(start = 2.dp, bottom = if (isCompact) 8.dp else 14.dp),
         text = noteOctave(note).toString(),
-        style = when {
-            isCompact -> MaterialTheme.typography.titleLarge
-            isLarge -> MaterialTheme.typography.displaySmall
-            else -> MaterialTheme.typography.headlineMedium
-        },
+        style = if (isCompact) MaterialTheme.typography.titleLarge else MaterialTheme.typography.headlineMedium,
         color = color,
         softWrap = false,
         maxLines = 1,

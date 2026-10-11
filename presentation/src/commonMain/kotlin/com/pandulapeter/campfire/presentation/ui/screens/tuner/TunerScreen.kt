@@ -105,9 +105,9 @@ internal fun TunerScreen(
         canListen = canListenWithoutTap(status = permission.status, hasRequested = hasRequested),
         onListeningChanged = viewModel::setTunerListening,
     )
-    // A window with room for two columns gives the display a larger note and the strings the whole width of the display
-    // above them, which they are played against, and sets the instrument and the reference pitch side by side under
-    // them; a narrower one keeps everything in one column, in the same order.
+    // A window with room for two columns gives the strings the whole width of the display above them, which they are
+    // played against, and sets the instrument and the reference pitch side by side under them; a narrower one keeps
+    // everything in one column, in the same order.
     val isWide = layout.sectionColumns >= 2
     val layoutDirection = LocalLayoutDirection.current
     val scrollState = rememberRetainedScrollState(scrollPosition)
@@ -137,7 +137,6 @@ internal fun TunerScreen(
                 notation = notation,
                 referencePitch = config.referencePitch,
                 isCompact = LocalWindowInfo.current.containerDpSize.height < SHORT_WINDOW_HEIGHT,
-                isLarge = isWide,
             )
         }
         val playing: @Composable ColumnScope.() -> Unit = {
