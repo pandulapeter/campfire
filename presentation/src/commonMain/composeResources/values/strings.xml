@@ -16,6 +16,7 @@
     <string name="done">Done</string>
     <string name="delete">Delete</string>
     <string name="create">Create</string>
+    <string name="duplicate">Duplicate</string>
     <string name="save">Save</string>
     <string name="retry">Retry</string>
     <string name="add_demo_songs">Add the demo songs</string>
@@ -132,6 +133,7 @@
     <string name="songs_edit_song">Edit song file</string>
     <string name="songs_choose_setlists">Choose setlists</string>
     <string name="songs_update_file_name">Update file name</string>
+    <string name="songs_duplicate_song">Duplicate song</string>
     <string name="songs_update_file_name_partly">The file was renamed, but a setlist or the saved transposition still points at the old name</string>
     <string name="songs_delete_song_partly">The song was deleted, but a setlist or the saved transposition still names it</string>
     <string name="songs_delete_song">Delete song</string>
@@ -199,7 +201,6 @@
     <string name="setlists_total_duration_minimum">%1$s+</string>
     <!-- A setlist header's subtitle holding both the countdown and the total duration. -->
     <string name="setlists_header_subtitle">%1$s · %2$s</string>
-    <string name="setlists_duplicate">Duplicate</string>
     <string name="setlists_duplicate_setlist">Duplicate setlist</string>
     <string name="setlists_duplicate_title">%1$s (copy)</string>
     <string name="setlists_archive">Archive setlist</string>

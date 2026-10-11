@@ -19,6 +19,12 @@ sealed interface DialogType {
     data class Export(val song: Song? = null, val setlist: Setlist? = null, val songSetlistFileName: String? = null) : DialogType
     data object NewSetlist : DialogType
     data object NewSong : DialogType
+    /**
+     * The New song form filled in with what [song] says about itself ([values], a snapshot of each field the form
+     * offers, blank for nothing), which makes a copy of the song with whatever the user changed there written over it,
+     * see [CampfireViewModel.duplicateSong].
+     */
+    data class DuplicateSong(val song: Song, val values: Map<ChordProMetadataFields.Field, String>) : DialogType
     data object SongFilters : DialogType
     /**
      * Every setlist with a box each, which is how a song is both put into one and taken out of another.

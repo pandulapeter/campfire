@@ -32,7 +32,7 @@ import com.pandulapeter.campfire.presentation.resources.setlists_delete_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_remove_song
 import com.pandulapeter.campfire.presentation.resources.setlists_remove_song_confirmation
 import com.pandulapeter.campfire.presentation.resources.setlists_delete_setlist_confirmation
-import com.pandulapeter.campfire.presentation.resources.setlists_duplicate
+import com.pandulapeter.campfire.presentation.resources.duplicate
 import com.pandulapeter.campfire.presentation.resources.setlists_duplicate_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_duplicate_title
 import com.pandulapeter.campfire.presentation.resources.setlists_edit_details
@@ -46,6 +46,7 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_revert
 import com.pandulapeter.campfire.presentation.resources.song_editor_revert_confirmation
 import com.pandulapeter.campfire.presentation.resources.songs_delete_song
 import com.pandulapeter.campfire.presentation.resources.songs_delete_song_confirmation
+import com.pandulapeter.campfire.presentation.resources.songs_duplicate_song
 import com.pandulapeter.campfire.presentation.resources.songs_filter
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.SongFilters
@@ -123,7 +124,7 @@ internal fun CampfireDialogs(
             initialTitle = textResource(Res.string.setlists_duplicate_title, dialog.setlist.title),
             initialDescription = dialog.setlist.description,
             initialIsCountdownShown = dialog.setlist.isCountdownShown,
-            confirmLabel = stringResource(Res.string.setlists_duplicate),
+            confirmLabel = stringResource(Res.string.duplicate),
             onDismiss = { viewModel.dismissSheet(dialog) },
             onConfirm = { setlistTitle, description, date, isCountdownShown ->
                 viewModel.duplicateSetlist(
@@ -138,7 +139,17 @@ internal fun CampfireDialogs(
 
         DialogType.NewSong -> NewSongDialog(
             onDismiss = { viewModel.dismissSheet(dialog) },
-            onCreate = { values -> viewModel.createSong(values = values) },
+            onCreate = { values, _ -> viewModel.createSong(values = values) },
+        )
+
+        is DialogType.DuplicateSong -> NewSongDialog(
+            title = stringResource(Res.string.songs_duplicate_song),
+            subtitle = songLabel(dialog.song),
+            songFileName = dialog.song.fileName,
+            offeredValues = dialog.values,
+            confirmLabel = stringResource(Res.string.duplicate),
+            onDismiss = { viewModel.dismissSheet(dialog) },
+            onCreate = { values, offeredValues -> viewModel.duplicateSong(song = dialog.song, values = values, offeredValues = offeredValues) },
         )
 
         DialogType.SongFilters -> CampfireBottomSheet(

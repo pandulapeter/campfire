@@ -164,8 +164,8 @@ to be unticked. The setlist picker stays where it is while its "New setlist" act
 it from the picker's own state rather than through `visibleDialog` (which holds one dialog at a time), because the song
 goes into the new setlist as soon as it exists (`createSetlistWithSong`) and the picker is where that shows. **Automatic
 keyboard behavior is specific to each form** (`rememberFirstFieldFocusRequester`): new song, new and duplicate setlist,
-tag management, language management and library deletion focus their first field on opening. Editing an existing
-setlist, song metadata, song links and cover art leave their fields unfocused. Both assignment sheets also leave search
+tag management, language management and library deletion focus their first field on opening. Duplicating a song,
+editing an existing setlist, song metadata, song links and cover art leave their fields unfocused. Both assignment sheets also leave search
 unfocused at every window height; the keyboard opens when search is tapped. The calendar sheet shows only the calendar,
 with no way to switch to typed date entry.
 
@@ -185,7 +185,15 @@ using the same field order and side-by-side year/duration row as Edit song detai
 consistent with setlist description and link name. The title retains autofocus, title and artist retain their
 60-character limits, and the last field's Done creates the song when the title is valid. `CampfireViewModel.createSong`
 passes the metadata to `CreateSongUseCase`, which writes nonblank optional directives into the initial song template
-before the editor opens. The bodies of the new song, setlist details and library deletion sheets scroll, so the field is
+before the editor opens.
+
+**Duplicate song**, a song card's menu entry on the Songs screen alone (`SongActions.isDuplicable`), is the same sheet
+filled in with what the song says, read from its file (`showDuplicateSongDialog`, `DialogType.DuplicateSong`), titled
+Duplicate song with the song under it and confirmed with Duplicate. It opens with no field focused, as Edit song details
+does, since it is already filled in. `duplicateSong` hands `DuplicateSongUseCase` only the fields that were changed,
+which are written over the file's text as it is when the copy is made, so the copy keeps the original's lyrics, chords and
+every other directive; it is named by its own title, subtitle and artist like any new song (a copy nobody changed gets the
+original's name with `_2`), and opens in the editor. The bodies of the new song, setlist details and library deletion sheets scroll, so the field is
 brought into view however little is left of them, and like every sheet's content they fade at the top only: a sheet's
 content ends at the bottom of the window or at the keyboard, which is the bottom of what the window has left, and
 nothing in the app fades towards that edge.

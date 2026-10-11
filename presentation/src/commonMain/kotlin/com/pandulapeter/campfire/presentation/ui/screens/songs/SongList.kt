@@ -341,6 +341,7 @@ internal fun SongList(
                                             actions = songActions,
                                             song = song,
                                             isDeletable = true,
+                                            isDuplicable = true,
                                             fileEditItems = songLabelActions(
                                                 viewModel = viewModel,
                                                 song = song,

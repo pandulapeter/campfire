@@ -18,6 +18,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -32,22 +33,38 @@ import com.pandulapeter.campfire.presentation.resources.songs_new_song
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
 
-/** A new song's metadata. Only its title is required; the optional values are written into its initial file. */
+/**
+ * A new song's metadata. Only its title is required; the optional values are written into its initial file.
+ *
+ * Duplicating a song opens the same form on what that song says ([offeredValues], as [DialogType.DuplicateSong] read
+ * them), and [onCreate] then gets the draft with what was offered, so that only the fields the user changed are written
+ * over the copy. Unlike the empty form it opens with no field focused, as the song metadata sheet does: the form is
+ * already filled in, and a keyboard brought up over the title would hide the subtitle a "Live" copy is likeliest to
+ * be told apart by.
+ *
+ * @param songFileName The song being duplicated, which keys the draft; null for a new song.
+ */
 @Composable
 internal fun NewSongDialog(
     onDismiss: () -> Unit,
-    onCreate: (Map<Field, String>) -> Unit,
+    onCreate: (values: Map<Field, String>, offeredValues: Map<Field, String>) -> Unit,
+    title: String = stringResource(Res.string.songs_new_song),
+    subtitle: String = "",
+    songFileName: String? = null,
+    offeredValues: Map<Field, String> = emptyMap(),
+    confirmLabel: String = stringResource(Res.string.create),
 ) {
-    var values by rememberSaveable(stateSaver = songMetadataSaver) { mutableStateOf(emptyMap<Field, String>()) }
+    val offeredDraft = remember(offeredValues) { offeredValues.toSongMetadataDraft() }
+    var values by rememberSaveable(songFileName, stateSaver = songMetadataSaver) { mutableStateOf(offeredDraft) }
     val isValid = values[Field.TITLE].orEmpty().isNotBlank()
-    val focusRequester = rememberFirstFieldFocusRequester()
+    val focusRequester = rememberFirstFieldFocusRequester(isFocused = songFileName == null)
     val keyboardController = LocalSoftwareKeyboardController.current
     val scrollState = rememberScrollState()
     val confirmOnce = rememberSingleConfirmation()
     val create = { close: () -> Unit ->
         if (isValid) {
             confirmOnce {
-                onCreate(values.fromSongMetadataDraft())
+                onCreate(values.fromSongMetadataDraft(), offeredDraft.fromSongMetadataDraft())
                 close()
             }
         } else {
@@ -56,7 +73,8 @@ internal fun NewSongDialog(
     }
     TextFieldBottomSheet(
         onDismissRequest = onDismiss,
-        title = stringResource(Res.string.songs_new_song),
+        title = title,
+        subtitle = subtitle,
         text = { contentPadding ->
             val closeSheet = { close() }
             val isClosing = LocalIsSheetClosing.current
@@ -86,7 +104,7 @@ internal fun NewSongDialog(
             }
         },
         confirmButton = { close ->
-            BottomSheetConfirmButton(enabled = isValid, onClick = { create(close) }) { Text(stringResource(Res.string.create)) }
+            BottomSheetConfirmButton(enabled = isValid, onClick = { create(close) }) { Text(confirmLabel) }
         },
     )
 }

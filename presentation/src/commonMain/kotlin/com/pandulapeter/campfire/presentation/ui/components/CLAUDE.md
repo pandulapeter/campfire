@@ -149,19 +149,21 @@ outer buttons stay where a bar puts them.
 
 **What stays behind the tap whatever the room** is part of the rule, since keeping the interface clean matters more than
 one tap saved: a song card never expands at all (`isExpandable = false`, keeping only its star or drag handle in front
-of the menu), and a setlist's Edit details and Reorder songs, Archive, Duplicate, Export, Delete, Update file name and
-the editor's Revert are always menu entries (`ActionsMenuItem.isAlwaysInMenu`) — dangerous, not to be promoted, or
-rarely wanted — so a menu holding any of them keeps its overflow button. `SongActions` never expands (the song details
-bar puts its own buttons in front of it, see below), so what can come out is a setlist's Choose songs in its header. On
-the song details screen it is the bar's one menu, Edit song file first among its own entries; every metadata and cover
-art editor is the About the song sheet's, which the title opens, so no menu lists them one by one.
+of the menu), and a setlist's Edit details and Reorder songs, Archive, Duplicate, Export, Delete, a song's Update file
+name and Duplicate song and the editor's Revert are always menu entries (`ActionsMenuItem.isAlwaysInMenu`) — dangerous,
+not to be promoted, or rarely wanted — so a menu holding any of them keeps its overflow button. `SongActions` never
+expands (the song details bar puts its own buttons in front of it, see below), so what can come out is a setlist's
+Choose songs in its header. On the song details screen it is the bar's one menu, Edit song file first among its own
+entries; every metadata and cover art editor is the About the song sheet's, which the title opens, so no menu lists them
+one by one.
 
 `SongActions` is the per-song set: edit, "Update file name" where the file is named something other than what its
-metadata would name it (`Song.canUpdateFileName`, which is also why the entry is absent from most songs), "Export song"
-(the one way out of the app for a song, whatever the format or the platform, see Export below), and delete — the last
-only where the song is reached as part of the library, never from a setlist row or a song details screen opened from a
-setlist (`isDeletable`), since a song read through a setlist is taken out of that setlist rather than out of the
-library.
+metadata would name it (`Song.canUpdateFileName`, which is also why the entry is absent from most songs), "Duplicate
+song" on the songs screen's cards alone (`isDuplicable`, since a copy is a new song of the library, see
+`ui/dialogs/CLAUDE.md`), "Export song" (the one way out of the app for a song, whatever the format or the platform, see
+Export below), and delete — the last only where the song is reached as part of the library, never from a setlist row or
+a song details screen opened from a setlist (`isDeletable`), since a song read through a setlist is taken out of that
+setlist rather than out of the library.
 
 The Choose setlists sheet is not in a songs screen row's menu: on a row of the songs screen and in the song details app
 bar, wherever that screen was opened from, it has a `SetlistAssignmentsButton` of its own in front of the overflow

@@ -24,6 +24,8 @@ internal interface SongActionHandler {
 
     fun updateFileName(song: Song)
 
+    fun duplicate(song: Song)
+
     fun export(song: Song, setlistFileName: String?)
 
     fun delete(song: Song)

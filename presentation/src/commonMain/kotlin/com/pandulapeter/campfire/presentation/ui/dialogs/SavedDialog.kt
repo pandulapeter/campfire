@@ -29,6 +29,9 @@ internal sealed interface SavedDialog {
     data object NewSong : SavedDialog
 
     @Serializable
+    data class DuplicateSong(val songFileName: String) : SavedDialog
+
+    @Serializable
     data object NewSetlist : SavedDialog
 
     @Serializable
@@ -67,6 +70,7 @@ internal sealed interface SavedDialog {
 /** What of this dialog is worth reopening in a restored process, see [SavedDialog]; null for everything else. */
 internal fun DialogType.toSavedDialog(): SavedDialog? = when (this) {
     DialogType.NewSong -> SavedDialog.NewSong
+    is DialogType.DuplicateSong -> SavedDialog.DuplicateSong(song.fileName)
     DialogType.NewSetlist -> SavedDialog.NewSetlist
     is DialogType.EditSetlist -> SavedDialog.EditSetlist(setlist.fileName)
     is DialogType.DuplicateSetlist -> SavedDialog.DuplicateSetlist(setlist.fileName)

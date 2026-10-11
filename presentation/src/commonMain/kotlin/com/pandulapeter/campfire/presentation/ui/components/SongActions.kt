@@ -15,11 +15,13 @@ import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_delete
+import com.pandulapeter.campfire.presentation.resources.ic_duplicate
 import com.pandulapeter.campfire.presentation.resources.ic_edit
 import com.pandulapeter.campfire.presentation.resources.songs_export_song
 import com.pandulapeter.campfire.presentation.resources.ic_export
 import com.pandulapeter.campfire.presentation.resources.ic_rename
 import com.pandulapeter.campfire.presentation.resources.songs_delete_song
+import com.pandulapeter.campfire.presentation.resources.songs_duplicate_song
 import com.pandulapeter.campfire.presentation.resources.songs_edit_song
 import com.pandulapeter.campfire.presentation.resources.songs_update_file_name
 import org.jetbrains.compose.resources.painterResource
@@ -44,6 +46,8 @@ import org.jetbrains.compose.resources.painterResource
  * @param isDeletable Whether the song can be deleted from here, which it only can where the song is read as part of
  *   the library. A setlist is the list somebody wrote down to play from, and a song reached through one is taken out
  *   of it rather than removed from every setlist and the library at once.
+ * @param isDuplicable Whether the menu offers a copy of the song, which only the songs screen's cards do: a copy is a
+ *   new song of the library, so it is made where the library's songs are made.
  * @param leadingItems Actions put before the song's own: the ones that belong to the row rather than to the song
  *   (moving a row of a setlist up or down, and taking it out of the setlist), and on the song details screen whichever
  *   of its bar's buttons the bar has no room for: the setlist assignments and the tuner.
@@ -58,6 +62,7 @@ internal fun SongActions(
     song: Song,
     isDeletable: Boolean,
     isEditAndExportOnly: Boolean = false,
+    isDuplicable: Boolean = false,
     setlistFileName: String? = null,
     leadingItems: List<ActionsMenuItem> = emptyList(),
     fileEditItems: List<ActionsMenuItem> = emptyList(),
@@ -78,6 +83,16 @@ internal fun SongActions(
                     icon = painterResource(Res.drawable.ic_rename),
                     isAlwaysInMenu = true,
                     onClick = { actions.updateFileName(song) },
+                )
+            } else {
+                null
+            },
+            if (isDuplicable && !isEditAndExportOnly) {
+                ActionsMenuItem(
+                    title = stringResource(Res.string.songs_duplicate_song),
+                    icon = painterResource(Res.drawable.ic_duplicate),
+                    isAlwaysInMenu = true,
+                    onClick = { actions.duplicate(song) },
                 )
             } else {
                 null

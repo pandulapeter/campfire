@@ -63,6 +63,7 @@ import com.pandulapeter.campfire.domain.api.useCases.CreateSongUseCase
 import com.pandulapeter.campfire.domain.api.useCases.DeleteLibraryUseCase
 import com.pandulapeter.campfire.domain.api.useCases.DeleteSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.DeleteSongUseCase
+import com.pandulapeter.campfire.domain.api.useCases.DuplicateSongUseCase
 import com.pandulapeter.campfire.domain.api.useCases.DisconnectSyncProviderUseCase
 import com.pandulapeter.campfire.domain.api.useCases.EditSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ExportLibraryUseCase
@@ -211,6 +212,7 @@ class CampfireViewModel(
     private val saveEditorDraft: SaveEditorDraftUseCase,
     getSongContentInvalidations: GetSongContentInvalidationsUseCase,
     private val createSong: CreateSongUseCase,
+    private val duplicateSong: DuplicateSongUseCase,
     private val deleteSong: DeleteSongUseCase,
     private val deleteLibrary: DeleteLibraryUseCase,
     private val prepareImport: PrepareImportUseCase,
@@ -1068,6 +1070,32 @@ class CampfireViewModel(
     }
 
     /**
+     * Opens the New song form filled in with what [song] says about itself, read from its file, since the subtitle,
+     * the album and the rest are not part of the song list's lighter metadata. The file is read here rather than into
+     * the texts the open screens hold, which are all read again on every sync run.
+     */
+    fun showDuplicateSongDialog(song: Song) = launchLibraryChange {
+        showDialog(duplicateSongDialogOf(song) ?: return@launchLibraryChange sendMessage(Message.OperationFailed))
+    }
+
+    private suspend fun duplicateSongDialogOf(song: Song) = getSongContent(song.fileName)?.let { songMetadataEditing.duplicateSongDialog(song, it.text) }
+
+    /**
+     * Writes a copy of [song] with the fields of the form that were changed there written over it, as
+     * [setSongMetadata] writes them, and opens the copy in the editor: a copy is made to be changed, a "Live" or an
+     * "Acoustic" version of the song, and what makes it one is rarely in its header alone.
+     */
+    fun duplicateSong(
+        song: Song,
+        values: Map<ChordProMetadataFields.Field, String>,
+        offeredValues: Map<ChordProMetadataFields.Field, String>,
+    ) = launchLibraryChange {
+        val changes = values.filter { (field, value) -> value.trim() != offeredValues[field]?.trim() }
+        val copy = duplicateSong.invoke(fileName = song.fileName, changes = changes) ?: return@launchLibraryChange sendMessage(Message.OperationFailed)
+        openEditor(fileName = copy.fileName)
+    }
+
+    /**
      * Renames the song's file to the one its own metadata gives it, offered by the song's menu wherever the two have
      * drifted apart (`Song.canUpdateFileName`). The use case follows the references that are on disk - the setlists
      * holding the song, its saved transposition - and what is left here is the two places the old name lives in
@@ -1488,6 +1516,7 @@ class CampfireViewModel(
         if (dialogHost.visibleDialog.value != null) return false
         when (saved) {
             SavedDialog.NewSong -> showDialog(DialogType.NewSong)
+            is SavedDialog.DuplicateSong -> showDialog(duplicateSongDialogOf(songOf(saved.songFileName) ?: return false) ?: return false)
             SavedDialog.NewSetlist -> showDialog(DialogType.NewSetlist)
             is SavedDialog.EditSetlist -> showDialog(DialogType.EditSetlist(setlistOf(saved.setlistFileName) ?: return false))
             is SavedDialog.DuplicateSetlist -> showDialog(DialogType.DuplicateSetlist(setlistOf(saved.setlistFileName) ?: return false))

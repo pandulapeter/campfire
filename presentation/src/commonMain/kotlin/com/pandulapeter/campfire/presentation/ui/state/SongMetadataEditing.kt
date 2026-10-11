@@ -109,14 +109,14 @@ internal class SongMetadataEditing(
      * song list's lighter metadata, and the title there already has the subtitle in it.
      */
     fun showSongMetadataDialog(song: Song, target: SongEditTarget) {
-        val metadata = parseChordPro(songTextOf(target) ?: return).metadata
-        dialogHost.showDialog(
-            DialogType.SongMetadata(
-                song = song,
-                values = SONG_METADATA_FIELDS.associateWith { ChordProMetadataFields.valueOf(metadata, it).orEmpty() },
-                target = target,
-            )
-        )
+        dialogHost.showDialog(DialogType.SongMetadata(song = song, values = songMetadataValuesOf(songTextOf(target) ?: return), target = target))
+    }
+
+    /** The New song form filled in with what [text], the text of [song], says for each of its fields. */
+    fun duplicateSongDialog(song: Song, text: String) = DialogType.DuplicateSong(song = song, values = songMetadataValuesOf(text))
+
+    private fun songMetadataValuesOf(text: String) = parseChordPro(text).metadata.let { metadata ->
+        SONG_METADATA_FIELDS.associateWith { ChordProMetadataFields.valueOf(metadata, it).orEmpty() }
     }
 
     /**
