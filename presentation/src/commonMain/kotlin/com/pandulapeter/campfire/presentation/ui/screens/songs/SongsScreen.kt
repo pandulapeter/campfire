@@ -35,7 +35,6 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.layout.layout
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -56,8 +55,8 @@ import com.pandulapeter.campfire.presentation.ui.components.AppBarOverlap
 import com.pandulapeter.campfire.presentation.ui.components.ControlsSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.DismissSheetWhenSidePanelAppears
 import com.pandulapeter.campfire.presentation.ui.components.HideKeyboardWhenScrolledDown
-import com.pandulapeter.campfire.presentation.ui.components.ListLayout
 import com.pandulapeter.campfire.presentation.ui.components.ImportProgress
+import com.pandulapeter.campfire.presentation.ui.components.ListLayout
 import com.pandulapeter.campfire.presentation.ui.components.ListUnderAppBar
 import com.pandulapeter.campfire.presentation.ui.components.LocalOverlayState
 import com.pandulapeter.campfire.presentation.ui.components.NewItemMenu
@@ -67,7 +66,6 @@ import com.pandulapeter.campfire.presentation.ui.components.SongSortMenu
 import com.pandulapeter.campfire.presentation.ui.components.allowsNewItemMenu
 import com.pandulapeter.campfire.presentation.ui.components.animateAppBarReveal
 import com.pandulapeter.campfire.presentation.ui.components.besideSidePanel
-import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.overlappingAction
 import com.pandulapeter.campfire.presentation.ui.components.rememberHasLoadedLibrary
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedLazyGridState
@@ -100,7 +98,7 @@ internal fun SongsScreen(
     // Snapshot state, read here so that a tick recomposes the screen it changes and nothing above it.
     val selection = viewModel.selectedSongFileNames
     val isSelecting = selection != null && viewModel.isSongSelecting && !isPerformanceModeEnabled
-    val shownSongGroups = if (isSelecting && selection != null) {
+    val shownSongGroups = if (isSelecting) {
         key(viewModel.songSelectionSession) { rememberSongGroupsWithSelection(songGroups, selection, viewModel.songSelectAllCount) }
     } else {
         songGroups
