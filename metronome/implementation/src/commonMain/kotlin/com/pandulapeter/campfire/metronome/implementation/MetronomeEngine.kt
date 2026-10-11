@@ -177,12 +177,15 @@ internal class MetronomeEngine(
 
     /**
      * Releases the ticks the output has been handed as its playback position passes them. Polled, since no platform
-     * calls back at a click's moment; a few milliseconds is far below what the eye notices in a flash.
+     * calls back at a click's moment; a few milliseconds is far below what the eye notices in a flash. It polls closely
+     * only near the next tick and once a chunk otherwise, since a click plays for minutes on a locked phone, where every
+     * wake keeps a core out of its idle states.
      */
     private fun releaseHeardBeats() = scope.launch(confined) {
         val stream = stream ?: return@launch
         val output = activeOutput ?: return@launch
         val pending = ArrayDeque<MetronomeSequencer.Tick>()
+        var hasReleased = false
         while (isActive) {
             while (true) pending.addLast(stream.renderedTicks.tryReceive().getOrNull() ?: break)
             val heardFrame = output.heardFrame()
@@ -197,8 +200,23 @@ internal class MetronomeEngine(
                     }
                 }
                 _beats.tryEmit(MetronomeBeat(tick.beatIndex, tick.barIndex, tick.level, tick.isSubdivision))
+                hasReleased = true
             }
-            delay(RELEASE_INTERVAL_MILLIS)
+            val remainingMillis = pending.firstOrNull()?.let { (it.frame - heardFrame) * 1_000 / stream.sampleRate }
+            val wait = when {
+                // Nothing heard yet (Android before its first timestamp answers -1), or nothing released yet this session
+                // (the silent output hears frame 0 the moment it starts): poll closely.
+                heardFrame < 0 || !hasReleased -> RELEASE_INTERVAL_MILLIS
+                // A tick is rendered about a queue's depth (AudioOutput.QUEUED_SECONDS) before it is heard, so one chunk's
+                // wait never misses one arriving.
+                remainingMillis == null -> MAX_RELEASE_WAIT_MILLIS
+                // Only Android's position moves continuously; the others move in steps of up to about a chunk, and a wait
+                // computed straight to the tick could end just before the step that passes it and then wait a whole
+                // chunk more. Near the tick the loop polls closely instead, so it is released within a poll of that step.
+                remainingMillis <= NEAR_RELEASE_MILLIS -> RELEASE_INTERVAL_MILLIS
+                else -> (remainingMillis - NEAR_RELEASE_MILLIS).coerceIn(1L, MAX_RELEASE_WAIT_MILLIS)
+            }
+            delay(wait)
         }
     }
 
@@ -217,6 +235,8 @@ internal class MetronomeEngine(
     private companion object {
         const val BEAT_BUFFER = 16
         const val RELEASE_INTERVAL_MILLIS = 5L
+        const val MAX_RELEASE_WAIT_MILLIS = (AudioOutput.CHUNK_SECONDS * 1000).toLong()
+        const val NEAR_RELEASE_MILLIS = 50L
         const val PREVIEW_HOLD_MILLIS = 1_500L
     }
 }

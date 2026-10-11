@@ -9,7 +9,10 @@
  */
 package com.pandulapeter.campfire.metronome.implementation
 
-/** An output that plays nothing and records what the engine asks of it, its [heardFrame] set by the test. */
+/**
+ * An output that plays nothing and records what the engine asks of it, its [heardFrame] set by the test, or answered by
+ * [clock] where a test runs the position on virtual time.
+ */
 internal class FakeAudioOutput(var result: AudioOutputStart = AudioOutputStart.Started()) : AudioOutput {
 
     val starts = mutableListOf<Boolean>()
@@ -20,6 +23,9 @@ internal class FakeAudioOutput(var result: AudioOutputStart = AudioOutputStart.S
     var listener: AudioOutputListener? = null
         private set
     var heardFrame = -1L
+    var clock: (() -> Long)? = null
+    var heardFrameCalls = 0
+        private set
 
     override fun start(isPreview: Boolean, createStream: (sampleRate: Int) -> ClickStream, listener: AudioOutputListener): AudioOutputStart {
         starts += isPreview
@@ -28,7 +34,10 @@ internal class FakeAudioOutput(var result: AudioOutputStart = AudioOutputStart.S
         return result
     }
 
-    override fun heardFrame() = heardFrame
+    override fun heardFrame(): Long {
+        heardFrameCalls++
+        return clock?.invoke() ?: heardFrame
+    }
 
     override fun stop() {
         stopCount++

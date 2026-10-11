@@ -18,6 +18,7 @@ import com.pandulapeter.campfire.metronome.api.model.MetronomeSound
 import com.pandulapeter.campfire.metronome.api.model.MetronomeStopReason
 import com.pandulapeter.campfire.metronome.api.model.TimeSignature
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -28,6 +29,7 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class MetronomeEngineTest {
@@ -301,6 +303,57 @@ class MetronomeEngineTest {
         assertEquals(emptyList(), beats)
     }
 
+    @Test
+    fun `beats are released when heard without polling every few milliseconds`() = runTest {
+        val engine = engine()
+        val beatTimes = beatTimesOf(engine)
+        engine.start(pattern)
+        runCurrent()
+        output.clock = { testScheduler.currentTime * FakeAudioOutput.SAMPLE_RATE / 1_000 }
+        feedOnVirtualTime()
+        advanceTimeBy(PLAYED_MILLIS)
+        runCurrent()
+        assertTrue(beatTimes.size >= (PLAYED_MILLIS / BEAT_MILLIS).toInt())
+        beatTimes.forEachIndexed { index, time ->
+            val heardAt = index * BEAT_MILLIS
+            assertTrue(time in heardAt..heardAt + POLL_MILLIS, "Beat $index heard at $heardAt was released at $time.")
+        }
+        assertTrue(output.heardFrameCalls < 800, "The position was read ${output.heardFrameCalls} times.")
+    }
+
+    @Test
+    fun `a position that moves in steps releases a beat within a poll of the step that passes it`() = runTest {
+        val engine = engine()
+        val beatTimes = beatTimesOf(engine)
+        engine.start(pattern)
+        runCurrent()
+        val steppedFrameAt = { millis: Long -> millis * FakeAudioOutput.SAMPLE_RATE / 1_000 / STEP_FRAMES * STEP_FRAMES }
+        output.clock = { steppedFrameAt(testScheduler.currentTime) }
+        feedOnVirtualTime()
+        advanceTimeBy(PLAYED_MILLIS)
+        runCurrent()
+        assertTrue(beatTimes.size >= (PLAYED_MILLIS / BEAT_MILLIS).toInt())
+        beatTimes.forEachIndexed { index, time ->
+            val frame = index * BEAT_FRAMES
+            var steppedPastAt = 0L
+            while (steppedFrameAt(steppedPastAt) < frame) steppedPastAt++
+            assertTrue(time in steppedPastAt..steppedPastAt + POLL_MILLIS, "Beat $index heard at $steppedPastAt was released at $time.")
+        }
+    }
+
+    private fun TestScope.beatTimesOf(engine: MetronomeEngine) = mutableListOf<Long>().also { times ->
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { engine.beats.collect { times += testScheduler.currentTime } }
+    }
+
+    /** Keeps the output's queue a queue's depth ahead of its position once a chunk, the way [SilentAudioOutput] does. */
+    private fun TestScope.feedOnVirtualTime() = backgroundScope.launch {
+        while (true) {
+            val now = output.clock!!.invoke()
+            output.stream!!.schedule(nowFrame = now, untilFrame = now + AudioOutput.queuedFrames(FakeAudioOutput.SAMPLE_RATE)) { _, _, _, _ -> }
+            delay((AudioOutput.CHUNK_SECONDS * 1000).toLong())
+        }
+    }
+
     private fun TestScope.beatsOf(engine: MetronomeEngine) = mutableListOf<MetronomeBeat>().also { beats ->
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { engine.beats.toList(beats) }
     }
@@ -310,7 +363,11 @@ class MetronomeEngineTest {
         stream!!.schedule(nowFrame = from * BEAT_FRAMES, untilFrame = to * BEAT_FRAMES) { _, _, _, _ -> }
 
     private companion object {
-        const val RELEASE_STEP_MILLIS = 6L
+        const val RELEASE_STEP_MILLIS = 21L
         const val BEAT_FRAMES = FakeAudioOutput.SAMPLE_RATE / 2L
+        const val BEAT_MILLIS = 500L
+        const val PLAYED_MILLIS = 10_000L
+        const val POLL_MILLIS = 5L
+        const val STEP_FRAMES = 1_024L
     }
 }

@@ -41,8 +41,10 @@ are tested, the platform outputs only call them.
 `MetronomeEngine` runs every call on one confined coroutine (`limitedParallelism(1)`), so calls from the UI, platform
 callbacks and media buttons apply in order without a lock, and each start is a session whose late listener callbacks
 are ignored. **`beats` are released when heard**: a coroutine polls the output's `heardFrame()` (the reported playback
-position, the route's latency included where the platform reports it) every 5 ms and emits the queued ticks it has
-passed. An output that cannot open (`AudioOutputStart.Unavailable`: no device, a refused `AudioContext`) is swapped for
+position, the route's latency included where the platform reports it) and emits the queued ticks it has passed. It
+polls every 5 ms only within 50 ms of the next tick (and before the output reports a position or the session's first
+tick is released), and once a chunk otherwise: only Android's position moves continuously, so a wait computed straight
+to a tick's frame could end just before the step that passes it. An output that cannot open (`AudioOutputStart.Unavailable`: no device, a refused `AudioContext`) is swapped for
 `SilentAudioOutput`, the same stream clocked by `TimeSource.Monotonic`, so the UI has one source of beats either way and
 `playback` says `audioIssue = UNAVAILABLE`. A refusal (`Refused`: the audio taken by a call) ends in `Stopped(reason)`. A
 preview while stopped opens the output for one and a half seconds after the last tap, a preview's focus (Android's
