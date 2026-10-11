@@ -14,6 +14,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.pandulapeter.campfire.data.model.DataState
+import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.domain.api.models.ScreenData
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import kotlinx.coroutines.CoroutineScope
@@ -80,13 +81,21 @@ internal class SongSelection(
      * Unticks the songs that leave the library, so that the count follows a sync run deleting a ticked song. Only a
      * library that was read whole prunes: a rescan publishes in batches, and one that had not reached a ticked song yet
      * would untick it.
+     *
+     * The library's names are hashed again only when the library is a new list: a filter, a sort or a setlist write
+     * emits the very same instance, which is immutable, so it is the same library.
      */
     fun startPruning(screenData: StateFlow<DataState<ScreenData>>) = scope.launch {
+        var prunedSongs: List<Song>? = null
+        var fileNames: Set<String> = emptySet()
         screenData.collect { state ->
             val data = state.data
             if (state is DataState.Loading || data == null || !data.isWholeLibrary) return@collect
             val selected = selectedSongFileNames ?: return@collect
-            val fileNames = data.unfilteredSongs.mapTo(hashSetOf()) { it.fileName }
+            if (data.unfilteredSongs !== prunedSongs) {
+                prunedSongs = data.unfilteredSongs
+                fileNames = data.unfilteredSongs.mapTo(hashSetOf()) { it.fileName }
+            }
             if (selected.any { it !in fileNames }) selectedSongFileNames = selected.filterTo(mutableSetOf()) { it in fileNames }
         }
     }
