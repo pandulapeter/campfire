@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
 import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
 import com.pandulapeter.campfire.metronome.api.model.MetronomeSound
 import com.pandulapeter.campfire.metronome.api.model.MetronomeStopReason
+import com.pandulapeter.campfire.metronome.api.model.TimeSignature
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
@@ -151,6 +152,26 @@ class MetronomeEngineTest {
         engine.update(stepped, fromNextBar = false)
         runCurrent()
         assertEquals(MetronomePlayback.Playing(pattern, pendingPattern = stepped), engine.playback.value)
+    }
+
+    @Test
+    fun `a change from the next bar made before the one before it is heard is reported in turn`() = runTest {
+        val engine = engine()
+        val b = MetronomePattern(bpm = 120, timeSignature = TimeSignature(3, 4))
+        val c = MetronomePattern(bpm = 90)
+        engine.start(pattern)
+        runCurrent()
+        output.scheduleBeats(from = 0, to = 3)
+        engine.update(b, fromNextBar = true)
+        runCurrent()
+        output.scheduleBeats(from = 3, to = 5)
+        engine.update(c, fromNextBar = true)
+        runCurrent()
+        assertEquals(MetronomePlayback.Playing(pattern, pendingPattern = c), engine.playback.value)
+        output.heardFrame = 4 * BEAT_FRAMES
+        advanceTimeBy(RELEASE_STEP_MILLIS)
+        runCurrent()
+        assertEquals(MetronomePlayback.Playing(b, pendingPattern = c), engine.playback.value)
     }
 
     @Test

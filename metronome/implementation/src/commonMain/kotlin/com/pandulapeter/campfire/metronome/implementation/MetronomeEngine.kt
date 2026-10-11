@@ -57,7 +57,9 @@ internal class MetronomeEngine(
     private var releaseJob: Job? = null
     private var previewEndJob: Job? = null
     private var lastBarChangeId = 0
-    private var pendingBarChangeId: Int? = null
+
+    /** The changes from the next bar not heard yet, oldest first: their ids, and the pattern each one brings. */
+    private val pendingBarChanges = ArrayDeque<Pair<Int, MetronomePattern>>()
 
     override fun start(pattern: MetronomePattern) = onEngine {
         if (_playback.value is MetronomePlayback.Playing) {
@@ -89,25 +91,28 @@ internal class MetronomeEngine(
     override fun update(pattern: MetronomePattern, fromNextBar: Boolean) = onEngine { updatePlaying(pattern, fromNextBar) }
 
     override fun applyPendingNow() = onEngine {
-        if (pendingBarChangeId != null) stream?.applyPendingBarChangeNow()
+        if (pendingBarChanges.isNotEmpty()) stream?.applyPendingBarChangeNow()
     }
 
     /**
      * A change from the next bar is [MetronomePlayback.Playing.pendingPattern] until its first click is heard, and a
-     * change from the next beat made meanwhile replaces it there, since it waits with it.
+     * change from the next beat made meanwhile replaces it there, since it waits with it. A second change from the next
+     * bar made before the first is heard queues behind it, each becoming [MetronomePlayback.Playing.pattern] with its own
+     * first heard click.
      */
     private fun updatePlaying(pattern: MetronomePattern, fromNextBar: Boolean) {
         val playing = _playback.value as? MetronomePlayback.Playing ?: return
         when {
             fromNextBar -> {
                 val barChangeId = ++lastBarChangeId
-                pendingBarChangeId = barChangeId
+                pendingBarChanges.addLast(barChangeId to pattern)
                 stream?.update(pattern, barChangeId)
                 _playback.value = playing.copy(pendingPattern = pattern)
             }
             playing.pendingPattern != null -> {
                 if (playing.pendingPattern == pattern) return
                 stream?.update(pattern, barChangeId = null)
+                pendingBarChanges.lastOrNull()?.let { (id, _) -> pendingBarChanges[pendingBarChanges.lastIndex] = id to pattern }
                 _playback.value = playing.copy(pendingPattern = pattern)
             }
             else -> {
@@ -187,11 +192,12 @@ internal class MetronomeEngine(
             val heardFrame = output.heardFrame()
             while (pending.isNotEmpty() && pending.first().frame <= heardFrame) {
                 val tick = pending.removeFirst()
-                val barChangeId = pendingBarChangeId
-                if (barChangeId != null && tick.barChangeId == barChangeId) {
-                    pendingBarChangeId = null
+                val heardIndex = tick.barChangeId?.let { id -> pendingBarChanges.indexOfFirst { it.first == id } } ?: -1
+                if (heardIndex >= 0) {
+                    val heard = pendingBarChanges[heardIndex].second
+                    repeat(heardIndex + 1) { pendingBarChanges.removeFirst() }
                     (_playback.value as? MetronomePlayback.Playing)?.let { playing ->
-                        _playback.value = playing.copy(pattern = playing.pendingPattern ?: playing.pattern, pendingPattern = null)
+                        _playback.value = playing.copy(pattern = heard, pendingPattern = pendingBarChanges.lastOrNull()?.second)
                     }
                 }
                 _beats.tryEmit(MetronomeBeat(tick.beatIndex, tick.barIndex, tick.level, tick.isSubdivision))
@@ -204,7 +210,7 @@ internal class MetronomeEngine(
         session++
         previewEndJob?.cancel()
         previewEndJob = null
-        pendingBarChangeId = null
+        pendingBarChanges.clear()
         releaseJob?.cancel()
         releaseJob = null
         activeOutput?.stop()
