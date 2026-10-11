@@ -17,10 +17,12 @@ import com.pandulapeter.campfire.domain.api.useCases.SetChordProTagUseCase
 import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.withContext
 
 /**
  * The tags and the languages of the songs ticked in the selection mode, written into all of them at once through
@@ -66,7 +68,9 @@ internal class SelectionEditing(
     private fun edit(fileNames: List<String>, edit: (String) -> String) = messageSink.launchLibraryChange {
         runningEdits.update { it + 1 }
         try {
-            val result = editSongs(fileNames = fileNames, edit = edit)
+            // Not cancellable once it has started: the view model going away with the Android activity is no reason to leave a
+            // tag on half of the songs it was saved onto, and the repository the files go into outlives it.
+            val result = withContext(NonCancellable) { editSongs(fileNames = fileNames, edit = edit) }
             messageSink.sendMessage(
                 if (result.failedFileNames.isEmpty()) {
                     Message.SongsUpdated(fileNames.size)

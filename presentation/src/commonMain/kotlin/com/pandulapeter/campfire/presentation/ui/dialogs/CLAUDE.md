@@ -289,7 +289,8 @@ and off, and Save writes only what was turned on (onto every song) and what was 
 half ticked row alone in every file — for one song no row is ever half ticked, which is why the two share a body. The
 selection's are written by `CampfireViewModel.setSelectionTags` / `setSelectionLanguages` (`SelectionEditing`), each
 file edited as it is on disk through `EditSongsUseCase`, which announces the change once, and the whole of it ends in
-one snackbar: how many songs were updated, or how many could not be.
+one snackbar: how many songs were updated, or how many could not be. Once started, the write finishes even if the
+screen, or the view model with it, goes.
 
 Every row of Manage tags ends in the tag's mark (`TagColorButton`), drawn in its color, which opens a popup of the
 colors as `ColorChoice` discs — no color first, then the palette, in rows of five, which fit a 360dp phone — rather

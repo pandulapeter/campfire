@@ -21,7 +21,12 @@ import com.pandulapeter.campfire.domain.api.useCases.SetChordProLanguagesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SetChordProTagUseCase
 import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
-import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -40,18 +45,35 @@ class SelectionEditingTest {
         // The decomposed letter is spelled as an escape, since a literal one would not survive a tool that normalizes text.
         files["a.cho"] = "{title: A}\n{tag: U\u0308nnep}\n{tag: Rock}"
 
-        editing().setSelectionTags(listOf("a.cho"), added = emptyList(), removed = setOf("ünnep"))
+        editing(backgroundScope).setSelectionTags(listOf("a.cho"), added = emptyList(), removed = setOf("ünnep"))
         runCurrent()
 
         assertEquals(listOf("Rock"), ChordProParser.parse(files.getValue("a.cho")).metadata.tags)
     }
 
-    private fun TestScope.editing() = SelectionEditing(
-        scope = backgroundScope,
-        messageSink = MessageSink(backgroundScope),
+    @Test
+    fun `a bulk tag write carries on when the view model's scope is cancelled`() = runTest {
+        files += listOf("a.cho", "b.cho", "c.cho").associateWith { "{title: ${it.first()}}" }
+        val viewModelScope = CoroutineScope(StandardTestDispatcher(testScheduler) + Job())
+        val gate = CompletableDeferred<Unit>()
+
+        editing(viewModelScope, gate).setSelectionTags(files.keys.toList(), added = listOf("Rock"), removed = emptySet())
+        runCurrent()
+        viewModelScope.cancel()
+        gate.complete(Unit)
+        advanceUntilIdle()
+
+        assertEquals(List(3) { listOf("Rock") }, files.values.map { ChordProParser.parse(it).metadata.tags })
+    }
+
+    /** Edits [files], each file once [gate] lets it through, as the repository's lock would keep it waiting. */
+    private fun editing(scope: CoroutineScope, gate: CompletableDeferred<Unit>? = null) = SelectionEditing(
+        scope = scope,
+        messageSink = MessageSink(scope),
         editSongs = object : EditSongsUseCase {
             override suspend fun invoke(fileNames: List<String>, edit: (text: String) -> String): EditedSongs {
                 val changed = fileNames.filterTo(mutableSetOf()) { fileName ->
+                    gate?.await()
                     val text = files.getValue(fileName)
                     edit(text).also { files[fileName] = it } != text
                 }

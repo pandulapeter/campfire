@@ -47,9 +47,10 @@ come from a separate `GetUserPreferencesUseCase` rather than from `ScreenData`, 
 for the library scan. Intent handlers are non-suspend and launch in `viewModelScope`; the ones that write to the library
 go through `launchLibraryChange`, which turns a write that failed into a `Message.OperationFailed` snackbar instead of
 an uncaught exception that would take the app down on Android. An import's writes run on `NonCancellable` once they
-start, so the view model going away with a finished Android activity does not leave an archive half imported; planning
-it and the conflicts question are still dropped with it, since nothing has been written by then. **Every state is kept
-up to date from the moment the view model exists**, never only while a screen collects it. A state started by its first
+start, and so do the selection's tags and languages (`SelectionEditing`), so the view model going away with a finished
+Android activity does not leave an archive half imported or a tag on half of the songs; planning the import and the
+conflicts question are still dropped with it, since nothing has been written by then. **Every state is kept up to date
+from the moment the view model exists**, never only while a screen collects it. A state started by its first
 collector hands it the initial value for a frame, and a screen answers the real one as a change: coming back to a tab
 after a few seconds away had the song rows fading in and the "New" button expanding into the bar and pushing the search
 action aside.
