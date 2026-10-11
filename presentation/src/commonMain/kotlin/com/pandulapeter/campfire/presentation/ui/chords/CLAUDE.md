@@ -15,7 +15,7 @@ Chord diagrams.
 ### Chord diagrams
 
 **Chord diagrams** (`ui/chords/`, `screens/songDetails/SongChordsSection.kt`, `components/ChordDiagram.kt`,
-`dialogs/ChordShapesSheet.kt`). `prepareSongLyrics` collects a song's chords with the rest of the model; the first model
+`dialogs/ChordShapeSheet.kt`). `prepareSongLyrics` collects a song's chords with the rest of the model; the first model
 of a page, built in place, leaves out the shapes only the search finds (`searchesShapes`, a chord `isShapePending`),
 which follow from `Dispatchers.Default` (`SongLyricsModel.withSearchedShapes`, the same sections, so only the Chords
 section is measured again, at the size it had: the cell is drawn as the empty frame until then) — a chord the tables

@@ -665,9 +665,10 @@ pages themselves are the songs that are there, so stepping skips a missing entry
 
 **On the song details screen** the `MetronomeButton` **shows and hides the panel** rather than starting the click
 (`toggleMetronomePanel`: opening it starts nothing, and closing it stops a click that is playing). Its mark stays the
-metronome, in the primary color while the panel is up (the light half of the app's own palette darkens the second accent
-for text, and a filled mark in it reads as red) and pulsing on every heard beat unless the Animate switch is off — the
-growing alone there, the mark being in that color already and the panel's beat row being right under it. **Its pendulum
+metronome, drawn in the button's content color — `onSecondaryContainer` on the secondary container circle while the
+panel is up, the way the tuner's is while its sheet is open (`SongToolButton`) — and pulsing on every heard beat unless
+the Animate switch is off, growing and leaning towards the primary color as the pulse fades, the way the navigation bar's
+does. **Its pendulum
 swings with the click**, and the Metronome item in the navigation bar and the rails both swings and pulses the same way
 (`MetronomeIcon`, the mark as two drawables, `ic_metronome_body` and `ic_metronome_pendulum`, the second turned about
 its pivot, driven by `rememberMetronomeIconBeat`): the pendulum is at an end of its arc on every heard beat and swings
