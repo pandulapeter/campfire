@@ -187,6 +187,8 @@ internal class FontScaleController(
 
     private companion object {
         const val FONT_SCALE_STEP_TOLERANCE = 0.01f // Floating point slack, so that 1.1000001 still counts as step 11.
-        const val FONT_SCALE_SETTLE_MILLIS = 200L
+        // Longer than the page being read takes to stop gliding and to re-anchor its scroll (CONTINUOUS_CHANGE_MILLIS and
+        // LAYOUT_SETTLE_MILLIS), so that the pages beside it are laid out again in frames of their own, not in those.
+        const val FONT_SCALE_SETTLE_MILLIS = 500L
     }
 }

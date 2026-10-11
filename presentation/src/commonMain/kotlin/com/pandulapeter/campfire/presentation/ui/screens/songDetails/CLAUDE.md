@@ -563,7 +563,9 @@ each page's `SongLyrics`, the stepper, the gesture — so that a pinch recompose
 the stored value wins whenever nothing set on this device is still waiting to be saved, so a preference written
 elsewhere (Settings, a restore, a sync run) is followed after a pinch too. Only the page on screen (and the one a swipe
 is heading to) follows a pinch frame by frame; the pages composed beside it read `settledFontScale`, the live value once
-it has held still for 200 ms, which a step of the stepper or a shortcut sets at once. The scale is kept in whole
+it has held still for 500 ms, which a step of the stepper or a shortcut sets at once. That is after the page being read
+has stopped gliding and re-anchored its scroll, so the pages beside it are laid out again in frames of their own; a
+swipe settles it at once, so the song being left never goes back to the old size as it slides away. The scale is kept in whole
 percent, which is all the stepper's label shows, so a slow pinch's sub-percent frames lay nothing out again.
 
 Each stepper is a tonal pill (`surfaceContainerHighest`, `CircleShape`) around its two buttons and the value, so that

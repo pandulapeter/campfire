@@ -18,12 +18,14 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
@@ -76,6 +78,11 @@ internal fun SongPages(
     val failedSongFileNames by viewModel.failedSongFileNames.collectAsStateWithLifecycle()
     val playingOverrides by viewModel.playingOverrides.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    LaunchedEffect(pagerState) {
+        // A swipe right after a pinch must not hand the song it leaves the size from before the pinch once it stops being
+        // the current page, halfway across: the pages beside the one being read take the new size before any of them moves.
+        snapshotFlow { pagerState.isScrollInProgress }.collect { if (it) viewModel.settleFontScale() }
+    }
     HorizontalPager(
         modifier = Modifier.bounceScrollableContent(pagerState, Orientation.Horizontal)
             .fillMaxSize()
@@ -100,7 +107,8 @@ internal fun SongPages(
         }
         if (page == pagerState.currentPage) SideEffect { onCurrentPage(scrollState, stepper) }
         // Only the song being read follows a pinch frame by frame; the pages beside it are composed and laid out
-        // too, and take the scale once it has settled. A swipe makes its page the target, which follows at once.
+        // too, and take the scale once it has settled, or as soon as the pager starts moving. A swipe makes its page the
+        // target, which follows at once.
         val isFollowingGesture = page == pagerState.currentPage || page == pagerState.targetPage
         // Derived, so that a swipe recomposes the page only when the answer flips rather than on every frame.
         val buildsInPlace by remember(pagerState, page) {

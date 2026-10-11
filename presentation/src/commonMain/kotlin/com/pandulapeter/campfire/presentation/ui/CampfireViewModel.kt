@@ -510,6 +510,9 @@ class CampfireViewModel(
     /** See [FontScaleController.settledFontScale]. */
     val settledFontScale: Float get() = fontScaleController.settledFontScale
 
+    /** See [FontScaleController.settleFontScale]. */
+    fun settleFontScale() = fontScaleController.settleFontScale()
+
     private val preferencesController: PreferencesController = PreferencesController(
         scope = viewModelScope,
         getUserPreferences = getUserPreferences,
