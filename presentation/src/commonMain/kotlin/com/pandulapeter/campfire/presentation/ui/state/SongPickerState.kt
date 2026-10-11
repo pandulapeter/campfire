@@ -13,7 +13,7 @@ import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.presentation.ui.search.PickerFilterOptions
 import com.pandulapeter.campfire.presentation.ui.search.PickerSongs
 import com.pandulapeter.campfire.presentation.ui.search.pickerFilterOptions
-import com.pandulapeter.campfire.presentation.ui.search.toPickableSong
+import com.pandulapeter.campfire.presentation.ui.search.pickerSongsOf
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.Companion.SONG_PICKER_LANGUAGES_KEY
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.Companion.SONG_PICKER_TAGS_KEY
 import kotlinx.coroutines.CoroutineScope
@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.flow.update
 
 /** The song picker sheet's songs and filter chips, and the chips it has ticked, which outlive the sheet for the session. */
@@ -53,9 +54,8 @@ internal class SongPickerState(
      * wait for a whole library to be folded. The order is the domain layer's (`ScreenData.sortedSongs`), which sorts
      * the library once for the songs screen and the picker alike, and comes with the search index of the same value.
      */
-    val pickerSongs = indexedSongs.map { indexed ->
-        val list = indexed.sorted.mapNotNull { indexed.search.byFileName[it.fileName] }.map { it.toPickableSong() }
-        PickerSongs(list = list, byFileName = list.associateBy { it.song.fileName })
+    val pickerSongs = indexedSongs.scan(PickerSongs.Empty) { previous, indexed ->
+        pickerSongsOf(sorted = indexed.sorted, byFileName = indexed.search.byFileName, previous = previous)
     }
         .flowOn(Dispatchers.Default)
         .asState(scope, PickerSongs.Empty)

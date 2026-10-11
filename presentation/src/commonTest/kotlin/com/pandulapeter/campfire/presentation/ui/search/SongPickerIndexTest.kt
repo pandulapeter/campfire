@@ -14,6 +14,8 @@ import com.pandulapeter.campfire.data.model.domain.SongLanguage
 import com.pandulapeter.campfire.data.model.domain.Tag
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotSame
+import kotlin.test.assertSame
 
 class SongPickerIndexTest {
 
@@ -99,6 +101,47 @@ class SongPickerIndexTest {
             listOf("love"),
             songPickerMatches(songs, normalizedQuery = "", activeTags = emptySet(), activeLanguages = setOf("hu")).map { it.song.title },
         )
+    }
+
+    @Test
+    fun `the same order with the same songs keeps the previous picker songs`() {
+        val sorted = listOf(song("a"), song("b"))
+        val previous = pickerSongsOf(sorted, searchable(sorted), PickerSongs.Empty)
+        assertSame(previous, pickerSongsOf(sorted, searchable(sorted), previous))
+    }
+
+    @Test
+    fun `another order lists the songs in it`() {
+        val sorted = listOf(song("a"), song("b"))
+        val previous = pickerSongsOf(sorted, searchable(sorted), PickerSongs.Empty)
+        val reordered = sorted.reversed()
+        val result = pickerSongsOf(reordered, searchable(reordered), previous)
+        assertNotSame(previous, result)
+        assertEquals(listOf("b", "a"), result.list.map { it.song.title })
+    }
+
+    @Test
+    fun `a song written to the library is listed as it is now`() {
+        val sorted = listOf(song("a"), song("b"))
+        val previous = pickerSongsOf(sorted, searchable(sorted), PickerSongs.Empty)
+        val written = listOf(song("a"), song("b", tags = listOf("Rock")))
+        val result = pickerSongsOf(written, searchable(written), previous)
+        assertEquals(setOf("rock"), result.byFileName.getValue("b.cho").tags)
+        assertEquals(listOf("a", "b"), result.list.map { it.song.title })
+    }
+
+    @Test
+    fun `a song removed from the library is gone from the picker`() {
+        val sorted = listOf(song("a"), song("b"))
+        val previous = pickerSongsOf(sorted, searchable(sorted), PickerSongs.Empty)
+        val removed = listOf(song("b"))
+        val result = pickerSongsOf(removed, searchable(removed), previous)
+        assertEquals(listOf("b"), result.list.map { it.song.title })
+        assertEquals(setOf("b.cho"), result.byFileName.keys)
+    }
+
+    private fun searchable(songs: List<Song>) = songs.associate { song ->
+        song.fileName to SearchableSong(song = song, title = song.title, artist = song.artist, tags = song.tags)
     }
 
     private fun pickable(

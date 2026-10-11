@@ -64,14 +64,29 @@ internal fun songPickerMatches(
 /**
  * Every song of the library as the song picker lists it: in the songs screen's order in [list], and by file name in
  * [byFileName] for the songs a setlist already holds, which the picker puts first.
+ *
+ * @param sorted The library in that order, as [pickerSongsOf] built [list] from, so that it can tell when nothing changed.
  */
 internal class PickerSongs(
     val list: List<PickableSong>,
     val byFileName: Map<String, PickableSong>,
+    val sorted: List<Song>,
 ) {
     companion object {
-        val Empty = PickerSongs(emptyList(), emptyMap())
+        val Empty = PickerSongs(emptyList(), emptyMap(), emptyList())
     }
+}
+
+/**
+ * The [PickerSongs] of the library in the order of [sorted], with each song's search keys taken from [byFileName], or
+ * [previous] itself while [sorted] is the very list it was built from. The domain layer hands out the same sorted list
+ * for as long as the library and its order are the same, and then the search index holds the same songs, so a filter
+ * changed on the songs screen builds nothing here, and the unchanged value is not emitted to an open picker again.
+ */
+internal fun pickerSongsOf(sorted: List<Song>, byFileName: Map<String, SearchableSong>, previous: PickerSongs): PickerSongs {
+    if (sorted === previous.sorted) return previous
+    val list = sorted.mapNotNull { byFileName[it.fileName] }.map { it.toPickableSong() }
+    return PickerSongs(list = list, byFileName = list.associateBy { it.song.fileName }, sorted = sorted)
 }
 
 /**
