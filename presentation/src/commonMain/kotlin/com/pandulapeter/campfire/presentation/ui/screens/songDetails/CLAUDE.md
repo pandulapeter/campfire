@@ -498,7 +498,8 @@ than composed and fades by its colors rather than through a layer, for the web b
 whole area the song is read in is their touch target too** (`stepOnTap`, on the box around the pager and the buttons): a
 tap on its top half presses the previous one and a tap on its bottom half the next one, while that button is there —
 only a tap nothing inside wanted (a fold toggle, a button or a pinch), never a long press, never a mouse's right or
-middle click, and never the press that stops a fling, while a press during a step steps on as the buttons do.
+middle click, never the press that stops a fling and never one the system took away (the cancellation Compose makes of
+Android's home and back gestures arrives as a consumed release), while a press during a step steps on as the buttons do.
 
 A tap between two strums often slides, so a drag the scroll took that is over within 250 ms and travelled less than a
 tenth of the area's height is still a tap, by where it landed: the step is counted from where the song was when the

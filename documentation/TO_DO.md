@@ -11,7 +11,6 @@
 ## Short-term (in this version)
 ### Bugs / issues
 - CoverArtArchive thumbnails load really slowly
-- Page scroll triggered by home gesture on Android
 
 ### Improvements
 - The metronome should remember beat setup per song

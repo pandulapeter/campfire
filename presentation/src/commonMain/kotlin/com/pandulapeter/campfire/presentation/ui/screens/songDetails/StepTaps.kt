@@ -92,12 +92,16 @@ internal fun Modifier.stepOnTap(
                     }
                     if (if (isSteppingOn) (change.position - down.position).getDistance() > viewConfiguration.touchSlop else change.isConsumed) isDragged = true
                 }
+                // An up taken without a drag before it is a child's tap, which was answered there. After a drag nothing
+                // inside takes the up, since the scroll and the pager only fling on it, so a consumed one is the
+                // cancellation Compose makes up when the system takes the pointer away: Android's home and back
+                // gestures start as an ordinary press and slide on the window, and are short enough to pass for a tap.
+                if (up.isConsumed) return@awaitEachGesture
                 val direction = if (down.position.y < size.height / 2f) -1 else 1
                 val duration = up.uptimeMillis - down.uptimeMillis
                 val isSideways: Boolean
                 if (!isDragged) {
-                    // An up taken without a drag before it is a child's tap, which was answered there.
-                    if (up.isConsumed || duration >= viewConfiguration.longPressTimeoutMillis) return@awaitEachGesture
+                    if (duration >= viewConfiguration.longPressTimeoutMillis) return@awaitEachGesture
                     up.consume()
                     if (!isSteppingOn) {
                         currentOnStep(direction, origin)
