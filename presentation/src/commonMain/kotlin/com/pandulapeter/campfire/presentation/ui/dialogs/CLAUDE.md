@@ -273,12 +273,13 @@ The songs ticked in the songs screen's selection mode (see `ui/screens/songs`) g
 how many songs it is about and holding the selection as it was when it opened, in the order the screen sorts by; none
 of them has a `SavedDialog`, since the mode is not restored either. **Choose setlists** (`SelectionSetlistsSheet`) is
 the setlist picker with a box per setlist that is ticked where it holds all of the songs, empty where it holds none and
-half ticked in between (`selectionBoxState`, following the sheet's own record of what each setlist held as it opened
-and what the sheet added since rather than the library): a tap on an empty or half ticked box adds the songs it lacks
-to its end as one write (`Setlist.withSongsAdded`), and a tap on a box the sheet filled takes out exactly those
-(`withSongsTakenOut`) — a song the setlist held already is never taken out from here, since that loses its place and
-its key in it. A setlist that held them all is ticked and disabled, an archived one is listed only where it holds one of
-them, and a library with nothing to list skips to the naming sheet, whose setlist is created holding the whole
+half ticked in between (`selectionBoxState`, following what each setlist holds until the sheet is first tapped on it,
+and from then on the sheet's own record of what it held then and what the sheet added since rather than the library,
+which lags behind the sheet's writes): a tap on an empty or half ticked box adds the songs it lacks to its end as one
+write (`Setlist.withSongsAdded`), and a tap on a box the sheet filled takes out exactly those (`withSongsTakenOut`) — a
+song the setlist held already is never taken out from here, since that loses its place and its key in it. A setlist
+that holds them all, untouched by the sheet, is ticked and disabled, an archived one is listed only where it holds one
+of them, and a library with nothing to list skips to the naming sheet, whose setlist is created holding the whole
 selection (`createSetlistWithSongs`, which the one-song picker goes through too).
 
 **Manage tags** and **Manage languages** are the one-song sheets' bodies (`TagsSheet`, `LanguagesSheet`), which both the

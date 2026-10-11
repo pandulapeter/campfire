@@ -28,6 +28,7 @@ import com.pandulapeter.campfire.presentation.resources.setlists_no_search_resul
 import com.pandulapeter.campfire.presentation.resources.setlists_search
 import com.pandulapeter.campfire.presentation.resources.songs_choose_setlists
 import com.pandulapeter.campfire.presentation.resources.songs_selection_count
+import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
 import com.pandulapeter.campfire.presentation.ui.components.CheckboxListItem
@@ -35,7 +36,9 @@ import com.pandulapeter.campfire.presentation.ui.components.SetlistSortMenu
 import com.pandulapeter.campfire.presentation.ui.components.checklistItems
 import com.pandulapeter.campfire.presentation.ui.components.listItemAnimation
 import com.pandulapeter.campfire.presentation.ui.components.rememberChecklistOrder
+import com.pandulapeter.campfire.presentation.ui.screens.setlists.heldOf
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.selectionBoxState
+import com.pandulapeter.campfire.presentation.ui.screens.setlists.withHeldRecorded
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -46,9 +49,10 @@ import org.jetbrains.compose.resources.painterResource
  * tapped, since taking a song out of a setlist loses its place and its key there, which is the setlist's own business,
  * one song at a time and after a question.
  *
- * A setlist that held all of the songs as the sheet opened is ticked and disabled, and an archived one is listed only
- * where it holds one of them, disabled. The boxes follow the sheet's own record of what each setlist held and what it
- * added rather than the library, which only catches up once a write has been round tripped through it.
+ * A setlist that holds all of the songs, and that the sheet has not added to, is ticked and disabled, and an archived
+ * one is listed only where it holds one of them, disabled. A setlist the sheet has not been tapped on yet follows the
+ * library; from its first tap on, its box follows the sheet's own record of what it held then and what the sheet added
+ * since rather than the library, which only catches up once a write has been round tripped through it.
  */
 @Composable
 internal fun SelectionSetlistsSheet(
@@ -59,20 +63,18 @@ internal fun SelectionSetlistsSheet(
     val selection = dialog.songFileNames
     var query by rememberSaveable { mutableStateOf("") }
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
-    val heldAtOpening by rememberSaveable(stateSaver = fileNamesBySetlistSaver) {
-        mutableStateOf(setlists.associate { setlist -> setlist.fileName to setlist.entries.map { it.songFileName }.filter { it in selection }.toSet() })
-    }
+    var heldWhenTapped by rememberSaveable(stateSaver = fileNamesBySetlistSaver) { mutableStateOf(emptyMap<String, Set<String>>()) }
     var added by rememberSaveable(stateSaver = fileNamesBySetlistSaver) { mutableStateOf(emptyMap<String, Set<String>>()) }
-    fun stateOf(setlistFileName: String) = selectionBoxState(
+    fun stateOf(setlist: Setlist) = selectionBoxState(
         selection = selection,
-        held = heldAtOpening[setlistFileName].orEmpty(),
-        added = added[setlistFileName].orEmpty(),
+        held = heldOf(heldWhenTapped, setlist, selection),
+        added = added[setlist.fileName].orEmpty(),
     )
-    val checkedSetlistKeys = setlists.filter { stateOf(it.fileName) != ToggleableState.Off }.mapTo(mutableSetOf()) { it.fileName }
+    val checkedSetlistKeys = setlists.filter { stateOf(it) != ToggleableState.Off }.mapTo(mutableSetOf()) { it.fileName }
     val refreshKey = userPreferences?.setlistSortingMode to query
     val setlistOrder = rememberChecklistOrder(checkedSetlistKeys, refreshKey)
-    val pickableSetlists = remember(setlists, heldAtOpening) {
-        setlists.filter { setlist -> !setlist.isArchived || heldAtOpening[setlist.fileName].orEmpty().isNotEmpty() }
+    val pickableSetlists = remember(setlists, heldWhenTapped) {
+        setlists.filter { setlist -> !setlist.isArchived || heldOf(heldWhenTapped, setlist, selection).isNotEmpty() }
     }
     val matches = remember(pickableSetlists, query) {
         val normalizedQuery = viewModel.songRenderer.normalizeForSearch(query)
@@ -109,17 +111,19 @@ internal fun SelectionSetlistsSheet(
                     key = { it.fileName },
                     listState = listState,
                 ) { setlist ->
-                    val held = heldAtOpening[setlist.fileName].orEmpty()
+                    val held = heldOf(heldWhenTapped, setlist, selection)
                     val addedHere = added[setlist.fileName].orEmpty()
                     CheckboxListItem(
                         modifier = listItemAnimation(listState),
                         title = setlist.title,
-                        state = stateOf(setlist.fileName),
+                        state = stateOf(setlist),
                         isEnabled = !setlist.isArchived && held.size < selection.size,
                         onClick = {
+                            heldWhenTapped = withHeldRecorded(heldWhenTapped, setlist, selection)
+                            val heldHere = heldWhenTapped.getValue(setlist.fileName)
                             if (addedHere.isEmpty()) {
                                 viewModel.addSongsToSetlist(songFileNames = selection, setlistFileName = setlist.fileName)
-                                added = added + (setlist.fileName to selection.filterNot { it in held }.toSet())
+                                added = added + (setlist.fileName to selection.filterNot { it in heldHere }.toSet())
                             } else {
                                 viewModel.takeSongsOutOfSetlist(songFileNames = addedHere, setlistFileName = setlist.fileName)
                                 added = added - setlist.fileName

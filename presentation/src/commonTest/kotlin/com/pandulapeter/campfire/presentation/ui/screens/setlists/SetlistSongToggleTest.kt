@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.data.model.domain.Setlist
 import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertSame
 
 /** A tick of the song picker moves one song in or out of the setlist as it is now, never the picker's own copy of it. */
 internal class SetlistSongToggleTest {
@@ -31,6 +32,8 @@ internal class SetlistSongToggleTest {
         ),
         size = 0,
     )
+
+    private val selection = listOf("a", "b", "c")
 
     @Test
     fun `a song ticked in goes to the end and the others keep their overrides`() = assertEquals(
@@ -84,4 +87,28 @@ internal class SetlistSongToggleTest {
         assertEquals(ToggleableState.On, selectionBoxState(selection, held = setOf("a"), added = setOf("b")))
         assertEquals(ToggleableState.On, selectionBoxState(selection, held = setOf("a", "b", "x"), added = emptySet()))
     }
+
+    @Test
+    fun `a setlist the sheet has not tapped is read as it is now`() {
+        val held = heldOf(emptyMap(), setlistOf("a", "b", "c", "x"), selection)
+
+        assertEquals(setOf("a", "b", "c"), held)
+        assertEquals(ToggleableState.On, selectionBoxState(selection, held, emptySet()))
+    }
+
+    @Test
+    fun `a recorded setlist is not read again`() = assertEquals(
+        setOf("a"),
+        heldOf(mapOf(setlist.fileName to setOf("a")), setlistOf("a", "b"), selection),
+    )
+
+    @Test
+    fun `a tap records what the setlist holds then, once`() {
+        val recorded = withHeldRecorded(emptyMap(), setlistOf("a"), selection)
+
+        assertEquals(mapOf(setlist.fileName to setOf("a")), recorded)
+        assertSame(recorded, withHeldRecorded(recorded, setlistOf("a", "b", "c"), selection))
+    }
+
+    private fun setlistOf(vararg songFileNames: String) = setlist.copy(entries = songFileNames.map { Setlist.Entry(songFileName = it) })
 }
