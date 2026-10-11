@@ -46,11 +46,11 @@ sealed interface DialogType {
      */
     data class SongInfo(val song: Song, val target: SongEditTarget) : DialogType
     /**
-     * The chords of a song and the other ways each can be played, opened from the header of its Chords section,
-     * which reads the song as the page plays it - in the setlist it was opened from, if any - and its text as it
-     * is now.
+     * One chord of a song and the other ways it can be played, opened by tapping its diagram in the Chords section,
+     * which reads the song as the page plays it - in the setlist it was opened from, if any - and its text as it is
+     * now, and finds the chord by the name the page shows it with ([chordName]).
      */
-    data class ChordShapes(val song: Song, val setlistFileName: String?) : DialogType
+    data class ChordShape(val song: Song, val setlistFileName: String?, val chordName: String) : DialogType
 
     /** The tuner over the song being read, opened from the song details overflow menu; it listens while it is up. */
     data object Tuner : DialogType

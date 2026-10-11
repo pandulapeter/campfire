@@ -187,8 +187,8 @@ internal fun SongPages(
             onTimingChanged = { timing -> if (timing == null) songTimings.remove(song.fileName) else songTimings[song.fileName] = timing },
             chordDiagrams = remember(chordDiagrams, song.fileName, destination.setlistFileName, isReadOnly) {
                 chordDiagrams?.copy(
-                    onShapesClicked = if (isReadOnly) null else {
-                        { viewModel.showDialog(DialogType.ChordShapes(song = song, setlistFileName = destination.setlistFileName)) }
+                    onChordClicked = if (isReadOnly) null else {
+                        { chordName -> viewModel.showDialog(DialogType.ChordShape(song = song, setlistFileName = destination.setlistFileName, chordName = chordName)) }
                     },
                 )
             },

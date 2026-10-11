@@ -21,11 +21,11 @@ import com.pandulapeter.campfire.presentation.ui.chords.selectShape
 
 /**
  * What a song's Chords section needs beyond the song: the instrument the diagrams are drawn for, the shapes the player
- * chose, whether the section is folded, and what its header does.
+ * chose, whether the section is folded, and what its header and its diagrams do.
  *
  * @param onFoldToggled Folds the section or unfolds it, one preference for every song; null where nothing folds.
- * @param onShapesClicked Opens the Chord shapes sheet of the song, null in read only mode (performance mode, or a song
- * read from an archived setlist), which takes the controls off the page. Offered only while the section is unfolded.
+ * @param onChordClicked Opens the sheet of the chord a diagram was tapped on, by the name the page shows it with; null in
+ * read only mode (performance mode, or a song read from an archived setlist), which takes the controls off the page.
  * @param showsDefinitionsOnly Whether the section holds the song's own definitions and nothing else, each on the
  * instrument it is written for, which is the editor's preview: it shows what is being written, and the app's own shapes
  * are not written. [notation] is what their names are read in.
@@ -36,7 +36,7 @@ internal data class ChordDiagrams(
     val storedShapes: Map<String, String> = emptyMap(),
     val isFolded: Boolean = false,
     val onFoldToggled: (() -> Unit)? = null,
-    val onShapesClicked: (() -> Unit)? = null,
+    val onChordClicked: ((chordName: String) -> Unit)? = null,
     val showsDefinitionsOnly: Boolean = false,
     val notation: ChordNotation = ChordNotation.STANDARD,
 )

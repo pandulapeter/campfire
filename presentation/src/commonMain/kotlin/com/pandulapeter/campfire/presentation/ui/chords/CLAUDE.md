@@ -39,13 +39,15 @@ composed (`ChordCellLayouts`: names measured by the page's measurer, diagrams by
 intrinsic measurement at a candidate width already counts the rows they wrap into, every slot answering for the whole
 section's width; a screen reader reads it row by row.
 
-It is a pill folding it (`UserPreferences.isChordSectionFolded`, one fold for every song, in read only mode too)
-followed by the Chord shapes button, a pencil as tall as the pill, fading,
-scaling and expanding in and out (unclipped) with the diagrams, since it is there only while the section is unfolded and
-never in read only mode (performance mode, or a song read from an archived setlist), and rows of cells — the name in the
-chords' style and accent over its diagram, growing with the text size, wrapping rather than scrolling sideways into as
-few rows as the width allows, shared out between them as evenly as their order lets them (`balancedRowStarts`: nine of
-which six fit a line are five over four, not six over three, and the PDF breaks its rows the same way), taking no press.
+It is a pill folding it (`UserPreferences.isChordSectionFolded`, one fold for every song, in read only mode too) and
+rows of cells — the name in the chords' style and accent over its diagram, growing with the text size, wrapping rather
+than scrolling sideways into as few rows as the width allows, shared out between them as evenly as their order lets them
+(`balancedRowStarts`: nine of which six fit a line are five over four, not six over three, and the PDF breaks its rows
+the same way). **Every cell opens its own chord's sheet when tapped** (`ChordDiagrams.onChordClicked`), outside read
+only mode (performance mode, or a song read from an archived setlist): the cells are drawn, so the tap is found by
+`chordCellAt` (`ChordRows.kt`, tested; a cell is hit across its row's height, the gaps hit nothing), the cell pressed is
+lit behind it while the finger is down, a screen reader gets one custom action per cell, and the tap is consumed so it
+does not also turn the page — a tap between the cells, or on any of them in read only mode, still does.
 
 Which shape a cell draws is `selectShape` (`ChordSelection.kt`, tested): the song's definition, then the player's stored
 shape for the chord's id (`UserPreferences.chordVoicings`, where it still reads as a shape of that instrument), then the
@@ -57,11 +59,15 @@ four, a key past them left out, white keys the lighter of the two theme colours 
 filled whole — the root in the second accent, the rest (a slash chord's bass included) in a shade of it moved away from
 the white keys (deeper in the dark theme, paler in the light one).
 
-The **Chord shapes sheet** (`DialogType.ChordShapes`, closed with the song) reads the song as the page plays it and
-lists its chords larger, with their fingers and notes, each with a `Stepper` through `ChordVoicings.all` (searched per
-cell off the main thread), written at once by `setChordVoicing` (stepping onto the app's first shape removes the entry),
-never highlighted and with no reset, since which shape is the default means nothing to the player; a chord the song
-defines has "Defined in this song" (and by how many frets it was moved) in its place. The **editor**'s first toolbar row
+The **chord sheet** (`ChordShapeSheet`, `DialogType.ChordShape`, closed with the song) is titled "Choose chord shape -
+G", the label of the screen reader action that opens it, and reads the song as the page plays it, finding the chord by
+its name (gone, it closes): the chord larger, with its
+fingers and notes, its shapes the pages of a `HorizontalPager` through `ChordVoicings.all` (searched off the main
+thread, the pages decided once they are there, a stored shape the app does not list first) and a `Stepper` under it
+reading the page and turning it, for a mouse, a keyboard and a screen reader. The page it settles on is written at once
+by `setChordVoicing` (settling on the app's first shape removes the entry), never highlighted and with no reset, since
+which shape is the default means nothing to the player; a chord the song defines has one page and "Defined in this
+song" (and by how many frets it was moved) in the stepper's place. The **editor**'s first toolbar row
 ends in Chord shape (`chordShapeInsertion`, tested), which writes a `{define}` for the chord at the caret into the
 header, filled in with the shape the player would be shown and its frets selected, or sends the caret to the frets of
 the line already there; the preview's Chords section holds every definition of the text and nothing else, each on its
@@ -81,7 +87,7 @@ it, like any other section. Nothing is shipped for it and nothing is fetched: `:
 stands for (`ChordProChords`) and finds its shapes (`ChordVoicings`) — a hand-typed table of the shapes everybody knows
 first, a search for every other one after it. Which shape a chord is drawn with is, in order, the song's own `{define}`
 (or `{chord}`) for that instrument, which ChordPro has for "in this song the G is played this way" and which travels
-with the file; the player's own choice from the Chord shapes sheet, **one per chord and instrument for the whole
+with the file; the player's own choice from the chord's sheet, **one per chord and instrument for the whole
 library**, since which F somebody plays is a habit of their hands rather than a reading of one song, stored as the shape
 rather than its number and keyed by the chord's notes so every spelling shares it (`UserPreferences.chordVoicings`,
 synced, see `data/sync/implementation/CLAUDE.md`); and the app's first shape.

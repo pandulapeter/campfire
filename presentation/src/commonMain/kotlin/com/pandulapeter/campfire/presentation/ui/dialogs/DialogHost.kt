@@ -127,7 +127,7 @@ internal class DialogHost(
             is DialogType.SetlistPicker -> song.fileName
             is DialogType.DeleteSong -> song.fileName
             is DialogType.SongInfo -> song.fileName.takeIf { target is SongEditTarget.File }
-            is DialogType.ChordShapes -> song.fileName
+            is DialogType.ChordShape -> song.fileName
             // The editor's draft is the editor's to keep, whatever became of the file it was opened on.
             is DialogType.SongEdit -> song.fileName.takeIf { target is SongEditTarget.File }
             else -> null

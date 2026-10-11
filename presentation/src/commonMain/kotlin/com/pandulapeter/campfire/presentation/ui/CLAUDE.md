@@ -404,7 +404,7 @@ duration after that, as its card there has it.
 Keyboard, whatever the Chord diagrams switch says): a keyboard has no capo, so the song details screen has no capo
 stepper and names no capo, read only mode's line included, and counts the capo's frets into the transposition instead
 (`withCapoSounding`, wrapped around the octave like the stepper), so that the chords over the lyrics, the diagrams, the
-Chord shapes sheet and the key next to the stepper are all the sounding key the app bar names. The stepper still steps
+chord sheet and the key next to the stepper are all the sounding key the app bar names. The stepper still steps
 and resets only the transposition's own override, and reads as overridden only while there is one, so a capoed song with
 nothing stepped reads the capo's amount, plainly. The capo overrides are still kept, read and stepped by the other
 instruments, and the Song defaults sheet still edits the file's `{capo}`. The PDF follows the screen (the capo the

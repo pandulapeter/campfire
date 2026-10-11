@@ -27,7 +27,7 @@ internal data class SelectedShape(
         /** The song's own `{define}`, which has no stepper: the song says how it is played, the editor is where that changes. */
         DEFINED,
 
-        /** The player's own choice of shape for the chord on the instrument, from the Chord shapes sheet. */
+        /** The player's own choice of shape for the chord on the instrument, from the chord's sheet. */
         PLAYER,
 
         /** The app's own first shape of the chord, or no shape at all where it has none. */

@@ -40,8 +40,8 @@ import kotlin.math.min
  * pressed keys filled. The root is in the second accent color, the color the chords are written in. It is drawn
  * rather than composed, at whatever size [modifier] gives it, and it takes no press: a tap on it is a tap on the song.
  *
- * @param showsFingers Whether the dots carry the finger that holds them, where the shape says: legible at the Chord
- *   shapes sheet's size, and only clutter at the section's.
+ * @param showsFingers Whether the dots carry the finger that holds them, where the shape says: legible at the chord
+ *   sheet's size, and only clutter at the section's.
  */
 @Composable
 internal fun ChordDiagram(

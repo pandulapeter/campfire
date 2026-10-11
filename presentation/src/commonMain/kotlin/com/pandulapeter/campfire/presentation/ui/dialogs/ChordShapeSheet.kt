@@ -50,6 +50,7 @@ import com.pandulapeter.campfire.presentation.resources.ic_next
 import com.pandulapeter.campfire.presentation.resources.ic_previous
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_defined
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_defined_moved
+import com.pandulapeter.campfire.presentation.resources.song_details_chord_shape_choose
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_shape_next
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_shape_position
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_shape_position_description
@@ -121,7 +122,7 @@ internal fun ChordShapeSheet(
     if (chords != null && chord == null) return LaunchedEffect(Unit) { viewModel.dismissSheet(dialog) }
     val storedShapes = userPreferences?.chordVoicings?.get(instrument.id).orEmpty()
     CampfireBottomSheet(
-        title = dialog.chordName,
+        title = textResource(Res.string.song_details_chord_shape_choose, dialog.chordName),
         subtitle = songLabel(song),
         onDismiss = { viewModel.dismissSheet(dialog) },
     ) { contentPadding ->
@@ -141,8 +142,8 @@ internal fun ChordShapeSheet(
                 // of a diagram and the room of the rest hold the sheet at its height meanwhile.
                 ChordShapePlaceholder(instrument = instrument, chordName = dialog.chordName)
             } else {
-                // A shape chosen is written at once, and the shapes are worked out again for the chord as the new
-                // preferences arrive, so the pager is keyed on the chord rather than on what is selected.
+                // The pager holds its chord's shapes while a new list of chords is worked out under the open sheet, so
+                // it is keyed on the chord: its pages are never handed to another one.
                 key(chord.chord.id, chord.name) {
                     ChordShapePager(
                         chord = chord,
@@ -195,7 +196,8 @@ private fun ChordShapePager(
             textAlign = TextAlign.Center,
         )
     }
-    if (options == null) {
+    // A chord the tables have no shape for has no page to draw, only the empty frame its cell has on the page.
+    if (options.isNullOrEmpty()) {
         ChordShapePlaceholder(instrument = instrument, chordName = chord.name)
         return
     }
@@ -316,7 +318,7 @@ private fun ChordShapeStepper(
     }
 }
 
-/** The empty frame of a diagram and the room of the notes and the stepper, while there is nothing to page through yet. */
+/** The empty frame of a diagram and the room of the notes and the stepper, while there is nothing to page through. */
 @Composable
 private fun ChordShapePlaceholder(
     instrument: ChordInstrument,

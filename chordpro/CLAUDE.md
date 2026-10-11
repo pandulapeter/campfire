@@ -418,8 +418,8 @@ what nothing outside the module calls is `internal`.
   `ChordProChordRewriter.writtenChordNames` (the key and the lines of the sections alone, which decide the notation and the
   spelling) are both one internal walk, `visitChordNames`, whose flags say whether the key, the bracketed text and the
   recalled choruses are read and which a test holds against every name the chord rewrite renames. `spelledNoteNames` spells a chord's notes by degree from the root's letter (`Cm` is
-  `C Eb G`, a white-key enharmonic or a double accidental falling back to the plain name), which the Chord shapes sheet
-  shows under each diagram.
+  `C Eb G`, a white-key enharmonic or a double accidental falling back to the plain name), which a chord's sheet on the
+  song details screen shows under its diagram.
 - `ChordVoicings` / `ChordVoicingTables` — how a chord is played on the guitar, the ukulele and the keyboard
   (`model/ChordInstrument`, `model/ChordVoicing`). The tables are the shapes everybody knows, typed by hand in a
   `{define}`'s syntax, and always come first; a shape with no open string stands for its quality on every root and is

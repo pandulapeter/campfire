@@ -9,37 +9,35 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandHorizontally
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
-import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.PointerType
+import androidx.compose.ui.input.pointer.isPrimaryPressed
+import androidx.compose.ui.input.pointer.pointerHoverIcon
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.IntrinsicMeasurable
 import androidx.compose.ui.layout.IntrinsicMeasureScope
 import androidx.compose.ui.layout.Layout
@@ -48,7 +46,10 @@ import androidx.compose.ui.layout.MeasurePolicy
 import androidx.compose.ui.layout.MeasureResult
 import androidx.compose.ui.layout.MeasureScope
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
@@ -58,23 +59,22 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.ic_edit
-import com.pandulapeter.campfire.presentation.resources.song_details_chord_shapes
+import com.pandulapeter.campfire.presentation.resources.song_details_chord_shape_choose
 import com.pandulapeter.campfire.presentation.resources.song_details_chords
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.ui.chords.chordCellDescription
 import com.pandulapeter.campfire.presentation.ui.components.drawChordDiagram
-import com.pandulapeter.campfire.presentation.ui.components.songControlHeight
+import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.songLayout.chordSlotRows
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
-import org.jetbrains.compose.resources.painterResource
 import kotlin.math.roundToInt
 
 /**
  * One chunk of the song's chords as diagrams: the slots [items] names (counted as [RenderSection.Chords.itemCount]),
  * the first headed by a pill that folds them like any section's. The cells are drawn in rows that wrap rather than
  * scroll sideways, since a song may be read with a pedal, one slot per row the section may be cut between, as a run of
- * tablature is drawn as systems, and take no press: a tap on them turns the page like a tap anywhere on the song.
+ * tablature is drawn as systems. A tap on a cell opens that chord's sheet (see [ChordDiagrams.onChordClicked]); a tap
+ * between them, or on any of them in read only mode, turns the page like a tap anywhere on the song.
  *
  * @param onFoldToggled Folds the section or unfolds it, see [ChordDiagrams.onFoldToggled].
  * @param isFadingIn Whether the fold was toggled while the page is open, so that the rows coming back fade in, in
@@ -94,12 +94,16 @@ internal fun SongChordsSection(
 ) = Column(modifier = modifier) {
     val isFirstChunk = items.first == 0
     if (isFirstChunk) {
-        ChordsSectionHeader(
-            isFolded = section.isFolded,
-            onFoldToggled = onFoldToggled,
-            onShapesClicked = chordDiagrams?.onShapesClicked,
-            headerStyle = headerStyle,
-            fontScale = fontScale,
+        SectionHeaderPill(
+            header = stringResource(Res.string.song_details_chords),
+            toggle = onFoldToggled?.let {
+                FoldToggle(
+                    isExpanded = !section.isFolded,
+                    onToggled = it,
+                )
+            },
+            style = headerStyle,
+            chevronSize = FOLD_CHEVRON_SIZE * fontScale,
         )
     }
     if (section.isFolded) return@Column
@@ -112,54 +116,8 @@ internal fun SongChordsSection(
         firstSlot = items.first,
         lastSlot = items.last,
         isLastSlot = items.last == section.itemCount - 1,
+        onCellClicked = chordDiagrams?.onChordClicked?.let { onChordClicked -> { cell -> onChordClicked(layouts.cells[cell].name) } },
     )
-}
-
-@Composable
-private fun ChordsSectionHeader(
-    isFolded: Boolean,
-    onFoldToggled: (() -> Unit)?,
-    onShapesClicked: (() -> Unit)?,
-    headerStyle: TextStyle,
-    fontScale: Float,
-) = Row(verticalAlignment = Alignment.CenterVertically) {
-    SectionHeaderPill(
-        header = stringResource(Res.string.song_details_chords),
-        toggle = onFoldToggled?.let {
-            FoldToggle(
-                isExpanded = !isFolded,
-                onToggled = it,
-            )
-        },
-        style = headerStyle,
-        chevronSize = FOLD_CHEVRON_SIZE * fontScale,
-    )
-    // As tall as the pill and growing with it, like the controls of the song's first section. It comes and goes with
-    // the diagrams, since choosing a shape is choosing between the diagrams it would be drawn next to.
-    onShapesClicked?.let {
-        AnimatedVisibility(
-            visible = !isFolded,
-            // Unclipped, since a clip cuts the round button off while the room for it opens and closes: the scale is
-            // what shows it arriving instead.
-            enter = fadeIn() + scaleIn() + expandHorizontally(clip = false),
-            exit = fadeOut() + scaleOut() + shrinkHorizontally(clip = false),
-        ) {
-            val height = songControlHeight(headerStyle)
-            CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides height) {
-                IconButton(
-                    modifier = Modifier.size(height),
-                    onClick = it,
-                ) {
-                    Icon(
-                        modifier = Modifier.size(SHAPES_ICON_SIZE * fontScale),
-                        painter = painterResource(Res.drawable.ic_edit),
-                        contentDescription = stringResource(Res.string.song_details_chord_shapes),
-                        tint = MaterialTheme.colorScheme.primary,
-                    )
-                }
-            }
-        }
-    }
 }
 
 /**
@@ -171,6 +129,10 @@ private fun ChordsSectionHeader(
  * under a wider pair of names, the second name after the first and level with its bottom, top-aligned in its row and
  * mirrored in a right-to-left layout (the diagram itself never is: a guitar's low string stays on the left). A cell wider
  * than the block is held to it, its names clipped at its edge, as a composed cell was held to its row.
+ *
+ * Where [onCellClicked] is given, a press on a cell lights the whole of its row's height behind it, as a button's
+ * press would, and a tap that the scroll did not take is answered with the cell's index; a screen reader is offered the
+ * same as one action per cell it is told about.
  */
 @Composable
 private fun ChordRowsBlock(
@@ -179,6 +141,7 @@ private fun ChordRowsBlock(
     firstSlot: Int,
     lastSlot: Int,
     isLastSlot: Boolean,
+    onCellClicked: ((cell: Int) -> Unit)?,
 ) {
     val nameColor = LocalSecondAccentColor.current
     val secondNameColor = MaterialTheme.colorScheme.onSurfaceVariant
@@ -195,21 +158,83 @@ private fun ChordRowsBlock(
     val descriptions = mutableListOf<String>()
     for (cell in shownCells) descriptions += chordCellDescription(layouts.cells[cell])
     val description = descriptions.joinToString("\n")
+    val actions = if (onCellClicked == null) emptyList() else shownCells.map { cell ->
+        CustomAccessibilityAction(textResource(Res.string.song_details_chord_shape_choose, layouts.cells[cell].name)) {
+            onCellClicked(cell)
+            true
+        }
+    }
+    val isRightToLeft = LocalLayoutDirection.current == LayoutDirection.Rtl
+    val currentOnCellClicked by rememberUpdatedState(onCellClicked)
+    // The last cell pressed, kept while its highlight fades out after the finger has gone.
+    var pressedCell by remember { mutableIntStateOf(-1) }
+    var isPressed by remember { mutableStateOf(false) }
+    val pressProgress by animateFloatAsState(
+        targetValue = if (isPressed) 1f else 0f,
+        animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
+    )
+    val pressColor = MaterialTheme.colorScheme.onSurface.copy(alpha = PRESSED_ALPHA)
     val measurePolicy = remember(layouts, firstSlot, lastSlot, isLastSlot) { ChordRowsMeasurePolicy(layouts, firstSlot, lastSlot, isLastSlot) }
     Layout(
         modifier = modifier
             .onSizeChanged { shownWidth = it.width }
-            .then(if (description.isEmpty()) Modifier else Modifier.semantics { contentDescription = description })
+            .then(
+                if (description.isEmpty()) {
+                    Modifier
+                } else {
+                    Modifier.semantics {
+                        contentDescription = description
+                        if (actions.isNotEmpty()) customActions = actions
+                    }
+                },
+            )
+            .then(
+                if (onCellClicked == null) {
+                    Modifier
+                } else {
+                    Modifier
+                        .pointerHoverIcon(PointerIcon.Hand)
+                        .pointerInput(layouts, firstSlot, lastSlot, isLastSlot, isRightToLeft) {
+                            awaitEachGesture {
+                                val down = awaitFirstDown()
+                                // A right or middle click is a context menu or a paste, as it is to the step taps around the song.
+                                if (down.type == PointerType.Mouse && !currentEvent.buttons.isPrimaryPressed) return@awaitEachGesture
+                                val cell = layouts.cellAt(down.position.x, down.position.y, size.width, firstSlot, lastSlot, isLastSlot, isRightToLeft)
+                                if (cell < 0) return@awaitEachGesture
+                                pressedCell = cell
+                                isPressed = true
+                                // Null where the scroll took the press as a drag, which then scrolls the song as anywhere else.
+                                val up = waitForUpOrCancellation()
+                                isPressed = false
+                                if (up != null) {
+                                    // Consumed, so that the tap does not also turn the page around it.
+                                    up.consume()
+                                    currentOnCellClicked?.invoke(cell)
+                                }
+                            }
+                        }
+                },
+            )
             .drawBehind {
                 val width = size.width.roundToInt()
                 val starts = layouts.rowStartsAt(width)
-                val isRightToLeft = layoutDirection == LayoutDirection.Rtl
                 var y = 0f
                 for (row in chordSlotRows(starts.size, firstSlot, lastSlot, isLastSlot)) {
                     var x = 0
+                    val rowHeight = layouts.rowHeight(starts, row)
                     for (cell in layouts.cellsOfRow(starts, row)) {
                         val cellWidth = minOf(layouts.cellWidths[cell], width)
                         val cellLeft = if (isRightToLeft) width - x - cellWidth else x
+                        if (cell == pressedCell && pressProgress > 0f) {
+                            val inset = layouts.gap / 2f
+                            drawRoundRect(
+                                color = pressColor,
+                                alpha = pressProgress,
+                                topLeft = Offset(cellLeft - inset, y - inset),
+                                size = Size(cellWidth + inset * 2, rowHeight + inset * 2),
+                                cornerRadius = CornerRadius(PRESSED_CORNER_RADIUS.toPx()),
+                            )
+                        }
                         drawChordCell(
                             layouts = layouts,
                             cell = cell,
@@ -226,7 +251,7 @@ private fun ChordRowsBlock(
                         )
                         x += cellWidth + layouts.gap
                     }
-                    y += layouts.rowHeight(starts, row) + layouts.gap
+                    y += rowHeight + layouts.gap
                 }
             },
         measurePolicy = measurePolicy,
@@ -306,4 +331,5 @@ private class ChordRowsMeasurePolicy(
         layouts.height(width, firstSlot, lastSlot, isLastSlot)
 }
 
-private val SHAPES_ICON_SIZE = 18.dp
+private const val PRESSED_ALPHA = 0.1f
+private val PRESSED_CORNER_RADIUS = 8.dp

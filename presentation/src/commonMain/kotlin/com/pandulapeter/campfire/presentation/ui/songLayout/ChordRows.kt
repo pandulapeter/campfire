@@ -97,6 +97,43 @@ internal fun chordSlotRows(rowCount: Int, firstSlot: Int, lastSlot: Int, isLastS
     if (firstSlot >= rowCount) IntRange.EMPTY else firstSlot..(if (isLastSlot) rowCount - 1 else minOf(lastSlot, rowCount - 1))
 
 /**
+ * Which cell is under [x], [y] in a chunk of a Chords section [width] wide that draws [rows] of the rows starting at
+ * [starts]: the rows stacked from the chunk's top [gap] apart, each as tall as its tallest cell, the cells of a row [gap]
+ * apart from its start edge, a cell wider than [width] held to it, and the row mirrored where [isRightToLeft]. A cell is
+ * hit across the whole height of its row, so a short name over a short diagram is as easy to tap as its neighbours; the
+ * gaps hit nothing. -1 where no cell is there.
+ */
+internal fun chordCellAt(
+    x: Float,
+    y: Float,
+    width: Int,
+    starts: IntArray,
+    rows: IntRange,
+    cellWidths: IntArray,
+    cellHeights: IntArray,
+    gap: Int,
+    isRightToLeft: Boolean,
+): Int {
+    var top = 0
+    for (row in rows) {
+        val cells = starts[row] until (starts.getOrNull(row + 1) ?: cellWidths.size)
+        val height = cells.maxOf { cellHeights[it] }
+        if (y >= top && y < top + height) {
+            var start = 0
+            for (cell in cells) {
+                val cellWidth = minOf(cellWidths[cell], width)
+                val left = if (isRightToLeft) width - start - cellWidth else start
+                if (x >= left && x < left + cellWidth) return cell
+                start += cellWidth + gap
+            }
+            return -1
+        }
+        top += height + gap
+    }
+    return -1
+}
+
+/**
  * The most slots a Chords section is cut into: one per chord the song details screen ever lists ([MAX_SONG_CHORDS]),
  * so that every row it can wrap into is a slot of its own and the last one never holds more than one row there. Only
  * the editor's preview, whose definitions are not bounded, has more cells, and it is never cut.

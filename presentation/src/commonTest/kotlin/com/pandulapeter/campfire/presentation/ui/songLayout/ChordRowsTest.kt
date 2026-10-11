@@ -22,6 +22,33 @@ import kotlin.test.assertTrue
 class ChordRowsTest {
 
     @Test
+    fun `a tap finds the cell drawn under it`() {
+        // Two rows of 50 px wide cells 10 px apart: cells 0 and 1 over cell 2, the first row 80 px tall.
+        val widths = intArrayOf(50, 50, 50)
+        val heights = intArrayOf(80, 60, 70)
+        fun at(x: Float, y: Float, isRightToLeft: Boolean = false) =
+            chordCellAt(x, y, width = 120, starts = intArrayOf(0, 2), rows = 0..1, cellWidths = widths, cellHeights = heights, gap = 10, isRightToLeft = isRightToLeft)
+        assertEquals(0, at(10f, 10f))
+        assertEquals(1, at(70f, 75f))
+        assertEquals(2, at(10f, 95f))
+        assertEquals(-1, at(55f, 10f))
+        assertEquals(-1, at(10f, 85f))
+        assertEquals(-1, at(70f, 95f))
+        assertEquals(-1, at(10f, 165f))
+        assertEquals(0, at(110f, 10f, isRightToLeft = true))
+        assertEquals(1, at(50f, 10f, isRightToLeft = true))
+        assertEquals(2, at(100f, 95f, isRightToLeft = true))
+    }
+
+    @Test
+    fun `a chunk is hit from its own first row`() {
+        assertEquals(
+            2,
+            chordCellAt(10f, 5f, width = 120, starts = intArrayOf(0, 2), rows = 1..1, cellWidths = intArrayOf(50, 50, 50), cellHeights = intArrayOf(80, 60, 70), gap = 10, isRightToLeft = false),
+        )
+    }
+
+    @Test
     fun `cells flow into rows at the width`() {
         assertContentEquals(intArrayOf(0, 2), chordRowStarts(intArrayOf(56, 56, 56), gap = 6, width = 118))
         assertContentEquals(intArrayOf(0, 1, 2), chordRowStarts(intArrayOf(56, 56, 56), gap = 6, width = 117))

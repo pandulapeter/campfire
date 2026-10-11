@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.ui.chords.ChordCell
 import com.pandulapeter.campfire.presentation.ui.chords.chordDiagramGeometryOf
 import com.pandulapeter.campfire.presentation.ui.chords.emptyChordDiagramGeometryOf
+import com.pandulapeter.campfire.presentation.ui.songLayout.chordCellAt
 import com.pandulapeter.campfire.presentation.ui.songLayout.chordRowStarts
 import com.pandulapeter.campfire.presentation.ui.songLayout.chordSlotRows
 
@@ -105,6 +106,13 @@ internal class ChordCellLayouts(
         val rows = chordSlotRows(starts.size, firstSlot, lastSlot, isLastSlot)
         if (rows.isEmpty()) return 0
         return rows.sumOf { rowHeight(starts, it) } + gap * (rows.last - rows.first) + if (rows.last < starts.size - 1) gap else 0
+    }
+
+    /** The cell under [x], [y] in the slots from [firstSlot] to [lastSlot] at [width] (see [chordCellAt]), -1 where none. */
+    fun cellAt(x: Float, y: Float, width: Int, firstSlot: Int, lastSlot: Int, isLastSlot: Boolean, isRightToLeft: Boolean): Int {
+        val starts = rowStartsAt(width)
+        val rows = chordSlotRows(starts.size, firstSlot, lastSlot, isLastSlot)
+        return chordCellAt(x, y, width, starts, rows, cellWidths, cellHeights, gap, isRightToLeft)
     }
 
     /** The cells the slots from [firstSlot] to [lastSlot] show at [width], which a screen reader is told about. */
