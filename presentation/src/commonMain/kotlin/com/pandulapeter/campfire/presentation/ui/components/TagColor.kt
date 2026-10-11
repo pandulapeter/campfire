@@ -30,8 +30,8 @@ import com.pandulapeter.campfire.data.model.domain.tagKey
  */
 internal enum class TagColor(
     val id: String,
-    private val light: Color,
-    private val dark: Color,
+    internal val light: Color,
+    internal val dark: Color,
 ) {
     RED("red", light = Color(0xFFE53935), dark = Color(0xFFEF7A75)),
     ORANGE("orange", light = Color(0xFFF57C00), dark = Color(0xFFFFB74D)),

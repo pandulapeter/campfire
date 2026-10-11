@@ -9,9 +9,12 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components
 
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class TagColorTest {
 
@@ -32,5 +35,14 @@ class TagColorTest {
     @Test
     fun `every color has an id of its own`() {
         assertEquals(TagColor.entries.size, TagColor.entries.map { it.id }.toSet().size)
+    }
+
+    @Test
+    fun `every color's check contrasts with it by at least three to one`() {
+        TagColor.entries.flatMap { listOf(it.light, it.dark) }.forEach { color ->
+            val check = if (isDarkerMoreLegible(color)) Color.Black else Color.White
+            val (lighter, darker) = listOf(color.luminance(), check.luminance()).sortedDescending()
+            assertTrue((lighter + 0.05f) / (darker + 0.05f) >= 3f, "The check on $color")
+        }
     }
 }

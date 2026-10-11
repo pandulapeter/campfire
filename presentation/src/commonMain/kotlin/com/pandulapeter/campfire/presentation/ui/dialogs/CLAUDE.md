@@ -293,8 +293,9 @@ one snackbar: how many songs were updated, or how many could not be. Once starte
 screen, or the view model with it, goes.
 
 Every row of Manage tags ends in the tag's mark (`TagColorButton`), drawn in its color, which opens a popup of the
-colors as `ColorChoice` discs — no color first, then the palette, in rows of five, which fit a 360dp phone — rather
-than a second sheet over a sheet that may have the keyboard up. The choice is written at once
+colors as `ColorChoice` discs, each disc's check black or white, whichever contrasts with it more
+(`isDarkerMoreLegible`) — no color first, then the palette, in rows of five, which fit a 360dp phone — rather than a
+second sheet over a sheet that may have the keyboard up. The choice is written at once
 (`CampfireViewModel.setTagColor`), not with Save, and stays when the sheet is closed without saving, since the color is
 the tag's in the whole library rather than part of the songs being edited.
 

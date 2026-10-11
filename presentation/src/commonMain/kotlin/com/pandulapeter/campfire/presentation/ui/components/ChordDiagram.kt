@@ -160,11 +160,11 @@ private fun DrawScope.drawFinger(textMeasurer: TextMeasurer, finger: Int, center
  * of the keys' colors, [light] or [dark], it reads closer to in contrast — towards the black keys where the accent is
  * light (a dark theme), towards the white keys where it is dark (a light theme, and the PDF's gray) — so that the
  * chord's other notes stand off the white keys in either. Contrast is compared by the geometric midpoint of
- * `luminance + 0.05`, as WCAG measures it: the arithmetic midpoint of the luminances picks the white keys for an accent
- * as light as a dark theme's, which leaves nothing to see.
+ * `luminance + 0.05`, as WCAG measures it ([isDarkerMoreLegible]): the arithmetic midpoint of the luminances picks the
+ * white keys for an accent as light as a dark theme's, which leaves nothing to see.
  */
 internal fun pressedKeyColor(root: Color, light: Color, dark: Color): Color {
-    val isTowardsDark = (root.luminance() + 0.05f).let { it * it } > (light.luminance() + 0.05f) * (dark.luminance() + 0.05f)
+    val isTowardsDark = isDarkerMoreLegible(background = root, light = light, dark = dark)
     return lerp(root, if (isTowardsDark) dark else light, if (isTowardsDark) PRESSED_KEY_DEEPENING else PRESSED_KEY_PALING)
 }
 

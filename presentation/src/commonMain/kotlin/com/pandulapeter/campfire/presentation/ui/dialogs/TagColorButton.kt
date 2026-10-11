@@ -22,7 +22,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -50,6 +49,7 @@ import com.pandulapeter.campfire.presentation.ui.components.OverflowMenu
 import com.pandulapeter.campfire.presentation.ui.components.TagColor
 import com.pandulapeter.campfire.presentation.ui.components.TagIcon
 import com.pandulapeter.campfire.presentation.ui.components.colorChoiceWidth
+import com.pandulapeter.campfire.presentation.ui.components.isDarkerMoreLegible
 import com.pandulapeter.campfire.presentation.ui.components.textResource
 import org.jetbrains.compose.resources.painterResource
 
@@ -106,7 +106,7 @@ private fun animatedTagFill(color: TagColor?): Color {
 
 /**
  * No color first, which is what every tag starts at, then the palette. A disc's check is drawn in black or in white,
- * whichever the color is lighter or darker than, since the palette holds a yellow as well as a purple.
+ * whichever contrasts with it more, since the palette holds a yellow as well as a purple.
  */
 @Composable
 private fun tagColorOptions(): List<ColorChoiceOption<TagColor?>> {
@@ -124,7 +124,7 @@ private fun tagColorOptions(): List<ColorChoiceOption<TagColor?>> {
         ColorChoiceOption(
             value = tagColor,
             color = color,
-            contentColor = if (color.luminance() > CHECK_LUMINANCE_THRESHOLD) Color.Black else Color.White,
+            contentColor = if (isDarkerMoreLegible(color)) Color.Black else Color.White,
             label = tagColor.label(),
         )
     }
@@ -156,6 +156,3 @@ private fun TagColor.label() = stringResource(
 
 /** Even rows of the choices, no color included, five being as many as fit a 360dp phone. */
 private const val SWATCHES_PER_ROW = 5
-
-/** Where white stops being the more legible check on a disc; a little under the middle, as the eye reads it. */
-private const val CHECK_LUMINANCE_THRESHOLD = 0.4f
