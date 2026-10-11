@@ -353,10 +353,10 @@ default 800 × 600 desktop window can become two.
 
 **A song a few lines too long for its pages is set a little smaller** (`TextFitting.kt`): 97.5%, then 95% of the reader's
 size, never below `UserPreferences.MIN_FONT_SCALE`, the first at which the whole search takes a page fewer
-(`chooseFitScale`), searched only where the song could fit a page fewer even without its gaps. The heights are read at a
-width that much wider and scaled down, and the song is drawn the same way — every chunk laid out wider and placed through
-a scaled layer, which scales its hit testing with it — so nothing is composed again and the first frame is already the
-fitted one; `DecidedGrid.fitScale` keeps it with the grid, a change of it is a grid change that glides like any other, and
+(`chooseFitScale`), searched only where the song could fit a page fewer even with none of its lines wrapped, none of its
+gaps, and every narrow section beside another. The heights are read at a width that much wider and scaled down, and the
+song is drawn the same way — every chunk laid out wider and placed through a scaled layer, which scales its hit testing
+with it — so nothing is composed again and the first frame is already the fitted one; `DecidedGrid.fitScale` keeps it with the grid, a change of it is a grid change that glides like any other, and
 the stepper, the menu and the app bar keep the reader's own size. The editor's preview and a songbook are neither
 narrowed nor fitted.
 

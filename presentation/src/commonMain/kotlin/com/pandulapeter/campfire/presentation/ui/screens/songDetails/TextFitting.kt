@@ -27,6 +27,25 @@ internal fun fitScalesFor(fontScale: Float) = FIT_SCALE_STEPS.filter { fontScale
 internal fun chooseFitScale(pageCount: Int, fitScales: List<Float>, pageCountAt: (fitScale: Float) -> Int?) =
     fitScales.firstOrNull { scale -> pageCountAt(scale)?.let { it < pageCount } == true } ?: 1f
 
+/**
+ * Whether a song whose sections are [sectionHeights] tall where nothing in them wraps could take fewer than [pageCount]
+ * pages of [pageCapacity] when set at [fitScale] - its text laid out that much wider can only wrap less, never less than
+ * not at all - so that a scale which cannot save a page is not laid out on every frame of a pinch. A section [isPairable]
+ * may be set beside another, as tall as the taller of the two, so it counts at half; and [unitCount] allows for each
+ * unit's height being rounded on its own.
+ */
+internal fun couldSaveAPage(
+    sectionHeights: LongArray,
+    isPairable: (section: Int) -> Boolean,
+    unitCount: Int,
+    fitScale: Float,
+    pageCount: Int,
+    pageCapacity: Long,
+): Boolean {
+    val height = sectionHeights.indices.sumOf { if (isPairable(it)) sectionHeights[it] / 2.0 else sectionHeights[it].toDouble() }
+    return height * fitScale - unitCount <= (pageCount - 1).toDouble() * pageCapacity
+}
+
 /** How much smaller than the reader's size a song may be set, in the order they are tried. */
 private val FIT_SCALE_STEPS = listOf(0.975f, 0.95f)
 

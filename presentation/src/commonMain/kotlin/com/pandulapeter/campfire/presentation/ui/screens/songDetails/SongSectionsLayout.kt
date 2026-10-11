@@ -315,7 +315,7 @@ internal fun SongSectionsLayout(
             )
         }
 
-        fun SearchedGrid.laidOut(pageCount: Int = grid.pageCount()) = SegmentLayout(this, pageCount, grid.unitHeights().sumOf { it.toLong() })
+        fun SearchedGrid.laidOut(pageCount: Int = grid.pageCount()) = SegmentLayout(this, pageCount)
 
         fun ScoredGrid.laidOut(): SegmentLayout {
             val height = if (grid.pageCount == 1) grid.height() else Int.MAX_VALUE
@@ -420,21 +420,36 @@ internal fun SongSectionsLayout(
         return SegmentLayout(
             searched = SearchedGrid(segments.map { it.searched.grid }.concatenated(), fits = false, height = Int.MAX_VALUE),
             pageCount = segments.sumOf { it.pageCount },
-            contentHeight = segments.sumOf { it.contentHeight },
         )
     }
 
     // A song a few lines too long for its pages is set a little smaller where that takes its last page away (see
-    // fitScalesFor). A scale is only searched at where the song could fit one page fewer even with no gap between two
-    // sections, which a song a whole page over never does, so that the search that runs again on every frame of a pinch
-    // does not lay the whole song out at two more widths for nothing.
+    // fitScalesFor). A scale is only searched at where the song could fit one page fewer even with none of its lines
+    // wrapped, no gap between two sections, and every narrow section beside another, which a song a whole page over
+    // never does, so that the search that runs again on every frame of a pinch does not lay the whole song out at two
+    // more widths for nothing.
     fun searchFitted(totalWidth: Int): FittedLayout {
         val plain = searchGrid(totalWidth, fitScale = 1f)
         if (fitScales.isEmpty() || plain.isReadWithoutStepping() || plain.pageCount < 2 || maxRowHeightPx == Int.MAX_VALUE) return FittedLayout(plain, 1f)
         val pageCapacity = narrowColumnCountFor(totalWidth).toLong() * maxRowHeightPx
+        val plainGrid = plain.searched.grid
+        val unwrappedSectionHeights = LongArray(sectionCount)
+        for (unit in 0 until unitCount) {
+            // The width the plain layout measured the unit at where nothing in it wrapped there, which is the same key and so
+            // a cache hit, and its own widest line where something did, which wrappedLinesAt has measured already wherever
+            // the grid was scored. A text is as tall at every width from its widest line up, so either is its unwrapped height.
+            val measuredWidth = unitWidthFor(unit, plainGrid.columnWidthOf(unit, totalWidth, fitScale = 1f), fitScale = 1f)
+            unwrappedSectionHeights[units.unitSections[unit]] += sectionMeasurements.height(
+                index = unit,
+                width = maxOf(measuredWidth, maxWidthOf(unit)),
+                measure = measurables[unit]::maxIntrinsicHeight,
+            )
+        }
+        val halfColumnWidth = columnWidthFor(totalWidth, 2)
         val fitted = HashMap<Float, SegmentLayout>()
         val fitScale = chooseFitScale(plain.pageCount, fitScales) { scale ->
-            if (plain.contentHeight * scale > (plain.pageCount - 1) * pageCapacity) {
+            val isPairable = { section: Int -> isNarrowSection(section, halfColumnWidth, scale) }
+            if (!couldSaveAPage(unwrappedSectionHeights, isPairable, unitCount, scale, plain.pageCount, pageCapacity)) {
                 null
             } else {
                 searchGrid(totalWidth, scale).also { fitted[scale] = it }.pageCount
@@ -710,13 +725,12 @@ internal fun SongSectionsLayout(
 }
 
 /**
- * What a stretch of the song, or the whole of it, was set as: its grid, how many pages it takes as [pageCount] counts
- * them, and how tall all of its units are together, which is the least room any setting of it could take.
+ * What a stretch of the song, or the whole of it, was set as: its grid, and how many pages it takes as [pageCount]
+ * counts them.
  */
 private class SegmentLayout(
     val searched: SearchedGrid,
     val pageCount: Int,
-    val contentHeight: Long,
 ) {
 
     /** Whether the song is read whole, with nothing to step through. */
