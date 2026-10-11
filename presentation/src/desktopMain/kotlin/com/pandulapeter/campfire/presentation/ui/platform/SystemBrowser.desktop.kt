@@ -29,9 +29,15 @@ internal class DesktopSystemBrowser : SystemBrowser {
  * Opens [url] in the system's browser and answers whether anything took it. `java.awt.Desktop` goes first, and the
  * operating system's own command is what is left - both where AWT has no desktop to speak of, which is a Linux
  * session without the GNOME libraries it looks for, and where it has one that fails, as `browse` does on a machine
- * with no default browser registered.
+ * with no default browser registered. On macOS an address that is not a web page (the system's settings) skips `browse`,
+ * which hands every address to the default browser: one that cannot open it shows an error of its own before `browse`
+ * fails, while `open` passes it to the app that claims its scheme.
  */
-internal fun openUrl(url: String) = openWithAwt(url) || openWithSystemCommand(url)
+internal fun openUrl(url: String) = (!isMacSystemAddress(url) && openWithAwt(url)) || openWithSystemCommand(url)
+
+private fun isMacSystemAddress(url: String) = isMac() && !url.startsWith("http://") && !url.startsWith("https://")
+
+private fun isMac() = System.getProperty("os.name").orEmpty().lowercase().let { "mac" in it || "darwin" in it }
 
 /** `getDesktop` throws where `isDesktopSupported` says no, so it is only asked for after that has said yes. */
 private fun openWithAwt(url: String) = try {
