@@ -357,7 +357,7 @@ after the title says, and by nothing else, since that is all the way to it a she
 the one place a song's description is edited**: outside performance mode and outside an archived setlist each group is a
 tile of one grouped list that opens its own sheet when tapped (a chevron at its end, no pencils; a link is an outlined button
 inside its tile that opens the page), a group with nothing in it holding a call to
-action in the primary color (Add tags), and the cover — or an empty place for one — opens the cover search; key, capo, tempo and time stay on
+action in the primary color (Add tags), and the cover — or an empty place for one — opens the cover search; key, capo, tempo, and time stay on
 the page as the song's first section (see How a song is played below), and the sheet only reads what the file declares
 for them, opening the Song defaults sheet and saying where the song is being played differently.
 
@@ -393,7 +393,7 @@ Song defaults tile and nowhere on the page (the sheet opened over the editor has
 typed, without the line and the card below, since the editor has no steppers): it opens with a line saying that the
 steppers change them for this setlist only, or, opened from the library, outside every setlist — never naming a device,
 since the library's own overrides are synced (see `data/sync/implementation/CLAUDE.md`) — then a card naming what is
-adjusted there, with a Reset, while there is any, then the key, capo, tempo and time signature fields, each optional, an
+adjusted there, with a Reset, while there is any, then the key, capo, tempo, and time signature fields, each optional, an
 empty one leaving the default in force. A new song's template carries an empty `{key}` line and `{capo: 0}`, `{tempo:
 120}` and `{time: 4/4}`, the defaults written out, for them to be edited. **Read only mode reads them instead**:
 performance mode and a song opened from an archived setlist get the same four as one line of accent colored text,
@@ -406,7 +406,7 @@ With the chords switched off the key and the capo leave the line and the control
 off the tempo and the time signature do (see Features below) — everywhere but in the editor's preview, which says all
 four whatever the switches and in the key it is written in, since it shows what is being written. What is left in the
 app bar is about the song rather than about how it is played — the text size, which is the reader's own, where
-the bar has the room for it (at the end of the menu where not), the Choose setlists and the menu, the title opening the
+the bar has the room for it (at the end of the menu where not), the Choose setlists button, the menu, and the title opening the
 About the song sheet. **The
 key the band actually hears is named in the app bar**, after the artist and the way a song card names it: the
 transposition *and* the capo applied, so it is the key the song sounds in rather than the one the chords on the page
@@ -420,12 +420,12 @@ duration after that, as its card there has it.
 Keyboard, whatever the Chord diagrams switch says): a keyboard has no capo, so the song details screen has no capo
 stepper and names no capo, read only mode's line included, and counts the capo's frets into the transposition instead
 (`withCapoSounding`, wrapped around the octave like the stepper), so that the chords over the lyrics, the diagrams, the
-chord sheet and the key next to the stepper are all the sounding key the app bar names. The stepper still steps
+chord sheet, and the key next to the stepper are all the sounding key the app bar names. The stepper still steps
 and resets only the transposition's own override, and reads as overridden only while there is one, so a capoed song with
 nothing stepped reads the capo's amount, plainly. The capo overrides are still kept, read and stepped by the other
 instruments, and the Song defaults sheet still edits the file's `{capo}`. The PDF follows the screen (the capo the
 screen counts, the library's included, counted into the printed transposition, and no capo printed); the guitar, the
-ukulele and Other are unchanged, the capo a stepper of its own that moves the sounding key without moving a chord.
+ukulele, and Other are unchanged, the capo a stepper of its own that moves the sounding key without moving a chord.
 
 ## Haptics
 

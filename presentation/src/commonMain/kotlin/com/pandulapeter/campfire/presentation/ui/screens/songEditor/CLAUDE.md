@@ -115,7 +115,7 @@ screen. Its app bar starts with Close rather than Back. The whole bar is one sur
   all the sheet would. The first entry of the overflow menu opens that sheet over the text being typed
   (`DialogType.SongInfo` with a `SongEditTarget.EditorDraft`), in every pane, so the editors are there while the
   preview, and with it the card, is out of sight; the rest of the menu is Prettify, a link to the ChordPro directives
-  reference on chordpro.org (for what the Shortcuts write, a `{define}` above all) and the revert. Card and sheet open
+  reference on chordpro.org (for what the Shortcuts write, a `{define}` above all), and the revert. Card and sheet open
   the same bottom sheets the song details screen's do, on a snapshot of the text being typed (`toEditorSong`), but there they edit that text rather than the file (`DialogType.SongEdit.target`): the change
   reaches the screen through `CampfireViewModel.editorTextEdits` and goes through the field's own editing
   (`EditOnRequest`), one more step of the undo history that Save writes with the rest, since nothing but Save ever

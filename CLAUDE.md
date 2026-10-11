@@ -225,7 +225,7 @@ tab reaches the export screen. The detail is in `:presentation`'s `ui/screens/ex
   predicates and the tag normalization), `:chordpro` (including chord-sheet conversion, and chord names, shapes and definitions, every shape of the tables checked against the chord it is filed under), `:domain:implementation` (`ImportPlanner` and conversion import plumbing),
   `:data:formats` (zip, bounded PDF/Word readers), `:data:source:local:implementation` (the JVM file storage, with independent-producer document goldens in `desktopTest`), `:data:source:remote:*` (hashing, encoders,
   the OAuth authorization URL, the cover search's queries, its `User-Agent` and its pace, the cover download),
-  `:data:repository:implementation` (the caches, the edit of many songs at once and the cover cache), `:data:sync:implementation` (`SyncPlanner`, which
+  `:data:repository:implementation` (the caches, the edit of many songs at once, and the cover cache), `:data:sync:implementation` (`SyncPlanner`, which
   decides what happens to every file in a sync run, the engine and the synced preferences), `:metronome:*` (the sequencer, the synthesizer, the mixer, the engine's state machine, tap tempo and time signatures), `:tuner:*` (the note arithmetic and the presets, the FFT, the pitch detector against synthesized strings and any recording dropped into its `desktopTest` resources, the tracker, the tones, the engine's state machine, the sample ring and the FFT) and
   `:presentation` (the pure helpers behind its screens: the search index and ranking, the song picker's filter chips, the fast scroller's section
   index, the setlist slots, stepper labels, section grid and the cutting of sections into columns, a tag's color by its key, the score a layout is chosen by, the narrow columns and the text fitted to a page, row snapping and section measurements of the details screen, the editor's token cache, where a song's tempo comes from, what a click plays for, which chords a song plays and which
@@ -259,7 +259,7 @@ What the app does, one line each; the full text is in the file named (`:presenta
 - Both list screens are searched from a button rather than an ever-present field, and a setlist that answers a search is
   shown whole: `:presentation`'s `ui/screens/CLAUDE.md`.
 - Songs are selected in a mode started from a song's menu, which lives only while the Songs screen is on top; what is
-  ticked is put into setlists, tagged, given languages or exported in one go, and never deleted in bulk:
+  ticked is put into setlists, tagged, given languages, or exported in one go, and never deleted in bulk:
   `:presentation`'s `ui/screens/songs/CLAUDE.md`.
 - Tags, languages, the cover and links are part of the song file (ChordPro directives), so they travel with it through
   an export, an import or a sync run: `:presentation`'s `ui/CLAUDE.md`.

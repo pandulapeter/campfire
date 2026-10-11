@@ -165,7 +165,7 @@ sections spring rather than glide), their labels in the content colour and bold 
 What the file declares for all four is edited in the Song defaults sheet, opened from the About the song sheet, and the
 page holds nothing but the song and its controls, no line or button of the app's own explaining them. **Labels and
 controls grow and shrink with the lyrics together, the way the sections' own header pills do** rather than as a bar's
-buttons scaled up: a `fontScale` grows what is written in a control — its value, its label and its icons — while the
+buttons scaled up: a `fontScale` grows what is written in a control — its value, its label, and its icons — while the
 padding around them stays as it is, so every one of them is exactly as tall as the pill heading the section under it
 (`songControlHeight` in `components/Stepper.kt`, the pills' `titleStyle` over their own `HEADER_VERTICAL_PADDING`; a
 pill scaled whole towered over the page at a large text size). What keeps them big enough to hit at the other end is
@@ -208,9 +208,9 @@ About the song sheet instead (`DialogType.SongInfo`, read live from the song's t
 other song sheets), opened by a tap on the app bar's title (see below) and by nothing else, since a menu entry would
 only repeat it; outside performance mode for every song, in it only where the sheet has something in it.
 
-The card and the sheet share `SongInfoBody`: the cover, then album, year, composer, lyricist and duration as
+The card and the sheet share `SongInfoBody`: the cover, then album, year, composer, lyricist, and duration as
 label-over-value tiles flowing side by side beside it, then a Song defaults group (`SongDefaults`): the file's key,
-capo, tempo and time as the same tiles (the 120 BPM
+capo, tempo, and time as the same tiles (the 120 BPM
 and the 4/4 the click starts at where the file names none, as if they were written there, the way every place that
 reads a song's tempo has it; in the preview the values as the line would read them), a line in the primary colour
 naming the setlist's or the library's overrides while there are any, which the editor's text never has
@@ -237,11 +237,11 @@ empty place with the album icon in it that does the same.
 **The links are outlined buttons rather than chips** (`SongInfoLinkButtons`): a link opens its page when tapped, which a
 tag and a language do not, so inside a tile whose every other spot opens the Manage links sheet each one looks and is
 hit like a control of its own — taller than a pill, with Material's 48dp touch target around it — while the tile, its
-chevron and its empty state stay exactly those of the other groups. **No tile is shorter than the links tile with one link**
+chevron, and its empty state stay exactly those of the other groups. **No tile is shorter than the links tile with one link**
 (`songInfoTileMinHeight`, from `songInfoLinkRowHeight`), so the tiles of the list are of one height until one of them
 needs more. A titled tile gets there by its own layout: its content, or its call to action, is centered in a slot as
 tall as a row of link buttons under the title, so every title stands on one line of its tile and every row of chips,
-buttons or call to action is centered on another, whichever the tile holds; an untitled one centers what it holds. Each sheet goes
+buttons, or call to action is centered on another, whichever the tile holds; an untitled one centers what it holds. Each sheet goes
 back to this one once it is saved or closed (`DialogHost.underlyingSongInfo`, for an edit of the same target). The
 header has no buttons, and no menu lists these editors one by one.
 
@@ -282,7 +282,7 @@ everywhere in the app).
 
 The menu's Edit song file is absent in performance mode and the sheet's tiles do nothing there; link buttons still open their pages
 there, and only display their labels in the editor's preview, where a tap is meant for the text. The song is parsed,
-transposed and split into sections away from the main thread (`rememberSongLyricsModel`, which builds only the first
+transposed, and split into sections away from the main thread (`rememberSongLyricsModel`, which builds only the first
 rendering of the page on screen, headed for or before the target page in place, so that it never opens on an empty frame
 and a step back from a song's top has the previous song's end to land on (`buildsModelInPlace`) — without the chord
 shapes only the search finds, which follow from `Dispatchers.Default` right after — while the next page builds its first
@@ -334,10 +334,10 @@ section of four lines or fewer and almost nothing for one after an empty line or
 of a cut section holding one or two lines of lyrics, and for the empty space at the end of every column of a page that is
 not the last, by its square in chorded lines. So a verse moves to the next column whole rather than leave a line of itself
 behind, and a column ends a line short rather than strand one, unless that costs a page. A row of chord diagrams, a tab
-system, a comment and the song's first section are no stranded lines; they pay for the cut alone.
+system, a comment, and the song's first section are no stranded lines; they pay for the cut alone.
 
 Each page is then evened out on its own (`ColumnFlow.evenOut`): set under the lowest height it fits in its columns, one,
-two and three lines more and the screen, the one taken whose cuts and whose spread of column bottoms cost least. The last
+two, and three lines more, and the screen, the one taken whose cuts and whose spread of column bottoms cost least. The last
 page, and one ending before a stretch that cannot be cut and is taller than the screen (a single column row of its own,
 paged through), takes the fewest columns that hold it; the slack stays there, at the end of the song. It is tried at
 every column count the width allows and compared, with the sections whole (`flowIntoRows`, with its wide tab rows), by
@@ -357,7 +357,7 @@ size, never below `UserPreferences.MIN_FONT_SCALE`, the first at which the whole
 gaps, and every narrow section beside another. The heights are read at a width that much wider and scaled down, and the
 song is drawn the same way — every chunk laid out wider and placed through a scaled layer, which scales its hit testing
 with it — so nothing is composed again and the first frame is already the fitted one; `DecidedGrid.fitScale` keeps it with the grid, a change of it is a grid change that glides like any other, and
-the stepper, the menu and the app bar keep the reader's own size. The editor's preview and a songbook are neither
+the stepper, the menu, and the app bar keep the reader's own size. The editor's preview and a songbook are neither
 narrowed nor fitted.
 
 **A width with room for one column is paged the same way** (`flowIntoPages`, also in `SectionCutting.kt`): the column is
@@ -579,7 +579,7 @@ Outside read only mode the overflow button is always in the bar, holding the way
 and the tuner are the song's first section's, above); as the bar narrows, the text size goes into the menu first, then
 the Choose setlists button, and then the cover leaves the title, each while the title keeps 160dp (`appBarButtons`,
 decided from the settled width for every song of the pager at once), so the smallest phone has the back button, the
-cover, the title, Choose setlists and the menu. The overflow button reaches into the button before it and not into the
+cover, the title, Choose setlists, and the menu. The overflow button reaches into the button before it and not into the
 stepper's pill or the title (`overflowOverlap`). Performance
 mode leaves only the text size and empties the app bar of everything else, so there the one stepper is in the bar
 (`LiveFontScaleControls`) wherever that leaves the title 160dp (`showsFontScaleInPerformanceBar`) and alone in an
@@ -620,7 +620,7 @@ scrolls instead; its room is
 kept wherever the sheet is offered at all, so a long title is not cut off afresh as the song passes its top. Its touch
 target (`titleTouchTarget`) is all of the bar that the back button and the actions leave, as tall as the bar and
 reaching up to their touch targets, so a tap on any empty part of it counts; it reports only the title's own room to the
-bar, so the back button, the title and the actions stay exactly where the bar puts them.
+bar, so the back button, the title, and the actions stay exactly where the bar puts them.
 
 It draws no indication — a highlight over most of the bar reads as the bar reacting, and one around the title alone has
 no room, the title starting 4dp after the back button's target — so a press dims the title, its cover and its chevron

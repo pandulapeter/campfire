@@ -45,7 +45,7 @@ module does not see), `isChordSectionFolded` (one fold for every song) and `chor
 each chord, by instrument id and then by the chord's id, never exported but synced through `preferences.json`, an
 unknown instrument kept as it is), `tagColors` (a palette id by `tagKey`, synced the same way, never dropped with
 the last song carrying the tag, since that is as often a moment as a decision), `shouldNumberSections`, whether the
-unlabeled sections of a kind are headed "Verse 1", "Verse 2" (on by default), plus the library-wide transpositions, tempos and capos (`tempos` and `capos`, song file
+unlabeled sections of a kind are headed "Verse 1", "Verse 2" (on by default), plus the library-wide transpositions, tempos, and capos (`tempos` and `capos`, song file
 name to BPM and to fret for songs opened from the library, never exported, but synced through the cloud folder's
 `preferences.json` (see `data/sync/implementation/CLAUDE.md`)), `metronomeSettings` (`MetronomeSettings`: the sound, subdivision and
 accents stored as the metronome's own ids, so this module depends on nothing, the volume, whose zero is the mute, the

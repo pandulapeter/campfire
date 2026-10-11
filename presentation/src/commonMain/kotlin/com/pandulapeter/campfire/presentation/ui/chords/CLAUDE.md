@@ -65,7 +65,7 @@ G", the label of the screen reader action that opens it, and reads the song as t
 its name (gone, it closes): the chord larger, with its
 fingers and notes, its shapes the pages of a `HorizontalPager` through `ChordVoicings.all` (searched off the main
 thread, the pages decided once they are there, a stored shape the app does not list first) and a `Stepper` under it
-reading the page and turning it, for a mouse, a keyboard and a screen reader. The page it settles on is written at once
+reading the page and turning it, for a mouse, a keyboard, and a screen reader. The page it settles on is written at once
 by `setChordVoicing` (settling on the app's first shape removes the entry), never highlighted and with no reset, since
 which shape is the default means nothing to the player; a chord the song defines has one page and "Defined in this
 song" (and by how many frets it was moved) in the stepper's place. The **editor**'s first toolbar row

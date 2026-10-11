@@ -18,7 +18,7 @@ confirmation deliberately does not: a question nobody answered is not one to put
 
 `ui/dialogs/CoverArtSearchSheet.kt` — the cover search, opened by tapping the cover in the About the song sheet (or the
 empty place for one) and titled "Set cover art" or "Change cover art" accordingly; performance mode and a turned-off
-switch leave it out. Two tabs. **Search**: artist, album and title fields prefilled from the file
+switch leave it out. Two tabs. **Search**: artist, album, and title fields prefilled from the file
 (`CampfireViewModel.coverArtQueryOf`, the held text parsed, the library's entry where there is none), asked by
 `setVisibleDialog` as the sheet is put up — so its first frame already says the search is running rather than
 crossfading from the hint while it slides — and afterwards only from the keyboard's search key or the button, never per
@@ -164,8 +164,8 @@ to be unticked. The setlist picker stays where it is while its "New setlist" act
 it from the picker's own state rather than through `visibleDialog` (which holds one dialog at a time), because the song
 goes into the new setlist as soon as it exists (`createSetlistWithSong`) and the picker is where that shows. **Automatic
 keyboard behavior is specific to each form** (`rememberFirstFieldFocusRequester`): new song, new and duplicate setlist,
-tag management, language management and library deletion focus their first field on opening. Duplicating a song,
-editing an existing setlist, song metadata, song links and cover art leave their fields unfocused. Both assignment sheets also leave search
+tag management, language management, and library deletion focus their first field on opening. Duplicating a song,
+editing an existing setlist, song metadata, song links, and cover art leave their fields unfocused. Both assignment sheets also leave search
 unfocused at every window height; the keyboard opens when search is tapped. The calendar sheet shows only the calendar,
 with no way to switch to typed date entry.
 
@@ -191,9 +191,9 @@ before the editor opens.
 filled in with what the song says, read from its file (`showDuplicateSongDialog`, `DialogType.DuplicateSong`), titled
 Duplicate song with the song under it and confirmed with Duplicate. It opens with no field focused, as Edit song details
 does, since it is already filled in. `duplicateSong` hands `DuplicateSongUseCase` only the fields that were changed,
-which are written over the file's text as it is when the copy is made, so the copy keeps the original's lyrics, chords and
-every other directive; it is named by its own title, subtitle and artist like any new song (a copy nobody changed gets the
-original's name with `_2`), and opens in the editor. The bodies of the new song, setlist details and library deletion sheets scroll, so the field is
+which are written over the file's text as it is when the copy is made, so the copy keeps the original's lyrics, chords, and
+every other directive; it is named by its own title, subtitle, and artist like any new song (a copy nobody changed gets the
+original's name with `_2`), and opens in the editor. The bodies of the new song, setlist details, and library deletion sheets scroll, so the field is
 brought into view however little is left of them, and like every sheet's content they fade at the top only: a sheet's
 content ends at the bottom of the window or at the keyboard, which is the bottom of what the window has left, and
 nothing in the app fades towards that edge.
@@ -284,7 +284,7 @@ selection (`createSetlistWithSongs`, which the one-song picker goes through too)
 
 **Manage tags** and **Manage languages** are the one-song sheets' bodies (`TagsSheet`, `LanguagesSheet`), which both the
 one-song dialogs and the selection's use, driven by `BulkLabelDraft`: a row starts on where every song carries the label,
-off where none does and half ticked otherwise, a half ticked row goes on, off and back to half ticked, the rest only on
+off where none does and half ticked otherwise, a half ticked row goes on, off, and back to half ticked, the rest only on
 and off, and Save writes only what was turned on (onto every song) and what was turned off (off every song), leaving a
 half ticked row alone in every file — for one song no row is ever half ticked, which is why the two share a body. The
 selection's are written by `CampfireViewModel.setSelectionTags` / `setSelectionLanguages` (`SelectionEditing`), each

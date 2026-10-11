@@ -152,8 +152,8 @@ outer buttons stay where a bar puts them.
 
 **What stays behind the tap whatever the room** is part of the rule, since keeping the interface clean matters more than
 one tap saved: a song card never expands at all (`isExpandable = false`, keeping only its star or drag handle in front
-of the menu), and a setlist's Edit details and Reorder songs, Archive, Duplicate, Export, Delete, a song's Update file
-name and Duplicate song and the editor's Revert are always menu entries (`ActionsMenuItem.isAlwaysInMenu`) — dangerous,
+of the menu), and a setlist's Edit details, Reorder songs, Archive, Duplicate, Export, and Delete, a song's Update file
+name and Duplicate song, and the editor's Revert are always menu entries (`ActionsMenuItem.isAlwaysInMenu`) — dangerous,
 not to be promoted, or rarely wanted — so a menu holding any of them keeps its overflow button. `SongActions` never
 expands (the song details bar puts its own buttons in front of it, see below), so what can come out is a setlist's
 Choose songs in its header. On the song details screen it is the bar's one menu, Edit song file first among its own
@@ -222,7 +222,7 @@ songs screen and in another inside a setlist that plays it differently.
 The capo is in it because this is what the band hears: a capo raises every fretted chord without renaming one of them,
 so a card is the one place that says so - the song details screen's Transposition control names the written key instead.
 
-The tempo follows it (`EffectiveTempo.bpm`, the setlist's entry, the library's override or the file's `{tempo}`, and
+The tempo follows it (`EffectiveTempo.bpm`, the setlist's entry, the library's override, or the file's `{tempo}`, and
 the metronome's default of 120 where none of them names one, as if the file did), in the duration's muted color rather than the
 accent one, since a second emphasized value beside the key halves what the key is there for.
 
@@ -357,9 +357,9 @@ hugging the text lit up under the pointer.
 
 A tag the user gave a color has its mark filled with it (`TagIcon`: `ic_label_fill` under the outline, which stays in
 the content color, so the color only ever tells tags apart and never stands alone), in the pills, the song filters' tag
-chips and the song picker's alike (a language chip carries `ic_language` in both, for the same look), read from
+chips, and the song picker's alike (a language chip carries `ic_language` in both, for the same look), read from
 `LocalTagColors`, which `CampfireApp` provides once from the preferences rather than every caller handing the map down.
-`TagColor` is the palette: fourteen fixed colors, eleven hues around the circle and then brown, gray and black, the ones
+`TagColor` is the palette: fourteen fixed colors, eleven hues around the circle and then brown, gray, and black, the ones
 the theme has too under its names, each with a saturated middle tone for a light scheme and a lighter one for a dark
 scheme (told by the surface's luminance, so the theme's cross fade and the sepia need nothing of their own; black is a
 charcoal there, since a black fill is what a mark with no color already shows on a dark background), and an id that is what every device stores — one this version does

@@ -65,7 +65,7 @@ function of `RouteInputs`, which `routeInputs()` here reads off the view model, 
 `PercentEncoding.kt`, which writes what `encodeURIComponent` writes) maps where the user is to the path of every history
 entry that should exist (one per step a back gesture would take: a screen of the back stack, an open search, the setlist
 reorder mode, the songs screen's selection mode (the songs' address again, under `search` where the search is open, so
-that Back closes the search, then ends the mode), or a dialog, a sheet or a menu open over them, which repeats the
+that Back closes the search, then ends the mode), or a dialog, a sheet, or a menu open over them, which repeats the
 address under it — without an entry of its own, a Back on the songs screen of a page opened on it left the page instead
 of closing the dialog; the unsaved changes question has none, since it is asked in answer to a Back and the entry that
 Back left is gone forward to again), and a path back to a `NavigationState` against the library, a missing song or
@@ -107,9 +107,9 @@ page — the same rule, and the price every single page app pays for a deep link
 - **Every screen has an address, and the browser's history is the app's back stack**: `/` is the songs, then `search`,
   `setlists`, `setlists/search`, `metronome`, `settings/{general,features,songs,library,about}`, `song/{song}`,
   `song/{song}/edit`, `setlist/{setlist}/{song}` and `import`, one history entry per step a back gesture would take — a
-  dialog, a sheet or a menu open over a screen is one too, and so are the setlist reorder mode and the song selection
+  dialog, a sheet, or a menu open over a screen is one too, and so are the setlist reorder mode and the song selection
   mode, at the screen's address (`:presentation`'s `ui/navigation/BrowserHistory.kt`). The app decides and the history
-  follows — pushed, replaced or gone back through to match — and the browser's Back is sent into the navigation event
+  follows — pushed, replaced, or gone back through to match — and the browser's Back is sent into the navigation event
   dispatcher like Escape, so it closes a dialog or asks about unsaved text before it leaves a screen. An address that is
   opened is resolved once the library has been read, behind the launch screen; one naming nothing the library holds
   opens the songs. GitHub Pages serves a deep address as its site-wide 404 page, which hands it to `index.html` in the

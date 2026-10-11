@@ -11,14 +11,14 @@
 *Your songbook, on every screen you own.*
 
 Campfire is a chord sheet viewer and editor built around the plain-text [ChordPro](https://www.chordpro.org/chordpro/chordpro-introduction/) format.
-It runs natively on Android, iOS, macOS, Windows, Linux and the web. 
+It runs natively on Android, iOS, macOS, Windows, Linux, and the web. 
 
 <img src="documentation/screenshots/01.webp" width="32%" /> <img src="documentation/screenshots/02.webp" width="32%" /> <img src="documentation/screenshots/03.webp" width="32%" />
 
 The interface is designed around practical use, whether you’re organizing a song library, building setlists, or playing a gig, and a selection of songs can be filed into setlists, tagged, given languages, or exported in one go.
 Songs automatically adapt with multi-column layouts and customizable section ordering to make reading easier on stage.
-It also includes on-the-fly transposition, chord diagrams for guitar, ukulele and keyboard (with every other way to play each chord one tap away, and the shapes a song defines for itself), adjustable font sizing, a lyrics-only view for singers, customizable themes, a read only mode to lock the app against accidental edits, and a Features tab that switches off whatever a reader does not need, from the metronome and the tuner to the setlists.
-A built-in metronome starts at each song's own tempo and time signature, with tap tempo, accents, subdivisions and five sounds, and keeps clicking with the screen locked. Setlists can play a song in its own key, with its own capo and tempo, count down to the date of the gig, and add up their running time.
+It also includes on-the-fly transposition, chord diagrams for guitar, ukulele, and keyboard (with every other way to play each chord one tap away, and the shapes a song defines for itself), adjustable font sizing, a lyrics-only view for singers, customizable themes, a read only mode to lock the app against accidental edits, and a Features tab that switches off whatever a reader does not need, from the metronome and the tuner to the setlists.
+A built-in metronome starts at each song's own tempo and time signature, with tap tempo, accents, subdivisions, and five sounds, and keeps clicking with the screen locked. Setlists can play a song in its own key, with its own capo and tempo, count down to the date of the gig, and add up their running time.
 A tuner hears one string at a time through the microphone, chromatically or against the strings of a guitar, bass, ukulele, violin, mandolin or banjo, and plays each string's note for tuning by ear; nothing it hears is kept or sent anywhere, and it can be opened over the song being played.
 Songs and setlists can be exported as printable PDFs, with a page preview, song selection, and saved paper, sizing and content options.
 
@@ -45,7 +45,7 @@ The whole interface is written once with Compose Multiplatform and Material 3 Ex
 Platform-specific code is limited to thin shells: file pickers, system bars, share and "open with" intents, and the storage behind the library, which is a plain folder on Android, iOS and desktop and the Origin Private File System in the browser.
 
 The code is split into small modules with a strict `api` / `implementation` boundary at every layer: a `presentation` module with the screens and the ViewModel, a `domain` layer of single-method use cases, repositories on top of local and remote data sources, and the `app` modules that hold each platform's entry point.
-The ChordPro parser, transposer and serializer live in a dependency-free `chordpro` module, so the format logic can be tested and reused independently of any UI or storage.
+The ChordPro parser, transposer, and serializer live in a dependency-free `chordpro` module, so the format logic can be tested and reused independently of any UI or storage.
 The metronome is a self-contained `metronome` module of its own: every click is placed by sample count rather than by a timer, so it never drifts, and its sounds are synthesized in Kotlin behind one audio output per platform. The `tuner` module beside it reads the microphone with the McLeod pitch method and plays its reference tones the same way.
 
 Everything the app owns is a plain file: songs are `.cho` files and setlists are small JSON documents, so nothing is locked inside a database.

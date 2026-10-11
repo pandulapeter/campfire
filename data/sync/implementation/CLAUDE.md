@@ -213,7 +213,7 @@ written once there is something in it, so a document from before it stays the sa
 The tags' colors (`UserPreferences.tagColors`) are a `tags` member beside them, tag (`tagKey`) to palette id, read and
 written exactly as the chords are: any string is a color, a non-string passes through, nothing is dropped with a song,
 and the member only appears once something is in it.
-`localChanges` is what schedules a run when the four maps, the chord shapes or the tag colors change, filtering out
+`localChanges` is what schedules a run when the four maps, the chord shapes, or the tag colors change, filtering out
 the values the step wrote itself.
 `SyncedPreferencesTest` covers the merge, the document and the step against the fakes.
 `cancelConnection` is the way out of `Connecting` that does not need the `connect()` that got there to be running
@@ -317,7 +317,7 @@ Tested with `commonTest`, run with `./gradlew :data:sync:implementation:desktopT
   keep their choice and two choices for one chord keep this device's; an instrument this version does not know passes
   through, and no entry is ever dropped with a song, since none belongs to one. The tags' colors
   (`UserPreferences.tagColors`) are a `tags` member of the same kind (`{"christmas": "red"}`). A change to those four
-  maps, the chord shapes or the tag colors schedules a run like a change to a file does; the run's own write does not.
+  maps, the chord shapes, or the tag colors schedules a run like a change to a file does; the run's own write does not.
 - Authorization is OAuth 2.0 with PKCE and no client secret, which is what lets this work with no backend. The four
   platforms get back from the consent page in four different ways, all behind `SyncAuthenticator`.
 

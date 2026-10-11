@@ -19,9 +19,9 @@ actions ("Export song", which also titles the screen) (with the setlist it was r
 in) and a setlist's ("Export setlist"), and from the songs screen's selection mode ("Export songs",
 `DialogType.Export.songs`, the ticked songs in the order the screen sorts by; one ticked song is the row's own Export).
 The source says which of the three it is (`PrintSource.Kind`), and the screen asks it the two things it needs: whether
-there is a running order (`hasRunningOrder`, a setlist's: the setlist content choice, the overview and the zip's
+there is a running order (`hasRunningOrder`, a setlist's: the setlist content choice, the overview, and the zip's
 manifest) and whether there are several songs (`hasSeveralSongs`: the song ticks with Select all, "Start each song on a
-new page", the Zip format and its preview). Several songs are listed unnumbered, printed in the keys the library plays
+new page", and the Zip format and its preview). Several songs are listed unnumbered, printed in the keys the library plays
 them in as one song exported from the library is, zipped as `campfire_songs.zip` by `ExportSongsUseCase` even when
 only one of them is left chosen, and saved as `campfire_songs.pdf`, the PDF titled with how many songs it holds; the screen closes onto the selection as it was. It is
 a dialog to the view model and a screen to the user: `ExportHost`, composed by `CampfireScreens` after the `NavDisplay`
@@ -29,11 +29,11 @@ and before the dialogs and the snackbars, deals it in over everything and takes 
 exactly as a destination is pushed and popped: from the right, on the same spring (`slideFractionSpec`, `slideSpec` as a
 fraction of the width), with the `NavDisplay` giving way by the same 12% (`ExportTransition` is the one progress both
 read), and following a predictive back gesture with the finger. It is an opaque `Surface` under the host's
-`NavigationBackHandler`, so that Escape, the browser's Back and the back gesture close it as they closed every sheet,
+`NavigationBackHandler`, so that Escape, the browser's Back, and the back gesture close it as they closed every sheet,
 and the snackbar of a failed export still shows over it. It is a focus group that cancels every exit while it is the
 dialog shown (not while it slides away), so Tab never reaches the screen under it, which `clearAndSetSemantics` only
 hides from a screen reader. The preview's pager fades into nothing under the app bar and towards the options (below it,
-or at its start beside them) as far as a zoomed, panned or turning page has moved past where it rests, so a page at rest
+or at its start beside them) as far as a zoomed, panned, or turning page has moved past where it rests, so a page at rest
 is drawn whole.
 
 **The format is the first option** (`PrintSettings.format`, saved with the rest), a `SegmentedChoice` with a line under
@@ -53,7 +53,7 @@ them under one heading, a missing one dimmed as not included. Save and Share are
 Every row of the options and of the zip's files goes through `listItemAnimation`, keyed by its place in the source (a
 setlist may name a song twice), so a tick fades the file in or out of the zip and slides the rest; the options fade
 only, since what moves them is the PDF options folding, which they already follow frame by frame; the files preview
-crossfades between the list, the song's text and its messages (the one asking for a song once the last tick is gone),
+crossfades between the list, the song's text, and its messages (the one asking for a song once the last tick is gone),
 and the overview and "Start each song on a new page" fold away with a setlist's running order rather than vanishing.
 
 The screen's state is a `ExportState` from `rememberExportState(dialog)`, which remembers each field on its own: the
