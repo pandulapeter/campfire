@@ -12,7 +12,9 @@
 ### Bugs / issues
 - CoverArtArchive thumbnails load really slowly
 - Page scroll triggered by home gesture on Android
-- Contrast between chips and their container in the About song bottom sheet is too small
+- Chips should look the same on cards as they do on the details bottom sheet
+- Song defaults row of the About card should also appear in preview mode, instead of that header with the same info
+- The chord diagrams should be individually clickable instead of the current Chord Shapes sheet
 
 ### Improvements
 - The metronome should remember beat setup per song

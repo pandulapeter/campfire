@@ -163,7 +163,7 @@ internal fun SongInfoBody(
                 emptyLabel = stringResource(Res.string.song_details_tags_add),
             ) {
                 val tags = remember(metadata.tags) { metadata.tags.sortedAlphabeticallyBy { it } }
-                tags.forEach { TagPill(text = it, leadingIcon = painterResource(Res.drawable.ic_label), fontScale = fontScale) }
+                tags.forEach { TagPill(text = it, leadingIcon = painterResource(Res.drawable.ic_label), fontScale = fontScale, isOutlined = true) }
             }
         }
         if (SongInfoGroupKind.LANGUAGES in groups) {
@@ -178,7 +178,7 @@ internal fun SongInfoBody(
                 emptyLabel = stringResource(Res.string.song_details_languages_add),
             ) {
                 metadata.languages.map { languageLabel(it) }.sortedAlphabeticallyBy { it }.forEach { label ->
-                    TagPill(text = label, leadingIcon = painterResource(Res.drawable.ic_language), fontScale = fontScale)
+                    TagPill(text = label, leadingIcon = painterResource(Res.drawable.ic_language), fontScale = fontScale, isOutlined = true)
                 }
             }
         }
@@ -196,7 +196,12 @@ internal fun SongInfoBody(
                 if (onOpenLink == null) {
                     // The links stay in the order the file gives them, as the buttons keep it.
                     metadata.links.forEach { link ->
-                        TagPill(text = linkLabel(link), leadingIcon = painterResource(Res.drawable.ic_link), fontScale = fontScale)
+                        TagPill(
+                            text = linkLabel(link),
+                            leadingIcon = painterResource(Res.drawable.ic_link),
+                            fontScale = fontScale,
+                            isOutlined = true,
+                        )
                     }
                 } else {
                     SongInfoLinkButtons(links = metadata.links, fontScale = fontScale, onOpenLink = onOpenLink)

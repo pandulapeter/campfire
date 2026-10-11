@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -23,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
@@ -35,6 +37,9 @@ import androidx.compose.ui.unit.dp
  * reserving that much would be taller than the song title above it.
  *
  * @param onClick Null where the pill is only read, which is what the editor's preview shows.
+ * @param isOutlined Drawn as an outline rather than filled, for a pill standing on a tile of its own: the tiles of a song's
+ *   info are the tone just below the fill, which tells the two apart in neither theme, and an outline reads on any
+ *   container, like the outlined link buttons it stands next to there.
  * @param fontScale The song details' zoom, which the pills of its info card follow along with the lyrics; the text, the
  *   mark and the widest a pill may grow scale together, so that a zoomed tag is not ellipsized sooner than at rest.
  */
@@ -46,9 +51,15 @@ internal fun TagPill(
     onClick: (() -> Unit)? = null,
     leadingIcon: Painter? = null,
     fontScale: Float = 1f,
+    isOutlined: Boolean = false,
 ) {
     val contentColor = if (isSelected) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
-    val containerColor = if (isSelected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainerHighest
+    val containerColor = when {
+        isSelected -> MaterialTheme.colorScheme.secondaryContainer
+        isOutlined -> Color.Transparent
+        else -> MaterialTheme.colorScheme.surfaceContainerHighest
+    }
+    val border = if (isOutlined && !isSelected) BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant) else null
     val textStyle = MaterialTheme.typography.labelMedium.scaled(fontScale)
     val chipHeight = tagPillHeight(fontScale)
     val content = @Composable {
@@ -85,6 +96,7 @@ internal fun TagPill(
                 shape = MaterialTheme.shapes.small,
                 color = containerColor,
                 contentColor = contentColor,
+                border = border,
                 content = content,
             )
         } else {
@@ -94,6 +106,7 @@ internal fun TagPill(
                 shape = MaterialTheme.shapes.small,
                 color = containerColor,
                 contentColor = contentColor,
+                border = border,
                 content = content,
             )
         }
