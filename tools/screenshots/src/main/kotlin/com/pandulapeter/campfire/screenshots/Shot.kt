@@ -128,7 +128,21 @@ internal class ShotScope(
     language: UserPreferences.Language,
     settle: suspend (milliseconds: Long) -> Unit,
     private val scene: ImageComposeScene,
+    private val captureFrame: suspend () -> Unit,
 ) : PrepareScope(viewModel, device, language, settle) {
+
+    /**
+     * Records [frames] frames of the app as a clip, a sixtieth of a second of the scene's clock apart whatever the time
+     * each takes to draw, so that an animation plays at its own speed in the clip. [onFrame] runs before each frame is
+     * drawn, with its index, for what the clip shows to happen at that moment.
+     */
+    suspend fun record(frames: Int, onFrame: suspend (Int) -> Unit = {}) = repeat(frames) { index ->
+        onFrame(index)
+        captureFrame()
+    }
+
+    /** Sends a touch of [type] at [position], in the scene's pixels, for a gesture a recording draws frame by frame. */
+    fun touch(type: PointerEventType, position: Offset) = scene.sendPointerEvent(type, position, type = PointerType.Touch)
 
     /**
      * Taps the middle of whatever on screen is labelled [label] - its text, or what a screen reader calls an icon - with

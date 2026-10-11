@@ -44,6 +44,8 @@ import androidx.savedstate.SavedStateRegistry
 import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.compose.LocalSavedStateRegistryOwner
+import coil3.SingletonImageLoader
+import coil3.annotation.DelicateCoilApi
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.di.startCampfireDependencyGraph
 import com.pandulapeter.campfire.metronome.api.Metronome
@@ -79,7 +81,8 @@ internal class RenderEnvironment(
 )
 
 /**
- * Takes [shot] on [device] into [output]: the library copied into a home of its own, the app started on it as the
+ * Takes [shot] on [device] into [output], and the clip its drive records, if it does, into [frames] as numbered JPEGs:
+ * the library copied into a home of its own, the app started on it as the
  * device's platform, driven to the shot and drawn with the platform's chrome around it.
  *
  * Everything the app reads at its start is set up before Koin is: the home directory, which the desktop file storage
@@ -87,12 +90,13 @@ internal class RenderEnvironment(
  * access. Koin is stopped again afterwards, so that the next shot starts from a library of its own. Runs on the Swing
  * thread, the desktop's main dispatcher, which the view model's work is dispatched to as well.
  */
-@OptIn(InternalComposeUiApi::class)
+@OptIn(InternalComposeUiApi::class, DelicateCoilApi::class)
 internal suspend fun render(
     device: Device,
     shot: Shot,
     environment: RenderEnvironment,
     output: File,
+    frames: File? = null,
 ) {
     val home = createTempDirectory("campfire-screenshots").toFile()
     try {
@@ -107,6 +111,10 @@ internal suspend fun render(
         PlatformImpersonation.platform = device.platform
         PlatformImpersonation.fontFamily = environment.fonts.interfaceFamily(device.platform)
         PlatformImpersonation.monospaceFontFamily = environment.fonts.monospaceFamily(device.platform)
+        // Coil's image loader is one per process and is built once, with the cover use case of the Koin it was first
+        // composed under: kept for the next shot, it would read the covers from the first shot's home, deleted by now,
+        // and show only the ones its memory cache happened to hold. Each shot builds its own instead.
+        SingletonImageLoader.reset()
         val koin = startCampfireDependencyGraph().koin
         koin.loadModules(listOf(fakes), allowOverride = true)
         val owner = SceneOwner()
@@ -156,6 +164,18 @@ internal suspend fun render(
                 delay(FRAME_MILLIS)
             }
         }
+        var frameCount = 0
+        suspend fun captureFrame() {
+            time += RECORDING_FRAME_NANOS
+            val image = scene.render(time)
+            if (frames != null) {
+                frames.mkdirs()
+                File(frames, "%05d.jpg".format(frameCount++)).writeBytes(checkNotNull(image.encodeToData(EncodedImageFormat.JPEG, JPEG_QUALITY)).bytes)
+            }
+            // The scene's clock is what animations follow; the real pause is for the app's own coroutines (a beat
+            // collected, a state arriving from another thread) to run before the next frame is drawn.
+            delay(FRAME_MILLIS)
+        }
         try {
             // The view model is created before the app is composed, and reads the library on its own, so the shot is
             // prepared against the whole library rather than against whatever the first frames had of it.
@@ -169,7 +189,7 @@ internal suspend fun render(
                 while (!isAppReady) settle(FRAME_MILLIS)
             } ?: error("The app did not finish starting within ${LAUNCH_TIMEOUT_MILLIS / 1000} seconds.")
             settle(SETTLE_MILLIS)
-            ShotScope(viewModel = currentViewModel, device = device, language = shot.language, settle = ::settle, scene = scene)
+            ShotScope(viewModel = currentViewModel, device = device, language = shot.language, settle = ::settle, scene = scene, captureFrame = ::captureFrame)
                 .apply { shot.drive(this) }
             settle(SETTLE_MILLIS)
             // Covers arrive on their own time, a few at once, so the shot waits until the screen stops changing rather
@@ -305,3 +325,5 @@ private const val SETTLE_MILLIS = 1_500L
 private const val STABLE_INTERVAL_MILLIS = 750L
 private const val STABLE_CHECKS = 20
 private const val LAUNCH_TIMEOUT_MILLIS = 30_000L
+private const val RECORDING_FRAME_NANOS = 1_000_000_000L / 60
+private const val JPEG_QUALITY = 95

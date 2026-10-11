@@ -44,3 +44,9 @@ graphic and the website's link preview - from the same shots, in their own theme
 - **The shots** are `shots` in `Shot.kt`, in the listing's order, each with its theme, language and the `drive` block
   that brings the app to its state through `CampfireViewModel`; their rules are kept there, so a retake is the same
   picture. The headlines are part of the Screenshot Bro project, not of the images.
+- **The promotional video's footage** is `Promo.kt`, rendered only when asked for (`--only promo`), into `Promo/`: stills,
+  and clips whose drive calls `record`, which draws a frame every sixtieth of a second of the scene's clock and writes
+  each as a JPEG into a folder named after the clip, so an animation plays at its own speed however long a frame takes
+  to draw. A drag is a finger moved a frame at a time (`touch`), the metronome lights its beats at the video's 160 BPM,
+  and the tuner is `ScriptedTuner`, which hears only the readings a clip hands it. The video itself is composed outside
+  the repository, from these clips.

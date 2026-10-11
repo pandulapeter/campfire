@@ -22,7 +22,7 @@ import kotlin.system.exitProcess
  *
  * `./gradlew :tools:screenshots:run` writes them to `tools/screenshots/renders` (gitignored), replacing what an earlier
  * run left there; `--args="--out <folder>"` writes them elsewhere, and `--only <names>` (comma separated, each a device's enum name, a
- * shot's id, or `listing`, `banners` or `website`) renders part of them. The paths the run needs are passed in by the build as
+ * shot's id, or `listing`, `banners`, `website` or `promo`) renders part of them. The paths the run needs are passed in by the build as
  * system properties.
  */
 fun main(args: Array<String>) {
@@ -48,15 +48,23 @@ fun main(args: Array<String>) {
         }
     }
     val websiteJobs = websiteShots.map { (name, device, shot) -> Job("website", "Website", name, device, shot) }
-    val renders = (listing + bannerJobs + websiteJobs)
-        .filter { only == null || it.set in only || it.device.name in only || it.shot.id in only }
+    val promoJobs = promoShots.map { Job("promo", "Promo", it.name, it.device, it.shot, isClip = it.isClip) }
+    val renders = (listing + bannerJobs + websiteJobs + promoJobs)
+        // The promotional video's footage is a minute of frames, so a run renders it only when it is asked for by name.
+        .filter { if (only == null) it.set != "promo" else it.set in only || it.device.name in only || it.shot.id in only }
     var failures = 0
     runBlocking(Dispatchers.Main) {
         renders.forEachIndexed { index, job ->
             val file = File(output, "${job.folder}/${job.name}.png")
             print("[${index + 1}/${renders.size}] ${job.folder} / ${job.name}… ")
             try {
-                render(device = job.device, shot = job.shot, environment = environment, output = file)
+                render(
+                    device = job.device,
+                    shot = job.shot,
+                    environment = environment,
+                    output = file,
+                    frames = if (job.isClip) File(output, "${job.folder}/${job.name}") else null,
+                )
                 println("done")
             } catch (exception: Exception) {
                 failures++
@@ -77,6 +85,7 @@ private class Job(
     val name: String,
     val device: Device,
     val shot: Shot,
+    val isClip: Boolean = false,
 )
 
 private fun requireProperty(name: String) = requireNotNull(System.getProperty(name)) { "Run the tool through Gradle, which sets $name." }

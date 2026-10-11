@@ -27,6 +27,11 @@ import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
 import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
 import com.pandulapeter.campfire.metronome.api.model.MetronomeSound
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
+import com.pandulapeter.campfire.tuner.api.Tuner
+import com.pandulapeter.campfire.tuner.api.model.TunerConfig
+import com.pandulapeter.campfire.tuner.api.model.TunerListening
+import com.pandulapeter.campfire.tuner.api.model.TunerReading
+import com.pandulapeter.campfire.tuner.api.model.TunerState
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -43,6 +48,7 @@ import kotlin.time.Clock
 internal val fakes = module {
     single<SyncRepository> { ConnectedSyncRepository() }
     single<Metronome> { SilentMetronome() }
+    single<Tuner> { ScriptedTuner() }
 }
 
 /**
@@ -128,6 +134,36 @@ internal class SilentMetronome : Metronome {
                 isSubdivision = false,
             ),
         )
+    }
+}
+
+/**
+ * A tuner without a microphone: it reports itself as listening once asked to, and hears only what a shot hands it with
+ * [hear], so that the needle a recording shows moves the way the shot scripted rather than with whatever a room sounds
+ * like. It plays no tone.
+ */
+internal class ScriptedTuner : Tuner {
+    override val state = MutableStateFlow(TunerState())
+
+    override fun listen(config: TunerConfig) {
+        if (state.value.listening !is TunerListening.Hearing) state.value = TunerState(listening = TunerListening.Hearing())
+    }
+
+    override fun update(config: TunerConfig) = Unit
+
+    override fun stopListening() {
+        state.value = TunerState()
+    }
+
+    override fun playTone(note: Int, referencePitch: Int) = Unit
+
+    override fun stopTone() = Unit
+
+    override fun setStartable(isStartable: Boolean) = Unit
+
+    /** Reports [reading] as what the microphone hears, or silence for null; ignored while not listening. */
+    fun hear(reading: TunerReading?) {
+        if (state.value.listening is TunerListening.Hearing) state.value = TunerState(listening = TunerListening.Hearing(reading = reading))
     }
 }
 
