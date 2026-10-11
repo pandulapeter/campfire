@@ -13,10 +13,11 @@ The contract of the click, and nothing else: depends on nothing but coroutines (
 `:chordpro` depends on nothing, so that no data or domain type leaks into it and the engine reads no settings of its own.
 It builds in explicit API mode (`explicitApi()`), so every public declaration says `public` and its type on purpose.
 
-- `Metronome` — the one stateful interface: `playback` (`Stopped(reason?)` or `Playing(pattern, audioIssue?)`),
-  `beats` (one `MetronomeBeat` per click, emitted when it is *heard*, subdivisions flagged), `start`, `update` (timing
-  changes from the next beat, `restartBar` making it beat one; the sound, volume and accents from the next click),
-  `preview` (one click of a sound, mixed into a playing click or on its own), `stop` and `setStartable` (whether a
+- `Metronome` — the one stateful interface: `playback` (`Stopped(reason?)` or
+  `Playing(pattern, audioIssue?, pendingPattern?)`, the pattern heard and the one waiting for the bar to end), `beats`
+  (one `MetronomeBeat` per click, emitted when it is *heard*, subdivisions flagged), `start`, `update` (the timing from
+  the next beat, or with `fromNextBar` once the bar being played has ended, as beat one of a new count of bars; the
+  sound, volume and accents from the next click), `preview` (one click of a sound, mixed into a playing click or on its own), `stop` and `setStartable` (whether a
   screen that can start a click is showing, which only the web's output uses, to listen for the gesture its audio
   needs only there). Every call returns at once and never throws: a start that cannot happen ends in
   `Stopped(reason)`.

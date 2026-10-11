@@ -122,29 +122,6 @@ class MetronomeSequencerTest {
     }
 
     @Test
-    fun `a change waiting for the next bar applied now makes the next beat beat one`() {
-        val sequencer = sequencer(MetronomePattern(bpm = 60))
-        sequencer.ticksUntil(SAMPLE_RATE * 2L)
-        sequencer.update(MetronomePattern(bpm = 120), barChangeId = 7)
-        sequencer.applyPendingBarChangeNow()
-        val ticks = sequencer.ticksUntil(SAMPLE_RATE * 3L)
-        assertEquals(listOf(2L * SAMPLE_RATE, 2L * SAMPLE_RATE + 24_000), ticks.map { it.frame })
-        assertEquals(listOf(0, 1), ticks.map { it.beatIndex })
-        assertEquals(listOf(7, 7), ticks.map { it.barChangeId })
-    }
-
-    @Test
-    fun `applying now with nothing waiting changes nothing`() {
-        val sequencer = sequencer(MetronomePattern(bpm = 60))
-        sequencer.ticksUntil(SAMPLE_RATE * 2L)
-        sequencer.applyPendingBarChangeNow()
-        sequencer.update(MetronomePattern(bpm = 60, timeSignature = TimeSignature(3, 4)), barChangeId = 1)
-        val ticks = sequencer.ticksUntil(SAMPLE_RATE * 5L)
-        assertEquals(listOf(2, 3, 0), ticks.map { it.beatIndex })
-        assertEquals(listOf(null, null, 1), ticks.map { it.barChangeId })
-    }
-
-    @Test
     fun `a sound change waiting on the next bar still lands on the next click`() {
         val sequencer = sequencer(MetronomePattern(bpm = 60))
         sequencer.ticksUntil(1L)

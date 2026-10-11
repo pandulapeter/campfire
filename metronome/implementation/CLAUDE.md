@@ -20,12 +20,12 @@ started at plus `ticks × sampleRate × 60 / (bpm × clicksPerBeat)` in one inte
 frame off however long it runs, where adding rounded intervals drifts. A pattern change replaces the pattern of every
 tick not yet handed out — what sounds from the next tick, what places them from the next beat, so a subdivided beat is
 never cut in two lengths, or, for a change made `fromNextBar` (another song, another stretch of one), once the bar being
-played has ended, as beat one of bar zero; a later change waits with it rather than bringing it forward, and
-`applyPendingNow` brings it forward to the next beat. Such a change has an id, carried by every tick it places, and the
-engine reports it as `Playing.pendingPattern` until the first of those ticks is heard; the engine keeps every such
-change not yet heard, so one made while another is rendered but not heard leaves `Playing.pattern` following each in
-turn. `Playing.pattern` is always what reaches the ear. `ClickSynthesizer` computes every sound's three voices (accent, normal, subdivision) once per
-sample rate — decaying sines, partial pairs, first-differenced noise from a seeded `Random`, the same generator on
+played has ended, as beat one of bar zero; a later change waits with it rather than bringing it forward. Such a change
+has an id, carried by every tick it places, and the engine reports it as `Playing.pendingPattern` until the first of
+those ticks is heard; the engine keeps every such change not yet heard, so one made while another is rendered but not
+heard leaves `Playing.pattern` following each in turn. `Playing.pattern` is always what reaches the ear.
+`ClickSynthesizer` computes every sound's three voices (accent, normal, subdivision) once per sample rate — decaying
+sines, partial pairs, first-differenced noise from a seeded `Random`, the same generator on
 every platform — with ramps at both ends and peaks below full scale; its golden test compares checksums of the 16-bit
 samples, never the floats, which may differ by an ulp between the JVM's interpreter and JIT. `ClickMixer` mixes clicks
 into 16-bit PCM a chunk at a time, carrying a click across chunk boundaries (tested to be the same however it is

@@ -38,7 +38,6 @@ internal class MetronomeSequencer(
     private var pendingTiming: MetronomePattern? = null
     private var pendingBarChangeId: Int? = null
     private var appliedBarChangeId: Int? = null
-    private var isBarChangeDue = false
     private var anchorFrame = 0L
     private var ticksSinceAnchor = 0L
     private var beatIndex = 0
@@ -52,11 +51,6 @@ internal class MetronomeSequencer(
         // A change from the next beat made while one from the next bar waits waits with it: a tempo stepped on the song
         // being moved to is part of that move, not a change of its own that could bring it forward.
         if (barChangeId != null) pendingBarChangeId = barChangeId
-    }
-
-    /** Brings a change waiting for the next bar forward to the next beat, which it makes beat one of a new bar. */
-    fun applyPendingBarChangeNow() {
-        if (pendingBarChangeId != null) isBarChangeDue = true
     }
 
     /** Hands out the ticks before [frame] that have not been handed out yet, in order. */
@@ -95,7 +89,7 @@ internal class MetronomeSequencer(
     private fun applyPendingTiming() {
         val pending = pendingTiming ?: return
         val barChangeId = pendingBarChangeId
-        if (barChangeId != null && beatIndex != 0 && !isBarChangeDue) return
+        if (barChangeId != null && beatIndex != 0) return
         anchorFrame = nextTickFrame()
         ticksSinceAnchor = 0
         timing = pending
@@ -105,7 +99,6 @@ internal class MetronomeSequencer(
             barIndex = 0
             appliedBarChangeId = barChangeId
             pendingBarChangeId = null
-            isBarChangeDue = false
         } else if (beatIndex >= timing.timeSignature.beats) {
             beatIndex = 0
             barIndex++

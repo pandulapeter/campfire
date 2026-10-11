@@ -90,10 +90,6 @@ internal class MetronomeEngine(
 
     override fun update(pattern: MetronomePattern, fromNextBar: Boolean) = onEngine { updatePlaying(pattern, fromNextBar) }
 
-    override fun applyPendingNow() = onEngine {
-        if (pendingBarChanges.isNotEmpty()) stream?.applyPendingBarChangeNow()
-    }
-
     /**
      * A change from the next bar is [MetronomePlayback.Playing.pendingPattern] until its first click is heard, and a
      * change from the next beat made meanwhile replaces it there, since it waits with it. A second change from the next

@@ -58,7 +58,7 @@ internal class SampleRing(private val capacity: Int) {
     }
 
     companion object {
-        /** Four of the largest window the detector reads, 8192 frames at 96 kHz. */
+        /** Over two and a half of the largest input the detector reads, 12 288 frames at 96 kHz (`PitchDetector.inputSizeFor`). */
         const val CAPACITY = 32_768
         private const val SHORT_SCALE = 32_768f
     }

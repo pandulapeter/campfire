@@ -175,25 +175,6 @@ class MetronomeEngineTest {
     }
 
     @Test
-    fun `a change waiting for the next bar applied now is heard from the next beat`() = runTest {
-        val engine = engine()
-        val beats = beatsOf(engine)
-        val next = MetronomePattern(bpm = 90)
-        engine.start(pattern)
-        runCurrent()
-        output.scheduleBeats(from = 0, to = 2)
-        engine.update(next, fromNextBar = true)
-        engine.applyPendingNow()
-        runCurrent()
-        output.stream!!.schedule(nowFrame = 2 * BEAT_FRAMES, untilFrame = 3 * BEAT_FRAMES) { _, _, _, _ -> }
-        output.heardFrame = 2 * BEAT_FRAMES
-        advanceTimeBy(RELEASE_STEP_MILLIS)
-        runCurrent()
-        assertEquals(MetronomePlayback.Playing(next), engine.playback.value)
-        assertEquals(listOf(0, 1, 0), beats.map { it.beatIndex })
-    }
-
-    @Test
     fun `a lost output stops the click, unless it belongs to an earlier session`() = runTest {
         val engine = engine()
         engine.start(pattern)

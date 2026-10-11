@@ -39,10 +39,6 @@ internal class ClickStream(
         commands.trySend(Command.Update(pattern, barChangeId))
     }
 
-    fun applyPendingBarChangeNow() {
-        commands.trySend(Command.ApplyPendingBarChangeNow)
-    }
-
     fun preview(sound: MetronomeSound, level: BeatLevel) {
         commands.trySend(Command.Preview(sound, ClickVoice.of(level)))
     }
@@ -65,7 +61,6 @@ internal class ClickStream(
         while (true) {
             when (val command = commands.tryReceive().getOrNull() ?: break) {
                 is Command.Update -> sequencer?.update(command.pattern, command.barChangeId)
-                Command.ApplyPendingBarChangeNow -> sequencer?.applyPendingBarChangeNow()
                 is Command.Preview -> onClick(nowFrame, command.sound, command.voice, 1f)
             }
         }
@@ -83,8 +78,6 @@ internal class ClickStream(
             val pattern: MetronomePattern,
             val barChangeId: Int?,
         ) : Command
-
-        data object ApplyPendingBarChangeNow : Command
 
         data class Preview(
             val sound: MetronomeSound,

@@ -59,12 +59,6 @@ public interface Metronome {
     public fun update(pattern: MetronomePattern, fromNextBar: Boolean)
 
     /**
-     * Brings a change waiting for the next bar forward to the next beat, which becomes beat one of a new bar: the song
-     * moved to starts now rather than after the rest of the bar. Does nothing when no change waits.
-     */
-    public fun applyPendingNow()
-
-    /**
      * Plays the one click [sound] makes at [level], for choosing a sound: mixed into a playing click, or on its own
      * when stopped. Changes nothing about [playback].
      */
