@@ -55,6 +55,12 @@ internal class SectionAnimation {
     var isTooTallToAnimate by mutableStateOf(false)
 }
 
+/** Whether the grid on screen still waits to be fitted, which only the layout finds out (see [SectionMeasurements.grid]). */
+internal class FitDeferral {
+
+    var isPending by mutableStateOf(false)
+}
+
 /**
  * The glide of every section across a change of the grid, see [SongSectionsLayout]. The positions are followed in the
  * lookahead pass and the offsets read in the approach pass, both by the key of each section, so a section that is

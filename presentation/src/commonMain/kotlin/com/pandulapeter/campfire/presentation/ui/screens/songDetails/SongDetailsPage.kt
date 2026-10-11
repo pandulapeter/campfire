@@ -234,6 +234,11 @@ internal fun SongDetailsPage(
             // title row collapsing over the frames of a scroll and the metronome panel opening or closing above the
             // pager are bursts of height changes alike, and the grid they settle into glides too.
             val isChangingContinuously = rememberContinuousChange(maxWidth, maxHeight, currentFontScale)
+            // Fitting the text to its pages is left until what the grid is decided for holds still, which is not the
+            // same burst: an app bar, the short window's title row or the metronome panel moves the live height over
+            // many frames but the settled one once, as it comes to rest, and its one search fits as it always did,
+            // while a pinch or a window edge being dragged changes the settled size on every frame.
+            val isGridChangingContinuously = rememberContinuousChange(maxWidth, settled.height, currentFontScale)
             val density = LocalDensity.current
             val lyricsLineHeight = MaterialTheme.typography.bodyLarge.lineHeight
             val readingWindow = with(density) {
@@ -267,6 +272,7 @@ internal fun SongDetailsPage(
                 extraWidth = (settledWidth - maxWidth).coerceAtLeast(0.dp),
                 sectionMotion = if (isChangingContinuously) SectionMotion.GLIDE else SectionMotion.SPRING,
                 fontScale = currentFontScale,
+                canFitText = !isGridChangingContinuously,
                 foldedSections = foldedSections,
                 onFoldToggled = onFoldToggled,
                 playingControls = playingControls,

@@ -40,14 +40,18 @@ internal class SectionMeasurements(private val sizes: List<SectionSizes>) {
         return sectionSizes.maxWidth
     }
 
-    /** The grid decided for [key], which is only searched for again once the key has changed. */
-    fun grid(key: SectionGridKey, search: () -> DecidedGrid): DecidedGrid {
-        if (key != lastGridKey) {
+    /**
+     * The grid decided for [key], which is only searched for again once the key has changed, or once fitting the text is
+     * allowed again ([canFit]) where the last one was decided without it. A grid decided with fitting allowed is never
+     * searched again because fitting is not, since a pinch would otherwise search at its start and at its end.
+     */
+    fun grid(key: SectionGridKey, canFit: Boolean, search: (canFit: Boolean) -> DecidedGrid): DecidedGrid {
+        if (key != lastGridKey || (canFit && lastGrid.isFitDeferred)) {
             // A window being resized searches at a new width on every frame and none of those comes back, so
             // the widths are only kept until there are more of them than a few searches ask about. They are let
             // go of between two searches and never during one, which asks about the same few over and over.
             sizes.forEach { if (it.heightsByWidth.size > MAX_SECTION_WIDTHS) it.heightsByWidth.clear() }
-            lastGrid = search()
+            lastGrid = search(canFit)
             lastGridKey = key
         }
         return lastGrid
@@ -95,11 +99,15 @@ internal data class SectionGridKey(
 /**
  * The grid [SongSectionsLayout] decided on, whether it was decided for the width less the end inset, and the scale of
  * the reader's text size its text is drawn at to fit its pages (see [fitScalesFor]).
+ *
+ * @param isFitDeferred Whether it was decided at the reader's own size though the song could have been fitted, because
+ * what it is decided for kept changing, so that it is searched again once that holds still (see [SectionMeasurements.grid]).
  */
 internal data class DecidedGrid(
     val grid: SectionGrid,
     val isInset: Boolean,
     val fitScale: Float,
+    val isFitDeferred: Boolean = false,
 ) {
 
     /** Whether [other] lays every section out in the same cell, in the same width and at the same size as this one. */

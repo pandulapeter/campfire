@@ -71,6 +71,9 @@ import kotlin.math.roundToInt
  * where the fewest of them hold it in one row (see [withNarrowColumns]) - and a song a few lines too long for its pages
  * is set a little smaller, at the first of [fitScales] at which it takes a page fewer. The smaller text is the text at
  * its own size laid out in a column that much wider and drawn through a scaled layer, so nothing is composed again.
+ * While what the grid is decided for keeps changing ([canFitText] false: a pinch, a window edge being dragged) the song is
+ * laid out at the reader's own size, and it is fitted once the change holds still, which [fitDeferral] tells the sections
+ * so that the fitted grid is glided to rather than landing in one frame.
  *
  * The candidate column counts are evaluated with the sections' intrinsic heights (they are only measured once, with
  * the width that won), starting from a single column and jumping straight to the smallest count that could possibly
@@ -137,6 +140,8 @@ internal fun SongSectionsLayout(
     sectionMeasurements: SectionMeasurements,
     lyricsLineHeight: Int,
     fitScales: List<Float>,
+    canFitText: Boolean,
+    fitDeferral: FitDeferral,
     onRowsPlaced: (SongRows) -> Unit,
     content: @Composable () -> Unit,
 ) = Layout(
@@ -426,11 +431,12 @@ internal fun SongSectionsLayout(
     // A song a few lines too long for its pages is set a little smaller where that takes its last page away (see
     // fitScalesFor). A scale is only searched at where the song could fit one page fewer even with none of its lines
     // wrapped, no gap between two sections, and every narrow section beside another, which a song a whole page over
-    // never does, so that the search that runs again on every frame of a pinch does not lay the whole song out at two
-    // more widths for nothing.
-    fun searchFitted(totalWidth: Int): FittedLayout {
+    // never does, so that a song a whole page over is not laid out at two more widths for nothing. While what the grid is
+    // decided for keeps changing ([canFit] false), the song is not fitted at all, only marked as one that may be.
+    fun searchFitted(totalWidth: Int, canFit: Boolean): FittedLayout {
         val plain = searchGrid(totalWidth, fitScale = 1f)
         if (fitScales.isEmpty() || plain.isReadWithoutStepping() || plain.pageCount < 2 || maxRowHeightPx == Int.MAX_VALUE) return FittedLayout(plain, 1f)
+        if (!canFit) return FittedLayout(plain, 1f, isFitDeferred = true)
         val pageCapacity = narrowColumnCountFor(totalWidth).toLong() * maxRowHeightPx
         val plainGrid = plain.searched.grid
         val unwrappedSectionHeights = LongArray(sectionCount)
@@ -458,21 +464,22 @@ internal fun SongSectionsLayout(
         return FittedLayout(fitted[fitScale] ?: plain, fitScale)
     }
 
-    val decidedGrid = sectionMeasurements.grid(gridKey) {
+    val decidedGrid = sectionMeasurements.grid(gridKey, canFitText) { canFit ->
         // The buttons that step through the song sit at the end of the screen, so a song that has to be scrolled leaves
         // them that edge. One that fits the screen has no buttons to leave room for, and is laid out
         // across the whole width - but only where it still fits there, since the grid found for the whole width may be
         // one of fewer, taller columns, which would scroll with the buttons over it. Several rows read across are
         // stepped through however short they are, since each is followed by empty space down to the bottom of the screen.
-        val insetSearch = if (endInsetPx > 0) searchFitted(settledWidth - endInsetPx) else null
+        val insetSearch = if (endInsetPx > 0) searchFitted(settledWidth - endInsetPx, canFit) else null
         when {
-            insetSearch == null -> searchFitted(settledWidth).decided(isInset = false)
+            insetSearch == null -> searchFitted(settledWidth, canFit).decided(isInset = false)
             keepsStepButtonInset || !insetSearch.layout.isReadWithoutStepping() -> insetSearch.decided(isInset = true)
-            else -> searchFitted(settledWidth).let { full ->
+            else -> searchFitted(settledWidth, canFit).let { full ->
                 if (full.layout.isReadWithoutStepping()) full.decided(isInset = false) else insetSearch.decided(isInset = true)
             }
         }
     }
+    if (fitDeferral.isPending != decidedGrid.isFitDeferred) fitDeferral.isPending = decidedGrid.isFitDeferred
     val (grid, isInset, fitScale) = decidedGrid
     val layoutWidth = if (isInset) (width - endInsetPx).coerceAtLeast(0) else width
     val columnWidths = IntArray(unitCount) { grid.columnWidthOf(it, layoutWidth, fitScale) }
@@ -737,13 +744,14 @@ private class SegmentLayout(
     fun isReadWithoutStepping() = isReadWithoutStepping(searched.fits, searched.grid.pageCount)
 }
 
-/** A song set as [layout], its text at [fitScale] of the reader's size. */
+/** A song set as [layout], its text at [fitScale] of the reader's size, or not yet fitted though it may be ([isFitDeferred]). */
 private class FittedLayout(
     val layout: SegmentLayout,
     val fitScale: Float,
+    val isFitDeferred: Boolean = false,
 ) {
 
-    fun decided(isInset: Boolean) = DecidedGrid(layout.searched.grid, isInset = isInset, fitScale = fitScale)
+    fun decided(isInset: Boolean) = DecidedGrid(layout.searched.grid, isInset = isInset, fitScale = fitScale, isFitDeferred = isFitDeferred)
 }
 
 /** This width or height of text at the reader's size as it is drawn at [fitScale] of it. */

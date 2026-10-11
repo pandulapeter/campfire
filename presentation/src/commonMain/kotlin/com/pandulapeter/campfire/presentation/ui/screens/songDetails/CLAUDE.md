@@ -359,7 +359,10 @@ size, never below `UserPreferences.MIN_FONT_SCALE`, the first at which the whole
 gaps, and every narrow section beside another. The heights are read at a width that much wider and scaled down, and the
 song is drawn the same way — every chunk laid out wider and placed through a scaled layer, which scales its hit testing
 with it — so nothing is composed again and the first frame is already the fitted one; `DecidedGrid.fitScale` keeps it with the grid, a change of it is a grid change that glides like any other, and
-the stepper, the menu, and the app bar keep the reader's own size. The editor's preview and a songbook are neither
+while what the grid is decided for keeps changing (a pinch, a window edge being dragged; not the app bar or the metronome
+panel, which change the grid once, when they come to rest) the song is laid out at the reader's own size and fitted once
+the change holds still (`DecidedGrid.isFitDeferred`), since fitting costs two or three more layouts of the song on every
+frame; the stepper, the menu, and the app bar keep the reader's own size. The editor's preview and a songbook are neither
 narrowed nor fitted.
 
 **A width with room for one column is paged the same way** (`flowIntoPages`, also in `SectionCutting.kt`): the column is

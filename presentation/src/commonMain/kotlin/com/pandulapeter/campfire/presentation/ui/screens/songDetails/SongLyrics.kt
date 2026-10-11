@@ -78,6 +78,10 @@ import com.pandulapeter.campfire.presentation.ui.songLayout.rememberDefaultSecti
  * @param sectionMotion How the sections get to the place a change of the layout gives them, see [SectionMotion].
  * @param fontScale Multiplier applied to the text sizes (and to the column widths, so that larger text does not get
  * squeezed into narrow columns).
+ * @param canFitText Whether a song a few lines too long for its pages may be set a little smaller to save one. False
+ * while what the grid is decided for keeps changing - a pinch, a window edge being dragged, which is not the same as
+ * [SectionMotion.GLIDE] - since fitting lays the song out two or three more times on every frame; it is fitted once the
+ * change holds still.
  * @param foldedSections The keys of the sections, tabs and grids of this song the reader has folded away (see
  * [SongSectionContent]), which are saved per song, and [onFoldToggled] is handed each key a fold toggles to save it.
  * Null where nothing folds, which is the editor's preview: it is there to show what is being written, and a section
@@ -128,6 +132,7 @@ internal fun SongLyrics(
     extraWidth: Dp = 0.dp,
     sectionMotion: SectionMotion = SectionMotion.SPRING,
     fontScale: Float = 1f,
+    canFitText: Boolean = true,
     foldedSections: Set<String> = emptySet(),
     onFoldToggled: ((key: String) -> Unit)? = null,
     isSongInfoShown: Boolean = false,
@@ -313,6 +318,7 @@ internal fun SongLyrics(
     }
     // Only a song cut into pages is set smaller to save one; the editor's preview is set as it is typed.
     val fitScales = remember(fontScale, canCutSections) { if (canCutSections) fitScalesFor(fontScale) else emptyList() }
+    val fitDeferral = remember { FitDeferral() }
     Box(modifier = modifier) {
         LookaheadScope {
             SongSectionsLayout(
@@ -341,15 +347,20 @@ internal fun SongLyrics(
                 sectionMeasurements = sectionMeasurements,
                 lyricsLineHeight = textMeasurements.lyricsLineHeight,
                 fitScales = fitScales,
+                canFitText = canFitText,
+                fitDeferral = fitDeferral,
                 onRowsPlaced = { rows -> onRowsPlaced?.invoke(rows) },
             ) {
                 // Whether a chunk or a card is placed by animateBounds: not while the layout follows a change that keeps
                 // coming or a navigation transition, not where it is too tall for it (see maxAnimatedSectionHeight), and
                 // not while it is still gliding from a change that kept coming, since the spring would start at the place
-                // the glide has not reached yet.
+                // the glide has not reached yet. Nor while the grid on screen still waits to be fitted: the pass that fits
+                // it is the first one after a change stopped coming, and an animateBounds attached in that pass has no
+                // bounds to animate from, so the fitted grid would land in one frame rather than be glided to.
                 fun Modifier.movedBy(key: Any, animation: SectionAnimation): Modifier {
                     val isGliding = sectionGlides?.isGliding(key) == true
-                    return if (sectionMotion != SectionMotion.SPRING || extraWidth > 0.dp || animation.isTooTallToAnimate || isGliding) {
+                    val isHeldStill = sectionMotion != SectionMotion.SPRING || extraWidth > 0.dp || fitDeferral.isPending
+                    return if (isHeldStill || animation.isTooTallToAnimate || isGliding) {
                         this
                     } else {
                         animateBounds(this@LookaheadScope).layoutId(AnimatedSectionLayoutId)
