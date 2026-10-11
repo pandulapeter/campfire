@@ -22,6 +22,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -67,6 +68,9 @@ import com.pandulapeter.campfire.presentation.ui.components.drawChordDiagram
 import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.songLayout.chordSlotRows
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 /**
@@ -169,6 +173,10 @@ private fun ChordRowsBlock(
     // The last cell pressed, kept while its highlight fades out after the finger has gone.
     var pressedCell by remember { mutableIntStateOf(-1) }
     var isPressed by remember { mutableStateOf(false) }
+    // The highlight a tap quicker than the delay is shown with, kept outside pointerInput, whose block a change of its
+    // keys restarts.
+    val pulseScope = rememberCoroutineScope()
+    var pressPulse by remember { mutableStateOf<Job?>(null) }
     val pressProgress by animateFloatAsState(
         targetValue = if (isPressed) 1f else 0f,
         animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
@@ -197,18 +205,42 @@ private fun ChordRowsBlock(
                         .pointerInput(layouts, firstSlot, lastSlot, isLastSlot, isRightToLeft) {
                             awaitEachGesture {
                                 val down = awaitFirstDown()
+                                // A pulse cancelled during its delay never puts its highlight out, which would light this
+                                // press at once or keep a scroll it turns into lit.
+                                pressPulse?.cancel()
+                                pressPulse = null
+                                isPressed = false
                                 // A right or middle click is a context menu or a paste, as it is to the step taps around the song.
                                 if (down.type == PointerType.Mouse && !currentEvent.buttons.isPrimaryPressed) return@awaitEachGesture
                                 val cell = layouts.cellAt(down.position.x, down.position.y, size.width, firstSlot, lastSlot, isLastSlot, isRightToLeft)
                                 if (cell < 0) return@awaitEachGesture
                                 pressedCell = cell
-                                isPressed = true
                                 // Null where the scroll took the press as a drag, which then scrolls the song as anywhere else.
-                                val up = waitForUpOrCancellation()
-                                isPressed = false
+                                // A touch is only lit once it has lasted the delay, so a scroll started on a diagram never
+                                // flashes it; a mouse never starts one by dragging the content, so it lights at once.
+                                var isFinished = false
+                                var up = if (down.type == PointerType.Mouse) {
+                                    null
+                                } else {
+                                    withTimeoutOrNull(PRESS_HIGHLIGHT_DELAY_MILLIS) { waitForUpOrCancellation().also { isFinished = true } }
+                                }
+                                if (!isFinished) {
+                                    isPressed = true
+                                    up = waitForUpOrCancellation()
+                                    isPressed = false
+                                }
                                 if (up != null) {
                                     // Consumed, so that the tap does not also turn the page around it.
                                     up.consume()
+                                    // A gesture handler cannot wait once the finger is up, and a highlight set and cleared
+                                    // in one frame draws nothing.
+                                    if (isFinished) {
+                                        pressPulse = pulseScope.launch {
+                                            isPressed = true
+                                            delay(PRESS_HIGHLIGHT_DELAY_MILLIS)
+                                            isPressed = false
+                                        }
+                                    }
                                     currentOnCellClicked?.invoke(cell)
                                 }
                             }
@@ -330,6 +362,13 @@ private class ChordRowsMeasurePolicy(
     override fun IntrinsicMeasureScope.maxIntrinsicHeight(measurables: List<IntrinsicMeasurable>, width: Int) =
         layouts.height(width, firstSlot, lastSlot, isLastSlot)
 }
+
+/**
+ * How long a touch on a chord cell lasts before the cell is lit, and how long a quicker tap lights it for: the tap
+ * timeout Material waits inside a scrolling container before showing a press (Android's `getTapTimeout()`, which
+ * Compose's common `ViewConfiguration` does not expose), so that a drag the song's scroll takes never lights it.
+ */
+private const val PRESS_HIGHLIGHT_DELAY_MILLIS = 100L
 
 private const val PRESSED_ALPHA = 0.1f
 private val PRESSED_CORNER_RADIUS = 8.dp

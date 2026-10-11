@@ -46,8 +46,9 @@ than scrolling sideways into as few rows as the width allows, shared out between
 the same way). **Every cell opens its own chord's sheet when tapped** (`ChordDiagrams.onChordClicked`), outside read
 only mode (performance mode, or a song read from an archived setlist): the cells are drawn, so the tap is found by
 `chordCellAt` (`ChordRows.kt`, tested; a cell is hit across its row's height, the gaps hit nothing), the cell pressed is
-lit behind it while the finger is down, a screen reader gets one custom action per cell, and the tap is consumed so it
-does not also turn the page — a tap between the cells, or on any of them in read only mode, still does.
+lit behind it once the press has lasted the tap timeout, or briefly on a quicker tap, so a scroll started on a diagram
+never lights it (a mouse press lights it at once), a screen reader gets one custom action per cell, and the tap is
+consumed so it does not also turn the page — a tap between the cells, or on any of them in read only mode, still does.
 
 Which shape a cell draws is `selectShape` (`ChordSelection.kt`, tested): the song's definition, then the player's stored
 shape for the chord's id (`UserPreferences.chordVoicings`, where it still reads as a shape of that instrument), then the
