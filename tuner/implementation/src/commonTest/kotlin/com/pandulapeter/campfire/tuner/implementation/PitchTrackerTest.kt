@@ -127,11 +127,22 @@ class PitchTrackerTest {
     @Test
     fun `a ringing string read an octave away now and then keeps its note`() {
         val tracker = steadyTracker(note = 45)
+        // 12 dB under the strike, where a string has died far enough for the detector to find twice its period.
         val notes = (0 until 12).map { index ->
             val note = if (index % 3 == 2) 45 else 33
-            tracker.step(heard(frequencyOf(note), level = 0.15f), next(), chromatic).reading?.note
+            tracker.step(heard(frequencyOf(note), level = 0.05f), next(), chromatic).reading?.note
         }
         assertEquals(setOf(45), notes.toSet(), "$notes")
+    }
+
+    @Test
+    fun `a first reading in the wrong octave gives way to the one the string holds`() {
+        val tracker = steadyTracker(note = 40)
+        val notes = (0 until 24).map { index ->
+            val note = if (index % 8 == 7) 40 else 28
+            tracker.step(heard(frequencyOf(note)), next(), chromatic).reading?.note
+        }
+        assertEquals(28, notes.last(), "$notes")
     }
 
     @Test

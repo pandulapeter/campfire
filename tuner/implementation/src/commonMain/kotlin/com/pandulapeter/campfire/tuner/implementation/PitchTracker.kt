@@ -34,6 +34,7 @@ internal class PitchTracker {
     private var candidate: Int? = null
     private var candidateCount = 0
     private var isStruck = false
+    private var strikeLevel = 0f
     private var smoothedCents = 0f
     private var reading: TunerReading? = null
     private var lastHeardTime = Long.MIN_VALUE
@@ -49,13 +50,14 @@ internal class PitchTracker {
             attackUntil = timeMillis + ATTACK_MILLIS
             recent.clear()
             isStruck = true
+            strikeLevel = 0f
         }
         previousLevel = estimate.level
         val frequency = estimate.frequency
         if (frequency == null) updateNoiseFloor(estimate.level, elapsed)
         val isHeard = frequency != null && timeMillis >= attackUntil && estimate.level >= noiseFloor * GATE_RATIO
         if (isHeard) {
-            hear(frequency, timeMillis, elapsed, config)
+            hear(frequency, estimate.level, timeMillis, elapsed, config)
         } else if (reading != null && timeMillis - lastHeardTime > HOLD_MILLIS) {
             release()
         }
@@ -72,12 +74,15 @@ internal class PitchTracker {
         silentSince = null
     }
 
-    private fun hear(frequency: Float, timeMillis: Long, elapsed: Long, config: TunerConfig) {
+    private fun hear(frequency: Float, level: Float, timeMillis: Long, elapsed: Long, config: TunerConfig) {
+        if (level > strikeLevel) strikeLevel = level
         val current = target
         // A string that is ringing cannot change its octave, but its reading can: as it dies into the noise the
-        // detector finds twice the period now and then. Only a new strike moves the target by whole octaves; an
-        // octave struck too softly to be heard as one is read once the held note has been let go.
-        if (current != null && !isStruck && isOctaveOf(frequency, current, config)) {
+        // detector finds twice the period now and then, so an octave heard well under the strike's level is ignored,
+        // and only a new strike, or the held note being let go, moves the target by whole octaves. Near the strike's
+        // level an octave is what the string is playing - a first reading of a low string can land an octave up, the
+        // high-pass having taken most of its fundamental - so it is read like any other note.
+        if (current != null && !isStruck && level < strikeLevel * DYING_RATIO && isOctaveOf(frequency, current, config)) {
             if (timeMillis - lastHeardTime <= HOLD_MILLIS) return
             release()
         }
@@ -131,6 +136,7 @@ internal class PitchTracker {
     private fun release() {
         recent.clear()
         isStruck = false
+        strikeLevel = 0f
         target = null
         candidate = null
         candidateCount = 0
@@ -166,6 +172,12 @@ internal class PitchTracker {
 
         /** A level twice the previous window's, 6 dB, is a new note being struck. */
         private const val ONSET_RATIO = 2f
+
+        /**
+         * Half the strike's level, 6 dB under it: below it an answer an octave from the target is the string dying into
+         * the noise, above it a reading of its own.
+         */
+        private const val DYING_RATIO = 0.5f
 
         /** Twice the noise floor is the quietest a note may be and still be read. */
         private const val GATE_RATIO = 2f

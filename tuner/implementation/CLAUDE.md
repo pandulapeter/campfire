@@ -40,8 +40,9 @@ this module. Nothing here reaches the network, and nothing heard is kept beyond 
   allocated once.
 - `PitchTracker` — pure, driven by the time it is handed: the 60 ms after an onset (the level doubling) skipped, the
   median of the last five answers, the cents smoothed over about 80 ms, a target that only changes once a new one has
-  held for three answers, the previous reading held meanwhile, an answer a whole octave from the target ignored until a
-  new onset (a dying string is read at twice its period now and then) or until the held reading is let go, the last
+  held for three answers, the previous reading held meanwhile, an answer a whole octave from the target ignored while
+  the sound is more than 6 dB under its strike (a dying string is read at twice its period now and then), until a new
+  onset or until the held reading is let go; near the strike's level an octave is a reading like any other; the last
   reading held for half a second after the sound falls under twice the noise floor (tracked from the windows with no
   pitch in them: the room, not the strings), in tune once within ±5 cents for 300 ms, `SILENT` after two seconds of
   exact zeros.
