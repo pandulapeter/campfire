@@ -33,7 +33,7 @@ internal class SetlistSongToggleTest {
         size = 0,
     )
 
-    private val selection = listOf("a", "b", "c")
+    private val selection = setOf("a", "b", "c")
 
     @Test
     fun `a song ticked in goes to the end and the others keep their overrides`() = assertEquals(
@@ -81,11 +81,24 @@ internal class SetlistSongToggleTest {
 
     @Test
     fun `a selection box is ticked, empty or half ticked by what the setlist holds of the selection`() {
-        val selection = listOf("a", "b")
+        val selection = setOf("a", "b")
         assertEquals(ToggleableState.Off, selectionBoxState(selection, held = emptySet(), added = emptySet()))
         assertEquals(ToggleableState.Indeterminate, selectionBoxState(selection, held = setOf("a"), added = emptySet()))
         assertEquals(ToggleableState.On, selectionBoxState(selection, held = setOf("a"), added = setOf("b")))
         assertEquals(ToggleableState.On, selectionBoxState(selection, held = setOf("a", "b", "x"), added = emptySet()))
+    }
+
+    @Test
+    fun `a song both held and added counts once`() = assertEquals(
+        ToggleableState.Indeterminate,
+        selectionBoxState(setOf("a", "b"), held = setOf("a"), added = setOf("a")),
+    )
+
+    @Test
+    fun `an added song outside the selection is not counted`() {
+        val selection = setOf("a", "b")
+        assertEquals(ToggleableState.Off, selectionBoxState(selection, held = emptySet(), added = setOf("x")))
+        assertEquals(ToggleableState.Indeterminate, selectionBoxState(selection, held = setOf("a"), added = setOf("x")))
     }
 
     @Test

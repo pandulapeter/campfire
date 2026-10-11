@@ -61,20 +61,24 @@ internal fun SelectionSetlistsSheet(
 ) {
     val setlists by viewModel.setlists.collectAsStateWithLifecycle()
     val selection = dialog.songFileNames
+    val selectionSet = remember(selection) { selection.toHashSet() }
     var query by rememberSaveable { mutableStateOf("") }
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     var heldWhenTapped by rememberSaveable(stateSaver = fileNamesBySetlistSaver) { mutableStateOf(emptyMap<String, Set<String>>()) }
     var added by rememberSaveable(stateSaver = fileNamesBySetlistSaver) { mutableStateOf(emptyMap<String, Set<String>>()) }
     fun stateOf(setlist: Setlist) = selectionBoxState(
-        selection = selection,
-        held = heldOf(heldWhenTapped, setlist, selection),
+        selection = selectionSet,
+        held = heldOf(heldWhenTapped, setlist, selectionSet),
         added = added[setlist.fileName].orEmpty(),
     )
-    val checkedSetlistKeys = setlists.filter { stateOf(it) != ToggleableState.Off }.mapTo(mutableSetOf()) { it.fileName }
+    val boxStates = remember(setlists, selectionSet, heldWhenTapped, added) {
+        setlists.associate { it.fileName to stateOf(it) }
+    }
+    val checkedSetlistKeys = remember(boxStates) { boxStates.filterValues { it != ToggleableState.Off }.keys }
     val refreshKey = userPreferences?.setlistSortingMode to query
     val setlistOrder = rememberChecklistOrder(checkedSetlistKeys, refreshKey)
     val pickableSetlists = remember(setlists, heldWhenTapped) {
-        setlists.filter { setlist -> !setlist.isArchived || heldOf(heldWhenTapped, setlist, selection).isNotEmpty() }
+        setlists.filter { setlist -> !setlist.isArchived || heldOf(heldWhenTapped, setlist, selectionSet).isNotEmpty() }
     }
     val matches = remember(pickableSetlists, query) {
         val normalizedQuery = viewModel.songRenderer.normalizeForSearch(query)
@@ -111,15 +115,15 @@ internal fun SelectionSetlistsSheet(
                     key = { it.fileName },
                     listState = listState,
                 ) { setlist ->
-                    val held = heldOf(heldWhenTapped, setlist, selection)
+                    val held = heldOf(heldWhenTapped, setlist, selectionSet)
                     val addedHere = added[setlist.fileName].orEmpty()
                     CheckboxListItem(
                         modifier = listItemAnimation(listState),
                         title = setlist.title,
-                        state = stateOf(setlist),
+                        state = boxStates[setlist.fileName] ?: stateOf(setlist),
                         isEnabled = !setlist.isArchived && held.size < selection.size,
                         onClick = {
-                            heldWhenTapped = withHeldRecorded(heldWhenTapped, setlist, selection)
+                            heldWhenTapped = withHeldRecorded(heldWhenTapped, setlist, selectionSet)
                             val heldHere = heldWhenTapped.getValue(setlist.fileName)
                             if (addedHere.isEmpty()) {
                                 viewModel.addSongsToSetlist(songFileNames = selection, setlistFileName = setlist.fileName)
