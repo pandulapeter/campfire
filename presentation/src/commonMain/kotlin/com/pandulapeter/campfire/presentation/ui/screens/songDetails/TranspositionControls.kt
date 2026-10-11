@@ -31,6 +31,7 @@ internal fun TranspositionControls(
     transposition: Int,
     /** The key the song sounds in after transposing, shown next to the amount when the file declares one. */
     key: String? = null,
+    isDefault: Boolean = transposition == 0,
     fontScale: Float = 1f,
     height: Dp = STEPPER_HEIGHT,
     onStep: (semitones: Int) -> Unit,
@@ -40,7 +41,7 @@ internal fun TranspositionControls(
     fontScale = fontScale,
     height = height,
     value = transpositionLabel(transposition, key),
-    isDefault = transposition == 0,
+    isDefault = isDefault,
     decreaseIcon = painterResource(Res.drawable.ic_subtract),
     decreaseLabel = stringResource(Res.string.song_details_transpose_down),
     canDecrease = true,

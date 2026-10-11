@@ -142,6 +142,26 @@ class SongMetadataTest {
         assertSame(body, withMetadataSection(body, ChordProMetadata(), shouldShowChords = false, shouldShowTempo = false, isSongInfoShown = false, readsCapoAndTime = true))
     }
 
+    @Test
+    fun `the keyboard names no capo, not even in read only mode`() {
+        val body = listOf(verse)
+        assertEquals(
+            listOf(RenderSection.Metadata(metadata = ChordProMetadata(key = "A", time = "6/8"), readsCapoAndTime = true), verse),
+            withMetadataSection(
+                body,
+                ChordProMetadata(key = "A", capo = 3, time = "6/8"),
+                shouldShowChords = true,
+                shouldShowCapo = false,
+                isSongInfoShown = false,
+                readsCapoAndTime = true,
+            ),
+        )
+        assertEquals(
+            listOf(RenderSection.Metadata(metadata = ChordProMetadata(key = "A")), verse),
+            withMetadataSection(body, ChordProMetadata(key = "A", capo = 3), shouldShowChords = true, shouldShowCapo = false, isSongInfoShown = false),
+        )
+    }
+
     private fun shownMetadata(metadata: ChordProMetadata, readsCapoAndTime: Boolean = false) =
         (withMetadataSection(emptyList(), metadata, shouldShowChords = true, isSongInfoShown = false, readsCapoAndTime = readsCapoAndTime)
             .firstOrNull() as? RenderSection.Metadata)?.metadata

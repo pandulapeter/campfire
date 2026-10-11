@@ -19,7 +19,6 @@ import com.pandulapeter.campfire.chordpro.model.GridToken
 import com.pandulapeter.campfire.chordpro.model.SectionType
 import com.pandulapeter.campfire.data.model.domain.PrintSettings
 import com.pandulapeter.campfire.presentation.ui.chords.ChordDiagramGeometry
-import com.pandulapeter.campfire.presentation.ui.chords.secondaryName
 import com.pandulapeter.campfire.presentation.ui.songLayout.alignedGridBars
 import com.pandulapeter.campfire.presentation.ui.songLayout.areAll
 import com.pandulapeter.campfire.presentation.ui.songLayout.balancedRowStarts
@@ -293,7 +292,7 @@ private class PrintLayouter(
      */
     private fun diagramNameLines(chord: PrintChord): List<List<DiagramNamePart>> {
         val nameWidth = measure(chord.name, chordStyle)
-        val secondary = chord.secondaryName
+        val secondary = chord.letterName
         if (nameWidth <= columnWidth && (secondary == null || nameWidth + measure(" $secondary", detailStyle) <= columnWidth)) {
             return listOf(
                 listOfNotNull(

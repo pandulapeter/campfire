@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.playing
 
 import androidx.compose.runtime.Immutable
 import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.data.model.domain.UserPreferences
 
 /** Every override of how a song is played, as one value the screens that read all three collect once. */
 @Immutable
@@ -34,3 +35,22 @@ internal fun songPlaybackOf(song: Song, setlistFileName: String?, overrides: Pla
     capo = effectiveCapo(song = song, setlistFileName = setlistFileName, capos = overrides.capos),
     tempo = effectiveTempo(song = song, setlistFileName = setlistFileName, tempos = overrides.tempos),
 )
+
+/**
+ * Whether the capo is read as a transposition rather than as a fret: on the keyboard, which has no capo to put on, so
+ * its player reads every chord as the one that sounds, see [withCapoSounding].
+ */
+internal val UserPreferences?.readsCapoAsTransposition get() = this?.chordInstrument == UserPreferences.ChordInstrument.KEYBOARD
+
+/**
+ * [this] as an instrument without a capo plays it (see [readsCapoAsTransposition]): the frets the capo raises the song by
+ * are semitones of the transposition instead, wrapped around the octave as the stepper wraps, so the chords on the page,
+ * their diagrams and the key next to the stepper are the ones the band hears, and no capo is left to read.
+ */
+internal fun SongPlayback.withCapoSounding() = copy(
+    transposition = soundingTransposition(transposition, capo.fret),
+    capo = EffectiveCapo(fret = 0, songFret = 0),
+)
+
+/** The transposition that takes a song played at [transposition] and capoed at [capo] to the chords that sound. */
+internal fun soundingTransposition(transposition: Int, capo: Int) = wrapTransposition(transposition + capo)

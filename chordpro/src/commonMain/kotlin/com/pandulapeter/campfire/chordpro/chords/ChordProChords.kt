@@ -15,7 +15,6 @@ import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.chordpro.model.GridToken
-import com.pandulapeter.campfire.chordpro.syntax.ChordProChordRewriter
 import com.pandulapeter.campfire.chordpro.syntax.ChordProDirectives
 import com.pandulapeter.campfire.chordpro.syntax.ChordProTokens
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary
@@ -200,17 +199,6 @@ public object ChordProChords {
         is ChordProLine.Grid -> tokens.filterIsInstance<GridToken.Chord>().flatMap { ChordProTokens.cellChords(it.name) }
         is ChordProLine.Tab -> ChordProTabTransposer.chordNames(listOf(text))
         ChordProLine.Blank -> emptyList()
-    }
-
-    /**
-     * [name], a chord as shown in [notation], moved by [semitones] and spelled with flats or sharps as [preferFlats]
-     * says, in the same notation, or in letters for a numbering; a word that is no chord is returned as it is.
-     */
-    public fun transposedName(name: String, semitones: Int, notation: ChordNotation = ChordNotation.STANDARD, preferFlats: Boolean = false): String {
-        val move = { chord: String ->
-            ChordProNotation.shownName(ChordProTransposer.transposeChord(ChordProNotation.read(chord, isGerman = notation == ChordNotation.GERMAN), semitones, preferFlats), notation)
-        }
-        return if (notation == ChordNotation.LATIN) move(name) else ChordProChordRewriter.keepingLowercaseMinors(move)(name)
     }
 
     /** The pitch class of a note as written: a capital or lowercase letter, `H` as `B`, and an accidental or none. */

@@ -95,7 +95,7 @@ internal fun prepareSongLyrics(
         shouldShowChords = shouldShowChords,
         notation = notation,
         chords = if (shouldShowChords && chordInstrument != null) {
-            songChordsOf(standardSong, notation, chordInstrument, standardSong.metadata.capo ?: 0, searchesShapes = searchesShapes)
+            songChordsOf(standardSong, notation, chordInstrument, searchesShapes = searchesShapes)
         } else {
             emptyList()
         },

@@ -100,13 +100,14 @@ internal fun SongDisplaySection(
     ChordInstrumentChoice(
         selected = userPreferences?.chordInstrument,
         notation = notation,
-        isEnabled = isChordSpellingEnabled && userPreferences?.areChordDiagramsEnabled != false,
+        // Enabled with the diagrams switched off too, since the keyboard also reads the capo as a transposition.
+        isEnabled = isChordSpellingEnabled,
         onSelected = viewModel::setChordInstrument,
     )
 }
 
 /**
- * The instrument the chord diagrams are drawn for, as a list for the reason the notation is one: the strings under each
+ * The instrument the chord diagrams are drawn for, and on the keyboard what reads the capo as a transposition, as a list for the reason the notation is one: the strings under each
  * name are what say that the shapes are for that instrument in its standard tuning, so a player whose instrument is not
  * one of these picks Other rather than reading diagrams their strings do not match. The strings are named in the chord
  * [notation] picked above, as the diagrams' chords are, rather than in the app's language.

@@ -44,7 +44,7 @@ internal class ChordCellLayouts(
     }
     val secondNames by lazy(LazyThreadSafetyMode.NONE) {
         cells.map { cell ->
-            (cell.soundingName ?: cell.letterName)?.let { textMeasurer.measure(AnnotatedString(it), chordStyle, maxLines = 1, softWrap = false) }
+            cell.letterName?.let { textMeasurer.measure(AnnotatedString(it), chordStyle, maxLines = 1, softWrap = false) }
         }
     }
     val nameGap = with(density) { NAME_GAP.roundToPx() }

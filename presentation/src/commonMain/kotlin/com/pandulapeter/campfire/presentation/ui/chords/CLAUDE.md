@@ -28,7 +28,8 @@ the shape the app shows it with on the instrument in `SongLyricsInputs`, and the
 instrument where there is one that is drawn — one a transposition moved only while a hand can hold it; a song of more
 than 48 chords is a songbook and gets none).
 
-On the keyboard a capoed song's chords are the ones that sound, named after the page's. `SongLyrics`, handed
+On the keyboard the page is already in the chords that sound (see How a song is played on the keyboard in
+`ui/CLAUDE.md`), so the diagrams have no capo of their own to count. `SongLyrics`, handed
 `ChordDiagrams`, puts `RenderSection.Chords` after the metadata section, keyed as one section whatever it holds (each of
 its chunks by its slot, so a shape chosen or the fold composes nothing afresh but the rows that come back), and **cut
 between its rows of diagrams like any section**: it is drawn as slots (`chordSlotCount`, up to `MAX_SONG_CHORDS`, 48),
@@ -89,7 +90,7 @@ A definition for another instrument is not used on the page, nor translated: a g
 on a ukulele, and a keyboard plays the chord's own notes. A definition follows its chord through every transposition —
 the reader's, the file's `{transpose}` and the editor's transpose action, which rewrites the line in place — along the
 neck, in whichever octave a hand can hold it, and one a transposition left needing a fifth finger gives way to the
-player's shape. On the keyboard a capoed song draws the chords that sound. The editor writes definitions (its Chord
+player's shape — the keyboard's capo, counted into the transposition there, included. The editor writes definitions (its Chord
 shape button), marks one it cannot read and draws every one in its preview. The PDF prints them under each song's
 heading where the export screen's Chord diagrams box is ticked (as every option is for a new user; offered only while
 the feature is on and a song has a chord, and only with the chords printed), drawn as the song details screen draws

@@ -113,7 +113,7 @@ public object ChordProTransposer {
     )
 
     /** Whether flats should be preferred for the key this song arrives in after the transposition. */
-    public fun prefersFlats(song: ChordProSong, semitones: Int): Boolean {
+    internal fun prefersFlats(song: ChordProSong, semitones: Int): Boolean {
         val names = writtenChordNames(song)
         val key = song.metadata.key?.let(::keyOf)
             ?: names.firstNotNullOfOrNull { name -> name.takeIf(ChordProChordNames::isChordName)?.let(::keyOf) }

@@ -224,16 +224,6 @@ class ChordProChordsTest {
         assertEquals(listOf("Am", "G", "C", "D", "E7", "F", "Em"), ChordProChords.namesIn(song))
     }
 
-    @Test
-    fun `a chord name is moved in the notation it is shown in`() {
-        assertEquals("A", ChordProChords.transposedName("G", 2))
-        assertEquals("Bbm7", ChordProChords.transposedName("Am7", 1, preferFlats = true))
-        assertEquals("H", ChordProChords.transposedName("A", 2, ChordNotation.GERMAN))
-        assertEquals("B", ChordProChords.transposedName("A", 1, ChordNotation.GERMAN, preferFlats = true))
-        assertEquals("d/f#", ChordProChords.transposedName("c/e", 2))
-        assertEquals("N.C.", ChordProChords.transposedName("N.C.", 2))
-    }
-
     private val chordNameFixture = """
         {title: Fixture}
         {key: G}

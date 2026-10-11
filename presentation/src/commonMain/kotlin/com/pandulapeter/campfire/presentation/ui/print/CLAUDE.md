@@ -50,7 +50,8 @@ its own is broken across lines like any other text; their names are `PrintText`s
 back by the importer they would be a line of chords above the song.
 
 Under the heading a row of what the song names of how it is played (`playingDetails`): the key, the
-`PrintSong.transposition` the viewer prints it in and a capo other than 0 with `showKey`, and the tempo (through
+`PrintSong.transposition` the viewer prints it in and a capo other than 0 with `showKey` (on the keyboard the capo
+counted into that transposition and none printed, as the screen shows it, see `ui/CLAUDE.md`), and the tempo (through
 `PrintLabels.tempoValue`, "96 BPM") and the time signature with `showTempo`, which also prints a change of either
 further down; `showMetadata` is the artist and a setlist's date and description alone. The values are set three spaces
 apart, which is what lets the importer read them back one by one. The screen lays out `PrintSettings.withinFeatures`

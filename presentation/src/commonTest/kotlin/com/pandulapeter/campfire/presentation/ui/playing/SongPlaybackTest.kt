@@ -10,8 +10,10 @@
 package com.pandulapeter.campfire.presentation.ui.playing
 
 import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class SongPlaybackTest {
@@ -68,6 +70,25 @@ class SongPlaybackTest {
         val playback = songPlaybackOf(song, setlistFileName = null, overrides = same)
         assertTrue(playback.capo.isDefault)
         assertTrue(playback.tempo.isDefault)
+    }
+
+    @Test
+    fun `the keyboard reads the capo as a transposition, wrapped around the octave`() {
+        val playback = songPlaybackOf(song, setlistFileName = null, overrides = overrides).withCapoSounding()
+        assertEquals(-4, playback.transposition)
+        assertEquals(0, playback.capo.fret)
+        assertTrue(playback.capo.isDefault)
+        assertEquals(120, playback.tempo.bpm)
+        assertEquals(2, songPlaybackOf(song, setlistFileName = "other.setlist.json", overrides = overrides).withCapoSounding().transposition)
+    }
+
+    @Test
+    fun `only the keyboard reads the capo as a transposition`() {
+        assertTrue(testPreferences().copy(chordInstrument = UserPreferences.ChordInstrument.KEYBOARD).readsCapoAsTransposition)
+        listOf(UserPreferences.ChordInstrument.GUITAR, UserPreferences.ChordInstrument.UKULELE, UserPreferences.ChordInstrument.OTHER).forEach {
+            assertFalse(testPreferences().copy(chordInstrument = it).readsCapoAsTransposition)
+        }
+        assertFalse(null.readsCapoAsTransposition)
     }
 
     private companion object {

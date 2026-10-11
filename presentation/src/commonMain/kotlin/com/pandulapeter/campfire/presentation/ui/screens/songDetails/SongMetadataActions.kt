@@ -37,6 +37,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.metronome.timeSignatureOrDefault
 import com.pandulapeter.campfire.presentation.ui.playing.SongPlayback
+import com.pandulapeter.campfire.presentation.ui.playing.soundingTransposition
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -45,6 +46,9 @@ import org.jetbrains.compose.resources.painterResource
  * values are read rather than set.
  *
  * @param playback Passed in rather than read here, since the screen already holds it for the page.
+ * @param readsCapoAsTransposition True on the keyboard, which has no capo: there is no capo stepper then, and the
+ *   transposition reads the amount the page's chords are moved by with the capo counted in, while it still steps and resets
+ *   only the transposition's own override, see `withCapoSounding`.
  * @param shouldShowChords False with the chords switched off, which takes the transposition and the capo with them.
  * @param shouldShowTempo False with the metronome switched off, which takes the tempo and the time signature with it.
  * @return Null where both are switched off, which leaves the song nothing to set.
@@ -55,6 +59,7 @@ internal fun rememberSongPlayingControls(
     song: Song,
     setlistFileName: String?,
     playback: SongPlayback,
+    readsCapoAsTransposition: Boolean,
     chordSpelling: UserPreferences.ChordSpelling,
     shouldShowChords: Boolean,
     shouldShowTempo: Boolean,
@@ -62,10 +67,11 @@ internal fun rememberSongPlayingControls(
     if (!shouldShowChords && !shouldShowTempo) return null
     val (transposition, capo, tempo) = playback
     val canTranspose = shouldShowChords && song.hasChords
-    // The key the transposition alone takes the song to, which is what the chords on the page spell: the capo is the
-    // stepper next to this one and moves the sounding key without moving a chord, so counting it in here would have
-    // this control naming a key that is written nowhere in the song. The app bar's is the sounding one.
-    val key = if (canTranspose) viewModel.songRenderer.renderKey(song = song, transposition = transposition, capo = 0, spelling = chordSpelling) else null
+    val shownTransposition = if (readsCapoAsTransposition) soundingTransposition(transposition, capo.fret) else transposition
+    // The key the page's chords are spelled in: without the capo, which is the stepper next to this one and moves the
+    // sounding key without moving a chord, so counting it in here would have this control naming a key that is written
+    // nowhere in the song — unless there is no capo stepper, and the page is the sounding key itself.
+    val key = if (canTranspose) viewModel.songRenderer.renderKey(song = song, transposition = shownTransposition, capo = 0, spelling = chordSpelling) else null
     val timeSignature = song.timeSignatureOrDefault.toString()
     val fileName = song.fileName
     return remember(
@@ -75,7 +81,9 @@ internal fun rememberSongPlayingControls(
         canTranspose,
         shouldShowChords,
         shouldShowTempo,
+        readsCapoAsTransposition,
         transposition,
+        shownTransposition,
         key,
         capo,
         tempo,
@@ -85,7 +93,8 @@ internal fun rememberSongPlayingControls(
         SongPlayingControls(
             key = if (canTranspose) {
                 SongKeyControl(
-                    transposition = transposition,
+                    transposition = shownTransposition,
+                    isDefault = transposition == 0,
                     key = key,
                     onStep = { viewModel.stepTransposition(fileName, setlistFileName, it) },
                     onReset = { viewModel.resetTransposition(fileName, setlistFileName) },
@@ -93,7 +102,7 @@ internal fun rememberSongPlayingControls(
             } else {
                 null
             },
-            capo = if (shouldShowChords) {
+            capo = if (shouldShowChords && !readsCapoAsTransposition) {
                 SongCapoControl(
                     capo = capo,
                     onStep = { viewModel.stepCapo(fileName, setlistFileName, it) },

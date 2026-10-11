@@ -12,29 +12,24 @@ package com.pandulapeter.campfire.presentation.ui.chords
 import androidx.compose.runtime.Immutable
 import com.pandulapeter.campfire.chordpro.ChordNotation
 import com.pandulapeter.campfire.chordpro.chords.ChordProChords
-import com.pandulapeter.campfire.chordpro.chords.ChordProDefinitions
 import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
-import com.pandulapeter.campfire.chordpro.chords.ChordProTransposer
 import com.pandulapeter.campfire.chordpro.chords.ChordVoicings
 import com.pandulapeter.campfire.chordpro.model.Chord
 import com.pandulapeter.campfire.chordpro.model.ChordDefinition
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.chordpro.model.ChordVoicing
-import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 
 /**
  * A chord of a song as its Chords section lists it.
  *
  * @property name The chord as the page names it, transposed and in the reader's notation.
- * @property chord The notes the diagram is of: the page's chord, or on the keyboard of a capoed song the chord that
- *   sounds, since a keyboard has no capo to play the page's shape above.
- * @property soundingName The name of [chord] where it is not the one the page shows, which the cell names after it.
+ * @property chord The notes the diagram is of. On the keyboard a capoed song's page is already in the chords that
+ *   sound (see `withCapoSounding`), so these are the page's on every instrument.
  * @property letterName The page's chord in letters where the page counts it as a step of the key, which the cell names
  *   after it too: a `6-` says nothing about the shape under it to a player who has not counted the key out yet.
- * @property spelling The chord the notes are spelled from, in the standard notation: the page's, or on a capoed
- *   keyboard the one that sounds.
+ * @property spelling The chord the notes are spelled from, in the standard notation.
  * @property defaultShape The shape [chord] is shown with where nothing else says how it is played, or null while
  *   [isShapePending].
  * @property definition The shape the song itself gives the chord on the instrument, where it gives one that is drawn,
@@ -46,16 +41,12 @@ import com.pandulapeter.campfire.data.model.domain.UserPreferences
 internal data class SongChord(
     val name: String,
     val chord: Chord,
-    val soundingName: String? = null,
     val letterName: String? = null,
     val spelling: String? = null,
     val defaultShape: ChordVoicing? = null,
     val definition: ChordDefinition? = null,
     val isShapePending: Boolean = false,
 )
-
-/** What a cell names after the chord the page shows: the chord that sounds where it differs, or else its letters. */
-internal val SongChord.secondaryName get() = soundingName ?: letterName
 
 /**
  * The chords of [song], which is already transposed but still in the standard notation, each once by the name the page
@@ -67,9 +58,6 @@ internal val SongChord.secondaryName get() = soundingName ?: letterName
  * The chords are read before the notation is applied rather than out of what the page shows, since in a numbering a step
  * of the key says nothing about the notes without the stretch of the song it stands in; a chord played on both sides of
  * a modulation is one diagram, named by the step it is first played on.
- *
- * On the keyboard [capo], held to the app's capo range, moves every chord to the one that sounds, see [SongChord.chord],
- * and the keys a definition presses with it.
  *
  * A chord is matched to the song's definition for the instrument by its name, which the transposition renames the
  * definition to as well, or else by the notes the two names stand for. A definition as the file writes it is drawn
@@ -84,7 +72,6 @@ internal fun songChordsOf(
     song: ChordProSong,
     notation: ChordNotation,
     instrument: ChordInstrument,
-    capo: Int = 0,
     searchesShapes: Boolean = true,
 ): List<SongChord> {
     val shownNames = ChordProNotation.shownNames(song, notation)
@@ -98,21 +85,14 @@ internal fun songChordsOf(
         .mapNotNull { name -> ChordProChords.parse(name)?.let { chord -> Triple(name, chord, definitionOf(name, chord)) } }
         .distinctBy { (_, chord, definition) -> chord to definition?.let { it.voicing to it.movedBy } }
     if (entries.size > MAX_SONG_CHORDS) return emptyList()
-    // A file may say any capo, but the app's capo stops at the twelfth fret, as its control and the sheet read it.
-    val soundingShift = if (instrument == ChordInstrument.KEYBOARD) capo.coerceIn(Song.CAPO_RANGE) % 12 else 0
-    val preferFlats = soundingShift != 0 && ChordProTransposer.prefersFlats(song, soundingShift)
-    return entries.map { (name, chord, written) ->
-        val sounding = if (soundingShift == 0) chord else chord.copy(root = (chord.root + soundingShift) % 12, bass = chord.bass?.let { (it + soundingShift) % 12 })
-        val definition = written?.let { if (soundingShift == 0) it else ChordProDefinitions.transposed(it, soundingShift) { name -> name } }
-        val isShapePending = definition == null && !searchesShapes && ChordVoicings.needsSearch(sounding, instrument)
-        val spelling = if (soundingShift == 0) name else ChordProChords.transposedName(name, soundingShift, preferFlats = preferFlats)
+    return entries.map { (name, chord, definition) ->
+        val isShapePending = definition == null && !searchesShapes && ChordVoicings.needsSearch(chord, instrument)
         SongChord(
             name = shownNames.getValue(name),
-            chord = sounding,
-            soundingName = if (soundingShift == 0) null else ChordProNotation.shownName(spelling, notation),
+            chord = chord,
             letterName = name.takeIf { notation.isNumbering && shownNames[name] != name },
-            spelling = spelling,
-            defaultShape = if (definition == null && !isShapePending) ChordVoicings.default(sounding, instrument) else null,
+            spelling = name,
+            defaultShape = if (definition == null && !isShapePending) ChordVoicings.default(chord, instrument) else null,
             definition = definition,
             isShapePending = isShapePending,
         )

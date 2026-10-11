@@ -15,7 +15,6 @@ import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.presentation.ui.chords.ChordDiagramGeometry
 import com.pandulapeter.campfire.presentation.ui.chords.chordDiagramGeometryOf
 import com.pandulapeter.campfire.presentation.ui.chords.emptyChordDiagramGeometryOf
-import com.pandulapeter.campfire.presentation.ui.chords.secondaryName
 import com.pandulapeter.campfire.presentation.ui.chords.selectShape
 import com.pandulapeter.campfire.presentation.ui.chords.songChordsOf
 import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
@@ -54,12 +53,12 @@ internal data class PrintSong(
 )
 
 /**
- * One chord diagram of a [PrintSong]: the chord as the page names it, the one it sounds as where that differs or else
- * its letters where the page counts it ([SongChord.secondaryName]), and its shape.
+ * One chord diagram of a [PrintSong]: the chord as the page names it, its letters where the page counts it
+ * ([SongChord.letterName]), and its shape.
  */
 internal data class PrintChord(
     val name: String,
-    val secondaryName: String? = null,
+    val letterName: String? = null,
     val geometry: ChordDiagramGeometry,
 )
 
@@ -74,10 +73,10 @@ internal fun printChordsOf(
     notation: ChordNotation,
     instrument: ChordInstrument,
     storedShapes: Map<String, String>,
-): List<PrintChord> = songChordsOf(song, notation, instrument, song.metadata.capo ?: 0).map { chord ->
+): List<PrintChord> = songChordsOf(song, notation, instrument).map { chord ->
     PrintChord(
         name = chord.name,
-        secondaryName = chord.secondaryName,
+        letterName = chord.letterName,
         geometry = selectShape(chord, instrument, storedShapes).shape?.let { chordDiagramGeometryOf(it, instrument, chord.chord.root) }
             ?: emptyChordDiagramGeometryOf(instrument),
     )

@@ -391,8 +391,21 @@ app bar is about the song rather than about how it is played — the click, the 
 opening the About the song sheet — with the text size, which is the reader's own, at the end of that menu. **The key the
 band actually hears is named in the app bar**, after the artist and the way a song card names it: the transposition
 *and* the capo applied, so it is the key the song sounds in rather than the one the chords on the page spell, which is
-the Transposition control's — the two read differently wherever the capo is not zero. The tempo the click would play at
+the Transposition control's — the two read differently wherever the capo is not zero, but on the keyboard. The tempo the click would play at
 follows it there, as it does on a card, and inside a setlist the song's duration after that, as its card there has it.
+
+### How a song is played on the keyboard
+
+**On the keyboard the capo is a transposition** (`readsCapoAsTransposition`, the Songs tab's Instrument set to
+Keyboard, whatever the Chord diagrams switch says): a keyboard has no capo, so the song details screen has no capo
+stepper and names no capo, read only mode's line included, and counts the capo's frets into the transposition instead
+(`withCapoSounding`, wrapped around the octave like the stepper), so that the chords over the lyrics, the diagrams, the
+Chord shapes sheet and the key next to the stepper are all the sounding key the app bar names. The stepper still steps
+and resets only the transposition's own override, and reads as overridden only while there is one, so a capoed song with
+nothing stepped reads the capo's amount, plainly. The capo overrides are still kept, read and stepped by the other
+instruments, and the Song defaults sheet still edits the file's `{capo}`. The PDF follows the screen (the capo the
+screen counts, the library's included, counted into the printed transposition, and no capo printed); the guitar, the
+ukulele and Other are unchanged, the capo a stepper of its own that moves the sounding key without moving a chord.
 
 ## Haptics
 
@@ -425,8 +438,9 @@ by one. In order: **Read only** (`isPerformanceModeEnabled`, first because it de
 allowed to do, and called performance mode in the code); **Chords** (`areChordsEnabled`, stored as the inverse
 `isLyricsOnlyModeEnabled` the lyrics only switch was), off taking with the chords the key, the transposition and the
 capo wherever a song is read, and leaving the chord spelling rows of the Songs tab disabled; **Chord diagrams**
-(`areChordDiagramsEnabled`), disabled while the chords are off, off taking the Chords section off every song and leaving
-the Songs tab's Instrument row disabled, the chosen shapes kept; **Metronome** (`isMetronomeEnabled`), off taking its
+(`areChordDiagramsEnabled`), disabled while the chords are off, off taking the Chords section off every song, the
+chosen shapes kept (the Songs tab's Instrument row stays enabled, since the keyboard reads the capo as a transposition
+whether or not diagrams are drawn); **Metronome** (`isMetronomeEnabled`), off taking its
 tab, the song details screen's click button and panel, its M key and the tempo and the time signature wherever a song is
 read; **Tuner** (`isTunerEnabled`), off taking its tab and the song details screen's way to the tuner sheet, and with
 them every way the app could ask for the microphone; **Setlists** (`areSetlistsEnabled`), off taking their tab and every way of putting a song into one, while setlist

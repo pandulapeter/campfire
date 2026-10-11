@@ -45,7 +45,6 @@ internal data class ChordDiagrams(
 internal fun chordCellsOf(chords: List<SongChord>, instrument: ChordInstrument, storedShapes: Map<String, String>) = chords.map { chord ->
     ChordCell(
         name = chord.name,
-        soundingName = chord.soundingName,
         letterName = chord.letterName,
         instrument = instrument,
         root = chord.chord.root,
@@ -60,7 +59,6 @@ internal fun chordCellsOf(chords: List<SongChord>, instrument: ChordInstrument, 
 internal fun definitionCellsOf(song: ChordProSong, notation: ChordNotation) = song.metadata.definitions.map { definition ->
     ChordCell(
         name = definition.name,
-        soundingName = null,
         instrument = definition.instrument,
         root = ChordProChords.parse(definition.name, notation)?.root ?: 0,
         selection = SelectedShape(definition.voicing, SelectedShape.Source.DEFINED, definition.movedBy),

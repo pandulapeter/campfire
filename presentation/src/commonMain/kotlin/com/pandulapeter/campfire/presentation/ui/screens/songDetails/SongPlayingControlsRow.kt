@@ -72,6 +72,7 @@ internal fun SongPlayingControlsRow(
             ) {
                 TranspositionControls(
                     transposition = key.transposition,
+                    isDefault = key.isDefault,
                     key = key.key,
                     fontScale = fontScale,
                     height = height,

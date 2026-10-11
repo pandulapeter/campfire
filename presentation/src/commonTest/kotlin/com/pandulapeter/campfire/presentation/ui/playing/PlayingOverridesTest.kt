@@ -31,7 +31,7 @@ import kotlin.test.assertNull
 @OptIn(ExperimentalCoroutinesApi::class)
 class PlayingOverridesTest {
 
-    private val preferences = MutableStateFlow(preferences())
+    private val preferences = MutableStateFlow(testPreferences())
     private val setlists = MutableStateFlow(listOf(setlist(Setlist.Entry(songFileName = SONG))))
     private lateinit var sink: MessageSink
 
@@ -140,29 +140,5 @@ class PlayingOverridesTest {
         const val SONG = "song.cho"
         const val SETLIST = "set.setlist.json"
         const val SONG_TEMPO = 120
-
-        fun preferences() = UserPreferences(
-            isPerformanceModeEnabled = false,
-            shouldShowArchivedSetlists = false,
-            areChordsEnabled = true,
-            areSetlistsEnabled = true,
-            isMetronomeEnabled = true,
-            fontScale = UserPreferences.DEFAULT_FONT_SCALE,
-            sortingMode = UserPreferences.SortingMode.BY_TITLE,
-            setlistSortingMode = UserPreferences.SetlistSortingMode.BY_DATE,
-            uiMode = UserPreferences.UiMode.SYSTEM_DEFAULT,
-            themeColor = UserPreferences.ThemeColor.CAMPFIRE,
-            isAppIconThemed = true,
-            isCoverArtEnabled = true,
-            shouldNumberSections = true,
-            language = UserPreferences.Language.SYSTEM_DEFAULT,
-            chordSpelling = UserPreferences.ChordSpelling.Default,
-            transpositions = emptyMap(),
-            foldedSections = emptyMap(),
-            tagMatchMode = UserPreferences.MatchMode.ANY,
-            languageMatchMode = UserPreferences.MatchMode.ANY,
-            tagSortingMode = UserPreferences.LabelSortingMode.BY_USAGE,
-            languageSortingMode = UserPreferences.LabelSortingMode.BY_USAGE,
-        )
     }
 }

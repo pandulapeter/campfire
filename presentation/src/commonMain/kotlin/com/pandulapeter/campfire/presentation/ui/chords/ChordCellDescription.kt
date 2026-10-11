@@ -18,17 +18,14 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_diagram
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_diagram_none
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_letters
-import com.pandulapeter.campfire.presentation.resources.song_details_chord_sounding
 import com.pandulapeter.campfire.presentation.ui.components.textResource
 
 /**
- * How a chord is read out: its name, the one it sounds as where that differs or else its letters where the page counts
- * it, and its shape as it would be dictated.
+ * How a chord is read out: its name, its letters where the page counts it, and its shape as it would be dictated.
  */
 @Composable
 internal fun chordCellDescription(cell: ChordCell): String {
-    val name = cell.soundingName?.let { textResource(Res.string.song_details_chord_sounding, cell.name, it) }
-        ?: cell.letterName?.let { textResource(Res.string.song_details_chord_letters, cell.name, it) }
+    val name = cell.letterName?.let { textResource(Res.string.song_details_chord_letters, cell.name, it) }
         ?: cell.name
     val shape = cell.selection.shape ?: return textResource(Res.string.song_details_chord_diagram_none, name)
     return textResource(Res.string.song_details_chord_diagram, name, spokenShape(shape))

@@ -24,8 +24,8 @@ color, the sepia slider, language), Features (the switches that take whole parts
 art), Songs (how a song is read - section numbers, the chord spelling — the notation as a list of five radio rows,
 Standard, German, Latin, Nashville numbers and Roman numerals, each with an example under it, since five names do not
 fit a row of segments on a phone, and the accidentals, which stay enabled under a numbering since they still spell its
-key — and the instrument the chord diagrams are drawn for, disabled with the chords switched off, and the instrument
-with the diagrams too; the accidentals' examples and the instruments' strings are written in the notation picked there,
+key — and the instrument the chord diagrams are drawn for, disabled with the chords switched off but not with the
+diagrams, since the keyboard also reads the capo as a transposition; the accidentals' examples and the instruments' strings are written in the notation picked there,
 never in the language), Library (the sync section on an `ElevatedCard`, the one card in the app, then what the library
 holds and what can be done with it — its song and setlist counts and the cover cache are each a row that deletes what it
 counts, the cache behind an ordinary confirmation and the library behind `DeleteLibraryDialog`, which wants `DELETE`

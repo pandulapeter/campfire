@@ -26,7 +26,7 @@ import com.pandulapeter.campfire.presentation.ui.playing.EffectiveTempo
 internal class SongPlayingControls(
     /** Null for a song with nothing to transpose, whose key is then only read, and with the chords switched off. */
     val key: SongKeyControl?,
-    /** Null with the chords switched off. */
+    /** Null with the chords switched off, and on the keyboard, which reads the capo as a transposition. */
     val capo: SongCapoControl?,
     /** Null with the metronome switched off. */
     val tempo: SongTempoControl?,
@@ -37,10 +37,16 @@ internal class SongPlayingControls(
     val timeSignature: String?,
 )
 
-/** The transposition, which the key reads: the amount, the key it takes the song to, and the stepper's two ends. */
+/**
+ * The transposition, which the key reads: the amount, the key it takes the song to, and the stepper's two ends.
+ *
+ * @param isDefault Whether nothing overrides the transposition, which the amount alone does not say where it counts a
+ *   capo in, see `rememberSongPlayingControls`.
+ */
 @Immutable
 internal class SongKeyControl(
     val transposition: Int,
+    val isDefault: Boolean,
     val key: String?,
     val onStep: (semitones: Int) -> Unit,
     val onReset: () -> Unit,

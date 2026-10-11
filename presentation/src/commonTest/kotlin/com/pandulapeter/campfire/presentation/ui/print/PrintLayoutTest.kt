@@ -544,10 +544,10 @@ internal class PrintLayoutTest {
     @Test fun `chord diagram names stay inside their column`() = runTest {
         val settings = PrintSettings(showChordDiagrams = true, columns = 4, fontSize = 20, marginMm = 25)
         val chords = listOf(
-            guitarChord("b7sus4").copy(secondaryName = "Bbsus4"),
+            guitarChord("b7sus4").copy(letterName = "Bbsus4"),
             guitarChord("C#m7b5/G#"),
             guitarChord("1"),
-            guitarChord("4").copy(secondaryName = "F"),
+            guitarChord("4").copy(letterName = "F"),
         )
         val document = layout(source(song(lyrics(1)).copy(chords = chords)), settings)
         val page = document.pages.single()
@@ -569,7 +569,7 @@ internal class PrintLayoutTest {
     }
 
     @Test fun `a name that fits keeps its second name on its line`() = runTest {
-        val document = layout(source(song(lyrics(1)).copy(chords = listOf(guitarChord("5").copy(secondaryName = "G")))), PrintSettings(showChordDiagrams = true))
+        val document = layout(source(song(lyrics(1)).copy(chords = listOf(guitarChord("5").copy(letterName = "G")))), PrintSettings(showChordDiagrams = true))
         val texts = document.pages.single().texts
         assertEquals(texts.single { it.text == "5" }.y, texts.single { it.text == " G" }.y)
     }

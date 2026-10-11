@@ -90,6 +90,7 @@ import com.pandulapeter.campfire.presentation.ui.songLayout.rememberDefaultSecti
  * with the values it sets, see [SongPlayingControls].
  * @param readsCapoAndTime Whether that line names the capo and the time signature where the file names neither, which
  * read only mode on the song details screen asks for, see [withMetadataSection].
+ * @param shouldShowCapo False on the keyboard, which reads the capo as a transposition, see [withMetadataSection].
  * @param shouldShowTempo False with the metronome switched off, which leaves the tempo and the time signature out of
  * the song's first section, see [withMetadataSection]. The chords' own switch is the model's, since it shapes the lyrics.
  * @param onRowsPlaced Handed the rows of the song ([SongRows]: where a scroll comes to rest on each - the
@@ -130,6 +131,7 @@ internal fun SongLyrics(
     songInfoEditing: SongInfoEditing? = null,
     playingControls: SongPlayingControls? = null,
     readsCapoAndTime: Boolean = false,
+    shouldShowCapo: Boolean = true,
     shouldShowTempo: Boolean = true,
     onRowsPlaced: ((SongRows) -> Unit)? = null,
     rowViewportHeight: Dp = Dp.Unspecified,
@@ -145,11 +147,12 @@ internal fun SongLyrics(
     val isSongInfoEditable = songInfoEditing != null
     // The controls are only drawn where the values they set are, so a change of either decides the section's content.
     val shownPlayingControls = playingControls?.takeIf { model.shouldShowChords || shouldShowTempo }
-    val sections = remember(model.sections, model.song.metadata, model.shouldShowChords, shouldShowTempo, isSongInfoShown, isSongInfoEditable, shownPlayingControls != null, readsCapoAndTime) {
+    val sections = remember(model.sections, model.song.metadata, model.shouldShowChords, shouldShowTempo, isSongInfoShown, isSongInfoEditable, shownPlayingControls != null, readsCapoAndTime, shouldShowCapo) {
         withMetadataSection(
             sections = model.sections,
             metadata = model.song.metadata,
             shouldShowChords = model.shouldShowChords,
+            shouldShowCapo = shouldShowCapo,
             shouldShowTempo = shouldShowTempo,
             isSongInfoShown = isSongInfoShown,
             isSongInfoEditable = isSongInfoEditable,

@@ -417,8 +417,7 @@ what nothing outside the module calls is `internal`.
   lyrics, the grids, the tabs' chord rows, the brackets of comments and labels, never the key; it and
   `ChordProChordRewriter.writtenChordNames` (the key and the lines of the sections alone, which decide the notation and the
   spelling) are both one internal walk, `visitChordNames`, whose flags say whether the key, the bracketed text and the
-  recalled choruses are read and which a test holds against every name the chord rewrite renames — and `transposedName`
-  moves one name in its own notation. `spelledNoteNames` spells a chord's notes by degree from the root's letter (`Cm` is
+  recalled choruses are read and which a test holds against every name the chord rewrite renames. `spelledNoteNames` spells a chord's notes by degree from the root's letter (`Cm` is
   `C Eb G`, a white-key enharmonic or a double accidental falling back to the plain name), which the Chord shapes sheet
   shows under each diagram.
 - `ChordVoicings` / `ChordVoicingTables` — how a chord is played on the guitar, the ukulele and the keyboard

@@ -50,11 +50,10 @@ class ChordSelectionTest {
         assertEquals(SelectedShape.Source.DEFAULT, selectShape(songChord("C", ChordInstrument.UKULELE), ChordInstrument.UKULELE, stored).source)
     }
 
-    private fun chordsOf(text: String, transposition: Int = 0, instrument: ChordInstrument = ChordInstrument.GUITAR, capo: Int = 0) = songChordsOf(
+    private fun chordsOf(text: String, transposition: Int = 0, instrument: ChordInstrument = ChordInstrument.GUITAR) = songChordsOf(
         song = ChordProTransposer.transpose(ChordProParser.parse(text), transposition),
         notation = ChordNotation.STANDARD,
         instrument = instrument,
-        capo = capo,
     )
 
     @Test
@@ -87,8 +86,8 @@ class ChordSelectionTest {
     }
 
     @Test
-    fun `a keyboard definition is played as it sounds above the capo`() {
-        val chord = chordsOf("{define: G keys 0 4 7 12}\n[G]la", instrument = ChordInstrument.KEYBOARD, capo = 2).single()
+    fun `a keyboard definition follows the transposition`() {
+        val chord = chordsOf("{define: G keys 0 4 7 12}\n[G]la", transposition = 2, instrument = ChordInstrument.KEYBOARD).single()
         assertEquals(ChordVoicing.Keys(listOf(9, 13, 16, 21)), selectShape(chord, ChordInstrument.KEYBOARD, emptyMap()).shape)
     }
 }

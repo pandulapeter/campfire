@@ -64,7 +64,6 @@ import com.pandulapeter.campfire.presentation.ui.chords.SongChord
 import com.pandulapeter.campfire.presentation.ui.chords.chordCellDescription
 import com.pandulapeter.campfire.presentation.ui.chords.chordDiagramGeometryOf
 import com.pandulapeter.campfire.presentation.ui.chords.emptyChordDiagramGeometryOf
-import com.pandulapeter.campfire.presentation.ui.chords.secondaryName
 import com.pandulapeter.campfire.presentation.ui.chords.selectShape
 import com.pandulapeter.campfire.presentation.ui.chords.songChordsOf
 import com.pandulapeter.campfire.presentation.ui.chords.toChordInstrument
@@ -77,6 +76,8 @@ import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
 import com.pandulapeter.campfire.presentation.ui.playing.effectiveCapo
+import com.pandulapeter.campfire.presentation.ui.playing.readsCapoAsTransposition
+import com.pandulapeter.campfire.presentation.ui.playing.soundingTransposition
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 import kotlin.math.abs
 import kotlinx.coroutines.Dispatchers
@@ -87,7 +88,8 @@ import org.jetbrains.compose.resources.painterResource
  * The chords of a song larger than its Chords section draws them, each with its notes and a stepper through the other
  * ways it can be played. A step is the player's choice for that chord on that instrument in every song, written at
  * once like the page's own steppers write, so the sheet has nothing to save and its close button cancels nothing; the
- * section behind it follows. It reads the song as the page plays it: transposed, capoed and spelled the same way.
+ * section behind it follows. It reads the song as the page shows it: transposed (on the keyboard by the capo too, see
+ * `withCapoSounding`) and spelled the same way.
  */
 @Composable
 internal fun ChordShapesSheet(
@@ -107,10 +109,14 @@ internal fun ChordShapesSheet(
     val spelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
     val notation = spelling.notation.toChordNotation()
     val text = songTexts[song.fileName]
-    val transposition = transpositions[song.fileName, dialog.setlistFileName]
-    val capo = effectiveCapo(song = song, setlistFileName = dialog.setlistFileName, capos = capos).fret
-    val chords by produceState<List<SongChord>?>(null, text, transposition, capo, spelling, instrument) {
-        value = text?.let { withContext(Dispatchers.Default) { songChordsOf(viewModel.songRenderer.transposedSong(it, transposition, spelling), notation, instrument, capo) } }
+    val playedTransposition = transpositions[song.fileName, dialog.setlistFileName]
+    val transposition = if (userPreferences.readsCapoAsTransposition) {
+        soundingTransposition(playedTransposition, effectiveCapo(song = song, setlistFileName = dialog.setlistFileName, capos = capos).fret)
+    } else {
+        playedTransposition
+    }
+    val chords by produceState<List<SongChord>?>(null, text, transposition, spelling, instrument) {
+        value = text?.let { withContext(Dispatchers.Default) { songChordsOf(viewModel.songRenderer.transposedSong(it, transposition, spelling), notation, instrument) } }
     }
     val storedShapes = userPreferences?.chordVoicings?.get(instrument.id).orEmpty()
     CampfireBottomSheet(
@@ -177,7 +183,6 @@ private fun ChordShapeCell(
     val select = { shape: ChordVoicing -> onShapeSelected(shape.takeUnless { defaultShape?.sameShapeAs(it) == true }) }
     val cell = ChordCell(
         name = chord.name,
-        soundingName = chord.soundingName,
         letterName = chord.letterName,
         instrument = instrument,
         root = chord.chord.root,
@@ -216,7 +221,7 @@ private fun ChordShapeCell(
                 color = LocalSecondAccentColor.current,
                 textAlign = TextAlign.Center,
             )
-            chord.secondaryName?.let {
+            chord.letterName?.let {
                 Text(
                     text = it,
                     style = MaterialTheme.typography.titleMedium,

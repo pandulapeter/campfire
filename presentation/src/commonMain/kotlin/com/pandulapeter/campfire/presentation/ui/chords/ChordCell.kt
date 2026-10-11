@@ -13,13 +13,12 @@ import androidx.compose.runtime.Immutable
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
 
 /**
- * One diagram of the Chords section: the chord as the page names it and the shape it is drawn with, and the names
- * [SongChord.soundingName] and [SongChord.letterName] give it after that.
+ * One diagram of the Chords section: the chord as the page names it and the shape it is drawn with, and the letters
+ * [SongChord.letterName] gives it after that.
  */
 @Immutable
 internal data class ChordCell(
     val name: String,
-    val soundingName: String?,
     val letterName: String? = null,
     val instrument: ChordInstrument,
     val root: Int,

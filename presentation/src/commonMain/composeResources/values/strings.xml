@@ -278,13 +278,13 @@
     <string name="settings_accidentals_flats">Flats (b)</string>
     <string name="settings_accidentals_sharps">Sharps (#)</string>
     <string name="settings_chord_instrument">Instrument</string>
-    <string name="settings_chord_instrument_description">The instrument the chord diagrams are drawn for, in standard tuning.</string>
+    <string name="settings_chord_instrument_description">The instrument you play, in standard tuning, which the chord diagrams are drawn for.</string>
     <string name="settings_chord_instrument_guitar">Guitar</string>
     <string name="settings_chord_instrument_guitar_description">Six strings: %1$s</string>
     <string name="settings_chord_instrument_ukulele">Ukulele</string>
     <string name="settings_chord_instrument_ukulele_description">Four strings: %1$s</string>
     <string name="settings_chord_instrument_keyboard">Keyboard</string>
-    <string name="settings_chord_instrument_keyboard_description">The notes of each chord</string>
+    <string name="settings_chord_instrument_keyboard_description">The notes of each chord, with the capo counted into the transposition</string>
     <string name="settings_chord_instrument_other">Other</string>
     <string name="settings_chord_instrument_other_description">No chord diagrams</string>
     <string name="settings_general">General</string>
@@ -635,7 +635,6 @@
     <string name="song_details_chords">Chords</string>
     <string name="song_details_chord_diagram">%1$s: %2$s</string>
     <string name="song_details_chord_diagram_none">%1$s: no diagram</string>
-    <string name="song_details_chord_sounding">%1$s, sounding as %2$s</string>
     <string name="song_details_chord_letters">%1$s, that is %2$s</string>
     <string name="song_details_chord_shapes">Chord shapes</string>
     <string name="song_details_chord_shape_previous">Previous shape of %1$s</string>

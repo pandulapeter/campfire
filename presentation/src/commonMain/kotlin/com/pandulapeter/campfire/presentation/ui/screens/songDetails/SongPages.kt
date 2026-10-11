@@ -36,7 +36,9 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableContent
+import com.pandulapeter.campfire.presentation.ui.playing.readsCapoAsTransposition
 import com.pandulapeter.campfire.presentation.ui.playing.songPlaybackOf
+import com.pandulapeter.campfire.presentation.ui.playing.withCapoSounding
 
 /**
  * The pages of [SongDetailsPager], one song each, with the one beside the current page on either side composed ahead of
@@ -116,8 +118,10 @@ internal fun SongPages(
         val shownText = if (!hasShownLyrics && !isFollowingGesture && pagerState.isScrollInProgress) null else text
         if (shownText != null && !hasShownLyrics) SideEffect { hasShownLyrics = true }
         val playback = songPlaybackOf(song = song, setlistFileName = destination.setlistFileName, overrides = playingOverrides)
+        val readsCapoAsTransposition = userPreferences.readsCapoAsTransposition
+        val shownPlayback = if (readsCapoAsTransposition) playback.withCapoSounding() else playback
         val tempo = playback.tempo
-        val capo = playback.capo
+        val capo = shownPlayback.capo
         SongDetailsPage(
             // Chords and annotations are drawn rather than measured, so this is what keeps anything a line
             // draws past its end off the page of the next song. The page's own padding holds the cards'
@@ -130,7 +134,7 @@ internal fun SongPages(
             buildsModelInPlace = buildsInPlace,
             isViewportSettled = isViewportSettled,
             hasFailed = song.fileName in failedSongFileNames,
-            transposition = playback.transposition,
+            transposition = shownPlayback.transposition,
             tempoOverride = tempo.takeUnless { it.isDefault }?.bpm,
             capoOverride = capo.takeUnless { it.isDefault }?.fret,
             // Read only, the four playing values are read rather than set, so the page draws them as the
@@ -143,12 +147,14 @@ internal fun SongPages(
                     song = song,
                     setlistFileName = destination.setlistFileName,
                     playback = playback,
+                    readsCapoAsTransposition = readsCapoAsTransposition,
                     chordSpelling = chordSpelling,
                     shouldShowChords = shouldShowChords,
                     shouldShowTempo = isMetronomeEnabled,
                 )
             },
             shouldShowChords = shouldShowChords,
+            shouldShowCapo = !readsCapoAsTransposition,
             shouldShowTempo = isMetronomeEnabled,
             shouldNumberSections = userPreferences?.shouldNumberSections == true,
             fontScale = if (isFollowingGesture) ({ viewModel.fontScale }) else ({ viewModel.settledFontScale }),

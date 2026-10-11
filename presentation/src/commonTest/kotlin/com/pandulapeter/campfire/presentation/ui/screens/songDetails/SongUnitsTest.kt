@@ -69,7 +69,6 @@ class SongUnitsTest {
 
     private val cell = ChordCell(
         name = "G",
-        soundingName = null,
         instrument = ChordInstrument.GUITAR,
         root = 7,
         selection = SelectedShape(null, SelectedShape.Source.DEFAULT),

@@ -154,7 +154,8 @@ and remaining whole: **the transposition, capo, tempo and time, each next to the
 (`SongPlayingControls`, built per page by `rememberSongPlayingControls`) — the transposition stepper, labelled
 **Transposition** rather than Key since the amount is what it steps, reading that amount next to the key it takes the
 chords on the page to (the capo deliberately left out of it, or the control would name a key written nowhere in the
-song: the app bar names the sounding one), the capo stepper, the tempo stepper ending in the Tap segment that taps one
+song: the app bar names the sounding one), the capo stepper (neither on the keyboard, whose transposition counts the
+capo in, see `ui/CLAUDE.md`), the tempo stepper ending in the Tap segment that taps one
 in, inside the same pill and behind a divider, and after it the time signature, labelled like the rest but its value
 plain text, since only the file says it — laid out in balanced rows (`BalancedRows`: all on one line, two and two in
 aligned columns, or one per line, never three over one; a control the rows move, a stepper widening or the rows

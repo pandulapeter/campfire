@@ -19,7 +19,9 @@ The values a song is played with and where each is kept.
 library's override, then the file's `{capo}`, then no capo, an override equal to the song's own counting as none, within
 `Song.CAPO_RANGE`), `stepCapo`, `resetCapo` and `withCapo`, which is what puts an override on the page's capo line and
 in a setlist's PDF. Zero is a value rather than nothing there: a capo this setlist takes off a song whose file asks for
-one.
+one. On the keyboard (`readsCapoAsTransposition`) the effective capo is read as semitones of the transposition instead
+(`SongPlayback.withCapoSounding`, `soundingTransposition`, tested), and `withoutCapo` takes the file's capo line off
+the PDF; see `ui/CLAUDE.md`.
 
 ### Where a tempo lives
 

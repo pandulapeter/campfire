@@ -14,7 +14,6 @@ import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.chords.ChordProChords
 import com.pandulapeter.campfire.chordpro.chords.ChordVoicings
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
-import com.pandulapeter.campfire.chordpro.model.ChordVoicing
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -24,8 +23,8 @@ import kotlin.test.assertTrue
 
 class SongChordsTest {
 
-    private fun names(text: String, notation: ChordNotation = ChordNotation.STANDARD, instrument: ChordInstrument = ChordInstrument.GUITAR, capo: Int = 0) =
-        songChordsOf(ChordProParser.parse(text), notation, instrument, capo)
+    private fun names(text: String, notation: ChordNotation = ChordNotation.STANDARD, instrument: ChordInstrument = ChordInstrument.GUITAR) =
+        songChordsOf(ChordProParser.parse(text), notation, instrument)
 
     @Test
     fun `every chord is listed once, in the order it is first played`() {
@@ -68,18 +67,6 @@ class SongChordsTest {
         ).single()
         assertTrue(defined.definition != null)
         assertFalse(defined.isShapePending)
-    }
-
-    @Test
-    fun `a capo past the twelfth fret is read as the twelfth`() {
-        listOf(12, 15).forEach { capo ->
-            val chord = names("{capo: 15}\n[C]la", instrument = ChordInstrument.KEYBOARD, capo = capo).single()
-            assertNull(chord.soundingName)
-            assertEquals(ChordProChords.parse("C"), chord.chord)
-        }
-        val moved = names("{capo: 3}\n[C]la", instrument = ChordInstrument.KEYBOARD, capo = 3).single()
-        assertEquals(3, moved.chord.root)
-        assertEquals("Eb", moved.soundingName)
     }
 
     @Test
@@ -126,7 +113,7 @@ class SongChordsTest {
         val chords = names("{key: C}\n{define: G base-fret 1 frets 3 2 0 0 0 3}\n[C]la [Am]la [G]la", notation = ChordNotation.NASHVILLE)
         assertEquals(listOf("1", "6-", "5"), chords.map { it.name })
         assertEquals(listOf("C", "Am", "G"), chords.map { it.letterName })
-        assertEquals(listOf("C", "Am", "G"), chords.map { it.secondaryName })
+        assertEquals(listOf("C", "Am", "G"), chords.map { it.letterName })
         assertEquals(ChordProChords.parse("Am"), chords[1].chord)
         assertTrue(chords[2].definition != null)
         assertEquals(listOf("I", "vi", "V"), names("{key: C}\n[C]la [Am]la [G]la", notation = ChordNotation.ROMAN).map { it.name })
@@ -137,22 +124,5 @@ class SongChordsTest {
         val chords = names("[C]la [Am]la", notation = ChordNotation.NASHVILLE)
         assertEquals(listOf("C", "Am"), chords.map { it.name })
         assertEquals(listOf(null, null), chords.map { it.letterName })
-    }
-
-    @Test
-    fun `the keyboard draws the chord a capo makes sound and names it`() {
-        val chords = names("{key: G}\n[G]la [Em]la", instrument = ChordInstrument.KEYBOARD, capo = 2)
-        assertEquals(listOf("A", "F#m"), chords.map { it.soundingName })
-        assertEquals(ChordProChords.parse("A"), chords.first().chord)
-        assertEquals(ChordVoicing.Keys(listOf(9, 13, 16)), chords.first().defaultShape)
-        val fretted = names("[G]la", instrument = ChordInstrument.GUITAR, capo = 2).single()
-        assertNull(fretted.soundingName)
-        assertEquals(ChordProChords.parse("G"), fretted.chord)
-        assertEquals(listOf("La", "Fa#m"), names("{key: G}\n[G]la [Em]la", ChordNotation.LATIN, ChordInstrument.KEYBOARD, capo = 2).map { it.soundingName })
-        val numbered = names("{key: G}\n[G]la", ChordNotation.NASHVILLE, ChordInstrument.KEYBOARD, capo = 2).single()
-        assertEquals("1", numbered.name)
-        assertEquals("A", numbered.secondaryName)
-        assertEquals("Bb", names("{key: D}\n[A]la", instrument = ChordInstrument.KEYBOARD, capo = 1).single().spelling)
-        assertEquals(listOf("Bb", "D", "F"), ChordProChords.spelledNoteNames("Bb"))
     }
 }

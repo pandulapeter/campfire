@@ -225,7 +225,6 @@ class ChordProLatinNotationTest {
         assertEquals(ChordProChords.parse("Am"), ChordProChords.parse("Lam", ChordNotation.LATIN))
         assertEquals(ChordProChords.parse("Bb7"), ChordProChords.parse("Sib7"))
         assertEquals(listOf("Do", "Mi", "Sol"), ChordProChords.noteNames(ChordProChords.parse("C")!!, ChordNotation.LATIN))
-        assertEquals("Re", ChordProChords.transposedName("Do", 2, ChordNotation.LATIN))
         assertEquals(listOf("C", "E", "G"), ChordProChords.noteNames(ChordProChords.parse("C")!!, ChordNotation.NASHVILLE))
     }
 }
