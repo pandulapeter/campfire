@@ -382,13 +382,14 @@ detail is in `metronome/implementation/CLAUDE.md` (timing, playback as media), a
 
 ## Tuner
 
-A fourth tab, and a sheet over the song details screen opened from its menu, hearing one note at a time through the
-microphone and playing reference tones. Nothing it hears is kept or reaches the network. The microphone is asked for
+A fourth tab, and a sheet over the song details screen opened from the tuner button in the song's first section (from
+its menu where the chords and the metronome are both switched off, which leaves that section nothing to hold the button
+beside), hearing one note at a time through the microphone and playing reference tones. Nothing it hears is kept or reaches the network. The microphone is asked for
 only by the button on its page, never at launch or by opening the tab (on the desktop, which cannot tell whether it is
 allowed, that first tap is remembered and opening the tab listens from then on); it is listened to only while that page is on
 screen and the app is in front, so the system's recording indicator is lit exactly then; and nothing of it outlives
-its screen. The Tuner switch in Settings → Features takes the tab, the sheet's menu entry and every way the app could ask
-for the microphone. The detail is in `tuner/implementation/CLAUDE.md` (the detector, the tracker, the platforms) and
+its screen. The Tuner switch in Settings → Features takes the tab, the sheet's button and menu entry, and every way the
+app could ask for the microphone. The detail is in `tuner/implementation/CLAUDE.md` (the detector, the tracker, the platforms) and
 `:presentation`'s `ui/tuner/CLAUDE.md` (the page, the permission, the sheet).
 
 ## Cover art
