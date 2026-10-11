@@ -185,7 +185,8 @@ as a JSON tree and merges it three ways, value by value, against the document th
 (`SyncIndexDocument.syncedPreferences`, carried through every snapshot the engine hands out and dropped with the rest
 of an index written for another account); this device's side is that base with this version's own fields replaced
 by the preferences (`localDocument`), so whatever a later version writes passes through untouched — a value of one of
-those fields that this version cannot read (a tempo of 400, a capo of 13) included, like an unknown field. A document that
+those fields that this version cannot read (a tempo of 400, a capo of 13, a song's accents holding one signature that
+is not a list of strings, which are read and passed through as a whole) included, like an unknown field. A document that
 is missing from the folder, does not decode or holds no `songs` object (`isReadable`) is merged as the base, so it
 is replaced with this device's values rather than read as a removal of everything; one whose `version` is newer
 than this version's (`isNewerFormat`) is neither applied nor written over, and the step answers the base it was
@@ -204,7 +205,7 @@ The player's chord shapes (`UserPreferences.chordVoicings`) are a `chords` membe
 then by the chord's id, merged the same way value by value; a shape is any string and an instrument this version does
 not know is kept, a non-string value passes through, nothing in it is ever dropped with a song, and the member is only
 written once there is something in it, so a document from before it stays the same bytes.
-`localChanges` is what schedules a run when the three maps or the chord shapes change, filtering out the values the
+`localChanges` is what schedules a run when the four maps or the chord shapes change, filtering out the values the
 step wrote itself.
 `SyncedPreferencesTest` covers the merge, the document and the step against the fakes.
 `cancelConnection` is the way out of `Connecting` that does not need the `connect()` that got there to be running
@@ -289,9 +290,11 @@ Tested with `commonTest`, run with `./gradlew :data:sync:implementation:desktopT
   only change is the day its read gave an undated file, or a demo file this device planted that still holds exactly
   what was planted, met in the folder for the first time: the cloud folder's version is taken.
 - **The library's per-song overrides travel too**: the transposition, tempo and capo of a song opened from the library
-  (`UserPreferences.transpositions`, `tempos`, `capos`; a setlist's own are in its file already) are one
-  `preferences.json` at the top of the cloud folder, beside `songs/` and `setlists/`, where the engine never looks:
-  `{"version": 1, "songs": {"<file name>": {"transposition": 2, "tempo": 92, "capo": 1}}}`, an entry only for a song
+  (`UserPreferences.transpositions`, `tempos`, `capos`; a setlist's own are in its file already), and the accents
+  tapped for a song wherever it was opened from (`UserPreferences.beatLevels`), are one `preferences.json` at the top
+  of the cloud folder, beside `songs/` and `setlists/`, where the engine never looks:
+  `{"version": 1, "songs": {"<file name>": {"transposition": 2, "tempo": 92, "capo": 1, "beatLevels": {"3/4": [...]}}}}`
+  (each signature's accents a value of its own to the merge), an entry only for a song
   something is set for. Every run that completes ends by settling it (`SyncedPreferencesSync`) — a three-way merge,
   value by value, of this device's, the folder's and the last synced one, which the index keeps — so two devices that
   changed different songs or fields both keep their change, a change beats a removal, and two changes of one value
@@ -304,7 +307,7 @@ Tested with `commonTest`, run with `./gradlew :data:sync:implementation:desktopT
   (`UserPreferences.chordVoicings`): a `chords` member beside `songs`, by instrument and then by the chord's notes
   (`{"guitar": {"F:0.4.7": "x x 3 2 1 1"}}`), merged value by value, so two devices that chose for different chords both
   keep their choice and two choices for one chord keep this device's; an instrument this version does not know passes
-  through, and no entry is ever dropped with a song, since none belongs to one. A change to those three maps or to the
+  through, and no entry is ever dropped with a song, since none belongs to one. A change to those four maps or to the
   chord shapes schedules a run like a change to a file does; the run's own write does not.
 - Authorization is OAuth 2.0 with PKCE and no client secret, which is what lets this work with no backend. The four
   platforms get back from the consent page in four different ways, all behind `SyncAuthenticator`.

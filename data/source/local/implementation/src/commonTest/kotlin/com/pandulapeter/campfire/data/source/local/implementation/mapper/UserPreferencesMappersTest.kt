@@ -213,4 +213,21 @@ internal class UserPreferencesMappersTest {
         assertEquals(mapOf("a.cho" to 96), preferences.tempos)
         assertEquals(UserPreferences.UiMode.DARK, preferences.uiMode)
     }
+
+    @Test
+    fun `a song's accents survive saving and reloading`() {
+        val beatLevels = mapOf("a.cho" to mapOf("3/4" to listOf("accent", "muted", "normal")))
+        val preferences = UserPreferencesDocument().toModel().copy(beatLevels = beatLevels)
+        val reloaded = UserPreferencesDocumentFormat.decode(UserPreferencesDocumentFormat.encode(preferences.toDocument())).document.toModel()
+        assertEquals(beatLevels, reloaded.beatLevels)
+    }
+
+    @Test
+    fun `a song's accents of the wrong shape cost only themselves`() {
+        val preferences = UserPreferencesDocumentFormat.decode(
+            """{"beatLevels":{"a.cho":{"3/4":["accent","normal","normal"],"4/4":"loud"},"b.cho":[1,2]},"uiMode":"dark"}""",
+        ).document.toModel()
+        assertEquals(mapOf("a.cho" to mapOf("3/4" to listOf("accent", "normal", "normal"))), preferences.beatLevels)
+        assertEquals(UserPreferences.UiMode.DARK, preferences.uiMode)
+    }
 }

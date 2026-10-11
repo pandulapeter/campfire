@@ -83,7 +83,6 @@ import com.pandulapeter.campfire.presentation.ui.components.overlappingAction
 import com.pandulapeter.campfire.presentation.ui.components.setlistAssignmentsAction
 import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomePanel
-import com.pandulapeter.campfire.presentation.ui.metronome.withBeatLevels
 import com.pandulapeter.campfire.presentation.ui.tuner.tunerAction
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
@@ -413,7 +412,7 @@ internal fun SongDetailsAppBar(
                 beatLevels = panel.beatLevels,
                 beats = viewModel.metronomeBeats,
                 isFlashEnabled = panel.isFlashEnabled,
-                onBeatLevelsChanged = { levels -> viewModel.updateMetronomeSettings { withBeatLevels(panel.timeSignature, levels) } },
+                onBeatLevelsChanged = { levels -> viewModel.setBeatLevels(panel.timeSignature, levels) },
                 onPlayStop = viewModel::toggleMetronome,
                 isVisible = isMetronomePanelVisible,
                 contentPadding = contentPadding,

@@ -21,6 +21,7 @@ internal data class SyncedPreferences(
     val transpositions: Map<String, Int> = emptyMap(),
     val tempos: Map<String, Int> = emptyMap(),
     val capos: Map<String, Int> = emptyMap(),
+    val beatLevels: Map<String, Map<String, List<String>>> = emptyMap(),
     val chords: Map<String, Map<String, String>> = emptyMap(),
 ) {
 
@@ -33,6 +34,7 @@ internal data class SyncedPreferences(
         transpositions = preferences.transpositions.updated(from = since.transpositions, to = transpositions),
         tempos = preferences.tempos.updated(from = since.tempos, to = tempos),
         capos = preferences.capos.updated(from = since.capos, to = capos),
+        beatLevels = preferences.beatLevels.updated(from = since.beatLevels, to = beatLevels),
         chordVoicings = preferences.chordVoicings.flattened().updated(from = since.chords.flattened(), to = chords.flattened()).nested(),
     )
 
@@ -44,10 +46,11 @@ internal data class SyncedPreferences(
         transpositions = transpositions.respelled(spelling, isPreferred),
         tempos = tempos.respelled(spelling, isPreferred),
         capos = capos.respelled(spelling, isPreferred),
+        beatLevels = beatLevels.respelled(spelling, isPreferred),
         chords = chords,
     )
 
-    private fun Map<String, Int>.respelled(spelling: (String) -> String, isPreferred: (String) -> Boolean) =
+    private fun <T> Map<String, T>.respelled(spelling: (String) -> String, isPreferred: (String) -> Boolean) =
         entries.groupBy { spelling(it.key) }.mapValues { (_, entries) ->
             (entries.firstOrNull { isPreferred(it.key) } ?: entries.minBy { it.key }).value
         }
@@ -75,6 +78,7 @@ internal data class SyncedPreferences(
             transpositions = preferences.transpositions,
             tempos = preferences.tempos,
             capos = preferences.capos,
+            beatLevels = preferences.beatLevels,
             chords = preferences.chordVoicings,
         )
 

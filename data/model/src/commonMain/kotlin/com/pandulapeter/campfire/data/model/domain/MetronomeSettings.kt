@@ -18,7 +18,8 @@ package com.pandulapeter.campfire.data.model.domain
  *   visual beat alone.
  * @param beatLevels The accents the user drew for a time signature, keyed by the signature as written ("7/8"), so
  *   that a song in 7/8 is clicked 2+2+3 once that was set for 7/8 anywhere. A list whose length is not the
- *   signature's number of beats is ignored.
+ *   signature's number of beats is ignored. A song's own accents, tapped on its panel, win over these
+ *   (`UserPreferences.beatLevels`).
  * @param bpm The Metronome tab's own tempo.
  * @param timeSignature The Metronome tab's own, as written ("4/4").
  * @param isSongPanelShown Whether the song details screen opens with the metronome panel in its app bar: a player who

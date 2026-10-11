@@ -48,6 +48,7 @@ internal data class UserPreferencesDocument(
     val transpositions: Map<String, Int> = emptyMap(),
     val tempos: Map<String, Int> = emptyMap(),
     val capos: Map<String, Int> = emptyMap(),
+    val beatLevels: Map<String, Map<String, List<String>>> = emptyMap(),
     val foldedSections: Map<String, List<String>> = emptyMap(),
     val tagMatchMode: String = "",
     val languageMatchMode: String = "",

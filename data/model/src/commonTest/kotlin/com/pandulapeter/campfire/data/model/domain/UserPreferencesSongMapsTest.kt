@@ -22,6 +22,7 @@ class UserPreferencesSongMapsTest {
         assertEquals(mapOf(NEW_SONG to 2), renamed.transpositions)
         assertEquals(mapOf(NEW_SONG to 92), renamed.tempos)
         assertEquals(mapOf(NEW_SONG to 3), renamed.capos)
+        assertEquals(mapOf(NEW_SONG to BEAT_LEVELS), renamed.beatLevels)
         assertEquals(mapOf(NEW_SONG to setOf("chorus")), renamed.foldedSections)
     }
 
@@ -32,6 +33,7 @@ class UserPreferencesSongMapsTest {
         assertEquals(emptyMap(), deleted.transpositions)
         assertEquals(emptyMap(), deleted.tempos)
         assertEquals(emptyMap(), deleted.capos)
+        assertEquals(emptyMap(), deleted.beatLevels)
         assertEquals(emptyMap(), deleted.foldedSections)
     }
 
@@ -58,7 +60,7 @@ class UserPreferencesSongMapsTest {
         )
 
         assertEquals(
-            preferences.copy(transpositions = emptyMap(), tempos = emptyMap(), capos = emptyMap(), foldedSections = emptyMap()),
+            preferences.copy(transpositions = emptyMap(), tempos = emptyMap(), capos = emptyMap(), beatLevels = emptyMap(), foldedSections = emptyMap()),
             preferences.withoutSongOverrides(),
         )
     }
@@ -82,6 +84,7 @@ class UserPreferencesSongMapsTest {
         transpositions = mapOf(fileName to 2),
         tempos = mapOf(fileName to 92),
         capos = mapOf(fileName to 3),
+        beatLevels = mapOf(fileName to BEAT_LEVELS),
         foldedSections = mapOf(fileName to setOf("chorus")),
         tagMatchMode = UserPreferences.MatchMode.ANY,
         languageMatchMode = UserPreferences.MatchMode.ANY,
@@ -92,5 +95,6 @@ class UserPreferencesSongMapsTest {
     private companion object {
         const val SONG = "song.cho"
         const val NEW_SONG = "new_song.cho"
+        val BEAT_LEVELS = mapOf("3/4" to listOf("accent", "normal", "accent"))
     }
 }

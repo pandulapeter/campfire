@@ -116,6 +116,14 @@ data class UserPreferences(
      */
     val capos: Map<String, Int> = emptyMap(),
     /**
+     * Song file name to the accents tapped on its metronome panel, by time signature as written ("7/8") and then one
+     * `BeatLevel` id per beat, so that a song whose bar is 3+3+2 keeps it while every other song in 8/8 is clicked as
+     * [MetronomeSettings.beatLevels] says. A signature a song has none for, or a list whose length is not its number of
+     * beats, falls back on those. One per song wherever it is opened from, since the accents are the song's bar rather
+     * than one set's reading of it; never exported, but synced, like [tempos].
+     */
+    val beatLevels: Map<String, Map<String, List<String>>> = emptyMap(),
+    /**
      * Song file name to the sections (and the tabs and grids inside them) the reader has folded away on the song details
      * screen, as the opaque keys that screen names them by. One set per song, wherever the song is opened from: unlike a
      * transposition, which the band plays the song in, how much of it one reader keeps open is their own business, so it
@@ -161,6 +169,7 @@ data class UserPreferences(
         transpositions = transpositions.movedTo(fileName, newFileName),
         tempos = tempos.movedTo(fileName, newFileName),
         capos = capos.movedTo(fileName, newFileName),
+        beatLevels = beatLevels.movedTo(fileName, newFileName),
         foldedSections = foldedSections.movedTo(fileName, newFileName),
     )
 
@@ -169,6 +178,7 @@ data class UserPreferences(
         transpositions = emptyMap(),
         tempos = emptyMap(),
         capos = emptyMap(),
+        beatLevels = emptyMap(),
         foldedSections = emptyMap(),
     )
 

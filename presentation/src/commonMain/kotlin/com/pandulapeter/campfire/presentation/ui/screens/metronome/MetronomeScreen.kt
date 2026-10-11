@@ -49,7 +49,6 @@ import com.pandulapeter.campfire.presentation.ui.metronome.TimeSignaturePicker
 import com.pandulapeter.campfire.presentation.ui.metronome.sound
 import com.pandulapeter.campfire.presentation.ui.metronome.subdivision
 import com.pandulapeter.campfire.presentation.ui.metronome.timeSignatureOrDefault
-import com.pandulapeter.campfire.presentation.ui.metronome.withBeatLevels
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.rememberBeatHaptics
 import com.pandulapeter.campfire.presentation.ui.screens.rememberMetronomePanelState
@@ -107,7 +106,7 @@ internal fun MetronomeScreen(
             beatLevels = panel.beatLevels,
             beats = viewModel.metronomeBeats,
             isFlashEnabled = panel.isFlashEnabled,
-            onBeatLevelsChanged = { levels -> viewModel.updateMetronomeSettings { withBeatLevels(panel.timeSignature, levels) } },
+            onBeatLevelsChanged = { levels -> viewModel.setBeatLevels(panel.timeSignature, levels) },
             onPlayStop = viewModel::toggleMetronome,
             isVisible = true,
             isProminent = true,

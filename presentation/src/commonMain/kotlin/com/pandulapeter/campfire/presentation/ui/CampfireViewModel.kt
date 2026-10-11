@@ -102,7 +102,9 @@ import com.pandulapeter.campfire.domain.api.useCases.UpdateSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.UpdateUserPreferencesUseCase
 import com.pandulapeter.campfire.presentation.ui.components.SearchState
 import com.pandulapeter.campfire.metronome.api.Metronome
+import com.pandulapeter.campfire.metronome.api.model.BeatLevel
 import com.pandulapeter.campfire.metronome.api.model.MetronomeSound
+import com.pandulapeter.campfire.metronome.api.model.TimeSignature
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerController
 import com.pandulapeter.campfire.tuner.api.Tuner
 import com.pandulapeter.campfire.presentation.ui.dialogs.SONG_METADATA_FIELDS
@@ -631,6 +633,9 @@ class CampfireViewModel(
 
     /** See [MetronomeController.metronomeSettings]. */
     val metronomeSettings: StateFlow<MetronomeSettings> get() = metronomeController.metronomeSettings
+
+    /** See [MetronomeController.songBeatLevels]. */
+    internal val songBeatLevels get() = metronomeController.songBeatLevels
 
     /** See [MetronomeController.metronomePlayback]. */
     val metronomePlayback get() = metronomeController.metronomePlayback
@@ -1217,6 +1222,8 @@ class CampfireViewModel(
     fun previewMetronomeSound(sound: MetronomeSound) = metronomeController.previewMetronomeSound(sound)
 
     fun updateMetronomeSettings(change: MetronomeSettings.() -> MetronomeSettings) = metronomeController.updateMetronomeSettings(change)
+
+    internal fun setBeatLevels(timeSignature: TimeSignature, levels: List<BeatLevel>) = metronomeController.setBeatLevels(timeSignature, levels)
 
     /** See [TunerController.setTunerListening]. */
     fun setTunerListening(isListening: Boolean) = tunerController.setTunerListening(isListening)

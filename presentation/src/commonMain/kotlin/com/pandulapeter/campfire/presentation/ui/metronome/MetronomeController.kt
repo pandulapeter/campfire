@@ -21,6 +21,7 @@ import com.pandulapeter.campfire.metronome.api.model.BeatLevel
 import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
 import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
 import com.pandulapeter.campfire.metronome.api.model.MetronomeSound
+import com.pandulapeter.campfire.metronome.api.model.TimeSignature
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
@@ -68,6 +69,9 @@ internal class MetronomeController(
     val metronomeSettings = combine(userPreferences, metronomeSettingsPreference.pending) { userPreferences, pending ->
         pending ?: userPreferences?.metronomeSettings ?: MetronomeSettings()
     }.asState(scope, MetronomeSettings())
+
+    /** The accents tapped for each song, see `UserPreferences.beatLevels`. */
+    val songBeatLevels = userPreferences.map { it?.beatLevels.orEmpty() }.asState(scope, emptyMap())
 
     val metronomePlayback = metronome.playback
 
@@ -127,6 +131,7 @@ internal class MetronomeController(
         settings = metronomeSettings.value,
         songOf = { songsByFileName.value[it] ?: songsBeingRenamed.value[it] },
         tempos = tempos.value,
+        songBeatLevels = songBeatLevels.value,
     )
 
     /**
@@ -183,6 +188,26 @@ internal class MetronomeController(
 
     fun updateMetronomeSettings(change: MetronomeSettings.() -> MetronomeSettings) =
         metronomeSettingsPreference.update { (it ?: metronomeSettings.value).change() }
+
+    /**
+     * The accents tapped on a panel: on a song's, that song's own (`UserPreferences.beatLevels`), and on the Metronome
+     * tab's, the ones every song in [timeSignature] without accents of its own is clicked with. A tap is one write
+     * rather than a debounced one, since it is never repeated every frame, and the write reads the song's accents as
+     * they are when it runs, so a rename or a sync run landing meanwhile is not undone by it.
+     */
+    fun setBeatLevels(timeSignature: TimeSignature, levels: List<BeatLevel>) {
+        when (val context = metronomeContext) {
+            MetronomeContext.Standalone -> updateMetronomeSettings { withBeatLevels(timeSignature, levels) }
+            is MetronomeContext.Song -> {
+                val settings = metronomeSettings.value
+                scope.launch {
+                    updateUserPreferences { preferences ->
+                        preferences.copy(beatLevels = preferences.beatLevels.withSongBeatLevels(context.songFileName, timeSignature, levels, settings))
+                    }
+                }
+            }
+        }
+    }
 
     /**
      * Called whenever the app is out of sight (ON_STOP). A click that cannot sound - the volume at zero, every beat
@@ -247,13 +272,19 @@ internal class MetronomeController(
         combine(
             snapshotFlow { metronomeContext },
             tempos,
-            metronomeSettings,
+            combine(metronomeSettings, songBeatLevels, ::Pair),
             songsByFileName,
             songsBeingRenamed,
-        ) { context, tempos, settings, songs, renaming ->
+        ) { context, tempos, (settings, songBeatLevels), songs, renaming ->
             Triple(
                 context,
-                metronomePatternOf(context = context, settings = settings, songOf = { songs[it] ?: renaming[it] }, tempos = tempos),
+                metronomePatternOf(
+                    context = context,
+                    settings = settings,
+                    songOf = { songs[it] ?: renaming[it] },
+                    tempos = tempos,
+                    songBeatLevels = songBeatLevels,
+                ),
                 renaming.keys,
             )
         }.collect { (context, pattern, renaming) ->

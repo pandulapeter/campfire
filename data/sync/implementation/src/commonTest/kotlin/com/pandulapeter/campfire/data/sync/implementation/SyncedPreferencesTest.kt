@@ -179,6 +179,31 @@ class SyncedPreferencesTest {
         assertEquals(mapOf("a.cho" to 5, "b.cho" to 3), applied.transpositions)
     }
 
+    @Test
+    fun `a song's accents are read and written beside its other values`() {
+        val preferences = SyncedPreferences(tempos = mapOf("a.cho" to 96), beatLevels = mapOf("a.cho" to mapOf("3/4" to listOf("accent", "normal", "muted"))))
+        val document = document("""{"a.cho":{"tempo":96,"beatLevels":{"3/4":["accent","normal","muted"]}}}""")
+        assertEquals(document, SyncedPreferencesDocument.localDocument(base = null, preferences = preferences))
+        assertEquals(preferences, SyncedPreferencesDocument.preferencesOf(document))
+    }
+
+    @Test
+    fun `a song's accents holding a signature this version cannot read pass through whole`() {
+        val base = document("""{"a.cho":{"beatLevels":{"3/4":["accent","normal","normal"],"5/4":[1,2,3,4,5]}}}""")
+        assertEquals(SyncedPreferences(), SyncedPreferencesDocument.preferencesOf(base))
+        assertEquals(base, SyncedPreferencesDocument.localDocument(base = base, preferences = SyncedPreferences()))
+    }
+
+    @Test
+    fun `two devices that accented different signatures of one song both keep their change`() = assertEquals(
+        document("""{"a.cho":{"beatLevels":{"3/4":["accent","muted","muted"],"6/8":["accent","normal","normal","accent","normal","muted"]}}}"""),
+        merge(
+            base = """{"a.cho":{"beatLevels":{"3/4":["accent","normal","normal"]}}}""",
+            local = """{"a.cho":{"beatLevels":{"3/4":["accent","muted","muted"]}}}""",
+            remote = """{"a.cho":{"beatLevels":{"3/4":["accent","normal","normal"],"6/8":["accent","normal","normal","accent","normal","muted"]}}}""",
+        ),
+    )
+
     // The chords
 
     private fun chordsDocument(chords: String) = JsonObject(

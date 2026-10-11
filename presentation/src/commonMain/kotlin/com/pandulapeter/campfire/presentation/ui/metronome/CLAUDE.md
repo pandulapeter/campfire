@@ -67,9 +67,14 @@ turn clockwise either way, easing in, in a `FilledIconButton`) — at the end be
 it would otherwise push aside is the panel's content — and nothing else: the tempo is a line below it in the song's own
 first section, where it is both shown and set, and the sound, the subdivision and the volume are the tab's.
 
-The **accents are tapped here as they are there**, the same `BeatRow` writing the same `withBeatLevels` for the
-signature on screen, since they belong to the bar rather than to the screen somebody is on and two rows that disagreed
-about 4/4 would be two settings. Each beat's whole column takes the press, not the block drawn in it, which in this row
+The **accents are tapped here as they are there**, the same `BeatRow` and the same `CampfireViewModel.setBeatLevels`
+for the signature on screen, which writes them for whatever the click plays for (`MetronomeController.setBeatLevels`):
+on the tab, the signature's (`withBeatLevels`), which every song in it is clicked with; on a song, that song's own
+(`UserPreferences.beatLevels`, `withSongBeatLevels`, tested), by signature, so a song whose 8/8 is 3+3+2 keeps it
+without changing any other song's. A song's own win over the signature's (`beatLevelsOf`), are kept wherever the song
+is opened from (the bar is the song's, not a set's reading of it), renamed and deleted with it and synced like its tempo,
+and are taken off again once they are tapped back to what the signature's would give, so a song with nothing of its
+own goes on following the tab. Each beat's whole column takes the press, not the block drawn in it, which in this row
 is a sliver at a muted beat. It reads no tempo at all, only the time signature the row's blocks are drawn for
 (`metronomeTimeSignatureOf`, tested, which its two screens feed through `screens/MetronomePanelState.kt`, the panel
 itself taking that state and two callbacks rather than the view model). `MetronomeSettings.isSongPanelShown` is what
@@ -132,5 +137,6 @@ for a song's click too, how it reaches the player: the sound as chips, the volum
 
 Performance mode keeps the play button, and the panel has no tempo stepper to hide; the song's own line of text says the
 tempo there, as it says the transposition. The tab stays fully usable. Settings (sound, subdivision, accents per
-signature, volume, flash, vibrate) are `UserPreferences.metronomeSettings`; there is no mute of its own, since a volume
+signature, volume, flash, vibrate) are `UserPreferences.metronomeSettings`, a song's own accents
+`UserPreferences.beatLevels`; there is no mute of its own, since a volume
 of zero leaves the click running with nothing sounding — on screen, for the flash and the haptics.

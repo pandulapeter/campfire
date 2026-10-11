@@ -17,13 +17,15 @@ import com.pandulapeter.campfire.metronome.api.model.BeatLevel
 import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
 import com.pandulapeter.campfire.metronome.api.model.TimeSignature
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeContext
 import com.pandulapeter.campfire.presentation.ui.metronome.beatLevelsOf
 import com.pandulapeter.campfire.presentation.ui.metronome.metronomeTimeSignatureOf
 
 /**
  * What [com.pandulapeter.campfire.presentation.ui.metronome.MetronomePanel] shows, for the two screens that have one.
  *
- * @param timeSignature The bar the click counts, which the accents tapped on the panel are stored under.
+ * @param timeSignature The bar the click counts, which the accents tapped on the panel are stored under: the song's own on
+ *   a song, the signature's on the Metronome tab.
  */
 @Immutable
 internal data class MetronomePanelState(
@@ -45,11 +47,13 @@ internal fun rememberMetronomePanelState(viewModel: CampfireViewModel): Metronom
     val settings by viewModel.metronomeSettings.collectAsStateWithLifecycle()
     val songsByFileName by viewModel.songsByFileName.collectAsStateWithLifecycle()
     val songsBeingRenamed by viewModel.songsBeingRenamed.collectAsStateWithLifecycle()
+    val songBeatLevels by viewModel.songBeatLevels.collectAsStateWithLifecycle()
+    val context = viewModel.metronomeContext
     val timeSignature = (playback as? MetronomePlayback.Playing)?.pattern?.timeSignature
-        ?: metronomeTimeSignatureOf(viewModel.metronomeContext, settings) { songsByFileName[it] ?: songsBeingRenamed[it] }
+        ?: metronomeTimeSignatureOf(context, settings) { songsByFileName[it] ?: songsBeingRenamed[it] }
     return MetronomePanelState(
         timeSignature = timeSignature,
-        beatLevels = settings.beatLevelsOf(timeSignature),
+        beatLevels = settings.beatLevelsOf(timeSignature, songBeatLevels = (context as? MetronomeContext.Song)?.let { songBeatLevels[it.songFileName] }),
         isPlaying = playback is MetronomePlayback.Playing,
         isFlashEnabled = settings.isVisualBeatEnabled,
     )

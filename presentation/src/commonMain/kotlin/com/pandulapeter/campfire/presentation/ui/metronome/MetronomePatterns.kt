@@ -23,13 +23,15 @@ import com.pandulapeter.campfire.presentation.ui.playing.effectiveTempo
 /**
  * The complete pattern the click plays for [context]: a song's tempo and time signature (4/4 where it names none
  * that reads as one), those of the stretch of it the page is on where it changes them further down
- * ([MetronomeContext.Song.timing]), or the Metronome tab's own, and everything about how it sounds from [settings].
+ * ([MetronomeContext.Song.timing]), or the Metronome tab's own, a song's own accents from [songBeatLevels]
+ * (`UserPreferences.beatLevels`), and everything else about how it sounds from [settings].
  */
 internal fun metronomePatternOf(
     context: MetronomeContext,
     settings: MetronomeSettings,
     songOf: (String) -> Song?,
     tempos: Tempos,
+    songBeatLevels: Map<String, Map<String, List<String>>>,
 ): MetronomePattern {
     val (bpm, timeSignature) = when (context) {
         MetronomeContext.Standalone -> settings.bpm to settings.timeSignatureOrDefault
@@ -43,7 +45,7 @@ internal fun metronomePatternOf(
     return MetronomePattern(
         bpm = MetronomePattern.coerceBpm(bpm),
         timeSignature = timeSignature,
-        beatLevels = settings.beatLevelsOf(timeSignature),
+        beatLevels = settings.beatLevelsOf(timeSignature, songBeatLevels = (context as? MetronomeContext.Song)?.let { songBeatLevels[it.songFileName] }),
         subdivision = settings.subdivision,
         sound = settings.sound,
         volume = settings.volume,
@@ -56,15 +58,39 @@ internal val MetronomeSettings.sound get() = MetronomeSound.fromId(soundId) ?: M
 
 internal val MetronomeSettings.subdivision get() = Subdivision.fromId(subdivisionId) ?: Subdivision.NONE
 
-/** The accents drawn for [timeSignature], or its defaults where none were, or none of the right length. */
-internal fun MetronomeSettings.beatLevelsOf(timeSignature: TimeSignature) = beatLevels[timeSignature.toString()]
-    ?.takeIf { it.size == timeSignature.beats }
-    ?.map { BeatLevel.fromId(it) ?: BeatLevel.NORMAL }
-    ?: timeSignature.defaultBeatLevels()
+/**
+ * The accents of [timeSignature]: a song's own ([songBeatLevels], by signature), then the ones drawn for the signature
+ * anywhere, then its defaults, each skipped where it has none of the right length.
+ */
+internal fun MetronomeSettings.beatLevelsOf(timeSignature: TimeSignature, songBeatLevels: Map<String, List<String>>? = null) =
+    (songBeatLevels.levelsOf(timeSignature) ?: beatLevels.levelsOf(timeSignature))
+        ?.map { BeatLevel.fromId(it) ?: BeatLevel.NORMAL }
+        ?: timeSignature.defaultBeatLevels()
+
+private fun Map<String, List<String>>?.levelsOf(timeSignature: TimeSignature) = this?.get(timeSignature.toString())?.takeIf { it.size == timeSignature.beats }
 
 /** These settings with the accents of [timeSignature] set to [levels]. */
 internal fun MetronomeSettings.withBeatLevels(timeSignature: TimeSignature, levels: List<BeatLevel>) =
     copy(beatLevels = beatLevels + (timeSignature.toString() to levels.map { it.id }))
+
+/**
+ * The songs' accents (`UserPreferences.beatLevels`) with those of [songFileName] in [timeSignature] set to [levels], or
+ * taken off where they are the ones [settings] would give it anyway: a song accented as every other song in its
+ * signature has nothing of its own, so it goes on following the signature's accents when they are tapped differently
+ * on the Metronome tab, and a song left with no signature of its own leaves the map.
+ */
+internal fun Map<String, Map<String, List<String>>>.withSongBeatLevels(
+    songFileName: String,
+    timeSignature: TimeSignature,
+    levels: List<BeatLevel>,
+    settings: MetronomeSettings,
+): Map<String, Map<String, List<String>>> {
+    val signature = timeSignature.toString()
+    val songLevels = this[songFileName].orEmpty().let { songLevels ->
+        if (levels == settings.beatLevelsOf(timeSignature)) songLevels - signature else songLevels + (signature to levels.map { it.id })
+    }
+    return if (songLevels.isEmpty()) this - songFileName else this + (songFileName to songLevels)
+}
 
 internal val Song?.timeSignatureOrDefault
     get() = this?.time?.let(ChordProTime::parse)?.let { (beats, unit) -> TimeSignature(beats, unit) } ?: TimeSignature.COMMON_TIME
