@@ -301,8 +301,9 @@ like the rest of the bar, with no press drawn.
 
 The editor's bar draws it the same way, from the text as it is typed, so a cover written or changed by hand is seen
 before it is saved: an address only once the typing has paused for 500 ms (`rememberSettledCoverArtUrl`), since every
-half-typed one that happens to be valid would be a download of its own, and with no press, since the search is in the
-editor's menu. The About the song sheet and the preview's card put it at 72dp at the start of their Details tile,
+half-typed one that happens to be valid would be a download of its own, and with no press, since the search is opened
+from the cover in the About the song sheet and in the preview's card. The About the song sheet and the preview's card
+put it at 72dp at the start of their Details tile,
 the detail tiles flowing beside it (the group is there for a cover alone too), the card's following the text the same
 settled way; where the cover search is offered (outside performance mode, cover art on) a tap on it opens that search,
 and a song with no cover gets an empty place with the album icon in it that does the same. The lyrics' header draws none. Both follow
@@ -341,9 +342,10 @@ narrowed by).
 
 A tag or a language there is a shortcut to its own chip in the song filters (`toggleTagFilter`, `toggleLanguageFilter`),
 keeping the tapped row in place rather than sending the list to the top, drawn selected while it is on — a row has no
-chip that writes the song's tags, which is the details overflow menu's business; the setlists screen leaves both off its
-rows altogether (`shouldShowLabels`), since a setlist is not a view of the library either could narrow. Tags and
-languages in the song details card are read-only; only their dialogs edit them. A pill looks the same in both places:
+chip that writes the song's tags, which is the business of the song card's menu, the selection mode, and the About the
+song sheet's Tags tile; the setlists screen leaves both off its rows altogether (`shouldShowLabels`), since a setlist is
+not a view of the library either could narrow. Tags and languages in the About the song sheet and the editor preview's
+card are labels only; a tap on their tile opens their dialogs. A pill looks the same in both places:
 outlined rather than filled, since the card's tiles are the tone just below a tonal fill and an outline reads on any
 container, as the link buttons beside them do; only a selected one in a row is filled. `SongLabels` draws the song's languages
 there too, after the tags (the order of the details header and of the filters) each kind carrying the mark the details
