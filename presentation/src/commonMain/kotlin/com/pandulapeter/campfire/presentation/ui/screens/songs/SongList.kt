@@ -333,6 +333,11 @@ internal fun SongList(
                     // alone rather than the set that is new on every write to any setlist.
                     val isInSetlist = song.fileName in songFileNamesInSetlists
                     val isTicked = song.fileName in selection
+                    // Remembered, since the semantics lambda is a new one on every pass, which would make the modifier
+                    // unequal and have every visible card composed again on every tick of the selection mode.
+                    val selectionSemantics = remember(isSelecting, isTicked) {
+                        Modifier.selectionSemantics(isSelecting = isSelecting, isTicked = isTicked)
+                    }
                     // The placement animation changes as a scroll starts and ends, so it goes on a box of its own: on
                     // the row, it would be a new modifier each time, and the whole row would be composed again with it.
                     Box(
@@ -340,7 +345,7 @@ internal fun SongList(
                             .anchoredTransition(filterAnchor, listState, itemKey),
                     ) {
                         SongListItem(
-                            modifier = Modifier.fadingUnderListTop(topFade).selectionSemantics(isSelecting = isSelecting, isTicked = isTicked),
+                            modifier = Modifier.fadingUnderListTop(topFade).then(selectionSemantics),
                             song = song,
                             cardPadding = songCardPadding(songIndex, columnCount),
                             key = key,
