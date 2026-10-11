@@ -23,7 +23,27 @@ data class SongGroup(
 ) {
     /** The key of the grid item that shows [song] in this group: its own one, or its copy's. */
     fun itemKey(song: Song) = if (song.fileName in copiedFileNames) "$SONG_COPY_ITEM_KEY_PREFIX${song.fileName}" else songItemKey(song)
+
+    /**
+     * Where the song whose [itemKey] is [key] is in [songs], or -1. The key is taken apart rather than every song's key
+     * built to compare with it, since a tick looks a card up across the whole library.
+     */
+    fun indexOfItem(key: Any): Int {
+        val text = key as? String ?: return -1
+        val isCopy = text.startsWith(SONG_COPY_ITEM_KEY_PREFIX)
+        val fileName = when {
+            isCopy -> text.removePrefix(SONG_COPY_ITEM_KEY_PREFIX)
+            text.startsWith(SONG_ITEM_KEY_PREFIX) -> text.removePrefix(SONG_ITEM_KEY_PREFIX)
+            else -> return -1
+        }
+        return songs.indexOfFirst { it.fileName == fileName && (it.fileName in copiedFileNames) == isCopy }
+    }
 }
+
+internal fun songItemKey(song: Song) = "$SONG_ITEM_KEY_PREFIX${song.fileName}"
+
+/** What [songItemKey] puts in front of a song's file name. */
+private const val SONG_ITEM_KEY_PREFIX = "song_"
 
 /** What [SongGroup.itemKey] puts in front of the file name of a copy, a prefix no [songItemKey] can start with. */
 private const val SONG_COPY_ITEM_KEY_PREFIX = "copy_song_"

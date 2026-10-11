@@ -32,6 +32,17 @@ class ChecklistOrderTest {
     }
 
     @Test
+    fun `a row both held and added appears once, in the held part`() =
+        assertEquals(listOf("b", "d"), ChecklistOrder(heldKeys = setOf("b"), addedKeys = listOf("b", "d")).selectedGroup(rows) { it })
+
+    @Test
+    fun `of two rows with one added key the last one is taken`() {
+        val order = ChecklistOrder(setOf("a")).withCheckedKeys(setOf("a", "c"))
+        val items = listOf("a" to 1, "c" to 2, "c" to 3)
+        assertEquals(listOf("a" to 1, "c" to 3), order.selectedGroup(items) { it.first })
+    }
+
+    @Test
     fun `the group only grows until a refresh`() {
         val checked = ChecklistOrder(setOf("b")).withCheckedKeys(setOf("b", "d"))
         val unchecked = checked.withCheckedKeys(emptySet())
@@ -52,6 +63,8 @@ class ChecklistOrderTest {
         assertEquals(4, ChecklistOrder(setOf("b")).withCheckedKeys(setOf("b", "c")).layout(rows) { it }.leadingRowCount)
         // With nothing left under the group there is no divider.
         assertEquals(5, ChecklistOrder(rows.toSet()).layout(rows) { it }.leadingRowCount)
+        // Nothing checked, but the group still holds a row unchecked since the refresh.
+        assertEquals(3, ChecklistOrder(setOf("a")).withCheckedKeys(emptySet()).layout(rows) { it }.leadingRowCount)
     }
 
     @Test

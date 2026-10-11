@@ -42,6 +42,17 @@ class SongItemIndexTest {
     fun `a key no song has is nowhere`() = assertNull(groups.itemIndexOf("song_c1.cho", hasPlaceholder = false))
 
     @Test
+    fun `a copy key of a song copied nowhere is nowhere`() =
+        assertNull(groups.itemIndexOf(SongGroup(header = null, songs = emptyList(), copiedFileNames = setOf("a1.cho")).itemKey(song("a1")), hasPlaceholder = false))
+
+    @Test
+    fun `a key of another kind is nowhere`() {
+        assertNull(groups.itemIndexOf("header_a1.cho", hasPlaceholder = false))
+        assertNull(groups.itemIndexOf("selection_divider", hasPlaceholder = false))
+        assertNull(groups.itemIndexOf(1, hasPlaceholder = false))
+    }
+
+    @Test
     fun `the divider under the selection is counted`() {
         val selected = listOf(SongGroup(header = SongGroupHeader.Selection, songs = listOf(song("b1")))) + groups
         assertEquals(1, selected.itemIndexOf(songItemKey(song("b1")), hasPlaceholder = false))

@@ -64,7 +64,6 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ACTION_BUTTON_OVERLAP
@@ -133,7 +132,7 @@ internal fun SongList(
             inset = (appBarHeightPx * (1f - appBarOverlap().coverage)).roundToInt(),
         ) {
             listState.layoutInfo.visibleItemsInfo.firstOrNull { it.contentType == "song" }?.let { card ->
-                val activeGroup = groups.indexOfFirst { group -> group.songs.any { group.itemKey(it) == card.key } }
+                val activeGroup = groups.indexOfFirst { group -> group.indexOfItem(card.key) >= 0 }
                 SongSearchScrollAnchor.Snapshot(
                     cardIndex = card.index,
                     cardTop = card.offset.y,
@@ -494,17 +493,12 @@ internal fun SongList(
     }
 }
 
-internal fun songItemKey(song: Song) = "$SONG_ITEM_KEY_PREFIX${song.fileName}"
-
-/** What [songItemKey] puts in front of a song's file name. */
-private const val SONG_ITEM_KEY_PREFIX = "song_"
-
 /** The grid index of the item with [key], counted the way [SongList] emits its items. */
 internal fun List<SongGroup>.itemIndexOf(key: Any, hasPlaceholder: Boolean): Int? {
     var index = if (hasPlaceholder) 1 else 0
     forEachIndexed { groupIndex, group ->
         if (group.header != null) index++
-        val songIndex = group.songs.indexOfFirst { group.itemKey(it) == key }
+        val songIndex = group.indexOfItem(key)
         if (songIndex >= 0) return index + songIndex
         index += group.songs.size
         if (hasSelectionDividerAfter(groupIndex)) index++

@@ -52,10 +52,19 @@ internal data class ChecklistOrder(
         return copy(addedKeys = addedKeys + added, checkedKeys = checkedKeys)
     }
 
-    /** The rows of the selected group that [items] still holds. */
+    /**
+     * The rows of the selected group that [items] still holds. It keeps only those rows on its one pass rather than a map
+     * of all of them, since a tick asks it of the whole library.
+     */
     fun <T> selectedGroup(items: List<T>, key: (T) -> String): List<T> {
-        val byKey = items.associateBy(key)
-        return items.filter { key(it) in heldKeys } + addedKeys.mapNotNull { key -> byKey[key]?.takeIf { key !in heldKeys } }
+        val added = if (addedKeys.isEmpty()) emptySet() else addedKeys.toHashSet()
+        val held = ArrayList<T>()
+        val addedRows = HashMap<String, T>()
+        for (item in items) {
+            val itemKey = key(item)
+            if (itemKey in heldKeys) held += item else if (itemKey in added) addedRows[itemKey] = item
+        }
+        return held + addedKeys.mapNotNull { addedRows[it] }
     }
 
     /** Every row outside the held group, the ones added to the group since the last refresh included. */
@@ -65,13 +74,17 @@ internal data class ChecklistOrder(
      * Whether [checklistItems] draws its heading: while anything is checked, filtered out of [items] or not, so that
      * the count does not come and go with the search, and while the group still holds a row that was unchecked.
      */
-    fun <T> hasHeading(items: List<T>, key: (T) -> String) = checkedKeys.isNotEmpty() || selectedGroup(items, key).isNotEmpty()
+    fun <T> hasHeading(items: List<T>, key: (T) -> String) = hasHeadingWith(selectedGroup(items, key))
+
+    /** [hasHeading] for the [selectedGroup] the caller has worked out already, so that it is not worked out again. */
+    fun <T> hasHeadingWith(group: List<T>) = checkedKeys.isNotEmpty() || group.isNotEmpty()
 
     /** The rows [checklistItems] draws before [remainingRows]: the heading, the selected group and the divider. */
     fun <T> layout(items: List<T>, key: (T) -> String): ChecklistLayout {
+        val group = selectedGroup(items, key)
         val remainingRows = remainingRows(items, key)
-        val leadingRowCount = if (hasHeading(items, key)) {
-            1 + selectedGroup(items, key).size + if (remainingRows.isEmpty()) 0 else 1
+        val leadingRowCount = if (hasHeadingWith(group)) {
+            1 + group.size + if (remainingRows.isEmpty()) 0 else 1
         } else {
             0
         }
@@ -139,7 +152,7 @@ internal fun <T> LazyListScope.checklistItems(
 ) {
     val group = order.selectedGroup(items, key)
     val remaining = order.remainingRows(items, key)
-    if (order.hasHeading(items, key)) {
+    if (order.hasHeadingWith(group)) {
         item(key = "checklist_heading") {
             SettingsSectionTitle(
                 modifier = listItemAnimation(listState),

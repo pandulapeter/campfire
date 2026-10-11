@@ -45,6 +45,14 @@ class SongSelectionGroupsTest {
     }
 
     @Test
+    fun `a song ticked since the refresh is copied once, however many sections hold it`() {
+        val twice = groups + SongGroup(header = SongGroupHeader.Section(SongSection.Header.Letter('D')), songs = listOf(song("a1")))
+        val result = twice.withSelectionLeading(ChecklistOrder(setOf("b1.cho")).withCheckedKeys(setOf("b1.cho", "a1.cho")))
+        assertEquals(listOf("b1", "a1"), result.first().songs.map { it.title })
+        assertEquals(setOf("a1.cho"), result.first().copiedFileNames)
+    }
+
+    @Test
     fun `an unticked song stays in the selection until the next refresh`() {
         val order = ChecklistOrder(setOf("a1.cho")).withCheckedKeys(setOf("a1.cho", "b1.cho")).withCheckedKeys(emptySet())
         assertEquals(listOf("a1", "b1"), groups.withSelectionLeading(order).first().songs.map { it.title })
