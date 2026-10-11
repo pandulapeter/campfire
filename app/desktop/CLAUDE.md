@@ -133,10 +133,14 @@ follow a tap, which the runtime posts together and marks as a touch's on Windows
 Lists, the song pager and sheets then drag, fling and long press as on a phone. Multitouch is out of reach: the runtime
 passes on the primary finger alone. Compose Desktop has no public way to a window's scene, so it is found by type among
 the fields of the window and the Compose objects behind it (panel, container, mediator, its lazy `scene`), following
-only classes under `androidx.compose.`, whose names the release build keeps since ProGuard does not obfuscate there; a
-Compose version that keeps it elsewhere prints that touchscreen input is left to Compose, and the window behaves as it
-would without this. Check it after every Compose update: on a Mac, posting `MouseWheelEvent`s of those scroll types from
-an in-app driver exercises the whole path, since only the runtime's source of them is platform specific.
+only classes under `androidx.compose.`, whose names the release build keeps since ProGuard does not obfuscate there. It
+is looked for once, on the first touch, and only trusted when its size is the content pane's in pixels; a Compose
+version that keeps it elsewhere, keeps another scene closer to the window, or makes the walk throw prints that
+touchscreen input is left to Compose, and the window behaves as it would without this. One queue serves every window and
+is never popped, since `EventQueue.pop` removes the topmost queue whoever pushed it, and a window that has been disposed
+is left to Compose, whose own handling ignores it. Check it after every Compose update: on a Mac, posting
+`MouseWheelEvent`s of those scroll types from an in-app driver exercises the whole path, since only the runtime's source
+of them is platform specific.
 
 Everything the process prints is also written to `campfire.log` in the data directory (`DesktopLog`), since an installed
 build started from Finder, the Start menu or a `.desktop` entry has nowhere for standard output to go and the app has no

@@ -27,6 +27,8 @@ import java.lang.reflect.Modifier
 import java.util.Collections
 import java.util.IdentityHashMap
 import javax.swing.SwingUtilities
+import kotlin.math.abs
+import kotlin.math.roundToInt
 
 /**
  * Makes a finger on a touchscreen a touch to Compose rather than a mouse wheel, so that the lists, the pager and the
@@ -38,25 +40,58 @@ import javax.swing.SwingUtilities
  * finger that never left the radius, by a mouse click at that point. Compose Desktop reads the moves as wheel notches,
  * which on Windows are a twentieth of the scrolled area each and animated, so a finger that moves a hundred pixels
  * scrolls five screens, lifting it flings nothing, and nothing can be dragged at all. Every event of those scroll types
- * still carries where the finger is, which is all a touch pointer needs: an event queue of the window's own takes them
- * before Compose sees them and sends the window's scene a press, the moves and a release of a touch pointer instead,
- * dropping the click that follows a tap, which the press and the release already were.
+ * still carries where the finger is, which is all a touch pointer needs: an event queue takes them before Compose sees
+ * them and sends the window's scene a press, the moves and a release of a touch pointer instead, dropping the click
+ * that follows a tap, which the press and the release already were.
  *
  * Compose Desktop has no public way to the scene a window renders, so it is found among the window's own objects by
- * its type (see [findComposeScene]). A Compose version that keeps it elsewhere leaves the events to Compose, which is
- * the behavior of a window without this.
+ * its type (see [findComposeScene]). A Compose version that keeps it elsewhere, or keeps another scene there, leaves
+ * the events to Compose, which is the behavior of a window without this.
  *
  * @return What stops translating the events.
  */
 internal fun ComposeWindow.translateTouchScreenInput(): () -> Unit {
-    val queue = TouchScreenEventQueue(this)
-    Toolkit.getDefaultToolkit().systemEventQueue.push(queue)
-    return queue::stop
+    val translator = TouchScreenTranslator(this)
+    TouchScreenEventQueue.add(translator)
+    return { TouchScreenEventQueue.remove(translator) }
+}
+
+/**
+ * One queue for every window, pushed once and never popped: [EventQueue.pop] removes the queue on top, whoever pushed
+ * it, so a window popping its own after another queue was pushed over it - a window opened later, or a library's -
+ * would take that one instead, and throw when popping again. Only the event dispatch thread touches it.
+ */
+private object TouchScreenEventQueue : EventQueue() {
+    private val translators = mutableListOf<TouchScreenTranslator>()
+    private var isPushed = false
+
+    fun add(translator: TouchScreenTranslator) {
+        translators += translator
+        if (!isPushed) {
+            Toolkit.getDefaultToolkit().systemEventQueue.push(this)
+            isPushed = true
+        }
+    }
+
+    fun remove(translator: TouchScreenTranslator) {
+        translators -= translator
+    }
+
+    override fun dispatchEvent(event: AWTEvent) {
+        if (event is MouseEvent) {
+            for (translator in translators) {
+                if (translator.isInWindow(event)) {
+                    if (translator.translate(event)) return
+                    break
+                }
+            }
+        }
+        super.dispatchEvent(event)
+    }
 }
 
 @OptIn(InternalComposeUiApi::class)
-private class TouchScreenEventQueue(private val window: ComposeWindow) : EventQueue() {
-    private var isStopped = false
+private class TouchScreenTranslator(private val window: ComposeWindow) {
     private var scene: ComposeScene? = null
     private var isSceneSearched = false
     private var pointerId = TOUCH_POINTER_ID_BASE
@@ -64,22 +99,14 @@ private class TouchScreenEventQueue(private val window: ComposeWindow) : EventQu
     private var hasMoved = false
     private var isSkippingTapClick = false
 
-    fun stop() {
-        isStopped = true
-        pop()
-    }
-
-    override fun dispatchEvent(event: AWTEvent) {
-        if (!isStopped && event is MouseEvent && event.isInWindow() && translate(event)) return
-        super.dispatchEvent(event)
-    }
-
-    private fun MouseEvent.isInWindow() = component?.let { it === window || SwingUtilities.getWindowAncestor(it) === window } == true
+    fun isInWindow(event: MouseEvent) = event.component?.let { it === window || SwingUtilities.getWindowAncestor(it) === window } == true
 
     /** @return Whether the event was taken, so Compose must not see it. */
-    private fun translate(event: MouseEvent): Boolean {
+    fun translate(event: MouseEvent): Boolean {
         if (event is MouseWheelEvent && event.scrollType in TOUCH_BEGIN..TOUCH_END) {
             isSkippingTapClick = false
+            // AWT can still deliver events to a window that has been disposed, whose scene is closed.
+            if (!window.isDisplayable) return false
             val scene = scene() ?: return false
             val position = event.positionInScene()
             when (event.scrollType) {
@@ -123,13 +150,36 @@ private class TouchScreenEventQueue(private val window: ComposeWindow) : EventQu
         return false
     }
 
+    /**
+     * Looked for once: a window whose scene is not found, or not trusted, is left to Compose for good. Reflection that
+     * fails in a way the search did not foresee (a field whose type cannot be loaded, a module that refuses access)
+     * counts as not finding it, rather than breaking the window's input.
+     */
     private fun scene(): ComposeScene? {
         if (!isSceneSearched) {
-            scene = window.findComposeScene()
-            isSceneSearched = scene != null
+            isSceneSearched = true
+            scene = try {
+                window.findComposeScene()?.takeIf { it.fillsContentPane() }
+            } catch (_: LinkageError) {
+                null
+            } catch (_: RuntimeException) {
+                null
+            }
             if (scene == null) println("Touchscreen input is left to Compose: the window's scene was not found")
         }
         return scene
+    }
+
+    /**
+     * Whether the scene found is the one the window's content is drawn in, rather than one of a popup or a dialog that
+     * a later Compose version might keep closer to the window, since touches sent there would land elsewhere.
+     */
+    private fun ComposeScene.fillsContentPane(): Boolean {
+        val size = size ?: return false
+        val scale = window.graphicsConfiguration.defaultTransform.scaleX
+        val contentPane = window.contentPane
+        return abs(size.width - (contentPane.width * scale).roundToInt()) <= SCENE_SIZE_TOLERANCE &&
+            abs(size.height - (contentPane.height * scale).roundToInt()) <= SCENE_SIZE_TOLERANCE
     }
 
     /** Where Compose's own mouse handling puts the event: in pixels, from the corner of the window's content. */
@@ -200,4 +250,5 @@ private const val TOUCH_END = 4
 private const val TOUCH_POINTER_ID_BASE = 1L shl 32
 
 private const val SCENE_SEARCH_DEPTH = 6
+private const val SCENE_SIZE_TOLERANCE = 2
 private const val COMPOSE_PACKAGE = "androidx.compose."
