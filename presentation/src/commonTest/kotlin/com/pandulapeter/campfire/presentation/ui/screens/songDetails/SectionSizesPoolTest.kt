@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
+import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import kotlin.test.Test
 import kotlin.test.assertNotSame
 import kotlin.test.assertSame
@@ -57,4 +58,32 @@ class SectionSizesPoolTest {
         pool.sizesFor(listOf("chorus"))
         assertNotSame(first, pool.sizesFor(listOf("verse")).single())
     }
+
+    @Test
+    fun `folding one section keeps the sizes of the others`() {
+        val pool = SectionSizesPool<UnitContent>()
+        val verse = section(foldKey = "verse#1", "One", "Two")
+        val chorus = section(foldKey = "chorus#1", "Three")
+        val before = pool.sizesFor(listOf(UnitContent(verse, 0, 1, emptySet()), UnitContent(chorus, 0, 0, emptySet())))
+        before[1].heightsByWidth[400] = 60
+        val after = pool.sizesFor(listOf(UnitContent(verse, 0, 1, setOf("verse#1")), UnitContent(chorus, 0, 0, emptySet())))
+        assertSame(before[1], after[1])
+        assertTrue(after[1].heightsByWidth[400] == 60)
+    }
+
+    @Test
+    fun `a folded and an unfolded copy of an uncut section do not share sizes`() {
+        val pool = SectionSizesPool<UnitContent>()
+        val verse = section(foldKey = "verse#1", "One", "Two")
+        val unfolded = pool.sizesFor(listOf(UnitContent(verse, 0, verse.itemCount - 1, emptySet()))).single()
+        val folded = pool.sizesFor(listOf(UnitContent(verse, 0, verse.itemCount - 1, setOf("verse#1")))).single()
+        assertNotSame(unfolded, folded)
+    }
+
+    private fun section(foldKey: String, vararg lyrics: String) = RenderSection.Lines(
+        header = "Section",
+        foldKey = foldKey,
+        parts = listOf(SectionPart.Lines(lyrics.map { ChordProLine.Lyrics(text = it, chords = emptyList()) })),
+        isOnCard = false,
+    )
 }

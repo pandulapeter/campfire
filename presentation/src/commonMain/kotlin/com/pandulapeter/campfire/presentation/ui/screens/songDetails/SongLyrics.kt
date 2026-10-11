@@ -233,10 +233,11 @@ internal fun SongLyrics(
     val chordStyle = lyricsStyle.copy(fontWeight = FontWeight.Bold)
     // Annotations ([*text]) sit in the chord row but are not chords, so they are drawn in the lyrics' colour.
     val annotationStyle = lyricsStyle.copy(fontStyle = FontStyle.Italic)
-    // Everything the height of a section depends on apart from its own content and the width it is measured at, the
-    // folded runs included. Within one of these the sizes of a section are reused by content, so an edit or a
-    // transposition only measures the sections it changed.
-    val sectionSizesPool = remember(fontScale, density, foldedSections, lyricsStyle, headerStyle, defaultLabels) { SectionSizesPool<UnitContent>() }
+    // Everything the height of a section depends on apart from its own content and the width it is measured at. Within
+    // one of these the sizes of a section are reused by content, so an edit or a transposition only measures the
+    // sections it changed. The folds are not one of its keys but part of each chunk's content (UnitContent.foldedKeys),
+    // so a fold only measures its own section again.
+    val sectionSizesPool = remember(fontScale, density, lyricsStyle, headerStyle, defaultLabels) { SectionSizesPool<UnitContent>() }
     // Every section that may be cut is composed as the chunks it may be cut into, which the layout keeps together unless
     // it cuts between two of them (see flowLikeAMagazine): its lines, and the Chords section's slots, one per row of
     // diagrams. A folded section is one, since what is left of it is its header.
@@ -250,10 +251,14 @@ internal fun SongLyrics(
             }
         }
     }
-    val sectionMeasurements = remember(units, sectionSizesPool) {
+    val sectionMeasurements = remember(units, sectionSizesPool, foldedSections) {
+        val foldedKeys = sections.map { foldedKeysOf(it, foldedSections) }
         SectionMeasurements(
             sectionSizesPool.sizesFor(
-                units.itemRanges.mapIndexed { unit, items -> UnitContent(sections[units.unitSections[unit]], items.first, items.last) },
+                units.itemRanges.mapIndexed { unit, items ->
+                    val section = units.unitSections[unit]
+                    UnitContent(sections[section], items.first, items.last, foldedKeys[section])
+                },
             ),
         )
     }

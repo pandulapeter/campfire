@@ -31,12 +31,15 @@ internal data class CardKey(
 
 /**
  * What a chunk of a section holds, which is what its measurements are reused by (see [SectionSizesPool]): the section
- * and its items from [firstItem] to [lastItem].
+ * and its items from [firstItem] to [lastItem], and the folds of the section, which are part of what it holds since they
+ * change its height.
  */
 internal data class UnitContent(
     val section: RenderSection,
     val firstItem: Int,
     val lastItem: Int,
+    /** The keys of [foldedSections][FoldedRuns] that fold this section or a run inside it, see [foldedKeysOf]. */
+    val foldedKeys: Set<String>,
 )
 
 /**

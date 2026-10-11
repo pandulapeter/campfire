@@ -117,6 +117,16 @@ internal fun MutableMap<String, Int>.nextRunFoldKey(sectionFold: String, label: 
     return "$sectionFold/${nextFoldKey(runName)}"
 }
 
+/**
+ * The keys of [folded] that fold [section] or one of its runs (`intro#1`, `intro#1/tab#1`), which is all of the
+ * folds that can change its height. A key under it that names no run of it (the rest of a chorus recall, keyed
+ * `chorus#1/1`) only costs it a measurement it did not need.
+ */
+internal fun foldedKeysOf(section: RenderSection, folded: Set<String>): Set<String> = when (section) {
+    is RenderSection.Lines -> folded.filterTo(HashSet()) { it == section.foldKey || it.startsWith("${section.foldKey}/") }
+    else -> emptySet()
+}
+
 /** Whether a run (or a section that is nothing else) is unfolded, and how to fold or unfold it. */
 internal class FoldToggle(
     val isExpanded: Boolean,

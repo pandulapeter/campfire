@@ -130,8 +130,9 @@ never do. A run inside a section with other lines gets a small toggle of its own
 label (`{start_of_tab: Picking pattern}`) or "Tab" / "Grid" where it has none, and two environments written back to back
 under different labels fold apart; a section that is nothing but one run is folded as the section, with no second
 toggle. Its chevron is `components/ExpandChevron.kt`, the one the editor's Shortcuts toggle turns too, so that every
-fold in the app turns alike. The folded runs key `SectionMeasurements`, since they change the sections' heights and with
-them the columns; a run that is unfolded fades in while `animateBounds` grows its section, and only the opacity is
+fold in the app turns alike. The folds of each section are part of what its chunks' measured sizes are kept by
+(`UnitContent.foldedKeys`), so a fold measures only its own section again, while the grid is still searched again since
+the columns change; a run that is unfolded fades in while `animateBounds` grows its section, and only the opacity is
 animated, since a height still on its way would be measured halfway there. The chords switched off drop both altogether,
 so there is nothing to fold.
 

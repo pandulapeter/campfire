@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
+import com.pandulapeter.campfire.chordpro.model.CommentStyle
 import com.pandulapeter.campfire.presentation.ui.songLayout.FoldableKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -28,5 +29,13 @@ class RunFoldKeyTest {
                 counts.nextRunFoldKey(sectionFold = "intro#1", label = null, kind = FoldableKind.GRID),
             ),
         )
+    }
+
+    @Test
+    fun `a section's folds are its own key and the keys of its runs`() {
+        val folded = setOf("intro#1", "intro#1/tab#1", "verse#1", "intro#10")
+        val intro = RenderSection.Lines(header = "Intro", foldKey = "intro#1", parts = emptyList(), isOnCard = false)
+        assertEquals(setOf("intro#1", "intro#1/tab#1"), foldedKeysOf(intro, folded))
+        assertEquals(emptySet(), foldedKeysOf(RenderSection.Comment(text = "Slower", style = CommentStyle.ITALIC), folded))
     }
 }
