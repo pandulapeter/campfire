@@ -196,11 +196,11 @@ internal val promoShots: List<PromoShot> by lazy {
             ),
         ),
         PromoShot(
-            name = "mac-song-light",
-            device = Device.MAC,
+            name = "laptop-song-light",
+            device = Device.LAPTOP,
             isClip = false,
             shot = Shot(
-                id = "mac-song-light",
+                id = "laptop-song-light",
                 uiMode = UserPreferences.UiMode.LIGHT,
                 preferences = { mapOf("fontScale" to JsonPrimitive(1.05f)) },
                 drive = { openSong("the_rembrandts-ill_be_there_for_you.cho") },
