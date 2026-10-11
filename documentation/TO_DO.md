@@ -19,7 +19,6 @@
 - Setting tempo when no default is added - save to file?
 - Improve song details layout: documentation/plans/song-layout.md
 - Improve haptic effects (fast scroll is inconsistent, tap tempo should not have one)
-- Clean up all the Song details / Song editor / About the song bottom sheet menus. Too much duplicated content, not super intuitive.
 - Multi-select for songs: documentation/plans/multi-select.md
 - Duplicate song button
 - Review / update website support page (FAQ)

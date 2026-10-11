@@ -11,8 +11,6 @@ package com.pandulapeter.campfire.presentation.ui.dialogs
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -20,13 +18,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.chordpro.ChordProTempo
+import com.pandulapeter.campfire.chordpro.model.displayTitle
+import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
+import com.pandulapeter.campfire.metronome.api.model.TimeSignature
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.ic_album
-import com.pandulapeter.campfire.presentation.resources.song_details_set_cover_art
-import com.pandulapeter.campfire.presentation.resources.ic_edit
 import com.pandulapeter.campfire.presentation.resources.song_details_song_info
-import com.pandulapeter.campfire.presentation.resources.song_details_metadata_edit
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
@@ -34,17 +31,13 @@ import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongDefaults
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongInfoBody
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.rememberSongInfoEditing
-import com.pandulapeter.campfire.presentation.ui.components.ACTION_BUTTON_OVERLAP
-import com.pandulapeter.campfire.presentation.ui.components.overlappingAction
-import org.jetbrains.compose.resources.painterResource
 
 /**
- * What a song says about itself, read from its text as it is now: its details, the defaults its file declares for how
- * it is played — with a line saying where the song is being played differently from them, which is what the steppers on
- * the page show — and its tags, languages and links. Outside read only mode the header edits details and cover art and
- * the body edits the rest, opening their dialogs on top of the sheet — the cover art button there only while the song has
- * no cover, which is changed from the cover itself once it has one; read only mode shows only what the song has,
- * without editing controls.
+ * What a song says about itself, read from its text as it is now — the file's, or over the editor ([DialogType.SongInfo]'s
+ * target) the text being typed: its details, the defaults its file declares for how it is played — with a line saying
+ * where the song is being played differently from them, which is what the steppers on the page show — and its tags,
+ * languages and links. It is the one place all of that is edited: outside read only mode every group is a tile that
+ * opens its own sheet on top of this one, and the cover is what changes it; read only mode shows only what the song has.
  */
 @Composable
 internal fun SongInfoSheet(
@@ -52,47 +45,31 @@ internal fun SongInfoSheet(
     dialog: DialogType.SongInfo,
     urlOpener: (String) -> Unit,
 ) {
+    val isDraft = dialog.target is SongEditTarget.EditorDraft
     val songs by viewModel.allSongs.collectAsStateWithLifecycle()
-    val song = songs.firstOrNull { it.fileName == dialog.song.fileName } ?: dialog.song
     val songTexts by viewModel.songTexts.collectAsStateWithLifecycle()
+    val editorDraft by viewModel.editorDraft.collectAsStateWithLifecycle()
     val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     val setlists by viewModel.setlists.collectAsStateWithLifecycle()
-    val setlistFileName = (viewModel.backStack.lastOrNull() as? CampfireDestination.SongDetails)?.setlistFileName
-    val isReadOnly = isPerformanceModeEnabled || setlists.any { it.fileName == setlistFileName && it.isArchived }
-    val text = songTexts[dialog.song.fileName]
+    // The editor's own song is the text being typed, which neither has the overrides of a setlist nor is read only.
+    val setlistFileName = if (isDraft) null else (viewModel.backStack.lastOrNull() as? CampfireDestination.SongDetails)?.setlistFileName
+    val isReadOnly = !isDraft && (isPerformanceModeEnabled || setlists.any { it.fileName == setlistFileName && it.isArchived })
+    val text = if (isDraft) editorDraft?.takeIf { it.fileName == dialog.song.fileName }?.text else songTexts[dialog.song.fileName]
     val metadata = remember(text) { text?.let(viewModel::songMetadataOf) }
+    // Over the editor the header names the song the way the editor's title does, from the text being typed.
+    val song = if (isDraft) {
+        metadata?.let { dialog.song.copy(title = it.displayTitle(fallback = dialog.song.title), artist = it.artist.orEmpty()) } ?: dialog.song
+    } else {
+        songs.firstOrNull { it.fileName == dialog.song.fileName } ?: dialog.song
+    }
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val shouldShowChords = userPreferences?.areChordsEnabled != false
     val shouldShowTempo = userPreferences?.isMetronomeEnabled != false
-    val editing = rememberSongInfoEditing(viewModel = viewModel, song = song, target = SongEditTarget.File(song.fileName))
+    val editing = rememberSongInfoEditing(viewModel = viewModel, song = song, target = dialog.target)
     val overrides = songPlayingOverrides(viewModel = viewModel, song = song, setlistFileName = setlistFileName)
     CampfireBottomSheet(
         title = stringResource(Res.string.song_details_song_info),
         subtitle = songLabel(song),
-        actions = if (isReadOnly) null else {
-            {
-                // A song with a cover changes it from the cover itself, which the body draws with a pencil on it.
-                val onSetCoverArt = editing.onEditCoverArt?.takeIf { metadata?.coverArt.isNullOrBlank() }
-                onSetCoverArt?.let { onEditCoverArt ->
-                    IconButton(onClick = onEditCoverArt, enabled = metadata != null) {
-                        Icon(
-                            painter = painterResource(Res.drawable.ic_album),
-                            contentDescription = stringResource(Res.string.song_details_set_cover_art),
-                        )
-                    }
-                }
-                IconButton(
-                    modifier = if (onSetCoverArt != null) Modifier.overlappingAction(start = ACTION_BUTTON_OVERLAP, end = 0.dp) else Modifier,
-                    onClick = editing.onEditMetadata,
-                    enabled = metadata != null,
-                ) {
-                    Icon(
-                        painter = painterResource(Res.drawable.ic_edit),
-                        contentDescription = stringResource(Res.string.song_details_metadata_edit),
-                    )
-                }
-            }
-        },
         onDismiss = { viewModel.dismissSheet(dialog) },
     ) { contentPadding ->
         if (metadata != null) {
@@ -111,13 +88,15 @@ internal fun SongInfoSheet(
                 // Each value goes with its feature, and the group with both of them, see SongPlayingDialog.
                 defaults = if (shouldShowChords || shouldShowTempo) {
                     SongDefaults(
-                        key = metadata.key?.takeIf { shouldShowChords && it.isNotBlank() }?.let { viewModel.songRenderer.editorKeyOf(it, viewModel.editorNotation) },
+                        // The editor's text is in the reader's notation already, and the file's in the standard one.
+                        key = metadata.key?.takeIf { shouldShowChords && it.isNotBlank() }?.let { if (isDraft) it else viewModel.songRenderer.editorKeyOf(it, viewModel.editorNotation) },
                         capo = metadata.capo?.takeIf { shouldShowChords },
-                        tempo = ChordProTempo.parse(metadata.tempo)?.takeIf { shouldShowTempo },
-                        time = metadata.time?.takeIf { shouldShowTempo },
-                        overrides = overrides.labels,
+                        // The click's own tempo and time where the file names none, as if they were written there.
+                        tempo = (ChordProTempo.parse(metadata.tempo) ?: MetronomePattern.DEFAULT_BPM).takeIf { shouldShowTempo },
+                        time = (metadata.time?.takeIf { it.isNotBlank() } ?: TimeSignature.COMMON_TIME.toString()).takeIf { shouldShowTempo },
+                        overrides = if (isDraft) emptyList() else overrides.labels,
                         isReadFromSetlist = setlistFileName != null,
-                        onEdit = if (isReadOnly) null else ({ viewModel.showSongPlayingDialog(song = song, setlistFileName = setlistFileName, target = SongEditTarget.File(song.fileName)) }),
+                        onEdit = if (isReadOnly) null else ({ viewModel.showSongPlayingDialog(song = song, setlistFileName = setlistFileName, target = dialog.target) }),
                     )
                 } else {
                     null

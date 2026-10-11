@@ -46,9 +46,7 @@ import org.jetbrains.compose.resources.painterResource
  *   of it rather than removed from every setlist and the library at once.
  * @param leadingItems Actions put before the song's own: the ones that belong to the row rather than to the song
  *   (moving a row of a setlist up or down, and taking it out of the setlist), and on the song details screen whichever
- *   of its bar's buttons the bar has no room for: the metronome and the setlist assignments.
- * @param isEditShown False where the editor and [fileEditItems] have a menu of their own next to this one
- *   ([SongEditingActions]), which leaves this one with what is done to the file as a whole.
+ *   of its bar's buttons the bar has no room for: the setlist assignments and the tuner.
  * @param fileEditItems Metadata editors, kept after the editor in the menu: tags and languages on a song card.
  * @param menuFooter The song details screen's text size stepper, see [ActionsMenu].
  */
@@ -60,13 +58,12 @@ internal fun SongActions(
     song: Song,
     isDeletable: Boolean,
     isEditAndExportOnly: Boolean = false,
-    isEditShown: Boolean = true,
     setlistFileName: String? = null,
     leadingItems: List<ActionsMenuItem> = emptyList(),
     fileEditItems: List<ActionsMenuItem> = emptyList(),
     menuFooter: (@Composable () -> Unit)? = null,
 ) {
-    val editItems = if (isEditShown) listOf(editSongAction(actions = actions, song = song)) + fileEditItems.takeUnless { isEditAndExportOnly }.orEmpty() else emptyList()
+    val editItems = listOf(editSongAction(actions = actions, song = song)) + fileEditItems.takeUnless { isEditAndExportOnly }.orEmpty()
     ActionsMenu(
         modifier = modifier,
         state = state,

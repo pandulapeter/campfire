@@ -297,7 +297,7 @@ internal fun SongList(
                             song = song,
                             cardPadding = songCardPadding(songIndex, columnCount),
                             key = key,
-                            tempo = tempo.displayedBpm.takeIf { isMetronomeEnabled },
+                            tempo = tempo.bpm.takeIf { isMetronomeEnabled },
                             shouldShowChords = shouldShowChords,
                             coverArtUrl = song.coverArtUrl?.takeIf { isCoverArtEnabled },
                             labelsOnEverySong = labelsOnEverySong,

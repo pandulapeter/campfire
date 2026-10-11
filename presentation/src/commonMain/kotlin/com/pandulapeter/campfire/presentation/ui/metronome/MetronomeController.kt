@@ -179,9 +179,6 @@ internal class MetronomeController(
 
     fun stopMetronome() = metronome.stop()
 
-    /** Starts the song or the stretch the click is moving to on the next beat rather than once the bar has ended. */
-    fun applyPendingMetronomeChange() = metronome.applyPendingNow()
-
     fun previewMetronomeSound(sound: MetronomeSound) = metronome.preview(sound, BeatLevel.ACCENT)
 
     fun updateMetronomeSettings(change: MetronomeSettings.() -> MetronomeSettings) =

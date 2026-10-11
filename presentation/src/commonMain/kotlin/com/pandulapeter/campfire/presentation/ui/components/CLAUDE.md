@@ -153,9 +153,8 @@ of the menu), and a setlist's Edit details and Reorder songs, Archive, Duplicate
 the editor's Revert are always menu entries (`ActionsMenuItem.isAlwaysInMenu`) — dangerous, not to be promoted, or
 rarely wanted — so a menu holding any of them keeps its overflow button. `SongActions` never expands (the song details
 bar puts its own buttons in front of it, see below), so what can come out is a setlist's Choose songs in its header. On
-the song details screen, outside read only mode, the editor and the metadata and cover art editors are not in it but in
-`SongEditingActions`, a second menu before it behind a pencil (`ActionsMenu`'s `icon`), which never expands either:
-there are as many of them as of the song's other actions together, and the pencil says which menu is which.
+the song details screen it is the bar's one menu, Edit song file first among its own entries; every metadata and cover
+art editor is the About the song sheet's, which the title opens, so no menu lists them one by one.
 
 `SongActions` is the per-song set: edit, "Update file name" where the file is named something other than what its
 metadata would name it (`Song.canUpdateFileName`, which is also why the entry is absent from most songs), "Export song"
@@ -216,8 +215,8 @@ songs screen and in another inside a setlist that plays it differently.
 The capo is in it because this is what the band hears: a capo raises every fretted chord without renaming one of them,
 so a card is the one place that says so - the song details screen's Transposition control names the written key instead.
 
-The tempo follows it (`EffectiveTempo.displayedBpm`, the setlist's entry, the library's override or the file's
-`{tempo}`, and nothing at all where only the metronome's default is left), in the duration's muted color rather than the
+The tempo follows it (`EffectiveTempo.bpm`, the setlist's entry, the library's override or the file's `{tempo}`, and
+the metronome's default of 120 where none of them names one, as if the file did), in the duration's muted color rather than the
 accent one, since a second emphasized value beside the key halves what the key is there for.
 
 Both are worked out from the metadata the library scan already read rather than by parsing the file, since a list holds
@@ -233,7 +232,7 @@ one song from another while the others are showing chords — the way the switch
 viewer.
 
 The song list has priority over the panel: `hasRoomForSidePanel` only shows it when at least two `ListColumns` columns
-still fit beside it, the fast scroller's column counted (~1070dp of screen width next to the rail), otherwise the same
+still fit beside it, the fast scroller's column counted (~1150dp of screen width next to the rail), otherwise the same
 controls open in a bottom sheet from an app bar action.
 
 **In a window under 480dp wide** a song card gives its text 8dp of padding instead of the keyline — and the section
@@ -241,10 +240,10 @@ headers, a setlist's countdown and its description move in with it (`songCardTex
 one line — the dot between the artist and the key a 16dp box instead of 24dp, and its title two lines instead of one;
 the touch targets of its buttons stay as they are.
 
-A list's columns keep their 360dp minimum on a phone held sideways too, where two would each be narrower than the one in
-portrait. The Setlists screen's columns are at least 416dp (`MIN_SETLIST_COLUMN_WIDTH`,
+A list's columns keep their 400dp minimum on a phone held sideways too, where two would each be narrower than the one in
+portrait. The Setlists screen's columns are at least 456dp (`MIN_SETLIST_COLUMN_WIDTH`,
 `ListLayout.setlistColumnCount`), since its cards also carry the slot number, the key, the tempo and the duration, and
-at the songs' 360dp a laptop's maximized window cut all of them short across four columns.
+at the songs' 400dp a laptop's maximized window cut all of them short across four columns.
 
 ### `ui/components/LabeledControlRow.kt`
 
@@ -296,13 +295,12 @@ like the rest of the bar, with no press drawn.
 The editor's bar draws it the same way, from the text as it is typed, so a cover written or changed by hand is seen
 before it is saved: an address only once the typing has paused for 500 ms (`rememberSettledCoverArtUrl`), since every
 half-typed one that happens to be valid would be a download of its own, and with no press, since the search is in the
-editor's menu. The About the song sheet and the preview's card put it at 96dp at the start of their Song details group,
+editor's menu. The About the song sheet and the preview's card put it at 72dp at the start of their Details tile,
 the detail tiles flowing beside it (the group is there for a cover alone too), the card's following the text the same
 settled way; where the cover search is offered (outside performance mode, cover art on) a tap on it opens that search,
-which is why the header's cover button is there only while no cover is (fading and sliding in and out as one arrives or
-goes). The lyrics' header draws none. Both follow `UserPreferences.isCoverArtEnabled`, the Features tab's "Cover art"
-switch, which leaves every cover unfetched and undrawn when it is off; performance mode keeps them, since a cover
-changes nothing.
+and a song with no cover gets an empty place with the album icon in it that does the same. The lyrics' header draws none. Both follow
+`UserPreferences.isCoverArtEnabled`, the Features tab's "Cover art" switch, which leaves every cover unfetched and
+undrawn when it is off; performance mode keeps them, since a cover changes nothing.
 
 ### `ui/components/SaveShortcut.kt`
 

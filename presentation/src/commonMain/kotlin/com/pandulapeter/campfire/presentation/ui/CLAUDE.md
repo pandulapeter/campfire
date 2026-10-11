@@ -143,7 +143,7 @@ that sits at the bottom of every one of those stacks — used to be the only one
 — the root composable used by every platform shell: theme, language preference, adaptive chrome (`NavigationBar` under
 600dp, `NavigationRail` above — see `components/WindowSize` — and the expanded `WideNavigationRail`, labels beside the
 icons, where the window is wide enough that the songs screen keeps its filter side panel next to it too
-(`navigationChromeKind`, about 1290dp): it is decided by the window width alone, so the wide rail's own collapsed state
+(`navigationChromeKind`, about 1370dp): it is decided by the window width alone, so the wide rail's own collapsed state
 is never used, and its items start at the collapsed rail's height rather than under the room Material leaves for a
 header; the filter side panel is decided for the list screens rather than by the window, see `hasRoomForSidePanel`), the
 `Scaffold` + `NavDisplay`, `CampfireDialogs`, the snackbars for import and export results — a clean import's counts,
@@ -292,7 +292,7 @@ each screen collects that instead of reading it out of the preferences.
 It is read only mode for the app while it is being played from: the two "New" buttons, the per-song menu (and the long
 press that opens it on touch), the actions menu of a setlist header, the drag handle and the overflow menu a setlist row
 is reordered and removed by, the "Add to setlist" action, the "Choose songs" row ending every setlist, the song details
-file-editing menu and the controls of the four playing values all leave, which is also every way into the editor — the
+menu's Edit song file and the controls of the four playing values all leave, which is also every way into the editor — the
 screen stays reachable by nothing. What is left is what a song is read with: the search, the sorting, the tag and
 language filters, the text size and the chords switch, none of which change a file. The settings screen is the exception
 and keeps every row it has, since it is where the mode is switched back off; the two library actions there are disabled
@@ -336,23 +336,23 @@ See Cover art in the root `CLAUDE.md`.
 
 **Links about a song are carried the same way**: a `{meta: link https://… Optional name}` directive per link, read into
 `ChordProMetadata.links`. Any page is taken, whatever site it is on, and nothing is ever fetched from one: the song
-details' About the song sheet shows each as a chip named by its optional name or its host, opening the page in the
-browser. The sheet is opened by tapping the song details app bar's title while the song is at its top, which a chevron
-after the title says (it has no button or menu entry of its own) — and holds what the song says about itself, each group
-with an edit button next to its title outside performance mode and outside an archived setlist, where a group it has
-nothing for is its title and a plus alone; key, capo, tempo and time stay on the page as the song's first section (see
-How a song is played below), and the sheet only reads what the file declares for them, opening the Song defaults sheet
-and saying where the song is being played differently.
+details' About the song sheet shows each as an outlined button named by its optional name or its host, opening the page
+in the browser. The sheet is opened by tapping the song details app bar's title while the song is at its top, which a chevron
+after the title says, and by nothing else, since that is all the way to it a sheet needs — and holds what the song says about itself. **It is
+the one place a song's description is edited**: outside performance mode and outside an archived setlist each group is a
+tile of one grouped list that opens its own sheet when tapped (a chevron at its end, no pencils; a link is an outlined button
+inside its tile that opens the page), a group with nothing in it holding a call to
+action in the primary color (Add tags), and the cover — or an empty place for one — opens the cover search; key, capo, tempo and time stay on
+the page as the song's first section (see How a song is played below), and the sheet only reads what the file declares
+for them, opening the Song defaults sheet and saying where the song is being played differently.
 
-The editor's preview shows the same as a card that is the song's first section, flowing through its rows and columns and
-scaling with the lyrics, with the same edit buttons. The editor's overflow menu offers these actions in every pane, and
-the song details screen's editing menu — a pencil button of its own before the overflow menu, holding the editor and
-these — offers them outside performance mode and for a song not opened from an archived setlist (which has no editing
-menu and leaves its one overflow menu Edit and Export, as an archived setlist's own song menus do), with cover art
-editing following the cover art setting. Performance mode leaves that row out, and the button that opens it where all of
-them are empty. The Manage links sheet edits addresses and optional names together, and their order, written once on
-Save; the links are shown in that order, where tags and languages are always shown alphabetically. From the editor those
-buttons change the text being typed rather than the file, which only Save writes. Opening a link is the user's browser
+The editor's preview shows the same tiles as a card that is the song's first section, flowing through its rows and
+columns and scaling with the lyrics; there each tile opens its own editor directly, since the sheet would only repeat
+what the card already shows, and the first entry of the editor's overflow menu opens the sheet itself over the text
+being typed, in every pane. No menu lists the sheet's editors one by one; the song details screen's Edit song file is
+the first entry of its overflow menu, and cover art editing follows the cover art setting. The Manage links sheet edits addresses and optional names together, and their order, written once on Save; the
+links are shown in that order, where tags and languages are always shown alphabetically. Over the editor the sheet's
+tiles change the text being typed rather than the file, which only Save writes. Opening a link is the user's browser
 making the request, not Campfire.
 
 ## How a song is played
@@ -372,24 +372,26 @@ overridden where the song is read, so they belong to the setlist the band plays 
 `ui/playing/CLAUDE.md`); the time signature alone is written into the file as a `{time}` directive, since it is the song
 rather than one band's reading of it, and it is what the click counts the bar by.
 
-**What the file declares for all four is edited in the Song defaults sheet**, an entry of the song details editing menu
-and of the About the song sheet's Song defaults group, and nowhere on the page (the editor's overflow menu has it too,
-writing into the text being typed, without the line and the card below, since the editor has no steppers): it opens with
-a line saying that the steppers change them for this setlist only, or, opened from the library, outside every setlist —
-never naming a device, since the library's own overrides are synced (see `data/sync/implementation/CLAUDE.md`) — then a card naming what is adjusted
-there, with a Reset, while there is any, then the key, capo, tempo and time signature fields, each optional, an empty
-one leaving the default in force. A new song's template carries an empty `{key}` line and `{capo: 0}`, `{tempo: 120}`
-and `{time: 4/4}`, the defaults written out, for them to be edited. **Read only mode reads them instead**: performance
-mode and a song opened from an archived setlist get the same four as one line of accent colored text — which always
-names the capo and the time signature there, "Capo 0" and the click's 4/4 where the file says nothing, since with no
-control left on the page an absent value would read as an unknown one — as does the editor's preview, where the text
+**What the file declares for all four is edited in the Song defaults sheet**, opened from the About the song sheet's
+Song defaults tile and nowhere on the page (the sheet opened over the editor has it too, writing into the text being
+typed, without the line and the card below, since the editor has no steppers): it opens with a line saying that the
+steppers change them for this setlist only, or, opened from the library, outside every setlist — never naming a device,
+since the library's own overrides are synced (see `data/sync/implementation/CLAUDE.md`) — then a card naming what is
+adjusted there, with a Reset, while there is any, then the key, capo, tempo and time signature fields, each optional, an
+empty one leaving the default in force. A new song's template carries an empty `{key}` line and `{capo: 0}`, `{tempo:
+120}` and `{time: 4/4}`, the defaults written out, for them to be edited. **Read only mode reads them instead**:
+performance mode and a song opened from an archived setlist get the same four as one line of accent colored text — which
+always names the capo, the tempo and the time signature there, "Capo 0" and the click's 120 BPM and 4/4 where the file
+says nothing, since with
+no control left on the page an absent value would read as an unknown one — as does the editor's preview, where the text
 being typed is what says them.
 
 With the chords switched off the key and the capo leave the line and the controls alike, and with the metronome switched
 off the tempo and the time signature do (see Features below) — everywhere but in the editor's preview, which says all
 four whatever the switches and in the key it is written in, since it shows what is being written. What is left in the
-app bar is about the song rather than about how it is played — the Choose setlists, the editing menu and the menu, the
-title opening the About the song sheet — with the text size, which is the reader's own, at the end of that menu. **The
+app bar is about the song rather than about how it is played — the text size, which is the reader's own, where
+the bar has the room for it (at the end of the menu where not), the Choose setlists and the menu, the title opening the
+About the song sheet. **The
 key the band actually hears is named in the app bar**, after the artist and the way a song card names it: the
 transposition *and* the capo applied, so it is the key the song sounds in rather than the one the chords on the page
 spell, which is the Transposition control's — the two read differently wherever the capo is not zero, but on the
@@ -450,8 +452,8 @@ files still travel through an import, an export and a sync run; and **Cover art*
 whether the app reaches the network on its own.
 
 A switch cleans the interface up rather than locking anything, so what it takes away is gone everywhere, the Song
-defaults sheet and the About the song sheet's Song defaults group included (each value with its feature, the sheet's
-menu entry and the group once both are off), and an override nobody is shown is neither named nor reset there. A tab
+defaults sheet and the About the song sheet's Song defaults group included (each value with its feature, the group
+and with it the way into the sheet once both are off), and an override nobody is shown is neither named nor reset there. A tab
 switched off leaves the navigation chrome (`CampfireViewModel.topLevelDestinations`), shrinking out of the bar or the
 rail as the others close the gap (`components/NavigationItemPresence.kt`), and a back stack restored or an address
 opened is cut short at the first screen that belongs to one (`NavigationState.withoutDisabledFeatures`), a song read

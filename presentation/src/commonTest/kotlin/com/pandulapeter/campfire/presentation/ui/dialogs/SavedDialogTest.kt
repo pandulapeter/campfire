@@ -77,7 +77,7 @@ class SavedDialogTest {
             DialogType.Export(song = song),
             DialogType.Tuner,
             DialogType.DeleteSong(song),
-            DialogType.SongInfo(song),
+            DialogType.SongInfo(song = song, target = SongEditTarget.File(song.fileName)),
             DialogType.RemoveSongCoverArt(song, file),
         ).forEach { assertNull(it.toSavedDialog(), it.toString()) }
     }

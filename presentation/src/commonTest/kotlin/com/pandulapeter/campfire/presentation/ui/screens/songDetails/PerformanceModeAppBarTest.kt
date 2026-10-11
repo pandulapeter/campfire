@@ -18,7 +18,7 @@ import kotlin.test.assertTrue
 class PerformanceModeAppBarTest {
 
     /** Every width from below the smallest supported phone to a tablet, one dp apart. */
-    private val widths = (300..900).map { it.dp }
+    private val widths = (240..900).map { it.dp }
 
     @Test
     fun `the smallest supported phone keeps the text size stepper but leaves the cover out of the performance bar`() {
@@ -55,7 +55,16 @@ class PerformanceModeAppBarTest {
             val layouts = widths.map { appBarButtons(it, hasCover = hasCover) }
             layouts.forEach { if (it.isSetlistAssignmentsShown) assertTrue(it.isCoverShown) }
             assertTrue(layouts.any { it.isCoverShown && !it.isSetlistAssignmentsShown }, "hasCover = $hasCover")
-            assertEquals(buttons(cover = true, setlistAssignments = true), layouts.last())
+            assertEquals(buttons(cover = true, setlistAssignments = true, fontScale = true), layouts.last())
+        }
+    }
+
+    @Test
+    fun `the text size leaves the bar before the setlist assignments`() {
+        listOf(true, false).forEach { hasCover ->
+            val layouts = widths.map { appBarButtons(it, hasCover = hasCover) }
+            layouts.forEach { if (it.isFontScaleShown) assertTrue(it.isSetlistAssignmentsShown) }
+            assertTrue(layouts.any { it.isSetlistAssignmentsShown && !it.isFontScaleShown }, "hasCover = $hasCover")
         }
     }
 
@@ -67,12 +76,18 @@ class PerformanceModeAppBarTest {
     }
 
     @Test
-    fun `the smallest supported phone keeps the cover but leaves the setlist assignments to the menu`() {
-        assertEquals(buttons(cover = true, setlistAssignments = false), appBarButtons(360.dp, hasCover = true))
+    fun `the smallest supported phone keeps the cover and the setlist assignments but leaves the text size to the menu`() {
+        assertEquals(buttons(cover = true, setlistAssignments = true, fontScale = false), appBarButtons(360.dp, hasCover = true))
     }
 
-    private fun buttons(cover: Boolean, setlistAssignments: Boolean) = AppBarButtons(
+    @Test
+    fun `a tablet has the text size in the bar`() {
+        assertTrue(appBarButtons(800.dp, hasCover = true).isFontScaleShown)
+    }
+
+    private fun buttons(cover: Boolean, setlistAssignments: Boolean, fontScale: Boolean) = AppBarButtons(
         isCoverShown = cover,
         isSetlistAssignmentsShown = setlistAssignments,
+        isFontScaleShown = fontScale,
     )
 }

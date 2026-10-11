@@ -9,7 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -24,7 +23,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
@@ -37,8 +35,6 @@ import androidx.compose.ui.unit.dp
  * reserving that much would be taller than the song title above it.
  *
  * @param onClick Null where the pill is only read, which is what the editor's preview shows.
- * @param isAction An outlined pill in the primary color, for one that adds something rather than showing it: the empty
- *   groups of a song's info. The outline is drawn inside the pill, so it is exactly as tall as the tags next to it.
  * @param fontScale The song details' zoom, which the pills of its info card follow along with the lyrics; the text, the
  *   mark and the widest a pill may grow scale together, so that a zoomed tag is not ellipsized sooner than at rest.
  */
@@ -47,27 +43,14 @@ internal fun TagPill(
     modifier: Modifier = Modifier,
     text: String,
     isSelected: Boolean = false,
-    isAction: Boolean = false,
     onClick: (() -> Unit)? = null,
     leadingIcon: Painter? = null,
     fontScale: Float = 1f,
 ) {
-    val contentColor = when {
-        isAction -> MaterialTheme.colorScheme.primary
-        isSelected -> MaterialTheme.colorScheme.onSecondaryContainer
-        else -> MaterialTheme.colorScheme.onSurfaceVariant
-    }
-    val containerColor = when {
-        isAction -> Color.Transparent
-        isSelected -> MaterialTheme.colorScheme.secondaryContainer
-        else -> MaterialTheme.colorScheme.surfaceContainerHighest
-    }
-    val border = if (isAction) BorderStroke(width = 1.dp, color = MaterialTheme.colorScheme.outlineVariant) else null
+    val contentColor = if (isSelected) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+    val containerColor = if (isSelected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainerHighest
     val textStyle = MaterialTheme.typography.labelMedium.scaled(fontScale)
-    // All pills share the same height, including actions without an icon, at every text scale.
-    val chipHeight = with(LocalDensity.current) {
-        maxOf(TAG_ICON_SIZE * fontScale, textStyle.lineHeight.toDp() + TAG_TEXT_PADDING * 2)
-    }
+    val chipHeight = tagPillHeight(fontScale)
     val content = @Composable {
         Row(
             // The tag dialog caps what is typed, but a tag that arrives in a file (written in the editor, imported or
@@ -102,7 +85,6 @@ internal fun TagPill(
                 shape = MaterialTheme.shapes.small,
                 color = containerColor,
                 contentColor = contentColor,
-                border = border,
                 content = content,
             )
         } else {
@@ -112,11 +94,19 @@ internal fun TagPill(
                 shape = MaterialTheme.shapes.small,
                 color = containerColor,
                 contentColor = contentColor,
-                border = border,
                 content = content,
             )
         }
     }
+}
+
+/**
+ * The height of every [TagPill] at [fontScale], with or without an icon, for what stands in a row of them and has to
+ * be exactly as tall: the call to action of an empty group of a song's info.
+ */
+@Composable
+internal fun tagPillHeight(fontScale: Float): Dp = with(LocalDensity.current) {
+    maxOf(TAG_ICON_SIZE * fontScale, MaterialTheme.typography.labelMedium.scaled(fontScale).lineHeight.toDp() + TAG_TEXT_PADDING * 2)
 }
 
 private val TAG_PADDING = 8.dp

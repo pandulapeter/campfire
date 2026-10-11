@@ -30,8 +30,8 @@ internal fun MetadataTiles(
     fontScale: Float,
 ) = FlowRow(
     modifier = modifier,
-    horizontalArrangement = Arrangement.spacedBy(24.dp * fontScale),
-    verticalArrangement = Arrangement.spacedBy(12.dp * fontScale),
+    horizontalArrangement = Arrangement.spacedBy(20.dp * fontScale),
+    verticalArrangement = Arrangement.spacedBy(8.dp * fontScale),
 ) {
     rows.forEach { (label, value) ->
         Column {
@@ -42,7 +42,7 @@ internal fun MetadataTiles(
             )
             Text(
                 text = value,
-                style = MaterialTheme.typography.bodyLarge.scaled(fontScale),
+                style = MaterialTheme.typography.bodyMedium.scaled(fontScale),
             )
         }
     }

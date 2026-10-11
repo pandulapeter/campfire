@@ -39,11 +39,12 @@ import com.pandulapeter.campfire.presentation.ui.songInfo.hasSongInfo
  * hands them down outside read only mode, see [SongPlayingControls].
  * @param playingTools The tuner and metronome buttons, which the song details screen hands down in read only mode too,
  * see [SongPlayingTools]; null in the editor's preview, which plays nothing.
- * @param readsCapoAndTime Whether the line of text names a capo of none too, see [withMetadataSection].
+ * @param readsDefaults Whether the line of text names a capo of none, and the default tempo and time signature, too, see
+ * [withMetadataSection].
  * @param animatesControls Whether the controls travel to the places a new layout gives them, which the song's own
  * sections decide (see `SectionMotion`): never while a pinch or a window edge being dragged changes the layout every frame.
- * @param titleStyle The style of the section titles of the lyrics, which the card's own title follows as the text is
- * scaled; what the card holds scales with [fontScale] the way the lyrics do.
+ * @param titleStyle The style of the section titles of the lyrics, which the controls are as tall as; what the card
+ * holds scales with [fontScale] the way the lyrics do.
  * @param chordStyle The style the chords of the lyrics are set in, already scaled, which the line of text read only mode
  * draws the four values in: the key and the capo are read in the chords' accent color, and in the chords' size they read
  * as part of what is played rather than as a caption above it.
@@ -56,7 +57,7 @@ internal fun SongMetadataSection(
     songInfoEditing: SongInfoEditing?,
     playingControls: SongPlayingControls?,
     playingTools: SongPlayingTools?,
-    readsCapoAndTime: Boolean,
+    readsDefaults: Boolean,
     animatesControls: Boolean,
     titleStyle: TextStyle,
     chordStyle: TextStyle,
@@ -67,7 +68,6 @@ internal fun SongMetadataSection(
         SongInfoCard(
             metadata = metadata,
             editing = songInfoEditing,
-            titleStyle = titleStyle,
             fontScale = fontScale,
         )
     }
@@ -76,7 +76,7 @@ internal fun SongMetadataSection(
             modifier = Modifier.padding(top = if (hasSongInfoCard) 12.dp else 0.dp),
             metadata = metadata,
             tools = playingTools,
-            readsCapoAndTime = readsCapoAndTime,
+            readsDefaults = readsDefaults,
             isAnimated = animatesControls,
             style = chordStyle,
             toolHeight = songControlHeight(titleStyle),
@@ -104,7 +104,7 @@ private fun SongPlayingMetadata(
     modifier: Modifier = Modifier,
     metadata: ChordProMetadata,
     tools: SongPlayingTools?,
-    readsCapoAndTime: Boolean,
+    readsDefaults: Boolean,
     isAnimated: Boolean,
     style: TextStyle,
     toolHeight: Dp,
@@ -112,7 +112,7 @@ private fun SongPlayingMetadata(
 ) {
     val chordValues = listOfNotNull(
         metadata.key?.takeIf { it.isNotBlank() }?.let { it to true },
-        metadata.capo?.takeIf { readsCapoAndTime || it != 0 }?.let { stringResource(Res.string.song_details_capo, it) to true },
+        metadata.capo?.takeIf { readsDefaults || it != 0 }?.let { stringResource(Res.string.song_details_capo, it) to true },
     )
     val clickValues = listOfNotNull(
         metadata.tempo?.takeIf { it.isNotBlank() }?.let { textResource(Res.string.song_details_tempo, it) to false },

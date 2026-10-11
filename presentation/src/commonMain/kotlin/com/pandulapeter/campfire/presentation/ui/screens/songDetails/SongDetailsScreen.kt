@@ -50,6 +50,7 @@ import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
 import com.pandulapeter.campfire.presentation.ui.chords.toChordInstrument
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
+import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
@@ -156,7 +157,7 @@ internal fun SongDetailsScreen(
         isReadOnly && currentSongText?.let(viewModel::hasSongInfo) == true
     }
     val openCurrentSongInfo = currentSong?.let { song ->
-        if (currentSongText == null || (isReadOnly && !hasSongInfo)) null else { { viewModel.showDialog(DialogType.SongInfo(song)) } }
+        if (currentSongText == null || (isReadOnly && !hasSongInfo)) null else { { viewModel.showDialog(DialogType.SongInfo(song = song, target = SongEditTarget.File(song.fileName))) } }
     }
     val chordSpelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
     val layoutDirection = LocalLayoutDirection.current
@@ -244,7 +245,6 @@ internal fun SongDetailsScreen(
             areSetlistsEnabled = areSetlistsEnabled,
             isCoverArtEnabled = isCoverArtEnabled,
             chordSpelling = chordSpelling,
-            songTimings = songTimings,
             currentPageScrollState = { currentPageScrollState },
             openCurrentSongInfo = openCurrentSongInfo,
             songs = songs,

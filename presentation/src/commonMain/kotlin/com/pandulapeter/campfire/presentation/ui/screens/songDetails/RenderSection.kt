@@ -48,7 +48,8 @@ internal sealed interface RenderSection {
      *
      * @param hasPlayingControls Whether the key, capo, tempo and time are drawn as the controls that set them rather
      * than as one line of text, which is part of the content because the measured sizes of a section are kept by it.
-     * @param readsCapoAndTime Whether that line names a capo of none too, see [withMetadataSection].
+     * @param readsDefaults Whether that line names a capo of none, and the default tempo and time signature, too, see
+     * [withMetadataSection].
      * @param hasTuner Whether the tuner's button is drawn among them, part of the content for the same reason.
      * @param hasMetronome Whether the metronome's button is drawn among them, part of the content for the same reason.
      */
@@ -56,7 +57,7 @@ internal sealed interface RenderSection {
     data class Metadata(
         val metadata: ChordProMetadata,
         val hasPlayingControls: Boolean = false,
-        val readsCapoAndTime: Boolean = false,
+        val readsDefaults: Boolean = false,
         val hasTuner: Boolean = false,
         val hasMetronome: Boolean = false,
     ) : RenderSection

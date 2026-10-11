@@ -104,8 +104,8 @@ class SongMetadataTest {
             withMetadataSection(body, playing, shouldShowChords = true, shouldShowTempo = false, isSongInfoShown = true),
         )
         assertEquals(
-            listOf(RenderSection.Metadata(metadata = ChordProMetadata(time = "4/4"), readsCapoAndTime = true), verse),
-            withMetadataSection(body, ChordProMetadata(), shouldShowChords = false, isSongInfoShown = false, readsCapoAndTime = true),
+            listOf(RenderSection.Metadata(metadata = ChordProMetadata(tempo = "120", time = "4/4"), readsDefaults = true), verse),
+            withMetadataSection(body, ChordProMetadata(), shouldShowChords = false, isSongInfoShown = false, readsDefaults = true),
         )
     }
 
@@ -128,32 +128,32 @@ class SongMetadataTest {
     }
 
     @Test
-    fun `read only mode names a capo of none and the common time where the file names neither`() {
+    fun `read only mode names a capo of none and the default tempo and time where the file names none`() {
         val body = listOf(verse)
 
         assertEquals(
-            listOf(RenderSection.Metadata(metadata = ChordProMetadata(capo = 0, time = "4/4"), readsCapoAndTime = true), verse),
-            withMetadataSection(body, ChordProMetadata(), shouldShowChords = true, isSongInfoShown = false, readsCapoAndTime = true),
+            listOf(RenderSection.Metadata(metadata = ChordProMetadata(capo = 0, tempo = "120", time = "4/4"), readsDefaults = true), verse),
+            withMetadataSection(body, ChordProMetadata(), shouldShowChords = true, isSongInfoShown = false, readsDefaults = true),
         )
         assertEquals(
-            listOf(RenderSection.Metadata(metadata = ChordProMetadata(capo = 3, time = "6/8"), readsCapoAndTime = true), verse),
-            withMetadataSection(body, ChordProMetadata(capo = 3, time = "6/8"), shouldShowChords = true, isSongInfoShown = false, readsCapoAndTime = true),
+            listOf(RenderSection.Metadata(metadata = ChordProMetadata(capo = 3, tempo = "96", time = "6/8"), readsDefaults = true), verse),
+            withMetadataSection(body, ChordProMetadata(capo = 3, tempo = "96", time = "6/8"), shouldShowChords = true, isSongInfoShown = false, readsDefaults = true),
         )
-        assertSame(body, withMetadataSection(body, ChordProMetadata(), shouldShowChords = false, shouldShowTempo = false, isSongInfoShown = false, readsCapoAndTime = true))
+        assertSame(body, withMetadataSection(body, ChordProMetadata(), shouldShowChords = false, shouldShowTempo = false, isSongInfoShown = false, readsDefaults = true))
     }
 
     @Test
     fun `the keyboard names no capo, not even in read only mode`() {
         val body = listOf(verse)
         assertEquals(
-            listOf(RenderSection.Metadata(metadata = ChordProMetadata(key = "A", time = "6/8"), readsCapoAndTime = true), verse),
+            listOf(RenderSection.Metadata(metadata = ChordProMetadata(key = "A", tempo = "120", time = "6/8"), readsDefaults = true), verse),
             withMetadataSection(
                 body,
                 ChordProMetadata(key = "A", capo = 3, time = "6/8"),
                 shouldShowChords = true,
                 shouldShowCapo = false,
                 isSongInfoShown = false,
-                readsCapoAndTime = true,
+                readsDefaults = true,
             ),
         )
         assertEquals(
@@ -162,8 +162,8 @@ class SongMetadataTest {
         )
     }
 
-    private fun shownMetadata(metadata: ChordProMetadata, readsCapoAndTime: Boolean = false) =
-        (withMetadataSection(emptyList(), metadata, shouldShowChords = true, isSongInfoShown = false, readsCapoAndTime = readsCapoAndTime)
+    private fun shownMetadata(metadata: ChordProMetadata, readsDefaults: Boolean = false) =
+        (withMetadataSection(emptyList(), metadata, shouldShowChords = true, isSongInfoShown = false, readsDefaults = readsDefaults)
             .firstOrNull() as? RenderSection.Metadata)?.metadata
 
     /** The line says what the click plays, so a tempo is read as the click reads it. */
@@ -172,12 +172,13 @@ class SongMetadataTest {
         assertEquals("120", shownMetadata(ChordProMetadata(tempo = "120 bpm"))?.tempo)
         assertEquals("300", shownMetadata(ChordProMetadata(tempo = "400"))?.tempo)
         assertNull(shownMetadata(ChordProMetadata(tempo = "fast")))
+        assertEquals("120", shownMetadata(ChordProMetadata(tempo = "fast"), readsDefaults = true)?.tempo)
     }
 
     @Test
     fun `the time signature is the one the click counts`() {
         assertEquals("4/4", shownMetadata(ChordProMetadata(time = "C"))?.time)
-        assertEquals("4/4", shownMetadata(ChordProMetadata(time = "7/9"), readsCapoAndTime = true)?.time)
+        assertEquals("4/4", shownMetadata(ChordProMetadata(time = "7/9"), readsDefaults = true)?.time)
         assertNull(shownMetadata(ChordProMetadata(time = "7/9")))
     }
 
@@ -185,6 +186,6 @@ class SongMetadataTest {
     fun `the capo is held to the neck`() {
         assertEquals(12, shownMetadata(ChordProMetadata(capo = 15))?.capo)
         assertNull(shownMetadata(ChordProMetadata(capo = -1)))
-        assertEquals(0, shownMetadata(ChordProMetadata(capo = -1), readsCapoAndTime = true)?.capo)
+        assertEquals(0, shownMetadata(ChordProMetadata(capo = -1), readsDefaults = true)?.capo)
     }
 }

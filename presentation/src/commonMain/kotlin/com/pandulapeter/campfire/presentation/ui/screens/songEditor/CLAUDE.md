@@ -110,17 +110,17 @@ screen. Its app bar starts with Close rather than Back. The whole bar is one sur
   library or a setlist (the file's own `{transpose}` still applies, being part of the text), as it ignores the Chords
   and Metronome switches — so the field, the stepper and the preview name the same chords and the same key, the one
   exception being a numbering, whose preview counts the chords the field names in letters.
-- The preview's About the song card has the sheet's edit buttons (Edit song details, Manage tags, languages and links,
-  `rememberSongInfoEditing`, so the card is there even for a song that says nothing about itself yet), and the overflow
-  menu keeps the cover art, a link to the ChordPro directives reference on chordpro.org (always in the menu, for what
-  the Shortcuts write, a `{define}` above all) and the revert — and holds those four as well (`songInfoEditingActions`,
-  the same callbacks) in every pane, so they are there while the preview, and with it the card, is out of sight; they
-  open the same bottom sheets on a snapshot of the text being typed (`toEditorSong`) — but there they edit that text
-  rather than the file (`DialogType.SongEdit.target`, a `SongEditTarget.EditorDraft` rather than a
-  `SongEditTarget.File`): the change reaches the screen through `CampfireViewModel.editorTextEdits` and goes through the
-  field's own editing (`EditOnRequest`), one more step of the undo history that Save writes with the rest, since nothing
-  but Save ever writes the file the editor is open on. Such a sheet is not taken down when the file leaves the library,
-  since the draft is still there.
+- The preview's About the song card is the About the song sheet's tiles, each opening its own editor directly
+  (`rememberSongInfoEditing`, so the card is there even for a song that says nothing about itself yet), since it shows
+  all the sheet would. The first entry of the overflow menu opens that sheet over the text being typed
+  (`DialogType.SongInfo` with a `SongEditTarget.EditorDraft`), in every pane, so the editors are there while the
+  preview, and with it the card, is out of sight; the rest of the menu is Prettify, a link to the ChordPro directives
+  reference on chordpro.org (for what the Shortcuts write, a `{define}` above all) and the revert. Card and sheet open
+  the same bottom sheets the song details screen's do, on a snapshot of the text being typed (`toEditorSong`), but there they edit that text rather than the file (`DialogType.SongEdit.target`): the change
+  reaches the screen through `CampfireViewModel.editorTextEdits` and goes through the field's own editing
+  (`EditOnRequest`), one more step of the undo history that Save writes with the rest, since nothing but Save ever
+  writes the file the editor is open on. Such a sheet is not taken down when the file leaves the library, since the
+  draft is still there.
 - Export and Delete are not here: they belong to the song list and the viewer. Revert is, last in the overflow menu and
   behind a confirmation (`DialogType.RevertChanges`) — in the menu rather than a button of its own, because throwing
   away everything typed since the last save is not something to end up in by mistapping the button next to Save. It is

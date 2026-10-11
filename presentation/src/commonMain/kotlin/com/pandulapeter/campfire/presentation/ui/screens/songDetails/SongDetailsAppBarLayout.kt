@@ -36,22 +36,23 @@ internal fun showsCoverInPerformanceMode(appBarWidth: Dp) = showsFontScaleInPerf
 internal data class AppBarButtons(
     val isCoverShown: Boolean,
     val isSetlistAssignmentsShown: Boolean,
+    val isFontScaleShown: Boolean,
 )
 
 /**
- * What the app bar of a screen [appBarWidth] wide has the room for besides what it always holds: the back button, the
- * editing menu and the overflow button ([APP_BAR_FIXED_CONTENT_WIDTH]), which stay whatever the width, since the way
- * into the editor is what the screen is opened for (the metronome and the tuner are the song's own first section's, see
- * `SongPlayingTools`). The rest leaves one at a time as the bar narrows, each needing the title left [MIN_TITLE_WIDTH]:
- * the setlist assignments first, into the overflow menu, and then the cover in front of the title, which only decorates
- * it - where [hasCover] says no song of the pager has one, it takes no room. The setlist assignments are only there while
- * the cover is.
+ * What the app bar of a screen [appBarWidth] wide has the room for besides what it always holds: the back button and the
+ * overflow button ([APP_BAR_FIXED_CONTENT_WIDTH]), which holds the way into the editor whatever the width (the metronome
+ * and the tuner are the song's own first section's, see `SongPlayingTools`). The rest comes out of that menu one at a
+ * time as the bar widens, each needing the title left [MIN_TITLE_WIDTH] beside it and everything before it: the cover in
+ * front of the title, which only decorates it - where [hasCover] says no song of the pager has one, it takes no room -
+ * then the setlist assignments, then the text size stepper, the widest of them and the one only adjusted now and then.
  */
 internal fun appBarButtons(appBarWidth: Dp, hasCover: Boolean): AppBarButtons {
     val room = appBarWidth - APP_BAR_FIXED_CONTENT_WIDTH - if (hasCover) APP_BAR_COVER_SIZE + APP_BAR_COVER_GAP else 0.dp
     return AppBarButtons(
         isCoverShown = room >= MIN_TITLE_WIDTH,
         isSetlistAssignmentsShown = room - APP_BAR_OVERLAPPING_ACTION_WIDTH >= MIN_TITLE_WIDTH,
+        isFontScaleShown = room - APP_BAR_OVERLAPPING_ACTION_WIDTH - STEPPER_WIDTH >= MIN_TITLE_WIDTH,
     )
 }
 
@@ -69,9 +70,8 @@ private val APP_BAR_ACTION_WIDTH = 48.dp
 /** What one more button adds to a row of them, which reach into each other's touch targets (see [ACTION_BUTTON_OVERLAP]). */
 private val APP_BAR_OVERLAPPING_ACTION_WIDTH = APP_BAR_ACTION_WIDTH - ACTION_BUTTON_OVERLAP
 
-/** The back button, the bar's paddings, the editing menu and the overflow button. */
-private val APP_BAR_FIXED_CONTENT_WIDTH = APP_BAR_NAVIGATION_WIDTH + APP_BAR_END_PADDING + APP_BAR_ACTION_WIDTH +
-    APP_BAR_OVERLAPPING_ACTION_WIDTH
+/** The back button, the bar's paddings and the overflow button. */
+private val APP_BAR_FIXED_CONTENT_WIDTH = APP_BAR_NAVIGATION_WIDTH + APP_BAR_END_PADDING + APP_BAR_ACTION_WIDTH
 
 /** As tall as the title and the artist next to it: a titleMedium and a bodySmall line. The editor's bar shares it. */
 internal val APP_BAR_COVER_SIZE = 40.dp

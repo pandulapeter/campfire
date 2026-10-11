@@ -43,8 +43,11 @@ internal fun columnCountForWidth(
     minColumnWidth: Dp = MIN_SONG_COLUMN_WIDTH,
 ) = (width / minColumnWidth).toInt().coerceIn(1, MAX_COLUMN_COUNT)
 
-/** The narrowest column a song card is laid out in, which a phone held upright still fits one of. */
-internal val MIN_SONG_COLUMN_WIDTH = 360.dp
+/**
+ * The narrowest column a song card is laid out in where there are two or more; a window narrower than one column, a
+ * phone held upright included, still gets one, as wide as the window.
+ */
+internal val MIN_SONG_COLUMN_WIDTH = 400.dp
 
 /**
  * The narrowest column the Setlists screen lays its song cards out in. A card there carries more on one line than on
@@ -52,5 +55,5 @@ internal val MIN_SONG_COLUMN_WIDTH = 360.dp
  * the songs' width a laptop's maximized window fits four columns in which those lines are cut short. A phone is
  * unaffected, since it fits one column at either width.
  */
-internal val MIN_SETLIST_COLUMN_WIDTH = 416.dp
+internal val MIN_SETLIST_COLUMN_WIDTH = 456.dp
 private const val MAX_COLUMN_COUNT = 4

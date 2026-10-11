@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.FlowRowScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -30,17 +29,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.chordpro.ChordProDuration
 import com.pandulapeter.campfire.chordpro.model.ChordProLink
 import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
-import com.pandulapeter.campfire.presentation.localization.pluralStringResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.ic_edit
+import com.pandulapeter.campfire.presentation.resources.ic_album
 import com.pandulapeter.campfire.presentation.resources.ic_label
 import com.pandulapeter.campfire.presentation.resources.ic_language
 import com.pandulapeter.campfire.presentation.resources.ic_link
@@ -52,27 +50,32 @@ import com.pandulapeter.campfire.presentation.resources.song_details_info_langua
 import com.pandulapeter.campfire.presentation.resources.song_details_info_links
 import com.pandulapeter.campfire.presentation.resources.song_details_info_tags
 import com.pandulapeter.campfire.presentation.resources.song_details_languages_edit
+import com.pandulapeter.campfire.presentation.resources.song_details_links_add
 import com.pandulapeter.campfire.presentation.resources.song_details_links_edit
+import com.pandulapeter.campfire.presentation.resources.song_details_languages_add
 import com.pandulapeter.campfire.presentation.resources.song_details_lyricist
+import com.pandulapeter.campfire.presentation.resources.song_details_metadata_edit
+import com.pandulapeter.campfire.presentation.resources.song_details_set_cover_art
 import com.pandulapeter.campfire.presentation.resources.song_details_tags_manage
+import com.pandulapeter.campfire.presentation.resources.song_details_tags_add
 import com.pandulapeter.campfire.presentation.resources.song_details_year
 import com.pandulapeter.campfire.presentation.ui.components.CoverArtImage
 import com.pandulapeter.campfire.presentation.ui.components.TagFlowRow
 import com.pandulapeter.campfire.presentation.ui.components.TagPill
 import com.pandulapeter.campfire.presentation.ui.components.languageLabel
 import com.pandulapeter.campfire.presentation.ui.components.sortedAlphabeticallyBy
-import org.jetbrains.compose.resources.PluralStringResource
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * What the card and the sheet of what the song is hold: the cover, then the album, the year and the people behind the
- * song as small label-over-value tiles beside it, untitled since the card or the sheet around them already says what
- * they are, then the song's defaults where [defaults] are given, then a group of chips for each of its tags, its
- * languages and its links. Where [editing] is given, each category ends with a Manage chip, or an Add chip with a plus
- * icon when empty. Details are edited from the card or sheet header.
+ * What the sheet and the editor preview's card of what the song is hold, as the tiles of one grouped list: the cover
+ * with the album, the year and the people behind the song as small label-over-value tiles beside it, then the song's
+ * defaults where [defaults] are given, then a group of chips for each of its tags and its languages, and one of buttons
+ * for its links ([SongInfoLinkButtons]). Where [editing] is given every tile is what edits its group, an empty one offering its
+ * editor rather than being left out, and the cover (or the empty place for one) is what changes it: a tile as large as
+ * what it changes is found without a button next to every title.
  *
  * @param coverArtUrl The cover to draw at the start of the details, null where there is none or the cover art setting
- * is off. It opens the cover search where [editing] has a way to it, the same as the header's cover button.
+ * is off.
  * @param defaults What the file declares for the four values the song is played by, which only the sheet shows: the
  * editor's preview card sits over the line of text that already reads them.
  * @param onOpenLink Follows a link; null leaves the links as plain chips.
@@ -95,83 +98,108 @@ internal fun SongInfoBody(
         metadata.lyricist?.takeIf { it.isNotBlank() }?.let { stringResource(Res.string.song_details_lyricist) to it },
         ChordProDuration.parse(metadata.duration)?.let { stringResource(Res.string.song_details_duration) to ChordProDuration.format(it) },
     )
+    val onSetCoverArt = editing?.onEditCoverArt
+    val groups = songInfoGroupsOf(
+        hasDetails = rows.isNotEmpty() || coverArtUrl != null || editing != null,
+        hasDefaults = defaults != null && (defaults.hasValues || defaults.onEdit != null || defaults.overrides.isNotEmpty()),
+        hasTags = metadata.tags.isNotEmpty() || editing != null,
+        hasLanguages = metadata.languages.isNotEmpty() || editing != null,
+        hasLinks = metadata.links.isNotEmpty() || editing != null,
+    )
+    fun shapeOf(group: SongInfoGroupKind) = songInfoTileShape(groups.indexOf(group), groups.size)
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(SONG_INFO_GROUP_GAP * fontScale),
+        verticalArrangement = Arrangement.spacedBy(SONG_INFO_TILE_GAP),
     ) {
-        if (rows.isNotEmpty() || coverArtUrl != null) {
+        if (SongInfoGroupKind.DETAILS in groups) {
             SongInfoGroup(
+                // Untitled: the cover and the labelled values say what they are, and the empty tile names its editor.
                 title = null,
                 count = 0,
                 fontScale = fontScale,
                 horizontalPadding = horizontalPadding,
+                tileShape = shapeOf(SongInfoGroupKind.DETAILS),
+                onClick = editing?.onEditMetadata,
+                onClickLabel = stringResource(Res.string.song_details_metadata_edit),
             ) {
-                Row {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     SongInfoCover(
                         url = coverArtUrl,
                         fontScale = fontScale,
-                        onClick = editing?.onEditCoverArt,
+                        onClick = onSetCoverArt,
                     )
-                    MetadataTiles(
-                        modifier = Modifier.weight(1f),
-                        rows = rows,
-                        fontScale = fontScale,
-                    )
+                    if (rows.isEmpty() && editing != null) {
+                        SongInfoAction(
+                            text = stringResource(Res.string.song_details_metadata_edit),
+                            fontScale = fontScale,
+                        )
+                    } else {
+                        MetadataTiles(
+                            modifier = Modifier.weight(1f),
+                            rows = rows,
+                            fontScale = fontScale,
+                        )
+                    }
                 }
             }
         }
-        if (defaults != null && (defaults.hasValues || defaults.onEdit != null || defaults.overrides.isNotEmpty())) {
+        if (defaults != null && SongInfoGroupKind.DEFAULTS in groups) {
             SongDefaultsGroup(
                 defaults = defaults,
                 fontScale = fontScale,
                 horizontalPadding = horizontalPadding,
+                tileShape = shapeOf(SongInfoGroupKind.DEFAULTS),
             )
         }
-        if (metadata.tags.isNotEmpty() || editing != null) {
+        if (SongInfoGroupKind.TAGS in groups) {
             SongInfoChipGroup(
-                title = Res.plurals.song_details_info_tags,
+                title = stringResource(Res.string.song_details_info_tags),
                 count = metadata.tags.size,
                 fontScale = fontScale,
                 horizontalPadding = horizontalPadding,
+                tileShape = shapeOf(SongInfoGroupKind.TAGS),
                 onEdit = editing?.onEditTags,
                 editLabel = stringResource(Res.string.song_details_tags_manage),
+                emptyLabel = stringResource(Res.string.song_details_tags_add),
             ) {
                 val tags = remember(metadata.tags) { metadata.tags.sortedAlphabeticallyBy { it } }
                 tags.forEach { TagPill(text = it, leadingIcon = painterResource(Res.drawable.ic_label), fontScale = fontScale) }
             }
         }
-        if (metadata.languages.isNotEmpty() || editing != null) {
+        if (SongInfoGroupKind.LANGUAGES in groups) {
             SongInfoChipGroup(
-                title = Res.plurals.song_details_info_languages,
+                title = stringResource(Res.string.song_details_info_languages),
                 count = metadata.languages.size,
                 fontScale = fontScale,
                 horizontalPadding = horizontalPadding,
+                tileShape = shapeOf(SongInfoGroupKind.LANGUAGES),
                 onEdit = editing?.onEditLanguages,
                 editLabel = stringResource(Res.string.song_details_languages_edit),
+                emptyLabel = stringResource(Res.string.song_details_languages_add),
             ) {
                 metadata.languages.map { languageLabel(it) }.sortedAlphabeticallyBy { it }.forEach { label ->
                     TagPill(text = label, leadingIcon = painterResource(Res.drawable.ic_language), fontScale = fontScale)
                 }
             }
         }
-        if (metadata.links.isNotEmpty() || editing != null) {
+        if (SongInfoGroupKind.LINKS in groups) {
             SongInfoChipGroup(
-                title = Res.plurals.song_details_info_links,
+                title = stringResource(Res.string.song_details_info_links),
                 count = metadata.links.size,
                 fontScale = fontScale,
                 horizontalPadding = horizontalPadding,
+                tileShape = shapeOf(SongInfoGroupKind.LINKS),
                 onEdit = editing?.onEditLinks,
                 editLabel = stringResource(Res.string.song_details_links_edit),
+                emptyLabel = stringResource(Res.string.song_details_links_add),
             ) {
-                // Unlike the tags and the languages, the links stay in the order the file and the dialog that
-                // edits them give them, since that order is one the user chose.
-                metadata.links.forEach { link ->
-                    TagPill(
-                        text = linkLabel(link),
-                        onClick = onOpenLink?.let { { it(link.url) } },
-                        leadingIcon = painterResource(Res.drawable.ic_link),
-                        fontScale = fontScale,
-                    )
+                if (onOpenLink == null) {
+                    // The links stay in the order the file gives them, as the buttons keep it.
+                    metadata.links.forEach { link ->
+                        TagPill(text = linkLabel(link), leadingIcon = painterResource(Res.drawable.ic_link), fontScale = fontScale)
+                    }
+                } else {
+                    SongInfoLinkButtons(links = metadata.links, fontScale = fontScale, onOpenLink = onOpenLink)
                 }
             }
         }
@@ -179,10 +207,10 @@ internal fun SongInfoBody(
 }
 
 /**
- * The cover in front of the details, a shortcut to the cover search where [onClick] is given, with a small pencil on it
- * then, since the sheet's header offers its cover button only to a song with no cover yet. Keyed on whether there is
- * a cover rather than on its address, so that a new cover crossfades in place of the old one, while a cover being set or
- * removed opens or closes its room.
+ * The cover in front of the details. Where [onClick] is given it is the way to the cover search, and a song with no
+ * cover gets an empty place for one with the album icon in it, which is how a first cover is set. Keyed on whether
+ * there is a cover rather than on its address, so that a new cover crossfades in place of the old one, while a cover
+ * being set or removed opens or closes its room.
  */
 @Composable
 private fun SongInfoCover(
@@ -194,7 +222,7 @@ private fun SongInfoCover(
     transitionSpec = { fadeIn() togetherWith fadeOut() },
     contentKey = { it != null },
 ) { shownUrl ->
-    if (shownUrl != null) {
+    if (shownUrl != null || onClick != null) {
         val shape = MaterialTheme.shapes.medium
         Box(
             modifier = Modifier
@@ -203,32 +231,32 @@ private fun SongInfoCover(
                 .clip(shape)
                 .then(
                     if (onClick == null) Modifier else Modifier.clickable(
-                        onClickLabel = stringResource(Res.string.song_details_change_cover_art),
+                        onClickLabel = stringResource(if (shownUrl == null) Res.string.song_details_set_cover_art else Res.string.song_details_change_cover_art),
                         role = Role.Button,
                         onClick = onClick,
                     ),
                 ),
+            contentAlignment = Alignment.Center,
         ) {
-            CoverArtImage(
-                modifier = Modifier.matchParentSize(),
-                url = shownUrl,
-                shape = shape,
-            )
-            if (onClick != null) {
+            if (shownUrl != null) {
+                CoverArtImage(
+                    modifier = Modifier.matchParentSize(),
+                    url = shownUrl,
+                    shape = shape,
+                )
+            } else {
                 Surface(
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(COVER_EDIT_BADGE_INSET * fontScale)
-                        .size(COVER_EDIT_BADGE_SIZE * fontScale),
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.matchParentSize(),
+                    shape = shape,
+                    color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 ) {
-                    Icon(
-                        modifier = Modifier.padding(COVER_EDIT_BADGE_INSET * fontScale),
-                        painter = painterResource(Res.drawable.ic_edit),
-                        contentDescription = null,
-                    )
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            painter = painterResource(Res.drawable.ic_album),
+                            contentDescription = null,
+                        )
+                    }
                 }
             }
         }
@@ -236,34 +264,30 @@ private fun SongInfoCover(
 }
 
 /**
- * A [SongInfoGroup] of chips, titled in the singular or the plural. A group of several also says how many; a single
- * chip, which is what most songs have for a language, is named by the title alone. A pencil next to the title edits the
- * group; an empty one offers a plus instead, and is the title row alone.
+ * A [SongInfoGroup] of chips, always titled in the plural: the title names a kind of thing the song can have any number
+ * of, like a form's label, and one that changed its wording as the first chip arrived or the second one left would move
+ * under the finger that did it. A group of several also says how many.
  */
 @Composable
 private fun SongInfoChipGroup(
-    title: PluralStringResource,
+    title: String,
     count: Int,
     fontScale: Float,
     horizontalPadding: Dp,
+    tileShape: Shape,
     onEdit: (() -> Unit)?,
     editLabel: String,
+    emptyLabel: String,
     chips: @Composable FlowRowScope.() -> Unit,
 ) = SongInfoGroup(
-    title = pluralStringResource(title, count),
+    title = title,
     count = count,
     fontScale = fontScale,
     horizontalPadding = horizontalPadding,
-    action = onEdit?.let { onClick ->
-        {
-            SongInfoAction(
-                hasValues = count > 0,
-                contentDescription = editLabel,
-                fontScale = fontScale,
-                onClick = onClick,
-            )
-        }
-    },
+    tileShape = tileShape,
+    onClick = onEdit,
+    onClickLabel = editLabel,
+    emptyLabel = emptyLabel,
     isContentShown = count > 0,
 ) {
     TagFlowRow(content = chips)
@@ -285,9 +309,7 @@ internal fun linkLabel(url: String): String = url
     .removePrefix("www.")
     .ifEmpty { url }
 
-private val SONG_INFO_GROUP_GAP = 16.dp
+private val SONG_INFO_TILE_GAP = 2.dp
 
 /** As tall as two rows of detail tiles, which is what a song with a few details fills beside it. */
-private val SONG_INFO_COVER_SIZE = 96.dp
-private val COVER_EDIT_BADGE_SIZE = 24.dp
-private val COVER_EDIT_BADGE_INSET = 4.dp
+private val SONG_INFO_COVER_SIZE = 72.dp

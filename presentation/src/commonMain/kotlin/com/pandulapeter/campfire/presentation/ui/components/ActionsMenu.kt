@@ -78,8 +78,6 @@ import org.jetbrains.compose.resources.painterResource
  * @param menuFooter Drawn at the end of the menu, after its entries: controls that are adjusted rather than chosen, so
  *   they leave the menu open, and that have no button of their own however much room there is - which keeps the
  *   overflow button there for good.
- * @param icon The overflow button's icon: the dots, unless the menu stands next to another one and has to say which of
- *   the two it is, as the song details screen's editing menu does.
  */
 @Composable
 internal fun ActionsMenu(
@@ -87,7 +85,6 @@ internal fun ActionsMenu(
     buttonModifier: Modifier = Modifier,
     state: OverflowMenuState = rememberOverflowMenuState(),
     contentDescription: String = stringResource(Res.string.songs_actions),
-    icon: Painter = painterResource(Res.drawable.ic_more),
     items: List<ActionsMenuItem>,
     isExpandable: Boolean = true,
     isDecorative: Boolean = false,
@@ -96,6 +93,7 @@ internal fun ActionsMenu(
     modifier = modifier,
 ) {
     val buttonWidth = actionButtonWidth()
+    val icon = painterResource(Res.drawable.ic_more)
     val slotCount = ((maxWidth - ACTION_BUTTON_OVERLAP) / (buttonWidth - ACTION_BUTTON_OVERLAP)).toInt().coerceAtLeast(1)
     val visibleItems = items.filter { it.isVisible }
     val expandableItems = if (isExpandable) visibleItems.filterNot { it.isAlwaysInMenu } else emptyList()

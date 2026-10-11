@@ -559,7 +559,7 @@ internal fun SetlistList(
                                             song = entry.song,
                                             setlistFileName = setlistFileName,
                                             overrides = playingOverrides,
-                                        ).tempo.displayedBpm.takeIf { isMetronomeEnabled },
+                                        ).tempo.bpm.takeIf { isMetronomeEnabled },
                                         shouldShowChords = shouldShowChords,
                                         duration = entry.song.duration,
                                         coverArtUrl = entry.song.coverArtUrl?.takeIf { isCoverArtEnabled },

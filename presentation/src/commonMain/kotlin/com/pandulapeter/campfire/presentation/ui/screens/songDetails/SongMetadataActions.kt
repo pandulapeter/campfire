@@ -18,18 +18,9 @@ import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.ic_album
-import com.pandulapeter.campfire.presentation.resources.ic_info
 import com.pandulapeter.campfire.presentation.resources.ic_label
 import com.pandulapeter.campfire.presentation.resources.ic_language
-import com.pandulapeter.campfire.presentation.resources.ic_link
-import com.pandulapeter.campfire.presentation.resources.ic_tune
-import com.pandulapeter.campfire.presentation.resources.song_details_change_cover_art
 import com.pandulapeter.campfire.presentation.resources.song_details_languages_edit
-import com.pandulapeter.campfire.presentation.resources.song_details_links_edit
-import com.pandulapeter.campfire.presentation.resources.song_details_metadata_edit
-import com.pandulapeter.campfire.presentation.resources.song_details_playing_edit
-import com.pandulapeter.campfire.presentation.resources.song_details_set_cover_art
 import com.pandulapeter.campfire.presentation.resources.song_details_tags_manage
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ActionsMenuItem
@@ -127,10 +118,9 @@ internal fun rememberSongPlayingControls(
 }
 
 /**
- * What the header and group edit buttons open: the dialog of each group, on the song details screen's sheet and on the
- * editor preview's card alike. From the editor (a [SongEditTarget.EditorDraft] [target]) they edit the text being typed rather than the file,
- * see [DialogType.SongEdit], and [song] is that text's description of the song, which follows every
- * keystroke, so the latest one is what a button opens its dialog on.
+ * What the tiles of the About the song sheet open: the dialog of each group. Over the editor (a
+ * [SongEditTarget.EditorDraft] [target]) they edit the text being typed rather than the file, see [DialogType.SongEdit],
+ * and the latest [song] is what a tile opens its dialog on.
  */
 @Composable
 internal fun rememberSongInfoEditing(
@@ -153,71 +143,6 @@ internal fun rememberSongInfoEditing(
         )
     }
 }
-
-/**
- * [SongInfoEditing] as entries of the editor and song details menus. In the order of the card's groups, and kept
- * behind the overflow tap however much room the bar has.
- */
-@Composable
-internal fun songInfoEditingActions(editing: SongInfoEditing): List<ActionsMenuItem> = listOf(
-    ActionsMenuItem(
-        title = stringResource(Res.string.song_details_metadata_edit),
-        icon = painterResource(Res.drawable.ic_info),
-        isAlwaysInMenu = true,
-        onClick = editing.onEditMetadata,
-    ),
-    ActionsMenuItem(
-        title = stringResource(Res.string.song_details_tags_manage),
-        icon = painterResource(Res.drawable.ic_label),
-        isAlwaysInMenu = true,
-        onClick = editing.onEditTags,
-    ),
-    ActionsMenuItem(
-        title = stringResource(Res.string.song_details_languages_edit),
-        icon = painterResource(Res.drawable.ic_language),
-        isAlwaysInMenu = true,
-        onClick = editing.onEditLanguages,
-    ),
-    ActionsMenuItem(
-        title = stringResource(Res.string.song_details_links_edit),
-        icon = painterResource(Res.drawable.ic_link),
-        isAlwaysInMenu = true,
-        onClick = editing.onEditLinks,
-    ),
-)
-
-/**
- * Opens the "Song defaults" sheet from the song details editing menu or the editor's (the About the song sheet's Song
- * defaults group opens it too): what the file declares for the four values the song is played by, next to what
- * [setlistFileName] (or the library) overrides of them, or what the editor's draft declares for them.
- */
-@Composable
-internal fun songPlayingAction(
-    viewModel: CampfireViewModel,
-    song: Song,
-    setlistFileName: String?,
-    target: SongEditTarget,
-) = ActionsMenuItem(
-    title = stringResource(Res.string.song_details_playing_edit),
-    icon = painterResource(Res.drawable.ic_tune),
-    isAlwaysInMenu = true,
-    onClick = { viewModel.showSongPlayingDialog(song = song, setlistFileName = setlistFileName, target = target) },
-)
-
-/**
- * Opens the cover art sheet from the editor or song details menu.
- */
-@Composable
-internal fun coverArtAction(
-    viewModel: CampfireViewModel,
-    song: Song,
-    target: SongEditTarget,
-) = ActionsMenuItem(
-    title = stringResource(if (song.coverArtUrl == null) Res.string.song_details_set_cover_art else Res.string.song_details_change_cover_art),
-    icon = painterResource(Res.drawable.ic_album),
-    isAlwaysInMenu = true,
-    onClick = { viewModel.showSongCoverArtDialog(song = song, target = target) },
-)
 
 /**
  * The tag and the language editors as entries of a song card's menu on the songs screen: unlike the metadata and the

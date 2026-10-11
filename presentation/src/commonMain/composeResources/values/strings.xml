@@ -580,28 +580,20 @@
     <string name="song_details_section_expand_starting">Show the section starting \"%1$s\"</string>
     <string name="song_details_section_collapse_starting">Hide the section starting \"%1$s\"</string>
     <string name="song_details_tags_manage">Manage tags</string>
+    <string name="song_details_tags_add">Add tags</string>
     <string name="song_details_tags_search">Find or create a tag</string>
     <string name="song_details_tag_create">Create the \"%1$s\" tag</string>
-    <string name="song_details_editing_actions">Edit</string>
     <string name="song_details_metadata_edit">Edit song details</string>
     <string name="song_details_song_info">About the song</string>
-    <string name="song_details_info_defaults">Song defaults</string>
-    <plurals name="song_details_info_tags">
-        <item quantity="one">Tag</item>
-        <item quantity="other">Tags</item>
-    </plurals>
-    <plurals name="song_details_info_languages">
-        <item quantity="one">Language</item>
-        <item quantity="other">Languages</item>
-    </plurals>
-    <plurals name="song_details_info_links">
-        <item quantity="one">Link</item>
-        <item quantity="other">Links</item>
-    </plurals>
+    <string name="song_details_info_tags">Tags</string>
+    <string name="song_details_info_languages">Languages</string>
+    <string name="song_details_info_links">Links</string>
     <string name="song_details_links_edit">Manage links</string>
+    <string name="song_details_links_add">Add links</string>
     <string name="song_details_link_name">Name (optional)</string>
     <string name="song_details_link_duplicate">This address is already in the list</string>
     <string name="song_details_languages_edit">Manage languages</string>
+    <string name="song_details_languages_add">Add languages</string>
     <string name="song_details_remove_cover_art_confirmation">Remove the cover art from %1$s?</string>
     <string name="song_details_link_add">Add link</string>
     <string name="song_details_link_remove">Remove the link to %1$s</string>
@@ -627,9 +619,6 @@
     <string name="cover_art_address_failed">No image could be loaded from this address</string>
     <string name="song_details_capo">Capo %1$d</string>
     <string name="song_details_tempo">%1$s BPM</string>
-    <string name="song_details_tempo_pending">%1$s → %2$s BPM</string>
-    <string name="song_details_tempo_pending_description">From the next bar: %2$s BPM, now %1$s BPM</string>
-    <string name="song_details_tempo_apply_now">Switch now</string>
     <string name="song_details_time">%1$s</string>
     <string name="song_details_key_change">Key: %1$s</string>
     <string name="song_details_chords">Chords</string>

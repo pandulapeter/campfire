@@ -67,13 +67,6 @@ class SongTempoTest {
     fun `an override is highlighted`() = assertFalse(effectiveTempo(song(96), SETLIST, tempos).isDefault)
 
     @Test
-    fun `only a tempo something names is shown`() {
-        assertEquals(90, effectiveTempo(song(96), SETLIST, tempos).displayedBpm)
-        assertEquals(96, effectiveTempo(song(96), "other.setlist.json", tempos).displayedBpm)
-        assertEquals(null, effectiveTempo(song(null), "other.setlist.json", tempos).displayedBpm)
-    }
-
-    @Test
     fun `overrides are set and removed by key`() {
         val changed = tempos.with(SongPlace(FILE_NAME, SETLIST), null).with(SongPlace(FILE_NAME, null), 80)
         assertEquals(null, changed[FILE_NAME, SETLIST])

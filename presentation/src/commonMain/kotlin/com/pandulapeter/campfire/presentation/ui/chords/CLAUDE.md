@@ -40,7 +40,7 @@ intrinsic measurement at a candidate width already counts the rows they wrap int
 section's width; a screen reader reads it row by row.
 
 It is a pill folding it (`UserPreferences.isChordSectionFolded`, one fold for every song, in read only mode too)
-followed by the Chord shapes button, a pencil as tall as the pill like the About the song groups' edit buttons, fading,
+followed by the Chord shapes button, a pencil as tall as the pill, fading,
 scaling and expanding in and out (unclipped) with the diagrams, since it is there only while the section is unfolded and
 never in read only mode (performance mode, or a song read from an archived setlist), and rows of cells — the name in the
 chords' style and accent over its diagram, growing with the text size, wrapping rather than scrolling sideways into as

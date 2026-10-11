@@ -39,11 +39,12 @@ sealed interface DialogType {
     data class DuplicateSetlist(val setlist: Setlist) : DialogType
     data class DeleteSong(val song: Song) : DialogType
     /**
-     * What a song says about itself beyond how it is played, opened from the song details app bar. It reads the
-     * song's text as it is now rather than a snapshot, so that what its buttons edit is there when it is opened
-     * again.
+     * What a song says about itself beyond how it is played, and the one place it is edited: opened from the song
+     * details app bar and its menu over the file, and from the editor's menu and its preview's card over the text
+     * being typed ([target]). It reads that text as it is now rather than a snapshot, so that what its tiles edit is
+     * there when it is opened again.
      */
-    data class SongInfo(val song: Song) : DialogType
+    data class SongInfo(val song: Song, val target: SongEditTarget) : DialogType
     /**
      * The chords of a song and the other ways each can be played, opened from the header of its Chords section,
      * which reads the song as the page plays it - in the setlist it was opened from, if any - and its text as it

@@ -96,10 +96,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.TextTranspositionControls
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.coverArtAction
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.rememberSongInfoEditing
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.songInfoEditingActions
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.songPlayingAction
 import com.pandulapeter.campfire.presentation.ui.platform.CompactKeyboardEffect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -177,6 +174,10 @@ internal fun LoadedSongEditor(
     EditOnRequest(viewModel = viewModel, fileName = destination.fileName, textFieldState = textFieldState, summaryCache = summaryCache)
     val editorSong = summary.toEditorSong(destination.fileName)
     val songInfoEditing = rememberSongInfoEditing(viewModel = viewModel, song = editorSong, target = SongEditTarget.EditorDraft(editorSong.fileName))
+    val latestEditorSong by rememberUpdatedState(editorSong)
+    val onOpenSongInfo = remember(viewModel) {
+        { viewModel.showDialog(DialogType.SongInfo(song = latestEditorSong, target = SongEditTarget.EditorDraft(latestEditorSong.fileName))) }
+    }
     FollowFileWhileUntouched(viewModel = viewModel, fileName = destination.fileName, textFieldState = textFieldState, summaryCache = summaryCache)
     // The one way the file is ever written, reached from the app bar's button and from Ctrl / Cmd + S alike.
     val onSaveRequested = {
@@ -324,18 +325,7 @@ internal fun LoadedSongEditor(
                 }
                 EditorMenu(
                     modifier = Modifier.overlappingAction(start = ACTION_BUTTON_OVERLAP, end = 0.dp),
-                    editingActions = songInfoEditingActions(songInfoEditing),
-                    // The sheet edits what the two features show, so it goes once both are switched off.
-                    songPlayingAction = if (userPreferences?.areChordsEnabled != false || userPreferences?.isMetronomeEnabled != false) {
-                        songPlayingAction(viewModel = viewModel, song = editorSong, setlistFileName = null, target = SongEditTarget.EditorDraft(editorSong.fileName))
-                    } else {
-                        null
-                    },
-                    coverArtAction = if (userPreferences?.isCoverArtEnabled == true) {
-                        coverArtAction(viewModel = viewModel, song = editorSong, target = SongEditTarget.EditorDraft(editorSong.fileName))
-                    } else {
-                        null
-                    },
+                    onOpenSongInfo = onOpenSongInfo,
                     canPrettify = { !isSaving && text.value.isNotBlank() && prettifiedText.value != text.value },
                     onPrettify = {
                         val prettified = prettifiedText.value

@@ -13,6 +13,7 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
@@ -45,7 +46,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
@@ -69,10 +69,6 @@ import com.pandulapeter.campfire.presentation.resources.ic_back
 import com.pandulapeter.campfire.presentation.resources.ic_expand
 import com.pandulapeter.campfire.presentation.resources.song_details_scroll_to_top
 import com.pandulapeter.campfire.presentation.resources.song_details_song_info
-import com.pandulapeter.campfire.presentation.resources.song_details_tempo
-import com.pandulapeter.campfire.presentation.resources.song_details_tempo_apply_now
-import com.pandulapeter.campfire.presentation.resources.song_details_tempo_pending
-import com.pandulapeter.campfire.presentation.resources.song_details_tempo_pending_description
 import com.pandulapeter.campfire.presentation.resources.song_details_text_size
 import com.pandulapeter.campfire.presentation.resources.songs_key
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
@@ -83,14 +79,10 @@ import com.pandulapeter.campfire.presentation.ui.components.CoverArtImage
 import com.pandulapeter.campfire.presentation.ui.components.PRESSED_HEADING_ALPHA
 import com.pandulapeter.campfire.presentation.ui.components.SetlistAssignmentsButton
 import com.pandulapeter.campfire.presentation.ui.components.SongActions
-import com.pandulapeter.campfire.presentation.ui.components.SongEditingActions
 import com.pandulapeter.campfire.presentation.ui.components.overlappingAction
 import com.pandulapeter.campfire.presentation.ui.components.setlistAssignmentsAction
 import com.pandulapeter.campfire.presentation.ui.components.textResource
-import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomePanel
-import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
-import com.pandulapeter.campfire.presentation.ui.metronome.pendingTempoOf
 import com.pandulapeter.campfire.presentation.ui.metronome.withBeatLevels
 import com.pandulapeter.campfire.presentation.ui.tuner.tunerAction
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
@@ -128,7 +120,6 @@ internal fun SongDetailsAppBar(
     areSetlistsEnabled: Boolean,
     isCoverArtEnabled: Boolean,
     chordSpelling: UserPreferences.ChordSpelling,
-    songTimings: SnapshotStateMap<String, SongTiming>,
     currentPageScrollState: () -> ScrollState?,
     openCurrentSongInfo: (() -> Unit)?,
     songs: List<Song>,
@@ -143,8 +134,6 @@ internal fun SongDetailsAppBar(
     val songActions = rememberSongActionHandler(viewModel)
     val playingOverrides by viewModel.playingOverrides.collectAsStateWithLifecycle()
     val songFileNamesInSetlists by viewModel.songFileNamesInSetlists.collectAsStateWithLifecycle()
-    val metronomePlayback by viewModel.metronomePlayback.collectAsStateWithLifecycle()
-    val pendingTempo = pendingTempoOf(metronomePlayback)
     val layoutDirection = LocalLayoutDirection.current
     val appBarWidth = settledWidth - contentPadding.calculateStartPadding(layoutDirection) - contentPadding.calculateEndPadding(layoutDirection)
     // Decided from the settled width and for every song of the pager at once, like the song actions, so that the
@@ -153,7 +142,7 @@ internal fun SongDetailsAppBar(
     // the menu.
     val appBarButtons = appBarButtons(appBarWidth = appBarWidth, hasCover = isCoverArtEnabled && songs.any { it.coverArtUrl != null })
     val showsCoverInBar = isCoverArtEnabled && if (isReadOnly) showsCoverInPerformanceMode(appBarWidth) else appBarButtons.isCoverShown
-    val showsFontScaleInBar = isReadOnly && showsFontScaleInPerformanceBar(appBarWidth)
+    val showsFontScaleInBar = if (isReadOnly) showsFontScaleInPerformanceBar(appBarWidth) else appBarButtons.isFontScaleShown
     val showsSetlistAssignmentsInBar = !isReadOnly && areSetlistsEnabled && appBarButtons.isSetlistAssignmentsShown
     // The metronome and the tuner are buttons of the song's first section (SongPlayingTools), which is there wherever
     // the chords or the metronome are switched on; with both off there is nothing to put the tuner next to, so the menu
@@ -206,9 +195,10 @@ internal fun SongDetailsAppBar(
             ) { song ->
                 // What the song sounds like where it is being read, the way a song card says it: the key with the
                 // transposition and the capo applied, so this is the key the band hears rather than the one the
-                // chords on the page spell, and the tempo the click would play at. Worked out for the song this
-                // content was composed for rather than for the current one, since a crossfade between two songs
-                // draws both at once. Lyrics only mode says nothing about either, as it says nothing in a row.
+                // chords on the page spell. The tempo is left to the song's own first section, a line below, which
+                // already says it. Worked out for the song this content was composed for rather than for the current
+                // one, since a crossfade between two songs draws both at once. Lyrics only mode says nothing about the
+                // key, as it says nothing in a row.
                 val headerKey = song?.takeIf { shouldShowChords && it.hasChords }?.let {
                     val playback = songPlaybackOf(song = it, setlistFileName = destination.setlistFileName, overrides = playingOverrides)
                     viewModel.songRenderer.renderKey(
@@ -217,18 +207,6 @@ internal fun SongDetailsAppBar(
                         capo = playback.capo.fret,
                         spelling = chordSpelling,
                     )
-                }
-                // The stretch the page is on where the song changes its tempo further down, as the click plays it. A
-                // click moving to it at another tempo waits for the end of the bar it is in, and says so meanwhile with
-                // the tempo still heard, which a tap gives up for the new one at once.
-                val songPendingTempo = pendingTempo?.takeIf { song != null && song.fileName == currentSong?.fileName }
-                val headerTempo = if (songPendingTempo != null) {
-                    stringResource(Res.string.song_details_tempo_pending, songPendingTempo.fromBpm.toString(), songPendingTempo.toBpm.toString())
-                } else {
-                    song
-                        ?.takeIf { isMetronomeEnabled }
-                        ?.let { songTimings[it.fileName]?.bpm ?: songPlaybackOf(song = it, setlistFileName = destination.setlistFileName, overrides = playingOverrides).tempo.displayedBpm }
-                        ?.let { stringResource(Res.string.song_details_tempo, it.toString()) }
                 }
                 // The duration only inside a setlist, as the song's card there says it, since a set is what is
                 // timed by its songs; and, as there, with the chords switched off too, since the singer is timed by it alike.
@@ -279,15 +257,26 @@ internal fun SongDetailsAppBar(
                             // sheet is offered at all, so that a long title is not cut off afresh every time the
                             // song passes its top.
                             if (openCurrentSongInfo != null) {
-                                val chevronAlpha by animateFloatAsState(if (openSongInfoAtTop != null) 1f else 0f)
+                                // A fade on the effects spring and a grow from half its size on the spatial one, which
+                                // overshoots a little as it arrives: the chevron pops in as an offer and recedes as the
+                                // song scrolls away, rather than collapsing to a point that reads as a glitch.
+                                val isChevronShown = openSongInfoAtTop != null
+                                val chevronAlpha by animateFloatAsState(
+                                    targetValue = if (isChevronShown) 1f else 0f,
+                                    animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
+                                )
+                                val chevronScale by animateFloatAsState(
+                                    targetValue = if (isChevronShown) 1f else HIDDEN_CHEVRON_SCALE,
+                                    animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+                                )
                                 Icon(
                                     modifier = Modifier
                                         .padding(start = APP_BAR_TITLE_CHEVRON_GAP)
                                         .size(APP_BAR_TITLE_CHEVRON_SIZE)
                                         .graphicsLayer {
                                             alpha = chevronAlpha
-                                            scaleX = chevronAlpha
-                                            scaleY = chevronAlpha
+                                            scaleX = chevronScale
+                                            scaleY = chevronScale
                                         },
                                     painter = painterResource(Res.drawable.ic_expand),
                                     contentDescription = null,
@@ -322,20 +311,9 @@ internal fun SongDetailsAppBar(
                                 hasPrecedingContent = song?.artist?.isNotBlank() == true,
                             )
                             SongHeaderNote(
-                                text = headerTempo,
-                                description = songPendingTempo?.let {
-                                    stringResource(Res.string.song_details_tempo_pending_description, it.fromBpm.toString(), it.toBpm.toString())
-                                },
-                                isEmphasized = false,
-                                hasPrecedingContent = song?.artist?.isNotBlank() == true || headerKey != null,
-                                isPending = songPendingTempo != null,
-                                onClickLabel = stringResource(Res.string.song_details_tempo_apply_now),
-                                onClick = songPendingTempo?.let { viewModel::applyPendingMetronomeChange },
-                            )
-                            SongHeaderNote(
                                 text = headerDuration,
                                 isEmphasized = false,
-                                hasPrecedingContent = song?.artist?.isNotBlank() == true || headerKey != null || headerTempo != null,
+                                hasPrecedingContent = song?.artist?.isNotBlank() == true || headerKey != null,
                             )
                         }
                     }
@@ -343,19 +321,20 @@ internal fun SongDetailsAppBar(
             }
         },
         actions = {
-            // Performance mode leaves the bar with nothing else in it, and the text size is the one setting left
-            // to it, so it is in the bar wherever the title leaves it the room, and alone in a menu where not.
-            // Both are there, one leaving as the other arrives, so that a window resized across the width that
-            // decides it hands the stepper over the way the song's actions move in and out of their menu.
+            // The text size is in the bar wherever the title leaves it the room, and at the end of a menu where not:
+            // performance mode leaves the bar with nothing else in it, and elsewhere it is the first of the bar's
+            // controls to go back into the menu as the bar narrows. Both are there, one leaving as the other arrives,
+            // so that a window resized across the width that decides it hands the stepper over the way the song's
+            // actions move in and out of their menu.
             AnimatedVisibility(
-                visible = isReadOnly && showsFontScaleInBar,
+                visible = showsFontScaleInBar,
                 enter = fadeIn() + expandHorizontally(),
                 exit = fadeOut() + shrinkHorizontally(),
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     ActionsMenu(items = listOfNotNull(tunerAction?.takeIf { isPerformanceModeEnabled }))
                     LiveFontScaleControls(
-                        modifier = Modifier.padding(end = APP_BAR_STEPPER_END_PADDING),
+                        modifier = Modifier.padding(end = if (isReadOnly) APP_BAR_STEPPER_END_PADDING else 0.dp),
                         viewModel = viewModel,
                     )
                 }
@@ -377,12 +356,8 @@ internal fun SongDetailsAppBar(
                 )
             }
             currentSong?.takeIf { !isPerformanceModeEnabled }?.let { song ->
-                val editingActions = songInfoEditingActions(rememberSongInfoEditing(viewModel = viewModel, song = song, target = SongEditTarget.File(song.fileName)))
-                val coverArtAction = if (isCoverArtEnabled) coverArtAction(viewModel = viewModel, song = song, target = SongEditTarget.File(song.fileName)) else null
                 val isInSetlist = song.fileName in songFileNamesInSetlists
-                // The first of the bar's actions, so it reaches into the editing menu after it rather than into the title.
                 AnimatedVisibility(
-                    modifier = Modifier.overlappingAction(start = 0.dp, end = ACTION_BUTTON_OVERLAP),
                     visible = showsSetlistAssignmentsInBar,
                     enter = fadeIn() + expandHorizontally(),
                     exit = fadeOut() + shrinkHorizontally(),
@@ -394,41 +369,15 @@ internal fun SongDetailsAppBar(
                         setlistFileName = destination.setlistFileName,
                     )
                 }
-                // An archived setlist's song keeps the editor alone, which is no menu of its own, so it stays in
-                // the one menu next to Export.
-                AnimatedVisibility(
-                    visible = !isReadOnly,
-                    enter = fadeIn() + expandHorizontally(),
-                    exit = fadeOut() + shrinkHorizontally(),
-                ) {
-                    SongEditingActions(
-                        actions = songActions,
-                        song = song,
-                        fileEditItems = editingActions.take(1) +
-                            // The sheet edits what the two features show, so it goes once both are switched off.
-                            listOfNotNull(
-                                if (shouldShowChords || isMetronomeEnabled) {
-                                    songPlayingAction(
-                                        viewModel = viewModel,
-                                        song = song,
-                                        setlistFileName = destination.setlistFileName,
-                                        target = SongEditTarget.File(song.fileName),
-                                    )
-                                } else {
-                                    null
-                                },
-                            ) +
-                            listOfNotNull(coverArtAction) +
-                            editingActions.drop(1),
-                    )
-                }
+                // The overflow button reaches into the button before it, and only into a button: the stepper's pill and
+                // the title are kept clear of its touch target.
+                val overflowOverlap by animateDpAsState(if (showsSetlistAssignmentsInBar) ACTION_BUTTON_OVERLAP else 0.dp)
                 SongActions(
-                    modifier = Modifier.overlappingAction(start = ACTION_BUTTON_OVERLAP, end = 0.dp),
+                    modifier = Modifier.overlappingAction(start = overflowOverlap, end = 0.dp),
                     actions = songActions,
                     song = song,
                     isDeletable = destination.setlistFileName == null,
                     isEditAndExportOnly = isReadOnly,
-                    isEditShown = isReadOnly,
                     setlistFileName = destination.setlistFileName,
                     leadingItems = listOfNotNull(
                         if (isReadOnly || showsSetlistAssignmentsInBar || !areSetlistsEnabled) {
@@ -516,4 +465,5 @@ private fun Modifier.titleTouchTarget(
 private val TITLE_TOUCH_HORIZONTAL_OUTSET = 4.dp // The padding the bar puts around its title.
 private val APP_BAR_TITLE_CHEVRON_SIZE = 20.dp // A little under the titleMedium line it follows.
 private val APP_BAR_TITLE_CHEVRON_GAP = 2.dp // The chevron's own artwork leaves the rest of the gap after the title.
+private const val HIDDEN_CHEVRON_SCALE = 0.5f
 private val TITLE_TOUCH_VERTICAL_OUTSET = 12.dp // From the two lines of title, 40dp, to the bar's 64dp.

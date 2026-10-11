@@ -35,10 +35,10 @@ import com.pandulapeter.campfire.presentation.ui.songInfo.hasSongInfo
  * @param hasPlayingControls Whether the four playing values are drawn as the controls that set them, which is what
  * the song details screen hands down outside read only mode. The section is then there for every song, since a capo
  * and a tempo can be set on one that names neither.
- * @param readsCapoAndTime Whether the line of text read only mode draws in their place always names the capo and the
- * time signature, a capo of none and the common time the click counts where the file names neither: a player reading
- * from a music stand has no control left to look at to tell that nothing was set, and the absence of a value is a
- * value to the hands on the guitar. The section is then there for every song too.
+ * @param readsDefaults Whether the line of text read only mode draws in their place always names the capo, the tempo and
+ * the time signature, a capo of none and the tempo and the time the click starts at where the file names none: a player
+ * reading from a music stand has no control left to look at to tell that nothing was set, and the absence of a value is
+ * a value to the hands on the guitar. The section is then there for every song too.
  * @param hasTuner Whether the section holds the tuner's button, see [SongPlayingTools]. It is never there on its own:
  * the section that holds it is the one the values above put there.
  * @param hasMetronome Whether the section holds the metronome's button, the same way.
@@ -52,12 +52,12 @@ internal fun withMetadataSection(
     isSongInfoShown: Boolean,
     isSongInfoEditable: Boolean = false,
     hasPlayingControls: Boolean = false,
-    readsCapoAndTime: Boolean = false,
+    readsDefaults: Boolean = false,
     hasTuner: Boolean = false,
     hasMetronome: Boolean = false,
 ): List<RenderSection> {
     val hasControls = (shouldShowChords || shouldShowTempo) && hasPlayingControls
-    val readsBoth = (shouldShowChords || shouldShowTempo) && !hasControls && readsCapoAndTime
+    val readsBoth = (shouldShowChords || shouldShowTempo) && !hasControls && readsDefaults
     // Read the way the click and the steppers read them, so that the line says what is played: a number of beats a
     // minute within the click's range, a time signature it can count ("C" being 4/4) and a capo on the neck.
     val shownMetadata = metadata.copy(
@@ -67,7 +67,10 @@ internal fun withMetadataSection(
             readsBoth -> (metadata.capo ?: 0).coerceIn(Song.CAPO_RANGE)
             else -> metadata.capo?.coerceIn(Song.CAPO_RANGE)
         },
-        tempo = ChordProTempo.parse(metadata.tempo)?.let(MetronomePattern::coerceBpm)?.toString()?.takeIf { shouldShowTempo },
+        tempo = when {
+            !shouldShowTempo -> null
+            else -> (ChordProTempo.parse(metadata.tempo)?.let(MetronomePattern::coerceBpm) ?: MetronomePattern.DEFAULT_BPM.takeIf { readsBoth })?.toString()
+        },
         time = when {
             !shouldShowTempo -> null
             else -> timeSignatureOf(metadata.time)?.toString()
@@ -78,7 +81,7 @@ internal fun withMetadataSection(
         val section = RenderSection.Metadata(
             metadata = shownMetadata,
             hasPlayingControls = hasControls,
-            readsCapoAndTime = readsBoth,
+            readsDefaults = readsBoth,
             hasTuner = hasTuner,
             hasMetronome = hasMetronome,
         )

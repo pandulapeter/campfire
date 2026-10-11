@@ -20,7 +20,8 @@ import kotlin.math.roundToInt
 internal typealias Tempos = SongOverrides<Int>
 
 /**
- * The tempo a song plays at where it is opened.
+ * The tempo a song plays at where it is opened. The default stands for a tempo the file names nowhere as if it were
+ * written there, so a song card, the song details header and the "About the song" sheet name it like any other.
  *
  * @param songBpm The song's own: its file's, held within the metronome's range, or the default where it names none.
  *   What a reset goes back to.
@@ -32,13 +33,6 @@ internal data class EffectiveTempo(
 ) {
     /** Whether nothing overrides the song's own tempo, which is what the stepper is drawn plainly for. */
     val isDefault get() = source == Source.FILE || source == Source.DEFAULT
-
-    /**
-     * The tempo where something actually names one, for the places that only say what the song says about itself: a
-     * song card and the song details header. Null where it is the metronome's own default, which is the number a
-     * click has to start somewhere at rather than anything about this song.
-     */
-    val displayedBpm get() = bpm.takeIf { source != Source.DEFAULT }
 
     enum class Source {
         SETLIST,

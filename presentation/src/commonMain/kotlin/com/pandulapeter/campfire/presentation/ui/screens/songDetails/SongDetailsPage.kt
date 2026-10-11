@@ -272,8 +272,8 @@ internal fun SongDetailsPage(
                 playingControls = playingControls,
                 playingTools = playingTools,
                 // Read only, the page is the one place left that says how the song is played, so a capo of none and the
-                // time the click counts are said rather than left to be guessed from nothing.
-                readsCapoAndTime = playingControls == null,
+                // tempo and the time the click starts at are said rather than left to be guessed from nothing.
+                readsDefaults = playingControls == null,
                 shouldShowCapo = shouldShowCapo,
                 shouldShowTempo = shouldShowTempo,
                 // The padding is inside the scroll, so a row is at the top of the viewport once the song is scrolled by

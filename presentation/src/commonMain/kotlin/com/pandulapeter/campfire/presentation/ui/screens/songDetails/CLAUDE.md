@@ -162,13 +162,13 @@ aligned columns, or one per line, never three over one; a control the rows move,
 rearranging, springs to its new place on the sections' own spring, followed by its `layoutId`, and only where the
 sections spring rather than glide), their labels in the content colour and bold type alone setting the section apart.
 
-What the file declares for all four is edited in the editing menu's Song defaults sheet, and the page holds nothing but
-the song and its controls, no line or button of the app's own explaining them. **Labels and controls grow and shrink
-with the lyrics together, the way the sections' own header pills do** rather than as a bar's buttons scaled up: a
-`fontScale` grows what is written in a control — its value, its label and its icons — while the padding around them
-stays as it is, so every one of them is exactly as tall as the pill heading the section under it (`songControlHeight` in
-`components/Stepper.kt`, the pills' `titleStyle` over their own `HEADER_VERTICAL_PADDING`; a pill scaled whole towered
-over the page at a large text size). What keeps them big enough to hit at the other end is
+What the file declares for all four is edited in the Song defaults sheet, opened from the About the song sheet, and the
+page holds nothing but the song and its controls, no line or button of the app's own explaining them. **Labels and
+controls grow and shrink with the lyrics together, the way the sections' own header pills do** rather than as a bar's
+buttons scaled up: a `fontScale` grows what is written in a control — its value, its label and its icons — while the
+padding around them stays as it is, so every one of them is exactly as tall as the pill heading the section under it
+(`songControlHeight` in `components/Stepper.kt`, the pills' `titleStyle` over their own `HEADER_VERTICAL_PADDING`; a
+pill scaled whole towered over the page at a large text size). What keeps them big enough to hit at the other end is
 `UserPreferences.MIN_FONT_SCALE`, the size below which this screen is not read at all.
 
 **The tools the song is played with end the groups they belong to** (`SongPlayingTools`, built per page by
@@ -190,44 +190,68 @@ switched off the tempo and the time signature (in read only mode: the editor's p
 switches, since it shows what is being written), and both leave out the line and the controls entirely. On the song
 details screen the line keeps the tool buttons too, split in two around them — the key and the capo with the tuner, the
 tempo and the time signature with the metronome — side by side where they fit and one under the other where not; the
-editor's preview, which plays nothing, keeps the one line. On the song details screen that line always names the capo
-and the time signature (`withMetadataSection`'s `readsCapoAndTime`: "Capo 0", and the 4/4 the click counts where the
-file names no `{time}`), so read only mode is there for every song too. The line reads the values the way the click and
-the steppers do — the tempo as a number held to the click's range, the time signature as one it can count (a `C` as 4/4,
-one it cannot count as 4/4 where the line always names one and left out elsewhere), the capo held to the neck — so it
-says what is played rather than the directive's text.
+editor's preview, which plays nothing, keeps the one line. On the song details screen that line always names the capo,
+the tempo and the time signature (`withMetadataSection`'s `readsDefaults`: "Capo 0", and the 120 BPM and 4/4 the click
+starts at where the file names no `{tempo}` or `{time}`), so read only mode is there for every song too. The line
+reads the values the way the click and the steppers do — the tempo as a number held to the click's range, the time
+signature as one it can count (a `C` as 4/4, one it cannot count as 4/4 where the line always names one and left out
+elsewhere), the capo held to the neck — so it says what is played rather than the directive's text.
 
 The section is there for every song where the controls are, since a capo and a tempo can be set on one that names
 neither, and whether it has them is part of `RenderSection.Metadata`, which is what the measured sizes of a section are
-kept by. And in the editor's preview (`SongLyrics`' `isSongInfoShown`), 12dp above it, an "About the song" card — as
-wide as its column, whatever it holds, its title row carrying `ic_info` and following the lyrics' section titles,
-everything in it scaling with the lyrics — wherever the song names an album, a year, a composer, a lyricist, a duration,
+kept by. And in the editor's preview (`SongLyrics`' `isSongInfoShown`), 12dp above it, the About the song tiles — as
+wide as their column, whatever they hold, untitled since every tile names itself, everything in them scaling with the
+lyrics — wherever the song names an album, a year, a composer, a lyricist, a duration,
 a tag, a language or a link. A song with only the line has the line alone, and nothing above the grid is ever laid out
 outside a row. The info section is emitted under one key whatever it says, so the cover in the editor preview's card
 waits for the typing to pause rather than following every half-typed address. On the song details screen the same is the
 About the song sheet instead (`DialogType.SongInfo`, read live from the song's text and closed with the song like the
-other song sheets), opened by a tap on the app bar's title (see below) and by nothing else, since the menu has entries
-enough; outside performance mode for every song, in it only where the sheet has something in it.
+other song sheets), opened by a tap on the app bar's title (see below) and by nothing else, since a menu entry would
+only repeat it; outside performance mode for every song, in it only where the sheet has something in it.
 
-The card and the sheet share `SongInfoBody` and its edit buttons (`SongInfoEditing`, built by
-`rememberSongInfoEditing`): the cover, then album, year, composer, lyricist and duration as label-over-value tiles
-flowing side by side beside it, untitled since the card or sheet already names them, then — in the sheet alone
-(`SongDefaults`), since the preview's line already reads them — a Song defaults group: the file's key, capo, tempo and
-time as the same tiles, a line in the primary colour naming the setlist's or the library's overrides while there are any
-(`songPlayingOverrides`, shared with the Song defaults sheet's card), and outside read only mode a pencil or a plus next
-to its title opening the Song defaults sheet over it, which goes back to it like the other sheets it opens; then a group
-of chips for each of the tags, the languages and the links the song has, titled in the singular or the plural
-(`<plurals>`) and counted where there are several.
+The card and the sheet share `SongInfoBody`: the cover, then album, year, composer, lyricist and duration as
+label-over-value tiles flowing side by side beside it, then — in the sheet alone (`SongDefaults`), since the preview's
+line already reads them — a Song defaults group: the file's key, capo, tempo and time as the same tiles (the 120 BPM
+and the 4/4 the click starts at where the file names none, as if they were written there, the way every place that
+reads a song's tempo has it), a line in the primary colour naming the setlist's or the library's overrides while there
+are any (`songPlayingOverrides`, shared with the Song defaults sheet's card); then a group of chips for each of the tags
+and the languages the song has, and one of buttons for its links, always titled in the plural, like a form's label, so that the title does not change its wording under the finger that
+adds the first one or takes the second away, and counted where there are several. The chips are labels only, the plain
+tonal pills of the song cards, taking no tap of their own: the tile takes it.
 
-Outside performance mode the sheet passes `SongInfoEditing`: its header holds the Edit song details button, and the
-cover art one while the song has no cover (one it has is changed by tapping it, a small pencil badge on it saying so —
-the preview's card keeps both header buttons), and each group's title is followed by a pencil (`SongInfoAction`), or a
-plus where the song has none of that kind, which leaves that group its title row alone, its content folding away when it
-empties; each opens that group's sheet on top of the sheet (Edit song details, Manage tags, Manage languages, Manage
-links, Set or Change cover art), which it goes back to once that is saved or closed. The song details editing menu
-offers the same entries after Edit song file (`SongEditingActions`, with `songInfoEditingActions` and
-`SongMetadataActions.kt`'s `coverArtAction`). The editor preview's card has the same buttons, always, editing the text
-being typed. Links open their page in the sheet, named by their optional label or by the host without `www.`
+**The sheet is the one place a song's description is edited, and it has no pencils.** It draws every group as a tile of
+one grouped list (`SongInfoGroup`, `songInfoTileShape`: the list's outer corners rounded like a card, 2dp between tiles,
+the details and the Song defaults untitled since the cover and the labelled values say what they are), kept compact — a group's title set as
+small as the details' labels rather than on a title row of its own, the values in body medium and the cover 72dp, two
+rows of details beside it — since the sheet is looked over on a phone and every line it saves is one more group in view.
+Outside read only mode (`SongInfoEditing`, built by `rememberSongInfoEditing`) the whole tile is what opens that group's
+sheet on top of this one — Edit song details, Edit song defaults, Manage tags, Manage languages, Manage links — a chevron at
+its end saying so, and an empty group, the details included, is not left out but holds a call to action as plain text in the
+primary color behind a plus (`SongInfoAction`) — the editor's name for the details and the defaults, Add tags, Add
+languages, and Add links for the other three, since there is nothing to manage yet — rather than a pill, which would ask for a tap of
+its own: the same call to action in every tile, exactly as tall as a row of the chips it stands in for
+(`tagPillHeight`), so a tile keeps its height as its first chip arrives (`songInfoGroupsOf` decides which tiles are
+there, and so which get the outer corners). The cover is what opens the cover search, and a song without one gets an
+empty place with the album icon in it that does the same.
+
+**The links are outlined buttons rather than chips** (`SongInfoLinkButtons`): a link opens its page when tapped, which a
+tag and a language do not, so inside a tile whose every other spot opens the Manage links sheet each one looks and is
+hit like a control of its own — taller than a pill, with Material's 48dp touch target around it — while the tile, its
+chevron and its empty state stay exactly those of the other groups. **No tile is shorter than the links tile with one link**
+(`songInfoTileMinHeight`, from `songInfoLinkRowHeight`), so the tiles of the list are of one height until one of them
+needs more. A titled tile gets there by its own layout: its content, or its call to action, is centered in a slot as
+tall as a row of link buttons under the title, so every title stands on one line of its tile and every row of chips,
+buttons or call to action is centered on another, whichever the tile holds; an untitled one centers what it holds. Each sheet goes
+back to this one once it is saved or closed (`DialogHost.underlyingSongInfo`, for an edit of the same target). The
+header has no buttons, and no menu lists these editors one by one.
+
+Over the editor (`SongEditTarget.EditorDraft`, opened from the editor's menu) the sheet reads
+`CampfireViewModel.editorDraft` rather than the file, its header naming the song from that text, the key shown as typed
+(it is in the reader's notation already) and no overrides named; its tiles edit the text being typed. The preview's card
+(`SongInfoCard`) is the same tiles, untitled, without the Song defaults tile (the preview's line reads those): it already
+shows everything the sheet would, so each tile opens its own editor directly rather than the sheet, and a song that says
+nothing about itself yet has every tile all the same, each offering its editor. Links open their page in the sheet,
+named by their optional label or by the host without `www.`
 (`linkLabel`), and are not followed from the editor's card. The cover art sheet's Remove cover asks for confirmation,
 whose Cancel puts the cover art sheet back (searching again from the song's own fields).
 
@@ -256,18 +280,18 @@ are kept. The title, the subtitle and the artist are the ones that are deliberat
 three — the subtitle in parentheses after the title (`ChordProMetadata.displayTitle`, which is how a song is named
 everywhere in the app).
 
-The file-editing menu is absent in performance mode; link chips still open their pages there, and only display their
-labels in the editor's preview, where a tap is meant for the text. The song is parsed, transposed and split into
-sections away from the main thread (`rememberSongLyricsModel`, which builds only the first rendering of the page on
-screen, headed for or before the target page in place, so that it never opens on an empty frame and a step back from a
-song's top has the previous song's end to land on (`buildsModelInPlace`) — without the chord shapes only the search
-finds, which follow from `Dispatchers.Default` right after — while the next page builds its first rendering on
-`Dispatchers.Default` too, and keeps the previous one on screen until the next is ready), since that is a pass over the
-whole song that would otherwise land on the frame after a transposition or a pause in typing. **What is laid out is
-capped** (`LayoutBudget`, 3000 lines and 200,000 characters, several times the longest real song): every section is
-fitted into the columns at once and every chorded line measured on the main thread, which a songbook concatenated into
-one file or a log dropped into the folder turned into a freeze of seconds and gigabytes of memory — on a phone, the app
-being killed.
+The menu's Edit song file is absent in performance mode and the sheet's tiles do nothing there; link buttons still open their pages
+there, and only display their labels in the editor's preview, where a tap is meant for the text. The song is parsed,
+transposed and split into sections away from the main thread (`rememberSongLyricsModel`, which builds only the first
+rendering of the page on screen, headed for or before the target page in place, so that it never opens on an empty frame
+and a step back from a song's top has the previous song's end to land on (`buildsModelInPlace`) — without the chord
+shapes only the search finds, which follow from `Dispatchers.Default` right after — while the next page builds its first
+rendering on `Dispatchers.Default` too, and keeps the previous one on screen until the next is ready), since that is a
+pass over the whole song that would otherwise land on the frame after a transposition or a pause in typing. **What is
+laid out is capped** (`LayoutBudget`, 3000 lines and 200,000 characters, several times the longest real song): every
+section is fitted into the columns at once and every chorded line measured on the main thread, which a songbook
+concatenated into one file or a log dropped into the folder turned into a freeze of seconds and gigabytes of memory — on
+a phone, the app being killed.
 
 The model stops at the end of the last section that fits, or inside a first section too long on its own (a file with no
 blank line in it), and says so under the last one; the overflow menu's editor shows the whole file; nothing is cut from
@@ -520,13 +544,15 @@ to an end (`wrapTransposition` in `playing/Transpositions.kt`, from −5 to +6, 
 website does), both when it is stepped and when a stored amount is read, so its buttons are never disabled.
 
 **The transposition stepper belongs to the song's first section** (`SongPlayingControlsRow.kt`), next to the key it
-reads, and is in neither the bar nor the menu; what the menu keeps is the text size (`MenuStepperRow`, handed to
-`SongActions` as its `menuFooter`, drawn at a menu entry's height after the entries), which stays open while its buttons
-are pressed and which is the reader's own rather than the song's. Outside read only mode the editing menu and the
-overflow button are always in the bar, since the way into the editor is what the screen is opened for (the metronome and
-the tuner are the song's first section's, above); as it narrows, the Choose setlists button goes into the menu and then
-the cover leaves the title, each while the title keeps 160dp (`appBarButtons`, decided from the settled width for every
-song of the pager at once), so the smallest phone has the back button, the cover, the title and those two. Performance
+reads, and is in neither the bar nor the menu; what is left is the text size, which is the reader's own rather than the
+song's: in the bar where it has the room, and otherwise at the end of the menu (`MenuStepperRow`, handed to `SongActions`
+as its `menuFooter`, drawn at a menu entry's height after the entries), which stays open while its buttons are pressed.
+Outside read only mode the overflow button is always in the bar, holding the way into the editor first (the metronome
+and the tuner are the song's first section's, above); as the bar narrows, the text size goes into the menu first, then
+the Choose setlists button, and then the cover leaves the title, each while the title keeps 160dp (`appBarButtons`,
+decided from the settled width for every song of the pager at once), so the smallest phone has the back button, the
+cover, the title, Choose setlists and the menu. The overflow button reaches into the button before it and not into the
+stepper's pill or the title (`overflowOverlap`). Performance
 mode leaves only the text size and empties the app bar of everything else, so there the one stepper is in the bar
 (`LiveFontScaleControls`) wherever that leaves the title 160dp (`showsFontScaleInPerformanceBar`) and alone in an
 overflow menu otherwise; the cover is only in that bar next to the stepper and only where the title still keeps its
@@ -549,23 +575,24 @@ spread damped by the same `PINCH_SENSITIVITY` as a touch pinch and added up the 
 **The song details app bar says what the song sounds like**, under the title and the way a song card's second line does
 (`SongHeaderNote`): the artist, then the key with the transposition *and* the capo applied — so it is the key the band
 hears rather than the one the Transposition control names, the two reading differently wherever the capo is not zero —
-then the tempo the click would play at, and inside a setlist the song's duration, as its card there says it, each after
-a 16dp dot (the cards' 24dp one would grow the bar and with it the room the lyrics are laid out in). Both are worked out
-for the song the crossfaded content was composed for rather than for the current one, since a page change draws two
-songs at once, both crossfade where they stand as a stepper moves them, and the chords switched off leave the key out as
-they do on a card (the duration stays, as it does there). The artist gives way to them, since the key and the tempo are
-short and fixed while an artist is as long as somebody wrote it.
+and inside a setlist the song's duration, as its card there says it, each after a 16dp dot (the cards' 24dp one would
+grow the bar and with it the room the lyrics are laid out in). Both are worked out for the song the crossfaded content
+was composed for rather than for the current one, since a page change draws two songs at once, both crossfade where they
+stand as a stepper moves them, and the chords switched off leave the key out as they do on a card (the duration stays,
+as it does there). The artist gives way to them, since the key and the duration are short and fixed while an artist is
+as long as somebody wrote it. The tempo is not among them: the song's own first section, a line below, already says it.
 
 ### The song details title scrolls the song back to its top
 
 **The song details title scrolls the song back to its top** when pressed, and **opens the About the song sheet when the
 song is already there**: the title and the cover are that sheet's own heading, so once there is nothing left to scroll
-back to a tap on them is the one way into it. A chevron after the title (`ic_expand`) says so, fading and scaling in
-while a tap opens the sheet and out while it scrolls instead; its room is kept wherever the sheet is offered at all, so
-a long title is not cut off afresh as the song passes its top. Its touch target (`titleTouchTarget`) is all of the bar
-that the back button and the actions leave, as tall as the bar and reaching up to their touch targets, so a tap on any
-empty part of it counts; it reports only the title's own room to the bar, so the back button, the title and the actions
-stay exactly where the bar puts them.
+back to a tap on them is the one way into it. A chevron after the title (`ic_expand`) says so, fading in on the
+effects spring and growing from half its size on the spatial one while a tap opens the sheet, and back out while it
+scrolls instead; its room is
+kept wherever the sheet is offered at all, so a long title is not cut off afresh as the song passes its top. Its touch
+target (`titleTouchTarget`) is all of the bar that the back button and the actions leave, as tall as the bar and
+reaching up to their touch targets, so a tap on any empty part of it counts; it reports only the title's own room to the
+bar, so the back button, the title and the actions stay exactly where the bar puts them.
 
 It draws no indication — a highlight over most of the bar reads as the bar reacting, and one around the title alone has
 no room, the title starting 4dp after the back button's target — so a press dims the title, its cover and its chevron

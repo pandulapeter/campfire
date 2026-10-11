@@ -90,8 +90,8 @@ import com.pandulapeter.campfire.presentation.ui.songLayout.rememberDefaultSecti
  * with the values it sets, see [SongPlayingControls].
  * @param playingTools The tuner and metronome buttons the song's first section holds next to those values, whether they
  * are set there or read; null where it holds none, which is the editor's preview.
- * @param readsCapoAndTime Whether that line names the capo and the time signature where the file names neither, which
- * read only mode on the song details screen asks for, see [withMetadataSection].
+ * @param readsDefaults Whether that line names the capo, the tempo and the time signature where the file names none,
+ * which read only mode on the song details screen asks for, see [withMetadataSection].
  * @param shouldShowCapo False on the keyboard, which reads the capo as a transposition, see [withMetadataSection].
  * @param shouldShowTempo False with the metronome switched off, which leaves the tempo and the time signature out of
  * the song's first section, see [withMetadataSection]. The chords' own switch is the model's, since it shapes the lyrics.
@@ -133,7 +133,7 @@ internal fun SongLyrics(
     songInfoEditing: SongInfoEditing? = null,
     playingControls: SongPlayingControls? = null,
     playingTools: SongPlayingTools? = null,
-    readsCapoAndTime: Boolean = false,
+    readsDefaults: Boolean = false,
     shouldShowCapo: Boolean = true,
     shouldShowTempo: Boolean = true,
     onRowsPlaced: ((SongRows) -> Unit)? = null,
@@ -160,7 +160,7 @@ internal fun SongLyrics(
         isSongInfoShown,
         isSongInfoEditable,
         shownPlayingControls != null,
-        readsCapoAndTime,
+        readsDefaults,
         shouldShowCapo,
         hasTuner,
         hasMetronome,
@@ -174,7 +174,7 @@ internal fun SongLyrics(
             isSongInfoShown = isSongInfoShown,
             isSongInfoEditable = isSongInfoEditable,
             hasPlayingControls = shownPlayingControls != null,
-            readsCapoAndTime = readsCapoAndTime,
+            readsDefaults = readsDefaults,
             hasTuner = hasTuner,
             hasMetronome = hasMetronome,
         )
@@ -363,7 +363,7 @@ internal fun SongLyrics(
                                 songInfoEditing = songInfoEditing,
                                 playingControls = shownPlayingControls,
                                 playingTools = playingTools,
-                                readsCapoAndTime = section.readsCapoAndTime,
+                                readsDefaults = section.readsDefaults,
                                 animatesControls = sectionMotion == SectionMotion.SPRING && extraWidth <= 0.dp,
                                 titleStyle = headerStyle,
                                 chordStyle = chordStyle,

@@ -16,14 +16,14 @@ confirmation deliberately does not: a question nobody answered is not one to put
 
 ### `ui/dialogs/CoverArtSearchSheet.kt`
 
-`ui/dialogs/CoverArtSearchSheet.kt` — the cover search, opened from the song details editing menu's "Set cover art" or
-"Change cover art" entry and titled with it; performance mode and a turned-off switch leave it out. Two tabs.
-**Search**: artist, album and title fields prefilled from the file (`CampfireViewModel.coverArtQueryOf`, the held text
-parsed, the library's entry where there is none), asked by `setVisibleDialog` as the sheet is put up — so its first
-frame already says the search is running rather than crossfading from the hint while it slides — and afterwards only
-from the keyboard's search key or the button, never per keystroke, since MusicBrainz allows the whole app one request a
-second; and a grid of what MusicBrainz and iTunes found, each catalogue's records joining at the end as it answers,
-closed by an indicator while one is still pending.
+`ui/dialogs/CoverArtSearchSheet.kt` — the cover search, opened by tapping the cover in the About the song sheet (or the
+empty place for one) and titled "Set cover art" or "Change cover art" accordingly; performance mode and a turned-off
+switch leave it out. Two tabs. **Search**: artist, album and title fields prefilled from the file
+(`CampfireViewModel.coverArtQueryOf`, the held text parsed, the library's entry where there is none), asked by
+`setVisibleDialog` as the sheet is put up — so its first frame already says the search is running rather than
+crossfading from the hint while it slides — and afterwards only from the keyboard's search key or the button, never per
+keystroke, since MusicBrainz allows the whole app one request a second; and a grid of what MusicBrainz and iTunes found,
+each catalogue's records joining at the end as it answers, closed by an indicator while one is still pending.
 
 **Web address**: a field for any `http`/`https` address, typed with or without its `https://`
 (`ChordProCoverArt.usableUrl` decides what counts) and a preview of it, asked for once the typing has paused for 500 ms;
@@ -65,15 +65,14 @@ the original's).
 
 **A dialog or a sheet is titled with the label of the entry that opened it** — "Edit setlist", "Duplicate setlist",
 "Manage languages", "Set cover art", "Change cover art" or "Edit song defaults" — so that what was tapped is what comes
-up), the **Song defaults** sheet (`SongPlayingDialog`, `DialogType.SongPlaying`, opened from the song details editing
-menu's "Edit song defaults", after Edit song details (`songPlayingAction`), and from the About the song sheet's Song
-defaults group: what the file declares for the key, typed in the reader's notation and written in the standard one — the
-key the chords are written in, which the field says under it where the file opens with a `{transpose}` that moves them
-before anything names it — the capo and the tempo, each an optional field with its range under it and its default as the
-placeholder, and the time signature as the Metronome tab's own `TimeSignaturePicker`; Save writes the fields changed and
-only those, through `setSongPlaying`, and so judges only those (`isValidSongPlayingDraft`): a value the file already
-holds outside a range is drawn as an error but does not keep the other fields from being saved, and a field a feature
-switch hides is never judged.
+up), the **Song defaults** sheet (`SongPlayingDialog`, `DialogType.SongPlaying`, opened from the About the song sheet's
+Song defaults tile and titled "Edit song defaults": what the file declares for the key, typed in the reader's notation
+and written in the standard one — the key the chords are written in, which the field says under it where the file opens
+with a `{transpose}` that moves them before anything names it — the capo and the tempo, each an optional field with its
+range under it and its default as the placeholder, and the time signature as the Metronome tab's own
+`TimeSignaturePicker`; Save writes the fields changed and only those, through `setSongPlaying`, and so judges only those
+(`isValidSongPlayingDraft`): a value the file already holds outside a range is drawn as an error but does not keep the
+other fields from being saved, and a field a feature switch hides is never judged.
 
 It is where the difference between the file and the steppers is explained, rather than on the page: its first line says
 the steppers change these for this setlist only, or for the library (never "this device", since the library's overrides

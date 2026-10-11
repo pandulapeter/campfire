@@ -59,7 +59,7 @@ class DialogHostTest {
     @Test
     fun `the song info sheet stays under an edit of its own song and comes back after it`() = runTest {
         val host = DialogHost(backgroundScope)
-        val info = DialogType.SongInfo(song)
+        val info = DialogType.SongInfo(song = song, target = SongEditTarget.File(song.fileName))
         host.showDialog(info)
         host.showDialog(DialogType.SongTags(song = song, target = SongEditTarget.File(song.fileName)))
         assertEquals(info, host.underlyingSongInfo.value)
@@ -68,10 +68,21 @@ class DialogHostTest {
     }
 
     @Test
-    fun `the song info sheet does not stay under an edit of the editor's text`() = runTest {
+    fun `the song info sheet of the file does not stay under an edit of the editor's text`() = runTest {
         val host = DialogHost(backgroundScope)
-        host.showDialog(DialogType.SongInfo(song))
+        host.showDialog(DialogType.SongInfo(song = song, target = SongEditTarget.File(song.fileName)))
         host.showDialog(DialogType.SongTags(song = song, target = SongEditTarget.EditorDraft(song.fileName)))
         assertNull(host.underlyingSongInfo.value)
+    }
+
+    @Test
+    fun `the song info sheet of the editor's text stays under an edit of that text`() = runTest {
+        val host = DialogHost(backgroundScope)
+        val info = DialogType.SongInfo(song = song, target = SongEditTarget.EditorDraft(song.fileName))
+        host.showDialog(info)
+        host.showDialog(DialogType.SongLinks(song = song, links = emptyList(), target = SongEditTarget.EditorDraft(song.fileName)))
+        assertEquals(info, host.underlyingSongInfo.value)
+        host.dismissDialog()
+        assertEquals(info, host.visibleDialog.value)
     }
 }

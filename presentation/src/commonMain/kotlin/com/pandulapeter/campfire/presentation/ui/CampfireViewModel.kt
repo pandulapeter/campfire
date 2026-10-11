@@ -1156,6 +1156,9 @@ class CampfireViewModel(
 
     fun onEditorTextChanged(fileName: String, text: String) = editorSession.onEditorTextChanged(fileName, text)
 
+    /** The editor's text as it last reported it, which the About the song sheet opened over it reads. */
+    val editorDraft get() = editorSession.editorDraft
+
     fun onEditorClosed(fileName: String) = editorSession.onEditorClosed(fileName)
 
     fun retainEditorField(fileName: String, textFieldState: TextFieldState) = editorSession.retainEditorField(fileName, textFieldState)
@@ -1210,8 +1213,6 @@ class CampfireViewModel(
     internal fun toggleMetronomePanel() = metronomeController.toggleMetronomePanel()
 
     fun stopMetronome() = metronomeController.stopMetronome()
-
-    internal fun applyPendingMetronomeChange() = metronomeController.applyPendingMetronomeChange()
 
     fun previewMetronomeSound(sound: MetronomeSound) = metronomeController.previewMetronomeSound(sound)
 

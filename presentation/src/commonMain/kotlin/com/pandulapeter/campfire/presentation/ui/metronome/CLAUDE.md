@@ -26,7 +26,7 @@ slides in) and at the stretch of that song the page is headed for where it chang
 down (`SongTiming`: which change, and the tempo and the signature its line shows, from `timingIndexAt` over the stops
 and `SongStepper.headedOffset` — a step's or a fling's target, never a finger still dragging; a song paged back to is
 put at its end first, so it reports its last stretch; another stretch moves the click like another song, while the same
-stretch at a scaled tempo is applied from the next beat, and the panel's beat row and the app bar's tempo follow it), or
+stretch at a scaled tempo is applied from the next beat, and the panel's beat row follows it), or
 `Standalone`, the Metronome tab's own pattern (`metronomePatternOf`, in `MetronomePatterns.kt`: a song's tempo and
 `{time}`, 4/4 where it names none, the accents drawn for that signature in any context, everything else from the
 settings).
@@ -85,11 +85,9 @@ too, since it is saved with the rest of the metronome's settings.
 where the band is: on the song details screen a change starts a page of its own (one written before the song's first
 line stands on the first page, played from there), headed by one read only line naming the tempo and the time signature
 from there on as the click plays them, and a playing click follows the page being read — the one a step or a fling is
-headed for, never one a finger is still dragging past — from beat one of the next bar, the panel's beat row and the app
-bar's tempo with it once the bar being played has ended. **Until then the screen says what is heard**: the beat row
-draws the bar heard (`Playing.pattern`), and the app bar's tempo reads `96 → 120 BPM`, pulsing (`PendingTempo.kt`,
-tested; only where the tempo changes), a tap on it starting the new song or stretch on the next beat
-(`applyPendingMetronomeChange`) for a band that has already stopped. A change inside a section cuts it there, the rest heading the new page with its fold toggle alone; a recalled chorus
+headed for, never one a finger is still dragging past — from beat one of the next bar, the panel's beat row with it
+once the bar being played has ended. **Until then the screen says what is heard**: the beat row draws the bar heard
+(`Playing.pattern`). A change inside a section cuts it there, the rest heading the new page with its fold toggle alone; a recalled chorus
 is played in whatever is in force where it is recalled.
 
 The stepper, a setlist's entry and the library's override still hold one number, the song's opening tempo, and a later

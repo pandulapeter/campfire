@@ -96,7 +96,7 @@ internal class DialogHost(
             previousDialog is DialogType.RemoveSongCoverArt && dialogType is DialogType.CoverArtSearch -> _underlyingSongInfo.value
             else -> (previousDialog as? DialogType.SongInfo)
         }?.takeIf { parent ->
-            dialogType is DialogType.SongEdit && dialogType.target is SongEditTarget.File && dialogType.song.fileName == parent.song.fileName &&
+            dialogType is DialogType.SongEdit && dialogType.target == parent.target &&
                 (dialogType is DialogType.SongMetadata || dialogType is DialogType.SongTags ||
                     dialogType is DialogType.SongLinks || dialogType is DialogType.SongLanguages ||
                     dialogType is DialogType.SongPlaying || dialogType is DialogType.CoverArtSearch ||
@@ -126,7 +126,7 @@ internal class DialogHost(
         get() = when (this) {
             is DialogType.SetlistPicker -> song.fileName
             is DialogType.DeleteSong -> song.fileName
-            is DialogType.SongInfo -> song.fileName
+            is DialogType.SongInfo -> song.fileName.takeIf { target is SongEditTarget.File }
             is DialogType.ChordShapes -> song.fileName
             // The editor's draft is the editor's to keep, whatever became of the file it was opened on.
             is DialogType.SongEdit -> song.fileName.takeIf { target is SongEditTarget.File }

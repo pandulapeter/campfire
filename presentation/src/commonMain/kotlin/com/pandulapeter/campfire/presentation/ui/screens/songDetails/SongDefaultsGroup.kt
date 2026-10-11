@@ -24,12 +24,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.song_details_info_defaults
 import com.pandulapeter.campfire.presentation.resources.song_details_playing_edit
 import com.pandulapeter.campfire.presentation.resources.song_details_playing_override_library
 import com.pandulapeter.campfire.presentation.resources.song_details_playing_override_setlist
@@ -41,7 +40,10 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_insert_time
 import com.pandulapeter.campfire.presentation.ui.components.scaled
 import com.pandulapeter.campfire.presentation.ui.components.textResource
 
-/** What the song's file declares for the four values it is played by, for the "About the song" sheet, see [SongInfoBody]. */
+/**
+ * What the song's file declares for the four values it is played by, for the "About the song" sheet, see [SongInfoBody]:
+ * the tempo and the time signature the click starts at where it names none, as if they were written there.
+ */
 @Immutable
 internal class SongDefaults(
     /** In the reader's notation, the way the "Song defaults" sheet's field shows it. */
@@ -60,31 +62,26 @@ internal class SongDefaults(
 }
 
 /**
- * The song's defaults as label-over-value tiles, the way its details are shown, with a pencil next to the title that
- * opens the "Song defaults" sheet. Where the song is being played differently from them a line under the tiles says so, in the
- * color the steppers on the page draw an overridden value in: the sheet would otherwise name values the page does not
- * show, and that difference is the one the "Song defaults" sheet exists to explain.
+ * The song's defaults as label-over-value tiles, the way its details are shown, the whole group opening the "Song
+ * defaults" sheet where [SongDefaults.onEdit] is given. Where the song is being played differently from them a line under
+ * the tiles says so, in the color the steppers on the page draw an overridden value in: the sheet would otherwise name
+ * values the page does not show, and that difference is the one the "Song defaults" sheet exists to explain.
  */
 @Composable
 internal fun SongDefaultsGroup(
     defaults: SongDefaults,
     fontScale: Float,
     horizontalPadding: Dp,
+    tileShape: Shape,
 ) = SongInfoGroup(
-    title = stringResource(Res.string.song_details_info_defaults),
+    // Untitled, like the details: the key, the capo, the tempo and the time signature are labelled already.
+    title = null,
     count = 0,
     fontScale = fontScale,
     horizontalPadding = horizontalPadding,
-    action = defaults.onEdit?.let { onEdit ->
-        {
-            SongInfoAction(
-                hasValues = defaults.hasValues,
-                contentDescription = stringResource(Res.string.song_details_playing_edit),
-                fontScale = fontScale,
-                onClick = onEdit,
-            )
-        }
-    },
+    tileShape = tileShape,
+    onClick = defaults.onEdit,
+    onClickLabel = stringResource(Res.string.song_details_playing_edit),
     isContentShown = defaults.hasValues || defaults.overrides.isNotEmpty(),
 ) {
     SongDefaultsValues(defaults = defaults, fontScale = fontScale)
@@ -102,7 +99,7 @@ private fun SongDefaultsValues(
         defaults.tempo?.let { stringResource(Res.string.song_editor_insert_tempo) to textResource(Res.string.song_details_tempo, it.toString()) },
         defaults.time?.takeIf { it.isNotBlank() }?.let { stringResource(Res.string.song_editor_insert_time) to it },
     )
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp * fontScale)) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp * fontScale)) {
         if (rows.isNotEmpty()) {
             MetadataTiles(
                 rows = rows,
