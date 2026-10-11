@@ -365,7 +365,8 @@ The editor's preview shows the same tiles as a card that is the song's first sec
 columns and scaling with the lyrics; there each tile opens its own editor directly, since the sheet would only repeat
 what the card already shows, and the first entry of the editor's overflow menu opens the sheet itself over the text
 being typed, in every pane. No menu lists the sheet's editors one by one; the song details screen's Edit song file is
-the first entry of its overflow menu, and cover art editing follows the cover art setting. The Manage links sheet edits addresses and optional names together, and their order, written once on Save; the
+the first of its overflow menu's own entries, after Choose setlists and the tuner where the menu holds them, and cover
+art editing follows the cover art setting. The Manage links sheet edits addresses and optional names together, and their order, written once on Save; the
 links are shown in that order, where tags and languages are always shown alphabetically. Over the editor the sheet's
 tiles change the text being typed rather than the file, which only Save writes. Opening a link is the user's browser
 making the request, not Campfire.
@@ -395,11 +396,11 @@ since the library's own overrides are synced (see `data/sync/implementation/CLAU
 adjusted there, with a Reset, while there is any, then the key, capo, tempo and time signature fields, each optional, an
 empty one leaving the default in force. A new song's template carries an empty `{key}` line and `{capo: 0}`, `{tempo:
 120}` and `{time: 4/4}`, the defaults written out, for them to be edited. **Read only mode reads them instead**:
-performance mode and a song opened from an archived setlist get the same four as one line of accent colored text — which
-always names the capo, the tempo and the time signature there, "Capo 0" and the click's 120 BPM and 4/4 where the file
-says nothing, since with
-no control left on the page an absent value would read as an unknown one — as does the editor's preview, where the text
-being typed is what says them.
+performance mode and a song opened from an archived setlist get the same four as one line of accent colored text,
+which always names the capo, the tempo, and the time signature there ("Capo 0", the click's 120 BPM, and 4/4 where the
+file says nothing), since with no control left on the page an absent value would read as an unknown one. The editor's
+preview has no line: its card's Song defaults tiles show the four as the text being typed says them, with the click's
+120 BPM and 4/4 where it names no tempo or time, and a capo only where the text writes one.
 
 With the chords switched off the key and the capo leave the line and the controls alike, and with the metronome switched
 off the tempo and the time signature do (see Features below) — everywhere but in the editor's preview, which says all
