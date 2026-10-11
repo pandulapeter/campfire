@@ -23,8 +23,9 @@ import androidx.compose.runtime.snapshotFlow
 import kotlinx.coroutines.flow.filter
 
 /**
- * Scrolls a list back to the top whenever [key] changes - which is where its search, its sorting and its filters
- * go - and keeps the change of [contents] that follows it animated.
+ * Scrolls a list back to the top whenever [topKey] changes - which is where its search and its sorting go - and keeps
+ * the change of [contents] that follows it animated. A change of [key] alone - a filter, which only takes rows out of
+ * the list or puts them back - leaves the list on the row it was reading, which the grid follows by its key.
  *
  * A lazy grid holds on to the key of its first visible item across a change of its contents, and a list that grows
  * has that item further down than it was: a filter taken off puts the songs it hid above the row at the top, and the
@@ -36,8 +37,8 @@ import kotlinx.coroutines.flow.filter
  * measures them. That can be several frames after [key] changed, since the list is worked out outside the
  * composition, so every change of [contents] is held that way until the list is next scrolled - which is also where
  * holding it by index stops being right, and the grid goes back to following its first visible row through an edit.
- * The key last scrolled to the top is saved, so that coming back from another screen keeps the restored position
- * rather than jumping to the top.
+ * The keys last seen are saved, so that coming back from another screen keeps the restored position rather than jumping
+ * to the top.
  *
  * A change of [key] that was asked for from a row of the list itself - a tag on a song, which narrows the list to the
  * songs carrying it - leaves that row where it was instead, since the row is what the user was looking at and it is
@@ -52,6 +53,7 @@ import kotlinx.coroutines.flow.filter
  * anchor is only consumed by a change of [contents], and a key that changed without one - a filter that leaves the
  * list as it was - would leave the row pending until the list next changes for some unrelated reason.
  * @param itemIndex The index of the item with the given key in [contents], or null where it holds no such item.
+ * @param topKey The part of [key] whose change sends the list to the top, all of it by default.
  */
 @Composable
 internal fun ScrollToTopWhenChanged(
@@ -60,19 +62,23 @@ internal fun ScrollToTopWhenChanged(
     contents: Any?,
     anchor: ListAnchor? = null,
     itemIndex: (Any) -> Int? = { null },
+    topKey: String = key,
     scrollToTopOnKeyChange: Boolean = true,
 ) {
-    var lastScrollToTopKey by rememberSaveable { mutableStateOf(key) }
+    var lastKey by rememberSaveable { mutableStateOf(key) }
+    var lastTopKey by rememberSaveable { mutableStateOf(topKey) }
     val heldTop = remember { HeldTop(contents) }
     val coroutineScope = rememberCoroutineScope()
     // A side effect rather than a launched one, because it runs before the grid measures what this composition gave
     // it: a request made a frame later would come after the grid had already followed its first row down.
     SideEffect {
-        val hasKeyChanged = key != lastScrollToTopKey
+        val hasKeyChanged = key != lastKey
+        val shouldScrollToTop = topKey != lastTopKey && scrollToTopOnKeyChange
+        lastTopKey = topKey
         if (hasKeyChanged) {
-            lastScrollToTopKey = key
-            // Opting out lets the grid retain its visible item by key when a filter is removed.
-            heldTop.isHolding = scrollToTopOnKeyChange
+            lastKey = key
+            // Not holding lets the grid retain its visible item by key, which is where a filter leaves the list.
+            heldTop.isHolding = shouldScrollToTop
             heldTop.anchoredItem = anchor?.take()
         }
         val anchoredItem = heldTop.anchoredItem
@@ -87,7 +93,7 @@ internal fun ScrollToTopWhenChanged(
                     anchor?.animateFrom(anchoredItem.visibleOffsets, coroutineScope)
                 }
             }
-        } else if (hasKeyChanged && scrollToTopOnKeyChange) {
+        } else if (shouldScrollToTop) {
             listState.requestScrollToItem(0)
         } else if (heldTop.isHolding && contents !== heldTop.contents && !listState.isScrollInProgress) {
             listState.requestScrollToItem(

@@ -35,7 +35,7 @@ class ListPlaceholdersTest {
 
     @Test
     fun `a song list with songs to show has no placeholder`() {
-        assertNull(songListPlaceholder(idle(songs = listOf(song)), SongGroups("", listOf(SongGroup(header = null, songs = listOf(song)))), isImporting = false))
+        assertNull(songListPlaceholder(idle(songs = listOf(song)), SongGroups("", "", listOf(SongGroup(header = null, songs = listOf(song)))), isImporting = false))
     }
 
     @Test
@@ -66,7 +66,7 @@ class ListPlaceholdersTest {
         assertEquals(Placeholder.NO_SETLISTS, setlistListPlaceholder(idle(songs = listOf(song)), emptyList(), emptyList(), isImporting = false))
     }
 
-    private val noGroups = SongGroups(filterKey = "", groups = emptyList())
+    private val noGroups = SongGroups(filterKey = "", orderKey = "", groups = emptyList())
 
     /** A library of [song] alone, of which [songs] are what the filters let through. */
     private fun idle(songs: List<Song>, setlists: List<Setlist> = emptyList()) = DataState.Idle(

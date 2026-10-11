@@ -175,7 +175,7 @@ internal fun SongList(
     }
 
     // A tag or a language tapped on a row is one the song carries, so the list it filters to still holds that song,
-    // and the song stays where the tap left it rather than the list going back to the top.
+    // and the song stays where the tap left it rather than the list keeping whichever row happened to be first.
     val filterAnchor = remember { ListAnchor() }
     val onTagClicked: (Song, String) -> Unit = remember(viewModel, listState) {
         { song, tag ->
@@ -198,6 +198,7 @@ internal fun SongList(
         contents = songGroups,
         anchor = filterAnchor,
         itemIndex = { key -> groups.itemIndexOf(key, hasPlaceholder = placeholder != null) },
+        topKey = songGroups.orderKey,
     )
 
     // A lazy grid holds on to the key of its first visible item across a change of its contents, which is right for

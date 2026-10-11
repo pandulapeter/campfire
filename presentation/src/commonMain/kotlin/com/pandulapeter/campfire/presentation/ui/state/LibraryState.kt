@@ -141,6 +141,7 @@ internal class LibraryState(
                 "${it.sortingMode.name}|${it.songFilter.selectedTags.sorted()}|${it.tagMatchMode.name}|" +
                     "${it.songFilter.selectedLanguages.sorted()}|${it.languageMatchMode.name}"
             }.orEmpty(),
+            orderKey = data?.sortingMode?.name.orEmpty(),
             isLibraryRead = !latch.isLoading,
         )
     }.distinctUntilChanged().map { input ->
@@ -148,12 +149,13 @@ internal class LibraryState(
             sections = input.sections,
             search = songSearchIndex.update(input.all, input.filtered),
             filterKey = input.filterKey,
+            orderKey = input.orderKey,
             sorted = input.sorted,
             isLibraryRead = input.isLibraryRead,
         )
     }.flowOn(Dispatchers.Default).asState(
         scope,
-        IndexedSongs(emptyList(), SongSearchSnapshot.Empty, "", emptyList(), isLibraryRead = false),
+        IndexedSongs(emptyList(), SongSearchSnapshot.Empty, filterKey = "", orderKey = "", emptyList(), isLibraryRead = false),
     )
 
     /**
@@ -229,13 +231,17 @@ internal class LibraryState(
         }
     }
 
-    /** @param filterKey The filter and the preferences [filtered] was built for, see [SongGroups]. */
+    /**
+     * @param filterKey The filter and the preferences [filtered] was built for, see [SongGroups].
+     * @param orderKey The part of [filterKey] that decides the order of the songs rather than which of them are in it.
+     */
     private data class IndexedSongInput(
         val all: List<Song>,
         val filtered: List<Song>,
         val sections: List<SongSection>,
         val sorted: List<Song>,
         val filterKey: String,
+        val orderKey: String,
         val isLibraryRead: Boolean,
     )
 
@@ -247,6 +253,7 @@ internal class LibraryState(
         val sections: List<SongSection>,
         val search: SongSearchSnapshot,
         val filterKey: String,
+        val orderKey: String,
         val sorted: List<Song>,
         val isLibraryRead: Boolean,
     )

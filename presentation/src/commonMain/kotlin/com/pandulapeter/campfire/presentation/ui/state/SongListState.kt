@@ -85,9 +85,10 @@ internal class SongListState(
         val normalizedQuery = normalizeSearchText(query)
         SongGroups(
             filterKey = "$normalizedQuery|${indexed.filterKey}",
+            orderKey = "$normalizedQuery|${indexed.orderKey}",
             groups = songGroupsFor(sections = indexed.sections, filtered = indexed.search.filtered, normalizedQuery = normalizedQuery),
         )
-    }.flowOn(Dispatchers.Default).asState(scope, SongGroups(filterKey = "", groups = emptyList()))
+    }.flowOn(Dispatchers.Default).asState(scope, SongGroups(filterKey = "", orderKey = "", groups = emptyList()))
 
     /**
      * What the song list has to show instead of songs, null while it has songs. A library that is empty because

@@ -11,11 +11,15 @@ package com.pandulapeter.campfire.presentation.ui.screens.songs
 
 /**
  * The song list with the filter, the sort and the query it was built for: two equal lists for two filters are two
- * values. The song list scrolls by [filterKey] and keeps a tapped row in place once the list built for it arrives,
- * and with the key read from anywhere else a filter that left every song where it was would never deliver that
- * list, leaving the row to be put back in place by whatever changed the list next.
+ * values. The song list keeps a tapped row in place once the list built for [filterKey] arrives, and with the key read
+ * from anywhere else a filter that left every song where it was would never deliver that list, leaving the row to be
+ * put back in place by whatever changed the list next.
+ *
+ * @param orderKey The sort and the query alone, which put different songs at the top of the list and so send it back
+ * there; a filter only takes songs out or puts them back, and the list stays where it was reading.
  */
 data class SongGroups(
     val filterKey: String,
+    val orderKey: String,
     val groups: List<SongGroup>,
 )

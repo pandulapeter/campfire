@@ -86,12 +86,13 @@ batches arrive in the order the files are listed, so a later one puts songs abov
 following its first visible key down would open the app already scrolled.
 
 The two lists scroll back to the top through `ScrollToTopWhenChanged` whenever their search (the query that is applied,
-so closing a search counts) or sorting changes; the songs list also does so for filters, except for a tag or a language
-tapped on a song row: that song still carries it, so the list keeps the row where it was (`ListAnchor`, resolved to the
-row's new index and on-screen offset once the filtered list arrives). The songs list's key is not read off the filter
-and the preferences but carried by the list itself (`SongGroups.filterKey`, built from what `ScreenData` says it was
-built for), so the key and the list arrive together, and a filter that leaves every song where it was still delivers a
-list for the anchor to be consumed by rather than leaving it to jump the list at its next unrelated change. That is a
+so closing a search counts) or sorting changes (`SongGroups.orderKey` on the songs list). A filter does not: it only takes
+songs out or puts them back, so the grid keeps following the first row it shows by its key. A tag or a language tapped
+on a song row goes further: that song still carries it, so the list keeps that row where it was (`ListAnchor`, resolved
+to the row's new index and on-screen offset once the filtered list arrives). The songs list's keys are not read off the
+filter and the preferences but carried by the list itself (`SongGroups.filterKey`, built from what `ScreenData` says it
+was built for), so the key and the list arrive together, and a filter that leaves every song where it was still delivers
+a list for the anchor to be consumed by rather than leaving it to jump the list at its next unrelated change. That is a
 jump to another index, which a lazy grid answers by forgetting where every item was, so the change is narrated by the
 anchor instead (`anchoredTransition`, a layer on every song row and header): the rows that were on screen slide from
 where they were, the rest fade in, and the ones it took away are gone at once, while the setlists screen leaves its

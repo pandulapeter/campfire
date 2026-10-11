@@ -75,7 +75,7 @@ class SongListStateTest {
         savedStateStore = SavedStateStore(SavedStateHandle(), backgroundScope),
         mutableSongFilter = songFilter,
         screenData = MutableStateFlow<DataState<ScreenData>>(DataState.Loading(null)),
-        indexedSongs = MutableStateFlow(LibraryState.IndexedSongs(sections = emptyList(), search = SongSearchSnapshot.Empty, filterKey = "", sorted = emptyList(), isLibraryRead = true)),
+        indexedSongs = MutableStateFlow(LibraryState.IndexedSongs(sections = emptyList(), search = SongSearchSnapshot.Empty, filterKey = "", orderKey = "", sorted = emptyList(), isLibraryRead = true)),
         tags = tags,
         languages = languages,
         isImporting = MutableStateFlow(false),
