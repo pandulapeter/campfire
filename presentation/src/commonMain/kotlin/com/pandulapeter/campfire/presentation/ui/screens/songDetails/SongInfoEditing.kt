@@ -16,6 +16,7 @@ import androidx.compose.runtime.Immutable
 internal class SongInfoEditing(
     val onEditCoverArt: (() -> Unit)?,
     val onEditMetadata: () -> Unit,
+    val onEditDefaults: () -> Unit,
     val onEditTags: () -> Unit,
     val onEditLanguages: () -> Unit,
     val onEditLinks: () -> Unit,

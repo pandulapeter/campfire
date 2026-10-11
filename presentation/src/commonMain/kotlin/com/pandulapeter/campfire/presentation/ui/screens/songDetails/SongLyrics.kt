@@ -82,11 +82,12 @@ import com.pandulapeter.campfire.presentation.ui.songLayout.rememberDefaultSecti
  * [SongSectionContent]), which are saved per song, and [onFoldToggled] is handed each key a fold toggles to save it.
  * Null where nothing folds, which is the editor's preview: it is there to show what is being written, and a section
  * folded on the details screen would hide the lines being typed into it.
- * @param isSongInfoShown Whether the song's first section holds the card of what the song is (see
- * [SongMetadataSection]), which the editor's preview does; the song details screen opens it as a sheet instead.
+ * @param isSongInfoShown Whether the song's first section is the card of what the song is (see
+ * [SongMetadataSection]), its Song defaults tiles in place of the line, which the editor's preview does; the song
+ * details screen opens it as a sheet instead.
  * @param songInfoEditing The edit buttons of that card, null for none.
  * @param playingControls What sets the song's key, capo, tempo and time signature, drawn in place of the line that
- * only reads them; null leaves that line, which is what read only mode and the editor's preview get. Each control goes
+ * only reads them; null leaves that line, which is what read only mode gets. Each control goes
  * with the values it sets, see [SongPlayingControls].
  * @param playingTools The tuner and metronome buttons the song's first section holds next to those values, whether they
  * are set there or read; null where it holds none, which is the editor's preview.

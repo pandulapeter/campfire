@@ -51,6 +51,7 @@ import com.pandulapeter.campfire.metronome.api.model.TimeSignature
 import com.pandulapeter.campfire.presentation.localization.pluralStringResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.done
 import com.pandulapeter.campfire.presentation.resources.save
 import com.pandulapeter.campfire.presentation.resources.song_details_capo
 import com.pandulapeter.campfire.presentation.resources.song_details_playing_description_library
@@ -79,7 +80,8 @@ import kotlin.math.absoluteValue
  * "Song defaults": what the song's own file declares for the four values it is played by — its key, its capo, its
  * tempo and its time signature — opened from the song details editing menu and from the About the song sheet's Song
  * defaults group, edited as a draft and written on Save, the fields changed and only those. Opened from the editor's
- * overflow menu it writes into the text being typed instead, like the editor's other metadata sheets.
+ * overflow menu or its preview's Song defaults tile it writes into the text being typed instead, on Done, like the
+ * editor's other metadata sheets.
  *
  * The song's first section has a stepper for three of them, and those never touch the file: they override it for the
  * setlist the song is read through, or in the preferences for a song opened from the library. That difference is the
@@ -208,7 +210,7 @@ internal fun SongPlayingDialog(
                     )
                     close()
                 },
-            ) { Text(stringResource(Res.string.save)) }
+            ) { Text(stringResource(if (dialog.target is SongEditTarget.EditorDraft) Res.string.done else Res.string.save)) }
         },
     )
 }

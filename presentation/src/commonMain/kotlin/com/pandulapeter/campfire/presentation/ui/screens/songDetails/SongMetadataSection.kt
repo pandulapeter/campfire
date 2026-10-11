@@ -28,12 +28,11 @@ import com.pandulapeter.campfire.presentation.resources.song_details_tempo
 import com.pandulapeter.campfire.presentation.resources.song_details_time
 import com.pandulapeter.campfire.presentation.ui.components.songControlHeight
 import com.pandulapeter.campfire.presentation.ui.components.textResource
-import com.pandulapeter.campfire.presentation.ui.songInfo.hasSongInfo
 
 /**
- * The first section of the song: the card of what the song is, where [isSongInfoShown] and the song says anything for
- * it or [songInfoEditing] lets it be given something, then the key, capo, tempo and time, which are always on the page,
- * since they are what is played. A whole, uncuttable section.
+ * The first section of the song: the key, capo, tempo and time, which are always on the page, since they are what is
+ * played, or where [isSongInfoShown] the card of what the song is, which holds them as its Song defaults tiles. A whole,
+ * uncuttable section.
  *
  * @param playingControls What sets those four, where they are set here rather than only read: the song details screen
  * hands them down outside read only mode, see [SongPlayingControls].
@@ -63,17 +62,14 @@ internal fun SongMetadataSection(
     chordStyle: TextStyle,
     fontScale: Float,
 ) = Column(modifier = modifier) {
-    val hasSongInfoCard = isSongInfoShown && (songInfoEditing != null || metadata.hasSongInfo)
-    if (hasSongInfoCard) {
+    if (isSongInfoShown) {
         SongInfoCard(
             metadata = metadata,
             editing = songInfoEditing,
             fontScale = fontScale,
         )
-    }
-    if (playingControls == null) {
+    } else if (playingControls == null) {
         SongPlayingMetadata(
-            modifier = Modifier.padding(top = if (hasSongInfoCard) 12.dp else 0.dp),
             metadata = metadata,
             tools = playingTools,
             readsDefaults = readsDefaults,
@@ -84,7 +80,6 @@ internal fun SongMetadataSection(
         )
     } else {
         SongPlayingControlsRow(
-            modifier = Modifier.padding(top = if (hasSongInfoCard) 12.dp else 0.dp),
             controls = playingControls,
             tools = playingTools,
             isAnimated = animatesControls,

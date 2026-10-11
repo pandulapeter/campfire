@@ -76,8 +76,7 @@ import org.jetbrains.compose.resources.painterResource
  *
  * @param coverArtUrl The cover to draw at the start of the details, null where there is none or the cover art setting
  * is off.
- * @param defaults What the file declares for the four values the song is played by, which only the sheet shows: the
- * editor's preview card sits over the line of text that already reads them.
+ * @param defaults What the file declares for the four values the song is played by.
  * @param onOpenLink Follows a link; null leaves the links as plain chips.
  */
 @Composable

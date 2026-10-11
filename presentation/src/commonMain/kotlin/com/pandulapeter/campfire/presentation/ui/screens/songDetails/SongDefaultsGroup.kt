@@ -41,8 +41,9 @@ import com.pandulapeter.campfire.presentation.ui.components.scaled
 import com.pandulapeter.campfire.presentation.ui.components.textResource
 
 /**
- * What the song's file declares for the four values it is played by, for the "About the song" sheet, see [SongInfoBody]:
- * the tempo and the time signature the click starts at where it names none, as if they were written there.
+ * What the song's file declares for the four values it is played by, for the "About the song" sheet and the editor
+ * preview's card, see [SongInfoBody]: the tempo and the time signature the click starts at where it names none, as if
+ * they were written there.
  */
 @Immutable
 internal class SongDefaults(

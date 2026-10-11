@@ -173,7 +173,7 @@ internal fun LoadedSongEditor(
     RevertOnRequest(viewModel = viewModel, fileName = destination.fileName, textFieldState = textFieldState, summaryCache = summaryCache)
     EditOnRequest(viewModel = viewModel, fileName = destination.fileName, textFieldState = textFieldState, summaryCache = summaryCache)
     val editorSong = summary.toEditorSong(destination.fileName)
-    val songInfoEditing = rememberSongInfoEditing(viewModel = viewModel, song = editorSong, target = SongEditTarget.EditorDraft(editorSong.fileName))
+    val songInfoEditing = rememberSongInfoEditing(viewModel = viewModel, song = editorSong, setlistFileName = null, target = SongEditTarget.EditorDraft(editorSong.fileName))
     val latestEditorSong by rememberUpdatedState(editorSong)
     val onOpenSongInfo = remember(viewModel) {
         { viewModel.showDialog(DialogType.SongInfo(song = latestEditorSong, target = SongEditTarget.EditorDraft(latestEditorSong.fileName))) }

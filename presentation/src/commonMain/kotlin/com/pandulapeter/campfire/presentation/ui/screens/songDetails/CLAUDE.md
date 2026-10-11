@@ -183,14 +183,14 @@ wherever the chords or the metronome are on; with both off the tuner is an entry
 since there is nothing played to stand next to. Whether a section holds either button is part of
 `RenderSection.Metadata`, since its measured size is kept by it.
 
-Read only mode (performance mode, a song from an archived setlist) and the editor's preview get a **line of text**, set
+Read only mode (performance mode, a song from an archived setlist) gets a **line of text**, set
 in the chords' size and weight (the key and the capo in the accent colour, the tempo and the time signature in the
 content colour), those four used to be instead; the chords switched off leave out the key and the capo, the metronome
-switched off the tempo and the time signature (in read only mode: the editor's preview says all four whatever the
-switches, since it shows what is being written), and both leave out the line and the controls entirely. On the song
-details screen the line keeps the tool buttons too, split in two around them — the key and the capo with the tuner, the
-tempo and the time signature with the metronome — side by side where they fit and one under the other where not; the
-editor's preview, which plays nothing, keeps the one line. On the song details screen that line always names the capo,
+switched off the tempo and the time signature, and both leave out the line and the controls entirely. The editor's
+preview has neither: its card's Song defaults tile (below) reads all four whatever the switches, since it shows what is
+being written. The line keeps the tool buttons too, split in two around them — the key and the capo with the tuner, the
+tempo and the time signature with the metronome — side by side where they fit and one under the other where not. That
+line always names the capo,
 the tempo and the time signature (`withMetadataSection`'s `readsDefaults`: "Capo 0", and the 120 BPM and 4/4 the click
 starts at where the file names no `{tempo}` or `{time}`), so read only mode is there for every song too. The line
 reads the values the way the click and the steppers do — the tempo as a number held to the click's range, the time
@@ -199,22 +199,22 @@ elsewhere), the capo held to the neck — so it says what is played rather than 
 
 The section is there for every song where the controls are, since a capo and a tempo can be set on one that names
 neither, and whether it has them is part of `RenderSection.Metadata`, which is what the measured sizes of a section are
-kept by. And in the editor's preview (`SongLyrics`' `isSongInfoShown`), 12dp above it, the About the song tiles — as
-wide as their column, whatever they hold, untitled since every tile names itself, everything in them scaling with the
-lyrics — wherever the song names an album, a year, a composer, a lyricist, a duration,
-a tag, a language or a link. A song with only the line has the line alone, and nothing above the grid is ever laid out
-outside a row. The info section is emitted under one key whatever it says, so the cover in the editor preview's card
+kept by. In the editor's preview (`SongLyrics`' `isSongInfoShown`) the section is the About the song tiles instead,
+the Song defaults among them — as wide as their column, whatever they hold, untitled since every tile names itself,
+everything in them scaling with the lyrics — and nothing above the grid is ever laid out outside a row. The info
+section is emitted under one key whatever it says, so the cover in the editor preview's card
 waits for the typing to pause rather than following every half-typed address. On the song details screen the same is the
 About the song sheet instead (`DialogType.SongInfo`, read live from the song's text and closed with the song like the
 other song sheets), opened by a tap on the app bar's title (see below) and by nothing else, since a menu entry would
 only repeat it; outside performance mode for every song, in it only where the sheet has something in it.
 
 The card and the sheet share `SongInfoBody`: the cover, then album, year, composer, lyricist and duration as
-label-over-value tiles flowing side by side beside it, then — in the sheet alone (`SongDefaults`), since the preview's
-line already reads them — a Song defaults group: the file's key, capo, tempo and time as the same tiles (the 120 BPM
+label-over-value tiles flowing side by side beside it, then a Song defaults group (`SongDefaults`): the file's key,
+capo, tempo and time as the same tiles (the 120 BPM
 and the 4/4 the click starts at where the file names none, as if they were written there, the way every place that
-reads a song's tempo has it), a line in the primary colour naming the setlist's or the library's overrides while there
-are any (`songPlayingOverrides`, shared with the Song defaults sheet's card); then a group of chips for each of the tags
+reads a song's tempo has it; in the preview the values as the line would read them), a line in the primary colour
+naming the setlist's or the library's overrides while there are any, which the editor's text never has
+(`songPlayingOverrides`, shared with the Song defaults sheet's card); then a group of chips for each of the tags
 and the languages the song has, and one of buttons for its links, always titled in the plural, like a form's label, so that the title does not change its wording under the finger that
 adds the first one or takes the second away, and counted where there are several. The chips are labels only, the plain
 tonal pills of the song cards, taking no tap of their own: the tile takes it.
@@ -248,7 +248,7 @@ header has no buttons, and no menu lists these editors one by one.
 Over the editor (`SongEditTarget.EditorDraft`, opened from the editor's menu) the sheet reads
 `CampfireViewModel.editorDraft` rather than the file, its header naming the song from that text, the key shown as typed
 (it is in the reader's notation already) and no overrides named; its tiles edit the text being typed. The preview's card
-(`SongInfoCard`) is the same tiles, untitled, without the Song defaults tile (the preview's line reads those): it already
+(`SongInfoCard`) is the same tiles, untitled, the Song defaults included: it already
 shows everything the sheet would, so each tile opens its own editor directly rather than the sheet, and a song that says
 nothing about itself yet has every tile all the same, each offering its editor. Links open their page in the sheet,
 named by their optional label or by the host without `www.`
