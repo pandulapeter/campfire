@@ -336,9 +336,9 @@ A tag or a language there is a shortcut to its own chip in the song filters (`to
 keeping the tapped row in place rather than sending the list to the top, drawn selected while it is on — a row has no
 chip that writes the song's tags, which is the details overflow menu's business; the setlists screen leaves both off its
 rows altogether (`shouldShowLabels`), since a setlist is not a view of the library either could narrow. Tags and
-languages in the song details card are read-only; only their dialogs edit them. There they are outlined rather than filled
-(`isOutlined`), since the tile under them is the tone just below the fill and an outline reads on any container, as the
-link buttons beside them do. `SongLabels` draws the song's languages
+languages in the song details card are read-only; only their dialogs edit them. A pill looks the same in both places:
+outlined rather than filled, since the card's tiles are the tone just below a tonal fill and an outline reads on any
+container, as the link buttons beside them do; only a selected one in a row is filled. `SongLabels` draws the song's languages
 there too, after the tags (the order of the details header and of the filters) each kind carrying the mark the details
 card's chips and the overflow menu's entries do (`ic_label` for a tag, `ic_language` for a language) — a pill reading
 "Magyar" is otherwise either, and a list gives no other way of telling the two apart. The filter chips of `SongFilters`

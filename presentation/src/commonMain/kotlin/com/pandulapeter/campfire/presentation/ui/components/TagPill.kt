@@ -32,14 +32,15 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 /**
- * One tag as a tonal pill. Like a [SectionHeader] it is a label first and a control second, so it is laid out at its
- * own size rather than being grown to the 48dp touch target even where it can be clicked: a row of tags each
- * reserving that much would be taller than the song title above it.
+ * One tag as an outlined pill, the same in a song row and on the song details card: the card's tiles are the tone just
+ * below a tonal fill, which tells the two apart in neither theme, and an outline reads on any container. A selected
+ * pill is filled instead, since there the fill is the state.
+ *
+ * Like a [SectionHeader] it is a label first and a control second, so it is laid out at its own size rather than being
+ * grown to the 48dp touch target even where it can be clicked: a row of tags each reserving that much would be taller
+ * than the song title above it.
  *
  * @param onClick Null where the pill is only read, which is what the editor's preview shows.
- * @param isOutlined Drawn as an outline rather than filled, for a pill standing on a tile of its own: the tiles of a song's
- *   info are the tone just below the fill, which tells the two apart in neither theme, and an outline reads on any
- *   container, like the outlined link buttons it stands next to there.
  * @param fontScale The song details' zoom, which the pills of its info card follow along with the lyrics; the text, the
  *   mark and the widest a pill may grow scale together, so that a zoomed tag is not ellipsized sooner than at rest.
  */
@@ -51,15 +52,10 @@ internal fun TagPill(
     onClick: (() -> Unit)? = null,
     leadingIcon: Painter? = null,
     fontScale: Float = 1f,
-    isOutlined: Boolean = false,
 ) {
     val contentColor = if (isSelected) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
-    val containerColor = when {
-        isSelected -> MaterialTheme.colorScheme.secondaryContainer
-        isOutlined -> Color.Transparent
-        else -> MaterialTheme.colorScheme.surfaceContainerHighest
-    }
-    val border = if (isOutlined && !isSelected) BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant) else null
+    val containerColor = if (isSelected) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent
+    val border = if (isSelected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     val textStyle = MaterialTheme.typography.labelMedium.scaled(fontScale)
     val chipHeight = tagPillHeight(fontScale)
     val content = @Composable {

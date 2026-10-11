@@ -218,7 +218,7 @@ internal fun songInfoTileShape(index: Int, count: Int) = RoundedCornerShape(
 
 private val TILE_PADDING = 16.dp
 private val TILE_VERTICAL_PADDING = 10.dp
-private val TITLE_CONTENT_GAP = 6.dp
+private val TITLE_CONTENT_GAP = 2.dp
 private val TILE_CHEVRON_PADDING = 12.dp
 private val TILE_CHEVRON_SIZE = 20.dp
 private val SONG_INFO_ACTION_ICON_SIZE = 16.dp
