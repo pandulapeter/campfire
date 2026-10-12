@@ -67,7 +67,11 @@ else
     kill -0 "$PID" 2> /dev/null
   }
   stop() {
-    pkill -f "$LAUNCHER" || true
+    # This script's own command line names the launcher too, and the pkill of Linux, unlike the one of macOS, does not
+    # leave its caller out of the match.
+    for MATCH in $(pgrep -f "$LAUNCHER"); do
+      [ "$MATCH" = "$$" ] || kill "$MATCH" 2> /dev/null || true
+    done
     kill "$PID" 2> /dev/null || true
   }
 fi
