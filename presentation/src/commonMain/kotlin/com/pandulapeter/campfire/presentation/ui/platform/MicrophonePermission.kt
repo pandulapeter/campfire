@@ -37,6 +37,9 @@ internal enum class MicrophoneStatus {
  *   which is then the caller's to do.
  * @param openSettings Opens the system's page where it is allowed, null where the platform has none to open.
  * @param isAllowedInBrowser Whether a refusal is undone in the browser's site settings, which no page can open.
+ * @param openSoundSettings Opens the page where the system's own processing of the microphone is switched off, null
+ *   where the platform has none to offer. Windows' audio enhancements (noise suppression above all) remove a held note
+ *   as noise, which the input cannot ask the system not to do, so the player has to.
  */
 internal class MicrophonePermission(
     val status: MicrophoneStatus,
@@ -44,6 +47,7 @@ internal class MicrophonePermission(
     val request: (() -> Unit)?,
     val openSettings: (() -> Unit)?,
     val isAllowedInBrowser: Boolean = false,
+    val openSoundSettings: (() -> Unit)? = null,
 )
 
 @Composable

@@ -20,9 +20,11 @@ import androidx.compose.runtime.remember
 @Composable
 internal actual fun rememberMicrophonePermission(): MicrophonePermission = remember {
     val operatingSystem = System.getProperty("os.name").orEmpty().lowercase()
+    val isMac = "mac" in operatingSystem || "darwin" in operatingSystem
+    val isWindows = !isMac && "win" in operatingSystem
     val settingsUrl = when {
-        "mac" in operatingSystem || "darwin" in operatingSystem -> "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone"
-        "win" in operatingSystem -> "ms-settings:privacy-microphone"
+        isMac -> "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone"
+        isWindows -> "ms-settings:privacy-microphone"
         else -> null
     }
     MicrophonePermission(
@@ -30,5 +32,6 @@ internal actual fun rememberMicrophonePermission(): MicrophonePermission = remem
         canAskAgain = true,
         request = null,
         openSettings = settingsUrl?.let { url -> { openUrl(url) } },
+        openSoundSettings = if (isWindows) ({ openUrl("ms-settings:sound") }) else null,
     )
 }

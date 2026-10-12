@@ -53,6 +53,8 @@ share.
   forgotten as the microphone closes, since a string in tune when the instrument was put down is not known to be when it
   is picked up again, and as the instrument changes.
 - `TunerInputIssueMessage` — the input issue line (`SILENT`, with Open settings, and `WAITING_FOR_GESTURE`), on both.
+  On Windows the silent line also names the system's audio enhancements, which remove a held note as noise and which
+  Java Sound cannot switch off, and offers Open sound settings (`MicrophonePermission.openSoundSettings`).
 - `TunerStringsSetting` / `TunerStrings` — on both: one segmented row, a segment per string, so the strings read as one
   instrument: the tone's or the heard one selected, a tap toggling its tone, the sounding one carrying a speaker (what it is
   doing, where a stop square read as a media control) and a tuned one a check; read as buttons rather than the radio buttons Material makes segments; the names shrinking to fit
