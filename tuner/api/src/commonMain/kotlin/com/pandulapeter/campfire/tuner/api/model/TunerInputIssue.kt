@@ -12,8 +12,9 @@ package com.pandulapeter.campfire.tuner.api.model
 /** What keeps an open input from hearing anything. */
 public enum class TunerInputIssue {
     /**
-     * Every sample has been exactly zero for a while, which a live microphone never is: the desktop operating systems
-     * hand an app that may not record silence rather than an error, and a muted input looks the same.
+     * Every sample has been zero, or a sample or two of dither, for a while, which a live microphone never is: the
+     * desktop operating systems hand an app that may not record silence rather than an error, a muted input looks the
+     * same, and so does one whose system processing removes everything that is not speech.
      */
     SILENT,
 

@@ -45,8 +45,8 @@ this module. Nothing here reaches the network, and nothing heard is kept beyond 
   the sound is more than 6 dB under its strike (a dying string is read at twice its period now and then), until a new
   onset or until the held reading is let go; near the strike's level an octave is a reading like any other; the last
   reading held for half a second after the sound falls under twice the noise floor (tracked from the windows with no
-  pitch in them: the room, not the strings), in tune once within ±5 cents for 300 ms, `SILENT` after two seconds of
-  exact zeros.
+  pitch in them: the room, not the strings), in tune once within ±5 cents for 300 ms, `SILENT` after two seconds under
+  −86 dBFS (`SILENT_LEVEL`): zeros, or the sample or two of dither Windows' audio enhancements gate a held note down to.
 - `ToneSynthesizer` — about a second of a note, a whole number of periods so that the buffer loops without a seam (the
   frequency moved to the one that fits, never more than 0.02 cents off), the fundamental with three falling harmonics,
   since a phone's speaker cannot play a low string's fundamental.

@@ -125,6 +125,15 @@ class PitchTrackerTest {
     }
 
     @Test
+    fun `an input gated down to a sample or two of dither is silent too`() {
+        val tracker = PitchTracker()
+        val dither = PitchEstimate(frequency = null, clarity = 0f, level = PitchTracker.SILENT_LEVEL / 2)
+        assertFalse(tracker.step(dither, next(), chromatic).isSilent)
+        time += PitchTracker.SILENT_MILLIS
+        assertTrue(tracker.step(dither, time, chromatic).isSilent)
+    }
+
+    @Test
     fun `a ringing string read an octave away now and then keeps its note`() {
         val tracker = steadyTracker(note = 45)
         // 12 dB under the strike, where a string has died far enough for the detector to find twice its period.

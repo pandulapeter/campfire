@@ -150,7 +150,7 @@ internal class PitchTracker {
     }
 
     private fun updateSilence(estimate: PitchEstimate, timeMillis: Long): Boolean {
-        if (estimate.level != 0f) {
+        if (estimate.level >= SILENT_LEVEL) {
             silentSince = null
             return false
         }
@@ -165,6 +165,13 @@ internal class PitchTracker {
         const val HOLD_MILLIS = 500L
         const val ATTACK_MILLIS = 60L
         const val SILENT_MILLIS = 2_000L
+
+        /**
+         * The level under which the input is taken for silent, about 1.5 steps of a 16-bit sample (-86 dBFS): not only
+         * exact zeros, since Windows' audio enhancements gate what they take for noise down to a sample or two of dither
+         * rather than to nothing, and a live microphone's own noise is well above it.
+         */
+        const val SILENT_LEVEL = 5e-5f
         const val TARGET_HOLD_COUNT = 3
         private const val MEDIAN_SIZE = 5
         private const val SMOOTHING_MILLIS = 80.0
