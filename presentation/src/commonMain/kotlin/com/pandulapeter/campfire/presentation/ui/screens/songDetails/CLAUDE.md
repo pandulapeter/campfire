@@ -334,7 +334,8 @@ and only released by the delay. It is all in that file and `arrange`'s `heldSpre
 turns it off. That room is the screen wherever a row is read
 alone on it, and for a song read whole in one row the room it was decided for (or what the screen shows of it while the
 app bar or the metronome panel moves in), so it never scrolls for it. A page of several rows (the joined rows of a
-single column's pages) is moved down whole instead.
+single column's pages) is moved down whole instead, and a fold holds it at the shift it had the same way
+(`arrange`'s `heldPageShifts`, as far as it still fits the room it is centered in).
 
 Each section is a traversal group with its index as the `traversalIndex`, so a screen reader reads it whole and in the
 song's order whatever column it is in; the geometry alone read the columns across, line by line. Songs that do not fit

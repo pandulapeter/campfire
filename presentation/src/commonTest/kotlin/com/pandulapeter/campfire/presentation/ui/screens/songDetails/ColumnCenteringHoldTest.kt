@@ -47,23 +47,38 @@ class ColumnCenteringHoldTest {
     @Test
     fun `nothing is held while not holding`() {
         val hold = recordedHold()
-        assertNull(hold.heldSpreads(intArrayOf(2, 1)))
+        assertNull(hold.heldSpreads(intArrayOf(2, 1), BooleanArray(2)))
     }
 
     @Test
     fun `nothing is held for rows of other column counts`() {
         val hold = recordedHold().apply { isHolding = true }
-        assertNull(hold.heldSpreads(intArrayOf(1, 2)))
+        assertNull(hold.heldSpreads(intArrayOf(1, 2), BooleanArray(2)))
     }
 
     @Test
     fun `the recorded spreads are held for the same rows`() {
         val hold = recordedHold().apply { isHolding = true }
-        assertEquals(setOf(columnKey(0, 0), columnKey(0, 1)), hold.heldSpreads(intArrayOf(2, 1))?.keys)
+        assertEquals(setOf(columnKey(0, 0), columnKey(0, 1)), hold.heldSpreads(intArrayOf(2, 1), BooleanArray(2))?.keys)
+    }
+
+    @Test
+    fun `nothing is held for rows paired into other pages`() {
+        val hold = recordedHold().apply { isHolding = true }
+        assertNull(hold.heldSpreads(intArrayOf(2, 1), booleanArrayOf(false, true)))
+        assertNull(hold.heldPageShifts(intArrayOf(2, 1), booleanArrayOf(false, true)))
+    }
+
+    @Test
+    fun `the recorded page shifts are held for the same rows`() {
+        val hold = recordedHold().apply { isHolding = true }
+        assertEquals(mapOf(0 to 30), hold.heldPageShifts(intArrayOf(2, 1), BooleanArray(2)))
     }
 
     private fun recordedHold() = ColumnCenteringHold().apply {
         spreads = mapOf(columnKey(0, 0) to ColumnSpread(top = 10, extraGap = 2), columnKey(0, 1) to ColumnSpread(top = 20, extraGap = 0))
+        pageShifts = mapOf(0 to 30)
         columnCounts = intArrayOf(2, 1)
+        joinsPrevious = BooleanArray(2)
     }
 }

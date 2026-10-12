@@ -206,6 +206,32 @@ class SectionGridTest {
     }
 
     @Test
+    fun `a held page of several rows keeps its shift while it fits`() {
+        val grid = SectionGrid(
+            rows = intArrayOf(0, 1),
+            columns = IntArray(2),
+            columnCounts = intArrayOf(1, 1),
+            joinsPrevious = booleanArrayOf(false, true),
+        )
+        fun arrange(heights: IntArray, held: Map<Int, Int>?) = grid.arrange(
+            heights = heights,
+            sectionGap = 20,
+            rowGap = 40,
+            centeredRowHeight = 500,
+            heldPageShifts = held,
+        )
+        val before = arrange(intArrayOf(100, 100), held = null)
+        // Not held, the page is moved down by 45% of the room it leaves.
+        assertContentEquals(intArrayOf(126, 246), before.tops)
+        assertEquals(mapOf(0 to 126), before.pageShifts)
+        // The first section folds: centered again, the page would move down, but held, it stays where it was.
+        assertContentEquals(intArrayOf(153, 213), arrange(intArrayOf(40, 100), held = null).tops)
+        assertContentEquals(intArrayOf(126, 186), arrange(intArrayOf(40, 100), held = before.pageShifts).tops)
+        // Unfolded past what the room leaves below it, the page is moved up only as far as it has to be.
+        assertContentEquals(intArrayOf(80, 400), arrange(intArrayOf(300, 100), held = before.pageShifts).tops)
+    }
+
+    @Test
     fun `a song that fits in one row at several counts takes the one that fills the page most evenly`() {
         assertEquals(3, balancedSearch(mapOf(2 to 0.8, 3 to 0.1, 4 to 0.5)))
         // A count only slightly better balanced is not worth another column.

@@ -646,13 +646,16 @@ internal fun SongSectionsLayout(
         centeredRowHeight = maxOf(readableRowHeight, wholeSongHeight),
         // Stanzas further apart than a chorded line read as strangers rather than as one song.
         maxExtraSectionGap = lineHeightPx,
-        heldSpreads = centeringHold?.heldSpreads(grid.columnCounts),
+        heldSpreads = centeringHold?.heldSpreads(grid.columnCounts, grid.joinsPrevious),
+        heldPageShifts = centeringHold?.heldPageShifts(grid.columnCounts, grid.joinsPrevious),
         unitSections = units.unitSections,
         piecePadding = piecePadding,
     )
     if (isLookingAhead && centeringHold != null && !centeringHold.isHolding) {
         centeringHold.spreads = arrangement.columnSpreads
+        centeringHold.pageShifts = arrangement.pageShifts
         centeringHold.columnCounts = grid.columnCounts
+        centeringHold.joinsPrevious = grid.joinsPrevious
     }
     val dividerTops = arrangement.dividerTops
     // The approach pass places the rows where their sections' animations have got to, which is not where a scroll

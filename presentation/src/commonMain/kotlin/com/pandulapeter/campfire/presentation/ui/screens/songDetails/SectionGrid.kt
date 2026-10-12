@@ -224,7 +224,9 @@ private const val BALANCE_MARGIN = 0.15
 
 /**
  * The y position of every section, the total height of the layout, the y positions (centers) of the gaps between the
- * pages and where the content of every page ends, which is above the empty space a page may be followed by.
+ * pages and where the content of every page ends, which is above the empty space a page may be followed by. Where the
+ * pages were centered, [columnSpreads] is where the columns of every page of a single row were placed and [pageShifts]
+ * how far every page of several rows was moved down, by the row that starts it.
  */
 internal class SongArrangement(
     val tops: IntArray,
@@ -232,6 +234,7 @@ internal class SongArrangement(
     val dividerTops: List<Int>,
     val pageBottoms: List<Int>,
     val columnSpreads: ColumnSpreads = emptyMap(),
+    val pageShifts: Map<Int, Int> = emptyMap(),
 )
 
 /**
@@ -259,8 +262,9 @@ internal class SongArrangement(
  * as sitting low - a column holding a piece of a section cut across two as well, which held against the cut would
  * lean away from the column beside it. Where [heldSpreads] has a column, it keeps the top and the gaps it was placed at
  * there instead, as far as they still fit (see [ColumnCenteringHold]). A page of several rows is moved down whole by a
- * little less than half of what it leaves of [centeredRowHeight] instead. The divider above a page stays where it is
- * either way, so the scroll still comes to rest on the same spot.
+ * little less than half of what it leaves of [centeredRowHeight] instead, or where [heldPageShifts] has the row that
+ * starts it, by what it was moved down by there, as far as the page still fits. The divider above a page stays where
+ * it is either way, so the scroll still comes to rest on the same spot.
  */
 internal fun SectionGrid.arrange(
     heights: IntArray,
@@ -271,6 +275,7 @@ internal fun SectionGrid.arrange(
     centeredRowHeight: Int = 0,
     maxExtraSectionGap: Int = 0,
     heldSpreads: ColumnSpreads? = null,
+    heldPageShifts: Map<Int, Int>? = null,
     unitSections: IntArray? = null,
     piecePadding: IntArray? = null,
 ): SongArrangement {
@@ -317,8 +322,18 @@ internal fun SectionGrid.arrange(
     if (heights.isNotEmpty()) pageBottoms += pageTop + pageHeight
     val isSingleRowPage = BooleanArray(pageTops.size) { true }
     for (index in heights.indices) if (joinsPrevious[rows[index]]) isSingleRowPage[pages[index]] = false
+    val pageFirstRows = IntArray(pageTops.size)
+    for (index in heights.indices.reversed()) pageFirstRows[pages[index]] = rows[index]
     val pageShifts = IntArray(pageTops.size) { page ->
-        if (isSingleRowPage[page]) 0 else ((centeredRowHeight - (pageBottoms[page] - pageTops[page])) * SPACE_ABOVE_PERCENT / 100).coerceAtLeast(0)
+        val spaceLeft = centeredRowHeight - (pageBottoms[page] - pageTops[page])
+        val held = heldPageShifts?.get(pageFirstRows[page])
+        when {
+            isSingleRowPage[page] -> 0
+            // A page held where it was keeps its shift for as long as it still fits the room it is centered in, so it
+            // ends no lower than a page centered there would, and Up and Down still reach every line of it.
+            held != null -> held.coerceIn(0, spaceLeft.coerceAtLeast(0))
+            else -> (spaceLeft * SPACE_ABOVE_PERCENT / 100).coerceAtLeast(0)
+        }
     }
     // A cell is the sections of one column of one row, from where it starts until where the next one does.
     val cellStarts = heights.indices.filter { it == 0 || rows[it] != rows[it - 1] || columns[it] != columns[it - 1] }
@@ -370,6 +385,11 @@ internal fun SectionGrid.arrange(
         dividerTops = dividerTops,
         pageBottoms = shiftedPageBottoms,
         columnSpreads = columnSpreads,
+        pageShifts = if (centeredRowHeight > 0) {
+            pageTops.indices.filter { !isSingleRowPage[it] }.associate { pageFirstRows[it] to pageShifts[it] }
+        } else {
+            emptyMap()
+        },
     )
 }
 

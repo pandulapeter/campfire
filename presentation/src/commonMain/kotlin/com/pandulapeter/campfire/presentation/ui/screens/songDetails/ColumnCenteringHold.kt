@@ -38,7 +38,8 @@ internal fun columnKey(row: Int, column: Int) = row.toLong() shl Int.SIZE_BITS o
  * once: a column is centered by its height, so a fold would otherwise move the sections above it too, the very header
  * that was tapped among them, and a second tap aimed at it would miss. Once [isHolding] turns false the columns are
  * centered again, which their sections spring to like any other change. [spreads] is what the layout last placed them
- * at while nothing held them, with the [columnCounts] of the rows it was placed in.
+ * at while nothing held them, and [pageShifts] how far it moved the pages of several rows down, with the
+ * [columnCounts] and [joinsPrevious] of the grid it placed them in: a grid paired into other pages has other columns.
  */
 internal class ColumnCenteringHold {
 
@@ -46,10 +47,26 @@ internal class ColumnCenteringHold {
 
     var spreads: ColumnSpreads = emptyMap()
 
+    var pageShifts: Map<Int, Int> = emptyMap()
+
     var columnCounts = IntArray(0)
 
-    /** The spreads to place the columns of rows of [columnCounts] at, or null where they are centered as they are. */
-    fun heldSpreads(columnCounts: IntArray) = spreads.takeIf { isHolding && this.columnCounts.contentEquals(columnCounts) }
+    var joinsPrevious = BooleanArray(0)
+
+    /**
+     * The spreads to place the columns of a grid of [columnCounts] and [joinsPrevious] at, or null where they are centered
+     * as they are.
+     */
+    fun heldSpreads(columnCounts: IntArray, joinsPrevious: BooleanArray) = spreads.takeIf { isHolding(columnCounts, joinsPrevious) }
+
+    /**
+     * How far to move the pages of several rows of a grid of [columnCounts] and [joinsPrevious] down, or null where they
+     * are centered as they are.
+     */
+    fun heldPageShifts(columnCounts: IntArray, joinsPrevious: BooleanArray) = pageShifts.takeIf { isHolding(columnCounts, joinsPrevious) }
+
+    private fun isHolding(columnCounts: IntArray, joinsPrevious: BooleanArray) =
+        isHolding && this.columnCounts.contentEquals(columnCounts) && this.joinsPrevious.contentEquals(joinsPrevious)
 }
 
 /**
