@@ -316,7 +316,7 @@ it and **the space every row leaves is shared out evenly** before, between and a
 column gap between two), by what the row holds rather than by the columns it was given, whatever the rows around it
 hold; the whole width is shared out wherever that keeps the row clear of the step buttons, and the width left beside
 them otherwise. **Where several counts fit the song in one row, the one that fills the page most evenly is taken**
-(`balancedAmong`): the share of the width the columns fill against the share of the height the tallest one does, a
+(`balancedAmong`): the share of the width the columns and the gaps between them fill against the share of the height the tallest one does, a
 count of more columns only where that is better by a margin and where it wraps no more of the song's lines, so a short
 song on a large screen at a small size is three loose columns rather than two tall ones in the middle of it.
 

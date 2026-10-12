@@ -331,19 +331,31 @@ internal fun SongSectionsLayout(
 
         fun SectionGrid.wrappedLines() = (0 until unitCount).sumOf { wrappedLinesAt(it, unitColumnWidth(it)) }
 
+        // Every count a search weighs is compared with the same grid of the fewest columns, so its wrapping is summed once.
+        var fewestGrid: SectionGrid? = null
+        var fewestWrappedLines = 0
+        fun SectionGrid.wrappedLinesOnce(): Int {
+            if (this !== fewestGrid) {
+                fewestGrid = this
+                fewestWrappedLines = wrappedLines()
+            }
+            return fewestWrappedLines
+        }
+
         // How unevenly a grid of a single row fills the page: the share of the width its columns fill against the share
         // of the height its tallest one does, the columns as wide as the widest thing in them, the way they are drawn.
         // A grid that wraps more lines than the one of the fewest columns is no candidate, since wider lines read better
         // than a better filled page looks.
         fun SectionGrid.imbalance(height: Int, fewest: SectionGrid): Double? {
-            if (this !== fewest && wrappedLines() > fewest.wrappedLines()) return null
+            if (this !== fewest && wrappedLines() > fewest.wrappedLinesOnce()) return null
             val cellWidths = Array(columnCounts.size) { row -> IntArray(columnCounts[row]) }
             for (unit in 0 until unitCount) {
                 val index = unit + unitOffset
                 val contentWidth = minOf(unitColumnWidth(unit), unitWidthFor(index, unitColumnWidth(unit), fitScale), maxWidthOf(index).scaledBy(fitScale))
                 cellWidths[rows[unit]][columns[unit]] = maxOf(cellWidths[rows[unit]][columns[unit]], contentWidth)
             }
-            val filledWidth = cellWidths.maxOf { it.sum() }
+            // The gaps between the columns are filled as much as the columns are: what the eye sees is the block they make.
+            val filledWidth = (0 until columnCounts.size).maxOf { row -> cellWidths[row].sum() + columnGapPx * (columnCounts[row] - 1) }
             if (filledWidth <= 0 || height <= 0 || totalWidth <= 0) return null
             return abs(ln(filledWidth.toDouble() / totalWidth) - ln(height.toDouble() / availableHeightPx))
         }
