@@ -22,9 +22,6 @@ internal enum class AppIconSurface {
     /** iOS's home screen icon, which the system confirms every change of with an alert. */
     HOME_SCREEN,
 
-    /** The macOS Dock icon, for as long as the app runs. */
-    DOCK,
-
     /** The window icon a Linux window manager draws, for as long as the app runs. */
     WINDOW,
 

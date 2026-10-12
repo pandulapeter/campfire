@@ -27,19 +27,15 @@ internal actual val isStartupScreenHeldUntilAppReady = false
 // The library is in the platform's application data folder, which the user can open and edit files in.
 internal actual val isLibraryEditableOutsideApp get() = PlatformImpersonation.platform != ImpersonatedPlatform.ANDROID
 
-// Windows has none: the taskbar button of a packaged app (the Microsoft Store's) is drawn from the package's logos,
-// which a running app cannot change, so a switch there would only work in a build nobody is handed.
+// Windows and macOS have none. The taskbar button of a packaged app (the Microsoft Store's) is drawn from the package's
+// logos, which a running app cannot change, so a switch there would only work in a build nobody is handed; and an image
+// given to the Dock at runtime is a flat picture macOS cannot draw in its clear, tinted or dark icon styles.
 internal actual val appIconSurface: AppIconSurface?
     get() = when (PlatformImpersonation.platform) {
         ImpersonatedPlatform.ANDROID -> AppIconSurface.LAUNCHER
         ImpersonatedPlatform.IOS -> AppIconSurface.HOME_SCREEN
-        ImpersonatedPlatform.MACOS -> AppIconSurface.DOCK
-        ImpersonatedPlatform.WINDOWS -> null
-        null -> when {
-            isMacOs -> AppIconSurface.DOCK
-            isWindows -> null
-            else -> AppIconSurface.WINDOW
-        }
+        ImpersonatedPlatform.MACOS, ImpersonatedPlatform.WINDOWS -> null
+        null -> if (isMacOs || isWindows) null else AppIconSurface.WINDOW
     }
 
 // The store of the machine, not of the build: a Mac build made by hand answers to the Mac App Store's rules and sends

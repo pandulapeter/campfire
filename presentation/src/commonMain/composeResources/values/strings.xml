@@ -322,8 +322,6 @@
     <string name="settings_app_icon_launcher_description">The home screen icon takes the color above. The first change takes effect once you leave Campfire, and some launchers take the icon off the home screen when it changes.</string>
     <string name="settings_app_icon_home_screen">Color the app icon</string>
     <string name="settings_app_icon_home_screen_description">The home screen icon takes the color above. iOS confirms every change with a message.</string>
-    <string name="settings_app_icon_dock">Color the Dock icon</string>
-    <string name="settings_app_icon_dock_description">The Dock icon takes the color above while Campfire is open</string>
     <string name="settings_app_icon_window">Color the window icon</string>
     <string name="settings_app_icon_window_description">The window icon takes the color above while Campfire is open</string>
     <string name="settings_app_icon_browser_tab">Color the tab icon</string>

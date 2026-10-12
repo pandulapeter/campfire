@@ -26,8 +26,6 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_browser_tab
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_browser_tab_description
-import com.pandulapeter.campfire.presentation.resources.settings_app_icon_dock
-import com.pandulapeter.campfire.presentation.resources.settings_app_icon_dock_description
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_home_screen
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_home_screen_description
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_launcher
@@ -158,7 +156,6 @@ private fun AppIconSurface.title() = stringResource(
     when (this) {
         AppIconSurface.LAUNCHER -> Res.string.settings_app_icon_launcher
         AppIconSurface.HOME_SCREEN -> Res.string.settings_app_icon_home_screen
-        AppIconSurface.DOCK -> Res.string.settings_app_icon_dock
         AppIconSurface.WINDOW -> Res.string.settings_app_icon_window
         AppIconSurface.BROWSER_TAB -> Res.string.settings_app_icon_browser_tab
     }
@@ -170,7 +167,6 @@ private fun AppIconSurface.description() = stringResource(
     when (this) {
         AppIconSurface.LAUNCHER -> Res.string.settings_app_icon_launcher_description
         AppIconSurface.HOME_SCREEN -> Res.string.settings_app_icon_home_screen_description
-        AppIconSurface.DOCK -> Res.string.settings_app_icon_dock_description
         AppIconSurface.WINDOW -> Res.string.settings_app_icon_window_description
         AppIconSurface.BROWSER_TAB -> Res.string.settings_app_icon_browser_tab_description
     }

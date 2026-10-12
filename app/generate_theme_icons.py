@@ -34,8 +34,7 @@ What is written, for every color:
 - The web: `icon-192-<color>.png`, the favicon and the loading screen's icon. The app's own is named like the others
   rather than after the page, because a browser keeps a favicon by its address and would go on showing an earlier icon
   that had the same one.
-- The desktop: `app_icon.png` and `app_icon_<color>.png`, the window icon of Windows and Linux, and the macOS Dock icon
-  `dock_icon_<color>.png`, set while the app runs.
+- The desktop: `app_icon.png` and `app_icon_<color>.png`, the window icon of Windows and Linux.
 
 And, in the app's own colors alone, the packaged icons: `appIcon.icns` and `appIcon.ico`. Android's icons are not
 written here: the app's own launcher icon and its Play listing icon (`app/android/appIcon.png`) are drawn as they are,
@@ -92,8 +91,6 @@ SEEDS = {
     'pink': ('#E91EAF', '#E91EAF'),
     'gray': ('#707070', SAME_LIGHTNESS_GRAY),
 }
-
-DOCK_ICON_SIZE = 512
 
 GAMUT_TOLERANCE = 1e-4
 GAMUT_MAPPING_STEPS = 20
@@ -253,9 +250,6 @@ def main():
     ios_tinted = Image.open(os.path.join(SOURCES, 'ios/icon-tinted.png'))
     web_icon = Image.open(os.path.join(SOURCES, 'icon-192.png'))
     window_icon = Image.open(os.path.join(SOURCES, 'app_icon.png'))
-    with tempfile.TemporaryDirectory() as directory:
-        dock_icon = Image.open(os.path.join(iconset(os.path.join(SOURCES, 'appIcon.icns'), directory), 'icon_512x512@2x.png'))
-        dock_icon = dock_icon.convert('RGBA').resize((DOCK_ICON_SIZE, DOCK_ICON_SIZE), Image.LANCZOS)
     for color, (seed, dark_seed) in SEEDS.items():
         is_own = color == 'campfire'
         write_ios_icon_set(
@@ -266,7 +260,6 @@ def main():
         )
         save(recolor(web_icon, seed), os.path.join(WEB_RESOURCES, f'favicon-{color}.png'))
         save(recolor(window_icon, seed), os.path.join(DESKTOP_DRAWABLES, 'app_icon.png' if is_own else f'app_icon_{color}.png'))
-        save(recolor(dock_icon, seed), os.path.join(DESKTOP_DRAWABLES, f'dock_icon_{color}.png'))
         if is_own:
             write_packaged_icons(seed)
 

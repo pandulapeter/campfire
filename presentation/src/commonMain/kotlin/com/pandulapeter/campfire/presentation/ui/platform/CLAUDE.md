@@ -50,7 +50,7 @@ with no startup screen of its own over the app's), `isStartupScreenHeldUntilAppR
 whose startup screens stay over the app until `onAppReady` so that the launch screen is taken away without its fade;
 false on iOS, whose storyboard the system removes at the first frame), `appIconSurface` (which icon follows the theme
 color here, which the settings screen names the "Colored … icon" switch after and describes with its catch: the launcher
-on Android, the home screen on iOS, the Dock, the window on Linux, the browser tab; null on Windows, which has no
+on Android, the home screen on iOS, the window on Linux, the browser tab; null on Windows and macOS, which have no
 switch) and
 `isLibraryEditableOutsideApp` (the desktop folder and the iOS Files app, which decide whether resuming rescans; Settings
 names neither, since where the library lives is the platform's convention and nothing the user could change).

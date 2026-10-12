@@ -10,7 +10,6 @@
 package com.pandulapeter.campfire
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.graphics.painter.Painter
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
@@ -28,23 +27,7 @@ import com.pandulapeter.campfire.resources.app_icon_purple
 import com.pandulapeter.campfire.resources.app_icon_red
 import com.pandulapeter.campfire.resources.app_icon_teal
 import com.pandulapeter.campfire.resources.app_icon_yellow
-import com.pandulapeter.campfire.resources.dock_icon_blue
-import com.pandulapeter.campfire.resources.dock_icon_campfire
-import com.pandulapeter.campfire.resources.dock_icon_gray
-import com.pandulapeter.campfire.resources.dock_icon_green
-import com.pandulapeter.campfire.resources.dock_icon_orange
-import com.pandulapeter.campfire.resources.dock_icon_pink
-import com.pandulapeter.campfire.resources.dock_icon_purple
-import com.pandulapeter.campfire.resources.dock_icon_red
-import com.pandulapeter.campfire.resources.dock_icon_teal
-import com.pandulapeter.campfire.resources.dock_icon_yellow
-import java.awt.Taskbar
-import javax.imageio.ImageIO
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.DrawableResource
-import org.jetbrains.compose.resources.getDrawableResourceBytes
-import org.jetbrains.compose.resources.getSystemResourceEnvironment
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -53,33 +36,19 @@ import org.jetbrains.compose.resources.painterResource
  * running, and stay the ones of the app's own color.
  *
  * What is returned is the window icon, which Linux puts on whatever its window manager draws for a window - the round
- * icon, in the chosen color. On macOS a window has no icon, and the one in the Dock is the application's; that is set
- * here as well. On Windows it stays the app's own, since the taskbar belongs to the package there.
+ * icon, in the chosen color. Windows and macOS keep the app's own: the taskbar button of a packaged app is drawn from
+ * the package, and on macOS a window has no icon, while an image given to the Dock at runtime is a flat picture the
+ * system cannot draw in its clear, tinted or dark icon styles, so it would stand out from every other icon there.
  *
  * @param viewModel Null until the window has created it, which is also a moment the preferences have not been read.
  */
 @Composable
 internal fun appIcon(viewModel: CampfireViewModel?): Painter {
     val userPreferences = viewModel?.userPreferences?.collectAsState()?.value
-    // Windows offers no switch for it, and the preference may still be on from a build that did: a packaged app's
-    // taskbar button is drawn from the package, so only the title bar would follow the color.
-    val appIconColor = (if (isWindows) null else userPreferences).appIconThemeColor.appIconColor
-    // An unread preference says nothing about the theme, and the packaged icon the Dock is showing until then is the
-    // better guess.
-    if (userPreferences != null && isDockIconSupported) {
-        val dockIcon = DOCK_ICONS.getValue(appIconColor)
-        LaunchedEffect(dockIcon) {
-            val image = withContext(Dispatchers.IO) {
-                getDrawableResourceBytes(getSystemResourceEnvironment(), dockIcon).inputStream().use(ImageIO::read)
-            }
-            Taskbar.getTaskbar().iconImage = image
-        }
-    }
+    // Neither platform offers a switch for it, and the preference may still be on from a build that did.
+    val appIconColor = (if (isWindows || isMacOs) null else userPreferences).appIconThemeColor.appIconColor
     return painterResource(WINDOW_ICONS.getValue(appIconColor))
 }
-
-/** True on macOS, the one platform whose AWT can set the icon of the application rather than of a window. */
-private val isDockIconSupported by lazy { Taskbar.isTaskbarSupported() && Taskbar.getTaskbar().isSupported(Taskbar.Feature.ICON_IMAGE) }
 
 private val WINDOW_ICONS: Map<UserPreferences.ThemeColor, DrawableResource> = mapOf(
     UserPreferences.ThemeColor.CAMPFIRE to Res.drawable.app_icon,
@@ -92,17 +61,4 @@ private val WINDOW_ICONS: Map<UserPreferences.ThemeColor, DrawableResource> = ma
     UserPreferences.ThemeColor.BLUE to Res.drawable.app_icon_blue,
     UserPreferences.ThemeColor.PURPLE to Res.drawable.app_icon_purple,
     UserPreferences.ThemeColor.PINK to Res.drawable.app_icon_pink,
-)
-
-private val DOCK_ICONS: Map<UserPreferences.ThemeColor, DrawableResource> = mapOf(
-    UserPreferences.ThemeColor.CAMPFIRE to Res.drawable.dock_icon_campfire,
-    UserPreferences.ThemeColor.GRAY to Res.drawable.dock_icon_gray,
-    UserPreferences.ThemeColor.RED to Res.drawable.dock_icon_red,
-    UserPreferences.ThemeColor.ORANGE to Res.drawable.dock_icon_orange,
-    UserPreferences.ThemeColor.YELLOW to Res.drawable.dock_icon_yellow,
-    UserPreferences.ThemeColor.GREEN to Res.drawable.dock_icon_green,
-    UserPreferences.ThemeColor.TEAL to Res.drawable.dock_icon_teal,
-    UserPreferences.ThemeColor.BLUE to Res.drawable.dock_icon_blue,
-    UserPreferences.ThemeColor.PURPLE to Res.drawable.dock_icon_purple,
-    UserPreferences.ThemeColor.PINK to Res.drawable.dock_icon_pink,
 )

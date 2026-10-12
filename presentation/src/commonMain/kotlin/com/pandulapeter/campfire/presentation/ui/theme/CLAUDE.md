@@ -115,8 +115,9 @@ there too.
 ### The app icon follows the theme color
 
 **The app icon follows the theme color** wherever the platform lets an app change it: the launcher entry on Android (one
-`activity-alias` per color, see `app/android`), an alternate icon on iOS, the favicon on the web, and the window and
-Dock icons of a running desktop app (not Windows', whose taskbar the Store's package draws) — unless the user turned that off (`UserPreferences.isAppIconThemed`, a
+`activity-alias` per color, see `app/android`), an alternate icon on iOS, the favicon on the web, and the window icon of
+a running Linux app (not Windows', whose taskbar the Store's package draws, nor the Mac's Dock, where an icon set at
+runtime is a flat image the system cannot draw in its clear, tinted or dark styles) — unless the user turned that off (`UserPreferences.isAppIconThemed`, a
 switch under the colors named after the platform's icon), which keeps the app's own. **The app's own colors are the
 promotional material's purple and orange** (#5A49CA and #F57C00): its icon, and so every packaged one (the installed
 app, the Start menu, a store's page), is their diagonal gradient, and the "Campfire" palette is dusk around a fire:
