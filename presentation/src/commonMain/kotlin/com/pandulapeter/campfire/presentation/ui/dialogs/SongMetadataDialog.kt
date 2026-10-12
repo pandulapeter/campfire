@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -23,15 +25,19 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields.Field
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.done
+import com.pandulapeter.campfire.presentation.resources.ic_manage_search
 import com.pandulapeter.campfire.presentation.resources.save
+import com.pandulapeter.campfire.presentation.resources.song_details_lookup
 import com.pandulapeter.campfire.presentation.resources.song_details_metadata_edit
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
+import org.jetbrains.compose.resources.painterResource
 
 /**
  * What a song is, as a form: every field is edited as a draft and only the ones changed are written, together, on Save.
@@ -40,6 +46,10 @@ import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
  * saved as a list of strings in [SONG_METADATA_FIELDS] order, which is what Android's saved state takes. Unlike the
  * dialogs that ask for one thing it opens with no field focused: it is opened to look the song up as often as to
  * correct one field of it, and a keyboard brought up over the title would hide half the form.
+ *
+ * The header's search button puts the song details lookup up in its place, handing it the draft, which the lookup
+ * hands back — with what the user picked filled in — as [DialogType.SongMetadata.draft]: the form opens on that draft,
+ * and Save still compares it with the values the form was first offered, so that it writes what the lookup changed.
  */
 @Composable
 internal fun SongMetadataDialog(
@@ -49,7 +59,8 @@ internal fun SongMetadataDialog(
     // Compared with the draft the form opened with rather than with the file's text, so that a duration the field
     // could not show, and so opened empty, is only removed when the user typed into it.
     val offeredValues = remember(dialog.values) { dialog.values.toSongMetadataDraft() }
-    var values by rememberSaveable(dialog.song.fileName, stateSaver = songMetadataSaver) { mutableStateOf(offeredValues) }
+    var values by rememberSaveable(dialog.song.fileName, dialog.draft, stateSaver = songMetadataSaver) { mutableStateOf(dialog.draft ?: offeredValues) }
+    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
     val field: @Composable (Modifier, Field) -> Unit = { modifier, field ->
         SongMetadataField(
@@ -76,6 +87,19 @@ internal fun SongMetadataDialog(
                 field(Modifier.fillMaxWidth(), Field.LYRICIST)
                 SongMetadataShortFields(field)
             }
+        },
+        startButton = if (userPreferences?.isSongDetailsLookupEnabled == true) {
+            {
+                val isClosing = LocalIsSheetClosing.current
+                IconButton(onClick = { if (!isClosing()) viewModel.showSongDetailsLookup(dialog = dialog, draft = values) }) {
+                    Icon(
+                        painter = painterResource(Res.drawable.ic_manage_search),
+                        contentDescription = stringResource(Res.string.song_details_lookup),
+                    )
+                }
+            }
+        } else {
+            null
         },
         confirmButton = { close ->
             BottomSheetConfirmButton(

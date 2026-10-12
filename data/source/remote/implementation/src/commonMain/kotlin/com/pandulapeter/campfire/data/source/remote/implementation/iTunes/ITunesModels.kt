@@ -23,6 +23,9 @@ internal data class ITunesSearchResponse(
 @Serializable
 internal data class ITunesTrack(
     val wrapperType: String = "",
+    val trackId: Long = 0,
+    val trackName: String = "",
+    val trackTimeMillis: Long? = null,
     val collectionId: Long = 0,
     val collectionName: String = "",
     val artistName: String = "",

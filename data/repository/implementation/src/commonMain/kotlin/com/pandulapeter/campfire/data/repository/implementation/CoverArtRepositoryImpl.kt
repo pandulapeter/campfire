@@ -27,7 +27,6 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
@@ -56,8 +55,7 @@ import kotlin.time.Duration.Companion.minutes
  * of them — long enough for the client's timeout, which counts the time spent queued, to fail them and put their
  * addresses in the failure memory for a minute. One that has started is carried to its end whoever is still waiting.
  *
- * A search asks every source side by side, each in a coroutine of the collector's own, so that closing the sheet stops
- * all of them, and one that fails is recorded as failed rather than ending the others.
+ * A search asks every source side by side, see [searchCatalogues].
  */
 @Single
 internal class CoverArtRepositoryImpl(
@@ -118,44 +116,12 @@ internal class CoverArtRepositoryImpl(
         }
     }
 
-    override fun searchCoverArt(query: CoverArtQuery): Flow<CoverArtSearchResults> = channelFlow {
-        val resultsMutex = Mutex()
-        var results = CoverArtSearchResults(
-            candidates = emptyList(),
-            pending = coverArtSearchRemoteSources.all.mapTo(mutableSetOf()) { it.service },
-            busy = emptySet(),
-            failed = emptySet(),
-        )
-        val update: suspend (CoverArtSearchResults.() -> CoverArtSearchResults) -> Unit = { transform ->
-            resultsMutex.withLock {
-                results = results.transform()
-                send(results)
-            }
-        }
-        send(results)
-        coverArtSearchRemoteSources.all.forEach { source ->
-            val service = source.service
-            launch {
-                val candidates = environment.logger.recovering(
-                    describe = { "The cover search on $service failed: ${it::class.simpleName}" },
-                    fallback = { null },
-                ) {
-                    source.searchCoverArt(
-                        query = query,
-                        // A wait reported by a source that has answered since is not one anybody is still waiting on.
-                        onBusy = { launch { update { if (service in pending) copy(busy = busy + service) else this } } },
-                    )
-                }
-                update {
-                    copy(
-                        candidates = this.candidates + candidates.orEmpty(),
-                        pending = pending - service,
-                        busy = busy - service,
-                        failed = if (candidates == null) failed + service else failed,
-                    )
-                }
-            }
-        }
+    override fun searchCoverArt(query: CoverArtQuery): Flow<CoverArtSearchResults> = searchCatalogues(
+        catalogues = coverArtSearchRemoteSources.all.map { it.catalogue },
+        logger = environment.logger,
+        what = "cover search",
+    ) { catalogue, onBusy ->
+        coverArtSearchRemoteSources.all.first { it.catalogue == catalogue }.searchCoverArt(query = query, onBusy = onBusy)
     }
 
     override suspend fun clearCoverArtCache() {

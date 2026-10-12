@@ -279,6 +279,8 @@
     <string name="settings_metronome_description">A Metronóm fül és a dalok képernyőjén a metronóm, a dalok tempójával és ütemmutatójával együtt</string>
     <string name="settings_tuner_description">A Hangoló fül, és a mikrofon, amelyen keresztül hallgat</string>
     <string name="settings_setlists_description">A Listák fül és a dalok listákhoz adása. Kikapcsolva csak elrejti őket, egyetlen lista sem törlődik.</string>
+    <string name="settings_song_details_lookup">Daladatok online</string>
+    <string name="settings_song_details_lookup_description">A daladatok szerkesztésekor felajánlja, hogy a dal előadóját, albumát, évét és szerzőit megkeresd a MusicBrainzen és az iTunesban</string>
     <string name="settings_cover_art">Borítóképek</string>
     <string name="settings_cover_art_description">A dalokban megadott albumborítók megjelenítése, amelyeket az alkalmazás egyszer letölt, majd ezen az eszközön tárol</string>
     <string name="settings_number_sections">Szakaszok számozása</string>
@@ -645,6 +647,18 @@
     <string name="cover_art_address">A kép webcíme</string>
     <string name="cover_art_address_hint">Illeszd be egy weben elérhető kép címét</string>
     <string name="cover_art_address_failed">Erről a címről nem sikerült képet betölteni</string>
+    <string name="song_details_lookup">Daladatok keresése online</string>
+    <string name="song_details_lookup_fill_in">Kitöltés</string>
+    <string name="song_details_lookup_hint">Add meg a dal címét, és ha tudod, az előadóját, hogy megtaláljuk a hozzá illő felvételeket</string>
+    <string name="song_details_lookup_no_results">Nem található felvétel ehhez a dalhoz. Próbáld kevesebb szóval, vagy hagyd üresen az albumot.</string>
+    <string name="song_details_lookup_now">Most: %1$s</string>
+    <string name="song_details_lookup_credits_loading">A dalszerzők lekérdezése a MusicBrainzről…</string>
+    <string name="song_details_lookup_credits_none">A MusicBrainz nem nevez meg dalszerzőt ehhez a felvételhez</string>
+    <string name="song_details_lookup_credits_failed">A dalszerzőket nem sikerült lekérdezni</string>
+    <string name="song_details_lookup_nothing_new">Ez a felvétel semmi olyat nem tartalmaz, ami ne szerepelne már az űrlapon</string>
+    <string name="song_details_lookup_attribution">Felvételek a MusicBrainzről és az iTunesból. Egyik sem tartja nyilván a dalok hangnemét és tempóját.</string>
+    <string name="song_details_lookup_musicbrainz">MusicBrainz</string>
+    <string name="song_details_lookup_itunes">iTunes</string>
     <string name="song_details_capo">Capo %1$d</string>
     <string name="song_details_tempo">%1$s BPM</string>
     <string name="song_details_time">%1$s</string>

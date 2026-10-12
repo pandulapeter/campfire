@@ -73,6 +73,12 @@ data class UserPreferences(
      */
     val isCoverArtEnabled: Boolean,
     /**
+     * Whether the Edit song details form offers to look the song up in MusicBrainz and the iTunes Search API. Off, the
+     * button is gone and nothing is ever asked of either catalogue for a song's details; the cover search is
+     * [isCoverArtEnabled]'s.
+     */
+    val isSongDetailsLookupEnabled: Boolean = true,
+    /**
      * Whether the sections a song gives no name of their own are numbered by their kind where it has several of one
      * ("Verse 1", "Verse 2"), the way the files of a library were once written by hand. Off, they are headed by the
      * plain name of their kind.

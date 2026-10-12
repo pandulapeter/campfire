@@ -1,0 +1,32 @@
+/*
+ * This file is part of Campfire.
+ * Copyright (c) Pandula Péter 2017-2026.
+ * https://github.com/pandulapeter/campfire
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * https://mozilla.org/MPL/2.0/.
+ */
+package com.pandulapeter.campfire.data.model.domain
+
+/**
+ * Where one search of the catalogues is, with every catalogue it asks: what has been found so far and what each of the
+ * rest is doing. The catalogues answer at their own pace, so the same search is reported again every time one of them
+ * does.
+ */
+data class CatalogueSearchResults<T>(
+    /** What has been found so far, each catalogue's in its own order and the catalogues in the order they answered. */
+    val candidates: List<T>,
+    /** The catalogues that have not answered yet. */
+    val pending: Set<Catalogue>,
+    /** Those of [pending] that were asked to wait by the catalogue and are waiting before they ask again. */
+    val busy: Set<Catalogue>,
+    /** The catalogues that could not be reached, or kept refusing. */
+    val failed: Set<Catalogue>,
+) {
+    /** Whether every catalogue has answered, one way or the other. */
+    val isComplete get() = pending.isEmpty()
+}
+
+/** Where one cover search is. */
+typealias CoverArtSearchResults = CatalogueSearchResults<CoverArtCandidate>

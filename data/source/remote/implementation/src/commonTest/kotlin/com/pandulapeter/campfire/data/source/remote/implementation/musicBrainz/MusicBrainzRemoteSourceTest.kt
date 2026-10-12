@@ -9,8 +9,12 @@
  */
 package com.pandulapeter.campfire.data.source.remote.implementation.musicBrainz
 
+import com.pandulapeter.campfire.data.model.domain.Catalogue
 import com.pandulapeter.campfire.data.model.domain.CoverArtQuery
-import com.pandulapeter.campfire.data.source.remote.api.CoverArtSearchException
+import com.pandulapeter.campfire.data.model.domain.SongCredits
+import com.pandulapeter.campfire.data.model.domain.SongDetailsCandidate
+import com.pandulapeter.campfire.data.model.domain.SongDetailsQuery
+import com.pandulapeter.campfire.data.source.remote.api.CatalogueSearchException
 import com.pandulapeter.campfire.data.source.remote.implementation.network.HttpClientHolder
 import com.pandulapeter.campfire.data.source.remote.implementation.network.USER_AGENT
 import com.pandulapeter.campfire.data.source.remote.implementation.network.userAgent
@@ -34,14 +38,15 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
- * How the cover search keeps to MusicBrainz's pace. The service is a [MockEngine] and the waiting happens in virtual
+ * How the cover search and the song details lookup keep to MusicBrainz's pace. The service is a [MockEngine] and the waiting happens in virtual
  * time, so the spacing and the back-off are measured exactly.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-class MusicBrainzCoverArtSearchRemoteSourceTest {
+class MusicBrainzRemoteSourceTest {
 
     @Test
     fun `the user agent names the app, its version and where to reach its maintainers`() {
@@ -72,6 +77,56 @@ class MusicBrainzCoverArtSearchRemoteSourceTest {
         (1..3).map { async { source.searchCoverArt(QUERY, onBusy = {}) } }.awaitAll()
 
         assertEquals(listOf(0L, 1_100L, 2_200L), starts)
+    }
+
+    @Test
+    fun `a cover search and a details lookup share one pace`() = runTest {
+        val starts = mutableListOf<Long>()
+        val source = source { request ->
+            starts += currentTime
+            respondJson(if ("recording" in request.url.encodedPath) EMPTY_RECORDINGS else EMPTY_RESULT)
+        }
+
+        listOf(
+            async { source.searchCoverArt(QUERY, onBusy = {}) },
+            async { source.searchSongDetails(DETAILS_QUERY, onBusy = {}) },
+            async { source.loadSongCredits(CANDIDATE, onBusy = {}) },
+        ).awaitAll()
+
+        assertEquals(listOf(0L, 1_100L, 2_200L), starts)
+    }
+
+    @Test
+    fun `the songwriters are one lookup of the recording`() = runTest {
+        val urls = mutableListOf<String>()
+        val source = source { request ->
+            urls += request.url.toString()
+            respondJson(
+                """{"relations":[{"type":"performance","work":{"languages":["eng"],"relations":[
+                    {"type":"composer","artist":{"name":"Noel Gallagher"}}]}}]}""",
+            )
+        }
+
+        val credits = source.loadSongCredits(CANDIDATE, onBusy = {})
+
+        assertEquals(SongCredits(composer = "Noel Gallagher", lyricist = null), credits)
+        assertEquals(1, urls.size)
+        assertTrue(urls.single().contains("/recording/${CANDIDATE.id}"))
+    }
+
+    @Test
+    fun `a refused songwriters lookup is waited out and reported as busy`() = runTest {
+        var requestCount = 0
+        var busyCount = 0
+        val source = source { _ ->
+            requestCount++
+            if (requestCount == 1) respond("", HttpStatusCode.ServiceUnavailable, headersOf(HttpHeaders.RetryAfter, "2")) else respondJson("{}")
+        }
+
+        source.loadSongCredits(CANDIDATE, onBusy = { busyCount++ })
+
+        assertEquals(2, requestCount)
+        assertEquals(1, busyCount)
     }
 
     @Test
@@ -116,7 +171,7 @@ class MusicBrainzCoverArtSearchRemoteSourceTest {
             respond("", HttpStatusCode.ServiceUnavailable)
         }
 
-        assertFailsWith<CoverArtSearchException> { source.searchCoverArt(QUERY, onBusy = {}) }
+        assertFailsWith<CatalogueSearchException> { source.searchCoverArt(QUERY, onBusy = {}) }
 
         assertEquals(listOf(0L, 2_000L, 6_000L, 14_000L, 30_000L, 62_000L), starts)
     }
@@ -125,14 +180,14 @@ class MusicBrainzCoverArtSearchRemoteSourceTest {
     fun `any other failure ends the search`() = runTest {
         val source = source { _ -> respond("", HttpStatusCode.BadRequest) }
 
-        assertFailsWith<CoverArtSearchException> { source.searchCoverArt(QUERY, onBusy = {}) }
+        assertFailsWith<CatalogueSearchException> { source.searchCoverArt(QUERY, onBusy = {}) }
     }
 
     @Test
     fun `an answer that is not a search result ends the search`() = runTest {
         val source = source { _ -> respondJson("<html>") }
 
-        assertFailsWith<CoverArtSearchException> { source.searchCoverArt(QUERY, onBusy = {}) }
+        assertFailsWith<CatalogueSearchException> { source.searchCoverArt(QUERY, onBusy = {}) }
     }
 
     @Test
@@ -147,7 +202,7 @@ class MusicBrainzCoverArtSearchRemoteSourceTest {
         assertEquals(0, requestCount)
     }
 
-    private fun TestScope.source(handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData) = MusicBrainzCoverArtSearchRemoteSource(
+    private fun TestScope.source(handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData) = MusicBrainzRemoteSource(
         httpClientHolder = HttpClientHolder(dispatcher = StandardTestDispatcher(testScheduler)) {
             HttpClient(MockEngine.create {
                 // The handler records virtual time, so it must run on that clock's scheduler too. An I/O thread can
@@ -166,6 +221,17 @@ class MusicBrainzCoverArtSearchRemoteSourceTest {
 
     private companion object {
         val QUERY = CoverArtQuery(artist = "Green Day", album = "Dookie", title = "")
+        val DETAILS_QUERY = SongDetailsQuery(title = "Wonderwall", artist = "Oasis", album = "")
+        val CANDIDATE = SongDetailsCandidate(
+            catalogue = Catalogue.MUSIC_BRAINZ,
+            id = "2f3e2d1b-0000-4000-8000-000000000001",
+            title = "Wonderwall",
+            artist = "Oasis",
+            album = null,
+            year = null,
+            duration = null,
+        )
         const val EMPTY_RESULT = """{"release-groups":[]}"""
+        const val EMPTY_RECORDINGS = """{"recordings":[]}"""
     }
 }

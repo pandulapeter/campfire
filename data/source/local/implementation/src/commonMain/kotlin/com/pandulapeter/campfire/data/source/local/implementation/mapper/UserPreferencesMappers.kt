@@ -37,6 +37,7 @@ internal fun UserPreferencesDocument.toModel() = UserPreferences(
     backgroundWarmth = backgroundWarmth.coerceIn(0, UserPreferences.MAX_BACKGROUND_WARMTH),
     isAppIconThemed = isAppIconThemed,
     isCoverArtEnabled = isCoverArtEnabled,
+    isSongDetailsLookupEnabled = isSongDetailsLookupEnabled,
     shouldNumberSections = shouldNumberSections,
     language = UserPreferences.Language.entries.firstOrNull { it.id == language } ?: UserPreferences.Language.SYSTEM_DEFAULT,
     chordSpelling = UserPreferences.ChordSpelling(
@@ -80,6 +81,7 @@ internal fun UserPreferences.toDocument() = UserPreferencesDocument(
     backgroundWarmth = backgroundWarmth,
     isAppIconThemed = isAppIconThemed,
     isCoverArtEnabled = isCoverArtEnabled,
+    isSongDetailsLookupEnabled = isSongDetailsLookupEnabled,
     shouldNumberSections = shouldNumberSections,
     language = language.id,
     accidentals = chordSpelling.accidentals.id,

@@ -25,6 +25,8 @@ import com.pandulapeter.campfire.presentation.resources.settings_metronome_descr
 import com.pandulapeter.campfire.presentation.resources.settings_read_only_mode
 import com.pandulapeter.campfire.presentation.resources.settings_read_only_mode_description
 import com.pandulapeter.campfire.presentation.resources.settings_setlists_description
+import com.pandulapeter.campfire.presentation.resources.settings_song_details_lookup
+import com.pandulapeter.campfire.presentation.resources.settings_song_details_lookup_description
 import com.pandulapeter.campfire.presentation.resources.settings_tuner_description
 import com.pandulapeter.campfire.presentation.resources.tuner
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
@@ -82,6 +84,13 @@ internal fun FeaturesSection(
         description = stringResource(Res.string.settings_setlists_description),
         isChecked = userPreferences?.areSetlistsEnabled != false,
         onCheckedChange = viewModel::setSetlistsEnabled,
+    )
+    // Off, nothing is asked of either catalogue for a song's details: the button in the Edit song details form is gone.
+    SwitchListItem(
+        title = stringResource(Res.string.settings_song_details_lookup),
+        description = stringResource(Res.string.settings_song_details_lookup_description),
+        isChecked = userPreferences?.isSongDetailsLookupEnabled == true,
+        onCheckedChange = viewModel::setSongDetailsLookupEnabled,
     )
     // Off, no cover is fetched from anywhere, which is what somebody who does not want a song file to make the app
     // contact a host turns it off for.

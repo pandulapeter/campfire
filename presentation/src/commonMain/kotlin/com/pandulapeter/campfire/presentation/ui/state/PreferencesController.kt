@@ -149,6 +149,8 @@ internal class PreferencesController(
 
     fun setCoverArtEnabled(value: Boolean) = changeUserPreferences { copy(isCoverArtEnabled = value) }
 
+    fun setSongDetailsLookupEnabled(value: Boolean) = changeUserPreferences { copy(isSongDetailsLookupEnabled = value) }
+
     fun setSectionNumberingEnabled(value: Boolean) = changeUserPreferences { copy(shouldNumberSections = value) }
 
     fun setLanguage(value: UserPreferences.Language) = changeUserPreferences { copy(language = value) }

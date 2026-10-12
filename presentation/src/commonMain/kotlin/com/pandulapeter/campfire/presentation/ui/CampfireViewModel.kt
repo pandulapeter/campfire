@@ -36,6 +36,8 @@ import com.pandulapeter.campfire.data.model.domain.SyncProgress
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.model.domain.AuthorizationCompletionPage
 import com.pandulapeter.campfire.data.model.domain.SongContent
+import com.pandulapeter.campfire.data.model.domain.SongDetailsCandidate
+import com.pandulapeter.campfire.data.model.domain.SongDetailsQuery
 import com.pandulapeter.campfire.data.model.domain.SyncState
 import com.pandulapeter.campfire.presentation.ui.chords.toChordInstrument
 import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
@@ -83,6 +85,7 @@ import com.pandulapeter.campfire.domain.api.useCases.GetUserPreferencesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ImportFilesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.IsFirstRunUseCase
 import com.pandulapeter.campfire.domain.api.useCases.LoadScreenDataUseCase
+import com.pandulapeter.campfire.domain.api.useCases.LoadSongCreditsUseCase
 import com.pandulapeter.campfire.domain.api.useCases.NormalizeSearchTextUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ParseChordProUseCase
 import com.pandulapeter.campfire.domain.api.useCases.PrepareImportUseCase
@@ -94,6 +97,7 @@ import com.pandulapeter.campfire.domain.api.useCases.SaveEditorDraftUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveSongContentUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SearchCoverArtUseCase
+import com.pandulapeter.campfire.domain.api.useCases.SearchSongDetailsUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SetChordProCoverArtUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SetChordProLanguagesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SetChordProLinksUseCase
@@ -112,6 +116,7 @@ import com.pandulapeter.campfire.presentation.ui.tuner.TunerController
 import com.pandulapeter.campfire.tuner.api.Tuner
 import com.pandulapeter.campfire.presentation.ui.dialogs.SONG_METADATA_FIELDS
 import com.pandulapeter.campfire.presentation.ui.dialogs.SavedDialog
+import com.pandulapeter.campfire.presentation.ui.dialogs.slotKey
 import com.pandulapeter.campfire.presentation.ui.dialogs.toSavedDialog
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeContext
 import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
@@ -147,6 +152,7 @@ import com.pandulapeter.campfire.presentation.ui.screens.songEditor.EditorSessio
 import com.pandulapeter.campfire.presentation.ui.songInfo.hasSongInfo
 import com.pandulapeter.campfire.presentation.ui.state.AppExitController
 import com.pandulapeter.campfire.presentation.ui.state.CoverArtSearchController
+import com.pandulapeter.campfire.presentation.ui.state.SongDetailsLookupController
 import com.pandulapeter.campfire.presentation.ui.state.ImportController
 import com.pandulapeter.campfire.presentation.ui.state.ImportController.ImportRequest
 import com.pandulapeter.campfire.presentation.ui.state.LibraryState
@@ -252,6 +258,8 @@ class CampfireViewModel(
     private val searchCoverArt: SearchCoverArtUseCase,
     getCoverArtCacheSize: GetCoverArtCacheSizeUseCase,
     private val clearCoverArtCache: ClearCoverArtCacheUseCase,
+    private val searchSongDetails: SearchSongDetailsUseCase,
+    private val loadSongCredits: LoadSongCreditsUseCase,
     /** What the screens draw a song, a key and a search with, see [SongRenderer]. */
     internal val songRenderer: SongRenderer,
     private val metronome: Metronome,
@@ -332,11 +340,6 @@ class CampfireViewModel(
         addBeforeDialogChange { _, dialogType ->
             appExitController.onBeforeDialogChange(dialogType)
         }
-        addBeforeDialogChange { _, dialogType ->
-            // Nothing but the sheet reads it, and a search nobody is waiting for any more still counts against the
-            // service's one request a second.
-            if (dialogType !is DialogType.CoverArtSearch) clearCoverArtSearch()
-        }
         addBeforeDialogChange { previousDialog, dialogType ->
             // However the export screen goes - closed, Escape, the web's Back, another dialog put over it - it stays drawn
             // while it slides away, so its own disposal would be too late: its options are saved and its drawing cancelled
@@ -358,14 +361,20 @@ class CampfireViewModel(
             // The tuner sheet listens for as long as it is up and not a moment longer, as the Tuner tab does.
             if (previousDialog is DialogType.Tuner && dialogType !is DialogType.Tuner) stopTuner()
         }
-        addAfterDialogChange { _, dialogType ->
-            // Every change is written, so that a sheet that goes takes its entry with it.
-            savedStateStore.persist(SavedStateStore.VISIBLE_DIALOG_KEY, dialogType?.toSavedDialog())
-        }
-        addAfterDialogChange { previousDialog, dialogType ->
+        addOpenDialogsChange { before, after ->
+            // Every change is written, so that a sheet that goes takes its entry with it. The topmost one worth reopening
+            // rather than the one on top, so that a sheet with a question over it is what a restored process opens.
+            savedStateStore.persist(SavedStateStore.VISIBLE_DIALOG_KEY, after.asReversed().firstNotNullOfOrNull { it.toSavedDialog() })
+            // Nothing but the sheets read them, and a search nobody is waiting for any more still counts against the
+            // catalogue's one request a second - but a sheet with a question over it is still open, and still wants
+            // its results when the question goes.
+            if (after.none { it is DialogType.CoverArtSearch }) clearCoverArtSearch()
+            if (after.none { it is DialogType.SongDetailsLookup }) songDetailsLookupController.clear()
             // Asked as the sheet is put up rather than by the sheet once it is composed, so that its first frame already
             // says that the search is running instead of crossfading from the hint to it while it slides up.
-            if (dialogType is DialogType.CoverArtSearch && previousDialog !is DialogType.CoverArtSearch) searchCoverArt(coverArtQueryOf(song = dialogType.song, target = dialogType.target))
+            val opened = after.filter { dialog -> before.none { it.slotKey == dialog.slotKey } }
+            opened.filterIsInstance<DialogType.CoverArtSearch>().forEach { searchCoverArt(coverArtQueryOf(song = it.song, target = it.target)) }
+            opened.filterIsInstance<DialogType.SongDetailsLookup>().forEach { searchSongDetails(songDetailsQueryOf(it.draft)) }
         }
     }
 
@@ -743,6 +752,12 @@ class CampfireViewModel(
     /** See [CoverArtSearchController.coverArtCacheSize]. */
     val coverArtCacheSize get() = coverArtSearchController.coverArtCacheSize
 
+    private val songDetailsLookupController: SongDetailsLookupController = SongDetailsLookupController(
+        scope = viewModelScope,
+        searchSongDetails = searchSongDetails,
+        loadSongCredits = loadSongCredits,
+    )
+
     private val importController: ImportController = ImportController(
         scope = viewModelScope,
         dialogHost = dialogHost,
@@ -942,11 +957,20 @@ class CampfireViewModel(
     /** See [CoverArtSearchController.coverArtSearch]. */
     val coverArtSearch get() = coverArtSearchController.coverArtSearch
 
+    /** See [SongDetailsLookupController.songDetailsLookup]. */
+    val songDetailsLookup get() = songDetailsLookupController.songDetailsLookup
+
+    /** See [SongDetailsLookupController.songCredits]. */
+    val songCredits get() = songDetailsLookupController.songCredits
+
     /** See [DialogHost.visibleDialog]. */
     val visibleDialog: StateFlow<DialogType?> get() = dialogHost.visibleDialog
 
-    /** See [DialogHost.underlyingSongInfo]. */
-    val underlyingSongInfo: StateFlow<DialogType.SongInfo?> get() = dialogHost.underlyingSongInfo
+    /** See [DialogHost.openDialogs]. */
+    val openDialogs: StateFlow<List<DialogType>> get() = dialogHost.openDialogs
+
+    /** See [DialogHost.closeRequest]. */
+    val dialogCloseRequest: StateFlow<DialogType?> get() = dialogHost.closeRequest
 
     /**
      * Whether this is the first launch of this installation, asked once and shared. It stops being true the moment
@@ -1284,6 +1308,32 @@ class CampfireViewModel(
 
     private fun clearCoverArtSearch() = coverArtSearchController.clearCoverArtSearch()
 
+    /** Puts the song details lookup up over [dialog], the metadata form, which holds [draft] at the moment. */
+    fun showSongDetailsLookup(dialog: DialogType.SongMetadata, draft: Map<ChordProMetadataFields.Field, String>) = dialogHost.showDialog(
+        DialogType.SongDetailsLookup(song = dialog.song, target = dialog.target, values = dialog.values, draft = draft),
+    )
+
+    /**
+     * Fills [draft] into the metadata form [dialog] was put up over, which is still open under it and is updated where
+     * it is, see [DialogHost.updateUnderlyingDialog]; the lookup then closes as any sheet does, uncovering it.
+     */
+    fun fillSongMetadata(dialog: DialogType.SongDetailsLookup, draft: Map<ChordProMetadataFields.Field, String>) = dialogHost.updateUnderlyingDialog(
+        DialogType.SongMetadata(song = dialog.song, values = dialog.values, target = dialog.target, draft = draft),
+    )
+
+    /** What the lookup is first asked from a form holding [draft]: the title, artist and album typed into it. */
+    fun songDetailsQueryOf(draft: Map<ChordProMetadataFields.Field, String>) = SongDetailsQuery(
+        title = draft[ChordProMetadataFields.Field.TITLE].orEmpty().trim(),
+        artist = draft[ChordProMetadataFields.Field.ARTIST].orEmpty().trim(),
+        album = draft[ChordProMetadataFields.Field.ALBUM].orEmpty().trim(),
+    )
+
+    fun searchSongDetails(query: SongDetailsQuery) = songDetailsLookupController.searchSongDetails(query)
+
+    fun loadSongCredits(candidate: SongDetailsCandidate) = songDetailsLookupController.loadSongCredits(candidate)
+
+    fun clearSongCredits() = songDetailsLookupController.clearSongCredits()
+
     private fun songTextOf(target: SongEditTarget) = songMetadataEditing.songTextOf(target)
 
     private suspend fun editSongText(fileName: String, edit: (String) -> String) = songTextStore.editSongText(fileName, edit)
@@ -1565,6 +1615,8 @@ class CampfireViewModel(
 
     fun setCoverArtEnabled(value: Boolean) = preferencesController.setCoverArtEnabled(value)
 
+    fun setSongDetailsLookupEnabled(value: Boolean) = preferencesController.setSongDetailsLookupEnabled(value)
+
     fun setSectionNumberingEnabled(value: Boolean) = preferencesController.setSectionNumberingEnabled(value)
 
     fun setLanguage(value: UserPreferences.Language) = preferencesController.setLanguage(value)
@@ -1596,6 +1648,9 @@ class CampfireViewModel(
     fun showDialog(dialogType: DialogType) = dialogHost.showDialog(dialogType)
 
     fun dismissDialog() = dialogHost.dismissDialog()
+
+    /** See [DialogHost.dismissDialogAndSheetUnder]. */
+    fun dismissDialogAndSheetUnder() = dialogHost.dismissDialogAndSheetUnder()
 
     /** See [DialogHost.dismissSheet]. */
     fun dismissSheet(dialogType: DialogType) = dialogHost.dismissSheet(dialogType)

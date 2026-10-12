@@ -41,14 +41,15 @@ import com.pandulapeter.campfire.presentation.ui.components.rememberClearTextBut
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * The three things a record is found by. Artist and album share a row, since those two name a record, with the title
- * and the button under them, since the title is what is searched by only where the album is left empty.
+ * The three things the music catalogues are searched by, in the cover search and the song details lookup alike. Artist
+ * and album share a row, with the title and the button under them: the cover search looks a record up by the album and
+ * the title stands in for an empty one, and the lookup searches by the title, narrowed by the other two.
  *
  * On larger windows they stay above the results. On small windows they scroll with the results so the fields can
  * move out of the way of the covers, especially while the keyboard is open.
  */
 @Composable
-internal fun CoverArtQueryFields(
+internal fun CatalogueQueryFields(
     artist: String,
     album: String,
     title: String,
@@ -62,14 +63,14 @@ internal fun CoverArtQueryFields(
     verticalArrangement = Arrangement.spacedBy(8.dp),
 ) {
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        CoverArtQueryField(
+        CatalogueQueryField(
             modifier = Modifier.weight(1f),
             value = artist,
             label = stringResource(Res.string.songs_new_song_artist),
             onValueChange = onArtistChange,
             onSearch = onSearch,
         )
-        CoverArtQueryField(
+        CatalogueQueryField(
             modifier = Modifier.weight(1f),
             value = album,
             label = stringResource(Res.string.song_editor_insert_album),
@@ -81,14 +82,14 @@ internal fun CoverArtQueryFields(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        CoverArtQueryField(
+        CatalogueQueryField(
             modifier = Modifier.weight(1f),
             value = title,
             label = stringResource(Res.string.songs_new_song_title),
             onValueChange = onTitleChange,
             onSearch = onSearch,
         )
-        // Outlined rather than filled: the header's Save is what finishes the sheet, and two filled buttons in sight
+        // Outlined rather than filled: the header's action is what finishes the sheet, and two filled buttons in sight
         // left the reader to work out which of them was the one that wrote the cover.
         OutlinedButton(
             modifier = Modifier.padding(top = 8.dp),
@@ -108,7 +109,7 @@ internal fun CoverArtQueryFields(
 }
 
 @Composable
-private fun CoverArtQueryField(
+private fun CatalogueQueryField(
     modifier: Modifier = Modifier,
     value: String,
     label: String,

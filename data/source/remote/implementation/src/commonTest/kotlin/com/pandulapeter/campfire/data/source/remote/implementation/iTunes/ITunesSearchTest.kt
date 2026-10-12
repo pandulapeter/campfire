@@ -9,10 +9,12 @@
  */
 package com.pandulapeter.campfire.data.source.remote.implementation.iTunes
 
+import com.pandulapeter.campfire.data.model.domain.Catalogue
 import com.pandulapeter.campfire.data.model.domain.CoverArtCandidate
 import com.pandulapeter.campfire.data.model.domain.CoverArtQuery
-import com.pandulapeter.campfire.data.model.domain.CoverArtService
-import com.pandulapeter.campfire.data.source.remote.api.CoverArtSearchException
+import com.pandulapeter.campfire.data.model.domain.SongDetailsCandidate
+import com.pandulapeter.campfire.data.model.domain.SongDetailsQuery
+import com.pandulapeter.campfire.data.source.remote.api.CatalogueSearchException
 import com.pandulapeter.campfire.data.source.remote.implementation.network.HttpClientHolder
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
@@ -24,6 +26,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
+import kotlin.time.Duration.Companion.milliseconds
 
 class ITunesSearchTest {
 
@@ -73,7 +76,7 @@ class ITunesSearchTest {
         assertEquals(
             listOf(
                 CoverArtCandidate(
-                    service = CoverArtService.ITUNES,
+                    catalogue = Catalogue.ITUNES,
                     id = "1",
                     title = "Nimrod",
                     artist = "Green Day",
@@ -82,7 +85,7 @@ class ITunesSearchTest {
                     coverArtUrl = "https://is1-ssl.mzstatic.com/image/a/b.jpg/250x250bb.jpg",
                 ),
                 CoverArtCandidate(
-                    service = CoverArtService.ITUNES,
+                    catalogue = Catalogue.ITUNES,
                     id = "2",
                     title = "Good Riddance",
                     artist = "Green Day & Friends",
@@ -103,11 +106,66 @@ class ITunesSearchTest {
     @Test
     fun `a refusal is a failure rather than something to wait out`() = runTest {
         var requestCount = 0
-        val source = ITunesCoverArtSearchRemoteSource(
+        val source = ITunesRemoteSource(
             httpClientHolder = HttpClientHolder { HttpClient(MockEngine { requestCount++; respond("", HttpStatusCode.Forbidden) }) { expectSuccess = false } },
         )
 
-        assertFailsWith<CoverArtSearchException> { source.searchCoverArt(CoverArtQuery(artist = "", album = "Nimrod", title = ""), onBusy = {}) }
+        assertFailsWith<CatalogueSearchException> { source.searchCoverArt(CoverArtQuery(artist = "", album = "Nimrod", title = ""), onBusy = {}) }
         assertEquals(1, requestCount)
+    }
+
+    @Test
+    fun `a details lookup searches by the artist and the title, never the album`() {
+        val url = Url(ITunesSearch.songDetailsUrl(SongDetailsQuery(title = "Wonderwall", artist = "Oasis", album = "Morning Glory"))!!)
+
+        assertEquals("Oasis Wonderwall", url.parameters["term"])
+        assertEquals("song", url.parameters["entity"])
+        assertNull(ITunesSearch.songDetailsUrl(SongDetailsQuery(title = "", artist = "Oasis", album = "Morning Glory")))
+    }
+
+    @Test
+    fun `songs become details candidates, a single's name not taken for an album and repeats dropped`() {
+        val body = """
+            {"results":[
+              {"wrapperType":"track","trackId":1,"trackName":"Wonderwall","artistName":"Oasis","collectionName":"(What's the Story) Morning Glory?",
+               "releaseDate":"1995-10-02T07:00:00Z","trackTimeMillis":258907},
+              {"wrapperType":"track","trackId":2,"trackName":"Wonderwall","artistName":"Oasis","collectionName":"(What's the Story) Morning Glory?",
+               "releaseDate":"1995-10-02T12:00:00Z","trackTimeMillis":258773},
+              {"wrapperType":"track","trackId":3,"trackName":"Wonderwall","artistName":"Oasis","collectionName":"Wonderwall - Single","releaseDate":"1995-10-30T12:00:00Z"},
+              {"wrapperType":"track","trackId":4,"trackName":"Wonderwall","artistName":"Oasis","collectionName":"Wonderwall - EP","releaseDate":"1995-10-30T12:00:00Z"},
+              {"wrapperType":"collection","collectionId":5,"collectionName":"Something else"}
+            ]}
+        """.trimIndent()
+
+        val candidates = ITunesSearch.songDetailsCandidates(body)
+
+        assertEquals(listOf("1", "3", "4"), candidates.map { it.id })
+        assertEquals(Catalogue.ITUNES, candidates[0].catalogue)
+        assertEquals("(What's the Story) Morning Glory?", candidates[0].album)
+        assertEquals("1995", candidates[0].year)
+        assertEquals(258_907.milliseconds, candidates[0].duration)
+        assertNull(candidates[1].album)
+        assertNull(candidates[1].duration)
+        assertEquals("Wonderwall", candidates[2].album)
+    }
+
+    @Test
+    fun `the Search API is never asked for songwriters`() = runTest {
+        var requestCount = 0
+        val source = ITunesRemoteSource(
+            httpClientHolder = HttpClientHolder { HttpClient(MockEngine { requestCount++; respond("", HttpStatusCode.OK) }) { expectSuccess = false } },
+        )
+        val candidate = SongDetailsCandidate(
+            catalogue = Catalogue.ITUNES,
+            id = "1",
+            title = "Wonderwall",
+            artist = "Oasis",
+            album = null,
+            year = null,
+            duration = null,
+        )
+
+        assertNull(source.loadSongCredits(candidate, onBusy = {}))
+        assertEquals(0, requestCount)
     }
 }

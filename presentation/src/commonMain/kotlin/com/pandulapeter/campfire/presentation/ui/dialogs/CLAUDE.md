@@ -36,8 +36,8 @@ opens at its full height** whatever it holds, since what it holds grows after it
 it slid up was what made it stutter.
 
 The search is the view model's (`coverArtSearch`, one `Active` state per query carrying the `CoverArtSearchResults`), so
-that it outlives an Android activity being recreated, and `setVisibleDialog` cancels and clears it whenever the sheet
-stops being the dialog on screen. It says when MusicBrainz asked it to wait (only once nothing else is pending), when it
+that it outlives an Android activity being recreated, and it is cancelled and cleared once the sheet is open nowhere
+in the dialog stack (a Remove question over it keeps it). It says when MusicBrainz asked it to wait (only once nothing else is pending), when it
 failed (with a retry) and when it found nothing, and credits both catalogues at the end of the search tab. **Only the
 header and the tabs hold still on tall windows**: the search tab is one `LazyVerticalGrid` whose first item is the three
 fields and the button — outlined, so that the header's Save is the sheet's one filled action — and whose last is the
@@ -46,9 +46,54 @@ first anyway) sit at the end of the header (`CampfireBottomSheet`'s `actions`, w
 phone with the keyboard up otherwise left the covers no room at all. It goes through `CampfireBottomSheet` like every
 sheet, wider than the others (840dp) for the grid.
 
+### `ui/dialogs/SongDetailsLookupSheet.kt`
+
+`ui/dialogs/SongDetailsLookupSheet.kt` — "Find song details online", put up by the search button in the Edit song
+details form's header (`SongMetadataDialog`'s `startButton`, absent while the "Online song details" switch is off). It
+**writes nothing**: it is put over the form, which stays open under it (the dialog stack, below), handed the form's
+offered values and its draft (`DialogType.SongDetailsLookup`). Fill in, the header's one action, which Ctrl / Cmd + S
+presses, puts the ticked suggestions into the form where it is (`CampfireViewModel.fillSongMetadata`, a new
+`DialogType.SongMetadata.draft` the form resets its fields to) and slides the lookup away; closing it leaves the form
+as it was. The form still compares its draft with the offered values on Save, so only what changed is written. A
+restored process reopens the form rather than the lookup, from the file.
+
+The search (title, narrowed by artist and album, through `CatalogueQueryFields`, the cover search's fields) is asked as the
+sheet is put up (`addOpenDialogsChange`), from the draft, and afterwards only from the keyboard's search key or the
+button; its state and the songwriters of the open row are `SongDetailsLookupController`'s, cleared and cancelled with
+the sheet. Everything but the header is one `LazyColumn`: the fields, what stands in for results (the cover search's
+loading, busy and failed lines), the recordings as each catalogue answers (`SongDetailsCandidateRow`), and the credit,
+which also says that neither catalogue knows a key or a tempo. A tapped row opens in place into its review
+(`SongDetailsReview.kt`, pure and tested): one box per field it would change, the form's current value under the
+suggestion, ticked where the form holds nothing and never for the title, an identical value left out and durations
+compared as durations. On MusicBrainz the songwriters are asked for as the row opens — one request, `LaunchedEffect`
+keyed by the row so a restored one asks again — and join the rows when they arrive; iTunes names none, and its rows say nothing about it.
+
+### The dialog stack
+
+**A dialog opened from another one is put over it rather than in its place**, so that going back slides only the top
+one away and uncovers the one under it as it was — never puts it up again, sliding in as if it had just been opened.
+`DialogHost.openDialogs` is the whole stack, the one on screen (`visibleDialog`) last, and `CampfireDialogs` draws every
+dialog in it, each in a slot keyed by its place (`slotKey`: a song sheet's kind and `SongEditTarget`, any other
+dialog's kind), so one under another keeps its sheet, its draft and its scroll position. Which dialog stacks over
+which is `stacksOver` (`DialogStack.kt`, pure and tested): the About the song sheet's editors over it, the Remove cover
+question over the cover sheet, the song details lookup over the metadata form, each only over the same text. Every
+change goes through `setVisibleDialog`, which works the stack out from the dialog alone (`nextUnderlyingDialogs`): one
+in the place of an open dialog goes back to it, closing everything above it; one that stacks over an open dialog goes
+over it; anything else replaces the stack. `dismissDialog` uncovers the one under the top.
+
+**A sheet taken off the stack is gone in one frame, and one that closes itself slides away first**, so the stack never
+takes a sheet off from under the user: a sheet closes itself and is taken off once its hide has ended
+(`dismissSheet`, as every sheet does); an open dialog that has to change does so where it is
+(`updateUnderlyingDialog`, the form the lookup fills); and a question whose answer leaves nothing for the sheet under it
+to do asks that sheet to close itself (`dismissDialogAndSheetUnder`, `closeRequest`, which `CampfireBottomSheet` reads
+through `LocalIsSheetCloseRequested` and answers with its own final close). What belongs to a sheet for as long as it is
+open anywhere in the stack — the cover search, the lookup's search, the dialog a restored process reopens (the topmost
+one with a `SavedDialog`) — is kept by `DialogHost.addOpenDialogsChange`, which is handed the stack before and after.
+Each sheet is a modal window of its own, so back, Escape, a tap on the scrim and Ctrl / Cmd + S reach only the top one.
+
 ### `ui/dialogs/CampfireDialogs.kt`
 
-`ui/dialogs/CampfireDialogs.kt` — `CampfireDialogs` renders whatever `visibleDialog` asks for: the confirmation an
+`ui/dialogs/CampfireDialogs.kt` — `CampfireDialogs` renders every dialog of the stack (above): the confirmation an
 import's Replace takes over the import screen (`ConfirmImportReplace`; the question it confirms is the screen's, see
 `ui/screens/importReport/` — imports run one at a time through the view model's `importQueue`, so files dropped, opened
 with the app or planted as the demo while another import is running or reported on wait their turn rather than being
@@ -161,7 +206,7 @@ flick back.
 
 A song ticked there goes to the end of the setlist, and an entry whose file is missing is kept, since it is not listed
 to be unticked. The setlist picker stays where it is while its "New setlist" action renders the naming sheet on top of
-it from the picker's own state rather than through `visibleDialog` (which holds one dialog at a time), because the song
+it from the picker's own state rather than through the dialog stack, because the song
 goes into the new setlist as soon as it exists (`createSetlistWithSong`) and the picker is where that shows. **Automatic
 keyboard behavior is specific to each form** (`rememberFirstFieldFocusRequester`): new song, new and duplicate setlist,
 tag management, language management, and library deletion focus their first field on opening. Duplicating a song,

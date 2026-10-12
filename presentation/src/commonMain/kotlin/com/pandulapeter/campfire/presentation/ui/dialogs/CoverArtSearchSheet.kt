@@ -165,7 +165,7 @@ internal fun CoverArtSearchSheet(
                     },
                     onRetry = search,
                 ) {
-                    CoverArtQueryFields(
+                    CatalogueQueryFields(
                         artist = artist,
                         album = album,
                         title = title,

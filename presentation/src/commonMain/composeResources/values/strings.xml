@@ -279,6 +279,8 @@
     <string name="settings_metronome_description">The Metronome tab and the click on a song\'s screen, along with the tempo and the time signature of every song</string>
     <string name="settings_tuner_description">The Tuner tab, and the microphone it listens through</string>
     <string name="settings_setlists_description">The Setlists tab and adding songs to setlists. Off, they are only hidden: no setlist is deleted.</string>
+    <string name="settings_song_details_lookup">Online song details</string>
+    <string name="settings_song_details_lookup_description">Offer to look up a song\'s artist, album, year, and songwriters on MusicBrainz and iTunes while its details are edited</string>
     <string name="settings_cover_art">Cover art</string>
     <string name="settings_cover_art_description">Show the album cover a song names next to it, downloading it once and keeping a copy on this device</string>
     <string name="settings_number_sections">Number sections</string>
@@ -645,6 +647,18 @@
     <string name="cover_art_address">Image address</string>
     <string name="cover_art_address_hint">Paste the address of an image on the web</string>
     <string name="cover_art_address_failed">No image could be loaded from this address</string>
+    <string name="song_details_lookup">Find song details online</string>
+    <string name="song_details_lookup_fill_in">Fill in</string>
+    <string name="song_details_lookup_hint">Name the song, and its artist if you know it, to find the recordings it matches</string>
+    <string name="song_details_lookup_no_results">No recording of this song was found. Try fewer words, or leave the album out.</string>
+    <string name="song_details_lookup_now">Now: %1$s</string>
+    <string name="song_details_lookup_credits_loading">Asking MusicBrainz for the songwriters…</string>
+    <string name="song_details_lookup_credits_none">MusicBrainz names no songwriters for this recording</string>
+    <string name="song_details_lookup_credits_failed">The songwriters could not be looked up</string>
+    <string name="song_details_lookup_nothing_new">This recording says nothing the form does not say already</string>
+    <string name="song_details_lookup_attribution">Recordings from MusicBrainz and iTunes. Neither lists a song\'s key or tempo.</string>
+    <string name="song_details_lookup_musicbrainz">MusicBrainz</string>
+    <string name="song_details_lookup_itunes">iTunes</string>
     <string name="song_details_capo">Capo %1$d</string>
     <string name="song_details_tempo">%1$s BPM</string>
     <string name="song_details_time">%1$s</string>

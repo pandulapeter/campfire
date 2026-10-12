@@ -32,6 +32,9 @@ Repository interfaces only. Consumed by `:domain:implementation`; implemented by
   never a failure; `searchCoverArt` is a `Flow<CoverArtSearchResults>` that asks every catalogue at once and emits
   where the search is each time one waits or answers, a failing one recorded in `failed` rather than thrown;
   `coverArtCacheSize` is what the copies take up, listed again as they change, and `clearCoverArtCache` deletes them.
+- `SongDetailsRepository` — the song details lookup: `searchSongDetails` emits like `searchCoverArt`, and
+  `loadSongCredits` is a `Flow<SongCreditsState>` that never throws, ending in what the catalogue said, that it never
+  names songwriters, or that it could not be asked. Nothing is kept.
   `SongRepository.deleteAllSongs` and `SetlistRepository.deleteAllSetlists` empty their folder as one change to the
   list, going on past a file that fails — what Settings' "delete the library" is made of.
 - `SyncRepository` — the state machine around sync: `syncState: Flow<SyncState>`, the providers the build has, and

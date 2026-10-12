@@ -9,14 +9,19 @@
  */
 package com.pandulapeter.campfire.data.source.remote.implementation.iTunes
 
+import com.pandulapeter.campfire.data.model.domain.Catalogue
 import com.pandulapeter.campfire.data.model.domain.CoverArtCandidate
 import com.pandulapeter.campfire.data.model.domain.CoverArtQuery
-import com.pandulapeter.campfire.data.model.domain.CoverArtService
+import com.pandulapeter.campfire.data.model.domain.SongDetailsCandidate
+import com.pandulapeter.campfire.data.model.domain.SongDetailsQuery
 import com.pandulapeter.campfire.data.source.remote.implementation.network.urlEncode
+import com.pandulapeter.campfire.data.source.remote.implementation.songDetails.withoutRepeats
 import kotlinx.serialization.json.Json
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
- * The question the cover search asks the iTunes Search API and how its answer becomes candidates. Pure, like
+ * The questions the cover search and the song details lookup ask the iTunes Search API, and how their answers become
+ * candidates. Pure, like
  * `MusicBrainzSearch`, and tested.
  *
  * The songs are what is searched, by the artist and the album — or the title where the album is empty — as one free
@@ -24,6 +29,10 @@ import kotlinx.serialization.json.Json
  * API's own album search does not do: it matches a term against the album's name alone, so the artist in the term
  * finds nothing, and an album searched for without its artist is lost among everybody else's of that name. Apple
  * names a single `Title - Single` and an EP `Title - EP`, so that suffix is the only kind of record it tells apart.
+ *
+ * The details lookup searches the same songs by the artist and the song's own title, and every song is a candidate,
+ * with the record it is on as its album — except a single, which is named after the song and is not where a songbook
+ * files it. The API names no songwriter.
  */
 internal object ITunesSearch {
 
@@ -35,6 +44,30 @@ internal object ITunesSearch {
         return "$BASE_URL?term=${term.urlEncode()}&media=music&entity=song&limit=$SONG_LIMIT"
     }
 
+    /** The address the details lookup of [query] is answered at, or null where there is nothing to search by. */
+    fun songDetailsUrl(query: SongDetailsQuery): String? {
+        if (!query.isSearchable) return null
+        val term = listOf(query.artist.trim(), query.title.trim()).filter { it.isNotEmpty() }.joinToString(" ")
+        return "$BASE_URL?term=${term.urlEncode()}&media=music&entity=song&limit=$SONG_DETAILS_LIMIT"
+    }
+
+    /** The songs of the answer [body] to a details lookup, in the order they were ranked, one for every set of values. */
+    fun songDetailsCandidates(body: String): List<SongDetailsCandidate> = json.decodeFromString<ITunesSearchResponse>(body).results
+        .filter { it.wrapperType == "track" && it.trackId != 0L && it.trackName.isNotBlank() }
+        .map { track ->
+            val (album, type) = track.collectionName.recordTitleAndType()
+            SongDetailsCandidate(
+                catalogue = Catalogue.ITUNES,
+                id = track.trackId.toString(),
+                title = track.trackName,
+                artist = track.artistName,
+                album = album.takeIf { it.isNotBlank() && type != TYPE_SINGLE },
+                year = track.releaseDate.year(),
+                duration = track.trackTimeMillis?.takeIf { it > 0 }?.milliseconds,
+            )
+        }
+        .withoutRepeats()
+
     /** The albums the songs of the answer [body] are on, without repeats and in the order the songs were ranked. */
     fun candidates(body: String): List<CoverArtCandidate> = json.decodeFromString<ITunesSearchResponse>(body).results
         .filter { it.wrapperType == "track" && it.collectionId != 0L }
@@ -42,11 +75,9 @@ internal object ITunesSearch {
         .mapNotNull { (collectionId, tracks) ->
             val track = tracks.first()
             val artworkUrl = track.artworkUrl100?.let(::coverArtUrl) ?: return@mapNotNull null
-            val (title, type) = RECORD_TYPE_SUFFIXES.firstNotNullOfOrNull { (suffix, type) ->
-                track.collectionName.takeIf { it.endsWith(suffix) }?.let { it.removeSuffix(suffix) to type }
-            } ?: (track.collectionName to null)
+            val (title, type) = track.collectionName.recordTitleAndType()
             CoverArtCandidate(
-                service = CoverArtService.ITUNES,
+                catalogue = Catalogue.ITUNES,
                 id = collectionId.toString(),
                 title = title,
                 artist = track.collectionArtistName?.takeIf { it.isNotBlank() } ?: track.artistName,
@@ -66,6 +97,11 @@ internal object ITunesSearch {
         artworkUrl100.replaceRange(match.range, "/${COVER_SIZE}x${COVER_SIZE}bb.jpg")
     }
 
+    /** A collection's name without the suffix that says what kind of record it is, and that kind, null for an album. */
+    private fun String.recordTitleAndType() = RECORD_TYPE_SUFFIXES.firstNotNullOfOrNull { (suffix, type) ->
+        takeIf { it.endsWith(suffix) }?.let { it.removeSuffix(suffix) to type }
+    } ?: (this to null)
+
     /** The year of an iTunes date, which is a whole ISO timestamp. */
     private fun String?.year() = this?.take(4)?.takeIf { it.length == 4 && it.all(Char::isDigit) }
 
@@ -74,7 +110,8 @@ internal object ITunesSearch {
         coerceInputValues = true
     }
 
-    private val RECORD_TYPE_SUFFIXES = listOf(" - Single" to "Single", " - EP" to "EP")
+    private const val TYPE_SINGLE = "Single"
+    private val RECORD_TYPE_SUFFIXES = listOf(" - Single" to TYPE_SINGLE, " - EP" to "EP")
     private val ARTWORK_SIZE = Regex("""/\d+x\d+bb\.(jpg|png)$""")
     private const val BASE_URL = "https://itunes.apple.com/search"
     private const val COVER_SIZE = 250
@@ -82,4 +119,5 @@ internal object ITunesSearch {
     /** Enough songs to find a couple dozen records among, since the same album comes back once for every song on it. */
     private const val SONG_LIMIT = 100
     private const val CANDIDATE_LIMIT = 25
+    private const val SONG_DETAILS_LIMIT = 25
 }

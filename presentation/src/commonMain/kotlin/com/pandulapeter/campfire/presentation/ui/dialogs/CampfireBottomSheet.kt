@@ -201,6 +201,9 @@ internal fun CampfireBottomSheet(
     }
     val cancel = { requestClose(false) }
     val close = { requestClose(true) }
+    // Asked to close by the stack it is in rather than by its own controls, see DialogHost.dismissDialogAndSheetUnder.
+    val isCloseRequestedFromOutside = LocalIsSheetCloseRequested.current
+    LaunchedEffect(isCloseRequestedFromOutside) { if (isCloseRequestedFromOutside) close() }
     val saveShortcut = remember { SheetSaveShortcut() }
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -291,6 +294,8 @@ internal fun CampfireBottomSheet(
             ) {
                 CompositionLocalProvider(
                     LocalIsSheetClosing provides isClosing,
+                    // A sheet nested inside this one's content is not the dialog the request was for.
+                    LocalIsSheetCloseRequested provides false,
                     LocalSheetSaveShortcut provides saveShortcut,
                     LocalSheetPendingGrowth provides heightAnimation::pendingGrowth,
                 ) {
@@ -427,6 +432,12 @@ internal class SheetSaveShortcut {
 private class SheetFocusState {
     var hasFocus = false
 }
+
+/**
+ * Whether the dialog a [CampfireBottomSheet] is drawn for has been asked to close by the stack of open dialogs it is in,
+ * which it does as if one of its own actions had closed it, see `DialogHost.closeRequest`.
+ */
+internal val LocalIsSheetCloseRequested = staticCompositionLocalOf { false }
 
 /** The [SheetSaveShortcut] of the [CampfireBottomSheet] around it, null outside one. */
 internal val LocalSheetSaveShortcut = staticCompositionLocalOf<SheetSaveShortcut?> { null }

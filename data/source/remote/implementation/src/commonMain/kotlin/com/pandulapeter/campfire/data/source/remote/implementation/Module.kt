@@ -11,11 +11,12 @@ package com.pandulapeter.campfire.data.source.remote.implementation
 
 import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.source.remote.api.CoverArtSearchRemoteSources
+import com.pandulapeter.campfire.data.source.remote.api.SongDetailsSearchRemoteSources
 import com.pandulapeter.campfire.data.source.remote.api.SyncProviders
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.SyncCredentialsStore
 import com.pandulapeter.campfire.data.source.remote.implementation.dropbox.DropboxSyncProvider
-import com.pandulapeter.campfire.data.source.remote.implementation.iTunes.ITunesCoverArtSearchRemoteSource
-import com.pandulapeter.campfire.data.source.remote.implementation.musicBrainz.MusicBrainzCoverArtSearchRemoteSource
+import com.pandulapeter.campfire.data.source.remote.implementation.iTunes.ITunesRemoteSource
+import com.pandulapeter.campfire.data.source.remote.implementation.musicBrainz.MusicBrainzRemoteSource
 import com.pandulapeter.campfire.data.source.remote.implementation.musicBrainz.MusicBrainzRateLimiter
 import com.pandulapeter.campfire.data.source.remote.implementation.network.HttpClientHolder
 import com.pandulapeter.campfire.data.source.remote.implementation.network.createHttpClient
@@ -61,21 +62,35 @@ object DataRemoteSourceModule {
     )
 
     /**
-     * Built here rather than declared on the classes, since what the MusicBrainz source is built with — the clock its
-     * requests are spaced by — is the one thing its tests replace. 1.1 s rather than the 1 s MusicBrainz allows, to stay
-     * under the average it counts however the two clocks disagree. MusicBrainz comes first, since where both answer
-     * at once its release groups, one for every edition of a record, are the tidier list to start with.
+     * Built here rather than declared on the class, since what it is built with — the clock its requests are spaced by
+     * — is the one thing its tests replace. 1.1 s rather than the 1 s MusicBrainz allows, to stay under the average it
+     * counts however the two clocks disagree. One instance for the cover search and the song details lookup alike,
+     * and so one limiter: MusicBrainz counts the app's requests, whichever sheet is asking.
      */
     @Single
-    internal fun coverArtSearchRemoteSources(httpClientHolder: HttpClientHolder): CoverArtSearchRemoteSources = CoverArtSearchRemoteSources(
-        all = listOf(
-            MusicBrainzCoverArtSearchRemoteSource(
-                httpClientHolder = httpClientHolder,
-                rateLimiter = MusicBrainzRateLimiter(timeSource = TimeSource.Monotonic, interval = MUSIC_BRAINZ_REQUEST_INTERVAL),
-            ),
-            ITunesCoverArtSearchRemoteSource(httpClientHolder = httpClientHolder),
-        ),
+    internal fun musicBrainzRemoteSource(httpClientHolder: HttpClientHolder): MusicBrainzRemoteSource = MusicBrainzRemoteSource(
+        httpClientHolder = httpClientHolder,
+        rateLimiter = MusicBrainzRateLimiter(timeSource = TimeSource.Monotonic, interval = MUSIC_BRAINZ_REQUEST_INTERVAL),
     )
+
+    @Single
+    internal fun iTunesRemoteSource(httpClientHolder: HttpClientHolder): ITunesRemoteSource = ITunesRemoteSource(httpClientHolder = httpClientHolder)
+
+    /**
+     * MusicBrainz comes first, since where both answer at once its release groups, one for every edition of a record,
+     * are the tidier list to start with.
+     */
+    @Single
+    internal fun coverArtSearchRemoteSources(
+        musicBrainzRemoteSource: MusicBrainzRemoteSource,
+        iTunesRemoteSource: ITunesRemoteSource,
+    ): CoverArtSearchRemoteSources = CoverArtSearchRemoteSources(all = listOf(musicBrainzRemoteSource, iTunesRemoteSource))
+
+    @Single
+    internal fun songDetailsSearchRemoteSources(
+        musicBrainzRemoteSource: MusicBrainzRemoteSource,
+        iTunesRemoteSource: ITunesRemoteSource,
+    ): SongDetailsSearchRemoteSources = SongDetailsSearchRemoteSources(all = listOf(musicBrainzRemoteSource, iTunesRemoteSource))
 
     private val MUSIC_BRAINZ_REQUEST_INTERVAL = 1_100.milliseconds
 }

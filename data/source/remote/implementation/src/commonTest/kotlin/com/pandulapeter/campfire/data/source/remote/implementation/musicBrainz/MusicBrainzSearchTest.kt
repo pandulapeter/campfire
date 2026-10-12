@@ -9,14 +9,17 @@
  */
 package com.pandulapeter.campfire.data.source.remote.implementation.musicBrainz
 
+import com.pandulapeter.campfire.data.model.domain.Catalogue
 import com.pandulapeter.campfire.data.model.domain.CoverArtCandidate
 import com.pandulapeter.campfire.data.model.domain.CoverArtQuery
-import com.pandulapeter.campfire.data.model.domain.CoverArtService
+import com.pandulapeter.campfire.data.model.domain.SongCredits
+import com.pandulapeter.campfire.data.model.domain.SongDetailsQuery
 import com.pandulapeter.campfire.data.source.remote.implementation.musicBrainz.MusicBrainzSearch.quoted
 import io.ktor.http.Url
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.time.Duration.Companion.milliseconds
 
 class MusicBrainzSearchTest {
 
@@ -74,7 +77,7 @@ class MusicBrainzSearchTest {
         assertEquals(
             listOf(
                 CoverArtCandidate(
-                    service = CoverArtService.MUSIC_BRAINZ,
+                    catalogue = Catalogue.MUSIC_BRAINZ,
                     id = "rg1",
                     title = "Dookie",
                     artist = "Green Day",
@@ -83,7 +86,7 @@ class MusicBrainzSearchTest {
                     coverArtUrl = "https://coverartarchive.org/release-group/rg1/front-250",
                 ),
                 CoverArtCandidate(
-                    service = CoverArtService.MUSIC_BRAINZ,
+                    catalogue = Catalogue.MUSIC_BRAINZ,
                     id = "rg2",
                     title = "Dookie",
                     artist = "A feat. B",
@@ -122,5 +125,123 @@ class MusicBrainzSearchTest {
             MusicBrainzSearch.candidates(request, body).map { it.id to it.year },
         )
         assertEquals("Various Artists", MusicBrainzSearch.candidates(request, body).last().artist)
+    }
+
+    @Test
+    fun `a details lookup searches the recordings by title, narrowed by the artist and the album`() {
+        val url = Url(MusicBrainzSearch.songDetailsUrl(SongDetailsQuery(title = "Help!", artist = "The Beatles", album = "Help"))!!)
+
+        assertEquals("/ws/2/recording", url.encodedPath)
+        assertEquals("""recording:"Help!" AND artist:"The Beatles" AND release:"Help"""", url.parameters["query"])
+        assertEquals(
+            """recording:"Help!"""",
+            Url(MusicBrainzSearch.songDetailsUrl(SongDetailsQuery(title = "Help!", artist = " ", album = ""))!!).parameters["query"],
+        )
+    }
+
+    @Test
+    fun `a details lookup without a title asks nothing`() {
+        assertNull(MusicBrainzSearch.songDetailsUrl(SongDetailsQuery(title = " ", artist = "Queen", album = "")))
+    }
+
+    @Test
+    fun `recordings become candidates with their year, duration and studio album`() {
+        val body = """
+            {"recordings":[
+              {"id":"r1","score":100,"title":"Kicsi gesztenye","length":276000,"first-release-date":"2001-12",
+               "artist-credit":[{"name":"TNT","joinphrase":" feat. "},{"name":"Somebody"}],"releases":[
+                {"date":"2003","release-group":{"title":"Best of","primary-type":"Album","secondary-types":["Compilation"]}},
+                {"date":"2001-12","release-group":{"title":"Másképpen","primary-type":"Album"}},
+                {"date":"2002","release-group":{"title":"Kicsi gesztenye","primary-type":"Single"}}
+              ]}
+            ]}
+        """.trimIndent()
+
+        val candidate = MusicBrainzSearch.songDetailsCandidates(body).single()
+
+        assertEquals(Catalogue.MUSIC_BRAINZ, candidate.catalogue)
+        assertEquals("Kicsi gesztenye", candidate.title)
+        assertEquals("TNT feat. Somebody", candidate.artist)
+        assertEquals("Másképpen", candidate.album)
+        assertEquals("2001", candidate.year)
+        assertEquals(276_000.milliseconds, candidate.duration)
+    }
+
+    @Test
+    fun `a recording only on singles, live records and compilations has no album`() {
+        val body = """
+            {"recordings":[{"id":"r1","score":100,"title":"Wonderwall","releases":[
+              {"date":"1995","release-group":{"title":"Wonderwall","primary-type":"Single"}},
+              {"date":"1996","release-group":{"title":"Live","primary-type":"Album","secondary-types":["Live"]}}
+            ]}]}
+        """.trimIndent()
+
+        val candidate = MusicBrainzSearch.songDetailsCandidates(body).single()
+
+        assertNull(candidate.album)
+        assertNull(candidate.duration)
+        assertEquals("1995", candidate.year)
+    }
+
+    @Test
+    fun `recordings below the score are other songs, and among one score the studio ones come first`() {
+        val body = """
+            {"recordings":[
+              {"id":"live","score":100,"title":"Wonderwall","first-release-date":"1996","releases":[{"release-group":{"title":"Live","primary-type":"Album","secondary-types":["Live"]}}]},
+              {"id":"single","score":100,"title":"Wonderwall","releases":[{"release-group":{"title":"Wonderwall","primary-type":"Single"}}]},
+              {"id":"studio","score":100,"title":"Wonderwall","releases":[{"release-group":{"title":"Morning Glory","primary-type":"Album"}}]},
+              {"id":"edit","score":78,"title":"Wonderwall (radio edit)","releases":[{"release-group":{"title":"Morning Glory","primary-type":"Album"}}]},
+              {"id":"other","score":60,"title":"Wonder","releases":[{"release-group":{"title":"Morning Glory","primary-type":"Album"}}]}
+            ]}
+        """.trimIndent()
+
+        assertEquals(listOf("studio", "single", "live", "edit"), MusicBrainzSearch.songDetailsCandidates(body).map { it.id })
+    }
+
+    @Test
+    fun `recordings that would fill in the same values are offered once`() {
+        val body = """
+            {"recordings":[
+              {"id":"a","score":100,"title":"Wonderwall","length":258907,"first-release-date":"1995"},
+              {"id":"b","score":100,"title":"Wonderwall","length":258773,"first-release-date":"1995"},
+              {"id":"c","score":100,"title":"Wonderwall","length":251026,"first-release-date":"1995"}
+            ]}
+        """.trimIndent()
+
+        assertEquals(listOf("a", "c"), MusicBrainzSearch.songDetailsCandidates(body).map { it.id })
+    }
+
+    @Test
+    fun `the songwriters are read from the work the recording performs`() {
+        val body = """
+            {"relations":[
+              {"type":"producer","artist":{"name":"Owen Morris"}},
+              {"type":"performance","work":{"languages":["eng"],"relations":[
+                {"type":"composer","artist":{"name":"Noel Gallagher"}},
+                {"type":"lyricist","artist":{"name":"Noel Gallagher"}},
+                {"type":"lyricist","artist":{"name":"Liam Gallagher"}},
+                {"type":"other version","work":{}}
+              ]}}
+            ]}
+        """.trimIndent()
+
+        assertEquals(SongCredits(composer = "Noel Gallagher", lyricist = "Noel Gallagher, Liam Gallagher"), MusicBrainzSearch.songCredits(body))
+    }
+
+    @Test
+    fun `a writer stands in for the composer and the lyricist, but not for the lyricist of a work without lyrics`() {
+        fun body(language: String) = """
+            {"relations":[{"type":"performance","work":{"languages":["$language"],"relations":[
+              {"type":"writer","artist":{"name":"Joseph Kosma"}}
+            ]}}]}
+        """.trimIndent()
+
+        assertEquals(SongCredits(composer = "Joseph Kosma", lyricist = "Joseph Kosma"), MusicBrainzSearch.songCredits(body("fra")))
+        assertEquals(SongCredits(composer = "Joseph Kosma", lyricist = null), MusicBrainzSearch.songCredits(body("zxx")))
+    }
+
+    @Test
+    fun `a recording with no work names nobody`() {
+        assertEquals(SongCredits(composer = null, lyricist = null), MusicBrainzSearch.songCredits("""{"relations":[]}"""))
     }
 }

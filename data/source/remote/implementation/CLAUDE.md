@@ -115,27 +115,40 @@ redirect URIs character for character, which is why the desktop port is fixed.
   trusted no further than its headers: an answer that is not `image/*` or is over 5 MB (read one byte past the limit
   where no length is declared) is `Missing` and never read to its end; a 408, a 429, a 5xx or a transport failure is
   `Unreachable`; any other refusal is `Missing`.
-- `coverArt/CoverArtSearchTransport.kt` — what the two cover searches share: any `Throwable` of the transport turned
-  into a `CoverArtSearchException`, and the answer decoded on `Dispatchers.Default`, since a recording search lists
-  every release of every recording and decoding it on the main thread lands on the frames of the sheet opening.
-- `musicBrainz/` — the MusicBrainz cover search. `MusicBrainzSearch` is the pure part, and tested: with an album, the release
+- `network/CatalogueTransport.kt` — what every catalogue request shares: any `Throwable` of the transport turned into a
+  `CatalogueSearchException`, and the answer decoded on `Dispatchers.Default`, since a recording search lists every
+  release of every recording and decoding it on the main thread lands on the frames of the sheet opening.
+- **One object per catalogue serves both searches**, `MusicBrainzRemoteSource` and `ITunesRemoteSource`, each built
+  once in `DataRemoteSourceModule` and handed to both lists, so the cover search and the song details lookup wait at
+  the same `MusicBrainzRateLimiter`: two of them would each keep to one request a second, and start requests 0 s apart.
+- `musicBrainz/` — the MusicBrainz cover search and song details lookup. `MusicBrainzSearch` is the pure part, and tested: with an album, the release
   groups of that name (`/ws/2/release-group`, one release group standing for every edition of a record, which is what
   a cover is picked for); with only a title, the recordings, and the release groups their releases belong to, each
   once, dated by its earliest release and in the order the recordings are ranked; either narrowed by the artist. The
   values are Lucene phrases, so only a quote and a backslash are escaped. The search results carry nothing about
   covers, so every candidate's address is the Cover Art Archive's `front-250` of its release group, and a group with
-  no cover is found out by its thumbnail's 404. `MusicBrainzCoverArtSearchRemoteSource` spaces its requests through
+  no cover is found out by its thumbnail's 404. The details lookup searches the recordings (`recordingQuery`: title,
+  artist, album), keeps those MusicBrainz scores at 70 or more, and among one score puts the ones on a studio album
+  (an `Album` release group with no secondary type) first and a single's or an EP's next, since a hit's live bootlegs
+  and compilations score 100 as well and come back first as often; the album a candidate fills in is its earliest
+  studio album, else its earliest EP, else none. The songwriters are one lookup of the recording with
+  `artist-rels+work-rels+work-level-rels`, which brings the work it performs with the work's own relations: `composer`,
+  else `writer`; `lyricist` or `librettist`, else `writer` unless the work's language is `zxx`. Candidates that would
+  fill in the same values are one (`songDetails/SongDetailsCandidates.kt`, the duration to the second).
+  `MusicBrainzRemoteSource` spaces its requests through
   `MusicBrainzRateLimiter` — one for the whole app, a `Mutex` and the start of the last request, 1.1 s apart, since
   MusicBrainz refuses every request for as long as a client averages more than one a second — and waits out a 503 or
   a 429 for its `Retry-After`, or for 2 s doubling to 32 s where it names none, over at most five retries, calling
   `onBusy` before each. `MusicBrainzModels` are defaulted and read with unknown keys ignored, like the Dropbox ones.
-- `iTunes/` — the iTunes Search API's cover search, which needs no key and sends CORS headers on the search and the
+- `iTunes/` — the iTunes Search API's cover search and song details lookup, which needs no key and sends CORS headers on the search and the
   artwork alike. `ITunesSearch` is the pure part, and tested: the *songs* are searched with the artist and the album
   (or the title) as one term — the API's album search matches the album's name alone, so an artist in the term finds
   nothing — and the albums they are on are the candidates, each once, in the songs' order, a ` - Single` or ` - EP`
   suffix becoming the type. The artwork is the answer's 100 px address rewritten to `250x250bb.jpg`, which Apple's
   image server renders at any size; an address in any other form is not guessed at and the record is left out. It
-  allows about twenty requests a minute, so it is asked without a pace of its own and a refusal is a failure.
+  allows about twenty requests a minute, so it is asked without a pace of its own and a refusal is a failure. The
+  details lookup searches the songs by the artist and the title, every song a candidate, its album the collection
+  unless that is a ` - Single`; the API names no songwriter, so `loadSongCredits` answers null without asking.
 - `crypto/` — `Pkce` (verifier, S256 challenge, state) and `dropboxContentHash` (SHA-256 of each 4 MB block,
   concatenated, hashed again), both on the `Sha256` in `:data:source:remote:api`.
 - `network/` — the `HttpClient` factory, one engine per target (OkHttp, CIO, Darwin, `fetch`), `HttpClientHolder` —
@@ -150,7 +163,8 @@ redirect URIs character for character, which is why the desktop port is fixed.
   `kotlin.Error` rather than an `Exception`, so the provider's `transport` takes any `Throwable` that is not a
   cancellation as the service not being reached.
 
-Tested in `commonTest`, run on the desktop target: the hashing, the encoders, both cover searches' queries and parsing,
+Tested in `commonTest`, run on the desktop target: the hashing, the encoders, both catalogues' queries and parsing for
+the cover search and the song details lookup, the songwriters,
 its `User-Agent`, its pace and its retries in virtual time, the cover download's refusals, and the authorization URL — get a
 parameter wrong there and the user meets an error page on the service's own site with nothing in the app to say why —
 and, against a Ktor `MockEngine` in virtual time, how requests answer being told to slow down, and being cancelled or

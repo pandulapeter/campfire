@@ -247,8 +247,9 @@ into the tile's padding (`withoutTouchTargetSlack`), since otherwise their tile 
 with nothing to match it above.
 **The editor preview's card is compact** (`isCompact`, wherever the links are not followed): its links are chips like
 the tags, so its minimum is measured by a row of chips (`tagPillHeight`) rather than of buttons, and its paddings and
-title gap are smaller (10dp and 4dp rather than 12dp and 6dp). Each sheet goes
-back to this one once it is saved or closed (`DialogHost.underlyingSongInfo`, for an edit of the same target). The
+title gap are smaller (10dp and 4dp rather than 12dp and 6dp). Each sheet is put
+over this one, which stays open under it (the dialog stack, see `ui/dialogs/`, for an edit of the same target), so
+closing or saving it only uncovers this one. The
 header has no buttons, and no menu lists these editors one by one.
 
 Over the editor (`SongEditTarget.EditorDraft`, opened from the editor's menu) the sheet reads
@@ -258,8 +259,8 @@ Over the editor (`SongEditTarget.EditorDraft`, opened from the editor's menu) th
 shows everything the sheet would, so each tile opens its own editor directly rather than the sheet, and a song that says
 nothing about itself yet has every tile all the same, each offering its editor. Links open their page in the sheet,
 named by their optional label or by the host without `www.`
-(`linkLabel`), and are not followed from the editor's card. The cover art sheet's Remove cover asks for confirmation,
-whose Cancel puts the cover art sheet back (searching again from the song's own fields).
+(`linkLabel`), and are not followed from the editor's card. The cover art sheet's Remove cover asks for confirmation over
+it: Cancel uncovers the sheet as it was, and Remove closes the question and slides the sheet away after it.
 
 `SongMetadataDialog.kt` presents what the song is as a bottom-sheet form — title, subtitle, artist, album, composer,
 lyricist, and the year and the duration side by side; the key, capo, tempo and time are the Song defaults sheet's — the
@@ -269,7 +270,9 @@ year typed as four digits at most, and the duration as digits that fill in from 
 show), and written as `m:ss`, a typed value carried over no further than `99:59:59` — opening with no field focused,
 since it is a form to look over as much as to type into, fading at the top of its scroll, prefilled from the held text
 and written on Save through `SetChordProMetadataUseCase`, only the fields changed in it, so a field another device
-synced in meanwhile and left untouched here keeps that device's value. A blank field takes the directive off. A new
+synced in meanwhile and left untouched here keeps that device's value. A blank field takes the directive off. The search
+button beside Save puts the song details lookup up over the form with its draft, and the form comes back with it — the
+suggestions ticked there typed in — see `ui/dialogs/`. A new
 title or artist is not a rename: the file keeps its name until the menu's Update file name is taken.
 `SongLinksDialog.kt` presents a bottom sheet that edits all addresses and optional names as a draft, fading at the top
 of its scroll, written once on Save through `SetChordProLinksUseCase`; closing the sheet drops the draft.

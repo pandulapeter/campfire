@@ -14,10 +14,10 @@ with a metronome.
 Compose UI is shared between all platforms. The app owns a library folder of plain
 [ChordPro](https://www.chordpro.org) files on every platform, which the user fills by writing songs in the built-in
 editor or by importing ChordPro, plain text, PDF and Word documents, zip archives, and other apps' library backups. **The only things that ever reach the network are sync, and the cover
-images and the cover search the user asks for.** Sync is off until the user connects a cloud folder of their own in
+images, the cover search, and the song details lookup the user asks for.** Sync is off until the user connects a cloud folder of their own in
 Settings, and still involves no server of Campfire's own — see the Sync section below. A cover is fetched from the
 address a song's own file names, once, and kept on the device; the search asks MusicBrainz and the iTunes Search API,
-and only from the sheet the user opens for it; the "Cover art" switch in Settings → Features turns both off — see Cover art below. (The web build also asks its own deployment, at every launch, which build is current, which is the page being
+and only from the sheet the user opens for it; the "Cover art" switch in Settings → Features turns both off — see Cover art below. The song details lookup asks the same two catalogues for a song's recordings, only from the sheet the user opens from the Edit song details form, and its own "Online song details" switch takes it away — see Song details lookup below. (The web build also asks its own deployment, at every launch, which build is current, which is the page being
 loaded rather than a request about the user — see Web below. The Android build also asks Play whether a newer version of itself exists, but that
 question is answered over IPC by the Play Store app; Campfire's own process makes no request — see Updates below.
 On Android and iOS the system's own device backup also carries the library and the settings — to the user's Google or
@@ -49,8 +49,9 @@ app:android / app:desktop / app:ios / app:web   entry points, platform chrome, "
         data:formats                         the pure-Kotlin zip reader/writer and PDF/Word text extractors; depends on
                                              :data:model and :chordpro, used by :data:source:local:implementation
       data:source:remote:api -> :implementation   the sync contracts and the Dropbox provider, the cover download
-                                                  and the MusicBrainz and iTunes searches; the only module in the project that
-                                                  makes a network call (see Sync and Cover art below)
+                                                  and the MusicBrainz and iTunes searches (covers and song details);
+                                                  the only module in the project that makes a network call (see Sync,
+                                                  Cover art and Song details lookup below)
         data:model                           domain models, shared by everything
   metronome:api / :implementation            the click: the Metronome contract, its patterns and tap tempo, and the
                                              engine with one audio output per platform (see Metronome below). Depends
@@ -224,8 +225,9 @@ tab reaches the export screen. The detail is in `:presentation`'s `ui/screens/ex
 - Only pure logic is tested: `commonTest` unit tests in `:data:model` (the library name identity rule, the file name
   predicates and the tag normalization), `:chordpro` (including chord-sheet conversion, and chord names, shapes and definitions, every shape of the tables checked against the chord it is filed under), `:domain:implementation` (`ImportPlanner` and conversion import plumbing),
   `:data:formats` (zip, bounded PDF/Word readers), `:data:source:local:implementation` (the JVM file storage, with independent-producer document goldens in `desktopTest`), `:data:source:remote:*` (hashing, encoders,
-  the OAuth authorization URL, the cover search's queries, its `User-Agent` and its pace, the cover download),
-  `:data:repository:implementation` (the caches, the edit of many songs at once, and the cover cache), `:data:sync:implementation` (`SyncPlanner`, which
+  the OAuth authorization URL, the cover search's and the song details lookup's queries and answers, the songwriters,
+  their `User-Agent` and their shared pace, the cover download),
+  `:data:repository:implementation` (the caches, the edit of many songs at once, the cover cache, and the catalogue searches), `:data:sync:implementation` (`SyncPlanner`, which
   decides what happens to every file in a sync run, the engine and the synced preferences), `:metronome:*` (the sequencer, the synthesizer, the mixer, the engine's state machine, tap tempo and time signatures), `:tuner:*` (the note arithmetic and the presets, the FFT, the pitch detector against synthesized strings and any recording dropped into its `desktopTest` resources, the tracker, the tones, the engine's state machine, the sample ring and the FFT) and
   `:presentation` (the pure helpers behind its screens: the search index and ranking, the song picker's filter chips, the fast scroller's section
   index, the setlist slots, stepper labels, section grid and the cutting of sections into columns, a tag's color by its key, the score a layout is chosen by, the narrow columns and the text fitted to a page, row snapping and section measurements of the details screen, the editor's token cache, where a song's tempo comes from, what a click plays for, which chords a song plays and which
@@ -400,6 +402,16 @@ has shown. Every request is in `:data:source:remote`, the search only ever runs 
 and the "Cover art" switch in Settings → Features turns all of it off. The detail is in
 `data/source/remote/implementation/CLAUDE.md` (the download, the search, the switch) and
 `data/repository/implementation/CLAUDE.md` (the offline copies and their deletion).
+
+## Song details lookup
+
+A button in the Edit song details form's header puts up a sheet that looks the song's title up in MusicBrainz and the
+iTunes Search API, and the recording the user picks offers its artist, album, year, duration, and (from MusicBrainz)
+songwriters, each a box to tick. Fill in puts them into the form's draft and nothing more: the form's own Save is still
+the only write. Nothing is asked before the sheet opens and nothing is kept after it closes; the catalogues share the
+cover search's pace, and the "Online song details" switch in Settings → Features takes the button away. The detail is
+in `data/source/remote/implementation/CLAUDE.md` (the queries, the ranking, the credits) and `:presentation`'s
+`ui/dialogs/CLAUDE.md` (the sheet and its hand-over with the form).
 
 ## Updates
 

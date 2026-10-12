@@ -35,6 +35,7 @@ internal data class UserPreferencesDocument(
     val backgroundWarmth: Int = 0,
     val isAppIconThemed: Boolean = true,
     val isCoverArtEnabled: Boolean = true,
+    val isSongDetailsLookupEnabled: Boolean = true,
     val shouldNumberSections: Boolean = true,
     val language: String = "",
     val accidentals: String = "",

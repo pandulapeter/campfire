@@ -10,8 +10,8 @@
 # :data:repository:implementation
 
 Implements `:data:repository:api` — all of it but `SyncRepository` and `DemoLibraryRepository`, which
-`:data:sync:implementation` implements — on top of `:data:source:local:api` and, for the covers alone,
-`:data:source:remote:api`. Koin wiring: `Module.kt` holds the `@Module @ComponentScan object DataRepositoryModule`, and every
+`:data:sync:implementation` implements — on top of `:data:source:local:api` and, for the covers and the song details
+lookup alone, `:data:source:remote:api`. Koin wiring: `Module.kt` holds the `@Module @ComponentScan object DataRepositoryModule`, and every
 repository is a `@Single`.
 
 Nothing here prints: what fails without an exception is written to the injected `Logger` (`:data:model`), whose one
@@ -124,12 +124,16 @@ a deletion of one of those files lands before its reads or after its update and 
   dead address costs one request rather than one per scroll. It watches `SongRepository.songs` and, whenever a
   library read has finished (`Idle`, never the `Loading` batches of a scan, which would prune the covers of the songs
   not read yet) with a different set of addresses, deletes every copy no song names — a search result's thumbnail,
-  which is fetched the same way, included. The search runs every `CoverArtSearchRemoteSource` side by side in a
-  `channelFlow`, so cancelling the collection stops them all, and appends each one's candidates in the order they
-  answer — the grid grows at its end rather than shifting under the user. `coverArtCacheSize` lists the copies again
+  which is fetched the same way, included. The search runs every `CoverArtSearchRemoteSource` side by side through
+  `searchCatalogues` (`CatalogueSearch.kt`), a `channelFlow`, so cancelling the collection stops them all, and appends
+  each one's candidates in the order they answer — the grid grows at its end rather than shifting under the user. `coverArtCacheSize` lists the copies again
   after every write and prune, off a counter in a `StateFlow`, whose conflation keeps a burst of downloads to one
   listing at a time. `commonTest` covers the sharing, the bound and the downloads it skips, the failures, the
   pruning, the cache size and the search's order of emissions.
+- `SongDetailsRepositoryImpl` keeps nothing: `searchSongDetails` is `searchCatalogues` over the
+  `SongDetailsSearchRemoteSource`s, and `loadSongCredits` asks the source of the candidate's own catalogue, turning a
+  failure into `SongCreditsState.Failed` (logged by its class name alone, as every catalogue failure is) and null into
+  `Unavailable`. `commonTest` covers both.
 - `SongContentRepositoryImpl` is not a `BaseLocalDataRepository`: it is a keyed in-memory cache of song *texts*, so
   paging through a setlist re-reads nothing. It keeps the 32 most recently used, and at most a million characters of
   them — a long session would otherwise hold every song it opened, and a few songbooks pasted into one file each

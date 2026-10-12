@@ -22,7 +22,7 @@ other holders it calls, so that there are no cycles), and every member the scree
 `launchLibraryChange`), `SavedStateStore`, `PreferencesController`, `LibraryState`, `SongListState`, `SongPickerState`,
 `SetlistsController`, `SongSelection` (the songs screen's selection mode), `SongTextStore`, `SongMetadataEditing`,
 `SelectionEditing` (the selection's tags and languages, through `EditSongsUseCase`), `ImportController`, `SyncController`,
-`CoverArtSearchController` and `AppExitController` (`ui/state`), `DialogHost` (`ui/dialogs`), `Navigator`
+`CoverArtSearchController`, `SongDetailsLookupController` and `AppExitController` (`ui/state`), `DialogHost` (`ui/dialogs`), `Navigator`
 (`ui/navigation`), `FontScaleController` (`ui/fontScale`), `PlayingOverrides` (`ui/playing`), `MetronomeController`
 (`ui/metronome`), `TunerController` (`ui/tuner`), `ExportController` (`ui/screens/export`), `EditorSession` (`ui/screens/songEditor`) and
 `FirstRunController` (`ui/firstRun`). Construction order is behaviour: the holders are declared in the order their
@@ -465,8 +465,9 @@ whether or not diagrams are drawn); **Metronome** (`isMetronomeEnabled`), off ta
 tab, the song details screen's click button and panel, its M key and the tempo and the time signature wherever a song is
 read; **Tuner** (`isTunerEnabled`), off taking its tab and the song details screen's way to the tuner sheet, and with
 them every way the app could ask for the microphone; **Setlists** (`areSetlistsEnabled`), off taking their tab and every way of putting a song into one, while setlist
-files still travel through an import, an export and a sync run; and **Cover art**, last since it is the one that decides
-whether the app reaches the network on its own.
+files still travel through an import, an export and a sync run; **Online song details** (`isSongDetailsLookupEnabled`),
+off taking the Edit song details form's lookup button, so that nothing is asked of the catalogues for a song's details;
+and **Cover art**, last since it is the one that decides whether the app reaches the network on its own.
 
 A switch cleans the interface up rather than locking anything, so what it takes away is gone everywhere, the Song
 defaults sheet and the About the song sheet's Song defaults group included (each value with its feature, the group

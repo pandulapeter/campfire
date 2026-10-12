@@ -7,9 +7,9 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.data.source.remote.implementation.coverArt
+package com.pandulapeter.campfire.data.source.remote.implementation.network
 
-import com.pandulapeter.campfire.data.source.remote.api.CoverArtSearchException
+import com.pandulapeter.campfire.data.source.remote.api.CatalogueSearchException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
@@ -19,18 +19,18 @@ import kotlinx.serialization.SerializationException
 
 /**
  * Runs [block], the part of a cover search that talks to [serviceName], turning anything the transport throws into a
- * [CoverArtSearchException], the way the Dropbox provider reads it: the browser engine reports a failed `fetch` as a
+ * [CatalogueSearchException], the way the Dropbox provider reads it: the browser engine reports a failed `fetch` as a
  * `kotlin.Error`, so every `Throwable` that is not a cancellation of this coroutine counts.
  */
-internal suspend fun <T> coverArtSearchTransport(serviceName: String, block: suspend () -> T): T = try {
+internal suspend fun <T> catalogueTransport(serviceName: String, block: suspend () -> T): T = try {
     block()
 } catch (exception: CancellationException) {
     currentCoroutineContext().ensureActive()
-    throw CoverArtSearchException(exception.message ?: "$serviceName could not be reached.", exception)
-} catch (exception: CoverArtSearchException) {
+    throw CatalogueSearchException(exception.message ?: "$serviceName could not be reached.", exception)
+} catch (exception: CatalogueSearchException) {
     throw exception
 } catch (throwable: Throwable) {
-    throw CoverArtSearchException(throwable.message ?: "$serviceName could not be reached.", throwable)
+    throw CatalogueSearchException(throwable.message ?: "$serviceName could not be reached.", throwable)
 }
 
 /**
@@ -39,12 +39,12 @@ internal suspend fun <T> coverArtSearchTransport(serviceName: String, block: sus
  * thread lands on the frames of the sheet sliding up. Anything that does not decode is the service answering with
  * something that is not a search result.
  */
-internal suspend fun <T> parseCoverArtSearchAnswer(serviceName: String, parse: () -> T): T = withContext(Dispatchers.Default) {
+internal suspend fun <T> parseCatalogueAnswer(serviceName: String, parse: () -> T): T = withContext(Dispatchers.Default) {
     try {
         parse()
     } catch (exception: SerializationException) {
-        throw CoverArtSearchException("$serviceName answered with something that is not a search result.", exception)
+        throw CatalogueSearchException("$serviceName answered with something that is not a search result.", exception)
     } catch (exception: IllegalArgumentException) {
-        throw CoverArtSearchException("$serviceName answered with something that is not a search result.", exception)
+        throw CatalogueSearchException("$serviceName answered with something that is not a search result.", exception)
     }
 }

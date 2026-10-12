@@ -10,8 +10,10 @@
 package com.pandulapeter.campfire.presentation.ui.dialogs
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution
 import com.pandulapeter.campfire.presentation.localization.pluralStringResource
@@ -65,7 +67,8 @@ internal fun CampfireDialogs(
     urlOpener: (String) -> Unit,
 ) {
     val visibleDialog by viewModel.visibleDialog.collectAsStateWithLifecycle()
-    val underlyingSongInfo by viewModel.underlyingSongInfo.collectAsStateWithLifecycle()
+    val openDialogs by viewModel.openDialogs.collectAsStateWithLifecycle()
+    val closeRequest by viewModel.dialogCloseRequest.collectAsStateWithLifecycle()
     val importProgress by viewModel.importProgress.collectAsStateWithLifecycle()
     val importReport by viewModel.importReport.collectAsStateWithLifecycle()
     // The import screen shows the progress of the imports it reports on itself.
@@ -74,12 +77,25 @@ internal fun CampfireDialogs(
         canShow = visibleDialog == null,
         onCancel = viewModel::cancelImportPreparation,
     )
-    // A stable composition slot keeps the parent sheet mounted while its editor opens in another modal window.
-    val songInfo = underlyingSongInfo ?: (visibleDialog as? DialogType.SongInfo)
-    if (songInfo != null) {
-        SongInfoSheet(viewModel = viewModel, dialog = songInfo, urlOpener = urlOpener)
+    // A slot of its own for every open dialog, keyed by its place, so that one a dialog was put over stays composed
+    // under it - its sheet up, its draft and scroll position kept - and is only uncovered when that one goes.
+    openDialogs.forEach { dialog ->
+        key(dialog.slotKey) {
+            CompositionLocalProvider(LocalIsSheetCloseRequested provides (dialog == closeRequest)) {
+                CampfireDialog(viewModel = viewModel, dialog = dialog, urlOpener = urlOpener)
+            }
+        }
     }
-    when (val dialog = visibleDialog) {
+}
+
+/** One open dialog of [CampfireDialogs], whichever place in the stack it has. */
+@Composable
+private fun CampfireDialog(
+    viewModel: CampfireViewModel,
+    dialog: DialogType,
+    urlOpener: (String) -> Unit,
+) {
+    when (dialog) {
         // Drawn by ExportHost, which deals it over the screens rather than in a window of its own.
         is DialogType.Export -> Unit
         DialogType.NewSetlist -> SetlistDetailsDialog(
@@ -165,7 +181,7 @@ internal fun CampfireDialogs(
             )
         }
 
-        is DialogType.SongInfo -> Unit
+        is DialogType.SongInfo -> SongInfoSheet(viewModel = viewModel, dialog = dialog, urlOpener = urlOpener)
         is DialogType.ChordShape -> ChordShapeSheet(viewModel = viewModel, dialog = dialog)
         DialogType.Tuner -> TunerSheet(viewModel = viewModel, dialog = DialogType.Tuner)
 
@@ -215,6 +231,11 @@ internal fun CampfireDialogs(
             dialog = dialog,
         )
 
+        is DialogType.SongDetailsLookup -> SongDetailsLookupSheet(
+            viewModel = viewModel,
+            dialog = dialog,
+        )
+
         is DialogType.SongLinks -> SongLinksDialog(
             viewModel = viewModel,
             dialog = dialog,
@@ -239,11 +260,12 @@ internal fun CampfireDialogs(
             title = stringResource(Res.string.cover_art_search_remove),
             text = textResource(Res.string.song_details_remove_cover_art_confirmation, dialog.song.title),
             confirmLabel = stringResource(Res.string.cover_art_search_remove),
-            // Not removing the cover is not being done with it: the sheet the bin was tapped in comes back.
-            onDismiss = { viewModel.showDialog(DialogType.CoverArtSearch(song = dialog.song, target = dialog.target)) },
+            // Not removing the cover is not being done with it: the cover sheet the bin was tapped in is still under it.
+            onDismiss = { viewModel.dismissDialog() },
             onConfirm = {
                 viewModel.setSongCoverArt(target = dialog.target, url = null)
-                viewModel.dismissDialog()
+                // The cover sheet under the question goes with it, sliding away: there is nothing left for it to change.
+                viewModel.dismissDialogAndSheetUnder()
             },
         )
 
@@ -344,8 +366,6 @@ internal fun CampfireDialogs(
             }
             WhatsNewDialog(onDismiss = viewModel::dismissDialog)
         }
-
-        null -> Unit
     }
 }
 

@@ -16,19 +16,19 @@ package com.pandulapeter.campfire.data.model.domain
  */
 data class CoverArtCandidate(
     /** The catalogue that found it. */
-    val service: CoverArtService,
-    /** The record's identifier in [service]'s catalogue, unique among that service's candidates of one search. */
+    val catalogue: Catalogue,
+    /** The record's identifier in [catalogue], unique among that catalogue's candidates of one search. */
     val id: String,
     val title: String,
-    /** The artist credit as the service spells it, `feat.` and all; empty where it has none. */
+    /** The artist credit as the catalogue spells it, `feat.` and all; empty where it has none. */
     val artist: String,
-    /** The year of the record's first release, null where the service does not know it. */
+    /** The year of the record's first release, null where the catalogue does not know it. */
     val year: String?,
-    /** What kind of record it is as the service names it (`Album`, `Single`, `EP`), null where it says nothing. */
+    /** What kind of record it is as the catalogue names it (`Album`, `Single`, `EP`), null where it says nothing. */
     val type: String?,
     /** The address written into the song when this one is chosen, and the one its thumbnail is loaded from. */
     val coverArtUrl: String,
 ) {
-    /** What tells this candidate apart from every other of one search, whichever service found it. */
-    val key get() = "${service.name}:$id"
+    /** What tells this candidate apart from every other of one search, whichever catalogue found it. */
+    val key get() = "${catalogue.name}:$id"
 }

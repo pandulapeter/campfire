@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.dialogs
 
+import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields
 import com.pandulapeter.campfire.data.model.domain.Song
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -57,32 +58,91 @@ class DialogHostTest {
     }
 
     @Test
-    fun `the song info sheet stays under an edit of its own song and comes back after it`() = runTest {
+    fun `the song info sheet stays open under an edit of its own song and comes back after it`() = runTest {
         val host = DialogHost(backgroundScope)
-        val info = DialogType.SongInfo(song = song, target = SongEditTarget.File(song.fileName))
+        val info = DialogType.SongInfo(song = song, target = file)
+        val tags = DialogType.SongTags(song = song, target = file)
         host.showDialog(info)
-        host.showDialog(DialogType.SongTags(song = song, target = SongEditTarget.File(song.fileName)))
-        assertEquals(info, host.underlyingSongInfo.value)
+        host.showDialog(tags)
+        assertEquals(listOf(info, tags), host.openDialogs.value)
         host.dismissDialog()
         assertEquals(info, host.visibleDialog.value)
+        assertEquals(listOf<DialogType>(info), host.openDialogs.value)
     }
 
     @Test
     fun `the song info sheet of the file does not stay under an edit of the editor's text`() = runTest {
         val host = DialogHost(backgroundScope)
-        host.showDialog(DialogType.SongInfo(song = song, target = SongEditTarget.File(song.fileName)))
-        host.showDialog(DialogType.SongTags(song = song, target = SongEditTarget.EditorDraft(song.fileName)))
-        assertNull(host.underlyingSongInfo.value)
+        host.showDialog(DialogType.SongInfo(song = song, target = file))
+        host.showDialog(DialogType.SongTags(song = song, target = draft))
+        assertEquals(1, host.openDialogs.value.size)
     }
 
     @Test
-    fun `the song info sheet of the editor's text stays under an edit of that text`() = runTest {
+    fun `a dialog that stacks over nothing open replaces the whole stack`() = runTest {
         val host = DialogHost(backgroundScope)
-        val info = DialogType.SongInfo(song = song, target = SongEditTarget.EditorDraft(song.fileName))
-        host.showDialog(info)
-        host.showDialog(DialogType.SongLinks(song = song, links = emptyList(), target = SongEditTarget.EditorDraft(song.fileName)))
-        assertEquals(info, host.underlyingSongInfo.value)
+        host.showDialog(DialogType.SongInfo(song = song, target = file))
+        host.showDialog(DialogType.SongTags(song = song, target = file))
+        host.showDialog(DialogType.ConfirmExit)
+        assertEquals(listOf<DialogType>(DialogType.ConfirmExit), host.openDialogs.value)
         host.dismissDialog()
-        assertEquals(info, host.visibleDialog.value)
+        assertEquals(emptyList(), host.openDialogs.value)
     }
+
+    @Test
+    fun `the lookup fills the form under it in place, and closing it uncovers that form`() = runTest {
+        val host = DialogHost(backgroundScope)
+        val info = DialogType.SongInfo(song = song, target = file)
+        val form = DialogType.SongMetadata(song = song, values = emptyMap(), target = file)
+        val lookup = DialogType.SongDetailsLookup(song = song, target = file, values = emptyMap(), draft = emptyMap())
+        val filled = form.copy(draft = mapOf(ChordProMetadataFields.Field.ALBUM to "Nimrod"))
+        host.showDialog(info)
+        host.showDialog(form)
+        host.showDialog(lookup)
+        assertEquals(listOf(info, form, lookup), host.openDialogs.value)
+        host.updateUnderlyingDialog(filled)
+        assertEquals(listOf(info, filled, lookup), host.openDialogs.value)
+        host.dismissSheet(lookup)
+        assertEquals(filled, host.visibleDialog.value)
+        assertEquals(listOf(info, filled), host.openDialogs.value)
+    }
+
+    @Test
+    fun `a confirmed removal closes the question and asks the cover sheet under it to close itself`() = runTest {
+        val host = DialogHost(backgroundScope)
+        val info = DialogType.SongInfo(song = song, target = file)
+        val cover = DialogType.CoverArtSearch(song = song, target = file)
+        host.showDialog(info)
+        host.showDialog(cover)
+        host.showDialog(DialogType.RemoveSongCoverArt(song = song, target = file))
+        host.dismissDialogAndSheetUnder()
+        assertEquals(listOf(info, cover), host.openDialogs.value)
+        assertEquals(cover, host.closeRequest.value)
+        host.dismissSheet(cover)
+        assertEquals(listOf<DialogType>(info), host.openDialogs.value)
+        assertNull(host.closeRequest.value)
+    }
+
+    @Test
+    fun `the stack listeners see what was open before and after`() = runTest {
+        val host = DialogHost(backgroundScope)
+        val info = DialogType.SongInfo(song = song, target = file)
+        val tags = DialogType.SongTags(song = song, target = file)
+        val changes = mutableListOf<Pair<List<DialogType>, List<DialogType>>>()
+        host.addOpenDialogsChange { before, after -> changes += before to after }
+        host.showDialog(info)
+        host.showDialog(tags)
+        host.dismissDialog()
+        assertEquals(
+            listOf(
+                emptyList<DialogType>() to listOf<DialogType>(info),
+                listOf<DialogType>(info) to listOf(info, tags),
+                listOf(info, tags) to listOf<DialogType>(info),
+            ),
+            changes,
+        )
+    }
+
+    private val file = SongEditTarget.File(song.fileName)
+    private val draft = SongEditTarget.EditorDraft(song.fileName)
 }

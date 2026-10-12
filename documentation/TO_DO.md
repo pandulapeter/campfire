@@ -16,8 +16,7 @@
 
 ## Midterm (in the next versions)
 - New song from the clipboard: documentation/plans/clipboard-import.md
-- Share to Campfire (iOS share extension, Android audit): documentation/plans/share-extension.md (after the clipboard plan)
-- Find song details online: documentation/plans/song-details-lookup.md
+- Share to Campfire (iOS share extension, Android audit): documentation/plans/share-extension.md (after the clipboard plan)§
 - Song links and QR codes: documentation/plans/song-links.md
 - Search field for tags / languages
 - Find a way to allow entering tempo using the keyboard

@@ -9,8 +9,8 @@
 -->
 # :data:source:remote:api
 
-The sync contracts and the two cover art ones. Consumed by `:data:repository:implementation` (the engine and the cover
-repository) and implemented by `:data:source:remote:implementation`. Depends only on `:data:model`.
+The sync contracts, the two cover art ones and the song details lookup's. Consumed by `:data:repository:implementation`
+(the engine, the cover repository and the song details one) and implemented by `:data:source:remote:implementation`. Depends only on `:data:model`.
 
 Everything here is shaped so that a second provider is one new class rather than a change to the engine — the rules,
 and why each of them is load bearing, are spelled out in the KDoc of `SyncFolder` and `SyncConnection`.
@@ -59,11 +59,16 @@ and why each of them is load bearing, are spelled out in the KDoc of `SyncFolder
   throws for anything but a cancellation: what comes back is a `CoverArtDownload` — the image, `Missing` (the address
   answered with something that is not a cover, which asking again will not change) or `Unreachable` (no answer, which
   may be different a minute later) — so the caller can decide how long to remember a failure.
-- `CoverArtSearchRemoteSource` — the records a song may have come out on in one catalogue (its `service`), each with
+- `CoverArtSearchRemoteSource` — the records a song may have come out on in one catalogue (its `catalogue`), each with
   the address of its front cover. The contract is shaped by MusicBrainz's rules: an implementation keeps its own pace
   and waits out a refusal by itself, reporting each wait through `onBusy` so the sheet can say why it is taking a
-  while, and throws `CoverArtSearchException` only once it has given up. Every source is registered as one
+  while, and throws `CatalogueSearchException` only once it has given up. Every source is registered as one
   `CoverArtSearchRemoteSources`, never a bare list, for the reason `SyncProviders` is.
+- `SongDetailsSearchRemoteSource` — the recordings a song's title names in one catalogue, with what each would fill
+  the song's header with, and `loadSongCredits` for the songwriters of the one picked (null, without a request, from a
+  catalogue that never names them). The same rules as the cover search's, and one more: a catalogue's pace is shared
+  with its cover search, since it counts the app's requests and not one sheet's — so one object implements both
+  contracts for each catalogue. Registered as `SongDetailsSearchRemoteSources`.
 - `SyncAuthorizationException` / `SyncNetworkException` / `SyncRemoteStorageFullException` — the three failures the
   engine treats as reasons to stop a run, the subclasses of the sealed `SyncRunEndingException`, each carrying the
   `SyncFailureReason` the run is reported as, so that a fourth is one subclass rather than one more case in every list; the last one only ever comes from `upload`, since every upload after it

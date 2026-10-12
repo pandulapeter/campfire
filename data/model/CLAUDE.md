@@ -155,9 +155,14 @@ synced. `Tag` is the counted view of that set, built per library scan rather tha
 
 The cover of a song is carried the same way (`{meta: cover https://…}`, read into `Song.coverArtUrl`): the address only,
 never the image. `CoverArtQuery` is what the cover search is asked — an album, or a title where there is no album,
-narrowed by an artist — `CoverArtCandidate` one record it found in one `CoverArtService` (MusicBrainz, iTunes), with the
-address that is written into the song when it is picked, and `CoverArtSearchResults` where a search of all of them
-stands.
+narrowed by an artist — `CoverArtCandidate` one record it found in one `Catalogue` (MusicBrainz, iTunes), with the
+address that is written into the song when it is picked, and `CoverArtSearchResults` (a `CatalogueSearchResults`) where a
+search of all of them stands.
+
+The song details lookup asks the same catalogues: `SongDetailsQuery` is a title narrowed by an artist and an album,
+`SongDetailsCandidate` one recording found, with the artist, album, year and duration it would fill in, `SongCredits` the
+composer and lyricist the catalogue names for the one picked and `SongCreditsState` where asking for them is. Nothing of
+it is kept: the lookup only fills the Edit song details form, see `:presentation`.
 
 `SongLanguage` is the same thing for the languages a song is sung in (`{meta: language en}`, read into `Song.languages`
 as lowercase ISO codes — two letters wherever the standard has them, three for the languages ISO 639-1 left out), with

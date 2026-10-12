@@ -16,10 +16,10 @@ import kotlinx.coroutines.flow.Flow
 interface SearchCoverArtUseCase {
 
     /**
-     * Asks every cover search service about [query] at once, emitting where the search is each time one of them has
-     * to wait or answers — the records found so far, each with the address of its front cover, and which services are
+     * Asks every catalogue about [query] at once, emitting where the search is each time one of them has
+     * to wait or answers — the records found so far, each with the address of its front cover, and which catalogues are
      * still being waited for or could not be reached — and completing once they all have. Nothing is thrown for a
-     * service that fails; collecting the flow runs the search and cancelling it stops the search.
+     * catalogue that fails; collecting the flow runs the search and cancelling it stops the search.
      */
     operator fun invoke(query: CoverArtQuery): Flow<CoverArtSearchResults>
 }

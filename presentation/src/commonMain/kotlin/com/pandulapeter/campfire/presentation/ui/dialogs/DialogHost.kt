@@ -36,12 +36,26 @@ internal class DialogHost(
     private val _visibleDialog = MutableStateFlow<DialogType?>(null)
     val visibleDialog: StateFlow<DialogType?> = _visibleDialog.asStateFlow()
 
-    // Kept mounted beneath an editor so its sheet and scroll position survive opening and closing that editor.
-    private val _underlyingSongInfo = MutableStateFlow<DialogType.SongInfo?>(null)
-    val underlyingSongInfo = _underlyingSongInfo.asStateFlow()
+    /**
+     * Every dialog open: [visibleDialog] last, and under it the ones it was opened from and stacks over (see
+     * [stacksOver]), the one at the bottom first. Those stay composed underneath it, so that closing it only slides it
+     * away and uncovers them as they were — their drafts, their scroll positions — rather than putting them up again,
+     * sliding in as if they had just been opened. One flow rather than the ones under it apart from [visibleDialog], so
+     * that what is drawn never sees one of the two changed and not the other.
+     */
+    private val _openDialogs = MutableStateFlow<List<DialogType>>(emptyList())
+    val openDialogs: StateFlow<List<DialogType>> = _openDialogs.asStateFlow()
+
+    /**
+     * An open dialog asked to close itself rather than be taken off the stack, see [dismissDialogAndSheetUnder]: a
+     * sheet taken off is gone in one frame, and one that closes itself slides away first. Cleared by the next change.
+     */
+    private val _closeRequest = MutableStateFlow<DialogType?>(null)
+    val closeRequest: StateFlow<DialogType?> = _closeRequest.asStateFlow()
 
     private val beforeDialogChangeListeners = mutableListOf<(previous: DialogType?, next: DialogType?) -> Unit>()
     private val afterDialogChangeListeners = mutableListOf<(previous: DialogType?, next: DialogType?) -> Unit>()
+    private val openDialogsChangeListeners = mutableListOf<(before: List<DialogType>, after: List<DialogType>) -> Unit>()
 
     /** Called before every change of [visibleDialog], in the order the listeners were added. */
     fun addBeforeDialogChange(listener: (previous: DialogType?, next: DialogType?) -> Unit) {
@@ -54,10 +68,20 @@ internal class DialogHost(
     }
 
     /**
+     * Called after every change of [visibleDialog] with every dialog open before it and after it ([openDialogs]), for
+     * what belongs to a dialog for as long as it is open anywhere in the stack rather than only while it is on top.
+     */
+    fun addOpenDialogsChange(listener: (before: List<DialogType>, after: List<DialogType>) -> Unit) {
+        openDialogsChangeListeners += listener
+    }
+
+    /**
      * Puts [dialogType] up only where nothing is on screen, and answers whether it did. Not through [setVisibleDialog]:
      * this only ever replaces no dialog at all, behind which nothing is parked.
      */
-    fun showIfNoneIsShown(dialogType: DialogType) = _visibleDialog.compareAndSet(null, dialogType)
+    fun showIfNoneIsShown(dialogType: DialogType) = _visibleDialog.compareAndSet(null, dialogType).also { isShown ->
+        if (isShown) _openDialogs.value = listOf(dialogType)
+    }
 
     /**
      * A sheet or a dialog about one song goes when the song does - deleted or renamed by a sync run, or taken out
@@ -75,7 +99,7 @@ internal class DialogHost(
             val fileName = dialog?.songFileName
             dialog?.takeIf { fileName != null && !isLoading && fileName !in songsBeingRenamed && songs.none { it.fileName == fileName } }
         }.filterNotNull().collect { dialog ->
-            // The song disappearing closes both the editor and the sheet underneath it.
+            // The song disappearing closes the whole stack, every dialog in which is about that song.
             if (_visibleDialog.value == dialog) setVisibleDialog(null)
         }
     }
@@ -85,30 +109,48 @@ internal class DialogHost(
      * else can answer for: the exit behind [DialogType.UnsavedChanges]. It goes with its dialog, however that leaves
      * the screen - answered, dismissed, or replaced, the way the desktop's close button puts the unsaved changes
      * question over anything. That work, and everything else a change of dialog sets off, is in the listeners.
+     *
+     * The stack under it follows from [dialogType] ([nextUnderlyingDialogs]): one in the place ([slotKey]) of a dialog
+     * already open goes back to that one, closing everything above it and taking its place; one that [stacksOver] an
+     * open dialog is put over it; anything else replaces the whole stack.
      */
     fun setVisibleDialog(dialogType: DialogType?) {
         val previousDialog = _visibleDialog.value
+        val previousOpenDialogs = _openDialogs.value
         beforeDialogChangeListeners.forEach { it(previousDialog, dialogType) }
-        _underlyingSongInfo.value = when {
-            // The cover art sheet's Remove asks first, and either answer goes back to the sheet the cover art was opened
-            // from: Remove directly, Cancel through the cover art sheet it puts back.
-            previousDialog is DialogType.CoverArtSearch && dialogType is DialogType.RemoveSongCoverArt -> _underlyingSongInfo.value
-            previousDialog is DialogType.RemoveSongCoverArt && dialogType is DialogType.CoverArtSearch -> _underlyingSongInfo.value
-            else -> (previousDialog as? DialogType.SongInfo)
-        }?.takeIf { parent ->
-            dialogType is DialogType.SongEdit && dialogType.target == parent.target &&
-                (dialogType is DialogType.SongMetadata || dialogType is DialogType.SongTags ||
-                    dialogType is DialogType.SongLinks || dialogType is DialogType.SongLanguages ||
-                    dialogType is DialogType.SongPlaying || dialogType is DialogType.CoverArtSearch ||
-                    dialogType is DialogType.RemoveSongCoverArt)
-        }
+        _closeRequest.value = null
+        _openDialogs.value = nextUnderlyingDialogs(openDialogs = previousOpenDialogs, next = dialogType) + listOfNotNull(dialogType)
         _visibleDialog.update { dialogType }
         afterDialogChangeListeners.forEach { it(previousDialog, dialogType) }
+        openDialogsChangeListeners.forEach { it(previousOpenDialogs, _openDialogs.value) }
     }
 
     fun showDialog(dialogType: DialogType) = setVisibleDialog(dialogType)
 
-    fun dismissDialog() = setVisibleDialog(_underlyingSongInfo.value)
+    /** Closes the dialog on screen, uncovering the one it was put over, if any. */
+    fun dismissDialog() = _openDialogs.value.let { open -> setVisibleDialog(open.getOrNull(open.lastIndex - 1)) }
+
+    /**
+     * Closes the dialog on screen and asks the sheet it was put over to close itself too ([closeRequest]), which a
+     * `CampfireBottomSheet` does with its slide and then dismisses itself as any closed sheet does: for a question
+     * whose answer leaves nothing for the sheet under it to do.
+     */
+    fun dismissDialogAndSheetUnder() {
+        val sheet = _openDialogs.value.let { open -> open.getOrNull(open.lastIndex - 1) } ?: return setVisibleDialog(null)
+        setVisibleDialog(sheet)
+        _closeRequest.value = sheet
+    }
+
+    /**
+     * Puts [dialog] in the place ([slotKey]) of the open dialog under the one on screen that has it, which is updated
+     * where it is rather than put up again: the metadata form the song details lookup fills in, still under the lookup
+     * as it slides away.
+     */
+    fun updateUnderlyingDialog(dialog: DialogType) {
+        _openDialogs.update { open ->
+            open.mapIndexed { index, openDialog -> if (index < open.lastIndex && openDialog.slotKey == dialog.slotKey) dialog else openDialog }
+        }
+    }
 
     /**
      * What a bottom sheet dismisses itself with: [dialogType] goes only while it is still the dialog on screen. A

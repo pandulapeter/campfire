@@ -13,12 +13,12 @@ import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.CoverArtCandidate
 import com.pandulapeter.campfire.data.model.domain.CoverArtQuery
 import com.pandulapeter.campfire.data.model.domain.CoverArtSearchResults
-import com.pandulapeter.campfire.data.model.domain.CoverArtService
+import com.pandulapeter.campfire.data.model.domain.Catalogue
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.repository.implementation.base.testEnvironment
 import com.pandulapeter.campfire.data.source.local.api.CoverArtLocalSource
 import com.pandulapeter.campfire.data.source.remote.api.CoverArtRemoteSource
-import com.pandulapeter.campfire.data.source.remote.api.CoverArtSearchException
+import com.pandulapeter.campfire.data.source.remote.api.CatalogueSearchException
 import com.pandulapeter.campfire.data.source.remote.api.CoverArtSearchRemoteSource
 import com.pandulapeter.campfire.data.source.remote.api.CoverArtSearchRemoteSources
 import com.pandulapeter.campfire.data.source.remote.api.hashing.Sha256
@@ -200,15 +200,15 @@ class CoverArtRepositoryImplTest {
     }
 
     @Test
-    fun `a search reports every service as it answers, in the order they answer`() = runTest {
-        val musicBrainz = FakeCoverArtSearchRemoteSource(CoverArtService.MUSIC_BRAINZ) { onBusy ->
+    fun `a search reports every catalogue as it answers, in the order they answer`() = runTest {
+        val musicBrainz = FakeCoverArtSearchRemoteSource(Catalogue.MUSIC_BRAINZ) { onBusy ->
             onBusy()
             delay(2_000)
-            listOf(candidate(CoverArtService.MUSIC_BRAINZ, "a"))
+            listOf(candidate(Catalogue.MUSIC_BRAINZ, "a"))
         }
-        val iTunes = FakeCoverArtSearchRemoteSource(CoverArtService.ITUNES) {
+        val iTunes = FakeCoverArtSearchRemoteSource(Catalogue.ITUNES) {
             delay(100)
-            listOf(candidate(CoverArtService.ITUNES, "b"))
+            listOf(candidate(Catalogue.ITUNES, "b"))
         }
         val repository = repository(searchSources = listOf(musicBrainz, iTunes))
 
@@ -216,32 +216,32 @@ class CoverArtRepositoryImplTest {
 
         assertEquals(
             listOf(
-                results(pending = setOf(CoverArtService.MUSIC_BRAINZ, CoverArtService.ITUNES)),
-                results(pending = setOf(CoverArtService.MUSIC_BRAINZ, CoverArtService.ITUNES), busy = setOf(CoverArtService.MUSIC_BRAINZ)),
+                results(pending = setOf(Catalogue.MUSIC_BRAINZ, Catalogue.ITUNES)),
+                results(pending = setOf(Catalogue.MUSIC_BRAINZ, Catalogue.ITUNES), busy = setOf(Catalogue.MUSIC_BRAINZ)),
                 results(
-                    candidates = listOf(candidate(CoverArtService.ITUNES, "b")),
-                    pending = setOf(CoverArtService.MUSIC_BRAINZ),
-                    busy = setOf(CoverArtService.MUSIC_BRAINZ),
+                    candidates = listOf(candidate(Catalogue.ITUNES, "b")),
+                    pending = setOf(Catalogue.MUSIC_BRAINZ),
+                    busy = setOf(Catalogue.MUSIC_BRAINZ),
                 ),
-                results(candidates = listOf(candidate(CoverArtService.ITUNES, "b"), candidate(CoverArtService.MUSIC_BRAINZ, "a"))),
+                results(candidates = listOf(candidate(Catalogue.ITUNES, "b"), candidate(Catalogue.MUSIC_BRAINZ, "a"))),
             ),
             emissions,
         )
     }
 
     @Test
-    fun `a service that fails is recorded as failed and does not end the others`() = runTest {
-        val failing = FakeCoverArtSearchRemoteSource(CoverArtService.MUSIC_BRAINZ) { throw CoverArtSearchException("No network.") }
-        val answering = FakeCoverArtSearchRemoteSource(CoverArtService.ITUNES) {
+    fun `a catalogue that fails is recorded as failed and does not end the others`() = runTest {
+        val failing = FakeCoverArtSearchRemoteSource(Catalogue.MUSIC_BRAINZ) { throw CatalogueSearchException("No network.") }
+        val answering = FakeCoverArtSearchRemoteSource(Catalogue.ITUNES) {
             delay(100)
-            listOf(candidate(CoverArtService.ITUNES, "b"))
+            listOf(candidate(Catalogue.ITUNES, "b"))
         }
 
         val last = repository(searchSources = listOf(failing, answering)).searchCoverArt(QUERY).toList().last()
 
         assertTrue(last.isComplete)
-        assertEquals(setOf(CoverArtService.MUSIC_BRAINZ), last.failed)
-        assertEquals(listOf(candidate(CoverArtService.ITUNES, "b")), last.candidates)
+        assertEquals(setOf(Catalogue.MUSIC_BRAINZ), last.failed)
+        assertEquals(listOf(candidate(Catalogue.ITUNES, "b")), last.candidates)
     }
 
     private fun TestScope.repository(
@@ -258,7 +258,7 @@ class CoverArtRepositoryImplTest {
     )
 
     private class FakeCoverArtSearchRemoteSource(
-        override val service: CoverArtService,
+        override val catalogue: Catalogue,
         private val answer: suspend (onBusy: () -> Unit) -> List<CoverArtCandidate>,
     ) : CoverArtSearchRemoteSource {
         override suspend fun searchCoverArt(query: CoverArtQuery, onBusy: () -> Unit) = answer(onBusy)
@@ -303,8 +303,8 @@ class CoverArtRepositoryImplTest {
 
         fun keyOf(url: String) = Sha256.hashToHex(url.encodeToByteArray())
 
-        fun candidate(service: CoverArtService, id: String) = CoverArtCandidate(
-            service = service,
+        fun candidate(catalogue: Catalogue, id: String) = CoverArtCandidate(
+            catalogue = catalogue,
             id = id,
             title = "",
             artist = "",
@@ -315,8 +315,8 @@ class CoverArtRepositoryImplTest {
 
         fun results(
             candidates: List<CoverArtCandidate> = emptyList(),
-            pending: Set<CoverArtService> = emptySet(),
-            busy: Set<CoverArtService> = emptySet(),
+            pending: Set<Catalogue> = emptySet(),
+            busy: Set<Catalogue> = emptySet(),
         ) = CoverArtSearchResults(candidates = candidates, pending = pending, busy = busy, failed = emptySet())
 
         fun song(coverArtUrl: String?) = Song(

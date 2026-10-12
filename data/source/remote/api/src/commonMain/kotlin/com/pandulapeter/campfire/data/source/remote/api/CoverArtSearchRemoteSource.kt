@@ -11,23 +11,23 @@ package com.pandulapeter.campfire.data.source.remote.api
 
 import com.pandulapeter.campfire.data.model.domain.CoverArtCandidate
 import com.pandulapeter.campfire.data.model.domain.CoverArtQuery
-import com.pandulapeter.campfire.data.model.domain.CoverArtService
+import com.pandulapeter.campfire.data.model.domain.Catalogue
 
 /**
- * Finds the records a song may have come out on in one catalogue, [service], each with the address of its front cover,
+ * Finds the records a song may have come out on in one catalogue, [catalogue], each with the address of its front cover,
  * for the user to pick one from. The contract is shaped by the strictest of them: MusicBrainz allows one request a
  * second from the whole app and answers faster ones with a refusal to be waited out, so an implementation spaces its
- * own requests where its service asks for that and retries a refusal by itself, telling the caller through [onBusy]
+ * own requests where its catalogue asks for that and retries a refusal by itself, telling the caller through [onBusy]
  * each time it has to wait. Several of these are asked side by side, so none may assume it is the only one.
  */
 interface CoverArtSearchRemoteSource {
 
     /** The catalogue this source asks, which is also what every candidate it finds carries. */
-    val service: CoverArtService
+    val catalogue: Catalogue
 
     /**
      * The candidates for [query], most relevant first, or an empty list for a query that is not
-     * [CoverArtQuery.isSearchable] or matches nothing. Throws [CoverArtSearchException] when the service cannot be
+     * [CoverArtQuery.isSearchable] or matches nothing. Throws [CatalogueSearchException] when the catalogue cannot be
      * reached or keeps refusing; a cancellation is thrown as it is.
      */
     suspend fun searchCoverArt(query: CoverArtQuery, onBusy: () -> Unit): List<CoverArtCandidate>
@@ -40,6 +40,3 @@ interface CoverArtSearchRemoteSource {
 class CoverArtSearchRemoteSources(
     val all: List<CoverArtSearchRemoteSource>,
 )
-
-/** The cover search could not be answered: no network, or the service kept refusing past every retry. */
-class CoverArtSearchException(message: String, cause: Throwable? = null) : Exception(message, cause)
