@@ -57,7 +57,7 @@ import org.jetbrains.compose.resources.painterResource
  * emptying a group is something the user did from here.
  *
  * @param isCompact Whether the list holds no link buttons, only chips (the editor preview's card): its tiles are then
- * measured by a row of chips rather than by a row of buttons standing in their touch targets, and padded less.
+ * measured by a row of chips rather than by a row of link buttons at their own height, and padded less.
  */
 @Composable
 internal fun SongInfoGroup(
@@ -166,8 +166,8 @@ internal fun SongInfoAction(
 /**
  * The height no tile of the sheet is shorter than, whatever it holds: that of the links tile with a single link, the
  * tallest single row any group has, so that the tiles of one list are of one height until one of them needs more and
- * a group does not grow as its first link arrives. A titled tile is that tall by its own layout; an untitled one, the
- * details and the defaults, is held to it, what it holds centered in it.
+ * a group does not grow as its first link arrives. Every tile, titled or not, is held to it, what it holds centered in
+ * it.
  */
 @Composable
 private fun songInfoTileMinHeight(fontScale: Float, isCompact: Boolean): Dp = with(LocalDensity.current) {

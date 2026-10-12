@@ -240,10 +240,11 @@ empty place with the album icon in it that does the same.
 tag and a language do not, so inside a tile whose every other spot opens the Manage links sheet each one looks and is
 hit like a control of its own — taller than a pill, with Material's 48dp touch target around it — while the tile, its
 chevron, and its empty state stay exactly those of the other groups. **No tile is shorter than the links tile with one link**
-(`songInfoTileMinHeight`, from `songInfoLinkRowHeight`), so the tiles of the list are of one height until one of them
+(`songInfoTileMinHeight`, from the sheet's `songInfoLinkRowHeight`), so the tiles of the list are of one height until one of them
 needs more. Every tile centers what it shows, a title and the row under it as one block, so it has as much room above
 as below whatever it holds; the link buttons report their own height rather than their touch targets', which reach
-into the tile's padding (`withoutTouchTargetSlack`), or their tile had empty space under them its title had none of.
+into the tile's padding (`withoutTouchTargetSlack`), since otherwise their tile would have empty space under the buttons
+with nothing to match it above.
 **The editor preview's card is compact** (`isCompact`, wherever the links are not followed): its links are chips like
 the tags, so its minimum is measured by a row of chips (`tagPillHeight`) rather than of buttons, and its paddings and
 title gap are smaller (10dp and 4dp rather than 12dp and 6dp). Each sheet goes
@@ -326,16 +327,18 @@ are in its width. The room a column leaves first widens the gaps between its sec
 and no more than it keeps above and below them (so a full column is never justified against the screen's edges), and
 the rest is shared out above and below, 45% of it above, since what is centered exactly reads as sitting low. A column
 holding a piece of a section cut across two is centered like any other: held against the cut, the two columns leaned
-away from each other across the page. **A fold
-leaves the columns where they were for 900 ms** (`ColumnCenteringHold`, as far as they still fit their page) before
-they spring to their new center, since centering at once would move the header that was just tapped, and a second tap
-aimed at it would miss; the hold is armed in a `SideEffect` as the fold is composed, ahead of that frame's measure,
-and only released by the delay. It is all in that file and `arrange`'s `heldSpreads`, so `SongLyrics` passing no hold
-turns it off. That room is the screen wherever a row is read
-alone on it, and for a song read whole in one row the room it was decided for (or what the screen shows of it while the
-app bar or the metronome panel moves in), so it never scrolls for it. A page of several rows (the joined rows of a
-single column's pages) is moved down whole instead, and a fold holds it at the shift it had the same way
-(`arrange`'s `heldPageShifts`, as far as it still fits the room it is centered in).
+away from each other across the page. That room is the screen wherever a row is read alone on it, and for a song read
+whole in one row the room it was decided for (or what the screen shows of it while the app bar or the metronome panel
+moves in), so it never scrolls for it. A page of several rows (the joined rows of a single column's pages) is moved
+down whole instead.
+
+**A fold leaves the columns where they were for 900 ms** (`ColumnCenteringHold`, as far as they still fit their page)
+before they spring to their new center, since centering at once would move the header that was just tapped, and a
+second tap aimed at it would miss; a page of several rows keeps the shift it had the same way. `SongLyrics` keys the
+hold by the song's folds and its Chords section's, `ColumnCenteringHold.kt` arms it in a `SideEffect` as the fold is
+composed, ahead of that frame's measure, and releases it only by the delay, `SongSectionsLayout` records the spreads
+and the page shifts on every lookahead measure while nothing holds, and `arrange`'s `heldSpreads` and `heldPageShifts`
+place them; so `SongLyrics` passing no hold turns it off.
 
 Each section is a traversal group with its index as the `traversalIndex`, so a screen reader reads it whole and in the
 song's order whatever column it is in; the geometry alone read the columns across, line by line. Songs that do not fit
@@ -402,7 +405,8 @@ otherwise it starts here and the page runs on past the screen, paged through lik
 since a page left mostly empty is never acceptable.
 
 The rows of these pages share one start edge (`sharesKeyline`), the pair's second section starting from the middle, and
-a page shorter than the screen is spread out over it like any other (below): a full page barely moves, and a short
+a page shorter than the screen is centered in it like any other (above): spread out into its gaps where it is a single
+row, moved down whole where it holds joined rows. A full page barely moves, and a short
 section left alone on one is read in the middle of the screen rather than at the top of an empty one. The editor's preview and a songbook of more than `MAX_CUT_SECTION_COUNT` sections keep the plain single column,
 which is never measured.
 
