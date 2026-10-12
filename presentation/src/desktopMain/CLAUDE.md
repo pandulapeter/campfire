@@ -18,9 +18,9 @@ The desktop shell, called by `:app:desktop`.
 accepts dropped files (a folder standing for the files directly inside it); a drop whose file list cannot be read is
 refused rather than thrown, since an exception out of the target skips the end of the drag session and the window would
 refuse every drag after it; links open through `java.awt.Desktop`, or through the system's own command (`open`,
-`rundll32`, `xdg-open`) where AWT has no desktop or its `browse` fails — and on macOS for anything but a web page (the
-microphone's settings page), since `browse` there hands every address to the default browser, which shows an error of
-its own for a scheme it cannot open — and a link nothing would open is answered with a
+`rundll32`, `xdg-open`) where AWT has no desktop or its `browse` fails — and on macOS and Windows for anything but a web
+page (the microphone's and the sound settings pages), since `browse` there hands every address to the default browser,
+which shows an error or an empty page of its own for a scheme it cannot open — and a link nothing would open is answered with a
 snackbar naming the address (`Message.LinkNotOpened`). That opener (`openUrl`, in
 `desktopMain/ui/platform/SystemBrowser.desktop.kt`) is also a Koin definition, `DesktopSystemBrowser`, the
 `SystemBrowser` the sync authorizer opens the consent page with, so the consent page and the links in Settings take
