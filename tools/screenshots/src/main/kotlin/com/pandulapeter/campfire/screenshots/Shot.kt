@@ -155,17 +155,24 @@ internal class ShotScope(
     }
 
     /** Taps what is labelled [label] the way [tap] does, where the screen shows it, and says whether it did. */
-    @OptIn(ExperimentalComposeUiApi::class)
     suspend fun tapIfPresent(label: String): Boolean {
-        val node = scene.semanticsOwners.firstNotNullOfOrNull { owner -> owner.unmergedRootSemanticsNode.find { it.isLabelled(label) } }
-            ?: return false
-        val center = node.boundsInRoot.center
+        val center = centerOf(label) ?: return false
         scene.sendPointerEvent(PointerEventType.Press, center, type = PointerType.Touch)
         settle(FRAME_MILLIS * 4)
         scene.sendPointerEvent(PointerEventType.Release, center, type = PointerType.Touch)
         settle()
         return true
     }
+
+    /**
+     * The middle of whatever on screen is labelled [label], in the scene's pixels, for a recording to [touch] it on the
+     * frames it chooses: [tap] settles between its press and its release, which a clip would skip as a jump.
+     */
+    @OptIn(ExperimentalComposeUiApi::class)
+    fun centerOf(label: String): Offset? = scene.semanticsOwners
+        .firstNotNullOfOrNull { owner -> owner.unmergedRootSemanticsNode.find { it.isLabelled(label) } }
+        ?.boundsInRoot
+        ?.center
 
     private fun SemanticsNode.find(predicate: (SemanticsNode) -> Boolean): SemanticsNode? =
         if (predicate(this)) this else children.firstNotNullOfOrNull { it.find(predicate) }

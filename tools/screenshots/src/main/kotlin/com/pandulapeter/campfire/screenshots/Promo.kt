@@ -18,10 +18,8 @@ import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.tuner.api.Tuner
 import com.pandulapeter.campfire.tuner.api.model.TunerReading
 import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
-import kotlinx.serialization.json.putJsonArray
 import org.koin.mp.KoinPlatform
 import kotlin.math.abs
 import kotlin.math.cos
@@ -59,10 +57,11 @@ internal val promoShots: List<PromoShot> by lazy {
                 drive = { recordDrag(frames = 180, from = 0.85f, to = 0.15f) },
             ),
         ),
-        // House of the Rising Sun opened from the library, then read down past its chord diagrams.
+        // House of the Rising Sun opened from the library on the iPad, its picking pattern unfolded so that the song takes a
+        // second page, and that page turned with the step button on the beat the video shows "Pedal & tap to turn pages".
         PromoShot(
             name = "open-song",
-            device = Device.IPHONE,
+            device = Device.IPAD,
             isClip = true,
             shot = Shot(
                 id = "open-song",
@@ -70,8 +69,7 @@ internal val promoShots: List<PromoShot> by lazy {
                 preferences = {
                     mapOf(
                         "sortingMode" to JsonPrimitive(UserPreferences.SortingMode.BY_ARTIST.id),
-                        "fontScale" to JsonPrimitive(1f),
-                        "foldedSections" to buildJsonObject { putJsonArray(HOUSE_OF_THE_RISING_SUN) { add("Picking pattern#1") } },
+                        "fontScale" to JsonPrimitive(1.2f),
                     )
                 },
                 prepare = {
@@ -80,8 +78,14 @@ internal val promoShots: List<PromoShot> by lazy {
                 },
                 drive = {
                     val song = song(HOUSE_OF_THE_RISING_SUN)
-                    record(frames = 120) { if (it == 20) viewModel.openSong(song) }
-                    recordDrag(frames = 120, from = 0.8f, to = 0.35f)
+                    val nextPage = string("song_details_next_page")
+                    record(frames = 270) { frame ->
+                        when (frame) {
+                            20 -> viewModel.openSong(song)
+                            PAGE_TURN_FRAME -> touch(PointerEventType.Press, checkNotNull(centerOf(nextPage)) { "The song has a single page." })
+                            PAGE_TURN_FRAME + 4 -> touch(PointerEventType.Release, checkNotNull(centerOf(nextPage)))
+                        }
+                    }
                 },
             ),
         ),
@@ -277,5 +281,8 @@ internal fun reading(note: Int, cents: Float) = TunerReading(
 private const val VIDEO_BPM = 160
 private const val FRAMES_PER_BEAT = 60 * 60f / VIDEO_BPM
 private const val IN_TUNE_CENTS = 3f
+
+/** The song scene's seventh beat, 22.5 frames each, where the video shows its "Pedal & tap to turn pages" chip. */
+private const val PAGE_TURN_FRAME = 157
 private const val HOUSE_OF_THE_RISING_SUN = "traditional_american-house_of_the_rising_sun.cho"
 private const val HOME_ON_THE_RANGE = "traditional_american-home_on_the_range_my_western_home.cho"

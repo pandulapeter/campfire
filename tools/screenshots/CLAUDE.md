@@ -47,6 +47,7 @@ graphic and the website's link preview - from the same shots, in their own theme
 - **The promotional video's footage** is `Promo.kt`, rendered only when asked for (`--only promo`), into `Promo/`: stills,
   and clips whose drive calls `record`, which draws a frame every sixtieth of a second of the scene's clock and writes
   each as a JPEG into a folder named after the clip, so an animation plays at its own speed however long a frame takes
-  to draw. A drag is a finger moved a frame at a time (`touch`), the metronome lights its beats at the video's 160 BPM,
-  and the tuner is `ScriptedTuner`, which hears only the readings a clip hands it. The video itself is composed outside
+  to draw. A drag is a finger moved a frame at a time (`touch`), and a tap within a clip a press and a release on frames
+  of their own at the middle of what is labelled (`centerOf`), since `tap` settles between them. The metronome lights
+  its beats at the video's 160 BPM, and the tuner is `ScriptedTuner`, which hears only the readings a clip hands it. The video itself is composed outside
   the repository, from these clips.
