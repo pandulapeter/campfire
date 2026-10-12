@@ -266,8 +266,8 @@ What the app does, one line each; the full text is in the file named (`:presenta
 - How a song is played (transposition, capo, tempo, time signature) is the first section of the song itself; the time
   signature alone is written into the file, the other three are overridden per setlist or per device: `:presentation`'s
   `ui/CLAUDE.md`.
-- The tuner asks for the microphone only from the button on its page, listens only while that page is on screen, and
-  keeps nothing it hears: `:presentation`'s `ui/tuner/CLAUDE.md`.
+- The tuner asks for the microphone only as a tap opens it or from the button on its page, listens only while that page
+  is on screen, and keeps nothing it hears: `:presentation`'s `ui/tuner/CLAUDE.md`.
 - Features are switched on and off as a whole in Settings → Features; a switch only hides, never writes or deletes:
   `:presentation`'s `ui/CLAUDE.md`.
 - Haptics tell the hand only what the eye cannot easily follow (the fast scroller above all), through the platform's
@@ -385,8 +385,9 @@ detail is in `metronome/implementation/CLAUDE.md` (timing, playback as media), a
 A fourth tab, and a sheet over the song details screen opened from the tuner button in the song's first section (from
 its menu where the chords and the metronome are both switched off, which leaves that section nothing to hold the button
 beside), hearing one note at a time through the microphone and playing reference tones. Nothing it hears is kept or reaches the network. The microphone is asked for
-only by the button on its page, never at launch or by opening the tab (on the desktop, which cannot tell whether it is
-allowed, that first tap is remembered and opening the tab listens from then on); it is listened to only while that page is on
+the first time a tap opens a tuner (the Tuner tab, a song's tuner button), or by the button on its page, never at launch
+or by a tuner shown without a tap (restored, or the web's address); on the desktop, which cannot tell whether it is
+allowed, that first ask is remembered and opening the tab listens from then on; it is listened to only while that page is on
 screen and the app is in front, so the system's recording indicator is lit exactly then; and nothing of it outlives
 its screen. The Tuner switch in Settings → Features takes the tab, the sheet's button and menu entry, and every way the
 app could ask for the microphone. The detail is in `tuner/implementation/CLAUDE.md` (the detector, the tracker, the platforms) and

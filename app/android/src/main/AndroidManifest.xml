@@ -37,8 +37,8 @@
     <uses-permission android:name="android.permission.VIBRATE" />
 
     <!--
-      The tuner listens through the microphone, asked for only by the button on its page and only while that page is
-      on screen; nothing it hears is kept or sent anywhere. Not a required feature, or Play would hide the app from
+      The tuner listens through the microphone, asked for only as a tap opens the tuner or by the button on its page, and
+      listened to only while that page is on screen; nothing it hears is kept or sent anywhere. Not a required feature, or Play would hide the app from
       every device without a microphone, where the tuner still plays its reference tones.
     -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />

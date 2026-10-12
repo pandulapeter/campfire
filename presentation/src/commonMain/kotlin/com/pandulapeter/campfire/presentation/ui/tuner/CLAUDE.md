@@ -28,7 +28,7 @@ share.
   stopped wins, then a refusal, then a question never asked — on the platforms that cannot say, one no tap on this
   device has asked) and whether the microphone may be opened without a tap (`canListenWithoutTap`). Tested.
 - `TunerNoticeCard` — one sentence and at most two buttons: **Use the microphone** (the platform's request, or opening
-  the input on the desktop and the web, where that is the question), **Open settings** where the platform has a page to
+  the input on the desktop and the web, where that is the question; pressed for the player as a tap opens the tuner), **Open settings** where the platform has a page to
   open and **Ask again** where the system would still ask, **Try again** for a missing, busy or failed microphone; its
   sentence a polite live region, as is `TunerInputIssueMessage`, since both arrive without a tap.
 - `TunerDisplay` / `TunerMeter` — the note with its octave, sized to the display's width (`TextAutoSize`, 57 to 96sp), and
@@ -91,8 +91,13 @@ The microphone permission is `ui/platform/MicrophonePermission.kt`, an `expect` 
 again on every resume, with the app's page of the system settings; the web's `navigator.permissions.query`, asked as the
 app starts (`CampfireWebApp`) so the tab's first frame knows, and followed through its change events, so an answer given
 in the browser's prompt is known by the next frame too; the desktop always unknown, with the macOS and Windows
-microphone privacy pages. Nothing asks at launch or by opening a tab: only the notice's button. Where the platform cannot
-say (the desktop), the first tap is remembered, and from then on opening a tuner opens the microphone without one, so
+microphone privacy pages. Nothing asks at launch. **A tap that opens a tuner asks** (`TunerAskOnOpenEffect`): the Tuner
+tab's item and the song's tuner button and menu entry mark the opening (`TunerController.markOpenedByTap`, set only where
+the tuner did open), and the page that comes up consumes the mark and, where its notice is the question never asked,
+does what the notice's button would, so the player taps once to tune rather than twice. A tuner shown without a tap
+(restored with the app, the web's address or its Back) keeps the notice and waits for its button, since a system prompt
+nobody asked for is easily refused and iOS and Android only ask so often; a refusal keeps its notice too. Where the
+platform cannot say (the desktop), the first ask is remembered, and from then on opening a tuner opens the microphone without one, so
 it is one tap per device rather than per run; a refusal given later in the system's settings is heard as silence and
 said with Open settings, and a permission the system has forgotten is asked again by its own prompt as the tuner opens.
 

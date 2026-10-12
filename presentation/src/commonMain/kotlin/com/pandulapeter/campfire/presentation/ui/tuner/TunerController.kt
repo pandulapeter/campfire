@@ -64,6 +64,9 @@ internal class TunerController(
 
     private val config get() = tunerSettings.value.toConfig()
 
+    /** Whether the tuner on its way to the screen was opened by a tap, see [markOpenedByTap]. */
+    private var isOpenedByTap = false
+
     /** Listens while a tuner screen is showing and the microphone may be used, see `TunerScreen`. */
     fun setTunerListening(isListening: Boolean) {
         if (isListening) {
@@ -78,6 +81,19 @@ internal class TunerController(
         if (!tunerSettings.value.hasTurnedOnMicrophone) updateTunerSettings { copy(hasTurnedOnMicrophone = true) }
         tuner.listen(config)
     }
+
+    /**
+     * Notes that the tuner about to be shown was opened by a tap on the Tuner tab or on a song's tuner button, which is
+     * the player asking to tune: its page then asks for a microphone never asked about at once, rather than after a
+     * second tap on its notice. A tuner shown without one - restored with the app, the web's address or its Back - waits
+     * for that tap, since a system prompt nobody asked for is easily refused, and iOS and Android only ask so often.
+     */
+    fun markOpenedByTap() {
+        isOpenedByTap = true
+    }
+
+    /** Whether the tuner now on screen was opened by a tap, answered once, so that its page asks only as it opens. */
+    fun consumeOpenedByTap() = isOpenedByTap.also { isOpenedByTap = false }
 
     /** Plays [note], or stops it where it is the one sounding. */
     fun toggleTunerTone(note: Int) {

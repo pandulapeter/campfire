@@ -1091,7 +1091,12 @@ class CampfireViewModel(
         settingsTab = SettingsTab.LIBRARY
     }
 
-    fun selectTopLevelDestination(destination: CampfireDestination.TopLevel) = navigator.selectTopLevelDestination(destination)
+    fun selectTopLevelDestination(destination: CampfireDestination.TopLevel) {
+        val wasTunerShown = backStack.lastOrNull() == CampfireDestination.Tuner
+        navigator.selectTopLevelDestination(destination)
+        // Only where the tab did open: a refused navigation would otherwise leave the mark for a tuner opened later without a tap.
+        if (!wasTunerShown && backStack.lastOrNull() == CampfireDestination.Tuner) tunerController.markOpenedByTap()
+    }
 
     fun openSong(song: Song) = navigator.openSong(song)
 
@@ -1358,6 +1363,15 @@ class CampfireViewModel(
 
     /** See [TunerController.requestMicrophone]. */
     fun requestMicrophone() = tunerController.requestMicrophone()
+
+    /** Opens the tuner sheet over the song from its tuner button or menu entry, see [TunerController.markOpenedByTap]. */
+    fun openTunerSheet() {
+        showDialog(DialogType.Tuner)
+        if (visibleDialog.value is DialogType.Tuner) tunerController.markOpenedByTap()
+    }
+
+    /** See [TunerController.consumeOpenedByTap]. */
+    fun consumeTunerOpenedByTap() = tunerController.consumeOpenedByTap()
 
     /** See [TunerController.toggleTunerTone]. */
     fun toggleTunerTone(note: Int) = tunerController.toggleTunerTone(note)

@@ -26,8 +26,8 @@ internal enum class MicrophoneStatus {
 }
 
 /**
- * The microphone permission as the tuner's page asks for it: never at launch and never by opening the tab, only by the
- * button on the page.
+ * The microphone permission as the tuner's page asks for it: never at launch, only as a tap opens the tuner or by the
+ * button on the page (see `TunerAskOnOpenEffect`).
  *
  * @param status Read again whenever the app comes back to the front, so that a grant made in the system's settings is
  *   seen without a tap.

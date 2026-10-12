@@ -42,8 +42,9 @@ import com.pandulapeter.campfire.presentation.ui.platform.MicrophonePermission
 
 /**
  * What the page says in place of its display while the microphone cannot be listened to: one sentence, and at most two
- * buttons. The first time it is the only place the microphone is ever asked for; a refusal offers the system's settings
- * where the platform has a page to open, and asking again where the system would still show its question.
+ * buttons. The first time, its button is pressed for the player where a tap opened the tuner ([TunerAskOnOpenEffect]); a
+ * refusal offers the system's settings where the platform has a page to open, and asking again where the system would
+ * still show its question.
  *
  * @param onListen Opens the microphone, which on the desktop and the web is also what asks.
  */

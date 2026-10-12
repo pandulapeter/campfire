@@ -84,7 +84,6 @@ import com.pandulapeter.campfire.presentation.ui.components.setlistAssignmentsAc
 import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomePanel
 import com.pandulapeter.campfire.presentation.ui.tuner.tunerAction
-import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.playing.songPlaybackOf
 import com.pandulapeter.campfire.presentation.ui.screens.rememberMetronomePanelState
@@ -147,7 +146,7 @@ internal fun SongDetailsAppBar(
     // the chords or the metronome are switched on; with both off there is nothing to put the tuner next to, so the menu
     // holds it then.
     val tunerAction = if (isTunerEnabled && !shouldShowChords && !isMetronomeEnabled) {
-        tunerAction(onClick = { viewModel.showDialog(DialogType.Tuner) })
+        tunerAction(onClick = viewModel::openTunerSheet)
     } else {
         null
     }

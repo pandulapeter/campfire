@@ -50,6 +50,7 @@ import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsWidthL
 import com.pandulapeter.campfire.presentation.ui.tuner.InstrumentChoice
 import com.pandulapeter.campfire.presentation.ui.tuner.REFERENCE_NOTE
 import com.pandulapeter.campfire.presentation.ui.tuner.ReferencePitchSetting
+import com.pandulapeter.campfire.presentation.ui.tuner.TunerAskOnOpenEffect
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerDisplay
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerListeningEffect
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerNoticeCard
@@ -73,7 +74,8 @@ import kotlinx.coroutines.flow.collectLatest
  * and scrolls with it, which costs a short window nothing; its tones still play then.
  *
  * It listens while it is on screen and the app is in front ([TunerListeningEffect]) and nothing longer, keeping the
- * display on meanwhile, and asks for the microphone only from the notice's button.
+ * display on meanwhile, and asks for the microphone only as a tap opens it ([TunerAskOnOpenEffect]) or from the notice's
+ * button.
  */
 @Composable
 internal fun TunerScreen(
@@ -104,6 +106,11 @@ internal fun TunerScreen(
     TunerListeningEffect(
         canListen = canListenWithoutTap(status = permission.status, hasRequested = hasRequested),
         onListeningChanged = viewModel::setTunerListening,
+    )
+    TunerAskOnOpenEffect(
+        notice = notice,
+        consumeOpenedByTap = viewModel::consumeTunerOpenedByTap,
+        ask = permission.request ?: viewModel::requestMicrophone,
     )
     // A window with room for two columns gives the strings the whole width of the display above them, which they are
     // played against, and sets the instrument and the reference pitch side by side under them; a narrower one keeps

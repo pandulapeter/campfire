@@ -15,7 +15,6 @@ import androidx.compose.runtime.remember
 import com.pandulapeter.campfire.metronome.api.model.MetronomeBeat
 import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -69,7 +68,7 @@ internal fun rememberSongPlayingTools(
         null
     } else {
         SongPlayingTools(
-            onTunerClicked = if (isTunerEnabled) ({ viewModel.showDialog(DialogType.Tuner) }) else null,
+            onTunerClicked = if (isTunerEnabled) viewModel::openTunerSheet else null,
             isTunerSheetShown = isTunerSheetShown,
             metronome = if (isMetronomeEnabled) {
                 SongMetronomeTool(
