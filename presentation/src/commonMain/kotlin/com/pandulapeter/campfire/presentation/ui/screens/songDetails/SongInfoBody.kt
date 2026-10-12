@@ -79,7 +79,8 @@ import org.jetbrains.compose.resources.painterResource
  * @param coverArtUrl The cover to draw at the start of the details, null where there is none or the cover art setting
  * is off.
  * @param defaults What the file declares for the four values the song is played by.
- * @param onOpenLink Follows a link; null leaves the links as plain chips.
+ * @param onOpenLink Follows a link; null leaves the links as plain chips, and with no buttons left in them the tiles
+ * compact (see [SongInfoGroup]'s `isCompact`).
  */
 @Composable
 internal fun SongInfoBody(
@@ -100,6 +101,7 @@ internal fun SongInfoBody(
         ChordProDuration.parse(metadata.duration)?.let { stringResource(Res.string.song_details_duration) to ChordProDuration.format(it) },
     )
     val onSetCoverArt = editing?.onEditCoverArt
+    val isCompact = onOpenLink == null
     val groups = songInfoGroupsOf(
         hasDetails = rows.isNotEmpty() || coverArtUrl != null || editing != null,
         hasDefaults = defaults != null && (defaults.hasValues || defaults.onEdit != null || defaults.overrides.isNotEmpty()),
@@ -120,6 +122,7 @@ internal fun SongInfoBody(
                 fontScale = fontScale,
                 horizontalPadding = horizontalPadding,
                 tileShape = shapeOf(SongInfoGroupKind.DETAILS),
+                isCompact = isCompact,
                 onClick = editing?.onEditMetadata,
                 onClickLabel = stringResource(Res.string.song_details_metadata_edit),
             ) {
@@ -150,6 +153,7 @@ internal fun SongInfoBody(
                 fontScale = fontScale,
                 horizontalPadding = horizontalPadding,
                 tileShape = shapeOf(SongInfoGroupKind.DEFAULTS),
+                isCompact = isCompact,
             )
         }
         if (SongInfoGroupKind.TAGS in groups) {
@@ -159,6 +163,7 @@ internal fun SongInfoBody(
                 fontScale = fontScale,
                 horizontalPadding = horizontalPadding,
                 tileShape = shapeOf(SongInfoGroupKind.TAGS),
+                isCompact = isCompact,
                 onEdit = editing?.onEditTags,
                 editLabel = stringResource(Res.string.song_details_tags_manage),
                 emptyLabel = stringResource(Res.string.song_details_tags_add),
@@ -181,6 +186,7 @@ internal fun SongInfoBody(
                 fontScale = fontScale,
                 horizontalPadding = horizontalPadding,
                 tileShape = shapeOf(SongInfoGroupKind.LANGUAGES),
+                isCompact = isCompact,
                 onEdit = editing?.onEditLanguages,
                 editLabel = stringResource(Res.string.song_details_languages_edit),
                 emptyLabel = stringResource(Res.string.song_details_languages_add),
@@ -197,6 +203,7 @@ internal fun SongInfoBody(
                 fontScale = fontScale,
                 horizontalPadding = horizontalPadding,
                 tileShape = shapeOf(SongInfoGroupKind.LINKS),
+                isCompact = isCompact,
                 onEdit = editing?.onEditLinks,
                 editLabel = stringResource(Res.string.song_details_links_edit),
                 emptyLabel = stringResource(Res.string.song_details_links_add),
@@ -287,6 +294,7 @@ private fun SongInfoChipGroup(
     fontScale: Float,
     horizontalPadding: Dp,
     tileShape: Shape,
+    isCompact: Boolean,
     onEdit: (() -> Unit)?,
     editLabel: String,
     emptyLabel: String,
@@ -297,6 +305,7 @@ private fun SongInfoChipGroup(
     fontScale = fontScale,
     horizontalPadding = horizontalPadding,
     tileShape = tileShape,
+    isCompact = isCompact,
     onClick = onEdit,
     onClickLabel = editLabel,
     emptyLabel = emptyLabel,

@@ -74,6 +74,7 @@ internal fun SongDefaultsGroup(
     fontScale: Float,
     horizontalPadding: Dp,
     tileShape: Shape,
+    isCompact: Boolean,
 ) = SongInfoGroup(
     // Untitled, like the details: the key, the capo, the tempo and the time signature are labelled already.
     title = null,
@@ -81,6 +82,7 @@ internal fun SongDefaultsGroup(
     fontScale = fontScale,
     horizontalPadding = horizontalPadding,
     tileShape = tileShape,
+    isCompact = isCompact,
     onClick = defaults.onEdit,
     onClickLabel = stringResource(Res.string.song_details_playing_edit),
     isContentShown = defaults.hasValues || defaults.overrides.isNotEmpty(),

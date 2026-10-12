@@ -241,9 +241,12 @@ tag and a language do not, so inside a tile whose every other spot opens the Man
 hit like a control of its own — taller than a pill, with Material's 48dp touch target around it — while the tile, its
 chevron, and its empty state stay exactly those of the other groups. **No tile is shorter than the links tile with one link**
 (`songInfoTileMinHeight`, from `songInfoLinkRowHeight`), so the tiles of the list are of one height until one of them
-needs more. A titled tile gets there by its own layout: its content, or its call to action, is centered in a slot as
-tall as a row of link buttons under the title, so every title stands on one line of its tile and every row of chips,
-buttons, or call to action is centered on another, whichever the tile holds; an untitled one centers what it holds. Each sheet goes
+needs more. Every tile centers what it shows, a title and the row under it as one block, so it has as much room above
+as below whatever it holds; the link buttons report their own height rather than their touch targets', which reach
+into the tile's padding (`withoutTouchTargetSlack`), or their tile had empty space under them its title had none of.
+**The editor preview's card is compact** (`isCompact`, wherever the links are not followed): its links are chips like
+the tags, so its minimum is measured by a row of chips (`tagPillHeight`) rather than of buttons, and its paddings and
+title gap are smaller (10dp and 4dp rather than 12dp and 6dp). Each sheet goes
 back to this one once it is saved or closed (`DialogHost.underlyingSongInfo`, for an edit of the same target). The
 header has no buttons, and no menu lists these editors one by one.
 

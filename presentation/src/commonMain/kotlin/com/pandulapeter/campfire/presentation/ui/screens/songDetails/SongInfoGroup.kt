@@ -55,6 +55,9 @@ import org.jetbrains.compose.resources.painterResource
  * the caller words it for a group that has nothing yet), so that it says what a tap does; one that cannot is left out
  * by the caller. Where [isContentShown] turns false the content folds away rather than vanishing, since
  * emptying a group is something the user did from here.
+ *
+ * @param isCompact Whether the list holds no link buttons, only chips (the editor preview's card): its tiles are then
+ * measured by a row of chips rather than by a row of buttons standing in their touch targets, and padded less.
  */
 @Composable
 internal fun SongInfoGroup(
@@ -63,6 +66,7 @@ internal fun SongInfoGroup(
     fontScale: Float,
     horizontalPadding: Dp,
     tileShape: Shape,
+    isCompact: Boolean,
     onClick: (() -> Unit)?,
     onClickLabel: String,
     emptyLabel: String = onClickLabel,
@@ -75,11 +79,11 @@ internal fun SongInfoGroup(
         .clip(tileShape)
         .background(MaterialTheme.colorScheme.surfaceContainerHigh)
         .then(if (onClick == null) Modifier else Modifier.clickable(onClickLabel = onClickLabel, role = Role.Button, onClick = onClick))
-        .heightIn(min = songInfoTileMinHeight(fontScale))
+        .heightIn(min = songInfoTileMinHeight(fontScale, isCompact))
         .padding(
             start = TILE_PADDING * fontScale,
-            top = TILE_VERTICAL_PADDING * fontScale,
-            bottom = TILE_VERTICAL_PADDING * fontScale,
+            top = tileVerticalPadding(isCompact) * fontScale,
+            bottom = tileVerticalPadding(isCompact) * fontScale,
         ),
     verticalAlignment = Alignment.CenterVertically,
 ) {
@@ -91,16 +95,10 @@ internal fun SongInfoGroup(
                 fontScale = fontScale,
             )
         }
-        // A titled group's content sits in a slot as tall as a row of link buttons, centered in it, so that every title
-        // stands on the same line of its tile and every row of chips, buttons or the call to action is centered on the
-        // same line under it, whichever of them a tile holds.
+        // The title and what is under it are centered in the tile as one block, so that a tile shows as much room above
+        // what it holds as below it, whichever of chips, buttons or the call to action that is.
         Box(
-            modifier = if (title == null) {
-                Modifier
-            } else {
-                Modifier.padding(top = TITLE_CONTENT_GAP * fontScale).heightIn(min = songInfoLinkRowHeight(fontScale))
-            },
-            contentAlignment = Alignment.CenterStart,
+            modifier = if (title == null) Modifier else Modifier.padding(top = titleContentGap(isCompact) * fontScale),
         ) {
             Column {
                 AnimatedVisibility(
@@ -172,9 +170,21 @@ internal fun SongInfoAction(
  * details and the defaults, is held to it, what it holds centered in it.
  */
 @Composable
-private fun songInfoTileMinHeight(fontScale: Float): Dp = with(LocalDensity.current) {
+private fun songInfoTileMinHeight(fontScale: Float, isCompact: Boolean): Dp = with(LocalDensity.current) {
     MaterialTheme.typography.labelLarge.scaled(fontScale).lineHeight.toDp()
-} + TITLE_CONTENT_GAP * fontScale + songInfoLinkRowHeight(fontScale) + TILE_VERTICAL_PADDING * fontScale * 2
+} + titleContentGap(isCompact) * fontScale + songInfoContentRowHeight(fontScale, isCompact) + tileVerticalPadding(isCompact) * fontScale * 2
+
+/**
+ * The tallest single row a group of the list holds: a row of link buttons where the links are followed, and a row of
+ * chips where they are not, since the links are then chips like the tags and the languages.
+ */
+@Composable
+private fun songInfoContentRowHeight(fontScale: Float, isCompact: Boolean): Dp =
+    if (isCompact) tagPillHeight(fontScale) else songInfoLinkRowHeight(fontScale)
+
+private fun tileVerticalPadding(isCompact: Boolean) = if (isCompact) COMPACT_TILE_VERTICAL_PADDING else TILE_VERTICAL_PADDING
+
+private fun titleContentGap(isCompact: Boolean) = if (isCompact) COMPACT_TITLE_CONTENT_GAP else TITLE_CONTENT_GAP
 
 /**
  * A group's title, set as small as the labels of the details tiles: the content under it is what is read, and a title
@@ -217,8 +227,10 @@ internal fun songInfoTileShape(index: Int, count: Int) = RoundedCornerShape(
 )
 
 private val TILE_PADDING = 16.dp
-private val TILE_VERTICAL_PADDING = 10.dp
-private val TITLE_CONTENT_GAP = 2.dp
+private val TILE_VERTICAL_PADDING = 12.dp
+private val COMPACT_TILE_VERTICAL_PADDING = 10.dp
+private val TITLE_CONTENT_GAP = 6.dp
+private val COMPACT_TITLE_CONTENT_GAP = 4.dp
 private val TILE_CHEVRON_PADDING = 12.dp
 private val TILE_CHEVRON_SIZE = 20.dp
 private val SONG_INFO_ACTION_ICON_SIZE = 16.dp

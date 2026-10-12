@@ -23,9 +23,11 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.coerceAtLeast
 import androidx.compose.ui.unit.isSpecified
 import com.pandulapeter.campfire.chordpro.model.ChordProLink
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -37,6 +39,10 @@ import org.jetbrains.compose.resources.painterResource
  * The song's links as [SongInfoLinkButton]s, in the order the file and the dialog that edits them give them, unlike the
  * tags and the languages, since that order is one the user chose. The rows have no gap between them: each button already
  * stands in the 48dp touch target Material keeps around it, which leaves room enough between two rows of them.
+ *
+ * The rows report the buttons' own height rather than that of their touch targets, which reach past them into the tile's
+ * padding (nothing clips them there, so they are still hit): a tile measured by the touch targets had empty space under
+ * its buttons that its title had no match for above, and the tiles could not be laid out evenly around what they show.
  */
 @Composable
 internal fun SongInfoLinkButtons(
@@ -44,6 +50,7 @@ internal fun SongInfoLinkButtons(
     fontScale: Float,
     onOpenLink: (String) -> Unit,
 ) = FlowRow(
+    modifier = Modifier.withoutTouchTargetSlack(fontScale),
     horizontalArrangement = Arrangement.spacedBy(8.dp * fontScale),
 ) {
     links.forEach { link ->
@@ -84,14 +91,23 @@ private fun SongInfoLinkButton(
     )
 }
 
-/**
- * The height a row of [SongInfoLinkButtons] takes: the button's, or the touch target Material keeps around it where that
- * is taller, which the tiles of the sheet take for their own minimum.
- */
+/** The height a row of [SongInfoLinkButtons] takes, which the tiles of the sheet take for their own minimum. */
+internal fun songInfoLinkRowHeight(fontScale: Float): Dp = LINK_BUTTON_HEIGHT * fontScale
+
+/** Takes the part of the touch targets that stands above the first row of buttons and below the last one out of the layout. */
 @Composable
-internal fun songInfoLinkRowHeight(fontScale: Float): Dp = (LINK_BUTTON_HEIGHT * fontScale).let { buttonHeight ->
+private fun Modifier.withoutTouchTargetSlack(fontScale: Float): Modifier {
+    val buttonHeight = songInfoLinkRowHeight(fontScale)
     val touchTarget = LocalMinimumInteractiveComponentSize.current
-    if (touchTarget.isSpecified) maxOf(buttonHeight, touchTarget) else buttonHeight
+    val slack = if (touchTarget.isSpecified) ((touchTarget - buttonHeight) / 2).coerceAtLeast(0.dp) else 0.dp
+    return layout { measurable, constraints ->
+        val slackPx = slack.roundToPx()
+        val placeable = measurable.measure(constraints.copy(minHeight = 0))
+        val height = (placeable.height - slackPx * 2).coerceAtLeast(0)
+        layout(placeable.width, height.coerceIn(constraints.minHeight, constraints.maxHeight)) {
+            placeable.place(0, -slackPx)
+        }
+    }
 }
 
 private val LINK_BUTTON_HEIGHT = 36.dp
