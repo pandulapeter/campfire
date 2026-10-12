@@ -433,7 +433,8 @@ ukulele, and Other are unchanged, the capo a stepper of its own that moves the s
 platform's own on Android and iOS (and `navigator.vibrate` in a phone's browser) and nothing on the desktop, so it
 follows the system's touch feedback setting and needs no switch of the app's. What is felt: the fast scroller (see
 `components/`), a setlist row lifted, moved past another and set down in reorder mode, every step of a stepper button
-held down (not a tap), every tap of Tap tempo, and a `SwitchListItem` flipped. A long press on a song row is felt
+held down (not a tap), and a `SwitchListItem` flipped. Tap tempo is not: it is tapped along with music, and a buzz
+on every tap competes with the beat being tapped. A long press on a song row is felt
 through Foundation's `combinedClickable` (a missing song's row in a setlist, which has no click, performs the same). Plain buttons, menus, sheets and checkboxes are not: a buzz on every tap
 stops saying anything. The metronome's Vibrate on the beat is a feature rather than feedback, see `ui/platform/`.
 

@@ -87,8 +87,8 @@ import kotlin.math.roundToInt
  * horizontal swipe is left to the system's back gesture. A track fades in behind the thumb while it is pointed at or
  * dragged. Only the bubble extends beyond the column, and nothing about it can be pressed.
  *
- * A finger is told what the eye is: the thumb taken gives a tap of its own, and every section that comes to the top of
- * the list while it is dragged, and either end of the track, is felt as a notch. A mouse is told nothing, since the
+ * A finger is told what the eye is: the thumb taken gives a tap of its own, every row that passes the top of the list
+ * while it is dragged a light tick, and every section that comes to the top, and either end of the track, a notch. A mouse is told nothing, since the
  * device under it is not the one being held.
  *
  * @param labelForItem Returns the label of the section the item at the given index belongs to, or null if none. A
@@ -143,15 +143,23 @@ internal fun FastScroller(
     val hapticFeedback = LocalHapticFeedback.current
     // Collected rather than decided where the thumb is moved, since the label only changes once the list has scrolled
     // to it, a frame or more after the move that asked for it.
-    LaunchedEffect(state, labelState, hapticFeedback) {
+    LaunchedEffect(state, gridState, labelState, hapticFeedback) {
         var previous: FastScrollerDetent? = null
         snapshotFlow {
-            if (state.isDragging && state.isDraggedByTouch) FastScrollerDetent(label = labelState.value, end = state.draggedEnd) else null
+            if (state.isDragging && state.isDraggedByTouch) {
+                FastScrollerDetent(item = gridState.firstVisibleItemIndex, label = labelState.value, end = state.draggedEnd)
+            } else {
+                null
+            }
         }
             .collect { current ->
                 val last = previous
-                if (last != null && current != null && isDetentReached(previous = last, current = current)) {
-                    hapticFeedback.performHapticFeedback(HapticFeedbackType.SegmentTick)
+                // Read once a frame at most, so a thumb flung past many rows at once is felt as one tick a frame
+                // rather than a burst the vibrator would run together.
+                when (if (last != null && current != null) detentNotch(previous = last, current = current) else FastScrollerNotch.NONE) {
+                    FastScrollerNotch.NONE -> Unit
+                    FastScrollerNotch.TICK -> hapticFeedback.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
+                    FastScrollerNotch.NOTCH -> hapticFeedback.performHapticFeedback(HapticFeedbackType.SegmentTick)
                 }
                 previous = current
             }

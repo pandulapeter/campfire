@@ -439,9 +439,11 @@ cut the bubble off, and the web build does not redraw a `ModulateAlpha` layer wh
 stayed invisible there until a hover redrew it. Scroll position is estimated from the average visible item size; the
 pinned sticky header is excluded from that estimate, since it is listed among the visible items out of order. Visible on
 every platform for as long as the list is scrollable. A finger dragging it feels it (a mouse does not): a tap as the thumb
-is taken, and a notch for every section letter that comes to the top and at either end of the track — the end decided by
-where the finger asked the thumb to be, since the estimated range moves under a thumb pushed into it
-(`FastScrollerDetent.kt`, `isDetentReached`). The list screens' app bars have fixed color and elevation, so
+is taken, a light tick (`SegmentFrequentTick`) for every row that passes the top of the list, so the hand feels the
+list move at the speed it moves however long its sections are, and a stronger notch (`SegmentTick`) for every section
+letter that comes to the top and at either end of the track — the end decided by where the finger asked the thumb to
+be, since the estimated range moves under a thumb pushed into it (`FastScrollerDetent.kt`, `detentNotch`). It is read
+once a frame, so a thumb flung past many rows is one tick a frame. The list screens' app bars have fixed color and elevation, so
 scrolling the fast scroller does not alter them.
 
 ### `ui/components/CampfireTopAppBar.kt`

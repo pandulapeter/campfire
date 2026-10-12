@@ -10,10 +10,11 @@
 package com.pandulapeter.campfire.presentation.ui.components
 
 /**
- * Where the thumb of a [FastScroller] dragged by a finger is, as far as the hand is told about it: the label of the
- * section at the top of the list, and the end of the track the thumb is held against, if any.
+ * Where the thumb of a [FastScroller] dragged by a finger is, as far as the hand is told about it: the item at the top
+ * of the list, the label of its section, and the end of the track the thumb is held against, if any.
  */
 internal data class FastScrollerDetent(
+    val item: Int,
     val label: String?,
     val end: TrackEnd?,
 )
@@ -23,10 +24,21 @@ internal enum class TrackEnd {
     BOTTOM,
 }
 
+/** How strongly a step of the dragged thumb is felt: not at all, as a light tick, or as a notch. */
+internal enum class FastScrollerNotch {
+    NONE,
+    TICK,
+    NOTCH,
+}
+
 /**
- * Whether going from [previous] to [current] is a place the finger should feel, the way the notches of a dial are felt:
- * a new section coming to the top of the list, or the thumb coming up against an end of the track. Leaving an end, or
- * scrolling into rows with no label, is felt as nothing, since nothing has been arrived at.
+ * What going from [previous] to [current] feels like, the way the teeth of a dial are felt: every row that passes the
+ * top of the list is a light tick, so the hand feels the list move at the speed it moves whatever the sections are
+ * like, and a new section coming to the top, or the thumb coming up against an end of the track, is a notch. Leaving
+ * an end, or scrolling into rows with no label, adds nothing to the tick, since nothing has been arrived at.
  */
-internal fun isDetentReached(previous: FastScrollerDetent, current: FastScrollerDetent) =
-    (current.label != null && current.label != previous.label) || (current.end != null && current.end != previous.end)
+internal fun detentNotch(previous: FastScrollerDetent, current: FastScrollerDetent) = when {
+    (current.label != null && current.label != previous.label) || (current.end != null && current.end != previous.end) -> FastScrollerNotch.NOTCH
+    current.item != previous.item -> FastScrollerNotch.TICK
+    else -> FastScrollerNotch.NONE
+}
