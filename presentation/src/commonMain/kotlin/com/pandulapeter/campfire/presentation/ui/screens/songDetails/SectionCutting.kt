@@ -180,10 +180,19 @@ internal fun flowIntoPages(
     // Walks the page starting at from, handing onBlock every block it is stacked of in its order - a pair, or the units
     // from one place a page may end to the next - and onEnd every place the page may end, with its height, until the
     // page is full. A block that does not fit what is left of a page that is mostly empty runs it on past the screen,
-    // which is an end of its own, the last one. Nothing branches: a pair that fits is always set side by side.
+    // which is an end of its own, the last one. So does a page whose blocks fit but whose cut's padding does not, when it
+    // has no other end: it ends at that cut, running over, rather than leaving the rest of the song without a page.
+    // Nothing branches: a pair that fits is always set side by side.
     fun walk(from: Int, onBlock: (isPair: Boolean, start: Int, end: Int) -> Unit, onEnd: (end: Int, height: Long, runsOver: Boolean) -> Unit) {
         var used = 0L
         var unit = from
+        var hasEnded = false
+        // The end reported only once the page is full, since an end after it from the same start may still fit.
+        var pendingEnd = -1
+        var pendingHeight = 0L
+        fun endPending() {
+            if (!hasEnded && pendingEnd >= 0) onEnd(pendingEnd, pendingHeight, true)
+        }
         while (unit < unitCount) {
             val section = unitSections[unit]
             val isSectionStart = sectionStarts[section] == unit
@@ -198,6 +207,7 @@ internal fun flowIntoPages(
                     unit = pairEnd
                     onBlock(true, sectionStarts[section], pairEnd)
                     onEnd(unit, used, false)
+                    hasEnded = true
                     continue
                 }
                 val firstPieceEnd = nextBreaks[unit]
@@ -206,6 +216,8 @@ internal fun flowIntoPages(
                     if (isMostlyEmpty()) {
                         onBlock(true, sectionStarts[section], pairEnd)
                         onEnd(pairEnd, used + gap + pairHeight, true)
+                    } else {
+                        endPending()
                     }
                     return
                 }
@@ -217,6 +229,8 @@ internal fun flowIntoPages(
                 if (isMostlyEmpty()) {
                     onBlock(false, unit, blockEnd)
                     onEnd(blockEnd, used + added + bottomPaddingAt(blockEnd), true)
+                } else {
+                    endPending()
                 }
                 return
             }
@@ -224,7 +238,13 @@ internal fun flowIntoPages(
             onBlock(false, unit, blockEnd)
             unit = blockEnd
             val height = used + bottomPaddingAt(unit)
-            if (height <= maxRowHeight) onEnd(unit, height, false)
+            if (height <= maxRowHeight) {
+                onEnd(unit, height, false)
+                hasEnded = true
+            } else {
+                pendingEnd = unit
+                pendingHeight = height
+            }
         }
     }
 

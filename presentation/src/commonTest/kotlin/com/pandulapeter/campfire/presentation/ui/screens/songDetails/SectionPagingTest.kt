@@ -193,4 +193,29 @@ class SectionPagingTest {
         assertContentEquals(intArrayOf(1, 1, 1, 1), grid.columnCounts)
         assertTrue(grid.joinsPrevious.none { it })
     }
+
+    @Test
+    fun `a page whose blocks fit but whose cut's padding does not runs over rather than losing its end`() {
+        val grid = paddedPage(sectionStarts = intArrayOf(0, 1, 3), heights = intArrayOf(80, 95, 40), piecePadding = intArrayOf(0, 10))
+        assertContentEquals(intArrayOf(0, 1, 2), grid.rows)
+    }
+
+    @Test
+    fun `a later end that fits is kept over an earlier one that only fails by its padding`() {
+        val grid = paddedPage(sectionStarts = intArrayOf(0, 1, 3, 4), heights = intArrayOf(80, 95, 3, 40), piecePadding = intArrayOf(0, 10, 0))
+        assertContentEquals(intArrayOf(0, 1, 1, 2), grid.rows)
+    }
+
+    private fun paddedPage(sectionStarts: IntArray, heights: IntArray, piecePadding: IntArray) = flowIntoPages(
+        sectionStarts = sectionStarts,
+        heightAt = { unit, _ -> heights[unit] },
+        isNarrow = { false },
+        isCuttableBefore = { it == 2 },
+        piecePadding = piecePadding,
+        sectionGap = 10,
+        maxRowHeight = 100,
+        lineHeight = 20,
+        lineCount = { 1 },
+        isStanzaBreakBefore = { false },
+    )
 }
