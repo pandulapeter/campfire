@@ -329,7 +329,8 @@ holding a piece of a section cut across two is centered like any other: held aga
 away from each other across the page. **A fold
 leaves the columns where they were for 900 ms** (`ColumnCenteringHold`, as far as they still fit their page) before
 they spring to their new center, since centering at once would move the header that was just tapped, and a second tap
-aimed at it would miss; the hold is all in that file and `arrange`'s `heldSpreads`, so `SongLyrics` passing no hold
+aimed at it would miss; the hold is armed in a `SideEffect` as the fold is composed, ahead of that frame's measure,
+and only released by the delay. It is all in that file and `arrange`'s `heldSpreads`, so `SongLyrics` passing no hold
 turns it off. That room is the screen wherever a row is read
 alone on it, and for a song read whole in one row the room it was decided for (or what the screen shows of it while the
 app bar or the metronome panel moves in), so it never scrolls for it. A page of several rows (the joined rows of a

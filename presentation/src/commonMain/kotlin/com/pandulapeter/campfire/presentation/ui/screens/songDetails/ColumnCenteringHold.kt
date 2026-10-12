@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -54,24 +55,43 @@ internal class ColumnCenteringHold {
 /**
  * A [ColumnCenteringHold] that holds the columns for [FOLD_RECENTER_DELAY_MILLIS] whenever one of [foldKeys] changes -
  * the folds of the song, and of its Chords section - but not as the song is first composed.
+ *
+ * The hold is armed in a [SideEffect], as the composition that changed the keys is applied, because that always comes
+ * before the layout of the same frame: a [LaunchedEffect] body is only dispatched then, and on the `ComposeScene`
+ * platforms it runs after that frame has already measured, centered and recorded the folded columns. The coroutine
+ * only releases it, and a second fold cancels it before its delay returns, so the hold lasts until 900 ms after the
+ * last fold.
  */
 @Composable
 internal fun rememberColumnCenteringHold(vararg foldKeys: Any?): ColumnCenteringHold {
     val hold = remember { ColumnCenteringHold() }
-    val hasStarted = remember { booleanArrayOf(false) }
-    LaunchedEffect(*foldKeys) {
-        if (!hasStarted[0]) {
-            hasStarted[0] = true
-            return@LaunchedEffect
-        }
-        hold.isHolding = true
-        try {
-            delay(FOLD_RECENTER_DELAY_MILLIS)
-        } finally {
-            hold.isHolding = false
+    val watch = remember { FoldKeyWatch() }
+    SideEffect {
+        if (watch.hasChanged(foldKeys.toList())) {
+            hold.isHolding = true
         }
     }
+    LaunchedEffect(*foldKeys) {
+        delay(FOLD_RECENTER_DELAY_MILLIS)
+        hold.isHolding = false
+    }
     return hold
+}
+
+/**
+ * Tells whether the keys it is handed differ from the ones it was handed before, and never for the first ones. It
+ * compares them by the same `equals` as [LaunchedEffect] compares its keys, so the hold is armed exactly when the effect
+ * that releases it restarts.
+ */
+internal class FoldKeyWatch {
+
+    private var previous: List<Any?>? = null
+
+    fun hasChanged(keys: List<Any?>): Boolean {
+        val isChanged = previous != null && previous != keys
+        previous = keys
+        return isChanged
+    }
 }
 
 /** How long the columns stay where they were after a fold: past its own animation, and past a second tap on its header. */
