@@ -32,8 +32,6 @@ import com.pandulapeter.campfire.presentation.resources.settings_app_icon_home_s
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_home_screen_description
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_launcher
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_launcher_description
-import com.pandulapeter.campfire.presentation.resources.settings_app_icon_taskbar
-import com.pandulapeter.campfire.presentation.resources.settings_app_icon_taskbar_description
 import com.pandulapeter.campfire.presentation.resources.settings_background_warmth
 import com.pandulapeter.campfire.presentation.resources.settings_background_warmth_description
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_window
@@ -108,13 +106,15 @@ internal fun GeneralSection(
     // the app's own icon is then the icon of the color picked rather than the icon kept instead of it; the preference
     // itself is left as the user set it, for the next color that can reach the icon.
     val canColorAppIcon = colorSchemePair(userPreferences?.themeColor) !== CampfireColorScheme
-    SwitchListItem(
-        title = appIconSurface.title(),
-        description = appIconSurface.description(),
-        isChecked = !canColorAppIcon || userPreferences?.isAppIconThemed == true,
-        isEnabled = canColorAppIcon,
-        onCheckedChange = viewModel::setAppIconThemed,
-    )
+    appIconSurface?.let { surface ->
+        SwitchListItem(
+            title = surface.title(),
+            description = surface.description(),
+            isChecked = !canColorAppIcon || userPreferences?.isAppIconThemed == true,
+            isEnabled = canColorAppIcon,
+            onCheckedChange = viewModel::setAppIconThemed,
+        )
+    }
     BackgroundWarmthSlider(
         warmth = userPreferences?.backgroundWarmth ?: 0,
         onWarmthChanged = viewModel::setBackgroundWarmth,
@@ -159,7 +159,6 @@ private fun AppIconSurface.title() = stringResource(
         AppIconSurface.LAUNCHER -> Res.string.settings_app_icon_launcher
         AppIconSurface.HOME_SCREEN -> Res.string.settings_app_icon_home_screen
         AppIconSurface.DOCK -> Res.string.settings_app_icon_dock
-        AppIconSurface.TASKBAR -> Res.string.settings_app_icon_taskbar
         AppIconSurface.WINDOW -> Res.string.settings_app_icon_window
         AppIconSurface.BROWSER_TAB -> Res.string.settings_app_icon_browser_tab
     }
@@ -172,7 +171,6 @@ private fun AppIconSurface.description() = stringResource(
         AppIconSurface.LAUNCHER -> Res.string.settings_app_icon_launcher_description
         AppIconSurface.HOME_SCREEN -> Res.string.settings_app_icon_home_screen_description
         AppIconSurface.DOCK -> Res.string.settings_app_icon_dock_description
-        AppIconSurface.TASKBAR -> Res.string.settings_app_icon_taskbar_description
         AppIconSurface.WINDOW -> Res.string.settings_app_icon_window_description
         AppIconSurface.BROWSER_TAB -> Res.string.settings_app_icon_browser_tab_description
     }

@@ -52,16 +52,18 @@ import org.jetbrains.compose.resources.painterResource
  * `appIcon.ico`, the Store's logos and the Linux `.desktop` entry's) are files the system reads while the app is not
  * running, and stay the ones of the app's own color.
  *
- * What is returned is the window icon, which Windows puts on the title bar and the taskbar button and Linux on
- * whatever its window manager draws for a window - the round icon, in the chosen color. On macOS a window has no icon,
- * and the one in the Dock is the application's; that is set here as well.
+ * What is returned is the window icon, which Linux puts on whatever its window manager draws for a window - the round
+ * icon, in the chosen color. On macOS a window has no icon, and the one in the Dock is the application's; that is set
+ * here as well. On Windows it stays the app's own, since the taskbar belongs to the package there.
  *
  * @param viewModel Null until the window has created it, which is also a moment the preferences have not been read.
  */
 @Composable
 internal fun appIcon(viewModel: CampfireViewModel?): Painter {
     val userPreferences = viewModel?.userPreferences?.collectAsState()?.value
-    val appIconColor = userPreferences.appIconThemeColor.appIconColor
+    // Windows offers no switch for it, and the preference may still be on from a build that did: a packaged app's
+    // taskbar button is drawn from the package, so only the title bar would follow the color.
+    val appIconColor = (if (isWindows) null else userPreferences).appIconThemeColor.appIconColor
     // An unread preference says nothing about the theme, and the packaged icon the Dock is showing until then is the
     // better guess.
     if (userPreferences != null && isDockIconSupported) {

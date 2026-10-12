@@ -22,7 +22,7 @@ internal actual val isStartupScreenHeldUntilAppReady = true
 // The files live in the app's private storage, which no file manager will show.
 internal actual val isLibraryEditableOutsideApp = false
 
-internal actual val appIconSurface = AppIconSurface.LAUNCHER
+internal actual val appIconSurface: AppIconSurface? = AppIconSurface.LAUNCHER
 
 internal actual val platformStore: Distribution? = Distribution.PLAY_STORE
 

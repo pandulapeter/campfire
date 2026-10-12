@@ -45,8 +45,8 @@ internal expect val isStartupScreenHeldUntilAppReady: Boolean
 /** Whether the library is a folder the user can reach from outside the app, and so edit behind its back. */
 internal expect val isLibraryEditableOutsideApp: Boolean
 
-/** Which of the app's icons follows the theme color here (see [AppIconSurface]). */
-internal expect val appIconSurface: AppIconSurface
+/** Which of the app's icons follows the theme color here (see [AppIconSurface]), or null where none can. */
+internal expect val appIconSurface: AppIconSurface?
 
 /**
  * The app store of the platform the app is **running on**, which is the one official way to get Campfire there: every

@@ -27,15 +27,17 @@ internal actual val isStartupScreenHeldUntilAppReady = false
 // The library is in the platform's application data folder, which the user can open and edit files in.
 internal actual val isLibraryEditableOutsideApp get() = PlatformImpersonation.platform != ImpersonatedPlatform.ANDROID
 
-internal actual val appIconSurface
+// Windows has none: the taskbar button of a packaged app (the Microsoft Store's) is drawn from the package's logos,
+// which a running app cannot change, so a switch there would only work in a build nobody is handed.
+internal actual val appIconSurface: AppIconSurface?
     get() = when (PlatformImpersonation.platform) {
         ImpersonatedPlatform.ANDROID -> AppIconSurface.LAUNCHER
         ImpersonatedPlatform.IOS -> AppIconSurface.HOME_SCREEN
         ImpersonatedPlatform.MACOS -> AppIconSurface.DOCK
-        ImpersonatedPlatform.WINDOWS -> AppIconSurface.TASKBAR
+        ImpersonatedPlatform.WINDOWS -> null
         null -> when {
             isMacOs -> AppIconSurface.DOCK
-            isWindows -> AppIconSurface.TASKBAR
+            isWindows -> null
             else -> AppIconSurface.WINDOW
         }
     }

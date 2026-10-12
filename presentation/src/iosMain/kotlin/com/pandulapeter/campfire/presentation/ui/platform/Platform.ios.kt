@@ -23,7 +23,7 @@ internal actual val isStartupScreenHeldUntilAppReady = false
 // library lives in shows up under "On My iPhone".
 internal actual val isLibraryEditableOutsideApp = true
 
-internal actual val appIconSurface = AppIconSurface.HOME_SCREEN
+internal actual val appIconSurface: AppIconSurface? = AppIconSurface.HOME_SCREEN
 
 internal actual val platformStore: Distribution? = Distribution.APP_STORE
 

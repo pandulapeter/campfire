@@ -25,9 +25,6 @@ internal enum class AppIconSurface {
     /** The macOS Dock icon, for as long as the app runs. */
     DOCK,
 
-    /** The Windows taskbar button and title bar, for as long as the app runs; the Start menu keeps the packaged one. */
-    TASKBAR,
-
     /** The window icon a Linux window manager draws, for as long as the app runs. */
     WINDOW,
 

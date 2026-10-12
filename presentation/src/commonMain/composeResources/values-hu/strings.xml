@@ -324,8 +324,6 @@
     <string name="settings_app_icon_home_screen_description">A főképernyő ikonja felveszi a fenti színt. Az iOS minden változtatást egy üzenettel nyugtáz.</string>
     <string name="settings_app_icon_dock">Dock-ikon színezése</string>
     <string name="settings_app_icon_dock_description">A Dockban lévő ikon felveszi a fenti színt, amíg a Campfire nyitva van</string>
-    <string name="settings_app_icon_taskbar">Tálcaikon színezése</string>
-    <string name="settings_app_icon_taskbar_description">A tálcán lévő ikon felveszi a fenti színt, amíg a Campfire nyitva van. A Start menüben lévő ikon szürke marad.</string>
     <string name="settings_app_icon_window">Ablakikon színezése</string>
     <string name="settings_app_icon_window_description">Az ablak ikonja felveszi a fenti színt, amíg a Campfire nyitva van</string>
     <string name="settings_app_icon_browser_tab">Lapikon színezése</string>
