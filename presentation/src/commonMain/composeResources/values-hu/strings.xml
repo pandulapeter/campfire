@@ -486,7 +486,7 @@
     <string name="tuner_notice_silent">Semmi sem hallatszik. Ellenőrizd, hogy a mikrofon nincs-e elnémítva, és hogy a Campfire használhatja-e.</string>
     <string name="tuner_notice_waiting">Koppints bárhová, hogy a böngésző hallgathasson.</string>
     <string name="tuner_use_microphone">Mikrofon használata</string>
-    <string name="tuner_notice_silent_enhancements">Semmi sem hallatszik. Ellenőrizd, hogy a mikrofon nincs-e elnémítva, és hogy a Campfire használhatja-e. A Windows a kitartott hangot zajként is eltávolíthatja: kapcsold ki a hangbeállításokban a mikrofon hangjavításait.</string>
+    <string name="tuner_notice_silent_enhancements">Ellenőrizd, hogy a mikrofon nincs-e elnémítva, és hogy a Campfire használhatja-e. A Windows a kitartott hangot zajként is eltávolíthatja: kapcsold ki a hangbeállításokban a mikrofon hangjavításait.</string>
     <string name="tuner_open_settings">Beállítások megnyitása</string>
     <string name="tuner_open_sound_settings">Hangbeállítások megnyitása</string>
     <string name="tuner_ask_again">Újbóli kérés</string>

@@ -486,7 +486,7 @@
     <string name="tuner_notice_silent">Nothing at all is heard. Check that the microphone is not muted and that Campfire may use it.</string>
     <string name="tuner_notice_waiting">Tap anywhere to let the browser listen.</string>
     <string name="tuner_use_microphone">Use the microphone</string>
-    <string name="tuner_notice_silent_enhancements">Nothing at all is heard. Check that the microphone is not muted and that Campfire may use it. Windows can also remove a held note as noise: turn off Audio enhancements for this microphone in the sound settings.</string>
+    <string name="tuner_notice_silent_enhancements">Check that the microphone is not muted and that Campfire may use it. Windows can also remove a held note as noise: turn off Audio enhancements for this microphone in the sound settings.</string>
     <string name="tuner_open_settings">Open settings</string>
     <string name="tuner_open_sound_settings">Open sound settings</string>
     <string name="tuner_ask_again">Ask again</string>
