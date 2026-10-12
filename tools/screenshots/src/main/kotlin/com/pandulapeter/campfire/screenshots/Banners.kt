@@ -33,8 +33,8 @@ internal val banners: List<Banner> by lazy {
         Device.ANDROID_PHONE to "01-songs",
         Device.IPHONE to "03-metronome",
         Device.IPAD to "02-song",
-        Device.ANDROID_SMALL_TABLET to "04-setlists",
-        Device.MAC to "05-editor",
+        Device.ANDROID_SMALL_TABLET to "05-setlists",
+        Device.MAC to "06-editor",
     ).map { (device, id) -> device to shot(id) }
     listOf(
         Banner(
@@ -54,7 +54,7 @@ internal val banners: List<Banner> by lazy {
         Banner(
             folder = "App Store - Header",
             slots = listOf(
-                Device.IPAD to shot("04-setlists").inTheme(UserPreferences.UiMode.DARK),
+                Device.IPAD to shot("05-setlists").inTheme(UserPreferences.UiMode.DARK),
                 Device.MAC to shot("02-song"),
                 Device.IPHONE to shot("01-songs"),
             ),

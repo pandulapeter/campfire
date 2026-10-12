@@ -106,9 +106,9 @@ repository; the user reviews and commits.
 The listing alternates two dark, two light: 1–2 dark, 3–4 light, 5–6 dark, 7–8 light. Shared rules: the store
 screenshots are shown at 9:41 on Wednesday, October 7, 2026 (setlist dates are moved with the run's day, so their
 countdowns always read the same); the iPhone Duo is always part of the listing, shown unfolded and on its side
-(its inner display, 2853×2007 at 3x, as iOS 27 lays it out: no status bar across the top, but an 84pt strip along
-the right edge that the app is inset from and draws under, with the time and the status ring at its top, and the home
-indicator at the bottom); the app icon anywhere in the system chrome is the default gradient one; Android phone frames are Screenshot Bro's Pixel frame; Share is shown on Android and iOS only; sync is a fake connected
+(its inner display, 2853×2007 at 3x, as the iOS 27.1 simulator lays it out: no status bar across the top, but an 84pt
+strip along the right edge that the app is inset from and draws under, with the time and the status ring at its top,
+insets of 16pt at the top and 34pt at the bottom, and no home indicator drawn); the app icon anywhere in the system chrome is the default gradient one; Android phone frames are Screenshot Bro's Pixel frame; Share is shown on Android and iOS only; sync is a fake connected
 account, "Connected as Péter Pandula"; only public domain songs are opened full screen in the listing.
 
 | # | Headline | Shot |
@@ -116,15 +116,15 @@ account, "Connected as Péter Pandula"; only public domain songs are opened full
 | 1 | Your songbook, on any screen | Songs, English only, by artist, scrolled to Bob Dylan (pinned), "+" menu open |
 | 2 | Laid out for the way you play | House of the Rising Sun (Traditional American); phones at 100% text with the Picking pattern folded, Chromebook at 100%, so the whole first verse shows |
 | 3 | A metronome that knows each song | Metronome tab playing 6/8 at 236, beats 1 and 4 accented, caught on beat 1 |
-| 4 | Setlists ready for the gig | Setlists by date: Frey-Tully Nuptials "In 2 days", Friday Night by the Lake "Tomorrow" |
-| 5 | ChordPro editor with live preview | Home on the Range in the editor; Split wherever the app offers it, Edit otherwise; Shortcuts always open |
-| 6 | Print a song or the whole set | Home on the Range exported: PDF, A4, landscape (portrait on the small Android tablet), two columns, every option on |
-| 7 | Offline first, synced across devices | Settings → Library, sync connected |
-| 8 | Make it yours, down to the icon | Settings → General |
+| 4 | A tuner for the whole band | Tuner tab on a guitar: E2 and A2 ticked off in tune, D3 heard 12 cents flat |
+| 5 | Setlists ready for the gig | Setlists by date: Frey-Tully Nuptials "In 2 days", Friday Night by the Lake "Tomorrow" |
+| 6 | ChordPro editor with live preview | Home on the Range in the editor; Split wherever the app offers it, Edit otherwise; Shortcuts always open |
+| 7 | Print a song or the whole set | Home on the Range exported: PDF, A4, landscape (portrait on the small Android tablet), two columns, every option on |
+| 8 | Offline first, synced across devices | Settings → Library, sync connected |
 
-The README banners are shots 1, 3, 2, 4, 5 on the Android phone, iPhone, iPad, small Android tablet and Mac — dark in
+The README banners are shots 1, 3, 2, 5, 6 on the Android phone, iPhone, iPad, small Android tablet and Mac — dark in
 banner 1, light and in reverse order in banner 2. The Play Store banner is the Android phone's shots 1 and 2; the link
-preview the Mac's 2 and the iPhone's 1; Apple's header the iPad's 4, the Mac's 2 and the iPhone's 1, and its search
+preview the Mac's 2 and the iPhone's 1; Apple's header the iPad's 5, the Mac's 2 and the iPhone's 1, and its search
 results image the iPad's 2 and the iPhone's 3, all dark.
 
 The website's songs are set at the text size where page one ends exactly where a section ends, never inside one: Still
@@ -141,9 +141,9 @@ The listing is `shots` in `Shot.kt`, in store order; the website's are in `Websi
 `Banners.kt`. A shot sets the preferences it needs (`preferences`, per device), prepares state a screen only reads as
 it is first composed (`prepare`, e.g. a list's scroll position), then drives `CampfireViewModel` or taps what is
 labelled with a string resource (`drive`, `tap`, `tapIfPresent`) — so it works in every language — and can catch a
-metronome beat (`beat`). Keep each shot's rules in its comment and in the table above. Adding or removing a listing
-shot also means adding or removing that column in every listing row of the project (copying a neighbor's frame and
-headline), and updating the headlines there.
+metronome beat (`beat`). Keep each shot's rules in its comment and in the table above. A store takes at most eight shots, so a
+new one replaces another rather than adding a column: move the headlines along in every listing row of the project and
+reimport. Every headline is above its frame, in every row.
 
 The system chrome is `SystemChrome.kt`, measured against the real systems (Android emulators, iOS simulators, the
 desktop app's own window). The Chromebook and Windows rows are framed in MacBook Pros whose camera housing a black

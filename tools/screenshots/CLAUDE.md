@@ -39,8 +39,8 @@ graphic and the website's link preview - from the same shots, in their own theme
   downloads the three into `build/fonts`, each pinned to a commit of its repository and checked against its SHA-256 in
   `build.gradle.kts` — updating one means a new commit in its address and a new checksum there.
 - **Nothing reaches outside** (`Fakes.kt`): sync is a repository that shows a connected account and runs nothing, the
-  metronome is silent and lights only the beat a shot asks for, the file picker writes nothing. Covers come from the
-  copied cache.
+  metronome is silent and lights only the beat a shot asks for, the tuner (`ScriptedTuner`) hears only the readings a
+  shot hands it, the file picker writes nothing. Covers come from the copied cache.
 - **The shots** are `shots` in `Shot.kt`, in the listing's order, each with its theme, language and the `drive` block
   that brings the app to its state through `CampfireViewModel`; their rules are kept there, so a retake is the same
   picture. The headlines are part of the Screenshot Bro project, not of the images.

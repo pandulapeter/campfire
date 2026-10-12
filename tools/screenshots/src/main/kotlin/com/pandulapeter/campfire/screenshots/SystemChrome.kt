@@ -191,11 +191,12 @@ internal sealed interface SystemChrome {
     /**
      * The iPhone Duo open and on its side, where iOS 27 takes the bars off the top and the bottom edges: the status bar
      * stands at the top of an 84pt strip along the trailing edge, which the app is laid out beside and draws its
-     * background under, and only the home indicator stays at the bottom. The strip is a 48pt column with 12pt before
-     * and 24pt after it, its content starting 24pt from the top: the time over the status ring, as the iOS 27 UI Kit
-     * draws them and the Duo simulator reports the insets (none at the top, 34pt at the bottom, 84pt on the right).
+     * background under, and nothing is drawn at the bottom, not even the home indicator. The strip is a 48pt column
+     * with 12pt before and 24pt after it: the time over the status ring, measured on the iOS 27.1 Duo simulator, which
+     * still reports insets of 16pt at the top, 34pt at the bottom and 84pt on the right.
      */
     data object IPhoneDuo : SystemChrome {
+        override val statusBar = 16.dp
         override val navigationBar = 34.dp
         override val trailingBar = 84.dp
 
@@ -205,14 +206,13 @@ internal sealed interface SystemChrome {
                 modifier = Modifier.align(Alignment.TopEnd).padding(top = 24.dp, end = 24.dp).width(48.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Spacer(Modifier.height(11.dp))
+                Spacer(Modifier.height(6.33.dp))
                 Box(Modifier.height(19.dp), contentAlignment = Alignment.Center) {
                     ChromeText(text = "9:41", appearance = appearance, size = 16.sp, weight = FontWeight.Bold)
                 }
-                Spacer(Modifier.height(5.dp))
-                Canvas(Modifier.size(46.dp)) { drawStatusRing(appearance.content) }
+                Spacer(Modifier.height(7.67.dp))
+                Canvas(Modifier.size(41.dp)) { drawStatusRing(appearance.content) }
             }
-            HomeIndicator(appearance = appearance, width = 208.dp, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 8.dp))
         }
     }
 

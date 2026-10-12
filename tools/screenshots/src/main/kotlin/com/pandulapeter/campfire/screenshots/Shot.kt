@@ -27,6 +27,7 @@ import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.SettingsTab
 import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroupHeader
 import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroups
+import com.pandulapeter.campfire.tuner.api.Tuner
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
@@ -35,6 +36,7 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
+import org.koin.mp.KoinPlatform
 
 /**
  * One screenshot of the store listing, taken the same way on every [Device]. The rules each one follows are kept with
@@ -229,18 +231,42 @@ internal val shots = listOf(
         },
         beat = 0,
     ),
+    // The tuner as an instrument: its own tab on a guitar, the low E and the A strings already heard in tune and ticked
+    // off, and the D string heard a little flat, the needle left of the in-tune window, so the strings still to do show.
+    Shot(
+        id = "04-tuner",
+        uiMode = UserPreferences.UiMode.LIGHT,
+        preferences = {
+            mapOf(
+                "tunerSettings" to buildJsonObject {
+                    put("instrument", "guitar")
+                    put("referencePitch", 440)
+                    put("hasTurnedOnMicrophone", true)
+                },
+            )
+        },
+        drive = {
+            viewModel.selectTopLevelDestination(CampfireDestination.Tuner)
+            settle()
+            val tuner = KoinPlatform.getKoin().get<Tuner>() as ScriptedTuner
+            listOf(reading(note = 40, cents = 0f), reading(note = 45, cents = 1f), reading(note = 50, cents = -12f)).forEach {
+                tuner.hear(it)
+                settle(FRAME_MILLIS * 4)
+            }
+        },
+    ),
     // The setlists, latest day first: the Frey-Tully Nuptials in two days and Friday Night by the Lake tomorrow, each
     // counting down under its header next to its running time, and the rest of the gigs below.
     Shot(
-        id = "04-setlists",
-        uiMode = UserPreferences.UiMode.LIGHT,
+        id = "05-setlists",
+        uiMode = UserPreferences.UiMode.DARK,
         preferences = { mapOf("setlistSortingMode" to JsonPrimitive(UserPreferences.SetlistSortingMode.BY_DATE.id)) },
         drive = { viewModel.selectTopLevelDestination(CampfireDestination.Setlists) },
     ),
     // The ChordPro editor on the public domain Home on the Range: the text on its own where the window has room for one
     // pane, side by side with its live preview where it has room for two, and the Shortcuts always unfolded.
     Shot(
-        id = "05-editor",
+        id = "06-editor",
         uiMode = UserPreferences.UiMode.DARK,
         drive = {
             viewModel.openEditor(HOME_ON_THE_RANGE)
@@ -253,8 +279,8 @@ internal val shots = listOf(
     // preview shows the chord diagrams, the key, the tempo, the comments and the details. Share stands next to Save on
     // the phones and tablets, as the platforms' file pickers offer it there and not on a desktop.
     Shot(
-        id = "06-export",
-        uiMode = UserPreferences.UiMode.DARK,
+        id = "07-export",
+        uiMode = UserPreferences.UiMode.LIGHT,
         preferences = { device ->
             mapOf(
                 "printSettings" to printSettings(isLandscape = device != Device.ANDROID_SMALL_TABLET),
@@ -265,17 +291,9 @@ internal val shots = listOf(
     // Sync and the library: Settings' Library tab, the Dropbox account connected and synchronized a few minutes ago,
     // what the library holds, the covers it keeps and the ways in and out of it.
     Shot(
-        id = "07-sync",
+        id = "08-sync",
         uiMode = UserPreferences.UiMode.LIGHT,
         prepare = { viewModel.settingsTab = SettingsTab.LIBRARY },
-        drive = { viewModel.selectTopLevelDestination(CampfireDestination.Settings) },
-    ),
-    // Making it one's own: Settings' General tab, with the theme, the colors (Android's wallpaper colors among them) and
-    // the switch that has the app icon follow the color.
-    Shot(
-        id = "08-settings",
-        uiMode = UserPreferences.UiMode.LIGHT,
-        prepare = { viewModel.settingsTab = SettingsTab.GENERAL },
         drive = { viewModel.selectTopLevelDestination(CampfireDestination.Settings) },
     ),
 )

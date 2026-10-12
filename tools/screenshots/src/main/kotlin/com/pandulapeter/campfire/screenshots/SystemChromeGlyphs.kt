@@ -91,10 +91,11 @@ internal fun DrawScope.drawBattery(color: Color, hasNub: Boolean) {
 
 /**
  * iOS 27's status ring, the iPhone Duo's status bar when it stands on its side: a full battery as an arc around the
- * area, open at the bottom, where four dots of a full cellular signal sit, and Wi-Fi in the middle.
+ * area, open at the bottom, where four dots of a full cellular signal sit on the arc's own circle, and Wi-Fi in the
+ * middle, as the iOS 27.1 simulator draws it.
  */
 internal fun DrawScope.drawStatusRing(color: Color) {
-    val stroke = size.minDimension * 0.075f
+    val stroke = size.minDimension * 0.078f
     val radius = (size.minDimension - stroke) / 2
     drawArc(
         color = color,
@@ -105,23 +106,23 @@ internal fun DrawScope.drawStatusRing(color: Color) {
         size = Size(radius * 2, radius * 2),
         style = Stroke(width = stroke, cap = StrokeCap.Round),
     )
-    listOf(-16.5f, -5.5f, 5.5f, 16.5f).forEach { degrees ->
+    listOf(-31.5f, -10.5f, 10.5f, 31.5f).forEach { degrees ->
         val angle = (90.0 + degrees) * PI / 180
         drawCircle(
             color = color,
-            radius = stroke * 0.4f,
+            radius = stroke * 0.625f,
             center = Offset(center.x + radius * cos(angle).toFloat(), center.y + radius * sin(angle).toFloat()),
         )
     }
-    val wifiWidth = size.width * 0.4f
+    val wifiWidth = size.width * 0.43f
     val wifiHeight = wifiWidth * 0.72f
     val left = center.x - wifiWidth / 2
-    val top = center.y - wifiHeight * 0.6f
+    val top = center.y - wifiHeight * 0.52f
     inset(left = left, top = top, right = size.width - left - wifiWidth, bottom = size.height - top - wifiHeight) { drawWifi(color) }
 }
 
 /** How much of the status ring, in degrees, is left open at its bottom for the cellular dots. */
-private const val STATUS_RING_OPENING = 70f
+private const val STATUS_RING_OPENING = 120f
 
 /** A magnifier, its lens at the top left and its handle running to the bottom right. */
 internal fun DrawScope.drawMagnifier(color: Color) {
