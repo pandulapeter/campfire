@@ -62,7 +62,9 @@ none ever starts Bluetooth SCO, so a headset never becomes the input. Every tone
 - **Android** — `AudioRecord` at 48 kHz from `UNPROCESSED` where the device has it, `VOICE_RECOGNITION` elsewhere, read
   by a thread of its own; refused before anything is opened without `RECORD_AUDIO`; a client silenced by a call
   (`AudioRecordingCallback`, Android 10+) is busy, whether it is silenced from the start or later. The tone is a static
-  `AudioTrack` with `setLoopPoints` and a `VolumeShaper`, under transient audio focus whose loss ends it.
+  `AudioTrack` with `setLoopPoints` and a `VolumeShaper`, under transient audio focus whose loss ends it; it is stopped
+  only once the fade-out shaper reads silence (a second at most), since the mixer applies the fade tens of milliseconds
+  later than it is asked for, and a track stopped a fade's length after that is cut at full volume, which pops.
 - **iOS** — `IosTunerSession` is the session both share, active while either is in use: `playAndRecord` in `measurement`
   mode with `defaultToSpeaker` and no Bluetooth option where the record permission is granted, `playback` for a tone
   alone otherwise (touching a recording category without it makes the system ask on its own). The input is

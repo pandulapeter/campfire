@@ -18,6 +18,7 @@ import android.media.AudioTrack
 import android.media.VolumeShaper
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import org.koin.core.annotation.Provided
 import org.koin.core.annotation.Single
 
@@ -87,17 +88,39 @@ internal class AndroidToneOutput(
         val track = track ?: return
         this.track = null
         abandonFocus()
-        try {
-            track.createVolumeShaper(fade(floatArrayOf(1f, 0f))).apply(VolumeShaper.Operation.PLAY)
+        val fadeOut = try {
+            track.createVolumeShaper(fade(floatArrayOf(1f, 0f))).also { it.apply(VolumeShaper.Operation.PLAY) }
         } catch (_: IllegalStateException) {
+            null
         }
+        releaseOnceSilent(track, fadeOut, SystemClock.uptimeMillis() + RELEASE_TIMEOUT_MILLIS)
+    }
+
+    /**
+     * The fade is applied by the mixer as it mixes, which on the deep buffer output a music track is routed to runs tens
+     * of milliseconds ahead in large periods, so a fixed wait of the fade's length can stop the track before the faded
+     * frames were ever mixed, and that cut at full amplitude is a loud pop. The shaper's volume is the one the mixer last
+     * applied, so the track is only stopped once it reads silence; frames mixed after that are silent whatever stopping
+     * does to them. A track the mixer never reaches (one the system paused) is released after a timeout.
+     */
+    private fun releaseOnceSilent(track: AudioTrack, fadeOut: VolumeShaper?, deadlineMillis: Long) {
         handler.postDelayed({
-            try {
-                track.stop()
+            val volume = try {
+                fadeOut?.volume
             } catch (_: IllegalStateException) {
+                null
             }
-            track.release()
-        }, FADE_MILLIS * 2)
+            if (volume != 0f && SystemClock.uptimeMillis() < deadlineMillis) {
+                releaseOnceSilent(track, fadeOut, deadlineMillis)
+            } else {
+                try {
+                    track.stop()
+                } catch (_: IllegalStateException) {
+                }
+                fadeOut?.close()
+                track.release()
+            }
+        }, FADE_MILLIS)
     }
 
     private fun fade(volumes: FloatArray) = VolumeShaper.Configuration.Builder()
@@ -113,5 +136,6 @@ internal class AndroidToneOutput(
 
     private companion object {
         val FADE_MILLIS = (ToneOutput.FADE_SECONDS * 1_000).toLong()
+        const val RELEASE_TIMEOUT_MILLIS = 1_000L
     }
 }
