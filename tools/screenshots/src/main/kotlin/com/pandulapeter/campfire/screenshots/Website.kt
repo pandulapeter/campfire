@@ -12,10 +12,13 @@ package com.pandulapeter.campfire.screenshots
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
+import com.pandulapeter.campfire.tuner.api.Tuner
+import com.pandulapeter.campfire.tuner.api.model.TunerReading
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import org.koin.mp.KoinPlatform
 
 /**
  * The screenshots of campfire-songbook.com (`assets/screenshots` in the website's repository), each in the light and
@@ -51,6 +54,38 @@ internal val websiteShots: List<Triple<String, Device, Shot>> by lazy {
                 uiMode = UserPreferences.UiMode.DARK,
                 preferences = { metronome(isSongPanelShown = false) },
                 drive = { viewModel.selectTopLevelDestination(CampfireDestination.Metronome) },
+            ),
+        ),
+        // The Tuner tab on a guitar: the low E string already ticked off as in tune, the A string heard a little flat.
+        Triple(
+            "phone-tuner",
+            Device.IPHONE,
+            Shot(
+                id = "phone-tuner",
+                uiMode = UserPreferences.UiMode.DARK,
+                preferences = { tuner },
+                drive = {
+                    viewModel.selectTopLevelDestination(CampfireDestination.Tuner)
+                    settle()
+                    hear(reading(note = 40, cents = 0.4f))
+                    hear(reading(note = 45, cents = -14f))
+                },
+            ),
+        ),
+        // A song with the tuner sheet open over it, the G string heard in tune.
+        Triple(
+            "tablet-song-tuner",
+            Device.IPAD,
+            Shot(
+                id = "tablet-song-tuner",
+                uiMode = UserPreferences.UiMode.DARK,
+                preferences = { tuner + ("fontScale" to JsonPrimitive(0.9f)) },
+                drive = {
+                    openSong("ben_e_king-stand_by_me.cho")
+                    viewModel.showDialog(DialogType.Tuner)
+                    settle()
+                    hear(reading(note = 55, cents = 1.2f))
+                },
             ),
         ),
         Triple("tablet-song", Device.IPAD, song("tablet-song", "jonathan_coulton-still_alive.cho", fontScale = 0.9f)),
@@ -90,6 +125,20 @@ private val setlists = Shot(
     preferences = { mapOf("setlistSortingMode" to JsonPrimitive(UserPreferences.SetlistSortingMode.BY_DATE.id)) },
     drive = { viewModel.selectTopLevelDestination(CampfireDestination.Setlists) },
 )
+
+private val tuner = mapOf(
+    "tunerSettings" to buildJsonObject {
+        put("instrument", "guitar")
+        put("referencePitch", 440)
+        put("hasTurnedOnMicrophone", true)
+    },
+)
+
+/** Has the tuner hear [reading] and settle on it, the needle come to rest. */
+private suspend fun PrepareScope.hear(reading: TunerReading) {
+    (KoinPlatform.getKoin().get<Tuner>() as ScriptedTuner).hear(reading)
+    settle()
+}
 
 private fun metronome(isSongPanelShown: Boolean): Map<String, JsonElement> = mapOf(
     "metronomeSettings" to buildJsonObject {

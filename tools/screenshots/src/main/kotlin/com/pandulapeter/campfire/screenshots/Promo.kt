@@ -266,7 +266,8 @@ private fun approach(frame: Int, start: Float): Float {
     return ((swing + tremble) * 10).roundToInt() / 10f
 }
 
-private fun reading(note: Int, cents: Float) = TunerReading(
+/** What the microphone hears of [note] played [cents] off, at the frequency that would be. */
+internal fun reading(note: Int, cents: Float) = TunerReading(
     note = note,
     cents = cents,
     frequency = (440 * 2.0.pow((note - 69 + cents / 100.0) / 12)).toFloat(),
