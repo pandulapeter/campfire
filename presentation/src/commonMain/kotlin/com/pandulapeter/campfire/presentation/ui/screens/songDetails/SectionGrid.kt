@@ -320,6 +320,15 @@ internal fun SectionGrid.arrange(
         pageHeight = max(pageHeight, cellBottom - pageTop)
     }
     if (heights.isNotEmpty()) pageBottoms += pageTop + pageHeight
+    // Nothing is moved where nothing is centered: every shift would be 0, and every page would end where it does now.
+    if (centeredRowHeight <= 0) {
+        return SongArrangement(
+            tops = tops,
+            height = max(pageBottoms.lastOrNull() ?: 0, pageTop + minLastRowHeight),
+            dividerTops = dividerTops,
+            pageBottoms = pageBottoms,
+        )
+    }
     val isSingleRowPage = BooleanArray(pageTops.size) { true }
     for (index in heights.indices) if (joinsPrevious[rows[index]]) isSingleRowPage[pages[index]] = false
     val pageFirstRows = IntArray(pageTops.size)
@@ -336,38 +345,41 @@ internal fun SectionGrid.arrange(
         }
     }
     // A cell is the sections of one column of one row, from where it starts until where the next one does.
-    val cellStarts = heights.indices.filter { it == 0 || rows[it] != rows[it - 1] || columns[it] != columns[it - 1] }
-    val cellEnds = cellStarts.drop(1) + heights.size
+    fun startsCell(index: Int) = index == 0 || rows[index] != rows[index - 1] || columns[index] != columns[index - 1]
+    var cellCount = 0
+    for (index in heights.indices) if (startsCell(index)) cellCount++
+    val cellStarts = IntArray(cellCount)
+    cellCount = 0
+    for (index in heights.indices) if (startsCell(index)) cellStarts[cellCount++] = index
+    val cellEnds = IntArray(cellStarts.size) { cell -> if (cell < cellStarts.lastIndex) cellStarts[cell + 1] else heights.size }
     val columnSpreads = HashMap<Long, ColumnSpread>()
-    if (centeredRowHeight > 0) {
-        for (cell in cellStarts.indices) {
-            val cellStart = cellStarts[cell]
-            val cellEnd = cellEnds[cell]
-            val page = pages[cellStart]
-            if (!isSingleRowPage[page]) continue
-            val gapCount = (cellStart + 1 until cellEnd).count { sectionOf(it) != sectionOf(it - 1) }
-            val freeSpace = max(pageBottoms[page] - pageTops[page], centeredRowHeight) - (bottoms[cellEnd - 1] - pageTops[page])
-            val key = columnKey(rows[cellStart], columns[cellStart])
-            val held = heldSpreads?.get(key)
-            val extraGap = when {
-                // A column held where it was keeps its gaps and its top for as long as they still fit its page.
-                held != null -> minOf(held.extraGap, if (gapCount == 0) 0 else freeSpace / gapCount)
-                // The space above and below the column takes at least as much as every gap in it, or a full column
-                // would be justified, its first section against the top of the screen and its last against the bottom.
-                else -> minOf(maxExtraSectionGap, freeSpace / (gapCount + 2))
-            }
-            val spaceLeft = freeSpace - extraGap * gapCount
-            // A column ending or starting with a piece of a section cut across two is centered like any other: held
-            // against the cut, the two columns would lean away from each other across the page.
-            val columnTop = if (held != null) held.top.coerceIn(0, spaceLeft.coerceAtLeast(0)) else spaceLeft * SPACE_ABOVE_PERCENT / 100
-            columnSpreads[key] = ColumnSpread(top = columnTop, extraGap = extraGap)
-            var gapsAbove = 0
-            for (index in cellStart until cellEnd) {
-                if (index > cellStart && sectionOf(index) != sectionOf(index - 1)) gapsAbove++
-                val shift = columnTop + gapsAbove * extraGap
-                tops[index] += shift
-                bottoms[index] += shift
-            }
+    for (cell in cellStarts.indices) {
+        val cellStart = cellStarts[cell]
+        val cellEnd = cellEnds[cell]
+        val page = pages[cellStart]
+        if (!isSingleRowPage[page]) continue
+        val gapCount = (cellStart + 1 until cellEnd).count { sectionOf(it) != sectionOf(it - 1) }
+        val freeSpace = max(pageBottoms[page] - pageTops[page], centeredRowHeight) - (bottoms[cellEnd - 1] - pageTops[page])
+        val key = columnKey(rows[cellStart], columns[cellStart])
+        val held = heldSpreads?.get(key)
+        val extraGap = when {
+            // A column held where it was keeps its gaps and its top for as long as they still fit its page.
+            held != null -> minOf(held.extraGap, if (gapCount == 0) 0 else freeSpace / gapCount)
+            // The space above and below the column takes at least as much as every gap in it, or a full column
+            // would be justified, its first section against the top of the screen and its last against the bottom.
+            else -> minOf(maxExtraSectionGap, freeSpace / (gapCount + 2))
+        }
+        val spaceLeft = freeSpace - extraGap * gapCount
+        // A column ending or starting with a piece of a section cut across two is centered like any other: held
+        // against the cut, the two columns would lean away from each other across the page.
+        val columnTop = if (held != null) held.top.coerceIn(0, spaceLeft.coerceAtLeast(0)) else spaceLeft * SPACE_ABOVE_PERCENT / 100
+        columnSpreads[key] = ColumnSpread(top = columnTop, extraGap = extraGap)
+        var gapsAbove = 0
+        for (index in cellStart until cellEnd) {
+            if (index > cellStart && sectionOf(index) != sectionOf(index - 1)) gapsAbove++
+            val shift = columnTop + gapsAbove * extraGap
+            tops[index] += shift
+            bottoms[index] += shift
         }
     }
     for (index in heights.indices) {
@@ -385,11 +397,7 @@ internal fun SectionGrid.arrange(
         dividerTops = dividerTops,
         pageBottoms = shiftedPageBottoms,
         columnSpreads = columnSpreads,
-        pageShifts = if (centeredRowHeight > 0) {
-            pageTops.indices.filter { !isSingleRowPage[it] }.associate { pageFirstRows[it] to pageShifts[it] }
-        } else {
-            emptyMap()
-        },
+        pageShifts = pageTops.indices.filter { !isSingleRowPage[it] }.associate { pageFirstRows[it] to pageShifts[it] },
     )
 }
 
