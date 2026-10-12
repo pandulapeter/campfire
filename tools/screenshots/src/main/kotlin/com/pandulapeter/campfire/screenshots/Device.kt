@@ -115,14 +115,15 @@ internal enum class Device(
 
     /**
      * The website's laptop: the Mac app's window and nothing around it, which the page frames itself, at the density
-     * that gives a window of a 13" laptop's size and fits a song in three columns, as the page has always shown it.
+     * that gives a window of a 14" MacBook Pro's screen at its default scaling (about 1512 by 950 points), so a song
+     * fills as much of the page as it does in the app maximized there.
      */
     LAPTOP(
         folder = "Website",
         platform = ImpersonatedPlatform.MACOS,
         widthPx = 2000,
         heightPx = 1255,
-        density = 1.5f,
+        density = 1.32f,
         chrome = SystemChrome.None,
         isInListing = false,
     );

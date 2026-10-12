@@ -312,7 +312,25 @@ clamped to 384–560dp scaled by `fontScale` (288dp where narrow columns save a 
 it and **the space every row leaves is shared out evenly** before, between and after its columns (never less than a
 column gap between two), by what the row holds rather than by the columns it was given, whatever the rows around it
 hold; the whole width is shared out wherever that keeps the row clear of the step buttons, and the width left beside
-them otherwise.
+them otherwise. **Where several counts fit the song in one row, the one that fills the page most evenly is taken**
+(`balancedAmong`): the share of the width the columns fill against the share of the height the tallest one does, a
+count of more columns only where that is better by a margin and where it wraps no more of the song's lines, so a short
+song on a large screen at a small size is three loose columns rather than two tall ones in the middle of it.
+
+**A page with room to spare is spread out over it the way a designer would** (`SectionGrid.arrange`'s
+`maxExtraSectionGap`): every column of a single row's page is centered on its own in the page's height, as the columns
+are in its width. The room a column leaves first widens the gaps between its sections, by no more than a chorded line
+and no more than it keeps above and below them (so a full column is never justified against the screen's edges), and
+the rest is shared out above and below, 45% of it above, since what is centered exactly reads as sitting low. A column
+holding a piece of a section cut across two is centered like any other: held against the cut, the two columns leaned
+away from each other across the page. **A fold
+leaves the columns where they were for 900 ms** (`ColumnCenteringHold`, as far as they still fit their page) before
+they spring to their new center, since centering at once would move the header that was just tapped, and a second tap
+aimed at it would miss; the hold is all in that file and `arrange`'s `heldSpreads`, so `SongLyrics` passing no hold
+turns it off. That room is the screen wherever a row is read
+alone on it, and for a song read whole in one row the room it was decided for (or what the screen shows of it while the
+app bar or the metronome panel moves in), so it never scrolls for it. A page of several rows (the joined rows of a
+single column's pages) is moved down whole instead.
 
 Each section is a traversal group with its index as the `traversalIndex`, so a screen reader reads it whole and in the
 song's order whatever column it is in; the geometry alone read the columns across, line by line. Songs that do not fit
@@ -379,8 +397,8 @@ otherwise it starts here and the page runs on past the screen, paged through lik
 since a page left mostly empty is never acceptable.
 
 The rows of these pages share one start edge (`sharesKeyline`), the pair's second section starting from the middle, and
-a page shorter than the screen is read from its top rather than centered, since the pages are one column cut into
-screens. The editor's preview and a songbook of more than `MAX_CUT_SECTION_COUNT` sections keep the plain single column,
+a page shorter than the screen is spread out over it like any other (below): a full page barely moves, and a short
+section left alone on one is read in the middle of the screen rather than at the top of an empty one. The editor's preview and a songbook of more than `MAX_CUT_SECTION_COUNT` sections keep the plain single column,
 which is never measured.
 
 Every section that may be cut is composed line by line (`SongUnits`, one chunk per line, a comment, a line of a grid or
@@ -443,9 +461,9 @@ whose content is taller than the screen is landed on at its top, and once the re
 bottom comes into view, since it could not be read from a single position - measured by its content, never by the empty
 space after it. **Every row shorter than the screen is followed by empty space down to the bottom of it**, always —
 there is no setting for it (`SectionGrid.arrange`'s `minRowPitch`, wherever `SongLyrics` is given a `rowViewportHeight`,
-which the editor's preview is not), so that a scroll resting on a row shows that row and no other, centered vertically
-in what the screen shows below the divider (`centeredRowHeight`; the divider stays where it is, so the scroll rests on
-the same spot).
+which the editor's preview is not), so that a scroll resting on a row shows that row and no other, spread out over what
+the screen shows below the divider (`centeredRowHeight`; the divider stays where it is, so the scroll rests on the same
+spot).
 
 The last row gets that space too (`minLastRowHeight`), so that it can be brought to the top and fill the screen like the
 rest; a song of a single row taller than the screen too. That space is only there where the song scrolls anyway — where
@@ -534,7 +552,9 @@ taller than the screen, where a pixel offset is a different line at every text s
 by its section and its place among that section's chunks, and how far into it as a proportion of its height
 (`LineAnchor`) — and once a new layout has held still for 250 ms the scroll is animated to that line where the new
 layout still pages through it in a single column, and otherwise to the stop now holding that section, as far past it
-(never past the bottom of a row taller than the screen). A reader resting on a stop is put back on the stop. The wait is
+(never past the bottom of a row taller than the screen). A reader resting on a stop is put back on the stop, and the
+place found is snapped as a fling would be (`settledScrollTarget`), so that one falling between two rows of the new
+layout — or a scroll that has not caught up with it — never leaves a divider standing on screen. The wait is
 what keeps a pinch or a window edge being dragged from flickering: they lay the song out on every frame while its
 sections glide, and a scroll following each layout under them does. It is taken only at rest and never where a move of
 its own left it, so a pinch through many layouts returns to the row it started in instead of drifting, and a scroll of

@@ -88,12 +88,12 @@ internal val websiteShots: List<Triple<String, Device, Shot>> by lazy {
                 },
             ),
         ),
-        Triple("tablet-song", Device.IPAD, song("tablet-song", "jonathan_coulton-still_alive.cho", fontScale = 0.9f)),
+        Triple("tablet-song", Device.IPAD, song("tablet-song", "jonathan_coulton-still_alive.cho", fontScale = 0.95f)),
         // A song with the metronome panel open under its title, not playing.
         Triple(
             "tablet-song-metronome",
             Device.IPAD,
-            song("tablet-song-metronome", "counting_crows-accidentally_in_love.cho", fontScale = 0.9f, extra = metronome(isSongPanelShown = true)),
+            song("tablet-song-metronome", "counting_crows-accidentally_in_love.cho", fontScale = 1f, extra = metronome(isSongPanelShown = true)),
         ),
         // A song exported as a two-column A4 PDF, every option ticked.
         Triple(
@@ -106,7 +106,7 @@ internal val websiteShots: List<Triple<String, Device, Shot>> by lazy {
                 drive = { viewModel.showDialog(DialogType.Export(song = song("barenaked_ladies-big_bang_theory_theme.cho"))) },
             ),
         ),
-        Triple("laptop-song", Device.LAPTOP, song("laptop-song", "the_rembrandts-ill_be_there_for_you.cho", fontScale = 1.05f)),
+        Triple("laptop-song", Device.LAPTOP, song("laptop-song", "the_rembrandts-ill_be_there_for_you.cho")),
         Triple("laptop-import", Device.LAPTOP, editor("laptop-import", "ed_sheeran-thinking_out_loud.cho")),
         Triple("laptop-editor", Device.LAPTOP, editor("laptop-editor", "the_proclaimers-im_gonna_be_500_miles.cho")),
         Triple("laptop-setlists", Device.LAPTOP, setlists),
@@ -149,9 +149,9 @@ private fun metronome(isSongPanelShown: Boolean): Map<String, JsonElement> = map
 )
 
 /**
- * A song from the library at [fontScale], chosen per song for how its first page reads on the device (for Still Alive,
- * Verse 2 in one column). The layout itself avoids stranding a line at any size, so the scale is a matter of what the
- * page shows rather than of where it is cut; a change to the song, the device or the layout calls for looking again.
+ * A song from the library at [fontScale], chosen per song so that its first page on the device ends where a section
+ * ends (for Still Alive, after Bridge 2), since sections are cut across columns and pages wherever a column ends; a
+ * change to the song, the device or the layout calls for looking again.
  * The Chords section is never folded to make room.
  */
 private fun song(id: String, fileName: String, fontScale: Float = 1f, extra: Map<String, JsonElement> = emptyMap()) = Shot(

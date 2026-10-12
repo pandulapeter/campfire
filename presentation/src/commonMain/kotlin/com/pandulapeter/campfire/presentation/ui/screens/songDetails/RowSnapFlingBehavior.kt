@@ -195,7 +195,11 @@ internal class RowSnapFlingBehavior(
             if (scrollState.isScrollInProgress) return@collectLatest
             val target = anchoredScrollOffset(currentAnchor, currentRows, scrollState.viewportSize, Int.MAX_VALUE, readingWindow.top) ?: return@collectLatest
             withTimeoutOrNull(LAYOUT_SETTLE_MILLIS * 4) { snapshotFlow { scrollState.maxValue }.first { it >= target } }
-            val reachableTarget = target.coerceAtMost(scrollState.maxValue)
+            // Snapped as a fling is, since the place kept can fall between two rows of the new layout - a reader deep in
+            // a row taller than a smaller window held, or the end of a scroll that has not caught up with the new layout -
+            // and nothing else moves the song once it is there, leaving the divider in the middle of the screen.
+            val maxValue = scrollState.maxValue
+            val reachableTarget = settledScrollTarget(target.coerceAtMost(maxValue), currentRows, scrollState.viewportSize, maxValue)
             if (reachableTarget == scrollState.value) return@collectLatest
             isMoving = true
             try {

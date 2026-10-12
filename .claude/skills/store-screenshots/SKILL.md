@@ -127,12 +127,13 @@ banner 1, light and in reverse order in banner 2. The Play Store banner is the A
 preview the Mac's 2 and the iPhone's 1; Apple's header the iPad's 4, the Mac's 2 and the iPhone's 1, and its search
 results image the iPad's 2 and the iPhone's 3, all dark.
 
-The website's songs are set at the text size where page one ends exactly where a section ends, never inside one:
-Still Alive 90% (Verse 2 in one column), Accidentally in Love 90% with the metronome panel open, I'll Be There for You
-105% on the laptop. A song longer than a page is cut wherever a column ends, so these were found by rendering every
-size from 80% to 130% in steps of 2.5% and reading where page one ends; if a song, a device or the layout changes, try
-again the same way. **Never fold the Chords section (or anything else) to make a song fit.** The laptop is a Mac window
-with no system chrome at 1.5× (`Device.LAPTOP`).
+The website's songs are set at the text size where page one ends exactly where a section ends, never inside one: Still
+Alive 95% (page one ends after Bridge 2), Accidentally in Love 100% with the metronome panel open (after Prechorus 2),
+I'll Be There for You 100% on the laptop (the whole song, in four columns). A song longer than a page is cut wherever
+a column ends, so these were found by rendering every size from 80% to 130% in steps of 2.5% and reading where page
+one ends; if a song, a device or the layout changes, try again the same way. **Never fold the Chords section (or
+anything else) to make a song fit.** The laptop is a Mac window with no system chrome at 1.32×, a maximized window on
+a 14" MacBook Pro (`Device.LAPTOP`).
 
 ## Changing a shot
 

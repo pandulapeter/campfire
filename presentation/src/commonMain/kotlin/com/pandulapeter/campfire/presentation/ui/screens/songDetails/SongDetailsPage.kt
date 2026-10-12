@@ -300,6 +300,7 @@ internal fun SongDetailsPage(
                     )
                 },
                 rowViewportHeight = viewportHeight,
+                rowViewportTopPadding = topPadding,
                 rowViewportBottomPadding = bottomPadding,
                 // The buttons are as far from the end of the screen as the text is, so the text only has to leave
                 // them their own width and a gap.

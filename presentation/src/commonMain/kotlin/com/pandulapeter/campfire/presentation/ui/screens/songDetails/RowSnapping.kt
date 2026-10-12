@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
+import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.first
 
 /**
@@ -119,6 +120,18 @@ internal fun snappedScrollTarget(
         clampedTarget - lastFree < nextPoint - clampedTarget -> if (isStartInRow) lastFree else rowStart
         else -> nextPoint
     }
+}
+
+/**
+ * Where a scroll put at [target] by something other than the reader - the song laid out anew under a window resized,
+ * the reader brought back to their place in it - comes to rest when the song is read across the columns: where it is,
+ * anywhere a fling ending there could have left it, and otherwise on the nearer end of the dead stretch it is in, so that
+ * no divider is left showing with nothing to move it on. Where the song is not read in rows, wherever it was put.
+ */
+internal fun settledScrollTarget(target: Int, rows: SongRows, viewportHeight: Int, maxValue: Int): Int {
+    if (rows.restingOffsets.isEmpty()) return target
+    val position = target.toFloat()
+    return snappedScrollTarget(start = position, target = position, rows = rows, viewportHeight = viewportHeight, maxValue = maxValue).roundToInt()
 }
 
 /**

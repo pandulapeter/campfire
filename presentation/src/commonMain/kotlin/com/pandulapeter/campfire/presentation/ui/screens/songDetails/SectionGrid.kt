@@ -129,7 +129,9 @@ internal data class SearchedGrid(
 
 /**
  * The grid of the fewest columns, up to [maxColumnCount], that fits the song into [availableHeight] in a single row,
- * [gridFor] being the grid of a given number of columns at most and [heightOf] its height.
+ * [gridFor] being the grid of a given number of columns at most and [heightOf] its height - or, given [imbalanceOf],
+ * of the counts from that one on that fit it in a single row too, the one that fills the page most evenly (see
+ * [balancedAmong]): a short song on a large screen is not left in two tall columns in the middle of it.
  *
  * A grid of several rows can be as short as that too, and it may need fewer columns than one of a single row, since
  * its rows are packed tighter than the columns of one: but its rows are stepped through, each on a screen of its own,
@@ -150,6 +152,7 @@ internal fun searchColumnCount(
     stackedHeight: () -> Int,
     gridFor: (columnCount: Int) -> SectionGrid,
     heightOf: (SectionGrid) -> Int,
+    imbalanceOf: ((grid: SectionGrid, height: Int, fewest: SectionGrid) -> Double?)? = null,
 ): SearchedGrid {
     var candidate = 1
     var candidateGrid = gridFor(candidate)
@@ -158,7 +161,10 @@ internal fun searchColumnCount(
     while (candidate < maxColumnCount) {
         candidateHeight = heightOf(candidateGrid)
         if (candidateHeight <= availableHeight) {
-            if (candidateGrid.pageCount == 1) return SearchedGrid(candidateGrid, fits = true, height = candidateHeight)
+            if (candidateGrid.pageCount == 1) {
+                val fewest = SearchedGrid(candidateGrid, fits = true, height = candidateHeight)
+                return if (imbalanceOf == null) fewest else balancedAmong(fewest, maxColumnCount, availableHeight, gridFor, heightOf, imbalanceOf)
+            }
             if (fitInRows == null) fitInRows = SearchedGrid(candidateGrid, fits = true, height = candidateHeight)
             candidate++
         } else {
@@ -172,6 +178,51 @@ internal fun searchColumnCount(
 }
 
 /**
+ * Of the grids of a single row that fit the song into [availableHeight], from [fewest] - the one of the fewest columns
+ * - on, the one whose page is set most evenly by [imbalanceOf]: how far apart the share of the width its columns fill
+ * and the share of the height they fill are, or null for a grid that is no candidate at all (one that wraps more of the
+ * song's lines than [fewest] does). Two tall columns in the middle of a wide screen and five short ones across it are
+ * both a page a designer would not have set where three fill it as much one way as the other.
+ *
+ * A grid of more columns is only taken where it is better balanced by at least [BALANCE_MARGIN], since every column
+ * more is one more jump of the reader's eye, and the search stops at the first count that is less balanced than the one
+ * before it: more columns only ever fill more of the width and less of the height.
+ */
+private fun balancedAmong(
+    fewest: SearchedGrid,
+    maxColumnCount: Int,
+    availableHeight: Int,
+    gridFor: (columnCount: Int) -> SectionGrid,
+    heightOf: (SectionGrid) -> Int,
+    imbalanceOf: (grid: SectionGrid, height: Int, fewest: SectionGrid) -> Double?,
+): SearchedGrid {
+    var best = fewest
+    var bestImbalance = imbalanceOf(fewest.grid, fewest.height, fewest.grid) ?: return fewest
+    var previousImbalance = bestImbalance
+    var previousColumnCount = fewest.grid.columnCounts.maxOrNull() ?: return fewest
+    for (columnCount in previousColumnCount + 1..maxColumnCount) {
+        val grid = gridFor(columnCount)
+        // Fewer sections than columns leave the grid of the count before it, which was weighed already.
+        val gridColumnCount = grid.columnCounts.maxOrNull() ?: break
+        if (grid.pageCount != 1 || gridColumnCount <= previousColumnCount) break
+        previousColumnCount = gridColumnCount
+        val height = heightOf(grid)
+        if (height > availableHeight) break
+        val imbalance = imbalanceOf(grid, height, fewest.grid) ?: break
+        if (imbalance > previousImbalance) break
+        previousImbalance = imbalance
+        if (imbalance < bestImbalance - BALANCE_MARGIN) {
+            best = SearchedGrid(grid, fits = true, height = height)
+            bestImbalance = imbalance
+        }
+    }
+    return best
+}
+
+/** How much better balanced a page of more columns has to be, as a natural log of the ratio of its two shares, to be taken. */
+private const val BALANCE_MARGIN = 0.15
+
+/**
  * The y position of every section, the total height of the layout, the y positions (centers) of the gaps between the
  * pages and where the content of every page ends, which is above the empty space a page may be followed by.
  */
@@ -180,6 +231,7 @@ internal class SongArrangement(
     val height: Int,
     val dividerTops: List<Int>,
     val pageBottoms: List<Int>,
+    val columnSpreads: ColumnSpreads = emptyMap(),
 )
 
 /**
@@ -198,9 +250,17 @@ internal class SongArrangement(
  * scroll comes to rest on the pages is then never shown with a second page under the one it rests on (see
  * `snappedScrollTarget`), and its last page can be brought to the top like the others.
  *
- * A page shorter than [centeredRowHeight] is moved down by half of what it leaves of that height, so that it is read in
- * the middle of the screen rather than at the top of an otherwise empty one. The divider above it stays where it is,
- * so the scroll still comes to rest on the same spot.
+ * A page that is a single row is set the way a designer sets a page with room to spare, wherever there is a
+ * [centeredRowHeight] to set it in: every column of it is centered on its own in the page's height - the height of its
+ * tallest column, or [centeredRowHeight] where that is more - the way the columns of a row are centered in its width.
+ * The space a column leaves first widens the gaps between its sections, by no more than [maxExtraSectionGap] (sections
+ * pulled further apart than that read as strangers rather than as one song) and no more than it keeps above and below
+ * them, and the rest is shared out above and below, a little less of it above, since what is centered exactly reads
+ * as sitting low - a column holding a piece of a section cut across two as well, which held against the cut would
+ * lean away from the column beside it. Where [heldSpreads] has a column, it keeps the top and the gaps it was placed at
+ * there instead, as far as they still fit (see [ColumnCenteringHold]). A page of several rows is moved down whole by a
+ * little less than half of what it leaves of [centeredRowHeight] instead. The divider above a page stays where it is
+ * either way, so the scroll still comes to rest on the same spot.
  */
 internal fun SectionGrid.arrange(
     heights: IntArray,
@@ -209,12 +269,15 @@ internal fun SectionGrid.arrange(
     minRowPitch: Int = 0,
     minLastRowHeight: Int = 0,
     centeredRowHeight: Int = 0,
+    maxExtraSectionGap: Int = 0,
+    heldSpreads: ColumnSpreads? = null,
     unitSections: IntArray? = null,
     piecePadding: IntArray? = null,
 ): SongArrangement {
     fun sectionOf(index: Int) = unitSections?.get(index) ?: index
     fun paddingOf(index: Int) = piecePadding?.get(sectionOf(index)) ?: 0
     val tops = IntArray(heights.size)
+    val bottoms = IntArray(heights.size)
     val pages = IntArray(heights.size)
     val dividerTops = mutableListOf<Int>()
     val pageBottoms = mutableListOf<Int>()
@@ -248,19 +311,73 @@ internal fun SectionGrid.arrange(
         val isCut = index < heights.lastIndex && sectionOf(index + 1) == sectionOf(index) &&
             (rows[index + 1] != rows[index] || columns[index + 1] != columns[index])
         cellBottom = tops[index] + heights[index] + if (isCut) paddingOf(index) else 0
+        bottoms[index] = cellBottom
         pageHeight = max(pageHeight, cellBottom - pageTop)
     }
     if (heights.isNotEmpty()) pageBottoms += pageTop + pageHeight
-    val pageShifts = IntArray(pageTops.size) { page -> ((centeredRowHeight - (pageBottoms[page] - pageTops[page])) / 2).coerceAtLeast(0) }
-    for (index in heights.indices) tops[index] += pageShifts[pages[index]]
-    val shiftedPageBottoms = pageBottoms.mapIndexed { page, bottom -> bottom + pageShifts[page] }
+    val isSingleRowPage = BooleanArray(pageTops.size) { true }
+    for (index in heights.indices) if (joinsPrevious[rows[index]]) isSingleRowPage[pages[index]] = false
+    val pageShifts = IntArray(pageTops.size) { page ->
+        if (isSingleRowPage[page]) 0 else ((centeredRowHeight - (pageBottoms[page] - pageTops[page])) * SPACE_ABOVE_PERCENT / 100).coerceAtLeast(0)
+    }
+    // A cell is the sections of one column of one row, from where it starts until where the next one does.
+    val cellStarts = heights.indices.filter { it == 0 || rows[it] != rows[it - 1] || columns[it] != columns[it - 1] }
+    val cellEnds = cellStarts.drop(1) + heights.size
+    val columnSpreads = HashMap<Long, ColumnSpread>()
+    if (centeredRowHeight > 0) {
+        for (cell in cellStarts.indices) {
+            val cellStart = cellStarts[cell]
+            val cellEnd = cellEnds[cell]
+            val page = pages[cellStart]
+            if (!isSingleRowPage[page]) continue
+            val gapCount = (cellStart + 1 until cellEnd).count { sectionOf(it) != sectionOf(it - 1) }
+            val freeSpace = max(pageBottoms[page] - pageTops[page], centeredRowHeight) - (bottoms[cellEnd - 1] - pageTops[page])
+            val key = columnKey(rows[cellStart], columns[cellStart])
+            val held = heldSpreads?.get(key)
+            val extraGap = when {
+                // A column held where it was keeps its gaps and its top for as long as they still fit its page.
+                held != null -> minOf(held.extraGap, if (gapCount == 0) 0 else freeSpace / gapCount)
+                // The space above and below the column takes at least as much as every gap in it, or a full column
+                // would be justified, its first section against the top of the screen and its last against the bottom.
+                else -> minOf(maxExtraSectionGap, freeSpace / (gapCount + 2))
+            }
+            val spaceLeft = freeSpace - extraGap * gapCount
+            // A column ending or starting with a piece of a section cut across two is centered like any other: held
+            // against the cut, the two columns would lean away from each other across the page.
+            val columnTop = if (held != null) held.top.coerceIn(0, spaceLeft.coerceAtLeast(0)) else spaceLeft * SPACE_ABOVE_PERCENT / 100
+            columnSpreads[key] = ColumnSpread(top = columnTop, extraGap = extraGap)
+            var gapsAbove = 0
+            for (index in cellStart until cellEnd) {
+                if (index > cellStart && sectionOf(index) != sectionOf(index - 1)) gapsAbove++
+                val shift = columnTop + gapsAbove * extraGap
+                tops[index] += shift
+                bottoms[index] += shift
+            }
+        }
+    }
+    for (index in heights.indices) {
+        tops[index] += pageShifts[pages[index]]
+        bottoms[index] += pageShifts[pages[index]]
+    }
+    // What a page holds ends where its lowest column now does, which spreading its sections out may have moved.
+    val shiftedPageBottoms = pageBottoms.mapIndexed { page, bottom -> if (isSingleRowPage[page]) pageTops[page] else bottom + pageShifts[page] }.toMutableList()
+    for (index in heights.indices) {
+        if (isSingleRowPage[pages[index]]) shiftedPageBottoms[pages[index]] = max(shiftedPageBottoms[pages[index]], bottoms[index])
+    }
     return SongArrangement(
         tops = tops,
-        height = pageTop + max(pageHeight + (pageShifts.lastOrNull() ?: 0), minLastRowHeight),
+        height = max(shiftedPageBottoms.lastOrNull() ?: 0, pageTop + minLastRowHeight),
         dividerTops = dividerTops,
         pageBottoms = shiftedPageBottoms,
+        columnSpreads = columnSpreads,
     )
 }
+
+/**
+ * How much of the space left around something centered in a page goes above it, in percent: a little less than half,
+ * since what is centered exactly reads as sitting low.
+ */
+private const val SPACE_ABOVE_PERCENT = 45
 
 /** The grid of a layout one column wide: every section in the one cell of the one row, in their order. */
 internal fun singleColumnGrid(sectionCount: Int) = SectionGrid(

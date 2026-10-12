@@ -110,6 +110,8 @@ import com.pandulapeter.campfire.presentation.ui.songLayout.rememberDefaultSecti
  * a scroll resting on a divider shows no row but the one under it, in the middle of the screen, and the last one can be
  * brought to the top like the others. Unspecified where nothing snaps, which is the editor's preview. It is the live
  * height, followed frame by frame, where [availableHeight] waits for the viewport to settle.
+ * @param rowViewportTopPadding How much the scroll holds above this composable, which a song that fits the screen
+ * leaves above the room it is spread out over.
  * @param rowViewportBottomPadding How much the scroll holds under this composable, which is part of the room the last
  * row needs to be brought to the top of the viewport.
  * @param stepButtonInset How much of the end edge a song that has to be scrolled leaves to what is drawn over it there:
@@ -144,6 +146,7 @@ internal fun SongLyrics(
     shouldShowTempo: Boolean = true,
     onRowsPlaced: ((SongRows) -> Unit)? = null,
     rowViewportHeight: Dp = Dp.Unspecified,
+    rowViewportTopPadding: Dp = 0.dp,
     rowViewportBottomPadding: Dp = 0.dp,
     stepButtonInset: Dp = 0.dp,
     keepsStepButtonInset: Boolean = false,
@@ -319,6 +322,12 @@ internal fun SongLyrics(
     // Only a song cut into pages is set smaller to save one; the editor's preview is set as it is typed.
     val fitScales = remember(fontScale, canCutSections) { if (canCutSections) fitScalesFor(fontScale) else emptyList() }
     val fitDeferral = remember { FitDeferral() }
+    // Only where a fold can be toggled, which the editor's preview cannot.
+    val centeringHold = if (onFoldToggled == null && chordDiagrams?.onFoldToggled == null) {
+        null
+    } else {
+        rememberColumnCenteringHold(foldedSections, chordDiagrams?.isFolded)
+    }
     Box(modifier = modifier) {
         LookaheadScope {
             SongSectionsLayout(
@@ -332,6 +341,7 @@ internal fun SongLyrics(
                 availableHeight = availableHeight,
                 maxRowHeight = availableHeight,
                 rowViewportHeight = rowViewportHeight,
+                rowViewportTopPadding = rowViewportTopPadding,
                 rowViewportBottomPadding = rowViewportBottomPadding,
                 stepButtonInset = stepButtonInset,
                 keepsStepButtonInset = keepsStepButtonInset,
@@ -349,6 +359,7 @@ internal fun SongLyrics(
                 fitScales = fitScales,
                 canFitText = canFitText,
                 fitDeferral = fitDeferral,
+                centeringHold = centeringHold,
                 onRowsPlaced = { rows -> onRowsPlaced?.invoke(rows) },
             ) {
                 // Whether a chunk or a card is placed by animateBounds: not while the layout follows a change that keeps

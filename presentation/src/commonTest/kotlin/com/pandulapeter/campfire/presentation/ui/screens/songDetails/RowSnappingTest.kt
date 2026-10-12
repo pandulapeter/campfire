@@ -133,6 +133,24 @@ class RowSnappingTest {
     }
 
     @Test
+    fun `a song put between two rows by a new layout settles on one of them`() {
+        // Both rows end 700 below where they rest, and are followed by empty space down to the next one.
+        val rows = SongRows(restingOffsets = listOf(300, 1400), bottoms = listOf(1000, 2100))
+        assertEquals(300, settledScrollTarget(target = 700, rows = rows, viewportHeight = 1000, maxValue = 3000))
+        assertEquals(1400, settledScrollTarget(target = 1100, rows = rows, viewportHeight = 1000, maxValue = 3000))
+        assertEquals(1400, settledScrollTarget(target = 1400, rows = rows, viewportHeight = 1000, maxValue = 3000))
+    }
+
+    @Test
+    fun `a song put inside a row it is reading through stays there`() {
+        val rows = SongRows(restingOffsets = listOf(500, 2500), bottoms = listOf(2500, 4000))
+        assertEquals(1200, settledScrollTarget(target = 1200, rows = rows, viewportHeight = 1000, maxValue = 3000))
+        assertEquals(1500, settledScrollTarget(target = 1700, rows = rows, viewportHeight = 1000, maxValue = 3000))
+        // Not read in rows, a song stays wherever it was put.
+        assertEquals(1700, settledScrollTarget(target = 1700, rows = SongRows(), viewportHeight = 1000, maxValue = 3000))
+    }
+
+    @Test
     fun `a divider past the end of the scroll is the end`() {
         assertEquals(3000f, snap(target = 2800f, dividers = listOf(2000, 3400)))
         assertEquals(2000f, snap(target = 2400f, dividers = listOf(2000, 3400)))

@@ -25,7 +25,9 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.isSpecified
 import com.pandulapeter.campfire.presentation.ui.components.EDGE_FADE_SIZE
+import kotlin.math.abs
 import kotlin.math.ceil
+import kotlin.math.ln
 import kotlin.math.roundToInt
 
 /**
@@ -106,8 +108,11 @@ import kotlin.math.roundToInt
  * viewport, so that a row is read with nothing but itself on the screen, and the last one can be brought to the top
  * like the others: the next row peeking in under one would be read as part of it, which is what the dividers are there
  * to prevent. A song of a single row that fits the screen gets none, since it is read whole. A row shorter than the screen
- * is then read in the middle of it, the space split above and below it, rather than at the top of a screen that is
- * otherwise empty. The grid is still decided without that space, since it is not something a shorter song could save.
+ * - and a song of a single row that fits it, in what the screen shows between [rowViewportTopPadding] and
+ * [rowViewportBottomPadding] - is then spread out over it, its sections a little further apart and the rest of the
+ * space split above and below them, rather than packed at the top of a screen that is otherwise empty (see
+ * [SectionGrid.arrange]). The grid is still decided without that space, since it is not something a shorter song could
+ * save.
  *
  * [lyricsLineHeight] is the height of one line of lyrics in pixels, at the size the song is drawn at: twice it is the
  * height of a chorded line, which the flows are handed as what the empty space of a column is counted in, and a unit
@@ -125,6 +130,7 @@ internal fun SongSectionsLayout(
     availableHeight: Dp,
     maxRowHeight: Dp,
     rowViewportHeight: Dp,
+    rowViewportTopPadding: Dp,
     rowViewportBottomPadding: Dp,
     stepButtonInset: Dp,
     keepsStepButtonInset: Boolean,
@@ -142,6 +148,7 @@ internal fun SongSectionsLayout(
     fitScales: List<Float>,
     canFitText: Boolean,
     fitDeferral: FitDeferral,
+    centeringHold: ColumnCenteringHold?,
     onRowsPlaced: (SongRows) -> Unit,
     content: @Composable () -> Unit,
 ) = Layout(
@@ -322,6 +329,25 @@ internal fun SongSectionsLayout(
 
         fun SearchedGrid.laidOut(pageCount: Int = grid.pageCount()) = SegmentLayout(this, pageCount)
 
+        fun SectionGrid.wrappedLines() = (0 until unitCount).sumOf { wrappedLinesAt(it, unitColumnWidth(it)) }
+
+        // How unevenly a grid of a single row fills the page: the share of the width its columns fill against the share
+        // of the height its tallest one does, the columns as wide as the widest thing in them, the way they are drawn.
+        // A grid that wraps more lines than the one of the fewest columns is no candidate, since wider lines read better
+        // than a better filled page looks.
+        fun SectionGrid.imbalance(height: Int, fewest: SectionGrid): Double? {
+            if (this !== fewest && wrappedLines() > fewest.wrappedLines()) return null
+            val cellWidths = Array(columnCounts.size) { row -> IntArray(columnCounts[row]) }
+            for (unit in 0 until unitCount) {
+                val index = unit + unitOffset
+                val contentWidth = minOf(unitColumnWidth(unit), unitWidthFor(index, unitColumnWidth(unit), fitScale), maxWidthOf(index).scaledBy(fitScale))
+                cellWidths[rows[unit]][columns[unit]] = maxOf(cellWidths[rows[unit]][columns[unit]], contentWidth)
+            }
+            val filledWidth = cellWidths.maxOf { it.sum() }
+            if (filledWidth <= 0 || height <= 0 || totalWidth <= 0) return null
+            return abs(ln(filledWidth.toDouble() / totalWidth) - ln(height.toDouble() / availableHeightPx))
+        }
+
         fun ScoredGrid.laidOut(): SegmentLayout {
             val height = if (grid.pageCount == 1) grid.height() else Int.MAX_VALUE
             return SearchedGrid(grid, fits = height <= availableHeightPx, height = height).laidOut(pageCount)
@@ -386,6 +412,7 @@ internal fun SongSectionsLayout(
                 stackedHeight = { (0 until sectionCount).sumOf { heightAt(it, 1) } + sectionGapPx * (sectionCount - 1).coerceAtLeast(0) },
                 gridFor = ::gridFor,
                 heightOf = { it.height() },
+                imbalanceOf = { grid, height, fewest -> grid.imbalance(height, fewest) },
             )
         } else {
             SearchedGrid(gridFor(maxColumnCount), fits = false, height = Int.MAX_VALUE)
@@ -598,6 +625,13 @@ internal fun SongSectionsLayout(
     } else {
         0
     }
+    // A song read whole is spread over the room it was decided for, or what the screen shows of it while that is less -
+    // the metronome panel or the app bar on their way in - so that spreading it never makes it scroll.
+    val wholeSongHeight = if (!isScrolledByRow && rowViewportHeight.isSpecified && availableHeightPx > 0) {
+        minOf(availableHeightPx, rowViewportHeight.roundToPx() - rowViewportTopPadding.roundToPx() - rowViewportBottomPadding.roundToPx())
+    } else {
+        0
+    }
     val arrangement = grid.arrange(
         heights = unitHeights,
         sectionGap = sectionGapPx,
@@ -606,12 +640,20 @@ internal fun SongSectionsLayout(
         // divider, so that the divider stays out of it too.
         minRowPitch = if (isPaddedToViewport) rowViewportHeightPx + rowGapPx else 0,
         minLastRowHeight = readableRowHeight,
-        // A row read with nothing but itself on the screen is read in the middle of what the screen shows of it. The
-        // pages of a single column are not: they are one column cut into screens, which reads on from the top of each.
-        centeredRowHeight = if (grid.sharesKeyline) 0 else readableRowHeight,
+        // A row read with nothing but itself on the screen is spread out over what the screen shows of it, the pages of
+        // a single column too: a full one barely moves, and one holding a short section alone is read in the middle of
+        // the screen rather than at the top of an empty one.
+        centeredRowHeight = maxOf(readableRowHeight, wholeSongHeight),
+        // Stanzas further apart than a chorded line read as strangers rather than as one song.
+        maxExtraSectionGap = lineHeightPx,
+        heldSpreads = centeringHold?.heldSpreads(grid.columnCounts),
         unitSections = units.unitSections,
         piecePadding = piecePadding,
     )
+    if (isLookingAhead && centeringHold != null && !centeringHold.isHolding) {
+        centeringHold.spreads = arrangement.columnSpreads
+        centeringHold.columnCounts = grid.columnCounts
+    }
     val dividerTops = arrangement.dividerTops
     // The approach pass places the rows where their sections' animations have got to, which is not where a scroll
     // comes to rest: a fold toggled a moment before a fling would otherwise have it snap to a divider still moving.
