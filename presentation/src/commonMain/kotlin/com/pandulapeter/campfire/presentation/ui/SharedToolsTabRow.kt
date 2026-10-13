@@ -12,7 +12,9 @@ package com.pandulapeter.campfire.presentation.ui
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.only
@@ -27,13 +29,16 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import com.pandulapeter.campfire.presentation.ui.components.only
+import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeIconBeat
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 
 /**
  * The one [ToolsTabRow] the tool screens share while none of them carries a chrome of its own (see [ToolScreenFrame]),
  * laid over the room each of them keeps for it, next to the rail's room ([railWidth]) and under the status bar as the
  * screens are. It fades in and out as the stack arrives at a tool or leaves for another screen, while the screens fade
- * through under it, and keeps the tool it was on through its exit so that the indicator does not slide away first.
+ * through under it, and keeps the tool it was on through its exit so that the indicator does not slide away first. The
+ * background is painted across the whole width and under the status bar as well as behind the row, so that nothing of
+ * the screens fading through shows beside or above it.
  *
  * It reads the back stack itself rather than being handed what is on top, so that a change of screens recomposes the
  * row rather than everything [CampfireScreens] lays out.
@@ -45,6 +50,8 @@ internal fun SharedToolsTabRow(
     tools: List<CampfireDestination.TopLevel>,
     railWidth: Dp,
     contentPadding: PaddingValues,
+    metronomeBeat: MetronomeIconBeat,
+    isKeyboard: Boolean,
 ) {
     val current = viewModel.backStack.lastOrNull() as? CampfireDestination.TopLevel
     val lastShownTool = remember { mutableStateOf(current?.takeIf { it in tools }) }
@@ -57,11 +64,15 @@ internal fun SharedToolsTabRow(
     ) {
         ToolsTabRow(
             modifier = Modifier
-                .windowInsetsPadding(WindowInsets.contentEdges.only(WindowInsetsSides.Top).withMinTopEdge)
                 .padding(start = railWidth)
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.background)
+                .windowInsetsPadding(WindowInsets.contentEdges.only(WindowInsetsSides.Top).withMinTopEdge)
                 .padding(contentPadding.only(start = true, end = true)),
             tools = tools,
             selected = current?.takeIf { it in tools } ?: lastShownTool.value,
+            metronomeBeat = metronomeBeat,
+            isKeyboard = isKeyboard,
             onSelected = viewModel::selectTopLevelDestination,
         )
     }

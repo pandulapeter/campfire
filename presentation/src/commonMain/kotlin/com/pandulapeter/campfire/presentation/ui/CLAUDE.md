@@ -298,8 +298,9 @@ addresses, the restored stack and the tuner's listening are unchanged): the item
 top, and opens the one on top, else the one last on screen (`Navigator.lastTool`, for the session, starting on the
 Metronome), else the first one switched on (`toolsItemDestination`).
 
-Their screens are then switched by a row of tabs at their top (`ToolsTabRow`, drawn as the settings screen's are, at a
-fixed 48dp): each tool screen keeps that room above itself (`ToolScreenFrame`, growing and shrinking as the grouping
+Their screens are then switched by a row of tabs at their top (`ToolsTabRow`, drawn as the settings screen's are but
+with each tool's navigation icon over its name, `DestinationIcon`, at a fixed 72dp, and on the solid background color so
+that the screens fading through under it never show through): each tool screen keeps that room above itself (`ToolScreenFrame`, growing and shrinking as the grouping
 comes and goes), and one row is laid over it for all of them (`SharedToolsTabRow`, in `CampfireScreens`), so that its
 indicator slides from tool to tool while the screens fade through under it, and it fades in and out as the stack
 arrives at a tool or leaves. While the screens draw a chrome of their own (a card dealt over them, the export screen)
@@ -476,7 +477,7 @@ diagrams" after one without shapes, and nothing about tunings) and the tuning sh
 song details screen's first section, above the transposition and the capo, since like them they are about how the
 whole song is played, read only mode included, since they change this device's preference rather than the song or the
 setlist; they stand on the Tuner tab (under its Chromatic switch, and only while that is off), the Chords tab, and Settings → Songs
-(`InstrumentSetting`, `InstrumentChipRow`); the onboarding's instrument page lists the same instruments. Chromatic is not an instrument but the tuner's own switch (`TunerSettings.isChromatic`).
+(`InstrumentSetting`, `InstrumentChipRow`), and on the onboarding's instrument page. Chromatic is not an instrument but the tuner's own switch (`TunerSettings.isChromatic`).
 
 **The twelve-string guitar is the guitar to everything but the tuner** (`Instrument.isTwelveString`): its six courses
 are fingered and tuned as the guitar's six strings, so it offers the guitar's tunings (`InstrumentTuning` has none of its

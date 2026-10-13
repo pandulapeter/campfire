@@ -9,12 +9,25 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.onboarding
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.chordpro.model.ChordInstrument
+import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_metronome_body
@@ -24,6 +37,8 @@ import com.pandulapeter.campfire.presentation.resources.ic_songs
 import com.pandulapeter.campfire.presentation.resources.ic_tune
 import com.pandulapeter.campfire.presentation.resources.ic_tuner
 import com.pandulapeter.campfire.presentation.resources.metronome
+import com.pandulapeter.campfire.presentation.resources.onboarding_chord_diagram_description
+import com.pandulapeter.campfire.presentation.resources.onboarding_feature_chord_diagrams_description
 import com.pandulapeter.campfire.presentation.resources.onboarding_feature_chords_description
 import com.pandulapeter.campfire.presentation.resources.onboarding_feature_metronome_description
 import com.pandulapeter.campfire.presentation.resources.onboarding_feature_setlists_description
@@ -31,85 +46,144 @@ import com.pandulapeter.campfire.presentation.resources.onboarding_feature_tuner
 import com.pandulapeter.campfire.presentation.resources.onboarding_features_message
 import com.pandulapeter.campfire.presentation.resources.onboarding_features_title
 import com.pandulapeter.campfire.presentation.resources.setlists
+import com.pandulapeter.campfire.presentation.resources.settings_chord_diagrams
 import com.pandulapeter.campfire.presentation.resources.settings_chords
 import com.pandulapeter.campfire.presentation.resources.tuner
+import com.pandulapeter.campfire.presentation.ui.components.ChordDiagram
+import com.pandulapeter.campfire.presentation.ui.components.ChordsIcon
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * "What do you need?", the four features a newcomer decides on as cards any of which can be kept, each the Settings →
- * Features switch it stands for, so they start as the app is set (every one on, on a first run). It asks about the
- * features rather than about the person, since a role would only be a guess at them: a guitarist sings too, and anyone
- * may play from a list. This is the page every later question depends on: the instrument, the notation and the key on a
- * card are only asked about the features left on here.
+ * "What do you need?", the features a newcomer decides on as cards any of which can be kept, each the Settings → Features
+ * switch it stands for and in that list's order, so they start as the app is set (every one on, on a first run). It asks
+ * about the features rather than about the person, since a role would only be a guess at them: a guitarist sings too,
+ * and anyone may play from a list. The chords card says that leaving it off is how a singer reads lyrics only, the one
+ * hint at a role the page gives. The notation is only asked about the chords left on here.
+ *
+ * The chord diagrams are a card of their own under the chords, only while the chords are on and only for an instrument
+ * they are drawn for ([chordTuning] not null): the instrument has been asked already, so the card ends in a G drawn for
+ * it in its tuning, which shows what the feature will add to every song.
  */
 @Composable
 internal fun FeaturesStep(
     modifier: Modifier = Modifier,
+    markModifier: Modifier,
     features: OnboardingFeatures,
+    chordTuning: ChordTuning?,
     isCompact: Boolean,
     onChordsEnabledChange: (Boolean) -> Unit,
-    onSetlistsEnabledChange: (Boolean) -> Unit,
+    onChordDiagramsEnabledChange: (Boolean) -> Unit,
     onMetronomeEnabledChange: (Boolean) -> Unit,
     onTunerEnabledChange: (Boolean) -> Unit,
+    onSetlistsEnabledChange: (Boolean) -> Unit,
 ) = OnboardingPage(
     modifier = modifier,
-    icon = painterResource(Res.drawable.ic_tune),
+    markModifier = markModifier,
     title = stringResource(Res.string.onboarding_features_title),
     message = stringResource(Res.string.onboarding_features_message),
     isCompact = isCompact,
 ) {
-    val options = listOf(
-        FeatureOption(
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+    ) {
+        FeatureCard(
             title = stringResource(Res.string.settings_chords),
             description = stringResource(Res.string.onboarding_feature_chords_description),
-            icons = listOf(painterResource(Res.drawable.ic_songs)),
+            icon = { Icon(painter = painterResource(Res.drawable.ic_songs), contentDescription = null) },
             isEnabled = features.areChordsEnabled,
             onEnabledChange = onChordsEnabledChange,
-        ),
-        FeatureOption(
-            title = stringResource(Res.string.setlists),
-            description = stringResource(Res.string.onboarding_feature_setlists_description),
-            icons = listOf(painterResource(Res.drawable.ic_setlists)),
-            isEnabled = features.areSetlistsEnabled,
-            onEnabledChange = onSetlistsEnabledChange,
-        ),
-        FeatureOption(
+        )
+        // Keyed on whether there is a card, so that the card leaving still draws the diagram it had. The empty state is
+        // as wide as the card, so that only the height changes: the card collapses and fades rather than also shrinking
+        // sideways, and the gap above it collapses with it, so that the cards under it close up evenly.
+        AnimatedContent(
+            targetState = chordTuning.takeIf { features.areChordsEnabled },
+            contentKey = { it != null },
+            transitionSpec = { fadeIn() togetherWith fadeOut() using SizeTransform(clip = true) },
+            contentAlignment = Alignment.TopCenter,
+        ) { tuning ->
+            if (tuning == null) {
+                Spacer(modifier = Modifier.fillMaxWidth())
+            } else {
+                FeatureCard(
+                    modifier = Modifier.padding(top = FEATURE_CARD_GAP),
+                    title = stringResource(Res.string.settings_chord_diagrams),
+                    description = stringResource(Res.string.onboarding_feature_chord_diagrams_description),
+                    icon = { ChordsIcon(isKeyboard = tuning.instrument == ChordInstrument.KEYBOARD) },
+                    preview = { ChordDiagramPreview(tuning = tuning) },
+                    isEnabled = features.areChordDiagramsEnabled,
+                    onEnabledChange = onChordDiagramsEnabledChange,
+                )
+            }
+        }
+        FeatureCard(
+            modifier = Modifier.padding(top = FEATURE_CARD_GAP),
             title = stringResource(Res.string.metronome),
             description = stringResource(Res.string.onboarding_feature_metronome_description),
             // The metronome's mark is drawn in two parts, so that the navigation item can swing the pendulum alone.
-            icons = listOf(painterResource(Res.drawable.ic_metronome_body), painterResource(Res.drawable.ic_metronome_pendulum)),
+            icon = {
+                Box {
+                    Icon(painter = painterResource(Res.drawable.ic_metronome_body), contentDescription = null)
+                    Icon(painter = painterResource(Res.drawable.ic_metronome_pendulum), contentDescription = null)
+                }
+            },
             isEnabled = features.isMetronomeEnabled,
             onEnabledChange = onMetronomeEnabledChange,
-        ),
-        FeatureOption(
+        )
+        FeatureCard(
+            modifier = Modifier.padding(top = FEATURE_CARD_GAP),
             title = stringResource(Res.string.tuner),
             description = stringResource(Res.string.onboarding_feature_tuner_description),
-            icons = listOf(painterResource(Res.drawable.ic_tuner)),
+            icon = { Icon(painter = painterResource(Res.drawable.ic_tuner), contentDescription = null) },
             isEnabled = features.isTunerEnabled,
             onEnabledChange = onTunerEnabledChange,
-        ),
-    )
-    OnboardingChoiceGrid(
-        columns = 1,
-        count = options.size,
-    ) { index, itemModifier ->
-        val option = options[index]
-        OnboardingChoiceCard(
-            modifier = itemModifier,
-            title = option.title,
-            description = option.description,
-            icon = { Box { option.icons.forEach { Icon(painter = it, contentDescription = null) } } },
-            isSelected = option.isEnabled,
-            role = Role.Checkbox,
-            onClick = { option.onEnabledChange(!option.isEnabled) },
+        )
+        FeatureCard(
+            modifier = Modifier.padding(top = FEATURE_CARD_GAP),
+            title = stringResource(Res.string.setlists),
+            description = stringResource(Res.string.onboarding_feature_setlists_description),
+            icon = { Icon(painter = painterResource(Res.drawable.ic_setlists), contentDescription = null) },
+            isEnabled = features.areSetlistsEnabled,
+            onEnabledChange = onSetlistsEnabledChange,
         )
     }
 }
 
-private class FeatureOption(
-    val title: String,
-    val description: String,
-    val icons: List<Painter>,
-    val isEnabled: Boolean,
-    val onEnabledChange: (Boolean) -> Unit,
+/** One feature's card. */
+@Composable
+private fun FeatureCard(
+    modifier: Modifier = Modifier,
+    title: String,
+    description: String,
+    icon: @Composable () -> Unit,
+    preview: (@Composable () -> Unit)? = null,
+    isEnabled: Boolean,
+    onEnabledChange: (Boolean) -> Unit,
+) = OnboardingChoiceCard(
+    modifier = modifier.fillMaxWidth(),
+    title = title,
+    description = description,
+    icon = icon,
+    preview = preview,
+    isSelected = isEnabled,
+    role = Role.Checkbox,
+    onClick = { onEnabledChange(!isEnabled) },
 )
+
+/** A G, as the song page draws it at the top of a song in [tuning], or nothing for a tuning it has no shape in. */
+@Composable
+private fun ChordDiagramPreview(
+    tuning: ChordTuning,
+) {
+    val geometry = rememberChordGeometry(name = PREVIEW_CHORD, tuning = tuning) ?: return
+    ChordDiagram(
+        modifier = if (tuning.instrument.isFretted) Modifier.size(width = 36.dp, height = 48.dp) else Modifier.size(width = 56.dp, height = 26.dp),
+        geometry = geometry,
+        description = stringResource(Res.string.onboarding_chord_diagram_description, PREVIEW_CHORD),
+    )
+}
+
+private val FEATURE_CARD_GAP = 8.dp
+
+/** The chord drawn for the instrument picked: one of the first a player learns, with a shape on every instrument. */
+private const val PREVIEW_CHORD = "G"

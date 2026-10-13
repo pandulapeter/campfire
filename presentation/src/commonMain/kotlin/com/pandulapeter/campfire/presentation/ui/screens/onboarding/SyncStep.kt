@@ -43,7 +43,6 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.cancel
 import com.pandulapeter.campfire.presentation.resources.ic_check
 import com.pandulapeter.campfire.presentation.resources.ic_cloud
-import com.pandulapeter.campfire.presentation.resources.onboarding_sync_later
 import com.pandulapeter.campfire.presentation.resources.onboarding_sync_message
 import com.pandulapeter.campfire.presentation.resources.onboarding_sync_title
 import com.pandulapeter.campfire.presentation.resources.settings_sync_connect_dropbox
@@ -64,18 +63,19 @@ import org.jetbrains.compose.resources.painterResource
  * sync section does - the invitation (with the reason a connection failed under it), the wait for the consent page
  * with its way out, and the account once it is connected - crossfading between them, and leaves everything that comes
  * after a connection (a run's progress, its questions, disconnecting) to that section. Connecting is never required:
- * the bar under the page goes on either way, and the line at the end says where the offer can be found again.
+ * the bar under the page goes on either way, and the welcome page has already said that Settings holds every answer.
  */
 @Composable
 internal fun SyncStep(
     modifier: Modifier = Modifier,
+    markModifier: Modifier,
     syncState: SyncState,
     isCompact: Boolean,
     onConnect: (AuthorizationCompletionPage) -> Unit,
     onCancel: () -> Unit,
 ) = OnboardingPage(
     modifier = modifier,
-    icon = painterResource(Res.drawable.ic_cloud),
+    markModifier = markModifier,
     title = stringResource(Res.string.onboarding_sync_title),
     message = stringResource(Res.string.onboarding_sync_message),
     isCompact = isCompact,
@@ -108,13 +108,6 @@ internal fun SyncStep(
             }
         }
     }
-    Text(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
-        text = stringResource(Res.string.onboarding_sync_later),
-        style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        textAlign = TextAlign.Center,
-    )
 }
 
 /** What the page crossfades between: a failed connection is the invitation with its reason, so the two are one. */

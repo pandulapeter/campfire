@@ -40,8 +40,10 @@ builds are listed).
 The screen has no app bar: the tabs are at the top of the screen, next to the navigation rail, and everything on it
 starts at the start edge like the lists of the other screens rather than being centered. **The tabs stay flat** and have
 no divider under them: a page scrolled under them fades out into them (`fadingTopEdge`). The tabs themselves are capped
-at 560dp and start at the start edge, and the tab being headed for (`targetPage`) is the one marked, so the indicator
-sets off the moment a tab is pressed. A sync run waiting to hear whether its deletions are meant puts a dot on the
+at 560dp and start at the start edge. The tab being headed for (`targetPage`) is the one whose name lights up, so a
+pressed tab answers at once, while **the indicator follows the pages themselves** (`pagerIndicatorSpan` in
+`components/PagerIndicator.kt`, tested): it slides and resizes from one name to the next as far as the pages have
+turned, so a swipe, a press, and a predictive back move it the same way, frame by frame. A sync run waiting to hear whether its deletions are meant puts a dot on the
 Library tab rather than opening it, since the question may be a tab away; that is read through a derived state so a run
 reporting every file does not recompose the whole screen. Every page is composed with the screen
 (`beyondViewportPageCount` covers them all), so a tab is never first composed as it is swiped to.

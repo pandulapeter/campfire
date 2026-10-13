@@ -10,54 +10,50 @@
 package com.pandulapeter.campfire.presentation.ui.screens.onboarding
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.ic_campfire
 import com.pandulapeter.campfire.presentation.resources.ic_language
+import com.pandulapeter.campfire.presentation.resources.ic_settings
 import com.pandulapeter.campfire.presentation.resources.onboarding_language
+import com.pandulapeter.campfire.presentation.resources.onboarding_settings_note
 import com.pandulapeter.campfire.presentation.resources.onboarding_welcome_message
 import com.pandulapeter.campfire.presentation.resources.onboarding_welcome_title
-import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme
-import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color
-import com.pandulapeter.campfire.presentation.ui.components.BackgroundWarmthSlider
-import com.pandulapeter.campfire.presentation.ui.components.SettingsSubsection
-import com.pandulapeter.campfire.presentation.ui.components.ThemeColorChoice
-import com.pandulapeter.campfire.presentation.ui.components.UiModeChoice
 import com.pandulapeter.campfire.presentation.ui.components.languageName
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * The welcome, and the first thing a newcomer gets to make their own: the language, behind a small button under the
- * greeting that opens the list in a sheet, so that somebody greeted in the wrong one can change it before reading on;
- * then the theme, its color and how far it is turned towards sepia. The onboarding is drawn in the app's theme, so the
- * page itself shows what each tap changes.
+ * The welcome: under the greeting the language, behind a button that opens the list in a sheet, so that somebody
+ * greeted in the wrong one can change it before reading on; then the note that every answer of the onboarding can be
+ * changed in Settings, said once here for every page, so that none of the later ones has to say it again. The look is
+ * the next page's ([LookStep]), so that this one is read rather than worked through.
  */
 @Composable
 internal fun WelcomeStep(
     modifier: Modifier = Modifier,
+    markModifier: Modifier,
     language: UserPreferences.Language?,
-    uiMode: UserPreferences.UiMode?,
-    themeColor: UserPreferences.ThemeColor?,
-    backgroundWarmth: Int,
     isCompact: Boolean,
     onLanguageClicked: () -> Unit,
-    onUiModeSelected: (UserPreferences.UiMode) -> Unit,
-    onThemeColorSelected: (UserPreferences.ThemeColor) -> Unit,
-    onBackgroundWarmthChanged: (Int) -> Unit,
 ) = OnboardingPage(
     modifier = modifier,
-    icon = painterResource(Res.drawable.ic_campfire),
+    markModifier = markModifier,
     title = stringResource(Res.string.onboarding_welcome_title),
     message = stringResource(Res.string.onboarding_welcome_message),
     isCompact = isCompact,
@@ -66,8 +62,8 @@ internal fun WelcomeStep(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Center,
     ) {
-        TextButton(
-            contentPadding = ButtonDefaults.TextButtonWithIconContentPadding,
+        OutlinedButton(
+            contentPadding = ButtonDefaults.ButtonWithIconContentPadding,
             onClick = onLanguageClicked,
         ) {
             Icon(
@@ -81,28 +77,42 @@ internal fun WelcomeStep(
             )
         }
     }
-    SettingsSubsection(
-        title = stringResource(Res.string.settings_user_interface_theme),
-        shouldApplyPadding = false,
+    SettingsNote(modifier = Modifier.padding(top = 8.dp))
+}
+
+/**
+ * The one place the onboarding says that nothing it asks is final, on a tonal card with the settings mark, so that it is
+ * read as a promise about the whole of what follows rather than as a line about this page. It closes the page, after
+ * the language, as wide as its text and centered under the greeting, wrapping (still centered) where a phone is
+ * narrower than the sentence.
+ */
+@Composable
+private fun SettingsNote(
+    modifier: Modifier = Modifier,
+) = Box(
+    modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp),
+    contentAlignment = Alignment.Center,
+) {
+    Surface(
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
     ) {
-        UiModeChoice(
-            selected = uiMode,
-            onSelected = onUiModeSelected,
-        )
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Icon(
+                painter = painterResource(Res.drawable.ic_settings),
+                contentDescription = null,
+            )
+            Text(
+                modifier = Modifier.weight(1f, fill = false),
+                text = stringResource(Res.string.onboarding_settings_note),
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Center,
+            )
+        }
     }
-    SettingsSubsection(
-        title = stringResource(Res.string.settings_user_interface_theme_color),
-        shouldApplyPadding = false,
-    ) {
-        ThemeColorChoice(
-            uiMode = uiMode,
-            selected = themeColor,
-            onSelected = onThemeColorSelected,
-        )
-    }
-    BackgroundWarmthSlider(
-        warmth = backgroundWarmth,
-        shouldApplyPadding = false,
-        onWarmthChanged = onBackgroundWarmthChanged,
-    )
 }

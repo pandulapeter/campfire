@@ -1179,6 +1179,9 @@ class CampfireViewModel(
     /** See [Navigator.showNextOnboardingStep]. */
     fun showNextOnboardingStep() = navigator.showNextOnboardingStep()
 
+    /** See [Navigator.showOnboardingStepIfOpen]: the page a swipe settled on. */
+    fun showOnboardingStep(step: OnboardingStep) = navigator.showOnboardingStepIfOpen(step)
+
     /** See [Navigator.onboardingStep]. */
     internal val onboardingStep get() = navigator.onboardingStep
 
@@ -1189,7 +1192,6 @@ class CampfireViewModel(
     internal fun onboardingSteps(preferences: UserPreferences?) = onboardingSteps(
         canConnectDropbox = SyncProviderId.DROPBOX in syncProviders,
         areChordsEnabled = preferences?.areChordsEnabled != false,
-        isTunerEnabled = preferences?.isTunerEnabled != false,
     )
 
     /** See [Navigator.closeOnboarding]. */

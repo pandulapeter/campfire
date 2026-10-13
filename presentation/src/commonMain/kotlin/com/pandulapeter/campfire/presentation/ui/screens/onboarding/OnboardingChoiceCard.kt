@@ -31,6 +31,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -44,6 +45,8 @@ import org.jetbrains.compose.resources.painterResource
  * of the colors, and to somebody who cannot tell the container colors apart.
  *
  * @param icon Drawn in the content color at the start, decoration only: the title says what the card is.
+ * @param preview Drawn before the mark at the end, an example of what the answer changes, kept out of the icon's place
+ *   so that a preview wider than an icon does not push its card's text out of line with the other cards'.
  */
 @Composable
 internal fun OnboardingChoiceCard(
@@ -51,6 +54,7 @@ internal fun OnboardingChoiceCard(
     title: String,
     description: String? = null,
     icon: (@Composable () -> Unit)? = null,
+    preview: (@Composable () -> Unit)? = null,
     isSelected: Boolean,
     role: Role,
     onClick: () -> Unit,
@@ -60,15 +64,17 @@ internal fun OnboardingChoiceCard(
     val contentColor by animateColorAsState(if (isSelected) colors.onSecondaryContainer else colors.onSurface)
     val borderColor by animateColorAsState(if (isSelected) colors.primary else colors.outlineVariant)
     val borderWidth by animateDpAsState(if (isSelected) 2.dp else 1.dp)
+    // Clipped before it is made selectable, so that the ripple stays inside the rounded card rather than filling the
+    // rectangle around it.
     Surface(
-        modifier = modifier.selectable(selected = isSelected, role = role, onClick = onClick),
+        modifier = modifier.clip(MaterialTheme.shapes.large).selectable(selected = isSelected, role = role, onClick = onClick),
         shape = MaterialTheme.shapes.large,
         color = containerColor,
         contentColor = contentColor,
         border = BorderStroke(borderWidth, borderColor),
     ) {
         Row(
-            modifier = Modifier.defaultMinSize(minHeight = 56.dp).padding(horizontal = 16.dp, vertical = 12.dp),
+            modifier = Modifier.defaultMinSize(minHeight = 56.dp).padding(horizontal = 16.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
@@ -86,6 +92,7 @@ internal fun OnboardingChoiceCard(
                     )
                 }
             }
+            preview?.invoke()
             SelectionMark(isSelected = isSelected)
         }
     }

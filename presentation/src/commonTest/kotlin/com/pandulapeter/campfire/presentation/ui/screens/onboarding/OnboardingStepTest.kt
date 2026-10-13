@@ -18,11 +18,9 @@ class OnboardingStepTest {
     private fun steps(
         canConnectDropbox: Boolean = true,
         areChordsEnabled: Boolean = true,
-        isTunerEnabled: Boolean = true,
     ) = onboardingSteps(
         canConnectDropbox = canConnectDropbox,
         areChordsEnabled = areChordsEnabled,
-        isTunerEnabled = isTunerEnabled,
     )
 
     @Test
@@ -36,24 +34,16 @@ class OnboardingStepTest {
     }
 
     @Test
-    fun `without the chords and the tuner the instrument and the notation are not asked`() {
+    fun `the instrument is asked before the features, and without the chords the notation is not asked`() {
         assertEquals(
-            listOf(OnboardingStep.WELCOME, OnboardingStep.FEATURES, OnboardingStep.SYNC),
-            steps(areChordsEnabled = false, isTunerEnabled = false),
-        )
-    }
-
-    @Test
-    fun `the tuner alone asks for the instrument but not the notation`() {
-        assertEquals(
-            listOf(OnboardingStep.WELCOME, OnboardingStep.FEATURES, OnboardingStep.INSTRUMENT, OnboardingStep.SYNC),
-            steps(areChordsEnabled = false, isTunerEnabled = true),
+            listOf(OnboardingStep.WELCOME, OnboardingStep.LOOK, OnboardingStep.INSTRUMENT, OnboardingStep.FEATURES, OnboardingStep.SYNC),
+            steps(areChordsEnabled = false),
         )
     }
 
     @Test
     fun `the next and the previous step skip the ones that are not shown`() {
-        val steps = steps(areChordsEnabled = false, isTunerEnabled = false)
+        val steps = steps(areChordsEnabled = false)
         assertEquals(OnboardingStep.SYNC, nextOnboardingStep(OnboardingStep.FEATURES, steps))
         assertEquals(OnboardingStep.FEATURES, previousOnboardingStep(OnboardingStep.SYNC, steps))
         assertNull(nextOnboardingStep(OnboardingStep.SYNC, steps))
@@ -62,8 +52,8 @@ class OnboardingStepTest {
 
     @Test
     fun `a step that is no longer shown still leads on and back`() {
-        val steps = steps(areChordsEnabled = false, isTunerEnabled = false)
-        assertEquals(OnboardingStep.SYNC, nextOnboardingStep(OnboardingStep.INSTRUMENT, steps))
-        assertEquals(OnboardingStep.FEATURES, previousOnboardingStep(OnboardingStep.INSTRUMENT, steps))
+        val steps = steps(areChordsEnabled = false)
+        assertEquals(OnboardingStep.SYNC, nextOnboardingStep(OnboardingStep.NOTATION, steps))
+        assertEquals(OnboardingStep.FEATURES, previousOnboardingStep(OnboardingStep.NOTATION, steps))
     }
 }

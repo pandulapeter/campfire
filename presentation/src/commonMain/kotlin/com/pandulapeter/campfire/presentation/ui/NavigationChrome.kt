@@ -34,15 +34,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.ic_chords
-import com.pandulapeter.campfire.presentation.resources.ic_setlists
-import com.pandulapeter.campfire.presentation.resources.ic_settings
 import com.pandulapeter.campfire.presentation.resources.ic_tools
-import com.pandulapeter.campfire.presentation.resources.ic_tuner
-import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeIcon
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeIconBeat
 import com.pandulapeter.campfire.presentation.ui.metronome.rememberMetronomeIconBeat
-import com.pandulapeter.campfire.presentation.resources.ic_songs
 import com.pandulapeter.campfire.presentation.resources.tools
 import com.pandulapeter.campfire.presentation.ui.components.NavigationItemPresence
 import com.pandulapeter.campfire.presentation.ui.components.collapsingNavigationItem
@@ -78,6 +72,7 @@ private val EXPANDED_NAVIGATION_RAIL_TOP_PADDING = 4.dp
  * @param metronomeBeat Where the Metronome item's icon is in the beat, see [rememberMetronomeIconBeat]: one state for
  *   every copy of the chrome, so that a copy drawn under a card moves in step with the shared one.
  * @param lastTool The tool the bar's Tools item opens where none is on screen, see [toolsItemDestination].
+ * @param isKeyboard Whether the player's instrument is a keyboard, which the Chords item's icon is drawn for.
  */
 @Composable
 internal fun NavigationChrome(
@@ -86,6 +81,7 @@ internal fun NavigationChrome(
     currentTopLevelDestination: CampfireDestination.TopLevel?,
     metronomeBeat: MetronomeIconBeat,
     lastTool: CampfireDestination.TopLevel,
+    isKeyboard: Boolean,
     onDestinationSelected: (CampfireDestination.TopLevel) -> Unit,
 ) {
     if (kind == NavigationChromeKind.EXPANDED_RAIL) {
@@ -109,7 +105,7 @@ internal fun NavigationChrome(
                         colors = WideNavigationRailItemDefaults.colors().let {
                             it.copy(disabledIconColor = it.unselectedIconColor, disabledTextColor = it.unselectedTextColor)
                         },
-                        icon = { DestinationIcon(destination = destination, metronomeBeat = metronomeBeat) },
+                        icon = { DestinationIcon(destination = destination, metronomeBeat = metronomeBeat, isKeyboard = isKeyboard) },
                         label = {
                             Text(
                                 text = stringResource(destination.label),
@@ -135,7 +131,7 @@ internal fun NavigationChrome(
                         colors = NavigationRailItemDefaults.colors().let {
                             it.copy(disabledIconColor = it.unselectedIconColor, disabledTextColor = it.unselectedTextColor)
                         },
-                        icon = { DestinationIcon(destination = destination, metronomeBeat = metronomeBeat) },
+                        icon = { DestinationIcon(destination = destination, metronomeBeat = metronomeBeat, isKeyboard = isKeyboard) },
                         label = { NavigationItemLabel(stringResource(destination.label)) },
                     )
                 }
@@ -169,7 +165,7 @@ internal fun NavigationChrome(
                         },
                         icon = {
                             when (item) {
-                                is NavigationBarItem.Destination -> DestinationIcon(destination = item.destination, metronomeBeat = metronomeBeat)
+                                is NavigationBarItem.Destination -> DestinationIcon(destination = item.destination, metronomeBeat = metronomeBeat, isKeyboard = isKeyboard)
                                 NavigationBarItem.Tools -> Icon(painter = painterResource(Res.drawable.ic_tools), contentDescription = null)
                             }
                         },
@@ -188,20 +184,6 @@ internal fun NavigationChrome(
             }
         }
     }
-}
-
-/** The icon of a navigation item, the Metronome's swinging and pulsing with the click. */
-@Composable
-private fun DestinationIcon(
-    destination: CampfireDestination.TopLevel,
-    metronomeBeat: MetronomeIconBeat,
-) = when (destination) {
-    CampfireDestination.Songs -> Icon(painter = painterResource(Res.drawable.ic_songs), contentDescription = null)
-    CampfireDestination.Setlists -> Icon(painter = painterResource(Res.drawable.ic_setlists), contentDescription = null)
-    CampfireDestination.Metronome -> MetronomeIcon(beat = metronomeBeat, contentDescription = null)
-    CampfireDestination.Tuner -> Icon(painter = painterResource(Res.drawable.ic_tuner), contentDescription = null)
-    CampfireDestination.Chords -> Icon(painter = painterResource(Res.drawable.ic_chords), contentDescription = null)
-    CampfireDestination.Settings -> Icon(painter = painterResource(Res.drawable.ic_settings), contentDescription = null)
 }
 
 /**

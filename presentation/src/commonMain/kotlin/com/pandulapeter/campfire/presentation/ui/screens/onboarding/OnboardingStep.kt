@@ -13,32 +13,34 @@ import kotlinx.serialization.Serializable
 
 /**
  * The pages of the onboarding, in the order they are shown. Each asks one thing, and the answers to the earlier ones
- * decide whether the later ones are asked at all ([onboardingSteps]), which is why the features come before everything
- * that depends on them. Serializable because the page is saved with the back stack, see `Navigator.onboardingStep`.
+ * decide whether the later ones are asked at all ([onboardingSteps]). The instrument comes before the features, since
+ * whether the chord diagrams are a feature worth offering depends on it, and the features before everything that depends
+ * on them. The welcome and the look are two pages rather than one, so that neither is a page too long for a window
+ * while the next is a page with almost nothing on it. Serializable because the page is saved with the back stack, see
+ * `Navigator.onboardingStep`.
  */
 @Serializable
 enum class OnboardingStep {
     WELCOME,
-    FEATURES,
+    LOOK,
     INSTRUMENT,
+    FEATURES,
     NOTATION,
     SYNC,
 }
 
 /**
- * The steps worth showing, given the features switched on: the instrument only while there is something it decides (the
- * chord diagrams with the chords on, the tuning with the tuner on), the notation only with the chords on, and the cloud
- * folder only where the build can connect Dropbox, since a page offering a button that does nothing is worse than no
- * page. What a song card shows after its artist is not asked: the defaults follow the features, and Settings changes it.
+ * The steps worth showing, given the features switched on: the notation only with the chords on, and the cloud folder only
+ * where the build can connect Dropbox, since a page offering a button that does nothing is worse than no page. The
+ * instrument is always asked, being asked before the features it is for. What a song card shows after its artist is
+ * not asked: the defaults follow the features, and Settings changes it.
  */
 internal fun onboardingSteps(
     canConnectDropbox: Boolean,
     areChordsEnabled: Boolean,
-    isTunerEnabled: Boolean,
 ) = OnboardingStep.entries.filter { step ->
     when (step) {
-        OnboardingStep.WELCOME, OnboardingStep.FEATURES -> true
-        OnboardingStep.INSTRUMENT -> areChordsEnabled || isTunerEnabled
+        OnboardingStep.WELCOME, OnboardingStep.LOOK, OnboardingStep.INSTRUMENT, OnboardingStep.FEATURES -> true
         OnboardingStep.NOTATION -> areChordsEnabled
         OnboardingStep.SYNC -> canConnectDropbox
     }

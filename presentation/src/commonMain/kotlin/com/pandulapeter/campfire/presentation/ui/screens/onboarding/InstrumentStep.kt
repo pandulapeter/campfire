@@ -10,194 +10,118 @@
 package com.pandulapeter.campfire.presentation.ui.screens.onboarding
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.SizeTransform
-import androidx.compose.animation.expandHorizontally
-import androidx.compose.animation.expandVertically
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkHorizontally
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.chordpro.ChordNotation
-import com.pandulapeter.campfire.chordpro.chords.ChordProChords
-import com.pandulapeter.campfire.chordpro.chords.ChordVoicings
 import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.ic_tuner
-import com.pandulapeter.campfire.presentation.resources.onboarding_chord_diagram_description
-import com.pandulapeter.campfire.presentation.resources.onboarding_instrument_keyboard
-import com.pandulapeter.campfire.presentation.resources.onboarding_instrument_message_chords
-import com.pandulapeter.campfire.presentation.resources.onboarding_instrument_message_chords_and_tuner
-import com.pandulapeter.campfire.presentation.resources.onboarding_instrument_message_tuner
-import com.pandulapeter.campfire.presentation.resources.onboarding_instrument_other
+import com.pandulapeter.campfire.presentation.resources.onboarding_instrument_message
+import com.pandulapeter.campfire.presentation.resources.onboarding_instrument_strings
 import com.pandulapeter.campfire.presentation.resources.onboarding_instrument_title
-import com.pandulapeter.campfire.presentation.resources.settings_chord_diagrams
-import com.pandulapeter.campfire.presentation.resources.settings_chord_diagrams_description
-import com.pandulapeter.campfire.presentation.ui.chords.chordDiagramGeometryOf
-import com.pandulapeter.campfire.presentation.ui.components.ChordDiagram
-import com.pandulapeter.campfire.presentation.ui.components.SwitchListItem
-import com.pandulapeter.campfire.presentation.ui.instrument.hasDiagrams
-import com.pandulapeter.campfire.presentation.ui.instrument.instrumentLabel
-import com.pandulapeter.campfire.presentation.ui.instrument.tunings
+import com.pandulapeter.campfire.presentation.ui.components.InstrumentChipRow
+import com.pandulapeter.campfire.presentation.ui.instrument.tuningStringsLabel
 import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
-import org.jetbrains.compose.resources.painterResource
 
 /**
- * "What do you play?", one instrument picked out of a grid, and then its tuning, which is the one instrument the chord
- * diagrams and the tuner are set up for ([UserPreferences.instrument]), Something else among them for every instrument
- * that is not there. Only asked while the chords or the tuner are on, and the line under the question names the one or
- * two of them the answer is for; with the tuner off only the instruments the diagrams are drawn for are offered
- * ([onboardingInstruments]). The instrument already in the preferences is the one shown picked, a fresh installation's
- * guitar included, so that going through the onboarding again starts from what the app is set to now.
+ * "What do you play?", the one instrument the chord diagrams and the tuner are set up for ([UserPreferences.instrument])
+ * and its tuning, picked through the same two chips and sheets the song details screen, the Tuner, the Chords tab, and
+ * Settings offer, so that the onboarding teaches the control the player will meet again rather than one of its own. It
+ * is asked before the features, since the next page offers the chord diagrams only for an instrument they are drawn for.
+ * The chips show what the app is set to now, a fresh installation's six-string guitar included.
  *
- * With the chords on, the switch for the diagrams is under the answers for an instrument they are drawn for, and while
- * it is on a G is drawn beside it in [chordTuning], so the answer shows what it will change on every song; an
- * instrument they are never drawn for leaves the place empty.
+ * Under them the answer is shown on what it changes: a few chords drawn for it in [chordTuning], where it has diagrams,
+ * and the open strings the tuner will listen for, where it has a tuning, crossfading as either is picked again.
  */
 @Composable
 internal fun InstrumentStep(
     modifier: Modifier = Modifier,
-    selected: UserPreferences.Instrument,
+    markModifier: Modifier,
+    instrument: UserPreferences.Instrument,
     tuning: InstrumentTuning?,
     chordTuning: ChordTuning?,
     notation: ChordNotation,
-    areChordsEnabled: Boolean,
-    isTunerEnabled: Boolean,
-    areChordDiagramsEnabled: Boolean,
     isCompact: Boolean,
-    onSelected: (UserPreferences.Instrument) -> Unit,
-    onTuningSelected: (InstrumentTuning) -> Unit,
-    onChordDiagramsEnabledChange: (Boolean) -> Unit,
+    onInstrumentClicked: () -> Unit,
+    onTuningClicked: () -> Unit,
 ) = OnboardingPage(
     modifier = modifier,
-    icon = painterResource(Res.drawable.ic_tuner),
+    markModifier = markModifier,
     title = stringResource(Res.string.onboarding_instrument_title),
-    message = stringResource(
-        when {
-            areChordsEnabled && isTunerEnabled -> Res.string.onboarding_instrument_message_chords_and_tuner
-            areChordsEnabled -> Res.string.onboarding_instrument_message_chords
-            else -> Res.string.onboarding_instrument_message_tuner
-        }
-    ),
+    message = stringResource(Res.string.onboarding_instrument_message),
     isCompact = isCompact,
 ) {
-    val instruments = onboardingInstruments(isTunerEnabled = isTunerEnabled)
-    OnboardingChoiceGrid(
-        modifier = Modifier.selectableGroup(),
-        columns = 2,
-        count = instruments.size,
-    ) { index, itemModifier ->
-        val instrument = instruments[index]
-        OnboardingChoiceCard(
-            modifier = itemModifier,
-            title = onboardingInstrumentLabel(instrument),
-            isSelected = instrument == selected,
-            role = Role.RadioButton,
-            onClick = { onSelected(instrument) },
-        )
-    }
-    val tunedTuning = tuning?.takeIf { selected.tunings.size > 1 }
-    AnimatedVisibility(
-        visible = tunedTuning != null,
-        enter = fadeIn() + expandVertically(),
-        exit = fadeOut() + shrinkVertically(),
+    Box(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+        contentAlignment = Alignment.TopCenter,
     ) {
-        // Kept while it shrinks away, so that the chips fade out as they were rather than as nothing.
-        val shown = remember(tunedTuning) { tunedTuning?.let { selected to it } } ?: return@AnimatedVisibility
-        OnboardingTuningChoice(
-            instrument = shown.first,
-            selected = shown.second,
+        // Centered, so its width is animated: the tuning chip only fades, and the instrument's would otherwise jump
+        // sideways as it comes and goes.
+        InstrumentChipRow(
+            modifier = Modifier.animateContentSize(),
+            instrument = instrument,
+            tuning = tuning,
             notation = notation,
-            onSelected = onTuningSelected,
+            onInstrumentClicked = onInstrumentClicked,
+            onTuningClicked = onTuningClicked,
         )
     }
-    if (areChordsEnabled) {
-        AnimatedContent(
-            targetState = selected.hasDiagrams,
-            transitionSpec = { fadeIn() togetherWith fadeOut() using SizeTransform(clip = false) },
-            contentAlignment = Alignment.TopCenter,
-        ) { hasDiagrams ->
-            if (hasDiagrams) {
-                ChordDiagramsSwitch(
-                    tuning = chordTuning,
-                    areChordDiagramsEnabled = areChordDiagramsEnabled,
-                    onChordDiagramsEnabledChange = onChordDiagramsEnabledChange,
-                )
-            }
-        }
-    }
+    InstrumentPreview(
+        chordTuning = chordTuning,
+        tuning = tuning,
+        notation = notation,
+    )
 }
 
 /**
- * The chord diagrams switch, and while it is on a G drawn beside it in [tuning]. The diagram sits beside its switch
- * rather than under it, where the answers above would push it past the bottom of a short window, so that picking an
- * instrument visibly redraws it.
+ * The chords and the open strings under the chips, as wide as the page whatever it holds, so that a change only animates
+ * its height.
  */
 @Composable
-private fun ChordDiagramsSwitch(
-    tuning: ChordTuning?,
-    areChordDiagramsEnabled: Boolean,
-    onChordDiagramsEnabledChange: (Boolean) -> Unit,
-) = Row(verticalAlignment = Alignment.CenterVertically) {
-    SwitchListItem(
-        modifier = Modifier.weight(1f),
-        title = stringResource(Res.string.settings_chord_diagrams),
-        description = stringResource(Res.string.settings_chord_diagrams_description),
-        isChecked = areChordDiagramsEnabled,
-        onCheckedChange = onChordDiagramsEnabledChange,
-    )
-    AnimatedVisibility(
-        visible = areChordDiagramsEnabled && tuning != null,
-        enter = fadeIn() + expandHorizontally(),
-        exit = fadeOut() + shrinkHorizontally(),
+private fun InstrumentPreview(
+    chordTuning: ChordTuning?,
+    tuning: InstrumentTuning?,
+    notation: ChordNotation,
+) = AnimatedContent(
+    modifier = Modifier.fillMaxWidth(),
+    targetState = InstrumentPreviewState(chordTuning = chordTuning, tuning = tuning),
+    transitionSpec = { fadeIn() togetherWith fadeOut() using SizeTransform(clip = false) },
+    contentAlignment = Alignment.TopCenter,
+) { state ->
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        // Kept while it shrinks away, so that the diagram fades out as it was rather than as nothing.
-        remember(tuning) { tuning }?.let { InstrumentChordPreview(tuning = it) }
+        state.chordTuning?.let { OnboardingChordPreview(tuning = it) }
+        state.tuning?.let {
+            Text(
+                text = stringResource(Res.string.onboarding_instrument_strings, tuningStringsLabel(it, notation)),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
+        }
     }
 }
 
-/** A G, as the song page draws it at the top of a song in [tuning]. */
-@Composable
-private fun InstrumentChordPreview(
-    tuning: ChordTuning,
-) = Box(
-    modifier = Modifier.padding(end = 16.dp),
-    contentAlignment = Alignment.Center,
-) {
-    val chord = remember { ChordProChords.parse(PREVIEW_CHORD) }
-    val geometry = remember(chord, tuning) {
-        chord?.let { ChordVoicings.default(it, tuning)?.let { shape -> chordDiagramGeometryOf(shape, tuning, it.root) } }
-    }
-    if (geometry != null) {
-        ChordDiagram(
-            modifier = if (tuning.instrument.isFretted) Modifier.size(width = 56.dp, height = 72.dp) else Modifier.size(width = 104.dp, height = 48.dp),
-            geometry = geometry,
-            description = stringResource(Res.string.onboarding_chord_diagram_description, PREVIEW_CHORD),
-        )
-    }
-}
-
-/** The page's own words for the two answers that are not an instrument's name, and the instrument's name otherwise. */
-@Composable
-private fun onboardingInstrumentLabel(instrument: UserPreferences.Instrument) = when (instrument) {
-    UserPreferences.Instrument.KEYBOARD -> stringResource(Res.string.onboarding_instrument_keyboard)
-    UserPreferences.Instrument.OTHER -> stringResource(Res.string.onboarding_instrument_other)
-    else -> instrumentLabel(instrument)
-}
-
-/** The chord drawn for the instrument picked: one of the first a player learns, with a shape on every instrument. */
-private const val PREVIEW_CHORD = "G"
+private data class InstrumentPreviewState(
+    val chordTuning: ChordTuning?,
+    val tuning: InstrumentTuning?,
+)

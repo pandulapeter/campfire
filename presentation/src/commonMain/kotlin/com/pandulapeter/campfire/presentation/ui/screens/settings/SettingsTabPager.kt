@@ -98,10 +98,11 @@ internal fun SettingsTabPager(
         }
     }
     Column(modifier = modifier.fillMaxSize()) {
-        // The tab being headed for rather than the one on screen, so that the indicator sets off the moment a tab is
-        // pressed instead of waiting for the pages to pass the halfway point.
+        // The tab being headed for rather than the one on screen, so that its name lights up the moment it is pressed
+        // instead of waiting for the pages to pass the halfway point; the indicator follows the pages themselves.
         SettingsTabRow(
             selectedTab = SettingsTab.entries[pagerState.targetPage],
+            indicatorPosition = { pagerState.currentPage + pagerState.currentPageOffsetFraction },
             // The library is not synced until a run that stopped to ask whether its deletions are meant has been
             // answered, and the question is in the sync section, which may be a tab away.
             badgedTab = badgedTab,

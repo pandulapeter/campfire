@@ -256,6 +256,12 @@ slot number (456dp with all three, `MIN_SETLIST_COLUMN_WIDTH`, `ListLayout.setli
 width a laptop's maximized window cut those lines short across four columns. `CampfireScreens` works both out and hands
 them to `ListLayout.of`, which the side panel's room is counted in too.
 
+### `ui/components/ChordsIcon.kt`
+
+The mark of the Chords navigation item and of the onboarding's chord diagrams card: a fretboard for every fretted
+instrument (and Other), a keyboard (`ic_piano`) for the keyboard, crossfading as the instrument is picked. Nothing is
+composed before the preferences are read, so it starts on the right one.
+
 ### `ui/components/LabeledControlRow.kt`
 
 A setting whose label stands beside a wide control that grows with the text and never wraps — the tuner's reference
@@ -313,6 +319,14 @@ settled way; where the cover search is offered (outside performance mode, cover 
 and a song with no cover gets an empty place with the album icon in it that does the same. The lyrics' header draws none. Both follow
 `UserPreferences.isCoverArtEnabled`, the Features tab's "Cover art" switch, which leaves every cover unfetched and
 undrawn when it is off; performance mode keeps them, since a cover changes nothing.
+
+### `ui/components/PagerIndicator.kt`
+
+`ui/components/PagerIndicator.kt` — what a pager's indicator shows at the pager's position (its page plus its offset):
+how far each item is selected (`pagerSelection`, the onboarding's dots) and where a tab indicator is between two tabs
+(`pagerIndicatorSpan`, the settings tabs). **An indicator follows the pages rather than the page index**, read while
+laying out or drawing so a swipe moves it without recomposing, and never animates on its own: a swipe, a button, and a
+predictive back all move it the way they move the pages.
 
 ### `ui/components/SaveShortcut.kt`
 

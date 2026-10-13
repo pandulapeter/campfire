@@ -212,6 +212,7 @@ internal fun CampfireScreens(
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val areChordsEnabled = userPreferences?.areChordsEnabled != false
     val isMetronomeEnabled = userPreferences?.isMetronomeEnabled != false
+    val isKeyboard = userPreferences?.instrument == UserPreferences.Instrument.KEYBOARD
     val listLayout = ListLayout.of(
         settledWidth = settledListWidth,
         contentPadding = shellContentPadding,
@@ -234,6 +235,7 @@ internal fun CampfireScreens(
                     currentTopLevelDestination = destination,
                     metronomeBeat = metronomeBeat,
                     lastTool = viewModel.lastTool,
+                    isKeyboard = isKeyboard,
                     onDestinationSelected = viewModel::selectTopLevelDestination,
                 )
             }
@@ -255,6 +257,8 @@ internal fun CampfireScreens(
             tools = groupedTools,
             isTabRowDrawn = chromeInScreens,
             contentPadding = shellContentPadding,
+            metronomeBeat = metronomeBeat,
+            isKeyboard = isKeyboard,
             onToolSelected = viewModel::selectTopLevelDestination,
             content = content,
         )
@@ -452,6 +456,8 @@ internal fun CampfireScreens(
                 tools = groupedTools,
                 railWidth = railWidth,
                 contentPadding = shellContentPadding,
+                metronomeBeat = metronomeBeat,
+                isKeyboard = isKeyboard,
             )
         }
         ExportHost(

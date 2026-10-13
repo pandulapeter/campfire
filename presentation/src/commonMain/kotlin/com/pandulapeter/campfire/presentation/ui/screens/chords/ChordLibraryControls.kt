@@ -104,7 +104,7 @@ private fun ControlTitle(text: String) = Text(
     style = MaterialTheme.typography.titleSmall,
 )
 
-/** A wrapping row of chips that is a radio group, padded as [TuningChips] pads its own. */
+/** A wrapping row of chips that is a radio group, padded as the page's headings are. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ChipRow(content: @Composable () -> Unit) = FlowRow(

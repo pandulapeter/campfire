@@ -9,7 +9,9 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.onboarding
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,51 +21,64 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.chordpro.ChordNotation
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
+import com.pandulapeter.campfire.chordpro.chords.ChordProTransposer
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 
 /**
- * Two lines of a song with its chords over the words, the way a song page sets them, which is what the notation being
- * picked is shown on as it is made. A picture rather than content, so it is left out of the semantics tree; the choices beside it say what it shows.
+ * Two lines of a song with its chords over the words, the way a song page sets them, which is what the notation and the
+ * accidentals being picked are shown on as they are made. A picture rather than content, so it is left out of the
+ * semantics tree; the choices beside it say what it shows.
  */
 @Composable
 internal fun OnboardingSongPreview(
     modifier: Modifier = Modifier,
     notation: UserPreferences.Notation?,
+    accidentals: UserPreferences.Accidentals?,
 ) {
     val chordNotation = (notation ?: UserPreferences.Notation.STANDARD).toChordNotation()
-    val shownNames = remember(chordNotation) { ChordProNotation.shownNames(ChordProParser.parse(PREVIEW_SONG), chordNotation) }
+    val chordAccidentals = accidentals ?: UserPreferences.Accidentals.ORIGINAL
+    val shownNames = remember(chordNotation, chordAccidentals) { onboardingPreviewChordNames(chordNotation, chordAccidentals) }
     val chordColor = LocalSecondAccentColor.current
-    Surface(
+    // As wide as the lines rather than the page, and centered under the question, its width animated as the chord
+    // names of another notation make the lines longer or shorter.
+    Box(
         modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp).clearAndSetSemantics { },
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        contentAlignment = Alignment.Center,
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+        Surface(
+            modifier = Modifier.animateContentSize(),
+            shape = MaterialTheme.shapes.large,
+            color = MaterialTheme.colorScheme.surfaceContainerLow,
         ) {
-            PREVIEW_LINES.forEach { line ->
-                FlowRow {
-                    line.forEach { (chord, words) ->
-                        Column {
-                            Text(
-                                text = chord?.let { shownNames[it] ?: it } ?: "",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = chordColor,
-                            )
-                            Text(
-                                text = words,
-                                style = MaterialTheme.typography.bodyLarge,
-                            )
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                PREVIEW_LINES.forEach { line ->
+                    FlowRow {
+                        line.forEach { (chord, words) ->
+                            Column {
+                                Text(
+                                    text = chord?.let { shownNames[it] ?: it } ?: "",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = chordColor,
+                                )
+                                Text(
+                                    text = words,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                )
+                            }
                         }
                     }
                 }
@@ -73,8 +88,26 @@ internal fun OnboardingSongPreview(
 }
 
 /**
+ * What each chord of the preview is shown as, by the name [PREVIEW_LINES] write it under: spelled with [accidentals]
+ * first, as the song page does, then written in [notation].
+ */
+internal fun onboardingPreviewChordNames(notation: ChordNotation, accidentals: UserPreferences.Accidentals): Map<String, String> {
+    val preferFlats = when (accidentals) {
+        UserPreferences.Accidentals.ORIGINAL -> null
+        UserPreferences.Accidentals.FLATS -> true
+        UserPreferences.Accidentals.SHARPS -> false
+    }
+    val shown = ChordProNotation.shownNames(ChordProParser.parse(ChordProTransposer.transposeText(PREVIEW_SONG, 0, preferFlats)), notation)
+    return PREVIEW_LINES.flatten().mapNotNull { it.first }.distinct().associateWith { chord ->
+        val spelled = ChordProTransposer.transposeText("[$chord]", 0, preferFlats).removeSurrounding("[", "]")
+        shown[spelled] ?: spelled
+    }
+}
+
+/**
  * The key [PREVIEW_LINES] are in, in the standard notation: E, whose chords read differently in every notation the app
- * has, its fifth being the B the German notation calls H. Never shown, only counted from by a numbering.
+ * has, its fifth being the B the German notation calls H, and its sixth the C# that the accidentals spell as Db where
+ * flats are asked for. Never shown, only counted from by a numbering.
  */
 private const val PREVIEW_KEY = "E"
 
@@ -85,7 +118,7 @@ private const val PREVIEW_KEY = "E"
  */
 private val PREVIEW_LINES = listOf(
     listOf("E" to "Amazing ", "E7" to "grace, how ", "A" to "sweet the ", "E" to "sound"),
-    listOf(null to "That ", "E" to "saved a wretch like ", "B" to "me"),
+    listOf(null to "That ", "E" to "saved a ", "C#m" to "wretch like ", "B" to "me"),
 )
 
 /** The same lines as a song, which is what the notations are worked out from: a numbering counts from its key. */

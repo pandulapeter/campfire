@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.ui.components.only
+import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeIconBeat
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 
 /**
@@ -41,6 +42,8 @@ internal fun ToolScreenFrame(
     tools: List<CampfireDestination.TopLevel>,
     isTabRowDrawn: Boolean,
     contentPadding: PaddingValues,
+    metronomeBeat: MetronomeIconBeat,
+    isKeyboard: Boolean,
     onToolSelected: (CampfireDestination.TopLevel) -> Unit,
     content: @Composable () -> Unit,
 ) = Column(modifier = Modifier.fillMaxSize()) {
@@ -62,6 +65,8 @@ internal fun ToolScreenFrame(
                     .wrapContentHeight(unbounded = true),
                 tools = tools,
                 selected = destination,
+                metronomeBeat = metronomeBeat,
+                isKeyboard = isKeyboard,
                 onSelected = onToolSelected,
             )
         }

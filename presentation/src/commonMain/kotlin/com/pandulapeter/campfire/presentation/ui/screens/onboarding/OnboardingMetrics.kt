@@ -24,3 +24,9 @@ internal val ONBOARDING_CONTENT_WIDTH = max(560.dp, THEME_COLOR_CHOICE_WIDTH)
  * pages are better scrolled for their answers than for it.
  */
 internal val ONBOARDING_MARK_MIN_HEIGHT = 640.dp
+
+/**
+ * How long the mark and its place take to leave or come back as a window crosses [ONBOARDING_MARK_MIN_HEIGHT]. Slower
+ * than the app's springs, since the page reflows around it and a change that size is lost if it is over in a blink.
+ */
+internal const val ONBOARDING_MARK_RESIZE_MILLIS = 600

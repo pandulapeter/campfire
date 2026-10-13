@@ -17,31 +17,38 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.localization.stringResource
+import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeIconBeat
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SETTINGS_TAB_ROW_MAX_WIDTH
 
 /**
  * The tabs between the tools behind the navigation bar's Tools item (see [areToolsGrouped]), standing where the
- * settings screen's tabs do and drawn the way they are: on the background, with no divider, capped at the same width.
- * Each tab is a top level screen of its own, selected as its item would be, so a tab already open scrolls its screen
- * to the top. The three names fit a 360dp phone side by side, so the tabs share the row rather than scroll.
+ * settings screen's tabs do and drawn the way they are, with no divider and capped at the same width, but each with its
+ * tool's icon over its name, the one its navigation item would have ([DestinationIcon]), since the bar's own item shows
+ * only the wrench. Each tab is a top level screen of its own, selected as its item would be, so a tab already open
+ * scrolls its screen to the top. An icon beside each name would not leave the three names room on a 360dp phone, so the
+ * icon goes above it, and the tabs share the row rather than scroll.
+ *
+ * The row is painted in the background color rather than left transparent: the tool screens fade through under it,
+ * and a transparent row would show both of them at once for the length of the fade.
  */
 @Composable
 internal fun ToolsTabRow(
     modifier: Modifier = Modifier,
     tools: List<CampfireDestination.TopLevel>,
     selected: CampfireDestination.TopLevel?,
+    metronomeBeat: MetronomeIconBeat,
+    isKeyboard: Boolean,
     onSelected: (CampfireDestination.TopLevel) -> Unit,
 ) = PrimaryTabRow(
     modifier = modifier
         .widthIn(max = SETTINGS_TAB_ROW_MAX_WIDTH)
         .height(TOOLS_TAB_ROW_HEIGHT),
     selectedTabIndex = tools.indexOf(selected).coerceAtLeast(0),
-    containerColor = Color.Transparent,
+    containerColor = MaterialTheme.colorScheme.background,
     divider = {},
 ) {
     tools.forEach { tool ->
@@ -50,12 +57,13 @@ internal fun ToolsTabRow(
             onClick = { onSelected(tool) },
             unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
             text = { Text(text = stringResource(tool.label), maxLines = 1, overflow = TextOverflow.Ellipsis) },
+            icon = { DestinationIcon(destination = tool, metronomeBeat = metronomeBeat, isKeyboard = isKeyboard) },
         )
     }
 }
 
 /**
- * The height of [ToolsTabRow], a text tab's own, held fixed so that the room each tool screen keeps for the row is
+ * The height of [ToolsTabRow], that of a tab with an icon and text, held fixed so that the room each tool screen keeps for the row is
  * always exactly what the row takes, whatever the text size.
  */
-internal val TOOLS_TAB_ROW_HEIGHT = 48.dp
+internal val TOOLS_TAB_ROW_HEIGHT = 72.dp

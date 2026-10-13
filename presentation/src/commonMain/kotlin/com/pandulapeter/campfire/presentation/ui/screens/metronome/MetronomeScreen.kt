@@ -213,5 +213,5 @@ private fun MetronomeSoundOptions(
     }
 }
 
-/** What the bar keeps free above itself, so that it sits where the settings screen's tabs do. */
-private val PANEL_TOP_PADDING = 8.dp
+/** What the bar keeps free above itself, the gap the other tool screens leave above their first control. */
+private val PANEL_TOP_PADDING = 16.dp

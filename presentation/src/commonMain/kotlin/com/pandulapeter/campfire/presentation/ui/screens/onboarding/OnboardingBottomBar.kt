@@ -59,6 +59,7 @@ internal fun OnboardingBottomBar(
     modifier: Modifier = Modifier,
     steps: List<OnboardingStep>,
     currentStep: OnboardingStep,
+    pagerPosition: () -> Float,
     isLast: Boolean,
     isOpenedFromSettings: Boolean,
     isImportWaiting: Boolean,
@@ -90,7 +91,7 @@ internal fun OnboardingBottomBar(
             Button(onClick = {}, modifier = Modifier.clearAndSetSemantics {}, contentPadding = FOOTER_BUTTON_PADDING) { Text(lastLabel) }
         }.maxOf { it.measure(looseConstraints).width }
         // Measured on every pass, since the dots animate: the pill stretching, and a dot growing in or shrinking out.
-        val dots = subcompose(FooterSlot.DOTS) { OnboardingPageIndicator(steps = steps, currentStep = currentStep) }.single().measure(looseConstraints)
+        val dots = subcompose(FooterSlot.DOTS) { OnboardingPageIndicator(steps = steps, currentStep = currentStep, position = pagerPosition) }.single().measure(looseConstraints)
         val width = constraints.maxWidth
         // No gap of its own: the dots' padding already keeps them apart from the buttons.
         val dotsStart = onboardingDotsStart(width = width, dotsWidth = dots.width, startSlotWidth = startSlotWidth, endSlotWidth = endSlotWidth, gap = 0)
