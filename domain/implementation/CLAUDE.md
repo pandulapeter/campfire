@@ -98,15 +98,17 @@ The ones that carry real logic:
   conversion count input files, applying counts all entries including duplicates and the ones left out, and comparison
   and final adoption are indeterminate. A write failure stops the batch before any dependent setlist is written and
   returns the successful names, the failed source and the unprocessed remainder; cancellation still propagates. What
-  the review left out has its own result list (`leftOutFileNames`).
+  the review left out has its own result list (`leftOutFileNames`), named by the file each arrived in, as the review
+  listed it.
   Documents pass through `DocumentRepository`, `mapper/DocumentMappers.kt` and `ChordSheetConverter` before that
   same planning. Plain text uses positioned columns and the converter too, but ChordPro extensions are untouched.
   A multi-song document joins the ordinary collection path, with each song named by its own converted header and
   no source filename. Extracted prose is a valid import; no readable text is `unreadableDocumentFileNames`, not an
   unsupported file. Document input is capped at 16 MiB and converted text at 8 MiB. `isConverted` is transient
   planning state, counted only for actual writes in `ImportResult.convertedSongFileNames`; duplicates and entries left
-  out are never counted. The result's duplicate and left-out lists name each library file once, however
-  many copies the batch brought, and a repeat of a song this import wrote is not also "already in the library".
+  out are never counted. The result's duplicate list names each library file once, however many copies the batch
+  brought, and a repeat of a song this import wrote is not also "already in the library"; the left-out list has one
+  name for every unticked row of the review, a repeat of one going with it unnamed.
   `convertedSongToOpen` is set only for one converted song without other entries or
   errors, for the presentation's explicit Open action. No origin information survives in the library.
   Songs are still written before setlists and the names they actually got are remembered, so that a setlist arriving in

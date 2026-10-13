@@ -26,7 +26,10 @@ data class ImportResult(
     /** Files the import would have looked inside but did not read, see [ImportPlan.oversizedFileNames]. */
     val oversizedFileNames: List<String> = emptyList(),
     val unreadableDocumentFileNames: List<String> = emptyList(),
-    /** Entries the user unticked in the review, conflicting or not, separate from unsupported files. */
+    /**
+     * Entries the user unticked in the review, conflicting or not, named by the file each arrived in, as the review
+     * listed them; separate from unsupported files.
+     */
     val leftOutFileNames: List<String> = emptyList(),
     /** A stopped import retains the names it wrote, so a failure never hides a partial success. */
     val isFailed: Boolean = false,

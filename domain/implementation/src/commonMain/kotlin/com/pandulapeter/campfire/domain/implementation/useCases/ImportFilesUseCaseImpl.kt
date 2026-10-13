@@ -155,19 +155,21 @@ class ImportFilesUseCaseImpl internal constructor(
 
                     // Already in the library, or already written by this import, so the name it arrived under points there.
                     Action.DISREGARD -> (entry.repeatedEntryIndex?.let(storedNames::getOrNull) ?: entry.fileName).also {
+                        // A repeat of an entry left out goes with it, and is not reported again: the review lists only
+                        // the first of the repeats, which is already there.
                         if (entry.repeatedEntryIndex in leftAloneIndices) {
                             leftAloneIndices += index
-                            leftOut += it
                         } else {
                             duplicateFileNames += it
                         }
                     }
 
                     // The library's spelling of the name where it holds the file under another one (case, Unicode form),
-                    // since that is the name the song list holds and the batch's setlists are pointed at.
+                    // since that is the name the song list holds and the batch's setlists are pointed at. The result
+                    // names it as the review did, by the file it arrived in, since the stored name is no file the user saw.
                     Action.LEAVE_ALONE -> (entry.replacesFileName ?: entry.fileName).also {
                         leftAloneIndices += index
-                        leftOut += it
+                        leftOut += entry.sourceFileName ?: entry.fileName
                     }
                 }
                 storedNames[index] = storedName
@@ -223,7 +225,7 @@ class ImportFilesUseCaseImpl internal constructor(
                     }
 
                     Action.DISREGARD -> duplicateFileNames += entry.fileName
-                    Action.LEAVE_ALONE -> leftOut += entry.fileName
+                    Action.LEAVE_ALONE -> leftOut += planned.sourceFileName
                 }
                 processedSetlists++
                 currentFileName = null
@@ -259,12 +261,13 @@ class ImportFilesUseCaseImpl internal constructor(
             importedSongFileNames = importedSongs.map { it.fileName },
             importedSetlistFileNames = importedSetlists.map { it.fileName },
             skippedFileNames = plan.skippedFileNames,
-            // Both lists name library files and are filled once per incoming entry, so a song the batch brings twice
-            // would be named twice; and a repeat of a song this import wrote was not in the library before it.
-            leftOutFileNames = leftOut.distinct(),
+            // One for every row the review left unticked, two files of the same name from two folders included.
+            leftOutFileNames = leftOut,
             isFailed = isFailed,
             failedFileNames = failedFileNames,
             unprocessedFileNames = unprocessedFileNames,
+            // Names library files and is filled once per incoming entry, so a song the batch brings twice would be named
+            // twice; and a repeat of a song this import wrote was not in the library before it.
             duplicateFileNames = duplicateFileNames.distinct() - importedSongs.mapTo(hashSetOf()) { it.fileName },
             oversizedFileNames = plan.oversizedFileNames,
             unreadableDocumentFileNames = plan.unreadableDocumentFileNames,

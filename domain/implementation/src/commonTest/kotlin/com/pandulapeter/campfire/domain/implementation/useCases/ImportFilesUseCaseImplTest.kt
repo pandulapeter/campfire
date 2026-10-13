@@ -309,7 +309,7 @@ class ImportFilesUseCaseImplTest {
         )
         val skipped = FakeSongRepository(files = mutableMapOf("x.cho" to A))
         val skippedResult = ImportFilesUseCaseImpl(skipped, FakeSetlistRepository(), Logger.Standard).invoke(plan(), plan().leavingOutConflicts())
-        assertEquals(listOf("x.cho"), skippedResult.leftOutFileNames)
+        assertEquals(listOf("first.cho"), skippedResult.leftOutFileNames)
         assertTrue(skippedResult.duplicateFileNames.isEmpty())
         assertEquals(mapOf("x.cho" to A), skipped.files)
 
@@ -373,7 +373,7 @@ class ImportFilesUseCaseImplTest {
         val result = ImportFilesUseCaseImpl(songs, setlists, Logger.Standard).invoke(plan, plan.leavingOutConflicts())
 
         assertEquals(listOf("Beatles-Yesterday.cho"), setlists.files.values.single().entries.map { it.songFileName })
-        assertEquals(listOf("Beatles-Yesterday.cho"), result.leftOutFileNames)
+        assertEquals(listOf("beatles-yesterday.cho"), result.leftOutFileNames)
         assertEquals(mapOf("Beatles-Yesterday.cho" to A), songs.files)
     }
 
@@ -652,6 +652,25 @@ class ImportFilesUseCaseImplTest {
         assertEquals(mapOf("b.cho" to B), songs.files)
         assertEquals(listOf("b.cho"), result.importedSongFileNames)
         assertEquals(listOf("a.cho"), result.leftOutFileNames)
+    }
+
+    @Test
+    fun `a new song left out is reported by the file it arrived in`() = runTest {
+        val setlists = FakeSetlistRepository()
+        val plan = ImportPlan(
+            songs = listOf(
+                ImportPlan.SongEntry(fileName = "artist-title.cho", text = A, status = ImportPlan.Status.NEW, sourceFileName = "title.cho"),
+            ),
+            setlists = listOf(
+                ImportPlan.SetlistEntry("set.setlist.json", setlist(listOf("title.cho")), ImportPlan.Status.NEW, "set.setlist.json"),
+            ),
+        )
+
+        val result = ImportFilesUseCaseImpl(FakeSongRepository(files = mutableMapOf()), setlists, Logger.Standard)
+            .invoke(plan, ImportChoices(leftOut = setOf(ImportEntryKey(ImportEntryKey.Kind.SONG, 0))))
+
+        assertEquals(listOf("title.cho"), result.leftOutFileNames)
+        assertEquals(listOf("title.cho"), setlists.files.values.single().entries.map { it.songFileName })
     }
 
     @Test
