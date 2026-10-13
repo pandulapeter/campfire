@@ -23,6 +23,8 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.presentation.ui.components.minSongColumnWidth
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.metronome.rememberMetronomeIconBeat
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
@@ -67,11 +69,22 @@ internal fun CampfireContent(
         isEnabled = metronomeSettings.isVisualBeatEnabled,
     )
 
+    // Worked out once for both the expanded rail and the Songs screen's side panel, so that the two are never decided
+    // from different widths: a card that says less after its artist is given a narrower column, see minSongColumnWidth.
+    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    val songColumnWidth = minSongColumnWidth(
+        details = userPreferences?.songCardDetails ?: UserPreferences.CardDetails.SongsDefault,
+        areChordsEnabled = userPreferences?.areChordsEnabled != false,
+        isMetronomeEnabled = userPreferences?.isMetronomeEnabled != false,
+        isInSetlist = false,
+    )
+
     NavigationChromeScaffold(
         // Painted here as well as on every screen, so that the two screens of a cross fading tab transition blend
         // into the same color they are painted in and the fade stays invisible.
         modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
         isChromePlaced = !chromeInScreens,
+        songColumnWidth = songColumnWidth,
         chrome = { chromeKind ->
             NavigationChrome(
                 kind = chromeKind,
@@ -89,6 +102,7 @@ internal fun CampfireContent(
             windowSize = windowSize,
             chromeKind = chromeKind,
             chromeSize = chromeSize,
+            songColumnWidth = songColumnWidth,
             chromeInScreens = chromeInScreens,
             exportTransition = exportTransition,
             metronomeBeat = metronomeBeat,

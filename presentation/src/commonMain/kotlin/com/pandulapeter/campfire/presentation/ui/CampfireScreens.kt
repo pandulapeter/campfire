@@ -132,6 +132,7 @@ internal fun CampfireScreens(
     windowSize: WindowSize,
     chromeKind: NavigationChromeKind,
     chromeSize: NavigationChromeSize,
+    songColumnWidth: Dp,
     chromeInScreens: Boolean,
     exportTransition: ExportTransition,
     metronomeBeat: MetronomeIconBeat,
@@ -205,7 +206,8 @@ internal fun CampfireScreens(
     // decide from it, which stays equal between two breakpoints and lets them skip those frames. The song details
     // screen keeps the width itself: its lyrics use the difference between the settled width and the one they are
     // measured at inside their layout, which no discrete decision stands in for.
-    // A card that says less after its artist is given a narrower column, see minSongColumnWidth.
+    // A card that says less after its artist is given a narrower column, see minSongColumnWidth; the Songs screen's
+    // column width is worked out by the caller, which decides the expanded rail from the same width.
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val areChordsEnabled = userPreferences?.areChordsEnabled != false
     val isMetronomeEnabled = userPreferences?.isMetronomeEnabled != false
@@ -213,12 +215,7 @@ internal fun CampfireScreens(
         settledWidth = settledListWidth,
         contentPadding = shellContentPadding,
         layoutDirection = layoutDirection,
-        songColumnWidth = minSongColumnWidth(
-            details = userPreferences?.songCardDetails ?: UserPreferences.CardDetails.SongsDefault,
-            areChordsEnabled = areChordsEnabled,
-            isMetronomeEnabled = isMetronomeEnabled,
-            isInSetlist = false,
-        ),
+        songColumnWidth = songColumnWidth,
         setlistColumnWidth = minSongColumnWidth(
             details = userPreferences?.setlistCardDetails ?: UserPreferences.CardDetails.SetlistsDefault,
             areChordsEnabled = areChordsEnabled,

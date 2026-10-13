@@ -41,16 +41,18 @@ internal data class NavigationChromeSize(
 )
 
 /**
- * Whether a window this wide has the room for the expanded navigation rail. Deciding it from anything but the list
- * screens' own side panel would have the panel come, go and come again as a window is widened past both thresholds.
+ * Whether a window this wide has the room for the expanded navigation rail, with the Songs screen's cards
+ * [songColumnWidth] wide (its own [com.pandulapeter.campfire.presentation.ui.components.minSongColumnWidth], the one
+ * `ListLayout` decides its side panel from). Deciding it from anything but the list screens' own side panel would have
+ * the panel come, go and come again as a window is widened past both thresholds.
  *
  * Material decides the expanded rail's width from its items, [EXPANDED_NAVIGATION_RAIL_MIN_WIDTH] being where it
  * starts; the four labels here fit inside that in every language the app speaks.
  */
-internal fun navigationChromeKind(windowWidth: Dp) = when {
+internal fun navigationChromeKind(windowWidth: Dp, songColumnWidth: Dp) = when {
     !WindowSize.fromWidth(windowWidth).usesNavigationRail -> NavigationChromeKind.BAR
-    hasRoomForSidePanel(windowWidth - EXPANDED_NAVIGATION_RAIL_MIN_WIDTH) -> NavigationChromeKind.EXPANDED_RAIL
+    hasRoomForSidePanel(windowWidth - EXPANDED_NAVIGATION_RAIL_MIN_WIDTH, songColumnWidth) -> NavigationChromeKind.EXPANDED_RAIL
     else -> NavigationChromeKind.RAIL
 }
 
-private val EXPANDED_NAVIGATION_RAIL_MIN_WIDTH = 220.dp
+internal val EXPANDED_NAVIGATION_RAIL_MIN_WIDTH = 220.dp

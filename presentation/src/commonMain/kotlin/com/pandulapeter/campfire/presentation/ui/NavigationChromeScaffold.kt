@@ -55,13 +55,14 @@ import kotlin.math.roundToInt
  * and the room they take out of the window is worked out between the two on the same spring, so the screens next to
  * them travel rather than jump. The chrome is still measured for the kind the window has *now*, in the frame the
  * window changes, so what the screens settle at is known at once ([NavigationChromeSize.settledRailWidth]) while what
- * they are inset by catches up.
+ * they are inset by catches up. The kind is decided with the Songs screen's [songColumnWidth], see [navigationChromeKind].
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun NavigationChromeScaffold(
     modifier: Modifier = Modifier,
     isChromePlaced: Boolean,
+    songColumnWidth: Dp,
     chrome: @Composable (kind: NavigationChromeKind) -> Unit,
     content: @Composable (windowWidth: Dp, windowSize: WindowSize, kind: NavigationChromeKind, size: NavigationChromeSize) -> Unit,
 ) {
@@ -76,7 +77,7 @@ internal fun NavigationChromeScaffold(
     SubcomposeLayout(modifier) { constraints ->
         val windowWidth = constraints.maxWidth.toDp()
         val windowSize = WindowSize.fromWidth(windowWidth)
-        val kind = navigationChromeKind(windowWidth)
+        val kind = navigationChromeKind(windowWidth, songColumnWidth)
         // Loose constraints, so that the rail and the bar each take only the one dimension they want.
         val looseConstraints = constraints.copy(minWidth = 0, minHeight = 0)
         val chromePlaceable = subcompose(ChromeSlot.CHROME) { chrome(kind) }.single().measure(looseConstraints)

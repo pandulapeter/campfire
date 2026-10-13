@@ -145,9 +145,10 @@ that sits at the bottom of every one of those stacks — used to be the only one
 — the root composable used by every platform shell: theme, language preference, adaptive chrome (`NavigationBar` under
 600dp, `NavigationRail` above — see `components/WindowSize` — and the expanded `WideNavigationRail`, labels beside the
 icons, where the window is wide enough that the songs screen keeps its filter side panel next to it too
-(`navigationChromeKind`, about 1370dp): it is decided by the window width alone, so the wide rail's own collapsed state
-is never used, and its items start at the collapsed rail's height rather than under the room Material leaves for a
-header; the filter side panel is decided for the list screens rather than by the window, see `hasRoomForSidePanel`), the
+(`navigationChromeKind`): it is decided by the window width and the Songs screen's column width, the one its side
+panel is decided from (`minSongColumnWidth`, worked out once in `CampfireContent`; about 1370dp with the cards as a
+fresh installation has them), so the wide rail's own collapsed state is never used, and its items start at the
+collapsed rail's height rather than under the room Material leaves for a header; the filter side panel is decided for the list screens rather than by the window, see `hasRoomForSidePanel`), the
 `Scaffold` + `NavDisplay`, `CampfireDialogs`, the snackbars for import and export results — a clean import's counts,
 with Details where the import screen has more to say, and a saved PDF, song, setlist or library export is confirmed
 unless a warning about it says so already (a share is not, the platform sheet being its own answer) — (queued in the
