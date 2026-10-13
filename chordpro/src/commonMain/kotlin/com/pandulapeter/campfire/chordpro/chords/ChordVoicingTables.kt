@@ -72,7 +72,17 @@ internal object ChordVoicingTables {
         "Cadd9 frets x 3 2 0 3 0 fingers 0 2 1 0 3 0",
     )
 
+    val openG: List<String> get() = OpenTuningChordTables.openG
+
+    val openD: List<String> get() = OpenTuningChordTables.openD
+
+    val openC: List<String> get() = OpenTuningChordTables.openC
+
+    val dadgad: List<String> get() = OpenTuningChordTables.dadgad
+
     val ukulele: List<String> get() = UkuleleChordTable.shapes
 
     val mandolin: List<String> get() = MandolinChordTable.shapes
+
+    val mandolinGdgd: List<String> get() = OpenTuningChordTables.mandolinGdgd
 }

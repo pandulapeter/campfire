@@ -58,6 +58,7 @@ class ListLayoutTest {
         val narrow = minSongColumnWidth(bare, areChordsEnabled = true, isMetronomeEnabled = true, isInSetlist = false)
         assertTrue(narrow < MIN_SONG_COLUMN_WIDTH)
         assertEquals(narrow, minSongColumnWidth(songs, areChordsEnabled = false, isMetronomeEnabled = false, isInSetlist = false))
+        assertTrue(minSongColumnWidth(songs.copy(isTempoShown = true), areChordsEnabled = false, isMetronomeEnabled = false, isInSetlist = false) > narrow)
         assertTrue(minSongColumnWidth(songs.copy(isDurationShown = true), areChordsEnabled = true, isMetronomeEnabled = true, isInSetlist = false) > MIN_SONG_COLUMN_WIDTH)
         assertTrue(minSongColumnWidth(bare, areChordsEnabled = true, isMetronomeEnabled = true, isInSetlist = true) > narrow)
     }

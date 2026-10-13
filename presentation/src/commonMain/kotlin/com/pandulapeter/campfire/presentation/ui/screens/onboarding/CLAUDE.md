@@ -35,12 +35,11 @@ The onboarding: a few questions, one a page, each shown on what it changes; a fi
   two lines of Amazing Grace above them rewritten in each (`OnboardingSongPreview`; the examples and the explanations are
   Settings'). The song is in E, so that German turns its B into an H; it has no title and names no key, to save the room,
   the key only counted from by the numberings.
-- **What matters at a glance?**: what a song card says after the artist, for the Songs screen and, with the setlists on,
-  for the Setlists screen (`UserPreferences.songCardDetails`, `setlistCardDetails`, see `ui/CLAUDE.md`): each a card drawn
-  by the lists' own `SongListItem` over the chips of `CardDetailsChoice` (the key only with the chords on and the tempo
-  only with the metronome), the card as wide as the narrowest column its list would lay it out in
-  (`minSongColumnWidth`), so it narrows as it is told to say less. Always asked, since the duration goes with no feature.
 - **Your songs, everywhere** (`SyncStep`): only where the build can connect Dropbox; the sync section's three stages.
+
+What a song card says after its artist is not asked: it is a detail Settings → Songs changes, and its defaults already
+follow the features picked here (the key goes with the chords, the tempo with the metronome until it is picked, see
+`ui/CLAUDE.md`).
 
 There is no summary page: the last page's Next is Start playing (Done from Settings) — or still Next while an import
 waits behind the onboarding (`importReport` not null, `isImportWaiting`), since what the last page leads to is then
@@ -56,7 +55,7 @@ There is no draft: each tap goes through the setter the settings screen uses, an
 now, which is why every way out only closes the screen, why the colors picked take hold of the onboarding itself, and why
 going through it again from Settings needs no state of its own. `OnboardingInstrument` is not a preference either:
 picking one or one of its tunings writes the tuner's tuning, the chord diagrams' instrument, which is Other for a
-tuning the diagrams are not drawn for (`chordInstrumentFor`: a seven-string guitar, an open G), and the diagrams'
+tuning the diagrams are not drawn for (`chordInstrumentFor`: a seven- or eight-string guitar), and the diagrams'
 tuning for that instrument, the same one where they know it and standard otherwise (`chordTuningWrittenFor`); the
 page reads its answer back out of the first two (`onboardingInstrumentOf`), keeping a tuning the tuner already has for
 that instrument (`tuningFor`, so drop D stays drop D); settings that match no answer, a fresh installation's among them,

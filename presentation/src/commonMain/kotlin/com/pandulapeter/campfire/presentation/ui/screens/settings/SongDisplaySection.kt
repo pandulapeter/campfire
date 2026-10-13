@@ -69,9 +69,9 @@ internal fun SongDisplaySection(
         onCheckedChange = viewModel::setSectionNumberingEnabled,
     )
     // One row of chips per list, since a setlist's cards are where a set is timed and the library's where a song is found.
-    // A chip is disabled rather than hidden with its feature off, like the chord spelling below: the key goes with the
-    // chords and the tempo with the metronome, whatever these say, and what they are set to is kept for when those come
-    // back. The song details screen is not theirs: the top of a song is where its key and tempo are changed.
+    // The key's chip is gone with the chords, which take it off the cards whatever it says; the tempo's stays with the
+    // metronome off, which only decides it until it is picked. The song details screen is not theirs: the top of a song
+    // is where its key and tempo are changed.
     val areChordsEnabled = userPreferences?.areChordsEnabled != false
     val isMetronomeEnabled = userPreferences?.isMetronomeEnabled != false
     SettingsSubsection(
@@ -93,8 +93,9 @@ internal fun SongDisplaySection(
     ) {
         CardDetailsChoice(
             details = userPreferences?.setlistCardDetails ?: UserPreferences.CardDetails.SetlistsDefault,
-            areChordsEnabled = areChordsEnabled && areSetlistsEnabled,
-            isMetronomeEnabled = isMetronomeEnabled && areSetlistsEnabled,
+            areChordsEnabled = areChordsEnabled,
+            isMetronomeEnabled = isMetronomeEnabled,
+            isEnabled = areSetlistsEnabled,
             onDetailsChanged = viewModel::setSetlistCardDetails,
         )
     }

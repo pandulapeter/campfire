@@ -18,9 +18,10 @@ package com.pandulapeter.campfire.chordpro.model
  * soprano's C shape. So a diagram is always a shape on the strings the player has, its root dots marking the root of
  * the chord the page names on those strings.
  *
- * A tuning either has a table of shapes of its own (the standard tunings, drop D, and double drop D), or is one of those
- * with every string moved by the same interval (half and full step down, drop C♯ to drop B, the ukulele's low G, D, and
- * baritone tunings), whose shapes are that table's, moved along the chords rather than along the neck.
+ * A tuning either has a table of shapes of its own (the standard tunings, drop D, double drop D, open G, D, and C, DADGAD,
+ * and the mandolin's GDGD), or is one of those with every string moved by the same interval (half and full step down,
+ * drop C♯ to drop B, open E and A, the ukulele's low G, D, and baritone tunings, and the mandolin's AEAE), whose shapes
+ * are that table's, moved along the chords rather than along the neck.
  *
  * @property id What a stored choice names the tuning by, equal to the tuner's id of the same tuning (`guitar_drop_d`),
  *   so the two can be matched without this module knowing the tuner. The standard tunings' ids are their instruments'.
@@ -40,6 +41,12 @@ public enum class ChordTuning(
     GUITAR_DROP_C("guitar_drop_c", ChordInstrument.GUITAR, listOf(36, 43, 48, 53, 57, 62)),
     GUITAR_DROP_B("guitar_drop_b", ChordInstrument.GUITAR, listOf(35, 42, 47, 52, 56, 61)),
     GUITAR_DOUBLE_DROP_D("guitar_double_drop_d", ChordInstrument.GUITAR, listOf(38, 45, 50, 55, 59, 62)),
+    GUITAR_OPEN_G("guitar_open_g", ChordInstrument.GUITAR, listOf(38, 43, 50, 55, 59, 62)),
+    GUITAR_OPEN_D("guitar_open_d", ChordInstrument.GUITAR, listOf(38, 45, 50, 54, 57, 62)),
+    GUITAR_OPEN_E("guitar_open_e", ChordInstrument.GUITAR, listOf(40, 47, 52, 56, 59, 64)),
+    GUITAR_OPEN_A("guitar_open_a", ChordInstrument.GUITAR, listOf(40, 45, 52, 57, 61, 64)),
+    GUITAR_OPEN_C("guitar_open_c", ChordInstrument.GUITAR, listOf(36, 43, 48, 55, 60, 64)),
+    GUITAR_DADGAD("guitar_dadgad", ChordInstrument.GUITAR, listOf(38, 45, 50, 55, 57, 62)),
     UKULELE("ukulele", ChordInstrument.UKULELE, ChordInstrument.UKULELE.tuning),
     UKULELE_LOW_G("ukulele_low_g", ChordInstrument.UKULELE, listOf(55, 60, 64, 69)),
     UKULELE_BARITONE("ukulele_baritone", ChordInstrument.UKULELE, listOf(50, 55, 59, 64)),
@@ -47,6 +54,8 @@ public enum class ChordTuning(
     KEYBOARD("keyboard", ChordInstrument.KEYBOARD, ChordInstrument.KEYBOARD.tuning),
     MANDOLIN("mandolin", ChordInstrument.MANDOLIN, ChordInstrument.MANDOLIN.tuning),
     MANDOLIN_HALF_STEP_DOWN("mandolin_half_step_down", ChordInstrument.MANDOLIN, listOf(54, 61, 68, 75)),
+    MANDOLIN_AEAE("mandolin_aeae", ChordInstrument.MANDOLIN, listOf(57, 64, 69, 76)),
+    MANDOLIN_GDGD("mandolin_gdgd", ChordInstrument.MANDOLIN, listOf(55, 62, 67, 74)),
     ;
 
     /** Whether this is its instrument's standard tuning, which a `{define}` and the standard tables are written for. */
@@ -60,9 +69,25 @@ public enum class ChordTuning(
         get() = when (this) {
             GUITAR_HALF_STEP_DOWN, GUITAR_FULL_STEP_DOWN -> GUITAR
             GUITAR_DROP_C_SHARP, GUITAR_DROP_C, GUITAR_DROP_B -> GUITAR_DROP_D
+            GUITAR_OPEN_E -> GUITAR_OPEN_D
+            GUITAR_OPEN_A -> GUITAR_OPEN_G
             UKULELE_LOW_G, UKULELE_BARITONE, UKULELE_D -> UKULELE
             MANDOLIN_HALF_STEP_DOWN -> MANDOLIN
-            GUITAR, GUITAR_DROP_D, GUITAR_DOUBLE_DROP_D, UKULELE, KEYBOARD, MANDOLIN -> this
+            MANDOLIN_AEAE -> MANDOLIN_GDGD
+            GUITAR, GUITAR_DROP_D, GUITAR_DOUBLE_DROP_D, GUITAR_OPEN_G, GUITAR_OPEN_D, GUITAR_OPEN_C, GUITAR_DADGAD, UKULELE, KEYBOARD, MANDOLIN,
+            MANDOLIN_GDGD,
+            -> this
+        }
+
+    /**
+     * Whether this is an open or a modal tuning, whose open strings are tuned to a chord (or to the fifths of a fiddle's
+     * cross tuning) and ring under whatever is played on them. There the chord's fifth may sound lowest where it is an
+     * open string, the way open G's G is all six strings with the open D under them, which no other tuning allows.
+     */
+    internal val isOpen: Boolean
+        get() = when (tableTuning) {
+            GUITAR_OPEN_G, GUITAR_OPEN_D, GUITAR_OPEN_C, GUITAR_DADGAD, MANDOLIN_GDGD -> true
+            else -> false
         }
 
     /** The pitch classes every string is moved by from [tableTuning]'s, 0 to 11: a half step down is 11. */

@@ -23,8 +23,8 @@ color, the sepia slider, language, and "Set up Campfire again", which opens the 
 list are `components/`' `BackgroundWarmthSlider` and `LanguageChoice`, which the onboarding's first page shares), Features (the switches that take whole parts of the app away, see the root
 `CLAUDE.md`: read only mode, chords, chord diagrams — disabled with the chords off —, metronome, setlists and cover
 art), Songs (how a song is read - section numbers, what the song cards and the setlist cards say after the artist, a row of
-`CardDetailsChoice` chips each, the key disabled with the chords off, the tempo with the metronome and the setlists' row
-with the setlists (see `ui/CLAUDE.md`), the chord spelling — the notation as a list of five radio rows,
+`CardDetailsChoice` chips each, the key's chip gone with the chords off, the tempo's kept with the metronome off, and the
+setlists' row disabled with the setlists (see `ui/CLAUDE.md`), the chord spelling — the notation as a list of five radio rows,
 Standard, German, Latin, Nashville numbers and Roman numerals, each with an example under it, since five names do not
 fit a row of segments on a phone, and the accidentals, which stay enabled under a numbering since they still spell its
 key — and the instrument the chord diagrams are drawn for, disabled with the chords switched off but not with the

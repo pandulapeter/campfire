@@ -423,12 +423,19 @@ what nothing outside the module calls is `internal`.
 - `ChordVoicings` / `ChordVoicingTables` — how a chord is played on the guitar, the ukulele, the mandolin (a string
   for each of its four pairs, G D A E) and the keyboard (`model/ChordInstrument`, `model/ChordVoicing`). The tables,
   in a `{define}`'s syntax, always come first: one file per table (`GuitarChordTable`, `UkuleleChordTable`,
-  `MandolinChordTable`, `DropDChordTable`, and double drop D's in `ChordVoicingTables`), the shapes Campfire was first
-  shipped with joined by every one of [chords-db](https://github.com/tombatossals/chords-db) (MIT) and of ChordPro's
-  own instrument configurations (Artistic License 2.0) that sounds exactly the chord it is filed under and keeps the
-  search's rules, an inversion filed under the slash chord it sounds; each file's KDoc carries the notices. **Their
+  `MandolinChordTable`, `DropDChordTable`, the open tunings' in `OpenTuningChordTables`, and double drop D's in
+  `ChordVoicingTables`), the shapes Campfire was first shipped with joined by every one of
+  [chords-db](https://github.com/tombatossals/chords-db) and its corrected fork by
+  [Tabsy](https://github.com/tabsy-gr/chords-db) (both MIT), and of ChordPro's own instrument configurations (Artistic
+  License 2.0), that sounds exactly the chord it is filed under, keeps the search's rules (a muted string between two
+  that sound only with a fingering, which says a finger rests on it), stays below the twelfth fret (a shape there is an
+  open one an octave up, which `ChordProDefinitions.transposed` takes back to the nut) and can be held, an inversion
+  filed under the slash chord it sounds; each file's KDoc carries the notices. The open tunings' are typed for them,
+  since no library under a license Campfire can ship has any: the chords a chart of the tuning prints with its open
+  strings ringing, and one barre shape per chord quality with no open string, which the table moves to every root. **Their
   order is written, not worked out**: within a chord the shape it was shown with before the import first, then the
-  rest from the most comfortable to the least, decided once when the files were written. A chord is answered with
+  rest from the most comfortable to the least, decided once when the files were written; a chord the import gave its
+  first filed shapes keeps the shape it was answered with before, moved from another root, first. A chord is answered with
   the shapes filed under it in that order, then with the shapes of its quality filed under another root that have no
   open string, moved to it, from the lowest position up; a table is indexed by chord and by quality as it is read, so
   that neither walks the thousands of shapes. A search finds the rest: every way to stop the strings within four frets up to the twelfth that sounds
@@ -436,7 +443,8 @@ what nothing outside the module calls is `internal`.
   where there are more notes than strings, may go), with the bass or else the root lowest (not on an instrument that
   `playsChordOver`, the re-entrant ukulele and the mandolin, whose shapes everybody plays put the fifth or the third
   under the root: there every string sounds, and a slash chord is played as the chord over it), no muted string between two that sound, open strings only
-  with a hand in the first five frets, no more than four fingers (`fingerCount`: a barre at the lowest fret and a finger
+  with a hand in the first five frets (in an open or modal tuning, `ChordTuning.isOpen`, the chord's fifth may sound
+  lowest where it is an open string, the drone under open G's six-string G), no more than four fingers (`fingerCount`: a barre at the lowest fret and a finger
   laid across neighbouring strings at one fret each count as one), and no shape that is another with a string left out;
   a chord that needs more notes than there are strings has no shape, without a search. The keyboard plays the notes from
   the root up (the fifth, then the root, left out where there are more than five), and their inversions, a slash chord's
@@ -453,7 +461,7 @@ what nothing outside the module calls is `internal`.
   on which test ran first; `:presentation`'s tests cannot call it and keep to chords no other test asks for.
   `ChordVoicingTablesTest` checks that every shape of the tables sounds the chord it is filed under, and the
   `desktopTest` contact sheet draws them all into `CAMPFIRE_CHORD_QA_DIR` where that is set, for a player to look over,
-  one sheet per table, with the defaults of the everyday chords in every drop tuning.
+  one sheet per table, with the defaults of the everyday chords in every drop and open tuning.
 - `ChordTuning` — what the shapes are for, in place of a bare instrument: every entry point of `ChordVoicings` takes
   one, the keyboard's standard entry included. Its `id` is the tuner's (`:tuner:api`'s `InstrumentTuning`, which this
   module does not see; `:presentation` tests that the two agree) and `strings` the real ones, the baritone ukulele's
@@ -461,12 +469,13 @@ what nothing outside the module calls is `internal`.
   chord it is drawn for on the strings the player has. **A tuning either has a table of its own or is a tuning that has
   one with every string moved by the same interval** (`tableTuning`, `shift`, which `ChordVoicingTablesTest` holds to
   one interval on every string): the standard tunings, drop D (`ChordVoicingTables.dropD`: its own low-string shapes,
-  then every standard shape that mutes the sixth string, which sounds the same there), and double drop D (`doubleDropD`,
-  all typed for it) have tables; half and full step down, the mandolin's half step down, and the ukulele's low G, D,
-  and baritone read the standard table, and drop C♯ to drop B drop D's, for the chord moved back by the shift — a half
-  step down an A is the standard B♭ shape, `x 1 3 3 3 1`. The search runs on the real strings after the table, as in
-  standard tuning. An open or modal tuning gets a table of its own too when it is added (phase 3 of
-  `documentation/plans/alternate-tunings.md`), since no standard shape carries over to it.
+  then every standard shape that mutes the sixth string, which sounds the same there), double drop D (`doubleDropD`,
+  all typed for it), and open G, D, and C, DADGAD, and the mandolin's GDGD (`OpenTuningChordTables`) have tables; half
+  and full step down, the mandolin's half step down, and the ukulele's low G, D, and baritone read the standard table,
+  drop C♯ to drop B drop D's, open E open D's, open A open G's, and the mandolin's AEAE its GDGD's, for the chord moved
+  back by the shift — a half step down an A is the standard B♭ shape, `x 1 3 3 3 1`. The search runs on the real
+  strings after the table, as in standard tuning. Seven- and eight-string guitars, the bass, the banjo, and the violin
+  have no tuning here at all: they are Other, and no diagram is drawn for them.
 - `ChordTuning.drawsDefinitions` is where a `{define}`, which ChordPro gives no tuning, is drawn: standard tuning and
   the ukulele's low G, the only ones a standard tuning shape sounds right in. `voicingKey` is what the player's choices
   are stored under, the instrument's id there and the tuning's id in any other.

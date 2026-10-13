@@ -50,7 +50,7 @@ class NavigationChromeKindTest {
     private fun sweep(assert: (column: Dp, widths: List<Pair<Dp, Boolean>>) -> Unit) {
         val flags = listOf(false, true)
         flags.forEach { isKeyShown ->
-            flags.forEach { isTempoShown ->
+            listOf(null, false, true).forEach { isTempoShown ->
                 flags.forEach { isDurationShown ->
                     flags.forEach { areChordsEnabled ->
                         flags.forEach { isMetronomeEnabled ->

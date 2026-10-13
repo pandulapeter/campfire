@@ -378,12 +378,13 @@ making the request, not Campfire.
 ### How a song is played is set in the song itself
 
 **What a song card says after its artist is chosen for each list on its own** (`UserPreferences.songCardDetails` and
-`setlistCardDetails`, chips in Settings → Songs and on the onboarding's "What matters at a glance?" page): the key, the
-tempo, and the duration, the Songs screen's showing no duration by default and the Setlists screen's all three, since a
-setlist is where a set is timed. They only reach the cards: the top of a song always shows its key and tempo, which is
-where they are changed. They only ever narrow the chords and the metronome switches, which take the key and the tempo
-away whatever these say, and a card that says less is given a narrower column (`minSongColumnWidth`, see
-`components/CLAUDE.md`).
+`setlistCardDetails`, chips in Settings → Songs, never asked by the onboarding): the key, the tempo, and the duration,
+the Songs screen's showing no duration by default and the Setlists screen's all three, since a setlist is where a set is
+timed. They only reach the cards: the top of a song always shows its key and tempo, which is where they are changed. The
+chords switch takes the key away whatever it says, and its chip with it. The tempo is null until it is picked, and then
+follows the metronome switch (`CardDetails.isTempoShown(isMetronomeEnabled)`), so the metronome off takes it off the
+cards without writing anything, while its chip stays to put it back. A card that says less is given a narrower column
+(`minSongColumnWidth`, see `components/CLAUDE.md`).
 
 **How a song is played is set in the song itself**: the transposition, the capo, the tempo and the time signature — the
 four values that decide what is played rather than what the song is — are the first section of the song details screen's

@@ -23,7 +23,7 @@ import kotlin.test.Test
 
 /**
  * Draws every shape of the tables into `CAMPFIRE_CHORD_QA_DIR`, where that is set, one sheet per table, and the default
- * shapes of the everyday chords in every drop tuning, one sheet per tuning, which is where the search fills in. A test can say a shape sounds the
+ * shapes of the everyday chords in every drop and open tuning, one sheet per tuning, which is where the search fills in. A test can say a shape sounds the
  * right chord; only a player looking at it can say it is the shape they expect, which is what this is for. Without the
  * variable it does nothing.
  */
@@ -39,6 +39,11 @@ class ChordVoicingContactSheetTest {
             ChordTuning.GUITAR_DOUBLE_DROP_D to ChordVoicingTables.doubleDropD,
             ChordTuning.UKULELE to ChordVoicingTables.ukulele,
             ChordTuning.MANDOLIN to ChordVoicingTables.mandolin,
+            ChordTuning.GUITAR_OPEN_G to ChordVoicingTables.openG,
+            ChordTuning.GUITAR_OPEN_D to ChordVoicingTables.openD,
+            ChordTuning.GUITAR_OPEN_C to ChordVoicingTables.openC,
+            ChordTuning.GUITAR_DADGAD to ChordVoicingTables.dadgad,
+            ChordTuning.MANDOLIN_GDGD to ChordVoicingTables.mandolinGdgd,
         ).forEach { (tuning, lines) ->
             val shapes = lines.map { ChordProDefinitions.read(it, tuning.instrument.id) as ChordProDefinitions.Reading.Shape }
             draw(shapes.map { it.name to it.voicing as ChordVoicing.Fretted }, File(directory, "chord-shapes-${tuning.id}.png"))

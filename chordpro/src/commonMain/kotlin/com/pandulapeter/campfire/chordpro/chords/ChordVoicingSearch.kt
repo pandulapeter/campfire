@@ -36,8 +36,13 @@ internal object ChordVoicingSearch {
         ChordTuning.GUITAR -> guitarTable
         ChordTuning.GUITAR_DROP_D -> dropDTable
         ChordTuning.GUITAR_DOUBLE_DROP_D -> doubleDropDTable
+        ChordTuning.GUITAR_OPEN_G -> openGTable
+        ChordTuning.GUITAR_OPEN_D -> openDTable
+        ChordTuning.GUITAR_OPEN_C -> openCTable
+        ChordTuning.GUITAR_DADGAD -> dadgadTable
         ChordTuning.UKULELE -> ukuleleTable
         ChordTuning.MANDOLIN -> mandolinTable
+        ChordTuning.MANDOLIN_GDGD -> mandolinGdgdTable
         else -> Table.EMPTY
     }
 
@@ -63,8 +68,13 @@ internal object ChordVoicingSearch {
     private val guitarTable by lazy { readTable(ChordVoicingTables.guitar, ChordInstrument.GUITAR) }
     private val dropDTable by lazy { readTable(ChordVoicingTables.dropD, ChordInstrument.GUITAR) }
     private val doubleDropDTable by lazy { readTable(ChordVoicingTables.doubleDropD, ChordInstrument.GUITAR) }
+    private val openGTable by lazy { readTable(ChordVoicingTables.openG, ChordInstrument.GUITAR) }
+    private val openDTable by lazy { readTable(ChordVoicingTables.openD, ChordInstrument.GUITAR) }
+    private val openCTable by lazy { readTable(ChordVoicingTables.openC, ChordInstrument.GUITAR) }
+    private val dadgadTable by lazy { readTable(ChordVoicingTables.dadgad, ChordInstrument.GUITAR) }
     private val ukuleleTable by lazy { readTable(ChordVoicingTables.ukulele, ChordInstrument.UKULELE) }
     private val mandolinTable by lazy { readTable(ChordVoicingTables.mandolin, ChordInstrument.MANDOLIN) }
+    private val mandolinGdgdTable by lazy { readTable(ChordVoicingTables.mandolinGdgd, ChordInstrument.MANDOLIN) }
 
     private fun readTable(lines: List<String>, instrument: ChordInstrument): Table {
         val shapes = lines.map { line ->
@@ -133,6 +143,8 @@ internal object ChordVoicingSearch {
         // Every string sounds one note, so a chord that needs more notes than there are strings has no shape at all.
         if (required.size > strings.size) return emptyList()
         val lowest = if (tuning.instrument.playsChordOver) null else played.bass ?: played.root.takeIf { it in required }
+        // In an open tuning the open strings drone under the chord, so its fifth may ring lowest from one of them.
+        val openFifth = ((played.root + 7) % 12).takeIf { tuning.isOpen && played.bass == null && 7 in played.intervals }
         val minimumStrings = if (tuning.instrument.playsChordOver) strings.size else if (pitchClasses.size <= 2) 3 else 4
         val found = mutableSetOf<List<Int?>>()
         for (position in 1..MAX_POSITION) {
@@ -150,7 +162,10 @@ internal object ChordVoicingSearch {
                 if (0 in frets && stopped.isNotEmpty() && stopped.max() > OPEN_POSITION_FRETS) return@enumerate
                 val notes = sounding.map { strings[it] + frets[it]!! }
                 if (!notes.map { it % 12 }.toSet().containsAll(required)) return@enumerate
-                if (lowest != null && notes.min() % 12 != lowest) return@enumerate
+                if (lowest != null && notes.min() % 12 != lowest) {
+                    val bottom = sounding[notes.indexOf(notes.min())]
+                    if (notes.min() % 12 != openFifth || frets[bottom] != 0) return@enumerate
+                }
                 if (fingerCount(frets) > MAX_FINGERS) return@enumerate
                 found += frets
             }

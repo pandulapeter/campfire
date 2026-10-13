@@ -836,11 +836,9 @@
     <string name="onboarding_language">Nyelv: %1$s</string>
     <string name="onboarding_features_title">Mire van szükséged?</string>
     <string name="onboarding_features_message">Hagyd bekapcsolva, amit használni szeretnél. Amit kihagysz, a Beállításokban bármikor visszakapcsolhatod.</string>
-    <string name="onboarding_at_a_glance_message">Válaszd ki, mi jelenjen meg a dalkártyákon az előadó után.</string>
     <string name="onboarding_tuning_of_instrument">%1$s, %2$s</string>
     <string name="onboarding_chord_diagrams_unavailable">Akkordábrák csak a szabványos hangoláshoz készülnek, így ehhez nincsenek.</string>
     <string name="onboarding_chord_diagram_description">%1$s lefogása</string>
-    <string name="onboarding_at_a_glance_title">Mi legyen szem előtt?</string>
     <string name="onboarding_progress">Lépés: %1$d / %2$d</string>
     <string name="onboarding_instrument_title">Min játszol?</string>
     <string name="onboarding_instrument_message_chords_and_tuner">A Campfire ennek a fogásait mutatja, és erre állítja be a hangolót.</string>

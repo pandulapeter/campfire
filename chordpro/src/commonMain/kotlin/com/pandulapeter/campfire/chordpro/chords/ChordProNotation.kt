@@ -89,7 +89,7 @@ public object ChordProNotation {
         val isWrittenInStandard = to == ChordNotation.STANDARD || to.isNumbering
         // A text typed in the Latin notation is in it throughout, comments and definitions included, so only a text read
         // from a file may be returned as it is: there a Latin word in a comment does not make the file Latin.
-        if (from != ChordNotation.LATIN && !isGerman && isWrittenInStandard && text.none { it == SHARP_SIGN || it == FLAT_SIGN } && written?.let(::hasLatinName) == false) return text
+        if (from != ChordNotation.LATIN && !isGerman && isWrittenInStandard && text.none { it == SHARP_SIGN || it == FLAT_SIGN } && !written.let(::hasLatinName)) return text
         val fromWritten = { name: String -> withAsciiAccidentals(if (isGerman) fromGerman(name) else name) }
         val renameWritten = if (to == ChordNotation.LATIN) {
             { name: String -> toLatin(fromWritten(ChordProChordNames.lowercaseMinorExpanded(name) ?: name)) }

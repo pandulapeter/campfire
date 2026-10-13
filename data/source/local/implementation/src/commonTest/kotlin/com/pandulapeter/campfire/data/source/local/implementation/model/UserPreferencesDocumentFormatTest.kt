@@ -42,6 +42,8 @@ internal class UserPreferencesDocumentFormatTest {
             isKeyShownOnSetlistCards = true,
             isTempoShownOnSetlistCards = false,
             isDurationShownOnSetlistCards = false,
+            tempoOnSongCards = true,
+            tempoOnSetlistCards = false,
             shouldNumberSections = false,
             language = "hu",
             accidentals = "flats",

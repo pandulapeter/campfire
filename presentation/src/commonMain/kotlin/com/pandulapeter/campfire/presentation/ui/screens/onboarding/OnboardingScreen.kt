@@ -202,16 +202,6 @@ private fun OnboardingStepPage(
             onSelected = viewModel::setNotation,
         )
 
-        OnboardingStep.AT_A_GLANCE -> AtAGlanceStep(
-            features = features,
-            songCardDetails = userPreferences?.songCardDetails ?: UserPreferences.CardDetails.SongsDefault,
-            setlistCardDetails = userPreferences?.setlistCardDetails ?: UserPreferences.CardDetails.SetlistsDefault,
-            notation = notation,
-            isCompact = isCompact,
-            onSongCardDetailsChanged = viewModel::setSongCardDetails,
-            onSetlistCardDetailsChanged = viewModel::setSetlistCardDetails,
-        )
-
         OnboardingStep.SYNC -> {
             val syncState by viewModel.syncState.collectAsStateWithLifecycle()
             SyncStep(

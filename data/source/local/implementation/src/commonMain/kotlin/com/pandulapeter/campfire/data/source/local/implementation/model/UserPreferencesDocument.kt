@@ -52,6 +52,11 @@ internal data class UserPreferencesDocument(
     val isKeyShownOnSetlistCards: Boolean? = null,
     val isTempoShownOnSetlistCards: Boolean? = null,
     val isDurationShownOnSetlistCards: Boolean = true,
+    // The tempo picked for each list's cards, null where it has not been and the cards follow the metronome switch. Only
+    // these are written now, the two above (true by default, and so never a choice) only read for a document that has
+    // neither: a false there was picked, and a true is what the cards showed with the metronome on and only then.
+    val tempoOnSongCards: Boolean? = null,
+    val tempoOnSetlistCards: Boolean? = null,
     val chordInstrument: String = "",
     val chordTunings: Map<String, String> = emptyMap(),
     val chordVoicings: Map<String, Map<String, String>> = emptyMap(),

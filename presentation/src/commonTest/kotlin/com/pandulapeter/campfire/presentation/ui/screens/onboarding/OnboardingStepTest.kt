@@ -38,7 +38,7 @@ class OnboardingStepTest {
     @Test
     fun `without the chords and the tuner the instrument and the notation are not asked`() {
         assertEquals(
-            listOf(OnboardingStep.WELCOME, OnboardingStep.FEATURES, OnboardingStep.AT_A_GLANCE, OnboardingStep.SYNC),
+            listOf(OnboardingStep.WELCOME, OnboardingStep.FEATURES, OnboardingStep.SYNC),
             steps(areChordsEnabled = false, isTunerEnabled = false),
         )
     }
@@ -46,24 +46,24 @@ class OnboardingStepTest {
     @Test
     fun `the tuner alone asks for the instrument but not the notation`() {
         assertEquals(
-            listOf(OnboardingStep.WELCOME, OnboardingStep.FEATURES, OnboardingStep.INSTRUMENT, OnboardingStep.AT_A_GLANCE, OnboardingStep.SYNC),
+            listOf(OnboardingStep.WELCOME, OnboardingStep.FEATURES, OnboardingStep.INSTRUMENT, OnboardingStep.SYNC),
             steps(areChordsEnabled = false, isTunerEnabled = true),
         )
     }
 
     @Test
     fun `the next and the previous step skip the ones that are not shown`() {
-        val steps = steps(canConnectDropbox = false, areChordsEnabled = false, isTunerEnabled = false)
-        assertEquals(OnboardingStep.AT_A_GLANCE, nextOnboardingStep(OnboardingStep.FEATURES, steps))
-        assertEquals(OnboardingStep.FEATURES, previousOnboardingStep(OnboardingStep.AT_A_GLANCE, steps))
-        assertNull(nextOnboardingStep(OnboardingStep.AT_A_GLANCE, steps))
+        val steps = steps(areChordsEnabled = false, isTunerEnabled = false)
+        assertEquals(OnboardingStep.SYNC, nextOnboardingStep(OnboardingStep.FEATURES, steps))
+        assertEquals(OnboardingStep.FEATURES, previousOnboardingStep(OnboardingStep.SYNC, steps))
+        assertNull(nextOnboardingStep(OnboardingStep.SYNC, steps))
         assertNull(previousOnboardingStep(OnboardingStep.WELCOME, steps))
     }
 
     @Test
     fun `a step that is no longer shown still leads on and back`() {
         val steps = steps(areChordsEnabled = false, isTunerEnabled = false)
-        assertEquals(OnboardingStep.AT_A_GLANCE, nextOnboardingStep(OnboardingStep.INSTRUMENT, steps))
+        assertEquals(OnboardingStep.SYNC, nextOnboardingStep(OnboardingStep.INSTRUMENT, steps))
         assertEquals(OnboardingStep.FEATURES, previousOnboardingStep(OnboardingStep.INSTRUMENT, steps))
     }
 }

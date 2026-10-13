@@ -50,25 +50,25 @@ class OnboardingInstrumentTest {
     fun `the diagrams are only drawn for the tunings they know`() {
         assertEquals(ChordInstrument.GUITAR, OnboardingInstrument.GUITAR.chordInstrumentFor(InstrumentTuning.GUITAR))
         assertEquals(ChordInstrument.GUITAR, OnboardingInstrument.GUITAR.chordInstrumentFor(InstrumentTuning.GUITAR_DROP_D))
-        assertEquals(ChordInstrument.OTHER, OnboardingInstrument.GUITAR.chordInstrumentFor(InstrumentTuning.GUITAR_OPEN_G))
+        assertEquals(ChordInstrument.GUITAR, OnboardingInstrument.GUITAR.chordInstrumentFor(InstrumentTuning.GUITAR_OPEN_G))
         assertEquals(ChordInstrument.OTHER, OnboardingInstrument.GUITAR.chordInstrumentFor(InstrumentTuning.GUITAR_SEVEN_STRING))
         assertEquals(ChordInstrument.UKULELE, OnboardingInstrument.UKULELE.chordInstrumentFor(InstrumentTuning.UKULELE_LOW_G))
         assertEquals(ChordInstrument.UKULELE, OnboardingInstrument.UKULELE.chordInstrumentFor(InstrumentTuning.UKULELE_BARITONE))
-        assertEquals(ChordInstrument.OTHER, OnboardingInstrument.MANDOLIN.chordInstrumentFor(InstrumentTuning.MANDOLIN_GDGD))
+        assertEquals(ChordInstrument.MANDOLIN, OnboardingInstrument.MANDOLIN.chordInstrumentFor(InstrumentTuning.MANDOLIN_GDGD))
         assertEquals(ChordInstrument.KEYBOARD, OnboardingInstrument.KEYBOARD.chordInstrumentFor(null))
         assertEquals(ChordInstrument.OTHER, OnboardingInstrument.BASS.chordInstrumentFor(InstrumentTuning.BASS))
     }
 
     @Test
     fun `guitar diagrams over a tuning they are not drawn for have no instrument picked`() {
-        assertNull(onboardingInstrumentOf(ChordInstrument.GUITAR, InstrumentTuning.GUITAR_OPEN_G))
+        assertNull(onboardingInstrumentOf(ChordInstrument.GUITAR, InstrumentTuning.GUITAR_SEVEN_STRING))
     }
 
     @Test
     fun `the diagrams follow the tuning where they know it, and go back to standard where they do not`() {
         assertEquals(ChordTuning.GUITAR_DROP_D, OnboardingInstrument.GUITAR.chordTuningWrittenFor(InstrumentTuning.GUITAR_DROP_D))
         assertEquals(ChordTuning.UKULELE_BARITONE, OnboardingInstrument.UKULELE.chordTuningWrittenFor(InstrumentTuning.UKULELE_BARITONE))
-        assertEquals(ChordTuning.GUITAR, OnboardingInstrument.GUITAR.chordTuningWrittenFor(InstrumentTuning.GUITAR_OPEN_G))
+        assertEquals(ChordTuning.GUITAR_DADGAD, OnboardingInstrument.GUITAR.chordTuningWrittenFor(InstrumentTuning.GUITAR_DADGAD))
         assertEquals(ChordTuning.GUITAR, OnboardingInstrument.GUITAR.chordTuningWrittenFor(InstrumentTuning.GUITAR_EIGHT_STRING))
         assertNull(OnboardingInstrument.KEYBOARD.chordTuningWrittenFor(null))
         assertNull(OnboardingInstrument.BASS.chordTuningWrittenFor(InstrumentTuning.BASS))

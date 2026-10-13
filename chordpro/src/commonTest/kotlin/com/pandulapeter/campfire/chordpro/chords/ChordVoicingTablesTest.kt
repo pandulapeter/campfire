@@ -37,8 +37,10 @@ class ChordVoicingTablesTest {
                     "$line leaves out ${played.pitchClasses - sounded}",
                 )
                 if (!instrument.playsChordOver) {
-                    val lowest = voicing.frets.withIndex().filter { it.value != null }.minOf { tuning.strings[it.index] + it.value!! }
-                    assertEquals(chord.bass ?: chord.root, lowest % 12, "$line sounds its bass or root lowest")
+                    val bottom = voicing.frets.withIndex().filter { it.value != null }.minBy { tuning.strings[it.index] + it.value!! }
+                    val lowest = (tuning.strings[bottom.index] + bottom.value!!) % 12
+                    val isOpenFifth = tuning.isOpen && chord.bass == null && lowest == fifth && bottom.value == 0
+                    assertTrue(lowest == (chord.bass ?: chord.root) || isOpenFifth, "$line sounds its bass or root lowest, or an open tuning's open string its fifth")
                 }
             }
         }
@@ -75,5 +77,10 @@ class ChordVoicingTablesTest {
         ChordTuning.MANDOLIN to ChordVoicingTables.mandolin,
         ChordTuning.GUITAR_DROP_D to ChordVoicingTables.dropD,
         ChordTuning.GUITAR_DOUBLE_DROP_D to ChordVoicingTables.doubleDropD,
+        ChordTuning.GUITAR_OPEN_G to ChordVoicingTables.openG,
+        ChordTuning.GUITAR_OPEN_D to ChordVoicingTables.openD,
+        ChordTuning.GUITAR_OPEN_C to ChordVoicingTables.openC,
+        ChordTuning.GUITAR_DADGAD to ChordVoicingTables.dadgad,
+        ChordTuning.MANDOLIN_GDGD to ChordVoicingTables.mandolinGdgd,
     )
 }

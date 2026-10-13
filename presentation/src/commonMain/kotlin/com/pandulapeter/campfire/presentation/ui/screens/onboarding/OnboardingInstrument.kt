@@ -77,7 +77,7 @@ internal enum class OnboardingInstrument(
     /**
      * The tuning the chord diagrams are drawn in for this instrument tuned to [tuning], the tuner's: the diagrams' tuning
      * of the same id, the keyboard's for an instrument that is not tuned at all, and null where the diagrams know no such
-     * tuning (a seven-string guitar, an open G), since with the strings tuned any other way they would show the wrong
+     * tuning (a seven- or eight-string guitar), since with the strings tuned any other way they would show the wrong
      * notes.
      */
     fun chordTuningFor(tuning: InstrumentTuning?): ChordTuning? = when (chordInstrument) {

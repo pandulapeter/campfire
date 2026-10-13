@@ -204,12 +204,12 @@ internal fun SetlistList(
     }
     // The chords switched off take them out of the viewer, and the key is the shortest way of writing them down.
     val shouldShowChords = userPreferences?.areChordsEnabled != false
-    // The tempo is what the click plays, so it goes with the metronome.
+    // The tempo is what the click plays, so unless the reader picked it, it goes with the metronome.
     val isMetronomeEnabled = userPreferences?.isMetronomeEnabled != false
     // And each can be left off the cards by the reader, see UserPreferences.setlistCardDetails.
     val cardDetails = userPreferences?.setlistCardDetails ?: UserPreferences.CardDetails.SetlistsDefault
     val isKeyShown = cardDetails.isKeyShown
-    val isTempoShown = isMetronomeEnabled && cardDetails.isTempoShown
+    val isTempoShown = cardDetails.isTempoShown(isMetronomeEnabled)
     val isDurationShown = cardDetails.isDurationShown
     val isCoverArtEnabled = userPreferences?.isCoverArtEnabled == true
     val chordSpelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default

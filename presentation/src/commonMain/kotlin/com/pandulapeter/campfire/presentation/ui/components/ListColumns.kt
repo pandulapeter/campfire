@@ -46,7 +46,8 @@ internal fun columnCountForWidth(
 
 /**
  * The narrowest column a song card is laid out in where there are two or more, worked out from what the card says on
- * its second line ([UserPreferences.CardDetails], each only with the feature it goes with), so that a card that says
+ * its second line ([UserPreferences.CardDetails], the key only with the chords and the tempo by default only with the
+ * metronome), so that a card that says
  * less is given less room and a window fits more of them side by side, while one that says more keeps its line from
  * being cut short. A setlist's card starts wider, for the slot number before its title. A window narrower than one
  * column, a phone held upright included, still gets one, as wide as the window.
@@ -58,7 +59,7 @@ internal fun minSongColumnWidth(
     isInSetlist: Boolean,
 ) = (if (isInSetlist) SETLIST_CARD_BASE_WIDTH else SONG_CARD_BASE_WIDTH) +
     (if (areChordsEnabled && details.isKeyShown) CARD_KEY_WIDTH else 0.dp) +
-    (if (isMetronomeEnabled && details.isTempoShown) CARD_TEMPO_WIDTH else 0.dp) +
+    (if (details.isTempoShown(isMetronomeEnabled)) CARD_TEMPO_WIDTH else 0.dp) +
     (if (details.isDurationShown) CARD_DURATION_WIDTH else 0.dp)
 
 // Declared before the two defaults below, which are worked out from them as the file is initialized.

@@ -112,7 +112,7 @@ internal val openSourceComponents = listOf(
     ),
     OpenSourceComponent(
         name = "chords-db",
-        holder = "David Rubert",
+        holder = "David Rubert and the chords-db contributors, Tabsy contributors",
         url = "https://github.com/tombatossals/chords-db",
         licenseName = MIT,
         licenseFile = "$LICENSES/chords_db_mit.txt",

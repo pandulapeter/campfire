@@ -90,7 +90,7 @@ own instrument, whatever the switches say.
 **How every chord of a song is fingered is shown at its top**, on the guitar, the ukulele, the mandolin or the keyboard (the Songs
 tab's Instrument, a list naming the strings of the tuning picked for each under it in the reader's chord notation, and
 under it the Tuning, below;
-its Other, for every other instrument and for the open and modal tunings, draws no diagram at all, as the Features
+its Other, for every other instrument (a seven- or eight-string guitar, the bass, the banjo, the violin), draws no diagram at all, as the Features
 switch does, and the editor's Chord shape button writes a guitar's): a Chords section after the controls of how it is played, one diagram per chord in the order they are
 first played, folded by one preference for every song and cut between its rows of diagrams wherever a page ends inside
 it, like any other section. Nothing is shipped for it and nothing is fetched: `:chordpro` reads what notes a chord name
@@ -123,8 +123,9 @@ named the way the tuner names them (`ChordTuningLabels.kt`: a `ChordTuning` is t
 same id, which `ChordTuningsTest` holds it to, strings included), disabled with the diagrams off, since nothing else
 reads it. One tuning per instrument (`UserPreferences.chordTunings`, written by `withChordTuning`, read by
 `chordTuning()` / `chordTuningOf`: an id of another instrument or one this version does not know is standard), kept on
-the device like the instrument. Half and full step down, drop D to drop B, double drop D, the ukulele's low G, D, and
-baritone tunings, and the mandolin's half step down; what the shapes are in each is `:chordpro`'s `ChordTuning`. The
+the device like the instrument. Half and full step down, drop D to drop B, double drop D, open G, D, E, A, and C, and
+DADGAD on the guitar, the ukulele's low G, D, and baritone tunings, and the mandolin's half step down and its AEAE and
+GDGD cross tunings; what the shapes are in each is `:chordpro`'s `ChordTuning`. The
 onboarding writes it from the tuner's answer (`OnboardingInstrument.chordTuningWrittenFor`).
 
 Everything that drew for an instrument draws for a tuning: `ChordDiagrams.tuning`, `SongLyricsInputs.chordTuning`, the

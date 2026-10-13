@@ -334,18 +334,24 @@ data class UserPreferences(
 
     /**
      * What a song card says after the artist, chosen for each list on its own: a setlist's cards are where a set is
-     * timed, the library's where a song is found. The key is only ever shown with the chords switched on and the tempo
-     * with the metronome, whatever these say, so that what they are set to is kept for when those come back.
+     * timed, the library's where a song is found. The key is only ever shown with the chords switched on, whatever
+     * [isKeyShown] says, so that what it is set to is kept for when they come back. The tempo is a song's whether it is
+     * clicked or not, so it can be shown without the metronome, but it is what the click plays: [isTempoShown] is null
+     * until the reader picks it, and is then the metronome switch ([isTempoShown] with an argument), so that switching
+     * the metronome off takes the tempo off the cards without writing a thing.
      */
     data class CardDetails(
         val isKeyShown: Boolean,
-        val isTempoShown: Boolean,
+        val isTempoShown: Boolean?,
         val isDurationShown: Boolean,
     ) {
 
+        /** Whether the tempo is on the cards, given the metronome switch, see [isTempoShown]. */
+        fun isTempoShown(isMetronomeEnabled: Boolean) = isTempoShown ?: isMetronomeEnabled
+
         companion object {
-            val SongsDefault = CardDetails(isKeyShown = true, isTempoShown = true, isDurationShown = false)
-            val SetlistsDefault = CardDetails(isKeyShown = true, isTempoShown = true, isDurationShown = true)
+            val SongsDefault = CardDetails(isKeyShown = true, isTempoShown = null, isDurationShown = false)
+            val SetlistsDefault = CardDetails(isKeyShown = true, isTempoShown = null, isDurationShown = true)
         }
     }
 
@@ -387,7 +393,7 @@ data class UserPreferences(
 
     /**
      * The instrument the chord diagrams are drawn for, the twin of `:chordpro`'s, which this module does not see. [OTHER]
-     * is an instrument `:chordpro` has no shapes for (a bass, an eight-string guitar, a guitar in an open tuning), so no
+     * is an instrument `:chordpro` has no shapes for (a bass, a banjo, an eight-string guitar), so no
      * diagram is drawn: one for the six strings of a standard guitar would be wrong on it, which is worse than none.
      */
     enum class ChordInstrument(val id: String) {

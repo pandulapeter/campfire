@@ -12,6 +12,7 @@
 ### Bugs / issues
 
 ### Improvements
+- Chord library browser
 - Modal tuner instrument picker...?
 - Website: update Thinking out Loud + 500 miles
 - Search: highlight matched substrings
@@ -19,7 +20,6 @@
 
 ### Onboarding improvements
 - Instrument: Chord-diagrams are too hidden, maybe they should be a separate page? Only if a compatible instrument + tuning was selected
-- At a glance: not needed during onboarding
 
 ### Features
 - Shared setlists via Dropbox public links -> deeplink to Campfire. Rewrite documentation/plans/song-links.md - allow scanning deep links via QR code

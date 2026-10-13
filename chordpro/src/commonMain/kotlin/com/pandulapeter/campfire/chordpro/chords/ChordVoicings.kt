@@ -35,11 +35,12 @@ import kotlin.concurrent.Volatile
  * The keyboard needs neither: the chord's notes from the root up, the fifth and then the root left out of a chord of
  * more than five notes, and the inversions as the variations, a slash chord's bass an octave below.
  *
- * In a tuning other than the standard one every shape is a shape on the strings the player has. A shifted tuning's are
- * the standard shapes of the chord the shape names: the chord as written where the tuning is named by its shapes (a
- * guitar tuned down), the chord moved back by the shift where it is named by the chords that sound (the baritone
- * ukulele, whose G is the soprano's C shape). A dropped tuning's come from a small table of its own, then from the
- * standard tables re-fretted on the lowered strings where they still play the chord, then from the search.
+ * In a tuning other than the standard one every shape is a shape on the strings the player has, and sounds the chord it
+ * is drawn for: a tuning with a table of its own (drop D, double drop D, and the open and modal tunings) reads it, and
+ * one that is such a tuning with every string moved by one interval reads that table for the chord moved back by it (a
+ * half step down an A is the standard B♭ shape, on a baritone ukulele a G is the soprano's C shape). The search runs on
+ * the tuning's own strings after the table; in an open or modal tuning it lets the chord's fifth ring lowest from an
+ * open string, as the tables there do.
  */
 public object ChordVoicings {
 
@@ -72,7 +73,7 @@ public object ChordVoicings {
 
     /**
      * Whether [default] would have to run the search for [chord] in [tuning]: a fretted chord the tables do not hold,
-     * not even re-fretted for a dropped tuning, and nothing has looked for yet this session. What builds a page in a
+     * not even as a shape moved from another root, and nothing has looked for yet this session. What builds a page in a
      * frame asks this first.
      */
     public fun needsSearch(chord: Chord, tuning: ChordTuning): Boolean =

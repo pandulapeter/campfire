@@ -93,6 +93,27 @@ class ChordVoicingsTest {
     }
 
     @Test
+    fun `an open tuning plays the shapes its charts show`() {
+        mapOf(
+            "G" to "0 0 0 0 0 0", "Gsus4" to "0 0 0 0 1 0", "G7" to "0 0 0 0 0 3", "Em7" to "2 0 0 0 0 0", "C" to "x 5 5 5 5 5",
+            "D" to "x x 0 2 3 4", "A" to "x 2 2 2 2 2", "Am" to "x 2 2 2 1 2", "Bb" to "x 3 3 3 3 3", "C7" to "x 5 5 5 5 8",
+        ).forEach { (name, shape) -> assertEquals(shape, first(name, ChordTuning.GUITAR_OPEN_G), name) }
+        mapOf(
+            "D" to "0 0 0 0 0 0", "Dsus4" to "0 0 0 1 0 0", "D7" to "0 0 0 0 3 0", "G" to "5 5 5 5 5 5", "A" to "7 7 7 7 7 7",
+            "Bm7" to "x 2 0 0 0 0", "Em" to "2 2 2 1 2 2", "F#m" to "4 4 4 3 4 4",
+        ).forEach { (name, shape) -> assertEquals(shape, first(name, ChordTuning.GUITAR_OPEN_D), name) }
+        mapOf("C" to "0 0 0 0 0 0", "F" to "5 5 5 5 5 5", "G" to "7 7 7 7 7 7", "Am7" to "x 2 0 0 0 0", "Dm" to "2 2 2 2 2 1")
+            .forEach { (name, shape) -> assertEquals(shape, first(name, ChordTuning.GUITAR_OPEN_C), name) }
+        mapOf("Dsus4" to "0 0 0 0 0 0", "D5" to "0 0 0 2 0 0", "D" to "0 0 4 2 0 0", "Em7" to "2 2 0 0 2 0", "G" to "5 x 0 0 2 0")
+            .forEach { (name, shape) -> assertEquals(shape, first(name, ChordTuning.GUITAR_DADGAD), name) }
+        mapOf("G5" to "0 0 0 0", "G" to "0 0 4 0", "D" to "2 4 2 0", "Em" to "0 2 4 2", "C" to "0 2 5 2")
+            .forEach { (name, shape) -> assertEquals(shape, first(name, ChordTuning.MANDOLIN_GDGD), name) }
+        assertEquals("0 0 0 0 0 0", first("E", ChordTuning.GUITAR_OPEN_E), "open E reads open D's table")
+        assertEquals("0 0 0 0 0 0", first("A", ChordTuning.GUITAR_OPEN_A), "open A reads open G's table")
+        assertEquals("0 0 0 0", first("A5", ChordTuning.MANDOLIN_AEAE), "AEAE reads GDGD's table")
+    }
+
+    @Test
     fun `a drop tuning's shapes are its table's, with their fingering`() {
         val g = ChordVoicings.default(ChordProChords.parse("G")!!, ChordTuning.GUITAR_DROP_D) as ChordVoicing.Fretted
         assertEquals(listOf(4, 1, 0, 0, 0, 2), g.fingers)
@@ -130,8 +151,10 @@ class ChordVoicingsTest {
                     val stopped = frets.filterNotNull().filter { it > 0 }
                     if (stopped.isNotEmpty()) assertTrue(stopped.max() - stopped.min() < 4, label)
                     if (!instrument.playsChordOver) {
-                        val lowest = sounding.minOf { tuning.strings[it] + frets[it]!! } % 12
-                        assertTrue(lowest == (chord.bass ?: chord.root), "$label sounds its bass or root lowest")
+                        val bottom = sounding.minBy { tuning.strings[it] + frets[it]!! }
+                        val lowest = (tuning.strings[bottom] + frets[bottom]!!) % 12
+                        val isOpenFifth = tuning.isOpen && chord.bass == null && 7 in chord.intervals && lowest == (chord.root + 7) % 12 && frets[bottom] == 0
+                        assertTrue(lowest == (chord.bass ?: chord.root) || isOpenFifth, "$label sounds its bass or root lowest, or an open tuning's open string its fifth")
                     }
                 }
             }

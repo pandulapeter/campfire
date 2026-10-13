@@ -20,6 +20,7 @@ import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.data.source.local.implementation.model.UserPreferencesDocument
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 /** A value a newer or an older version wrote costs that one setting, never the document it is in. */
 internal class UserPreferencesMappersTest {
@@ -184,12 +185,22 @@ internal class UserPreferencesMappersTest {
     }
 
     @Test
+    fun `a document from before the tempo could be picked follows the metronome where it showed the tempo`() {
+        val model = UserPreferencesDocument(isTempoShown = true, isTempoShownOnSetlistCards = false).toModel()
+        assertNull(model.songCardDetails.isTempoShown)
+        assertEquals(false, model.setlistCardDetails.isTempoShown)
+        assertNull(UserPreferencesDocument().toModel().setlistCardDetails.isTempoShown)
+    }
+
+    @Test
     fun `the cards of each list keep their own details through saving and reloading`() {
         val songCards = UserPreferences.CardDetails(isKeyShown = false, isTempoShown = true, isDurationShown = true)
         val setlistCards = UserPreferences.CardDetails(isKeyShown = true, isTempoShown = false, isDurationShown = false)
         val reloaded = UserPreferencesDocument().toModel().copy(songCardDetails = songCards, setlistCardDetails = setlistCards).toDocument().toModel()
         assertEquals(songCards, reloaded.songCardDetails)
         assertEquals(setlistCards, reloaded.setlistCardDetails)
+        val unpicked = UserPreferencesDocument().toModel().copy(songCardDetails = songCards.copy(isTempoShown = null)).toDocument().toModel()
+        assertNull(unpicked.songCardDetails.isTempoShown)
     }
 
     @Test

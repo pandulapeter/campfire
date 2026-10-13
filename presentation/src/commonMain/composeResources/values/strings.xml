@@ -836,11 +836,9 @@
     <string name="onboarding_language">Language: %1$s</string>
     <string name="onboarding_features_title">What do you need?</string>
     <string name="onboarding_features_message">Keep what you\'d like to use. Anything you leave out can be switched back on in Settings.</string>
-    <string name="onboarding_at_a_glance_message">Choose what the song cards show after the artist.</string>
     <string name="onboarding_tuning_of_instrument">%1$s, %2$s</string>
     <string name="onboarding_chord_diagrams_unavailable">Chord diagrams are drawn for the standard tuning, so this one has none.</string>
     <string name="onboarding_chord_diagram_description">How to play %1$s</string>
-    <string name="onboarding_at_a_glance_title">What matters at a glance?</string>
     <string name="onboarding_progress">Step %1$d of %2$d</string>
     <string name="onboarding_instrument_title">What do you play?</string>
     <string name="onboarding_instrument_message_chords_and_tuner">Campfire will show its chord shapes and set the tuner up for it.</string>

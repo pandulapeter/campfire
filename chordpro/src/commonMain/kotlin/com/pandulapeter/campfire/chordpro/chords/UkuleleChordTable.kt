@@ -20,9 +20,11 @@ package com.pandulapeter.campfire.chordpro.chords
  * the search's rules and can be held, which `ChordVoicingTablesTest` checks again. An inversion is filed under the slash
  * chord it sounds.
  *
- * Shapes from chords-db (https://github.com/tombatossals/chords-db), used under its MIT License:
+ * Shapes from chords-db (https://github.com/tombatossals/chords-db) and its corrected fork
+ * (https://github.com/tabsy-gr/chords-db), used under their MIT License:
  *
- *   Copyright (c) 2016 David Rubert
+ *   Copyright (c) 2016 David Rubert and the tombatossals/chords-db contributors
+ *   Copyright (c) 2026 Tabsy contributors
  *
  *   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  *   documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -201,6 +203,9 @@ internal object UkuleleChordTable {
         "C7b13#9 frets 3 4 4 6 fingers 1 2 3 4",
         "C7b13#9 frets 8 8 6 7 fingers 3 4 1 2",
         "C7b13#9 frets 9 8 6 6 fingers 4 3 1 1",
+        "C(b5) frets 5 4 2 3 fingers 4 3 1 2",
+        "C(b5) frets 5 6 8 7 fingers 1 2 4 3",
+        "C(b5) frets 9 6 8 7 fingers 4 1 3 2",
 
         "C# frets 1 1 1 4 fingers 1 1 1 4",
         "Db frets 6 5 4 4 fingers 3 2 1 1",
@@ -360,6 +365,10 @@ internal object UkuleleChordTable {
         "Db7b13#9 frets 4 5 5 7 fingers 1 2 3 4",
         "Db7b13#9 frets 9 9 7 8 fingers 3 4 1 2",
         "Db7b13#9 frets 10 9 7 7 fingers 4 3 1 1",
+        "Db(b5) frets 0 1 1 4 fingers 0 1 1 4",
+        "Db(b5) frets 6 5 3 4 fingers 4 3 1 2",
+        "Db(b5) frets 6 7 9 8 fingers 1 2 4 3",
+        "Db(b5) frets 10 7 9 8 fingers 4 1 3 2",
 
         "D frets 2 2 2 0 fingers 1 2 3 0",
         "D frets 2 2 2 5 fingers 1 1 1 4",
@@ -518,6 +527,9 @@ internal object UkuleleChordTable {
         "D7b13#9 frets 5 6 6 8 fingers 1 2 3 4",
         "D7b13#9 frets 10 10 8 9 fingers 3 4 1 2",
         "D7b13#9 frets 11 10 8 8 fingers 4 3 1 1",
+        "D(b5) frets 7 6 4 5 fingers 4 3 1 2",
+        "D(b5) frets 7 8 10 9 fingers 1 2 4 3",
+        "D(b5) frets 11 8 10 9 fingers 4 1 3 2",
 
         "Eb frets 3 3 3 1 fingers 2 3 4 1",
         "Eb frets 0 3 3 1 fingers 0 3 4 1",
@@ -676,6 +688,9 @@ internal object UkuleleChordTable {
         "Eb7b13#9 frets 4 6 3 4 fingers 2 4 1 3",
         "Eb7b13#9 frets 6 7 7 9 fingers 1 2 3 4",
         "Eb7b13#9 frets 12 11 9 9 fingers 4 3 1 1",
+        "Eb(b5) frets 8 7 5 6 fingers 4 3 1 2",
+        "Eb(b5) frets 8 9 11 10 fingers 1 2 4 3",
+        "Eb(b5) frets 12 9 11 10 fingers 4 1 3 2",
 
         "E frets 1 4 0 2 fingers 1 4 0 2",
         "E frets 4 4 4 2 fingers 2 3 4 1",
@@ -836,6 +851,9 @@ internal object UkuleleChordTable {
         "E7b13#9 frets 5 7 4 5 fingers 2 4 1 3",
         "E7b13#9 frets 7 8 8 10 fingers 1 2 3 4",
         "E7b13#9 frets 13 12 10 10 fingers 4 3 1 1",
+        "E(b5) frets 9 8 6 7 fingers 4 3 1 2",
+        "E(b5) frets 9 10 12 11 fingers 1 2 4 3",
+        "E(b5) frets 13 10 12 11 fingers 4 1 3 2",
 
         "F frets 2 0 1 0 fingers 2 0 1 0",
         "F frets 2 0 1 3 fingers 2 0 1 3",
@@ -996,6 +1014,9 @@ internal object UkuleleChordTable {
         "F7b13#9 frets 6 8 5 6 fingers 2 4 1 3",
         "F7b13#9 frets 8 9 9 11 fingers 1 2 3 4",
         "F7b13#9 frets 14 13 11 11 fingers 4 3 1 1",
+        "F(b5) frets 2 5 5 2 fingers 1 3 4 1",
+        "F(b5) frets 10 9 7 8 fingers 4 3 1 2",
+        "F(b5) frets 10 11 13 12 fingers 1 2 4 3",
 
         "F# frets 3 1 2 1 fingers 3 1 2 1",
         "Gb frets 3 1 2 4 fingers 3 1 2 4",
@@ -1156,6 +1177,9 @@ internal object UkuleleChordTable {
         "Gb7b13#9 frets 3 2 0 0 fingers 3 2 0 0",
         "Gb7b13#9 frets 3 4 5 5 fingers 1 2 3 4",
         "Gb7b13#9 frets 7 9 6 7 fingers 2 4 1 3",
+        "Gb(b5) frets 3 0 2 1 fingers 3 0 2 1",
+        "Gb(b5) frets 3 6 6 3 fingers 1 3 4 1",
+        "Gb(b5) frets 11 10 8 9 fingers 4 3 1 2",
 
         "G frets 0 2 3 2 fingers 0 1 3 2",
         "G frets 4 2 3 2 fingers 3 1 2 1",
@@ -1314,6 +1338,9 @@ internal object UkuleleChordTable {
         "G7b13#9 frets 4 3 1 1 fingers 4 3 1 1",
         "G7b13#9 frets 4 5 6 6 fingers 1 2 3 4",
         "G7b13#9 frets 8 10 7 8 fingers 2 4 1 3",
+        "G(b5) frets 4 1 3 2 fingers 4 1 3 2",
+        "G(b5) frets 4 7 7 4 fingers 1 3 4 1",
+        "G(b5) frets 12 11 9 10 fingers 4 3 1 2",
 
         "Ab frets 5 3 4 3 fingers 3 1 2 1",
         "Ab frets 1 3 4 3 fingers 1 2 4 3",
@@ -1473,6 +1500,8 @@ internal object UkuleleChordTable {
         "Ab7b13#9 frets 5 4 2 2 fingers 4 3 1 1",
         "Ab7b13#9 frets 5 6 7 7 fingers 1 2 3 4",
         "Ab7b13#9 frets 9 11 8 9 fingers 2 4 1 3",
+        "Ab(b5) frets 5 2 4 3 fingers 4 1 3 2",
+        "Ab(b5) frets 5 8 8 5 fingers 1 3 4 1",
 
         "A frets 2 1 0 0 fingers 2 1 0 0",
         "A frets 2 4 5 4 fingers 1 2 4 3",
@@ -1631,6 +1660,9 @@ internal object UkuleleChordTable {
         "A7b13#9 frets 5 5 3 4 fingers 3 4 1 2",
         "A7b13#9 frets 6 5 3 3 fingers 4 3 1 1",
         "A7b13#9 frets 6 7 8 8 fingers 1 2 3 4",
+        "A(b5) frets 2 3 5 4 fingers 1 2 4 3",
+        "A(b5) frets 6 3 5 4 fingers 4 1 3 2",
+        "A(b5) frets 6 9 9 6 fingers 1 3 4 1",
 
         "Bb frets 3 2 1 1 fingers 3 2 1 1",
         "Bb frets 3 5 6 5 fingers 1 2 4 3",
@@ -1790,6 +1822,10 @@ internal object UkuleleChordTable {
         "Bb7b13#9 frets 6 6 4 5 fingers 3 4 1 2",
         "Bb7b13#9 frets 7 6 4 4 fingers 4 3 1 1",
         "Bb7b13#9 frets 7 8 9 9 fingers 1 2 3 4",
+        "Bb(b5) frets 3 2 0 1 fingers 3 2 0 1",
+        "Bb(b5) frets 3 4 6 5 fingers 1 2 4 3",
+        "Bb(b5) frets 7 4 6 5 fingers 4 1 3 2",
+        "Bb(b5) frets 7 10 10 7 fingers 1 3 4 1",
 
         "B frets 4 3 2 2 fingers 3 2 1 1",
         "B frets 4 6 7 6 fingers 1 2 4 3",
@@ -1945,5 +1981,11 @@ internal object UkuleleChordTable {
         "B7b13#9 frets 7 7 5 6 fingers 4 3 1 2",
         "B7b13#9 frets 8 7 5 5 fingers 4 3 1 1",
         "B7b13#9 frets 8 9 10 10 fingers 1 2 3 4",
+        "B(b5) frets 4 3 1 2 fingers 4 3 1 2",
+        "B(b5) frets 4 5 7 6 fingers 1 2 4 3",
+        "B(b5) frets 8 5 7 6 fingers 4 1 3 2",
+        "Bmadd9 frets 4 2 2 4 fingers 3 1 1 4",
+        "Bmadd9 frets 7 6 7 4 fingers 3 2 4 1",
+        "Bmadd9 frets 6 6 7 5 fingers 2 2 3 1",
     )
 }

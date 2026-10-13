@@ -30,9 +30,9 @@ import org.jetbrains.compose.resources.StringResource
 
 /**
  * What one list's song cards say after the artist ([UserPreferences.CardDetails]), as a row of chips any of which can be
- * on: the key, the tempo, and the duration. The key goes with the chords and the tempo with the metronome, so with its
- * feature off a chip is disabled, showing what it is set to for when the feature comes back, or left out altogether
- * where [isUnavailableHidden], for a page that only asks about what the app has.
+ * on: the key, the tempo, and the duration. The key goes with the chords, so with them off its chip is left out, what
+ * it is set to kept for when they come back. The tempo can be shown without the metronome, so its chip stays, ticked as
+ * the metronome is until it is tapped. [isEnabled] is false for a list the app does not have, the setlists switched off.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -41,7 +41,7 @@ internal fun CardDetailsChoice(
     details: UserPreferences.CardDetails,
     areChordsEnabled: Boolean,
     isMetronomeEnabled: Boolean,
-    isUnavailableHidden: Boolean = false,
+    isEnabled: Boolean = true,
     onDetailsChanged: (UserPreferences.CardDetails) -> Unit,
 ) = FlowRow(
     modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp),
@@ -50,12 +50,12 @@ internal fun CardDetailsChoice(
 ) {
     listOf(
         CardDetailOption(Res.string.card_detail_key, details.isKeyShown, areChordsEnabled) { details.copy(isKeyShown = it) },
-        CardDetailOption(Res.string.card_detail_tempo, details.isTempoShown, isMetronomeEnabled) { details.copy(isTempoShown = it) },
+        CardDetailOption(Res.string.card_detail_tempo, details.isTempoShown(isMetronomeEnabled), true) { details.copy(isTempoShown = it) },
         CardDetailOption(Res.string.card_detail_duration, details.isDurationShown, true) { details.copy(isDurationShown = it) },
-    ).filter { it.isEnabled || !isUnavailableHidden }.forEach { option ->
+    ).filter { it.isAvailable }.forEach { option ->
         SelectableChip(
             isSelected = option.isShown,
-            isEnabled = option.isEnabled,
+            isEnabled = isEnabled,
             role = Role.Checkbox,
             onClick = { onDetailsChanged(option.withShown(!option.isShown)) },
         ) { contentColor ->
@@ -71,6 +71,6 @@ internal fun CardDetailsChoice(
 private class CardDetailOption(
     val label: StringResource,
     val isShown: Boolean,
-    val isEnabled: Boolean,
+    val isAvailable: Boolean,
     val withShown: (Boolean) -> UserPreferences.CardDetails,
 )

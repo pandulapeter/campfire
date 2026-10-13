@@ -44,7 +44,7 @@ class ChordTuningsTest {
     @Test
     fun `a tuning of another instrument or one this version does not know is read as standard`() {
         assertEquals(ChordTuning.GUITAR, chordTuningOf(ChordInstrument.GUITAR, mapOf("guitar" to "ukulele_baritone")))
-        assertEquals(ChordTuning.GUITAR, chordTuningOf(ChordInstrument.GUITAR, mapOf("guitar" to "guitar_open_g")))
+        assertEquals(ChordTuning.GUITAR, chordTuningOf(ChordInstrument.GUITAR, mapOf("guitar" to "guitar_seven_string")))
         assertEquals(ChordTuning.KEYBOARD, chordTuningOf(ChordInstrument.KEYBOARD, mapOf("keyboard" to "guitar_drop_d")))
     }
 
