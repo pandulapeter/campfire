@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.DropdownMenuItem
@@ -66,7 +67,11 @@ internal fun ConflictResolutionDropdown(
     ImportConflictResolution.entries.forEach { option ->
         DropdownMenuItem(
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                // A menu item is as tight as a one-line one, and these descriptions run to several lines.
+                Column(
+                    modifier = Modifier.padding(vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                ) {
                     Text(stringResource(option.label))
                     Text(
                         text = stringResource(option.description),
