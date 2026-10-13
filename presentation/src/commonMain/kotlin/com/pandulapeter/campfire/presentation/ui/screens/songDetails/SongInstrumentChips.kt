@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
+import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.foundation.layout.offset
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -22,13 +23,15 @@ import com.pandulapeter.campfire.presentation.ui.components.songControlHeight
  * their chevrons scaled with the lyrics, opening the instrument's sheet and the tuning's ([ChordDiagrams.onInstrumentClicked],
  * [ChordDiagrams.onTuningClicked]). Each reaches out of its column to the left as a section's pill does, so that a chip
  * starting a line has its name on the keyline the lyrics and the section titles stand on. Emits the chips without a
- * container, for the flow that heads the song's first section.
+ * container, for the flow that heads the song's first section. The tuning chip fades in and out by [tuningChipVisibility],
+ * which [SongLyrics] reads to know when a leaving chip is no longer part of the section it measures.
  */
 @Composable
 internal fun SongInstrumentChips(
     chordDiagrams: ChordDiagrams,
     headerStyle: TextStyle,
     fontScale: Float,
+    tuningChipVisibility: MutableTransitionState<Boolean>,
     onInstrumentClicked: () -> Unit,
     onTuningClicked: () -> Unit,
 ) = InstrumentChips(
@@ -39,6 +42,7 @@ internal fun SongInstrumentChips(
     height = songControlHeight(headerStyle),
     style = headerStyle,
     chevronSize = FOLD_CHEVRON_SIZE * fontScale,
+    tuningChipVisibility = tuningChipVisibility,
     onInstrumentClicked = onInstrumentClicked,
     onTuningClicked = onTuningClicked,
 )

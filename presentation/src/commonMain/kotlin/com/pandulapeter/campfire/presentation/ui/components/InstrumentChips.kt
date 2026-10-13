@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.material3.MaterialTheme
@@ -39,6 +40,9 @@ import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
  * diagrams for the wrong instrument or tuning look just as right as the ones for the right one. Emits the chips without
  * a container of its own, so that the row or the flow they are put in lays them out; [chipModifier] goes on both, and
  * the tuning chip fades in and out with the instrument's tunings.
+ *
+ * @param tuningChipVisibility Where the tuning chip fades in and out, for a caller that measures the chips and so has to
+ * know when a leaving chip is no longer laid out; its target is kept by the caller at whether there is a tuning to show.
  */
 @Composable
 internal fun InstrumentChips(
@@ -50,6 +54,7 @@ internal fun InstrumentChips(
     style: TextStyle = MaterialTheme.typography.bodyLarge,
     chevronSize: Dp = 20.dp,
     isEnabled: Boolean = true,
+    tuningChipVisibility: MutableTransitionState<Boolean>? = null,
     onInstrumentClicked: () -> Unit,
     onTuningClicked: () -> Unit,
 ) {
@@ -69,7 +74,7 @@ internal fun InstrumentChips(
     val lastShownTuning = remember { LastTuning() }
     shownTuning?.let { lastShownTuning.value = it }
     AnimatedVisibility(
-        visible = shownTuning != null,
+        visibleState = tuningChipVisibility ?: remember { MutableTransitionState(shownTuning != null) }.apply { targetState = shownTuning != null },
         enter = fadeIn(),
         exit = fadeOut(),
     ) {

@@ -90,8 +90,8 @@ internal fun definitionCellsOf(song: ChordProSong, notation: ChordNotation) = so
 /**
  * [sections] with the Chords section after the metadata section, or first where there is none: the diagrams are part of
  * how the song is played, which the metadata section starts with. None where there is no chord to draw. A song that has
- * chords also gets the instrument and tuning chips where they are offered ([isInstrumentShown]), at the top of the
- * metadata section ([RenderSection.Metadata.hasInstrumentChips]), since like the transposition and the capo under them
+ * chords also gets the instrument and tuning chips where they are offered ([instrumentChips], what they name), at the
+ * top of the metadata section ([RenderSection.Metadata.instrumentChips]), since like the transposition and the capo under them
  * they are about how the whole song is played; they stay for an instrument without shapes, which leaves no [cells],
  * since they are what brings the diagrams back. A song without chords has nothing to draw on any instrument.
  */
@@ -100,10 +100,10 @@ internal fun withChordsSection(
     cells: List<ChordCell>,
     isFolded: Boolean,
     hasChords: Boolean,
-    isInstrumentShown: Boolean,
+    instrumentChips: InstrumentChipsContent?,
 ): List<RenderSection> {
     val metadata = (sections.firstOrNull() as? RenderSection.Metadata)
-        ?.let { if (hasChords && isInstrumentShown) it.copy(hasInstrumentChips = true) else it }
+        ?.let { if (hasChords && instrumentChips != null) it.copy(instrumentChips = instrumentChips) else it }
     val rest = if (metadata != null) sections.drop(1) else sections
     return listOfNotNull(metadata) + listOfNotNull(RenderSection.Chords(cells = cells, isFolded = isFolded).takeIf { cells.isNotEmpty() }) + rest
 }

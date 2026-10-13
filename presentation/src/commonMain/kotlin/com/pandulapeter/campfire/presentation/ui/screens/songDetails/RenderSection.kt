@@ -11,12 +11,15 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Immutable
+import com.pandulapeter.campfire.chordpro.ChordNotation
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 import com.pandulapeter.campfire.chordpro.model.CommentStyle
+import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.chords.ChordCell
 import com.pandulapeter.campfire.presentation.ui.songLayout.FoldableKind
 import com.pandulapeter.campfire.presentation.ui.songLayout.chordSlotCount
+import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 
 /**
  * [text] with its runs of whitespace collapsed into single spaces and cut to [DESCRIPTION_LENGTH] characters, an ellipsis
@@ -32,6 +35,22 @@ internal fun shortenedForDescription(text: String): String {
 
 private const val DESCRIPTION_LENGTH = 40
 private val WHITESPACE = Regex("\\s+")
+
+/**
+ * What the instrument and tuning chips at the top of a song's first section name: part of the section's content, since
+ * how wide their labels are decides how many lines they take, and the measured sizes of a section are kept by it.
+ *
+ * @param tuning The tuning the tuning chip names, a leaving one included until it has faded out, since it is laid out
+ * until then; null where there is no tuning chip, an instrument with a single tuning, so that two instruments without
+ * one are not told apart by a tuning nobody sees.
+ * @param notation What the tuning chip names the tuning's note in.
+ */
+@Immutable
+internal data class InstrumentChipsContent(
+    val instrument: UserPreferences.Instrument,
+    val tuning: InstrumentTuning?,
+    val notation: ChordNotation,
+)
 
 /**
  * One section of the song. The column layout places sections whole, or as the chunks they may be cut into as a last
@@ -53,6 +72,8 @@ internal sealed interface RenderSection {
      * [withMetadataSection].
      * @param hasTuner Whether the tuner's button is drawn among them, part of the content for the same reason.
      * @param hasMetronome Whether the metronome's button is drawn among them, part of the content for the same reason.
+     * @param instrumentChips What the instrument and tuning chips at its top name, null where it has none, part of the
+     * content for the same reason, see [withChordsSection].
      */
     @Immutable
     data class Metadata(
@@ -61,7 +82,7 @@ internal sealed interface RenderSection {
         val readsDefaults: Boolean = false,
         val hasTuner: Boolean = false,
         val hasMetronome: Boolean = false,
-        val hasInstrumentChips: Boolean = false,
+        val instrumentChips: InstrumentChipsContent? = null,
     ) : RenderSection
 
     /**

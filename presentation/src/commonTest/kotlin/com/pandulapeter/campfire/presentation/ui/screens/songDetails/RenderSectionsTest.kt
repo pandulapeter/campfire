@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
+import com.pandulapeter.campfire.chordpro.ChordNotation
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.chords.ChordProTransposer
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
@@ -16,10 +17,12 @@ import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.CommentStyle
 import com.pandulapeter.campfire.chordpro.model.GridToken
+import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.chords.ChordCell
 import com.pandulapeter.campfire.presentation.ui.chords.SelectedShape
 import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
 import com.pandulapeter.campfire.presentation.ui.songLayout.FoldableKind
+import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -28,6 +31,8 @@ import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 class RenderSectionsTest {
+
+    private val guitarChips = InstrumentChipsContent(UserPreferences.Instrument.GUITAR, InstrumentTuning.GUITAR, ChordNotation.STANDARD)
 
     private val labels = DefaultSectionLabels(
         verse = "Versszak",
@@ -339,22 +344,39 @@ class RenderSectionsTest {
         val model = prepareSongLyrics(ChordProParser.parse("{sov}\n[G]la [C]la\n{eov}"), shouldShowChords = true, labels = labels)
         assertTrue(model.hasChords)
         val sections = withMetadataSection(model.sections, model.song.metadata, shouldShowChords = true, isSongInfoShown = false, hasPlayingControls = true)
-        val withoutDiagrams = withChordsSection(sections, cells = emptyList(), isFolded = false, hasChords = model.hasChords, isInstrumentShown = true)
+        val withoutDiagrams = withChordsSection(sections, cells = emptyList(), isFolded = false, hasChords = model.hasChords, instrumentChips = guitarChips)
         assertTrue(withoutDiagrams.none { it is RenderSection.Chords })
-        assertTrue((withoutDiagrams.first() as RenderSection.Metadata).hasInstrumentChips)
+        assertEquals(guitarChips, (withoutDiagrams.first() as RenderSection.Metadata).instrumentChips)
         assertEquals(sections.drop(1), withoutDiagrams.drop(1))
         val cell = ChordCell(name = "G", tuning = ChordTuning.GUITAR, root = 7, selection = SelectedShape(null, SelectedShape.Source.DEFAULT))
-        val withDiagrams = withChordsSection(sections, cells = listOf(cell), isFolded = false, hasChords = model.hasChords, isInstrumentShown = true)
-        assertTrue((withDiagrams.first() as RenderSection.Metadata).hasInstrumentChips)
+        val withDiagrams = withChordsSection(sections, cells = listOf(cell), isFolded = false, hasChords = model.hasChords, instrumentChips = guitarChips)
+        assertEquals(guitarChips, (withDiagrams.first() as RenderSection.Metadata).instrumentChips)
         assertTrue(withDiagrams[1] is RenderSection.Chords)
-        assertEquals(sections, withChordsSection(sections, cells = emptyList(), isFolded = false, hasChords = model.hasChords, isInstrumentShown = false))
+        assertEquals(sections, withChordsSection(sections, cells = emptyList(), isFolded = false, hasChords = model.hasChords, instrumentChips = null))
+    }
+
+    @Test
+    fun `the first section differs by what the instrument chips name and is equal for the same chips`() {
+        val model = prepareSongLyrics(ChordProParser.parse("{sov}\n[G]la [C]la\n{eov}"), shouldShowChords = true, labels = labels)
+        val sections = withMetadataSection(model.sections, model.song.metadata, shouldShowChords = true, isSongInfoShown = false, hasPlayingControls = true)
+        fun firstSection(chips: InstrumentChipsContent) =
+            withChordsSection(sections, cells = emptyList(), isFolded = false, hasChords = model.hasChords, instrumentChips = chips).first()
+        val chips = listOf(
+            guitarChips,
+            InstrumentChipsContent(UserPreferences.Instrument.GUITAR_TWELVE_STRING, InstrumentTuning.GUITAR, ChordNotation.STANDARD),
+            InstrumentChipsContent(UserPreferences.Instrument.GUITAR, InstrumentTuning.GUITAR_DROP_D, ChordNotation.STANDARD),
+            InstrumentChipsContent(UserPreferences.Instrument.GUITAR, InstrumentTuning.GUITAR_DROP_B, ChordNotation.STANDARD),
+            InstrumentChipsContent(UserPreferences.Instrument.GUITAR, InstrumentTuning.GUITAR_DROP_B, ChordNotation.GERMAN),
+        )
+        assertEquals(chips.size, chips.map(::firstSection).toSet().size)
+        assertEquals(firstSection(guitarChips), firstSection(guitarChips.copy()))
     }
 
     @Test
     fun `a song without chords gets no Chords section whatever the instrument`() {
         val model = prepareSongLyrics(ChordProParser.parse("{sov}\nla la\n{eov}"), shouldShowChords = true, labels = labels)
         assertFalse(model.hasChords)
-        assertEquals(model.sections, withChordsSection(model.sections, cells = emptyList(), isFolded = false, hasChords = false, isInstrumentShown = true))
+        assertEquals(model.sections, withChordsSection(model.sections, cells = emptyList(), isFolded = false, hasChords = false, instrumentChips = guitarChips))
         val lyricsOnly = prepareSongLyrics(ChordProParser.parse("{sov}\n[G]la\n{eov}"), shouldShowChords = false, labels = labels)
         assertFalse(lyricsOnly.hasChords)
     }

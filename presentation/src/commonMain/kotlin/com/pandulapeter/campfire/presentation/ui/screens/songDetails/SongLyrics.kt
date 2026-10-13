@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.animateBounds
+import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -54,7 +55,9 @@ import com.pandulapeter.campfire.presentation.resources.song_details_cut
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.ui.chords.ChordCell
 import com.pandulapeter.campfire.presentation.ui.components.scaled
+import com.pandulapeter.campfire.presentation.ui.instrument.tunings
 import com.pandulapeter.campfire.presentation.ui.songLayout.rememberDefaultSectionLabels
+import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 
 /**
  * Renders the song [model] with the chords displayed above the lyrics, aligned to the syllable they belong to. A model
@@ -162,6 +165,20 @@ internal fun SongLyrics(
     val shownPlayingControls = playingControls?.takeIf { model.shouldShowChords || shouldShowTempo }
     val hasTuner = playingTools?.onTunerClicked != null
     val hasMetronome = playingTools?.metronome != null
+    val shownTuning = chordDiagrams?.instrumentTuning?.takeIf { chordDiagrams.instrument.tunings.size > 1 }
+    val tuningChipVisibility = remember { MutableTransitionState(shownTuning != null) }.apply { targetState = shownTuning != null }
+    // A section is measured in the frame its content first appears in, and a leaving tuning chip is still laid out while it
+    // fades: the content keeps naming that chip's tuning until the fade has ended, so that the section is measured again
+    // without it then. Not a state: the fade's own state is what changes the content.
+    val lastShownTuning = remember { LastShownTuning() }
+    shownTuning?.let { lastShownTuning.value = it }
+    val instrumentChips = chordDiagrams?.takeIf { it.onInstrumentClicked != null }?.let {
+        InstrumentChipsContent(
+            instrument = it.instrument,
+            tuning = shownTuning ?: lastShownTuning.value.takeIf { !tuningChipVisibility.isIdle || tuningChipVisibility.currentState },
+            notation = it.notation,
+        )
+    }
     val sections = remember(
         model.sections,
         model.song.metadata,
@@ -203,14 +220,13 @@ internal fun SongLyrics(
             }
         }
         lastCells.value = cells
-        val isInstrumentShown = chordDiagrams?.onInstrumentClicked != null
-        remember(sections, cells, chordDiagrams?.isFolded, model.hasChords, isInstrumentShown) {
+        remember(sections, cells, chordDiagrams?.isFolded, model.hasChords, instrumentChips) {
             withChordsSection(
                 sections = sections,
                 cells = cells,
                 isFolded = chordDiagrams?.isFolded == true,
                 hasChords = model.hasChords,
-                isInstrumentShown = isInstrumentShown,
+                instrumentChips = instrumentChips,
             )
         }
     }
@@ -417,12 +433,13 @@ internal fun SongLyrics(
                                 titleStyle = headerStyle,
                                 chordStyle = chordStyle,
                                 fontScale = fontScale,
-                                instrumentChips = chordDiagrams?.onInstrumentClicked?.takeIf { section.hasInstrumentChips }?.let { onInstrumentClicked ->
+                                instrumentChips = chordDiagrams?.onInstrumentClicked?.takeIf { section.instrumentChips != null }?.let { onInstrumentClicked ->
                                     {
                                         SongInstrumentChips(
                                             chordDiagrams = chordDiagrams,
                                             headerStyle = headerStyle,
                                             fontScale = fontScale,
+                                            tuningChipVisibility = tuningChipVisibility,
                                             onInstrumentClicked = onInstrumentClicked,
                                             onTuningClicked = chordDiagrams.onTuningClicked ?: {},
                                         )
@@ -557,6 +574,9 @@ private fun CutSongNotice(
     style = MaterialTheme.typography.bodyMedium,
     color = MaterialTheme.colorScheme.onSurfaceVariant,
 )
+
+/** What the tuning chip of [SongLyrics] last named. */
+private class LastShownTuning(var value: InstrumentTuning? = null)
 
 /** The Chords section's cells as [SongLyrics] last built them. */
 private class LastChordCells(var value: List<ChordCell> = emptyList())

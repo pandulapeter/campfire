@@ -84,8 +84,11 @@ own instrument, whatever the switches say.
 (`SongInstrumentChips`, the `InstrumentChips` as tall as a section's pill, `ChordDiagrams.onInstrumentClicked` and
 `onTuningClicked`, read only mode included; see `ui/CLAUDE.md`), above the transposition and the capo, which are as
 much about the whole song, and for every song with chords, so an instrument without shapes, which leaves no Chords
-section, keeps them to bring the diagrams back (`RenderSection.Metadata.hasInstrumentChips`, `withChordsSection`'s
-`hasChords`, `SongLyricsModel.hasChords`). **Every chip reaches out of its column as a section's pill does**, so that
+section, keeps them to bring the diagrams back (`RenderSection.Metadata.instrumentChips`, `withChordsSection`'s
+`hasChords`, `SongLyricsModel.hasChords`). The section's content holds what the chips name (`InstrumentChipsContent`: the
+instrument, the tuning the tuning chip shows, and the notation), since how wide their labels are decides how many lines
+they take and a section's measured size is kept by its content; a leaving tuning chip is named until it has faded out
+(`SongInstrumentChips`' `tuningChipVisibility`), since it is laid out until then. **Every chip reaches out of its column as a section's pill does**, so that
 one starting a line has its name on the keyline the lyrics, the section titles, and the controls' labels stand on, and
 a chip that does not fit beside the other goes under it whole rather than being cut short.
 
