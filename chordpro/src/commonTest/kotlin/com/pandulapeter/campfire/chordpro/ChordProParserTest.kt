@@ -770,7 +770,7 @@ class ChordProParserTest {
 
         assertEquals(3, blocks.size)
         assertEquals(ChordProLine.Tab("e|---0---2---|", label = "Riff"), (blocks[0] as ChordProBlock.Section).lines.single())
-        assertEquals(ChordProBlock.Comment("Repeat x2", CommentStyle.PLAIN, CommentPlacement.IN_SECTION, isInTabOrGrid = true), blocks[1])
+        assertEquals(ChordProBlock.Comment("Repeat x2", CommentStyle.PLAIN, CommentPlacement.IN_SECTION, isInTabOrGrid = true, isInTab = true), blocks[1])
         val secondSection = blocks[2] as ChordProBlock.Section
         assertEquals("Riff", secondSection.label)
         assertEquals(ChordProLine.Tab("e|---3---5---|", continuesEnvironment = true, label = "Riff"), secondSection.lines[0])
@@ -794,7 +794,7 @@ class ChordProParserTest {
     fun `a legacy heading name inside a tab environment stays a comment`() {
         val blocks = ChordProParser.parse("{sot}\ne|---0---|\n{c: Solo}\ne|---3---|\n{eot}").blocks
 
-        assertEquals(ChordProBlock.Comment("Solo", CommentStyle.PLAIN, CommentPlacement.IN_SECTION, isInTabOrGrid = true), blocks[1])
+        assertEquals(ChordProBlock.Comment("Solo", CommentStyle.PLAIN, CommentPlacement.IN_SECTION, isInTabOrGrid = true, isInTab = true), blocks[1])
         assertEquals(ChordProLine.Tab("e|---3---|", continuesEnvironment = true), (blocks[2] as ChordProBlock.Section).lines.single())
     }
 
@@ -1224,7 +1224,7 @@ class ChordProParserTest {
             (ChordProParser.parse("{start_of_pre-chorus}\n[C]la\n{end_of_pre-chorus}").blocks.single() as ChordProBlock.Section).type,
         )
         val tab = ChordProParser.parse("{start_of_tab-guitar}\ne|--0--|\n{end_of_tab}").blocks.single() as ChordProBlock.Section
-        assertEquals(listOf(ChordProLine.Tab("e|--0--|")), tab.lines)
+        assertEquals(listOf(ChordProLine.Tab("e|--0--|", selector = "guitar")), tab.lines)
     }
 
     @Test
@@ -1244,7 +1244,7 @@ class ChordProParserTest {
         val tab = ChordProParser.parse("{sot}\ne|-3-|\n{highlight: x}\ne|-5-|\n{eot}").blocks
         assertEquals(3, tab.size)
         assertEquals(ChordProLine.Tab("e|-3-|"), (tab[0] as ChordProBlock.Section).lines.single())
-        assertEquals(ChordProBlock.Comment("x", CommentStyle.PLAIN, CommentPlacement.IN_SECTION, isInTabOrGrid = true), tab[1])
+        assertEquals(ChordProBlock.Comment("x", CommentStyle.PLAIN, CommentPlacement.IN_SECTION, isInTabOrGrid = true, isInTab = true), tab[1])
         assertEquals(ChordProLine.Tab("e|-5-|", continuesEnvironment = true), (tab[2] as ChordProBlock.Section).lines.single())
     }
 

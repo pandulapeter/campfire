@@ -762,6 +762,13 @@
     <string name="song_details_tempo">%1$s BPM</string>
     <string name="song_details_time">%1$s</string>
     <string name="song_details_key_change">Hangnem: %1$s</string>
+    <string name="tab_notice_octave_up">Egy oktávval feljebb téve, hogy a fogólapon maradjon</string>
+    <string name="tab_notice_octave_down">Egy oktávval lejjebb téve, hogy a fogólapon maradjon</string>
+    <string name="tab_notice_other_instrument">%1$s tabulatúra, a hangszeredre átírva</string>
+    <string name="tab_notice_not_moved">Az eredeti formájában: nem írható át a hangolásodra</string>
+    <string name="tab_notice_not_moved_instrument">%1$s tabulatúra, az eredeti formájában: nem írható át a hangszeredre</string>
+    <string name="tab_notice_hidden">Tabulatúra elrejtve</string>
+    <string name="tab_notice_hidden_instrument">%1$s tabulatúra elrejtve</string>
     <string name="song_details_chords">Akkordok</string>
     <string name="song_details_chord_tuning">Hangolás: %1$s</string>
     <string name="song_details_chord_defined_standard_tuning">A dal normál hangolásra adja meg ezt az akkordot</string>

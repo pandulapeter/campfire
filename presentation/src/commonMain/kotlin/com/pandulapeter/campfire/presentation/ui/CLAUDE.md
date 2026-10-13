@@ -491,6 +491,22 @@ instrument, see `ui/tuner/`). A tuning therefore names no
 instrument of its own: `withTuning` tunes the instrument picked, and the chips ask a tuning whether it is standard
 (`isStandard`) rather than which instrument it is of.
 
+### Tabs follow the instrument
+
+**A tab is shown for the instrument and the tuning picked** (`ui/tabs/`: `tabPlayerOf` turns them into `:chordpro`'s
+`TabPlayer`, `TabReading` adds the notices' words, and `SongRenderer.transposedSong` applies both; see `:chordpro`'s
+`ChordProTabs`). Of the tabs written for several instruments (`{start_of_tab-ukulele}`) the player sees theirs — a
+seven- and an eight-string or a twelve-string guitar the guitar's when there is none of their own, a five-string bass
+the bass's — and otherwise the guitar's. Every tab is moved to their strings so that it sounds what its string names
+say, and every staff is named, one that names nothing being in the standard tuning of the player's instrument where it
+has as many strings, and else a bass's of four or five, a guitar's of six, seven, or eight. Only a judgment call is
+said, in an italic line above the tab: an octave move, a tab from another instrument, or one that could not be moved
+and is shown as written. The keyboard and the violin hide every tab, a line saying which in its place; Other is shown
+every tab as written. There is no switch for any of it: a reader who wants a tab as written tunes to what it names,
+or duplicates the song and edits it. The song details screen and the PDF follow it; the editor's preview only names
+the strings, moving and hiding nothing, and the editor's Tab button writes an empty staff named for the player's strings
+(a guitar's for an instrument without frets), in the standard notation every file is in.
+
 ## Haptics
 
 **The hand is told only what the eye cannot easily follow**, through Compose's `LocalHapticFeedback`, which is the

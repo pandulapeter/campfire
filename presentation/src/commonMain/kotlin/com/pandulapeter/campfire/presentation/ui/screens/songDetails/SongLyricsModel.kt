@@ -24,6 +24,7 @@ import com.pandulapeter.campfire.presentation.ui.chords.hasSongChords
 import com.pandulapeter.campfire.presentation.ui.chords.songChordsOf
 import com.pandulapeter.campfire.presentation.ui.chords.withSearchedShapes
 import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
+import com.pandulapeter.campfire.presentation.ui.tabs.TabReading
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -176,6 +177,7 @@ internal data class SongLyricsInputs(
     val capoOverride: Int? = null,
     val showsTiming: Boolean = true,
     val chordTuning: ChordTuning? = null,
+    val tabs: TabReading? = null,
 )
 
 /**

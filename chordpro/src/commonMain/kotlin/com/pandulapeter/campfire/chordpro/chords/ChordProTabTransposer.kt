@@ -62,7 +62,7 @@ internal object ChordProTabTransposer {
      * The positions of the fret numbers of a staff line: every run of digits that is not a repeat count, `x4` or, after
      * the last bar line, `4x`. Inside the staff a `3x` is a fret and a dead note on the next column, and moves.
      */
-    private fun fretRanges(line: String): List<IntRange> {
+    internal fun fretRanges(line: String): List<IntRange> {
         val ranges = mutableListOf<IntRange>()
         // What stands after the last bar line is a note to the player (`x3`, `3x`, `(3x)`), not a string's frets.
         val lastBar = line.lastIndexOf('|')
@@ -90,7 +90,7 @@ internal object ChordProTabTransposer {
      */
     private val Char.isAsciiDigit get() = this in '0'..'9'
 
-    private fun fretNumbers(line: String) = fretRanges(line).mapNotNull { line.substring(it).toIntOrNull() }
+    internal fun fretNumbers(line: String) = fretRanges(line).mapNotNull { line.substring(it).toIntOrNull() }
 
     /** How many semitones of whole octaves to add so that every fret stays on the fingerboard, or null if none does. */
     private fun octaveOffset(frets: List<Int>, semitones: Int): Int? {
@@ -101,7 +101,7 @@ internal object ChordProTabTransposer {
         return SEMITONES_IN_OCTAVE * 0.coerceIn(lowestOctave, highestOctave) // The one closest to not moving at all.
     }
 
-    private fun transposeStaffLine(line: String, shift: Int): String {
+    internal fun transposeStaffLine(line: String, shift: Int): String {
         if (shift == 0) return line
         return replaceKeepingColumns(
             line = line,
@@ -119,7 +119,7 @@ internal object ChordProTabTransposer {
      * nothing on the line itself tells the two apart, and a guess would be wrong as often as right. The spelling that
      * is safe is `Tuning: E A D G B E`, which the word `Tuning:` keeps from being read as chords.
      */
-    private fun rewriteChordLine(line: String, rename: (String) -> String): String {
+    internal fun rewriteChordLine(line: String, rename: (String) -> String): String {
         val trimmedLine = line.trim()
         if (trimmedLine.isEmpty() || trimmedLine.startsWith(SOURCE_COMMENT) || ChordProDirectives.matchDirective(trimmedLine) != null) return line
         if (ChordProDirectives.hasBrackets(line)) return ChordProChordRewriter.rewriteLyricsLineChords(line, rename)
@@ -184,7 +184,7 @@ internal object ChordProTabTransposer {
         return result.toString()
     }
 
-    private const val SEMITONES_IN_OCTAVE = 12
+    internal const val SEMITONES_IN_OCTAVE = 12
     private const val DASH = '-'
     private const val REPEAT_COUNT_MARKER = 'x' // The `x` of an `x4` after a bar or a `4x` after the last one, whose number is not a fret.
     private const val BEAT = "."

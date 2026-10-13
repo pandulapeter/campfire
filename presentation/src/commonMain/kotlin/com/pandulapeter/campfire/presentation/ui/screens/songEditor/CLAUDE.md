@@ -40,7 +40,10 @@ screen. Its app bar starts with Close rather than Back. The whole bar is one sur
   **song** (chords, the seven sections the app has a name for, tablature and grids, comments, and last the changes from
   where they stand: Key change, Tempo and Time signature), so the row being scrolled through is always the short one.
   Tab and Grid are a group of their own between the sections and the comments, because that is what they are: a display
-  mode that opens inside a section rather than a section of its own.
+  mode that opens inside a section rather than a section of its own. Tab writes an empty staff of one bar named for the
+  player's strings (`emptyTabStaffOf`, see `ui/CLAUDE.md`'s Tabs follow the instrument), the caret after the top
+  string's name, and with something selected only puts the environment around it, since that is most likely a tab
+  pasted in.
 - Two kinds of directive are deliberately absent, both still read without complaint: `{new_song}`, since the editor only
   ever holds one song, and `{new_page}` / `{column_break}`, since Campfire flows sections into columns at whatever size
   the window is and a hand written break would decide nothing. `{transpose}` is offered as **Key change**, in the second

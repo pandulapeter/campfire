@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.chordpro.chords
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
+import com.pandulapeter.campfire.chordpro.model.TabPlayer
 import com.pandulapeter.campfire.chordpro.syntax.ChordProChordRewriter.ChordRewrite
 import com.pandulapeter.campfire.chordpro.syntax.ChordProChordRewriter.anyWrittenChordName
 import com.pandulapeter.campfire.chordpro.syntax.ChordProChordRewriter.keepingLowercaseMinors
@@ -47,28 +48,33 @@ public object ChordProTransposer {
      * @param preferFlats Forces the spelling of the accidentals; null leaves it to [prefersFlats], which is what the
      *   song itself asks for. Forced, it is worth doing even for no semitones at all: respelling the chords of a song
      *   that is not transposed is exactly what a reader who always wants flats (or sharps) is asking for.
+     * @param tabPlayer Who the tabs are read by, which moves every run of tablature to their strings as well as by the
+     *   transposition, in one move, so that it is put on the neck by one decision rather than two (see
+     *   [ChordProTabRetuner]). Null moves the frets by the transposition alone, as the text transposition does.
      */
-    public fun transpose(song: ChordProSong, semitones: Int, preferFlats: Boolean? = null): ChordProSong {
+    public fun transpose(song: ChordProSong, semitones: Int, preferFlats: Boolean? = null, tabPlayer: TabPlayer? = null): ChordProSong {
         val isModulated = song.blocks.any { it is ChordProBlock.Transpose }
-        if (semitones == 0 && preferFlats == null && !isModulated) return song
+        if (semitones == 0 && preferFlats == null && !isModulated && tabPlayer == null) return song
         val rewrites = mutableMapOf<Int, ChordRewrite>()
         return rewriteChords(song) { offset ->
-            rewrites.getOrPut(semitones + offset) { rewriteBy(song, semitones + offset, preferFlats) }
+            rewrites.getOrPut(semitones + offset) { rewriteBy(song, semitones + offset, preferFlats, tabPlayer) }
         }
     }
 
     /**
      * Moving by [shift] semitones, spelled for the key the song is in once it has moved that far. No move and no forced
-     * spelling leaves the chords exactly as written, as it does for a song with no modulation at all.
+     * spelling leaves the chords exactly as written, as it does for a song with no modulation at all, and the tabs too
+     * where nobody is named to read them.
      */
-    private fun rewriteBy(song: ChordProSong, shift: Int, preferFlats: Boolean?): ChordRewrite {
-        if (shift == 0 && preferFlats == null) return ChordRewrite(rewriteTabLines = { it }, rename = { it })
-        val flats = preferFlats ?: prefersFlats(song, shift)
-        val rename = { name: String -> transposeChord(name, shift, flats) }
+    private fun rewriteBy(song: ChordProSong, shift: Int, preferFlats: Boolean?, tabPlayer: TabPlayer?): ChordRewrite {
+        val isMoved = shift != 0 || preferFlats != null
+        val flats = if (isMoved) preferFlats ?: prefersFlats(song, shift) else false
+        val rename = if (isMoved) { name: String -> transposeChord(name, shift, flats) } else { name: String -> name }
         return ChordRewrite(
-            rewriteTabLines = { lines -> ChordProTabTransposer.transpose(lines, shift, rename) },
+            rewriteTabLines = if (isMoved) { lines -> ChordProTabTransposer.transpose(lines, shift, rename) } else { lines -> lines },
             rename = rename,
-            rewriteDefinition = { ChordProDefinitions.transposed(it, shift, rename) },
+            rewriteDefinition = if (isMoved) { definition -> ChordProDefinitions.transposed(definition, shift, rename) } else { definition -> definition },
+            rewriteTabRun = tabPlayer?.let { player -> { lines, selector -> ChordProTabRetuner.retune(lines, shift, rename, selector, player) } },
         )
     }
 

@@ -103,9 +103,13 @@ internal object ChordProDirectives {
         }
     }
 
-    /** `title` for `title-guitar!`: the known directive a negated selector is written on, or null. */
+    /**
+     * `title` for `title-guitar!`: the known directive a negated selector is written on, or null. A tab's selector is
+     * the one Campfire matches (see `ChordProTabs.select`), so `start_of_tab-guitar!` is kept whole for the parser to read.
+     */
     private fun negatedSelectorBase(name: String): String? {
         if (!name.endsWith('!') || name.count { it == '!' } != 1) return null
+        if (startOfEnvironment(name)?.lowercase() == ChordProVocabulary.TAB) return name
         val base = name.dropLast(1).substringBeforeLast('-', missingDelimiterValue = "")
         return base.takeIf { it.isNotEmpty() && isKnownName(it) }
     }

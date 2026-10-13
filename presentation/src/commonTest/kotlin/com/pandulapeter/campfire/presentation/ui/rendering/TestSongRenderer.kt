@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
 import com.pandulapeter.campfire.chordpro.chords.ChordProTransposer
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
+import com.pandulapeter.campfire.chordpro.model.TabPlayer
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.data.model.domain.UserPreferences.Notation
 import com.pandulapeter.campfire.domain.api.useCases.ConvertChordProNotationUseCase
@@ -32,8 +33,8 @@ internal fun testSongRenderer() = SongRenderer(
         override fun invoke(text: String, notation: Notation) = ChordProParser.parse(text, notation.toChordNotation())
     },
     transposeChordPro = object : TransposeChordProUseCase {
-        override fun invoke(song: ChordProSong, semitones: Int, accidentals: UserPreferences.Accidentals) =
-            ChordProTransposer.transpose(song, semitones, accidentals.preferFlats)
+        override fun invoke(song: ChordProSong, semitones: Int, accidentals: UserPreferences.Accidentals, tabPlayer: TabPlayer?) =
+            ChordProTransposer.transpose(song, semitones, accidentals.preferFlats, tabPlayer)
     },
     transposeChordProText = object : TransposeChordProTextUseCase {
         override fun invoke(text: String, semitones: Int, accidentals: UserPreferences.Accidentals) =

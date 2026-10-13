@@ -17,7 +17,8 @@ Packages (under `com.pandulapeter.campfire.chordpro`): the root holds the entry 
 (`ChordProParser`, `ChordProSummaryCache`, `ChordProSplitter`, `ChordNotation`) and the values a
 directive holds (`ChordProTempo`, `ChordProTime`, `ChordProDuration`); `model` the immutable song model; `chords` what a
 chord name means, how it is spelled, moved and played (`ChordProChords`, `ChordProNotation`, `ChordProNashville`,
-`ChordProTransposer`, `ChordProTabTransposer`, `ChordProDefinitions`, `ChordVoicings` and their internal helpers);
+`ChordProTransposer`, `ChordProTabTransposer`, `ChordProTabs`, `ChordProDefinitions`, `ChordVoicings` and their internal
+helpers);
 `edit` the text rewriters the editor and the sheets call (`ChordProMetadataFields`, `ChordProHeader`, `ChordProTags`,
 `ChordProLanguages`, `ChordProLinks`, `ChordProCoverArt`, `ChordProPrettifier`, `ChordProHighlighter`,
 `ChordProTabWrapper`); `convert` the chord sheet conversion of the imports (`ChordSheet`, `ChordSheetConverter`); and
@@ -69,7 +70,8 @@ what nothing outside the module calls is `internal`.
   their matched lines through header reordering and spacing changes, accounting for the original line endings.
 
 - `model/` — `Chord` (the notes a chord name stands for), `ChordInstrument`, `ChordTuning` (a tuning the diagrams are
-  drawn in, see `ChordVoicings`) and `ChordVoicing` (a shape on a fretted instrument, or keys), `ChordDefinition` (a song's own shape of a chord, in `ChordProMetadata.definitions`),
+  drawn in, see `ChordVoicings`) and `ChordVoicing` (a shape on a fretted instrument, or keys), `TabPlayer`, `TabTuning` and `TabNotice` (who a tab is
+  shown to, see `ChordProTabs`), `ChordDefinition` (a song's own shape of a chord, in `ChordProMetadata.definitions`),
   `ChordProSong` (metadata + blocks), `ChordProBlock` (`Section`, `ChorusRecall`, `Comment`, `Break`,
   `Transpose`, `Timing`),
   `ChordProLine` (`Lyrics` with positioned chords and annotations, `Tab`, `Grid`, `Blank`) and `ChordProMetadata`,
@@ -150,7 +152,9 @@ what nothing outside the module calls is `internal`.
   file on disk is the user's and half of it may be under the caret. Unknown directives are ignored; a directive with a
   selector suffix (`{title-guitar}`) is dropped, since there is nothing to match it against, and one with a negated
   selector (`{title-guitar!}`) is read as the directive it is on for the same reason; an environment with a selector is
-  the environment it selects, since its lines are the song itself; a field a song can only say once (its title,
+  the environment it selects, since its lines are the song itself, and a tab's selector, negated or not, is kept on its
+  lines and its comments (`ChordProLine.Tab.selector`, `ChordProBlock.Comment.tabSelector`), the one selector the viewer
+  matches (see `ChordProTabs`); a field a song can only say once (its title,
   subtitle, artist, composer, lyricist, album, year, capo, duration, cover) is the first line of it that says something
   readable, wherever it stands, an empty or unreadable one leaving the place to the next and every later one read past
   (the highlighter marks it `DUPLICATE`); a song that changes key, tempo or time signature is in
@@ -304,6 +308,36 @@ what nothing outside the module calls is `internal`.
   lining up; where there is no dash to take (inside a `0h1p0` group) the line grows by a character instead. The same
   column bookkeeping serves `rewriteChordNames`, which only respells those chord names — `Bb` is a character wider
   than the `B` it becomes in German notation, and the staff underneath still has to line up.
+- `ChordProTabs` and `ChordProTabRetuner` — a tab as one reader is shown it, for their instrument and tuning
+  (`model/TabPlayer`, handed in by `:presentation`, which knows the instruments this module does not: their selectors,
+  their strings, the standard tuning a staff of so many strings is assumed to be in, and how a string is named).
+  `select` keeps, of every group of tabs with selectors written one after the other (nothing but blank lines and
+  comments between them), the ones for the reader's first selector the group has, else its `guitar` one, else its
+  first; a negated selector (`{start_of_tab-guitar!}`) is for everybody but that instrument's players; the comments
+  written inside a tab go with it.
+
+  The transposition then moves every run to the reader's strings in the same move as the transposition
+  (`ChordProTransposer.transpose`'s `tabPlayer`, through `ChordRewrite.rewriteTabRun`), so that one octave decision
+  is made for both. **A staff's string names are the tuning it is written in**, sounding notes as a chord name is
+  (`Eb|` on a guitar in standard tuning moves that string a fret down), and a staff that names none is in the assumed
+  standard tuning. A name is read in the standard, German or Latin notation, in the octave of the assumed tuning's
+  string nearest to it; a number (`1|`) names nothing. On the instrument it is written for every string moves by
+  exactly how far it is from the reader's; on another (a bass tab on a guitar, a guitar tab on a ukulele) the strings
+  are lined up as one block, unused ones falling off the ends, moved by pitch class and no further apart than two
+  semitones, or the shapes would fall apart.
+
+  Every staff line is then named for the reader's string in their notation (the higher of two strings that share a
+  name in lowercase: `e B G D A E`, a banjo's `d B G D g`), the lines above the staff moved with the names so that a
+  chord stays over its note. A run that would leave the neck moves by octaves, and one that no octave keeps on it, or
+  that cannot be lined up, is shown as written with its own names, moved by the transposition alone. A staff of a
+  number of strings no instrument has is left alone; the text transposition and the notation never retune anything.
+
+  `model/TabNotice` says what was decided — an octave, another instrument (only where the strings did not land on the
+  very notes they were tuned to), or that it could not be moved — on the first line of the run
+  (`ChordProLine.Tab.notice`); a plain move says nothing. `withNotices` writes each notice above its run as an italic
+  comment the section is cut around, a note about the tab (`isInTabOrGrid`), and where the reader's instrument
+  `hidesTabs` (a keyboard) takes every tab and its comments out, a notice naming what was hidden in its place.
+  `emptyStaff` is the named staff the editor writes for a new tab.
 - `ChordProTabWrapper` — cuts one run of tablature into rows that fit a width, for the viewer, which is the one
   place a tab can be too wide for: a tab is a grid of columns, so it can never be wrapped line by line, and every line
   of the run is cut at the same columns instead — after the last bar line that fits, so that a row ends where the

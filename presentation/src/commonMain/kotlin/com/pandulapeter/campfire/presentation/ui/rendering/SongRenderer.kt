@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.rendering
 
 import com.pandulapeter.campfire.chordpro.ChordProSummaryCache
+import com.pandulapeter.campfire.chordpro.chords.ChordProTabs
 import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.data.model.domain.Song
@@ -24,6 +25,7 @@ import com.pandulapeter.campfire.domain.api.useCases.PrettifyChordProUseCase
 import com.pandulapeter.campfire.domain.api.useCases.TransposeChordProTextUseCase
 import com.pandulapeter.campfire.domain.api.useCases.TransposeChordProUseCase
 import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
+import com.pandulapeter.campfire.presentation.ui.tabs.TabReading
 import org.koin.core.annotation.Single
 
 /**
@@ -54,28 +56,38 @@ class SongRenderer(
      * touches nothing but its arguments and stateless use cases, so it may run on a background thread, and it does:
      * see `rememberSongLyricsModel`.
      */
-    fun renderSong(
+    internal fun renderSong(
         text: String,
         transposition: Int,
         spelling: UserPreferences.ChordSpelling,
         writtenIn: UserPreferences.Notation = UserPreferences.Notation.STANDARD,
-    ) = notatedSong(transposedSong(text, transposition, spelling, writtenIn), spelling)
+        tabs: TabReading? = null,
+    ) = notatedSong(transposedSong(text, transposition, spelling, writtenIn, tabs), spelling)
 
     /**
      * [renderSong] up to its last step: the song moved and spelled as the viewer shows it, but still in the standard
      * notation, which is what its chords are read from for their diagrams — in a numbering the page names a chord by a
      * step of the key, which says nothing about the notes without the stretch of the song it stands in.
+     *
+     * @param tabs Who the tabs are shown to: of the ones written for several instruments only theirs are kept, every
+     *   tab is moved to their strings along with the transposition, and what was decided for them is written above it
+     *   (see `ChordProTabs`). Null leaves every tab as the transposition alone moves it, which is all a reader of the
+     *   chords alone needs.
      */
-    fun transposedSong(
+    internal fun transposedSong(
         text: String,
         transposition: Int,
         spelling: UserPreferences.ChordSpelling,
         writtenIn: UserPreferences.Notation = UserPreferences.Notation.STANDARD,
+        tabs: TabReading? = null,
     ): ChordProSong {
         val parsed = parseChordPro(text, writtenIn)
+        val selected = tabs?.takeIf { it.selects }?.let { ChordProTabs.select(parsed, it.player.selectors) } ?: parsed
         // The file's own {transpose} (the one it opens with), the reader's, and the modulations further down: all
-        // three are the transposition's to apply, and it leaves a song none of them move exactly as it is.
-        return transposeChordPro(parsed, parsed.metadata.transpose + transposition, spelling.accidentals)
+        // three are the transposition's to apply, and it leaves a song none of them move exactly as it is. The tabs of
+        // an instrument they are hidden from are not worth moving.
+        val transposed = transposeChordPro(selected, parsed.metadata.transpose + transposition, spelling.accidentals, tabs?.player?.takeUnless { it.hidesTabs })
+        return tabs?.let { ChordProTabs.withNotices(transposed, it.player, it.labels::describe) } ?: transposed
     }
 
     /** The last step of [renderSong], and on the model only: the file stays in the standard notation, which the transposition works in. */
@@ -104,7 +116,7 @@ class SongRenderer(
      */
     fun renderKey(key: String?, transpose: Int, transposition: Int, capo: Int, spelling: UserPreferences.ChordSpelling) = key?.let {
         val keyOnly = ChordProSong(metadata = ChordProMetadata(key = it), blocks = emptyList())
-        convertChordProNotation(transposeChordPro(keyOnly, transpose + transposition + capo, spelling.accidentals), spelling).metadata.key
+        convertChordProNotation(transposeChordPro(keyOnly, transpose + transposition + capo, spelling.accidentals, null), spelling).metadata.key
     }
 
     /** Formats the current editor draft without saving it or changing its chord notation. */

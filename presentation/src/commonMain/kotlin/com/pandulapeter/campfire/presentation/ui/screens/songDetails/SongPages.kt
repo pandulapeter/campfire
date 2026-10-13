@@ -41,6 +41,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableConten
 import com.pandulapeter.campfire.presentation.ui.playing.readsCapoAsTransposition
 import com.pandulapeter.campfire.presentation.ui.playing.songPlaybackOf
 import com.pandulapeter.campfire.presentation.ui.playing.withCapoSounding
+import com.pandulapeter.campfire.presentation.ui.tabs.rememberTabReading
 
 /**
  * The pages of [SongDetailsPager], one song each, with the one beside the current page on either side composed ahead of
@@ -78,6 +79,7 @@ internal fun SongPages(
     val failedSongFileNames by viewModel.failedSongFileNames.collectAsStateWithLifecycle()
     val playingOverrides by viewModel.playingOverrides.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    val tabs = rememberTabReading(userPreferences)
     LaunchedEffect(pagerState) {
         // A swipe right after a pinch must not hand the song it leaves the size from before the pinch once it stops being
         // the current page, halfway across: the pages beside the one being read take the new size before any of them moves.
@@ -189,7 +191,7 @@ internal fun SongPages(
             chordSpelling = chordSpelling,
             settledWidth = settledWidth,
             contentPadding = pageContentPadding,
-            transposeSong = viewModel.songRenderer::transposedSong,
+            transposeSong = { text, transposition, spelling, tabs -> viewModel.songRenderer.transposedSong(text, transposition, spelling, tabs = tabs) },
             notateSong = viewModel.songRenderer::notatedSong,
             onRetry = { viewModel.loadSongContent(song.fileName) },
             headedOffset = { stepper.headedOffset },
@@ -204,6 +206,7 @@ internal fun SongPages(
                     onTuningClicked = { viewModel.showDialog(DialogType.Tuning) },
                 )
             },
+            tabs = tabs,
         )
     }
 }

@@ -41,6 +41,17 @@ public sealed interface ChordProLine {
         val continuesEnvironment: Boolean = false,
         /** The label of the `{start_of_tab}` the line was written in (`{start_of_tab: Riff}`), on every line of it. */
         val label: String? = null,
+        /**
+         * The selector of the `{start_of_tab}` the line was written in, on every line of it: the instrument it is
+         * for (`guitar` for `{start_of_tab-guitar}`), with a `!` after it where it is for every instrument but that
+         * one, or null for a tab written for everybody. See [com.pandulapeter.campfire.chordpro.chords.ChordProTabs.select].
+         */
+        val selector: String? = null,
+        /**
+         * What the reader is told about how the run this line starts was moved to their instrument, on the first line
+         * of a run only, and only on a song the transposition moved for a [TabPlayer]. See [TabNotice].
+         */
+        val notice: TabNotice? = null,
     ) : ChordProLine
 
     /** One line inside {start_of_grid}: tokens separated by whitespace. */

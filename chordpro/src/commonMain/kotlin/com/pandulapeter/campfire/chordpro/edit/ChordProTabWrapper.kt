@@ -206,7 +206,7 @@ public object ChordProTabWrapper {
      * the last staff the last one. The string names are only compared over [MAX_STRINGS] lines at most, which keeps
      * this linear in the run whatever it holds.
      */
-    private fun systems(lines: List<String>, isStaffLine: List<Boolean>): List<IntRange> {
+    internal fun systems(lines: List<String>, isStaffLine: List<Boolean>): List<IntRange> {
         val names = lines.mapIndexed { index, line -> if (isStaffLine[index]) staffPrefix(line).filterNot { it.isWhitespace() || it == BAR } else "" }
         val starts = mutableListOf(0)
         var systemStaffStart = -1
@@ -337,7 +337,7 @@ public object ChordProTabWrapper {
     private const val MIN_BAR_WIDTH = 3 // A cut after the bar that opens a line would make a row of nothing but it.
     private const val BAR = '|'
     private const val DASH = '-'
-    private const val MAX_PREFIX_LETTERS = 2
+    private const val MAX_PREFIX_LETTERS = 4 // `Sol#`, a string named in the Latin notation.
     private const val SHARP = '#'
 
     /**

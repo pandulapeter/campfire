@@ -63,6 +63,7 @@ import com.pandulapeter.campfire.presentation.ui.playing.withCapo
 import com.pandulapeter.campfire.presentation.ui.playing.withTempo
 import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
 import com.pandulapeter.campfire.presentation.ui.songLayout.rememberDefaultSectionLabels
+import com.pandulapeter.campfire.presentation.ui.tabs.TabReading
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
@@ -97,6 +98,7 @@ import org.jetbrains.compose.resources.painterResource
  * @param onTimingChanged Told the stretch of the song [headedOffset] is in whenever it changes, null for its opening:
  *   the page being headed for, rather than the one a finger is still dragging past, is what the click follows.
  * @param chordDiagrams What the song's Chords section is drawn with, null where it has none.
+ * @param tabs Who the song's tabs are chosen for and moved to, null until the preferences are read.
  */
 @Composable
 internal fun SongDetailsPage(
@@ -125,12 +127,13 @@ internal fun SongDetailsPage(
     chordSpelling: UserPreferences.ChordSpelling,
     settledWidth: Dp,
     contentPadding: PaddingValues,
-    transposeSong: (text: String, transposition: Int, spelling: UserPreferences.ChordSpelling) -> ChordProSong,
+    transposeSong: (text: String, transposition: Int, spelling: UserPreferences.ChordSpelling, tabs: TabReading?) -> ChordProSong,
     notateSong: (song: ChordProSong, spelling: UserPreferences.ChordSpelling) -> ChordProSong,
     onRetry: () -> Unit,
     headedOffset: () -> Int?,
     onTimingChanged: (SongTiming?) -> Unit,
     chordDiagrams: ChordDiagrams?,
+    tabs: TabReading?,
 ) = AnimatedContent(
     modifier = modifier.fillMaxSize(),
     targetState = text,
@@ -167,10 +170,11 @@ internal fun SongDetailsPage(
                 capoOverride = capoOverride,
                 showsTiming = shouldShowTempo,
                 chordTuning = chordDiagrams?.tuning,
+                tabs = tabs,
             ),
             buildsInPlace = buildsModelInPlace,
         ) { inputs, searchesShapes ->
-            val transposed = transposeSong(inputs.text, inputs.transposition, inputs.spelling).withTempo(inputs.tempoOverride).withCapo(inputs.capoOverride)
+            val transposed = transposeSong(inputs.text, inputs.transposition, inputs.spelling, inputs.tabs).withTempo(inputs.tempoOverride).withCapo(inputs.capoOverride)
             prepareSongLyrics(
                 song = notateSong(transposed, inputs.spelling),
                 standardSong = transposed,

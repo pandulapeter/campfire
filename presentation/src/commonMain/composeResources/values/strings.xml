@@ -762,6 +762,13 @@
     <string name="song_details_tempo">%1$s BPM</string>
     <string name="song_details_time">%1$s</string>
     <string name="song_details_key_change">Key: %1$s</string>
+    <string name="tab_notice_octave_up">Moved up an octave to stay on the neck</string>
+    <string name="tab_notice_octave_down">Moved down an octave to stay on the neck</string>
+    <string name="tab_notice_other_instrument">%1$s tab, moved to your instrument</string>
+    <string name="tab_notice_not_moved">Shown as written: it can\'t be moved to your tuning</string>
+    <string name="tab_notice_not_moved_instrument">%1$s tab, shown as written: it can\'t be moved to your instrument</string>
+    <string name="tab_notice_hidden">Tab hidden</string>
+    <string name="tab_notice_hidden_instrument">%1$s tab hidden</string>
     <string name="song_details_chords">Chords</string>
     <string name="song_details_chord_tuning">Tuning: %1$s</string>
     <string name="song_details_chord_defined_standard_tuning">Defined in this song for standard tuning</string>

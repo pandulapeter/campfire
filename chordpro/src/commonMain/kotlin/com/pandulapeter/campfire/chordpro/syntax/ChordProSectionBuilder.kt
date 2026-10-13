@@ -28,6 +28,9 @@ internal class SectionBuilder(private val blocks: MutableList<ChordProBlock>) {
 
     /** The label of the tab or grid environment that is open, which each of its lines carries. */
     private var lineModeLabel: String? = null
+
+    /** The selector of the tab environment that is open, which each of its lines and comments carries. */
+    private var lineModeSelector: String? = null
     private val lines = mutableListOf<ChordProLine>()
 
     /**
@@ -115,13 +118,14 @@ internal class SectionBuilder(private val blocks: MutableList<ChordProBlock>) {
      * running the section's own heading wins, and the environment's label is carried by its lines instead
      * ([ChordProLine.Tab.label], [ChordProLine.Grid.label]), which is where a viewer finds "Riff" for the run.
      */
-    fun openLineMode(mode: LineMode, label: String?) {
+    fun openLineMode(mode: LineMode, label: String?, selector: String? = null) {
         if (type == null) {
             open(SectionType.Paragraph, label = label, isExplicit = false)
             isOpenedByLineMode = true
         }
         lineMode = mode
         lineModeLabel = label
+        lineModeSelector = selector.takeIf { mode == LineMode.TAB }
         hasTabLine = false
         hasLineModeLine = false
         lineModeComments.clear()
@@ -135,6 +139,7 @@ internal class SectionBuilder(private val blocks: MutableList<ChordProBlock>) {
         finishLineMode()
         lineMode = null
         lineModeLabel = null
+        lineModeSelector = null
         if (isOpenedByLineMode && lines.all { it == ChordProLine.Blank }) close()
         isOpenedByLineMode = false
     }
@@ -143,6 +148,7 @@ internal class SectionBuilder(private val blocks: MutableList<ChordProBlock>) {
         finishLineMode()
         lineMode = null
         lineModeLabel = null
+        lineModeSelector = null
         val type = type ?: return
         trimmedBlankLineCount = 0
         while (lines.isNotEmpty() && lines.last() == ChordProLine.Blank) {
@@ -174,7 +180,7 @@ internal class SectionBuilder(private val blocks: MutableList<ChordProBlock>) {
      */
     private fun finishLineMode() {
         if (lineMode == null) return
-        if (!hasLineModeLine) lineModeComments.forEach { blocks.replaceComment(it) { copy(isInTabOrGrid = false) } }
+        if (!hasLineModeLine) lineModeComments.forEach { blocks.replaceComment(it) { copy(isInTabOrGrid = false, isInTab = false, tabSelector = null) } }
         lineModeComments.clear()
     }
 
@@ -204,6 +210,7 @@ internal class SectionBuilder(private val blocks: MutableList<ChordProBlock>) {
             // highlighter end it as well.
             val lineMode = this.lineMode
             val lineModeLabel = this.lineModeLabel
+            val lineModeSelector = this.lineModeSelector
             val hasTabLine = this.hasTabLine
             this.lineMode = null
             close()
@@ -213,6 +220,7 @@ internal class SectionBuilder(private val blocks: MutableList<ChordProBlock>) {
             this.trimmedBlankLineCount = trimmedBlankLineCount
             this.lineMode = lineMode
             this.lineModeLabel = lineModeLabel
+            this.lineModeSelector = lineModeSelector
             this.hasTabLine = hasTabLine
         } else {
             blocks += placedBlock
@@ -257,6 +265,8 @@ internal class SectionBuilder(private val blocks: MutableList<ChordProBlock>) {
                 else -> CommentPlacement.START_OF_SECTION
             },
             isInTabOrGrid = lineMode == LineMode.TAB || lineMode == LineMode.GRID,
+            isInTab = lineMode == LineMode.TAB,
+            tabSelector = lineModeSelector,
         )
     }
 
@@ -274,7 +284,8 @@ internal class SectionBuilder(private val blocks: MutableList<ChordProBlock>) {
         }
         if (lineMode == LineMode.TAB || lineMode == LineMode.GRID) hasLineModeLine = true
         lines += when (lineMode) {
-            LineMode.TAB -> ChordProLine.Tab(rawLine, continuesEnvironment = hasTabLine, label = lineModeLabel).also { hasTabLine = true }
+            LineMode.TAB -> ChordProLine.Tab(rawLine, continuesEnvironment = hasTabLine, label = lineModeLabel, selector = lineModeSelector)
+                .also { hasTabLine = true }
             LineMode.GRID -> ChordProLine.Grid(ChordProTokens.parseGridTokens(trimmedLine), label = lineModeLabel)
             LineMode.VERBATIM -> ChordProLine.Lyrics(text = rawLine, chords = emptyList())
             null -> ChordProParser.parseLyrics(rawLine)

@@ -19,7 +19,6 @@
 - Onboarding: unbalanced vertical use of space, move contents a bit towards the top
 - Onboarding: the screen transition when the onboarding is Done should be improved
 - Search: highlight matched substrings
-- Simplify adding tab charts in the editor
 - Simplify adding chord diagrams in the editor
 - Update website + promo video + store screenshots + store descriptions to include the chord diagram library
 

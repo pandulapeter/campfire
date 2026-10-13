@@ -26,6 +26,7 @@ import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.fontScale.FontScaleController
+import com.pandulapeter.campfire.presentation.ui.instrument.instrumentTuning
 import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
@@ -43,6 +44,9 @@ import com.pandulapeter.campfire.presentation.ui.print.PrintSource
 import com.pandulapeter.campfire.presentation.ui.print.printChordsOf
 import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
 import com.pandulapeter.campfire.presentation.ui.state.DebouncedPreference
+import com.pandulapeter.campfire.presentation.ui.tabs.TabNoticeLabels
+import com.pandulapeter.campfire.presentation.ui.tabs.TabReading
+import com.pandulapeter.campfire.presentation.ui.tabs.tabPlayerOf
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
@@ -133,7 +137,7 @@ internal class ExportController(
         return job
     }
 
-    suspend fun preparePrintSource(dialog: DialogType.Export): PrintSource {
+    suspend fun preparePrintSource(dialog: DialogType.Export, tabNoticeLabels: TabNoticeLabels): PrintSource {
         val preferences = userPreferencesState.value.data
         val setlist = dialog.setlist
         val entries = when {
@@ -151,6 +155,14 @@ internal class ExportController(
         val chordTuning = preferences?.takeIf { it.areChordsEnabled && it.areChordDiagramsEnabled }?.chordTuning()
         val storedChordShapes = chordTuning?.let { preferences.chordVoicings[it.voicingKey] }.orEmpty()
         val readsCapoAsTransposition = preferences.readsCapoAsTransposition
+        // The tabs are printed for the reader as the screen shows them: theirs, moved to their strings.
+        val tabs = preferences?.let { preferences ->
+            TabReading(
+                player = tabPlayerOf(preferences.instrument, preferences.instrumentTuning, spelling.notation.toChordNotation(), isMoved = true),
+                labels = tabNoticeLabels,
+                selects = true,
+            )
+        }
         val printSongs = entries.mapIndexed { index, entry ->
             val song = songs[entry.songFileName] ?: dialog.songs.firstOrNull { it.fileName == entry.songFileName } ?: dialog.song
             val content = getSongContent(entry.songFileName)
@@ -168,7 +180,7 @@ internal class ExportController(
                 playedTransposition
             }
             val transposed = content?.let { withContext(Dispatchers.Default) {
-                songRenderer.transposedSong(it.text, transposition, spelling).withTempo(tempo).let { song ->
+                songRenderer.transposedSong(it.text, transposition, spelling, tabs = tabs).withTempo(tempo).let { song ->
                     if (readsCapoAsTransposition) song.withoutCapo() else song.withCapo(capo)
                 }
             } }

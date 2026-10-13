@@ -88,15 +88,27 @@ internal object ChordProEnvironments {
             ?.let(::withoutSelector)
 
     /**
+     * The selector of a `{start_of_x-selector}` directive named [name] (`guitar` for `start_of_tab-guitar`, `guitar!` for
+     * the negated `start_of_tab-guitar!`), or null for one without a selector or no start of an environment at all.
+     */
+    fun selectorOf(name: String): String? {
+        val environment = name.takeIf { it.startsWith(START_OF_PREFIX) }?.substring(START_OF_PREFIX.length) ?: return null
+        val separatorIndex = environment.lastIndexOf('-')
+        if (separatorIndex <= 0 || environment.substring(0, separatorIndex) !in selectableEnvironments) return null
+        return environment.substring(separatorIndex + 1).takeIf { it.isNotEmpty() && it != "!" }
+    }
+
+    /**
      * The environments a selector suffix is looked for on. A custom environment may have a dash in its own name
      * (`start_of_pre-chorus`), so only these are taken to have a selector after theirs.
      */
     private val selectableEnvironments = setOf("chorus", "verse", "bridge", "tab", "grid") + delegateEnvironments
 
     /**
-     * [environment] without a selector suffix. Campfire has nothing to match a selector against, and an environment
-     * is part of the song itself, so `{start_of_chorus-guitar}` is shown as the chorus it selects rather than left
-     * out; its `{end_of_chorus}` carries no selector, as the spec has it.
+     * [environment] without a selector suffix. An environment is part of the song itself, so `{start_of_chorus-guitar}`
+     * is read as the chorus it selects rather than left out; its `{end_of_chorus}` carries no selector, as the spec has
+     * it. A tab's selector is the one that is matched against anything: it is kept on its lines ([selectorOf]), and the
+     * viewer shows the tab to the players of the instrument it names.
      */
     private fun withoutSelector(environment: String): String {
         val base = environment.substringBeforeLast('-', missingDelimiterValue = environment)

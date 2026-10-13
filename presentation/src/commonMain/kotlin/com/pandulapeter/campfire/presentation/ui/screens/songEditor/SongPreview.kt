@@ -44,6 +44,7 @@ import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongLyrics
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongLyricsInputs
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.prepareSongLyrics
 import com.pandulapeter.campfire.presentation.ui.songLayout.rememberDefaultSectionLabels
+import com.pandulapeter.campfire.presentation.ui.tabs.rememberTabReading
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -77,6 +78,8 @@ internal fun SongPreview(
 ) {
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val labels = rememberDefaultSectionLabels(shouldNumberSections = userPreferences?.shouldNumberSections == true)
+    // The tabs are named for the reader, as everything is spelled for them, but moved for nobody and none of them left out.
+    val tabs = rememberTabReading(userPreferences, isMoved = false)
     val latestChordSpelling by rememberUpdatedState(chordSpelling)
     val songRenderer = viewModel.songRenderer
     val notation = viewModel.editorNotation
@@ -90,9 +93,10 @@ internal fun SongPreview(
         spelling = spelling,
         shouldShowChords = true,
         labels = labels,
+        tabs = tabs,
     )
     fun prepare(inputs: SongLyricsInputs) = prepareSongLyrics(
-        song = songRenderer.renderSong(inputs.text, inputs.transposition, inputs.spelling, writtenIn = notation),
+        song = songRenderer.renderSong(inputs.text, inputs.transposition, inputs.spelling, writtenIn = notation, tabs = inputs.tabs),
         shouldShowChords = inputs.shouldShowChords,
         labels = inputs.labels,
         notation = inputs.spelling.notation.toChordNotation(),
@@ -101,7 +105,7 @@ internal fun SongPreview(
     // away from the main thread once the typing pauses, which is exactly when the next key is likely to come, and
     // the one before it stays on screen until it is ready.
     var preview by remember(text) { mutableStateOf(inputsOf(text.value, chordSpelling).let { it to prepare(it) }) }
-    LaunchedEffect(text, labels) {
+    LaunchedEffect(text, labels, tabs) {
         snapshotFlow { inputsOf(text.value, latestChordSpelling) }
             .distinctUntilChanged()
             .debounce(PREVIEW_DELAY_MILLIS)

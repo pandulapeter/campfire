@@ -11,7 +11,7 @@
 {meta: link https://www.youtube.com/results?search_query=house+of+the+rising+sun YouTube}
 {meta: link https://en.wikipedia.org/wiki/The_House_of_the_Rising_Sun Wikipedia}
 
-{start_of_tab: Picking pattern}
+{start_of_tab-guitar: Picking pattern}
 {comment_box: Pick the strings one at a time, six notes to the bar, and let every chord ring.}
   Am            C             D             F             E7
 e|-------------|-------------|-------2-----|-------1-----|-------------|
@@ -20,6 +20,43 @@ G|-----2---2---|-----0---0---|---2-------2-|---2-------2-|-----1---1---|
 D|---2-------2-|---2-------2-|-0-----------|-3-----------|---0-------0-|
 A|-0-----------|-3-----------|-------------|-------------|-------------|
 E|-------------|-------------|-------------|-------------|-0-----------|
+{end_of_tab}
+
+{start_of_tab-ukulele: Picking pattern}
+{comment_box: Pick the strings one at a time, six notes to the bar, and let every chord ring.}
+  Am            C             D             F             E7
+A|-------0-----|-------3-----|-------0-----|-------0-----|-------2-----|
+E|-----0---0---|-----0---0---|-----2---2---|-----1---1---|-----0---0---|
+C|---0-------0-|-0-----------|-2-----------|-0-----------|-2-----------|
+G|-2-----------|---0-------0-|---2-------2-|---2-------2-|---1-------1-|
+{end_of_tab}
+
+{start_of_tab-mandolin: Picking pattern}
+{comment_box: Pick the strings one at a time, six notes to the bar, and let every chord ring.}
+  Am            C             D             F             E7
+E|-------0-----|-------0-----|-------2-----|-------1-----|-------0-----|
+A|-----3---3---|-----3---3---|-----0---0---|-----0---0---|-----2---2---|
+D|---2-------2-|---2-------2-|---0-------0-|---3-------3-|---0-------0-|
+G|-2-----------|-0-----------|-2-----------|-5-----------|-1-----------|
+{end_of_tab}
+
+{start_of_tab-banjo: Picking pattern}
+{comment_box: Pick the strings one at a time, six notes to the bar, and let every chord ring.}
+  Am            C             D             F             E7
+d|-------2-----|-------2-----|-------4-----|-------3-----|-------0-----|
+B|-----1---1---|-----1---1---|-----3---3---|-----1---1---|-----0---0---|
+G|---2-------2-|---0-------0-|---2-------2-|---2-------2-|---1-------1-|
+D|-2-----------|-2-----------|-0-----------|-3-----------|-2-----------|
+g|-------------|-------------|-------------|-------------|-------------|
+{end_of_tab}
+
+{start_of_tab-bass: Picking pattern}
+{comment_box: The root on the first beat of the bar and the fifth on the fourth, under the picking.}
+  Am            C             D             F             E7
+G|-------------|-------------|-------------|-------------|-------------|
+D|-------------|-------------|-0-----------|-------------|-------------|
+A|-0-----------|-3-----------|-------0-----|-------3-----|-------2-----|
+E|-------0-----|-------3-----|-------------|-1-----------|-0-----------|
 {end_of_tab}
 
 {start_of_intro: Intro}

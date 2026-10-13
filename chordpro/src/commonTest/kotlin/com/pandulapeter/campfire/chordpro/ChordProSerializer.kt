@@ -169,8 +169,9 @@ object ChordProSerializer {
         // line that started it rather than one that starts another.
         var isEnvironmentAwaitingLine = false
         fun startEnvironment(line: ChordProLine, environment: String?) {
-            environment?.let { name ->
+            environment?.let { environmentName ->
                 val environmentLabel = line.environmentLabel ?: label
+                val name = (line as? ChordProLine.Tab)?.selector?.let { "$environmentName-$it" } ?: environmentName
                 add(environmentLabel?.let { "{start_of_$name: $it}" } ?: "{start_of_$name}")
                 openEnvironmentLabel = environmentLabel
                 label = null

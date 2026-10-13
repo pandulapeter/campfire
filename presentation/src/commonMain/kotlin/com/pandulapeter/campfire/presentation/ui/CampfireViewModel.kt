@@ -113,6 +113,7 @@ import com.pandulapeter.campfire.metronome.api.Metronome
 import com.pandulapeter.campfire.metronome.api.model.BeatLevel
 import com.pandulapeter.campfire.metronome.api.model.MetronomeSound
 import com.pandulapeter.campfire.metronome.api.model.TimeSignature
+import com.pandulapeter.campfire.presentation.ui.tabs.TabNoticeLabels
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerController
 import com.pandulapeter.campfire.tuner.api.Tuner
 import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
@@ -1571,7 +1572,7 @@ class CampfireViewModel(
 
     private fun followReportedFileNames(fileName: (String) -> String?) = importController.followReportedFileNames(fileName)
 
-    internal suspend fun preparePrintSource(dialog: DialogType.Export) = exportController.preparePrintSource(dialog)
+    internal suspend fun preparePrintSource(dialog: DialogType.Export, tabNoticeLabels: TabNoticeLabels) = exportController.preparePrintSource(dialog, tabNoticeLabels)
 
     fun setPrintSettings(value: PrintSettings) = exportController.setPrintSettings(value)
 

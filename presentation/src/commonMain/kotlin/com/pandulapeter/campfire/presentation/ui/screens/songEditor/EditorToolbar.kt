@@ -102,6 +102,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.bounceHorizontalScroll
  *   follows it rather than each of them copying it again.
  * @param chordShapes What the Chord shape button, the last of the first row, writes a definition with, see
  *   [chordShapeInsertion].
+ * @param tabStaff The empty staff the Tab button writes where nothing is selected, its strings named for the player's.
  */
 @Composable
 internal fun EditorToolbar(
@@ -110,6 +111,7 @@ internal fun EditorToolbar(
     text: State<String>,
     contentPadding: PaddingValues,
     chordShapes: EditorChordShapes,
+    tabStaff: List<String>,
 ) {
     // What the song already says about itself follows the text rather than being read once, so that a directive
     // typed by hand takes its button out of reach exactly as one inserted from the toolbar does. The cache is what
@@ -138,7 +140,7 @@ internal fun EditorToolbar(
             )
         }
         EditorToolbarRow(
-            groups = contentInsertions(),
+            groups = contentInsertions(tabStaff),
             declaredMetadata = declaredMetadata,
             textFieldState = textFieldState,
             contentPadding = contentPadding,
@@ -205,9 +207,13 @@ private fun EditorToolbarRow(
  * The tempo and the time signature stand next to it although they are metadata, since after the header has named them
  * once, every further tap writes a change at the caret's line, which is what the row is reached for while the song is
  * being written; the first one still goes into the header, see [metadataInsertions].
+ *
+ * A tab with nothing selected starts as an empty staff of one bar for the player's strings ([tabStaff]), named, so
+ * that the file says what it is written in for whoever reads it in another tuning or on another instrument; with
+ * something selected, which is most likely a tab pasted in, it only puts the environment around it.
  */
 @Composable
-private fun contentInsertions(): List<List<EditorInsertion>> = listOf(
+private fun contentInsertions(tabStaff: List<String>): List<List<EditorInsertion>> = listOf(
     listOf(
         EditorInsertion(stringResource(Res.string.song_editor_insert_chord), prefix = "[", suffix = "]", isOwnLine = false),
         EditorInsertion(stringResource(Res.string.song_editor_insert_annotation), prefix = "[*", suffix = "]", isOwnLine = false),
@@ -223,7 +229,7 @@ private fun contentInsertions(): List<List<EditorInsertion>> = listOf(
         EditorInsertion.directive(stringResource(Res.string.song_editor_insert_chorus_recall), name = "chorus", hasValue = false),
     ),
     listOf(
-        EditorInsertion.section(stringResource(Res.string.song_editor_section_tab), name = "tab"),
+        EditorInsertion.tab(stringResource(Res.string.song_editor_section_tab), staff = tabStaff),
         EditorInsertion.section(stringResource(Res.string.song_editor_section_grid), name = "grid"),
     ),
     listOf(
@@ -285,6 +291,8 @@ private fun metadataInsertions(): List<List<EditorInsertion>> = listOf(
  *   its line; the two bracketed insertions belong inside a line of lyrics instead.
  * @param metadataName The kind of metadata this describes the song with, for the insertions that go into the header
  *   instead of to the caret, under the name `:chordpro` knows it by. Null for everything that is part of the song.
+ * @param emptyPrefix What is written in front of the caret in place of [prefix] where nothing is selected.
+ * @param emptySuffix What is written after the caret in place of [suffix] where nothing is selected.
  */
 private data class EditorInsertion(
     val label: String,
@@ -292,9 +300,25 @@ private data class EditorInsertion(
     val suffix: String,
     val isOwnLine: Boolean,
     val metadataName: String? = null,
+    val emptyPrefix: String = prefix,
+    val emptySuffix: String = suffix,
 ) {
 
     companion object {
+
+        /**
+         * A `{start_of_tab}` … `{end_of_tab}` environment around what is selected, or around an empty [staff] with the
+         * caret after the name of its top string where nothing is.
+         */
+        fun tab(label: String, staff: List<String>): EditorInsertion {
+            val section = section(label, name = TAB)
+            val firstLine = staff.firstOrNull().orEmpty()
+            val caret = firstLine.indexOf('|') + 1
+            return section.copy(
+                emptyPrefix = section.prefix + firstLine.take(caret),
+                emptySuffix = (listOf(firstLine.drop(caret)) + staff.drop(1)).joinToString("\n") + section.suffix,
+            )
+        }
 
         /** A `{start_of_x}` … `{end_of_x}` environment around what is selected, which becomes its first lines. */
         fun section(label: String, name: String) = EditorInsertion(
@@ -455,8 +479,10 @@ private fun TextFieldState.insertAtSelection(insertion: EditorInsertion) = edit 
     val start = minOf(selection.start, selection.end)
     val end = maxOf(selection.start, selection.end)
     val selected = originalText.substring(start, end)
-    val opening = if (insertion.isOwnLine && start > 0 && originalText[start - 1] != '\n') "\n${insertion.prefix}" else insertion.prefix
-    val closing = if (insertion.isOwnLine && end < originalText.length && originalText[end] != '\n') "${insertion.suffix}\n" else insertion.suffix
+    val prefix = if (selected.isEmpty()) insertion.emptyPrefix else insertion.prefix
+    val suffix = if (selected.isEmpty()) insertion.emptySuffix else insertion.suffix
+    val opening = if (insertion.isOwnLine && start > 0 && originalText[start - 1] != '\n') "\n$prefix" else prefix
+    val closing = if (insertion.isOwnLine && end < originalText.length && originalText[end] != '\n') "$suffix\n" else suffix
     delete(start, end)
     insert(start, opening + selected + closing)
     // With nothing selected the caret lands between the two halves, which is where the next thing typed belongs.
@@ -467,6 +493,7 @@ private fun TextFieldState.insertAtSelection(insertion: EditorInsertion) = edit 
     }
 }
 
+private const val TAB = "tab"
 private const val DISABLED_ALPHA = 0.5f
 private val TOOLBAR_PADDING = 16.dp
 private val TOOLBAR_GAP = 4.dp

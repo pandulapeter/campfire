@@ -226,14 +226,14 @@ tab reaches the export screen. The detail is in `:presentation`'s `ui/screens/ex
   a move nothing else can see is one other devices never follow — so a capitalised or decomposed file keeps its
   spelling until **Update file name** (or, for a setlist, a new title) moves it for a reason that is part of the name.
 - Only pure logic is tested: `commonTest` unit tests in `:data:model` (the library name identity rule, the file name
-  predicates, the tag normalization and which instrument a tuning id belongs to), `:chordpro` (including chord-sheet conversion, and chord names, shapes and definitions, every shape of the tables checked against the chord it is filed under), `:domain:implementation` (`ImportPlanner` and conversion import plumbing),
+  predicates, the tag normalization and which instrument a tuning id belongs to), `:chordpro` (including chord-sheet conversion, the tabs moved to a player's strings and chosen for their instrument, and chord names, shapes and definitions, every shape of the tables checked against the chord it is filed under), `:domain:implementation` (`ImportPlanner` and conversion import plumbing),
   `:data:formats` (zip, bounded PDF/Word readers), `:data:source:local:implementation` (the JVM file storage, with independent-producer document goldens in `desktopTest`), `:data:source:remote:*` (hashing, encoders,
   the OAuth authorization URL, the cover search's and the song details lookup's queries and answers, the songwriters,
   their `User-Agent` and their shared pace, the cover download, the import download and the name it gives the file),
   `:data:repository:implementation` (the caches, the edit of many songs at once, the cover cache, and the catalogue searches), `:data:sync:implementation` (`SyncPlanner`, which
   decides what happens to every file in a sync run, the engine and the synced preferences), `:metronome:*` (the sequencer, the synthesizer, the mixer, the engine's state machine, tap tempo and time signatures), `:tuner:*` (the note arithmetic and the presets, the FFT, the pitch detector against synthesized strings and any recording dropped into its `desktopTest` resources, the tracker, the tones, the engine's state machine, the sample ring and the FFT) and
   `:presentation` (the pure helpers behind its screens: which items the navigation bar puts behind Tools, the Chords tab's keys, chords and search, the search index and ranking, the song picker's filter chips, the fast scroller's section
-  index, the import review's groups, counts and group boxes, the setlist slots, stepper labels, section grid and the cutting of sections into columns, a tag's color by its key, the score a layout is chosen by, the narrow columns and the text fitted to a page, row snapping and section measurements of the details screen, the editor's token cache, its search matches and how wide its menu may be, where a song's tempo comes from, what a click plays for, which chords a song plays, in which tuning, and which
+  index, the import review's groups, counts and group boxes, the setlist slots, stepper labels, section grid and the cutting of sections into columns, a tag's color by its key, the tab player built from the instrument and the demo song's tabs as each instrument reads them, the score a layout is chosen by, the narrow columns and the text fitted to a page, row snapping and section measurements of the details screen, the editor's token cache, its search matches and how wide its menu may be, where a song's tempo comes from, what a click plays for, which chords a song plays, in which tuning, and which
   shape each is drawn with, the instrument table (the tunings of each instrument, which have shapes, the tuning picked for each), the tuner's note names and what its tunings are called in each notation, the cents it writes, the strings it ticks off, the step its reading is announced at and which notice its page shows, the diagrams' geometry and what the editor's Chord shape button writes, the setlist reorder merge and
   search and the list placeholders, the selection mode's Selection section, its tag and language draft and what its
   Choose setlists sheet adds; and, over small fakes of their use cases, the song text writes, the metadata sheets'
@@ -277,6 +277,9 @@ What the app does, one line each; the full text is in the file named (`:presenta
   `:presentation`'s `ui/CLAUDE.md`.
 - Haptics tell the hand only what the eye cannot easily follow (the fast scroller above all), through the platform's
   own feedback and its setting: `:presentation`'s `ui/CLAUDE.md`.
+- A tab is moved to the player's instrument and tuning so that it sounds what its string names say (a staff that names
+  none is in standard tuning), every staff named; of the tabs written for several instruments the player sees theirs, a
+  keyboard none: `:presentation`'s `ui/CLAUDE.md` and `chordpro/CLAUDE.md`.
 - Every chord the app can draw is browsed in the Chords tab by instrument, tuning, key and name, for the instrument and
   tuning the songs are drawn for, and a shape picked there is the player's in every song: `:presentation`'s
   `ui/screens/chords/CLAUDE.md`.

@@ -60,6 +60,10 @@ public sealed interface ChordProBlock {
          * makes it a note about the tablature or the grid: it says nothing where they are not shown.
          */
         val isInTabOrGrid: Boolean = false,
+        /** Whether that environment is a `{start_of_tab}`, whose comments go with it wherever the tab is not shown. */
+        val isInTab: Boolean = false,
+        /** The selector of that `{start_of_tab}` (see [ChordProLine.Tab.selector]), which shows the comment with it. */
+        val tabSelector: String? = null,
     ) : ChordProBlock
 
     /**

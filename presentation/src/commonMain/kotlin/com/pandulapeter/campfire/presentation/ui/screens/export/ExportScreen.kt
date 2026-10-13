@@ -119,6 +119,7 @@ import com.pandulapeter.campfire.presentation.ui.print.layoutPrintDocument
 import com.pandulapeter.campfire.presentation.ui.print.pdfFileName
 import com.pandulapeter.campfire.presentation.ui.print.withinFeatures
 import com.pandulapeter.campfire.presentation.ui.songLayout.rememberDefaultSectionLabels
+import com.pandulapeter.campfire.presentation.ui.tabs.rememberTabNoticeLabels
 import com.pandulapeter.campfire.presentation.ui.theme.LocalMonospaceFontFamily
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CancellationException
@@ -161,6 +162,7 @@ internal fun ExportScreen(
         textFontFamily = textFontFamily,
     )
     val renderer = remember(fontResolver, fontFamily, textFontFamily) { newRenderer() }
+    val tabNoticeLabels = rememberTabNoticeLabels()
     val labels = PrintLabels(
         key = stringResource(Res.string.song_editor_insert_key),
         transposition = stringResource(Res.string.song_details_transposition),
@@ -186,7 +188,7 @@ internal fun ExportScreen(
     LaunchedEffect(dialog, state.attempt) {
         state.failed = false
         try {
-            state.source = viewModel.preparePrintSource(dialog)
+            state.source = viewModel.preparePrintSource(dialog, tabNoticeLabels)
             if (state.selected == null) state.selected = state.source!!.songs.indices.toSet()
         } catch (exception: CancellationException) {
             throw exception

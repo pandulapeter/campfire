@@ -91,10 +91,12 @@ import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
+import com.pandulapeter.campfire.presentation.ui.instrument.instrumentTuning
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.TextTranspositionControls
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.rememberSongInfoEditing
 import com.pandulapeter.campfire.presentation.ui.platform.CompactKeyboardEffect
+import com.pandulapeter.campfire.presentation.ui.tabs.emptyTabStaffOf
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import org.jetbrains.compose.resources.painterResource
@@ -417,6 +419,9 @@ internal fun LoadedSongEditor(
                                 storedShapes = userPreferences?.chordVoicings?.get(tuning.instrument.id).orEmpty(),
                                 onWrittenForStandardTuning = viewModel::onChordShapeWrittenForStandardTuning,
                             )
+                        },
+                        tabStaff = remember(userPreferences) {
+                            emptyTabStaffOf(userPreferences?.instrument ?: UserPreferences.Instrument.GUITAR, userPreferences?.instrumentTuning)
                         },
                     )
                 }

@@ -216,7 +216,7 @@ public object ChordProParser {
             // inside whatever section is running, and a song with a solo written as a line of chords over a tab is
             // one section rather than three.
             lineMode(environment)?.let { mode ->
-                section.openLineMode(mode, ChordProEnvironments.label(directive.value))
+                section.openLineMode(mode, ChordProEnvironments.label(directive.value), ChordProEnvironments.selectorOf(name))
                 return
             }
             section.close()

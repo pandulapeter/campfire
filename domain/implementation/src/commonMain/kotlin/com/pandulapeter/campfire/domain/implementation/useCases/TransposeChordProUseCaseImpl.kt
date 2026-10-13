@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.domain.implementation.useCases
 
 import com.pandulapeter.campfire.chordpro.chords.ChordProTransposer
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
+import com.pandulapeter.campfire.chordpro.model.TabPlayer
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.domain.api.useCases.TransposeChordProUseCase
 import com.pandulapeter.campfire.domain.implementation.mapper.toPreferFlats
@@ -19,6 +20,6 @@ import org.koin.core.annotation.Factory
 @Factory
 class TransposeChordProUseCaseImpl internal constructor() : TransposeChordProUseCase {
 
-    override operator fun invoke(song: ChordProSong, semitones: Int, accidentals: UserPreferences.Accidentals) =
-        ChordProTransposer.transpose(song, semitones, accidentals.toPreferFlats())
+    override operator fun invoke(song: ChordProSong, semitones: Int, accidentals: UserPreferences.Accidentals, tabPlayer: TabPlayer?) =
+        ChordProTransposer.transpose(song, semitones, accidentals.toPreferFlats(), tabPlayer)
 }
