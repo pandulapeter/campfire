@@ -85,10 +85,16 @@ internal fun SettingsScreen(
         // the animation it interrupts ends in a CancellationException, which inside a plain collect would end the whole
         // collector, and every later press of the item with it, without a word. collectLatest runs each request in a
         // child of its own, so an interruption ends that request alone.
+        // A tab scrolled down is first taken to its top, and only a tab already there goes on to General.
         viewModel.scrollToTopRequests.collectLatest {
-            if (it == CampfireDestination.Settings) {
-                viewModel.settingsTab = SettingsTab.GENERAL
-                scrollStates[SettingsTab.GENERAL.ordinal].animateScrollTo(0)
+            if (it.destination == CampfireDestination.Settings) {
+                val currentScrollState = scrollStates[viewModel.settingsTab.ordinal]
+                if (currentScrollState.canScrollBackward) {
+                    currentScrollState.animateScrollTo(0)
+                } else if (viewModel.settingsTab != SettingsTab.GENERAL) {
+                    viewModel.settingsTab = SettingsTab.GENERAL
+                    scrollStates[SettingsTab.GENERAL.ordinal].animateScrollTo(0)
+                }
             }
         }
     }

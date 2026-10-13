@@ -12,14 +12,11 @@ package com.pandulapeter.campfire.presentation.ui.components
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -44,7 +41,7 @@ internal fun CardDetailsChoice(
     isEnabled: Boolean = true,
     onDetailsChanged: (UserPreferences.CardDetails) -> Unit,
 ) = FlowRow(
-    modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp),
+    modifier = modifier,
     horizontalArrangement = Arrangement.spacedBy(CHIP_GAP),
     verticalArrangement = Arrangement.spacedBy(CHIP_GAP),
 ) {

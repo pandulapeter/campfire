@@ -506,7 +506,7 @@ class CampfireViewModel(
     internal val currentSearch: SearchState? get() = navigator.currentSearch
 
     /** See [Navigator.scrollToTopRequests]. */
-    val scrollToTopRequests get() = navigator.scrollToTopRequests
+    internal val scrollToTopRequests get() = navigator.scrollToTopRequests
 
     /** See [DialogHost.overlayState]. */
     internal val overlayState get() = dialogHost.overlayState
@@ -1156,9 +1156,20 @@ class CampfireViewModel(
         settingsTab = tab
     }
 
-    fun selectTopLevelDestination(destination: CampfireDestination.TopLevel) {
+    fun selectTopLevelDestination(destination: CampfireDestination.TopLevel) = selectTopLevelDestination(destination, destinationWhenAtTop = null)
+
+    /**
+     * The navigation bar's Tools item, opening [destination] (see `toolsItemDestination`): pressed again on a tool at its
+     * top, it goes on to the first tool switched on, as the Settings item goes on to General.
+     */
+    fun selectToolsItem(destination: CampfireDestination.TopLevel) = selectTopLevelDestination(
+        destination = destination,
+        destinationWhenAtTop = CampfireDestination.TopLevel.tools.firstOrNull { it in topLevelDestinations.value },
+    )
+
+    private fun selectTopLevelDestination(destination: CampfireDestination.TopLevel, destinationWhenAtTop: CampfireDestination.TopLevel?) {
         val wasTunerShown = backStack.lastOrNull() == CampfireDestination.Tuner
-        navigator.selectTopLevelDestination(destination)
+        navigator.selectTopLevelDestination(destination, destinationWhenAtTop)
         // Only where the tab did open: a refused navigation would otherwise leave the mark for a tuner opened later without a tap.
         if (!wasTunerShown && backStack.lastOrNull() == CampfireDestination.Tuner) tunerController.markOpenedByTap()
     }

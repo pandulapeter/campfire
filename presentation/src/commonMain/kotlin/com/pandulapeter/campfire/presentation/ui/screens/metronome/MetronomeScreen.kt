@@ -86,7 +86,11 @@ internal fun MetronomeScreen(
     val scrollState = rememberRetainedScrollState(scrollPosition)
     LaunchedEffect(viewModel, scrollState) {
         // Latest, for the reason the settings screen gives.
-        viewModel.scrollToTopRequests.collectLatest { if (it == CampfireDestination.Metronome) scrollState.animateScrollTo(0) }
+        viewModel.scrollToTopRequests.collectLatest {
+            if (it.destination == CampfireDestination.Metronome) {
+                if (scrollState.canScrollBackward) scrollState.animateScrollTo(0) else it.destinationWhenAtTop?.let(viewModel::selectTopLevelDestination)
+            }
+        }
     }
     Column(
         // A metronome is practised with both hands on the instrument, and a screen that dims and locks takes the beat row

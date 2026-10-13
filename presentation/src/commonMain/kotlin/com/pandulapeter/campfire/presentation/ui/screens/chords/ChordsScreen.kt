@@ -101,7 +101,11 @@ internal fun ChordsScreen(
     val gridState = rememberRetainedLazyGridState(state.scrollPosition)
     LaunchedEffect(viewModel, gridState) {
         // Latest, for the reason the settings screen gives.
-        viewModel.scrollToTopRequests.collectLatest { if (it == CampfireDestination.Chords) gridState.animateScrollToItem(0) }
+        viewModel.scrollToTopRequests.collectLatest {
+            if (it.destination == CampfireDestination.Chords) {
+                if (gridState.canScrollBackward) gridState.animateScrollToItem(0) else it.destinationWhenAtTop?.let(viewModel::selectTopLevelDestination)
+            }
+        }
     }
     val backgroundColor = MaterialTheme.colorScheme.background
     Box(

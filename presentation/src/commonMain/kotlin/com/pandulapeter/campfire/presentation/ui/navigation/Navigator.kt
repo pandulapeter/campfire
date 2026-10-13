@@ -166,8 +166,8 @@ internal class Navigator(
             else -> null
         }
 
-    /** Emitted when the item of the top level screen that is already open is pressed; that screen scrolls to its top. */
-    private val _scrollToTopRequests = MutableSharedFlow<CampfireDestination.TopLevel>(extraBufferCapacity = 1)
+    /** Emitted when the item of the top level screen that is already open is pressed, see [ScrollToTopRequest]. */
+    private val _scrollToTopRequests = MutableSharedFlow<ScrollToTopRequest>(extraBufferCapacity = 1)
     val scrollToTopRequests = _scrollToTopRequests.asSharedFlow()
 
     /**
@@ -299,13 +299,19 @@ internal class Navigator(
      * navigation chrome that calls this is hidden over the editor, and nothing else may take that text off the screen
      * without asking, see [navigateBack]. Refused too for a screen whose feature is switched off: its item stays on
      * screen, and tappable, for as long as it takes to shrink away.
+     *
+     * @param destinationWhenAtTop Where a press of the open screen's item goes once that screen is at its top, see
+     *   [ScrollToTopRequest].
      */
-    fun selectTopLevelDestination(destination: CampfireDestination.TopLevel) {
+    fun selectTopLevelDestination(
+        destination: CampfireDestination.TopLevel,
+        destinationWhenAtTop: CampfireDestination.TopLevel? = null,
+    ) {
         if (destination !in topLevelDestinations()) return
         if (backStack.lastOrNull() == destination) {
             // Pressing the item of the screen that is already open takes that screen back to its resting state.
             if (destination != CampfireDestination.Settings) currentSearch?.close()
-            _scrollToTopRequests.tryEmit(destination)
+            _scrollToTopRequests.tryEmit(ScrollToTopRequest(destination, destinationWhenAtTop?.takeIf { it != destination }))
             return
         }
         if (hasUnsavedEditorText() && backStack.any { it is CampfireDestination.SongEditor }) return

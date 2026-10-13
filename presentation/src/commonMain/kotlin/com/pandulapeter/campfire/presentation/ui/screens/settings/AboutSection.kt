@@ -48,13 +48,14 @@ import com.pandulapeter.campfire.presentation.ui.platform.platformStore
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * What the app is and where it lives: campfire-songbook.com is its home page. Every build of Campfire is listed there,
- * which is the whole of what the app says about the other platforms, since a page can be kept up to date without a
- * release and it is the one place App Review has nothing to say about; and its support page answers the common
- * questions and says how to reach the author, by email or on GitHub. GitHub comes after those, as the source code and
- * the issue tracker, since that is what it is to somebody who has never used it, and the open-source licenses after
- * it, which open a sheet of the app's own rather than a page. The row that names the author is the
- * link to the author's own site, since that is what a name with a link on it is expected to lead to.
+ * What the app is and where it lives, in four groups: where to get it and where to get help; how to give something
+ * back; the fine print; and, last, who made it and which version this is. The row that names the author is the link to
+ * the author's own site, since that is what a name with a link on it is expected to lead to. campfire-songbook.com is the
+ * app's home page: every build of Campfire is listed there, which is the whole of what the app says about the other
+ * platforms, since a page can be kept up to date without a release and it is the one place App Review has nothing to
+ * say about; and its support page answers the common questions and says how to reach the author, by email or on
+ * GitHub. GitHub comes after those, as the source code and the issue tracker, since that is what it is to somebody who
+ * has never used it, with the open-source licenses and the privacy policy closing the section.
  *
  * The rating row leads to the store of the platform the app is running on, and only once that listing exists. It
  * says "rate", never "get it from the store": a store page has an install button on it, and somebody who has the
@@ -87,12 +88,14 @@ internal fun AboutSection(
             )
         }
     }
-    LinkListItem(
-        title = stringResource(Res.string.settings_privacy_policy),
-        description = stringResource(Res.string.settings_privacy_policy_description),
-        icon = painterResource(Res.drawable.ic_privacy_policy),
-        onClick = { urlOpener("${WEBSITE_URL}privacy/") },
-    )
+    if (canAskForDonations) {
+        LinkListItem(
+            title = stringResource(Res.string.settings_support),
+            description = stringResource(Res.string.settings_support_description),
+            icon = painterResource(Res.drawable.ic_coffee),
+            onClick = { urlOpener("https://buymeacoffee.com/pandulapeter") },
+        )
+    }
     LinkListItem(
         title = stringResource(Res.string.settings_git_hub),
         description = stringResource(Res.string.settings_git_hub_description),
@@ -103,8 +106,13 @@ internal fun AboutSection(
         title = stringResource(Res.string.settings_open_source_licenses),
         description = stringResource(Res.string.settings_open_source_licenses_description),
         icon = painterResource(Res.drawable.ic_license),
-        opensInApp = true,
         onClick = onOpenSourceLicensesClicked,
+    )
+    LinkListItem(
+        title = stringResource(Res.string.settings_privacy_policy),
+        description = stringResource(Res.string.settings_privacy_policy_description),
+        icon = painterResource(Res.drawable.ic_privacy_policy),
+        onClick = { urlOpener("${WEBSITE_URL}privacy/") },
     )
     LinkListItem(
         title = stringResource(Res.string.settings_created_by),
@@ -112,14 +120,6 @@ internal fun AboutSection(
         icon = painterResource(Res.drawable.ic_campfire),
         onClick = { urlOpener("https://pandulapeter.com/") },
     )
-    if (canAskForDonations) {
-        LinkListItem(
-            title = stringResource(Res.string.settings_support),
-            description = stringResource(Res.string.settings_support_description),
-            icon = painterResource(Res.drawable.ic_coffee),
-            onClick = { urlOpener("https://buymeacoffee.com/pandulapeter") },
-        )
-    }
 }
 
 /** The name a rating is left under, which is the one thing the app still has to call a store. */

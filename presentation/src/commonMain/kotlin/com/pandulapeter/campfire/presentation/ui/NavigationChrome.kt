@@ -73,6 +73,7 @@ private val EXPANDED_NAVIGATION_RAIL_TOP_PADDING = 4.dp
  *   every copy of the chrome, so that a copy drawn under a card moves in step with the shared one.
  * @param lastTool The tool the bar's Tools item opens where none is on screen, see [toolsItemDestination].
  * @param isKeyboard Whether the player's instrument is a keyboard, which the Chords item's icon is drawn for.
+ * @param onToolsItemSelected The bar's Tools item, with the tool it opens, see `CampfireViewModel.selectToolsItem`.
  */
 @Composable
 internal fun NavigationChrome(
@@ -83,6 +84,7 @@ internal fun NavigationChrome(
     lastTool: CampfireDestination.TopLevel,
     isKeyboard: Boolean,
     onDestinationSelected: (CampfireDestination.TopLevel) -> Unit,
+    onToolsItemSelected: (CampfireDestination.TopLevel) -> Unit,
 ) {
     if (kind == NavigationChromeKind.EXPANDED_RAIL) {
         // The wide rail's own collapsed state is not used: its collapsed form is wider than the plain rail, and the
@@ -154,7 +156,7 @@ internal fun NavigationChrome(
                         onClick = {
                             when (item) {
                                 is NavigationBarItem.Destination -> onDestinationSelected(item.destination)
-                                NavigationBarItem.Tools -> toolsItemDestination(currentTopLevelDestination, lastTool, destinations)?.let(onDestinationSelected)
+                                NavigationBarItem.Tools -> toolsItemDestination(currentTopLevelDestination, lastTool, destinations)?.let(onToolsItemSelected)
                             }
                         },
                         // A tool shrinking into the Tools item is still switched on, so what disables an item is

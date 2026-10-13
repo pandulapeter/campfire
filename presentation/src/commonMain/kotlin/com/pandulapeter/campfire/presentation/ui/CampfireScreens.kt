@@ -237,6 +237,7 @@ internal fun CampfireScreens(
                     lastTool = viewModel.lastTool,
                     isKeyboard = isKeyboard,
                     onDestinationSelected = viewModel::selectTopLevelDestination,
+                    onToolsItemSelected = viewModel::selectToolsItem,
                 )
             }
         } else {

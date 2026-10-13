@@ -296,7 +296,9 @@ screen, so a window that grows past the bar hands the tools their own items back
 on do not fit, so a bar of five or fewer never has it. The tools stay top level destinations of their own (their
 addresses, the restored stack and the tuner's listening are unchanged): the item is selected while any of them is on
 top, and opens the one on top, else the one last on screen (`Navigator.lastTool`, for the session, starting on the
-Metronome), else the first one switched on (`toolsItemDestination`).
+Metronome), else the first one switched on (`toolsItemDestination`). Pressed again, it acts as the Settings item does
+(`CampfireViewModel.selectToolsItem`, `ScrollToTopRequest.destinationWhenAtTop`): a tool scrolled down is taken to its
+top, and one already there gives way to the first tool switched on; a tool's own rail item and its tab only scroll.
 
 Their screens are then switched by a row of tabs at their top (`ToolsTabRow`, drawn as the settings screen's are but
 with each tool's navigation icon over its name, `DestinationIcon`, at a fixed 72dp, and on the solid background color so

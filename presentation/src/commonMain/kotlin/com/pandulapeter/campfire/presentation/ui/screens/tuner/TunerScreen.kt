@@ -121,7 +121,11 @@ internal fun TunerScreen(
     val scrollState = rememberRetainedScrollState(scrollPosition)
     LaunchedEffect(viewModel, scrollState) {
         // Latest, for the reason the settings screen gives.
-        viewModel.scrollToTopRequests.collectLatest { if (it == CampfireDestination.Tuner) scrollState.animateScrollTo(0) }
+        viewModel.scrollToTopRequests.collectLatest {
+            if (it.destination == CampfireDestination.Tuner) {
+                if (scrollState.canScrollBackward) scrollState.animateScrollTo(0) else it.destinationWhenAtTop?.let(viewModel::selectTopLevelDestination)
+            }
+        }
     }
     Column(
         // A tuner is used with both hands on the instrument, and a screen that dims and locks stops the listening.

@@ -75,7 +75,7 @@ internal fun SetlistsScreen(
     HideKeyboardWhenScrolledDown(listState, isEnabled = visibleDialog == null)
     LaunchedEffect(viewModel, listState) {
         // Latest, for the reason the settings screen gives.
-        viewModel.scrollToTopRequests.collectLatest { if (it == CampfireDestination.Setlists) listState.animateScrollToItem(0) }
+        viewModel.scrollToTopRequests.collectLatest { if (it.destination == CampfireDestination.Setlists) listState.animateScrollToItem(0) }
     }
     // See the songs screen: how far the app bar's buttons reach in over a pinned header, which it narrows to clear.
     var appBarReach by remember { mutableStateOf(0.dp) }

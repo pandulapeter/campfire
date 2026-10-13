@@ -94,6 +94,7 @@ internal fun CampfireContent(
                 lastTool = viewModel.lastTool,
                 isKeyboard = userPreferences?.instrument == UserPreferences.Instrument.KEYBOARD,
                 onDestinationSelected = viewModel::selectTopLevelDestination,
+                onToolsItemSelected = viewModel::selectToolsItem,
             )
         },
     ) { windowWidth, windowSize, chromeKind, chromeSize ->

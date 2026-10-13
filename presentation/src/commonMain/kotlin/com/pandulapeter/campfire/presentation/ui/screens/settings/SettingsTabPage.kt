@@ -58,7 +58,8 @@ internal fun SettingsTabPage(
         sectionColumns = sectionColumns,
         scrollState = scrollState,
         contentPadding = contentPadding,
-        section = { SongDisplaySection(viewModel = viewModel, userPreferences = userPreferences) },
+        section = { ChordsSection(viewModel = viewModel, userPreferences = userPreferences) },
+        secondSection = { SongDisplaySection(viewModel = viewModel, userPreferences = userPreferences) },
     )
 
     SettingsTab.LIBRARY -> SettingsPage(

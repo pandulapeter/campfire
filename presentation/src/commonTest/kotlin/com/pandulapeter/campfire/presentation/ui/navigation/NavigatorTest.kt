@@ -206,7 +206,7 @@ class NavigatorTest {
     fun `pressing the open screen's item closes its search and scrolls it to the top`() = runTest {
         val navigator = navigator(backgroundScope)
         val requests = mutableListOf<CampfireDestination.TopLevel>()
-        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { navigator.scrollToTopRequests.toList(requests) }
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { navigator.scrollToTopRequests.collect { requests += it.destination } }
         songsSearch.open()
         navigator.selectTopLevelDestination(CampfireDestination.Songs)
         assertFalse(songsSearch.isOpen.value)
@@ -217,12 +217,27 @@ class NavigatorTest {
     fun `pressing the open settings item scrolls it without touching a search`() = runTest {
         val navigator = navigator(backgroundScope)
         val requests = mutableListOf<CampfireDestination.TopLevel>()
-        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { navigator.scrollToTopRequests.toList(requests) }
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { navigator.scrollToTopRequests.collect { requests += it.destination } }
         navigator.selectTopLevelDestination(CampfireDestination.Settings)
         songsSearch.open()
         navigator.selectTopLevelDestination(CampfireDestination.Settings)
         assertTrue(songsSearch.isOpen.value)
         assertEquals(listOf<CampfireDestination.TopLevel>(CampfireDestination.Settings), requests)
+    }
+
+    @Test
+    fun `pressing the open tool's item names the first tool for a tool at its top, but never the tool itself`() = runTest {
+        val navigator = navigator(backgroundScope)
+        val requests = mutableListOf<ScrollToTopRequest>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { navigator.scrollToTopRequests.toList(requests) }
+        navigator.selectTopLevelDestination(CampfireDestination.Tuner)
+        navigator.selectTopLevelDestination(CampfireDestination.Tuner, destinationWhenAtTop = CampfireDestination.Metronome)
+        navigator.selectTopLevelDestination(CampfireDestination.Metronome)
+        navigator.selectTopLevelDestination(CampfireDestination.Metronome, destinationWhenAtTop = CampfireDestination.Metronome)
+        assertEquals(
+            listOf(CampfireDestination.Tuner to CampfireDestination.Metronome, CampfireDestination.Metronome to null),
+            requests.map { it.destination to it.destinationWhenAtTop },
+        )
     }
 
     @Test

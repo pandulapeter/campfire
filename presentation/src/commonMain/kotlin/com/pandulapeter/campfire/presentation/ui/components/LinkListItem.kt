@@ -13,27 +13,18 @@ import androidx.compose.foundation.clickable
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.semantics.contentDescription
-import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.ic_next
-import com.pandulapeter.campfire.presentation.resources.ic_open_in_new
-import org.jetbrains.compose.resources.painterResource
 
 /**
- * @param opensInApp Whether the row opens something of the app's own (a sheet) rather than a page in the browser, which
- *   its mark at the end says.
  * @param isEnabled False for a link that leads nowhere yet, which stays in its list, dimmed, with [description]
  *   saying why: a store the app has not reached.
  * @param onClick Null for a row of a list of links that is not one itself - the web build's own entry, whose address
- *   is the page it is already on - which is drawn at full strength, but with nothing to tap and no mark saying
- *   that it opens something.
+ *   is the page it is already on - which is drawn at full strength, but with nothing to tap.
  */
 @Composable
 internal fun LinkListItem(
@@ -41,7 +32,6 @@ internal fun LinkListItem(
     title: String,
     description: String? = null,
     icon: Painter,
-    opensInApp: Boolean = false,
     isEnabled: Boolean = true,
     onClick: (() -> Unit)?,
 ) = ListItem(
@@ -51,13 +41,4 @@ internal fun LinkListItem(
     headlineContent = { Text(title) },
     supportingContent = description?.let { { Text(it) } },
     leadingContent = { Icon(painter = icon, contentDescription = null) },
-    trailingContent = onClick?.let {
-        {
-            Icon(
-                painter = painterResource(if (opensInApp) Res.drawable.ic_next else Res.drawable.ic_open_in_new),
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    },
 )

@@ -110,7 +110,7 @@ internal fun SongsScreen(
     HideKeyboardWhenScrolledDown(listState, isEnabled = visibleDialog == null)
     LaunchedEffect(viewModel, listState) {
         // Latest, for the reason the settings screen gives.
-        viewModel.scrollToTopRequests.collectLatest { if (it == CampfireDestination.Songs) listState.animateScrollToItem(0) }
+        viewModel.scrollToTopRequests.collectLatest { if (it.destination == CampfireDestination.Songs) listState.animateScrollToItem(0) }
     }
     DismissSheetWhenSidePanelAppears(
         isSidePanelVisible = isSidePanelVisible,
