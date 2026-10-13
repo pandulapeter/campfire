@@ -212,6 +212,15 @@ internal val openSourceComponents = listOf(
         builds = DESKTOP,
     ),
     apache("JetBrains Runtime API", "JetBrains s.r.o.", "https://github.com/JetBrains/JetBrainsRuntimeApi", DESKTOP),
+    OpenSourceComponent(
+        name = "js-joda",
+        holder = "Philipp Thürwächter, Pattrick Hüper, and the js-joda contributors; Stephen Colebourne and Michael Nascimento Santos (ThreeTen)",
+        url = "https://js-joda.github.io/js-joda/",
+        licenseName = BSD_3,
+        licenseFile = "$LICENSES/js_joda_bsd_3.txt",
+        licenseUrl = BSD_3_URL,
+        builds = setOf(AppBuild.WEB),
+    ),
     apache("JSpecify", "The JSpecify Authors", "https://jspecify.dev", JVM),
     apache("Koin", "Kotzilla, Koin contributors", "https://github.com/InsertKoinIO/koin"),
     apache(
