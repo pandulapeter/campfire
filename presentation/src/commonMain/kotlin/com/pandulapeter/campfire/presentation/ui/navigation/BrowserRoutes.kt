@@ -193,7 +193,7 @@ internal object BrowserRoutes {
      * An editor is cut off as well while performance mode is on, which may have been turned on since, and the import
      * screen once there is no import to report on ([hasImportReport]): the one it was about has been left. So is an
      * onboarding the app is no longer showing ([openOnboarding] is the one on its back stack now, if any), which only a
-     * first run or Settings opens.
+     * start up that owes it or Settings opens.
      */
     fun validate(
         state: NavigationState,
@@ -218,10 +218,10 @@ internal object BrowserRoutes {
 
                 is CampfireDestination.SongEditor -> destination.takeIf { !isPerformanceModeEnabled && it.fileName in songFileNames }
                 CampfireDestination.ImportReport -> destination.takeIf { hasImportReport }
-                // The onboarding is only ever opened by a first run or from Settings: an entry left by finishing, skipping
-                // or closing it is not one to go forward into again, as an address names nothing for it either. One that is
-                // still open stays, since a dropped file can put the import screen or a song over it, and a Forward back into
-                // those must not close it.
+                // The onboarding is opened by a start up that owes it or from Settings, never by an address: an entry left by
+                // finishing, skipping or closing it is not one to go forward into again. One that is still open stays, since a
+                // song opened from an import's snackbar can be put over it, gone back from and gone forward into again, and that
+                // Forward must not close it.
                 is CampfireDestination.Onboarding -> destination.takeIf { it == openOnboarding }
                 else -> destination
             } ?: break

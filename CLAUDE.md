@@ -49,8 +49,9 @@ app:android / app:desktop / app:ios / app:web   entry points, platform chrome, "
       data:source:local:api  -> :implementation   files on Android/desktop/iOS, OPFS on web (see Web below)
         data:formats                         the pure-Kotlin zip reader/writer and PDF/Word text extractors; depends on
                                              :data:model and :chordpro, used by :data:source:local:implementation
-      data:source:remote:api -> :implementation   the sync contracts and the Dropbox provider, the cover download
-                                                  and the MusicBrainz and iTunes searches (covers and song details);
+      data:source:remote:api -> :implementation   the sync contracts and the Dropbox provider, the cover download,
+                                                  the MusicBrainz and iTunes searches (covers and song details), and
+                                                  the download of an import from an address (reached by nothing yet);
                                                   the only module in the project that makes a network call (see Sync,
                                                   Cover art and Song details lookup below)
         data:model                           domain models, shared by everything
