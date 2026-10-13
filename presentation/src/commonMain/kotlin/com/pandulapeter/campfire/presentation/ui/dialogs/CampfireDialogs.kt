@@ -26,7 +26,7 @@ import com.pandulapeter.campfire.presentation.resources.confirm_exit_title
 import com.pandulapeter.campfire.presentation.resources.create
 import com.pandulapeter.campfire.presentation.resources.delete
 import com.pandulapeter.campfire.presentation.resources.import_conflicts_replace
-import com.pandulapeter.campfire.presentation.resources.import_conflicts_replace_description
+import com.pandulapeter.campfire.presentation.resources.import_replace_message
 import com.pandulapeter.campfire.presentation.resources.import_replace_title
 import com.pandulapeter.campfire.presentation.resources.save
 import com.pandulapeter.campfire.presentation.resources.setlists_delete_setlist
@@ -323,7 +323,7 @@ private fun CampfireDialog(
 
         is DialogType.ConfirmImportReplace -> ConfirmationDialog(
             title = pluralStringResource(Res.plurals.import_replace_title, dialog.count, dialog.count),
-            text = stringResource(Res.string.import_conflicts_replace_description),
+            text = pluralStringResource(Res.plurals.import_replace_message, dialog.count),
             confirmLabel = stringResource(Res.string.import_conflicts_replace),
             onDismiss = viewModel::dismissDialog,
             onConfirm = {

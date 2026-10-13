@@ -58,6 +58,10 @@
         <item quantity="one">Replace %1$d file?</item>
         <item quantity="other">Replace %1$d files?</item>
     </plurals>
+    <plurals name="import_replace_message">
+        <item quantity="one">The file in your library is written over. This cannot be undone.</item>
+        <item quantity="other">The files in your library are written over. This cannot be undone.</item>
+    </plurals>
     <string name="import_files">Import files</string>
     <string name="import_result">Songs imported: %1$d · Setlists: %2$d · Already there: %3$d · Skipped: %4$d</string>
     <string name="import_converted">Converted: %1$d — worth a look in the editor.</string>

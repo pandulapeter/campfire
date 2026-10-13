@@ -58,6 +58,10 @@
         <item quantity="one">%1$d fájl cseréje?</item>
         <item quantity="other">%1$d fájl cseréje?</item>
     </plurals>
+    <plurals name="import_replace_message">
+        <item quantity="one">A könyvtáradban lévő fájl felülíródik. Ez nem vonható vissza.</item>
+        <item quantity="other">A könyvtáradban lévő fájlok felülíródnak. Ez nem vonható vissza.</item>
+    </plurals>
     <string name="import_files">Fájlok importálása</string>
     <string name="import_result">%1$d dal és %2$d lista importálva · %3$d már megvolt · %4$d kihagyva</string>
     <string name="import_converted">Átalakítva: %1$d — érdemes átnézni a szerkesztőben.</string>
