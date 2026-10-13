@@ -67,8 +67,8 @@
     <string name="import_converted">Converted: %1$d — worth a look in the editor.</string>
     <string name="import_open">Open</string>
     <plurals name="import_unreadable_documents">
-        <item quantity="one">One document has no text Campfire can read (a scan, a protected PDF or an old Word format).</item>
-        <item quantity="other">%1$d documents have no text Campfire can read (scans, protected PDFs or an old Word format).</item>
+        <item quantity="one">One document has no text Campfire can read (a scan, a protected PDF, or an old Word format).</item>
+        <item quantity="other">%1$d documents have no text Campfire can read (scans, protected PDFs, or an old Word format).</item>
     </plurals>
     <string name="import_failed">Import failed</string>
     <string name="import_interrupted">The import was interrupted. Open the files again to import them.</string>
@@ -162,7 +162,7 @@
     <string name="songs_sorting_mode_by_artist">Artist</string>
     <string name="songs_sorting_mode_by_title">Title</string>
     <string name="songs_empty_title">Your library is empty</string>
-    <string name="songs_empty_hint">Create a song, import songs, PDF or Word documents and zip archives, or add the demo songs.</string>
+    <string name="songs_empty_hint">Create a song, import songs, PDF or Word documents, and zip archives, or add the demo songs.</string>
     <string name="songs_create_song">Create a song</string>
     <string name="songs_new_song">New song</string>
     <string name="optional_field_label">%1$s (optional)</string>
@@ -303,14 +303,14 @@
     <string name="settings_library_storage_offline_granted">Campfire opens in this browser without a connection. Your browser has agreed to keep it and the library until you clear this site\'s data.</string>
     <string name="settings_library_storage_offline_best_effort">Campfire opens in this browser without a connection. Your browser keeps it and the library, but has not yet promised to hold on to them if the device runs low on space. Bookmarking this page or using it regularly usually earns that promise; until then, an export or sync keeps a copy of the library elsewhere.</string>
     <string name="settings_library_storage_online_only">Campfire could not be saved in this browser, so opening it needs a connection.</string>
-    <string name="settings_import">Import songs, documents or zip archives…</string>
+    <string name="settings_import">Import songs, documents, or zip archives…</string>
     <string name="settings_export_all">Export library as zip</string>
     <string name="settings_songs">Songs</string>
     <string name="settings_features">Features</string>
     <string name="settings_read_only_mode">Read only</string>
-    <string name="settings_read_only_mode_description">Locks the app while you play: editing, deleting, reordering and transposing are hidden, so an accidental tap can\'t change anything</string>
+    <string name="settings_read_only_mode_description">Locks the app while you play: editing, deleting, reordering, and transposing are hidden, so an accidental tap can\'t change anything</string>
     <string name="settings_chords">Chords</string>
-    <string name="settings_chords_description">Show the chords with the words, along with the key, the transposition and the capo. Off, every song is lyrics only.</string>
+    <string name="settings_chords_description">Show the chords with the words, along with the key, the transposition, and the capo. Off, every song is lyrics only.</string>
     <string name="settings_chord_diagrams">Chord diagrams</string>
     <string name="settings_chord_diagrams_description">Show how every chord of a song is played, at the top of the song, and every chord the app knows in the Chords tab.</string>
     <string name="settings_metronome_description">The Metronome tab and the click on a song\'s screen, along with the tempo and the time signature of every song</string>
@@ -729,7 +729,7 @@
     <string name="song_details_link_move_up">Move the link to %1$s up</string>
     <string name="song_details_link_move_down">Move the link to %1$s down</string>
     <string name="song_details_link_address">Web address</string>
-    <string name="song_details_link_address_hint">A video, a recording, a tab or any other page about the song</string>
+    <string name="song_details_link_address_hint">A video, a recording, a tab, or any other page about the song</string>
     <string name="song_details_language_search">Search for a language</string>
     <string name="song_details_language_no_search_results">No language matches this search. Its two or three letter code will find it even where there is no name for it.</string>
     <string name="song_details_set_cover_art">Set cover art</string>
@@ -794,7 +794,7 @@
 
     <!-- Settings screen: sync -->
     <string name="settings_sync_unavailable">This build of Campfire was made without sync credentials, so there is nothing to connect to.</string>
-    <string name="settings_sync_description">Keep the library the same on every device through a cloud folder you own, along with how each song is transposed, capoed and played. Campfire has no server: the files go straight between your devices and your own storage.</string>
+    <string name="settings_sync_description">Keep the library the same on every device through a cloud folder you own, along with how each song is transposed, capoed, and played. Campfire has no server: the files go straight between your devices and your own storage.</string>
     <string name="settings_sync_connect_dropbox">Connect Dropbox</string>
     <string name="settings_sync_connecting">Waiting for the browser…</string>
     <string name="settings_sync_connection_failed_network">Could not reach the service. Check the internet connection and try again.</string>
@@ -830,7 +830,7 @@
         <item quantity="one">One file could not be synced: %2$s</item>
         <item quantity="other">%1$d files could not be synced. Among them: %2$s</item>
     </plurals>
-    <string name="settings_sync_preferences_failed">The song settings (transposition, capo and tempo) could not be synced. Campfire will try again next time.</string>
+    <string name="settings_sync_preferences_failed">The song settings (transposition, capo, and tempo) could not be synced. Campfire will try again next time.</string>
     <plurals name="settings_sync_conflicts">
         <item quantity="one">Kept both versions of a file that changed in two places: %2$s</item>
         <item quantity="other">Kept both versions of %1$d files that changed in two places. Among them: %2$s</item>
@@ -908,7 +908,7 @@
     <string name="print_format_chordpro">ChordPro</string>
     <string name="print_format_zip">Zip</string>
     <string name="print_format_pdf_description">Ideal for printing. It opens on any device, but cannot be edited or transposed afterwards.</string>
-    <string name="print_format_chordpro_song_description">Ideal for sharing with other Campfire users, who can import, edit and transpose the song.</string>
+    <string name="print_format_chordpro_song_description">Ideal for sharing with other Campfire users, who can import, edit, and transpose the song.</string>
     <string name="print_format_zip_description">Ideal for other Campfire users: the setlist manifest and its songs as ChordPro files.</string>
     <string name="print_format_zip_songs_description">Ideal for other Campfire users: the chosen songs as ChordPro files.</string>
     <string name="print_zip_contents">In the zip file</string>
@@ -927,12 +927,12 @@
     <string name="print_margin_decrease">Decrease margins</string>
     <string name="print_margin_increase">Increase margins</string>
     <string name="print_columns">Columns</string>
-    <string name="print_chords">Chords, tablature and grids</string>
+    <string name="print_chords">Chords, tablature, and grids</string>
     <string name="print_comments">Comments</string>
-    <string name="print_key">Key, transposition and capo</string>
+    <string name="print_key">Key, transposition, and capo</string>
     <string name="print_tempo">Tempo and time signature</string>
     <string name="print_metadata">Artist</string>
-    <string name="print_metadata_setlist">Artists, date and description</string>
+    <string name="print_metadata_setlist">Artists, date, and description</string>
     <string name="print_page_numbers">Page numbers</string>
     <string name="print_setlist_content">Setlist content</string>
     <string name="print_song_sheets">Song sheets</string>
