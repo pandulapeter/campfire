@@ -65,18 +65,20 @@ Settings offers to add them for as long as the library is missing any of them, s
 asked for rather than on its own. Both ways of planting them remember what they wrote under the demo's own names
 (`RememberDemoLibraryFilesUseCase`, a local-only preference), so that a sync run meeting another version's untouched
 demo in the cloud folder takes it instead of keeping a copy of each. That first run also opens the **onboarding**
-(`ui/screens/onboarding/CLAUDE.md`), put on the back stack while the launch screen is still up, and only where no file
-the app was opened with is waiting to be imported (`canShowOnboarding`). Its preferences write marks the onboarding as
-owed (`UserPreferences.isOnboardingPending`), and only the onboarding leaving the back stack — finished, skipped, or gone
-back out of from its first page — clears it (`onBackStackChanged`), so a start up that finds it still owed, after an app
-ended in the middle of the pages or a first run that had to skip it for an import, opens it again (onto a stack holding
-only the songs), and What's new is recorded rather than shown over it. Each file is named
+(`ui/screens/onboarding/CLAUDE.md`), put on the back stack while the launch screen is still up, held back only by a
+dialog (`canShowOnboarding`): a file the app was opened with does not take it away, but is read behind it, and its import
+screen — or the one song it opens — follows as the onboarding leaves the back stack. That holds on any start up that
+owes the onboarding. Its preferences write marks the onboarding as owed (`UserPreferences.isOnboardingPending`), and only
+the onboarding leaving the back stack — finished, skipped, or gone back out of from its first page — clears it
+(`onBackStackChanged`), before any import screen is pushed after it, so a start up that finds it still owed after an app
+ended in the middle of the pages opens it again (onto a stack holding only the songs), and What's new is recorded rather
+than shown over it. Each file is named
 exactly as the library would name the song inside it, which is what lets one list both read the resources and answer
 whether they are already there.
 
 ### What's new
 
-**What's new** introduces each version once, after the app is on screen and startup import questions have finished.
+**What's new** introduces each version once, after the app is on screen and startup imports and their reviews have finished.
 `UserPreferences.seenWhatsNewVersions` remembers every introduced version and the first installed version, which is
 skipped in favor of the onboarding. Empty `whats_new_message` resources suppress the dialog and still record the version;
 the prepare-release skill replaces or clears that message in both languages for every release.

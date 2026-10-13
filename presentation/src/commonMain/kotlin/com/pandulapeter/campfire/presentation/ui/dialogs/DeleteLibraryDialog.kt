@@ -68,8 +68,8 @@ internal fun DeleteLibraryDialog(
     var value by rememberSaveable(stateSaver = TextFieldValue.Saver) { mutableStateOf(TextFieldValue()) }
     val isConfirmed = value.text.trim() == DELETE_LIBRARY_CONFIRMATION
     // Files dropped or opened with the app while the sheet is up are imported against the library it would delete, so
-    // Delete waits, greyed, until that import and its question are over.
-    val canDelete = isConfirmed && !isImporting && importReport !is ImportReport.Review
+    // Delete waits, greyed, until that import is over, its reading, its failure, and its review included.
+    val canDelete = isConfirmed && !isImporting && importReport.let { it !is ImportReport.Loading && it !is ImportReport.Failed && it !is ImportReport.Review }
     val focusRequester = rememberFirstFieldFocusRequester()
     val keyboardController = LocalSoftwareKeyboardController.current
     val scrollState = rememberScrollState()

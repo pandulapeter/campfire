@@ -10,9 +10,9 @@
 package com.pandulapeter.campfire.presentation.ui.firstRun
 
 /**
- * Whether What's new may open now. An import's conflicts question is not an import running, and is only put on the
- * back stack once no dialog is up, so a report waiting to be shown has to hold the dialog back as well; so does a
- * batch opened with the app that is still waiting in the queue, which no import has taken yet.
+ * Whether What's new may open now. An import's review is not an import running, and is only put on the back stack
+ * once no dialog is up, so a report waiting to be shown has to hold the dialog back as well; so does a batch opened
+ * with the app that is still waiting in the queue, which no import has taken yet.
  */
 internal fun canShowWhatsNew(
     hasDialog: Boolean,
@@ -22,7 +22,7 @@ internal fun canShowWhatsNew(
 ) = !hasDialog && !isImporting && !hasImportReport && queuedImportCount == 0
 
 /**
- * Whether an owed onboarding may go up now: not over a dialog, and not over an import, whose screen is a question
- * too - one already reported, or one of a file the app was opened with that is still waiting to be read.
+ * Whether an owed onboarding may go up now: not over a dialog, which may hold input. An import is no reason to wait:
+ * its screen waits for the onboarding instead, and follows it.
  */
-internal fun canShowOnboarding(hasDialog: Boolean, hasImportReport: Boolean, hasQueuedImport: Boolean) = !hasDialog && !hasImportReport && !hasQueuedImport
+internal fun canShowOnboarding(hasDialog: Boolean) = !hasDialog

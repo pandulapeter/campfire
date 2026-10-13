@@ -34,7 +34,8 @@ app that interrupted it.
 Every one of those ends in the same `leave`, which hides the window at once and ends the process only after
 `CampfireViewModel.settleSynchronizationBeforeExit`: an import that is being written is let finish first, for up to
 thirty seconds, since its songs are written before its setlists (one still being read is cancelled, having written
-nothing, a conflicts question that is up is dropped, and no queued batch is started); then the automatic sync run an
+nothing, an import that has not started writing — reading, failed, or under review — is dropped, and no queued batch is
+started); then the automatic sync run an
 edit made just before is waiting for starts then, and a run that is going is let finish, for up to fifteen seconds,
 after which it is stopped and its winding down waited for briefly. Dropped, the last change would reach the other
 devices only the next time this computer opens Campfire; killed mid run, it would leave the "a run was going" marker

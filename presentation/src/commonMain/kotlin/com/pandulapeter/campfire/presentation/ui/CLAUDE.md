@@ -41,15 +41,16 @@ has to be answered with a cancel rather than left waiting. The two exceptions on
 nothing parked to drop: the song picker opened after a new setlist and the What's new dialog are each a compare-and-set
 against null (`DialogHost.showIfNoneIsShown`).
 
-The import plan behind a conflict question is parked behind the import screen instead (`importReport`,
-`onImportReportLeft`), and dropped as that screen leaves the back stack however it leaves. The theme and the language
+The import behind the import screen is parked there instead — the request while it is read or has failed, the plan and
+the review's choices while it is reviewed (`importReport`, `onImportReportLeft`) — and dropped as that screen leaves the
+back stack however it leaves. The theme and the language
 come from a separate `GetUserPreferencesUseCase` rather than from `ScreenData`, so they reach the screen without waiting
 for the library scan. Intent handlers are non-suspend and launch in `viewModelScope`; the ones that write to the library
 go through `launchLibraryChange`, which turns a write that failed into a `Message.OperationFailed` snackbar instead of
 an uncaught exception that would take the app down on Android. An import's writes run on `NonCancellable` once they
 start, and so do the selection's tags and languages (`SelectionEditing`), so the view model going away with a finished
 Android activity does not leave an archive half imported or a tag on half of the songs; planning the import and the
-conflicts question are still dropped with it, since nothing has been written by then. **Every state is kept up to date
+review are still dropped with it, since nothing has been written by then. **Every state is kept up to date
 from the moment the view model exists**, never only while a screen collects it. A state started by its first
 collector hands it the initial value for a frame, and a screen answers the real one as a change: coming back to a tab
 after a few seconds away had the song rows fading in and the "New" button expanding into the bar and pushing the search

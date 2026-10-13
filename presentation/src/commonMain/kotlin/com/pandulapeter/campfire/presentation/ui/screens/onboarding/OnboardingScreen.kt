@@ -55,6 +55,7 @@ internal fun OnboardingScreen(
     destination: CampfireDestination.Onboarding,
 ) {
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    val importReport by viewModel.importReport.collectAsStateWithLifecycle()
     val steps = viewModel.onboardingSteps(userPreferences)
     val currentStep = viewModel.onboardingStep
     val currentSteps by rememberUpdatedState(steps)
@@ -124,6 +125,7 @@ internal fun OnboardingScreen(
                 currentStep = currentStep,
                 isLast = isLast,
                 isOpenedFromSettings = destination.isOpenedFromSettings,
+                isImportWaiting = importReport != null,
                 onBack = viewModel::navigateBack,
                 onClose = viewModel::closeOnboarding,
                 onNext = viewModel::showNextOnboardingStep,

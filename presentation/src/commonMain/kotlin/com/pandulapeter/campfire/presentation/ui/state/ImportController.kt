@@ -12,25 +12,33 @@ package com.pandulapeter.campfire.presentation.ui.state
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import com.pandulapeter.campfire.data.model.domain.ImportChoices
 import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution
+import com.pandulapeter.campfire.data.model.domain.ImportDownload
+import com.pandulapeter.campfire.data.model.domain.ImportEntryKey
 import com.pandulapeter.campfire.data.model.domain.ImportPlan
 import com.pandulapeter.campfire.data.model.domain.ImportProgress
 import com.pandulapeter.campfire.data.model.domain.ImportResult
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
+import com.pandulapeter.campfire.data.model.domain.LibraryFiles
 import com.pandulapeter.campfire.data.model.domain.SongContent
 import com.pandulapeter.campfire.domain.api.useCases.DeleteLibraryUseCase
+import com.pandulapeter.campfire.domain.api.useCases.DownloadImportFileUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ImportFilesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.PrepareImportUseCase
 import com.pandulapeter.campfire.domain.api.useCases.RememberDemoLibraryFilesUseCase
 import com.pandulapeter.campfire.presentation.ui.components.SearchState
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.firstRun.DemoLibrary
 import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
+import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportFailure
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportReport
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.followingLibraryFileNames
+import com.pandulapeter.campfire.presentation.ui.screens.importReport.replaceCount
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
@@ -51,9 +59,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
- * Every import: the queue the batches wait in, the reading and comparing that decides what an import would do, the
- * question the import screen asks, the writing, and what is said about it afterwards. Also the library's deletion,
- * which the queue waits for.
+ * Every import: the queue the batches wait in, the download of a file from an address, the reading and comparing that
+ * decides what an import would do, the review the import screen holds, the writing, and what is said about it
+ * afterwards. Also the library's deletion, which the queue waits for.
  *
  * @param updateBackStack Changes the back stack, see `CampfireViewModel.updateBackStack`.
  * @param hasUnsavedEditorText Whether the editor holds text that is not written yet, which the import screen waits for.
@@ -73,6 +81,7 @@ internal class ImportController(
     private val openImportedSong: (fileName: String) -> Unit,
     private val launchFileTransfer: (block: suspend () -> Unit) -> Job?,
     private val isLeaving: () -> Boolean,
+    private val downloadImportFile: DownloadImportFileUseCase,
     private val prepareImport: PrepareImportUseCase,
     private val importFiles: ImportFilesUseCase,
     private val rememberDemoLibraryFiles: RememberDemoLibraryFilesUseCase,
@@ -92,18 +101,15 @@ internal class ImportController(
     /** True while [deleteLibrary] is deleting, which the import queue waits for, see [deleteLibrary]. */
     private val isDeletingLibrary = MutableStateFlow(false)
 
-    /**
-     * The phase of an import the user asked for and how far into it it is, shown by a dialog while nothing else is
-     * reporting on it, and by the import screen while that is open.
-     */
+    /** The phase of an import the user asked for and how far into it it is, which the import screen shows. */
     private val _importProgress = MutableStateFlow<ImportProgress?>(null)
     val importProgress: StateFlow<ImportProgress?> = _importProgress.asStateFlow()
 
     /**
-     * What [CampfireDestination.ImportReport] shows, which is everything about an import that went anywhere but the
-     * one way that needs no more than a snackbar: a question about names that are taken, the import it decides on
-     * being written, and what an import that left something out came to. Null while no import has anything to report,
-     * and an import that has one keeps the next batch waiting until the screen is left, see [awaitImportSettled].
+     * What [CampfireDestination.ImportReport] shows: every import the user started, from the files being read through
+     * the review of what they hold to the import being written and what it came to, and of the rest whatever went
+     * anywhere but the one way that needs no more than a snackbar. Null while no import has anything to report, and an
+     * import that has one keeps the next batch waiting until the screen is left, see [awaitImportSettled].
      */
     private val _importReport = MutableStateFlow<ImportReport?>(null)
     val importReport: StateFlow<ImportReport?> = _importReport.asStateFlow()
@@ -118,17 +124,18 @@ internal class ImportController(
     private var importReportRequest = 0
 
     /**
-     * The import that has been worked out but not carried out, waiting for the user to answer the question
-     * [ImportReport.Review] asks. Not part of the screen, which holds only what it draws: this is the work, and it has
-     * to outlive whichever screen the import was started from. It never outlives the question: see [onImportReportLeft].
+     * The batch [importReport] is about from the moment it is put up until it is written: what [retryImport] reads
+     * again and what [resolveImport] writes the review's choices for. Not part of the screen, which holds only what it
+     * draws: this is the work, and it has to outlive whichever screen the import was started from. It never outlives
+     * the report, see [onImportReportLeft].
      */
-    private var pendingImport: PendingImport? = null
+    private var activeRequest: ImportRequest? = null
 
     /**
      * The reading and comparing half of the import being run, which [cancelImportPreparation] can end. Touched only on the
-     * main thread, like [isPreparationCancelled]: [import] runs in [scope] and the dialog's click calls in there.
+     * main thread, like [isPreparationCancelled]: [import] runs in [scope] and the screen's click calls in there.
      */
-    private var preparation: Deferred<ImportPlan>? = null
+    private var preparation: Deferred<Preparation>? = null
 
     /**
      * Whether the user asked for [preparation] to stop, which a cancellation of the view model itself is told apart from.
@@ -138,7 +145,7 @@ internal class ImportController(
     /**
      * Every batch of files waiting to be imported, taken one at a time by the consumer launched in `init`. Files are
      * handed over whenever the system or the user feels like it - a second archive dropped while the first is still
-     * being written, a file opened with the app while the conflicts question is up - and an import can only run while
+     * being written, a file opened with the app while a review is up - and an import can only run while
      * no other one is, so what arrives in the meantime waits here rather than being dropped.
      */
     private val importQueue = Channel<ImportRequest>(Channel.UNLIMITED)
@@ -165,34 +172,48 @@ internal class ImportController(
             messageSink.sendMessage(Message.ImportFailed)
             return@launchFileTransfer
         }
-        enqueueImport(files)
+        enqueueImport(ImportSource.Files(files))
     }
 
     /**
      * Files the system handed over: opened with Campfire, shared to it, or dropped onto it. Where that turns out to be
-     * one song, the song is what the user was after rather than the library it went into, so it is opened.
+     * one song, the song is what the user was after rather than the library it went into, so it is opened, and a single
+     * song file is written without a review unless its name is taken, see [isReviewed].
      */
     fun importFiles(files: List<ImportedFile>) {
-        enqueueImport(files, shouldOpenSong = true)
+        enqueueImport(ImportSource.Files(files), shouldOpenSong = true)
     }
 
     /**
-     * Puts a batch at the end of [importQueue] and returns what completes once it is over, its conflicts question
-     * answered, the import that answer decided on written, and its result dismissed. An empty batch is not queued at all.
+     * A file somebody shared as an address, downloaded once and reviewed like any other. A link to one song opens it,
+     * as a file opened with the app does.
+     */
+    fun importFromAddress(url: String) {
+        enqueueImport(ImportSource.Address(url), shouldOpenSong = true)
+    }
+
+    /**
+     * Puts a batch at the end of [importQueue] and returns what completes once it is over: reviewed, the import the
+     * review decided on written, and its result dismissed. An empty batch is not queued at all.
+     *
+     * @param shouldReview False for the demo library, whose contents are known and asked for by name: it is written at
+     *   once, and only a name it finds taken puts the import screen up.
      */
     fun enqueueImport(
-        files: List<ImportedFile>,
+        source: ImportSource,
         shouldAnnounceResult: Boolean = true,
         shouldOpenSong: Boolean = false,
+        shouldReview: Boolean = true,
         isDemoLibrary: Boolean = false,
     ): CompletableDeferred<Unit> {
         val request = ImportRequest(
-            files = files,
+            source = source,
             shouldAnnounceResult = shouldAnnounceResult,
             shouldOpenSong = shouldOpenSong,
+            shouldReview = shouldReview,
             isDemoLibrary = isDemoLibrary,
         )
-        if (files.isEmpty()) {
+        if (source.isEmpty) {
             request.settled.complete(Unit)
         } else {
             _queuedImportCount.update { it + 1 }
@@ -202,8 +223,8 @@ internal class ImportController(
     }
 
     /**
-     * Suspends until no import is running and none has anything left to report. A conflict leaves its question on
-     * the import screen when [import] returns, and the import the answer decides on only starts after that; whatever
+     * Suspends until no import is running and none has anything left to report. A reviewed batch leaves its review on
+     * the import screen when [import] returns, and the import the review decides on only starts after that; whatever
      * the screen shows is the one import it is about, so the next batch also waits for it to be left.
      */
     suspend fun awaitImportSettled() {
@@ -211,65 +232,121 @@ internal class ImportController(
     }
 
     /**
-     * The first half of an import only works out what it would do. Nothing is written until the plan turns out to
-     * have nothing worth asking about, or until the user has answered the question it does raise - which is why the
-     * plan is kept here rather than on the screen that asks: the answer can arrive long after the screen that started
+     * The first half of an import only works out what it would do. Nothing is written until the user has reviewed it
+     * and pressed Import, or, for a batch that is not reviewed, until the plan turns out to have no name taken - which
+     * is why the plan is kept here rather than on the screen: the answer can arrive long after the screen that started
      * this was left.
      */
     suspend fun import(request: ImportRequest) {
         // Only ever called by the consumer of importQueue, which waits for each import to settle before the next, and
         // by the first run's demo library before that consumer takes anything, so this holds by construction; it is
         // kept so that a second caller could not start an import over a running one.
-        if (request.files.isEmpty() || _isImporting.value || pendingImport != null) return
+        if (request.source.isEmpty || _isImporting.value || activeRequest != null) return
+        val isReviewed = request.isReviewed
+        if (isReviewed) {
+            activeRequest = request
+            // Set at once, which is what keeps the queue and What's new waiting, and pushed once nothing is in the way.
+            showImportReport(ImportReport.Loading(request.source.name))
+        }
+        prepare(request = request, isReviewed = isReviewed)
+    }
+
+    /** Downloads, reads and compares the batch of [request], and hands the plan on to the review or to the writing. */
+    private suspend fun prepare(request: ImportRequest, isReviewed: Boolean) {
         _isImporting.update { true }
         isPreparationCancelled = false
         // A sibling of the consumer under the scope's supervisor rather than a child of it, so that the user's Cancel
         // ends only the preparation and never the queue, and a failure inside it only reaches this through await().
-        val files = request.files
-        val deferred = scope.async { prepareImport(files) { if (request.shouldAnnounceResult) _importProgress.value = it } }
+        val deferred = scope.async { prepare(request) }
         preparation = deferred
-        val plan = try {
+        val outcome = try {
             deferred.await()
         } catch (exception: CancellationException) {
+            // The user's Cancel cancels only the deferred; the consumer itself still being active is what tells the two apart.
+            if (isPreparationCancelled && currentCoroutineContext().isActive) return onPreparationCancelled(isReviewed)
             _importProgress.value = null
             _isImporting.value = false
-            // The user's Cancel cancels only the deferred; the consumer itself still being active is what tells the two apart.
-            if (isPreparationCancelled && currentCoroutineContext().isActive) return
             throw exception
         } catch (exception: Exception) {
-            // Nothing has been written, so there is nothing to list either, and one line says all there is to say.
             println("Could not read the files to import: ${exception.message}")
-            _importProgress.value = null
-            if (request.shouldAnnounceResult) messageSink.sendMessage(Message.ImportFailed)
-            _isImporting.value = false
-            return
+            Preparation.Failed(ImportFailure.UNREADABLE)
         } finally {
             preparation = null
-            request.files = emptyList()
         }
         // A Cancel can land after the preparation finished but before this resumed (the resumption is dispatched to the
-        // main thread, behind a click already queued there): it was still pressed while the dialog said "reading", so it wins.
-        if (isPreparationCancelled) {
-            _importProgress.value = null
-            _isImporting.value = false
-            return
+        // main thread, behind a click already queued there): it was still pressed while the screen said "reading", so it wins.
+        if (isPreparationCancelled) return onPreparationCancelled(isReviewed)
+        _importProgress.value = null
+        when (outcome) {
+            is Preparation.Failed -> {
+                _isImporting.value = false
+                if (isReviewed) {
+                    // The source is kept, so that Try again has something to read.
+                    _importReport.value = ImportReport.Failed(reason = outcome.reason, sourceName = request.source.name)
+                } else {
+                    // Nothing has been written, so there is nothing to list either, and one line says all there is to say.
+                    if (request.shouldAnnounceResult) messageSink.sendMessage(Message.ImportFailed)
+                }
+            }
+
+            is Preparation.Planned -> {
+                // The plan carries everything the rest of the import needs, while the request lives for as long as the
+                // review does, which would otherwise keep up to the whole selection's bytes reachable for nothing.
+                request.source = ImportSource.Files(emptyList())
+                val plan = outcome.plan
+                if (isReviewed || plan.hasConflicts) {
+                    activeRequest = request
+                    // Nothing is happening while the review is on screen, and a progress bar under it would say otherwise.
+                    // The report, which is set first, is what keeps the next batch waiting from here on.
+                    val review = ImportReport.Review(plan = plan, choices = ImportChoices())
+                    if (isReviewed) _importReport.value = review else showImportReport(review)
+                    _isImporting.value = false
+                } else {
+                    applyImportPlan(plan = plan, choices = ImportChoices(), request = request, isReported = false)
+                }
+            }
         }
-        if (plan.hasConflicts) {
-            _importProgress.value = null
-            pendingImport = PendingImport(plan = plan, request = request)
-            // Nothing is happening while the question is on screen, and a progress bar under it would say otherwise.
-            // The report, which is set first, is what keeps the next batch waiting from here on.
-            showImportReport(ImportReport.Review(plan.summary))
-            _isImporting.value = false
-        } else {
-            applyImportPlan(plan = plan, resolution = ImportConflictResolution.KEEP_BOTH, request = request, isReported = false)
+    }
+
+    /** The download, where the batch is an address, and the reading and comparing, as one cancellable piece of work. */
+    private suspend fun prepare(request: ImportRequest): Preparation {
+        val files = when (val source = request.source) {
+            is ImportSource.Files -> source.files
+            is ImportSource.Address -> {
+                _importProgress.value = ImportProgress(ImportProgress.Phase.DOWNLOADING, fileName = source.name)
+                when (val download = downloadImportFile(source.url)) {
+                    is ImportDownload.File -> listOf(ImportedFile(name = download.name, bytes = download.bytes)).also {
+                        // A read that fails after this is tried again on the same bytes rather than downloaded again.
+                        request.source = ImportSource.Files(it)
+                    }
+
+                    ImportDownload.TooLarge -> return Preparation.Failed(ImportFailure.TOO_LARGE)
+                    ImportDownload.Missing -> return Preparation.Failed(ImportFailure.NOT_FOUND)
+                    ImportDownload.Unreachable -> return Preparation.Failed(ImportFailure.UNREACHABLE)
+                }
+            }
+        }
+        return Preparation.Planned(prepareImport(files) { if (request.shouldAnnounceResult) _importProgress.value = it })
+    }
+
+    /** What a preparation the user cancelled leaves: nothing, the screen it was shown on included. */
+    private fun onPreparationCancelled(isReviewed: Boolean) {
+        _importProgress.value = null
+        _isImporting.value = false
+        if (isReviewed) {
+            activeRequest = null
+            // Let go of first, so that the screen leaving finds nothing left to cancel.
+            if (_importReport.value is ImportReport.Loading) _importReport.value = null
+            closeImportReport()
         }
     }
 
     /**
-     * The progress dialog's Cancel, offered while the files are still being read and compared. Nothing has been written
-     * by then, so the library is exactly as it was and nothing is announced; the queue goes on to its next batch. Once
-     * the plan is being written or a question is up there is no preparation left to cancel, and a late click does nothing.
+     * The loading stage's Cancel, offered while the file is still being downloaded, read and compared. Nothing has been
+     * written by then, so the library is exactly as it was and nothing is announced; the queue goes on to its next
+     * batch. Once the plan is being written or reviewed there is no preparation left to cancel, and a late click does
+     * nothing. Cancellation is noticed where the preparation yields, between files and songs, so a single huge document
+     * being extracted is not interrupted until it is read.
      */
     fun cancelImportPreparation() {
         val deferred = preparation ?: return
@@ -277,30 +354,75 @@ internal class ImportController(
         deferred.cancel()
     }
 
+    /** The failure stage's Try again: the same address downloaded again, or the same bytes read again. */
+    fun retryImport() {
+        val request = activeRequest ?: return
+        if (_importReport.value !is ImportReport.Failed) return
+        _importReport.value = ImportReport.Loading(request.source.name)
+        _isImporting.update { true }
+        scope.launch { prepare(request = request, isReviewed = true) }
+    }
+
+    /** Ticks or unticks one entry of the review. */
+    fun setImportEntryChosen(key: ImportEntryKey, isChosen: Boolean) = setImportEntriesChosen(listOf(key), isChosen)
+
+    /** A group's box, over the rows the screen shows, which is only the matching ones while a search narrows them. */
+    fun setImportEntriesChosen(keys: Collection<ImportEntryKey>, isChosen: Boolean) = updateChoices { choices ->
+        choices.copy(leftOut = if (isChosen) choices.leftOut - keys.toSet() else choices.leftOut + keys)
+    }
+
     /**
-     * The answer to [ImportReport.Review], which is the only thing that ever overwrites a library file. The import
-     * screen stays where it is and shows the import being written, and then what it came to.
+     * What a name already taken does: one row's choice for [key], or with a null [key] the choice for all of them,
+     * which leaves the rows set by hand as they are.
      */
-    fun resolveImport(resolution: ImportConflictResolution) {
-        val pending = pendingImport ?: return
-        pendingImport = null
-        // Claimed before the question goes away rather than once the import has started, so that nothing waiting for
+    fun setImportConflictResolution(key: ImportEntryKey?, resolution: ImportConflictResolution) = updateChoices { choices ->
+        if (key == null) {
+            choices.copy(conflictResolution = resolution)
+        } else {
+            choices.copy(conflictResolutions = choices.conflictResolutions + (key to resolution))
+        }
+    }
+
+    private fun updateChoices(update: (ImportChoices) -> ImportChoices) = _importReport.update { report ->
+        if (report is ImportReport.Review) report.copy(choices = update(report.choices)) else report
+    }
+
+    /**
+     * The review's Import. Writing over a library file is the one thing an import cannot take back, so where the choices
+     * replace any, [DialogType.ConfirmImportReplace] asks first, and its confirmation is what calls [resolveImport].
+     */
+    fun confirmImport() {
+        val review = _importReport.value as? ImportReport.Review ?: return
+        val count = replaceCount(review.plan, review.choices)
+        if (count > 0) dialogHost.showDialog(DialogType.ConfirmImportReplace(count)) else resolveImport()
+    }
+
+    /**
+     * Writes what the review chose, which is the only thing that ever overwrites a library file. The import screen
+     * stays where it is and shows the import being written, and then what it came to.
+     */
+    fun resolveImport() {
+        val review = _importReport.value as? ImportReport.Review ?: return
+        val request = activeRequest ?: return
+        activeRequest = null
+        // Claimed before the review goes away rather than once the import has started, so that nothing waiting for
         // the two of them to be over (see importDemoLibrary) sees a moment with neither.
         _isImporting.update { true }
         _importReport.value = ImportReport.Importing
-        scope.launch { applyImportPlan(plan = pending.plan, resolution = resolution, request = pending.request, isReported = true) }
+        scope.launch { applyImportPlan(plan = review.plan, choices = review.choices, request = request, isReported = true) }
     }
 
     /**
      * Expects [isImporting] to have been claimed by the caller, which both of them do before anything can observe the gap.
      *
      * @param isReported Whether the import screen was put up for this import before it started writing, which is
-     *   where its outcome goes for as long as that screen has not been left. Otherwise the outcome is a snackbar, unless
-     *   something was left out or went wrong, which is what the import screen is put up for.
+     *   where its outcome goes for as long as that screen has not been left, unless it went clean: the user has just
+     *   read the list, and reading it again as a result is one tap more than it is worth. Otherwise the outcome is a
+     *   snackbar, unless something was left out or went wrong, which is what the import screen is put up for.
      */
     private suspend fun applyImportPlan(
         plan: ImportPlan,
-        resolution: ImportConflictResolution,
+        choices: ImportChoices,
         request: ImportRequest,
         isReported: Boolean,
     ) {
@@ -311,7 +433,7 @@ internal class ImportController(
             val result = withContext(NonCancellable) {
                 importFiles.invoke(
                     plan = plan,
-                    resolution = resolution,
+                    choices = choices,
                 ) { if (request.shouldAnnounceResult) _importProgress.value = it }
                     .also { result ->
                         if (request.isDemoLibrary) {
@@ -326,14 +448,25 @@ internal class ImportController(
             val songToOpen = songToOpen(plan = plan, result = result, shouldOpenSong = request.shouldOpenSong)
             val isReportShown = isReported && isImportReportOnBackStack
             when {
-                // The one song the system handed over is what the user was after, and the question about its name has
-                // been answered: the import screen gives way to it rather than reporting on one file.
+                // The one song the system handed over is what the user was after, and the review has been answered:
+                // the import screen gives way to it rather than reporting on one file.
                 songToOpen != null -> {
                     // Let go of first, since a report that still says it is being written outlives its screen.
                     if (isReported) _importReport.value = null
                     if (isReportShown) closeImportReport()
-                    openImportedSong(songToOpen)
+                    // A first run opens the onboarding over a file the app was opened with; the song follows it, as an
+                    // import screen would, rather than going on top of its pages.
+                    scope.launch {
+                        snapshotFlow { backStack.none { it is CampfireDestination.Onboarding } }.first { it }
+                        openImportedSong(songToOpen)
+                    }
                     if (request.shouldAnnounceResult) messageSink.sendMessage(Message.ImportFinished(result, hasDetails = false))
+                }
+
+                isReportShown && result.isClean -> {
+                    _importReport.value = null
+                    closeImportReport()
+                    if (request.shouldAnnounceResult) messageSink.sendMessage(Message.ImportFinished(result, hasDetails = true))
                 }
 
                 isReportShown -> _importReport.value = ImportReport.Finished(result)
@@ -368,15 +501,17 @@ internal class ImportController(
      * Sets [report] at once, which is what keeps the next batch waiting, and puts the import screen on top of whatever
      * is on screen once nothing else is in its way: a dialog, whose input would otherwise be left under the screen, or
      * an editor holding unsaved text, which is only ever asked about while it is on top (see [navigateBack]) and would
-     * be one closed window away from being lost under it. Launched rather than awaited, so that the import that asked
-     * can finish meanwhile.
+     * be one closed window away from being lost under it, or the onboarding, which a first run opens even while a file
+     * the app was opened with is read behind it, and which the import screen follows as it closes. Launched rather than
+     * awaited, so that the import that asked can finish meanwhile.
      */
     private fun showImportReport(report: ImportReport) {
         val request = ++importReportRequest
         _importReport.value = report
         scope.launch {
             combine(dialogHost.visibleDialog, editorDraft, songTexts, snapshotFlow { backStack.toList() }) { dialog, _, _, stack ->
-                dialog == null && !(hasUnsavedEditorText() && stack.any { it is CampfireDestination.SongEditor })
+                dialog == null && !(hasUnsavedEditorText() && stack.any { it is CampfireDestination.SongEditor }) &&
+                    stack.none { it is CampfireDestination.Onboarding }
             }.first { it }
             if (importReportRequest == request && _importReport.value != null && !isImportReportOnBackStack) {
                 updateBackStack { add(CampfireDestination.ImportReport) }
@@ -405,16 +540,21 @@ internal class ImportController(
     }
 
     /**
-     * However the import screen went - Back, its Close, Done, or the stack rebuilt under it - a question it asked is
-     * answered by cancelling, which leaves the library exactly as it was: the plan is what is thrown away. An import
-     * that is being written carries on, and is reported with a snackbar once it is done (see [applyImportPlan]); what
-     * a finished one came to has been seen.
+     * However the import screen went - Back, its Close, Done, or the stack rebuilt under it - an import that has not
+     * started writing is dropped, which leaves the library exactly as it was: a preparation is cancelled, and a failure
+     * or a review is thrown away with the request it was about. An import that is being written carries on, and is
+     * reported with a snackbar once it is done (see [applyImportPlan]); what a finished one came to has been seen.
      */
     private fun onImportReportLeft() {
         importReportSearch.textFieldState.clearText()
         when (_importReport.value) {
-            is ImportReport.Review -> {
-                pendingImport = null
+            is ImportReport.Loading -> {
+                _importReport.value = null
+                cancelImportPreparation()
+            }
+
+            is ImportReport.Failed, is ImportReport.Review -> {
+                activeRequest = null
                 _importReport.value = null
             }
 
@@ -428,10 +568,10 @@ internal class ImportController(
      * nothing open on a file that is about to go.
      */
     fun deleteLibrary() = messageSink.launchLibraryChange {
-        // An import writes against the library it planned for: one running, or one whose question is still open, would
+        // An import writes against the library it planned for: one running, or one still being read or reviewed, would
         // either outlive the deletion in part or be applied to a library that is gone. The import queue waits for the
         // flag the other way round. Checked and set before the first suspension, as import claims its own flag.
-        if (_isImporting.value || pendingImport != null || isDeletingLibrary.value) {
+        if (_isImporting.value || activeRequest != null || isDeletingLibrary.value) {
             return@launchLibraryChange messageSink.sendMessage(Message.OperationFailed)
         }
         isDeletingLibrary.value = true
@@ -445,40 +585,53 @@ internal class ImportController(
     /**
      * One batch in [importQueue].
      *
+     * @param source Emptied once a preparation has succeeded: the plan carries everything the rest of the import needs,
+     *   while the request lives for as long as the review does. Kept while a preparation failed, for Try again, and an
+     *   address that was downloaded becomes the file it downloaded, so a read that failed is not downloaded again.
      * @param shouldAnnounceResult False for the import nobody asked for: the demo library planted on a first run is
-     *   the library the user is about to be shown, and a progress dialog, a snackbar or a result counting the files
-     *   of it would be the app reporting on something that, as far as anyone can tell, simply came with it.
-     * @param shouldOpenSong True for files the system handed over, see [importFiles].
+     *   the library the user is about to be shown, and a snackbar or a result counting the files of it would be the app
+     *   reporting on something that, as far as anyone can tell, simply came with it.
+     * @param shouldOpenSong True for files the system handed over and for an address, see [importFiles].
+     * @param shouldReview See [enqueueImport].
      * @param isDemoLibrary The files are [DemoLibrary]'s, and what of them is written is remembered for sync.
-     * @param files Emptied by [import] once the preparation is over: the plan carries everything the rest of the import
-     *   needs, while the request lives for as long as a conflicts question does, which would otherwise keep up to the
-     *   whole selection's bytes reachable for nothing.
      */
     class ImportRequest(
-        var files: List<ImportedFile>,
+        var source: ImportSource,
         val shouldAnnounceResult: Boolean,
         val shouldOpenSong: Boolean,
+        val shouldReview: Boolean = true,
         val isDemoLibrary: Boolean = false,
         val settled: CompletableDeferred<Unit> = CompletableDeferred(),
     )
+
+    /**
+     * Whether the batch opens the import screen before anything is written: every one the user started, but the demo
+     * library, and but a single song file the system handed over, which is opened rather than reviewed - its name taken
+     * is the one thing that still puts the screen up for it. A song picked from the app's own Import files is reviewed,
+     * since one row and an Import is what the user asked to see; a document or an archive is reviewed whoever picked it.
+     */
+    private val ImportRequest.isReviewed
+        get() = shouldReview && !(shouldOpenSong && (source as? ImportSource.Files)?.files?.singleOrNull()?.let { isSingleSong(it.name) } == true)
+
+    private fun isSingleSong(name: String) = LibraryFiles.isSongFileName(name) && !LibraryFiles.isArchiveFileName(name)
 
     /**
      * Whether an import went the one way a snackbar is enough for: everything written, nothing left out and nothing
      * stopped. Files that were already in the library count as written, since nothing of them is lost.
      */
     private val ImportResult.isClean
-        get() = !isFailed && skippedFileNames.isEmpty() && skippedConflictingFileNames.isEmpty() &&
+        get() = !isFailed && skippedFileNames.isEmpty() && leftOutFileNames.isEmpty() &&
             oversizedFileNames.isEmpty() && unreadableDocumentFileNames.isEmpty()
 
     /** How many files the plan has something to say about, which is what makes an import more than one file's. */
     private val ImportPlan.entryCount
         get() = songs.size + setlists.size + skippedFileNames.size + oversizedFileNames.size + unreadableDocumentFileNames.size
 
-    /** An import waiting for the answer to [ImportReport.Review], see [pendingImport]. */
-    private class PendingImport(
-        val plan: ImportPlan,
-        val request: ImportRequest,
-    )
+    /** What [prepare] came to: a plan to review or write, or why there is none. */
+    private sealed interface Preparation {
+        class Planned(val plan: ImportPlan) : Preparation
+        class Failed(val reason: ImportFailure) : Preparation
+    }
 
     /**
      * Takes the batches of [importQueue] one at a time, once [demoLibraryDecision] has completed, see
@@ -496,11 +649,11 @@ internal class ImportController(
                 // start once the exit has begun. Skipping it still settles it in the finally below.
                 if (isLeaving()) continue
                 import(request)
-                // The next batch waits for this one's conflicts question too: it would have nowhere to be asked.
+                // The next batch waits for this one's review too: it would have nowhere to be shown.
                 awaitImportSettled()
             } finally {
                 // Here rather than in import, so that the count is honest whatever that did: returned after the
-                // preparation was cancelled, failed, or left a question that was answered or abandoned.
+                // preparation was cancelled, failed, or left a review that was answered or abandoned.
                 _queuedImportCount.update { it - 1 }
                 request.settled.complete(Unit)
             }

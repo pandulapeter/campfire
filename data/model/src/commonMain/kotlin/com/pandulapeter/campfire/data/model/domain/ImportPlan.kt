@@ -15,7 +15,7 @@ package com.pandulapeter.campfire.data.model.domain
  * The file name is a song's identity, so a file whose name the library already has is the one thing an import
  * cannot decide on its own: it is either the same song arriving a second time, which nobody needs two copies of, or
  * a different song under a name that is taken, which is a question for whoever started the import. Working that out
- * up front is what makes the question askable once for a whole archive instead of once per file.
+ * up front is what lets the whole import be reviewed, entry by entry, before anything is written (see [ImportChoices]).
  */
 data class ImportPlan(
     val songs: List<SongEntry> = emptyList(),
@@ -25,25 +25,14 @@ data class ImportPlan(
     /** Files the import would have looked inside but did not read, because they are larger than [ImportLimits] allows. */
     val oversizedFileNames: List<String> = emptyList(),
     val unreadableDocumentFileNames: List<String> = emptyList(),
+    /** The names of the picked files, in the order [SongEntry.origin] and [SetlistEntry.origin] count them. */
+    val sourceNames: List<String> = emptyList(),
 ) {
 
     /** True while nothing about this import needs answering, which is every import into an untouched name. */
     val hasConflicts get() = songs.any { it.status == Status.CONFLICTING } || setlists.any { it.status == Status.CONFLICTING }
 
     val isEmpty get() = songs.isEmpty() && setlists.isEmpty()
-
-    /** The counts and names the conflict dialog is built from, so that the UI never walks the entries itself. */
-    val summary
-        get() = Summary(
-            newSongCount = songs.count { it.status == Status.NEW },
-            newSetlistCount = setlists.count { it.status == Status.NEW },
-            duplicateCount = songs.count { it.status == Status.IDENTICAL } + setlists.count { it.status == Status.IDENTICAL },
-            skippedCount = skippedFileNames.size,
-            oversizedCount = oversizedFileNames.size,
-            unreadableDocumentCount = unreadableDocumentFileNames.size,
-            conflictingFileNames = songs.filter { it.status == Status.CONFLICTING }.map { it.replacesFileName ?: it.fileName } +
-                setlists.filter { it.status == Status.CONFLICTING }.map { it.fileName },
-        )
 
     data class SongEntry(
         /**
@@ -79,6 +68,9 @@ data class ImportPlan(
          * resolved among the songs of its own [SetlistEntry.origin] before the rest of the batch.
          */
         val origin: Int? = null,
+        /** What the header says, or the name of the file it arrived in where the header names no title; what names [fileName]. */
+        val title: String = "",
+        val artist: String = "",
     )
 
     data class SetlistEntry(
@@ -119,19 +111,12 @@ data class ImportPlan(
          */
         CONFLICTING,
     }
-
-    data class Summary(
-        val newSongCount: Int,
-        val newSetlistCount: Int,
-        val duplicateCount: Int,
-        val skippedCount: Int,
-        val oversizedCount: Int,
-        val conflictingFileNames: List<String>,
-        val unreadableDocumentCount: Int = 0,
-    )
 }
 
-/** What an import does with the entries whose name the library has given to something else. */
+/**
+ * What an import does with an entry whose name the library has given to something else. Leaving it out of the import
+ * is not one of the answers: that is the entry left unticked, see [ImportChoices].
+ */
 enum class ImportConflictResolution {
 
     /**
@@ -142,7 +127,4 @@ enum class ImportConflictResolution {
 
     /** The incoming file is written over the one the library has. The only way anything is ever overwritten. */
     REPLACE,
-
-    /** The incoming file is not imported at all, and the library keeps what it had. */
-    SKIP,
 }

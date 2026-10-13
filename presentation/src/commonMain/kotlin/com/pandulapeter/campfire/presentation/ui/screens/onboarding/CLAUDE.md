@@ -42,7 +42,9 @@ The onboarding: a few questions, one a page, each shown on what it changes; a fi
   (`minSongColumnWidth`), so it narrows as it is told to say less. Always asked, since the duration goes with no feature.
 - **Your songs, everywhere** (`SyncStep`): only where the build can connect Dropbox; the sync section's three stages.
 
-There is no summary page: the last page's Next is Start playing (Done from Settings). `onboardingSteps` is worked out
+There is no summary page: the last page's Next is Start playing (Done from Settings) — or still Next while an import
+waits behind the onboarding (`importReport` not null, `isImportWaiting`), since what the last page leads to is then
+that import's screen, which is pushed as the onboarding leaves; the label crossfades whenever it changes. `onboardingSteps` is worked out
 from the preferences on every recomposition, so unticking the chords and the tuner takes their pages and dots away at
 once; `nextOnboardingStep` and `previousOnboardingStep` count by the steps' order, so a page an answer took out of the
 list still leads on and back. Every step has a dot of its own (`OnboardingPageIndicator`), shown or not, so a dot an

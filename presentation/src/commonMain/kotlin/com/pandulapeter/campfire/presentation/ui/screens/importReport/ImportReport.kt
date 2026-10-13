@@ -9,25 +9,51 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.importReport
 
+import com.pandulapeter.campfire.data.model.domain.ImportChoices
 import com.pandulapeter.campfire.data.model.domain.ImportPlan
 import com.pandulapeter.campfire.data.model.domain.ImportResult
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 
-/** What [CampfireDestination.ImportReport] shows, see [CampfireViewModel.importReport]. */
+/**
+ * What [CampfireDestination.ImportReport] shows, see [CampfireViewModel.importReport]: the stages of one import the user
+ * started, in the order it goes through them, each replacing the one before it in place.
+ */
 sealed interface ImportReport {
 
-    /**
-     * Names the library has given to other files, and the question of what to do about them, see
-     * [CampfireViewModel.resolveImport].
-     */
-    data class Review(val summary: ImportPlan.Summary) : ImportReport
+    /** The files being read and compared, or the address being downloaded; [sourceName] names what is read, if anything. */
+    data class Loading(val sourceName: String?) : ImportReport
 
-    /** The answer being carried out, with [CampfireViewModel.importProgress] saying how far. */
+    /** Why nothing could be read, which [CampfireViewModel.retryImport] asks again about. */
+    data class Failed(val reason: ImportFailure, val sourceName: String?) : ImportReport
+
+    /**
+     * Everything the files hold, each entry ticked or not and each name already taken given its choice, see
+     * [CampfireViewModel.confirmImport]. The choices live here rather than on the screen, so that a screen composed
+     * again (an Android activity recreated under it) keeps every tick.
+     */
+    data class Review(val plan: ImportPlan, val choices: ImportChoices) : ImportReport
+
+    /** The choices being carried out, with [CampfireViewModel.importProgress] saying how far. */
     data object Importing : ImportReport
 
     /** What the import came to; null for one that failed before it could say. */
     data class Finished(val result: ImportResult?) : ImportReport
+}
+
+/** Why [ImportReport.Failed] has nothing to review. */
+enum class ImportFailure {
+    /** The host could not be reached, did not answer in time, or was busy; worth asking again a minute later. */
+    UNREACHABLE,
+
+    /** The address answered that there is nothing there. */
+    NOT_FOUND,
+
+    /** The file is larger than an import reads. */
+    TOO_LARGE,
+
+    /** The files were in hand, and could not be read. */
+    UNREADABLE,
 }
 
 /**

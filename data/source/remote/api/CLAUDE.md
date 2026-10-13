@@ -59,6 +59,10 @@ and why each of them is load bearing, are spelled out in the KDoc of `SyncFolder
   throws for anything but a cancellation: what comes back is a `CoverArtDownload` — the image, `Missing` (the address
   answered with something that is not a cover, which asking again will not change) or `Unreachable` (no answer, which
   may be different a minute later) — so the caller can decide how long to remember a failure.
+- `ImportDownloadRemoteSource` — downloads a file to import from an address the user opened, once, keeping nothing.
+  It never reads past the ceiling it is handed and never throws but for a cancellation: what comes back is an
+  `ImportDownload` (`:data:model`, since the import screen shows its outcome) — the file under the name the host gave
+  it, `TooLarge`, `Missing` or `Unreachable`. It does not judge the file by its content type.
 - `CoverArtSearchRemoteSource` — the records a song may have come out on in one catalogue (its `catalogue`), each with
   the address of its front cover. The contract is shaped by MusicBrainz's rules: an implementation keeps its own pace
   and waits out a refusal by itself, reporting each wait through `onBusy` so the sheet can say why it is taking a

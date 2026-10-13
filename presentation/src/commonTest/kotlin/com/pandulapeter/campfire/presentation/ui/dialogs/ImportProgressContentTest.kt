@@ -13,14 +13,18 @@ import com.pandulapeter.campfire.data.model.domain.ImportProgress
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class ImportProgressDialogTest {
+class ImportProgressContentTest {
 
     @Test
     fun `only the phases before anything is written can be cancelled`() {
         ImportProgress.Phase.entries.forEach { phase ->
             // Exhaustive, so that a new phase has to be placed on one side of the line before this compiles.
             val writes = when (phase) {
-                ImportProgress.Phase.UNPACKING, ImportProgress.Phase.READING, ImportProgress.Phase.COMPARING -> false
+                ImportProgress.Phase.DOWNLOADING,
+                ImportProgress.Phase.UNPACKING,
+                ImportProgress.Phase.READING,
+                ImportProgress.Phase.COMPARING,
+                -> false
                 ImportProgress.Phase.IMPORTING, ImportProgress.Phase.FINISHING -> true
             }
             assertEquals(!writes, phase.isCancellable, "$phase")

@@ -134,6 +134,8 @@ a deletion of one of those files lands before its reads or after its update and 
   `SongDetailsSearchRemoteSource`s, and `loadSongCredits` asks the source of the candidate's own catalogue, turning a
   failure into `SongCreditsState.Failed` (logged by its class name alone, as every catalogue failure is) and null into
   `Unavailable`. `commonTest` covers both.
+- `ImportDownloadRepositoryImpl` keeps nothing either: one line over `ImportDownloadRemoteSource` with the import's own
+  ceiling, there so that the use case reaches it through a repository.
 - `SongContentRepositoryImpl` is not a `BaseLocalDataRepository`: it is a keyed in-memory cache of song *texts*, so
   paging through a setlist re-reads nothing. It keeps the 32 most recently used, and at most a million characters of
   them — a long session would otherwise hold every song it opened, and a few songbooks pasted into one file each

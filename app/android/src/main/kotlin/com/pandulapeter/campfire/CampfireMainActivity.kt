@@ -40,7 +40,7 @@ class CampfireMainActivity : ComponentActivity() {
         // An intent is acted on once. A recreated activity is handed the intent of the instance before it - on a
         // rotation, and when the system brings the app back after killing it - and one reopened from Recents the
         // intent it was first started with, marked as history. Neither is something the user has just asked for,
-        // and importing the same file again would put the conflicts question up over whatever they did to the
+        // and importing the same file again would put the import screen up over whatever they did to the
         // song since. An intent that arrives while no instance exists is not lost to this: the system delivers it
         // to onNewIntent once there is one.
         // Ahead of the content on purpose: a redirect that started this process answers an authorization the previous

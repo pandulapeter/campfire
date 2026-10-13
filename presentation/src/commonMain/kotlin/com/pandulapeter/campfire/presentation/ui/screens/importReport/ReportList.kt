@@ -30,7 +30,7 @@ import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableContent
 
 /**
- * The list both the question and the result are, centered and no wider than a line of text reads well at on a wide
+ * The list both the review and the result are, centered and no wider than a line of text reads well at on a wide
  * window. It fades out under the bar rather than the bar lifting over it, like every list of the app - until the search
  * field at [searchFieldIndex] is pinned, which the fade would otherwise take the top of: from there the field is what
  * the rows fade under, see [searchField], and the list's own fade gives way to it as the field arrives at the top.

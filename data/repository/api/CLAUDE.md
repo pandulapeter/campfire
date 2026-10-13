@@ -37,6 +37,8 @@ Repository interfaces only. Consumed by `:domain:implementation`; implemented by
   names songwriters, or that it could not be asked. Nothing is kept.
   `SongRepository.deleteAllSongs` and `SetlistRepository.deleteAllSetlists` empty their folder as one change to the
   list, going on past a file that fails — what Settings' "delete the library" is made of.
+- `ImportDownloadRepository` — `download(url)`, a file to import from an address, no larger than
+  `ImportLimits.MAX_IMPORT_SIZE`, or why there is none. Nothing is kept.
 - `SyncRepository` — the state machine around sync: `syncState: Flow<SyncState>`, the providers the build has, and
   `restore` / `connect` / `cancelConnection` / `disconnect` / `forgetStoredConnection` / `synchronize` /
   `cancelSynchronization`; `forgetStoredConnection` is the local-only wipe a first launch does, with no request — retried by

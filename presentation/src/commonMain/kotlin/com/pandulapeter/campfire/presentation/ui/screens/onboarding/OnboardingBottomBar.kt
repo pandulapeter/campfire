@@ -40,7 +40,8 @@ import com.pandulapeter.campfire.presentation.resources.onboarding_start_playing
 
 /**
  * Back, where there is a page to go back to, how far along the pages are, and the way on: Next, and on the last page
- * Start playing (Done where the onboarding was opened from Settings), which finishes it. Pinned under the page, since it is
+ * Start playing (Done where the onboarding was opened from Settings), which finishes it - or Next still while an import
+ * waits behind the onboarding ([isImportWaiting]), since what finishing it leads to is that import's screen. Pinned under the page, since it is
  * what every page is finished with, and as wide as it is, so that the buttons stay near the content on a wide window.
  *
  * On the first page, which has nothing to go back to, Back's place holds the way out of the whole onboarding instead
@@ -60,6 +61,7 @@ internal fun OnboardingBottomBar(
     currentStep: OnboardingStep,
     isLast: Boolean,
     isOpenedFromSettings: Boolean,
+    isImportWaiting: Boolean,
     onBack: () -> Unit,
     onClose: () -> Unit,
     onNext: () -> Unit,
@@ -67,7 +69,13 @@ internal fun OnboardingBottomBar(
     val backLabel = stringResource(Res.string.back)
     val closeLabel = stringResource(if (isOpenedFromSettings) Res.string.close else Res.string.onboarding_skip)
     val nextLabel = stringResource(Res.string.onboarding_next)
-    val lastLabel = stringResource(if (isOpenedFromSettings) Res.string.done else Res.string.onboarding_start_playing)
+    val lastLabel = stringResource(
+        when {
+            isImportWaiting -> Res.string.onboarding_next
+            isOpenedFromSettings -> Res.string.done
+            else -> Res.string.onboarding_start_playing
+        },
+    )
     SubcomposeLayout(
         modifier = modifier.widthIn(max = ONBOARDING_CONTENT_WIDTH).fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
     ) { constraints ->
@@ -101,12 +109,14 @@ internal fun OnboardingBottomBar(
         }.single().measure(looseConstraints.copy(maxWidth = dotsStart.coerceAtLeast(0)))
         val end = subcompose(FooterSlot.END) {
             Button(onClick = onNext, contentPadding = FOOTER_BUTTON_PADDING) {
+                // Keyed on the label rather than on the page, so that an import arriving or settling on the last page
+                // crossfades it too, and a last page that still says Next does not fade it into itself.
                 AnimatedContent(
-                    targetState = isLast,
+                    targetState = if (isLast) lastLabel else nextLabel,
                     transitionSpec = { fadeIn() togetherWith fadeOut() using SizeTransform(clip = false) },
                     contentAlignment = Alignment.Center,
-                ) { isLast ->
-                    Text(if (isLast) lastLabel else nextLabel)
+                ) { label ->
+                    Text(label)
                 }
             }
         }.single().measure(looseConstraints.copy(maxWidth = (width - dotsStart - dots.width).coerceAtLeast(0)))

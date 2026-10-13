@@ -64,19 +64,22 @@ The ones that carry real logic:
   file of exactly that name holding the same text — an export hands songs out under their library names, and one
   named before today's rule is still the same song. `ImportPlanner`
   compares a song with the whole family of its name (the unnumbered file and its numbered siblings), records a repeat
-  in the batch by entry index, asks one conflict question per library name — and none about a library file the batch
+  in the batch by entry index, raises one conflict per library name — and none about a library file the batch
   itself brings back unchanged, which the planner finds in a first pass over the whole batch before it plans in
   arriving order, since the unchanged copy may come after the song that wants its name — and leaves numbering to the
   write that can see the directory. `ImportFilesUseCaseImpl` holds the same rule once more at the one place a file is
-  overwritten. A plan is held against the library as it was when it was prepared, which a conflicts question can leave
+  overwritten. A plan is held against the library as it was when it was prepared, which a review can leave
   open for as long as the user takes; only two things are checked again as it is written: the setlists, planned again
   on the names the songs got, and an identical song whose library file a sync run deleted meanwhile, which is written
   after all, under the name its own header gives it. A replacement is not: the user confirmed it naming the file. The names it records are the library's own spellings: where the file system answers the derived name
   with a file listed under another spelling of it (another case on macOS and Windows, the other Unicode form on APFS),
   the listed one is what an identical song maps to and what a replacement writes over
   (`ImportPlan.SongEntry.replacesFileName`), so that no setlist of the batch is pointed at a name the song list does
-  not hold. Only a decision made before anything is written can be put to the user as one question about a
-  whole archive, which is the reason for the split — three hundred questions is not a choice. A song is compared by
+  not hold. Only a decision made before anything is written can be put to the user as one review of a whole
+  archive, which is the reason for the split — and the review answers three hundred taken names with one choice for
+  all of them, the rows there for the few the user actually looks at. Each song entry carries the `title` and `artist`
+  its header gives, read with `:chordpro`'s metadata reader as the name is, and the plan the picked files' names
+  (`sourceNames`), which is all the review shows that the planning did not already compute. A song is compared by
   its text and a setlist by its fields, never by the stored document, and never by the date of a file that named
   none (`ImportPlan.SetlistEntry.isDated` false) — nor, then, by its countdown, which no file older than the date can
   say either (a replacement keeps the library's) — since parsing gives such a setlist the day it is imported on, and
@@ -86,19 +89,23 @@ The ones that carry real logic:
   entries are resolved among the songs of the picked file it came out of (`ImportPlan.SongEntry.origin`) before the
   rest of the batch, since file names are only unique within one archive. `ImportPlanner` is covered by `commonTest`. Preparing runs on `Dispatchers.Default`, because decoding, splitting, header parsing and
   comparisons would otherwise occupy the view model's main thread, and yields between songs so the web can paint and
-  cancellation can stop it. Applying turns each entry plus the
-  `ImportConflictResolution` into write / replace / disregard / leave alone, and only `REPLACE` ever overwrites.
-  Both halves report `ImportProgress` phases; unpacking and conversion count input files, applying counts all
-  entries including duplicates and skipped conflicts, and comparison and final adoption are indeterminate. A write
-  failure stops the batch before any dependent setlist is written and returns the successful names, the failed source
-  and the unprocessed remainder; cancellation still propagates. Skipped conflicts have their own result list.
+  cancellation can stop it. Applying turns each entry plus the review's
+  `ImportChoices` into write / replace / disregard / leave alone: an entry left unticked is left alone, a repeat of it
+  going with it, and a new song left out is pointed at by the setlists of its batch under the name it arrived as,
+  which they show as a missing song; an identical entry is disregarded whatever the choices say, the review offering
+  it no box; a taken name is written numbered or over the library's file by its own `ImportConflictResolution`, or
+  the one for all, and only `REPLACE` ever overwrites. Both halves report `ImportProgress` phases; unpacking and
+  conversion count input files, applying counts all entries including duplicates and the ones left out, and comparison
+  and final adoption are indeterminate. A write failure stops the batch before any dependent setlist is written and
+  returns the successful names, the failed source and the unprocessed remainder; cancellation still propagates. What
+  the review left out has its own result list (`leftOutFileNames`).
   Documents pass through `DocumentRepository`, `mapper/DocumentMappers.kt` and `ChordSheetConverter` before that
   same planning. Plain text uses positioned columns and the converter too, but ChordPro extensions are untouched.
   A multi-song document joins the ordinary collection path, with each song named by its own converted header and
   no source filename. Extracted prose is a valid import; no readable text is `unreadableDocumentFileNames`, not an
   unsupported file. Document input is capped at 16 MiB and converted text at 8 MiB. `isConverted` is transient
-  planning state, counted only for actual writes in `ImportResult.convertedSongFileNames`; duplicates and skipped
-  conflicts are never counted. The result's duplicate and skipped-conflict lists name each library file once, however
+  planning state, counted only for actual writes in `ImportResult.convertedSongFileNames`; duplicates and entries left
+  out are never counted. The result's duplicate and left-out lists name each library file once, however
   many copies the batch brought, and a repeat of a song this import wrote is not also "already in the library".
   `convertedSongToOpen` is set only for one converted song without other entries or
   errors, for the presentation's explicit Open action. No origin information survives in the library.
@@ -107,14 +114,16 @@ The ones that carry real logic:
   the library already had. The setlists are planned again on those names (`ImportPlanner.replanSetlists`), since the
   plan could only expect each song in place: an edited song kept next to the library's is `x_2.cho`, and the unchanged
   setlist naming it is then a different setlist under a taken name, which goes in numbered and points at `x_2.cho`
-  rather than being disregarded as the library's copy. A setlist that becomes a conflict only there was not part of
-  the question, so it is written numbered whatever the answer was. Every song and setlist written is kept as what it
+  rather than being disregarded as the library's copy. A setlist that becomes a conflict only there was offered no
+  choice in the review, so it is written numbered whatever the choice for all was, unless it was left unticked. Every song and setlist written is kept as what it
   became — a song built from its text, not read back from the file — and put into the lists in one change at the end
   (`adoptImported`, which also runs after a failure or a cancellation halfway, for what was written by then), rather
   than rescanning the library. Planning reads the library files of every family the batch touches — and every library
   file a song arrived under, where that is not the name its header gives it — up front, 64 at a time in parallel,
   rather than one after another as each family comes up. Preparing owns the import's size budget: every archive unpacks into what the ones before it
   left, and a file over its limit goes to `ImportPlan.oversizedFileNames`, which the UI reports on its own line.
+- `DownloadImportFileUseCaseImpl` — a line over `ImportDownloadRepository`; what is downloaded goes through
+  `PrepareImportUseCaseImpl` as one picked file, triaged by its name or, for a name it does not know, by its bytes.
 - `ExportLibraryUseCaseImpl` / `ExportSongsUseCaseImpl` / `ExportSetlistUseCaseImpl` — decide what leaves as what: a
   single song exported on its own is the `.cho` file as it is on disk, everything else — the selection's several songs
   included, however many of them are chosen — is a zip. The user's transposition is never baked in.
@@ -185,9 +194,9 @@ The ones that carry real logic:
   entry it had. Files that were named before any of this keep their names until one of those two things happens to
   them.
 
-## An import decides before it writes
+## An import is reviewed before it writes
 
-- An **import decides before it writes**: every incoming
+- An **import is reviewed before it writes**: every incoming
   file is held against the name it wants (`PrepareImportUseCase` -> `ImportPlan`), a song the library already holds
   under that name or a numbered sibling of it (`x_2.cho`) — or under the very name it arrived with, which is what an
   export of a file named by an older rule carries — is disregarded rather than copied (for a song, comparing both
@@ -195,14 +204,15 @@ The ones that carry real logic:
   `{title: X}`), and two different files of one
   batch that want the same name are never a question: the second is numbered like any other collision — the
   library's own file among them: a song or setlist the batch brings back unchanged is never offered up for
-  replacement, so a different one wanting its name is numbered next to it. The names
-  taken by something *different* are put to the user as one question about the whole batch — keep both, replace,
-  skip, or cancel the import. Replacing is the
-  only thing in the app that ever overwrites a library file, and it takes an answer to that question and a
-  confirmation after it. An import that takes a moment shows its phase and a processed-entry count in a dialog, and
-  can be cancelled until it starts writing; one that went the one happy way — everything written or already there, nothing left out — ends in a snackbar (with
-  **Details** for a batch of more than one file). **Anything else is a screen of its own** (`CampfireDestination.ImportReport`),
-  pushed on the back stack rather than told in dialogs following one another: the question, then the import it decides
-  on being written, then every file of what it came to, grouped by what became of it and searchable, a song opened from
-  it coming back to it. A write failure stops the batch and reports its partial success, the failed source and every
-  unprocessed entry there; an import that could not be read at all is one "Import failed" snackbar.
+  replacement, so a different one wanting its name is numbered next to it. **Every import the user starts is
+  reviewed on a screen of its own** (`CampfireDestination.ImportReport`, see `:presentation`'s
+  `ui/screens/importReport/`) before anything is written: everything the files hold is listed, each entry ticked to
+  start with, and the names taken by something *different* each get a choice between keeping both and replacing, with
+  one choice for all of them (`ImportChoices`); unticking an entry leaves it out, and leaving the screen cancels the
+  import. Replacing is the only thing in the app that ever overwrites a library file, and it takes a choice on that
+  screen and a confirmation after it. The same screen shows the files being read (cancellable until anything is
+  written), the import being written, and every file of what it came to, grouped by what became of it and searchable,
+  a song opened from it coming back to it; a reviewed import that went clean ends in a snackbar with **Details**
+  instead. A write failure stops the batch and reports its partial success, the failed source and every unprocessed
+  entry there; files that could not be read at all are said to be on the screen, with Try again. The demo library and
+  a single song file handed over by the system are not reviewed, and only a name they find taken puts the screen up.

@@ -14,7 +14,8 @@ Document imports (`.pdf`, `.docx`, plain `.txt` and Android shared text) become 
 Import summaries report unreadable documents separately and append the number of converted songs actually written, in
 both English and Hungarian. A single converted song offers a snackbar **Open** action, handled by
 `CampfireViewModel.openImportedSong`; converted imports never navigate automatically. The existing behavior for an
-unconverted ChordPro file is unchanged. The import screen's question carries the same unreadable-document note, and
+unconverted ChordPro file is unchanged. Every import the user starts is reviewed on the import screen before anything
+is written (see `ui/screens/importReport/`), whose review carries the same unreadable-document note, and
 settings/empty-library import labels name documents too.
 
 The entire UI: all Compose components, plus the thin per-platform shells the `:app:*` modules call into. A single Kotlin
@@ -54,7 +55,7 @@ The notes on it are split by directory, each in the `CLAUDE.md` of the package i
 - `ui/screens/export/` — the export screen; `ui/print/` — the PDF pipeline behind it.
 - `ui/components/` — the shared components (list items, tags, covers, the fast scroller, the app bar) and scrolling
   performance.
-- `ui/dialogs/` — `CampfireDialogs`, the cover search, the import progress dialog.
+- `ui/dialogs/` — `CampfireDialogs`, the cover search, the import's progress.
 - `ui/theme/` — the theme, the typography and the fonts.
 - `ui/platform/` — the `expect` declarations and the interfaces the shells provide.
 - `ui/update/` — in-app updates.

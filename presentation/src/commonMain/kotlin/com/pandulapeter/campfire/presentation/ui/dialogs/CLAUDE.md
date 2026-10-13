@@ -98,7 +98,8 @@ Each sheet is a modal window of its own, so back, Escape, a tap on the scrim and
 ### `ui/dialogs/CampfireDialogs.kt`
 
 `ui/dialogs/CampfireDialogs.kt` — `CampfireDialogs` renders every dialog of the stack (above): the confirmation an
-import's Replace takes over the import screen (`ConfirmImportReplace`; the question it confirms is the screen's, see
+import's Replace takes over the import screen (`ConfirmImportReplace`, naming how many ticked taken names the review's
+choices write over, and confirming with `resolveImport`; the review is the screen's, see
 `ui/screens/importReport/` — imports run one at a time through the view model's `importQueue`, so files dropped, opened
 with the app or planted as the demo while another import is running or reported on wait their turn rather than being
 dropped; a batch the operating system handed over that comes down to one song, written or already in the library, opens
@@ -299,16 +300,15 @@ tag and language dialogs, the delete confirmation) is taken down by the view mod
 whichever screen it was opened from; the setlist dialogs are not, since the song picker opens on a setlist the library
 has not caught up with yet.
 
-### `ui/dialogs/ImportProgressDialogHost.kt` / `ImportProgressContent.kt`
+### `ui/dialogs/ImportProgressContent.kt`
 
-`ui/dialogs/ImportProgressDialogHost.kt` / `ImportProgressContent.kt` — an import the user asked for that lasts more
-than 400 ms shows its phase, the current file name and the processed count in a progress dialog, and waits while another
-dialog is up rather than covering whatever is typed into it. Its Cancel, offered during the three preparing phases only
-(`isCancellable`) and fading out as the writing starts, cancels that preparation and not the queue
-(`cancelImportPreparation`): nothing has been written yet, so nothing is announced and the next batch runs. The writing
-phases stay uncancellable, and tapping outside or Back never cancels. Comparing and the final library update have no
-count, so their bar is indeterminate. It is only the happy path's: the import screen shows the progress of an import it
-reports on itself, with the same `ImportProgressContent`. The first-run demo import shows none of it.
+`ui/dialogs/ImportProgressContent.kt` — an import's phase, the current file name and the processed count, which the
+import screen shows while the files are downloaded and read and while they are written; comparing and the final library
+update have no count, so their bar is indeterminate. `isCancellable` is the line between the phases that only read
+(downloading, unpacking, reading, comparing), under which the screen offers Cancel, and the ones that write, which are
+never cancelled. There is no progress dialog: an import that cannot put its screen up yet (a dialog, an editor with
+unsaved text, the onboarding) is read unseen meanwhile, with the list screens' progress bar, and the demo library's
+import shows nothing at all.
 
 ### The selection mode's sheets
 

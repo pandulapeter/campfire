@@ -9,7 +9,9 @@
  */
 package com.pandulapeter.campfire.domain.implementation.useCases
 
+import com.pandulapeter.campfire.data.model.domain.ImportChoices
 import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution
+import com.pandulapeter.campfire.data.model.domain.ImportEntryKey
 import com.pandulapeter.campfire.data.model.domain.ImportProgress
 import com.pandulapeter.campfire.data.model.domain.ImportPlan
 import com.pandulapeter.campfire.data.model.domain.ImportResult
@@ -41,10 +43,10 @@ class ImportFilesUseCaseImpl internal constructor(
      */
     override suspend operator fun invoke(
         plan: ImportPlan,
-        resolution: ImportConflictResolution,
+        choices: ImportChoices,
         onProgress: (ImportProgress) -> Unit,
     ): ImportResult {
-        val run = ImportRun(plan = plan, resolution = resolution, onProgress = onProgress)
+        val run = ImportRun(plan = plan, choices = choices, onProgress = onProgress)
         try {
             run.writeSongs()
             run.writeSetlists()
@@ -71,7 +73,7 @@ class ImportFilesUseCaseImpl internal constructor(
     /** One import being written: what has been written, left out and reached so far, which the result is made of. */
     private inner class ImportRun(
         private val plan: ImportPlan,
-        private val resolution: ImportConflictResolution,
+        private val choices: ImportChoices,
         private val onProgress: (ImportProgress) -> Unit,
     ) {
         val importedSongs = mutableListOf<Song>()
@@ -86,7 +88,7 @@ class ImportFilesUseCaseImpl internal constructor(
         private val storedSongFileNamesByOrigin = mutableMapOf<Int?, MutableMap<String, String>>()
 
         val importedSetlists = mutableListOf<Setlist>()
-        private val skippedConflicts = mutableListOf<String>()
+        private val leftOut = mutableListOf<String>()
         val total = plan.songs.size + plan.setlists.size
         private var processedSongs = 0
         private var processedSetlists = 0
@@ -99,7 +101,7 @@ class ImportFilesUseCaseImpl internal constructor(
             // Where each song of the plan ended up, by its place in the plan: a repeat of an earlier song of the batch
             // is wherever that one went, which was not known when the plan was made.
             val storedNames = arrayOfNulls<String>(plan.songs.size)
-            // The songs of the plan the answer left out, by their place in it: a repeat of one of them is left out with it
+            // The songs of the plan the review left out, by their place in it: a repeat of one of them is left out with it
             // rather than being the duplicate of the different library song whose name they both wanted.
             val leftAloneIndices = mutableSetOf<Int>()
             val replacedSongFileNames = mutableSetOf<String>()
@@ -108,7 +110,7 @@ class ImportFilesUseCaseImpl internal constructor(
             val keptSongFileNames = plan.songs
                 .filter { it.status == ImportPlan.Status.IDENTICAL && it.repeatedEntryIndex == null }
                 .mapTo(hashSetOf()) { it.fileName }
-            // A plan is held against the library as it was when the question was asked; a sync run may have deleted, since
+            // A plan is held against the library as it was when it was reviewed; a sync run may have deleted, since
             // then, the file an identical song was going to be left as. The names come from the same list the planner used,
             // folded the way the storage layer compares names (LibraryFiles.identityKey), so a file another device re-spelt in
             // case only is still there.
@@ -123,7 +125,7 @@ class ImportFilesUseCaseImpl internal constructor(
                 yield()
                 val isLibraryFileGone = entry.isIdenticalToLibraryFile && libraryNames != null &&
                     LibraryFiles.identityKey(entry.fileName) !in libraryNames
-                val storedName = when (val action = if (isLibraryFileGone) Action.WRITE else entry.action(resolution)) {
+                val storedName = when (val action = if (isLibraryFileGone) Action.WRITE else action(ImportEntryKey(ImportEntryKey.Kind.SONG, index), entry.status)) {
                     Action.WRITE, Action.REPLACE -> {
                         // A replacement goes over the file as the library lists it; anything else is written under the
                         // name the app gives the song, which the storage layer numbers if it is taken. An identical
@@ -155,7 +157,7 @@ class ImportFilesUseCaseImpl internal constructor(
                     Action.DISREGARD -> (entry.repeatedEntryIndex?.let(storedNames::getOrNull) ?: entry.fileName).also {
                         if (entry.repeatedEntryIndex in leftAloneIndices) {
                             leftAloneIndices += index
-                            skippedConflicts += it
+                            leftOut += it
                         } else {
                             duplicateFileNames += it
                         }
@@ -165,11 +167,16 @@ class ImportFilesUseCaseImpl internal constructor(
                     // since that is the name the song list holds and the batch's setlists are pointed at.
                     Action.LEAVE_ALONE -> (entry.replacesFileName ?: entry.fileName).also {
                         leftAloneIndices += index
-                        skippedConflicts += it
+                        leftOut += it
                     }
                 }
                 storedNames[index] = storedName
-                entry.sourceFileName?.let { storedSongFileNamesByOrigin.getOrPut(entry.origin) { mutableMapOf() }[it] = storedName }
+                // A new song left out has no file a setlist could point at, and the name it would have had may be an
+                // earlier song of the batch's: the setlists keep the name it arrived under, which shows as a missing song.
+                val isLeftOutNew = entry.status == ImportPlan.Status.NEW && index in leftAloneIndices
+                if (!isLeftOutNew) {
+                    entry.sourceFileName?.let { storedSongFileNamesByOrigin.getOrPut(entry.origin) { mutableMapOf() }[it] = storedName }
+                }
                 processedSongs++
                 currentFileName = null
             }
@@ -187,15 +194,16 @@ class ImportFilesUseCaseImpl internal constructor(
                 songFileNames = storedSongFileNames,
             )
             val keptSetlistFileNames = setlists.filter { it.status == ImportPlan.Status.IDENTICAL }.mapTo(hashSetOf()) { it.fileName }
-            plan.setlists.zip(setlists).forEach { (planned, entry) ->
+            plan.setlists.zip(setlists).forEachIndexed { index, (planned, entry) ->
                 currentFileName = planned.sourceFileName
                 onProgress(ImportProgress(ImportProgress.Phase.IMPORTING, processedSongs + processedSetlists, total, currentFileName))
                 yield()
-                // A setlist the question was not about goes in numbered rather than being replaced or left out by it.
-                val action = if (entry.status == ImportPlan.Status.CONFLICTING && planned.status != ImportPlan.Status.CONFLICTING) {
+                // A setlist the review offered no choice about goes in numbered rather than being replaced by the choice for all.
+                val key = ImportEntryKey(ImportEntryKey.Kind.SETLIST, index)
+                val action = if (entry.status == ImportPlan.Status.CONFLICTING && planned.status != ImportPlan.Status.CONFLICTING && choices.isChosen(key)) {
                     Action.WRITE
                 } else {
-                    entry.action(resolution)
+                    action(key, entry.status)
                 }
                 when (action) {
                     Action.WRITE, Action.REPLACE -> {
@@ -215,7 +223,7 @@ class ImportFilesUseCaseImpl internal constructor(
                     }
 
                     Action.DISREGARD -> duplicateFileNames += entry.fileName
-                    Action.LEAVE_ALONE -> skippedConflicts += entry.fileName
+                    Action.LEAVE_ALONE -> leftOut += entry.fileName
                 }
                 processedSetlists++
                 currentFileName = null
@@ -231,13 +239,29 @@ class ImportFilesUseCaseImpl internal constructor(
             unprocessedFileNames = if (currentFileName == null) remaining else remaining.drop(1)
         }
 
+        /**
+         * An identical entry is disregarded even where the choices name it, since the review offers it no box: it is
+         * already in the library, and leaving it out would only report a file the library still has as left out.
+         */
+        private fun action(key: ImportEntryKey, status: ImportPlan.Status) = when {
+            status == ImportPlan.Status.IDENTICAL -> Action.DISREGARD
+            !choices.isChosen(key) -> Action.LEAVE_ALONE
+            status == ImportPlan.Status.NEW -> Action.WRITE
+            else -> when (choices.resolutionOf(key)) {
+                // The name is taken, so writing under it is what produces the "_2" the storage layer suffixes — which is
+                // also how a NEW entry whose name an earlier file of the same import took gets its number.
+                ImportConflictResolution.KEEP_BOTH -> Action.WRITE
+                ImportConflictResolution.REPLACE -> Action.REPLACE
+            }
+        }
+
         fun result() = ImportResult(
             importedSongFileNames = importedSongs.map { it.fileName },
             importedSetlistFileNames = importedSetlists.map { it.fileName },
             skippedFileNames = plan.skippedFileNames,
             // Both lists name library files and are filled once per incoming entry, so a song the batch brings twice
             // would be named twice; and a repeat of a song this import wrote was not in the library before it.
-            skippedConflictingFileNames = skippedConflicts.distinct(),
+            leftOutFileNames = leftOut.distinct(),
             isFailed = isFailed,
             failedFileNames = failedFileNames,
             unprocessedFileNames = unprocessedFileNames,
@@ -252,7 +276,7 @@ class ImportFilesUseCaseImpl internal constructor(
         )
     }
 
-    /** What one planned file turns into once the answer to the conflicts is known. */
+    /** What one planned file turns into once the review has been answered. */
     private enum class Action {
         WRITE,
         REPLACE,
@@ -260,22 +284,6 @@ class ImportFilesUseCaseImpl internal constructor(
         LEAVE_ALONE,
     }
 
-    private fun ImportPlan.SongEntry.action(resolution: ImportConflictResolution) = action(status, resolution)
-
     /** An identical song that matched a library file rather than an earlier song of the same batch. */
     private val ImportPlan.SongEntry.isIdenticalToLibraryFile get() = status == ImportPlan.Status.IDENTICAL && repeatedEntryIndex == null
-
-    private fun ImportPlan.SetlistEntry.action(resolution: ImportConflictResolution) = action(status, resolution)
-
-    private fun action(status: ImportPlan.Status, resolution: ImportConflictResolution) = when (status) {
-        ImportPlan.Status.NEW -> Action.WRITE
-        ImportPlan.Status.IDENTICAL -> Action.DISREGARD
-        ImportPlan.Status.CONFLICTING -> when (resolution) {
-            // The name is taken, so writing under it is what produces the "_2" the storage layer suffixes — which is
-            // also how a NEW entry whose name an earlier file of the same import took gets its number.
-            ImportConflictResolution.KEEP_BOTH -> Action.WRITE
-            ImportConflictResolution.REPLACE -> Action.REPLACE
-            ImportConflictResolution.SKIP -> Action.LEAVE_ALONE
-        }
-    }
 }

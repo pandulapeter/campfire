@@ -20,20 +20,15 @@ class WhatsNewGateTest {
             "nothing" to canShowWhatsNew(hasDialog = false, isImporting = false, hasImportReport = false, queuedImportCount = 0),
             "a dialog" to canShowWhatsNew(hasDialog = true, isImporting = false, hasImportReport = false, queuedImportCount = 0),
             "an import running" to canShowWhatsNew(hasDialog = false, isImporting = true, hasImportReport = false, queuedImportCount = 0),
-            "a conflicts question" to canShowWhatsNew(hasDialog = false, isImporting = false, hasImportReport = true, queuedImportCount = 0),
+            "an import under review" to canShowWhatsNew(hasDialog = false, isImporting = false, hasImportReport = true, queuedImportCount = 0),
             "a batch still queued" to canShowWhatsNew(hasDialog = false, isImporting = false, hasImportReport = false, queuedImportCount = 1),
         )
         assertEquals(mapOf("nothing" to true), cases.filterValues { it })
     }
 
     @Test
-    fun `the onboarding stays off another dialog and an import`() {
-        val cases = mapOf(
-            "nothing" to canShowOnboarding(hasDialog = false, hasImportReport = false, hasQueuedImport = false),
-            "a dialog" to canShowOnboarding(hasDialog = true, hasImportReport = false, hasQueuedImport = false),
-            "an import screen" to canShowOnboarding(hasDialog = false, hasImportReport = true, hasQueuedImport = false),
-            "a file waiting to be imported" to canShowOnboarding(hasDialog = false, hasImportReport = false, hasQueuedImport = true),
-        )
-        assertEquals(mapOf("nothing" to true), cases.filterValues { it })
+    fun `the onboarding stays off another dialog but not off an import, which follows it`() {
+        assertEquals(true, canShowOnboarding(hasDialog = false))
+        assertEquals(false, canShowOnboarding(hasDialog = true))
     }
 }

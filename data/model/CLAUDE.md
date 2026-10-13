@@ -64,13 +64,17 @@ from before the onboarding is never sent through it; local only), and
 (never exported or synced), which sync reads to take the cloud folder's version of a demo still holding exactly that
 instead of keeping both — but not which tags and languages the song list is filtered to, which is never stored, see
 `SongFilter` in `:domain:api`), `ImportedFile` / `ExportedFile` / `ImportResult` for the import and export paths
-(including skipped conflicts and partial failures), `ImportProgress` for phase-local processed counts and the current
+(including the entries the review left out and partial failures), `ImportProgress` for phase-local processed counts and the current
 filename, `ImportLimits` and `ImportBudget` — how much an import reads (8 MiB a text file, 16 MiB a PDF/Word document,
 24 MiB a selection and an unpacked import, sized for an Android heap) and the one function every platform reads its
 incoming files through, so that a file the import would not look inside is never kept (one of an unknown type is read
 only to see whether it is a zip archive) and one that is too large is reported rather than loaded — and `ImportPlan`
-(what an import would do to each name, worked out before anything is written) with the `ImportConflictResolution` the
-user answers it with.
+(what an import would do to each name, worked out before anything is written; each song entry carries the `title` and
+`artist` its header gives, and the plan the picked files' `sourceNames`, for the review to show) with the
+`ImportChoices` the review answers it with: the entries left unticked (`ImportEntryKey`, a song's or a setlist's place
+in the plan), and the `ImportConflictResolution` (Keep both or Replace) for all taken names and for each row set by
+hand, which a change of the one for all leaves alone. `ImportDownload` is what downloading a file to import from an
+address came to (the file, too large, missing, unreachable), here because the import screen tells them apart.
 
 ### `domain/LibraryFiles.kt`
 

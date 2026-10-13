@@ -41,7 +41,7 @@
     <string name="import_status_songs">Songs imported</string>
     <string name="import_status_setlists">Setlists imported</string>
     <string name="import_status_duplicates">Already in the library</string>
-    <string name="import_status_skipped_conflicts">Conflicts skipped by your choice</string>
+    <string name="import_status_left_out">Left out by your choice</string>
     <string name="import_status_skipped">Unsupported or invalid files</string>
     <string name="import_status_oversized">Files over the import size limit</string>
     <string name="import_status_unreadable">Documents without readable text</string>
@@ -58,7 +58,6 @@
         <item quantity="one">Replace %1$d file?</item>
         <item quantity="other">Replace %1$d files?</item>
     </plurals>
-    <string name="import_conflicts_apply_all">This choice applies to every conflicting file in this import.</string>
     <string name="import_files">Import files</string>
     <string name="import_result">Songs imported: %1$d · Setlists: %2$d · Already there: %3$d · Skipped: %4$d</string>
     <string name="import_converted">Converted: %1$d — worth a look in the editor.</string>
@@ -79,17 +78,7 @@
         <item quantity="one">One file could not be read and is not in the archive: %2$s</item>
         <item quantity="other">%1$d files could not be read and are not in the archive. Among them: %2$s</item>
     </plurals>
-    <string name="import_conflicts">Some names are taken</string>
-    <plurals name="import_conflicts_summary">
-        <item quantity="one">One of the files you are importing has the name of a different file already in your library.</item>
-        <item quantity="other">%1$d of the files you are importing have the name of a different file already in your library.</item>
-    </plurals>
-    <string name="import_conflicts_new">New songs: %1$d · New setlists: %2$d. These are imported either way.</string>
-    <plurals name="import_conflicts_duplicates">
-        <item quantity="one">One file is already in your library, unchanged, and will be left alone.</item>
-        <item quantity="other">%1$d files are already in your library, unchanged, and will be left alone.</item>
-    </plurals>
-    <plurals name="import_conflicts_skipped">
+    <plurals name="import_review_skipped">
         <item quantity="one">One file is neither a song nor a setlist and cannot be imported.</item>
         <item quantity="other">%1$d files are neither songs nor setlists and cannot be imported.</item>
     </plurals>
@@ -97,15 +86,57 @@
         <item quantity="one">One file is too large and cannot be imported.</item>
         <item quantity="other">%1$d files are too large and cannot be imported.</item>
     </plurals>
-    <string name="import_conflicts_files">The names that are taken</string>
-    <string name="import_conflicts_question">What should happen to those?</string>
     <string name="import_conflicts_keep_both">Keep both</string>
     <string name="import_conflicts_keep_both_description">Import them next to the files they collide with, numbered \"_2\"</string>
     <string name="import_conflicts_replace">Replace</string>
     <string name="import_conflicts_replace_description">Write them over what your library has. The replaced files are gone.</string>
-    <string name="import_conflicts_skip">Skip them</string>
-    <string name="import_conflicts_skip_description">Import everything else and keep what your library has</string>
-    <string name="import_conflicts_confirm">Import</string>
+    <string name="import_loading_title">Reading the files</string>
+    <string name="import_progress_downloading">Downloading the file</string>
+    <string name="import_failed_unreachable">%1$s could not be reached. Check the internet connection and try again.</string>
+    <string name="import_failed_not_found">There is nothing to download at that address. The link may have expired or been removed.</string>
+    <string name="import_failed_too_large">This file is larger than the 24 MB Campfire can import at once.</string>
+    <string name="import_failed_unreadable">The files could not be read. Nothing was imported.</string>
+    <string name="import_retry">Try again</string>
+    <string name="import_review_title">Review the import</string>
+    <string name="import_review_title_empty">Nothing to import</string>
+    <string name="import_review_from">From %1$s</string>
+    <plurals name="import_review_confirm">
+        <item quantity="one">Import %1$d file</item>
+        <item quantity="other">Import %1$d files</item>
+    </plurals>
+    <string name="import_review_summary_counts">Songs to import: %1$d · Setlists: %2$d</string>
+    <plurals name="import_review_replacing">
+        <item quantity="one">One of them replaces a file of your library</item>
+        <item quantity="other">%1$d of them replace files of your library</item>
+    </plurals>
+    <plurals name="import_review_numbered">
+        <item quantity="one">One of them is numbered next to the file it collides with</item>
+        <item quantity="other">%1$d of them are numbered next to the files they collide with</item>
+    </plurals>
+    <plurals name="import_review_already_there">
+        <item quantity="one">One is already in your library and is left alone</item>
+        <item quantity="other">%1$d are already in your library and are left alone</item>
+    </plurals>
+    <plurals name="import_review_left_out">
+        <item quantity="one">One is left out by you</item>
+        <item quantity="other">%1$d are left out by you</item>
+    </plurals>
+    <string name="import_review_conflicts">Names already taken</string>
+    <string name="import_review_songs">Songs</string>
+    <string name="import_review_setlists">Setlists</string>
+    <string name="import_review_for_all">For all of them</string>
+    <string name="import_review_will_be_numbered">Will be numbered next to the one you have</string>
+    <string name="import_review_will_replace">Will replace the one you have: %1$s</string>
+    <string name="import_review_show_library_song">Show the one you have</string>
+    <plurals name="import_review_setlist_songs">
+        <item quantity="one">One song</item>
+        <item quantity="other">%1$d songs</item>
+    </plurals>
+    <string name="import_review_setlist_songs_in_import">%1$d of them in this import</string>
+    <plurals name="import_review_repeated">
+        <item quantity="one">Appears once in the files</item>
+        <item quantity="other">Appears %1$d times in the files</item>
+    </plurals>
 
     <!-- Errors -->
     <string name="error_no_data">Nothing could be loaded</string>

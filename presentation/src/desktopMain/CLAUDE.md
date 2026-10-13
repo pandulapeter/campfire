@@ -47,6 +47,4 @@ it, so the setlists screen is reached with the songs screen still under it and e
 the tab with the search still open behind it. What is open on top is `visibleDialog` plus `overlayState.isAnyMenuOpen`
 (`components/OverlayState.kt`, the view model's own, which `CampfireApp` provides to every `OverflowMenu`, and to a sheet a screen hosts itself such as the editor's search, as
 `LocalOverlayState`): a window key handler runs before Compose turns Escape into a back event, so an Escape consumed
-here would pop the back stack behind a dialog, a sheet or a menu instead of closing it. The import's progress dialog is
-neither, so while it would be shown (`importProgress` set and no `importReport`) Escape is consumed and does nothing: it
-would otherwise go back behind the dialog or offer to close the app midway through the import.
+here would pop the back stack behind a dialog, a sheet or a menu instead of closing it.

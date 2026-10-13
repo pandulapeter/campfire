@@ -31,6 +31,7 @@ import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportRepo
 import com.pandulapeter.campfire.presentation.ui.screens.settings.DemoLibraryOffer
 import com.pandulapeter.campfire.presentation.ui.state.ImportController
 import com.pandulapeter.campfire.presentation.ui.state.ImportController.ImportRequest
+import com.pandulapeter.campfire.presentation.ui.state.ImportSource
 import com.pandulapeter.campfire.presentation.ui.state.asState
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
@@ -218,7 +219,7 @@ internal class FirstRunController(
         if (files == null) {
             messageSink.sendMessage(Message.ImportFailed)
         } else {
-            importController.enqueueImport(files, isDemoLibrary = true).await()
+            importController.enqueueImport(ImportSource.Files(files), shouldReview = false, isDemoLibrary = true).await()
         }
         // Asked of a fresh read of the library rather than of the offer, which can still be a step behind the import
         // that just finished. Where the demo is now all there, the offer is waited for until it has left the screen,
@@ -261,9 +262,10 @@ internal class FirstRunController(
                     readDemoLibrary()?.let { files ->
                         importController.import(
                             ImportRequest(
-                                files = files,
+                                source = ImportSource.Files(files),
                                 shouldAnnounceResult = false,
                                 shouldOpenSong = false,
+                                shouldReview = false,
                                 isDemoLibrary = true,
                             ),
                         )
@@ -295,21 +297,15 @@ internal class FirstRunController(
 
     /**
      * Puts the onboarding on the back stack of a start up that owes it, while the launch screen is still up, so that the app is
-     * uncovered on its first page rather than on the songs with the page sliding in over them a moment later. Only where
-     * nothing else is waiting for the user: a file the app was opened with is already queued by now (the queue waits for
-     * [demoLibraryDecision], which is completed after this), and its import screen ([ImportReport]) would end up under
-     * the onboarding, its question unanswered for as long as the pages take. It is skipped then rather than put up later,
-     * which would arrive in the middle of whatever the user went on to do next; Settings offers it whenever they want it.
+     * uncovered on its first page rather than on the songs with the page sliding in over them a moment later. A file the
+     * app was opened with does not hold it back: it is already queued by now (the queue waits for [demoLibraryDecision],
+     * which is completed after this), its import is read behind the onboarding, and its import screen ([ImportReport])
+     * is pushed as the onboarding leaves, whose last button says Next meanwhile. Only a dialog holds it back.
      * It is part of the saved back stack like any other screen, so a process the system ends behind it comes back on it,
      * every answer given so far kept, since each is written as it is given.
      */
     private fun openOnboardingOnStartUp() {
-        val canOpen = canShowOnboarding(
-            hasDialog = dialogHost.visibleDialog.value != null,
-            hasImportReport = importController.importReport.value != null,
-            hasQueuedImport = importController.isImporting.value || importController.queuedImportCount.value > 0,
-        )
-        if (canOpen) openOnboarding()
+        if (canShowOnboarding(hasDialog = dialogHost.visibleDialog.value != null)) openOnboarding()
     }
 
     /**

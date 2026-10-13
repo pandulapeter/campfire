@@ -71,7 +71,7 @@ Shared text carries `EXTRA_TEXT` instead of a stream, and `importSharedTexts` (`
 `ImportedFile` that `:presentation`'s `sharedTextsToImportedFiles` (`ui/platform/SharedTextImport.kt`, where it is
 tested) makes of it, named after `EXTRA_SUBJECT` — or the text's first plain line — ending in `.txt`, which then goes
 through chord-sheet conversion and the ordinary import like any text file: named by its own header, disregarded when the
-library already has it, asked about when the name is taken. A stream wins over a text in the same intent, since that
+library already has it, and reviewed on the import screen before anything is written. A stream wins over a text in the same intent, since that
 text is a caption; a text that is nothing but links is passed on empty and reported as skipped, because a link is not a
 song and the app does not fetch one. Only `content://` is registered for Open with: the app holds no storage permission,
 so a `file://` URI into shared storage could not be read. Keep the Open with extension list in step with

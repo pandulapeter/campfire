@@ -10,11 +10,14 @@
 package com.pandulapeter.campfire.presentation.ui.screens.importReport
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.style.TextOverflow
@@ -25,10 +28,14 @@ import com.pandulapeter.campfire.presentation.resources.ic_clear
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
 import org.jetbrains.compose.resources.painterResource
 
-/** Close, which cancels a question and leaves anything else, and the title of the stage the import is at. */
+/**
+ * Close, which drops an import that has not started writing and leaves anything else, the title of the stage the
+ * import is at, and under it, where there is one, [subtitle]: what is being imported.
+ */
 @Composable
 internal fun ImportReportTopAppBar(
     title: String,
+    subtitle: String?,
     onClose: () -> Unit,
 ) = CampfireTopAppBar(
     navigationIcon = {
@@ -41,14 +48,25 @@ internal fun ImportReportTopAppBar(
     },
     title = {
         AnimatedContent(
-            targetState = title,
-            transitionSpec = { fadeIn() togetherWith fadeOut() },
-        ) { text ->
-            Text(
-                text = text,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
+            targetState = title to subtitle,
+            transitionSpec = { fadeIn() togetherWith fadeOut() using SizeTransform(clip = false) },
+        ) { (title, subtitle) ->
+            Column {
+                Text(
+                    text = title,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                subtitle?.let {
+                    Text(
+                        text = it,
+                        maxLines = 1,
+                        overflow = TextOverflow.MiddleEllipsis,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
         }
     },
 )

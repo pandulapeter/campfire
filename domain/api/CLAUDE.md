@@ -72,6 +72,9 @@ paths, `Is*` for a question with a yes or no answer (`IsFirstRun`), or a verb fo
   the catalogues still pending, waiting or failed — which is what the sheet builds its grid, its indicators and its
   retry from. Both reach the network through `:data:source:remote`, the only
   things besides sync that do.
+- `DownloadImportFileUseCase` downloads the file at an address for an import the user started, which the import screen
+  then reads like a picked file; with the cover's two and the catalogue searches, the only things besides sync that
+  reach the network. Nothing in the app calls it yet: the shared links will.
 - `IsFirstRunUseCase` is the only one that asks about the installation rather than about the library: whether
   Campfire has ever written its preferences, which is the first thing it writes about itself and therefore the one
   trace a device that has been used has. It exists for the demo library alone, and has to be asked before anything is
@@ -107,5 +110,6 @@ is the one piece of Campfire's text rendered outside the app and the data layer 
 the chosen language — so the words travel down from the UI like any other string the user reads.
 
 Import preparation and application accept an optional `ImportProgress` observer, which may run on the worker dispatcher.
-Application counts duplicates and skipped conflicts as processed entries, stops on a write failure, and returns the
+Application takes the review's `ImportChoices` (what is left out, and what each taken name does), counts duplicates and
+the entries left out as processed entries, stops on a write failure, and returns the
 partial `ImportResult` with failed and unprocessed names rather than losing the successful ones; cancellation still throws.

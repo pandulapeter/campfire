@@ -134,7 +134,7 @@ internal class AppExitController(
      * Lets the sync runs the library still owes the cloud folder happen before a desktop process ends, which is where
      * a quit leads once [requestExit] has let it through - the shell hides the window first, so the quit looks as
      * immediate as it is. An import that is being written is let finish first, for up to [EXIT_IMPORT_GRACE], since
-     * its songs are written before its setlists and the progress dialog asked for Campfire to be kept open; one that is
+     * its songs are written before its setlists and the import screen asked for Campfire to be kept open; one that is
      * still being read is cancelled, having written nothing, and no further batch is started. Waited for before the
      * sync run, so that the run carries the whole import. The automatic run that is waiting for the library to settle
      * is started next: dropped, the change made just before quitting would reach the other devices only the next time
@@ -149,7 +149,7 @@ internal class AppExitController(
     suspend fun settleSynchronizationBeforeExit() {
         isLeaving = true
         importController.cancelImportPreparation()
-        // A conflicts question that is up has written nothing and has already let the import flag go, so it is dropped
+        // A failure or a review that is up has written nothing and has already let the import flag go, so it is dropped
         // here rather than waited for.
         withTimeoutOrNull(EXIT_IMPORT_GRACE) { importController.isImporting.first { !it } }
         // The stored draft is removed by a collector a few hops after the editor lets its text go, which a process that

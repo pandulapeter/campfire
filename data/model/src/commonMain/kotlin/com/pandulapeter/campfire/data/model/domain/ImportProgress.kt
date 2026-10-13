@@ -20,6 +20,7 @@ data class ImportProgress(
     val fileName: String? = null,
 ) {
     enum class Phase {
+        DOWNLOADING,
         UNPACKING,
         READING,
         COMPARING,

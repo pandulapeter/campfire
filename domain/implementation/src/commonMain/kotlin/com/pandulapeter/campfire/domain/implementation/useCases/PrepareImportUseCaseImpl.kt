@@ -10,11 +10,13 @@
 package com.pandulapeter.campfire.domain.implementation.useCases
 
 import com.pandulapeter.campfire.chordpro.ChordNotation
+import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.ChordProSplitter
 import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
 import com.pandulapeter.campfire.chordpro.convert.ChordSheet
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetConverter
 import com.pandulapeter.campfire.chordpro.edit.ChordProPrettifier
+import com.pandulapeter.campfire.chordpro.model.displayTitle
 import com.pandulapeter.campfire.data.model.domain.ImportLimits
 import com.pandulapeter.campfire.data.model.domain.ImportPlan
 import com.pandulapeter.campfire.data.model.domain.ImportProgress
@@ -125,6 +127,7 @@ class PrepareImportUseCaseImpl internal constructor(
             skippedFileNames = triage.skippedFileNames,
             oversizedFileNames = triage.oversizedFileNames,
             unreadableDocumentFileNames = triage.unreadableDocumentFileNames,
+            sourceNames = files.map { it.name },
         )
     }
 
@@ -173,12 +176,15 @@ class PrepareImportUseCaseImpl internal constructor(
                 // All sources share the same formatter after conversion and splitting, and before naming or
                 // comparing. The editor's manual action uses it too. Notation conversion still precedes formatting.
                 val text = ChordProPrettifier.prettify(ChordProNotation.convertText(part, ChordNotation.STANDARD, ChordNotation.STANDARD))
+                val metadata = ChordProParser.parseMetadata(text)
                 ImportPlanner.IncomingSong(
                     fileName = songRepository.importFileName(fallbackTitle = fallbackTitle, text = text),
                     text = text,
                     sourceFileName = file.name.takeIf { parts.size == 1 },
                     isConverted = isConverted,
                     origin = origin,
+                    title = metadata.displayTitle(fallback = fallbackTitle),
+                    artist = metadata.artist.orEmpty(),
                 )
             }
             // Formatting adds section separators and a final newline; keep the resulting text within the same

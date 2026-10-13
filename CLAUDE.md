@@ -228,11 +228,11 @@ tab reaches the export screen. The detail is in `:presentation`'s `ui/screens/ex
   predicates and the tag normalization), `:chordpro` (including chord-sheet conversion, and chord names, shapes and definitions, every shape of the tables checked against the chord it is filed under), `:domain:implementation` (`ImportPlanner` and conversion import plumbing),
   `:data:formats` (zip, bounded PDF/Word readers), `:data:source:local:implementation` (the JVM file storage, with independent-producer document goldens in `desktopTest`), `:data:source:remote:*` (hashing, encoders,
   the OAuth authorization URL, the cover search's and the song details lookup's queries and answers, the songwriters,
-  their `User-Agent` and their shared pace, the cover download),
+  their `User-Agent` and their shared pace, the cover download, the import download and the name it gives the file),
   `:data:repository:implementation` (the caches, the edit of many songs at once, the cover cache, and the catalogue searches), `:data:sync:implementation` (`SyncPlanner`, which
   decides what happens to every file in a sync run, the engine and the synced preferences), `:metronome:*` (the sequencer, the synthesizer, the mixer, the engine's state machine, tap tempo and time signatures), `:tuner:*` (the note arithmetic and the presets, the FFT, the pitch detector against synthesized strings and any recording dropped into its `desktopTest` resources, the tracker, the tones, the engine's state machine, the sample ring and the FFT) and
   `:presentation` (the pure helpers behind its screens: the search index and ranking, the song picker's filter chips, the fast scroller's section
-  index, the setlist slots, stepper labels, section grid and the cutting of sections into columns, a tag's color by its key, the score a layout is chosen by, the narrow columns and the text fitted to a page, row snapping and section measurements of the details screen, the editor's token cache, its search matches and how wide its menu may be, where a song's tempo comes from, what a click plays for, which chords a song plays and which
+  index, the import review's groups, counts and group boxes, the setlist slots, stepper labels, section grid and the cutting of sections into columns, a tag's color by its key, the score a layout is chosen by, the narrow columns and the text fitted to a page, row snapping and section measurements of the details screen, the editor's token cache, its search matches and how wide its menu may be, where a song's tempo comes from, what a click plays for, which chords a song plays and which
   shape each is drawn with, the tuner's note names, the instruments its presets are offered under and what its tunings are called in each notation, the cents it writes, the strings it ticks off, the step its reading is announced at and which notice its page shows, the diagrams' geometry and what the editor's Chord shape button writes, the setlist reorder merge and
   search and the list placeholders, the selection mode's Selection section, its tag and language draft and what its
   Choose setlists sheet adds; and, over small fakes of their use cases, the song text writes, the metadata sheets'
@@ -295,8 +295,9 @@ What the app does, one line each; the full text is in the file named (`:presenta
   files): `data/source/local/implementation/CLAUDE.md`.
 - Every file is in the standard chord notation; German, Latin, Nashville and Roman notations are only ways of showing
   (and, the first two, of typing) chords: `chordpro/CLAUDE.md`.
-- An import decides before it writes: what is already there is disregarded, what collides is numbered, and replacing a
-  library file takes an answer and a confirmation: `domain/implementation/CLAUDE.md`.
+- An import is reviewed before it writes: everything the files hold is listed to be ticked, what is already there is
+  disregarded, what collides is numbered or, by choice and after a confirmation, replaced:
+  `domain/implementation/CLAUDE.md`.
 - A song is named by its own header, wherever it came from: a file name is reproducible from its header alone:
   `data/source/local/implementation/CLAUDE.md`.
 - A file is only ever renamed by the app when the user asks for it, or when nothing is lost by it:

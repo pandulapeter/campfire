@@ -29,13 +29,17 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.import_progress_comparing
 import com.pandulapeter.campfire.presentation.resources.import_progress_count
+import com.pandulapeter.campfire.presentation.resources.import_progress_downloading
 import com.pandulapeter.campfire.presentation.resources.import_progress_finishing
 import com.pandulapeter.campfire.presentation.resources.import_progress_importing
 import com.pandulapeter.campfire.presentation.resources.import_progress_reading
 import com.pandulapeter.campfire.presentation.resources.import_progress_unpacking
 import com.pandulapeter.campfire.presentation.resources.import_progress_wait
 
-/** Shared with the import screen, which shows the import its question decided on being written the same way. */
+/**
+ * How far an import is, which the import screen shows both while the files are read and while they are written. The
+ * screen's loading stage offers Cancel only for the phases that are [isCancellable].
+ */
 @Composable
 internal fun ImportProgressContent(
     modifier: Modifier = Modifier,
@@ -78,9 +82,15 @@ internal fun ImportProgressContent(
 
 private val ImportProgress.Phase.label
     get() = when (this) {
+        ImportProgress.Phase.DOWNLOADING -> Res.string.import_progress_downloading
         ImportProgress.Phase.UNPACKING -> Res.string.import_progress_unpacking
         ImportProgress.Phase.READING -> Res.string.import_progress_reading
         ImportProgress.Phase.COMPARING -> Res.string.import_progress_comparing
         ImportProgress.Phase.IMPORTING -> Res.string.import_progress_importing
         ImportProgress.Phase.FINISHING -> Res.string.import_progress_finishing
     }
+
+/** The phases that only download, read and compare: the ones after them write, and an import is never left half written. */
+internal val ImportProgress.Phase.isCancellable
+    get() = this == ImportProgress.Phase.DOWNLOADING || this == ImportProgress.Phase.UNPACKING || this == ImportProgress.Phase.READING ||
+        this == ImportProgress.Phase.COMPARING

@@ -21,6 +21,7 @@ import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields
 import com.pandulapeter.campfire.chordpro.model.ChordProLink
 import com.pandulapeter.campfire.data.model.domain.CoverArtQuery
 import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution
+import com.pandulapeter.campfire.data.model.domain.ImportEntryKey
 import com.pandulapeter.campfire.data.model.domain.ImportLimits
 import com.pandulapeter.campfire.data.model.domain.ImportProgress
 import com.pandulapeter.campfire.data.model.domain.ImportResult
@@ -64,6 +65,7 @@ import com.pandulapeter.campfire.domain.api.useCases.ConvertChordProTextNotation
 import com.pandulapeter.campfire.domain.api.useCases.CreateSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.CreateSongUseCase
 import com.pandulapeter.campfire.domain.api.useCases.DeleteLibraryUseCase
+import com.pandulapeter.campfire.domain.api.useCases.DownloadImportFileUseCase
 import com.pandulapeter.campfire.domain.api.useCases.DeleteSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.DeleteSongUseCase
 import com.pandulapeter.campfire.domain.api.useCases.DuplicateSongUseCase
@@ -162,7 +164,6 @@ import com.pandulapeter.campfire.presentation.ui.state.AppExitController
 import com.pandulapeter.campfire.presentation.ui.state.CoverArtSearchController
 import com.pandulapeter.campfire.presentation.ui.state.SongDetailsLookupController
 import com.pandulapeter.campfire.presentation.ui.state.ImportController
-import com.pandulapeter.campfire.presentation.ui.state.ImportController.ImportRequest
 import com.pandulapeter.campfire.presentation.ui.state.LibraryState
 import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
@@ -234,6 +235,7 @@ class CampfireViewModel(
     private val editSongs: EditSongsUseCase,
     private val deleteSong: DeleteSongUseCase,
     private val deleteLibrary: DeleteLibraryUseCase,
+    downloadImportFile: DownloadImportFileUseCase,
     private val prepareImport: PrepareImportUseCase,
     private val importFiles: ImportFilesUseCase,
     private val exportSongs: ExportSongsUseCase,
@@ -780,6 +782,7 @@ class CampfireViewModel(
         openImportedSong = { openImportedSong(it) },
         launchFileTransfer = { launchFileTransfer(it) },
         isLeaving = { isLeaving },
+        downloadImportFile = downloadImportFile,
         prepareImport = prepareImport,
         importFiles = importFiles,
         rememberDemoLibraryFiles = rememberDemoLibraryFiles,
@@ -1507,24 +1510,26 @@ class CampfireViewModel(
 
     fun importFiles(files: List<ImportedFile>) = importController.importFiles(files)
 
-    private fun enqueueImport(
-        files: List<ImportedFile>,
-        shouldAnnounceResult: Boolean = true,
-        shouldOpenSong: Boolean = false,
-        isDemoLibrary: Boolean = false,
-    ) = importController.enqueueImport(files, shouldAnnounceResult, shouldOpenSong, isDemoLibrary)
-
-    private suspend fun awaitImportSettled() = importController.awaitImportSettled()
+    fun importFromAddress(url: String) = importController.importFromAddress(url)
 
     fun importDemoLibrary() = firstRunController.importDemoLibrary()
 
     fun onWhatsNewShown() = firstRunController.onWhatsNewShown()
 
-    private suspend fun import(request: ImportRequest) = importController.import(request)
-
     fun cancelImportPreparation() = importController.cancelImportPreparation()
 
-    fun resolveImport(resolution: ImportConflictResolution) = importController.resolveImport(resolution)
+    fun retryImport() = importController.retryImport()
+
+    fun setImportEntryChosen(key: ImportEntryKey, isChosen: Boolean) = importController.setImportEntryChosen(key, isChosen)
+
+    fun setImportEntriesChosen(keys: Collection<ImportEntryKey>, isChosen: Boolean) = importController.setImportEntriesChosen(keys, isChosen)
+
+    fun setImportConflictResolution(key: ImportEntryKey?, resolution: ImportConflictResolution) =
+        importController.setImportConflictResolution(key, resolution)
+
+    fun confirmImport() = importController.confirmImport()
+
+    fun resolveImport() = importController.resolveImport()
 
     internal fun openImportReport(result: ImportResult) = importController.openImportReport(result)
 

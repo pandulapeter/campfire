@@ -48,7 +48,7 @@ internal class ImportPlannerTest {
 
         assertEquals(listOf(ImportPlan.Status.CONFLICTING, ImportPlan.Status.NEW, ImportPlan.Status.IDENTICAL), plan.map { it.status })
         assertEquals(0, plan.last().repeatedEntryIndex)
-        assertEquals(listOf("x.cho"), ImportPlan(songs = plan).summary.conflictingFileNames)
+        assertEquals(listOf("x.cho"), plan.filter { it.status == ImportPlan.Status.CONFLICTING }.map { it.replacesFileName ?: it.fileName })
     }
 
     @Test
@@ -361,7 +361,7 @@ internal class ImportPlannerTest {
         assertEquals(listOf(C, B), plan.map { it.text })
         assertEquals(listOf(ImportPlan.Status.CONFLICTING, ImportPlan.Status.IDENTICAL), plan.map { it.status })
         assertEquals("x_2.cho", plan.last().fileName)
-        assertEquals(listOf("x.cho"), ImportPlan(songs = plan).summary.conflictingFileNames)
+        assertEquals(listOf("x.cho"), plan.filter { it.status == ImportPlan.Status.CONFLICTING }.map { it.replacesFileName ?: it.fileName })
     }
 
     @Test
@@ -513,7 +513,7 @@ internal class ImportPlannerTest {
         assertEquals(listOf(ImportPlan.Status.CONFLICTING), plan.map { it.status })
         assertEquals("wonderwall.cho", plan.single().fileName)
         assertEquals("Wonderwall.cho", plan.single().replacesFileName)
-        assertEquals(listOf("Wonderwall.cho"), ImportPlan(songs = plan).summary.conflictingFileNames)
+        assertEquals(listOf("Wonderwall.cho"), plan.filter { it.status == ImportPlan.Status.CONFLICTING }.map { it.replacesFileName ?: it.fileName })
     }
 
     @Test

@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.domain.api.useCases
 
-import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution
+import com.pandulapeter.campfire.data.model.domain.ImportChoices
 import com.pandulapeter.campfire.data.model.domain.ImportProgress
 import com.pandulapeter.campfire.data.model.domain.ImportPlan
 import com.pandulapeter.campfire.data.model.domain.ImportResult
@@ -18,16 +18,17 @@ interface ImportFilesUseCase {
 
     /**
      * Carries out what [PrepareImportUseCase] worked out. A file the library already has under the same name and
-     * with the same content is never written a second time; [resolution] decides what happens to the ones whose
-     * name is taken by something else, and is the answer the user gave to that question. Progress counts every
-     * processed entry, including duplicates and skipped conflicts. A write failure stops the batch and returns
+     * with the same content is never written a second time. [choices] are what the user answered in the review: an
+     * entry left out is not written, and a repeat of it goes with it; one whose name is taken by something else is
+     * numbered next to it or written over it, as its resolution says. Progress counts every processed entry,
+     * including duplicates and the ones left out. A write failure stops the batch and returns
      * its partial result with the failed and unprocessed names; cancellation still throws. The observer must not
      * throw or perform blocking work. A setlist that arrived naming no day of its own is written with the day it was
      * imported on, the way a new one is, unless it replaces a library setlist, whose day and countdown it keeps.
      */
     suspend operator fun invoke(
         plan: ImportPlan,
-        resolution: ImportConflictResolution,
+        choices: ImportChoices,
         onProgress: (ImportProgress) -> Unit = {},
     ): ImportResult
 }

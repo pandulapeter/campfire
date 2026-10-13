@@ -9,7 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.importReport
 
-import com.pandulapeter.campfire.data.model.domain.ImportPlan
 import com.pandulapeter.campfire.data.model.domain.ImportResult
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song
@@ -25,10 +24,9 @@ internal data class ImportReportSection(
      * up for, and what arrived as expected after it.
      */
     enum class Kind {
-        CONFLICTS,
         FAILED,
         UNPROCESSED,
-        SKIPPED_CONFLICTS,
+        LEFT_OUT,
         SKIPPED,
         OVERSIZED,
         UNREADABLE,
@@ -54,11 +52,6 @@ internal data class ImportReportRow(
     val isSong: Boolean = false,
     val isConverted: Boolean = false,
 )
-
-/** The names a conflict question is about. */
-internal fun importReportSections(summary: ImportPlan.Summary) = listOf(
-    ImportReportSection(ImportReportSection.Kind.CONFLICTS, summary.conflictingFileNames.toRows()),
-).filter { it.rows.isNotEmpty() }
 
 /**
  * What an import came to, every group that has any files in it. Songs and setlists are named the way the library
@@ -88,7 +81,7 @@ internal fun importReportSections(
     return listOf(
         ImportReportSection(ImportReportSection.Kind.FAILED, result.failedFileNames.toRows()),
         ImportReportSection(ImportReportSection.Kind.UNPROCESSED, result.unprocessedFileNames.toRows()),
-        ImportReportSection(ImportReportSection.Kind.SKIPPED_CONFLICTS, result.skippedConflictingFileNames.toRows()),
+        ImportReportSection(ImportReportSection.Kind.LEFT_OUT, result.leftOutFileNames.toRows()),
         ImportReportSection(ImportReportSection.Kind.SKIPPED, result.skippedFileNames.toRows()),
         ImportReportSection(ImportReportSection.Kind.OVERSIZED, result.oversizedFileNames.toRows()),
         ImportReportSection(ImportReportSection.Kind.UNREADABLE, result.unreadableDocumentFileNames.toRows()),

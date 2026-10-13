@@ -115,6 +115,14 @@ redirect URIs character for character, which is why the desktop port is fixed.
   trusted no further than its headers: an answer that is not `image/*` or is over 5 MB (read one byte past the limit
   where no length is declared) is `Missing` and never read to its end; a 408, a 429, a 5xx or a transport failure is
   `Unreachable`; any other refusal is `Missing`.
+- `importDownload/ImportDownloadRemoteSourceImpl` — a GET of the one address the user asked to import from, redirects
+  followed, asked once and keeping nothing; it is reached by nothing in the app yet (the shared links will). The cover
+  download's shape: a declared length over the ceiling is `TooLarge` before the body is read, otherwise the body is
+  read one byte past it; a 408, a 429, a 5xx, a transport failure or a refused CORS check is `Unreachable`, any other
+  refusal or an empty body `Missing`. The content type is not checked, since a share link's is whatever the host says;
+  the import triages the file by its name or its bytes instead. The name is `importDownloadFileName`'s (pure, tested):
+  `Content-Disposition`'s `filename*` (UTF-8, percent-decoded), then `filename`, then the last segment of the final
+  address's path, then `download`, always only the last segment of whatever names it.
 - `network/CatalogueTransport.kt` — what every catalogue request shares: any `Throwable` of the transport turned into a
   `CatalogueSearchException`, and the answer decoded on `Dispatchers.Default`, since a recording search lists every
   release of every recording and decoding it on the main thread lands on the frames of the sheet opening.

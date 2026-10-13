@@ -85,6 +85,26 @@ class PrepareImportUseCaseImplTest {
         assertTrue(plan.songs.isEmpty())
     }
 
+    @Test
+    fun `every song carries the title and artist of its header and the plan the names of the picked files`() = runTest {
+        val archive = FakeArchiveRepository { _, _ ->
+            listOf(
+                ImportedFile("one.cho", "{title: One}\n{artist: Band}\n".encodeToByteArray()),
+                ImportedFile("two.cho", "{title: Two}\n{subtitle: Live}\n".encodeToByteArray()),
+            )
+        }
+
+        val plan = prepare(archive = archive)(
+            listOf(ImportedFile("backup.zip", byteArrayOf(1)), ImportedFile("Untitled.cho", "[C]la la\n".encodeToByteArray())),
+        )
+
+        assertEquals(listOf("backup.zip", "Untitled.cho"), plan.sourceNames)
+        assertEquals(
+            listOf(Triple("one.cho", "One", "Band"), Triple("two.cho", "Two (Live)", ""), Triple("Untitled.cho", "Untitled", "")),
+            plan.songs.map { Triple(it.sourceFileName, it.title, it.artist) },
+        )
+    }
+
     private fun song(name: String) = ImportedFile(name, "{title: ${name.substringBeforeLast('.')}}\n".encodeToByteArray())
 
     /** An import into an empty library, which leaves what the preparation left out the only thing two plans differ by. */

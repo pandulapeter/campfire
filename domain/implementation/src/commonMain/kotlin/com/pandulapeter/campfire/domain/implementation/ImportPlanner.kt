@@ -41,6 +41,9 @@ internal object ImportPlanner {
         val isConverted: Boolean = false,
         /** See [ImportPlan.SongEntry.origin]. */
         val origin: Int? = null,
+        /** See [ImportPlan.SongEntry.title]. */
+        val title: String = "",
+        val artist: String = "",
     )
 
     /** One setlist of the batch, as `SetlistRepository.parseSetlist` named it, and the name of the file it arrived in. */
@@ -310,6 +313,8 @@ internal object ImportPlanner {
         replacesFileName = replacesFileName,
         isConverted = isConverted,
         origin = origin,
+        title = title,
+        artist = artist,
     )
 
     private suspend fun readAll(

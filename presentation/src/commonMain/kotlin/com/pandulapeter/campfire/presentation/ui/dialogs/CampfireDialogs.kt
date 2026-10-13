@@ -15,7 +15,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution
 import com.pandulapeter.campfire.presentation.localization.pluralStringResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -66,17 +65,8 @@ internal fun CampfireDialogs(
     viewModel: CampfireViewModel,
     urlOpener: (String) -> Unit,
 ) {
-    val visibleDialog by viewModel.visibleDialog.collectAsStateWithLifecycle()
     val openDialogs by viewModel.openDialogs.collectAsStateWithLifecycle()
     val closeRequest by viewModel.dialogCloseRequest.collectAsStateWithLifecycle()
-    val importProgress by viewModel.importProgress.collectAsStateWithLifecycle()
-    val importReport by viewModel.importReport.collectAsStateWithLifecycle()
-    // The import screen shows the progress of the imports it reports on itself.
-    ImportProgressDialogHost(
-        progress = importProgress.takeIf { importReport == null },
-        canShow = visibleDialog == null,
-        onCancel = viewModel::cancelImportPreparation,
-    )
     // A slot of its own for every open dialog, keyed by its place, so that one a dialog was put over stays composed
     // under it - its sheet up, its draft and scroll position kept - and is only uncovered when that one goes.
     openDialogs.forEach { dialog ->
@@ -335,7 +325,7 @@ private fun CampfireDialog(
             onDismiss = viewModel::dismissDialog,
             onConfirm = {
                 viewModel.dismissDialog()
-                viewModel.resolveImport(ImportConflictResolution.REPLACE)
+                viewModel.resolveImport()
             },
         )
 

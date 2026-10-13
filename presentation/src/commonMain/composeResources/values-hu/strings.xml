@@ -41,7 +41,7 @@
     <string name="import_status_songs">Importált dalok</string>
     <string name="import_status_setlists">Importált listák</string>
     <string name="import_status_duplicates">Már a könyvtárban</string>
-    <string name="import_status_skipped_conflicts">Döntésed alapján kihagyott ütközések</string>
+    <string name="import_status_left_out">Döntésed alapján kihagyva</string>
     <string name="import_status_skipped">Nem támogatott vagy érvénytelen fájlok</string>
     <string name="import_status_oversized">Importálási méretkorlátot túllépő fájlok</string>
     <string name="import_status_unreadable">Olvasható szöveg nélküli dokumentumok</string>
@@ -58,7 +58,6 @@
         <item quantity="one">%1$d fájl cseréje?</item>
         <item quantity="other">%1$d fájl cseréje?</item>
     </plurals>
-    <string name="import_conflicts_apply_all">Ez a döntés az importálás minden ütköző fájljára vonatkozik.</string>
     <string name="import_files">Fájlok importálása</string>
     <string name="import_result">%1$d dal és %2$d lista importálva · %3$d már megvolt · %4$d kihagyva</string>
     <string name="import_converted">Átalakítva: %1$d — érdemes átnézni a szerkesztőben.</string>
@@ -79,17 +78,7 @@
         <item quantity="one">Egy fájlt nem sikerült beolvasni, így nincs benne az archívumban: %2$s</item>
         <item quantity="other">%1$d fájlt nem sikerült beolvasni, így nincsenek benne az archívumban. Köztük: %2$s</item>
     </plurals>
-    <string name="import_conflicts">Néhány név foglalt</string>
-    <plurals name="import_conflicts_summary">
-        <item quantity="one">Az importálandó fájlok közül egy olyan nevet visel, amelyen már egy másik fájl van a könyvtáradban.</item>
-        <item quantity="other">Az importálandó fájlok közül %1$d olyan nevet visel, amelyen már egy másik fájl van a könyvtáradban.</item>
-    </plurals>
-    <string name="import_conflicts_new">%1$d dal és %2$d lista új, ezek mindenképpen importálódnak.</string>
-    <plurals name="import_conflicts_duplicates">
-        <item quantity="one">Egy fájl változatlanul megvan már a könyvtáradban, ezt nem bántjuk.</item>
-        <item quantity="other">%1$d fájl változatlanul megvan már a könyvtáradban, ezeket nem bántjuk.</item>
-    </plurals>
-    <plurals name="import_conflicts_skipped">
+    <plurals name="import_review_skipped">
         <item quantity="one">Egy fájl se nem dal, se nem lista, ezt nem lehet importálni.</item>
         <item quantity="other">%1$d fájl se nem dal, se nem lista, ezeket nem lehet importálni.</item>
     </plurals>
@@ -97,15 +86,57 @@
         <item quantity="one">Egy fájl túl nagy, ezt nem lehet importálni.</item>
         <item quantity="other">%1$d fájl túl nagy, ezeket nem lehet importálni.</item>
     </plurals>
-    <string name="import_conflicts_files">A foglalt nevek</string>
-    <string name="import_conflicts_question">Mi legyen velük?</string>
     <string name="import_conflicts_keep_both">Maradjon mindkettő</string>
     <string name="import_conflicts_keep_both_description">Importálás a meglévő fájlok mellé, \"_2\" számozással</string>
     <string name="import_conflicts_replace">Felülírás</string>
     <string name="import_conflicts_replace_description">A könyvtáradban lévő fájlok helyére kerülnek. A felülírt fájlok elvesznek.</string>
-    <string name="import_conflicts_skip">Kihagyás</string>
-    <string name="import_conflicts_skip_description">Minden más importálódik, a könyvtáradban lévő fájlok megmaradnak</string>
-    <string name="import_conflicts_confirm">Importálás</string>
+    <string name="import_loading_title">Fájlok beolvasása</string>
+    <string name="import_progress_downloading">A fájl letöltése</string>
+    <string name="import_failed_unreachable">%1$s nem érhető el. Ellenőrizd az internetkapcsolatot, és próbáld újra.</string>
+    <string name="import_failed_not_found">Ezen a címen nincs mit letölteni. Lehet, hogy a link lejárt, vagy törölték.</string>
+    <string name="import_failed_too_large">Ez a fájl nagyobb annál a 24 MB-nál, amennyit a Campfire egyszerre importálni tud.</string>
+    <string name="import_failed_unreadable">A fájlokat nem sikerült beolvasni. Semmi sem lett importálva.</string>
+    <string name="import_retry">Újrapróbálás</string>
+    <string name="import_review_title">Importálás áttekintése</string>
+    <string name="import_review_title_empty">Nincs mit importálni</string>
+    <string name="import_review_from">Forrás: %1$s</string>
+    <plurals name="import_review_confirm">
+        <item quantity="one">%1$d fájl importálása</item>
+        <item quantity="other">%1$d fájl importálása</item>
+    </plurals>
+    <string name="import_review_summary_counts">Importálandó dalok: %1$d · Listák: %2$d</string>
+    <plurals name="import_review_replacing">
+        <item quantity="one">Ebből egy felülír egy fájlt a könyvtáradban</item>
+        <item quantity="other">Ebből %1$d felülír egy-egy fájlt a könyvtáradban</item>
+    </plurals>
+    <plurals name="import_review_numbered">
+        <item quantity="one">Ebből egy számozva kerül a vele ütköző fájl mellé</item>
+        <item quantity="other">Ebből %1$d számozva kerül a vele ütköző fájl mellé</item>
+    </plurals>
+    <plurals name="import_review_already_there">
+        <item quantity="one">Egy már megvan a könyvtáradban, és változatlan marad</item>
+        <item quantity="other">%1$d már megvan a könyvtáradban, és változatlan marad</item>
+    </plurals>
+    <plurals name="import_review_left_out">
+        <item quantity="one">Egyet kihagytál</item>
+        <item quantity="other">%1$d fájlt kihagytál</item>
+    </plurals>
+    <string name="import_review_conflicts">Már foglalt nevek</string>
+    <string name="import_review_songs">Dalok</string>
+    <string name="import_review_setlists">Listák</string>
+    <string name="import_review_for_all">Mindegyikre</string>
+    <string name="import_review_will_be_numbered">Számozva kerül a meglévő mellé</string>
+    <string name="import_review_will_replace">Felülírja a meglévőt: %1$s</string>
+    <string name="import_review_show_library_song">A meglévő megnyitása</string>
+    <plurals name="import_review_setlist_songs">
+        <item quantity="one">Egy dal</item>
+        <item quantity="other">%1$d dal</item>
+    </plurals>
+    <string name="import_review_setlist_songs_in_import">ebből %1$d ebben az importálásban</string>
+    <plurals name="import_review_repeated">
+        <item quantity="one">Egyszer szerepel a fájlok között</item>
+        <item quantity="other">%1$d alkalommal szerepel a fájlok között</item>
+    </plurals>
 
     <!-- Errors -->
     <string name="error_no_data">Nem sikerült betölteni az adatokat</string>
