@@ -23,7 +23,7 @@
 - At a glance: not needed during onboarding
 
 ### Features
-- Import zip screen that displays the content before actually importing it, prepare the screen for loading remote zips
+- Import zip screen that displays the content before actually importing it, prepare the screen for loading remote zips: documentation/plans/import-review.md
 - Shared setlists via Dropbox public links -> deeplink to Campfire. Rewrite documentation/plans/song-links.md - allow scanning deep links via QR code
 
 ## Midterm (in the next versions)
