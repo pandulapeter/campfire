@@ -235,6 +235,40 @@ class ChordVoicingsTest {
     }
 
     @Test
+    fun `a stored shape moved from another root keeps the table's fingering`() {
+        val moved = listOf("C", "Am", "G7", "Fmaj7", "Bbm7b5", "F#m7", "Ebmaj7").flatMap { name ->
+            val chord = ChordProChords.parse(name)!!
+            val filed = ChordVoicingTables.guitar.map { ChordProDefinitions.read(it, ChordInstrument.GUITAR.id) as ChordProDefinitions.Reading.Shape }
+                .filter { ChordProChords.parse(it.name) == chord }
+                .map { (it.voicing as ChordVoicing.Fretted).frets }
+            ChordVoicingSearch.tableShapes(chord, ChordTuning.GUITAR).filter { it.frets !in filed }.map { chord to it }
+        }
+        assertTrue(moved.isNotEmpty())
+        moved.forEach { (chord, shape) ->
+            assertNotNull(shape.fingers, shape.toString())
+            assertEquals(shape, ChordVoicings.read(ChordVoicings.write(shape), ChordTuning.GUITAR, chord))
+        }
+    }
+
+    @Test
+    fun `the table lookup of one shape answers what the chord's table shapes do`() {
+        val tunings = listOf(ChordTuning.GUITAR, ChordTuning.GUITAR_DROP_D, ChordTuning.GUITAR_HALF_STEP_DOWN, ChordTuning.UKULELE_BARITONE, ChordTuning.BANJO)
+        var searched = 0
+        listOf("C", "Am", "G7", "Fmaj7", "C/E", "Bbm7b5").forEach { name ->
+            val chord = ChordProChords.parse(name)!!
+            tunings.forEach { tuning ->
+                val table = ChordVoicingSearch.tableShapes(chord, tuning)
+                ChordVoicings.all(chord, tuning).map { (it as ChordVoicing.Fretted).frets }.forEach { frets ->
+                    val expected = table.firstOrNull { it.frets == frets }
+                    if (expected == null) searched++
+                    assertEquals(expected, ChordVoicingSearch.tableShape(chord, tuning, frets), "$name in ${tuning.id}: $frets")
+                }
+            }
+        }
+        assertTrue(searched > 0, "a searched shape is looked up too")
+    }
+
+    @Test
     fun `a shape of another instrument is not read`() {
         assertNull(ChordVoicings.read("x 3 2 0 1 0", ChordTuning.UKULELE))
         assertNull(ChordVoicings.read("0 0 0 3", ChordTuning.GUITAR))

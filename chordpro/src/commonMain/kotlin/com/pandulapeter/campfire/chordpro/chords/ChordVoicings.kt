@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.chordpro.chords
 import com.pandulapeter.campfire.chordpro.chords.ChordVoicingSearch.hasTableShapes
 import com.pandulapeter.campfire.chordpro.chords.ChordVoicingSearch.keyboard
 import com.pandulapeter.campfire.chordpro.chords.ChordVoicingSearch.search
+import com.pandulapeter.campfire.chordpro.chords.ChordVoicingSearch.tableShape
 import com.pandulapeter.campfire.chordpro.chords.ChordVoicingSearch.tableShapes
 import com.pandulapeter.campfire.chordpro.model.Chord
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
@@ -105,7 +106,7 @@ public object ChordVoicings {
         if (words.size != tuning.strings.size) return null
         val frets = words.map { word -> if (word == MUTED) null else word.toIntOrNull()?.takeIf { it in 0..MAX_FRET } ?: return null }
         if ((tuning.instrument.droneString?.let { frets[it] } ?: 0) > 0) return null
-        return chord?.let { tableShapes(it, tuning).firstOrNull { known -> known.frets == frets } } ?: ChordVoicing.Fretted(frets)
+        return chord?.let { tableShape(it, tuning, frets) } ?: ChordVoicing.Fretted(frets)
     }
 
     /** [voicing] as one string, which is how a player's choice of shape is stored: `x 3 2 0 1 0`, `4 7 12 / 0`. */

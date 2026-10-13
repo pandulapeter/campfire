@@ -130,6 +130,28 @@ internal object ChordVoicingSearch {
         return (filed + moved).distinctBy { it.frets }
     }
 
+    /**
+     * The shape of [tableShapes] for [chord] in [tuning] whose frets are [frets], with its fingering, or null where the
+     * table has none: what [tableShapes] would answer, without moving and sorting every shape of the chord's quality.
+     */
+    fun tableShape(chord: Chord, tuning: ChordTuning, frets: List<Int?>): ChordVoicing.Fretted? {
+        val target = playedOn(chord.movedBy(-tuning.shift), tuning.instrument)
+        val table = table(tuning)
+        table.filed[target]?.firstOrNull { it.frets == frets }?.let { return it }
+        val drone = tuning.instrument.droneString
+        val droneFret = drone?.let { if (tuning.tableTuning.strings[it] % 12 in target.pitchClasses) 0 else null }
+        // The sort of tableShapes is stable and orders by the frets alone, so of the moved shapes with equal frets it
+        // keeps the first in the table-and-shift order this walks.
+        table.movable[target.quality].orEmpty().forEach { shape ->
+            if (shape.chord == target) return@forEach
+            shiftsOf(shape.voicing.frets, (target.root - shape.chord.root).mod(12), drone).forEach { shift ->
+                val moved = shape.voicing.shiftedBy(shift, drone, droneFret)
+                if (moved.frets == frets) return moved
+            }
+        }
+        return null
+    }
+
     /** Whether [tableShapes] has any shape of [chord] in [tuning], without working all of them out. */
     fun hasTableShapes(chord: Chord, tuning: ChordTuning): Boolean {
         val target = playedOn(chord.movedBy(-tuning.shift), tuning.instrument)

@@ -453,8 +453,9 @@ what nothing outside the module calls is `internal`.
   answer is remembered for the rest of the session (a bounded copy-on-write map, safe from any thread), so the first
   page that names an unusual chord pays for it once, and `needsSearch` says whether it would have to search, for what builds a page in a frame to
   leave out; `all` runs the search. `write` and `read` are a stored choice
-  (`x 3 2 0 1 0`, `4 7 12 / 0`), and reading one back for a chord the tables know gives it their fingering; `read`
-  takes a keyboard key in four octaves and a bass as a pitch class, since a stored choice arrives through sync.
+  (`x 3 2 0 1 0`, `4 7 12 / 0`), and reading one back for a chord the tables know gives it their fingering (looked up
+  in the table's index, without building the chord's shapes); `read` takes a keyboard key in four octaves and a bass as
+  a pitch class, since a stored choice arrives through sync.
   `ChordVoicings` itself is only the cache, the stored format and the public entry points: the table lookup, the search
   and the keyboard's inversions are the stateless internal `ChordVoicingSearch`, and what a hand does with a shape
   (`baseFret`, `fingerCount`, `isHoldable`, `pitchClasses`) is `ChordShapeGeometry`, with public delegates for what
