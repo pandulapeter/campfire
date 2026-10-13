@@ -11,9 +11,9 @@ package com.pandulapeter.campfire.presentation.ui.navigation
 
 /**
  * A press of the item of the top level screen that is already open: [destination] scrolls to its top, and one that is
- * there already opens [destinationWhenAtTop] instead, where there is one. Only the navigation bar's Tools item names
+ * there already opens [destinationWhenAtTop] instead, where there is one. Only the chrome's Tools item names
  * one (the first tool switched on), so that it steps back to its first tab the way the Settings item steps back to
- * General; a tool's own item on a rail and a tool's tab only ever scroll.
+ * General; a tool's own item on a taller rail and a tool's tab only ever scroll.
  */
 internal class ScrollToTopRequest(
     val destination: CampfireDestination.TopLevel,

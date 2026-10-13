@@ -52,6 +52,6 @@ any other choice. It is offered in read only mode too, since it writes no file.
 ### Where it lives
 
 A top level destination (`CampfireDestination.Chords`, `/chords` on the web), one of the tools
-(`CampfireDestination.TopLevel.tools`, with the Metronome and the Tuner): where the navigation bar has no room for every
-screen it is a tab behind the bar's Tools item (see the navigation chrome in `ui/CLAUDE.md`). It follows the Chord
-diagrams switch in Settings → Features (`FeatureSwitches.isChordLibraryEnabled`), which the Chords switch disables.
+(`CampfireDestination.TopLevel.tools`, with the Metronome and the Tuner): where the navigation bar, or a short window's
+rail, has no room for every screen it is a tab behind their Tools item (see the navigation chrome in `ui/CLAUDE.md`). It
+follows the Chord diagrams switch in Settings → Features (`FeatureSwitches.isChordLibraryEnabled`), which the Chords switch disables.

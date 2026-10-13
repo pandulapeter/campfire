@@ -113,7 +113,7 @@ internal class Navigator(
     var settingsTab by mutableStateOf(SettingsTab.GENERAL)
 
     /**
-     * The tool that was on screen last, which the navigation bar's Tools item opens again (see `toolsItemDestination`),
+     * The tool that was on screen last, which the chrome's Tools item opens again (see `toolsItemDestination`),
      * starting on the Metronome. Like [settingsTab] it lasts for the session.
      */
     var lastTool by mutableStateOf(backStack.lastTool() ?: CampfireDestination.Metronome)
