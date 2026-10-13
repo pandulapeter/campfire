@@ -38,11 +38,26 @@ internal object ChordVoicingSearch {
         ChordTuning.GUITAR_DOUBLE_DROP_D -> doubleDropDTable
         ChordTuning.UKULELE -> ukuleleTable
         ChordTuning.MANDOLIN -> mandolinTable
-        else -> emptyList()
+        else -> Table.EMPTY
     }
 
-    private class TableShape(val chord: Chord, val voicing: ChordVoicing.Fretted) {
-        val isMovable = voicing.frets.none { it == 0 }
+    private class TableShape(val chord: Chord, val voicing: ChordVoicing.Fretted)
+
+    /**
+     * A table read and indexed once: thousands of shapes are looked up for every chord of a page while it is built in a
+     * frame, so neither lookup walks the whole of it.
+     *
+     * @property filed The shapes filed under each chord, in the table's order.
+     * @property movable The shapes with no open string, by their quality (the intervals and the bass's interval), which
+     *   stand for that quality on every root.
+     */
+    private class Table(
+        val filed: Map<Chord, List<ChordVoicing.Fretted>>,
+        val movable: Map<Pair<List<Int>, Int?>, List<TableShape>>,
+    ) {
+        companion object {
+            val EMPTY = Table(emptyMap(), emptyMap())
+        }
     }
 
     private val guitarTable by lazy { readTable(ChordVoicingTables.guitar, ChordInstrument.GUITAR) }
@@ -51,25 +66,41 @@ internal object ChordVoicingSearch {
     private val ukuleleTable by lazy { readTable(ChordVoicingTables.ukulele, ChordInstrument.UKULELE) }
     private val mandolinTable by lazy { readTable(ChordVoicingTables.mandolin, ChordInstrument.MANDOLIN) }
 
-    private fun readTable(lines: List<String>, instrument: ChordInstrument) = lines.map { line ->
-        val reading = ChordProDefinitions.read(line, instrument.id) as ChordProDefinitions.Reading.Shape
-        check(reading.instrument == instrument) { line }
-        TableShape(checkNotNull(ChordProChords.parse(reading.name)) { line }, reading.voicing as ChordVoicing.Fretted)
+    private fun readTable(lines: List<String>, instrument: ChordInstrument): Table {
+        val shapes = lines.map { line ->
+            val reading = ChordProDefinitions.read(line, instrument.id) as ChordProDefinitions.Reading.Shape
+            check(reading.instrument == instrument) { line }
+            TableShape(checkNotNull(ChordProChords.parse(reading.name)) { line }, reading.voicing as ChordVoicing.Fretted)
+        }
+        return Table(
+            filed = shapes.groupBy({ it.chord }, { it.voicing }),
+            movable = shapes.filter { shape -> shape.voicing.frets.none { it == 0 } }.groupBy { it.chord.quality },
+        )
     }
 
     /**
-     * The table's shapes of [chord] in [tuning]: the open position shapes filed under it, in the table's order, and then
-     * every shape with no open string, filed under it or moved to it from another root, from the lowest position up.
+     * The table's shapes of [chord] in [tuning]: every shape filed under it, in the table's order, and then every shape
+     * with no open string filed under another root of its quality, moved to it, from the lowest position up.
      */
     fun tableShapes(chord: Chord, tuning: ChordTuning): List<ChordVoicing.Fretted> {
         val target = playedOn(chord.movedBy(-tuning.shift), tuning.instrument)
-        val shapes = table(tuning)
-        val open = shapes.filter { !it.isMovable && it.chord == target }.map { it.voicing }
-        val movable = shapes.filter { it.isMovable && it.chord.intervals == target.intervals && it.chord.bassInterval == target.bassInterval }
+        val table = table(tuning)
+        val filed = table.filed[target].orEmpty()
+        val moved = table.movable[target.quality].orEmpty().filter { it.chord != target }
             .flatMap { shape -> shiftsOf(shape.voicing.frets, (target.root - shape.chord.root).mod(12)).map { shape.voicing.shiftedBy(it) } }
             .sortedWith(compareBy({ position(it.frets) }, { -it.frets.count { fret -> fret != null } }))
-        return (open + movable).distinctBy { it.frets }
+        return (filed + moved).distinctBy { it.frets }
     }
+
+    /** Whether [tableShapes] has any shape of [chord] in [tuning], without working all of them out. */
+    fun hasTableShapes(chord: Chord, tuning: ChordTuning): Boolean {
+        val target = playedOn(chord.movedBy(-tuning.shift), tuning.instrument)
+        val table = table(tuning)
+        return target in table.filed ||
+            table.movable[target.quality].orEmpty().any { shiftsOf(it.voicing.frets, (target.root - it.chord.root).mod(12)).isNotEmpty() }
+    }
+
+    private val Chord.quality get() = intervals to bassInterval
 
     private val Chord.bassInterval get() = bass?.let { (it - root).mod(12) }
 

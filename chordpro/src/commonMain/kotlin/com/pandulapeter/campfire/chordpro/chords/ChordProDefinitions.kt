@@ -158,9 +158,10 @@ public object ChordProDefinitions {
                 stoppedNow.isNotEmpty() -> fingers.mapIndexed { string, finger -> if (string in stoppedNow) 1 else if (finger > 0) finger + 1 else 0 }
                 openedNow.isNotEmpty() -> {
                     val released = openedNow.map { fingers[it] }.filter { it > 0 }.toSet()
-                    // Strings held by several fingers coming to rest open is no barre going, and moving the shape back
-                    // could not tell which finger held which: the fingering is left out rather than guessed.
-                    if (released.size > 1) return ChordVoicing.Fretted(moved)
+                    // Strings held by several fingers coming to rest open is no barre going, and one held by any finger
+                    // but the index is a finger moving the shape back would put the index on: either way it could not
+                    // tell which finger held which, so the fingering is left out rather than guessed.
+                    if (released.size > 1 || released.any { it != 1 }) return ChordVoicing.Fretted(moved)
                     fingers.mapIndexed { string, finger ->
                         when {
                             string in openedNow || finger == 0 -> 0

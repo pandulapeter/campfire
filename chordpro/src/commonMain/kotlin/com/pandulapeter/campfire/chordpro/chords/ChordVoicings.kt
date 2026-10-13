@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.chordpro.chords
 
+import com.pandulapeter.campfire.chordpro.chords.ChordVoicingSearch.hasTableShapes
 import com.pandulapeter.campfire.chordpro.chords.ChordVoicingSearch.keyboard
 import com.pandulapeter.campfire.chordpro.chords.ChordVoicingSearch.search
 import com.pandulapeter.campfire.chordpro.chords.ChordVoicingSearch.tableShapes
@@ -22,8 +23,8 @@ import kotlin.concurrent.Volatile
  * How a chord is played: the shapes of a [Chord] on an instrument in one of its tunings ([ChordTuning]).
  *
  * The shapes come from two places, each for what it is good at. The tables ([ChordVoicingTables]) hold the shapes
- * everybody knows, with their fingerings, and always come first, since a search cannot know which of a dozen C chords
- * a guitarist expects to see. A search finds the rest: every way to stop the strings within four frets, at each
+ * players use, most with their fingerings, in the order they are offered in, and always come first, since a search
+ * cannot know which of a dozen C chords a guitarist expects to see. A search finds the rest: every way to stop the strings within four frets, at each
  * position up to the twelfth, that sounds only notes of the chord and all of the ones that make it that chord (the
  * fifth may go first, then the root, where there are more notes than strings), with the bass, or else the root, as the
  * lowest note that sounds (not on the re-entrant ukulele, whose lowest string is in the middle), no muted string
@@ -75,7 +76,7 @@ public object ChordVoicings {
      * frame asks this first.
      */
     public fun needsSearch(chord: Chord, tuning: ChordTuning): Boolean =
-        tuning.instrument != ChordInstrument.KEYBOARD && (chord to tuning) !in defaults && tableShapes(chord, tuning).isEmpty()
+        tuning.instrument != ChordInstrument.KEYBOARD && (chord to tuning) !in defaults && !hasTableShapes(chord, tuning)
 
     /** Every shape of [chord] in [tuning], [default] first: the tables', then the search's. */
     public fun all(chord: Chord, tuning: ChordTuning): List<ChordVoicing> = when (tuning.instrument) {

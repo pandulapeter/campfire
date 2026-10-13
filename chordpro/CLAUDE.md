@@ -421,9 +421,17 @@ what nothing outside the module calls is `internal`.
   `C Eb G`, a white-key enharmonic or a double accidental falling back to the plain name), which a chord's sheet on the
   song details screen shows under its diagram.
 - `ChordVoicings` / `ChordVoicingTables` — how a chord is played on the guitar, the ukulele, the mandolin (a string
-  for each of its four pairs, G D A E) and the keyboard (`model/ChordInstrument`, `model/ChordVoicing`). The tables are the shapes everybody knows, typed by hand in a
-  `{define}`'s syntax, and always come first; a shape with no open string stands for its quality on every root and is
-  moved to it. A search finds the rest: every way to stop the strings within four frets up to the twelfth that sounds
+  for each of its four pairs, G D A E) and the keyboard (`model/ChordInstrument`, `model/ChordVoicing`). The tables,
+  in a `{define}`'s syntax, always come first: one file per table (`GuitarChordTable`, `UkuleleChordTable`,
+  `MandolinChordTable`, `DropDChordTable`, and double drop D's in `ChordVoicingTables`), the shapes Campfire was first
+  shipped with joined by every one of [chords-db](https://github.com/tombatossals/chords-db) (MIT) and of ChordPro's
+  own instrument configurations (Artistic License 2.0) that sounds exactly the chord it is filed under and keeps the
+  search's rules, an inversion filed under the slash chord it sounds; each file's KDoc carries the notices. **Their
+  order is written, not worked out**: within a chord the shape it was shown with before the import first, then the
+  rest from the most comfortable to the least, decided once when the files were written. A chord is answered with
+  the shapes filed under it in that order, then with the shapes of its quality filed under another root that have no
+  open string, moved to it, from the lowest position up; a table is indexed by chord and by quality as it is read, so
+  that neither walks the thousands of shapes. A search finds the rest: every way to stop the strings within four frets up to the twelfth that sounds
   only notes of the chord and all of the ones that make it (the fifth of a chord of four notes or more, and the root
   where there are more notes than strings, may go), with the bass or else the root lowest (not on an instrument that
   `playsChordOver`, the re-entrant ukulele and the mandolin, whose shapes everybody plays put the fifth or the third
@@ -476,8 +484,8 @@ what nothing outside the module calls is `internal`.
   defines none, and `rangeOf` sends the caret to the line that counts. `line` writes one the way it is read, with the base fret a diagram would draw and a selector only where the frets alone would name another instrument (`define-mandolin`). `transposed`
   moves one with the song: the name renamed like any chord, a fretted shape moved along the neck, up by the rest of the
   octave where it has an open string and otherwise whichever of the two octaves a hand can hold, the lower where both or
-  neither can, the fingering following a barre coming or going (and left out where it would need a fifth finger or
-  several fingers came to rest open), and a shape no move keeps on the neck left as it is, named as it was; `movedBy`
+  neither can, the fingering following a barre coming or going (and left out where it would need a fifth finger,
+  several fingers came to rest open, or a finger other than the index did, which moving back would put the index on), and a shape no move keeps on the neck left as it is, named as it was; `movedBy`
   adds up, so there and back is zero. `ChordProTransposer` applies it on
   the model, by what the whole song is moved by, and in the text, where `rewrittenLine` rewrites the name, the base
   fret, the frets and the fingers where they stand and keeps every other character — a line with no base fret keeps

@@ -49,12 +49,12 @@ class ChordVoicingTablesTest {
         tables.forEach { (tuning, lines) ->
             lines.forEach { line ->
                 val voicing = (ChordProDefinitions.read(line, tuning.instrument.id) as ChordProDefinitions.Reading.Shape).voicing as ChordVoicing.Fretted
-                val fingers = assertNotNull(voicing.fingers, line)
+                assertTrue(ChordShapeGeometry.isHoldable(voicing.frets), line)
+                val fingers = voicing.fingers ?: return@forEach
                 voicing.frets.forEachIndexed { string, fret ->
                     assertEquals(fret != null && fret > 0, fingers[string] > 0, "$line, string ${string + 1}")
                 }
                 assertTrue(fingers.all { it in 0..4 }, line)
-                assertTrue(ChordShapeGeometry.isHoldable(voicing.frets), line)
             }
         }
     }

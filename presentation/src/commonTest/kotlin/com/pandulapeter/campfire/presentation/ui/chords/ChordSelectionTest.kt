@@ -110,7 +110,7 @@ class ChordSelectionTest {
     fun `a stored shape is read for the tuning it is stored under`() {
         val chord = chordsOf("[G]la", tuning = ChordTuning.GUITAR_DROP_D).single()
         val stored = mapOf(chord.chord.id to "x 10 9 7 8 7")
-        assertEquals(SelectedShape(ChordVoicing.Fretted(listOf(null, 10, 9, 7, 8, 7)), SelectedShape.Source.PLAYER), selectShape(chord, ChordTuning.GUITAR_DROP_D, stored))
+        assertEquals(SelectedShape(ChordVoicing.Fretted(listOf(null, 10, 9, 7, 8, 7), listOf(0, 4, 3, 1, 2, 1)), SelectedShape.Source.PLAYER), selectShape(chord, ChordTuning.GUITAR_DROP_D, stored))
         assertEquals("guitar", ChordTuning.GUITAR.voicingKey)
         assertEquals("guitar_half_step_down", ChordTuning.GUITAR_HALF_STEP_DOWN.voicingKey)
         assertEquals("guitar_drop_d", ChordTuning.GUITAR_DROP_D.voicingKey)
