@@ -21,6 +21,7 @@ class ChordShapeCrossfadeTest {
     private val openG = ChordVoicing.Fretted(frets = listOf(3, 2, 0, 0, 0, 3))
     private val barreG = ChordVoicing.Fretted(frets = listOf(3, 5, 5, 4, 3, 3))
     private val openC = ChordVoicing.Fretted(frets = listOf(null, 3, 2, 0, 1, 0))
+    private val openA = ChordVoicing.Fretted(frets = listOf(null, 0, 2, 2, 2, 0))
 
     private fun cell(name: String, shape: ChordVoicing?, tuning: ChordTuning = ChordTuning.GUITAR) = ChordCell(
         name = name,
@@ -59,6 +60,19 @@ class ChordShapeCrossfadeTest {
     @Test
     fun `a cell holding another chord does not fade`() {
         assertEquals(emptyList(), changedShapeCells(previous = listOf(cell("G", openG)), cells = listOf(cell("A", barreG))))
+    }
+
+    @Test
+    fun `a transposed step of a numbering does not fade while another shape for the same step does`() {
+        fun step(letterName: String, root: Int, shape: ChordVoicing) = ChordCell(
+            name = "1",
+            letterName = letterName,
+            tuning = ChordTuning.GUITAR,
+            root = root,
+            selection = SelectedShape(shape, SelectedShape.Source.DEFAULT),
+        )
+        assertEquals(emptyList(), changedShapeCells(previous = listOf(step("G", 7, openG)), cells = listOf(step("A", 9, openA))))
+        assertEquals(listOf(0), changedShapeCells(previous = listOf(step("G", 7, openG)), cells = listOf(step("G", 7, barreG))))
     }
 
     @Test

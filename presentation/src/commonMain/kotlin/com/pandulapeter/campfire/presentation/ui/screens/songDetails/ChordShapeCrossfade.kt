@@ -59,13 +59,15 @@ internal fun rememberChordShapeCrossfade(layouts: ChordCellLayouts): ChordShapeC
  * The indices of [cells] whose shape changed since [previous]: the same chord at the same index on the same instrument,
  * drawn with one shape before and with another now, a shape picked in its sheet or a tuning picked for the instrument.
  * A cell that was the empty frame is not one, since that is a shape the search found arriving rather than one the player
- * changed (see `SongChord.isShapePending`), and neither is a cell that holds another chord now, whose name above it
- * changes in one frame anyway.
+ * changed (see `SongChord.isShapePending`), and neither is a cell that holds another chord now, a transposed step of a
+ * numbering included, whose name or letters change in one frame anyway.
  */
 internal fun changedShapeCells(previous: List<ChordCell>, cells: List<ChordCell>) = cells.indices.filter { index ->
     val before = previous.getOrNull(index) ?: return@filter false
     val after = cells[index]
     before.name == after.name &&
+        before.root == after.root &&
+        before.letterName == after.letterName &&
         before.tuning.instrument == after.tuning.instrument &&
         before.selection.shape != null &&
         (before.selection.shape != after.selection.shape || before.tuning != after.tuning)
