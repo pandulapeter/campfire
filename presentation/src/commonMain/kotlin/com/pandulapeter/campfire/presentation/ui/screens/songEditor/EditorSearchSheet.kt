@@ -72,8 +72,8 @@ import org.jetbrains.compose.resources.painterResource
  *
  * The previous and next match are the header's actions, since they are what the sheet is reached for every time and
  * the one control that has to stay in sight over a long song; everything else scrolls. The matches are drawn in the
- * field behind the sheet and the current one is scrolled into view there (see [ChordProTextField]), towards the top of
- * the pane, which is the part of it the sheet does not cover.
+ * field behind the sheet and the current one is scrolled into view there (see [ChordProTextField]), into the part of the
+ * pane above the sheet's top edge, which the sheet reports as [EditorSearch.sheetTop].
  */
 @Composable
 internal fun EditorSearchSheet(
@@ -113,6 +113,9 @@ internal fun EditorSearchSheet(
                 )
             }
         },
+        // Only while the search is open: the sheet's window can be laid out once more after the close, and a top left behind
+        // by it would keep the room the field makes after its last line for a sheet that is gone.
+        onTopMoved = { if (search.mode != null) search.sheetTop = it },
         onDismiss = onDismiss,
     ) { contentPadding ->
         val scrollState = rememberScrollState()

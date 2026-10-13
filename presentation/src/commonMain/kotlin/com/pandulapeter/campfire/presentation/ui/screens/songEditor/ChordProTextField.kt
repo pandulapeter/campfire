@@ -27,16 +27,24 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextLayoutResult
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionOnScreen
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
@@ -67,7 +75,10 @@ import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
  * @param horizontalScrollState How far the field is scrolled sideways, hoisted for the same reason.
  * @param searchHighlights The matches of the editor's search while its sheet is open, drawn behind the text; the current
  *   one is scrolled into view whenever it changes, since the field has no focus under the sheet to follow it with.
+ * @param searchSheetTop Where the search sheet's top edge is on the screen ([EditorSearch.sheetTop]), above which the
+ *   current match is revealed, or null while there is no sheet laid out.
  */
+@OptIn(FlowPreview::class)
 @Composable
 internal fun ChordProTextField(
     modifier: Modifier = Modifier,
@@ -78,6 +89,7 @@ internal fun ChordProTextField(
     horizontalScrollState: ScrollState,
     contentPadding: PaddingValues,
     searchHighlights: () -> SearchHighlights?,
+    searchSheetTop: () -> Float?,
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val secondAccentColor = LocalSecondAccentColor.current
@@ -100,26 +112,53 @@ internal fun ChordProTextField(
     // The room after the last line is inside the scroll, as at the end of every list, so the text runs under the
     // navigation bar and comes clear of it once scrolled to the end. It is part of the field (its decorator), so a
     // press there still places the caret, and it never changes while the field is scrolled: a viewport resized at the
-    // end of a drag sends the scroll back to the caret and interrupts the fling.
+    // end of a drag sends the scroll back to the caret and interrupts the fling. The search sheet's room changes it only
+    // as the sheet settles, under the sheet's scrim, which no finger scrolls the field through.
     val restingBottomInset = WindowInsets.contentEdges.asPaddingValues().calculateBottomPadding()
     val layoutDirection = LocalLayoutDirection.current
     val textLayout = remember { TextLayoutHolder() }
     val density = LocalDensity.current
     val textStart by rememberUpdatedState(with(density) { (contentPadding.calculateStartPadding(layoutDirection) + 16.dp).toPx() })
-    LaunchedEffect(searchHighlights, scrollState, horizontalScrollState) {
-        snapshotFlow { searchHighlights()?.let { it.matchStarts.getOrNull(it.currentIndex) } }
-            .filterNotNull()
-            .collect { offset ->
-                val layout = textLayout.getResult() ?: return@collect
-                revealOffset(
-                    offset = offset,
-                    layout = layout,
-                    scrollState = scrollState,
-                    horizontalScrollState = horizontalScrollState,
-                    textStart = textStart,
-                    margin = with(density) { REVEAL_MARGIN.toPx() },
-                )
+    // Snapshot state, read only by the reveal below: the field moves on its own while the sheet is up (the Shortcuts
+    // collapsing as the keyboard comes, the title row of a short window), which has to reveal again like a moving sheet.
+    var viewportTop by remember { mutableFloatStateOf(0f) }
+    // The part of the pane the sheet covers, added after the last line while it is open, so that a match in the last
+    // lines can still be scrolled up above it. It only changes once the sheet has settled, never while the field moves.
+    var coveredRoom by remember { mutableFloatStateOf(0f) }
+    LaunchedEffect(searchHighlights, searchSheetTop, scrollState, horizontalScrollState) {
+        val margin = with(density) { REVEAL_MARGIN.toPx() }
+        val currentMatch = snapshotFlow { searchHighlights()?.let { it.matchStarts.getOrNull(it.currentIndex) } }
+        // Settled before it counts, so that the sheet sliding in and the keyboard animating do not start a scroll on
+        // every frame. A new match is revealed at once.
+        val uncoveredHeight = snapshotFlow {
+            searchSheetTop()?.let { (it - viewportTop).coerceIn(0f, scrollState.viewportSize.toFloat()) }
+        }.debounce(UNCOVERED_HEIGHT_SETTLING_MILLIS)
+        combine(currentMatch, uncoveredHeight, ::Pair).collectLatest { (offset, height) ->
+            val room = height?.let { scrollState.viewportSize - it } ?: 0f
+            if (room > coveredRoom) {
+                // Grown before the reveal: a scroll is clamped to the maximum of each of its frames, and one started
+                // before the room is laid out stops short of it.
+                coveredRoom = room
+                awaitLayout()
+            } else if (room < coveredRoom) {
+                // Shrunk only once the text is above the shorter end, or it would jump down in one frame as the sheet
+                // closes.
+                val newMax = (scrollState.maxValue - (coveredRoom - room)).roundToInt().coerceAtLeast(0)
+                if (scrollState.value > newMax) scrollState.animateScrollTo(newMax)
+                coveredRoom = room
             }
+            if (offset == null || height == null) return@collectLatest
+            val layout = textLayout.getResult() ?: return@collectLatest
+            revealOffset(
+                offset = offset,
+                layout = layout,
+                scrollState = scrollState,
+                horizontalScrollState = horizontalScrollState,
+                textStart = textStart,
+                uncoveredHeight = height,
+                margin = margin,
+            )
+        }
     }
     BasicTextField(
         modifier = modifier
@@ -128,6 +167,7 @@ internal fun ChordProTextField(
             // the viewport then ends at the keyboard, so the caret the field brings into view is never behind it.
             .padding(EditorFieldPadding(contentPadding = contentPadding, restingBottomInset = restingBottomInset))
             .fadingTopEdge(scrollState, MaterialTheme.colorScheme.background)
+            .onGloballyPositioned { viewportTop = it.positionOnScreen().y }
             // The field's own scrolling cannot hold any room after the last line, so it is never given less height than
             // its text and the scrolling is a container around it, one per axis. The vertical one hands its viewport
             // height on as the minimum, so a short song is still a field down to the bottom of the pane. The sideways
@@ -160,7 +200,7 @@ internal fun ChordProTextField(
                 modifier = Modifier.padding(
                     start = contentPadding.calculateStartPadding(layoutDirection) + 16.dp,
                     end = contentPadding.calculateEndPadding(layoutDirection) + 16.dp,
-                    bottom = restingBottomInset + 32.dp,
+                    bottom = restingBottomInset + 32.dp + with(density) { coveredRoom.toDp() },
                 ),
                 propagateMinConstraints = true,
             ) {
@@ -199,10 +239,12 @@ private class TextLayoutHolder {
     var getResult: () -> TextLayoutResult? = { null }
 }
 
+/** Waits until what was changed in this frame has been laid out: the next frame starts before its layout. */
+private suspend fun awaitLayout() = repeat(2) { withFrameNanos { } }
+
 /**
- * Scrolls the line holding [offset] into the top part of the pane, which is what a bottom sheet over the field leaves
- * uncovered, unless it is there already: a match on the screen does not move the text under the eye that has found it.
- * The vertical scroll and the sideways one are containers around the field (see [ChordProTextField]), so its layout's
+ * Scrolls the line holding [offset] into the top [uncoveredHeight] of the pane, the part above the sheet over the field,
+ * unless it is there already (see [revealTarget]). The vertical scroll and the sideways one are containers around the field (see [ChordProTextField]), so its layout's
  * coordinates are theirs once the margin before the text is added.
  */
 private suspend fun revealOffset(
@@ -211,13 +253,14 @@ private suspend fun revealOffset(
     scrollState: ScrollState,
     horizontalScrollState: ScrollState,
     textStart: Float,
+    uncoveredHeight: Float,
     margin: Float,
 ) = coroutineScope {
     val line = layout.getLineForOffset(offset.coerceAtMost(layout.layoutInput.text.length))
     val top = layout.getLineTop(line)
     val bottom = layout.getLineBottom(line)
-    if (top < scrollState.value || bottom > scrollState.value + scrollState.viewportSize * REVEALED_PART) {
-        launch { scrollState.animateScrollTo((top - margin).roundToInt().coerceAtLeast(0)) }
+    revealTarget(lineTop = top, lineBottom = bottom, scroll = scrollState.value, uncoveredHeight = uncoveredHeight, margin = margin)?.let {
+        launch { scrollState.animateScrollTo(it) }
     }
     val x = textStart + layout.getHorizontalPosition(offset, usePrimaryDirection = true)
     if (x < horizontalScrollState.value + margin || x > horizontalScrollState.value + horizontalScrollState.viewportSize - margin) {
@@ -225,6 +268,5 @@ private suspend fun revealOffset(
     }
 }
 
-/** How much of the pane from its top a revealed line is kept in, see [revealOffset]. */
-private const val REVEALED_PART = 0.4f
+private const val UNCOVERED_HEIGHT_SETTLING_MILLIS = 150L
 private val REVEAL_MARGIN = 48.dp

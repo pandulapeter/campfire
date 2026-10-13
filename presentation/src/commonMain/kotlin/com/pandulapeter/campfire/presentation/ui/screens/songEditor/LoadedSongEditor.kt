@@ -422,6 +422,7 @@ internal fun LoadedSongEditor(
             },
         )
         val searchHighlights = remember(search) { { search.highlights } }
+        val searchSheetTop = remember(search) { { search.sheetTop } }
         val editor: @Composable (Modifier) -> Unit = { paneModifier ->
             ChordProTextField(
                 modifier = paneModifier,
@@ -435,6 +436,7 @@ internal fun LoadedSongEditor(
                 // Next to the preview the divider is the end of this pane, not the window.
                 contentPadding = contentPadding.only(start = true, end = !hasSideBySidePreview, bottom = true),
                 searchHighlights = searchHighlights,
+                searchSheetTop = searchSheetTop,
             )
         }
         val preview: @Composable (Modifier) -> Unit = { paneModifier ->

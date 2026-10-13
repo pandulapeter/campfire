@@ -70,6 +70,12 @@ internal class EditorSearch(
         private set
     var isMatchCase by mutableStateOf(isMatchCase)
 
+    /**
+     * Where the open sheet's top edge is on the screen, for the field to keep the current match above it, or null while
+     * no sheet is open or it has not been laid out yet. Not saved: a restored sheet measures it again on its first frame.
+     */
+    var sheetTop: Float? by mutableStateOf(null)
+
     // Nothing is searched for while neither sheet is open, so that typing in the field never scans the song for a
     // query nobody is looking at.
     private val matchStarts by derivedStateOf {
@@ -110,6 +116,7 @@ internal class EditorSearch(
 
     fun close() {
         mode = null
+        sheetTop = null
     }
 
     fun selectNext() {

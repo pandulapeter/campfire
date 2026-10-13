@@ -67,6 +67,8 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusTarget
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionOnScreen
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
@@ -130,6 +132,9 @@ internal fun sheetContainerColor() = MaterialTheme.colorScheme.background.let { 
  *   the button that finishes what the sheet is for. The close they are handed is final: unlike the header's close
  *   button, a hide that follows an action is not taken back by a finger landing on the sliding sheet. The ones that
  *   write ([BottomSheetConfirmButton]) do nothing once the sheet has started closing ([LocalIsSheetClosing]).
+ * @param onTopMoved Where the sheet's top edge is on the screen, on every frame it moves: for what is drawn behind the
+ *   sheet and has to stay in the part of it the sheet leaves uncovered. Screen coordinates rather than the window's, since
+ *   on Android the sheet is a window of its own.
  * @param onDismiss Has to dismiss this sheet's own dialog and nothing else (`CampfireViewModel.dismissSheet`): it is
  *   called from the end of a hide animation, by which time another dialog may have taken the sheet's place.
  * @param content Can close the sheet ([BottomSheetContentScope.close]), for a sheet with a button of its own that is
@@ -142,6 +147,7 @@ internal fun CampfireBottomSheet(
     subtitle: String = "",
     sheetMaxWidth: Dp = BottomSheetDefaults.SheetMaxWidth,
     actions: (@Composable RowScope.(close: () -> Unit) -> Unit)? = null,
+    onTopMoved: ((topOnScreen: Float) -> Unit)? = null,
     onDismiss: () -> Unit,
     content: @Composable BottomSheetContentScope.(contentPadding: PaddingValues) -> Unit,
 ) {
@@ -259,6 +265,7 @@ internal fun CampfireBottomSheet(
         // the lists in it that would otherwise be measured against an infinite one.
         Column(
             modifier = Modifier.fillMaxWidth()
+                .onGloballyPositioned { onTopMoved?.invoke(it.positionOnScreen().y) }
                 .saveShortcut { saveShortcut.action?.invoke() }
                 .onFocusChanged { sheetFocusState.hasFocus = it.hasFocus }
                 .focusRequester(sheetFocus)

@@ -145,10 +145,17 @@ screen. Its app bar starts with Close rather than Back. The whole bar is one sur
   selects it, and a match reached by typing the query is selected too, so the next letter searches on from it and the
   sheet closed over it leaves it selected, with the caret given back to the field. A selection of one line opens the
   sheet as its query. Matches ignore the case unless Match case is ticked and never overlap (`searchMatchStarts`).
-  While the sheet is open they are drawn behind the text by `ChordProOutputTransformation`, the current one in a color
-  of its own, and the current one is scrolled into the top part of the pane, which the sheet leaves uncovered, unless it
-  is there already. Replace writes over the current match and moves on; Replace all writes every match in one edit, so
-  one undo takes it back (in a long document the history before it is gone, as before a transposition); nothing but Save writes the file.
+  Replace writes over the current match and moves on; Replace all writes every match in one edit, so one undo takes it
+  back (in a long document the history before it is gone, as before a transposition); nothing but Save writes the file.
+- While the search sheet is open the matches are drawn behind the text by `ChordProOutputTransformation`, the current
+  one in a color of its own. The sheet reports its top edge on the screen (`EditorSearch.sheetTop`, through
+  `CampfireBottomSheet`'s `onTopMoved`), and the current match is scrolled into the strip of the field above it, unless
+  it is there already, with a margin of at most a third of the strip (`revealTarget`). It is revealed again whenever the
+  strip settles at another height (the sheet sliding in, the keyboard, Find turning into Find and replace), debounced so
+  that the slide starts no scroll per frame; on the smallest phone with the keyboard up there is no strip, and nothing
+  is revealed. While the sheet is open the field also gains the height the sheet covers as room after its last line, so
+  that a match in the last lines can be scrolled above it: grown before the reveal, and shrunk only once the text has
+  been scrolled back above the shorter end, so that closing the sheet slides the text down rather than jumping.
 - The screen itself is a `BasicTextField` over a `TextFieldState`, scrolled by containers around it rather than by its
   own `scrollState`, which has no way to hold room after the last line: a `verticalScroll`, which hands the field its
   viewport height as the minimum so a short song is still a field down to the bottom of the pane, and inside it a
