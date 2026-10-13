@@ -138,12 +138,13 @@ GDGD cross tunings, and the banjo's double C, C, open D, and G modal; what the s
 Everything that drew for an instrument draws for a tuning: `ChordDiagrams.tuning`, `SongLyricsInputs.chordTuning`, the
 cells, the sheet, the PDF and the onboarding's G; the page keeps the cells it has until the song's chords have been
 collected for the new tuning, away from the main thread, so a tuning picked crossfades once, from the old shapes to the
-new, and never through the old shapes drawn on the new strings. A chord name always names the chord that sounds, so a half step down
-an A is drawn `x 1 3 3 3 1`, the shape that sounds A on those strings, and the root dots are read against the tuning's
-own strings. The Chords section's chip names a tuning
-that is not the standard one after its instrument ("Guitar · Drop D"), the chord sheet says it under the title
-("Tuning: Drop D") and the PDF prints that line above every song's diagrams, so a sheet read by somebody who did not set
-it is not read for the wrong strings.
+new, and never through the old shapes drawn on the new strings. A chord name always names the chord that sounds, so a
+half step down an A is drawn `x 1 3 3 3 1`, the shape that sounds A on those strings, and the root dots are read against
+the tuning's own strings. The Chords section's chip names a tuning that is not the standard one after its instrument
+("Guitar · Drop D"), the chord sheet says it under the title ("Tuning: Drop D"), and the PDF prints a line above every
+song's diagrams naming the instrument where it is not the guitar (the twelve-string is drawn as one) or the keyboard,
+and the tuning where it is not the standard one ("Mandolin · Tuning: GDGD", "Tuning: Drop D"), so a sheet read by
+somebody who did not set it is not read for the wrong instrument or strings.
 
 ### A song's own definition is a standard tuning shape
 

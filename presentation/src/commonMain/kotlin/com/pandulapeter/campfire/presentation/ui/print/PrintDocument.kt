@@ -165,8 +165,10 @@ internal data class PrintLabels(
     /** The headings of the sections the file leaves unnamed, the viewer's own. */
     val sections: DefaultSectionLabels,
     /**
-     * The line naming the tuning the diagrams are drawn for ("Tuning: Drop D"), printed above every song's diagrams so
-     * that a sheet read by somebody who did not set it is not read for the wrong strings; null for standard tuning.
+     * The line naming the instrument and the tuning the diagrams are drawn for ("Mandolin · Tuning: GDGD", "Tuning: Drop D"),
+     * printed above every song's diagrams so that a sheet read by somebody who did not set it is not read for the wrong
+     * strings: the instrument where it is not the guitar (the twelve-string is drawn as one) or the keyboard (whose
+     * diagram says it), the tuning where it is not the standard one, and null where neither is named.
      */
     val chordTuning: String? = null,
 )

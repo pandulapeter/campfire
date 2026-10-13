@@ -250,8 +250,9 @@ private class PrintLayouter(
     /**
      * The song's chord diagrams as the song details screen's Chords section has them, in rows of cells each holding the
      * chord's name over its diagram, sized by the text so that they grow with it, a row being one unit [place] keeps
-     * together, under the line naming the tuning where it is not the standard one ([PrintLabels.chordTuning]). Only with
-     * the chords, since the diagrams finger chords the page would otherwise not print.
+     * together, under the line naming the instrument and the tuning ([PrintLabels.chordTuning]), which is not selectable
+     * for the reason the names are not: the importer would read it back as a line of the song. Only with the chords, since
+     * the diagrams finger chords the page would otherwise not print.
      */
     private fun chordDiagramRows(chords: List<PrintChord>): List<Row> {
         if (!options.showChords || !options.showChordDiagrams || chords.isEmpty()) return emptyList()
@@ -283,7 +284,7 @@ private class PrintLayouter(
             }
             val height = rowNameHeight + row.maxOf { it.diagramHeight } + if (index < rows.lastIndex) gap else 0f
             Row(parts, height, diagrams = diagrams)
-        }.let { diagramRows -> labels.chordTuning?.let { wrapped(it, detailStyle) + diagramRows } ?: diagramRows }
+        }.let { diagramRows -> labels.chordTuning?.let { wrapped(it, detailStyle, isSelectable = false) + diagramRows } ?: diagramRows }
     }
 
     /**
@@ -575,8 +576,9 @@ private class PrintLayouter(
         text: String,
         style: PrintStyle = lyricStyle,
         width: Float = columnWidth,
+        isSelectable: Boolean = true,
     ): List<Row> = text.lines().flatMap { line ->
-        wrapPrintText(line, width) { measure(it, style) }.map { Row(listOf(Part(it, style = style)), style.size * 1.45f) }
+        wrapPrintText(line, width) { measure(it, style) }.map { Row(listOf(Part(it, style = style, isSelectable = isSelectable)), style.size * 1.45f) }
     }
 
     /** The space above a label belongs to its first row, so that it never ends a column on its own or opens one with a gap. */

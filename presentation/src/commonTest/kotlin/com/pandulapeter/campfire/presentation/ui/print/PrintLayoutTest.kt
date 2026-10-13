@@ -530,6 +530,17 @@ internal class PrintLayoutTest {
         assertTrue(page.diagrams.all { diagram -> diagram.y + diagram.height <= page.texts.first { it.text == "Line 1" }.y })
     }
 
+    @Test fun `the tuning line is printed above the diagrams only with them and is not selectable`() = runTest {
+        val entry = song(lyrics(1)).copy(chords = listOf(guitarChord("G")))
+        val tuningLabels = labels.copy(chordTuning = "Tuning: Drop D")
+        val page = layoutPrintDocument(source(entry), PrintSettings(showChordDiagrams = true), tuningLabels, ::measure).pages.single()
+        val tuning = page.texts.single { it.text == "Tuning: Drop D" }
+        assertFalse(tuning.isSelectable)
+        assertTrue(tuning.y < page.diagrams.first().y)
+        val withoutDiagrams = layoutPrintDocument(source(entry), PrintSettings(showChordDiagrams = false), tuningLabels, ::measure).pages.single()
+        assertTrue(withoutDiagrams.texts.none { it.text == "Tuning: Drop D" })
+    }
+
     @Test fun `chord diagrams wrap into rows inside the column`() = runTest {
         val settings = PrintSettings(showChordDiagrams = true, columns = 4)
         val document = layout(source(song(lyrics(1)).copy(chords = (1..12).map { guitarChord("C$it") })), settings)

@@ -75,8 +75,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.pandulapeter.campfire.chordpro.ChordNotation
 import com.pandulapeter.campfire.data.model.domain.PrintSettings
+import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.currentLanguage
 import com.pandulapeter.campfire.presentation.localization.pluralStringResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -99,6 +99,7 @@ import com.pandulapeter.campfire.presentation.resources.songs_export_songs
 import com.pandulapeter.campfire.presentation.resources.songs_selection_count
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.instrument.chordTuning
+import com.pandulapeter.campfire.presentation.ui.instrument.instrumentLabel
 import com.pandulapeter.campfire.presentation.ui.chords.chordTuningLabel
 import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.components.DelayedLoadingIndicator
@@ -169,8 +170,17 @@ internal fun ExportScreen(
         time = stringResource(Res.string.print_time),
         missing = stringResource(Res.string.print_missing),
         sections = rememberDefaultSectionLabels(shouldNumberSections = preferences?.shouldNumberSections == true),
-        chordTuning = preferences?.chordTuning()?.takeIf { !it.isStandard }?.let { tuning ->
-            stringResource(Res.string.song_details_chord_tuning, chordTuningLabel(tuning, preferences?.chordSpelling?.notation?.toChordNotation() ?: ChordNotation.STANDARD))
+        chordTuning = preferences?.let { preferences ->
+            preferences.chordTuning()?.let { tuning ->
+                listOfNotNull(
+                    instrumentLabel(preferences.instrument).takeIf { preferences.instrument !in INSTRUMENTS_NAMED_BY_DIAGRAMS },
+                    if (tuning.isStandard) {
+                        null
+                    } else {
+                        stringResource(Res.string.song_details_chord_tuning, chordTuningLabel(tuning, preferences.chordSpelling.notation.toChordNotation()))
+                    },
+                ).joinToString(" · ").ifEmpty { null }
+            }
         },
     )
     LaunchedEffect(dialog, state.attempt) {
@@ -591,3 +601,13 @@ private enum class PrintScreenContent { FAILED, LOADING, LOADED }
 
 /** How long the options have to hold still before the pages are laid out again, so that a burst of steps is one layout. */
 private val LAYOUT_DEBOUNCE = 120.milliseconds
+
+/**
+ * The instruments the PDF's tuning line leaves unnamed: the guitar's diagrams are what a reader expects, the twelve-string
+ * is drawn as the guitar, and the keyboard's diagram is a keyboard.
+ */
+private val INSTRUMENTS_NAMED_BY_DIAGRAMS = setOf(
+    UserPreferences.Instrument.GUITAR,
+    UserPreferences.Instrument.GUITAR_TWELVE_STRING,
+    UserPreferences.Instrument.KEYBOARD,
+)
