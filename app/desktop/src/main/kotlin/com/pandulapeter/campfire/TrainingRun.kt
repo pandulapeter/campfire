@@ -35,7 +35,7 @@ internal fun TrainingRunEffect(exit: () -> Unit) {
             while (!File(data, "preferences/preferences.json").isFile ||
                 File(data, "library/songs").listFiles { file -> file.extension == "cho" }.isNullOrEmpty()
             ) delay(100)
-            // Enough frames for the song cards, the welcome sheet and their animations to have been composed and
+            // Enough frames for the song cards, the onboarding and their animations to have been composed and
             // drawn - bounded in time too, so a session that produces no frames still ends normally (and so still
             // writes the archive) instead of being killed by the build's timeout.
             withTimeoutOrNull(15_000) { repeat(120) { withFrameNanos { } } }

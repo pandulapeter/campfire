@@ -285,6 +285,10 @@
     <string name="settings_cover_art_description">A dalokban megadott albumborítók megjelenítése, amelyeket az alkalmazás egyszer letölt, majd ezen az eszközön tárol</string>
     <string name="settings_number_sections">Szakaszok számozása</string>
     <string name="settings_number_sections_description">A saját névvel nem rendelkező szakaszok fejlécében a fajtájuk és egy sorszám jelenik meg, például Versszak 1 és Versszak 2, ha egy dalban több van belőle</string>
+    <string name="settings_show_key">Hangnem megjelenítése</string>
+    <string name="settings_show_key_description">A hangnem minden dalkártyán és a dal tetején, ahol transzponálni is lehet. A capo megmarad.</string>
+    <string name="settings_show_tempo">Tempó megjelenítése</string>
+    <string name="settings_show_tempo_description">A tempó és az ütemmutató minden dalkártyán és a dal tetején. A metronóm továbbra is a dal tempójában szól.</string>
     <string name="settings_notation">Akkordjelölés</string>
     <string name="settings_notation_description">Hogyan legyenek írva az akkordok a dalok olvasásakor és szerkesztésekor. A dalok mindig szabványos jelöléssel mentődnek, így minden alkalmazásban ugyanúgy olvashatók.</string>
     <string name="settings_notation_standard">Szabványos</string>
@@ -313,6 +317,8 @@
     <string name="settings_chord_instrument_other">Egyéb</string>
     <string name="settings_chord_instrument_other_description">Nincsenek akkordábrák</string>
     <string name="settings_general">Általános</string>
+    <string name="settings_onboarding">A Campfire újbóli beállítása</string>
+    <string name="settings_onboarding_description">Válaszd ki újra a megjelenést, a hangszered és a funkciókat, lépésről lépésre</string>
     <string name="settings_user_interface_theme">Téma</string>
     <string name="settings_user_interface_theme_system_default">Rendszer</string>
     <string name="settings_user_interface_theme_dark">Sötét</string>
@@ -758,12 +764,49 @@
     <string name="whats_new_title">Újdonságok a Campfire %1$s verziójában</string>
     <string name="whats_new_message">• **Hangoló** Az új fül a mikrofonon keresztül segít behangolni a gitárt, a basszusgitárt, az ukulelét, a hegedűt, a mandolint vagy a bendzsót, referenciahangokat játszik, és bármelyik dal fölött megnyitható.\n• **Több dal kijelölése** Bármelyik dal menüjéből indítva a kijelölt dalokat egyszerre adhatod listákhoz, címkézheted, megadhatod a nyelvüket vagy exportálhatod.\n• **Dalok kevesebb oldalon** A hosszú dalok keskenyebb hasábokba és kicsit kisebb betűvel kerülnek, ha ezzel megspórolható egy oldal, a rövidek pedig középre igazított hasábokban töltik ki a képernyőt.\n• **Színes címkék** A Címkék kezelése részben minden címkének adhatsz egyet 14 szín közül, amely a dalkártyákon és a szűrőkön is látszik, és szinkronizálódik az eszközeid között.\n• **Metronómhangsúlyok dalonként** A metronóm megjegyzi minden dal hangsúlyos ütéseit, a dalok közötti tempóváltás a következő ütemtől lép életbe, Androidon pedig már nem áll le a háttérben.\n• **Dalok megkettőzése, jobb kattintás** A menüjéből lemásolhatsz egy dalt, hogy új változatot készíts belőle, és bármelyik dal vagy lista menüjét megnyithatod jobb kattintással.</string>
 
-    <!-- Welcome sheet, shown once on the first run -->
-    <string name="welcome_title">Üdv a Campfire-ben!</string>
-    <string name="welcome_message">Kezdésnek válassz egy neked tetsző megjelenést, később bármikor módosíthatod.</string>
-    <string name="welcome_settings_hint">Minden mást a Beállításokban találsz.</string>
-    <string name="welcome_settings_hint_sync">Szeretnéd ugyanazokat a dalokat minden eszközödön? Csatlakoztasd a Dropboxot a Beállításokban, ahol minden mást is megtalálsz.</string>
-    <string name="welcome_open_settings">Beállítások megnyitása</string>
+    <!-- Onboarding, shown once on the first run and again from Settings -->
+    <string name="onboarding_skip">Kihagyás</string>
+    <string name="onboarding_next">Tovább</string>
+    <string name="onboarding_start_playing">Zenéljünk</string>
+    <string name="onboarding_welcome_title">Üdv a Campfire-ben!</string>
+    <string name="onboarding_welcome_message">Dalszövegek és akkordok egy helyen. Néhány gyors kérdés, és már készen is áll, kezdve egy neked tetsző megjelenéssel.</string>
+    <string name="onboarding_role_title">Mire fogod használni a Campfire-t?</string>
+    <string name="onboarding_role_message">Válaszd azt, ami a legjobban illik rád, és bekapcsoljuk, amire szükséged van. Alább finomhangolhatod.</string>
+    <string name="onboarding_role_player">Hangszeren játszom</string>
+    <string name="onboarding_role_player_description">Akkordok, metronóm és hangoló</string>
+    <string name="onboarding_role_singer">Énekelek</string>
+    <string name="onboarding_role_singer_description">Csak a dalszövegek, az est dallistáiban</string>
+    <string name="onboarding_role_leader">Zenekart vagy csapatot vezetek</string>
+    <string name="onboarding_role_leader_description">Minden, a dallistákkal együtt</string>
+    <string name="onboarding_role_features">Ezeket kapod</string>
+    <string name="onboarding_chord_diagram_description">%1$s lefogása</string>
+    <string name="onboarding_at_a_glance_title">Mi legyen szem előtt?</string>
+    <string name="onboarding_at_a_glance_message">Válaszd ki, mi jelenjen meg minden dal címe mellett.</string>
+    <string name="onboarding_done_title">Minden kész!</string>
+    <string name="onboarding_done_message">A Campfire készen áll. Bármit módosíthatsz később a Beállításokban.</string>
+    <string name="onboarding_done_setup">A beállításaid</string>
+    <string name="onboarding_done_lyrics_only">Csak dalszöveg</string>
+    <string name="onboarding_done_sync">A dalaid a Dropboxon keresztül szinkronizálódnak</string>
+    <string name="onboarding_done_tips">Hol kezdd?</string>
+    <string name="onboarding_done_tip_demo">Nyisd meg az egyik bemutató dalt, és nézd meg működés közben</string>
+    <string name="onboarding_done_tip_add">Írj egy dalt, vagy importáld a sajátjaidat a + gombbal</string>
+    <string name="onboarding_done_tip_settings">Mindent, amit itt választottál, megtalálsz a Beállításokban</string>
+    <string name="onboarding_progress">Lépés: %1$d / %2$d</string>
+    <string name="onboarding_instrument_title">Min játszol?</string>
+    <string name="onboarding_instrument_message_chords_and_tuner">A Campfire ennek a fogásait mutatja, és erre állítja be a hangolót.</string>
+    <string name="onboarding_instrument_message_chords">A Campfire ennek a fogásait mutatja.</string>
+    <string name="onboarding_instrument_message_tuner">A Campfire erre állítja be a hangolót.</string>
+    <string name="onboarding_instrument_keyboard">Zongora vagy billentyűs</string>
+    <string name="onboarding_instrument_other">Valami mással</string>
+    <string name="onboarding_notation_title">Hogyan írod az akkordokat?</string>
+    <string name="onboarding_notation_message">A dalok mindig a szabványos módon kerülnek mentésre, így minden alkalmazásban ugyanúgy olvashatók.</string>
+    <string name="onboarding_feature_chords_description">Akkordok a dalszöveg fölött, és hogy hogyan kell lefogni őket</string>
+    <string name="onboarding_feature_setlists_description">Sorba rendezett dalok egy fellépéshez vagy próbához</string>
+    <string name="onboarding_feature_metronome_description">Tartja az ütemet, minden dalnál a saját tempójában</string>
+    <string name="onboarding_feature_tuner_description">Behangolja a hangszered a mikrofonon keresztül</string>
+    <string name="onboarding_sync_title">A dalaid mindenhol</string>
+    <string name="onboarding_sync_message">Csatlakoztasd a Dropboxot, hogy minden eszközödön ugyanazok a dalok legyenek. A Campfire-nek nincs saját szervere: a fájljaid egyenesen a saját tárhelyedre kerülnek.</string>
+    <string name="onboarding_sync_later">Ezt később a Beállításokban is megteheted.</string>
     <string name="welcome_get_started">Kezdjük</string>
 
     <!-- In-app updates, which only the Play build ever has anything to show -->

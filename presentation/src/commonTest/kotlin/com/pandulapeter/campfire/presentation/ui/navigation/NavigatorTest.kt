@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.components.SearchState
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
+import com.pandulapeter.campfire.presentation.ui.screens.onboarding.OnboardingStep
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.SetlistWithSongs
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
 import kotlinx.coroutines.CoroutineScope
@@ -35,6 +36,7 @@ class NavigatorTest {
     private var isReordering = false
     private var isSelecting = false
     private var topLevelDestinations = CampfireDestination.TopLevel.entries
+    private var onboardingSteps = listOf(OnboardingStep.WELCOME, OnboardingStep.ROLE, OnboardingStep.DONE)
     private val savedStateHandle = SavedStateHandle()
     private val songsSearch = SearchState()
     private val setlistsSearch = SearchState()
@@ -45,6 +47,7 @@ class NavigatorTest {
         songsSearch = { songsSearch },
         setlistsSearch = { setlistsSearch },
         importReportSearch = { SearchState(isInitiallyOpen = true) },
+        onboardingSteps = { onboardingSteps },
         topLevelDestinations = { topLevelDestinations },
         userPreferences = { null as UserPreferences? },
         hasUnsavedEditorText = { hasUnsavedText },
@@ -118,6 +121,44 @@ class NavigatorTest {
         navigator.navigateBack()
         assertEquals(SettingsTab.GENERAL, navigator.settingsTab)
         assertEquals(2, navigator.backStack.size)
+    }
+
+    @Test
+    fun `back steps through the onboarding's pages before it leaves the screen it was opened over`() = runTest {
+        val navigator = navigator(backgroundScope)
+        navigator.selectTopLevelDestination(CampfireDestination.Settings)
+        navigator.openOnboarding(isOpenedFromSettings = true)
+        navigator.showNextOnboardingStep()
+        navigator.showNextOnboardingStep()
+        assertEquals(OnboardingStep.DONE, navigator.onboardingStep)
+        navigator.navigateBack()
+        assertEquals(OnboardingStep.ROLE, navigator.onboardingStep)
+        navigator.navigateBack()
+        assertEquals(OnboardingStep.WELCOME, navigator.onboardingStep)
+        navigator.navigateBack()
+        assertEquals(listOf(CampfireDestination.Songs, CampfireDestination.Settings), navigator.backStack.toList())
+    }
+
+    @Test
+    fun `next on the onboarding's last page finishes it, and it opens again on its first`() = runTest {
+        val navigator = navigator(backgroundScope)
+        navigator.openOnboarding(isOpenedFromSettings = false)
+        repeat(3) { navigator.showNextOnboardingStep() }
+        assertEquals(listOf<CampfireDestination>(CampfireDestination.Songs), navigator.backStack.toList())
+        navigator.openOnboarding(isOpenedFromSettings = true)
+        assertEquals(OnboardingStep.WELCOME, navigator.onboardingStep)
+    }
+
+    @Test
+    fun `the onboarding is opened once and closed in one step`() = runTest {
+        val navigator = navigator(backgroundScope)
+        navigator.openOnboarding(isOpenedFromSettings = false)
+        navigator.showNextOnboardingStep()
+        navigator.openOnboarding(isOpenedFromSettings = false)
+        assertEquals(2, navigator.backStack.size)
+        assertEquals(OnboardingStep.ROLE, navigator.onboardingStep)
+        navigator.closeOnboarding()
+        assertEquals(listOf<CampfireDestination>(CampfireDestination.Songs), navigator.backStack.toList())
     }
 
     @Test

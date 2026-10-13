@@ -12,7 +12,6 @@ package com.pandulapeter.campfire.presentation.ui.firstRun
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song
-import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.domain.api.models.ScreenData
 import com.pandulapeter.campfire.domain.api.models.SongFilter
@@ -28,7 +27,6 @@ import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.NavigationState
-import com.pandulapeter.campfire.presentation.ui.navigation.SettingsTab
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportReport
 import com.pandulapeter.campfire.presentation.ui.screens.settings.DemoLibraryOffer
 import com.pandulapeter.campfire.presentation.ui.state.ImportController
@@ -51,14 +49,14 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 
 /**
- * The app's start: the demo library planted on a first run, the welcome sheet, What's new, the place an address asked
+ * The app's start: the demo library planted on a first run, the onboarding, What's new, the place an address asked
  * the app to open on, and what the launch screen waits for before it goes.
  *
  * @param isFirstLaunch Whether this is the first launch of this installation, see `CampfireViewModel.isFirstLaunch`.
  * @param isEditorDraftRecoveryPending Whether a draft a previous run left is still being reopened.
  * @param editorDraftRecovery Completed with whether the editor was reopened on a stored draft.
  * @param restoreNavigationState See `CampfireViewModel.restoreNavigationState`.
- * @param selectSettingsTab Opens a tab of the settings screen.
+ * @param openOnboarding Puts the first page of the onboarding on the back stack.
  */
 internal class FirstRunController(
     private val scope: CoroutineScope,
@@ -71,13 +69,11 @@ internal class FirstRunController(
     private val userPreferencesState: StateFlow<DataState<UserPreferences>>,
     isEditorDraftRecoveryPending: StateFlow<Boolean>,
     private val editorDraftRecovery: Deferred<Boolean>,
-    private val syncProviders: List<SyncProviderId>,
     private val songFilter: StateFlow<SongFilter>,
     private val getScreenData: GetScreenDataUseCase,
     private val updateUserPreferences: UpdateUserPreferencesUseCase,
     private val restoreNavigationState: (NavigationState) -> Boolean,
-    private val selectTopLevelDestination: (CampfireDestination.TopLevel) -> Unit,
-    private val selectSettingsTab: (SettingsTab) -> Unit,
+    private val openOnboarding: () -> Unit,
 ) {
 
     /**
@@ -147,7 +143,7 @@ internal class FirstRunController(
         }
 
     /**
-     * [hasShownApp] as something to wait for, which the welcome sheet does, see [showWelcomeOnFirstRun], and as
+     * [hasShownApp] as something to wait for, which What's new does, see [showWhatsNewOnVersionChange], and as
      * something to watch, which the store's update check does, see `rememberAppUpdateController`.
      */
     private val _isAppOnScreen = MutableStateFlow(false)
@@ -270,6 +266,7 @@ internal class FirstRunController(
                         importController.awaitImportSettled()
                     }
                 }
+                openOnboardingOnFirstRun()
                 // Before the preferences are written rather than after: neither the queue nor the launch screen has any
                 // reason to wait for those.
                 demoLibraryDecision.complete(Unit)
@@ -289,27 +286,26 @@ internal class FirstRunController(
     }
 
     /**
-     * Puts [DialogType.Welcome] over the app on the first run, once the launch screen has gone: the sheet is a window of
-     * its own on Android and would otherwise slide up over the mark rather than over the library it introduces, which
-     * is also what lets the colors picked in it be seen taking hold of the app behind it. Only onto a screen with no
-     * other dialog on it and no import screen ([ImportReport]) under it - on a first run that is the question about a
-     * file the app was opened with, which is a screen of its own rather than a dialog - since a welcome over a question
-     * would leave it unanswered, its Open settings taking the import screen off the stack and the import with it. It is
-     * skipped rather than put up later: one that waited for the answer would arrive in the middle of whatever the user
-     * went on to do next. Showing it is the only time it is shown: the first run's preferences
-     * are written as the demo library is settled, before this, so a process that ends with the sheet still up starts
-     * the next time without it.
+     * Puts the onboarding on the back stack of a first run, while the launch screen is still up, so that the app is
+     * uncovered on its first page rather than on the songs with the page sliding in over them a moment later. Only where
+     * nothing else is waiting for the user: a file the app was opened with is already queued by now (the queue waits for
+     * [demoLibraryDecision], which is completed after this), and its import screen ([ImportReport]) would end up under
+     * the onboarding, its question unanswered for as long as the pages take. It is skipped then rather than put up later,
+     * which would arrive in the middle of whatever the user went on to do next; Settings offers it whenever they want it.
+     * It is part of the saved back stack like any other screen, so a process the system ends behind it comes back on it,
+     * every answer given so far kept, since each is written as it is given.
      */
-    suspend fun showWelcomeOnFirstRun() {
-        if (!isFirstLaunch.await()) return
-        isAppOnScreen.first { it }
-        // A report is set before it is pushed, so this also covers one still waiting for its push.
-        if (!canShowWelcome(hasDialog = dialogHost.visibleDialog.value != null, hasImportReport = importController.importReport.value != null)) return
-        dialogHost.showIfNoneIsShown(DialogType.Welcome)
+    private fun openOnboardingOnFirstRun() {
+        val canOpen = canShowOnboarding(
+            hasDialog = dialogHost.visibleDialog.value != null,
+            hasImportReport = importController.importReport.value != null,
+            hasQueuedImport = importController.isImporting.value || importController.queuedImportCount.value > 0,
+        )
+        if (canOpen) openOnboarding()
     }
 
     /**
-     * The first installed version belongs to the welcome, so it is recorded by [plantDemoLibraryOnFirstRun] instead.
+     * The first installed version belongs to the onboarding, so it is recorded by [plantDemoLibraryOnFirstRun] instead.
      * Later versions wait for the app and for every import queued, running or reported on before opening (see
      * [canShowWhatsNew]), and are recorded by [onWhatsNewShown] once the dialog has stayed uncovered for a few seconds,
      * or here as it closes, rather than as it is asked for or on its first frame: on Android it is not composed while
@@ -360,16 +356,6 @@ internal class FirstRunController(
         } catch (exception: Exception) {
             println("Could not remember the introduced version: ${exception.message}")
         }
-    }
-
-    /**
-     * The welcome sheet's way on to the rest of the settings, on the tab holding sync where this build has any: that
-     * is the one thing the sheet points at that nothing else in the app would lead a new user to. The sheet closes
-     * itself, since only it can do that with the animation it closes with everywhere else.
-     */
-    fun openSettingsFromWelcome() {
-        if (backStack.lastOrNull() != CampfireDestination.Settings) selectTopLevelDestination(CampfireDestination.Settings)
-        selectSettingsTab(if (syncProviders.isEmpty()) SettingsTab.GENERAL else SettingsTab.LIBRARY)
     }
 
     /**

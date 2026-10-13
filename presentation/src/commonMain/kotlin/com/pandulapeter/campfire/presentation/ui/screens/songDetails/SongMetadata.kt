@@ -24,6 +24,7 @@ import com.pandulapeter.campfire.presentation.ui.songInfo.hasSongInfo
  *
  * @param shouldShowChords False with the chords switched off, which leaves out the key and the capo along with the
  * chords: they are what is played, and say nothing to somebody who is only singing.
+ * @param shouldShowKey False where the reader chose not to see the key (`UserPreferences.isKeyShown`).
  * @param shouldShowCapo False on the keyboard, which reads the capo as a transposition the key already counts in, so
  * that a capo said on the page would be counted twice.
  * @param shouldShowTempo False with the metronome switched off, which leaves out the tempo and the time signature: they
@@ -47,6 +48,7 @@ internal fun withMetadataSection(
     sections: List<RenderSection>,
     metadata: ChordProMetadata,
     shouldShowChords: Boolean,
+    shouldShowKey: Boolean = true,
     shouldShowCapo: Boolean = true,
     shouldShowTempo: Boolean = true,
     isSongInfoShown: Boolean,
@@ -61,7 +63,7 @@ internal fun withMetadataSection(
     // Read the way the click and the steppers read them, so that the line says what is played: a number of beats a
     // minute within the click's range, a time signature it can count ("C" being 4/4) and a capo on the neck.
     val shownMetadata = metadata.copy(
-        key = metadata.key.takeIf { shouldShowChords },
+        key = metadata.key.takeIf { shouldShowChords && shouldShowKey },
         capo = when {
             !shouldShowChords || !shouldShowCapo -> null
             readsBoth -> (metadata.capo ?: 0).coerceIn(Song.CAPO_RANGE)

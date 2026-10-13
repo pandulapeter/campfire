@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 internal fun ActionListItem(
     modifier: Modifier = Modifier,
     title: String,
+    description: String? = null,
     icon: Painter,
     isEnabled: Boolean = true,
     isEmphasized: Boolean = true,
@@ -54,5 +55,6 @@ internal fun ActionListItem(
         ListItemDefaults.colors(containerColor = Color.Transparent)
     },
     headlineContent = { Text(title) },
+    supportingContent = description?.let { { Text(it) } },
     leadingContent = { Icon(painter = icon, contentDescription = null) },
 )

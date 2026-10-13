@@ -139,6 +139,8 @@ import com.pandulapeter.campfire.presentation.ui.playing.effectiveCapo
 import com.pandulapeter.campfire.presentation.ui.playing.withCapo
 import com.pandulapeter.campfire.presentation.ui.screens.export.ExportController
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportReport
+import com.pandulapeter.campfire.presentation.ui.screens.onboarding.OnboardingFeatures
+import com.pandulapeter.campfire.presentation.ui.screens.onboarding.onboardingSteps
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.SetlistWithSongs
 import com.pandulapeter.campfire.presentation.ui.screens.settings.DemoLibraryOffer
 import com.pandulapeter.campfire.presentation.ui.screens.settings.LibrarySummary
@@ -385,6 +387,8 @@ class CampfireViewModel(
         songsSearch = { songsSearch },
         setlistsSearch = { setlistsSearch },
         importReportSearch = { importReportSearch },
+        // The view model's copy of the preferences, which is what the onboarding's pages draw their dots from.
+        onboardingSteps = { onboardingSteps(userPreferences.value) },
         topLevelDestinations = { topLevelDestinations.value },
         userPreferences = { userPreferencesState.value.data },
         hasUnsavedEditorText = { hasUnsavedEditorText() },
@@ -1002,13 +1006,11 @@ class CampfireViewModel(
         userPreferencesState = userPreferencesState,
         isEditorDraftRecoveryPending = editorSession.isEditorDraftRecoveryPending,
         editorDraftRecovery = editorSession.editorDraftRecovery,
-        syncProviders = syncProviders,
         songFilter = _songFilter,
         getScreenData = getScreenData,
         updateUserPreferences = updateUserPreferences,
         restoreNavigationState = { restoreNavigationState(it) },
-        selectTopLevelDestination = { selectTopLevelDestination(it) },
-        selectSettingsTab = { settingsTab = it },
+        openOnboarding = { navigator.openOnboarding(isOpenedFromSettings = false) },
     )
 
     /** See [FirstRunController.isLaunchNavigationPending]. */
@@ -1033,7 +1035,6 @@ class CampfireViewModel(
     init {
         libraryState.startLoading()
         viewModelScope.launch { firstRunController.plantDemoLibraryOnFirstRun() }
-        viewModelScope.launch { firstRunController.showWelcomeOnFirstRun() }
         viewModelScope.launch { firstRunController.showWhatsNewOnVersionChange() }
         syncController.startRestoring(isFirstLaunch = isFirstLaunch, onConsentAnswered = ::openSyncSettingsAfterConsent)
         songTextStore.startFollowingFiles()
@@ -1131,6 +1132,37 @@ class CampfireViewModel(
     internal fun openReportedSong(songFileNames: List<String>, index: Int) = navigator.openReportedSong(songFileNames, index)
 
     fun navigateBack(isPredictiveBackCompleted: Boolean = false) = navigator.navigateBack(isPredictiveBackCompleted)
+
+    /** See [Navigator.openOnboarding]; the settings screen's way into it, a first run's being [FirstRunController]'s. */
+    fun openOnboarding() = navigator.openOnboarding(isOpenedFromSettings = true)
+
+    /** Switches the onboarding's four features as a role it offers sets them, see `OnboardingRole`. */
+    internal fun applyOnboardingFeatures(features: OnboardingFeatures) {
+        setChordsEnabled(features.areChordsEnabled)
+        setSetlistsEnabled(features.areSetlistsEnabled)
+        setMetronomeEnabled(features.isMetronomeEnabled)
+        setTunerEnabled(features.isTunerEnabled)
+    }
+
+    /** See [Navigator.showNextOnboardingStep]. */
+    fun showNextOnboardingStep() = navigator.showNextOnboardingStep()
+
+    /** See [Navigator.onboardingStep]. */
+    internal val onboardingStep get() = navigator.onboardingStep
+
+    /** See [Navigator.isOnboardingBackToPreviousStep]. */
+    internal val isOnboardingBackToPreviousStep get() = navigator.isOnboardingBackToPreviousStep
+
+    /** The pages the onboarding shows with the features as they are now, see [onboardingSteps]. */
+    internal fun onboardingSteps(preferences: UserPreferences?) = onboardingSteps(
+        canConnectDropbox = SyncProviderId.DROPBOX in syncProviders,
+        areChordsEnabled = preferences?.areChordsEnabled != false,
+        isMetronomeEnabled = preferences?.isMetronomeEnabled != false,
+        isTunerEnabled = preferences?.isTunerEnabled != false,
+    )
+
+    /** See [Navigator.closeOnboarding]. */
+    fun closeOnboarding() = navigator.closeOnboarding()
 
     fun requestExit(onExit: () -> Unit, onCancelled: () -> Unit = {}) = appExitController.requestExit(onExit, onCancelled)
 
@@ -1474,8 +1506,6 @@ class CampfireViewModel(
 
     fun onWhatsNewShown() = firstRunController.onWhatsNewShown()
 
-    fun openSettingsFromWelcome() = firstRunController.openSettingsFromWelcome()
-
     private suspend fun import(request: ImportRequest) = importController.import(request)
 
     fun cancelImportPreparation() = importController.cancelImportPreparation()
@@ -1617,6 +1647,10 @@ class CampfireViewModel(
 
     fun setSongDetailsLookupEnabled(value: Boolean) = preferencesController.setSongDetailsLookupEnabled(value)
 
+    fun setKeyShown(value: Boolean) = preferencesController.setKeyShown(value)
+
+    fun setTempoShown(value: Boolean) = preferencesController.setTempoShown(value)
+
     fun setSectionNumberingEnabled(value: Boolean) = preferencesController.setSectionNumberingEnabled(value)
 
     fun setLanguage(value: UserPreferences.Language) = preferencesController.setLanguage(value)
@@ -1690,7 +1724,7 @@ class CampfireViewModel(
                 if (songTexts.value[saved.songFileName] == null) return false
             }
         }
-        // The welcome, what's new or an import question go first.
+        // What's new or an import question go first.
         if (dialogHost.visibleDialog.value != null) return false
         when (saved) {
             SavedDialog.NewSong -> showDialog(DialogType.NewSong)

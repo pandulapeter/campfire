@@ -21,5 +21,8 @@ internal fun canShowWhatsNew(
     queuedImportCount: Int,
 ) = !hasDialog && !isImporting && !hasImportReport && queuedImportCount == 0
 
-/** Whether the first run's welcome may go up now: not over a dialog, and not over an import screen, which is a question too. */
-internal fun canShowWelcome(hasDialog: Boolean, hasImportReport: Boolean) = !hasDialog && !hasImportReport
+/**
+ * Whether the first run's onboarding may go up now: not over a dialog, and not over an import, whose screen is a question
+ * too - one already reported, or one of a file the app was opened with that is still waiting to be read.
+ */
+internal fun canShowOnboarding(hasDialog: Boolean, hasImportReport: Boolean, hasQueuedImport: Boolean) = !hasDialog && !hasImportReport && !hasQueuedImport

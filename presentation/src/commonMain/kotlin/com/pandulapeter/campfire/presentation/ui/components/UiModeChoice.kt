@@ -18,7 +18,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_user_interface_
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_light
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_system_default
 
-/** Light, dark or whatever the system is set to, as the settings screen and the welcome sheet both offer it. */
+/** Light, dark or whatever the system is set to, as the settings screen and the onboarding both offer it. */
 @Composable
 internal fun UiModeChoice(
     modifier: Modifier = Modifier,

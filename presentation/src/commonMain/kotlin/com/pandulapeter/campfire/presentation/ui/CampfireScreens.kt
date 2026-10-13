@@ -60,6 +60,7 @@ import com.pandulapeter.campfire.presentation.ui.screens.export.ExportTransition
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.SetlistsScreen
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportReportScreen
+import com.pandulapeter.campfire.presentation.ui.screens.onboarding.OnboardingScreen
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsScreen
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsWidthLayout
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongDetailsScreen
@@ -335,7 +336,7 @@ internal fun CampfireScreens(
                         )
                     }
                 }
-                // These three cover the chrome, so they are the only ones laid out edge to edge.
+                // These four cover the chrome, so they are the only ones laid out edge to edge.
                 entry<CampfireDestination.SongEditor>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
                     ReportNavigationTransition(viewModel, onNavigationTransitionRunningChanged)
                     ScreenSurface(hostLifecycle = hostLifecycle, scrim = navigationScrim) {
@@ -357,6 +358,15 @@ internal fun CampfireScreens(
                             // Its search is typed into, so its list ends above the keyboard as the editor's text does.
                             contentPadding = songEditorContentPadding,
                             onBack = viewModel::navigateBack,
+                        )
+                    }
+                }
+                entry<CampfireDestination.Onboarding>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
+                    ReportNavigationTransition(viewModel, onNavigationTransitionRunningChanged)
+                    ScreenSurface(hostLifecycle = hostLifecycle, scrim = navigationScrim) {
+                        OnboardingScreen(
+                            viewModel = viewModel,
+                            destination = destination,
                         )
                     }
                 }

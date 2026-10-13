@@ -27,11 +27,12 @@ class WhatsNewGateTest {
     }
 
     @Test
-    fun `the welcome stays off another dialog and an import screen`() {
+    fun `the onboarding stays off another dialog and an import`() {
         val cases = mapOf(
-            "nothing" to canShowWelcome(hasDialog = false, hasImportReport = false),
-            "a dialog" to canShowWelcome(hasDialog = true, hasImportReport = false),
-            "an import screen" to canShowWelcome(hasDialog = false, hasImportReport = true),
+            "nothing" to canShowOnboarding(hasDialog = false, hasImportReport = false, hasQueuedImport = false),
+            "a dialog" to canShowOnboarding(hasDialog = true, hasImportReport = false, hasQueuedImport = false),
+            "an import screen" to canShowOnboarding(hasDialog = false, hasImportReport = true, hasQueuedImport = false),
+            "a file waiting to be imported" to canShowOnboarding(hasDialog = false, hasImportReport = false, hasQueuedImport = true),
         )
         assertEquals(mapOf("nothing" to true), cases.filterValues { it })
     }

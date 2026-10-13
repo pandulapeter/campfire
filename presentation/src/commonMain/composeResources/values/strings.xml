@@ -285,6 +285,10 @@
     <string name="settings_cover_art_description">Show the album cover a song names next to it, downloading it once and keeping a copy on this device</string>
     <string name="settings_number_sections">Number sections</string>
     <string name="settings_number_sections_description">Head sections that have no name of their own with their kind and a number, such as Verse 1 and Verse 2, where a song has several of a kind</string>
+    <string name="settings_show_key">Show the key</string>
+    <string name="settings_show_key_description">The key on every song card, and the key at the top of a song, which is also where it is transposed. The capo stays.</string>
+    <string name="settings_show_tempo">Show the tempo</string>
+    <string name="settings_show_tempo_description">The tempo and the time signature on every song card and at the top of a song. The metronome still plays at the song\'s tempo.</string>
     <string name="settings_notation">Chord notation</string>
     <string name="settings_notation_description">How chords are written while you read and edit songs. Songs are always saved in standard notation, so they read the same in every app.</string>
     <string name="settings_notation_standard">Standard</string>
@@ -313,6 +317,8 @@
     <string name="settings_chord_instrument_other">Other</string>
     <string name="settings_chord_instrument_other_description">No chord diagrams</string>
     <string name="settings_general">General</string>
+    <string name="settings_onboarding">Set up Campfire again</string>
+    <string name="settings_onboarding_description">Choose your look, instrument, and features again, step by step</string>
     <string name="settings_user_interface_theme">Theme</string>
     <string name="settings_user_interface_theme_system_default">System</string>
     <string name="settings_user_interface_theme_dark">Dark</string>
@@ -758,12 +764,49 @@
     <string name="whats_new_title">What's new in Campfire %1$s</string>
     <string name="whats_new_message">• **Tuner** A new tab listens through the microphone to tune guitar, bass, ukulele, violin, mandolin, or banjo, plays reference tones, and opens over any song.\n• **Select multiple songs** Start from any song's menu, then add the ticked songs to setlists, tag them, set their languages, or export them in one go.\n• **Songs on fewer pages** Long songs use narrower columns and slightly smaller text where that saves a page, and short ones fill the screen in centered columns.\n• **Colored tags** Give each tag one of 14 colors in Manage tags, shown on song cards and filter chips and synced between your devices.\n• **Metronome accents for each song** The metronome remembers each song's accented beats, switches tempo between songs on the next bar, and no longer stops in the background on Android.\n• **Duplicate songs, right-click menus** Copy a song from its menu to start a new version of it, and open any song's or setlist's menu with a right click.</string>
 
-    <!-- Welcome sheet, shown once on the first run -->
-    <string name="welcome_title">Welcome to Campfire!</string>
-    <string name="welcome_message">Pick a look you like to begin with, you can always change it later.</string>
-    <string name="welcome_settings_hint">You will find everything else in Settings.</string>
-    <string name="welcome_settings_hint_sync">Want the same songs on every device? Connect Dropbox in Settings, where you will find everything else too.</string>
-    <string name="welcome_open_settings">Open Settings</string>
+    <!-- Onboarding, shown once on the first run and again from Settings -->
+    <string name="onboarding_skip">Skip</string>
+    <string name="onboarding_next">Next</string>
+    <string name="onboarding_start_playing">Start playing</string>
+    <string name="onboarding_welcome_title">Welcome to Campfire!</string>
+    <string name="onboarding_welcome_message">Your songbook for lyrics and chords. A few quick questions and it\'s ready for you, starting with a look you like.</string>
+    <string name="onboarding_role_title">How will you use Campfire?</string>
+    <string name="onboarding_role_message">Pick the one closest to you and we\'ll switch on what you need. You can fine-tune it below.</string>
+    <string name="onboarding_role_player">I play an instrument</string>
+    <string name="onboarding_role_player_description">Chords, a metronome, and a tuner</string>
+    <string name="onboarding_role_singer">I sing</string>
+    <string name="onboarding_role_singer_description">Just the lyrics, in setlists for the evening</string>
+    <string name="onboarding_role_leader">I lead a band or a group</string>
+    <string name="onboarding_role_leader_description">Everything, setlists included</string>
+    <string name="onboarding_role_features">What you\'ll get</string>
+    <string name="onboarding_chord_diagram_description">How to play %1$s</string>
+    <string name="onboarding_at_a_glance_title">What matters at a glance?</string>
+    <string name="onboarding_at_a_glance_message">Choose what every song shows next to its title.</string>
+    <string name="onboarding_done_title">You\'re all set!</string>
+    <string name="onboarding_done_message">Campfire is ready for you. You can change any of this later in Settings.</string>
+    <string name="onboarding_done_setup">Your setup</string>
+    <string name="onboarding_done_lyrics_only">Lyrics only</string>
+    <string name="onboarding_done_sync">Your songs sync through Dropbox</string>
+    <string name="onboarding_done_tips">Where to start</string>
+    <string name="onboarding_done_tip_demo">Open one of the demo songs to see it all in action</string>
+    <string name="onboarding_done_tip_add">Write a song or import your own with the + button</string>
+    <string name="onboarding_done_tip_settings">Everything you picked here is in Settings</string>
+    <string name="onboarding_progress">Step %1$d of %2$d</string>
+    <string name="onboarding_instrument_title">What do you play?</string>
+    <string name="onboarding_instrument_message_chords_and_tuner">Campfire will show its chord shapes and set the tuner up for it.</string>
+    <string name="onboarding_instrument_message_chords">Campfire will show its chord shapes.</string>
+    <string name="onboarding_instrument_message_tuner">Campfire will set the tuner up for it.</string>
+    <string name="onboarding_instrument_keyboard">Piano or keyboard</string>
+    <string name="onboarding_instrument_other">Something else</string>
+    <string name="onboarding_notation_title">How do you write chords?</string>
+    <string name="onboarding_notation_message">Songs are always saved the standard way, so they read the same in every app.</string>
+    <string name="onboarding_feature_chords_description">Chords above the lyrics, and how to play them</string>
+    <string name="onboarding_feature_setlists_description">Songs in order for a gig or a rehearsal</string>
+    <string name="onboarding_feature_metronome_description">Keeps the beat at each song\'s own tempo</string>
+    <string name="onboarding_feature_tuner_description">Tunes your instrument through the microphone</string>
+    <string name="onboarding_sync_title">Your songs, everywhere</string>
+    <string name="onboarding_sync_message">Connect Dropbox to keep the same songs on all your devices. Campfire has no server of its own: your files go straight to your own storage.</string>
+    <string name="onboarding_sync_later">You can also do this later in Settings.</string>
     <string name="welcome_get_started">Get started</string>
 
     <!-- In-app updates, which only the Play build ever has anything to show -->

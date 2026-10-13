@@ -15,11 +15,11 @@ Without it the release APK carried only the profiles its libraries ship, none of
 
 `BaselineProfileGenerator` is one `BaselineProfileRule.collect` with `includeInStartupProfile`, walking what every
 launch goes through: a cold start (on a fresh installation that is a first run, so the demo library is planted and the
-welcome sheet is dismissed with **Get started**), a fling down and up the song list, *House of the Rising Sun* opened,
+onboarding is walked through with **Next** to its **Start playing**), a fling down and up the song list, *House of the Rising Sun* opened,
 flung and left, the **Setlists** tab and the demo setlist, the **Metronome** tab, the **Tuner** tab (which asks for nothing without a tap), and **Settings**. Screens are found by their visible English
 text, which Compose exposes to UI Automator, so the app carries no test tags; every step waits up to five seconds and
 is skipped where its text never appears, so that a renamed string costs a step of the profile rather than the run. The
-collection runs the journey several times without clearing the app's data, which is why the welcome sheet is only
+collection runs the journey several times without clearing the app's data, which is why the onboarding is only
 looked for rather than expected.
 
 It is not a test: it asserts nothing and CI never runs it. The profile is recorded by hand and committed, and

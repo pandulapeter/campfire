@@ -151,6 +151,10 @@ internal class PreferencesController(
 
     fun setSongDetailsLookupEnabled(value: Boolean) = changeUserPreferences { copy(isSongDetailsLookupEnabled = value) }
 
+    fun setKeyShown(value: Boolean) = changeUserPreferences { copy(isKeyShown = value) }
+
+    fun setTempoShown(value: Boolean) = changeUserPreferences { copy(isTempoShown = value) }
+
     fun setSectionNumberingEnabled(value: Boolean) = changeUserPreferences { copy(shouldNumberSections = value) }
 
     fun setLanguage(value: UserPreferences.Language) = changeUserPreferences { copy(language = value) }

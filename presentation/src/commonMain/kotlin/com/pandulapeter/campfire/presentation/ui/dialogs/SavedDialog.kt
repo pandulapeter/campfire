@@ -19,7 +19,7 @@ import kotlinx.serialization.Serializable
  * Only the sheets something is typed or picked into have one. Every confirmation is left out, since putting back a
  * question nobody answered is worse than losing it, and `DeleteLibrary` above all, whose typed answer must never outlive
  * the moment; so are the export screen, which has a pipeline of its own, the tuner, which only ever listens from a tap,
- * the welcome and what's new, which the start decides on by itself, and the sheets that hold nothing typed (Song info,
+ * the onboarding and what's new, which the start decides on by itself, and the sheets that hold nothing typed (Song info,
  * a chord's shapes, the song filters).
  */
 @Serializable

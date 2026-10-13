@@ -13,11 +13,15 @@
 - CoverArtArchive thumbnails load really slowly
 
 ### Improvements
+- Mandolin chord diagrams
+
+### Features
+- Import zip screen that displays the content before actually importing it, prepare the screen for loading remote zips
+- Shared setlists via Dropbox public links -> deeplink to Campfire. Rewrite documentation/plans/song-links.md - allow scanning deep links via QR code
 
 ## Midterm (in the next versions)
 - New song from the clipboard: documentation/plans/clipboard-import.md
 - Share to Campfire (iOS share extension, Android audit): documentation/plans/share-extension.md (after the clipboard plan)§
-- Song links and QR codes: documentation/plans/song-links.md
 - Search field for tags / languages
 - Find a way to allow entering tempo using the keyboard
 - Comments in setlists (between songs)

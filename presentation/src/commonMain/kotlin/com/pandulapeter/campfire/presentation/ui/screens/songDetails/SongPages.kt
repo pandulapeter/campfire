@@ -131,6 +131,10 @@ internal fun SongPages(
         if (shownText != null && !hasShownLyrics) SideEffect { hasShownLyrics = true }
         val playback = songPlaybackOf(song = song, setlistFileName = destination.setlistFileName, overrides = playingOverrides)
         val readsCapoAsTransposition = userPreferences.readsCapoAsTransposition
+        // What the reader chose to see at a glance; the tempo goes with the metronome as well, and the click still plays
+        // it where it is hidden.
+        val isKeyShown = userPreferences?.isKeyShown != false
+        val isTempoShown = isMetronomeEnabled && userPreferences?.isTempoShown != false
         val shownPlayback = if (readsCapoAsTransposition) playback.withCapoSounding() else playback
         val tempo = playback.tempo
         val capo = shownPlayback.capo
@@ -163,7 +167,8 @@ internal fun SongPages(
                     readsCapoAsTransposition = readsCapoAsTransposition,
                     chordSpelling = chordSpelling,
                     shouldShowChords = shouldShowChords,
-                    shouldShowTempo = isMetronomeEnabled,
+                    shouldShowKey = isKeyShown,
+                    shouldShowTempo = isTempoShown,
                 )
             },
             playingTools = rememberSongPlayingTools(
@@ -176,8 +181,9 @@ internal fun SongPages(
                 isBeatFlashEnabled = isBeatFlashEnabled,
             ),
             shouldShowChords = shouldShowChords,
+            shouldShowKey = isKeyShown,
             shouldShowCapo = !readsCapoAsTransposition,
-            shouldShowTempo = isMetronomeEnabled,
+            shouldShowTempo = isTempoShown,
             shouldNumberSections = userPreferences?.shouldNumberSections == true,
             fontScale = if (isFollowingGesture) ({ viewModel.fontScale }) else ({ viewModel.settledFontScale }),
             // In a setlist the step buttons page to the songs beside every song, whether it scrolls or not.

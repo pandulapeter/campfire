@@ -43,6 +43,8 @@ internal data class UserPreferencesDocument(
     // What the notation was before there could be more than two: only read, for a document that has no notation yet.
     val isGermanNotationEnabled: Boolean = false,
     val areChordDiagramsEnabled: Boolean = true,
+    val isKeyShown: Boolean = true,
+    val isTempoShown: Boolean = true,
     val chordInstrument: String = "",
     val chordVoicings: Map<String, Map<String, String>> = emptyMap(),
     val isChordSectionFolded: Boolean = false,

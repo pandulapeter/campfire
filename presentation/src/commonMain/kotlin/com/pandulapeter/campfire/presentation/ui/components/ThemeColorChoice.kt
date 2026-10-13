@@ -34,13 +34,13 @@ import org.jetbrains.compose.resources.painterResource
 
 /**
  * How wide the [ThemeColorChoice] is with every color the preference has in one row, the system's included, which is
- * what the settings screen's columns and the welcome sheet leave it, so that the colors do not wrap wherever there is
+ * what the settings screen's columns and the onboarding leave it, so that the colors do not wrap wherever there is
  * the room for them.
  */
 internal val THEME_COLOR_CHOICE_WIDTH = colorChoiceWidth(UserPreferences.ThemeColor.entries.size)
 
 /**
- * Every color the theme can be painted in, as the settings screen and the welcome sheet both offer it.
+ * Every color the theme can be painted in, as the settings screen and the onboarding both offer it.
  *
  * @param uiMode The mode the app is drawn in, which decides the half of each palette the discs are filled with.
  */

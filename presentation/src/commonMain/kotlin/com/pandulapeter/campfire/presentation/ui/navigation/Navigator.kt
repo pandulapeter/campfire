@@ -23,6 +23,9 @@ import com.pandulapeter.campfire.presentation.ui.components.SearchState
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportReport
+import com.pandulapeter.campfire.presentation.ui.screens.onboarding.OnboardingStep
+import com.pandulapeter.campfire.presentation.ui.screens.onboarding.nextOnboardingStep
+import com.pandulapeter.campfire.presentation.ui.screens.onboarding.previousOnboardingStep
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.SetlistWithSongs
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.Companion.BACK_STACK_KEY
@@ -49,6 +52,7 @@ internal class Navigator(
     private val songsSearch: () -> SearchState,
     private val setlistsSearch: () -> SearchState,
     private val importReportSearch: () -> SearchState,
+    private val onboardingSteps: () -> List<OnboardingStep>,
     private val topLevelDestinations: () -> List<CampfireDestination.TopLevel>,
     private val userPreferences: () -> UserPreferences?,
     private val hasUnsavedEditorText: () -> Boolean,
@@ -106,6 +110,19 @@ internal class Navigator(
      * is thrown away when Settings is selected from another top level screen. The screen only reads it as it is composed, but it is a state because the web build's address names the tab, and follows it.
      */
     var settingsTab by mutableStateOf(SettingsTab.GENERAL)
+
+    /**
+     * The page the onboarding is on, kept here rather than in the screen so that every way back - the desktop's Escape
+     * included, which [navigateBack] answers from outside the composition - steps back through the pages before it leaves
+     * the screen ([isOnboardingBackToPreviousStep]). It lasts for the session like [settingsTab]: a process the system
+     * ends behind the onboarding comes back on its first page, every answer given so far kept in the preferences.
+     */
+    var onboardingStep by mutableStateOf(OnboardingStep.entries.first())
+        private set
+
+    /** Whether a way back out of the onboarding goes to its previous page rather than leaving it, see [onboardingStep]. */
+    val isOnboardingBackToPreviousStep
+        get() = backStack.lastOrNull() is CampfireDestination.Onboarding && previousOnboardingStep(onboardingStep, onboardingSteps()) != null
 
     /**
      * Whether a way back out of the settings screen goes to its General tab rather than leaving it: the tabs are the
@@ -351,6 +368,28 @@ internal class Navigator(
     }
 
     /**
+     * Puts the onboarding over whatever is on screen, on its first page. Refused over an onboarding that is already open,
+     * which a second tap on the settings screen's row during the push would otherwise stack a second one on.
+     */
+    fun openOnboarding(isOpenedFromSettings: Boolean) {
+        if (backStack.any { it is CampfireDestination.Onboarding }) return
+        onboardingStep = OnboardingStep.entries.first()
+        updateBackStack { add(CampfireDestination.Onboarding(isOpenedFromSettings = isOpenedFromSettings)) }
+    }
+
+    /** Moves the onboarding on to its next page, or finishes it on its last one. */
+    fun showNextOnboardingStep() {
+        if (backStack.lastOrNull() !is CampfireDestination.Onboarding) return
+        nextOnboardingStep(onboardingStep, onboardingSteps())?.let { onboardingStep = it } ?: closeOnboarding()
+    }
+
+    /** Takes the onboarding off the stack, which slides the screen under it back in. */
+    fun closeOnboarding() {
+        if (backStack.none { it is CampfireDestination.Onboarding }) return
+        updateBackStack { removeAll { it is CampfireDestination.Onboarding } }
+    }
+
+    /**
      * Every way out of a screen ends up here - the app bar's button, the system's back gesture and the desktop
      * window's Escape key - which is why this is where the editor's unsaved text is caught: nothing the user typed
      * is thrown away without being asked about it first, and why a settings tab other than General goes back to that
@@ -368,6 +407,7 @@ internal class Navigator(
                 dialogHost.showDialog(DialogType.UnsavedChanges)
             }
             isSettingsBackToGeneral -> settingsTab = SettingsTab.GENERAL
+            isOnboardingBackToPreviousStep -> previousOnboardingStep(onboardingStep, onboardingSteps())?.let { onboardingStep = it }
             else -> popBackStack(isPredictiveBackCompleted)
         }
     }

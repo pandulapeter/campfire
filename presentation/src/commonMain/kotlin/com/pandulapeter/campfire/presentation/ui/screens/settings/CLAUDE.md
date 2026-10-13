@@ -19,9 +19,10 @@ the available width fits the 560dp tab row and, above that, the entries of a 180
 of the screen with the selected page next to it (`NavigationDrawerItem`s, the dot of a pending sync answer as their
 badge; the choice is written straight to `settingsTab`, and the pager, which keeps a state of its own in
 `SettingsTabPager`, opens on it when a window narrows again): General (theme, color, whether the app icon takes that
-color, the sepia slider, language), Features (the switches that take whole parts of the app away, see the root
+color, the sepia slider, language, and "Set up Campfire again", which opens the onboarding), Features (the switches that take whole parts of the app away, see the root
 `CLAUDE.md`: read only mode, chords, chord diagrams — disabled with the chords off —, metronome, setlists and cover
-art), Songs (how a song is read - section numbers, the chord spelling — the notation as a list of five radio rows,
+art), Songs (how a song is read - section numbers, whether the key and the tempo are shown, each disabled with the chords
+or the metronome off (see `ui/CLAUDE.md`), the chord spelling — the notation as a list of five radio rows,
 Standard, German, Latin, Nashville numbers and Roman numerals, each with an example under it, since five names do not
 fit a row of segments on a phone, and the accidentals, which stay enabled under a numbering since they still spell its
 key — and the instrument the chord diagrams are drawn for, disabled with the chords switched off but not with the

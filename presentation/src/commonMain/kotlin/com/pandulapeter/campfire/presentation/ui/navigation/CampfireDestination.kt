@@ -145,4 +145,19 @@ sealed interface CampfireDestination : NavKey {
     data object ImportReport : CampfireDestination {
         override val contentKey = "importReport"
     }
+
+    /**
+     * The onboarding, one screen whose pages are a pager of its own: the page it is on is `Navigator.onboardingStep`,
+     * which a back steps through before it leaves the screen, the way the settings screen's tabs are. What each page
+     * shows is read from the preferences, so it carries nothing else.
+     *
+     * @param isOpenedFromSettings Whether it was opened from the settings screen rather than by a first run, which is
+     *   what gives it a Close button instead of Skip and finishes it with Done rather than Start playing.
+     */
+    @Serializable
+    data class Onboarding(
+        val isOpenedFromSettings: Boolean,
+    ) : CampfireDestination {
+        override val contentKey get() = "onboarding"
+    }
 }

@@ -47,6 +47,10 @@ import com.pandulapeter.campfire.presentation.resources.settings_notation_standa
 import com.pandulapeter.campfire.presentation.resources.settings_notation_standard_description
 import com.pandulapeter.campfire.presentation.resources.settings_number_sections
 import com.pandulapeter.campfire.presentation.resources.settings_number_sections_description
+import com.pandulapeter.campfire.presentation.resources.settings_show_key
+import com.pandulapeter.campfire.presentation.resources.settings_show_key_description
+import com.pandulapeter.campfire.presentation.resources.settings_show_tempo
+import com.pandulapeter.campfire.presentation.resources.settings_show_tempo_description
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.components.RadioListItem
@@ -64,6 +68,22 @@ internal fun SongDisplaySection(
         description = stringResource(Res.string.settings_number_sections_description),
         isChecked = userPreferences?.shouldNumberSections == true,
         onCheckedChange = viewModel::setSectionNumberingEnabled,
+    )
+    // Disabled rather than hidden with their feature off, like the chord spelling below: the key goes with the chords and
+    // the tempo with the metronome, whatever these say, and what they are set to is kept for when those come back.
+    SwitchListItem(
+        title = stringResource(Res.string.settings_show_key),
+        description = stringResource(Res.string.settings_show_key_description),
+        isChecked = userPreferences?.isKeyShown != false,
+        isEnabled = userPreferences?.areChordsEnabled != false,
+        onCheckedChange = viewModel::setKeyShown,
+    )
+    SwitchListItem(
+        title = stringResource(Res.string.settings_show_tempo),
+        description = stringResource(Res.string.settings_show_tempo_description),
+        isChecked = userPreferences?.isTempoShown != false,
+        isEnabled = userPreferences?.isMetronomeEnabled != false,
+        onCheckedChange = viewModel::setTempoShown,
     )
     // Both of these only decide how a chord is written, so with the chords switched off they have nothing to say. They
     // stay in the section rather than disappearing from it: what they are set to is still what the chords will look

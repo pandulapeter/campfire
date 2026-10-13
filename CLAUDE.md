@@ -38,9 +38,10 @@ app:android / app:desktop / app:ios / app:web   entry points, platform chrome, "
   app:di                                     the Koin application: the one place every module is named, and the
                                              function the four entry points start Koin with
   presentation                               CampfireViewModel, Navigation 3 back stack, Material 3 theme + every screen
-                                             (Songs, Setlists, Metronome, Tuner, Settings, SongDetails, SongEditor), string resources; the
-                                             platform shells (system bars, file pickers, drag and drop, URL opening,
-                                             desktop key handling) are its platform source sets
+                                             (Songs, Setlists, Metronome, Tuner, Settings, SongDetails, SongEditor,
+                                             Onboarding), string resources; the platform shells (system bars, file
+                                             pickers, drag and drop, URL opening, desktop key handling) are its
+                                             platform source sets
   domain:api / :implementation               use cases (single-method interfaces)
     data:repository:api / :implementation
     data:sync:implementation                 sync: the engine, the planner, the index, the synced preferences and the
@@ -278,6 +279,10 @@ What the app does, one line each; the full text is in the file named (`:presenta
   library-wide choice, then the app's first: `:presentation`'s `ui/chords/CLAUDE.md`.
 - The app is shipped with two demo songs and one setlist, planted once through the ordinary import on a fresh
   installation only: `:presentation`'s `ui/firstRun/CLAUDE.md`.
+- A first run opens a short, skippable onboarding, one question a page and each shown on what it changes, whose earlier
+  answers take away the later questions they make pointless; every answer is written as it is given, and Settings opens
+  it again:
+  `:presentation`'s `ui/screens/onboarding/CLAUDE.md`.
 - What's new introduces each version once, after startup import questions have finished: `:presentation`'s
   `ui/firstRun/CLAUDE.md`.
 - The app icon follows the theme color wherever the platform allows, and the app's own colors are the promotional purple

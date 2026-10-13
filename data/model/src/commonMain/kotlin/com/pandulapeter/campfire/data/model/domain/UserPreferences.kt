@@ -91,6 +91,18 @@ data class UserPreferences(
      * played. Only while [areChordsEnabled]: with the chords gone there is nothing to finger.
      */
     val areChordDiagramsEnabled: Boolean = true,
+    /**
+     * Whether a song's key is shown where it is read: on its card in the lists, and as the key stepper of its first
+     * section, which is also where it is transposed. Only while [areChordsEnabled], which takes the key away with the
+     * chords whatever this says. Off, the capo stays, since it is a fret rather than something to read.
+     */
+    val isKeyShown: Boolean = true,
+    /**
+     * Whether a song's tempo is shown where it is read: on its card, and as the tempo and the time signature of its
+     * first section and of the changes inside it. Only while [isMetronomeEnabled]; off, the click still plays at the
+     * song's tempo, and the metronome's own panel still shows and sets it.
+     */
+    val isTempoShown: Boolean = true,
     /** The instrument the diagrams are drawn for, or [ChordInstrument.OTHER] for none. */
     val chordInstrument: ChordInstrument = ChordInstrument.GUITAR,
     /**

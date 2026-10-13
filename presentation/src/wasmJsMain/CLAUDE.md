@@ -107,8 +107,8 @@ page — the same rule, and the price every single page app pays for a deep link
 - **Every screen has an address, and the browser's history is the app's back stack**: `/` is the songs, then `search`,
   `setlists`, `setlists/search`, `metronome`, `settings/{general,features,songs,library,about}`, `song/{song}`,
   `song/{song}/edit`, `setlist/{setlist}/{song}` and `import`, one history entry per step a back gesture would take — a
-  dialog, a sheet, or a menu open over a screen is one too, and so are the setlist reorder mode and the song selection
-  mode, at the screen's address (`:presentation`'s `ui/navigation/BrowserHistory.kt`). The app decides and the history
+  dialog, a sheet, or a menu open over a screen is one too, and so are the setlist reorder mode, the song selection
+  mode, and the onboarding, at the screen's address (`:presentation`'s `ui/navigation/BrowserHistory.kt`). The app decides and the history
   follows — pushed, replaced, or gone back through to match — and the browser's Back is sent into the navigation event
   dispatcher like Escape, so it closes a dialog or asks about unsaved text before it leaves a screen. An address that is
   opened is resolved once the library has been read, behind the launch screen; one naming nothing the library holds

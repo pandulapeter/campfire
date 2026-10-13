@@ -169,8 +169,6 @@ sealed interface DialogType {
     /** Asked before the editor throws away everything typed since the last save, see [CampfireViewModel.revertEditorChanges]. */
     data object RevertChanges : DialogType
 
-    /** Shown once, over the first run of an installation, see [CampfireViewModel.showWelcomeOnFirstRun]. */
-    data object Welcome : DialogType
     /** The current version's introduction, shown once after the first installed version. */
     data object WhatsNew : DialogType
 }

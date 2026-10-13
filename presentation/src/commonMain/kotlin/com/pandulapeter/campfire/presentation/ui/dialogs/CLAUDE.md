@@ -128,26 +128,17 @@ language with rather than the one the library files it under, so that `HUN` and 
 `NormalizeLanguageCodeUseCase`'s job — the ones the song already declares held at the top for as long as the dialog is
 open — a row that reordered itself under the finger that just ticked it would be worse than a list that has to be
 scrolled — and one write when it is confirmed), delete song / delete setlist confirmations (the only way to delete
-either), the editor's unsaved changes and revert questions, and the controls, setlist picker, song picker and welcome
+either), the editor's unsaved changes and revert questions, and the controls, setlist picker and song picker
 `ModalBottomSheet`s.
 
-**The welcome sheet** (`DialogType.Welcome`) is the first run's one screen of its own and is kept that short on purpose:
-a line about the app, the theme and the color — the settings screen's own `UiModeChoice` and `ThemeColorChoice`
-(`components/UiModeChoice.kt`, `ThemeColorChoice.kt`), over the app in its own theme so that every tap shows on the
-songs behind — a line pointing at Settings that names Dropbox wherever `syncProviders` is not empty, since sync is the
-one thing a new user cannot find by using the app, and "Open Settings" / "Get started".
-`CampfireViewModel.showWelcomeOnFirstRun` puts it up once `hasShownApp` is set rather than as the library arrives, since
-a sheet is a window of its own on Android and would slide up over the launch screen, and only onto a screen with no
-other dialog on it and no import screen under it; Open Settings lands on the Library tab where the build has sync and on
-General where it has none, and moves behind the sheet as it goes down. It is shown on that one run and never again,
-since the first run's preferences are written before it is up. `WhatsNewDialog` is an alert titled with
+`WhatsNewDialog` is an alert titled with
 `CAMPFIRE_VERSION_NAME`, shown once per version after the first installed one.
 
 Its body is a list of `• **Headline** Description` bullets separated by `\n` in the localized resource, ordered by
 importance to the user, each a bold one-line headline with a short description of the change and its practical benefit
 under it (a bullet without the bold part is all description). The rows keep wrapped text aligned and 16dp between
 changes, in a scrolling area capped at 420dp with the usual fades at both ends; the title and the **Get started** button
-(the welcome sheet's string) stay visible. `showWhatsNewOnVersionChange` waits for the app and for every import queued,
+(the onboarding's last button's string) stay visible. `showWhatsNewOnVersionChange` waits for the app and for every import queued,
 running or reported on (`canShowWhatsNew` in `ui/firstRun/WhatsNewGate.kt`: no dialog, no import running, no import
 screen, nothing in `importQueue`), and the version is recorded once the dialog has stayed composed for a few seconds
 (`onWhatsNewShown`) or as it closes, rather than when it is asked for or on its first frame, since on Android Play's

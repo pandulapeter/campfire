@@ -127,6 +127,20 @@ class BrowserRoutesTest {
     }
 
     @Test
+    fun `the onboarding repeats the address under it, which opens no onboarding`() {
+        val state = home.copy(
+            backStack = listOf(CampfireDestination.Songs, CampfireDestination.Settings, CampfireDestination.Onboarding(isOpenedFromSettings = true)),
+        )
+        val paths = BrowserRoutes.paths(inputs(state))
+        assertEquals(listOf("", "settings/general", "settings/general"), paths)
+        assertEquals(paths.size, BrowserRoutes.entryCount(state))
+        assertEquals(
+            listOf<CampfireDestination>(CampfireDestination.Songs, CampfireDestination.Settings),
+            BrowserRoutes.resolve(path = paths.last(), songs = songs, setlists = setlists, current = home, isPerformanceModeEnabled = false)?.backStack,
+        )
+    }
+
+    @Test
     fun `the unsaved changes question is no overlay, any other dialog and a menu are`() {
         assertFalse(RouteInputs.hasOverlay(dialog = DialogType.UnsavedChanges, isAnyMenuOpen = false))
         assertFalse(RouteInputs.hasOverlay(dialog = null, isAnyMenuOpen = false))

@@ -38,7 +38,7 @@ symbols or emoji alone, counting as no search), `setlistsWithSongs`, `visibleDia
 work parked behind a dialog — the exit behind the unsaved changes question — is dropped whenever that dialog stops being
 the one on screen; a dropped exit is reported to `requestExit`'s `onCancelled`, since the macOS quit request behind it
 has to be answered with a cancel rather than left waiting. The three exceptions only ever replace no dialog, so there is
-nothing parked to drop: the song picker opened after a new setlist, the welcome sheet and the What's new dialog are each
+nothing parked to drop: the song picker opened after a new setlist, the onboarding and the What's new dialog are each
 a compare-and-set against null.
 
 The import plan behind a conflict question is parked behind the import screen instead (`importReport`,
@@ -374,6 +374,13 @@ making the request, not Campfire.
 ## How a song is played
 
 ### How a song is played is set in the song itself
+
+**The key and the tempo can each be left off what a song shows** (`UserPreferences.isKeyShown`, `isTempoShown`, in
+Settings → Songs and on the onboarding's "What matters at a glance?" page): the key off every song card and, with it, the
+transposition stepper off the top of the song, the capo staying; the tempo off every card, off the top of the song with
+the time signature, and off the tempo changes inside it, while the click still plays it and the metronome's panel still
+sets it. They only ever narrow the chords and the metronome switches, which take the key and the tempo away whatever
+these say.
 
 **How a song is played is set in the song itself**: the transposition, the capo, the tempo and the time signature — the
 four values that decide what is played rather than what the song is — are the first section of the song details screen's

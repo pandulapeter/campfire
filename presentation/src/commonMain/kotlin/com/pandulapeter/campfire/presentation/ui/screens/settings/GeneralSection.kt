@@ -32,6 +32,9 @@ import com.pandulapeter.campfire.presentation.resources.settings_app_icon_launch
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_launcher_description
 import com.pandulapeter.campfire.presentation.resources.settings_background_warmth
 import com.pandulapeter.campfire.presentation.resources.settings_background_warmth_description
+import com.pandulapeter.campfire.presentation.resources.ic_campfire
+import com.pandulapeter.campfire.presentation.resources.settings_onboarding
+import com.pandulapeter.campfire.presentation.resources.settings_onboarding_description
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_window
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_window_description
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language
@@ -43,6 +46,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_user_interface_
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
 import com.pandulapeter.campfire.presentation.ui.components.RadioListItem
 import com.pandulapeter.campfire.presentation.ui.components.SettingsSubsection
 import com.pandulapeter.campfire.presentation.ui.components.SwitchListItem
@@ -53,6 +57,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.appIconSurface
 import com.pandulapeter.campfire.presentation.ui.theme.CampfireColorScheme
 import com.pandulapeter.campfire.presentation.ui.theme.colorSchemePair
 import kotlin.math.roundToInt
+import org.jetbrains.compose.resources.painterResource
 
 /**
  * How far the palette's neutrals are turned towards sepia. A slider of a few steps rather than a picker of tints, since
@@ -148,6 +153,13 @@ internal fun GeneralSection(
         }
         SettingsMessage(text = stringResource(Res.string.settings_user_interface_language_more_coming))
     }
+    // The way back into the steps the first run opens with, which start from what everything is set to now.
+    ActionListItem(
+        title = stringResource(Res.string.settings_onboarding),
+        description = stringResource(Res.string.settings_onboarding_description),
+        icon = painterResource(Res.drawable.ic_campfire),
+        onClick = viewModel::openOnboarding,
+    )
 }
 
 /** What the icon the theme color can reach is called on this platform. */

@@ -43,9 +43,16 @@ class BaselineProfileGenerator {
     ) {
         pressHome()
         startActivityAndWait()
-        // A fresh installation is a first run, which plants the demo library and opens the welcome sheet over it. The
-        // collection runs this block several times without clearing the app's data, so only the first one sees it.
-        waitFor(By.text("Get started"))?.click()
+        // A fresh installation is a first run, which plants the demo library and opens the onboarding over it, walked
+        // page by page so that every page is in the profile. The collection runs this block several times without
+        // clearing the app's data, so only the first one sees it, and the rest wait for its Skip once.
+        if (waitFor(By.text("Skip")) != null) {
+            while (true) {
+                device.findObject(By.text("Next"))?.click() ?: break
+                device.waitForIdle()
+            }
+            waitFor(By.text("Start playing"))?.click()
+        }
         waitFor(By.textContains("Rising Sun"))?.let {
             flingScrollable(Direction.DOWN)
             flingScrollable(Direction.UP)

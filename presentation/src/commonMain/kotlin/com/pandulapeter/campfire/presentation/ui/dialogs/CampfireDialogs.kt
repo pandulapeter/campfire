@@ -352,10 +352,6 @@ private fun CampfireDialog(
             onSave = viewModel::saveEditorChangesAndLeave,
         )
 
-        DialogType.Welcome -> WelcomeDialog(
-            viewModel = viewModel,
-        )
-
         DialogType.WhatsNew -> {
             // Only once it has stayed up for a moment: Play's answer can arrive after the app is on screen and cover the
             // dialog with the update required screen, which takes it out of the composition and cancels this, and whose
