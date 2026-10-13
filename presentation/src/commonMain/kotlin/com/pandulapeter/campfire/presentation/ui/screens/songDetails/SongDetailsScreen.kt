@@ -344,7 +344,7 @@ private fun LoadSongTexts(
  * What the Chords section of every page is drawn with, null where the diagrams are off. One for the whole pager, since
  * nothing in it belongs to one song: the instrument, the tuning, the player's shapes and whether the section is folded
  * are the same wherever a song is read. An instrument without shapes still gets one, with no tuning to draw in, so that
- * the section keeps the chip that changes it.
+ * the first section keeps the chips that change it.
  */
 @Composable
 private fun rememberChordDiagrams(

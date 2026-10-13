@@ -47,8 +47,10 @@ and the layout yields after each song and every 50 placed blocks: on the web it 
 text size (the chord's name over its diagram, a `PrintDiagram` in the page), kept with the heading the way a first block
 is; a name and its second name too wide for the column together are set on two lines, and one wider than the column on
 its own is broken across lines like any other text; their names are `PrintText`s that are not `isSelectable`, since read
-back by the importer they would be a line of chords above the song, and neither is the line naming the instrument and
-the tuning above them (`PrintLabels.chordTuning`), which the importer would read back as a lyric.
+back by the importer they would be a line of chords above the song. Above a song's diagrams a line names the
+instrument where it is not the guitar or the keyboard and the tuning where it is not the standard one
+(`PrintLabels.chordTuning`), so a sheet is not read for the wrong instrument or strings; like the names it is not
+`isSelectable`, since the importer would read it back as a lyric.
 
 Under the heading a row of what the song names of how it is played (`playingDetails`): the key, the
 `PrintSong.transposition` the viewer prints it in and a capo other than 0 with `showKey` (on the keyboard the capo
