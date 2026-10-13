@@ -25,12 +25,15 @@ internal class NavigationBarItemsTest {
 
     private val all = CampfireDestination.TopLevel.entries
 
-    private fun shownItems(destinations: List<CampfireDestination.TopLevel>, kind: NavigationChromeKind = NavigationChromeKind.BAR) =
-        navigationBarItems(destinations, areToolsGrouped(kind, destinations)).filter { it.second }.map { it.first }
+    private fun shownItems(
+        destinations: List<CampfireDestination.TopLevel>,
+        kind: NavigationChromeKind = NavigationChromeKind.BAR,
+        isShortWindow: Boolean = false,
+    ) = navigationBarItems(destinations, areToolsGrouped(kind, destinations, isShortWindow)).filter { it.second }.map { it.first }
 
     @Test
     fun `a bar with no room for every screen offers the tools behind one item`() {
-        assertTrue(areToolsGrouped(NavigationChromeKind.BAR, all))
+        assertTrue(areToolsGrouped(NavigationChromeKind.BAR, all, isShortWindow = false))
         assertEquals(
             listOf(NavigationBarItem.Destination(Songs), NavigationBarItem.Destination(Setlists), NavigationBarItem.Tools, NavigationBarItem.Destination(Settings)),
             shownItems(all),
@@ -38,15 +41,36 @@ internal class NavigationBarItemsTest {
     }
 
     @Test
-    fun `the rails offer every screen`() {
-        assertFalse(areToolsGrouped(NavigationChromeKind.RAIL, all))
-        assertFalse(areToolsGrouped(NavigationChromeKind.EXPANDED_RAIL, all))
+    fun `a tall rail offers every screen`() {
+        assertFalse(areToolsGrouped(NavigationChromeKind.RAIL, all, isShortWindow = false))
+        assertFalse(areToolsGrouped(NavigationChromeKind.EXPANDED_RAIL, all, isShortWindow = false))
+    }
+
+    @Test
+    fun `a rail in a short window groups the tools`() {
+        assertTrue(areToolsGrouped(NavigationChromeKind.RAIL, all, isShortWindow = true))
+        assertTrue(areToolsGrouped(NavigationChromeKind.EXPANDED_RAIL, all, isShortWindow = true))
+        assertEquals(
+            listOf(NavigationBarItem.Destination(Songs), NavigationBarItem.Destination(Setlists), NavigationBarItem.Tools, NavigationBarItem.Destination(Settings)),
+            shownItems(all, NavigationChromeKind.RAIL, isShortWindow = true),
+        )
+    }
+
+    @Test
+    fun `a bar is grouped whatever its height`() {
+        assertTrue(areToolsGrouped(NavigationChromeKind.BAR, all, isShortWindow = true))
+        assertTrue(areToolsGrouped(NavigationChromeKind.BAR, all, isShortWindow = false))
+    }
+
+    @Test
+    fun `a short rail with five screens lists them all`() {
+        assertFalse(areToolsGrouped(NavigationChromeKind.RAIL, all - Setlists, isShortWindow = true))
     }
 
     @Test
     fun `a bar that fits every screen switched on offers each of them`() {
         val withoutSetlists = all - Setlists
-        assertFalse(areToolsGrouped(NavigationChromeKind.BAR, withoutSetlists))
+        assertFalse(areToolsGrouped(NavigationChromeKind.BAR, withoutSetlists, isShortWindow = false))
         assertEquals(withoutSetlists.map { NavigationBarItem.Destination(it) }, shownItems(withoutSetlists))
     }
 

@@ -30,7 +30,7 @@ import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeIconBeat
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 
 /**
- * A tool's screen with the room for [ToolsTabRow] above it while the tools are behind the bar's Tools item ([tools] not
+ * A tool's screen with the room for [ToolsTabRow] above it while the tools are behind the chrome's Tools item ([tools] not
  * empty), the room growing and shrinking as the grouping comes and goes, so that the screen moves rather than jumps.
  * The row itself is drawn once over every tool screen ([SharedToolsTabRow]), so that its indicator slides from one
  * tool to the next while the screens fade through under it; only while the screens carry a chrome of their own (a card

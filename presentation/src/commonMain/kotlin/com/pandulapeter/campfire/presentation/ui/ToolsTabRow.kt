@@ -25,12 +25,13 @@ import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SETTINGS_TAB_ROW_MAX_WIDTH
 
 /**
- * The tabs between the tools behind the navigation bar's Tools item (see [areToolsGrouped]), standing where the
- * settings screen's tabs do and drawn the way they are, with no divider and capped at the same width, but each with its
- * tool's icon over its name, the one its navigation item would have ([DestinationIcon]), since the bar's own item shows
- * only the wrench. Each tab is a top level screen of its own, selected as its item would be, so a tab already open
- * scrolls its screen to the top. An icon beside each name would not leave the three names room on a 360dp phone, so the
- * icon goes above it, and the tabs share the row rather than scroll.
+ * The tabs between the tools behind the Tools item of the navigation bar or of a short window's rail (see
+ * [areToolsGrouped]), standing where the settings screen's tabs do and drawn the way they are, with no divider and
+ * capped at the same width, but each with its tool's icon over its name, the one its navigation item would have
+ * ([DestinationIcon]), since the chrome's own item shows only the wrench. Each tab is a top level screen of its own,
+ * selected as its item would be, so a tab already open scrolls its screen to the top. An icon beside each name would
+ * not leave the three names room on a 360dp phone, so the icon goes above it, and the tabs share the row rather than
+ * scroll.
  *
  * The row is painted in the background color rather than left transparent: the tool screens fade through under it,
  * and a transparent row would show both of them at once for the length of the fade.

@@ -133,6 +133,7 @@ internal fun CampfireScreens(
     windowSize: WindowSize,
     chromeKind: NavigationChromeKind,
     chromeSize: NavigationChromeSize,
+    isShortWindow: Boolean,
     songColumnWidth: Dp,
     chromeInScreens: Boolean,
     exportTransition: ExportTransition,
@@ -232,6 +233,7 @@ internal fun CampfireScreens(
                 NavigationChrome(
                     kind = chromeKind,
                     destinations = topLevelDestinations,
+                    isShortWindow = isShortWindow,
                     currentTopLevelDestination = destination,
                     metronomeBeat = metronomeBeat,
                     lastTool = viewModel.lastTool,
@@ -244,10 +246,10 @@ internal fun CampfireScreens(
             null
         }
     }
-    // The tools the bar offers behind its Tools item, and so the tabs their screens are switched by; none where every
+    // The tools the chrome offers behind its Tools item, and so the tabs their screens are switched by; none where every
     // screen has an item of its own. Decided by the kind the window has rather than by the chrome on screen, which hands
-    // over between the two, so that the tabs come and go once as a window crosses from the bar to the rail.
-    val groupedTools = if (areToolsGrouped(chromeKind, topLevelDestinations)) {
+    // over between the two, so that the tabs come and go once as a window crosses from the bar to a taller rail.
+    val groupedTools = if (areToolsGrouped(chromeKind, topLevelDestinations, isShortWindow)) {
         CampfireDestination.TopLevel.tools.filter { it in topLevelDestinations }
     } else {
         emptyList()

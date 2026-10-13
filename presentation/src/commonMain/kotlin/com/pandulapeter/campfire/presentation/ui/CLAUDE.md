@@ -291,9 +291,10 @@ that failed to load.
 **A navigation bar holds at most five items** (`MAX_NAVIGATION_BAR_ITEMS`), and with every feature on there are six top
 level screens, so there the Metronome, the Tuner and the Chords are offered behind one Tools item (`areToolsGrouped`,
 `navigationBarItems` in `NavigationBarItems.kt`, tested): a wrench, standing where the first tool would, the tools
-shrinking into it as the grouping comes and growing back out of it as it goes. It is only the bar's — a rail lists every
-screen, so a window that grows past the bar hands the tools their own items back — and only while the screens switched
-on do not fit, so a bar of five or fewer never has it. The tools stay top level destinations of their own (their
+shrinking into it as the grouping comes and growing back out of it as it goes. It is the bar's, and a rail's in a short
+window (`SHORT_WINDOW_HEIGHT`: a phone on its side), where six items do not fit its height — a taller rail lists every
+screen, so a window that grows past the bar or the short height hands the tools their own items back — and only while
+the screens switched on do not fit, so five or fewer never have it. The tools stay top level destinations of their own (their
 addresses, the restored stack and the tuner's listening are unchanged): the item is selected while any of them is on
 top, and opens the one on top, else the one last on screen (`Navigator.lastTool`, for the session, starting on the
 Metronome), else the first one switched on (`toolsItemDestination`). Pressed again, it acts as the Settings item does

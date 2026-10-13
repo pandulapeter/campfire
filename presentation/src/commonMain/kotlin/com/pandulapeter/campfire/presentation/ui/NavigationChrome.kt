@@ -39,6 +39,7 @@ import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeIconBeat
 import com.pandulapeter.campfire.presentation.ui.metronome.rememberMetronomeIconBeat
 import com.pandulapeter.campfire.presentation.resources.tools
 import com.pandulapeter.campfire.presentation.ui.components.NavigationItemPresence
+import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.components.collapsingNavigationItem
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import org.jetbrains.compose.resources.painterResource
@@ -61,9 +62,9 @@ private val EXPANDED_NAVIGATION_RAIL_TOP_PADDING = 4.dp
  * once for the window and stays there while the tabs fade through in place next to it. A card dealt over the deck
  * moves the screen under it a little, and the chrome is part of that screen as far as the eye can tell, so for as long
  * as a card covers the deck or is being taken off it every top level screen draws a copy of it instead (see
- * [CampfireScreens]), which moves with the screen and which the card covers. Where the bar has no room for every top
- * level screen, it offers the tools behind one Tools item ([areToolsGrouped]), whose screens then carry a row of tabs
- * between them ([ToolsTabRow]).
+ * [CampfireScreens]), which moves with the screen and which the card covers. Where the chrome has no room for every top
+ * level screen, as on the bar or on a rail in a short window, it offers the tools behind one Tools item
+ * ([areToolsGrouped]), whose screens then carry a row of tabs between them ([ToolsTabRow]).
  *
  * @param destinations The top level screens of the features switched on, see `CampfireViewModel.topLevelDestinations`.
  *   The item of one that is not is disabled while it shrinks away, so that it takes no tap and no focus and is not
@@ -71,14 +72,16 @@ private val EXPANDED_NAVIGATION_RAIL_TOP_PADDING = 4.dp
  *   wide rail - and nothing but the shrink should change on screen.
  * @param metronomeBeat Where the Metronome item's icon is in the beat, see [rememberMetronomeIconBeat]: one state for
  *   every copy of the chrome, so that a copy drawn under a card moves in step with the shared one.
- * @param lastTool The tool the bar's Tools item opens where none is on screen, see [toolsItemDestination].
+ * @param isShortWindow Whether the window is shorter than [SHORT_WINDOW_HEIGHT], where a rail has no room for six items.
+ * @param lastTool The tool the Tools item opens where none is on screen, see [toolsItemDestination].
  * @param isKeyboard Whether the player's instrument is a keyboard, which the Chords item's icon is drawn for.
- * @param onToolsItemSelected The bar's Tools item, with the tool it opens, see `CampfireViewModel.selectToolsItem`.
+ * @param onToolsItemSelected The Tools item, with the tool it opens, see `CampfireViewModel.selectToolsItem`.
  */
 @Composable
 internal fun NavigationChrome(
     kind: NavigationChromeKind,
     destinations: List<CampfireDestination.TopLevel>,
+    isShortWindow: Boolean,
     currentTopLevelDestination: CampfireDestination.TopLevel?,
     metronomeBeat: MetronomeIconBeat,
     lastTool: CampfireDestination.TopLevel,
@@ -86,6 +89,17 @@ internal fun NavigationChrome(
     onDestinationSelected: (CampfireDestination.TopLevel) -> Unit,
     onToolsItemSelected: (CampfireDestination.TopLevel) -> Unit,
 ) {
+    // Worked out for this chrome's own kind rather than handed in for the window's: the scaffold composes the chrome it
+    // is leaving for the length of a handover, and that one keeps its own grouping while it fades.
+    val items = navigationBarItems(destinations, areToolsGrouped(kind, destinations, isShortWindow))
+    val onItemClick: (NavigationBarItem) -> Unit = { item ->
+        when (item) {
+            is NavigationBarItem.Destination -> onDestinationSelected(item.destination)
+            NavigationBarItem.Tools -> toolsItemDestination(currentTopLevelDestination, lastTool, destinations)?.let(onToolsItemSelected)
+        }
+    }
+    // A tool shrinking into the Tools item is still switched on, so what disables an item in every kind below is
+    // whether it is shown rather than whether its feature is.
     if (kind == NavigationChromeKind.EXPANDED_RAIL) {
         // The wide rail's own collapsed state is not used: its collapsed form is wider than the plain rail, and the
         // window width alone decides which of the two a window gets, the scaffold handing one over to the other. The
@@ -97,20 +111,20 @@ internal fun NavigationChrome(
             // 40dp lower than the collapsed rail's as the window crosses from the one to the other.
             contentPadding = PaddingValues(top = EXPANDED_NAVIGATION_RAIL_TOP_PADDING),
         ) {
-            CampfireDestination.TopLevel.entries.forEach { destination ->
-                NavigationItemPresence(isShown = destination in destinations) { presence ->
+            items.forEach { (item, isShown) ->
+                NavigationItemPresence(isShown = isShown) { presence ->
                     WideNavigationRailItem(
                         modifier = Modifier.collapsingNavigationItem(presence = presence, isHorizontal = false),
-                        selected = destination == currentTopLevelDestination,
-                        onClick = { onDestinationSelected(destination) },
-                        enabled = destination in destinations,
+                        selected = item.isSelected(currentTopLevelDestination),
+                        onClick = { onItemClick(item) },
+                        enabled = isShown,
                         colors = WideNavigationRailItemDefaults.colors().let {
                             it.copy(disabledIconColor = it.unselectedIconColor, disabledTextColor = it.unselectedTextColor)
                         },
-                        icon = { DestinationIcon(destination = destination, metronomeBeat = metronomeBeat, isKeyboard = isKeyboard) },
+                        icon = { NavigationBarItemIcon(item = item, metronomeBeat = metronomeBeat, isKeyboard = isKeyboard) },
                         label = {
                             Text(
-                                text = stringResource(destination.label),
+                                text = stringResource(item.label),
                                 modifier = Modifier.width(EXPANDED_NAVIGATION_RAIL_LABEL_WIDTH),
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
@@ -123,25 +137,25 @@ internal fun NavigationChrome(
         }
     } else if (kind == NavigationChromeKind.RAIL) {
         NavigationRail(windowInsets = NavigationRailDefaults.windowInsets.withMinTopEdge) {
-            CampfireDestination.TopLevel.entries.forEach { destination ->
-                NavigationItemPresence(isShown = destination in destinations) { presence ->
+            items.forEach { (item, isShown) ->
+                NavigationItemPresence(isShown = isShown) { presence ->
                     NavigationRailItem(
                         modifier = Modifier.collapsingNavigationItem(presence = presence, isHorizontal = false),
-                        selected = destination == currentTopLevelDestination,
-                        onClick = { onDestinationSelected(destination) },
-                        enabled = destination in destinations,
+                        selected = item.isSelected(currentTopLevelDestination),
+                        onClick = { onItemClick(item) },
+                        enabled = isShown,
                         colors = NavigationRailItemDefaults.colors().let {
                             it.copy(disabledIconColor = it.unselectedIconColor, disabledTextColor = it.unselectedTextColor)
                         },
-                        icon = { DestinationIcon(destination = destination, metronomeBeat = metronomeBeat, isKeyboard = isKeyboard) },
-                        label = { NavigationItemLabel(stringResource(destination.label)) },
+                        icon = { NavigationBarItemIcon(item = item, metronomeBeat = metronomeBeat, isKeyboard = isKeyboard) },
+                        label = { NavigationItemLabel(stringResource(item.label)) },
                     )
                 }
             }
         }
     } else {
         NavigationBar {
-            navigationBarItems(destinations, areToolsGrouped(kind, destinations)).forEach { (item, isShown) ->
+            items.forEach { (item, isShown) ->
                 NavigationItemPresence(isShown = isShown) { presence ->
                     NavigationBarItem(
                         // The bar hands its width out by weight, and the outermost weight is the one it reads, so this
@@ -149,43 +163,37 @@ internal fun NavigationChrome(
                         modifier = Modifier
                             .weight(presence().coerceAtLeast(MIN_NAVIGATION_ITEM_WEIGHT))
                             .collapsingNavigationItem(presence = presence, isHorizontal = true),
-                        selected = when (item) {
-                            is NavigationBarItem.Destination -> item.destination == currentTopLevelDestination
-                            NavigationBarItem.Tools -> currentTopLevelDestination in CampfireDestination.TopLevel.tools
-                        },
-                        onClick = {
-                            when (item) {
-                                is NavigationBarItem.Destination -> onDestinationSelected(item.destination)
-                                NavigationBarItem.Tools -> toolsItemDestination(currentTopLevelDestination, lastTool, destinations)?.let(onToolsItemSelected)
-                            }
-                        },
-                        // A tool shrinking into the Tools item is still switched on, so what disables an item is
-                        // whether it is shown rather than whether its feature is.
+                        selected = item.isSelected(currentTopLevelDestination),
+                        onClick = { onItemClick(item) },
                         enabled = isShown,
                         colors = NavigationBarItemDefaults.colors().let {
                             it.copy(disabledIconColor = it.unselectedIconColor, disabledTextColor = it.unselectedTextColor)
                         },
-                        icon = {
-                            when (item) {
-                                is NavigationBarItem.Destination -> DestinationIcon(destination = item.destination, metronomeBeat = metronomeBeat, isKeyboard = isKeyboard)
-                                NavigationBarItem.Tools -> Icon(painter = painterResource(Res.drawable.ic_tools), contentDescription = null)
-                            }
-                        },
-                        label = {
-                            NavigationItemLabel(
-                                stringResource(
-                                    when (item) {
-                                        is NavigationBarItem.Destination -> item.destination.label
-                                        NavigationBarItem.Tools -> Res.string.tools
-                                    },
-                                ),
-                            )
-                        },
+                        icon = { NavigationBarItemIcon(item = item, metronomeBeat = metronomeBeat, isKeyboard = isKeyboard) },
+                        label = { NavigationItemLabel(stringResource(item.label)) },
                     )
                 }
             }
         }
     }
+}
+
+/** Whether [this] item is the one selected: its own screen, or for the Tools item any tool, while it is on top. */
+private fun NavigationBarItem.isSelected(currentTopLevelDestination: CampfireDestination.TopLevel?) = when (this) {
+    is NavigationBarItem.Destination -> destination == currentTopLevelDestination
+    NavigationBarItem.Tools -> currentTopLevelDestination in CampfireDestination.TopLevel.tools
+}
+
+private val NavigationBarItem.label
+    get() = when (this) {
+        is NavigationBarItem.Destination -> destination.label
+        NavigationBarItem.Tools -> Res.string.tools
+    }
+
+@Composable
+private fun NavigationBarItemIcon(item: NavigationBarItem, metronomeBeat: MetronomeIconBeat, isKeyboard: Boolean) = when (item) {
+    is NavigationBarItem.Destination -> DestinationIcon(destination = item.destination, metronomeBeat = metronomeBeat, isKeyboard = isKeyboard)
+    NavigationBarItem.Tools -> Icon(painter = painterResource(Res.drawable.ic_tools), contentDescription = null)
 }
 
 /**

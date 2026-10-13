@@ -22,8 +22,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.components.minSongColumnWidth
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.metronome.rememberMetronomeIconBeat
@@ -79,6 +81,11 @@ internal fun CampfireContent(
         isInSetlist = false,
     )
 
+    // The window's height rather than what the keyboard leaves of it, so that the grouping of the tools never flips while
+    // typing, and derived, so that a window being resized recomposes only in the frame it crosses the line.
+    val windowInfo = LocalWindowInfo.current
+    val isShortWindow by remember(windowInfo) { derivedStateOf { windowInfo.containerDpSize.height < SHORT_WINDOW_HEIGHT } }
+
     NavigationChromeScaffold(
         // Painted here as well as on every screen, so that the two screens of a cross fading tab transition blend
         // into the same color they are painted in and the fade stays invisible.
@@ -89,6 +96,7 @@ internal fun CampfireContent(
             NavigationChrome(
                 kind = chromeKind,
                 destinations = topLevelDestinations,
+                isShortWindow = isShortWindow,
                 currentTopLevelDestination = backStack.lastOrNull { it is CampfireDestination.TopLevel } as? CampfireDestination.TopLevel,
                 metronomeBeat = metronomeBeat,
                 lastTool = viewModel.lastTool,
@@ -105,6 +113,7 @@ internal fun CampfireContent(
             windowSize = windowSize,
             chromeKind = chromeKind,
             chromeSize = chromeSize,
+            isShortWindow = isShortWindow,
             songColumnWidth = songColumnWidth,
             chromeInScreens = chromeInScreens,
             exportTransition = exportTransition,

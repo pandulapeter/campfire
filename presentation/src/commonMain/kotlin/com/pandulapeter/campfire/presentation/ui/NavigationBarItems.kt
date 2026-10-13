@@ -11,7 +11,7 @@ package com.pandulapeter.campfire.presentation.ui
 
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 
-/** One item of the navigation bar: a top level screen, or the tools behind one item (see [areToolsGrouped]). */
+/** One item of the navigation bar or rail: a top level screen, or the tools behind one item (see [areToolsGrouped]). */
 internal sealed interface NavigationBarItem {
 
     data class Destination(val destination: CampfireDestination.TopLevel) : NavigationBarItem
@@ -27,17 +27,18 @@ internal const val MAX_NAVIGATION_BAR_ITEMS = 5
 
 /**
  * Whether the chrome offers the tools ([CampfireDestination.TopLevel.tools]) behind one Tools item, which opens them
- * with a row of tabs over their screens: only on the bar, and only while the [destinations] of the features switched on
- * would not all fit it. The rails list every screen, so a window that grows past the bar hands the tools back their
- * own items.
+ * with a row of tabs over their screens: on the bar, and on a rail in a short window ([isShortWindow], a phone on its
+ * side), whose height does not hold six items, and only while the [destinations] of the features switched on would not
+ * all fit it. A taller rail lists every screen, so a window that grows past the bar or the short height hands the tools
+ * back their own items.
  */
-internal fun areToolsGrouped(kind: NavigationChromeKind, destinations: List<CampfireDestination.TopLevel>) =
-    kind == NavigationChromeKind.BAR &&
+internal fun areToolsGrouped(kind: NavigationChromeKind, destinations: List<CampfireDestination.TopLevel>, isShortWindow: Boolean) =
+    (kind == NavigationChromeKind.BAR || isShortWindow) &&
         destinations.size > MAX_NAVIGATION_BAR_ITEMS &&
         destinations.count { it in CampfireDestination.TopLevel.tools } > 1
 
 /**
- * Every item the navigation bar may hold, in its order, each with whether it is shown: the Tools item stands where the
+ * Every item the navigation bar or rail may hold, in its order, each with whether it is shown: the Tools item stands where the
  * first tool does, and the tools themselves come after it, so that switching the grouping on shrinks them away into it
  * and switching it off grows them back out of it. An item that is not shown is composed only while it is leaving.
  */

@@ -280,8 +280,9 @@ What the app does, one line each; the full text is in the file named (`:presenta
 - Every chord the app can draw is browsed in the Chords tab by instrument, tuning, key and name, for the instrument and
   tuning the songs are drawn for, and a shape picked there is the player's in every song: `:presentation`'s
   `ui/screens/chords/CLAUDE.md`.
-- Six top level screens do not fit a navigation bar, so there the Metronome, the Tuner and the Chords are tabs behind one
-  Tools item, which a rail and a bar of five or fewer screens leave out: `:presentation`'s `ui/CLAUDE.md`.
+- Six top level screens fit neither a navigation bar nor a rail in a short window, so there the Metronome, the Tuner, and
+  the Chords are tabs behind one Tools item, which a taller rail and five or fewer screens leave out: `:presentation`'s
+  `ui/CLAUDE.md`.
 - The player has one instrument, held in one preference and picked, with its tuning, through two chips on the song
   details screen, the Tuner, the Chords tab, and Settings, and on the onboarding; the diagrams, the tuner, and the capo rule all read it:
   `:presentation`'s `ui/CLAUDE.md`.
