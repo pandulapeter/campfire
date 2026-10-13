@@ -19,9 +19,9 @@ package com.pandulapeter.campfire.chordpro.model
  * the chord the page names on those strings.
  *
  * A tuning either has a table of shapes of its own (the standard tunings, drop D, double drop D, open G, D, and C, DADGAD,
- * the mandolin's GDGD, and every banjo tuning), or is one of those with every string moved by the same interval (half and full step down,
- * drop C♯ to drop B, open E and A, the ukulele's low G, D, and baritone tunings, and the mandolin's AEAE), whose shapes
- * are that table's, moved along the chords rather than along the neck.
+ * the mandolin's GDGD, and every banjo tuning), or is one of those with every string moved by the same interval (the
+ * guitar's half and full step down, drop C♯ to drop B, open E and A, the ukulele's low G, D, and baritone tunings, and the
+ * mandolin's half step down and AEAE), whose shapes are that table's, moved along the chords rather than along the neck.
  *
  * @property id What a stored choice names the tuning by, equal to the tuner's id of the same tuning (`guitar_drop_d`),
  *   so the two can be matched without this module knowing the tuner. The standard tunings' ids are their instruments'.

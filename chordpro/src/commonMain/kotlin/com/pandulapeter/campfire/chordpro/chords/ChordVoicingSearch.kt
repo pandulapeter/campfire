@@ -207,6 +207,7 @@ internal object ChordVoicingSearch {
         val openFifth = ((played.root + 7) % 12).takeIf { tuning.isOpen && played.bass == null && 7 in played.intervals }
         // A drone string only ever rings open, so it sounds where its note is the chord's and is muted otherwise.
         val drone = tuning.instrument.droneString
+        // On the banjo every string but one sounds, and an open drone counts as one of them.
         val minimumStrings = when {
             tuning.instrument.playsChordOver -> strings.size - if (drone == null) 0 else 1
             pitchClasses.size <= 2 -> 3

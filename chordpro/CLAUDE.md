@@ -480,10 +480,11 @@ what nothing outside the module calls is `internal`.
   tuning here at all: they are Other, and no diagram is drawn for them.
 - **The banjo's fifth string is a drone** (`ChordInstrument.droneString`): it starts at the fifth fret, so a shape only
   ever leaves it open or mutes it, open where its note is one of the chord's and muted where not, which keeps every
-  shape sounding exactly its chord. The search offers it nothing else and does not count it among the strings that must
-  sound or the open strings a hand high up the neck rules out; a table shape moved to another root leaves it where it
-  is, open or muted for the chord it lands on, and only moves where the four long strings sound every note it sounds
-  (double C's G7 takes its root from the drone alone). Every banjo tuning — open G, the standard one, double C, C, open
+  shape sounding exactly its chord. The search offers it nothing else; open, it is one of the four strings that must
+  sound, so a shape may leave the first string muted where the drone sounds the chord (banjo C's C5 is `0 0 0 1 x`),
+  and it is not among the open strings a hand high up the neck rules out; a table shape moved to another root leaves it
+  where it is, open or muted for the chord it lands on, and only moves where the four long strings sound every note it
+  sounds (double C's G7 takes its root from the drone alone). Every banjo tuning — open G, the standard one, double C, C, open
   D, and G modal — has a table of its own (`BanjoChordTables`, typed for Campfire, no library under a license it can
   ship having any), since none is another moved by one interval.
 - `ChordTuning.drawsDefinitions` is where a `{define}`, which ChordPro gives no tuning, is drawn: standard tuning and
