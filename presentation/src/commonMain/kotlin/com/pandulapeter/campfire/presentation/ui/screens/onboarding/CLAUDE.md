@@ -75,12 +75,14 @@ stack (`SavedStateStore`), so a process ended behind the onboarding comes back o
 kept. On the web the screen is one history entry at the address of the screen under it (`BrowserRoutes`), so a reload
 opens the app rather than a question, and neither does a Forward once it is finished, skipped, or closed.
 
-`FirstRunController.openOnboardingOnFirstRun` opens it as the demo library is settled, while the launch screen is still
-up, so the app is uncovered on it; it is skipped where a dialog is up or an import is waiting (`canShowOnboarding`). A
+`FirstRunController.openOnboardingOnStartUp` opens it as the demo library is settled, while the launch screen is still
+up, so the app is uncovered on it; it is skipped where a dialog is up or an import is waiting (`canShowOnboarding`). It
+is opened on every start up until it has been finished or skipped (`isOnboardingPending`, see `ui/firstRun/CLAUDE.md`),
+so an app ended in the middle of it starts it again, the answers given so far kept. A
 consent answered while it is on top does not open Settings over it; the Dropbox page says how it went. That holds where
 the app did not live through the consent page too: Android's restored onboarding is back on that page, and the web,
 whose answer is a new start up on the songs, puts the onboarding back on it (`SyncConsentOrigin`, over the settings
-screen's General tab where that was what opened it), or moves a first run's onboarding the start up opened meanwhile
+screen's General tab where that was what opened it), or moves an owed onboarding the start up opened meanwhile
 from its first page to it (`syncConsentAnswerOf`), rather than opening Settings.
 
 ### Layout

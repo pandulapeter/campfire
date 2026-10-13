@@ -1045,6 +1045,7 @@ class CampfireViewModel(
         syncController.startRestoring(isFirstLaunch = isFirstLaunch, onConsentAnswered = ::showSyncConsentAnswer)
         songTextStore.startFollowingFiles()
         importController.startQueue(firstRunController.demoLibraryDecision)
+        navigator.addOnBackStackChanged { _, stack -> firstRunController.onBackStackChanged(stack) }
         dialogHost.startClosingWithSong(allSongs = allSongs, isLoading = isLoading, songsBeingRenamed = songsBeingRenamed)
         editorSession.startRecovery()
         restoreVisibleDialog()
@@ -1111,7 +1112,7 @@ class CampfireViewModel(
      * ([takeSyncConsentOrigin]): the onboarding's Dropbox page, over the settings screen where that was what opened it, or
      * Settings, on the tab holding the sync section. Only onto a stack nobody has built on since the app started - the
      * songs the app opens on, the settings screen Android brings back after reclaiming the process behind the browser, or
-     * a first run's onboarding still on its first page, which a start up that still counts as a first one opens while the
+     * an owed onboarding still on its first page, which a start up that still owes it opens while the
      * code is being exchanged and which is moved on to its Dropbox page (see [syncConsentAnswerOf]); an onboarding
      * Android brings back is already on the page that says how it went. The code exchange this
      * follows can take a minute on a bad network, and a user who has gone somewhere else meanwhile has moved on: the

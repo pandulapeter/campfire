@@ -57,7 +57,9 @@ one set per song wherever it is opened from, since how much of a song one reader
 goes into a setlist, an export or a sync run), — the four maps keyed by a song's file name, which `withSongRenamed`
 moves with a renamed song or drops with a deleted one and `withoutSongOverrides` empties with the library, so that a new
 per-song map is listed there and nowhere else (`UserPreferencesSongMapsTest`) — and `shouldShowArchivedSetlists`, plus
-`seenWhatsNewVersions`, the local history of versions introduced or deliberately skipped, and
+`seenWhatsNewVersions`, the local history of versions introduced or deliberately skipped, `isOnboardingPending`, set
+by the first run and cleared only once the onboarding is finished or skipped (false by default, so that an installation
+from before the onboarding is never sent through it; local only), and
 `demoLibraryContentHashes`, the content hash of every demo file this device planted by its library path, local only
 (never exported or synced), which sync reads to take the cloud folder's version of a demo still holding exactly that
 instead of keeping both — but not which tags and languages the song list is filtered to, which is never stored, see

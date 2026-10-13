@@ -73,6 +73,7 @@ internal fun UserPreferencesDocument.toModel() = UserPreferences(
     metronomeSettings = metronomeSettings.toModel(),
     tunerSettings = tunerSettings.toModel(),
     seenWhatsNewVersions = seenWhatsNewVersions,
+    isOnboardingPending = isOnboardingPending,
     demoLibraryContentHashes = demoLibraryContentHashes.filterValues { it.isNotBlank() },
 )
 
@@ -120,6 +121,7 @@ internal fun UserPreferences.toDocument() = UserPreferencesDocument(
     metronomeSettings = metronomeSettings.toDocument(),
     tunerSettings = tunerSettings.toDocument(),
     seenWhatsNewVersions = seenWhatsNewVersions,
+    isOnboardingPending = isOnboardingPending,
     demoLibraryContentHashes = demoLibraryContentHashes,
 )
 

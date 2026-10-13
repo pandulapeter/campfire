@@ -281,8 +281,8 @@ What the app does, one line each; the full text is in the file named (`:presenta
 - The app is shipped with two demo songs and one setlist, planted once through the ordinary import on a fresh
   installation only: `:presentation`'s `ui/firstRun/CLAUDE.md`.
 - A first run opens a short, skippable onboarding, one question a page and each shown on what it changes, whose earlier
-  answers take away the later questions they make pointless; every answer is written as it is given, and Settings opens
-  it again:
+  answers take away the later questions they make pointless; every answer is written as it is given, it opens again on
+  every start until it has been finished or skipped, and Settings opens it again:
   `:presentation`'s `ui/screens/onboarding/CLAUDE.md`.
 - What's new introduces each version once, after startup import questions have finished: `:presentation`'s
   `ui/firstRun/CLAUDE.md`.

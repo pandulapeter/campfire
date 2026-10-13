@@ -40,8 +40,8 @@ internal enum class SyncConsentAnswer {
 
 /**
  * Where the answer to a consent asked from [origin] goes on [backStack]: only onto a stack nobody has built on since the
- * app started — the songs, the settings screen Android brings back, or a first run's onboarding still on its first page
- * ([onboardingStep]), which a start up that still counts as a first one opens while the code is being exchanged, and
+ * app started — the songs, the settings screen Android brings back, or an owed onboarding still on its first page
+ * ([onboardingStep]), which a start up that still owes it opens while the code is being exchanged, and
  * which is moved on to its Dropbox page rather than covered by Settings.
  */
 internal fun syncConsentAnswerOf(backStack: List<CampfireDestination>, onboardingStep: OnboardingStep, origin: SyncConsentOrigin?) = when {

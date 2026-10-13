@@ -241,6 +241,9 @@ internal class FirstRunController(
      * anything was planted or not, which is what makes the next launch not a first run: without it, deleting every
      * demo song would be undone by the next launch, and so would a library the user filled on the first day and
      * emptied later without ever changing a setting.
+     *
+     * The same write marks the onboarding as owed ([UserPreferences.isOnboardingPending]), and every later start that
+     * finds it still owed opens it again, since an app ended in the middle of the onboarding has not been set up.
      */
     suspend fun plantDemoLibraryOnFirstRun() {
         try {
@@ -267,7 +270,7 @@ internal class FirstRunController(
                         importController.awaitImportSettled()
                     }
                 }
-                openOnboardingOnFirstRun()
+                openOnboardingOnStartUp()
                 // Before the preferences are written rather than after: neither the queue nor the launch screen has any
                 // reason to wait for those.
                 demoLibraryDecision.complete(Unit)
@@ -276,7 +279,11 @@ internal class FirstRunController(
                 // dispatch and would write the demo record the import just took back out. With nothing read there is
                 // nothing to write either, and the next start is a first run again - which plants nothing into a library
                 // that has songs in it.
-                updateUserPreferences { it.copy(seenWhatsNewVersions = it.seenWhatsNewVersions + CAMPFIRE_VERSION_NAME) }
+                updateUserPreferences { it.copy(seenWhatsNewVersions = it.seenWhatsNewVersions + CAMPFIRE_VERSION_NAME, isOnboardingPending = true) }
+            } else if (userPreferencesState.first { it !is DataState.Loading }.data?.isOnboardingPending == true) {
+                // Only onto a stack nothing has been built on yet: a process restored behind the onboarding already has it,
+                // and one restored on another screen has a user somewhere the onboarding must not cover.
+                if (backStack.toList() == listOf(CampfireDestination.Songs)) openOnboardingOnStartUp()
             }
         } finally {
             // In a finally rather than at the end: whatever went wrong, the app is no longer waiting for this, and
@@ -287,7 +294,7 @@ internal class FirstRunController(
     }
 
     /**
-     * Puts the onboarding on the back stack of a first run, while the launch screen is still up, so that the app is
+     * Puts the onboarding on the back stack of a start up that owes it, while the launch screen is still up, so that the app is
      * uncovered on its first page rather than on the songs with the page sliding in over them a moment later. Only where
      * nothing else is waiting for the user: a file the app was opened with is already queued by now (the queue waits for
      * [demoLibraryDecision], which is completed after this), and its import screen ([ImportReport]) would end up under
@@ -296,7 +303,7 @@ internal class FirstRunController(
      * It is part of the saved back stack like any other screen, so a process the system ends behind it comes back on it,
      * every answer given so far kept, since each is written as it is given.
      */
-    private fun openOnboardingOnFirstRun() {
+    private fun openOnboardingOnStartUp() {
         val canOpen = canShowOnboarding(
             hasDialog = dialogHost.visibleDialog.value != null,
             hasImportReport = importController.importReport.value != null,
@@ -304,6 +311,30 @@ internal class FirstRunController(
         )
         if (canOpen) openOnboarding()
     }
+
+    /**
+     * Clears [UserPreferences.isOnboardingPending] once the onboarding has left the back stack - finished, skipped, or
+     * gone back out of from its first page, every one of them a way the user chose out of it. A process that ends with
+     * it on screen never gets here, so the next start opens it again.
+     */
+    fun onBackStackChanged(stack: List<CampfireDestination>) {
+        val isOnboardingOpen = stack.any { it is CampfireDestination.Onboarding }
+        if (wasOnboardingOpen && !isOnboardingOpen) {
+            scope.launch {
+                try {
+                    withContext(NonCancellable) { updateUserPreferences { it.copy(isOnboardingPending = false) } }
+                } catch (exception: CancellationException) {
+                    throw exception
+                } catch (exception: Exception) {
+                    println("Could not remember that the onboarding is done: ${exception.message}")
+                }
+            }
+        }
+        wasOnboardingOpen = isOnboardingOpen
+    }
+
+    /** Whether the back stack held the onboarding as of its last change, see [onBackStackChanged]. */
+    private var wasOnboardingOpen = backStack.any { it is CampfireDestination.Onboarding }
 
     /**
      * The first installed version belongs to the onboarding, so it is recorded by [plantDemoLibraryOnFirstRun] instead.
@@ -322,6 +353,8 @@ internal class FirstRunController(
         if (isFirstLaunch.await()) return
         val preferences = userPreferencesState.first { it !is DataState.Loading }.data ?: return
         if (CAMPFIRE_VERSION_NAME in preferences.seenWhatsNewVersions) return
+        // An onboarding still owed is opened instead, and it introduces the app as it is now.
+        if (preferences.isOnboardingPending) return recordWhatsNewVersion()
         isAppOnScreen.first { it }
         if (LocalizedStrings.get(Res.string.whats_new_message).isNotBlank()) {
             combine(dialogHost.visibleDialog, importController.isImporting, importController.importReport, importController.queuedImportCount) { dialog, isImporting, report, queuedImportCount ->

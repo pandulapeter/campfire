@@ -11,7 +11,10 @@
 
 Written 2026-10-13 against `25e6152ea`, with the twenty-eighth review's lane O (the onboarding footer, the web's
 Forward into a finished onboarding) landed; re-check `OnboardingBottomBar` and `BrowserRoutes.validate` against `HEAD`
-before starting section 6. Today an import is a black box: the user picks a file, opens one with the app,
+before starting section 6. Since then the onboarding is owed until it is finished or skipped
+(`UserPreferences.isOnboardingPending`, set by the first run, cleared by `FirstRunController.onBackStackChanged` as it
+leaves the back stack), and every start up that owes it opens it (`openOnboardingOnStartUp`, formerly
+`openOnboardingOnFirstRun`); section 6 is written against that. Today an import is a black box: the user picks a file, opens one with the app,
 or drops one on the window, and everything inside it goes into the library, with a screen only where a name was taken
 (the conflicts question) or something was left out (the result). This plan turns that screen into **the import screen
 proper**: every import the user starts opens it first, in a loading stage while the files are read and compared, then in
@@ -85,7 +88,8 @@ stage, and the Retry button come from.
    waiting, the import's reading runs behind it, `showImportReport` waits for the onboarding to leave the back stack
    as it waits for a dialog, and the onboarding's last button reads **Next** instead of Start playing while an import
    waits (Skip stays Skip, and leads to the same place). The onboarding opened again from Settings is waited for the
-   same way. Today's third option — skipping the onboarding — is dropped: it was the one way a new user never saw it.
+   same way. Today's third option — skipping the onboarding for the import — is dropped: it was the one way a new user
+   did not see it on their first start (today it stays owed and opens on the next start instead).
 2. **The download is built now, reached by nothing.** `ImportSource.Address`, the remote source, the repository, the
    use case, and `CampfireViewModel.importFromAddress(url)` land with their tests, so the loading and failure stages
    are driven by real code rather than by a placeholder, and the links feature only has to call one function. The
@@ -382,17 +386,23 @@ Removed: `import_conflicts`, `import_conflicts_summary`, `import_conflicts_new`,
 
 ## 6. The onboarding and the first run
 
-- `canShowOnboarding(hasDialog)` loses `hasImportReport` and `hasQueuedImport`; `openOnboardingOnFirstRun`'s KDoc and
-  `ui/firstRun/CLAUDE.md`'s "only where no file the app was opened with is waiting" sentence turn around: the
+- `canShowOnboarding(hasDialog)` loses `hasImportReport` and `hasQueuedImport`; `openOnboardingOnStartUp`'s KDoc and
+  `ui/firstRun/CLAUDE.md`'s "only where no file the app was opened with is waiting" sentence turn around, and so does
+  its "a first run that had to skip it for an import" case of an owed onboarding, which no longer happens: the
   onboarding opens, the queue starts after it (as it already does, on `demoLibraryDecision`), the import's reading runs
-  behind it, and the screen is pushed as the onboarding leaves.
+  behind it, and the screen is pushed as the onboarding leaves. That holds on any start up that owes the onboarding,
+  not only the first: one opened with a file after the app was ended in the middle of the pages opens the owed
+  onboarding again and pushes the import screen after it. `isOnboardingPending` itself is unchanged — the onboarding
+  leaving the back stack before the import screen is pushed is what clears it, so an app ended on the review does not
+  bring the onboarding back.
 - `OnboardingScreen` collects `viewModel.importReport` and hands `isImportWaiting = report != null` to
   `OnboardingBottomBar`, whose `lastLabel` is `onboarding_next` while it is true, before the Done / Start playing
   choice (the `AnimatedContent` over `isLast` is keyed on the label's resource, so the swap crossfades too).
   `ui/screens/onboarding/CLAUDE.md`'s "There is no summary page" paragraph says so.
 - `BrowserRoutes.validate` already keeps an onboarding only while it is the open one (`openOnboarding`) and drops the
   import screen without a report; a Forward into `/import` after the review was left is refused by what is there.
-- `showWhatsNewOnVersionChange` is unchanged: it waits for every import, and a first run has no What's new.
+- `showWhatsNewOnVersionChange` is unchanged: it waits for every import, a first run has no What's new, and a start up
+  that owes the onboarding records the version without showing it.
 - The web: the onboarding is one history entry at `/`; `/import` is pushed after it. `BrowserHistory` already passes
   `hasImportReport`, so Forward into a left review is refused as today.
 
@@ -466,7 +476,8 @@ platform:
 - A single `.cho` opened with the app (Android, iOS, desktop) opens the song without a review; the same file with its
   name taken shows the one-row review.
 - A fresh installation (Android emulator at 360 × 640 dp, iOS simulator) opened with a zip: the onboarding, Next on its
-  last page, the review sliding in; the same with Skip.
+  last page, the review sliding in; the same with Skip. Then the app ended in the middle of the onboarding and opened
+  with a zip again: the onboarding first, the review after it.
 - A rotation under the review keeps the ticks; a dialog over it (the confirmation) and Back behave.
 - `importFromAddress` from a debug hook or the desktop driver: a Dropbox `?dl=1` link to a zip, a 404, airplane mode,
   a link to a 30 MB file; Retry after each.

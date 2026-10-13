@@ -69,6 +69,7 @@ internal data class UserPreferencesDocument(
     val metronomeSettings: MetronomeSettingsDocument = MetronomeSettingsDocument(),
     val tunerSettings: TunerSettingsDocument = TunerSettingsDocument(),
     val seenWhatsNewVersions: Set<String> = emptySet(),
+    val isOnboardingPending: Boolean = false,
     val demoLibraryContentHashes: Map<String, String> = emptyMap(),
 )
 

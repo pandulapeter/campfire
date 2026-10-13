@@ -253,7 +253,7 @@ on (`navigateOnLaunch`, the web build's address), the place found once the whole
 
 Nothing on the back stack is animated while the launch screen is up (`hasShownApp`), since whatever is put there behind
 it — that place, or Settings or the onboarding after a consent page — only onto a stack the user has not built on since
-the app started, a first run's onboarding still on its first page included (`showSyncConsentAnswer`), since the code
+the app started, an owed onboarding still on its first page included (`showSyncConsentAnswer`), since the code
 exchange it follows can outlast the launch screen by a minute — would otherwise still be sliding in as the app is
 uncovered. Holding it through that read costs none of the time the read was going to take anyway, and what it saves is
 the handful of frames the song list would otherwise be opened on its loading indicator for — a startup screen handing

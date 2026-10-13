@@ -175,6 +175,13 @@ data class UserPreferences(
     /** Versions already introduced here, including the first installed version whose introduction is skipped. */
     val seenWhatsNewVersions: Set<String> = emptySet(),
     /**
+     * Whether this installation's onboarding is still owed: set by the first run, cleared only once the onboarding has
+     * been finished or skipped, so an app ended in the middle of it opens it again. Its default is false so that an
+     * installation from before the onboarding existed is never sent through it. Never exported or synced: it is about
+     * this device.
+     */
+    val isOnboardingPending: Boolean = false,
+    /**
      * The content hash of every demo file this device planted, as it was written, keyed by its library path
      * (`songs/<file name>`, `setlists/<file name>`: the folder is `LibraryFileKind.id`). Sync takes the cloud folder's
      * version of a file that still has exactly that content instead of keeping both, see `SyncRepository`. Never

@@ -224,6 +224,14 @@ internal class UserPreferencesMappersTest {
     }
 
     @Test
+    fun `an owed onboarding survives saving and reloading, and a document from before it owes none`() {
+        val preferences = UserPreferencesDocument().toModel().copy(isOnboardingPending = true)
+        val reloaded = UserPreferencesDocumentFormat.decode(UserPreferencesDocumentFormat.encode(preferences.toDocument())).document.toModel()
+        assertEquals(true, reloaded.isOnboardingPending)
+        assertEquals(false, UserPreferencesDocumentFormat.decode("{\"seenWhatsNewVersions\": [\"4.8.1\"]}").document.toModel().isOnboardingPending)
+    }
+
+    @Test
     fun `a metronome value out of range is held within it`() {
         val preferences = UserPreferencesDocument(metronomeSettings = MetronomeSettingsDocument(volume = 4f, bpm = 1_000), tempos = mapOf("a.cho" to 5, "b.cho" to 96))
             .toModel()
