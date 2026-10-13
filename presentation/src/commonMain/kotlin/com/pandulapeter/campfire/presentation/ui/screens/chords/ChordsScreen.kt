@@ -12,8 +12,10 @@ package com.pandulapeter.campfire.presentation.ui.screens.chords
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -24,12 +26,21 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.layout.positionInParent
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -41,6 +52,8 @@ import com.pandulapeter.campfire.presentation.resources.chords_instrument_withou
 import com.pandulapeter.campfire.presentation.resources.chords_search_no_chord
 import com.pandulapeter.campfire.presentation.resources.chords_search_no_shape
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.components.EDGE_FADE_SIZE
+import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.chords.selectShape
 import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
@@ -53,9 +66,11 @@ import com.pandulapeter.campfire.presentation.ui.instrument.chordTuning
 import com.pandulapeter.campfire.presentation.ui.instrument.instrumentLabel
 import com.pandulapeter.campfire.presentation.ui.instrument.instrumentTuning
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
+import com.pandulapeter.campfire.presentation.ui.platform.CompactKeyboardEffect
 import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableContent
 import com.pandulapeter.campfire.presentation.ui.screens.settings.PAGE_TOP_PADDING
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsWidthLayout
+import kotlin.math.roundToInt
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.withContext
@@ -110,6 +125,29 @@ internal fun ChordsScreen(
             }
         }
     }
+    var isSearchFocused by remember { mutableStateOf(false) }
+    var searchFieldTop by remember { mutableIntStateOf(0) }
+    val density = LocalDensity.current
+    val ime = WindowInsets.ime
+    // Derived, so that the page recomposes as the keyboard comes and goes rather than on every frame it slides.
+    val isKeyboardVisible by remember(ime, density) { derivedStateOf { ime.getBottom(density) > 0 } }
+    val isTypingSearch = isSearchFocused && isKeyboardVisible
+    CompactKeyboardEffect(isEnabled = isTypingSearch && LocalWindowInfo.current.containerDpSize.height < SHORT_WINDOW_HEIGHT)
+    // Read through a state: every platform but Android hands out a new, fixed instance on every composition (see
+    // KeyboardAwarePadding), which a flow started once would never see move.
+    val imeState = rememberUpdatedState(ime)
+    LaunchedEffect(isTypingSearch) {
+        if (isTypingSearch) {
+            // The page is laid out under the keyboard, which only pads the grid, so the field's bring-into-view counts what
+            // the keyboard covers as shown: the field is scrolled to the top instead, once per focus, so that what it finds
+            // is above the keyboard. It follows the keyboard as it rises, since the grid can only scroll as far as the
+            // padding added so far allows, and stops just under the top fade, which would paint over the field's outline.
+            val margin = with(density) { (EDGE_FADE_SIZE - PAGE_TOP_PADDING - SEARCH_FIELD_OWN_TOP_PADDING).roundToPx() }
+            snapshotFlow { imeState.value.getBottom(density) }.collectLatest {
+                gridState.animateScrollToItem(0, (searchFieldTop - margin).coerceAtLeast(0))
+            }
+        }
+    }
     val backgroundColor = MaterialTheme.colorScheme.background
     Box(
         modifier = modifier.fillMaxSize(),
@@ -146,6 +184,9 @@ internal fun ChordsScreen(
                     keys = keys,
                     selectedKeyIndex = keyIndex,
                     query = query,
+                    searchFieldModifier = Modifier
+                        .onFocusChanged { isSearchFocused = it.hasFocus }
+                        .onPlaced { searchFieldTop = it.positionInParent().y.roundToInt() },
                     onInstrumentClicked = { viewModel.showDialog(DialogType.Instrument) },
                     onTuningClicked = { viewModel.showDialog(DialogType.Tuning) },
                     onKeySelected = { state.keyIndex = it },
@@ -223,3 +264,6 @@ private const val CELL_CONTENT_TYPE = "chord"
 private const val CONTROLS_KEY = "controls"
 private const val MESSAGE_KEY = "message"
 private val CELL_GAP = 8.dp
+
+/** The room `SearchField` leaves above its outline, inside the modifier it is handed. */
+private val SEARCH_FIELD_OWN_TOP_PADDING = 8.dp

@@ -18,7 +18,9 @@ The Chords tab: every chord the app can draw, browsed by instrument, tuning, key
 that a phone on its side keeps a row of diagrams above the keyboard: the instrument chip under an Instrument title
 and the tuning chip after it (`components/InstrumentChipRow.kt`, opening the sheets every screen opens, see
 `ui/CLAUDE.md`), the twelve keys
-and a search field (`components/SearchField.kt`, the pickers' own, which never takes the focus on its own). An
+and a search field (`components/SearchField.kt`, the pickers' own, which never takes the focus on its own). Focused
+with the keyboard up, the field is scrolled to the top of the page, once per focus, so the chords it finds are above the
+keyboard, on its side too, where a short window also takes the status bar away while it is typed into. An
 instrument without shapes has a line naming it in the chords' place, pointing at the chip ("Bass: no chord diagrams",
 Other a line of its own). **The instrument and its tuning are the one the songs' diagrams and the tuner follow**,
 written at once, since somebody browsing ukulele chords has a ukulele in hand; the key, the search and the scroll position are the

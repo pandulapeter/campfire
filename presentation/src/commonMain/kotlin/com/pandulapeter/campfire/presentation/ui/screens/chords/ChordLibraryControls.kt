@@ -58,6 +58,7 @@ internal fun ChordLibraryControls(
     keys: List<String>,
     selectedKeyIndex: Int,
     query: String,
+    searchFieldModifier: Modifier = Modifier,
     onInstrumentClicked: () -> Unit,
     onTuningClicked: () -> Unit,
     onKeySelected: (Int) -> Unit,
@@ -87,7 +88,7 @@ internal fun ChordLibraryControls(
         }
     }
     SearchField(
-        modifier = Modifier.padding(top = 8.dp),
+        modifier = Modifier.padding(top = 8.dp).then(searchFieldModifier),
         query = query,
         placeholder = stringResource(Res.string.chords_search),
         onQueryChange = onQueryChanged,
