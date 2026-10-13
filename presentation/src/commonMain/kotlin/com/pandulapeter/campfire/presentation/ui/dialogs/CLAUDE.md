@@ -53,8 +53,9 @@ details form's header (`SongMetadataDialog`'s `startButton`, absent while the "O
 **writes nothing**: it is put over the form, which stays open under it (the dialog stack, below), handed the form's
 offered values and its draft (`DialogType.SongDetailsLookup`). Fill in, the header's one action, which Ctrl / Cmd + S
 presses, puts the ticked suggestions into the form where it is (`CampfireViewModel.fillSongMetadata`, a new
-`DialogType.SongMetadata.draft` the form resets its fields to) and slides the lookup away; closing it leaves the form
-as it was. The form still compares its draft with the offered values on Save, so only what changed is written. A
+`DialogType.SongMetadata.draft` the form resets its fields to) and slides the lookup away; every Fill in is a hand-over
+of its own (`fillCount`, which the form's fields are keyed by), so they are reset to it even where it equals the one
+before. Closing it leaves the form as it was. The form still compares its draft with the offered values on Save, so only what changed is written. A
 restored process reopens the form rather than the lookup, from the file.
 
 The search (title, narrowed by artist and album, through `CatalogueQueryFields`, the cover search's fields) is asked as the

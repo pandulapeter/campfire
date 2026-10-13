@@ -116,6 +116,7 @@ import com.pandulapeter.campfire.presentation.ui.tuner.TunerController
 import com.pandulapeter.campfire.tuner.api.Tuner
 import com.pandulapeter.campfire.presentation.ui.dialogs.SONG_METADATA_FIELDS
 import com.pandulapeter.campfire.presentation.ui.dialogs.SavedDialog
+import com.pandulapeter.campfire.presentation.ui.dialogs.filledForm
 import com.pandulapeter.campfire.presentation.ui.dialogs.slotKey
 import com.pandulapeter.campfire.presentation.ui.dialogs.toSavedDialog
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeContext
@@ -1352,16 +1353,15 @@ class CampfireViewModel(
 
     /** Puts the song details lookup up over [dialog], the metadata form, which holds [draft] at the moment. */
     fun showSongDetailsLookup(dialog: DialogType.SongMetadata, draft: Map<ChordProMetadataFields.Field, String>) = dialogHost.showDialog(
-        DialogType.SongDetailsLookup(song = dialog.song, target = dialog.target, values = dialog.values, draft = draft),
+        DialogType.SongDetailsLookup(song = dialog.song, target = dialog.target, values = dialog.values, draft = draft, formFillCount = dialog.fillCount),
     )
 
     /**
      * Fills [draft] into the metadata form [dialog] was put up over, which is still open under it and is updated where
      * it is, see [DialogHost.updateUnderlyingDialog]; the lookup then closes as any sheet does, uncovering it.
      */
-    fun fillSongMetadata(dialog: DialogType.SongDetailsLookup, draft: Map<ChordProMetadataFields.Field, String>) = dialogHost.updateUnderlyingDialog(
-        DialogType.SongMetadata(song = dialog.song, values = dialog.values, target = dialog.target, draft = draft),
-    )
+    fun fillSongMetadata(dialog: DialogType.SongDetailsLookup, draft: Map<ChordProMetadataFields.Field, String>) =
+        dialogHost.updateUnderlyingDialog(dialog.filledForm(draft))
 
     /** What the lookup is first asked from a form holding [draft]: the title, artist and album typed into it. */
     fun songDetailsQueryOf(draft: Map<ChordProMetadataFields.Field, String>) = SongDetailsQuery(

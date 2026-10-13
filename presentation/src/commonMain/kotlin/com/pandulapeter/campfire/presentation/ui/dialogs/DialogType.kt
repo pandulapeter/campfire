@@ -93,13 +93,16 @@ sealed interface DialogType {
     /**
      * A snapshot of what the song says for each field the metadata editor offers, blank for nothing, and the [draft] the
      * form opens with in its own spelling (see `toSongMetadataDraft`): null for [values] as they are, and otherwise
-     * what the form held when the song details lookup was put up over it, with what the lookup filled in.
+     * what the form held when the song details lookup was put up over it, with what the lookup filled in. [fillCount] is
+     * how many times the song details lookup has filled this form in, so that a fill equal to the one before still puts
+     * its draft back into the fields.
      */
     data class SongMetadata(
         override val song: Song,
         val values: Map<ChordProMetadataFields.Field, String>,
         override val target: SongEditTarget,
         val draft: Map<ChordProMetadataFields.Field, String>? = null,
+        val fillCount: Int = 0,
     ) : SongEdit
     /** A snapshot of the links offered by the overflow menu's link editor. */
     data class SongLinks(override val song: Song, val links: List<ChordProLink>, override val target: SongEditTarget) : SongEdit
@@ -128,13 +131,14 @@ sealed interface DialogType {
     /**
      * The recordings the song's title names in the music catalogues, put up over the metadata editor, whose [values]
      * and [draft] it carries so that it can put the form back as it was — or with what the user picked filled into the
-     * draft, see [CampfireViewModel.searchSongDetails].
+     * draft, see [CampfireViewModel.searchSongDetails]. [formFillCount] is that form's [SongMetadata.fillCount].
      */
     data class SongDetailsLookup(
         override val song: Song,
         override val target: SongEditTarget,
         val values: Map<ChordProMetadataFields.Field, String>,
         val draft: Map<ChordProMetadataFields.Field, String>,
+        val formFillCount: Int,
     ) : SongEdit
 
     /**

@@ -60,7 +60,7 @@ class DialogStackTest {
     private val file = SongEditTarget.File(song.fileName)
     private val info = DialogType.SongInfo(song = song, target = file)
     private val form = DialogType.SongMetadata(song = song, values = emptyMap(), target = file)
-    private val lookup = DialogType.SongDetailsLookup(song = song, target = file, values = emptyMap(), draft = emptyMap())
+    private val lookup = DialogType.SongDetailsLookup(song = song, target = file, values = emptyMap(), draft = emptyMap(), formFillCount = 0)
     private val cover = DialogType.CoverArtSearch(song = song, target = file)
     private val remove = DialogType.RemoveSongCoverArt(song = song, target = file)
 }

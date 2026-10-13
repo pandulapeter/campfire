@@ -65,6 +65,15 @@ internal fun Map<Field, String>.withSongDetails(rows: List<SongDetailsReviewRow>
     .filter { it.field in ticked }
     .associate { row -> row.field to if (row.field == Field.DURATION) durationDigitsOf(row.suggested) else row.suggested }
 
+/** The metadata form [this] lookup was put up over, holding [draft], as a hand-over of its own (see [DialogType.SongMetadata.fillCount]). */
+internal fun DialogType.SongDetailsLookup.filledForm(draft: Map<Field, String>) = DialogType.SongMetadata(
+    song = song,
+    values = values,
+    target = target,
+    draft = draft,
+    fillCount = formFillCount + 1,
+)
+
 /** A brace would end the directive early or open another one, and a line break would leave the rest in the song as lyrics. */
 private fun String.cleanedForMetadata() = filterNot { it == '{' || it == '}' || it == '\n' || it == '\r' }.trim()
 

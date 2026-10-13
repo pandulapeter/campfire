@@ -94,7 +94,7 @@ class DialogHostTest {
         val host = DialogHost(backgroundScope)
         val info = DialogType.SongInfo(song = song, target = file)
         val form = DialogType.SongMetadata(song = song, values = emptyMap(), target = file)
-        val lookup = DialogType.SongDetailsLookup(song = song, target = file, values = emptyMap(), draft = emptyMap())
+        val lookup = DialogType.SongDetailsLookup(song = song, target = file, values = emptyMap(), draft = emptyMap(), formFillCount = 0)
         val filled = form.copy(draft = mapOf(ChordProMetadataFields.Field.ALBUM to "Nimrod"))
         host.showDialog(info)
         host.showDialog(form)

@@ -48,7 +48,8 @@ import org.jetbrains.compose.resources.painterResource
  * correct one field of it, and a keyboard brought up over the title would hide half the form.
  *
  * The header's search button puts the song details lookup up in its place, handing it the draft, which the lookup
- * hands back — with what the user picked filled in — as [DialogType.SongMetadata.draft]: the form opens on that draft,
+ * hands back — with what the user picked filled in — as [DialogType.SongMetadata.draft]: the form resets its fields to
+ * that draft on every fill (keyed by [DialogType.SongMetadata.fillCount], so a fill equal to the one before still does),
  * and Save still compares it with the values the form was first offered, so that it writes what the lookup changed.
  */
 @Composable
@@ -59,7 +60,7 @@ internal fun SongMetadataDialog(
     // Compared with the draft the form opened with rather than with the file's text, so that a duration the field
     // could not show, and so opened empty, is only removed when the user typed into it.
     val offeredValues = remember(dialog.values) { dialog.values.toSongMetadataDraft() }
-    var values by rememberSaveable(dialog.song.fileName, dialog.draft, stateSaver = songMetadataSaver) { mutableStateOf(dialog.draft ?: offeredValues) }
+    var values by rememberSaveable(dialog.song.fileName, dialog.fillCount, stateSaver = songMetadataSaver) { mutableStateOf(dialog.draft ?: offeredValues) }
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
     val field: @Composable (Modifier, Field) -> Unit = { modifier, field ->

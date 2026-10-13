@@ -11,11 +11,14 @@ package com.pandulapeter.campfire.presentation.ui.dialogs
 
 import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields.Field
 import com.pandulapeter.campfire.data.model.domain.Catalogue
+import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.SongCredits
 import com.pandulapeter.campfire.data.model.domain.SongDetailsCandidate
+import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
@@ -83,6 +86,41 @@ class SongDetailsReviewTest {
             ),
             filled,
         )
+    }
+
+    @Test
+    fun `two fills with the same draft are two hand-overs`() = runTest {
+        val song = Song(
+            fileName = "a.cho",
+            title = "A",
+            artist = "",
+            key = null,
+            transpose = 0,
+            tags = emptyList(),
+            languages = emptyList(),
+            coverArtUrl = null,
+            hasChords = true,
+            canUpdateFileName = false,
+            lastModified = 0,
+            size = 0,
+        )
+        val file = SongEditTarget.File(song.fileName)
+        val draft = mapOf(Field.ALBUM to "Nimrod")
+        val form = DialogType.SongMetadata(song = song, values = emptyMap(), target = file)
+        val first = DialogType.SongDetailsLookup(song = song, target = file, values = emptyMap(), draft = emptyMap(), formFillCount = form.fillCount)
+            .filledForm(draft)
+        val secondLookup = DialogType.SongDetailsLookup(song = song, target = file, values = emptyMap(), draft = emptyMap(), formFillCount = first.fillCount)
+        val second = secondLookup.filledForm(draft)
+
+        assertNotEquals(first, second)
+        assertEquals(first.draft, second.draft)
+        val host = DialogHost(backgroundScope)
+        val info = DialogType.SongInfo(song = song, target = file)
+        host.showDialog(info)
+        host.showDialog(first)
+        host.showDialog(secondLookup)
+        host.updateUnderlyingDialog(second)
+        assertEquals(listOf(info, second, secondLookup), host.openDialogs.value)
     }
 
     private companion object {
