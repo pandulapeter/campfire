@@ -64,7 +64,42 @@ alongside it is yours, under whatever license you choose.
 The name *Campfire*, the app icon and the other branding assets are **not** covered by the license and remain the
 author's. The MPL grants no trademark rights (section 2.3), so a fork has to ship under a name and an icon of its own.
 
-The web build bundles [JetBrains Mono](https://github.com/JetBrains/JetBrainsMono), copyright The JetBrains Mono
-Project Authors, which is licensed under the [SIL Open Font License 1.1](presentation/src/wasmJsMain/composeResources/files/licenses/jetbrains_mono_ofl.txt)
-rather than the MPL, and [Inter](https://github.com/rsms/inter), copyright The Inter Project Authors, licensed under the
-[same license](presentation/src/wasmJsMain/composeResources/files/licenses/inter_ofl.txt).
+### Third-party software
+
+Campfire is built with the work of others, which keeps its own license. Each build lists what it ships, with the full
+license texts and the projects' NOTICE files, under Settings → About → Open-source licenses; the table below is every
+build's, from the Android, desktop, and web runtime dependencies. The texts are under `composeResources/files/licenses`
+of the source set of the builds that ship them.
+
+| Component | Copyright | License | Builds |
+|---|---|---|---|
+| [Accompanist](https://github.com/google/accompanist) Drawable Painter | Google | [Apache 2.0](presentation/src/commonMain/composeResources/files/licenses/apache_2.0.txt) | Android |
+| [AndroidX](https://developer.android.com/jetpack/androidx) libraries (Activity, AppCompat, Browser, Core, Fragment, ProfileInstaller, and what they need) | The Android Open Source Project | [Apache 2.0](presentation/src/commonMain/composeResources/files/licenses/apache_2.0.txt) | Android |
+| AndroidX [multiplatform](https://github.com/JetBrains/compose-multiplatform-core) libraries (Annotation, Collection, Graphics Shapes, Lifecycle, Navigation 3, NavigationEvent, SavedState) | The Android Open Source Project, JetBrains | [Apache 2.0](presentation/src/commonMain/composeResources/files/licenses/apache_2.0.txt) | All |
+| [ANGLE](https://chromium.googlesource.com/angle/angle) | The ANGLE Project Authors | [BSD 3-Clause](presentation/src/desktopMain/composeResources/files/licenses/angle_bsd_3.txt) | Windows |
+| [ChordPro](https://www.chordpro.org) chord shapes | The ChordPro Team | [Artistic 2.0](presentation/src/commonMain/composeResources/files/licenses/chordpro_artistic_2.0.txt) | All |
+| [chords-db](https://github.com/tombatossals/chords-db) chord shapes | David Rubert | [MIT](presentation/src/commonMain/composeResources/files/licenses/chords_db_mit.txt) | All |
+| [Coil](https://github.com/coil-kt/coil) | Coil Contributors | [Apache 2.0](presentation/src/commonMain/composeResources/files/licenses/apache_2.0.txt) | All |
+| [Compose Multiplatform](https://github.com/JetBrains/compose-multiplatform) and Material 3 | JetBrains, The Android Open Source Project | [Apache 2.0](presentation/src/commonMain/composeResources/files/licenses/apache_2.0.txt) | All |
+| [Google Play In-App Updates](https://developer.android.com/guide/playcore/in-app-updates) and Play services | Google | [Play Core SDK Terms of Service](https://developer.android.com/guide/playcore/license), and [the licenses of what it bundles](presentation/src/androidMain/composeResources/files/licenses/google_play_third_party_licenses.txt) | Android |
+| [Guava](https://github.com/google/guava) ListenableFuture | The Guava Authors | [Apache 2.0](presentation/src/commonMain/composeResources/files/licenses/apache_2.0.txt) | Android |
+| [Inter](https://github.com/rsms/inter) | The Inter Project Authors | [SIL Open Font License 1.1](presentation/src/wasmJsMain/composeResources/files/licenses/inter_ofl.txt) | Web |
+| [JetBrains Annotations](https://github.com/JetBrains/java-annotations) | JetBrains | [Apache 2.0](presentation/src/commonMain/composeResources/files/licenses/apache_2.0.txt) | Android, desktop |
+| [JetBrains Mono](https://github.com/JetBrains/JetBrainsMono) | The JetBrains Mono Project Authors | [SIL Open Font License 1.1](presentation/src/wasmJsMain/composeResources/files/licenses/jetbrains_mono_ofl.txt) | Web |
+| [JetBrains Runtime](https://github.com/JetBrains/JetBrainsRuntime) | Oracle and/or its affiliates, JetBrains | [GPL 2.0 with the Classpath Exception](presentation/src/desktopMain/composeResources/files/licenses/openjdk_gpl_2.0_classpath_exception.txt) ([additional information](presentation/src/desktopMain/composeResources/files/licenses/jetbrains_runtime_additional_license_info.txt)) | Desktop |
+| [JetBrains Runtime API](https://github.com/JetBrains/JetBrainsRuntimeApi) | JetBrains | [Apache 2.0](presentation/src/commonMain/composeResources/files/licenses/apache_2.0.txt) | Desktop |
+| [JSpecify](https://jspecify.dev) | The JSpecify Authors | [Apache 2.0](presentation/src/commonMain/composeResources/files/licenses/apache_2.0.txt) | Android, desktop |
+| [Koin](https://github.com/InsertKoinIO/koin) | Kotzilla, Koin contributors | [Apache 2.0](presentation/src/commonMain/composeResources/files/licenses/apache_2.0.txt) | All |
+| [Kotlin](https://kotlinlang.org) and kotlinx (coroutines, serialization, datetime, io, atomicfu, browser) | JetBrains, Kotlin contributors | [Apache 2.0](presentation/src/commonMain/composeResources/files/licenses/apache_2.0.txt) ([NOTICE](presentation/src/commonMain/composeResources/files/licenses/kotlin_notice.txt)) | All |
+| [Ktor](https://github.com/ktorio/ktor) | JetBrains, Ktor contributors | [Apache 2.0](presentation/src/commonMain/composeResources/files/licenses/apache_2.0.txt) | All |
+| [OkHttp](https://github.com/square/okhttp) | Square | [Apache 2.0](presentation/src/commonMain/composeResources/files/licenses/apache_2.0.txt) | Android |
+| [Okio](https://github.com/square/okio) | Square | [Apache 2.0](presentation/src/commonMain/composeResources/files/licenses/apache_2.0.txt) | All |
+| [Public Suffix List](https://publicsuffix.org), inside OkHttp | Mozilla Foundation | [MPL 2.0](presentation/src/commonMain/composeResources/files/licenses/mpl_2.0.txt) | Android |
+| [Reorderable](https://github.com/Calvin-LL/Reorderable) | Calvin Liang | [Apache 2.0](presentation/src/commonMain/composeResources/files/licenses/apache_2.0.txt) | All |
+| [Skia](https://skia.org) | Google | [BSD 3-Clause](presentation/src/commonMain/composeResources/files/licenses/skia_bsd_3.txt) | Desktop, iOS, web |
+| [Skiko](https://github.com/JetBrains/skiko) | JetBrains | [Apache 2.0](presentation/src/commonMain/composeResources/files/licenses/apache_2.0.txt) ([NOTICE](presentation/src/commonMain/composeResources/files/licenses/skiko_notice.txt)) | Desktop, iOS, web |
+| [SLF4J](https://www.slf4j.org) | QOS.ch | [MIT](presentation/src/commonMain/composeResources/files/licenses/slf4j_mit.txt) | Android, desktop |
+| [Stately](https://github.com/touchlab/Stately) | Touchlab | [Apache 2.0](presentation/src/commonMain/composeResources/files/licenses/apache_2.0.txt) | All |
+
+The chord shapes from chords-db and ChordPro were checked and reordered for Campfire; each table's source file names
+where its shapes came from.

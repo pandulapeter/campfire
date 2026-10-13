@@ -177,6 +177,7 @@ private fun CampfireDialog(
         DialogType.Tuner -> TunerSheet(viewModel = viewModel, dialog = DialogType.Tuner)
 
         DialogType.AppLanguage -> AppLanguageSheet(viewModel = viewModel)
+        DialogType.OpenSourceLicenses -> OpenSourceLicensesSheet(viewModel = viewModel, urlOpener = urlOpener)
 
         is DialogType.SetlistPicker -> SetlistPicker(
             viewModel = viewModel,

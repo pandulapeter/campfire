@@ -404,6 +404,13 @@
     <string name="settings_help_description">Common questions, and how to report a problem</string>
     <string name="settings_privacy_policy">Privacy Policy</string>
     <string name="settings_privacy_policy_description">What the app does with your data</string>
+    <string name="settings_open_source_licenses">Open-source licenses</string>
+    <string name="settings_open_source_licenses_description">The libraries, fonts, and chord shapes Campfire is built with, and their licenses</string>
+    <string name="open_source_licenses_intro">Campfire is open source, and it is built with the work of others. Tap an entry to read its license.</string>
+    <string name="open_source_licenses_show">Show the license</string>
+    <string name="open_source_licenses_hide">Hide the license</string>
+    <string name="open_source_licenses_project">Project page</string>
+    <string name="open_source_licenses_license">License</string>
     <string name="settings_support">Buy me a coffee</string>
     <string name="settings_support_description">Support the development of the app</string>
     <string name="settings_version">Version %1$s</string>

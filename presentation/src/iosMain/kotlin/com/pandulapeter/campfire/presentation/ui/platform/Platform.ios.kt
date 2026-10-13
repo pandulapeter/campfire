@@ -28,3 +28,5 @@ internal actual val appIconSurface: AppIconSurface? = AppIconSurface.HOME_SCREEN
 internal actual val platformStore: Distribution? = Distribution.APP_STORE
 
 internal actual fun PointerEvent.verticalWheelNotches() = changes.fold(0f) { total, change -> total + change.scrollDelta.y }
+
+internal actual val appBuild = AppBuild.IOS

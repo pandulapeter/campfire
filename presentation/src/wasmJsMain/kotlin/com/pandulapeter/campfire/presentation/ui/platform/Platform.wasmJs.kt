@@ -53,3 +53,5 @@ private fun hasTouchScreen(): Boolean = js("navigator.maxTouchPoints > 0 || 'ont
 
 private const val PIXELS_PER_WHEEL_NOTCH = 100f // What Chrome, Edge and Safari report for one notch at 100 % zoom.
 private const val LINES_PER_WHEEL_NOTCH = 3f // What Firefox reports for one notch in line mode.
+
+internal actual val appBuild = AppBuild.WEB

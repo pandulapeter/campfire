@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.navigation.SettingsTab
 
 @Composable
@@ -80,6 +81,6 @@ internal fun SettingsTabPage(
         sectionColumns = sectionColumns,
         scrollState = scrollState,
         contentPadding = contentPadding,
-        section = { AboutSection(urlOpener = urlOpener) },
+        section = { AboutSection(urlOpener = urlOpener, onOpenSourceLicensesClicked = { viewModel.showDialog(DialogType.OpenSourceLicenses) }) },
     )
 }

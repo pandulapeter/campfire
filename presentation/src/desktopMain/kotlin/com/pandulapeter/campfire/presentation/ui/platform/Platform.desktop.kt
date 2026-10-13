@@ -94,3 +94,16 @@ fun desktopDataDirectory(): File {
 
 private const val APPLICATION_NAME = "Campfire"
 private const val PACKAGE_FAMILY_NAME_PROPERTY = "campfire.packageFamilyName"
+
+internal actual val appBuild: AppBuild
+    get() = when (PlatformImpersonation.platform) {
+        ImpersonatedPlatform.ANDROID -> AppBuild.ANDROID
+        ImpersonatedPlatform.IOS -> AppBuild.IOS
+        ImpersonatedPlatform.MACOS -> AppBuild.MACOS
+        ImpersonatedPlatform.WINDOWS -> AppBuild.WINDOWS
+        null -> when {
+            isMacOs -> AppBuild.MACOS
+            isWindows -> AppBuild.WINDOWS
+            else -> AppBuild.LINUX
+        }
+    }

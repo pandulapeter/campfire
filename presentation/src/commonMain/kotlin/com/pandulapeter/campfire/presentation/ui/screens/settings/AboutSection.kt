@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.presentation.resources.ic_bug
 import com.pandulapeter.campfire.presentation.resources.ic_campfire
 import com.pandulapeter.campfire.presentation.resources.ic_coffee
 import com.pandulapeter.campfire.presentation.resources.ic_git_hub
+import com.pandulapeter.campfire.presentation.resources.ic_license
 import com.pandulapeter.campfire.presentation.resources.ic_phone
 import com.pandulapeter.campfire.presentation.resources.ic_privacy_policy
 import com.pandulapeter.campfire.presentation.resources.ic_star
@@ -31,6 +32,8 @@ import com.pandulapeter.campfire.presentation.resources.settings_git_hub
 import com.pandulapeter.campfire.presentation.resources.settings_git_hub_description
 import com.pandulapeter.campfire.presentation.resources.settings_help
 import com.pandulapeter.campfire.presentation.resources.settings_help_description
+import com.pandulapeter.campfire.presentation.resources.settings_open_source_licenses
+import com.pandulapeter.campfire.presentation.resources.settings_open_source_licenses_description
 import com.pandulapeter.campfire.presentation.resources.settings_privacy_policy
 import com.pandulapeter.campfire.presentation.resources.settings_privacy_policy_description
 import com.pandulapeter.campfire.presentation.resources.settings_rate
@@ -49,7 +52,8 @@ import org.jetbrains.compose.resources.painterResource
  * which is the whole of what the app says about the other platforms, since a page can be kept up to date without a
  * release and it is the one place App Review has nothing to say about; and its support page answers the common
  * questions and says how to reach the author, by email or on GitHub. GitHub comes after those, as the source code and
- * the issue tracker, since that is what it is to somebody who has never used it. The row that names the author is the
+ * the issue tracker, since that is what it is to somebody who has never used it, and the open-source licenses after
+ * it, which open a sheet of the app's own rather than a page. The row that names the author is the
  * link to the author's own site, since that is what a name with a link on it is expected to lead to.
  *
  * The rating row leads to the store of the platform the app is running on, and only once that listing exists. It
@@ -59,6 +63,7 @@ import org.jetbrains.compose.resources.painterResource
 @Composable
 internal fun AboutSection(
     urlOpener: (String) -> Unit,
+    onOpenSourceLicensesClicked: () -> Unit,
 ) = SettingsSection {
     LinkListItem(
         title = stringResource(Res.string.settings_distributions_all),
@@ -93,6 +98,13 @@ internal fun AboutSection(
         description = stringResource(Res.string.settings_git_hub_description),
         icon = painterResource(Res.drawable.ic_git_hub),
         onClick = { urlOpener("https://github.com/pandulapeter/campfire") },
+    )
+    LinkListItem(
+        title = stringResource(Res.string.settings_open_source_licenses),
+        description = stringResource(Res.string.settings_open_source_licenses_description),
+        icon = painterResource(Res.drawable.ic_license),
+        opensInApp = true,
+        onClick = onOpenSourceLicensesClicked,
     )
     LinkListItem(
         title = stringResource(Res.string.settings_created_by),

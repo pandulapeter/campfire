@@ -72,6 +72,27 @@ keyed by the open row, which an Android activity recreated with the row open fin
 coming back to the first asks again) — and join the rows when they arrive; iTunes names none, and its rows say nothing
 about it.
 
+### `ui/dialogs/OpenSourceLicensesSheet.kt`
+
+`ui/dialogs/OpenSourceLicensesSheet.kt` — Settings → About → Open-source licenses (`DialogType.OpenSourceLicenses`):
+Campfire's own license first, then everything this build ships that somebody else wrote, by name
+(`OpenSourceComponents.kt`: the libraries, the transitive ones included, the web build's fonts, the desktop builds'
+runtime, and the chord shapes the tables were filled from), each naming its holder and its license. **A build lists
+only what it ships** (`OpenSourceComponent.builds` against `ui/platform`'s `appBuild`, which on the desktop follows the
+screenshot tool's impersonation); the README lists every build's. A tap opens one entry (one at a time), with its
+project page and its license's page, then its NOTICE where the project has one (Apache 2.0's section 4 d) and the
+license's full text, read from the app's own files as the sheet opens rather than fetched. An open entry's texts are
+items of the list, cut at blank lines (`licenseTextChunks`), since Google's list of what its Play libraries bundle runs
+to thousands of lines; so opening and closing one is the list's own item animation, the texts fading while the entries
+below move, vertically only.
+
+**The list is kept by hand**: a dependency that ships in a build gets an entry, its license text and NOTICE under
+`composeResources/files/licenses` of the source set of the builds that show it (`commonMain` where several do, so
+Google's 220 KB list is the Android build's alone), and a row of the README's Third-party software table, in the same
+change; `OpenSourceComponentsTest` checks that every build has every text it lists, what a few builds list, and the
+order. The list was taken from every artifact on the Android, desktop, and web runtime classpaths, whose jars and AARs
+were searched for NOTICE and license files, and from the projects' repositories.
+
 ### The dialog stack
 
 **A dialog opened from another one is put over it rather than in its place**, so that going back slides only the top

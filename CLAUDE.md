@@ -308,6 +308,10 @@ What the app does, one line each; the full text is in the file named (`:presenta
 
 ## Build
 
+- **A dependency that ships in a build is credited in the same change**, a transitive one included: an entry in
+  `:presentation`'s `ui/dialogs/OpenSourceComponents.kt` (Settings → About → Open-source licenses, which lists what the
+  build it runs in ships), its license text and its project's NOTICE under `composeResources/files/licenses` of the
+  source set of the builds that ship it, and a row of the README's Third-party software table.
 - Dependency versions in `gradle/libs.versions.toml` (including `android-compileSdk` / `android-minSdk`). The
   version and the build number are `campfire.versionName` and `campfire.buildNumber`, one of each for every platform:
   the build number is Android's version code, the Mac build's `CFBundleVersion` and the iOS one's, the last written

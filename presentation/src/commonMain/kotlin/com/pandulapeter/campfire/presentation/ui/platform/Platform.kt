@@ -95,3 +95,9 @@ internal enum class Distribution(
     MAC_APP_STORE(listingUrl = "https://apps.apple.com/app/id6815160850", isApple = true),
     MICROSOFT_STORE(listingUrl = "https://apps.microsoft.com/detail/9MSR62F288M1"),
 }
+
+/** The builds Campfire is handed out as, each shipping a different set of libraries and assets. */
+internal enum class AppBuild { ANDROID, IOS, MACOS, WINDOWS, LINUX, WEB }
+
+/** The build this is, which decides what the Open-source licenses sheet lists: only what it actually ships. */
+internal expect val appBuild: AppBuild

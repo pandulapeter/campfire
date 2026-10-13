@@ -91,7 +91,8 @@ where its sans serif resolves to the system's font. The web build's Skia cannot 
 single weight of Roboto, so every style Material sets in Medium came out Regular and the interface read as thin; that
 build bundles Inter (the closest to the desktop systems' fonts that may be shipped, SF Pro's license keeping it on
 Apple's platforms) in Regular, Medium and Bold, subset to Latin, Greek, Cyrillic and the symbols a song uses and to the
-default layout features, with its OFL license under `files/licenses`. The actual answers null until all three weights
+default layout features, with its OFL license next to it under `files/licenses`, which the web build's Open-source
+licenses sheet shows (see `ui/dialogs/CLAUDE.md`). The actual answers null until all three weights
 are in, and the theme does not report itself settled until then, so the launch screen covers the app rather than every
 line of text in it being laid out a second time; a font that has not arrived within five seconds gives way to Material's
 typography, since Compose resources never reports a failed fetch. `app/web`'s `index.html` preloads the files by their

@@ -80,7 +80,8 @@ the switch next to it.
 "Every version of Campfire" (the download section of campfire-songbook.com, which is the whole of what the app says
 about the other builds), Help and support (the website's support page, which gives an email address and the GitHub
 issues), the rating row, the privacy policy, GitHub (the source code and the issue tracker, after the website's rows on
-purpose), the author and the version and, last and where `canAskForDonations`, the coffee. Every row has a description.
+purpose), Open-source licenses (the one row that opens a sheet of the app's own, which its chevron says in place of the
+open-in-browser mark, `LinkListItem`'s `opensInApp`), the author and the version and, last and where `canAskForDonations`, the coffee. Every row has a description.
 The rating row opens `platformStore`'s `listingUrl` — the store of the platform the app runs on rather than the one it
 came from — and is absent on Linux, in the web build and wherever that listing does not exist yet; its wording says
 *rate*, since a store page also offers to install a second copy of the app. **campfire-songbook.com is the app's
