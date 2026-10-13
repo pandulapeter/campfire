@@ -101,7 +101,8 @@ internal class AndroidToneOutput(
      * of milliseconds ahead in large periods, so a fixed wait of the fade's length can stop the track before the faded
      * frames were ever mixed, and that cut at full amplitude is a loud pop. The shaper's volume is the one the mixer last
      * applied, so the track is only stopped once it reads silence; frames mixed after that are silent whatever stopping
-     * does to them. A track the mixer never reaches (one the system paused) is released after a timeout.
+     * does to them. A track the mixer never reaches (one the system paused) is released after a timeout, and one whose
+     * fade cannot be read, at once: nothing is fading it, so waiting would only keep the tone sounding at full volume.
      */
     private fun releaseOnceSilent(track: AudioTrack, fadeOut: VolumeShaper?, deadlineMillis: Long) {
         handler.postDelayed({
@@ -110,7 +111,7 @@ internal class AndroidToneOutput(
             } catch (_: IllegalStateException) {
                 null
             }
-            if (volume != 0f && SystemClock.uptimeMillis() < deadlineMillis) {
+            if (volume != null && volume > 0f && SystemClock.uptimeMillis() < deadlineMillis) {
                 releaseOnceSilent(track, fadeOut, deadlineMillis)
             } else {
                 try {
