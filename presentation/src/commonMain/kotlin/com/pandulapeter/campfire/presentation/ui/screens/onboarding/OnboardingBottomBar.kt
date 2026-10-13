@@ -93,8 +93,15 @@ internal fun OnboardingBottomBar(
         // Measured on every pass, since the dots animate: the pill stretching, and a dot growing in or shrinking out.
         val dots = subcompose(FooterSlot.DOTS) { OnboardingPageIndicator(steps = steps, currentStep = currentStep, position = pagerPosition) }.single().measure(looseConstraints)
         val width = constraints.maxWidth
-        // No gap of its own: the dots' padding already keeps them apart from the buttons.
-        val dotsStart = onboardingDotsStart(width = width, dotsWidth = dots.width, startSlotWidth = startSlotWidth, endSlotWidth = endSlotWidth, gap = 0)
+        // On top of the dots' own 4dp padding, so that the last dot does not touch the button beside it, and shrunk
+        // evenly on both sides where a phone has less room than that.
+        val dotsStart = onboardingDotsStart(
+            width = width,
+            dotsWidth = dots.width,
+            startSlotWidth = startSlotWidth,
+            endSlotWidth = endSlotWidth,
+            gap = FOOTER_DOTS_GAP.roundToPx(),
+        )
         val start = subcompose(FooterSlot.START) {
             AnimatedContent(
                 targetState = previousOnboardingStep(currentStep, steps) != null,
@@ -137,6 +144,9 @@ private enum class FooterSlot {
     START,
     END,
 }
+
+/** The room the footer keeps between the dots and each button where it has it, see [onboardingDotsStart]. */
+private val FOOTER_DOTS_GAP = 8.dp
 
 /** Material's small button padding: the default's 24dp sides would leave Start playing no room on a 360dp phone. */
 private val FOOTER_BUTTON_PADDING = PaddingValues(

@@ -52,9 +52,13 @@ class OnboardingFooterLayoutTest {
 
     @Test
     fun `start playing and skip fit beside six dots on a 360dp phone`() {
-        val start = onboardingDotsStart(width = 328, dotsWidth = 112, startSlotWidth = 90, endSlotWidth = 113, gap = 0)
-        assertTrue(start >= 90)
-        assertTrue(start + 112 + 113 <= 328)
-        assertEquals(13, 328 - 90 - 112 - 113)
+        val start = onboardingDotsStart(width = 328, dotsWidth = 112, startSlotWidth = 90, endSlotWidth = 113, gap = 8)
+        assertTrue(start - 90 >= 6)
+        assertTrue(328 - 113 - (start + 112) >= 6)
+    }
+
+    @Test
+    fun `room for less than the gap is shared between the two sides`() {
+        assertEquals(95, onboardingDotsStart(width = 300, dotsWidth = 100, startSlotWidth = 90, endSlotWidth = 100, gap = 8))
     }
 }
