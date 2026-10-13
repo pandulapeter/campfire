@@ -73,7 +73,7 @@ of the screen's own claims the system's gesture and the browser's Back while the
 following a predictive back with the finger inside one scroll, as the settings tabs do. The step is saved with the back
 stack (`SavedStateStore`), so a process ended behind the onboarding comes back on the page it was left on, every answer
 kept. On the web the screen is one history entry at the address of the screen under it (`BrowserRoutes`), so a reload
-opens the app rather than a question.
+opens the app rather than a question, and neither does a Forward once it is finished, skipped, or closed.
 
 `FirstRunController.openOnboardingOnFirstRun` opens it as the demo library is settled, while the launch screen is still
 up, so the app is uncovered on it; it is skipped where a dialog is up or an import is waiting (`canShowOnboarding`). A

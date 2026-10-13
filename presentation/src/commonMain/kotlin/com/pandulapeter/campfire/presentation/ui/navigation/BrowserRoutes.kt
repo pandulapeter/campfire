@@ -189,7 +189,9 @@ internal object BrowserRoutes {
      * A song read from a setlist pages through what the setlist holds now, as it does when the setlist's row is tapped
      * or its address is opened ([resolve]), and it is cut short too once the song it was on is gone from the setlist.
      * An editor is cut off as well while performance mode is on, which may have been turned on since, and the import
-     * screen once there is no import to report on ([hasImportReport]): the one it was about has been left.
+     * screen once there is no import to report on ([hasImportReport]): the one it was about has been left. So is an
+     * onboarding the app is no longer showing ([openOnboarding] is the one on its back stack now, if any), which only a
+     * first run or Settings opens.
      */
     fun validate(
         state: NavigationState,
@@ -197,6 +199,7 @@ internal object BrowserRoutes {
         setlists: List<Setlist>,
         isPerformanceModeEnabled: Boolean,
         hasImportReport: Boolean,
+        openOnboarding: CampfireDestination.Onboarding?,
     ): NavigationState {
         val songFileNames = songs.mapTo(mutableSetOf()) { it.fileName }
         val setlistsByFileName = setlists.associateBy { it.fileName }
@@ -213,6 +216,11 @@ internal object BrowserRoutes {
 
                 is CampfireDestination.SongEditor -> destination.takeIf { !isPerformanceModeEnabled && it.fileName in songFileNames }
                 CampfireDestination.ImportReport -> destination.takeIf { hasImportReport }
+                // The onboarding is only ever opened by a first run or from Settings: an entry left by finishing, skipping
+                // or closing it is not one to go forward into again, as an address names nothing for it either. One that is
+                // still open stays, since a dropped file can put the import screen or a song over it, and a Forward back into
+                // those must not close it.
+                is CampfireDestination.Onboarding -> destination.takeIf { it == openOnboarding }
                 else -> destination
             } ?: break
         }

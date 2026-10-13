@@ -188,6 +188,7 @@ private class BrowserHistory(
         val songs = viewModel.allSongs.value
         val setlists = viewModel.setlists.value
         val isPerformanceModeEnabled = viewModel.isPerformanceModeEnabled.value
+        val openOnboarding = viewModel.backStack.lastOrNull { it is CampfireDestination.Onboarding } as? CampfireDestination.Onboarding
         val state = entry?.state
             ?.let {
                 BrowserRoutes.validate(
@@ -196,6 +197,7 @@ private class BrowserHistory(
                     setlists = setlists,
                     isPerformanceModeEnabled = isPerformanceModeEnabled,
                     hasImportReport = viewModel.importReport.value != null,
+                    openOnboarding = openOnboarding,
                 )
             }
             ?: (path ?: entry?.path)

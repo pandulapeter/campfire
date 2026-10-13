@@ -192,6 +192,7 @@ class BrowserRoutesTest {
             setlists = setlists,
             isPerformanceModeEnabled = false,
             hasImportReport = false,
+            openOnboarding = null,
         ).backStack,
     )
 
@@ -204,6 +205,7 @@ class BrowserRoutesTest {
             setlists = setlists,
             isPerformanceModeEnabled = false,
             hasImportReport = false,
+            openOnboarding = null,
         ).backStack.last() as CampfireDestination.SongDetails
         assertEquals(listOf("a.cho", "b.cho"), validated.songFileNames)
         assertEquals(1, validated.initialIndex)
@@ -212,11 +214,46 @@ class BrowserRoutesTest {
     @Test
     fun `the editor is cut in performance mode and the import screen without a report`() {
         val state = home.copy(backStack = listOf(CampfireDestination.Songs, songDetails("a.cho"), CampfireDestination.SongEditor(fileName = "a.cho")))
-        assertEquals(2, BrowserRoutes.validate(state, songs, setlists, isPerformanceModeEnabled = true, hasImportReport = false).backStack.size)
-        assertEquals(3, BrowserRoutes.validate(state, songs, setlists, isPerformanceModeEnabled = false, hasImportReport = false).backStack.size)
+        assertEquals(2, BrowserRoutes.validate(state, songs, setlists, isPerformanceModeEnabled = true, hasImportReport = false, openOnboarding = null).backStack.size)
+        assertEquals(3, BrowserRoutes.validate(state, songs, setlists, isPerformanceModeEnabled = false, hasImportReport = false, openOnboarding = null).backStack.size)
         val import = home.copy(backStack = listOf(CampfireDestination.Songs, CampfireDestination.ImportReport))
-        assertEquals(1, BrowserRoutes.validate(import, songs, setlists, isPerformanceModeEnabled = false, hasImportReport = false).backStack.size)
-        assertEquals(2, BrowserRoutes.validate(import, songs, setlists, isPerformanceModeEnabled = false, hasImportReport = true).backStack.size)
+        assertEquals(1, BrowserRoutes.validate(import, songs, setlists, isPerformanceModeEnabled = false, hasImportReport = false, openOnboarding = null).backStack.size)
+        assertEquals(2, BrowserRoutes.validate(import, songs, setlists, isPerformanceModeEnabled = false, hasImportReport = true, openOnboarding = null).backStack.size)
+    }
+
+    @Test
+    fun `a finished onboarding is not gone forward into again`() {
+        listOf(
+            listOf(CampfireDestination.Songs, CampfireDestination.Onboarding(isOpenedFromSettings = false)),
+            listOf(CampfireDestination.Songs, CampfireDestination.Settings, CampfireDestination.Onboarding(isOpenedFromSettings = true)),
+        ).forEach { backStack ->
+            assertEquals(
+                backStack.dropLast(1),
+                BrowserRoutes.validate(home.copy(backStack = backStack), songs, setlists, isPerformanceModeEnabled = false, hasImportReport = false, openOnboarding = null).backStack,
+            )
+        }
+    }
+
+    @Test
+    fun `an open onboarding stays under the screen a Forward returns to`() {
+        val onboarding = CampfireDestination.Onboarding(isOpenedFromSettings = false)
+        val backStack = listOf(CampfireDestination.Songs, onboarding, CampfireDestination.ImportReport)
+        assertEquals(
+            backStack,
+            BrowserRoutes.validate(home.copy(backStack = backStack), songs, setlists, isPerformanceModeEnabled = false, hasImportReport = true, openOnboarding = onboarding).backStack,
+        )
+        // Not the one that is open: cut there, with what is over it.
+        assertEquals(
+            listOf(CampfireDestination.Songs),
+            BrowserRoutes.validate(
+                state = home.copy(backStack = backStack),
+                songs = songs,
+                setlists = setlists,
+                isPerformanceModeEnabled = false,
+                hasImportReport = true,
+                openOnboarding = CampfireDestination.Onboarding(isOpenedFromSettings = true),
+            ).backStack,
+        )
     }
 
     /** A song details screen is identified by an id made up when it is opened, which no address carries. */
