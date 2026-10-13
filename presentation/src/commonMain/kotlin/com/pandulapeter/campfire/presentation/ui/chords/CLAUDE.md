@@ -39,7 +39,11 @@ composed (`ChordCellLayouts`: names measured by the page's measurer, diagrams by
 intrinsic measurement at a candidate width already counts the rows they wrap into, every slot answering for the whole
 section's width; a screen reader reads it row by row.
 
-It is a pill folding it (`UserPreferences.isChordSectionFolded`, one fold for every song, in read only mode too) and
+It is a pill folding it (`UserPreferences.isChordSectionFolded`, one fold for every song, in read only mode too),
+followed outside read only mode by a pencil (`ChordDiagrams.onInstrumentClicked`, a `SongToolButton` as tall as the pill)
+opening the **instrument sheet** (`ChordInstrumentSheet`, `DialogType.ChordInstrument`): the Settings list
+(`components/ChordInstrumentList.kt`, shared) without Other, which would take the section away with the way back, a pick
+written at once and closing the sheet — and
 rows of cells — the name in the chords' style and accent over its diagram, growing with the text size, wrapping rather
 than scrolling sideways into as few rows as the width allows, shared out between them as evenly as their order lets them
 (`balancedRowStarts`: nine of which six fit a line are five over four, not six over three, and the PDF breaks its rows

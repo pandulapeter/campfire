@@ -68,7 +68,8 @@ internal fun SectionHeaderPill(
 }
 
 private val HEADER_ELEVATION = 2.dp
-private val HEADER_HORIZONTAL_PADDING = 12.dp
+/** Inside a header pill around its name, which is also how far the pill reaches out of its column to the left. */
+internal val HEADER_HORIZONTAL_PADDING = 12.dp
 
 /**
  * Above and below a section's name, and so, with the name's own line, the whole of a header pill's height — which is

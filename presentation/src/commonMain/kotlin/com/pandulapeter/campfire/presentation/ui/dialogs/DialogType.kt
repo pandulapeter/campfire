@@ -77,6 +77,11 @@ sealed interface DialogType {
      * now, and finds the chord by the name the page shows it with ([chordName]).
      */
     data class ChordShape(val song: Song, val setlistFileName: String?, val chordName: String) : DialogType
+    /**
+     * The instrument the chord diagrams are drawn for, opened from the button next to the Chords section's pill, so that
+     * the shapes are changed where they are read and not only in Settings, which holds the same preference.
+     */
+    data object ChordInstrument : DialogType
 
     /** The tuner over the song being read, opened from the song details overflow menu; it listens while it is up. */
     data object Tuner : DialogType

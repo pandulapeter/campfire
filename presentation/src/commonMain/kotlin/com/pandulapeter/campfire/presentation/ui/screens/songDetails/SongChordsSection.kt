@@ -14,8 +14,12 @@ import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -25,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
@@ -60,11 +65,16 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.ic_edit
+import com.pandulapeter.campfire.presentation.resources.song_details_chord_instrument_choose
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_shape_choose
 import com.pandulapeter.campfire.presentation.resources.song_details_chords
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.ui.chords.chordCellDescription
+import com.pandulapeter.campfire.presentation.ui.components.SongToolButton
 import com.pandulapeter.campfire.presentation.ui.components.drawChordDiagram
+import com.pandulapeter.campfire.presentation.ui.components.songControlHeight
+import com.pandulapeter.campfire.presentation.ui.components.songToolIconSize
 import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.songLayout.chordSlotRows
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
@@ -72,6 +82,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
+import org.jetbrains.compose.resources.painterResource
 
 /**
  * One chunk of the song's chords as diagrams: the slots [items] names (counted as [RenderSection.Chords.itemCount]),
@@ -79,6 +90,9 @@ import kotlin.math.roundToInt
  * scroll sideways, since a song may be read with a pedal, one slot per row the section may be cut between, as a run of
  * tablature is drawn as systems. A tap on a cell opens that chord's sheet (see [ChordDiagrams.onChordClicked]); a tap
  * between them, or on any of them in read only mode, turns the page like a tap anywhere on the song.
+ *
+ * The pill is followed by a button opening the sheet of the instrument the diagrams are drawn for, outside read only
+ * mode (see [ChordDiagrams.onInstrumentClicked]), so that the shapes are changed where they are read.
  *
  * @param onFoldToggled Folds the section or unfolds it, see [ChordDiagrams.onFoldToggled].
  * @param isFadingIn Whether the fold was toggled while the page is open, so that the rows coming back fade in, in
@@ -98,17 +112,36 @@ internal fun SongChordsSection(
 ) = Column(modifier = modifier) {
     val isFirstChunk = items.first == 0
     if (isFirstChunk) {
-        SectionHeaderPill(
-            header = stringResource(Res.string.song_details_chords),
-            toggle = onFoldToggled?.let {
-                FoldToggle(
-                    isExpanded = !section.isFolded,
-                    onToggled = it,
-                )
-            },
-            style = headerStyle,
-            chevronSize = FOLD_CHEVRON_SIZE * fontScale,
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            SectionHeaderPill(
+                header = stringResource(Res.string.song_details_chords),
+                toggle = onFoldToggled?.let {
+                    FoldToggle(
+                        isExpanded = !section.isFolded,
+                        onToggled = it,
+                    )
+                },
+                style = headerStyle,
+                chevronSize = FOLD_CHEVRON_SIZE * fontScale,
+            )
+            chordDiagrams?.onInstrumentClicked?.let { onInstrumentClicked ->
+                // As tall as the pill, and as far from where it is drawn as the playing tools are from each other: the pill
+                // reaches out of its column to the left, and the room it leaves behind on the right is taken back.
+                SongToolButton(
+                    modifier = Modifier
+                        .offset(x = -HEADER_HORIZONTAL_PADDING)
+                        .padding(start = INSTRUMENT_BUTTON_GAP),
+                    height = songControlHeight(headerStyle),
+                    onClick = onInstrumentClicked,
+                ) {
+                    Icon(
+                        modifier = Modifier.size(songToolIconSize(fontScale)),
+                        painter = painterResource(Res.drawable.ic_edit),
+                        contentDescription = stringResource(Res.string.song_details_chord_instrument_choose),
+                    )
+                }
+            }
+        }
     }
     if (section.isFolded) return@Column
     ChordRowsBlock(
@@ -372,3 +405,6 @@ private const val PRESS_HIGHLIGHT_DELAY_MILLIS = 100L
 
 private const val PRESSED_ALPHA = 0.1f
 private val PRESSED_CORNER_RADIUS = 8.dp
+
+/** Between the Chords pill and the button after it, as between the song's playing tools. */
+private val INSTRUMENT_BUTTON_GAP = 8.dp

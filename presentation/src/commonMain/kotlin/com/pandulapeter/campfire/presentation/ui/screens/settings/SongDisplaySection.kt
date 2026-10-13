@@ -25,16 +25,6 @@ import com.pandulapeter.campfire.presentation.resources.settings_accidentals_ori
 import com.pandulapeter.campfire.presentation.resources.settings_accidentals_sharps
 import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument
 import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_description
-import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_guitar
-import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_keyboard
-import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_mandolin
-import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_mandolin_description
-import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_ukulele
-import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_guitar_description
-import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_keyboard_description
-import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_other
-import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_other_description
-import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_ukulele_description
 import com.pandulapeter.campfire.presentation.resources.settings_notation
 import com.pandulapeter.campfire.presentation.resources.settings_notation_description
 import com.pandulapeter.campfire.presentation.resources.settings_notation_german
@@ -55,6 +45,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_show_tempo
 import com.pandulapeter.campfire.presentation.resources.settings_show_tempo_description
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
+import com.pandulapeter.campfire.presentation.ui.components.ChordInstrumentList
 import com.pandulapeter.campfire.presentation.ui.components.RadioListItem
 import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
 import com.pandulapeter.campfire.presentation.ui.components.SettingsSubsection
@@ -129,10 +120,8 @@ internal fun SongDisplaySection(
 }
 
 /**
- * The instrument the chord diagrams are drawn for, and on the keyboard what reads the capo as a transposition, as a list for the reason the notation is one: the strings under each
- * name are what say that the shapes are for that instrument in its standard tuning, so a player whose instrument is not
- * one of these picks Other rather than reading diagrams their strings do not match. The strings are named in the chord
- * [notation] picked above, as the diagrams' chords are, rather than in the app's language.
+ * The instrument the chord diagrams are drawn for, and on the keyboard what reads the capo as a transposition, see
+ * [ChordInstrumentList].
  */
 @Composable
 private fun ChordInstrumentChoice(
@@ -145,51 +134,13 @@ private fun ChordInstrumentChoice(
     description = stringResource(Res.string.settings_chord_instrument_description),
     isEnabled = isEnabled,
 ) {
-    Column(modifier = Modifier.selectableGroup()) {
-        listOf(
-            Triple(
-                UserPreferences.ChordInstrument.GUITAR,
-                stringResource(Res.string.settings_chord_instrument_guitar),
-                stringResource(Res.string.settings_chord_instrument_guitar_description, stringNames(GUITAR_STRINGS, notation)),
-            ),
-            Triple(
-                UserPreferences.ChordInstrument.UKULELE,
-                stringResource(Res.string.settings_chord_instrument_ukulele),
-                stringResource(Res.string.settings_chord_instrument_ukulele_description, stringNames(UKULELE_STRINGS, notation)),
-            ),
-            Triple(
-                UserPreferences.ChordInstrument.MANDOLIN,
-                stringResource(Res.string.settings_chord_instrument_mandolin),
-                stringResource(Res.string.settings_chord_instrument_mandolin_description, stringNames(MANDOLIN_STRINGS, notation)),
-            ),
-            Triple(
-                UserPreferences.ChordInstrument.KEYBOARD,
-                stringResource(Res.string.settings_chord_instrument_keyboard),
-                stringResource(Res.string.settings_chord_instrument_keyboard_description),
-            ),
-            Triple(
-                UserPreferences.ChordInstrument.OTHER,
-                stringResource(Res.string.settings_chord_instrument_other),
-                stringResource(Res.string.settings_chord_instrument_other_description),
-            ),
-        ).forEach { (instrument, title, description) ->
-            RadioListItem(
-                title = title,
-                description = description,
-                isSelected = selected == instrument,
-                isEnabled = isEnabled,
-                onSelected = { onSelected(instrument) },
-            )
-        }
-    }
+    ChordInstrumentList(
+        selected = selected,
+        notation = notation,
+        isEnabled = isEnabled,
+        onSelected = onSelected,
+    )
 }
-
-/** The open strings of an instrument in the standard notation, lowest first, written in [notation], `E A D G B E`. */
-private fun stringNames(strings: List<String>, notation: ChordNotation) = strings.joinToString(" ") { ChordProNotation.shownName(it, notation) }
-
-private val GUITAR_STRINGS = listOf("E", "A", "D", "G", "B", "E")
-private val UKULELE_STRINGS = listOf("G", "C", "E", "A")
-private val MANDOLIN_STRINGS = listOf("G", "D", "A", "E")
 
 /**
  * The notation chords are written in, as a list rather than a segmented control: five names with an example under each

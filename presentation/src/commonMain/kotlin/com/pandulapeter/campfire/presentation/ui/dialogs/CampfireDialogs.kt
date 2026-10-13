@@ -183,6 +183,7 @@ private fun CampfireDialog(
 
         is DialogType.SongInfo -> SongInfoSheet(viewModel = viewModel, dialog = dialog, urlOpener = urlOpener)
         is DialogType.ChordShape -> ChordShapeSheet(viewModel = viewModel, dialog = dialog)
+        DialogType.ChordInstrument -> ChordInstrumentSheet(viewModel = viewModel, dialog = DialogType.ChordInstrument)
         DialogType.Tuner -> TunerSheet(viewModel = viewModel, dialog = DialogType.Tuner)
 
         is DialogType.SetlistPicker -> SetlistPicker(

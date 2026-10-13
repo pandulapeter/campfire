@@ -205,6 +205,7 @@ internal fun SongPages(
                     onChordClicked = if (isReadOnly) null else {
                         { chordName -> viewModel.showDialog(DialogType.ChordShape(song = song, setlistFileName = destination.setlistFileName, chordName = chordName)) }
                     },
+                    onInstrumentClicked = if (isReadOnly) null else ({ viewModel.showDialog(DialogType.ChordInstrument) }),
                 )
             },
         )

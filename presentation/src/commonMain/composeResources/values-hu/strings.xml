@@ -672,6 +672,7 @@
     <string name="song_details_time">%1$s</string>
     <string name="song_details_key_change">Hangnem: %1$s</string>
     <string name="song_details_chords">Akkordok</string>
+    <string name="song_details_chord_instrument_choose">Hangszer kiválasztása</string>
     <string name="song_details_chord_diagram">%1$s: %2$s</string>
     <string name="song_details_chord_diagram_none">%1$s: nincs ábra</string>
     <string name="song_details_chord_letters">%1$s, azaz %2$s</string>
