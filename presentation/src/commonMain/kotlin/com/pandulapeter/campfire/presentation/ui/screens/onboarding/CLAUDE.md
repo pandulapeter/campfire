@@ -24,7 +24,7 @@ The onboarding: a few questions, one a page, each shown on what it changes; a fi
   be kept, each the Features switch it stands for. There are no roles: a player sings too, and anyone may play from a
   list, so the page asks about the features rather than guessing them from the person.
 - **What do you play?**: only with the chords or the tuner on, its line naming which of them the answer is for. Guitar,
-  Ukulele, Mandolin, Piano or keyboard, and Something else; Bass, Banjo, and Violin too with the tuner on
+  Ukulele, Mandolin, Banjo, Piano or keyboard, and Something else; Bass and Violin too with the tuner on
   (`onboardingInstruments`), since with it off they would only be Something else by another name. Under them the
   tunings of the one picked (`OnboardingTuningChoice`, `tuningsOffered`: its own, and the standard tuning of the
   guitar's seven and eight strings and the bass's five), asked with the tuner off too, since the diagrams depend on it.

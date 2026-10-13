@@ -69,6 +69,7 @@ class OnboardingInstrumentTest {
         assertEquals(ChordTuning.GUITAR_DROP_D, OnboardingInstrument.GUITAR.chordTuningWrittenFor(InstrumentTuning.GUITAR_DROP_D))
         assertEquals(ChordTuning.UKULELE_BARITONE, OnboardingInstrument.UKULELE.chordTuningWrittenFor(InstrumentTuning.UKULELE_BARITONE))
         assertEquals(ChordTuning.GUITAR_DADGAD, OnboardingInstrument.GUITAR.chordTuningWrittenFor(InstrumentTuning.GUITAR_DADGAD))
+        assertEquals(ChordTuning.BANJO_OPEN_D, OnboardingInstrument.BANJO.chordTuningWrittenFor(InstrumentTuning.BANJO_OPEN_D))
         assertEquals(ChordTuning.GUITAR, OnboardingInstrument.GUITAR.chordTuningWrittenFor(InstrumentTuning.GUITAR_EIGHT_STRING))
         assertNull(OnboardingInstrument.KEYBOARD.chordTuningWrittenFor(null))
         assertNull(OnboardingInstrument.BASS.chordTuningWrittenFor(InstrumentTuning.BASS))
@@ -115,7 +116,14 @@ class OnboardingInstrumentTest {
     @Test
     fun `without the tuner only the instruments the diagrams are drawn for are offered, and Something else`() {
         assertEquals(
-            listOf(OnboardingInstrument.GUITAR, OnboardingInstrument.UKULELE, OnboardingInstrument.MANDOLIN, OnboardingInstrument.KEYBOARD, OnboardingInstrument.OTHER),
+            listOf(
+                OnboardingInstrument.GUITAR,
+                OnboardingInstrument.UKULELE,
+                OnboardingInstrument.MANDOLIN,
+                OnboardingInstrument.BANJO,
+                OnboardingInstrument.KEYBOARD,
+                OnboardingInstrument.OTHER,
+            ),
             onboardingInstruments(isTunerEnabled = false),
         )
     }

@@ -23,9 +23,9 @@ import com.pandulapeter.campfire.chordpro.syntax.ChordProLines
  * fret (1 is the base fret itself, 0 an open string, `x`, `X`, `N` and `-1` a muted one; `base_fret` is read too), its
  * fingers numbered 1 to 5 and every other finger value, a thumb's `T` included, shown as none, as the specification
  * has it ignored, and `{define: G keys 0 4 7}` a keyboard one, its keys counted in semitones from the chord's root. The instrument is the
- * directive's selector where it names one (`{define-ukulele: …}`, `-guitar`, `-mandolin`, `-keyboard`, `-piano`), and
- * otherwise the first one with as many strings as the shape has frets: four frets are a ukulele's unless the selector
- * says mandolin.
+ * directive's selector where it names one (`{define-ukulele: …}`, `-guitar`, `-mandolin`, `-banjo`, `-keyboard`, `-piano`),
+ * and otherwise the first one with as many strings as the shape has frets: four frets are a ukulele's unless the selector
+ * says mandolin, and five a banjo's, its short fifth string first.
  */
 public object ChordProDefinitions {
 
@@ -100,7 +100,8 @@ public object ChordProDefinitions {
      * finger's barre and every other finger moves one on, and strings that come to rest open lose their finger while
      * the others move one back. A shape that would need a fifth finger keeps no fingering here, on the page (the text keeps
      * it, see [rewrittenLine]), and nor does one whose strings coming to rest open were held by more than one finger. A keyboard's keys move with the root they are counted from.
-     * [ChordDefinition.movedBy] adds up, so there and back is zero.
+     * [ChordDefinition.movedBy] adds up, so there and back is zero. A drone string ([ChordInstrument.droneString]) stays
+     * where it is, and an open one is muted where its note is not one of the new chord's, which the text keeps as written.
      */
     public fun transposed(definition: ChordDefinition, semitones: Int, rename: (String) -> String): ChordDefinition {
         val name = rename(definition.name)
@@ -117,24 +118,33 @@ public object ChordProDefinitions {
             }
             is ChordVoicing.Fretted -> {
                 // A shape no move keeps on the neck is not the new chord's, so it is left as the old chord's.
-                val (move, moved) = voicing.moved(semitones, ChordShapeGeometry.MAX_FINGERS) ?: return definition
-                definition.copy(name = name, voicing = moved, movedBy = definition.movedBy + move)
+                val drone = definition.instrument.droneString
+                val (move, moved) = voicing.moved(semitones, ChordShapeGeometry.MAX_FINGERS, drone) ?: return definition
+                val chord = ChordProChords.parse(name)
+                val sounding = if (drone == null || moved.frets[drone] != 0 || chord == null || definition.instrument.tuning[drone] % 12 in chord.pitchClasses) {
+                    moved
+                } else {
+                    moved.copy(frets = moved.frets.mapIndexed { string, fret -> if (string == drone) null else fret })
+                }
+                definition.copy(name = name, voicing = sounding, movedBy = definition.movedBy + move)
             }
         }
     }
 
     /**
      * The move along the neck [transposed] takes this shape by for [semitones], and the shape it lands on with its
-     * fingering kept up to [maxFinger] fingers, or null where no move keeps every fret on the neck.
+     * fingering kept up to [maxFinger] fingers, or null where no move keeps every fret on the neck. The [drone] string
+     * is left where it is.
      */
-    private fun ChordVoicing.Fretted.moved(semitones: Int, maxFinger: Int): Pair<Int, ChordVoicing.Fretted>? {
+    private fun ChordVoicing.Fretted.moved(semitones: Int, maxFinger: Int, drone: Int?): Pair<Int, ChordVoicing.Fretted>? {
         val shift = semitones.mod(12)
-        val candidates = (if (frets.any { it == 0 }) listOf(shift) else listOf(shift - 12, shift))
-            .filter { move -> frets.all { it == null || it + move in 0..ChordVoicings.MAX_FRET } }
-        val move = candidates.firstOrNull { ChordShapeGeometry.isHoldable(frets.map { fret -> fret?.plus(it) }) }
+        val fretted = frets.filterIndexed { string, _ -> string != drone }
+        val candidates = (if (fretted.any { it == 0 }) listOf(shift) else listOf(shift - 12, shift))
+            .filter { move -> fretted.all { it == null || it + move in 0..ChordVoicings.MAX_FRET } }
+        val move = candidates.firstOrNull { ChordShapeGeometry.isHoldable(fretted.map { fret -> fret?.plus(it) }) }
             ?: candidates.firstOrNull()
             ?: return null
-        return move to movedBy(move, maxFinger)
+        return move to movedBy(move, maxFinger, drone)
     }
 
     /**
@@ -149,10 +159,10 @@ public object ChordProDefinitions {
         return definition.copy(name = name, voicing = keysShape(name, (listOfNotNull(voicing.bass) + voicing.notes).map { it - root }))
     }
 
-    private fun ChordVoicing.Fretted.movedBy(move: Int, maxFinger: Int): ChordVoicing.Fretted {
-        val moved = frets.map { it?.plus(move) }
+    private fun ChordVoicing.Fretted.movedBy(move: Int, maxFinger: Int, drone: Int?): ChordVoicing.Fretted {
+        val moved = frets.mapIndexed { string, fret -> if (string == drone) fret else fret?.plus(move) }
         val fingers = fingers?.let { fingers ->
-            val stoppedNow = frets.indices.filter { frets[it] == 0 }
+            val stoppedNow = frets.indices.filter { frets[it] == 0 && it != drone }
             val openedNow = moved.indices.filter { moved[it] == 0 && frets[it] != 0 }
             val adjusted = when {
                 stoppedNow.isNotEmpty() -> fingers.mapIndexed { string, finger -> if (string in stoppedNow) 1 else if (finger > 0) finger + 1 else 0 }
@@ -215,11 +225,12 @@ public object ChordProDefinitions {
         keywordIndices.filter { value.substring(words[it]).lowercase() == COPY }.forEach { keyword ->
             words.getOrNull(keyword + 1)?.let { replacements[keyword + 1] = rename(value.substring(it)) }
         }
-        val voicing = (reading as? Reading.Shape)?.voicing as? ChordVoicing.Fretted
+        val shape = reading as? Reading.Shape
+        val voicing = shape?.voicing as? ChordVoicing.Fretted
         if (voicing != null && semitones.mod(12) != 0) {
             // The text keeps a fingering up to the five fingers the specification allows, where the page draws none past
             // the hand's four: dropping it from the file would lose it for good, since moving back could not bring it back.
-            val moved = voicing.moved(semitones, MAX_FINGER)?.second ?: return rawLine
+            val moved = voicing.moved(semitones, MAX_FINGER, shape.instrument.droneString)?.second ?: return rawLine
             val baseFretKeyword = keywordIndices.firstOrNull { keywordOf(value.substring(words[it])) == BASE_FRET }
             // A line with no base fret counts its frets from the nut whatever they are, so that moving it back writes
             // the line it was.
@@ -396,6 +407,9 @@ public object ChordProDefinitions {
         }
         val instrument = selected ?: implicitInstrumentOf(frets.size) ?: return Reading.Other(name)
         if (instrument.tuning.size != frets.size) return Reading.Invalid
+        // A drone string stopped is a note the shape cannot say: the banjo's fifth string is fretted by the neck's fret
+        // numbers, which start five frets above its nut, and nothing draws a fret that does not run under every string.
+        if ((instrument.droneString?.let { voicing.frets[it] } ?: 0) > 0) return Reading.Other(name)
         return Reading.Shape(name, instrument, voicing)
     }
 
@@ -449,6 +463,7 @@ public object ChordProDefinitions {
         "guitar" to ChordInstrument.GUITAR,
         "ukulele" to ChordInstrument.UKULELE,
         "mandolin" to ChordInstrument.MANDOLIN,
+        "banjo" to ChordInstrument.BANJO,
         "keyboard" to ChordInstrument.KEYBOARD,
         "piano" to ChordInstrument.KEYBOARD,
     )

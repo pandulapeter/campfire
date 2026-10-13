@@ -118,6 +118,7 @@ internal fun UserPreferences.ChordInstrument.toChordInstrument() = when (this) {
     UserPreferences.ChordInstrument.GUITAR -> ChordInstrument.GUITAR
     UserPreferences.ChordInstrument.UKULELE -> ChordInstrument.UKULELE
     UserPreferences.ChordInstrument.MANDOLIN -> ChordInstrument.MANDOLIN
+    UserPreferences.ChordInstrument.BANJO -> ChordInstrument.BANJO
     UserPreferences.ChordInstrument.KEYBOARD -> ChordInstrument.KEYBOARD
     UserPreferences.ChordInstrument.OTHER -> null
 }

@@ -44,6 +44,11 @@ class ChordVoicingContactSheetTest {
             ChordTuning.GUITAR_OPEN_C to ChordVoicingTables.openC,
             ChordTuning.GUITAR_DADGAD to ChordVoicingTables.dadgad,
             ChordTuning.MANDOLIN_GDGD to ChordVoicingTables.mandolinGdgd,
+            ChordTuning.BANJO to ChordVoicingTables.banjo,
+            ChordTuning.BANJO_DOUBLE_C to ChordVoicingTables.banjoDoubleC,
+            ChordTuning.BANJO_C to ChordVoicingTables.banjoC,
+            ChordTuning.BANJO_OPEN_D to ChordVoicingTables.banjoOpenD,
+            ChordTuning.BANJO_G_MODAL to ChordVoicingTables.banjoGModal,
         ).forEach { (tuning, lines) ->
             val shapes = lines.map { ChordProDefinitions.read(it, tuning.instrument.id) as ChordProDefinitions.Reading.Shape }
             draw(shapes.map { it.name to it.voicing as ChordVoicing.Fretted }, File(directory, "chord-shapes-${tuning.id}.png"))

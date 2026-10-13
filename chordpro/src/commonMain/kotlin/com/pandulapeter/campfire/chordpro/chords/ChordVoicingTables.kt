@@ -85,4 +85,14 @@ internal object ChordVoicingTables {
     val mandolin: List<String> get() = MandolinChordTable.shapes
 
     val mandolinGdgd: List<String> get() = OpenTuningChordTables.mandolinGdgd
+
+    val banjo: List<String> get() = BanjoChordTables.openG
+
+    val banjoDoubleC: List<String> get() = BanjoChordTables.doubleC
+
+    val banjoC: List<String> get() = BanjoChordTables.c
+
+    val banjoOpenD: List<String> get() = BanjoChordTables.openD
+
+    val banjoGModal: List<String> get() = BanjoChordTables.gModal
 }

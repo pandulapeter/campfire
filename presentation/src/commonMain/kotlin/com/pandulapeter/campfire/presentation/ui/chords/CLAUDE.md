@@ -88,10 +88,10 @@ own instrument, whatever the switches say.
 
 ### How every chord of a song is fingered is shown at its top
 
-**How every chord of a song is fingered is shown at its top**, on the guitar, the ukulele, the mandolin or the keyboard (the Songs
+**How every chord of a song is fingered is shown at its top**, on the guitar, the ukulele, the mandolin, the banjo, or the keyboard (the Songs
 tab's Instrument, a list naming the strings of the tuning picked for each under it in the reader's chord notation, and
 under it the Tuning, below;
-its Other, for every other instrument (a seven- or eight-string guitar, the bass, the banjo, the violin), draws no diagram at all, as the Features
+its Other, for every other instrument (a seven- or eight-string guitar, the bass, the violin), draws no diagram at all, as the Features
 switch does, and the editor's Chord shape button writes a guitar's): a Chords section after the controls of how it is played, one diagram per chord in the order they are
 first played, folded by one preference for every song and cut between its rows of diagrams wherever a page ends inside
 it, like any other section. Nothing is shipped for it and nothing is fetched: `:chordpro` reads what notes a chord name
@@ -105,7 +105,8 @@ synced, see `data/sync/implementation/CLAUDE.md`); and the app's first shape.
 
 A definition for another instrument is not used on the page, nor translated: a guitar shape's fingers make another chord
 on a ukulele, and a keyboard plays the chord's own notes. Four frets with no selector are the ukulele's, so the
-mandolin's definitions name it (`{define-mandolin}`, which the editor's Chord shape button writes). A definition follows its chord through every transposition —
+mandolin's definitions name it (`{define-mandolin}`, which the editor's Chord shape button writes); five frets are the
+banjo's, its short fifth string first and only ever open or muted. A definition follows its chord through every transposition —
 the reader's, the file's `{transpose}` and the editor's transpose action, which rewrites the line in place — along the
 neck, in whichever octave a hand can hold it, and one a transposition left needing a fifth finger gives way to the
 player's shape — the keyboard's capo, counted into the transposition there, included. The editor writes definitions (its Chord
@@ -125,8 +126,8 @@ same id, which `ChordTuningsTest` holds it to, strings included), disabled with 
 reads it. One tuning per instrument (`UserPreferences.chordTunings`, written by `withChordTuning`, read by
 `chordTuning()` / `chordTuningOf`: an id of another instrument or one this version does not know is standard), kept on
 the device like the instrument. Half and full step down, drop D to drop B, double drop D, open G, D, E, A, and C, and
-DADGAD on the guitar, the ukulele's low G, D, and baritone tunings, and the mandolin's half step down and its AEAE and
-GDGD cross tunings; what the shapes are in each is `:chordpro`'s `ChordTuning`. The
+DADGAD on the guitar, the ukulele's low G, D, and baritone tunings, the mandolin's half step down and its AEAE and
+GDGD cross tunings, and the banjo's double C, C, open D, and G modal; what the shapes are in each is `:chordpro`'s `ChordTuning`. The
 onboarding writes it from the tuner's answer (`OnboardingInstrument.chordTuningWrittenFor`).
 
 Everything that drew for an instrument draws for a tuning: `ChordDiagrams.tuning`, `SongLyricsInputs.chordTuning`, the

@@ -43,6 +43,7 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.chords_key
 import com.pandulapeter.campfire.presentation.resources.chords_search
 import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument
+import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_banjo
 import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_guitar
 import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_keyboard
 import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_mandolin
@@ -87,6 +88,7 @@ internal fun ChordLibraryControls(
             UserPreferences.ChordInstrument.GUITAR to Res.string.settings_chord_instrument_guitar,
             UserPreferences.ChordInstrument.UKULELE to Res.string.settings_chord_instrument_ukulele,
             UserPreferences.ChordInstrument.MANDOLIN to Res.string.settings_chord_instrument_mandolin,
+            UserPreferences.ChordInstrument.BANJO to Res.string.settings_chord_instrument_banjo,
             UserPreferences.ChordInstrument.KEYBOARD to Res.string.settings_chord_instrument_keyboard,
         ).forEach { (choice, label) ->
             ChoiceChip(

@@ -52,6 +52,20 @@ class ChordVoicingsTest {
     }
 
     @Test
+    fun `the banjo plays the shapes its charts show, its fifth string open only where its note is the chord's`() {
+        mapOf(
+            "G" to "0 0 0 0 0", "C" to "0 2 0 1 2", "D" to "x 0 2 3 4", "Em" to "0 2 0 0 2", "Am" to "x 2 2 1 2", "D7" to "x 0 2 1 4",
+            "G7" to "0 0 0 0 3", "F" to "x 3 2 1 3", "A7" to "0 2 2 2 2", "E7" to "x 0 1 0 2", "Bm" to "x 0 4 3 4",
+        ).forEach { (name, shape) -> assertEquals(shape, first(name, ChordTuning.BANJO), name) }
+        assertEquals("0 5 5 4 5", first("Cm", ChordTuning.BANJO), "the Am shape moved, the fifth string's G ringing in Cm")
+        assertEquals("x 3 3 2 3", first("Bbm", ChordTuning.BANJO), "the Am shape moved, the fifth string's G muted in Bbm")
+        assertEquals("0 0 0 0 2", first("C", ChordTuning.BANJO_DOUBLE_C))
+        assertEquals("0 2 0 0 0", first("G", ChordTuning.BANJO_C))
+        assertEquals("0 0 0 0 0", first("D", ChordTuning.BANJO_OPEN_D))
+        assertEquals("0 2 0 0 2", first("C", ChordTuning.BANJO_G_MODAL))
+    }
+
+    @Test
     fun `a shifted tuning draws the shape that sounds the chord on its strings`() {
         assertEquals("x 1 3 3 3 1", first("A", ChordTuning.GUITAR_HALF_STEP_DOWN), "the standard Bb shape")
         assertEquals("4 6 6 5 4 4", first("G", ChordTuning.GUITAR_HALF_STEP_DOWN), "the standard Ab shape")
@@ -150,6 +164,7 @@ class ChordVoicingsTest {
                     if (shape.fingers == null) assertEquals(sounding.size, sounding.last() - sounding.first() + 1, "$label mutes no string between two that sound")
                     val stopped = frets.filterNotNull().filter { it > 0 }
                     if (stopped.isNotEmpty()) assertTrue(stopped.max() - stopped.min() < 4, label)
+                    instrument.droneString?.let { assertTrue(frets[it] == null || frets[it] == 0, "$label leaves its drone string open or muted") }
                     if (!instrument.playsChordOver) {
                         val bottom = sounding.minBy { tuning.strings[it] + frets[it]!! }
                         val lowest = (tuning.strings[bottom] + frets[bottom]!!) % 12

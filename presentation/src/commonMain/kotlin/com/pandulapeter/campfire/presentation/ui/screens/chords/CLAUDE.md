@@ -16,7 +16,7 @@ The Chords tab: every chord the app can draw, browsed by instrument, tuning, key
 
 `ChordsScreen` is one lazy grid, its first item the controls (`ChordLibraryControls`), which scroll with the chords so
 that a phone on its side keeps a row of diagrams above the keyboard: the instrument (Guitar, Ukulele, Mandolin,
-Keyboard — never Other, which draws nothing, and while Other is the preference none is selected and a line says what to
+Banjo, Keyboard — never Other, which draws nothing, and while Other is the preference none is selected and a line says what to
 do), the tunings of a fretted instrument that has more than one (`ChordTuningChips`, shared with Settings), the twelve
 keys and a search field (`components/SearchField.kt`, the pickers' own, which never takes the focus on its own).
 **The instrument and the tuning are the preferences Settings → Songs draws the songs' diagrams for**, written at once,

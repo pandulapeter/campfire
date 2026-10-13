@@ -348,6 +348,8 @@
     <string name="settings_chord_instrument_ukulele_description">Négy húr: %1$s</string>
     <string name="settings_chord_instrument_mandolin">Mandolin</string>
     <string name="settings_chord_instrument_mandolin_description">Négy húrpár: %1$s</string>
+    <string name="settings_chord_instrument_banjo">Bendzsó</string>
+    <string name="settings_chord_instrument_banjo_description">Öt húr, elöl a rövid: %1$s</string>
     <string name="settings_chord_instrument_keyboard">Billentyű</string>
     <string name="settings_chord_instrument_keyboard_description">Minden akkord hangjai, a capót a transzponálásba számolva</string>
     <string name="settings_chord_instrument_other">Egyéb</string>
@@ -550,7 +552,7 @@
     <!-- The row of chips picking the note the chords listed are built on. -->
     <string name="chords_key">Alaphang</string>
     <string name="chords_search">Akkord keresése</string>
-    <string name="chords_instrument_other">Válassz hangszert, hogy lásd, hogyan kell lefogni az akkordjait. A hét- és nyolchúros gitárnak, a basszusgitárnak, a bendzsónak és a hegedűnek nincsenek akkordábrái.</string>
+    <string name="chords_instrument_other">Válassz hangszert, hogy lásd, hogyan kell lefogni az akkordjait. A hét- és nyolchúros gitárnak, a basszusgitárnak és a hegedűnek nincsenek akkordábrái.</string>
     <!-- A search that names no chord, e.g. "No chord is called “Hmaj”." -->
     <string name="chords_search_no_chord">Nincs „%1$s” nevű akkord.</string>
     <!-- A search that names a chord that has no shape on the instrument, e.g. "C13 has no shape on this instrument." -->

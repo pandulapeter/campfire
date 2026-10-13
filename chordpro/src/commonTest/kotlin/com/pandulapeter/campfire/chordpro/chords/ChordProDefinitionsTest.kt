@@ -43,6 +43,14 @@ class ChordProDefinitionsTest {
     }
 
     @Test
+    fun `five frets are a banjo's, and one that stops its short fifth string is not Campfire's to draw`() {
+        assertEquals(ChordDefinition("C", ChordInstrument.BANJO, ChordVoicing.Fretted(listOf(0, 2, 0, 1, 2))), definitions("{define: C frets 0 2 0 1 2}").single())
+        assertEquals(ChordInstrument.BANJO, definitions("{define-banjo: D frets x 0 2 3 4}").single().instrument)
+        assertIs<ChordProDefinitions.Reading.Other>(ChordProDefinitions.read("A frets 7 2 2 2 2"))
+        assertEquals("{define: C base-fret 1 frets 0 2 0 1 2}", ChordProDefinitions.line("C", ChordVoicing.Fretted(listOf(0, 2, 0, 1, 2)), ChordInstrument.BANJO))
+    }
+
+    @Test
     fun `a keyboard shape is counted from the root`() {
         assertEquals(
             listOf(ChordDefinition("D", ChordInstrument.KEYBOARD, ChordVoicing.Keys(listOf(2, 6, 9)))),
@@ -80,7 +88,7 @@ class ChordProDefinitionsTest {
 
     @Test
     fun `what declares no shape is no definition, and what cannot be read is invalid`() {
-        listOf("G copy G7", "G copyall G7", "G display G/B", "G frets 0 0 0 0 0", "G", "G copy G7 frets 3 2 0 0 0 3").forEach {
+        listOf("G copy G7", "G copyall G7", "G display G/B", "G frets 0 0 0 0 0 0 0", "G", "G copy G7 frets 3 2 0 0 0 3").forEach {
             assertIs<ChordProDefinitions.Reading.Other>(ChordProDefinitions.read(it), it)
         }
         listOf(

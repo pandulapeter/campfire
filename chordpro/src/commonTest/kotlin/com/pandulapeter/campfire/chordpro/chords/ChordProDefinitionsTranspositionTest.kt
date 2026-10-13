@@ -61,6 +61,15 @@ class ChordProDefinitionsTranspositionTest {
     }
 
     @Test
+    fun `a banjo's fifth string stays open where it is, and is muted where its note leaves the chord`() {
+        val c = ChordDefinition("C", ChordInstrument.BANJO, ChordVoicing.Fretted(listOf(0, 2, 0, 1, 2), listOf(0, 2, 0, 1, 3)))
+        assertEquals(ChordVoicing.Fretted(listOf(null, 4, 2, 3, 4), listOf(0, 3, 1, 2, 4)), move(c, 2).voicing)
+        assertEquals(listOf<Int?>(0, 9, 7, 8, 9), (move(c, 7).voicing as ChordVoicing.Fretted).frets, "G keeps the drone's G")
+        val rename = { name: String -> ChordProTransposer.transposeChord(name, 2, preferFlats = false) }
+        assertEquals("{define: D frets 0 4 2 3 4}", ChordProDefinitions.rewrittenLine("{define: C frets 0 2 0 1 2}", "", rename, 2), "the text keeps it as written")
+    }
+
+    @Test
     fun `a shape with an open string moves up the neck, also when transposed down`() {
         val e = ChordDefinition("E", ChordInstrument.GUITAR, ChordVoicing.Fretted(listOf(0, 2, 2, 1, 0, 0), listOf(0, 2, 3, 1, 0, 0)))
         val f = move(e, 1)

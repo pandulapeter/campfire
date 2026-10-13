@@ -38,6 +38,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_expand
+import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_banjo
 import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_guitar
 import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_keyboard
 import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_mandolin
@@ -110,6 +111,7 @@ private val ChordInstrument.nameResource
         ChordInstrument.GUITAR -> Res.string.settings_chord_instrument_guitar
         ChordInstrument.UKULELE -> Res.string.settings_chord_instrument_ukulele
         ChordInstrument.MANDOLIN -> Res.string.settings_chord_instrument_mandolin
+        ChordInstrument.BANJO -> Res.string.settings_chord_instrument_banjo
         ChordInstrument.KEYBOARD -> Res.string.settings_chord_instrument_keyboard
     }
 

@@ -46,6 +46,10 @@ internal enum class OnboardingInstrument(
         chordInstrument = ChordInstrument.MANDOLIN,
         tunerInstruments = listOf(TunerInstrument.MANDOLIN),
     ),
+    BANJO(
+        chordInstrument = ChordInstrument.BANJO,
+        tunerInstruments = listOf(TunerInstrument.BANJO),
+    ),
     KEYBOARD(
         chordInstrument = ChordInstrument.KEYBOARD,
         tunerInstruments = emptyList(),
@@ -53,11 +57,6 @@ internal enum class OnboardingInstrument(
     BASS(
         chordInstrument = ChordInstrument.OTHER,
         tunerInstruments = listOf(TunerInstrument.BASS, TunerInstrument.FIVE_STRING_BASS),
-        isOnlyForTuner = true,
-    ),
-    BANJO(
-        chordInstrument = ChordInstrument.OTHER,
-        tunerInstruments = listOf(TunerInstrument.BANJO),
         isOnlyForTuner = true,
     ),
     VIOLIN(
@@ -136,6 +135,6 @@ internal fun onboardingInstrumentOf(chordInstrument: ChordInstrument, tuning: In
 
 /**
  * The answers worth offering: with the tuner off the answer only decides the chord diagrams, which are drawn for a guitar,
- * a ukulele, a mandolin and a keyboard, so every other instrument would be Something else by another name.
+ * a ukulele, a mandolin, a banjo, and a keyboard, so every other instrument would be Something else by another name.
  */
 internal fun onboardingInstruments(isTunerEnabled: Boolean) = OnboardingInstrument.entries.filter { isTunerEnabled || !it.isOnlyForTuner }

@@ -348,6 +348,8 @@
     <string name="settings_chord_instrument_ukulele_description">Four strings: %1$s</string>
     <string name="settings_chord_instrument_mandolin">Mandolin</string>
     <string name="settings_chord_instrument_mandolin_description">Four pairs of strings: %1$s</string>
+    <string name="settings_chord_instrument_banjo">Banjo</string>
+    <string name="settings_chord_instrument_banjo_description">Five strings, the short one first: %1$s</string>
     <string name="settings_chord_instrument_keyboard">Keyboard</string>
     <string name="settings_chord_instrument_keyboard_description">The notes of each chord, with the capo counted into the transposition</string>
     <string name="settings_chord_instrument_other">Other</string>
@@ -550,7 +552,7 @@
     <!-- The row of chips picking the note the chords listed are built on. -->
     <string name="chords_key">Key</string>
     <string name="chords_search">Find a chord</string>
-    <string name="chords_instrument_other">Choose an instrument to see how its chords are played. Seven- and eight-string guitars, the bass, the banjo, and the violin have no chord diagrams.</string>
+    <string name="chords_instrument_other">Choose an instrument to see how its chords are played. Seven- and eight-string guitars, the bass, and the violin have no chord diagrams.</string>
     <!-- A search that names no chord, e.g. "No chord is called “Hmaj”." -->
     <string name="chords_search_no_chord">No chord is called “%1$s”.</string>
     <!-- A search that names a chord that has no shape on the instrument, e.g. "C13 has no shape on this instrument." -->

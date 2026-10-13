@@ -393,13 +393,14 @@ data class UserPreferences(
 
     /**
      * The instrument the chord diagrams are drawn for, the twin of `:chordpro`'s, which this module does not see. [OTHER]
-     * is an instrument `:chordpro` has no shapes for (a bass, a banjo, an eight-string guitar), so no
+     * is an instrument `:chordpro` has no shapes for (a bass, a violin, an eight-string guitar), so no
      * diagram is drawn: one for the six strings of a standard guitar would be wrong on it, which is worse than none.
      */
     enum class ChordInstrument(val id: String) {
         GUITAR("guitar"),
         UKULELE("ukulele"),
         MANDOLIN("mandolin"),
+        BANJO("banjo"),
         KEYBOARD("keyboard"),
         OTHER("other"),
     }

@@ -19,7 +19,7 @@ package com.pandulapeter.campfire.chordpro.model
  * the chord the page names on those strings.
  *
  * A tuning either has a table of shapes of its own (the standard tunings, drop D, double drop D, open G, D, and C, DADGAD,
- * and the mandolin's GDGD), or is one of those with every string moved by the same interval (half and full step down,
+ * the mandolin's GDGD, and every banjo tuning), or is one of those with every string moved by the same interval (half and full step down,
  * drop C♯ to drop B, open E and A, the ukulele's low G, D, and baritone tunings, and the mandolin's AEAE), whose shapes
  * are that table's, moved along the chords rather than along the neck.
  *
@@ -56,6 +56,11 @@ public enum class ChordTuning(
     MANDOLIN_HALF_STEP_DOWN("mandolin_half_step_down", ChordInstrument.MANDOLIN, listOf(54, 61, 68, 75)),
     MANDOLIN_AEAE("mandolin_aeae", ChordInstrument.MANDOLIN, listOf(57, 64, 69, 76)),
     MANDOLIN_GDGD("mandolin_gdgd", ChordInstrument.MANDOLIN, listOf(55, 62, 67, 74)),
+    BANJO("banjo", ChordInstrument.BANJO, ChordInstrument.BANJO.tuning),
+    BANJO_DOUBLE_C("banjo_double_c", ChordInstrument.BANJO, listOf(67, 48, 55, 60, 62)),
+    BANJO_C("banjo_c", ChordInstrument.BANJO, listOf(67, 48, 55, 59, 62)),
+    BANJO_OPEN_D("banjo_open_d", ChordInstrument.BANJO, listOf(66, 50, 54, 57, 62)),
+    BANJO_G_MODAL("banjo_g_modal", ChordInstrument.BANJO, listOf(67, 50, 55, 60, 62)),
     ;
 
     /** Whether this is its instrument's standard tuning, which a `{define}` and the standard tables are written for. */
@@ -75,7 +80,7 @@ public enum class ChordTuning(
             MANDOLIN_HALF_STEP_DOWN -> MANDOLIN
             MANDOLIN_AEAE -> MANDOLIN_GDGD
             GUITAR, GUITAR_DROP_D, GUITAR_DOUBLE_DROP_D, GUITAR_OPEN_G, GUITAR_OPEN_D, GUITAR_OPEN_C, GUITAR_DADGAD, UKULELE, KEYBOARD, MANDOLIN,
-            MANDOLIN_GDGD,
+            MANDOLIN_GDGD, BANJO, BANJO_DOUBLE_C, BANJO_C, BANJO_OPEN_D, BANJO_G_MODAL,
             -> this
         }
 

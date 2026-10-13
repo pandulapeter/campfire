@@ -18,6 +18,8 @@ import com.pandulapeter.campfire.chordpro.model.ChordInstrument
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_banjo
+import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_banjo_description
 import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_guitar
 import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_guitar_description
 import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_keyboard
@@ -66,6 +68,11 @@ internal fun ChordInstrumentList(
             UserPreferences.ChordInstrument.MANDOLIN,
             stringResource(Res.string.settings_chord_instrument_mandolin),
             stringResource(Res.string.settings_chord_instrument_mandolin_description, stringNames(ChordInstrument.MANDOLIN, chordTunings, notation)),
+        ),
+        Triple(
+            UserPreferences.ChordInstrument.BANJO,
+            stringResource(Res.string.settings_chord_instrument_banjo),
+            stringResource(Res.string.settings_chord_instrument_banjo_description, stringNames(ChordInstrument.BANJO, chordTunings, notation)),
         ),
         Triple(
             UserPreferences.ChordInstrument.KEYBOARD,

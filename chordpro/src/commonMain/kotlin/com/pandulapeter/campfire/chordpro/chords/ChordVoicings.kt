@@ -104,6 +104,7 @@ public object ChordVoicings {
         }
         if (words.size != tuning.strings.size) return null
         val frets = words.map { word -> if (word == MUTED) null else word.toIntOrNull()?.takeIf { it in 0..MAX_FRET } ?: return null }
+        if ((tuning.instrument.droneString?.let { frets[it] } ?: 0) > 0) return null
         return chord?.let { tableShapes(it, tuning).firstOrNull { known -> known.frets == frets } } ?: ChordVoicing.Fretted(frets)
     }
 

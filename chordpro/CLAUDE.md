@@ -399,7 +399,7 @@ what nothing outside the module calls is `internal`.
   into the header for the value to be typed into. A definition is coloured the same way: the chord it names is a
   `CHORD` token inside its value, and one whose shape cannot be read (`ChordProDefinitions.Reading.Invalid`: a fret
   that is no number, fingers that do not match the frets, a value given twice, a selector naming an instrument the
-  shape is not for) is one `INVALID` token; one that is only not Campfire's to draw (a `copy`, a banjo's five strings) is neither. A directive
+  shape is not for) is one `INVALID` token; one that is only not Campfire's to draw (a `copy`, a stopped banjo drone) is neither. A directive
   that says again what a song can only say once — every `MetadataKind` but the repeatable and the timing-change ones,
   counted by `ChordProHeaderLayout.metadataKind`, so a `{t}` after a `{title}` counts — is one
   `DUPLICATE` token from the line after the first that says something on, an empty one included — exactly the lines
@@ -421,10 +421,11 @@ what nothing outside the module calls is `internal`.
   `C Eb G`, a white-key enharmonic or a double accidental falling back to the plain name), which a chord's sheet on the
   song details screen shows under its diagram.
 - `ChordVoicings` / `ChordVoicingTables` — how a chord is played on the guitar, the ukulele, the mandolin (a string
-  for each of its four pairs, G D A E) and the keyboard (`model/ChordInstrument`, `model/ChordVoicing`). The tables,
+  for each of its four pairs, G D A E), the five-string banjo (its short fifth string first, g D G B D) and the keyboard
+  (`model/ChordInstrument`, `model/ChordVoicing`). The tables,
   in a `{define}`'s syntax, always come first: one file per table (`GuitarChordTable`, `UkuleleChordTable`,
-  `MandolinChordTable`, `DropDChordTable`, the open tunings' in `OpenTuningChordTables`, and double drop D's in
-  `ChordVoicingTables`), the shapes Campfire was first shipped with joined by every one of
+  `MandolinChordTable`, `DropDChordTable`, the open tunings' in `OpenTuningChordTables`, the banjo's five in
+  `BanjoChordTables`, and double drop D's in `ChordVoicingTables`), the shapes Campfire was first shipped with joined by every one of
   [chords-db](https://github.com/tombatossals/chords-db) and its corrected fork by
   [Tabsy](https://github.com/tabsy-gr/chords-db) (both MIT), and of ChordPro's own instrument configurations (Artistic
   License 2.0), that sounds exactly the chord it is filed under, keeps the search's rules (a muted string between two
@@ -441,8 +442,8 @@ what nothing outside the module calls is `internal`.
   that neither walks the thousands of shapes. A search finds the rest: every way to stop the strings within four frets up to the twelfth that sounds
   only notes of the chord and all of the ones that make it (the fifth of a chord of four notes or more, and the root
   where there are more notes than strings, may go), with the bass or else the root lowest (not on an instrument that
-  `playsChordOver`, the re-entrant ukulele and the mandolin, whose shapes everybody plays put the fifth or the third
-  under the root: there every string sounds, and a slash chord is played as the chord over it), no muted string between two that sound, open strings only
+  `playsChordOver`, the re-entrant ukulele, the mandolin and the banjo, whose shapes everybody plays put the fifth or the
+  third under the root: there every string sounds, and a slash chord is played as the chord over it), no muted string between two that sound, open strings only
   with a hand in the first five frets (in an open or modal tuning, `ChordTuning.isOpen`, the chord's fifth may sound
   lowest where it is an open string, the drone under open G's six-string G), no more than four fingers (`fingerCount`: a barre at the lowest fret and a finger
   laid across neighbouring strings at one fret each count as one), and no shape that is another with a string left out;
@@ -474,8 +475,16 @@ what nothing outside the module calls is `internal`.
   and full step down, the mandolin's half step down, and the ukulele's low G, D, and baritone read the standard table,
   drop C♯ to drop B drop D's, open E open D's, open A open G's, and the mandolin's AEAE its GDGD's, for the chord moved
   back by the shift — a half step down an A is the standard B♭ shape, `x 1 3 3 3 1`. The search runs on the real
-  strings after the table, as in standard tuning. Seven- and eight-string guitars, the bass, the banjo, and the violin
-  have no tuning here at all: they are Other, and no diagram is drawn for them.
+  strings after the table, as in standard tuning. Seven- and eight-string guitars, the bass, and the violin have no
+  tuning here at all: they are Other, and no diagram is drawn for them.
+- **The banjo's fifth string is a drone** (`ChordInstrument.droneString`): it starts at the fifth fret, so a shape only
+  ever leaves it open or mutes it, open where its note is one of the chord's and muted where not, which keeps every
+  shape sounding exactly its chord. The search offers it nothing else and does not count it among the strings that must
+  sound or the open strings a hand high up the neck rules out; a table shape moved to another root leaves it where it
+  is, open or muted for the chord it lands on, and only moves where the four long strings sound every note it sounds
+  (double C's G7 takes its root from the drone alone). Every banjo tuning — open G, the standard one, double C, C, open
+  D, and G modal — has a table of its own (`BanjoChordTables`, typed for Campfire, no library under a license it can
+  ship having any), since none is another moved by one interval.
 - `ChordTuning.drawsDefinitions` is where a `{define}`, which ChordPro gives no tuning, is drawn: standard tuning and
   the ukulele's low G, the only ones a standard tuning shape sounds right in. `voicingKey` is what the player's choices
   are stored under, the instrument's id there and the tuning's id in any other.
@@ -486,13 +495,14 @@ what nothing outside the module calls is `internal`.
   or no note of the chord) — from the root its chord has in the notation the text is read in, which `normalized`
   re-roots a German definition to (`renamedFromNotation`);
   frets and the base fret stay on a 24-fret neck (`Invalid` past it), and keys past four octaves are wrapped by their
-  note, as the specification says, so no file can make a diagram draw without end; the instrument is the selector's where it names one and otherwise the first one with as many strings (four frets are a ukulele's, a mandolin's only as `{define-mandolin}`); a `copy`, a
+  note, as the specification says, so no file can make a diagram draw without end; the instrument is the selector's where it names one and otherwise the first one with as many strings (four frets are a ukulele's, a mandolin's only as `{define-mandolin}`, five a banjo's; one that stops the banjo's fifth string is `Other`, since its frets count from the neck's fifth); a `copy`, a
   `display` alone or a string count no instrument has is `Other`, and what cannot be read, or gives `base-fret`,
   `frets`, `fingers` or `keys` twice, `Invalid`. The last `{define}` of a chord on an instrument wins, in the place of the
   first; a `{chord}`, which the specification has show a diagram only where it stands, counts only where the song
   defines none, and `rangeOf` sends the caret to the line that counts. `line` writes one the way it is read, with the base fret a diagram would draw and a selector only where the frets alone would name another instrument (`define-mandolin`). `transposed`
   moves one with the song: the name renamed like any chord, a fretted shape moved along the neck, up by the rest of the
-  octave where it has an open string and otherwise whichever of the two octaves a hand can hold, the lower where both or
+  octave where it has an open string (the banjo's drone not counted, which stays as it is and is muted on the page where
+  its note leaves the chord, while the text keeps it as written) and otherwise whichever of the two octaves a hand can hold, the lower where both or
   neither can, the fingering following a barre coming or going (and left out where it would need a fifth finger,
   several fingers came to rest open, or a finger other than the index did, which moving back would put the index on), and a shape no move keeps on the neck left as it is, named as it was; `movedBy`
   adds up, so there and back is zero. `ChordProTransposer` applies it on
