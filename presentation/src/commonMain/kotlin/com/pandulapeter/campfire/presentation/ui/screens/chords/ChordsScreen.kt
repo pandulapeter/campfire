@@ -84,18 +84,21 @@ internal fun ChordsScreen(
     val keys = remember(spelling.accidentals) { chordLibraryKeys(spelling.accidentals) }
     val tuning = userPreferences?.chordTuning()
     val instrument = userPreferences?.instrument ?: UserPreferences.Instrument.GUITAR
-    val storedShapes = tuning?.let { userPreferences?.chordVoicings?.get(it.voicingKey) }.orEmpty()
     val keyIndex = state.keyIndex
     val query = state.query
     // What the tables answer alone is there from the first frame; a chord only the search finds keeps the chords that
-    // were on screen up until it has been found, rather than emptying the page in between.
-    var results by remember {
-        mutableStateOf(tuning?.let { chordLibraryResults(keys, keyIndex, query, notation, it, searchesShapes = false) })
+    // were on screen up until it has been found, rather than emptying the page in between. They are held with the tuning
+    // they were found for, since each carries that tuning's shape, which the new strings would play as another chord.
+    var shown by remember {
+        mutableStateOf(tuning?.let { ChordLibraryShown(it, chordLibraryResults(keys, keyIndex, query, notation, it, searchesShapes = false)) })
     }
     LaunchedEffect(keys, keyIndex, query, notation, tuning) {
-        results = tuning?.let {
-            chordLibraryResults(keys, keyIndex, query, notation, it, searchesShapes = false)
-                ?: withContext(Dispatchers.Default) { chordLibraryResults(keys, keyIndex, query, notation, it) }
+        shown = tuning?.let {
+            ChordLibraryShown(
+                tuning = it,
+                results = chordLibraryResults(keys, keyIndex, query, notation, it, searchesShapes = false)
+                    ?: withContext(Dispatchers.Default) { chordLibraryResults(keys, keyIndex, query, notation, it) },
+            )
         }
     }
     val gridState = rememberRetainedLazyGridState(state.scrollPosition)
@@ -122,7 +125,7 @@ internal fun ChordsScreen(
                 )
                 .bounceScrollableContent(gridState),
             state = gridState,
-            columns = GridCells.Adaptive(minSize = chordCellMinWidth(tuning?.instrument)),
+            columns = GridCells.Adaptive(minSize = chordCellMinWidth(shown?.tuning?.instrument ?: tuning?.instrument)),
             contentPadding = contentPadding.only(
                 start = true,
                 end = true,
@@ -149,43 +152,51 @@ internal fun ChordsScreen(
                     onQueryChanged = { state.query = it },
                 )
             }
-            when (val shown = results) {
-                null -> if (tuning == null) {
-                    item(key = MESSAGE_KEY, span = { GridItemSpan(maxLineSpan) }, contentType = MESSAGE_KEY) {
+            val held = shown
+            // An instrument without shapes says so at once, whatever the last tuning's results still hold.
+            if (tuning == null) {
+                item(key = MESSAGE_KEY, span = { GridItemSpan(maxLineSpan) }, contentType = MESSAGE_KEY) {
+                    ChordLibraryMessage(
+                        modifier = listItemAnimation(gridState),
+                        text = if (instrument == UserPreferences.Instrument.OTHER) {
+                            stringResource(Res.string.chords_instrument_other)
+                        } else {
+                            textResource(Res.string.chords_instrument_without_diagrams, instrumentLabel(instrument))
+                        },
+                    )
+                }
+            } else if (held != null) {
+                when (val results = held.results) {
+                    null -> Unit
+
+                    is ChordLibraryResults.NoChord -> item(key = MESSAGE_KEY, span = { GridItemSpan(maxLineSpan) }, contentType = MESSAGE_KEY) {
                         ChordLibraryMessage(
                             modifier = listItemAnimation(gridState),
-                            text = if (instrument == UserPreferences.Instrument.OTHER) {
-                                stringResource(Res.string.chords_instrument_other)
-                            } else {
-                                textResource(Res.string.chords_instrument_without_diagrams, instrumentLabel(instrument))
-                            },
+                            text = textResource(Res.string.chords_search_no_chord, results.query),
                         )
                     }
-                }
 
-                is ChordLibraryResults.NoChord -> item(key = MESSAGE_KEY, span = { GridItemSpan(maxLineSpan) }, contentType = MESSAGE_KEY) {
-                    ChordLibraryMessage(
-                        modifier = listItemAnimation(gridState),
-                        text = textResource(Res.string.chords_search_no_chord, shown.query),
-                    )
-                }
-
-                is ChordLibraryResults.NoShape -> item(key = MESSAGE_KEY, span = { GridItemSpan(maxLineSpan) }, contentType = MESSAGE_KEY) {
-                    ChordLibraryMessage(
-                        modifier = listItemAnimation(gridState),
-                        text = textResource(Res.string.chords_search_no_shape, shown.name),
-                    )
-                }
-
-                is ChordLibraryResults.Chords -> if (tuning != null) {
-                    items(items = shown.chords, key = { it.name to it.chord.id }, contentType = { CELL_CONTENT_TYPE }) { chord ->
-                        ChordLibraryCell(
+                    is ChordLibraryResults.NoShape -> item(key = MESSAGE_KEY, span = { GridItemSpan(maxLineSpan) }, contentType = MESSAGE_KEY) {
+                        ChordLibraryMessage(
                             modifier = listItemAnimation(gridState),
-                            chord = chord,
-                            tuning = tuning,
-                            selection = selectShape(chord, tuning, storedShapes),
-                            onClick = { viewModel.showDialog(DialogType.ChordReference(chord)) },
+                            text = textResource(Res.string.chords_search_no_shape, results.name),
                         )
+                    }
+
+                    is ChordLibraryResults.Chords -> {
+                        val heldTuning = held.tuning
+                        val storedShapes = userPreferences?.chordVoicings?.get(heldTuning.voicingKey).orEmpty()
+                        // Cells held from another tuning are on their way out: their chords name that tuning's shapes.
+                        val isCurrent = heldTuning == tuning
+                        items(items = results.chords, key = { it.name to it.chord.id }, contentType = { CELL_CONTENT_TYPE }) { chord ->
+                            ChordLibraryCell(
+                                modifier = listItemAnimation(gridState),
+                                chord = chord,
+                                tuning = heldTuning,
+                                selection = selectShape(chord, heldTuning, storedShapes),
+                                onClick = { if (isCurrent) viewModel.showDialog(DialogType.ChordReference(chord)) },
+                            )
+                        }
                     }
                 }
             }

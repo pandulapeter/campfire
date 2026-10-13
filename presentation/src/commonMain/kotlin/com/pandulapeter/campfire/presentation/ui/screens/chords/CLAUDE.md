@@ -38,7 +38,8 @@ chord no shape plays on the instrument, says so in the chords' place.
 with** (`selectShape`: the player's choice for the chord in that tuning, then the app's first), crossfading when that
 changes. The shapes are looked up off the main thread, except where the tables answer every chord on screen
 (`searchesShapes = false`), which is what the tab opens on, so its first frame is already the page; a key that needs
-the search keeps the chords on screen until it is answered. A tap opens `ChordReferenceSheet`
+the search keeps the chords on screen until it is answered, drawn for the tuning they were found for, and not opened,
+after the tuning or the instrument changes (`ChordLibraryShown`). A tap opens `ChordReferenceSheet`
 (`DialogType.ChordReference`): the song details screen's chord sheet without a song around it, the same pager
 (`dialogs/ChordShapePager.kt`), titled the same way and naming a tuning that is not the standard one, **whose page is
 written at once as the player's shape for the chord** — so choosing a shape here changes it in every song, synced like

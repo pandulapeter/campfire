@@ -73,14 +73,15 @@ internal fun ChordLibraryCell(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
+            // Each shape is drawn on the strings it was found for, so the outgoing one never lands on the next tuning's.
             Crossfade(
-                targetState = selection.shape,
+                targetState = selection.shape to tuning,
                 label = "chordLibraryShape",
-            ) { shape ->
+            ) { (shape, shapeTuning) ->
                 ChordDiagram(
-                    modifier = Modifier.size(width = tuning.instrument.diagramWidth, height = tuning.instrument.diagramHeight),
-                    geometry = remember(shape, tuning, chord.chord.root) {
-                        shape?.let { chordDiagramGeometryOf(it, tuning, chord.chord.root) } ?: emptyChordDiagramGeometryOf(tuning.instrument)
+                    modifier = Modifier.size(width = shapeTuning.instrument.diagramWidth, height = shapeTuning.instrument.diagramHeight),
+                    geometry = remember(shape, shapeTuning, chord.chord.root) {
+                        shape?.let { chordDiagramGeometryOf(it, shapeTuning, chord.chord.root) } ?: emptyChordDiagramGeometryOf(shapeTuning.instrument)
                     },
                     description = description,
                 )

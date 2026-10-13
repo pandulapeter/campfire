@@ -55,6 +55,16 @@ internal sealed interface ChordLibraryResults {
 }
 
 /**
+ * The results the Chords tab draws, with the [tuning] they were found for: results held on screen while the next ones are
+ * searched for are drawn on their own strings, since every chord carries the shape it was given for that tuning.
+ */
+@Immutable
+internal data class ChordLibraryShown(
+    val tuning: ChordTuning,
+    val results: ChordLibraryResults?,
+)
+
+/**
  * The chords the Chords tab lists in the key at [keyIndex] of [keys] (see [chordLibraryKeys]) on [tuning], named in
  * [notation], narrowed by [query]: a search that names a chord in the reader's notation (`F#m7b5`, `a`) is that chord
  * alone, whatever key is picked, and any other narrows the key's chords to those whose name holds it (`m7`, `sus`). A

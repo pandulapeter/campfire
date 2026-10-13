@@ -94,4 +94,11 @@ internal class ChordLibraryTest {
         assertNull(chordLibraryResults(keys, 0, "Dbmaj9#11/Ab", ChordNotation.STANDARD, ChordTuning.MANDOLIN_AEAE, searchesShapes = false))
         assertNotNull(chordLibraryResults(keys, 0, "G", ChordNotation.STANDARD, ChordTuning.GUITAR, searchesShapes = false))
     }
+
+    @Test
+    fun `a chord's shape belongs to the tuning it was found for`() {
+        val g = assertIs<ChordLibraryResults.Chords>(results(keyIndex = 7)).chords.first()
+        val dropD = ChordVoicings.all(g.chord, ChordTuning.GUITAR_DROP_D).map(ChordVoicings::write)
+        assertTrue(g.defaultShape?.let(ChordVoicings::write) !in dropD)
+    }
 }

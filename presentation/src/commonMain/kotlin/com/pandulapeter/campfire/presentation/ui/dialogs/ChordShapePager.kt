@@ -84,18 +84,9 @@ internal fun ChordShapePager(
     val shapes by produceState<List<ChordVoicing>?>(null, chord.chord, tuning, selection.source == SelectedShape.Source.DEFINED) {
         value = if (selection.source == SelectedShape.Source.DEFINED) emptyList() else withContext(Dispatchers.Default) { ChordVoicings.all(chord.chord, tuning) }
     }
-    // The pages are decided once the shapes are there and kept while the sheet is up: a stored shape the app does not list
-    // is still the player's, and comes first, but paging away from it must not take its page out from under the pager.
-    val options = remember(shapes) {
-        shapes?.let { all ->
-            val current = selection.shape
-            when {
-                selection.source == SelectedShape.Source.DEFINED || all.isEmpty() -> listOfNotNull(current)
-                current == null || all.any { it.sameShapeAs(current) } -> all
-                else -> listOf(current) + all
-            }
-        }
-    }
+    // The pages are decided once the shapes are there and kept while the sheet is up, so that paging away from a stored
+    // shape the app does not list never takes its page out from under the pager.
+    val options = remember(shapes) { shapes?.let { shapePagerOptions(selection, it) } }
     chord.letterName?.let {
         Text(
             text = it,
@@ -256,6 +247,21 @@ private fun Modifier.diagramSize(instrument: ChordInstrument) = size(
     width = if (instrument.isFretted) FRETTED_WIDTH else KEYBOARD_WIDTH,
     height = if (instrument.isFretted) FRETTED_HEIGHT else KEYBOARD_HEIGHT,
 )
+
+/**
+ * The pages of the sheet for [selection], [all] being every shape the app has for the chord in the sheet's tuning: a
+ * song's definition alone, and otherwise [all], after a stored shape of the player's that the app does not list, which is
+ * still theirs. A default the list lacks was given for another tuning (cells held while the next tuning's are searched
+ * for), and is dropped, since settling on it would store a shape that sounds another chord on these strings.
+ */
+internal fun shapePagerOptions(selection: SelectedShape, all: List<ChordVoicing>): List<ChordVoicing> {
+    val current = selection.shape
+    return when {
+        selection.source == SelectedShape.Source.DEFINED -> listOfNotNull(current)
+        selection.source == SelectedShape.Source.PLAYER && current != null && all.none { it.sameShapeAs(current) } -> listOf(current) + all
+        else -> all
+    }
+}
 
 /** Whether two shapes are fingered on the same frets or keys, whatever either says about the fingers. */
 private fun ChordVoicing.sameShapeAs(other: ChordVoicing) = when (this) {
