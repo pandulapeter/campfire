@@ -40,8 +40,8 @@ import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
  * A chord of the Chords tab with every way it can be played, the song's chord sheet ([ChordShapeSheet]) with no song
  * around it: titled the same way, naming a tuning that is not the standard one under the title, and writing the page it
  * settles on as the player's shape for the chord in that tuning at once, so that the tab and every song follow it. The
- * tuning is the one the tab drew the chord for, which nothing can change while the sheet covers the tab; a preference
- * synced in meanwhile that leaves no instrument closes it.
+ * tuning is the one the tab drew the chord for, which nothing can change while the sheet covers the tab; an instrument
+ * without shapes, which leaves the tab nothing to draw, closes it.
  */
 @Composable
 internal fun ChordReferenceSheet(

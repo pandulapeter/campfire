@@ -48,13 +48,15 @@ import com.pandulapeter.campfire.presentation.ui.tuner.tunerNoticeOf
 import com.pandulapeter.campfire.tuner.api.model.TunerListening
 
 /**
- * The tuner over the song being read, opened from the song details overflow menu, so that a string that went flat
- * between two songs is tuned without leaving the setlist, laid out as the Tuner tab is: its display at full size (compact
- * only in a short window, as on the tab), giving way to its notice the same way, and under them the strings of the
- * instrument in the player's hands, all of it scrolling under the sheet's header. The instrument is the app's one, set
- * from the instrument chip of the Tuner tab, the Chords tab, Settings, or the song's own Chords section, and the
- * reference pitch and the chromatic switch are set on the tab alone, the way the metronome panel plays with the Metronome
- * tab's presets without offering them. It listens while it is up and the app is in front, and the view model stops it as the sheet closes.
+ * The tuner over the song being read, opened from the tuner button of the song's first section (or its overflow menu,
+ * where the chords and the metronome are both switched off and that section is not there), so that a string that went
+ * flat between two songs is tuned without leaving the setlist, laid out as the Tuner tab is: its display at full size
+ * (compact only in a short window, as on the tab), giving way to its notice the same way, and under them the strings of
+ * the instrument in the player's hands, all of it scrolling under the sheet's header. The instrument is the app's one,
+ * set from the instrument chip of the Tuner tab, the Chords tab, Settings, the onboarding, or the chips at the top of the
+ * song's first section, and the reference pitch and the chromatic switch are set on the tab alone, the way the metronome
+ * panel plays with the Metronome tab's presets without offering them. It listens while it is up and the app is in front,
+ * and the view model stops it as the sheet closes.
  */
 @Composable
 internal fun TunerSheet(

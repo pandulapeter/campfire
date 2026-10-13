@@ -77,8 +77,8 @@ internal fun ChordShapeSheet(
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val transpositions by viewModel.transpositions.collectAsStateWithLifecycle()
     val capos by viewModel.capos.collectAsStateWithLifecycle()
-    // The sheet is opened from a song's Chords section, which Other leaves out, so only a preference changed while it was
-    // open gets here without a tuning; there are no shapes to offer then.
+    // The sheet is opened from a song's Chords section, which an instrument without shapes leaves out, so only an
+    // instrument changed while it was open gets here without a tuning; there are no shapes to offer then.
     val tuning = userPreferences.let { if (it == null) ChordTuning.GUITAR else it.chordTuning() } ?: return LaunchedEffect(Unit) { viewModel.dismissSheet(dialog) }
     val spelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
     val notation = spelling.notation.toChordNotation()
