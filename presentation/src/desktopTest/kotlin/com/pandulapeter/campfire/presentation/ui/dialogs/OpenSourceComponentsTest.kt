@@ -36,6 +36,9 @@ class OpenSourceComponentsTest {
         assertTrue("JetBrains Runtime" in namesOf(AppBuild.LINUX) && "ANGLE" !in namesOf(AppBuild.LINUX))
         assertTrue("ANGLE" in namesOf(AppBuild.WINDOWS))
         assertTrue("Inter" in namesOf(AppBuild.WEB) && "SLF4J" !in namesOf(AppBuild.WEB))
+        assertTrue("HarfBuzz" in namesOf(AppBuild.IOS) && "HarfBuzz" in namesOf(AppBuild.WEB) && "HarfBuzz" in namesOf(AppBuild.MACOS) && "HarfBuzz" !in namesOf(AppBuild.ANDROID))
+        assertTrue("piex" in namesOf(AppBuild.MACOS) && "piex" !in namesOf(AppBuild.WEB) && "piex" !in namesOf(AppBuild.WINDOWS))
+        assertTrue("FreeType" in namesOf(AppBuild.WEB) && "FreeType" in namesOf(AppBuild.LINUX) && "FreeType" !in namesOf(AppBuild.IOS))
         AppBuild.entries.forEach { assertEquals("Campfire", namesOf(it).first()) }
     }
 

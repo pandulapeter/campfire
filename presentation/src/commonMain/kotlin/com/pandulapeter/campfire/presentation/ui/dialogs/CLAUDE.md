@@ -91,7 +91,10 @@ below move, vertically only.
 Google's 220 KB list is the Android build's alone), and a row of the README's Third-party software table, in the same
 change; `OpenSourceComponentsTest` checks that every build has every text it lists, what a few builds list, and the
 order. The list was taken from every artifact on the Android, desktop, and web runtime classpaths, whose jars and AARs
-were searched for NOTICE and license files, and from the projects' repositories.
+were searched for NOTICE and license files, and from the projects' repositories, and from the native libraries Skiko
+ships for the desktop, iOS, and the web, whose bundled third-party code (Skia's `third_party`) was found with `strings`:
+Windows and the web are built without the raw image readers (piex, the DNG SDK), and only Linux and the web carry
+FreeType.
 
 ### The dialog stack
 
