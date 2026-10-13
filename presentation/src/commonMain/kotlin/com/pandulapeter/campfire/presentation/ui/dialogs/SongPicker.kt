@@ -48,6 +48,7 @@ import com.pandulapeter.campfire.presentation.ui.components.languageName
 import com.pandulapeter.campfire.presentation.ui.components.listItemAnimation
 import com.pandulapeter.campfire.presentation.ui.components.orderedBy
 import com.pandulapeter.campfire.presentation.ui.components.tagColor
+import com.pandulapeter.campfire.presentation.ui.components.SearchField
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -129,7 +130,7 @@ internal fun SongPicker(
         actions = { SongSortMenu(selected = userPreferences?.sortingMode, onSelected = viewModel::setSortingMode) },
         onDismiss = { viewModel.dismissSheet(dialog) },
     ) { contentPadding ->
-        PickerSearchField(
+        SearchField(
             query = query,
             placeholder = stringResource(Res.string.songs_search),
             onQueryChange = { query = it },

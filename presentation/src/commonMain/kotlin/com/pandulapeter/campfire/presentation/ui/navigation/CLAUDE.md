@@ -14,7 +14,9 @@ The destinations and the back stack.
 
 ### `ui/navigation/CampfireDestination.kt`
 
-`ui/navigation/CampfireDestination.kt` — `NavKey`s: `Songs`, `Setlists`, `Metronome`, `Settings` (top level),
+`ui/navigation/CampfireDestination.kt` — `NavKey`s: `Songs`, `Setlists`, `Metronome`, `Tuner`, `Chords`, `Settings`
+(top level, the middle three `TopLevel.tools`, which the navigation bar may offer behind one item, see `ui/CLAUDE.md`;
+which of them a switch in Settings → Features takes away is `isEnabled`, asked with `FeatureSwitches`),
 `SongDetails(songFileNames, setlistFileName, initialIndex, id)` (keyed by the `id` generated once per push rather than
 by its file names, so renaming a song from the details screen rewrites the entry without Navigation 3 taking it for a
 new one) `SongEditor(fileName, shouldStartInsideFirstSection)` and `ImportReport`, which carries nothing since there is

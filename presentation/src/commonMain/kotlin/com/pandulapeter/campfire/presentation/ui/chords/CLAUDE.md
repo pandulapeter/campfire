@@ -69,7 +69,8 @@ four, a key past them left out, white keys the lighter of the two theme colours 
 filled whole — the root in the second accent, the rest (a slash chord's bass included) in a shade of it moved away from
 the white keys (deeper in the dark theme, paler in the light one).
 
-The **chord sheet** (`ChordShapeSheet`, `DialogType.ChordShape`, closed with the song) is titled "Choose chord shape -
+The **chord sheet** (`ChordShapeSheet`, `DialogType.ChordShape`, closed with the song; its pager, `ChordShapePager.kt`,
+is shared with the Chords tab's sheet, see `ui/screens/chords/CLAUDE.md`) is titled "Choose chord shape -
 G", the label of the screen reader action that opens it, and reads the song as the page plays it, finding the chord by
 its name (gone, it closes): the chord larger, with its
 fingers and notes, its shapes the pages of a `HorizontalPager` through `ChordVoicings.all` (searched off the main

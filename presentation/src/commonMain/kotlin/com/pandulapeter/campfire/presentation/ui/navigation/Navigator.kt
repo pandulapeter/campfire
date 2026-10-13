@@ -113,6 +113,13 @@ internal class Navigator(
     var settingsTab by mutableStateOf(SettingsTab.GENERAL)
 
     /**
+     * The tool that was on screen last, which the navigation bar's Tools item opens again (see `toolsItemDestination`),
+     * starting on the Metronome. Like [settingsTab] it lasts for the session.
+     */
+    var lastTool by mutableStateOf(backStack.lastTool() ?: CampfireDestination.Metronome)
+        private set
+
+    /**
      * The page the onboarding is on, kept here rather than in the screen so that every way back - the desktop's Escape
      * included, which [navigateBack] answers from outside the composition - steps back through the pages before it leaves
      * the screen ([isOnboardingBackToPreviousStep]). It is kept in [savedStateStore] with the back stack, so a process
@@ -196,6 +203,7 @@ internal class Navigator(
         if (isNavigationTransitionRunning && !isPredictiveBackCompleted) navigationGeneration++
         val previousTop = backStack.lastOrNull()
         backStack.update()
+        backStack.lastTool()?.let { lastTool = it }
         backStackListeners.forEach { it(previousTop, backStack) }
         persistBackStack()
     }
@@ -271,12 +279,7 @@ internal class Navigator(
         if (hasUnsavedEditorText()) return false
         // Read from the repository's own state, which the launch has waited for, rather than from userPreferences,
         // which may not have caught up with the read yet.
-        val preferences = userPreferences()
-        val allowedState = state.withoutDisabledFeatures(
-            areSetlistsEnabled = preferences?.areSetlistsEnabled != false,
-            isMetronomeEnabled = preferences?.isMetronomeEnabled != false,
-            isTunerEnabled = preferences?.isTunerEnabled != false,
-        )
+        val allowedState = state.withoutDisabledFeatures(FeatureSwitches.of(userPreferences()))
         if (allowedState.backStack.isEmpty()) return false
         settingsTab = allowedState.settingsTab
         listOf(songsSearch() to allowedState.isSongsSearchOpen, setlistsSearch() to allowedState.isSetlistsSearchOpen).forEach { (search, isOpen) ->
@@ -430,6 +433,8 @@ internal class Navigator(
             updateBackStack(isPredictiveBackCompleted = isPredictiveBackCompleted) { removeAt(lastIndex) }
         }
     }
+
+    private fun List<CampfireDestination>.lastTool() = (lastOrNull() as? CampfireDestination.TopLevel)?.takeIf { it in CampfireDestination.TopLevel.tools }
 
     private companion object {
         const val MAX_SAVED_BACK_STACK_LENGTH = 100_000 // Characters of JSON, about 200 KB as the UTF-16 a Bundle writes.

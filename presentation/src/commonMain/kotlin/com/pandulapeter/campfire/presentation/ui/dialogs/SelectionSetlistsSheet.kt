@@ -36,6 +36,7 @@ import com.pandulapeter.campfire.presentation.ui.components.SetlistSortMenu
 import com.pandulapeter.campfire.presentation.ui.components.checklistItems
 import com.pandulapeter.campfire.presentation.ui.components.listItemAnimation
 import com.pandulapeter.campfire.presentation.ui.components.rememberChecklistOrder
+import com.pandulapeter.campfire.presentation.ui.components.SearchField
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.heldOf
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.selectionBoxState
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.withHeldRecorded
@@ -97,7 +98,7 @@ internal fun SelectionSetlistsSheet(
             actions = { SetlistSortMenu(selected = userPreferences?.setlistSortingMode, onSelected = viewModel::setSetlistSortingMode) },
             onDismiss = { viewModel.dismissSheet(dialog) },
         ) { contentPadding ->
-            PickerSearchField(
+            SearchField(
                 query = query,
                 placeholder = stringResource(Res.string.setlists_search),
                 onQueryChange = { query = it },

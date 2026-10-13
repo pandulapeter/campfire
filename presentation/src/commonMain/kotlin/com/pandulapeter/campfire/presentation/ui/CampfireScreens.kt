@@ -53,6 +53,7 @@ import com.pandulapeter.campfire.presentation.ui.messages.Messages
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeIconBeat
 import com.pandulapeter.campfire.presentation.ui.screens.metronome.MetronomeScreen
 import com.pandulapeter.campfire.presentation.ui.screens.tuner.TunerScreen
+import com.pandulapeter.campfire.presentation.ui.screens.chords.ChordsScreen
 import com.pandulapeter.campfire.presentation.ui.components.ListLayout
 import com.pandulapeter.campfire.presentation.ui.components.minSongColumnWidth
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
@@ -232,12 +233,31 @@ internal fun CampfireScreens(
                     destinations = topLevelDestinations,
                     currentTopLevelDestination = destination,
                     metronomeBeat = metronomeBeat,
+                    lastTool = viewModel.lastTool,
                     onDestinationSelected = viewModel::selectTopLevelDestination,
                 )
             }
         } else {
             null
         }
+    }
+    // The tools the bar offers behind its Tools item, and so the tabs their screens are switched by; none where every
+    // screen has an item of its own. Decided by the kind the window has rather than by the chrome on screen, which hands
+    // over between the two, so that the tabs come and go once as a window crosses from the bar to the rail.
+    val groupedTools = if (areToolsGrouped(chromeKind, topLevelDestinations)) {
+        CampfireDestination.TopLevel.tools.filter { it in topLevelDestinations }
+    } else {
+        emptyList()
+    }
+    val toolScreen: @Composable (CampfireDestination.TopLevel, @Composable () -> Unit) -> Unit = { destination, content ->
+        ToolScreenFrame(
+            destination = destination,
+            tools = groupedTools,
+            isTabRowDrawn = chromeInScreens,
+            contentPadding = shellContentPadding,
+            onToolSelected = viewModel::selectTopLevelDestination,
+            content = content,
+        )
     }
     // What the screens' own lifecycles are compared with, see ScreenSurface.
     val hostLifecycle = LocalLifecycleOwner.current.lifecycle
@@ -312,12 +332,14 @@ internal fun CampfireScreens(
                         navigationBarHeight = navigationBarHeight,
                         chrome = screenChrome(destination),
                     ) {
-                        MetronomeScreen(
-                            viewModel = viewModel,
-                            layout = settingsLayout,
-                            scrollPosition = viewModel.metronomeScrollPosition,
-                            contentPadding = shellContentPadding,
-                        )
+                        toolScreen(destination) {
+                            MetronomeScreen(
+                                viewModel = viewModel,
+                                layout = settingsLayout,
+                                scrollPosition = viewModel.metronomeScrollPosition,
+                                contentPadding = shellContentPadding,
+                            )
+                        }
                     }
                 }
                 entry<CampfireDestination.Tuner>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
@@ -329,12 +351,32 @@ internal fun CampfireScreens(
                         navigationBarHeight = navigationBarHeight,
                         chrome = screenChrome(destination),
                     ) {
-                        TunerScreen(
-                            viewModel = viewModel,
-                            layout = settingsLayout,
-                            scrollPosition = viewModel.tunerScrollPosition,
-                            contentPadding = shellContentPadding,
-                        )
+                        toolScreen(destination) {
+                            TunerScreen(
+                                viewModel = viewModel,
+                                layout = settingsLayout,
+                                scrollPosition = viewModel.tunerScrollPosition,
+                                contentPadding = shellContentPadding,
+                            )
+                        }
+                    }
+                }
+                entry<CampfireDestination.Chords>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
+                    ReportNavigationTransition(viewModel, onNavigationTransitionRunningChanged)
+                    TopLevelScreenSurface(
+                        scrim = navigationScrim,
+                        windowSize = windowSize,
+                        railWidth = railWidth,
+                        navigationBarHeight = navigationBarHeight,
+                        chrome = screenChrome(destination),
+                    ) {
+                        toolScreen(destination) {
+                            ChordsScreen(
+                                viewModel = viewModel,
+                                layout = settingsLayout,
+                                contentPadding = shellContentPadding,
+                            )
+                        }
                     }
                 }
                 entry<CampfireDestination.Settings>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
@@ -403,6 +445,15 @@ internal fun CampfireScreens(
                 }
             },
         )
+        // Not while the screens draw a chrome of their own, each tool screen a row of its own with it (ToolScreenFrame).
+        if (!chromeInScreens && groupedTools.isNotEmpty()) {
+            SharedToolsTabRow(
+                viewModel = viewModel,
+                tools = groupedTools,
+                railWidth = railWidth,
+                contentPadding = shellContentPadding,
+            )
+        }
         ExportHost(
             viewModel = viewModel,
             transition = exportTransition,

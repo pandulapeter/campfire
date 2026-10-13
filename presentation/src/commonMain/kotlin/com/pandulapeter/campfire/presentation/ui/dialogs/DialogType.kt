@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordProLink
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.chords.SongChord
 
 sealed interface DialogType {
     /**
@@ -77,6 +78,11 @@ sealed interface DialogType {
      * now, and finds the chord by the name the page shows it with ([chordName]).
      */
     data class ChordShape(val song: Song, val setlistFileName: String?, val chordName: String) : DialogType
+    /**
+     * One chord of the Chords tab and the other ways it can be played, the chord sheet without a song around it: the
+     * shape it settles on is the player's for the chord, as the song's sheet writes it.
+     */
+    data class ChordReference internal constructor(internal val chord: SongChord) : DialogType
     /**
      * The instrument the chord diagrams are drawn for, opened from the button next to the Chords section's pill, so that
      * the shapes are changed where they are read and not only in Settings, which holds the same preference.

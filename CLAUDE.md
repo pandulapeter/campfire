@@ -38,7 +38,7 @@ app:android / app:desktop / app:ios / app:web   entry points, platform chrome, "
   app:di                                     the Koin application: the one place every module is named, and the
                                              function the four entry points start Koin with
   presentation                               CampfireViewModel, Navigation 3 back stack, Material 3 theme + every screen
-                                             (Songs, Setlists, Metronome, Tuner, Settings, SongDetails, SongEditor,
+                                             (Songs, Setlists, Metronome, Tuner, Chords, Settings, SongDetails, SongEditor,
                                              Onboarding), string resources; the platform shells (system bars, file
                                              pickers, drag and drop, URL opening, desktop key handling) are its
                                              platform source sets
@@ -231,7 +231,7 @@ tab reaches the export screen. The detail is in `:presentation`'s `ui/screens/ex
   their `User-Agent` and their shared pace, the cover download, the import download and the name it gives the file),
   `:data:repository:implementation` (the caches, the edit of many songs at once, the cover cache, and the catalogue searches), `:data:sync:implementation` (`SyncPlanner`, which
   decides what happens to every file in a sync run, the engine and the synced preferences), `:metronome:*` (the sequencer, the synthesizer, the mixer, the engine's state machine, tap tempo and time signatures), `:tuner:*` (the note arithmetic and the presets, the FFT, the pitch detector against synthesized strings and any recording dropped into its `desktopTest` resources, the tracker, the tones, the engine's state machine, the sample ring and the FFT) and
-  `:presentation` (the pure helpers behind its screens: the search index and ranking, the song picker's filter chips, the fast scroller's section
+  `:presentation` (the pure helpers behind its screens: which items the navigation bar puts behind Tools, the Chords tab's keys, chords and search, the search index and ranking, the song picker's filter chips, the fast scroller's section
   index, the import review's groups, counts and group boxes, the setlist slots, stepper labels, section grid and the cutting of sections into columns, a tag's color by its key, the score a layout is chosen by, the narrow columns and the text fitted to a page, row snapping and section measurements of the details screen, the editor's token cache, its search matches and how wide its menu may be, where a song's tempo comes from, what a click plays for, which chords a song plays, in which tuning, and which
   shape each is drawn with, the tuner's note names, the instruments its presets are offered under and what its tunings are called in each notation, the cents it writes, the strings it ticks off, the step its reading is announced at and which notice its page shows, the diagrams' geometry and what the editor's Chord shape button writes, the setlist reorder merge and
   search and the list placeholders, the selection mode's Selection section, its tag and language draft and what its
@@ -276,6 +276,11 @@ What the app does, one line each; the full text is in the file named (`:presenta
   `:presentation`'s `ui/CLAUDE.md`.
 - Haptics tell the hand only what the eye cannot easily follow (the fast scroller above all), through the platform's
   own feedback and its setting: `:presentation`'s `ui/CLAUDE.md`.
+- Every chord the app can draw is browsed in the Chords tab by instrument, tuning, key and name, for the instrument and
+  tuning the songs are drawn for, and a shape picked there is the player's in every song: `:presentation`'s
+  `ui/screens/chords/CLAUDE.md`.
+- Six top level screens do not fit a navigation bar, so there the Metronome, the Tuner and the Chords are tabs behind one
+  Tools item, which a rail and a bar of five or fewer screens leave out: `:presentation`'s `ui/CLAUDE.md`.
 - Every chord of a song is shown fingered at its top, for the tuning picked in Settings; the shape is the song's own
   `{define}` (a standard tuning shape, drawn only where it sounds what it says), then the player's
   library-wide choice, then the app's first: `:presentation`'s `ui/chords/CLAUDE.md`.

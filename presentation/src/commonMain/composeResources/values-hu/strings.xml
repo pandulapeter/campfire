@@ -306,7 +306,7 @@
     <string name="settings_chords">Akkordok</string>
     <string name="settings_chords_description">Az akkordok megjelenítése a szöveg fölött, a hangnemmel, a transzponálással és a capóval együtt. Kikapcsolva minden dalnak csak a szövege látszik.</string>
     <string name="settings_chord_diagrams">Akkordábrák</string>
-    <string name="settings_chord_diagrams_description">A dal elején megmutatja, hogyan kell lefogni a dal minden akkordját.</string>
+    <string name="settings_chord_diagrams_description">A dal elején megmutatja, hogyan kell lefogni a dal minden akkordját, az Akkordok fülön pedig minden akkordot, amit az alkalmazás ismer.</string>
     <string name="settings_metronome_description">A Metronóm fül és a dalok képernyőjén a metronóm, a dalok tempójával és ütemmutatójával együtt</string>
     <string name="settings_tuner_description">A Hangoló fül, és a mikrofon, amelyen keresztül hallgat</string>
     <string name="settings_setlists_description">A Listák fül és a dalok listákhoz adása. Kikapcsolva csak elrejti őket, egyetlen lista sem törlődik.</string>
@@ -542,6 +542,19 @@
     <string name="tuner_open_sound_settings">Hangbeállítások megnyitása</string>
     <string name="tuner_ask_again">Újbóli kérés</string>
     <string name="tuner_try_again">Újra</string>
+
+    <!-- Chords screen, and the Tools item of a navigation bar with no room for every screen, which holds it with the
+         Metronome and the Tuner -->
+    <string name="chords">Akkordok</string>
+    <string name="tools">Eszközök</string>
+    <!-- The row of chips picking the note the chords listed are built on. -->
+    <string name="chords_key">Alaphang</string>
+    <string name="chords_search">Akkord keresése</string>
+    <string name="chords_instrument_other">Válassz hangszert, hogy lásd, hogyan kell lefogni az akkordjait. A hét- és nyolchúros gitárnak, a basszusgitárnak, a bendzsónak és a hegedűnek nincsenek akkordábrái.</string>
+    <!-- A search that names no chord, e.g. "No chord is called “Hmaj”." -->
+    <string name="chords_search_no_chord">Nincs „%1$s” nevű akkord.</string>
+    <!-- A search that names a chord that has no shape on the instrument, e.g. "C13 has no shape on this instrument." -->
+    <string name="chords_search_no_shape">A(z) %1$s akkordnak nincs fogása ezen a hangszeren.</string>
 
     <!-- Song editor screen -->
     <string name="song_editor_edit">Szöveg</string>

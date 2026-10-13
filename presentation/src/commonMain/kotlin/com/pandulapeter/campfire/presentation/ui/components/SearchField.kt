@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.dialogs
+package com.pandulapeter.campfire.presentation.ui.components
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -23,13 +23,14 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_search
-import com.pandulapeter.campfire.presentation.ui.components.MAX_SEARCH_QUERY_LENGTH
-import com.pandulapeter.campfire.presentation.ui.components.rememberClearTextButton
 import org.jetbrains.compose.resources.painterResource
 
-/** Both assignment sheets open with their lists visible; tapping search brings up the keyboard. */
+/**
+ * A field narrowing the list it stands over, which never takes the focus on its own: both assignment sheets and the
+ * Chords tab open with their lists visible, and tapping the field brings up the keyboard.
+ */
 @Composable
-internal fun PickerSearchField(
+internal fun SearchField(
     modifier: Modifier = Modifier,
     query: String,
     placeholder: String,

@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.domain.api.useCases.GetUserPreferencesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.UpdateUserPreferencesUseCase
 import com.pandulapeter.campfire.presentation.ui.chords.withChordTuning
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
+import com.pandulapeter.campfire.presentation.ui.navigation.FeatureSwitches
 import com.pandulapeter.campfire.presentation.ui.platform.LibraryPersistence
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.StateFlow
@@ -73,13 +74,7 @@ internal class PreferencesController(
 
     /** The top level screens the navigation chrome offers, which are only those of the features switched on. */
     val topLevelDestinations = userPreferences
-        .map {
-            CampfireDestination.TopLevel.entries(
-                areSetlistsEnabled = it?.areSetlistsEnabled != false,
-                isMetronomeEnabled = it?.isMetronomeEnabled != false,
-                isTunerEnabled = it?.isTunerEnabled != false,
-            )
-        }
+        .map { CampfireDestination.TopLevel.entries(FeatureSwitches.of(it)) }
         .asState(scope, CampfireDestination.TopLevel.entries)
 
     /**

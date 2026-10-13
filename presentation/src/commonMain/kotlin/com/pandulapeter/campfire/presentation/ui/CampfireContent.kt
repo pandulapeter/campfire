@@ -91,6 +91,7 @@ internal fun CampfireContent(
                 destinations = topLevelDestinations,
                 currentTopLevelDestination = backStack.lastOrNull { it is CampfireDestination.TopLevel } as? CampfireDestination.TopLevel,
                 metronomeBeat = metronomeBeat,
+                lastTool = viewModel.lastTool,
                 onDestinationSelected = viewModel::selectTopLevelDestination,
             )
         },

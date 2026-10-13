@@ -286,6 +286,27 @@ is the system's to dismiss, so there the launch screen is what covers the gap, a
 screen also waits for `areDrawablesLoaded`, for at most five seconds, because Compose resources never reports a drawable
 that failed to load.
 
+### The Tools item
+
+**A navigation bar holds at most five items** (`MAX_NAVIGATION_BAR_ITEMS`), and with every feature on there are six top
+level screens, so there the Metronome, the Tuner and the Chords are offered behind one Tools item (`areToolsGrouped`,
+`navigationBarItems` in `NavigationBarItems.kt`, tested): a wrench, standing where the first tool would, the tools
+shrinking into it as the grouping comes and growing back out of it as it goes. It is only the bar's — a rail lists every
+screen, so a window that grows past the bar hands the tools their own items back — and only while the screens switched
+on do not fit, so a bar of five or fewer never has it. The tools stay top level destinations of their own (their
+addresses, the restored stack and the tuner's listening are unchanged): the item is selected while any of them is on
+top, and opens the one on top, else the one last on screen (`Navigator.lastTool`, for the session, starting on the
+Metronome), else the first one switched on (`toolsItemDestination`).
+
+Their screens are then switched by a row of tabs at their top (`ToolsTabRow`, drawn as the settings screen's are, at a
+fixed 48dp): each tool screen keeps that room above itself (`ToolScreenFrame`, growing and shrinking as the grouping
+comes and goes), and one row is laid over it for all of them (`SharedToolsTabRow`, in `CampfireScreens`), so that its
+indicator slides from tool to tool while the screens fade through under it, and it fades in and out as the stack
+arrives at a tool or leaves. While the screens draw a chrome of their own (a card dealt over them, the export screen)
+the shared row is not drawn and each tool screen draws a copy in its room instead, which moves with the screen, as the
+chrome copies do. A tab is a top level item: tapping the one open scrolls its screen to the top. The tabs switch the
+screens rather than page them, so a swipe never brings the tuner and its microphone onto the screen in passing.
+
 ### Performance mode
 
 **Performance mode** (`UserPreferences.isPerformanceModeEnabled`, called Read only in the interface, the first row of
@@ -470,7 +491,8 @@ by one. In order: **Read only** (`isPerformanceModeEnabled`, first because it de
 allowed to do, and called performance mode in the code); **Chords** (`areChordsEnabled`, stored as the inverse
 `isLyricsOnlyModeEnabled` the lyrics only switch was), off taking with the chords the key, the transposition and the
 capo wherever a song is read, and leaving the chord spelling rows of the Songs tab disabled; **Chord diagrams**
-(`areChordDiagramsEnabled`), disabled while the chords are off, off taking the Chords section off every song, the
+(`areChordDiagramsEnabled`), disabled while the chords are off, off taking the Chords section off every song and the
+Chords tab (which the chords off take too, `FeatureSwitches.isChordLibraryEnabled`), the
 chosen shapes kept (the Songs tab's Instrument row stays enabled, since the keyboard reads the capo as a transposition
 whether or not diagrams are drawn); **Metronome** (`isMetronomeEnabled`), off taking its
 tab, the song details screen's click button and panel, its M key and the tempo and the time signature wherever a song is

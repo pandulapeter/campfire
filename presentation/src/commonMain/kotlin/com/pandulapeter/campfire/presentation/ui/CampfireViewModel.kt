@@ -145,6 +145,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.takeSyncConsentOrigin
 import com.pandulapeter.campfire.presentation.ui.playing.Capos
 import com.pandulapeter.campfire.presentation.ui.playing.effectiveCapo
 import com.pandulapeter.campfire.presentation.ui.playing.withCapo
+import com.pandulapeter.campfire.presentation.ui.screens.chords.ChordLibraryState
 import com.pandulapeter.campfire.presentation.ui.screens.export.ExportController
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportReport
 import com.pandulapeter.campfire.presentation.ui.screens.onboarding.OnboardingStep
@@ -478,6 +479,12 @@ class CampfireViewModel(
 
     /** See [Navigator.tunerScrollPosition]. */
     internal val tunerScrollPosition get() = navigator.tunerScrollPosition
+
+    /** See [Navigator.lastTool]. */
+    internal val lastTool get() = navigator.lastTool
+
+    /** Where the Chords tab was left, see [ChordLibraryState]. */
+    internal val chordLibrary = ChordLibraryState()
 
     /** See [Navigator.settingsScrollPositions]. */
     internal val settingsScrollPositions get() = navigator.settingsScrollPositions

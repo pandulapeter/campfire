@@ -34,22 +34,19 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.ic_chords
 import com.pandulapeter.campfire.presentation.resources.ic_setlists
 import com.pandulapeter.campfire.presentation.resources.ic_settings
+import com.pandulapeter.campfire.presentation.resources.ic_tools
 import com.pandulapeter.campfire.presentation.resources.ic_tuner
-import com.pandulapeter.campfire.presentation.resources.metronome
-import com.pandulapeter.campfire.presentation.resources.tuner
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeIcon
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeIconBeat
 import com.pandulapeter.campfire.presentation.ui.metronome.rememberMetronomeIconBeat
 import com.pandulapeter.campfire.presentation.resources.ic_songs
-import com.pandulapeter.campfire.presentation.resources.setlists
-import com.pandulapeter.campfire.presentation.resources.settings
-import com.pandulapeter.campfire.presentation.resources.songs
+import com.pandulapeter.campfire.presentation.resources.tools
 import com.pandulapeter.campfire.presentation.ui.components.NavigationItemPresence
 import com.pandulapeter.campfire.presentation.ui.components.collapsingNavigationItem
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
-import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
 
 /** Material adds the icon and its padding to this reserved label width, giving every item a 180dp pill. */
@@ -70,7 +67,9 @@ private val EXPANDED_NAVIGATION_RAIL_TOP_PADDING = 4.dp
  * once for the window and stays there while the tabs fade through in place next to it. A card dealt over the deck
  * moves the screen under it a little, and the chrome is part of that screen as far as the eye can tell, so for as long
  * as a card covers the deck or is being taken off it every top level screen draws a copy of it instead (see
- * [CampfireScreens]), which moves with the screen and which the card covers.
+ * [CampfireScreens]), which moves with the screen and which the card covers. Where the bar has no room for every top
+ * level screen, it offers the tools behind one Tools item ([areToolsGrouped]), whose screens then carry a row of tabs
+ * between them ([ToolsTabRow]).
  *
  * @param destinations The top level screens of the features switched on, see `CampfireViewModel.topLevelDestinations`.
  *   The item of one that is not is disabled while it shrinks away, so that it takes no tap and no focus and is not
@@ -78,6 +77,7 @@ private val EXPANDED_NAVIGATION_RAIL_TOP_PADDING = 4.dp
  *   wide rail - and nothing but the shrink should change on screen.
  * @param metronomeBeat Where the Metronome item's icon is in the beat, see [rememberMetronomeIconBeat]: one state for
  *   every copy of the chrome, so that a copy drawn under a card moves in step with the shared one.
+ * @param lastTool The tool the bar's Tools item opens where none is on screen, see [toolsItemDestination].
  */
 @Composable
 internal fun NavigationChrome(
@@ -85,6 +85,7 @@ internal fun NavigationChrome(
     destinations: List<CampfireDestination.TopLevel>,
     currentTopLevelDestination: CampfireDestination.TopLevel?,
     metronomeBeat: MetronomeIconBeat,
+    lastTool: CampfireDestination.TopLevel,
     onDestinationSelected: (CampfireDestination.TopLevel) -> Unit,
 ) {
     if (kind == NavigationChromeKind.EXPANDED_RAIL) {
@@ -142,22 +143,46 @@ internal fun NavigationChrome(
         }
     } else {
         NavigationBar {
-            CampfireDestination.TopLevel.entries.forEach { destination ->
-                NavigationItemPresence(isShown = destination in destinations) { presence ->
+            navigationBarItems(destinations, areToolsGrouped(kind, destinations)).forEach { (item, isShown) ->
+                NavigationItemPresence(isShown = isShown) { presence ->
                     NavigationBarItem(
                         // The bar hands its width out by weight, and the outermost weight is the one it reads, so this
                         // one rather than the item's own decides the slot. A weight cannot be zero.
                         modifier = Modifier
                             .weight(presence().coerceAtLeast(MIN_NAVIGATION_ITEM_WEIGHT))
                             .collapsingNavigationItem(presence = presence, isHorizontal = true),
-                        selected = destination == currentTopLevelDestination,
-                        onClick = { onDestinationSelected(destination) },
-                        enabled = destination in destinations,
+                        selected = when (item) {
+                            is NavigationBarItem.Destination -> item.destination == currentTopLevelDestination
+                            NavigationBarItem.Tools -> currentTopLevelDestination in CampfireDestination.TopLevel.tools
+                        },
+                        onClick = {
+                            when (item) {
+                                is NavigationBarItem.Destination -> onDestinationSelected(item.destination)
+                                NavigationBarItem.Tools -> toolsItemDestination(currentTopLevelDestination, lastTool, destinations)?.let(onDestinationSelected)
+                            }
+                        },
+                        // A tool shrinking into the Tools item is still switched on, so what disables an item is
+                        // whether it is shown rather than whether its feature is.
+                        enabled = isShown,
                         colors = NavigationBarItemDefaults.colors().let {
                             it.copy(disabledIconColor = it.unselectedIconColor, disabledTextColor = it.unselectedTextColor)
                         },
-                        icon = { DestinationIcon(destination = destination, metronomeBeat = metronomeBeat) },
-                        label = { NavigationItemLabel(stringResource(destination.label)) },
+                        icon = {
+                            when (item) {
+                                is NavigationBarItem.Destination -> DestinationIcon(destination = item.destination, metronomeBeat = metronomeBeat)
+                                NavigationBarItem.Tools -> Icon(painter = painterResource(Res.drawable.ic_tools), contentDescription = null)
+                            }
+                        },
+                        label = {
+                            NavigationItemLabel(
+                                stringResource(
+                                    when (item) {
+                                        is NavigationBarItem.Destination -> item.destination.label
+                                        NavigationBarItem.Tools -> Res.string.tools
+                                    },
+                                ),
+                            )
+                        },
                     )
                 }
             }
@@ -175,6 +200,7 @@ private fun DestinationIcon(
     CampfireDestination.Setlists -> Icon(painter = painterResource(Res.drawable.ic_setlists), contentDescription = null)
     CampfireDestination.Metronome -> MetronomeIcon(beat = metronomeBeat, contentDescription = null)
     CampfireDestination.Tuner -> Icon(painter = painterResource(Res.drawable.ic_tuner), contentDescription = null)
+    CampfireDestination.Chords -> Icon(painter = painterResource(Res.drawable.ic_chords), contentDescription = null)
     CampfireDestination.Settings -> Icon(painter = painterResource(Res.drawable.ic_settings), contentDescription = null)
 }
 
@@ -197,12 +223,3 @@ private fun NavigationItemLabel(text: String) {
         ),
     )
 }
-
-private val CampfireDestination.TopLevel.label: StringResource
-    get() = when (this) {
-        CampfireDestination.Songs -> Res.string.songs
-        CampfireDestination.Setlists -> Res.string.setlists
-        CampfireDestination.Metronome -> Res.string.metronome
-        CampfireDestination.Tuner -> Res.string.tuner
-        CampfireDestination.Settings -> Res.string.settings
-    }

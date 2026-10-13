@@ -36,12 +36,17 @@ sealed interface CampfireDestination : NavKey {
     sealed interface TopLevel : CampfireDestination {
 
         companion object {
-            val entries: List<TopLevel> get() = listOf(Songs, Setlists, Metronome, Tuner, Settings)
+            val entries: List<TopLevel> get() = listOf(Songs, Setlists, Metronome, Tuner, Chords, Settings)
+
+            /**
+             * The top level screens that are tools to reach for while playing rather than places the library is read in,
+             * in the order the chrome lists them: where a navigation bar has no room for every top level screen, these are
+             * the ones it offers behind one Tools item (see `navigationBarItems`).
+             */
+            val tools: List<TopLevel> get() = listOf(Metronome, Tuner, Chords)
 
             /** The top level screens the navigation chrome offers, which leaves out those of the features switched off. */
-            fun entries(areSetlistsEnabled: Boolean, isMetronomeEnabled: Boolean, isTunerEnabled: Boolean) = entries.filter {
-                CampfireDestination.isEnabled(it, areSetlistsEnabled = areSetlistsEnabled, isMetronomeEnabled = isMetronomeEnabled, isTunerEnabled = isTunerEnabled)
-            }
+            internal fun entries(features: FeatureSwitches) = entries.filter { CampfireDestination.isEnabled(it, features) }
 
             /**
              * Maps a [NavEntry][androidx.navigation3.runtime.NavEntry] content key back to the destination it
@@ -55,14 +60,15 @@ sealed interface CampfireDestination : NavKey {
 
         /**
          * Whether [destination] belongs to a feature that is switched on: the setlists screen and a song read from a
-         * setlist to the setlists, the metronome screen to the metronome, the tuner screen to the tuner. Everything else is
-         * always there.
+         * setlist to the setlists, the metronome screen to the metronome, the tuner screen to the tuner, the chords screen
+         * to the chord diagrams. Everything else is always there.
          */
-        fun isEnabled(destination: CampfireDestination, areSetlistsEnabled: Boolean, isMetronomeEnabled: Boolean, isTunerEnabled: Boolean) = when (destination) {
-            Setlists -> areSetlistsEnabled
-            Metronome -> isMetronomeEnabled
-            Tuner -> isTunerEnabled
-            is SongDetails -> areSetlistsEnabled || destination.setlistFileName == null
+        internal fun isEnabled(destination: CampfireDestination, features: FeatureSwitches) = when (destination) {
+            Setlists -> features.areSetlistsEnabled
+            Metronome -> features.isMetronomeEnabled
+            Tuner -> features.isTunerEnabled
+            Chords -> features.isChordLibraryEnabled
+            is SongDetails -> features.areSetlistsEnabled || destination.setlistFileName == null
             else -> true
         }
     }
@@ -85,6 +91,12 @@ sealed interface CampfireDestination : NavKey {
     @Serializable
     data object Tuner : TopLevel {
         override val contentKey = "tuner"
+    }
+
+    /** Every chord the app can draw, browsed by instrument, tuning, key and name, see `ChordsScreen`. */
+    @Serializable
+    data object Chords : TopLevel {
+        override val contentKey = "chords"
     }
 
     @Serializable
