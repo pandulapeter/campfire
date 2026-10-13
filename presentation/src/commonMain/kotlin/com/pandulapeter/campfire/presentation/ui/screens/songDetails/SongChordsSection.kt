@@ -195,6 +195,8 @@ private fun ChordRowsBlock(
     )
     val pressColor = MaterialTheme.colorScheme.onSurface.copy(alpha = PRESSED_ALPHA)
     val shapeCrossfade = rememberChordShapeCrossfade(layouts)
+    // One for every layer of every fading cell, its alpha set before each, rather than one allocated per layer per frame.
+    val layerPaint = remember { Paint() }
     val measurePolicy = remember(layouts, firstSlot, lastSlot, isLastSlot) { ChordRowsMeasurePolicy(layouts, firstSlot, lastSlot, isLastSlot) }
     Layout(
         modifier = modifier
@@ -295,6 +297,7 @@ private fun ChordRowsBlock(
                             diagramTextMeasurer = diagramTextMeasurer,
                             fadingOut = shapeCrossfade.fadingOut[cell],
                             fadeProgress = shapeCrossfade.progress.value,
+                            layerPaint = layerPaint,
                         )
                         x += cellWidth + layouts.gap
                     }
@@ -324,6 +327,7 @@ private fun DrawScope.drawChordCell(
     diagramTextMeasurer: TextMeasurer,
     fadingOut: ChordDiagramGeometry?,
     fadeProgress: Float,
+    layerPaint: Paint,
 ) {
     val name = layouts.names[cell]
     val secondName = layouts.secondNames[cell]
@@ -355,8 +359,8 @@ private fun DrawScope.drawChordCell(
         if (fadingOut == null || fadeProgress >= 1f) {
             drawDiagram(layouts.geometries[cell])
         } else {
-            withLayerAlpha(alpha = 1f - fadeProgress, area = area) { drawDiagram(fadingOut) }
-            withLayerAlpha(alpha = fadeProgress, area = area) { drawDiagram(layouts.geometries[cell]) }
+            withLayerAlpha(alpha = 1f - fadeProgress, area = area, paint = layerPaint) { drawDiagram(fadingOut) }
+            withLayerAlpha(alpha = fadeProgress, area = area, paint = layerPaint) { drawDiagram(layouts.geometries[cell]) }
         }
     }
 }
@@ -364,11 +368,15 @@ private fun DrawScope.drawChordCell(
 /**
  * Draws [block] at [alpha] as one picture rather than stroke by stroke, since a diagram paints the background over its
  * own lines (under a dot, inside a ring), and those would show through one another at any alpha less than whole. The
- * layer reaches a diagram's size past [area] all around, since a stroke on its edge is drawn half outside it.
+ * layer reaches [LAYER_MARGIN] of the diagram's shorter side past [area] all around, since a stroke on its edge is drawn
+ * half outside it, and no stroke of a diagram is that wide; no further, since every fading cell draws two layers a frame.
+ * [paint] is read as the layer is saved, so one serves every layer.
  */
-private inline fun DrawScope.withLayerAlpha(alpha: Float, area: Size, block: () -> Unit) {
+private inline fun DrawScope.withLayerAlpha(alpha: Float, area: Size, paint: Paint, block: () -> Unit) {
     val canvas = drawContext.canvas
-    canvas.saveLayer(Rect(-area.width, -area.height, area.width * 2, area.height * 2), Paint().apply { this.alpha = alpha })
+    val margin = minOf(area.width, area.height) * LAYER_MARGIN
+    paint.alpha = alpha
+    canvas.saveLayer(Rect(-margin, -margin, area.width + margin, area.height + margin), paint)
     block()
     canvas.restore()
 }
@@ -412,4 +420,5 @@ private class ChordRowsMeasurePolicy(
 private const val PRESS_HIGHLIGHT_DELAY_MILLIS = 100L
 
 private const val PRESSED_ALPHA = 0.1f
+private const val LAYER_MARGIN = 0.1f
 private val PRESSED_CORNER_RADIUS = 8.dp
