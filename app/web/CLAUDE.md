@@ -227,9 +227,10 @@ the two entries. The deployment's is the custom domain rather than `pandulapeter
 which redirects to it: the page is always running on the custom domain when it asks, and the service compares the URI as a
 string before any redirect could come into it.
 The answer therefore always lands on the songs' address, with the code in the query string: `restore` reports that
-this start up came back from a consent page (whatever the service answered) and `CampfireViewModel` opens the Library
-tab of Settings, which is the screen the user pressed the button on and which gets two history entries on top of the
-songs, `settings/general` and `settings/library`, since a Back from a tab other than General goes to General first. The
+this start up came back from a consent page (whatever the service answered) and `CampfireViewModel` opens the screen the
+user pressed the button on, which the tab's session storage remembers across the trip (`SyncConsentOrigin`): the Library
+tab of Settings, which gets two history entries on top of the songs, `settings/general` and `settings/library`, since a
+Back from a tab other than General goes to General first, or the onboarding on its Dropbox page. The
 query string is left alone by the app's history handling until the authenticator has read it, and taken out with the
 history entry's state kept. Going Back from the consent page instead reloads the page at the address it was left from.
 

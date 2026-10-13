@@ -167,9 +167,11 @@ internal fun SongList(
     val shouldShowChords = userPreferences?.areChordsEnabled != false
     // The tempo is what the click plays, so it goes with the metronome.
     val isMetronomeEnabled = userPreferences?.isMetronomeEnabled != false
-    // And either can be left off the cards by the reader, see UserPreferences.isKeyShown and isTempoShown.
-    val isKeyShown = userPreferences?.isKeyShown != false
-    val isTempoShown = isMetronomeEnabled && userPreferences?.isTempoShown != false
+    // And each can be left off the cards by the reader, see UserPreferences.songCardDetails.
+    val cardDetails = userPreferences?.songCardDetails ?: UserPreferences.CardDetails.SongsDefault
+    val isKeyShown = cardDetails.isKeyShown
+    val isTempoShown = isMetronomeEnabled && cardDetails.isTempoShown
+    val isDurationShown = cardDetails.isDurationShown
     val isCoverArtEnabled = userPreferences?.isCoverArtEnabled == true
     val chordSpelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
     val filePicker = LocalFilePicker.current
@@ -353,6 +355,7 @@ internal fun SongList(
                             key = key.takeIf { isKeyShown },
                             tempo = tempo.bpm.takeIf { isTempoShown },
                             shouldShowChords = shouldShowChords,
+                            duration = song.duration?.takeIf { isDurationShown },
                             coverArtUrl = song.coverArtUrl?.takeIf { isCoverArtEnabled },
                             labelsOnEverySong = labelsOnEverySong,
                             songFilter = songFilter,

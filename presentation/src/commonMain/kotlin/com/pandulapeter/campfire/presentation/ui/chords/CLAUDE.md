@@ -40,8 +40,10 @@ intrinsic measurement at a candidate width already counts the rows they wrap int
 section's width; a screen reader reads it row by row.
 
 It is a pill folding it (`UserPreferences.isChordSectionFolded`, one fold for every song, in read only mode too),
-followed outside read only mode by a pencil (`ChordDiagrams.onInstrumentClicked`, a `SongToolButton` as tall as the pill)
-opening the **instrument sheet** (`ChordInstrumentSheet`, `DialogType.ChordInstrument`): the Settings list
+followed outside read only mode, and only while the section is unfolded, by the instrument's name and a chevron
+(`ChordInstrumentChip`, a tonal pill as tall as the section's, `ChordDiagrams.onInstrumentClicked`; it grows out of the
+pill and fades in as the section unfolds and shrinks back into it as it folds, scaled rather than widened, so the
+section's measured size never passes through a width in between), since diagrams for the wrong instrument look as right as any, opening the **instrument sheet** (`ChordInstrumentSheet`, `DialogType.ChordInstrument`): the Settings list
 (`components/ChordInstrumentList.kt`, shared) without Other, which would take the section away with the way back, a pick
 written at once and closing the sheet — and
 rows of cells — the name in the chords' style and accent over its diagram, growing with the text size, wrapping rather

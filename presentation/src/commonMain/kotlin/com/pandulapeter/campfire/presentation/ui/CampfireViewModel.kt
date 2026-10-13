@@ -133,13 +133,17 @@ import com.pandulapeter.campfire.presentation.ui.navigation.followingSongRename
 import com.pandulapeter.campfire.presentation.ui.navigation.isShowingSong
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.LibraryPersistence
+import com.pandulapeter.campfire.presentation.ui.platform.SyncConsentOrigin
+import com.pandulapeter.campfire.presentation.ui.platform.keepSyncConsentOrigin
 import com.pandulapeter.campfire.presentation.ui.platform.requestLibraryPersistence
+import com.pandulapeter.campfire.presentation.ui.platform.syncConsentOriginOf
+import com.pandulapeter.campfire.presentation.ui.platform.takeSyncConsentOrigin
 import com.pandulapeter.campfire.presentation.ui.playing.Capos
 import com.pandulapeter.campfire.presentation.ui.playing.effectiveCapo
 import com.pandulapeter.campfire.presentation.ui.playing.withCapo
 import com.pandulapeter.campfire.presentation.ui.screens.export.ExportController
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportReport
-import com.pandulapeter.campfire.presentation.ui.screens.onboarding.OnboardingFeatures
+import com.pandulapeter.campfire.presentation.ui.screens.onboarding.OnboardingStep
 import com.pandulapeter.campfire.presentation.ui.screens.onboarding.onboardingSteps
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.SetlistWithSongs
 import com.pandulapeter.campfire.presentation.ui.screens.settings.DemoLibraryOffer
@@ -1036,7 +1040,7 @@ class CampfireViewModel(
         libraryState.startLoading()
         viewModelScope.launch { firstRunController.plantDemoLibraryOnFirstRun() }
         viewModelScope.launch { firstRunController.showWhatsNewOnVersionChange() }
-        syncController.startRestoring(isFirstLaunch = isFirstLaunch, onConsentAnswered = ::openSyncSettingsAfterConsent)
+        syncController.startRestoring(isFirstLaunch = isFirstLaunch, onConsentAnswered = ::showSyncConsentAnswer)
         songTextStore.startFollowingFiles()
         importController.startQueue(firstRunController.demoLibraryDecision)
         dialogHost.startClosingWithSong(allSongs = allSongs, isLoading = isLoading, songsBeingRenamed = songsBeingRenamed)
@@ -1101,19 +1105,34 @@ class CampfireViewModel(
         firstRunController.navigateOnLaunch(resolve)
 
     /**
-     * Shows the answer to a consent page the app was sent away to, which is where the user was when they left: Settings,
-     * on the tab holding the sync section. Only onto a stack nobody has built on since the app started - the songs the
-     * app opens on, or the settings screen Android brings back after reclaiming the process behind the browser. The
-     * code exchange this follows can take a minute on a bad network, and a user who has gone somewhere else meanwhile
-     * has moved on: the settings screen says the same thing whenever they get there, and an editor they opened in the
-     * meantime holds text that nothing but its own ways out may take away.
+     * Shows the answer to a consent page the app was sent away to, which is where the user was when they left
+     * ([takeSyncConsentOrigin]): the onboarding's Dropbox page, over the settings screen where that was what opened it, or
+     * Settings, on the tab holding the sync section. Only onto a stack nobody has built on since the app started - the
+     * songs the app opens on, or the settings screen Android brings back after reclaiming the process behind the
+     * browser; an onboarding Android brings back is already on the page that says how it went. The code exchange this
+     * follows can take a minute on a bad network, and a user who has gone somewhere else meanwhile has moved on: the
+     * settings screen says the same thing whenever they get there, and an editor they opened in the meantime holds text
+     * that nothing but its own ways out may take away.
      */
-    private fun openSyncSettingsAfterConsent() {
+    private fun showSyncConsentAnswer() {
+        // Taken whatever happens next, so that it cannot be mistaken later for where another consent was asked from.
+        val origin = takeSyncConsentOrigin()
         val stack = backStack.toList()
         if (stack != listOf(CampfireDestination.Songs) && stack != listOf(CampfireDestination.Songs, CampfireDestination.Settings)) return
+        when (origin) {
+            SyncConsentOrigin.ONBOARDING -> navigator.openOnboarding(isOpenedFromSettings = false, step = OnboardingStep.SYNC)
+            SyncConsentOrigin.ONBOARDING_FROM_SETTINGS -> {
+                openSettingsOn(SettingsTab.GENERAL)
+                navigator.openOnboarding(isOpenedFromSettings = true, step = OnboardingStep.SYNC)
+            }
+            SyncConsentOrigin.SETTINGS, null -> openSettingsOn(SettingsTab.LIBRARY)
+        }
+    }
+
+    private fun openSettingsOn(tab: SettingsTab) {
         // Not through the re-selection of an open settings screen, which would send it back to General a moment after.
         if (backStack.lastOrNull() != CampfireDestination.Settings) selectTopLevelDestination(CampfireDestination.Settings)
-        settingsTab = SettingsTab.LIBRARY
+        settingsTab = tab
     }
 
     fun selectTopLevelDestination(destination: CampfireDestination.TopLevel) {
@@ -1136,14 +1155,6 @@ class CampfireViewModel(
     /** See [Navigator.openOnboarding]; the settings screen's way into it, a first run's being [FirstRunController]'s. */
     fun openOnboarding() = navigator.openOnboarding(isOpenedFromSettings = true)
 
-    /** Switches the onboarding's four features as a role it offers sets them, see `OnboardingRole`. */
-    internal fun applyOnboardingFeatures(features: OnboardingFeatures) {
-        setChordsEnabled(features.areChordsEnabled)
-        setSetlistsEnabled(features.areSetlistsEnabled)
-        setMetronomeEnabled(features.isMetronomeEnabled)
-        setTunerEnabled(features.isTunerEnabled)
-    }
-
     /** See [Navigator.showNextOnboardingStep]. */
     fun showNextOnboardingStep() = navigator.showNextOnboardingStep()
 
@@ -1157,7 +1168,6 @@ class CampfireViewModel(
     internal fun onboardingSteps(preferences: UserPreferences?) = onboardingSteps(
         canConnectDropbox = SyncProviderId.DROPBOX in syncProviders,
         areChordsEnabled = preferences?.areChordsEnabled != false,
-        isMetronomeEnabled = preferences?.isMetronomeEnabled != false,
         isTunerEnabled = preferences?.isTunerEnabled != false,
     )
 
@@ -1647,9 +1657,9 @@ class CampfireViewModel(
 
     fun setSongDetailsLookupEnabled(value: Boolean) = preferencesController.setSongDetailsLookupEnabled(value)
 
-    fun setKeyShown(value: Boolean) = preferencesController.setKeyShown(value)
+    fun setSongCardDetails(value: UserPreferences.CardDetails) = preferencesController.setSongCardDetails(value)
 
-    fun setTempoShown(value: Boolean) = preferencesController.setTempoShown(value)
+    fun setSetlistCardDetails(value: UserPreferences.CardDetails) = preferencesController.setSetlistCardDetails(value)
 
     fun setSectionNumberingEnabled(value: Boolean) = preferencesController.setSectionNumberingEnabled(value)
 
@@ -1663,8 +1673,10 @@ class CampfireViewModel(
 
     // Sync
 
-    fun connectSyncProvider(providerId: SyncProviderId, completionPage: AuthorizationCompletionPage) =
+    fun connectSyncProvider(providerId: SyncProviderId, completionPage: AuthorizationCompletionPage) {
+        keepSyncConsentOrigin(syncConsentOriginOf(backStack.lastOrNull()))
         syncController.connectSyncProvider(providerId, completionPage)
+    }
 
     fun cancelSyncConnection() = syncController.cancelSyncConnection()
 

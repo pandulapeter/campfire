@@ -186,6 +186,8 @@ private fun CampfireDialog(
         DialogType.ChordInstrument -> ChordInstrumentSheet(viewModel = viewModel, dialog = DialogType.ChordInstrument)
         DialogType.Tuner -> TunerSheet(viewModel = viewModel, dialog = DialogType.Tuner)
 
+        DialogType.AppLanguage -> AppLanguageSheet(viewModel = viewModel)
+
         is DialogType.SetlistPicker -> SetlistPicker(
             viewModel = viewModel,
             dialog = dialog,

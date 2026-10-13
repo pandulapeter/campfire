@@ -251,8 +251,8 @@ the first batch of the library read or a finished read that found none — and, 
 on (`navigateOnLaunch`, the web build's address), the place found once the whole library is in.
 
 Nothing on the back stack is animated while the launch screen is up (`hasShownApp`), since whatever is put there behind
-it — that place, or Settings after a consent page — only onto a stack the user has not built on since the app started
-(`openSyncSettingsAfterConsent`), since the code exchange it follows can outlast the launch screen by a minute — would
+it — that place, or Settings or the onboarding after a consent page — only onto a stack the user has not built on since the app started
+(`showSyncConsentAnswer`), since the code exchange it follows can outlast the launch screen by a minute — would
 otherwise still be sliding in as the app is uncovered. Holding it through that read costs none of the time the read was
 going to take anyway, and what it saves is the handful of frames the song list would otherwise be opened on its loading
 indicator for — a startup screen handing over to a spinner being two startup screens in a row, which is the very thing
@@ -375,12 +375,13 @@ making the request, not Campfire.
 
 ### How a song is played is set in the song itself
 
-**The key and the tempo can each be left off what a song shows** (`UserPreferences.isKeyShown`, `isTempoShown`, in
-Settings → Songs and on the onboarding's "What matters at a glance?" page): the key off every song card and, with it, the
-transposition stepper off the top of the song, the capo staying; the tempo off every card, off the top of the song with
-the time signature, and off the tempo changes inside it, while the click still plays it and the metronome's panel still
-sets it. They only ever narrow the chords and the metronome switches, which take the key and the tempo away whatever
-these say.
+**What a song card says after its artist is chosen for each list on its own** (`UserPreferences.songCardDetails` and
+`setlistCardDetails`, chips in Settings → Songs and on the onboarding's "What matters at a glance?" page): the key, the
+tempo, and the duration, the Songs screen's showing no duration by default and the Setlists screen's all three, since a
+setlist is where a set is timed. They only reach the cards: the top of a song always shows its key and tempo, which is
+where they are changed. They only ever narrow the chords and the metronome switches, which take the key and the tempo
+away whatever these say, and a card that says less is given a narrower column (`minSongColumnWidth`, see
+`components/CLAUDE.md`).
 
 **How a song is played is set in the song itself**: the transposition, the capo, the tempo and the time signature — the
 four values that decide what is played rather than what the song is — are the first section of the song details screen's

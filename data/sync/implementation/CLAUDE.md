@@ -263,7 +263,9 @@ Tested with `commonTest`, run with `./gradlew :data:sync:implementation:desktopT
   request, before anything restores them (`ForgetSyncConnectionUseCase`), so no run starts on an account nobody
   connected here. One that cannot forget them notes that it still owes it, in a file of its own (removed with the
   app, unlike the Keychain), and every start up tries again and restores nothing until it has; connecting on this
-  installation crosses the note off.
+  installation crosses the note off. A start up that brings the answer to a waiting authorization forgets nothing,
+  even where it looks like a first launch (the one before could not write its preferences): that answer only comes
+  back to the installation that asked, and `restore` finishes it with the redirect the forgetting took up.
 - A run belongs to the **app**, not to the screen that started it: `SyncRepository` is a singleton with its own
   scope, so a run carries on while the user moves around or leaves. Android keeps the process alive with a
   foreground service and iOS with a background task, both driven by `SyncNotifier`, which each app shell provides

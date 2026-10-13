@@ -36,7 +36,7 @@ class NavigatorTest {
     private var isReordering = false
     private var isSelecting = false
     private var topLevelDestinations = CampfireDestination.TopLevel.entries
-    private var onboardingSteps = listOf(OnboardingStep.WELCOME, OnboardingStep.ROLE, OnboardingStep.DONE)
+    private var onboardingSteps = listOf(OnboardingStep.WELCOME, OnboardingStep.FEATURES, OnboardingStep.AT_A_GLANCE)
     private val savedStateHandle = SavedStateHandle()
     private val songsSearch = SearchState()
     private val setlistsSearch = SearchState()
@@ -130,9 +130,9 @@ class NavigatorTest {
         navigator.openOnboarding(isOpenedFromSettings = true)
         navigator.showNextOnboardingStep()
         navigator.showNextOnboardingStep()
-        assertEquals(OnboardingStep.DONE, navigator.onboardingStep)
+        assertEquals(OnboardingStep.AT_A_GLANCE, navigator.onboardingStep)
         navigator.navigateBack()
-        assertEquals(OnboardingStep.ROLE, navigator.onboardingStep)
+        assertEquals(OnboardingStep.FEATURES, navigator.onboardingStep)
         navigator.navigateBack()
         assertEquals(OnboardingStep.WELCOME, navigator.onboardingStep)
         navigator.navigateBack()
@@ -156,7 +156,7 @@ class NavigatorTest {
         navigator.showNextOnboardingStep()
         navigator.openOnboarding(isOpenedFromSettings = false)
         assertEquals(2, navigator.backStack.size)
-        assertEquals(OnboardingStep.ROLE, navigator.onboardingStep)
+        assertEquals(OnboardingStep.FEATURES, navigator.onboardingStep)
         navigator.closeOnboarding()
         assertEquals(listOf<CampfireDestination>(CampfireDestination.Songs), navigator.backStack.toList())
     }

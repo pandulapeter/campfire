@@ -70,6 +70,9 @@ internal class SyncConnectionManager(
     /** The failed connection a [connect] started from, which backing out of it returns to, see [stateAfterBackingOut]. */
     private var stateBeforeConnecting: SyncState? = null
 
+    /** A consent page's answer [forgetStoredConnection] took up and left for [restoreConnection] to finish. */
+    private var redirectKeptForRestore: String? = null
+
     suspend fun restore() = restoreMutex.withLock { restoreConnection() }
 
     private suspend fun restoreConnection(): SyncRepository.RestoreResult {
@@ -78,7 +81,7 @@ internal class SyncConnectionManager(
         // stored credentials are about to become. A redirect that no authorization is waiting for answers nothing -
         // Android hands a spent one over again when a finished task is reopened from the recents - and must not keep
         // the account that is connected from being restored below.
-        val redirectUri = authenticator.consumePendingRedirect()
+        val redirectUri = redirectKeptForRestore?.also { redirectKeptForRestore = null } ?: authenticator.consumePendingRedirect()
         if (redirectUri != null && pendingAuthorizationStore.loadPendingAuthorization() != null) {
             return SyncRepository.RestoreResult(
                 isConnected = completePendingAuthorization(redirectUri),
@@ -268,7 +271,18 @@ internal class SyncConnectionManager(
     }
 
     suspend fun forgetStoredConnection() {
-        restoreMutex.withLock { withContext(NonCancellable) { forgetStoredConnectionNow() } }
+        restoreMutex.withLock {
+            // A consent page answered for an authorization that is waiting was asked for by this installation, since
+            // the answer only ever comes back to the app that sent the user away: the start up that answers it may
+            // still look like a first one where the launch before it could not write its preferences, and forgetting
+            // here would throw the user's consent away with the previous installation's credentials it is not.
+            val redirectUri = authenticator.consumePendingRedirect()
+            if (redirectUri != null && pendingAuthorizationStore.loadPendingAuthorization() != null) {
+                redirectKeptForRestore = redirectUri
+                return@withLock
+            }
+            withContext(NonCancellable) { forgetStoredConnectionNow() }
+        }
     }
 
     /**

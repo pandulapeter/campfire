@@ -113,9 +113,9 @@ internal class SyncController(
      * @param onConsentAnswered Shows the answer to a consent page the app was sent away to.
      */
     fun startRestoring(isFirstLaunch: Deferred<Boolean>, onConsentAnswered: () -> Unit) = scope.launch {
-        // On the web the consent page replaces the app, so this start up is the second half of a tap on
-        // Settings: whether it ended up connected or not, that is the screen the answer is on. The page load forgot
-        // which tab the tap was made on, so the one holding the sync section is opened rather than the first.
+        // On the web the consent page replaces the app, so this start up is the second half of a tap on Connect:
+        // whether it ended up connected or not, the screen the tap was made on is the one the answer is on, which
+        // onConsentAnswered puts back, since the page load forgot it.
         try {
             // A reinstall is the one case where credentials outlive the library: iOS leaves the Keychain item
             // behind while everything else goes, so a fresh installation would find itself connected to an

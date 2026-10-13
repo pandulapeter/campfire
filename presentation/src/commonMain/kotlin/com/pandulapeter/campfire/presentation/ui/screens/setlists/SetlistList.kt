@@ -206,9 +206,11 @@ internal fun SetlistList(
     val shouldShowChords = userPreferences?.areChordsEnabled != false
     // The tempo is what the click plays, so it goes with the metronome.
     val isMetronomeEnabled = userPreferences?.isMetronomeEnabled != false
-    // And either can be left off the cards by the reader, see UserPreferences.isKeyShown and isTempoShown.
-    val isKeyShown = userPreferences?.isKeyShown != false
-    val isTempoShown = isMetronomeEnabled && userPreferences?.isTempoShown != false
+    // And each can be left off the cards by the reader, see UserPreferences.setlistCardDetails.
+    val cardDetails = userPreferences?.setlistCardDetails ?: UserPreferences.CardDetails.SetlistsDefault
+    val isKeyShown = cardDetails.isKeyShown
+    val isTempoShown = isMetronomeEnabled && cardDetails.isTempoShown
+    val isDurationShown = cardDetails.isDurationShown
     val isCoverArtEnabled = userPreferences?.isCoverArtEnabled == true
     val chordSpelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
     // The order the rows are drawn in while a drag is in flight, before any of it has been written down. The
@@ -563,7 +565,7 @@ internal fun SetlistList(
                                             overrides = playingOverrides,
                                         ).tempo.bpm.takeIf { isTempoShown },
                                         shouldShowChords = shouldShowChords,
-                                        duration = entry.song.duration,
+                                        duration = entry.song.duration?.takeIf { isDurationShown },
                                         coverArtUrl = entry.song.coverArtUrl?.takeIf { isCoverArtEnabled },
                                         labelsOnEverySong = labelsOnEverySong,
                                         shouldShowLabels = false,

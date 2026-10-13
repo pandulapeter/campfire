@@ -25,8 +25,10 @@ import androidx.compose.ui.unit.dp
  * [songListColumnCount] takes it off too, and a panel granted by a width the list then lays out one column fewer in
  * would leave the list with less than the columns it was promised.
  */
-internal fun hasRoomForSidePanel(screenWidth: Dp) =
-    columnCountForWidth(screenWidth - SIDE_PANEL_WIDTH - FAST_SCROLLER_WIDTH) >= SIDE_PANEL_MIN_COLUMN_COUNT
+internal fun hasRoomForSidePanel(
+    screenWidth: Dp,
+    minColumnWidth: Dp = MIN_SONG_COLUMN_WIDTH,
+) = columnCountForWidth(screenWidth - SIDE_PANEL_WIDTH - FAST_SCROLLER_WIDTH, minColumnWidth) >= SIDE_PANEL_MIN_COLUMN_COUNT
 
 /**
  * What a list screen decides from the width it settles at: whether its filter side panel fits, how many columns the
@@ -47,17 +49,37 @@ internal data class ListLayout(
         /**
          * @param settledWidth The width of the screen once the navigation bars have finished animating.
          * @param contentPadding The insets the screen hands to its list, whose start and end are not part of its width.
+         * @param songColumnWidth The narrowest column of the Songs screen, see [minSongColumnWidth].
+         * @param setlistColumnWidth The narrowest column of the Setlists screen, the same way.
          */
-        fun of(settledWidth: Dp, contentPadding: PaddingValues, layoutDirection: LayoutDirection) = ListLayout(
-            hasRoomForSidePanel = hasRoomForSidePanel(settledWidth),
-            columnCount = songListColumnCount(settledWidth, contentPadding, layoutDirection, isSidePanelVisible = false),
-            columnCountBesideSidePanel = songListColumnCount(settledWidth, contentPadding, layoutDirection, isSidePanelVisible = true),
+        fun of(
+            settledWidth: Dp,
+            contentPadding: PaddingValues,
+            layoutDirection: LayoutDirection,
+            songColumnWidth: Dp = MIN_SONG_COLUMN_WIDTH,
+            setlistColumnWidth: Dp = MIN_SETLIST_COLUMN_WIDTH,
+        ) = ListLayout(
+            hasRoomForSidePanel = hasRoomForSidePanel(settledWidth, songColumnWidth),
+            columnCount = songListColumnCount(
+                settledWidth = settledWidth,
+                contentPadding = contentPadding,
+                layoutDirection = layoutDirection,
+                isSidePanelVisible = false,
+                minColumnWidth = songColumnWidth,
+            ),
+            columnCountBesideSidePanel = songListColumnCount(
+                settledWidth = settledWidth,
+                contentPadding = contentPadding,
+                layoutDirection = layoutDirection,
+                isSidePanelVisible = true,
+                minColumnWidth = songColumnWidth,
+            ),
             setlistColumnCount = songListColumnCount(
                 settledWidth = settledWidth,
                 contentPadding = contentPadding,
                 layoutDirection = layoutDirection,
                 isSidePanelVisible = false,
-                minColumnWidth = MIN_SETLIST_COLUMN_WIDTH,
+                minColumnWidth = setlistColumnWidth,
             ),
         )
     }

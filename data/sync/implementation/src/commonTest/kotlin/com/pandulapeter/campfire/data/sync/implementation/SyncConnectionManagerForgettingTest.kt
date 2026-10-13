@@ -18,6 +18,7 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.test.fail
@@ -69,6 +70,32 @@ class SyncConnectionManagerForgettingTest {
     }
 
     @Test
+    fun `forgetting the connection keeps an authorization the start up brings the answer to`() = runTest {
+        val store = FakePendingAuthorizationStore().apply {
+            pending = PendingAuthorization(SyncProviderId.DROPBOX, state = "state", verifier = "verifier", redirectUri = null)
+        }
+        val provider = FakeSyncProvider().apply {
+            connected = false
+            onCompleteAuthorization = {
+                connected = true
+                TEST_ACCOUNT
+            }
+        }
+        val repository = syncRepository(
+            provider = provider,
+            authenticator = FakeSyncAuthenticator(pendingRedirect = TEST_REDIRECT),
+            pendingAuthorizationStore = store,
+        )
+
+        repository.forgetStoredConnection()
+        val result = repository.restore()
+
+        assertTrue(result.didReturnFromAuthorization)
+        assertTrue(result.isConnected)
+        assertEquals(TEST_ACCOUNT, assertIs<SyncState.Connected>(repository.syncState.value).account)
+    }
+
+    @Test
     fun `an ordinary launch does not forget anything`() = runTest {
         val provider = FakeSyncProvider(account = TEST_ACCOUNT)
         val stateLocalSource = FakeSyncIndexLocalSource().apply { onSetForgettingOwed = { fail("A forgetting was noted.") } }
@@ -78,7 +105,7 @@ class SyncConnectionManagerForgettingTest {
 
         assertTrue(result.isConnected)
         assertFalse(provider.hasForgottenCredentials)
-        assertEquals(TEST_ACCOUNT, (repository.syncState.value as SyncState.Connected).account)
+        assertEquals(TEST_ACCOUNT, assertIs<SyncState.Connected>(repository.syncState.value).account)
     }
 
     @Test

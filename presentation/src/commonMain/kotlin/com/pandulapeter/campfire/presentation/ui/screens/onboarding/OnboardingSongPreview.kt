@@ -30,9 +30,8 @@ import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 
 /**
- * Two lines of a song with its chords over the words, the way a song page sets them, which is what the onboarding's
- * choices are shown on as they are made: the colors of the theme being picked, and the chords in the notation being
- * picked. A picture rather than content, so it is left out of the semantics tree; the choices beside it say what it shows.
+ * Two lines of a song with its chords over the words, the way a song page sets them, which is what the notation being
+ * picked is shown on as it is made. A picture rather than content, so it is left out of the semantics tree; the choices beside it say what it shows.
  */
 @Composable
 internal fun OnboardingSongPreview(
@@ -51,10 +50,6 @@ internal fun OnboardingSongPreview(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Text(
-                text = PREVIEW_TITLE,
-                style = MaterialTheme.typography.titleMedium,
-            )
             PREVIEW_LINES.forEach { line ->
                 FlowRow {
                     line.forEach { (chord, words) ->
@@ -78,19 +73,22 @@ internal fun OnboardingSongPreview(
 }
 
 /**
- * The opening of Amazing Grace, which is in the public domain, known in most of the world, and in a key whose chords read
- * differently in every notation the app has. Sample content rather than interface text, so it is not translated, as the
- * demo songs are not.
+ * The key [PREVIEW_LINES] are in, in the standard notation: E, whose chords read differently in every notation the app
+ * has, its fifth being the B the German notation calls H. Never shown, only counted from by a numbering.
  */
-private const val PREVIEW_TITLE = "Amazing Grace"
+private const val PREVIEW_KEY = "E"
 
-/** Each line as the chord played on a stretch of it, if any, and the words of that stretch. */
+/**
+ * The opening of Amazing Grace, which is in the public domain and known in most of the world, each line as the chord
+ * played on a stretch of it, if any, and the words of that stretch. Sample content rather than interface text, so it is
+ * not translated, as the demo songs are not.
+ */
 private val PREVIEW_LINES = listOf(
-    listOf("G" to "Amazing ", "G7" to "grace, how ", "C" to "sweet the ", "G" to "sound"),
-    listOf(null to "That ", "G" to "saved a wretch like ", "D" to "me"),
+    listOf("E" to "Amazing ", "E7" to "grace, how ", "A" to "sweet the ", "E" to "sound"),
+    listOf(null to "That ", "E" to "saved a wretch like ", "B" to "me"),
 )
 
 /** The same lines as a song, which is what the notations are worked out from: a numbering counts from its key. */
-private val PREVIEW_SONG = "{key: G}\n" + PREVIEW_LINES.joinToString("\n") { line ->
+private val PREVIEW_SONG = "{key: $PREVIEW_KEY}\n" + PREVIEW_LINES.joinToString("\n") { line ->
     line.joinToString("") { (chord, words) -> chord?.let { "[$it]" }.orEmpty() + words }
 }

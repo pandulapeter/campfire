@@ -9,38 +9,38 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.onboarding
 
+import kotlinx.serialization.Serializable
+
 /**
  * The pages of the onboarding, in the order they are shown. Each asks one thing, and the answers to the earlier ones
- * decide whether the later ones are asked at all ([onboardingSteps]), which is why the role, which decides the features,
- * comes before everything that depends on them.
+ * decide whether the later ones are asked at all ([onboardingSteps]), which is why the features come before everything
+ * that depends on them. Serializable because the page is saved with the back stack, see `Navigator.onboardingStep`.
  */
+@Serializable
 enum class OnboardingStep {
     WELCOME,
-    ROLE,
+    FEATURES,
     INSTRUMENT,
     NOTATION,
     AT_A_GLANCE,
     SYNC,
-    DONE,
 }
 
 /**
  * The steps worth showing, given the features switched on: the instrument only while there is something it decides (the
- * chord diagrams with the chords on, the tuning with the tuner on), the notation only with the chords on, what a song
- * shows at a glance only while it has a key (the chords) or a tempo (the metronome) to show, and the cloud folder only
- * where the build can connect Dropbox, since a page offering a button that does nothing is worse than no page.
+ * chord diagrams with the chords on, the tuning with the tuner on), the notation only with the chords on, and the cloud
+ * folder only where the build can connect Dropbox, since a page offering a button that does nothing is worse than no
+ * page. What a song card shows at a glance is always asked, since its duration goes with no feature.
  */
 internal fun onboardingSteps(
     canConnectDropbox: Boolean,
     areChordsEnabled: Boolean,
-    isMetronomeEnabled: Boolean,
     isTunerEnabled: Boolean,
 ) = OnboardingStep.entries.filter { step ->
     when (step) {
-        OnboardingStep.WELCOME, OnboardingStep.ROLE, OnboardingStep.DONE -> true
+        OnboardingStep.WELCOME, OnboardingStep.FEATURES, OnboardingStep.AT_A_GLANCE -> true
         OnboardingStep.INSTRUMENT -> areChordsEnabled || isTunerEnabled
         OnboardingStep.NOTATION -> areChordsEnabled
-        OnboardingStep.AT_A_GLANCE -> areChordsEnabled || isMetronomeEnabled
         OnboardingStep.SYNC -> canConnectDropbox
     }
 }

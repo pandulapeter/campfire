@@ -72,7 +72,7 @@ internal val websiteShots: List<Triple<String, Device, Shot>> by lazy {
                 },
             ),
         ),
-        // A song with the tuner sheet open over it, the G string heard in tune.
+        // A song with the tuner sheet open over it, the low E string heard in tune.
         Triple(
             "tablet-song-tuner",
             Device.IPAD,
@@ -81,10 +81,10 @@ internal val websiteShots: List<Triple<String, Device, Shot>> by lazy {
                 uiMode = UserPreferences.UiMode.DARK,
                 preferences = { tuner + ("fontScale" to JsonPrimitive(0.9f)) },
                 drive = {
-                    openSong("ben_e_king-stand_by_me.cho")
+                    openSong("the_proclaimers-im_gonna_be_500_miles.cho")
                     viewModel.showDialog(DialogType.Tuner)
                     settle()
-                    hear(reading(note = 55, cents = 1.2f))
+                    hear(reading(note = 40, cents = 1.2f))
                 },
             ),
         ),
@@ -106,7 +106,11 @@ internal val websiteShots: List<Triple<String, Device, Shot>> by lazy {
                 drive = { viewModel.showDialog(DialogType.Export(song = song("barenaked_ladies-big_bang_theory_theme.cho"))) },
             ),
         ),
-        Triple("laptop-song", Device.LAPTOP, song("laptop-song", "the_rembrandts-ill_be_there_for_you.cho")),
+        // One song at three text sizes, which the page crossfades between to show that the columns follow the text size:
+        // the whole song in four columns, the first page ending after Chorus 2 in three, and after Verse 1 in two.
+        Triple("laptop-song-small", Device.LAPTOP, song("laptop-song-small", "the_rembrandts-ill_be_there_for_you.cho", fontScale = 1f)),
+        Triple("laptop-song-medium", Device.LAPTOP, song("laptop-song-medium", "the_rembrandts-ill_be_there_for_you.cho", fontScale = 1.4f)),
+        Triple("laptop-song-large", Device.LAPTOP, song("laptop-song-large", "the_rembrandts-ill_be_there_for_you.cho", fontScale = 2.3f)),
         Triple("laptop-import", Device.LAPTOP, editor("laptop-import", "ed_sheeran-thinking_out_loud.cho")),
         Triple("laptop-editor", Device.LAPTOP, editor("laptop-editor", "the_proclaimers-im_gonna_be_500_miles.cho")),
         Triple("laptop-setlists", Device.LAPTOP, setlists),

@@ -176,4 +176,7 @@ sealed interface DialogType {
 
     /** The current version's introduction, shown once after the first installed version. */
     data object WhatsNew : DialogType
+
+    /** The languages of the interface, opened from the onboarding's first page so that it can be read from the start. */
+    data object AppLanguage : DialogType
 }

@@ -18,6 +18,7 @@
 ### Features
 - Import zip screen that displays the content before actually importing it, prepare the screen for loading remote zips
 - Shared setlists via Dropbox public links -> deeplink to Campfire. Rewrite documentation/plans/song-links.md - allow scanning deep links via QR code
+- Editor search and replace
 
 ## Midterm (in the next versions)
 - New song from the clipboard: documentation/plans/clipboard-import.md

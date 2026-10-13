@@ -48,11 +48,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import androidx.navigation3.ui.NavDisplay
+import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.messages.Messages
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeIconBeat
 import com.pandulapeter.campfire.presentation.ui.screens.metronome.MetronomeScreen
 import com.pandulapeter.campfire.presentation.ui.screens.tuner.TunerScreen
 import com.pandulapeter.campfire.presentation.ui.components.ListLayout
+import com.pandulapeter.campfire.presentation.ui.components.minSongColumnWidth
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
 import com.pandulapeter.campfire.presentation.ui.dialogs.CampfireDialogs
 import com.pandulapeter.campfire.presentation.ui.screens.export.ExportHost
@@ -203,7 +205,27 @@ internal fun CampfireScreens(
     // decide from it, which stays equal between two breakpoints and lets them skip those frames. The song details
     // screen keeps the width itself: its lyrics use the difference between the settled width and the one they are
     // measured at inside their layout, which no discrete decision stands in for.
-    val listLayout = ListLayout.of(settledWidth = settledListWidth, contentPadding = shellContentPadding, layoutDirection = layoutDirection)
+    // A card that says less after its artist is given a narrower column, see minSongColumnWidth.
+    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    val areChordsEnabled = userPreferences?.areChordsEnabled != false
+    val isMetronomeEnabled = userPreferences?.isMetronomeEnabled != false
+    val listLayout = ListLayout.of(
+        settledWidth = settledListWidth,
+        contentPadding = shellContentPadding,
+        layoutDirection = layoutDirection,
+        songColumnWidth = minSongColumnWidth(
+            details = userPreferences?.songCardDetails ?: UserPreferences.CardDetails.SongsDefault,
+            areChordsEnabled = areChordsEnabled,
+            isMetronomeEnabled = isMetronomeEnabled,
+            isInSetlist = false,
+        ),
+        setlistColumnWidth = minSongColumnWidth(
+            details = userPreferences?.setlistCardDetails ?: UserPreferences.CardDetails.SetlistsDefault,
+            areChordsEnabled = areChordsEnabled,
+            isMetronomeEnabled = isMetronomeEnabled,
+            isInSetlist = true,
+        ),
+    )
     val settingsLayout = SettingsWidthLayout.of(settledWidth = settledListWidth, contentPadding = shellContentPadding, layoutDirection = layoutDirection)
     val screenChrome: (CampfireDestination.TopLevel) -> (@Composable () -> Unit)? = { destination ->
         if (chromeInScreens) {

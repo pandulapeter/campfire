@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.data.model.domain.UserPreferences
 
 /**
  * The columns of the song lists: [count] equally wide columns filling the available width, so that wide windows show
@@ -44,16 +45,43 @@ internal fun columnCountForWidth(
 ) = (width / minColumnWidth).toInt().coerceIn(1, MAX_COLUMN_COUNT)
 
 /**
- * The narrowest column a song card is laid out in where there are two or more; a window narrower than one column, a
- * phone held upright included, still gets one, as wide as the window.
+ * The narrowest column a song card is laid out in where there are two or more, worked out from what the card says on
+ * its second line ([UserPreferences.CardDetails], each only with the feature it goes with), so that a card that says
+ * less is given less room and a window fits more of them side by side, while one that says more keeps its line from
+ * being cut short. A setlist's card starts wider, for the slot number before its title. A window narrower than one
+ * column, a phone held upright included, still gets one, as wide as the window.
  */
-internal val MIN_SONG_COLUMN_WIDTH = 400.dp
+internal fun minSongColumnWidth(
+    details: UserPreferences.CardDetails,
+    areChordsEnabled: Boolean,
+    isMetronomeEnabled: Boolean,
+    isInSetlist: Boolean,
+) = (if (isInSetlist) SETLIST_CARD_BASE_WIDTH else SONG_CARD_BASE_WIDTH) +
+    (if (areChordsEnabled && details.isKeyShown) CARD_KEY_WIDTH else 0.dp) +
+    (if (isMetronomeEnabled && details.isTempoShown) CARD_TEMPO_WIDTH else 0.dp) +
+    (if (details.isDurationShown) CARD_DURATION_WIDTH else 0.dp)
 
-/**
- * The narrowest column the Setlists screen lays its song cards out in. A card there carries more on one line than on
- * the Songs screen — the slot number before the title, and the key, the tempo and the duration after the artist — so at
- * the songs' width a laptop's maximized window fits four columns in which those lines are cut short. A phone is
- * unaffected, since it fits one column at either width.
- */
-internal val MIN_SETLIST_COLUMN_WIDTH = 456.dp
+// Declared before the two defaults below, which are worked out from them as the file is initialized.
+private val SONG_CARD_BASE_WIDTH = 368.dp
+private val SETLIST_CARD_BASE_WIDTH = 392.dp
+private val CARD_KEY_WIDTH = 16.dp
+private val CARD_TEMPO_WIDTH = 16.dp
+private val CARD_DURATION_WIDTH = 32.dp
+
+/** The Songs screen's [minSongColumnWidth] with every feature on and the cards as a fresh installation has them. */
+internal val MIN_SONG_COLUMN_WIDTH = minSongColumnWidth(
+    details = UserPreferences.CardDetails.SongsDefault,
+    areChordsEnabled = true,
+    isMetronomeEnabled = true,
+    isInSetlist = false,
+)
+
+/** The Setlists screen's [minSongColumnWidth] with every feature on and the cards as a fresh installation has them. */
+internal val MIN_SETLIST_COLUMN_WIDTH = minSongColumnWidth(
+    details = UserPreferences.CardDetails.SetlistsDefault,
+    areChordsEnabled = true,
+    isMetronomeEnabled = true,
+    isInSetlist = true,
+)
+
 private const val MAX_COLUMN_COUNT = 4

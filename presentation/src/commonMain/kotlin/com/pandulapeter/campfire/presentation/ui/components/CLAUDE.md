@@ -247,10 +247,14 @@ headers, a setlist's countdown and its description move in with it (`songCardTex
 one line — the dot between the artist and the key a 16dp box instead of 24dp, and its title two lines instead of one;
 the touch targets of its buttons stay as they are.
 
-A list's columns keep their 400dp minimum on a phone held sideways too, where two would each be narrower than the one in
-portrait. The Setlists screen's columns are at least 456dp (`MIN_SETLIST_COLUMN_WIDTH`,
-`ListLayout.setlistColumnCount`), since its cards also carry the slot number, the key, the tempo and the duration, and
-at the songs' 400dp a laptop's maximized window cut all of them short across four columns.
+A list's narrowest column follows what its cards say after the artist (`minSongColumnWidth`, from the list's
+`UserPreferences.CardDetails` and the chords and metronome switches): 368dp for a card that says nothing there, 16dp
+more for the key and for the tempo, and 32dp for the duration, so the Songs screen's cards as a fresh installation has
+them keep their 400dp, which keeps a phone held sideways at one column, since two would each be narrower than the one
+in portrait — a card told to say less can give that up for more columns. The Setlists screen's start 24dp wider for the
+slot number (456dp with all three, `MIN_SETLIST_COLUMN_WIDTH`, `ListLayout.setlistColumnCount`), since at the songs'
+width a laptop's maximized window cut those lines short across four columns. `CampfireScreens` works both out and hands
+them to `ListLayout.of`, which the side panel's room is counted in too.
 
 ### `ui/components/LabeledControlRow.kt`
 

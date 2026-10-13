@@ -176,9 +176,10 @@ tab reaches the export screen. The detail is in `:presentation`'s `ui/screens/ex
   song details app bar hides as the song is scrolled down and comes back as it is scrolled up. On Android, typing in a short window also takes the status bar away until the keyboard goes
   (`CompactKeyboardEffect`, swiped back as a transient bar) — the only way a landscape keyboard leaves room for a
   field, a title row and three lines. A phone held upright gives song cards two title lines and narrower padding, and
-  a setlist's description starts at two lines in a short window, opening on a tap. Song lists keep their 400dp
-  minimum column (a setlist's 456dp, since its cards say more on a line), so a phone on its side stays one column:
-  two would each be narrower than the portrait one.
+  a setlist's description starts at two lines in a short window, opening on a tap. Song lists keep a 400dp
+  minimum column with their cards as a fresh installation has them (a setlist's 456dp, since its cards say more on a
+  line), so a phone on its side stays one column: two would each be narrower than the portrait one. A card told to
+  show less after its artist is given a narrower column (`minSongColumnWidth`).
 - `:app:android` and `:app:baselineprofile` are plain Android modules, `:app:desktop` a plain JVM one, `:app:ios`
   Kotlin/Native-only and `:app:web` Kotlin/Wasm-only; every other module (`:presentation` and `:chordpro` included) is
   a multiplatform library.

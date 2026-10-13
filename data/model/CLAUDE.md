@@ -40,7 +40,8 @@ controls of a song's first section included, rather than the lyrics alone — wi
 display-only `ChordSpelling`, `isPerformanceModeEnabled` — read only mode for the whole app, see `:presentation` — the
 feature switches `areChordsEnabled` (stored as the inverse `isLyricsOnlyModeEnabled` it replaced), `areSetlistsEnabled`,
 `isMetronomeEnabled` and `isTunerEnabled`, `isCoverArtEnabled`, which is what lets the app fetch the covers the songs name at all, the
-chord diagrams' `areChordDiagramsEnabled`, `chordInstrument` (`ChordInstrument`, the twin of `:chordpro`'s, which this
+chord diagrams' `areChordDiagramsEnabled`, `songCardDetails` and `setlistCardDetails` (`CardDetails`: whether the Songs and the
+Setlists screen's cards show the key, the tempo and the duration), `chordInstrument` (`ChordInstrument`, the twin of `:chordpro`'s, which this
 module does not see), `isChordSectionFolded` (one fold for every song) and `chordVoicings` (the player's own shape of
 each chord, by instrument id and then by the chord's id, never exported but synced through `preferences.json`, an
 unknown instrument kept as it is), `tagColors` (a palette id by `tagKey`, synced the same way, never dropped with

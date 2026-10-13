@@ -101,6 +101,13 @@ process alive given back only after a grace of two seconds with no run going, fo
 start in. When a run counts as chained, and whether there is anything to give back, the shells decide (see `app/android`
 and `app/ios`).
 
+### `ui/platform/SyncConsentOrigin.kt`
+
+`ui/platform/SyncConsentOrigin.kt` — where a Connect was tapped (Settings, or the onboarding opened by a first run or
+from Settings), kept by `CampfireViewModel.connectSyncProvider` and taken by `showSyncConsentAnswer`, which shows the
+consent page's answer there. Only the web keeps it, in the tab's session storage, since only there does every consent
+end in a new start up; Android's process reclaimed behind the browser comes back on its saved back stack instead.
+
 ### `ui/platform/FilePicker.kt`
 
 `ui/platform/FilePicker.kt` — the interface every shell provides through `LocalFilePicker`: `pickFiles`, `saveFile`, and

@@ -15,31 +15,80 @@ import com.pandulapeter.campfire.presentation.ui.tuner.instrumentOf
 import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 
 /**
- * The answers to the onboarding's "What do you play?", each standing for the two settings an instrument decides: what the
- * chord diagrams are drawn for, and what the tuner reads against. [OTHER] is an answer too, the one for an instrument
- * that is not listed (or a voice): no diagrams, and the tuner reading the nearest note. Not a setting of its own: what is picked is written into
- * those two, and what the page shows as picked is read back out of them ([onboardingInstrumentOf]), so that going through
- * the onboarding again starts from what the app is set to now, whichever screen it was set on.
+ * The answers to the onboarding's "What do you play?", each standing for the two settings an instrument and its tuning
+ * decide: what the chord diagrams are drawn for, and what the tuner reads against. [OTHER] is an answer too, the one for
+ * an instrument that is not listed (or a voice): no diagrams, and the tuner reading the nearest note. Not a setting of
+ * its own: what is picked is written into those two, and what the page shows as picked is read back out of them
+ * ([onboardingInstrumentOf]), so that going through the onboarding again starts from what the app is set to now,
+ * whichever screen it was set on.
  *
  * @param tunerInstruments The tuner's instruments this one covers, the first one's standard tuning being what picking it
  *   tunes to; empty for one the tuner reads chromatically.
+ * @param diagramTunings The tunings the chord diagrams are drawn for, null standing for an instrument that is not tuned
+ *   at all: the shapes are the ones of the standard tuning, which a ukulele's low G does not change, and with the strings
+ *   tuned any other way they would show the wrong notes, so such a tuning has no diagrams ([chordInstrumentFor]).
  * @param isOnlyForTuner Whether the tuner is all this answer decides, the diagrams being none for it as for Something
  *   else: it is only offered with the tuner on ([onboardingInstruments]).
  */
 internal enum class OnboardingInstrument(
-    val chordInstrument: ChordInstrument,
+    private val chordInstrument: ChordInstrument,
     val tunerInstruments: List<TunerInstrument>,
+    private val diagramTunings: Set<InstrumentTuning?>,
     val isOnlyForTuner: Boolean = false,
 ) {
-    GUITAR(ChordInstrument.GUITAR, listOf(TunerInstrument.GUITAR, TunerInstrument.SEVEN_STRING_GUITAR, TunerInstrument.EIGHT_STRING_GUITAR)),
-    UKULELE(ChordInstrument.UKULELE, listOf(TunerInstrument.UKULELE)),
-    MANDOLIN(ChordInstrument.MANDOLIN, listOf(TunerInstrument.MANDOLIN)),
-    KEYBOARD(ChordInstrument.KEYBOARD, emptyList()),
-    BASS(ChordInstrument.OTHER, listOf(TunerInstrument.BASS, TunerInstrument.FIVE_STRING_BASS), isOnlyForTuner = true),
-    BANJO(ChordInstrument.OTHER, listOf(TunerInstrument.BANJO), isOnlyForTuner = true),
-    VIOLIN(ChordInstrument.OTHER, listOf(TunerInstrument.VIOLIN), isOnlyForTuner = true),
-    OTHER(ChordInstrument.OTHER, emptyList()),
+    GUITAR(
+        chordInstrument = ChordInstrument.GUITAR,
+        tunerInstruments = listOf(TunerInstrument.GUITAR, TunerInstrument.SEVEN_STRING_GUITAR, TunerInstrument.EIGHT_STRING_GUITAR),
+        diagramTunings = setOf(InstrumentTuning.GUITAR),
+    ),
+    UKULELE(
+        chordInstrument = ChordInstrument.UKULELE,
+        tunerInstruments = listOf(TunerInstrument.UKULELE),
+        diagramTunings = setOf(InstrumentTuning.UKULELE, InstrumentTuning.UKULELE_LOW_G),
+    ),
+    MANDOLIN(
+        chordInstrument = ChordInstrument.MANDOLIN,
+        tunerInstruments = listOf(TunerInstrument.MANDOLIN),
+        diagramTunings = setOf(InstrumentTuning.MANDOLIN),
+    ),
+    KEYBOARD(
+        chordInstrument = ChordInstrument.KEYBOARD,
+        tunerInstruments = emptyList(),
+        diagramTunings = setOf(null),
+    ),
+    BASS(
+        chordInstrument = ChordInstrument.OTHER,
+        tunerInstruments = listOf(TunerInstrument.BASS, TunerInstrument.FIVE_STRING_BASS),
+        diagramTunings = emptySet(),
+        isOnlyForTuner = true,
+    ),
+    BANJO(
+        chordInstrument = ChordInstrument.OTHER,
+        tunerInstruments = listOf(TunerInstrument.BANJO),
+        diagramTunings = emptySet(),
+        isOnlyForTuner = true,
+    ),
+    VIOLIN(
+        chordInstrument = ChordInstrument.OTHER,
+        tunerInstruments = listOf(TunerInstrument.VIOLIN),
+        diagramTunings = emptySet(),
+        isOnlyForTuner = true,
+    ),
+    OTHER(
+        chordInstrument = ChordInstrument.OTHER,
+        tunerInstruments = emptyList(),
+        diagramTunings = emptySet(),
+    ),
     ;
+
+    /** Whether the chord diagrams are drawn for this instrument in some tuning, so that a tuning without them is worth a word. */
+    val hasDiagrams get() = diagramTunings.isNotEmpty()
+
+    /** Whether the chord diagrams are drawn for this instrument tuned to [tuning]. */
+    fun hasDiagramsIn(tuning: InstrumentTuning?) = tuning in diagramTunings
+
+    /** What the diagrams are drawn for once this is picked tuned to [tuning]: none where the shapes would be wrong for it. */
+    fun chordInstrumentFor(tuning: InstrumentTuning?) = if (hasDiagramsIn(tuning)) chordInstrument else ChordInstrument.OTHER
 
     /**
      * What the tuner is set to once this is picked over [current]: [current] itself where it already is a tuning of this
@@ -48,19 +97,33 @@ internal enum class OnboardingInstrument(
      */
     fun tuningFor(current: InstrumentTuning?): InstrumentTuning? =
         if (current != null && instrumentOf(current) in tunerInstruments) current else tunerInstruments.firstOrNull()?.tunings?.first()
+
+    /**
+     * The tunings offered once this is picked: every tuning of its first tuner instrument, and the standard one of each
+     * of the others (the guitar's seven and eight strings), which would otherwise bury the guitar's own under three
+     * lists of drop tunings. [current] is added where it is a tuning of this instrument that is not among them, so that
+     * what the tuner is set to is always shown picked.
+     */
+    fun tuningsOffered(current: InstrumentTuning?): List<InstrumentTuning> {
+        val first = tunerInstruments.firstOrNull() ?: return emptyList()
+        val offered = first.tunings + tunerInstruments.drop(1).map { it.tunings.first() }
+        return if (current != null && current !in offered && instrumentOf(current) in tunerInstruments) offered + current else offered
+    }
 }
 
 /**
  * The answer the settings add up to, null where they add up to none of them: a fresh installation (guitar diagrams over a
- * chromatic tuner) is one, and so is a mix set by hand, such as ukulele diagrams with a guitar tuner. The page then starts
- * with nothing picked rather than with a guess, which picking anything would silently overwrite.
+ * chromatic tuner) is one, and so is a mix set by hand, such as ukulele diagrams with a guitar tuner, or guitar diagrams
+ * over a drop D the shapes are wrong for. The page then starts with nothing picked rather than with a guess, which picking
+ * anything would silently overwrite.
  */
 internal fun onboardingInstrumentOf(chordInstrument: ChordInstrument, tuning: InstrumentTuning?) = OnboardingInstrument.entries.firstOrNull {
-    it.chordInstrument == chordInstrument && if (it.tunerInstruments.isEmpty()) tuning == null else instrumentOf(tuning) in it.tunerInstruments
+    val isTunedFor = if (it.tunerInstruments.isEmpty()) tuning == null else instrumentOf(tuning) in it.tunerInstruments
+    isTunedFor && chordInstrument == it.chordInstrumentFor(tuning)
 }
 
 /**
  * The answers worth offering: with the tuner off the answer only decides the chord diagrams, which are drawn for a guitar,
- * a ukulele and a keyboard, so every other instrument would be Something else by another name.
+ * a ukulele, a mandolin and a keyboard, so every other instrument would be Something else by another name.
  */
 internal fun onboardingInstruments(isTunerEnabled: Boolean) = OnboardingInstrument.entries.filter { isTunerEnabled || !it.isOnlyForTuner }

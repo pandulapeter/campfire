@@ -20,7 +20,7 @@ import com.pandulapeter.campfire.presentation.ui.components.THEME_COLOR_CHOICE_W
 internal val ONBOARDING_CONTENT_WIDTH = max(560.dp, THEME_COLOR_CHOICE_WIDTH)
 
 /**
- * The least height a page keeps its mark at. Higher than the app's short window, since the mark is decoration and the
- * look page's three controls only just fit a desktop window's default height without it.
+ * The least height a page keeps its mark at. Higher than the app's short window, since the mark is decoration, and the
+ * pages are better scrolled for their answers than for it.
  */
 internal val ONBOARDING_MARK_MIN_HEIGHT = 640.dp

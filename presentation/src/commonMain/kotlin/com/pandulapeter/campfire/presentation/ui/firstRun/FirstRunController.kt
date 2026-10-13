@@ -177,9 +177,10 @@ internal class FirstRunController(
      * address, which can name a song or a setlist that only the library can say is still there. The launch screen is
      * held until then, see [isLaunchNavigationPending]. Only the first call counts, since only one start up can be
      * answered, and the answer is only taken while the app is still where every start opens: coming back from a
-     * consent page opens Settings on its own, and that is the screen the user is waiting for. [resolve] is told whether
-     * performance mode is on as the preferences were read rather than as [isPerformanceModeEnabled] says, since that
-     * state may not have caught up with the read yet, and the mode decides whether an editor may be opened at all.
+     * consent page opens Settings or the onboarding on its own, and that is the screen the user is waiting for.
+     * [resolve] is told whether performance mode is on as the preferences were read rather than as
+     * [isPerformanceModeEnabled] says, since that state may not have caught up with the read yet, and the mode decides
+     * whether an editor may be opened at all.
      *
      * Called by the shell while it is first composed, which is before the read it waits for can possibly have ended:
      * that read resumes on the main thread, and the composition is holding it.

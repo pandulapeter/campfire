@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -48,6 +49,33 @@ class ListLayoutTest {
         val justShort = layout(twoSetlistColumns - 1.dp)
         assertEquals(1, justShort.setlistColumnCount)
         assertEquals(2, justShort.columnCount)
+    }
+
+    @Test
+    fun `a card that says less after its artist is given a narrower column`() {
+        val songs = UserPreferences.CardDetails.SongsDefault
+        val bare = UserPreferences.CardDetails(isKeyShown = false, isTempoShown = false, isDurationShown = false)
+        val narrow = minSongColumnWidth(bare, areChordsEnabled = true, isMetronomeEnabled = true, isInSetlist = false)
+        assertTrue(narrow < MIN_SONG_COLUMN_WIDTH)
+        assertEquals(narrow, minSongColumnWidth(songs, areChordsEnabled = false, isMetronomeEnabled = false, isInSetlist = false))
+        assertTrue(minSongColumnWidth(songs.copy(isDurationShown = true), areChordsEnabled = true, isMetronomeEnabled = true, isInSetlist = false) > MIN_SONG_COLUMN_WIDTH)
+        assertTrue(minSongColumnWidth(bare, areChordsEnabled = true, isMetronomeEnabled = true, isInSetlist = true) > narrow)
+    }
+
+    @Test
+    fun `narrower song cards fit more columns into the same window`() {
+        val narrow = minSongColumnWidth(
+            UserPreferences.CardDetails(isKeyShown = false, isTempoShown = false, isDurationShown = false),
+            areChordsEnabled = true,
+            isMetronomeEnabled = true,
+            isInSetlist = false,
+        )
+        val width = narrow * 3 + FAST_SCROLLER_WIDTH
+        assertEquals(2, layout(width).columnCount)
+        assertEquals(
+            3,
+            ListLayout.of(settledWidth = width, contentPadding = noPadding, layoutDirection = LayoutDirection.Ltr, songColumnWidth = narrow).columnCount,
+        )
     }
 
     @Test

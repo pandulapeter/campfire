@@ -13,14 +13,17 @@ import com.pandulapeter.campfire.data.model.domain.UserPreferences.ChordInstrume
 import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class OnboardingInstrumentTest {
 
     @Test
     fun `every instrument is read back from the settings it writes`() {
         OnboardingInstrument.entries.forEach { instrument ->
-            assertEquals(instrument, onboardingInstrumentOf(instrument.chordInstrument, instrument.tuningFor(null)))
+            val tuning = instrument.tuningFor(null)
+            assertEquals(instrument, onboardingInstrumentOf(instrument.chordInstrumentFor(tuning), tuning))
         }
     }
 
@@ -37,8 +40,45 @@ class OnboardingInstrumentTest {
 
     @Test
     fun `any tuning of an instrument reads as that instrument`() {
-        assertEquals(OnboardingInstrument.GUITAR, onboardingInstrumentOf(ChordInstrument.GUITAR, InstrumentTuning.GUITAR_SEVEN_STRING_DROP_A))
+        assertEquals(OnboardingInstrument.GUITAR, onboardingInstrumentOf(ChordInstrument.OTHER, InstrumentTuning.GUITAR_SEVEN_STRING_DROP_A))
+        assertEquals(OnboardingInstrument.UKULELE, onboardingInstrumentOf(ChordInstrument.UKULELE, InstrumentTuning.UKULELE_LOW_G))
         assertEquals(OnboardingInstrument.BASS, onboardingInstrumentOf(ChordInstrument.OTHER, InstrumentTuning.BASS_FIVE_STRING))
+    }
+
+    @Test
+    fun `the diagrams are only drawn for the tunings their shapes are for`() {
+        assertEquals(ChordInstrument.GUITAR, OnboardingInstrument.GUITAR.chordInstrumentFor(InstrumentTuning.GUITAR))
+        assertEquals(ChordInstrument.OTHER, OnboardingInstrument.GUITAR.chordInstrumentFor(InstrumentTuning.GUITAR_DROP_D))
+        assertEquals(ChordInstrument.UKULELE, OnboardingInstrument.UKULELE.chordInstrumentFor(InstrumentTuning.UKULELE_LOW_G))
+        assertEquals(ChordInstrument.OTHER, OnboardingInstrument.UKULELE.chordInstrumentFor(InstrumentTuning.UKULELE_BARITONE))
+        assertEquals(ChordInstrument.KEYBOARD, OnboardingInstrument.KEYBOARD.chordInstrumentFor(null))
+        assertEquals(ChordInstrument.OTHER, OnboardingInstrument.BASS.chordInstrumentFor(InstrumentTuning.BASS))
+    }
+
+    @Test
+    fun `guitar diagrams over a tuning they are not drawn for have no instrument picked`() {
+        assertNull(onboardingInstrumentOf(ChordInstrument.GUITAR, InstrumentTuning.GUITAR_DROP_D))
+    }
+
+    @Test
+    fun `the guitar offers its own tunings and the standard one of its seven and eight strings`() {
+        val offered = OnboardingInstrument.GUITAR.tuningsOffered(InstrumentTuning.GUITAR)
+        assertEquals(InstrumentTuning.GUITAR, offered.first())
+        assertTrue(InstrumentTuning.GUITAR_DROP_D in offered)
+        assertTrue(InstrumentTuning.GUITAR_SEVEN_STRING in offered && InstrumentTuning.GUITAR_EIGHT_STRING in offered)
+        assertFalse(InstrumentTuning.GUITAR_SEVEN_STRING_DROP_A in offered)
+    }
+
+    @Test
+    fun `a tuning of the instrument that is not offered is added, so that it shows picked`() {
+        assertEquals(InstrumentTuning.GUITAR_SEVEN_STRING_DROP_A, OnboardingInstrument.GUITAR.tuningsOffered(InstrumentTuning.GUITAR_SEVEN_STRING_DROP_A).last())
+        assertFalse(InstrumentTuning.BASS in OnboardingInstrument.GUITAR.tuningsOffered(InstrumentTuning.BASS))
+    }
+
+    @Test
+    fun `an instrument the tuner has no strings for offers no tunings`() {
+        assertTrue(OnboardingInstrument.KEYBOARD.tuningsOffered(null).isEmpty())
+        assertTrue(OnboardingInstrument.OTHER.tuningsOffered(InstrumentTuning.GUITAR).isEmpty())
     }
 
     @Test

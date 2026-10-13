@@ -9,19 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.settings
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.material3.Slider
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
-import com.pandulapeter.campfire.presentation.localization.AppLocale
-import com.pandulapeter.campfire.presentation.localization.LocalizedStrings
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_browser_tab
@@ -30,7 +19,6 @@ import com.pandulapeter.campfire.presentation.resources.settings_app_icon_home_s
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_home_screen_description
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_launcher
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_launcher_description
-import com.pandulapeter.campfire.presentation.resources.settings_background_warmth
 import com.pandulapeter.campfire.presentation.resources.settings_background_warmth_description
 import com.pandulapeter.campfire.presentation.resources.ic_campfire
 import com.pandulapeter.campfire.presentation.resources.settings_onboarding
@@ -38,16 +26,13 @@ import com.pandulapeter.campfire.presentation.resources.settings_onboarding_desc
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_window
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_window_description
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language
-import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language_english
-import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language_hungarian
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language_more_coming
-import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language_system_default
-import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language_with_own_name
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
-import com.pandulapeter.campfire.presentation.ui.components.RadioListItem
+import com.pandulapeter.campfire.presentation.ui.components.BackgroundWarmthSlider
+import com.pandulapeter.campfire.presentation.ui.components.LanguageChoice
 import com.pandulapeter.campfire.presentation.ui.components.SettingsSubsection
 import com.pandulapeter.campfire.presentation.ui.components.SwitchListItem
 import com.pandulapeter.campfire.presentation.ui.components.ThemeColorChoice
@@ -56,32 +41,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.AppIconSurface
 import com.pandulapeter.campfire.presentation.ui.platform.appIconSurface
 import com.pandulapeter.campfire.presentation.ui.theme.CampfireColorScheme
 import com.pandulapeter.campfire.presentation.ui.theme.colorSchemePair
-import kotlin.math.roundToInt
 import org.jetbrains.compose.resources.painterResource
-
-/**
- * How far the palette's neutrals are turned towards sepia. A slider of a few steps rather than a picker of tints, since
- * every step keeps every contrast ratio of the palette (see `withBackgroundWarmth`), so no step can cost legibility,
- * and a step is a whole theme change that recomposes the app: a continuous slider would do that on every frame of a
- * drag. Each step reaches the theme as it is crossed, so the app behind the settings shows where the thumb is.
- */
-@Composable
-private fun BackgroundWarmthSlider(
-    warmth: Int,
-    onWarmthChanged: (Int) -> Unit,
-) = SettingsSubsection(
-    title = stringResource(Res.string.settings_background_warmth),
-    description = stringResource(Res.string.settings_background_warmth_description),
-) {
-    val sliderDescription = stringResource(Res.string.settings_background_warmth)
-    Slider(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).semantics { contentDescription = sliderDescription },
-        value = warmth.toFloat(),
-        onValueChange = { value -> value.roundToInt().let { if (it != warmth) onWarmthChanged(it) } },
-        valueRange = 0f..UserPreferences.MAX_BACKGROUND_WARMTH.toFloat(),
-        steps = UserPreferences.MAX_BACKGROUND_WARMTH - 1,
-    )
-}
 
 @Composable
 internal fun GeneralSection(
@@ -120,37 +80,14 @@ internal fun GeneralSection(
     }
     BackgroundWarmthSlider(
         warmth = userPreferences?.backgroundWarmth ?: 0,
+        description = stringResource(Res.string.settings_background_warmth_description),
         onWarmthChanged = viewModel::setBackgroundWarmth,
     )
-    // A list rather than a segmented control, since it is the one choice here that grows with every translation,
-    // and a row of segments runs out of width after the third. Every language the app is not set to also carries its
-    // name in itself, read out of its own string table, so that somebody who ended up in one they cannot read can
-    // still find theirs; the one it is set to is already named in itself, and saying so twice reads as a mistake.
     SettingsSubsection(title = stringResource(Res.string.settings_user_interface_language)) {
-        Column(modifier = Modifier.selectableGroup()) {
-            listOf(
-                UserPreferences.Language.SYSTEM_DEFAULT to Res.string.settings_user_interface_language_system_default,
-                UserPreferences.Language.ENGLISH to Res.string.settings_user_interface_language_english,
-                UserPreferences.Language.HUNGARIAN to Res.string.settings_user_interface_language_hungarian,
-            ).forEach { (language, name) ->
-                val isSelected = userPreferences?.language == language
-                val localName = stringResource(name)
-                val ownName = if (language == UserPreferences.Language.SYSTEM_DEFAULT) {
-                    localName
-                } else {
-                    LocalizedStrings.get(name, locale = AppLocale.findByCode(language.id))
-                }
-                RadioListItem(
-                    title = if (isSelected || ownName == localName) {
-                        localName
-                    } else {
-                        stringResource(Res.string.settings_user_interface_language_with_own_name, localName, ownName)
-                    },
-                    isSelected = isSelected,
-                    onSelected = { viewModel.setLanguage(language) },
-                )
-            }
-        }
+        LanguageChoice(
+            selected = userPreferences?.language,
+            onSelected = viewModel::setLanguage,
+        )
         SettingsMessage(text = stringResource(Res.string.settings_user_interface_language_more_coming))
     }
     // The way back into the steps the first run opens with, which start from what everything is set to now.

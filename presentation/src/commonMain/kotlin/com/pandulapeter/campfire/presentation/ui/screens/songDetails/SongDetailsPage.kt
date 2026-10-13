@@ -115,7 +115,6 @@ internal fun SongDetailsPage(
     playingControls: SongPlayingControls?,
     playingTools: SongPlayingTools?,
     shouldShowChords: Boolean,
-    shouldShowKey: Boolean,
     shouldShowCapo: Boolean,
     shouldShowTempo: Boolean,
     shouldNumberSections: Boolean,
@@ -290,7 +289,6 @@ internal fun SongDetailsPage(
                 // Read only, the page is the one place left that says how the song is played, so a capo of none and the
                 // tempo and the time the click starts at are said rather than left to be guessed from nothing.
                 readsDefaults = playingControls == null,
-                shouldShowKey = shouldShowKey,
                 shouldShowCapo = shouldShowCapo,
                 shouldShowTempo = shouldShowTempo,
                 // The padding is inside the scroll, so a row is at the top of the viewport once the song is scrolled by

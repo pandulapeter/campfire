@@ -131,6 +131,9 @@ scrolled — and one write when it is confirmed), delete song / delete setlist c
 either), the editor's unsaved changes and revert questions, and the controls, setlist picker and song picker
 `ModalBottomSheet`s.
 
+`AppLanguageSheet` (`DialogType.AppLanguage`) is Settings' language list in a sheet, put up by the onboarding's first
+page; a pick is written at once and closes it, and it has no `SavedDialog`, since nothing is typed into it.
+
 `WhatsNewDialog` is an alert titled with
 `CAMPFIRE_VERSION_NAME`, shown once per version after the first installed one.
 

@@ -92,17 +92,12 @@ data class UserPreferences(
      */
     val areChordDiagramsEnabled: Boolean = true,
     /**
-     * Whether a song's key is shown where it is read: on its card in the lists, and as the key stepper of its first
-     * section, which is also where it is transposed. Only while [areChordsEnabled], which takes the key away with the
-     * chords whatever this says. Off, the capo stays, since it is a fret rather than something to read.
+     * What the cards of the Songs screen say after the artist. Never the song details screen, which always shows the key
+     * and the tempo a song is played in, since that is where they are changed.
      */
-    val isKeyShown: Boolean = true,
-    /**
-     * Whether a song's tempo is shown where it is read: on its card, and as the tempo and the time signature of its
-     * first section and of the changes inside it. Only while [isMetronomeEnabled]; off, the click still plays at the
-     * song's tempo, and the metronome's own panel still shows and sets it.
-     */
-    val isTempoShown: Boolean = true,
+    val songCardDetails: CardDetails = CardDetails.SongsDefault,
+    /** What the cards of the Setlists screen say after the artist, the twin of [songCardDetails]. */
+    val setlistCardDetails: CardDetails = CardDetails.SetlistsDefault,
     /** The instrument the diagrams are drawn for, or [ChordInstrument.OTHER] for none. */
     val chordInstrument: ChordInstrument = ChordInstrument.GUITAR,
     /**
@@ -319,6 +314,23 @@ data class UserPreferences(
 
         companion object {
             val Default = ChordSpelling(accidentals = Accidentals.ORIGINAL, notation = Notation.STANDARD)
+        }
+    }
+
+    /**
+     * What a song card says after the artist, chosen for each list on its own: a setlist's cards are where a set is
+     * timed, the library's where a song is found. The key is only ever shown with the chords switched on and the tempo
+     * with the metronome, whatever these say, so that what they are set to is kept for when those come back.
+     */
+    data class CardDetails(
+        val isKeyShown: Boolean,
+        val isTempoShown: Boolean,
+        val isDurationShown: Boolean,
+    ) {
+
+        companion object {
+            val SongsDefault = CardDetails(isKeyShown = true, isTempoShown = true, isDurationShown = false)
+            val SetlistsDefault = CardDetails(isKeyShown = true, isTempoShown = true, isDurationShown = true)
         }
     }
 

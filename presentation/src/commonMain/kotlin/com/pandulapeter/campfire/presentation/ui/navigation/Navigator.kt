@@ -29,6 +29,7 @@ import com.pandulapeter.campfire.presentation.ui.screens.onboarding.previousOnbo
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.SetlistWithSongs
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.Companion.BACK_STACK_KEY
+import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.Companion.ONBOARDING_STEP_KEY
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.map
@@ -114,10 +115,12 @@ internal class Navigator(
     /**
      * The page the onboarding is on, kept here rather than in the screen so that every way back - the desktop's Escape
      * included, which [navigateBack] answers from outside the composition - steps back through the pages before it leaves
-     * the screen ([isOnboardingBackToPreviousStep]). It lasts for the session like [settingsTab]: a process the system
-     * ends behind the onboarding comes back on its first page, every answer given so far kept in the preferences.
+     * the screen ([isOnboardingBackToPreviousStep]). It is kept in [savedStateStore] with the back stack, so a process
+     * the system ends behind the onboarding comes back on the page it was left on: on Android that is how the Dropbox
+     * page shows how a consent answered after the browser outlived the app went, and the answers themselves are in the
+     * preferences already.
      */
-    var onboardingStep by mutableStateOf(OnboardingStep.entries.first())
+    var onboardingStep by mutableStateOf(savedStateStore.restore<OnboardingStep>(ONBOARDING_STEP_KEY) ?: OnboardingStep.entries.first())
         private set
 
     /** Whether a way back out of the onboarding goes to its previous page rather than leaving it, see [onboardingStep]. */
@@ -368,19 +371,24 @@ internal class Navigator(
     }
 
     /**
-     * Puts the onboarding over whatever is on screen, on its first page. Refused over an onboarding that is already open,
+     * Puts the onboarding over whatever is on screen, on [step]. Refused over an onboarding that is already open,
      * which a second tap on the settings screen's row during the push would otherwise stack a second one on.
      */
-    fun openOnboarding(isOpenedFromSettings: Boolean) {
+    fun openOnboarding(isOpenedFromSettings: Boolean, step: OnboardingStep = OnboardingStep.entries.first()) {
         if (backStack.any { it is CampfireDestination.Onboarding }) return
-        onboardingStep = OnboardingStep.entries.first()
+        showOnboardingStep(step)
         updateBackStack { add(CampfireDestination.Onboarding(isOpenedFromSettings = isOpenedFromSettings)) }
     }
 
     /** Moves the onboarding on to its next page, or finishes it on its last one. */
     fun showNextOnboardingStep() {
         if (backStack.lastOrNull() !is CampfireDestination.Onboarding) return
-        nextOnboardingStep(onboardingStep, onboardingSteps())?.let { onboardingStep = it } ?: closeOnboarding()
+        nextOnboardingStep(onboardingStep, onboardingSteps())?.let { showOnboardingStep(it) } ?: closeOnboarding()
+    }
+
+    private fun showOnboardingStep(step: OnboardingStep) {
+        onboardingStep = step
+        savedStateStore.persist(ONBOARDING_STEP_KEY, step)
     }
 
     /** Takes the onboarding off the stack, which slides the screen under it back in. */
@@ -407,7 +415,7 @@ internal class Navigator(
                 dialogHost.showDialog(DialogType.UnsavedChanges)
             }
             isSettingsBackToGeneral -> settingsTab = SettingsTab.GENERAL
-            isOnboardingBackToPreviousStep -> previousOnboardingStep(onboardingStep, onboardingSteps())?.let { onboardingStep = it }
+            isOnboardingBackToPreviousStep -> previousOnboardingStep(onboardingStep, onboardingSteps())?.let { showOnboardingStep(it) }
             else -> popBackStack(isPredictiveBackCompleted)
         }
     }

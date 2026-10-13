@@ -151,9 +151,9 @@ internal class PreferencesController(
 
     fun setSongDetailsLookupEnabled(value: Boolean) = changeUserPreferences { copy(isSongDetailsLookupEnabled = value) }
 
-    fun setKeyShown(value: Boolean) = changeUserPreferences { copy(isKeyShown = value) }
+    fun setSongCardDetails(value: UserPreferences.CardDetails) = changeUserPreferences { copy(songCardDetails = value) }
 
-    fun setTempoShown(value: Boolean) = changeUserPreferences { copy(isTempoShown = value) }
+    fun setSetlistCardDetails(value: UserPreferences.CardDetails) = changeUserPreferences { copy(setlistCardDetails = value) }
 
     fun setSectionNumberingEnabled(value: Boolean) = changeUserPreferences { copy(shouldNumberSections = value) }
 

@@ -39,12 +39,13 @@ import com.pandulapeter.campfire.presentation.resources.settings_notation_standa
 import com.pandulapeter.campfire.presentation.resources.settings_notation_standard_description
 import com.pandulapeter.campfire.presentation.resources.settings_number_sections
 import com.pandulapeter.campfire.presentation.resources.settings_number_sections_description
-import com.pandulapeter.campfire.presentation.resources.settings_show_key
-import com.pandulapeter.campfire.presentation.resources.settings_show_key_description
-import com.pandulapeter.campfire.presentation.resources.settings_show_tempo
-import com.pandulapeter.campfire.presentation.resources.settings_show_tempo_description
+import com.pandulapeter.campfire.presentation.resources.settings_setlist_cards
+import com.pandulapeter.campfire.presentation.resources.settings_setlist_cards_description
+import com.pandulapeter.campfire.presentation.resources.settings_song_cards
+import com.pandulapeter.campfire.presentation.resources.settings_song_cards_description
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
+import com.pandulapeter.campfire.presentation.ui.components.CardDetailsChoice
 import com.pandulapeter.campfire.presentation.ui.components.ChordInstrumentList
 import com.pandulapeter.campfire.presentation.ui.components.RadioListItem
 import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
@@ -62,27 +63,41 @@ internal fun SongDisplaySection(
         isChecked = userPreferences?.shouldNumberSections == true,
         onCheckedChange = viewModel::setSectionNumberingEnabled,
     )
-    // Disabled rather than hidden with their feature off, like the chord spelling below: the key goes with the chords and
-    // the tempo with the metronome, whatever these say, and what they are set to is kept for when those come back.
-    SwitchListItem(
-        title = stringResource(Res.string.settings_show_key),
-        description = stringResource(Res.string.settings_show_key_description),
-        isChecked = userPreferences?.isKeyShown != false,
-        isEnabled = userPreferences?.areChordsEnabled != false,
-        onCheckedChange = viewModel::setKeyShown,
-    )
-    SwitchListItem(
-        title = stringResource(Res.string.settings_show_tempo),
-        description = stringResource(Res.string.settings_show_tempo_description),
-        isChecked = userPreferences?.isTempoShown != false,
-        isEnabled = userPreferences?.isMetronomeEnabled != false,
-        onCheckedChange = viewModel::setTempoShown,
-    )
+    // One row of chips per list, since a setlist's cards are where a set is timed and the library's where a song is found.
+    // A chip is disabled rather than hidden with its feature off, like the chord spelling below: the key goes with the
+    // chords and the tempo with the metronome, whatever these say, and what they are set to is kept for when those come
+    // back. The song details screen is not theirs: the top of a song is where its key and tempo are changed.
+    val areChordsEnabled = userPreferences?.areChordsEnabled != false
+    val isMetronomeEnabled = userPreferences?.isMetronomeEnabled != false
+    SettingsSubsection(
+        title = stringResource(Res.string.settings_song_cards),
+        description = stringResource(Res.string.settings_song_cards_description),
+    ) {
+        CardDetailsChoice(
+            details = userPreferences?.songCardDetails ?: UserPreferences.CardDetails.SongsDefault,
+            areChordsEnabled = areChordsEnabled,
+            isMetronomeEnabled = isMetronomeEnabled,
+            onDetailsChanged = viewModel::setSongCardDetails,
+        )
+    }
+    val areSetlistsEnabled = userPreferences?.areSetlistsEnabled != false
+    SettingsSubsection(
+        title = stringResource(Res.string.settings_setlist_cards),
+        description = stringResource(Res.string.settings_setlist_cards_description),
+        isEnabled = areSetlistsEnabled,
+    ) {
+        CardDetailsChoice(
+            details = userPreferences?.setlistCardDetails ?: UserPreferences.CardDetails.SetlistsDefault,
+            areChordsEnabled = areChordsEnabled && areSetlistsEnabled,
+            isMetronomeEnabled = isMetronomeEnabled && areSetlistsEnabled,
+            onDetailsChanged = viewModel::setSetlistCardDetails,
+        )
+    }
     // Both of these only decide how a chord is written, so with the chords switched off they have nothing to say. They
     // stay in the section rather than disappearing from it: what they are set to is still what the chords will look
     // like as soon as they are shown again. The accidentals stay enabled under a numbering, since they still spell the
     // key it counts from.
-    val isChordSpellingEnabled = userPreferences?.areChordsEnabled != false
+    val isChordSpellingEnabled = areChordsEnabled
     // The examples under the settings below are written in the notation picked here, so they change with it.
     val notation = (userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default).notation.toChordNotation()
     NotationChoice(

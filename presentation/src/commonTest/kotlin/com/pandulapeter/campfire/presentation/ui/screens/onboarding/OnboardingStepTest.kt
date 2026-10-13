@@ -18,12 +18,10 @@ class OnboardingStepTest {
     private fun steps(
         canConnectDropbox: Boolean = true,
         areChordsEnabled: Boolean = true,
-        isMetronomeEnabled: Boolean = true,
         isTunerEnabled: Boolean = true,
     ) = onboardingSteps(
         canConnectDropbox = canConnectDropbox,
         areChordsEnabled = areChordsEnabled,
-        isMetronomeEnabled = isMetronomeEnabled,
         isTunerEnabled = isTunerEnabled,
     )
 
@@ -38,42 +36,34 @@ class OnboardingStepTest {
     }
 
     @Test
-    fun `a singer is only asked about the look, the role, and the cloud folder`() {
+    fun `without the chords and the tuner the instrument and the notation are not asked`() {
         assertEquals(
-            listOf(OnboardingStep.WELCOME, OnboardingStep.ROLE, OnboardingStep.SYNC, OnboardingStep.DONE),
-            steps(areChordsEnabled = false, isMetronomeEnabled = false, isTunerEnabled = false),
+            listOf(OnboardingStep.WELCOME, OnboardingStep.FEATURES, OnboardingStep.AT_A_GLANCE, OnboardingStep.SYNC),
+            steps(areChordsEnabled = false, isTunerEnabled = false),
         )
     }
 
     @Test
-    fun `the tuner alone asks for the instrument but not the notation or what a song shows`() {
+    fun `the tuner alone asks for the instrument but not the notation`() {
         assertEquals(
-            listOf(OnboardingStep.WELCOME, OnboardingStep.ROLE, OnboardingStep.INSTRUMENT, OnboardingStep.SYNC, OnboardingStep.DONE),
-            steps(areChordsEnabled = false, isMetronomeEnabled = false, isTunerEnabled = true),
-        )
-    }
-
-    @Test
-    fun `the metronome alone asks what a song shows, for its tempo`() {
-        assertEquals(
-            listOf(OnboardingStep.WELCOME, OnboardingStep.ROLE, OnboardingStep.AT_A_GLANCE, OnboardingStep.SYNC, OnboardingStep.DONE),
-            steps(areChordsEnabled = false, isMetronomeEnabled = true, isTunerEnabled = false),
+            listOf(OnboardingStep.WELCOME, OnboardingStep.FEATURES, OnboardingStep.INSTRUMENT, OnboardingStep.AT_A_GLANCE, OnboardingStep.SYNC),
+            steps(areChordsEnabled = false, isTunerEnabled = true),
         )
     }
 
     @Test
     fun `the next and the previous step skip the ones that are not shown`() {
-        val steps = steps(areChordsEnabled = false, isMetronomeEnabled = false, isTunerEnabled = false)
-        assertEquals(OnboardingStep.SYNC, nextOnboardingStep(OnboardingStep.ROLE, steps))
-        assertEquals(OnboardingStep.ROLE, previousOnboardingStep(OnboardingStep.SYNC, steps))
-        assertNull(nextOnboardingStep(OnboardingStep.DONE, steps))
+        val steps = steps(canConnectDropbox = false, areChordsEnabled = false, isTunerEnabled = false)
+        assertEquals(OnboardingStep.AT_A_GLANCE, nextOnboardingStep(OnboardingStep.FEATURES, steps))
+        assertEquals(OnboardingStep.FEATURES, previousOnboardingStep(OnboardingStep.AT_A_GLANCE, steps))
+        assertNull(nextOnboardingStep(OnboardingStep.AT_A_GLANCE, steps))
         assertNull(previousOnboardingStep(OnboardingStep.WELCOME, steps))
     }
 
     @Test
     fun `a step that is no longer shown still leads on and back`() {
-        val steps = steps(areChordsEnabled = false, isMetronomeEnabled = false, isTunerEnabled = false)
-        assertEquals(OnboardingStep.SYNC, nextOnboardingStep(OnboardingStep.INSTRUMENT, steps))
-        assertEquals(OnboardingStep.ROLE, previousOnboardingStep(OnboardingStep.INSTRUMENT, steps))
+        val steps = steps(areChordsEnabled = false, isTunerEnabled = false)
+        assertEquals(OnboardingStep.AT_A_GLANCE, nextOnboardingStep(OnboardingStep.INSTRUMENT, steps))
+        assertEquals(OnboardingStep.FEATURES, previousOnboardingStep(OnboardingStep.INSTRUMENT, steps))
     }
 }

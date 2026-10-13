@@ -41,8 +41,6 @@ import org.jetbrains.compose.resources.painterResource
  *   transposition reads the amount the page's chords are moved by with the capo counted in, while it still steps and resets
  *   only the transposition's own override, see `withCapoSounding`.
  * @param shouldShowChords False with the chords switched off, which takes the transposition and the capo with them.
- * @param shouldShowKey False where the reader chose not to see the key, which takes its stepper, and with it the
- *   transposition, off the section while leaving the capo.
  * @param shouldShowTempo False with the metronome switched off, which takes the tempo and the time signature with it.
  * @return Null where both are switched off, which leaves the song nothing to set.
  */
@@ -55,12 +53,11 @@ internal fun rememberSongPlayingControls(
     readsCapoAsTransposition: Boolean,
     chordSpelling: UserPreferences.ChordSpelling,
     shouldShowChords: Boolean,
-    shouldShowKey: Boolean,
     shouldShowTempo: Boolean,
 ): SongPlayingControls? {
     if (!shouldShowChords && !shouldShowTempo) return null
     val (transposition, capo, tempo) = playback
-    val canTranspose = shouldShowChords && shouldShowKey && song.hasChords
+    val canTranspose = shouldShowChords && song.hasChords
     val shownTransposition = if (readsCapoAsTransposition) soundingTransposition(transposition, capo.fret) else transposition
     // The key the page's chords are spelled in: without the capo, which is the stepper next to this one and moves the
     // sounding key without moving a chord, so counting it in here would have this control naming a key that is written

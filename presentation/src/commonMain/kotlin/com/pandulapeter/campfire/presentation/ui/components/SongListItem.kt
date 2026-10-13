@@ -67,7 +67,8 @@ import kotlin.time.Duration
  * @param shouldShowChords False with the Chords switch off, where the row says nothing about chords at all: not the
  *   key, and not the "Lyrics only" marker either, which only tells this song from the others while the others are
  *   showing chords.
- * @param duration The song's duration, shown on the Setlists screen even with the chords switched off.
+ * @param duration The song's duration, where the list's cards show it (`UserPreferences.CardDetails`), even with the
+ *   chords switched off.
  * @param labelsOnEverySong The tags and languages the row leaves off, because every song in the library carries
  *   them and a label that is on every row tells the reader nothing about this one.
  * @param shouldShowLabels False inside a setlist, which lists the songs somebody wrote down rather than a view of the
