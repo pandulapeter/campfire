@@ -32,7 +32,9 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.chordpro.ChordNotation
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
+import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_expand
@@ -41,19 +43,23 @@ import com.pandulapeter.campfire.presentation.resources.settings_chord_instrumen
 import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_mandolin
 import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_ukulele
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_instrument_choose
+import com.pandulapeter.campfire.presentation.resources.song_details_chord_instrument_tuning
+import com.pandulapeter.campfire.presentation.ui.chords.chordTuningLabel
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * The instrument the Chords section's diagrams are drawn for, named after its pill and opening the sheet that changes
- * it. It names the instrument rather than showing an icon, since diagrams for the wrong instrument look just as right
- * as the ones for the right one, and its chevron says that it is a choice rather than an edit of the song. A tonal pill
+ * The instrument the Chords section's diagrams are drawn for, and its tuning where that is not the standard one, named
+ * after its pill and opening the sheet that changes them. It names them rather than showing an icon, since diagrams for
+ * the wrong instrument or tuning look just as right as the ones for the right one, and its chevron says that it is a
+ * choice rather than an edit of the song. The tuning's note is written in [notation], as Settings writes it. A tonal pill
  * like the steppers, as tall as the section's own pill ([height]), its name in the same style; the name crossfades as it
  * changes and the pill resizes with it, and a name too long for the row is cut short rather than wrapped.
  */
 @Composable
 internal fun ChordInstrumentChip(
     modifier: Modifier = Modifier,
-    instrument: ChordInstrument,
+    tuning: ChordTuning,
+    notation: ChordNotation,
     height: Dp,
     style: TextStyle,
     chevronSize: Dp,
@@ -73,11 +79,16 @@ internal fun ChordInstrumentChip(
         val fadeSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
         AnimatedContent(
             modifier = Modifier.weight(1f, fill = false),
-            targetState = instrument,
+            targetState = tuning,
             transitionSpec = { fadeIn(fadeSpec) togetherWith fadeOut(fadeSpec) },
-        ) { shownInstrument ->
+        ) { shownTuning ->
+            val instrumentName = stringResource(shownTuning.instrument.nameResource)
             Text(
-                text = stringResource(shownInstrument.nameResource),
+                text = if (shownTuning.kind == ChordTuning.Kind.Standard) {
+                    instrumentName
+                } else {
+                    stringResource(Res.string.song_details_chord_instrument_tuning, instrumentName, chordTuningLabel(shownTuning, notation))
+                },
                 style = style,
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,

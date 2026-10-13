@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.chords
 import com.pandulapeter.campfire.chordpro.chords.ChordProChords
 import com.pandulapeter.campfire.chordpro.chords.ChordVoicings
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
+import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.chordpro.model.ChordVoicing
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -20,7 +21,7 @@ import kotlin.test.assertTrue
 class ChordDiagramGeometryTest {
 
     private fun fretted(frets: List<Int?>, fingers: List<Int>? = null, root: Int = 0) =
-        chordDiagramGeometryOf(ChordVoicing.Fretted(frets, fingers), ChordInstrument.GUITAR, root) as ChordDiagramGeometry.Fretted
+        chordDiagramGeometryOf(ChordVoicing.Fretted(frets, fingers), ChordTuning.GUITAR, root) as ChordDiagramGeometry.Fretted
 
     @Test
     fun `an open shape is drawn from the nut in four frets`() {
@@ -39,6 +40,17 @@ class ChordDiagramGeometryTest {
         assertEquals(listOf(1 to 2, 2 to 1, 4 to 0), c.dots.map { it.string to it.row })
         assertEquals(listOf(true, false, true), c.dots.map { it.isRoot })
         assertEquals(emptyList(), c.barres)
+    }
+
+    @Test
+    fun `the roots are marked on the strings the tuning has`() {
+        // The baritone's G is the soprano's C shape, on strings tuned D G B E.
+        val baritone = chordDiagramGeometryOf(ChordVoicing.Fretted(listOf(0, 0, 0, 3)), ChordTuning.UKULELE_BARITONE, root = 7) as ChordDiagramGeometry.Fretted
+        assertEquals(listOf(ChordDiagramGeometry.Fretted.Marker.OPEN, ChordDiagramGeometry.Fretted.Marker.OPEN_ROOT, ChordDiagramGeometry.Fretted.Marker.OPEN, null), baritone.markers)
+        assertEquals(listOf(true), baritone.dots.map { it.isRoot })
+        // A half step down, an A is the standard Bb shape, its roots on the fifth and the third string.
+        val shifted = chordDiagramGeometryOf(ChordVoicing.Fretted(listOf(null, 1, 3, 3, 3, 1)), ChordTuning.GUITAR_HALF_STEP_DOWN, root = 9) as ChordDiagramGeometry.Fretted
+        assertEquals(listOf(1, 3), shifted.dots.filter { it.isRoot }.map { it.string })
     }
 
     @Test
@@ -69,10 +81,10 @@ class ChordDiagramGeometryTest {
         assertEquals(listOf(3, 4, 5), d.dots.map { it.string })
         assertEquals(emptyList(), fretted(listOf(0, 2, 2, 0, 0, 0)).barres)
         assertEquals(emptyList(), fretted(listOf(null, 0, 2, 2, 2, 0)).barres)
-        assertEquals(emptyList(), (chordDiagramGeometryOf(ChordVoicing.Fretted(listOf(0, 2, 3, 2)), ChordInstrument.UKULELE, root = 7) as ChordDiagramGeometry.Fretted).barres)
+        assertEquals(emptyList(), (chordDiagramGeometryOf(ChordVoicing.Fretted(listOf(0, 2, 3, 2)), ChordTuning.UKULELE, root = 7) as ChordDiagramGeometry.Fretted).barres)
         assertEquals(
             listOf(ChordDiagramGeometry.Fretted.Barre(row = 0, fromString = 2, toString = 3, finger = null)),
-            (chordDiagramGeometryOf(ChordVoicing.Fretted(listOf(3, 2, 1, 1)), ChordInstrument.UKULELE, root = 10) as ChordDiagramGeometry.Fretted).barres,
+            (chordDiagramGeometryOf(ChordVoicing.Fretted(listOf(3, 2, 1, 1)), ChordTuning.UKULELE, root = 10) as ChordDiagramGeometry.Fretted).barres,
         )
     }
 
@@ -83,7 +95,7 @@ class ChordDiagramGeometryTest {
         roots.forEach { root ->
             qualities.forEach { quality ->
                 val chord = ChordProChords.parse(root + quality)!!
-                listOf(ChordInstrument.GUITAR, ChordInstrument.UKULELE).forEach { instrument ->
+                listOf(ChordTuning.GUITAR, ChordTuning.UKULELE).forEach { instrument ->
                     ChordVoicings.all(chord, instrument).filterIsInstance<ChordVoicing.Fretted>().filter { it.fingers != null }.forEach { shape ->
                         val fingered = (chordDiagramGeometryOf(shape, instrument, chord.root) as ChordDiagramGeometry.Fretted).barres.map { it.copy(finger = null) }
                         val bare = (chordDiagramGeometryOf(shape.copy(fingers = null), instrument, chord.root) as ChordDiagramGeometry.Fretted).barres
@@ -96,14 +108,14 @@ class ChordDiagramGeometryTest {
 
     @Test
     fun `a keyboard is drawn in as many octaves as its keys reach, two at least`() {
-        val c = chordDiagramGeometryOf(ChordVoicing.Keys(listOf(0, 4, 7)), ChordInstrument.KEYBOARD, root = 0) as ChordDiagramGeometry.Keyboard
+        val c = chordDiagramGeometryOf(ChordVoicing.Keys(listOf(0, 4, 7)), ChordTuning.KEYBOARD, root = 0) as ChordDiagramGeometry.Keyboard
         assertEquals(2, c.octaves)
         assertEquals(setOf(0), c.roots)
-        val slash = chordDiagramGeometryOf(ChordVoicing.Keys(listOf(14, 18, 21), bass = 6), ChordInstrument.KEYBOARD, root = 2) as ChordDiagramGeometry.Keyboard
+        val slash = chordDiagramGeometryOf(ChordVoicing.Keys(listOf(14, 18, 21), bass = 6), ChordTuning.KEYBOARD, root = 2) as ChordDiagramGeometry.Keyboard
         assertEquals(2, slash.octaves)
         assertEquals(6, slash.bass)
         assertEquals(setOf(14), slash.roots)
-        assertEquals(3, (chordDiagramGeometryOf(ChordVoicing.Keys(listOf(23, 27, 30)), ChordInstrument.KEYBOARD, root = 11) as ChordDiagramGeometry.Keyboard).octaves)
+        assertEquals(3, (chordDiagramGeometryOf(ChordVoicing.Keys(listOf(23, 27, 30)), ChordTuning.KEYBOARD, root = 11) as ChordDiagramGeometry.Keyboard).octaves)
     }
 
     @Test
@@ -111,9 +123,9 @@ class ChordDiagramGeometryTest {
         val g = fretted(listOf(3, 2, 0, 0, 0, 99999999))
         assertEquals(24, g.fretCount)
         assertTrue(g.dots.none { it.row >= 24 })
-        val keys = chordDiagramGeometryOf(ChordVoicing.Keys(listOf(0, 4, 99999999)), ChordInstrument.KEYBOARD, root = 0) as ChordDiagramGeometry.Keyboard
+        val keys = chordDiagramGeometryOf(ChordVoicing.Keys(listOf(0, 4, 99999999)), ChordTuning.KEYBOARD, root = 0) as ChordDiagramGeometry.Keyboard
         assertEquals(4, keys.octaves)
         assertEquals(setOf(0, 4), keys.keys)
-        assertEquals(null, (chordDiagramGeometryOf(ChordVoicing.Keys(listOf(4, 7), bass = -5), ChordInstrument.KEYBOARD, root = 0) as ChordDiagramGeometry.Keyboard).bass)
+        assertEquals(null, (chordDiagramGeometryOf(ChordVoicing.Keys(listOf(4, 7), bass = -5), ChordTuning.KEYBOARD, root = 0) as ChordDiagramGeometry.Keyboard).bass)
     }
 }

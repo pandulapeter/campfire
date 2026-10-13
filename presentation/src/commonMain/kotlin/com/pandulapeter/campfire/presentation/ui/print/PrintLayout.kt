@@ -250,7 +250,8 @@ private class PrintLayouter(
     /**
      * The song's chord diagrams as the song details screen's Chords section has them, in rows of cells each holding the
      * chord's name over its diagram, sized by the text so that they grow with it, a row being one unit [place] keeps
-     * together. Only with the chords, since the diagrams finger chords the page would otherwise not print.
+     * together, under the line naming the tuning where it is not the standard one ([PrintLabels.chordTuning]). Only with
+     * the chords, since the diagrams finger chords the page would otherwise not print.
      */
     private fun chordDiagramRows(chords: List<PrintChord>): List<Row> {
         if (!options.showChords || !options.showChordDiagrams || chords.isEmpty()) return emptyList()
@@ -282,7 +283,7 @@ private class PrintLayouter(
             }
             val height = rowNameHeight + row.maxOf { it.diagramHeight } + if (index < rows.lastIndex) gap else 0f
             Row(parts, height, diagrams = diagrams)
-        }
+        }.let { diagramRows -> labels.chordTuning?.let { wrapped(it, detailStyle) + diagramRows } ?: diagramRows }
     }
 
     /**

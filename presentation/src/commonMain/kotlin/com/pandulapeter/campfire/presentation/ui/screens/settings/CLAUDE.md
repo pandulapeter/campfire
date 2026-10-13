@@ -28,8 +28,9 @@ with the setlists (see `ui/CLAUDE.md`), the chord spelling — the notation as a
 Standard, German, Latin, Nashville numbers and Roman numerals, each with an example under it, since five names do not
 fit a row of segments on a phone, and the accidentals, which stay enabled under a numbering since they still spell its
 key — and the instrument the chord diagrams are drawn for, disabled with the chords switched off but not with the
-diagrams, since the keyboard also reads the capo as a transposition; the accidentals' examples and the instruments' strings are written in the notation picked there,
-never in the language), Library (the sync section on an `ElevatedCard`, the one card in the app, then what the library
+diagrams, since the keyboard also reads the capo as a transposition, with its tuning's chips under it for a fretted
+instrument, which go with the diagrams too (see `ui/chords/CLAUDE.md`); the accidentals' examples, the instruments'
+strings, and the tunings' notes are written in the notation picked there, never in the language), Library (the sync section on an `ElevatedCard`, the one card in the app, then what the library
 holds and what can be done with it — its song and setlist counts and the cover cache are each a row that deletes what it
 counts, the cache behind an ordinary confirmation and the library behind `DeleteLibraryDialog`, which wants `DELETE`
 typed in every language, into a field that capitalizes what is typed) and About (the app, its links and where its other

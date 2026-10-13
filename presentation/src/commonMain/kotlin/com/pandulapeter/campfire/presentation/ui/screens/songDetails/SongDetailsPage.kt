@@ -166,7 +166,7 @@ internal fun SongDetailsPage(
                 tempoOverride = tempoOverride,
                 capoOverride = capoOverride,
                 showsTiming = shouldShowTempo,
-                chordInstrument = chordDiagrams?.instrument,
+                chordTuning = chordDiagrams?.tuning,
             ),
             buildsInPlace = buildsModelInPlace,
         ) { inputs, searchesShapes ->
@@ -177,7 +177,7 @@ internal fun SongDetailsPage(
                 shouldShowChords = inputs.shouldShowChords,
                 labels = inputs.labels,
                 showsTiming = inputs.showsTiming,
-                chordInstrument = inputs.chordInstrument,
+                chordTuning = inputs.chordTuning,
                 notation = inputs.spelling.notation.toChordNotation(),
                 searchesShapes = searchesShapes,
             )

@@ -53,8 +53,8 @@ internal class ChordCellLayouts(
     val diagramSizes = with(density) {
         cells.map { cell ->
             IntSize(
-                width = ((if (cell.instrument.isFretted) FRETTED_WIDTH else KEYBOARD_WIDTH) * fontScale).roundToPx(),
-                height = ((if (cell.instrument.isFretted) FRETTED_HEIGHT else KEYBOARD_HEIGHT) * fontScale).roundToPx(),
+                width = ((if (cell.tuning.instrument.isFretted) FRETTED_WIDTH else KEYBOARD_WIDTH) * fontScale).roundToPx(),
+                height = ((if (cell.tuning.instrument.isFretted) FRETTED_HEIGHT else KEYBOARD_HEIGHT) * fontScale).roundToPx(),
             )
         }
     }
@@ -76,7 +76,7 @@ internal class ChordCellLayouts(
     val widestCell by lazy(LazyThreadSafetyMode.NONE) { cellWidths.maxOrNull() ?: 0 }
     val geometries by lazy(LazyThreadSafetyMode.NONE) {
         cells.map { cell ->
-            cell.selection.shape?.let { chordDiagramGeometryOf(it, cell.instrument, cell.root) } ?: emptyChordDiagramGeometryOf(cell.instrument)
+            cell.selection.shape?.let { chordDiagramGeometryOf(it, cell.tuning, cell.root) } ?: emptyChordDiagramGeometryOf(cell.tuning.instrument)
         }
     }
     private val rowStartsByWidth = mutableMapOf<Int, IntArray>()

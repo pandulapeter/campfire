@@ -18,6 +18,7 @@ import com.pandulapeter.campfire.chordpro.model.Chord
 import com.pandulapeter.campfire.chordpro.model.ChordDefinition
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
+import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.chordpro.model.ChordVoicing
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 
@@ -34,6 +35,8 @@ import com.pandulapeter.campfire.data.model.domain.UserPreferences
  *   [isShapePending].
  * @property definition The shape the song itself gives the chord on the instrument, where it gives one that is drawn,
  *   see [songChordsOf].
+ * @property undrawnDefinition The shape the song gives the chord where the tuning does not draw it
+ *   ([ChordTuning.drawsDefinitions]): a standard tuning shape, which the chord's sheet says is there and offers to show.
  * @property isShapePending The default shape has not been looked for yet, see [songChordsOf]'s `searchesShapes`; drawn
  *   as the empty frame until it has.
  */
@@ -45,6 +48,7 @@ internal data class SongChord(
     val spelling: String? = null,
     val defaultShape: ChordVoicing? = null,
     val definition: ChordDefinition? = null,
+    val undrawnDefinition: ChordDefinition? = null,
     val isShapePending: Boolean = false,
 )
 
@@ -63,7 +67,8 @@ internal data class SongChord(
  * definition to as well, or else by the notes the two names stand for. A definition as the file writes it is drawn
  * whatever it asks of a hand, since asking for the unusual is what one is for; one a transposition moved only while a
  * hand can hold it, in the octave the move chose for exactly that, and otherwise the chord is drawn as if the song gave
- * it no shape.
+ * it no shape. A definition is a shape in standard tuning, so in a tuning whose shapes are not the standard ones it is
+ * not drawn either, and is only kept as [SongChord.undrawnDefinition].
  *
  * Without [searchesShapes] a chord whose default shape only the search finds is left [SongChord.isShapePending], for
  * [withSearchedShapes] to fill in away from the main thread: what builds a page in a frame cannot wait for a search.
@@ -71,11 +76,11 @@ internal data class SongChord(
 internal fun songChordsOf(
     song: ChordProSong,
     notation: ChordNotation,
-    instrument: ChordInstrument,
+    tuning: ChordTuning,
     searchesShapes: Boolean = true,
 ): List<SongChord> {
     val shownNames = ChordProNotation.shownNames(song, notation)
-    val definitions = song.metadata.definitions.filter { it.instrument == instrument }
+    val definitions = song.metadata.definitions.filter { it.instrument == tuning.instrument }
     fun definitionOf(name: String, chord: Chord) =
         (definitions.lastOrNull { it.name == name } ?: definitions.lastOrNull { ChordProChords.parse(it.name) == chord })
             ?.takeIf { it.movedBy == 0 || (it.voicing as? ChordVoicing.Fretted)?.frets?.let(ChordVoicings::isHoldable) != false }
@@ -85,25 +90,27 @@ internal fun songChordsOf(
         .mapNotNull { name -> ChordProChords.parse(name)?.let { chord -> Triple(name, chord, definitionOf(name, chord)) } }
         .distinctBy { (_, chord, definition) -> chord to definition?.let { it.voicing to it.movedBy } }
     if (entries.size > MAX_SONG_CHORDS) return emptyList()
-    return entries.map { (name, chord, definition) ->
-        val isShapePending = definition == null && !searchesShapes && ChordVoicings.needsSearch(chord, instrument)
+    return entries.map { (name, chord, written) ->
+        val definition = written?.takeIf { tuning.drawsDefinitions }
+        val isShapePending = definition == null && !searchesShapes && ChordVoicings.needsSearch(chord, tuning)
         SongChord(
             name = shownNames.getValue(name),
             chord = chord,
             letterName = name.takeIf { notation.isNumbering && shownNames[name] != name },
             spelling = name,
-            defaultShape = if (definition == null && !isShapePending) ChordVoicings.default(chord, instrument) else null,
+            defaultShape = if (definition == null && !isShapePending) ChordVoicings.default(chord, tuning) else null,
             definition = definition,
+            undrawnDefinition = written?.takeIf { definition == null },
             isShapePending = isShapePending,
         )
     }
 }
 
 /** [this] with the shapes [songChordsOf] left to be looked for filled in: the search, so never on the main thread. */
-internal fun List<SongChord>.withSearchedShapes(instrument: ChordInstrument) = if (none { it.isShapePending }) {
+internal fun List<SongChord>.withSearchedShapes(tuning: ChordTuning) = if (none { it.isShapePending }) {
     this
 } else {
-    map { if (it.isShapePending) it.copy(defaultShape = ChordVoicings.default(it.chord, instrument), isShapePending = false) else it }
+    map { if (it.isShapePending) it.copy(defaultShape = ChordVoicings.default(it.chord, tuning), isShapePending = false) else it }
 }
 
 /** `:chordpro`'s instrument for the one the preferences name, null for [UserPreferences.ChordInstrument.OTHER], which has none. */
@@ -113,6 +120,23 @@ internal fun UserPreferences.ChordInstrument.toChordInstrument() = when (this) {
     UserPreferences.ChordInstrument.MANDOLIN -> ChordInstrument.MANDOLIN
     UserPreferences.ChordInstrument.KEYBOARD -> ChordInstrument.KEYBOARD
     UserPreferences.ChordInstrument.OTHER -> null
+}
+
+/**
+ * The tuning the diagrams are drawn for: the one [UserPreferences.chordTunings] names for the instrument picked, and
+ * its standard one where it names none, one this version does not know, or one of another instrument. Null for
+ * [UserPreferences.ChordInstrument.OTHER], which draws no diagrams.
+ */
+internal fun UserPreferences.chordTuning(): ChordTuning? = chordInstrument.toChordInstrument()?.let { chordTuningOf(it, chordTunings) }
+
+/** The tuning [chordTunings] (see [UserPreferences.chordTunings]) names for [instrument], see [chordTuning]. */
+internal fun chordTuningOf(instrument: ChordInstrument, chordTunings: Map<String, String>): ChordTuning =
+    chordTunings[instrument.id]?.let(ChordTuning::fromId)?.takeIf { it.instrument == instrument } ?: ChordTuning.standard(instrument)
+
+/** [this] with [tuning] as the one the diagrams are drawn for on its instrument, a standard tuning leaving no entry. */
+internal fun UserPreferences.withChordTuning(tuning: ChordTuning): UserPreferences {
+    val instrumentId = tuning.instrument.id
+    return copy(chordTunings = if (tuning.kind == ChordTuning.Kind.Standard) chordTunings - instrumentId else chordTunings + (instrumentId to tuning.id))
 }
 
 /** `:chordpro`'s notation for the one the preferences name. */

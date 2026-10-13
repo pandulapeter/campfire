@@ -144,6 +144,17 @@ internal object ChordVoicingTables {
         "D#aug frets x x 1 4 4 3 fingers 0 0 1 3 4 2",
     )
 
+    /**
+     * The guitar's drop tunings' own shapes, on drop D's strings (drop C♯ to drop B are drop D moved down, so their
+     * chords are looked for here moved up by as much, and the first string double drop D lowers is muted in all of them): the ones every drop D chart prints that no standard
+     * shape becomes once its sixth string is re-fretted. The one-finger power chord above all, without which a D5 would
+     * come up as the standard `x 5 7 7 x x`, a table shape that is still a D5 there and so comes before any search.
+     */
+    val drop = listOf(
+        "D5 frets 0 0 0 x x x fingers 0 0 0 0 0 0",
+        "Eb5 frets 1 1 1 x x x fingers 1 1 1 0 0 0",
+    )
+
     val ukulele = listOf(
         "C frets 0 0 0 3 fingers 0 0 0 3",
         "Cm frets 0 3 3 3 fingers 0 1 1 1",

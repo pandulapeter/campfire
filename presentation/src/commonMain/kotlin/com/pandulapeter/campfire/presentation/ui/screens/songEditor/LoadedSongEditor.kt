@@ -77,8 +77,8 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_preview
 import com.pandulapeter.campfire.presentation.resources.song_editor_redo
 import com.pandulapeter.campfire.presentation.resources.song_editor_split
 import com.pandulapeter.campfire.presentation.resources.song_editor_undo
-import com.pandulapeter.campfire.chordpro.model.ChordInstrument
-import com.pandulapeter.campfire.presentation.ui.chords.toChordInstrument
+import com.pandulapeter.campfire.chordpro.model.ChordTuning
+import com.pandulapeter.campfire.presentation.ui.chords.chordTuning
 import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ACTION_BUTTON_OVERLAP
@@ -410,11 +410,12 @@ internal fun LoadedSongEditor(
                         chordShapes = remember(userPreferences) {
                             // Other draws no diagrams, but a definition is still worth writing for whoever reads the
                             // file on a guitar, the instrument ChordPro takes a `{define}` without one to be for.
-                            val instrument = userPreferences?.chordInstrument?.toChordInstrument() ?: ChordInstrument.GUITAR
+                            val tuning = userPreferences?.chordTuning() ?: ChordTuning.GUITAR
                             EditorChordShapes(
                                 notation = notation.toChordNotation(),
-                                instrument = instrument,
-                                storedShapes = userPreferences?.chordVoicings?.get(instrument.id).orEmpty(),
+                                tuning = tuning,
+                                storedShapes = userPreferences?.chordVoicings?.get(tuning.instrument.id).orEmpty(),
+                                onWrittenForStandardTuning = viewModel::onChordShapeWrittenForStandardTuning,
                             )
                         },
                     )

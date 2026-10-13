@@ -11,7 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.chords
 
 import androidx.compose.runtime.Immutable
 import com.pandulapeter.campfire.chordpro.chords.ChordVoicings
-import com.pandulapeter.campfire.chordpro.model.ChordInstrument
+import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.chordpro.model.ChordVoicing
 
 /** The shape a chord is drawn with, and where it came from. */
@@ -27,7 +27,7 @@ internal data class SelectedShape(
         /** The song's own `{define}`, which has no stepper: the song says how it is played, the editor is where that changes. */
         DEFINED,
 
-        /** The player's own choice of shape for the chord on the instrument, from the chord's sheet. */
+        /** The player's own choice of shape for the chord in the tuning, from the chord's sheet. */
         PLAYER,
 
         /** The app's own first shape of the chord, or no shape at all where it has none. */
@@ -36,16 +36,17 @@ internal data class SelectedShape(
 }
 
 /**
- * The shape [chord] is drawn with on [instrument]: the song's own definition of it where there is one that is drawn
- * (see [songChordsOf]), the player's stored one for the chord ([storedShapes], by the chord's id) where it still reads as
- * a shape of that instrument, and otherwise the app's own.
+ * The shape [chord] is drawn with in [tuning]: the song's own definition of it where there is one that is drawn (see
+ * [songChordsOf]), the player's stored one for the chord ([storedShapes], the ones stored under the tuning's
+ * [ChordTuning.voicingKey], by the chord's id) where it still reads as a shape of that instrument, and otherwise the
+ * app's own.
  */
 internal fun selectShape(
     chord: SongChord,
-    instrument: ChordInstrument,
+    tuning: ChordTuning,
     storedShapes: Map<String, String>,
 ): SelectedShape {
     chord.definition?.let { return SelectedShape(it.voicing, SelectedShape.Source.DEFINED, it.movedBy) }
-    storedShapes[chord.chord.id]?.let { ChordVoicings.read(it, instrument, chord.chord) }?.let { return SelectedShape(it, SelectedShape.Source.PLAYER) }
+    storedShapes[chord.chord.id]?.let { ChordVoicings.read(it, tuning, chord.chord) }?.let { return SelectedShape(it, SelectedShape.Source.PLAYER) }
     return SelectedShape(chord.defaultShape, SelectedShape.Source.DEFAULT)
 }

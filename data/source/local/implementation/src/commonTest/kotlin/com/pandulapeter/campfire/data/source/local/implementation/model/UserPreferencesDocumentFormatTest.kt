@@ -53,6 +53,7 @@ internal class UserPreferencesDocumentFormatTest {
             tagSortingMode = "alphabetical",
             languageSortingMode = "alphabetical",
             seenWhatsNewVersions = setOf("4.5.1", "4.6.0"),
+            chordTunings = mapOf("guitar" to "guitar_drop_d", "ukulele" to "ukulele_baritone"),
         )
 
         val decoded = UserPreferencesDocumentFormat.decode(UserPreferencesDocumentFormat.encode(document))
@@ -115,6 +116,14 @@ internal class UserPreferencesDocumentFormatTest {
         val decoded = UserPreferencesDocumentFormat.decode("""{"tagColors": {"christmas": "red", "folk": 3, "rock": "blue"}}""")
 
         assertEquals(mapOf("christmas" to "red", "rock" to "blue"), decoded.document.tagColors)
+        assertFalse(decoded.isIntact)
+    }
+
+    @Test
+    fun `gives up only the chord tunings that are not text`() {
+        val decoded = UserPreferencesDocumentFormat.decode("""{"chordTunings": {"guitar": "guitar_drop_d", "ukulele": 3}}""")
+
+        assertEquals(mapOf("guitar" to "guitar_drop_d"), decoded.document.chordTunings)
         assertFalse(decoded.isIntact)
     }
 

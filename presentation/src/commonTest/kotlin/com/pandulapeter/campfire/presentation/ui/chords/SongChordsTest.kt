@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.chords.ChordProChords
 import com.pandulapeter.campfire.chordpro.chords.ChordVoicings
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
+import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -23,8 +24,8 @@ import kotlin.test.assertTrue
 
 class SongChordsTest {
 
-    private fun names(text: String, notation: ChordNotation = ChordNotation.STANDARD, instrument: ChordInstrument = ChordInstrument.GUITAR) =
-        songChordsOf(ChordProParser.parse(text), notation, instrument)
+    private fun names(text: String, notation: ChordNotation = ChordNotation.STANDARD, tuning: ChordTuning = ChordTuning.GUITAR) =
+        songChordsOf(ChordProParser.parse(text), notation, tuning)
 
     @Test
     fun `every chord is listed once, in the order it is first played`() {
@@ -47,22 +48,22 @@ class SongChordsTest {
         // The shapes worked out are cached for the whole process and only :chordpro's own tests can reset that cache, so
         // these chords are ones no other test of this module asks for.
         val unusual = ChordProChords.parse("Ebmaj9#11/Bb")!!
-        assertTrue(ChordVoicings.needsSearch(unusual, ChordInstrument.GUITAR))
-        val chords = songChordsOf(ChordProParser.parse("[C]la [Ebmaj9#11/Bb]la"), ChordNotation.STANDARD, ChordInstrument.GUITAR, searchesShapes = false)
+        assertTrue(ChordVoicings.needsSearch(unusual, ChordTuning.GUITAR))
+        val chords = songChordsOf(ChordProParser.parse("[C]la [Ebmaj9#11/Bb]la"), ChordNotation.STANDARD, ChordTuning.GUITAR, searchesShapes = false)
         assertFalse(chords[0].isShapePending)
         assertNotNull(chords[0].defaultShape)
         assertTrue(chords[1].isShapePending)
         assertNull(chords[1].defaultShape)
-        val searched = chords.withSearchedShapes(ChordInstrument.GUITAR)
+        val searched = chords.withSearchedShapes(ChordTuning.GUITAR)
         assertFalse(searched[1].isShapePending)
-        assertEquals(ChordVoicings.default(unusual, ChordInstrument.GUITAR), searched[1].defaultShape)
+        assertEquals(ChordVoicings.default(unusual, ChordTuning.GUITAR), searched[1].defaultShape)
         assertFalse(
-            songChordsOf(ChordProParser.parse("[Fbmaj9#11/Cb]la"), ChordNotation.STANDARD, ChordInstrument.KEYBOARD, searchesShapes = false).single().isShapePending,
+            songChordsOf(ChordProParser.parse("[Fbmaj9#11/Cb]la"), ChordNotation.STANDARD, ChordTuning.KEYBOARD, searchesShapes = false).single().isShapePending,
         )
         val defined = songChordsOf(
             ChordProParser.parse("{define: Gbmaj9#11 base-fret 1 frets 2 x 3 3 2 3}\n[Gbmaj9#11]la"),
             ChordNotation.STANDARD,
-            ChordInstrument.GUITAR,
+            ChordTuning.GUITAR,
             searchesShapes = false,
         ).single()
         assertTrue(defined.definition != null)

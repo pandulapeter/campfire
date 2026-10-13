@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.chordpro.chords
 
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
+import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.chordpro.model.ChordVoicing
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -37,41 +38,96 @@ class ChordVoicingsTest {
             "C#m" to "x 4 6 6 5 4", "Bb" to "x 1 3 3 3 1", "Eb" to "x x 1 3 4 3", "Ab" to "4 6 6 5 4 4",
             "Bbm" to "x 1 3 3 2 1", "G#m" to "4 6 6 4 4 4", "F#7" to "2 4 2 3 2 2", "Bm7" to "x 2 0 2 0 2",
             "Esus4" to "0 2 2 2 0 0", "D/F#" to "2 x 0 2 3 2", "G/B" to "x 2 0 0 0 3", "C/G" to "3 3 2 0 1 0",
-        ).forEach { (name, shape) -> assertEquals(shape, first(name, ChordInstrument.GUITAR), name) }
+        ).forEach { (name, shape) -> assertEquals(shape, first(name, ChordTuning.GUITAR), name) }
         mapOf(
             "C" to "0 0 0 3", "G" to "0 2 3 2", "Am" to "2 0 0 0", "F" to "2 0 1 0", "D" to "2 2 2 0", "Em" to "0 4 3 2",
             "A" to "2 1 0 0", "Dm" to "2 2 1 0", "G7" to "0 2 1 2", "C7" to "0 0 0 1", "Bb" to "3 2 1 1", "E7" to "1 2 0 2",
             "A7" to "0 1 0 0", "Bm" to "4 2 2 2", "D7" to "2 2 2 3", "F#m" to "2 1 2 0", "C#m" to "1 1 0 4", "E" to "1 4 0 2",
-        ).forEach { (name, shape) -> assertEquals(shape, first(name, ChordInstrument.UKULELE), name) }
+        ).forEach { (name, shape) -> assertEquals(shape, first(name, ChordTuning.UKULELE), name) }
         mapOf(
             "G" to "0 0 2 3", "C" to "0 2 3 0", "D" to "2 0 0 2", "Em" to "0 2 2 0", "Am" to "2 2 3 0", "A" to "2 2 4 0",
             "E" to "1 2 2 0", "F" to "2 3 3 1", "Bm" to "4 0 2 2", "G7" to "0 0 2 1", "D7" to "2 0 3 2", "B7" to "2 1 2 2",
             "C#" to "1 3 4 1", "C#m" to "1 2 4 4", "G#m" to "1 1 2 4", "Bbm" to "3 3 4 6",
-        ).forEach { (name, shape) -> assertEquals(shape, first(name, ChordInstrument.MANDOLIN), name) }
+        ).forEach { (name, shape) -> assertEquals(shape, first(name, ChordTuning.MANDOLIN), name) }
+    }
+
+    @Test
+    fun `a shifted tuning draws the shape that sounds the chord on its strings`() {
+        assertEquals("x 1 3 3 3 1", first("A", ChordTuning.GUITAR_HALF_STEP_DOWN), "the standard Bb shape")
+        assertEquals("4 6 6 5 4 4", first("G", ChordTuning.GUITAR_HALF_STEP_DOWN), "the standard Ab shape")
+        assertEquals("x 0 2 2 2 0", first("G", ChordTuning.GUITAR_FULL_STEP_DOWN), "the standard A shape")
+        assertEquals("x 2 4 4 4 2", first("A", ChordTuning.GUITAR_FULL_STEP_DOWN), "the standard B shape")
+        assertEquals("1 1 3 4", first("G", ChordTuning.MANDOLIN_HALF_STEP_DOWN), "the mandolin's Ab shape")
+        assertEquals("0 2 3 2", first("G", ChordTuning.UKULELE_LOW_G))
+        assertEquals("0 0 0 3", first("G", ChordTuning.UKULELE_BARITONE), "the soprano's C shape")
+        assertEquals("2 0 1 0", first("G", ChordTuning.UKULELE_D), "the soprano's F shape")
+    }
+
+    @Test
+    fun `every shape in every tuning sounds the chord it is drawn for`() {
+        ChordTuning.entries.filter { it.instrument.isFretted }.forEach { tuning ->
+            listOf("G", "A", "Am", "D7", "Em", "C", "F", "Bb", "D5").forEach { name ->
+                val chord = ChordProChords.parse(name)!!
+                ChordVoicings.all(chord, tuning).forEach { shape ->
+                    val sounded = ChordShapeGeometry.pitchClasses(shape, tuning.strings)
+                    assertTrue(chord.pitchClasses.containsAll(sounded) && chord.root in sounded, "$name in ${tuning.id}: ${ChordVoicings.write(shape)}")
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `drop D plays the shapes its charts show`() {
+        mapOf(
+            "D" to "x x 0 2 3 2", "G" to "5 2 0 0 0 3", "D5" to "0 0 0 x x x", "E5" to "2 2 2 x x x", "A" to "x 0 2 2 2 0",
+            "Am" to "x 0 2 2 1 0", "C" to "x 3 2 0 1 0", "Em" to "2 2 2 0 0 0", "E" to "2 2 2 1 0 0", "F" to "3 3 3 2 1 1",
+            "Dm" to "x x 0 2 3 1", "Bm" to "x 2 4 4 3 2",
+        ).forEach { (name, shape) -> assertEquals(shape, first(name, ChordTuning.GUITAR_DROP_D), name) }
+        assertEquals("0 0 0 x x x", first("C#5", ChordTuning.GUITAR_DROP_C_SHARP), "drop C#'s open power chord")
+        assertEquals("1 1 1 x x x", first("D5", ChordTuning.GUITAR_DROP_C_SHARP))
+        assertEquals("3 3 3 x x x", first("D5", ChordTuning.GUITAR_DROP_B))
+        assertEquals("0 0 0 x x x", first("D5", ChordTuning.GUITAR_DOUBLE_DROP_D))
+    }
+
+    @Test
+    fun `a re-fretted shape keeps its fingering only where no finger moved`() {
+        val d = ChordVoicings.default(ChordProChords.parse("D")!!, ChordTuning.GUITAR_DROP_D) as ChordVoicing.Fretted
+        assertEquals(listOf(0, 0, 0, 1, 3, 2), d.fingers)
+        val g = ChordVoicings.default(ChordProChords.parse("G")!!, ChordTuning.GUITAR_DROP_D) as ChordVoicing.Fretted
+        assertNull(g.fingers)
+    }
+
+    @Test
+    fun `the shapes are remembered per tuning`() {
+        val g = ChordProChords.parse("G")!!
+        assertEquals("3 2 0 0 0 3", ChordVoicings.write(ChordVoicings.default(g, ChordTuning.GUITAR)!!))
+        assertEquals("5 2 0 0 0 3", ChordVoicings.write(ChordVoicings.default(g, ChordTuning.GUITAR_DROP_D)!!))
+        assertEquals("3 2 0 0 0 3", ChordVoicings.write(ChordVoicings.default(g, ChordTuning.GUITAR)!!))
     }
 
     @Test
     fun `every shape the search finds keeps its rules`() {
         corpus.forEach { name ->
             val chord = ChordProChords.parse(name)!!
-            listOf(ChordInstrument.GUITAR, ChordInstrument.UKULELE, ChordInstrument.MANDOLIN).forEach { instrument ->
+            ChordTuning.entries.filter { it.instrument.isFretted }.forEach { tuning ->
+                val instrument = tuning.instrument
                 val played = if (instrument.playsChordOver) chord.copy(bass = null) else chord
-                val shapes = ChordVoicings.all(chord, instrument)
+                val shapes = ChordVoicings.all(chord, tuning)
                 assertEquals(shapes.size, shapes.map { (it as ChordVoicing.Fretted).frets }.distinct().size, "$name has no shape twice")
                 shapes.forEach { voicing ->
                     val shape = assertIs<ChordVoicing.Fretted>(voicing)
                     val frets = shape.frets
-                    val label = "$name on ${instrument.id}: ${ChordVoicings.write(shape)}"
-                    assertEquals(instrument.tuning.size, frets.size, label)
-                    assertTrue(played.pitchClasses.containsAll(ChordShapeGeometry.pitchClasses(shape, instrument)), label)
+                    val label = "$name in ${tuning.id}: ${ChordVoicings.write(shape)}"
+                    assertEquals(tuning.strings.size, frets.size, label)
+                    assertTrue(played.pitchClasses.containsAll(ChordShapeGeometry.pitchClasses(shape, tuning.strings)), label)
                     assertTrue(ChordShapeGeometry.fingerCount(frets) <= 4, label)
                     val sounding = frets.indices.filter { frets[it] != null }
                     // The tables' own shapes, which carry their fingering, may mute a string with a finger that rests on it.
                     if (shape.fingers == null) assertEquals(sounding.size, sounding.last() - sounding.first() + 1, "$label mutes no string between two that sound")
                     val stopped = frets.filterNotNull().filter { it > 0 }
                     if (stopped.isNotEmpty()) assertTrue(stopped.max() - stopped.min() < 4, label)
-                    if (instrument == ChordInstrument.GUITAR) {
-                        val lowest = sounding.minOf { instrument.tuning[it] + frets[it]!! } % 12
+                    if (!instrument.playsChordOver) {
+                        val lowest = sounding.minOf { tuning.strings[it] + frets[it]!! } % 12
                         assertTrue(lowest == (chord.bass ?: chord.root), "$label sounds its bass or root lowest")
                     }
                 }
@@ -83,7 +139,7 @@ class ChordVoicingsTest {
     fun `the search answers the same twice`() {
         corpus.forEach { name ->
             val chord = ChordProChords.parse(name)!!
-            ChordInstrument.entries.forEach { assertEquals(ChordVoicings.all(chord, it), ChordVoicings.all(chord, it), name) }
+            ChordTuning.entries.forEach { assertEquals(ChordVoicings.all(chord, it), ChordVoicings.all(chord, it), name) }
         }
     }
 
@@ -91,7 +147,7 @@ class ChordVoicingsTest {
     fun `the default is the first of all the shapes`() {
         corpus.forEach { name ->
             val chord = ChordProChords.parse(name)!!
-            ChordInstrument.entries.forEach {
+            ChordTuning.entries.forEach {
                 assertEquals(ChordVoicings.all(chord, it).firstOrNull(), ChordVoicings.default(chord, it), name)
                 assertEquals(ChordVoicings.all(chord, it).firstOrNull(), ChordVoicings.default(chord, it), "$name, remembered")
             }
@@ -102,12 +158,12 @@ class ChordVoicingsTest {
     fun `the keyboard plays the notes from the root up and their inversions`() {
         assertEquals(
             listOf(ChordVoicing.Keys(listOf(0, 4, 7)), ChordVoicing.Keys(listOf(4, 7, 12)), ChordVoicing.Keys(listOf(7, 12, 16))),
-            ChordVoicings.all(ChordProChords.parse("C")!!, ChordInstrument.KEYBOARD),
+            ChordVoicings.all(ChordProChords.parse("C")!!, ChordTuning.KEYBOARD),
         )
-        assertEquals(ChordVoicing.Keys(listOf(9, 12, 16, 19)), ChordVoicings.default(ChordProChords.parse("Am7")!!, ChordInstrument.KEYBOARD))
-        assertEquals(ChordVoicing.Keys(listOf(14, 18, 21), bass = 6), ChordVoicings.default(ChordProChords.parse("D/F#")!!, ChordInstrument.KEYBOARD))
-        assertEquals(6, (ChordVoicings.default(ChordProChords.parse("C7(b9,#9,#11,b13)")!!, ChordInstrument.KEYBOARD) as ChordVoicing.Keys).notes.size)
-        val thirteenth = ChordVoicings.default(ChordProChords.parse("C13#11")!!, ChordInstrument.KEYBOARD) as ChordVoicing.Keys
+        assertEquals(ChordVoicing.Keys(listOf(9, 12, 16, 19)), ChordVoicings.default(ChordProChords.parse("Am7")!!, ChordTuning.KEYBOARD))
+        assertEquals(ChordVoicing.Keys(listOf(14, 18, 21), bass = 6), ChordVoicings.default(ChordProChords.parse("D/F#")!!, ChordTuning.KEYBOARD))
+        assertEquals(6, (ChordVoicings.default(ChordProChords.parse("C7(b9,#9,#11,b13)")!!, ChordTuning.KEYBOARD) as ChordVoicing.Keys).notes.size)
+        val thirteenth = ChordVoicings.default(ChordProChords.parse("C13#11")!!, ChordTuning.KEYBOARD) as ChordVoicing.Keys
         assertEquals(5, thirteenth.notes.size, "the fifth goes first")
     }
 
@@ -115,23 +171,23 @@ class ChordVoicingsTest {
     fun `a stored shape is read back as it was written`() {
         corpus.forEach { name ->
             val chord = ChordProChords.parse(name)!!
-            ChordInstrument.entries.forEach { instrument ->
-                ChordVoicings.all(chord, instrument).forEach { shape ->
-                    assertEquals(shape, ChordVoicings.read(ChordVoicings.write(shape), instrument, chord), name)
+            ChordTuning.entries.forEach { tuning ->
+                ChordVoicings.all(chord, tuning).forEach { shape ->
+                    assertEquals(shape, ChordVoicings.read(ChordVoicings.write(shape), tuning, chord), name)
                 }
             }
         }
         assertEquals("x 3 2 0 1 0", ChordVoicings.write(ChordVoicing.Fretted(listOf(null, 3, 2, 0, 1, 0))))
         assertEquals("12 16 19 / 4", ChordVoicings.write(ChordVoicing.Keys(listOf(12, 16, 19), bass = 4)))
-        assertEquals(ChordVoicing.Fretted(listOf(null, 3, 2, 0, 1, 0)), ChordVoicings.read("x 3 2 0 1 0", ChordInstrument.GUITAR))
-        assertEquals(listOf(0, 3, 2, 0, 1, 0), (ChordVoicings.read("x 3 2 0 1 0", ChordInstrument.GUITAR, ChordProChords.parse("C")) as ChordVoicing.Fretted).fingers)
-        listOf("0 4 48", "0 4 99999999", "4 7 / -5", "4 7 / 12").forEach { assertNull(ChordVoicings.read(it, ChordInstrument.KEYBOARD), it) }
-        listOf("0 4 47", "4 7 / 11").forEach { assertNotNull(ChordVoicings.read(it, ChordInstrument.KEYBOARD), it) }
+        assertEquals(ChordVoicing.Fretted(listOf(null, 3, 2, 0, 1, 0)), ChordVoicings.read("x 3 2 0 1 0", ChordTuning.GUITAR))
+        assertEquals(listOf(0, 3, 2, 0, 1, 0), (ChordVoicings.read("x 3 2 0 1 0", ChordTuning.GUITAR, ChordProChords.parse("C")) as ChordVoicing.Fretted).fingers)
+        listOf("0 4 48", "0 4 99999999", "4 7 / -5", "4 7 / 12").forEach { assertNull(ChordVoicings.read(it, ChordTuning.KEYBOARD), it) }
+        listOf("0 4 47", "4 7 / 11").forEach { assertNotNull(ChordVoicings.read(it, ChordTuning.KEYBOARD), it) }
         listOf("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B").forEach { root ->
             listOf("", "m7", "maj9", "13#11", "/E").forEach { quality ->
                 val chord = ChordProChords.parse(root + quality)!!
-                ChordVoicings.all(chord, ChordInstrument.KEYBOARD).forEach { shape ->
-                    assertEquals(shape, ChordVoicings.read(ChordVoicings.write(shape), ChordInstrument.KEYBOARD, chord), root + quality)
+                ChordVoicings.all(chord, ChordTuning.KEYBOARD).forEach { shape ->
+                    assertEquals(shape, ChordVoicings.read(ChordVoicings.write(shape), ChordTuning.KEYBOARD, chord), root + quality)
                 }
             }
         }
@@ -139,40 +195,40 @@ class ChordVoicingsTest {
 
     @Test
     fun `a shape of another instrument is not read`() {
-        assertNull(ChordVoicings.read("x 3 2 0 1 0", ChordInstrument.UKULELE))
-        assertNull(ChordVoicings.read("0 0 0 3", ChordInstrument.GUITAR))
-        assertNull(ChordVoicings.read("x 3 two 0 1 0", ChordInstrument.GUITAR))
-        assertNull(ChordVoicings.read("", ChordInstrument.KEYBOARD))
-        assertNull(ChordVoicings.read("4 7 /", ChordInstrument.KEYBOARD))
+        assertNull(ChordVoicings.read("x 3 2 0 1 0", ChordTuning.UKULELE))
+        assertNull(ChordVoicings.read("0 0 0 3", ChordTuning.GUITAR))
+        assertNull(ChordVoicings.read("x 3 two 0 1 0", ChordTuning.GUITAR))
+        assertNull(ChordVoicings.read("", ChordTuning.KEYBOARD))
+        assertNull(ChordVoicings.read("4 7 /", ChordTuning.KEYBOARD))
     }
 
     @Test
     fun `a chord with no shape answers no shape rather than a wrong one`() {
         val crowded = ChordProChords.parse("C7(b9, #9, #11, b13)")!!
-        assertEquals(emptyList(), ChordVoicings.all(crowded, ChordInstrument.UKULELE))
-        assertNull(ChordVoicings.default(crowded, ChordInstrument.UKULELE))
+        assertEquals(emptyList(), ChordVoicings.all(crowded, ChordTuning.UKULELE))
+        assertNull(ChordVoicings.default(crowded, ChordTuning.UKULELE))
     }
 
     @Test
     fun `only a fretted chord the tables lack needs the search, until it has been looked for`() {
         val unusual = ChordProChords.parse("Dbmaj9#11/Ab")!!
-        assertTrue(!ChordVoicings.needsSearch(ChordProChords.parse("G")!!, ChordInstrument.GUITAR))
-        assertTrue(!ChordVoicings.needsSearch(unusual, ChordInstrument.KEYBOARD))
-        assertTrue(ChordVoicings.needsSearch(unusual, ChordInstrument.GUITAR))
-        ChordVoicings.default(unusual, ChordInstrument.GUITAR)
-        assertTrue(!ChordVoicings.needsSearch(unusual, ChordInstrument.GUITAR))
+        assertTrue(!ChordVoicings.needsSearch(ChordProChords.parse("G")!!, ChordTuning.GUITAR))
+        assertTrue(!ChordVoicings.needsSearch(unusual, ChordTuning.KEYBOARD))
+        assertTrue(ChordVoicings.needsSearch(unusual, ChordTuning.GUITAR))
+        ChordVoicings.default(unusual, ChordTuning.GUITAR)
+        assertTrue(!ChordVoicings.needsSearch(unusual, ChordTuning.GUITAR))
     }
 
     @Test
     fun `a chord with more notes than strings has no shape`() {
         val chord = ChordProChords.parse("C(b9,9,#9,11,#11,b13,13,#13,maj7)")!!
-        listOf(ChordInstrument.GUITAR, ChordInstrument.UKULELE).forEach {
+        listOf(ChordTuning.GUITAR, ChordTuning.UKULELE).forEach {
             assertEquals(emptyList(), ChordVoicings.all(chord, it))
             assertNull(ChordVoicings.default(chord, it))
         }
     }
 
-    private fun first(name: String, instrument: ChordInstrument) = ChordVoicings.default(ChordProChords.parse(name)!!, instrument)?.let(ChordVoicings::write)
+    private fun first(name: String, tuning: ChordTuning) = ChordVoicings.default(ChordProChords.parse(name)!!, tuning)?.let(ChordVoicings::write)
 
     private val corpus: List<String> = listOf("C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B").flatMap { root ->
         listOf("", "m", "7", "m7", "maj7", "sus2", "sus4", "7sus4", "6", "m6", "9", "add9", "dim", "dim7", "m7b5", "aug", "5", "/E", "13", "m9", "11")

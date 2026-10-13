@@ -20,21 +20,25 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument
 import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_description
+import com.pandulapeter.campfire.presentation.resources.settings_chord_tuning
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.chords.chordTuning
 import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.components.ChordInstrumentList
+import com.pandulapeter.campfire.presentation.ui.components.ChordTuningChips
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
 
 /**
- * The instrument the chord diagrams are drawn for, as Settings offers it but without Other, which would take away the
- * Chords section the sheet was opened from. A pick is written at once and closes the sheet, so that the diagrams it
- * changes are what is seen next.
+ * The instrument the chord diagrams are drawn for and its tuning, as Settings offers them but without Other, which would
+ * take away the Chords section the sheet was opened from. A pick is written at once and closes the sheet, so that the
+ * diagrams it changes are what is seen next.
  */
 @Composable
 internal fun ChordInstrumentSheet(
@@ -66,6 +70,7 @@ internal fun ChordInstrumentSheet(
             )
             ChordInstrumentList(
                 selected = userPreferences?.chordInstrument,
+                chordTunings = userPreferences?.chordTunings.orEmpty(),
                 notation = notation,
                 isOtherShown = false,
                 onSelected = { instrument ->
@@ -73,6 +78,21 @@ internal fun ChordInstrumentSheet(
                     closeSheet()
                 },
             )
+            userPreferences?.chordTuning()?.takeIf { ChordTuning.of(it.instrument).size > 1 }?.let { tuning ->
+                Text(
+                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp),
+                    text = stringResource(Res.string.settings_chord_tuning),
+                    style = MaterialTheme.typography.titleSmall,
+                )
+                ChordTuningChips(
+                    selected = tuning,
+                    notation = notation,
+                    onSelected = {
+                        viewModel.setChordTuning(it)
+                        closeSheet()
+                    },
+                )
+            }
         }
     }
 }

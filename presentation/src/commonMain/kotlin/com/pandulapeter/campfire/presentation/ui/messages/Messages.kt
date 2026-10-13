@@ -48,6 +48,7 @@ import com.pandulapeter.campfire.presentation.resources.import_open
 import com.pandulapeter.campfire.presentation.resources.import_status_stopped
 import com.pandulapeter.campfire.presentation.resources.import_result
 import com.pandulapeter.campfire.presentation.resources.song_editor_draft_lost
+import com.pandulapeter.campfire.presentation.resources.song_editor_chord_shape_standard_tuning
 import com.pandulapeter.campfire.presentation.resources.song_editor_draft_restored
 import com.pandulapeter.campfire.presentation.resources.song_editor_file_gone
 import com.pandulapeter.campfire.presentation.resources.song_editor_save_failed
@@ -109,6 +110,7 @@ internal fun Messages(
         Message.SaveFailed -> stringResource(Res.string.song_editor_save_failed)
         Message.EditorDraftLost -> stringResource(Res.string.song_editor_draft_lost)
         Message.EditorDraftRestored -> stringResource(Res.string.song_editor_draft_restored)
+        Message.ChordShapeWrittenForStandardTuning -> stringResource(Res.string.song_editor_chord_shape_standard_tuning)
         Message.EditedSongFileGone -> stringResource(Res.string.song_editor_file_gone)
         Message.OperationFailed -> stringResource(Res.string.error_operation_failed)
         is Message.SongsUpdated -> pluralStringResource(Res.plurals.songs_selection_updated, current.count, current.count)

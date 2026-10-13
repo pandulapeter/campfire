@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.print
 
 import com.pandulapeter.campfire.chordpro.ChordNotation
-import com.pandulapeter.campfire.chordpro.model.ChordInstrument
+import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.presentation.ui.chords.ChordDiagramGeometry
 import com.pandulapeter.campfire.presentation.ui.chords.chordDiagramGeometryOf
@@ -55,8 +55,8 @@ internal data class PrintSong(
     /** The file as it is stored, which the export screen shows for a song exported as ChordPro, and null when it could not be read. */
     val text: String? = null,
     /**
-     * Every chord the song plays, in the order it is first played, with the shape its Chords section draws it with on
-     * the reader's instrument; empty where the chord diagrams are switched off in the app, whatever the export asks for.
+     * Every chord the song plays, in the order it is first played, with the shape its Chords section draws it with in
+     * the reader's tuning; empty where the chord diagrams are switched off in the app, whatever the export asks for.
      */
     val chords: List<PrintChord> = emptyList(),
 )
@@ -74,20 +74,20 @@ internal data class PrintChord(
 /**
  * The chords of [song], transposed as it is printed and still in the standard notation, named in [notation] and drawn
  * the way the song details screen's Chords section draws them
- * on [instrument]: the song's own definition, the player's shape from [storedShapes], or the app's own, and an empty
+ * in [tuning]: the song's own definition, the player's shape from [storedShapes], or the app's own, and an empty
  * frame for a chord with none, so that the page and the screen finger every chord alike.
  */
 internal fun printChordsOf(
     song: ChordProSong,
     notation: ChordNotation,
-    instrument: ChordInstrument,
+    tuning: ChordTuning,
     storedShapes: Map<String, String>,
-): List<PrintChord> = songChordsOf(song, notation, instrument).map { chord ->
+): List<PrintChord> = songChordsOf(song, notation, tuning).map { chord ->
     PrintChord(
         name = chord.name,
         letterName = chord.letterName,
-        geometry = selectShape(chord, instrument, storedShapes).shape?.let { chordDiagramGeometryOf(it, instrument, chord.chord.root) }
-            ?: emptyChordDiagramGeometryOf(instrument),
+        geometry = selectShape(chord, tuning, storedShapes).shape?.let { chordDiagramGeometryOf(it, tuning, chord.chord.root) }
+            ?: emptyChordDiagramGeometryOf(tuning.instrument),
     )
 }
 
@@ -164,6 +164,11 @@ internal data class PrintLabels(
     val missing: String,
     /** The headings of the sections the file leaves unnamed, the viewer's own. */
     val sections: DefaultSectionLabels,
+    /**
+     * The line naming the tuning the diagrams are drawn for ("Tuning: Drop D"), printed above every song's diagrams so
+     * that a sheet read by somebody who did not set it is not read for the wrong strings; null for standard tuning.
+     */
+    val chordTuning: String? = null,
 )
 
 /** What [PrintLabels.tempoValue] holds in place of the number. */

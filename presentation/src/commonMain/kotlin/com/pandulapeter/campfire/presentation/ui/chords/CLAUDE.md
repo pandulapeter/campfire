@@ -57,8 +57,11 @@ never lights it (a mouse press lights it at once), a screen reader gets one cust
 consumed so it does not also turn the page — a tap between the cells, or on any of them in read only mode, still does.
 
 Which shape a cell draws is `selectShape` (`ChordSelection.kt`, tested): the song's definition, then the player's stored
-shape for the chord's id (`UserPreferences.chordVoicings`, where it still reads as a shape of that instrument), then the
-app's own. `ChordDiagram` draws a `ChordDiagramGeometry` (`ChordDiagramGeometry.kt`, pure and tested): strings and four
+shape for the chord's id (`UserPreferences.chordVoicings` under the tuning's `voicingKey`, where it still reads as a
+shape of that instrument), then the app's own. A cell whose chord is drawn with another shape than before (one picked in
+its sheet, a tuning picked for the instrument) crossfades into it (`ChordShapeCrossfade.kt`, `changedShapeCells`
+tested); a shape the search finds arriving into the empty frame, and a cell that is another chord now, do not.
+`ChordDiagram` draws a `ChordDiagramGeometry` (`ChordDiagramGeometry.kt`, pure and tested): strings and four
 frets or as many as the shape spans, up to 24, the nut or the base fret's number, a dot per stopped string with the root
 in the second accent, an open string on the root ringed in it too, barres from the fingering or from the lowest fret
 where the shape needs one, `×` and `○` above the nut; a keyboard of two octaves or as many as its keys reach, up to
@@ -85,10 +88,10 @@ own instrument, whatever the switches say.
 ### How every chord of a song is fingered is shown at its top
 
 **How every chord of a song is fingered is shown at its top**, on the guitar, the ukulele, the mandolin or the keyboard (the Songs
-tab's Instrument, a list naming the standard tuning's strings under each in the reader's chord notation, since that is the only tuning
-the shapes are for;
-its Other, for every other instrument and tuning, draws no diagram at all, as the Features switch does, and the editor's
-Chord shape button writes a guitar's): a Chords section after the controls of how it is played, one diagram per chord in the order they are
+tab's Instrument, a list naming the strings of the tuning picked for each under it in the reader's chord notation, and
+under it the Tuning, below;
+its Other, for every other instrument and for the open and modal tunings, draws no diagram at all, as the Features
+switch does, and the editor's Chord shape button writes a guitar's): a Chords section after the controls of how it is played, one diagram per chord in the order they are
 first played, folded by one preference for every song and cut between its rows of diagrams wherever a page ends inside
 it, like any other section. Nothing is shipped for it and nothing is fetched: `:chordpro` reads what notes a chord name
 stands for (`ChordProChords`) and finds its shapes (`ChordVoicings`) — a hand-typed table of the shapes everybody knows
@@ -109,3 +112,38 @@ shape button), marks one it cannot read and draws every one in its preview. The 
 heading where the export screen's Chord diagrams box is ticked (as every option is for a new user; offered only while
 the feature is on and a song has a chord, and only with the chords printed), drawn as the song details screen draws
 them, their names left out of the file's selectable text.
+
+## Tunings
+
+### The diagrams are drawn for the tuning the player has
+
+**The diagrams are drawn for the tuning the player has**: Settings → Songs → Tuning, under the instrument and only for a
+fretted one with more than one, a row of chips (`components/ChordTuningChips.kt`, shared with the instrument sheet)
+named the way the tuner names them (`ChordTuningLabels.kt`: a `ChordTuning` is the tuner's `InstrumentTuning` of the
+same id, which `ChordTuningsTest` holds it to, strings included), disabled with the diagrams off, since nothing else
+reads it. One tuning per instrument (`UserPreferences.chordTunings`, written by `withChordTuning`, read by
+`chordTuning()` / `chordTuningOf`: an id of another instrument or one this version does not know is standard), kept on
+the device like the instrument. Half and full step down, drop D to drop B, double drop D, the ukulele's low G, D, and
+baritone tunings, and the mandolin's half step down; what the shapes are in each is `:chordpro`'s `ChordTuning`. The
+onboarding writes it from the tuner's answer (`OnboardingInstrument.chordTuningWrittenFor`).
+
+Everything that drew for an instrument draws for a tuning: `ChordDiagrams.tuning`, `SongLyricsInputs.chordTuning`, the
+cells, the sheet, the PDF and the onboarding's G. A chord name always names the chord that sounds, so a half step down
+an A is drawn `x 1 3 3 3 1`, the shape that sounds A on those strings, and the root dots are read against the tuning's
+own strings. The Chords section's chip names a tuning
+that is not the standard one after its instrument ("Guitar · Drop D"), the chord sheet says it under the title
+("Tuning: Drop D") and the PDF prints that line above every song's diagrams, so a sheet read by somebody who did not set
+it is not read for the wrong strings.
+
+### A song's own definition is a standard tuning shape
+
+**A song's own definition is a standard tuning shape**: ChordPro gives a `{define}` no tuning, and nearly every file is
+written for standard tuning, so a definition is drawn only where a standard tuning shape sounds what it says, standard
+tuning and the ukulele's low G (`ChordTuning.drawsDefinitions`) and is otherwise kept as `SongChord.undrawnDefinition`: the cell draws the player's
+or the app's shape, and the chord's sheet says "Defined in this song for standard tuning" under it with a button that
+shows the definition, named as standard tuning, in the pager's place, and back. The player's choices made in such a
+tuning are kept under the tuning's own key and never turn up in standard tuning. The editor's Chord shape button writes
+the standard tuning shape in every tuning (the player's choice under the instrument's key, else the app's first), since
+every program reads a definition that way, and where the diagrams are in a tuning that does not draw definitions the
+snackbar says it was written for standard tuning (`TextInsertion.isForStandardTuning`,
+`Message.ChordShapeWrittenForStandardTuning`).

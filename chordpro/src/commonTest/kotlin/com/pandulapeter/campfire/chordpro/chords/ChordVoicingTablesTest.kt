@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.chordpro.chords
 
-import com.pandulapeter.campfire.chordpro.model.ChordInstrument
+import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.chordpro.model.ChordVoicing
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -21,22 +21,23 @@ class ChordVoicingTablesTest {
 
     @Test
     fun `every shape of the tables sounds exactly the chord it is filed under`() {
-        tables.forEach { (instrument, lines) ->
+        tables.forEach { (tuning, lines) ->
+            val instrument = tuning.instrument
             lines.forEach { line ->
                 val shape = assertIs<ChordProDefinitions.Reading.Shape>(ChordProDefinitions.read(line, instrument.id), line)
                 assertEquals(instrument, shape.instrument, line)
                 val chord = assertNotNull(ChordProChords.parse(shape.name), line)
                 val voicing = assertIs<ChordVoicing.Fretted>(shape.voicing)
                 val played = if (instrument.playsChordOver) chord.copy(bass = null) else chord
-                val sounded = ChordShapeGeometry.pitchClasses(voicing, instrument)
+                val sounded = ChordShapeGeometry.pitchClasses(voicing, tuning.strings)
                 val fifth = (played.root + 7) % 12
                 assertTrue(played.pitchClasses.containsAll(sounded), "$line sounds only notes of its chord")
                 assertTrue(
                     (played.pitchClasses - sounded).all { it == fifth && played.intervals.size >= 4 || it == played.root && played.pitchClasses.size > instrument.tuning.size },
                     "$line leaves out ${played.pitchClasses - sounded}",
                 )
-                if (instrument == ChordInstrument.GUITAR) {
-                    val lowest = voicing.frets.withIndex().filter { it.value != null }.minOf { instrument.tuning[it.index] + it.value!! }
+                if (!instrument.playsChordOver) {
+                    val lowest = voicing.frets.withIndex().filter { it.value != null }.minOf { tuning.strings[it.index] + it.value!! }
                     assertEquals(chord.bass ?: chord.root, lowest % 12, "$line sounds its bass or root lowest")
                 }
             }
@@ -45,9 +46,9 @@ class ChordVoicingTablesTest {
 
     @Test
     fun `every fingering names as many fingers as frets are stopped`() {
-        tables.forEach { (instrument, lines) ->
+        tables.forEach { (tuning, lines) ->
             lines.forEach { line ->
-                val voicing = (ChordProDefinitions.read(line, instrument.id) as ChordProDefinitions.Reading.Shape).voicing as ChordVoicing.Fretted
+                val voicing = (ChordProDefinitions.read(line, tuning.instrument.id) as ChordProDefinitions.Reading.Shape).voicing as ChordVoicing.Fretted
                 val fingers = assertNotNull(voicing.fingers, line)
                 voicing.frets.forEachIndexed { string, fret ->
                     assertEquals(fret != null && fret > 0, fingers[string] > 0, "$line, string ${string + 1}")
@@ -59,8 +60,10 @@ class ChordVoicingTablesTest {
     }
 
     private val tables = mapOf(
-        ChordInstrument.GUITAR to ChordVoicingTables.guitar,
-        ChordInstrument.UKULELE to ChordVoicingTables.ukulele,
-        ChordInstrument.MANDOLIN to ChordVoicingTables.mandolin,
+        ChordTuning.GUITAR to ChordVoicingTables.guitar,
+        ChordTuning.UKULELE to ChordVoicingTables.ukulele,
+        ChordTuning.MANDOLIN to ChordVoicingTables.mandolin,
+        ChordTuning.GUITAR_DROP_D to ChordVoicingTables.drop,
+        ChordTuning.GUITAR_DOUBLE_DROP_D to ChordVoicingTables.drop,
     )
 }

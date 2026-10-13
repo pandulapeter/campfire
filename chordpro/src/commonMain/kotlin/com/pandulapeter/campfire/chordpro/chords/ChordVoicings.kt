@@ -14,11 +14,12 @@ import com.pandulapeter.campfire.chordpro.chords.ChordVoicingSearch.search
 import com.pandulapeter.campfire.chordpro.chords.ChordVoicingSearch.tableShapes
 import com.pandulapeter.campfire.chordpro.model.Chord
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
+import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.chordpro.model.ChordVoicing
 import kotlin.concurrent.Volatile
 
 /**
- * How a chord is played: the shapes of a [Chord] on an instrument.
+ * How a chord is played: the shapes of a [Chord] on an instrument in one of its tunings ([ChordTuning]).
  *
  * The shapes come from two places, each for what it is good at. The tables ([ChordVoicingTables]) hold the shapes
  * everybody knows, with their fingerings, and always come first, since a search cannot know which of a dozen C chords
@@ -32,25 +33,31 @@ import kotlin.concurrent.Volatile
  *
  * The keyboard needs neither: the chord's notes from the root up, the fifth and then the root left out of a chord of
  * more than five notes, and the inversions as the variations, a slash chord's bass an octave below.
+ *
+ * In a tuning other than the standard one every shape is a shape on the strings the player has. A shifted tuning's are
+ * the standard shapes of the chord the shape names: the chord as written where the tuning is named by its shapes (a
+ * guitar tuned down), the chord moved back by the shift where it is named by the chords that sound (the baritone
+ * ukulele, whose G is the soprano's C shape). A dropped tuning's come from a small table of its own, then from the
+ * standard tables re-fretted on the lowered strings where they still play the chord, then from the search.
  */
 public object ChordVoicings {
 
     /** The defaults worked out so far, replaced whole rather than changed, so threads reading it never see it half written. */
     @Volatile
-    private var defaults: Map<Pair<Chord, ChordInstrument>, ChordVoicing?> = emptyMap()
+    private var defaults: Map<Pair<Chord, ChordTuning>, ChordVoicing?> = emptyMap()
 
     /**
-     * The shape [chord] is shown with on [instrument], or null where there is none. A table lookup wherever the tables
+     * The shape [chord] is shown with in [tuning], or null where there is none. A table lookup wherever the tables
      * have the chord, and the search otherwise, whose answer is remembered for the rest of the session: the first page
      * that names an unusual chord pays for it once.
      */
-    public fun default(chord: Chord, instrument: ChordInstrument): ChordVoicing? {
-        val key = chord to instrument
+    public fun default(chord: Chord, tuning: ChordTuning): ChordVoicing? {
+        val key = chord to tuning
         val cached = defaults
         if (key in cached) return cached[key]
-        val shape = when (instrument) {
+        val shape = when (tuning.instrument) {
             ChordInstrument.KEYBOARD -> keyboard(chord).firstOrNull()
-            else -> tableShapes(chord, instrument).firstOrNull() ?: search(chord, instrument).firstOrNull()
+            else -> tableShapes(chord, tuning).firstOrNull() ?: search(chord, tuning).firstOrNull()
         }
         // A song plays a few dozen chords; starting over when the cache is full keeps it bounded without bookkeeping.
         defaults = (if (cached.size >= MAX_CACHED_DEFAULTS) emptyMap() else cached) + (key to shape)
@@ -63,38 +70,39 @@ public object ChordVoicings {
     }
 
     /**
-     * Whether [default] would have to run the search for [chord] on [instrument]: a fretted chord the tables do not
-     * hold and nothing has looked for yet this session. What builds a page in a frame asks this first.
+     * Whether [default] would have to run the search for [chord] in [tuning]: a fretted chord the tables do not hold,
+     * not even re-fretted for a dropped tuning, and nothing has looked for yet this session. What builds a page in a
+     * frame asks this first.
      */
-    public fun needsSearch(chord: Chord, instrument: ChordInstrument): Boolean =
-        instrument != ChordInstrument.KEYBOARD && (chord to instrument) !in defaults && tableShapes(chord, instrument).isEmpty()
+    public fun needsSearch(chord: Chord, tuning: ChordTuning): Boolean =
+        tuning.instrument != ChordInstrument.KEYBOARD && (chord to tuning) !in defaults && tableShapes(chord, tuning).isEmpty()
 
-    /** Every shape of [chord] on [instrument], [default] first: the tables', then the search's. */
-    public fun all(chord: Chord, instrument: ChordInstrument): List<ChordVoicing> = when (instrument) {
+    /** Every shape of [chord] in [tuning], [default] first: the tables', then the search's. */
+    public fun all(chord: Chord, tuning: ChordTuning): List<ChordVoicing> = when (tuning.instrument) {
         ChordInstrument.KEYBOARD -> keyboard(chord)
         else -> {
-            val table = tableShapes(chord, instrument)
+            val table = tableShapes(chord, tuning)
             val known = table.map { it.frets }.toSet()
-            table + search(chord, instrument).filter { it.frets !in known }
+            table + search(chord, tuning).filter { it.frets !in known }
         }
     }
 
     /**
-     * A shape [write] wrote, read back for [instrument], or null where it is no shape of that instrument. With
-     * [chord], a fretted shape the tables know for it gets their fingering back, which a stored shape does not keep.
+     * A shape [write] wrote, read back for [tuning], or null where it is no shape of its instrument. With [chord], a
+     * fretted shape the tables know for it in that tuning gets their fingering back, which a stored shape does not keep.
      */
-    public fun read(shape: String, instrument: ChordInstrument, chord: Chord? = null): ChordVoicing? {
+    public fun read(shape: String, tuning: ChordTuning, chord: Chord? = null): ChordVoicing? {
         val words = shape.trim().split(' ').filter { it.isNotEmpty() }
-        if (instrument == ChordInstrument.KEYBOARD) {
+        if (tuning.instrument == ChordInstrument.KEYBOARD) {
             val separator = words.indexOf(BASS_SEPARATOR)
             val notes = (if (separator < 0) words else words.subList(0, separator)).map { it.toIntOrNull()?.takeIf { note -> note in 0..MAX_KEY } ?: return null }
             val bass = if (separator < 0) null else words.getOrNull(separator + 1)?.toIntOrNull()?.takeIf { it in 0 until 12 } ?: return null
             if (notes.isEmpty() || separator >= 0 && words.size != separator + 2) return null
             return ChordVoicing.Keys(notes.distinct().sorted(), bass)
         }
-        if (words.size != instrument.tuning.size) return null
+        if (words.size != tuning.strings.size) return null
         val frets = words.map { word -> if (word == MUTED) null else word.toIntOrNull()?.takeIf { it in 0..MAX_FRET } ?: return null }
-        return chord?.let { tableShapes(it, instrument).firstOrNull { known -> known.frets == frets } } ?: ChordVoicing.Fretted(frets)
+        return chord?.let { tableShapes(it, tuning).firstOrNull { known -> known.frets == frets } } ?: ChordVoicing.Fretted(frets)
     }
 
     /** [voicing] as one string, which is how a player's choice of shape is stored: `x 3 2 0 1 0`, `4 7 12 / 0`. */

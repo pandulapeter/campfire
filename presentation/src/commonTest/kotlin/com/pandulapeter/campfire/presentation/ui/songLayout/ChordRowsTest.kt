@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.songLayout
 
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
+import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.presentation.ui.chords.ChordCell
 import com.pandulapeter.campfire.presentation.ui.chords.MAX_SONG_CHORDS
 import com.pandulapeter.campfire.presentation.ui.chords.SelectedShape
@@ -90,7 +91,7 @@ class ChordRowsTest {
     fun `a folded chords section is its header alone`() {
         val cell = ChordCell(
             name = "G",
-            instrument = ChordInstrument.GUITAR,
+            tuning = ChordTuning.GUITAR,
             root = 7,
             selection = SelectedShape(null, SelectedShape.Source.DEFAULT),
         )

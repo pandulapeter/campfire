@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.chords
 import com.pandulapeter.campfire.chordpro.ChordNotation
 import com.pandulapeter.campfire.chordpro.chords.ChordProChords
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
+import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -20,11 +21,11 @@ class ChordShapeInsertionTest {
     private fun apply(
         text: String,
         caret: Int,
-        instrument: ChordInstrument = ChordInstrument.GUITAR,
+        tuning: ChordTuning = ChordTuning.GUITAR,
         notation: ChordNotation = ChordNotation.STANDARD,
         storedShapes: Map<String, String> = emptyMap(),
     ): Pair<String, String> {
-        val insertion = chordShapeInsertion(text, caret, notation, instrument, storedShapes)
+        val insertion = chordShapeInsertion(text, caret, notation, tuning, storedShapes)
         val result = text.substring(0, insertion.offset) + insertion.text + text.substring(insertion.offset)
         return result to result.substring(insertion.selectionStart, insertion.selectionEnd)
     }
@@ -39,29 +40,29 @@ class ChordShapeInsertionTest {
         )
         val stored = mapOf(ChordProChords.parse("C")!!.id to "x 3 5 5 5 3")
         assertEquals("x 1 3 3 3 1", apply(song, song.indexOf("[C]"), storedShapes = stored).second)
-        assertEquals("0 0 0 3", apply(song, song.indexOf("[C]") + 3, instrument = ChordInstrument.UKULELE).second)
+        assertEquals("0 0 0 3", apply(song, song.indexOf("[C]") + 3, tuning = ChordTuning.UKULELE).second)
     }
 
     @Test
     fun `the keyboard writes keys`() {
-        val (text, selected) = apply(song, song.indexOf("[C]") + 1, instrument = ChordInstrument.KEYBOARD)
+        val (text, selected) = apply(song, song.indexOf("[C]") + 1, tuning = ChordTuning.KEYBOARD)
         assertEquals("0 4 7", selected)
         assertEquals(true, "{define: C keys 0 4 7}" in text)
     }
 
     @Test
     fun `the mandolin names itself, since its four frets would otherwise read as a ukulele's`() {
-        val (text, selected) = apply(song, song.indexOf("Am"), instrument = ChordInstrument.MANDOLIN)
+        val (text, selected) = apply(song, song.indexOf("Am"), tuning = ChordTuning.MANDOLIN)
         assertEquals("2 2 3 0", selected)
         assertEquals(true, "{define-mandolin: Am base-fret 1 frets 2 2 3 0 fingers 1 2 3 0}" in text)
-        val insertion = chordShapeInsertion(text, text.lastIndexOf("Am"), ChordNotation.STANDARD, ChordInstrument.MANDOLIN, emptyMap())
+        val insertion = chordShapeInsertion(text, text.lastIndexOf("Am"), ChordNotation.STANDARD, ChordTuning.MANDOLIN, emptyMap())
         assertEquals("", insertion.text)
         assertEquals("2 2 3 0", text.substring(insertion.selectionStart, insertion.selectionEnd))
     }
 
     @Test
     fun `with the caret in no chord the name is left to be typed`() {
-        val insertion = chordShapeInsertion(song, song.indexOf("Hello") + 2, ChordNotation.STANDARD, ChordInstrument.GUITAR, emptyMap())
+        val insertion = chordShapeInsertion(song, song.indexOf("Hello") + 2, ChordNotation.STANDARD, ChordTuning.GUITAR, emptyMap())
         assertEquals("{define: }\n", insertion.text)
         assertEquals(insertion.offset + "{define: ".length, insertion.selectionStart)
         assertEquals(insertion.selectionStart, insertion.selectionEnd)
@@ -70,11 +71,21 @@ class ChordShapeInsertionTest {
     @Test
     fun `a chord already defined gets no second line, the caret goes to its frets`() {
         val defined = "{title: X}\n{define: Am frets x 0 2 2 1 0}\n\n[Am]there"
-        val insertion = chordShapeInsertion(defined, defined.lastIndexOf("Am"), ChordNotation.STANDARD, ChordInstrument.GUITAR, emptyMap())
+        val insertion = chordShapeInsertion(defined, defined.lastIndexOf("Am"), ChordNotation.STANDARD, ChordTuning.GUITAR, emptyMap())
         assertEquals("", insertion.text)
         assertEquals("x 0 2 2 1 0", defined.substring(insertion.selectionStart, insertion.selectionEnd))
         // Defined for another instrument only, it gets a line of its own.
-        assertEquals("2 0 0 0", apply(defined, defined.lastIndexOf("Am"), instrument = ChordInstrument.UKULELE).second)
+        assertEquals("2 0 0 0", apply(defined, defined.lastIndexOf("Am"), tuning = ChordTuning.UKULELE).second)
+    }
+
+    @Test
+    fun `a tuning whose shapes are not the standard ones still writes the standard shape, and says so`() {
+        val insertion = chordShapeInsertion(song, song.indexOf("[C]") + 1, ChordNotation.STANDARD, ChordTuning.UKULELE_BARITONE, emptyMap())
+        assertEquals("0 0 0 3", (song.substring(0, insertion.offset) + insertion.text + song.substring(insertion.offset)).let { it.substring(insertion.selectionStart, insertion.selectionEnd) })
+        assertEquals(true, insertion.isForStandardTuning)
+        assertEquals("x 3 2 0 1 0", apply(song, song.indexOf("[C]") + 1, tuning = ChordTuning.GUITAR_DROP_D).second)
+        assertEquals(true, chordShapeInsertion(song, song.indexOf("[C]") + 1, ChordNotation.STANDARD, ChordTuning.GUITAR_HALF_STEP_DOWN, emptyMap()).isForStandardTuning)
+        assertEquals(false, chordShapeInsertion(song, song.indexOf("[C]") + 1, ChordNotation.STANDARD, ChordTuning.UKULELE_LOW_G, emptyMap()).isForStandardTuning)
     }
 
     @Test
@@ -83,7 +94,7 @@ class ChordShapeInsertionTest {
         val (text, selected) = apply(german, german.indexOf("H7"), notation = ChordNotation.GERMAN)
         assertEquals("x 2 1 2 0 2", selected)
         assertEquals(true, "{define: H7 base-fret 1 frets x 2 1 2 0 2" in text)
-        assertEquals("10 14 17".split(" ").size, apply(german, german.indexOf("[B]") + 1, instrument = ChordInstrument.KEYBOARD, notation = ChordNotation.GERMAN).second.split(" ").size)
-        assertEquals(true, "{define: B keys 0 4 7}" in apply(german, german.indexOf("[B]") + 1, instrument = ChordInstrument.KEYBOARD, notation = ChordNotation.GERMAN).first)
+        assertEquals("10 14 17".split(" ").size, apply(german, german.indexOf("[B]") + 1, tuning = ChordTuning.KEYBOARD, notation = ChordNotation.GERMAN).second.split(" ").size)
+        assertEquals(true, "{define: B keys 0 4 7}" in apply(german, german.indexOf("[B]") + 1, tuning = ChordTuning.KEYBOARD, notation = ChordNotation.GERMAN).first)
     }
 }

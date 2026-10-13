@@ -53,6 +53,7 @@ internal data class UserPreferencesDocument(
     val isTempoShownOnSetlistCards: Boolean? = null,
     val isDurationShownOnSetlistCards: Boolean = true,
     val chordInstrument: String = "",
+    val chordTunings: Map<String, String> = emptyMap(),
     val chordVoicings: Map<String, Map<String, String>> = emptyMap(),
     val isChordSectionFolded: Boolean = false,
     val transpositions: Map<String, Int> = emptyMap(),

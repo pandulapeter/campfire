@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.chords.ChordProTransposer
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
+import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.CommentStyle
 import com.pandulapeter.campfire.chordpro.model.GridToken
@@ -288,7 +289,7 @@ class RenderSectionsTest {
             song = ChordProParser.parse("[Abmaj9#11/Eb]la\n\n[G]la"),
             shouldShowChords = true,
             labels = labels,
-            chordInstrument = ChordInstrument.GUITAR,
+            chordTuning = ChordTuning.GUITAR,
             searchesShapes = false,
         )
         assertTrue(model.hasPendingShapes)

@@ -43,7 +43,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.chordpro.ChordNotation
 import com.pandulapeter.campfire.chordpro.edit.ChordProHeader
-import com.pandulapeter.campfire.chordpro.model.ChordInstrument
+import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_album
@@ -416,26 +416,33 @@ private fun TextFieldState.insertIntoHeader(insertion: EditorInsertion, metadata
 }
 
 /**
- * What the Chord shape button needs besides the text: the notation the field is written in, and the instrument and the
- * player's own shapes the line is filled in from.
+ * What the Chord shape button needs besides the text: the notation the field is written in, the tuning the diagrams are
+ * drawn in and the player's own standard tuning shapes the line is filled in from, and what says that a line was
+ * written for standard tuning where the diagrams are drawn in another one (see [chordShapeInsertion]).
  */
 internal class EditorChordShapes(
     val notation: ChordNotation,
-    val instrument: ChordInstrument,
+    val tuning: ChordTuning,
     val storedShapes: Map<String, String>,
+    val onWrittenForStandardTuning: () -> Unit,
 )
 
 /** Writes the definition [chordShapeInsertion] decides on as one step of the undo history, and selects what it says. */
-private fun TextFieldState.insertChordShape(chordShapes: EditorChordShapes) = edit {
-    val insertion = chordShapeInsertion(
-        text = originalText.toString(),
-        caret = minOf(selection.start, selection.end),
-        notation = chordShapes.notation,
-        instrument = chordShapes.instrument,
-        storedShapes = chordShapes.storedShapes,
-    )
-    if (insertion.text.isNotEmpty()) insert(insertion.offset, insertion.text)
-    selection = TextRange(insertion.selectionStart, insertion.selectionEnd)
+private fun TextFieldState.insertChordShape(chordShapes: EditorChordShapes) {
+    var isForStandardTuning = false
+    edit {
+        val insertion = chordShapeInsertion(
+            text = originalText.toString(),
+            caret = minOf(selection.start, selection.end),
+            notation = chordShapes.notation,
+            tuning = chordShapes.tuning,
+            storedShapes = chordShapes.storedShapes,
+        )
+        if (insertion.text.isNotEmpty()) insert(insertion.offset, insertion.text)
+        selection = TextRange(insertion.selectionStart, insertion.selectionEnd)
+        isForStandardTuning = insertion.text.isNotEmpty() && insertion.isForStandardTuning
+    }
+    if (isForStandardTuning) chordShapes.onWrittenForStandardTuning()
 }
 
 /**

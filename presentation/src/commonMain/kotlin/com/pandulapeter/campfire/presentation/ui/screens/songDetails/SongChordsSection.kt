@@ -37,8 +37,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.clipRect
@@ -72,6 +74,7 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_shape_choose
 import com.pandulapeter.campfire.presentation.resources.song_details_chords
 import com.pandulapeter.campfire.presentation.localization.stringResource
+import com.pandulapeter.campfire.presentation.ui.chords.ChordDiagramGeometry
 import com.pandulapeter.campfire.presentation.ui.chords.chordCellDescription
 import com.pandulapeter.campfire.presentation.ui.components.drawChordDiagram
 import com.pandulapeter.campfire.presentation.ui.components.songControlHeight
@@ -90,9 +93,9 @@ import kotlin.math.roundToInt
  * tablature is drawn as systems. A tap on a cell opens that chord's sheet (see [ChordDiagrams.onChordClicked]); a tap
  * between them, or on any of them in read only mode, turns the page like a tap anywhere on the song.
  *
- * The pill is followed by the name of the instrument the diagrams are drawn for, outside read only mode and while the
- * section is unfolded, opening its sheet (see [ChordDiagrams.onInstrumentClicked], [ChordInstrumentChip]), so that the
- * shapes are changed where they are read.
+ * The pill is followed by the name of the instrument the diagrams are drawn for, and of its tuning, outside read only
+ * mode and while the section is unfolded, opening its sheet (see [ChordDiagrams.onInstrumentClicked],
+ * [ChordInstrumentChip]), so that the shapes are changed where they are read.
  *
  * @param onFoldToggled Folds the section or unfolds it, see [ChordDiagrams.onFoldToggled].
  * @param isFadingIn Whether the fold was toggled while the page is open, so that the rows coming back fade in, in
@@ -147,7 +150,8 @@ internal fun SongChordsSection(
                     ) + fadeOut(animationSpec = MaterialTheme.motionScheme.fastEffectsSpec()),
                 ) {
                     ChordInstrumentChip(
-                        instrument = chordDiagrams.instrument,
+                        tuning = chordDiagrams.tuning,
+                        notation = chordDiagrams.notation,
                         height = songControlHeight(headerStyle),
                         style = headerStyle,
                         chevronSize = FOLD_CHEVRON_SIZE * fontScale,
@@ -180,6 +184,9 @@ internal fun SongChordsSection(
  * under a wider pair of names, the second name after the first and level with its bottom, top-aligned in its row and
  * mirrored in a right-to-left layout (the diagram itself never is: a guitar's low string stays on the left). A cell wider
  * than the block is held to it, its names clipped at its edge, as a composed cell was held to its row.
+ *
+ * A cell whose chord is drawn with another shape than it was crossfades from the old diagram to the new one (see
+ * [rememberChordShapeCrossfade]).
  *
  * Where [onCellClicked] is given, a press on a cell lights the whole of its row's height behind it, as a button's
  * press would, and a tap that the scroll did not take is answered with the cell's index; a screen reader is offered the
@@ -229,6 +236,7 @@ private fun ChordRowsBlock(
         animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
     )
     val pressColor = MaterialTheme.colorScheme.onSurface.copy(alpha = PRESSED_ALPHA)
+    val shapeCrossfade = rememberChordShapeCrossfade(layouts)
     val measurePolicy = remember(layouts, firstSlot, lastSlot, isLastSlot) { ChordRowsMeasurePolicy(layouts, firstSlot, lastSlot, isLastSlot) }
     Layout(
         modifier = modifier
@@ -327,6 +335,8 @@ private fun ChordRowsBlock(
                             mutedColor = mutedColor,
                             backgroundColor = backgroundColor,
                             diagramTextMeasurer = diagramTextMeasurer,
+                            fadingOut = shapeCrossfade.fadingOut[cell],
+                            fadeProgress = shapeCrossfade.progress.value,
                         )
                         x += cellWidth + layouts.gap
                     }
@@ -337,7 +347,10 @@ private fun ChordRowsBlock(
     )
 }
 
-/** Draws [cell] of [layouts] [width] wide with its top left corner at [left] and [top], see [ChordRowsBlock]. */
+/**
+ * Draws [cell] of [layouts] [width] wide with its top left corner at [left] and [top], see [ChordRowsBlock]: its
+ * diagram [fadeProgress] of the way from [fadingOut] to its own where it is fading out of another shape.
+ */
 private fun DrawScope.drawChordCell(
     layouts: ChordCellLayouts,
     cell: Int,
@@ -351,6 +364,8 @@ private fun DrawScope.drawChordCell(
     mutedColor: Color,
     backgroundColor: Color,
     diagramTextMeasurer: TextMeasurer,
+    fadingOut: ChordDiagramGeometry?,
+    fadeProgress: Float,
 ) {
     val name = layouts.names[cell]
     val secondName = layouts.secondNames[cell]
@@ -367,16 +382,37 @@ private fun DrawScope.drawChordCell(
     }
     val diagramSize = layouts.diagramSizes[cell]
     translate(left = left + ((width - diagramSize.width) / 2f).roundToInt(), top = top + nameRowHeight) {
-        drawChordDiagram(
-            geometry = layouts.geometries[cell],
-            area = Size(diagramSize.width.toFloat(), diagramSize.height.toFloat()),
-            lineColor = lineColor,
-            mutedColor = mutedColor,
-            rootColor = nameColor,
-            backgroundColor = backgroundColor,
-            textMeasurer = diagramTextMeasurer,
-        )
+        val area = Size(diagramSize.width.toFloat(), diagramSize.height.toFloat())
+        val drawDiagram = { geometry: ChordDiagramGeometry ->
+            drawChordDiagram(
+                geometry = geometry,
+                area = area,
+                lineColor = lineColor,
+                mutedColor = mutedColor,
+                rootColor = nameColor,
+                backgroundColor = backgroundColor,
+                textMeasurer = diagramTextMeasurer,
+            )
+        }
+        if (fadingOut == null || fadeProgress >= 1f) {
+            drawDiagram(layouts.geometries[cell])
+        } else {
+            withLayerAlpha(alpha = 1f - fadeProgress, area = area) { drawDiagram(fadingOut) }
+            withLayerAlpha(alpha = fadeProgress, area = area) { drawDiagram(layouts.geometries[cell]) }
+        }
     }
+}
+
+/**
+ * Draws [block] at [alpha] as one picture rather than stroke by stroke, since a diagram paints the background over its
+ * own lines (under a dot, inside a ring), and those would show through one another at any alpha less than whole. The
+ * layer reaches a diagram's size past [area] all around, since a stroke on its edge is drawn half outside it.
+ */
+private inline fun DrawScope.withLayerAlpha(alpha: Float, area: Size, block: () -> Unit) {
+    val canvas = drawContext.canvas
+    canvas.saveLayer(Rect(-area.width, -area.height, area.width * 2, area.height * 2), Paint().apply { this.alpha = alpha })
+    block()
+    canvas.restore()
 }
 
 /**

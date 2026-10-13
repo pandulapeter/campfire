@@ -9,7 +9,8 @@
 -->
 # Chord diagrams in alternate tunings — implementation plan
 
-Written 2026-10-13 against `06475d270`, the commit that added the mandolin diagrams (`ChordInstrument.MANDOLIN`,
+Decisions 1 to 3 and 5 were corrected after phases 1 and 2 were built: chord names always name the sound. Written
+2026-10-13 against `06475d270`, the commit that added the mandolin diagrams (`ChordInstrument.MANDOLIN`,
 `playsChordOver`, `{define-mandolin}`); reviewed against the same commit. Today the diagrams are drawn for one standard
 tuning per instrument, and a player in any other tuning is told to pick Other, which draws none. This plan lets them
 pick their tuning instead, in three phases that each ship on their own:
@@ -56,41 +57,33 @@ pick their tuning instead, in three phases that each ship on their own:
 
 ### Decisions — veto any of them before the work starts
 
-1. **A chord name in a shifted tuning names the shape, except where players read that tuning in sounding names.** A
-   song for a guitar tuned a half step down says "play G" for a G shape that sounds F♯, so the guitar's and the
-   mandolin's half and full step down draw the standard shape of the chord as written. The baritone ukulele and the
-   ukulele's D tuning are the other way around: their charts name the chord that sounds, so a G on the baritone is the
-   soprano's C shape. Each shifted tuning carries which of the two it is (`namesShapes`), and this table is the default:
+1. **A chord name always names the chord that sounds, in every tuning.** A half step down, an A is drawn as the shape
+   that sounds A on those strings: the standard B♭ shape, `x 1 3 3 3 1`. A shifted tuning draws the standard shape of
+   the chord moved by `-semitones`:
 
-   | Tuning | Chords name | A `G` is drawn as |
-   |---|---|---|
-   | Guitar half / full step down | the shape | the standard G shape |
-   | Mandolin half step down | the shape | the standard G shape |
-   | Ukulele D (A D F♯ B, two semitones up) | the sound | the standard F shape (the chord two semitones below) |
-   | Ukulele low G | the sound, which is the same | the standard G shape (only the fourth string's octave differs) |
-   | Baritone ukulele (D G B E, five semitones down) | the sound | the standard C shape (the chord five semitones above) |
-
-   The rule behind the third column: a `namesShapes` tuning draws the standard shape of the chord named; the other kind
-   draws the standard shape of the chord moved by `-semitones`.
-2. **A drop tuning names the sound below its shift.** Drop D is standard with the sixth string down a tone: chord
-   names are what sounds, as everybody writes drop D songs. Drop C♯, drop C, and drop B are a half, a whole, and a step
-   and a half down with the sixth string a further tone down: the shift part follows decision 1 (shape names, like the
-   down-tunings they are built on), and the dropped string is then derived as in drop D. The alternative, sounding
-   names throughout, is what metal tabs often use; it is one flag per tuning (`namesShapes`) either way.
+   | Tuning | An `A` is drawn as |
+   |---|---|
+   | Guitar half step down | the standard B♭ shape, `x 1 3 3 3 1` |
+   | Guitar full step down | the standard B shape, `x 2 4 4 4 2` |
+   | Ukulele D (A D F♯ B, two semitones up) | the standard G shape (the chord two semitones below) |
+   | Ukulele low G | the standard A shape (only the fourth string's octave differs) |
+   | Baritone ukulele (D G B E, five semitones down) | the standard D shape (the chord five semitones above) |
+2. **A drop tuning names the sound too.** Drop D is standard with the sixth string down a tone; drop C♯, drop C, and
+   drop B are drop D a half, a whole, and a step and a half down. Each is answered on drop D's strings for the chord
+   moved back by its shift, the dropped string derived as in drop D.
 3. **A song's own `{define}` is a standard-tuning shape.** ChordPro has no tuning on a definition (it lives in the
    program's configuration, not the song), and almost every file in the wild is written for standard tuning. So a
-   definition is drawn in standard tuning and in every tuning whose shapes are the standard ones (the `namesShapes`
-   shifted tunings, and the low G), and nowhere else: in a drop, open, or sound-named shifted tuning the cell falls back
-   to the player's shape or the app's, exactly as a definition for another instrument does today. No `{meta: tuning}`
-   of Campfire's own is invented.
+   definition is drawn in standard tuning and the ukulele's low G, the only tunings a standard shape sounds right in,
+   and nowhere else: in a shifted, drop, or open tuning the cell falls back to the player's shape or the app's,
+   exactly as a definition for another instrument does today. No `{meta: tuning}` of Campfire's own is invented.
 4. **The editor's Chord shape button writes only what it can write truthfully.** In standard tuning and the tunings
    decision 3 draws definitions in, it is unchanged. In any other tuning a `{define}` of the shape on screen would be
    read by every other program, and by this one on another device, as a standard-tuning shape of that chord, which it
    is not; so there the button writes the chord's standard-tuning shape instead (the player's choice under the
    standard key, else the app's default), and where there is none, the line with the frets left to be typed, as it does
    for a chord it has no shape for. Its snackbar says "written for standard tuning".
-5. **The player's own shapes are kept per tuning family**: `guitar` holds the choices for standard and every tuning
-   decision 3 draws definitions in (the shapes are the same), and every other tuning has its own key (`guitar_drop_d`,
+5. **The player's own shapes are kept per tuning**: `guitar` holds the choices for standard tuning (and `ukulele` the
+   low G's too, decision 3), and every other tuning has its own key (`guitar_drop_d`,
    `ukulele_baritone`, …), its id from `InstrumentTuning`. A shape chosen in drop D never appears in standard.
 6. **Seven- and eight-string guitars are not in this plan**: they are instruments with more strings, a `{define}` of
    seven frets has no instrument to be read for, and the tables would be new from scratch. They stay Other.

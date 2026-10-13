@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.onboarding
 
+import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.data.model.domain.UserPreferences.ChordInstrument
 import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 import kotlin.test.Test
@@ -46,18 +47,31 @@ class OnboardingInstrumentTest {
     }
 
     @Test
-    fun `the diagrams are only drawn for the tunings their shapes are for`() {
+    fun `the diagrams are only drawn for the tunings they know`() {
         assertEquals(ChordInstrument.GUITAR, OnboardingInstrument.GUITAR.chordInstrumentFor(InstrumentTuning.GUITAR))
-        assertEquals(ChordInstrument.OTHER, OnboardingInstrument.GUITAR.chordInstrumentFor(InstrumentTuning.GUITAR_DROP_D))
+        assertEquals(ChordInstrument.GUITAR, OnboardingInstrument.GUITAR.chordInstrumentFor(InstrumentTuning.GUITAR_DROP_D))
+        assertEquals(ChordInstrument.OTHER, OnboardingInstrument.GUITAR.chordInstrumentFor(InstrumentTuning.GUITAR_OPEN_G))
+        assertEquals(ChordInstrument.OTHER, OnboardingInstrument.GUITAR.chordInstrumentFor(InstrumentTuning.GUITAR_SEVEN_STRING))
         assertEquals(ChordInstrument.UKULELE, OnboardingInstrument.UKULELE.chordInstrumentFor(InstrumentTuning.UKULELE_LOW_G))
-        assertEquals(ChordInstrument.OTHER, OnboardingInstrument.UKULELE.chordInstrumentFor(InstrumentTuning.UKULELE_BARITONE))
+        assertEquals(ChordInstrument.UKULELE, OnboardingInstrument.UKULELE.chordInstrumentFor(InstrumentTuning.UKULELE_BARITONE))
+        assertEquals(ChordInstrument.OTHER, OnboardingInstrument.MANDOLIN.chordInstrumentFor(InstrumentTuning.MANDOLIN_GDGD))
         assertEquals(ChordInstrument.KEYBOARD, OnboardingInstrument.KEYBOARD.chordInstrumentFor(null))
         assertEquals(ChordInstrument.OTHER, OnboardingInstrument.BASS.chordInstrumentFor(InstrumentTuning.BASS))
     }
 
     @Test
     fun `guitar diagrams over a tuning they are not drawn for have no instrument picked`() {
-        assertNull(onboardingInstrumentOf(ChordInstrument.GUITAR, InstrumentTuning.GUITAR_DROP_D))
+        assertNull(onboardingInstrumentOf(ChordInstrument.GUITAR, InstrumentTuning.GUITAR_OPEN_G))
+    }
+
+    @Test
+    fun `the diagrams follow the tuning where they know it, and go back to standard where they do not`() {
+        assertEquals(ChordTuning.GUITAR_DROP_D, OnboardingInstrument.GUITAR.chordTuningWrittenFor(InstrumentTuning.GUITAR_DROP_D))
+        assertEquals(ChordTuning.UKULELE_BARITONE, OnboardingInstrument.UKULELE.chordTuningWrittenFor(InstrumentTuning.UKULELE_BARITONE))
+        assertEquals(ChordTuning.GUITAR, OnboardingInstrument.GUITAR.chordTuningWrittenFor(InstrumentTuning.GUITAR_OPEN_G))
+        assertEquals(ChordTuning.GUITAR, OnboardingInstrument.GUITAR.chordTuningWrittenFor(InstrumentTuning.GUITAR_EIGHT_STRING))
+        assertNull(OnboardingInstrument.KEYBOARD.chordTuningWrittenFor(null))
+        assertNull(OnboardingInstrument.BASS.chordTuningWrittenFor(InstrumentTuning.BASS))
     }
 
     @Test

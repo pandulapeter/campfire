@@ -19,6 +19,7 @@ import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.ChordProTempo
 import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields
 import com.pandulapeter.campfire.chordpro.model.ChordProLink
+import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.data.model.domain.CoverArtQuery
 import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution
 import com.pandulapeter.campfire.data.model.domain.ImportEntryKey
@@ -40,7 +41,6 @@ import com.pandulapeter.campfire.data.model.domain.SongContent
 import com.pandulapeter.campfire.data.model.domain.SongDetailsCandidate
 import com.pandulapeter.campfire.data.model.domain.SongDetailsQuery
 import com.pandulapeter.campfire.data.model.domain.SyncState
-import com.pandulapeter.campfire.presentation.ui.chords.toChordInstrument
 import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.components.LabelsOnEverySong
 import com.pandulapeter.campfire.presentation.ui.components.Placeholder
@@ -965,6 +965,8 @@ class CampfireViewModel(
     /** Called by the snackbar host once [message] has been on screen for its whole duration, or dismissed. */
     fun onMessageShown(message: IndexedValue<Message>) = messageSink.onMessageShown(message)
 
+    fun onChordShapeWrittenForStandardTuning() = sendMessage(Message.ChordShapeWrittenForStandardTuning)
+
     // Dialogs
 
     /** See [CoverArtSearchController.coverArtSearch]. */
@@ -1616,7 +1618,9 @@ class CampfireViewModel(
 
     fun toggleChordSectionFold() = preferencesController.toggleChordSectionFold()
 
-    fun setChordVoicing(instrument: UserPreferences.ChordInstrument, chordId: String, shape: String?) = preferencesController.setChordVoicing(instrument, chordId, shape)
+    fun setChordTuning(tuning: ChordTuning) = preferencesController.setChordTuning(tuning)
+
+    fun setChordVoicing(voicingKey: String, chordId: String, shape: String?) = preferencesController.setChordVoicing(voicingKey, chordId, shape)
 
     fun setSetlistsEnabled(value: Boolean) = preferencesController.setSetlistsEnabled(value)
 

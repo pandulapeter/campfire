@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.chords
 
 import androidx.compose.runtime.Immutable
-import com.pandulapeter.campfire.chordpro.model.ChordInstrument
+import com.pandulapeter.campfire.chordpro.model.ChordTuning
 
 /**
  * One diagram of the Chords section: the chord as the page names it and the shape it is drawn with, and the letters
@@ -20,7 +20,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordInstrument
 internal data class ChordCell(
     val name: String,
     val letterName: String? = null,
-    val instrument: ChordInstrument,
+    val tuning: ChordTuning,
     val root: Int,
     val selection: SelectedShape,
 )

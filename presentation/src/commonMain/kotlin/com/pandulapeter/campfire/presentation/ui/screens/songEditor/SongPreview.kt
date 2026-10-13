@@ -30,7 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
-import com.pandulapeter.campfire.chordpro.model.ChordInstrument
+import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.ChordDiagrams
 import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
@@ -130,7 +130,7 @@ internal fun SongPreview(
             isSongInfoShown = true,
             songInfoEditing = songInfoEditing,
             // Whatever the two switches and the instrument in Settings say: what is being written is what is shown.
-            chordDiagrams = remember { ChordDiagrams(instrument = ChordInstrument.GUITAR, showsDefinitionsOnly = true, notation = notation.toChordNotation()) },
+            chordDiagrams = remember { ChordDiagrams(tuning = ChordTuning.GUITAR, showsDefinitionsOnly = true, notation = notation.toChordNotation()) },
         )
     }
 }

@@ -12,7 +12,6 @@
 ### Bugs / issues
 
 ### Improvements
-- Alternate tuning support for chord diagrams: documentation/plans/alternate-tunings.md
 - Modal tuner instrument picker...?
 - Website: update Thinking out Loud + 500 miles
 - Search: highlight matched substrings

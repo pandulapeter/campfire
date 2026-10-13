@@ -188,11 +188,11 @@ internal fun SongLyrics(
             hasMetronome = hasMetronome,
         )
     }.let { sections ->
-        val cells = remember(model, chordDiagrams?.instrument, chordDiagrams?.storedShapes, chordDiagrams?.showsDefinitionsOnly) {
+        val cells = remember(model, chordDiagrams?.tuning, chordDiagrams?.storedShapes, chordDiagrams?.showsDefinitionsOnly) {
             when {
                 chordDiagrams == null -> emptyList()
                 chordDiagrams.showsDefinitionsOnly -> definitionCellsOf(model.song, chordDiagrams.notation)
-                else -> chordCellsOf(model.chords, chordDiagrams.instrument, chordDiagrams.storedShapes)
+                else -> chordCellsOf(model.chords, chordDiagrams.tuning, chordDiagrams.storedShapes)
             }
         }
         remember(sections, cells, chordDiagrams?.isFolded) { withChordsSection(sections, cells, isFolded = chordDiagrams?.isFolded == true) }

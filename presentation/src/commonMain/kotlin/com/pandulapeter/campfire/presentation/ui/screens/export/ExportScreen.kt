@@ -75,6 +75,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pandulapeter.campfire.chordpro.ChordNotation
+import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.data.model.domain.PrintSettings
 import com.pandulapeter.campfire.presentation.localization.currentLanguage
 import com.pandulapeter.campfire.presentation.localization.pluralStringResource
@@ -87,6 +89,7 @@ import com.pandulapeter.campfire.presentation.resources.print_setlist_empty
 import com.pandulapeter.campfire.presentation.resources.print_time
 import com.pandulapeter.campfire.presentation.resources.retry
 import com.pandulapeter.campfire.presentation.resources.setlists_export
+import com.pandulapeter.campfire.presentation.resources.song_details_chord_tuning
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo
 import com.pandulapeter.campfire.presentation.resources.song_details_transposition
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_capo
@@ -96,6 +99,9 @@ import com.pandulapeter.campfire.presentation.resources.songs_export_song
 import com.pandulapeter.campfire.presentation.resources.songs_export_songs
 import com.pandulapeter.campfire.presentation.resources.songs_selection_count
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.chords.chordTuning
+import com.pandulapeter.campfire.presentation.ui.chords.chordTuningLabel
+import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.components.DelayedLoadingIndicator
 import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.components.saveShortcut
@@ -164,6 +170,9 @@ internal fun ExportScreen(
         time = stringResource(Res.string.print_time),
         missing = stringResource(Res.string.print_missing),
         sections = rememberDefaultSectionLabels(shouldNumberSections = preferences?.shouldNumberSections == true),
+        chordTuning = preferences?.chordTuning()?.takeIf { it.kind != ChordTuning.Kind.Standard }?.let { tuning ->
+            stringResource(Res.string.song_details_chord_tuning, chordTuningLabel(tuning, preferences?.chordSpelling?.notation?.toChordNotation() ?: ChordNotation.STANDARD))
+        },
     )
     LaunchedEffect(dialog, state.attempt) {
         state.failed = false

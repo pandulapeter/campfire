@@ -9,11 +9,13 @@
  */
 package com.pandulapeter.campfire.presentation.ui.state
 
+import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.data.model.domain.tagKey
 import com.pandulapeter.campfire.domain.api.useCases.GetUserPreferencesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.UpdateUserPreferencesUseCase
+import com.pandulapeter.campfire.presentation.ui.chords.withChordTuning
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.LibraryPersistence
 import kotlinx.coroutines.CoroutineScope
@@ -99,15 +101,18 @@ internal class PreferencesController(
 
     fun setChordInstrument(value: UserPreferences.ChordInstrument) = changeUserPreferences { copy(chordInstrument = value) }
 
+    fun setChordTuning(tuning: ChordTuning) = changeUserPreferences { withChordTuning(tuning) }
+
     fun toggleChordSectionFold() = changeUserPreferences { copy(isChordSectionFolded = !isChordSectionFolded) }
 
     /**
-     * Stores [shape] as the player's own for the chord [chordId] on [instrument], in every song, or forgets their
-     * choice where it is null. Written at once, as the page's own steppers write.
+     * Stores [shape] as the player's own for the chord [chordId] under [voicingKey] (a tuning's
+     * [ChordTuning.voicingKey]), in every song, or forgets their choice where it is null. Written at once, as the page's
+     * own steppers write.
      */
-    fun setChordVoicing(instrument: UserPreferences.ChordInstrument, chordId: String, shape: String?) = changeUserPreferences {
-        val shapes = chordVoicings[instrument.id].orEmpty().let { if (shape == null) it - chordId else it + (chordId to shape) }
-        copy(chordVoicings = if (shapes.isEmpty()) chordVoicings - instrument.id else chordVoicings + (instrument.id to shapes))
+    fun setChordVoicing(voicingKey: String, chordId: String, shape: String?) = changeUserPreferences {
+        val shapes = chordVoicings[voicingKey].orEmpty().let { if (shape == null) it - chordId else it + (chordId to shape) }
+        copy(chordVoicings = if (shapes.isEmpty()) chordVoicings - voicingKey else chordVoicings + (voicingKey to shapes))
     }
 
     fun setSetlistsEnabled(value: Boolean) = changeUserPreferences { copy(areSetlistsEnabled = value) }

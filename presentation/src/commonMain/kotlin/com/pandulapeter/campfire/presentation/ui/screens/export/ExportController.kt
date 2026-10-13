@@ -21,7 +21,7 @@ import com.pandulapeter.campfire.domain.api.useCases.ExportSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ExportSongsUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetSongContentUseCase
 import com.pandulapeter.campfire.domain.api.useCases.UpdateUserPreferencesUseCase
-import com.pandulapeter.campfire.presentation.ui.chords.toChordInstrument
+import com.pandulapeter.campfire.presentation.ui.chords.chordTuning
 import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
@@ -148,8 +148,8 @@ internal class ExportController(
         val spelling = preferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
         // Collected whether or not the export asks for the diagrams, so that ticking them lays the pages out again rather
         // than reading the songs again; with the feature switched off the export does not offer them at all.
-        val chordInstrument = preferences?.takeIf { it.areChordsEnabled && it.areChordDiagramsEnabled }?.chordInstrument?.toChordInstrument()
-        val storedChordShapes = chordInstrument?.let { preferences.chordVoicings[it.id] }.orEmpty()
+        val chordTuning = preferences?.takeIf { it.areChordsEnabled && it.areChordDiagramsEnabled }?.chordTuning()
+        val storedChordShapes = chordTuning?.let { preferences.chordVoicings[it.voicingKey] }.orEmpty()
         val readsCapoAsTransposition = preferences.readsCapoAsTransposition
         val printSongs = entries.mapIndexed { index, entry ->
             val song = songs[entry.songFileName] ?: dialog.songs.firstOrNull { it.fileName == entry.songFileName } ?: dialog.song
@@ -173,8 +173,8 @@ internal class ExportController(
                 }
             } }
             val rendered = transposed?.let { withContext(Dispatchers.Default) { songRenderer.notatedSong(it, spelling) } }
-            val chords = if (transposed != null && chordInstrument != null) {
-                withContext(Dispatchers.Default) { printChordsOf(transposed, spelling.notation.toChordNotation(), chordInstrument, storedChordShapes) }
+            val chords = if (transposed != null && chordTuning != null) {
+                withContext(Dispatchers.Default) { printChordsOf(transposed, spelling.notation.toChordNotation(), chordTuning, storedChordShapes) }
             } else {
                 emptyList()
             }

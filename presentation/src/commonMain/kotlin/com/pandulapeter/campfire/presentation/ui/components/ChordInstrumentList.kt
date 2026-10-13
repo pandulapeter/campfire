@@ -14,7 +14,7 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.pandulapeter.campfire.chordpro.ChordNotation
-import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
+import com.pandulapeter.campfire.chordpro.model.ChordInstrument
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -28,13 +28,15 @@ import com.pandulapeter.campfire.presentation.resources.settings_chord_instrumen
 import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_other_description
 import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_ukulele
 import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_ukulele_description
+import com.pandulapeter.campfire.presentation.ui.chords.chordTuningOf
+import com.pandulapeter.campfire.presentation.ui.tuner.noteName
 
 /**
  * The instruments the chord diagrams can be drawn for, as a list rather than a segmented control: the strings under
- * each name are what say that the shapes are for that instrument in its standard tuning, so a player whose instrument
- * is not one of these picks Other rather than reading diagrams their strings do not match. The strings are named in the
- * chord [notation], as the diagrams' chords are, rather than in the app's language. Shared by Settings and by the sheet
- * the song details screen's Chords section opens.
+ * each name are what say that the shapes are for that instrument in the tuning [chordTunings] names for it (standard
+ * where it names none), so a player whose instrument is not one of these picks Other rather than reading diagrams their
+ * strings do not match. The strings are named in the chord [notation], as the diagrams' chords are, rather than in the
+ * app's language. Shared by Settings and by the sheet the song details screen's Chords section opens.
  *
  * @param isOtherShown Whether Other is offered, which draws no diagram: the song details screen's sheet leaves it out,
  * since picking it there would take away the very section it was opened from, along with the way back.
@@ -43,6 +45,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_chord_instrumen
 internal fun ChordInstrumentList(
     modifier: Modifier = Modifier,
     selected: UserPreferences.ChordInstrument?,
+    chordTunings: Map<String, String>,
     notation: ChordNotation,
     isOtherShown: Boolean = true,
     isEnabled: Boolean = true,
@@ -52,17 +55,17 @@ internal fun ChordInstrumentList(
         Triple(
             UserPreferences.ChordInstrument.GUITAR,
             stringResource(Res.string.settings_chord_instrument_guitar),
-            stringResource(Res.string.settings_chord_instrument_guitar_description, stringNames(GUITAR_STRINGS, notation)),
+            stringResource(Res.string.settings_chord_instrument_guitar_description, stringNames(ChordInstrument.GUITAR, chordTunings, notation)),
         ),
         Triple(
             UserPreferences.ChordInstrument.UKULELE,
             stringResource(Res.string.settings_chord_instrument_ukulele),
-            stringResource(Res.string.settings_chord_instrument_ukulele_description, stringNames(UKULELE_STRINGS, notation)),
+            stringResource(Res.string.settings_chord_instrument_ukulele_description, stringNames(ChordInstrument.UKULELE, chordTunings, notation)),
         ),
         Triple(
             UserPreferences.ChordInstrument.MANDOLIN,
             stringResource(Res.string.settings_chord_instrument_mandolin),
-            stringResource(Res.string.settings_chord_instrument_mandolin_description, stringNames(MANDOLIN_STRINGS, notation)),
+            stringResource(Res.string.settings_chord_instrument_mandolin_description, stringNames(ChordInstrument.MANDOLIN, chordTunings, notation)),
         ),
         Triple(
             UserPreferences.ChordInstrument.KEYBOARD,
@@ -89,9 +92,6 @@ internal fun ChordInstrumentList(
     }
 }
 
-/** The open strings of an instrument in the standard notation, lowest first, written in [notation], `E A D G B E`. */
-private fun stringNames(strings: List<String>, notation: ChordNotation) = strings.joinToString(" ") { ChordProNotation.shownName(it, notation) }
-
-private val GUITAR_STRINGS = listOf("E", "A", "D", "G", "B", "E")
-private val UKULELE_STRINGS = listOf("G", "C", "E", "A")
-private val MANDOLIN_STRINGS = listOf("G", "D", "A", "E")
+/** The open strings of [instrument] in its tuning, in a chord chart's order, written in [notation]: `E A D G B E`. */
+private fun stringNames(instrument: ChordInstrument, chordTunings: Map<String, String>, notation: ChordNotation) =
+    chordTuningOf(instrument, chordTunings).strings.joinToString(" ") { noteName(it, notation) }

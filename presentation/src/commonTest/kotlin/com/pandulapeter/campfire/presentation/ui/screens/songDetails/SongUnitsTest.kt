@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
+import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 import com.pandulapeter.campfire.chordpro.model.CommentStyle
@@ -69,7 +70,7 @@ class SongUnitsTest {
 
     private val cell = ChordCell(
         name = "G",
-        instrument = ChordInstrument.GUITAR,
+        tuning = ChordTuning.GUITAR,
         root = 7,
         selection = SelectedShape(null, SelectedShape.Source.DEFAULT),
     )

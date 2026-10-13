@@ -55,11 +55,12 @@ answer takes away shrinks out from between its neighbours and one it brings back
 There is no draft: each tap goes through the setter the settings screen uses, and each page shows what the app is set to
 now, which is why every way out only closes the screen, why the colors picked take hold of the onboarding itself, and why
 going through it again from Settings needs no state of its own. `OnboardingInstrument` is not a preference either:
-picking one or one of its tunings writes the tuner's tuning and the chord diagrams' instrument, which is Other for a
-tuning the diagrams are not drawn for (`chordInstrumentFor`: the shapes are the standard tuning's, the ukulele's low G
-included), and the page reads its answer back out of the two (`onboardingInstrumentOf`), keeping a tuning the tuner
-already has for that instrument (`tuningFor`, so drop D stays drop D); settings that match no answer, a fresh
-installation's among them, show nothing picked rather than a guess.
+picking one or one of its tunings writes the tuner's tuning, the chord diagrams' instrument, which is Other for a
+tuning the diagrams are not drawn for (`chordInstrumentFor`: a seven-string guitar, an open G), and the diagrams'
+tuning for that instrument, the same one where they know it and standard otherwise (`chordTuningWrittenFor`); the
+page reads its answer back out of the first two (`onboardingInstrumentOf`), keeping a tuning the tuner already has for
+that instrument (`tuningFor`, so drop D stays drop D); settings that match no answer, a fresh installation's among them,
+show nothing picked rather than a guess.
 
 ### One screen, one pager, one footer
 

@@ -341,7 +341,7 @@
     <string name="settings_accidentals_flats">Flats (b)</string>
     <string name="settings_accidentals_sharps">Sharps (#)</string>
     <string name="settings_chord_instrument">Instrument</string>
-    <string name="settings_chord_instrument_description">The instrument you play, in standard tuning, which the chord diagrams are drawn for.</string>
+    <string name="settings_chord_instrument_description">The instrument you play, which the chord diagrams are drawn for.</string>
     <string name="settings_chord_instrument_guitar">Guitar</string>
     <string name="settings_chord_instrument_guitar_description">Six strings: %1$s</string>
     <string name="settings_chord_instrument_ukulele">Ukulele</string>
@@ -352,6 +352,8 @@
     <string name="settings_chord_instrument_keyboard_description">The notes of each chord, with the capo counted into the transposition</string>
     <string name="settings_chord_instrument_other">Other</string>
     <string name="settings_chord_instrument_other_description">No chord diagrams</string>
+    <string name="settings_chord_tuning">Tuning</string>
+    <string name="settings_chord_tuning_description">How your instrument is tuned, so that every shape is drawn on the strings you have.</string>
     <string name="settings_general">General</string>
     <string name="settings_onboarding">Set up Campfire again</string>
     <string name="settings_onboarding_description">Choose your look, instrument, and features again, step by step</string>
@@ -599,6 +601,7 @@
     <string name="song_editor_save_failed">Could not save the song</string>
     <string name="song_editor_draft_lost">The unsaved changes could not be restored</string>
     <string name="song_editor_draft_restored">The unsaved changes were restored</string>
+    <string name="song_editor_chord_shape_standard_tuning">Chord shape written for standard tuning, as every app reads it</string>
     <string name="song_editor_file_gone">This song\'s file is no longer in the library. Save to put it back.</string>
 
     <!-- Song details screen -->
@@ -718,6 +721,11 @@
     <string name="song_details_key_change">Key: %1$s</string>
     <string name="song_details_chords">Chords</string>
     <string name="song_details_chord_instrument_choose">Choose instrument</string>
+    <string name="song_details_chord_instrument_tuning">%1$s · %2$s</string>
+    <string name="song_details_chord_tuning">Tuning: %1$s</string>
+    <string name="song_details_chord_defined_standard_tuning">Defined in this song for standard tuning</string>
+    <string name="song_details_chord_defined_standard_tuning_show">Show the song\'s shape</string>
+    <string name="song_details_chord_defined_standard_tuning_hide">Show the shapes for your tuning</string>
     <string name="song_details_chord_diagram">%1$s: %2$s</string>
     <string name="song_details_chord_diagram_none">%1$s: no diagram</string>
     <string name="song_details_chord_letters">%1$s, that is %2$s</string>

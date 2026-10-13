@@ -36,7 +36,7 @@ import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.chordpro.ChordNotation
 import com.pandulapeter.campfire.chordpro.chords.ChordProChords
 import com.pandulapeter.campfire.chordpro.chords.ChordVoicings
-import com.pandulapeter.campfire.chordpro.model.ChordInstrument
+import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_tuner
@@ -57,7 +57,6 @@ import com.pandulapeter.campfire.presentation.resources.tuner_instrument_mandoli
 import com.pandulapeter.campfire.presentation.resources.tuner_instrument_ukulele
 import com.pandulapeter.campfire.presentation.resources.tuner_instrument_violin
 import com.pandulapeter.campfire.presentation.ui.chords.chordDiagramGeometryOf
-import com.pandulapeter.campfire.presentation.ui.chords.toChordInstrument
 import com.pandulapeter.campfire.presentation.ui.components.ChordDiagram
 import com.pandulapeter.campfire.presentation.ui.components.SwitchListItem
 import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
@@ -68,7 +67,7 @@ import org.jetbrains.compose.resources.painterResource
  * tuner for it at once (see [OnboardingInstrument]), Something else among them for every instrument that is not there.
  * Only asked while the chords or the tuner are on, and the line under the question names the one or two of them the
  * answer is for; with the tuner off only the instruments the diagrams are drawn for are offered ([onboardingInstruments]).
- * The tuning is asked even then, since the diagrams are only drawn for the standard tuning of each instrument.
+ * The tuning is asked even then, since the diagrams are drawn in it, and only for the tunings they know.
  *
  * With the chords on, the switch for the diagrams is under the answers, and while it is on a G is drawn beside it for the
  * instrument picked, so the answer shows what it will change on every song. A tuning the diagrams are not drawn for says
@@ -145,7 +144,7 @@ internal fun InstrumentStep(
         ) { offer ->
             when (offer) {
                 ChordDiagramsOffer.SWITCH -> ChordDiagramsSwitch(
-                    instrument = selected?.chordInstrumentFor(tuning)?.toChordInstrument(),
+                    tuning = selected?.chordTuningFor(tuning),
                     areChordDiagramsEnabled = areChordDiagramsEnabled,
                     onChordDiagramsEnabledChange = onChordDiagramsEnabledChange,
                 )
@@ -173,13 +172,13 @@ private fun chordDiagramsOffer(instrument: OnboardingInstrument?, tuning: Instru
 }
 
 /**
- * The chord diagrams switch, and while it is on a G drawn beside it for [instrument]. The diagram sits beside its switch
+ * The chord diagrams switch, and while it is on a G drawn beside it in [tuning]. The diagram sits beside its switch
  * rather than under it, where the answers above would push it past the bottom of a short window, so that picking an
  * instrument visibly redraws it.
  */
 @Composable
 private fun ChordDiagramsSwitch(
-    instrument: ChordInstrument?,
+    tuning: ChordTuning?,
     areChordDiagramsEnabled: Boolean,
     onChordDiagramsEnabledChange: (Boolean) -> Unit,
 ) = Row(verticalAlignment = Alignment.CenterVertically) {
@@ -191,30 +190,30 @@ private fun ChordDiagramsSwitch(
         onCheckedChange = onChordDiagramsEnabledChange,
     )
     AnimatedVisibility(
-        visible = areChordDiagramsEnabled && instrument != null,
+        visible = areChordDiagramsEnabled && tuning != null,
         enter = fadeIn() + expandHorizontally(),
         exit = fadeOut() + shrinkHorizontally(),
     ) {
         // Kept while it shrinks away, so that the diagram fades out as it was rather than as nothing.
-        remember(instrument) { instrument }?.let { InstrumentChordPreview(instrument = it) }
+        remember(tuning) { tuning }?.let { InstrumentChordPreview(tuning = it) }
     }
 }
 
-/** A G, as the song page draws it at the top of a song for [instrument]. */
+/** A G, as the song page draws it at the top of a song in [tuning]. */
 @Composable
 private fun InstrumentChordPreview(
-    instrument: ChordInstrument,
+    tuning: ChordTuning,
 ) = Box(
     modifier = Modifier.padding(end = 16.dp),
     contentAlignment = Alignment.Center,
 ) {
     val chord = remember { ChordProChords.parse(PREVIEW_CHORD) }
-    val geometry = remember(chord, instrument) {
-        chord?.let { ChordVoicings.default(it, instrument)?.let { shape -> chordDiagramGeometryOf(shape, instrument, it.root) } }
+    val geometry = remember(chord, tuning) {
+        chord?.let { ChordVoicings.default(it, tuning)?.let { shape -> chordDiagramGeometryOf(shape, tuning, it.root) } }
     }
     if (geometry != null) {
         ChordDiagram(
-            modifier = if (instrument.isFretted) Modifier.size(width = 56.dp, height = 72.dp) else Modifier.size(width = 104.dp, height = 48.dp),
+            modifier = if (tuning.instrument.isFretted) Modifier.size(width = 56.dp, height = 72.dp) else Modifier.size(width = 104.dp, height = 48.dp),
             geometry = geometry,
             description = stringResource(Res.string.onboarding_chord_diagram_description, PREVIEW_CHORD),
         )

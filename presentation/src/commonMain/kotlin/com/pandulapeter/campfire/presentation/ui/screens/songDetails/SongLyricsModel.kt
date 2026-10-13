@@ -16,7 +16,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import com.pandulapeter.campfire.chordpro.ChordNotation
-import com.pandulapeter.campfire.chordpro.model.ChordInstrument
+import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.chords.SongChord
@@ -32,7 +32,7 @@ import kotlinx.coroutines.withContext
  * @param isCut Whether [sections] stop short of the end of [song], see [LayoutBudget].
  * @param shouldShowChords False for lyrics-only mode, see [prepareSongLyrics].
  * @param notation The notation [song] is written in, which decides what is a chord in the brackets of a comment.
- * @param chordInstrument The instrument [chords] were collected for, which their pending shapes are looked for on.
+ * @param chordTuning The tuning [chords] were collected for, which their pending shapes are looked for in.
  */
 internal class SongLyricsModel(
     val song: ChordProSong,
@@ -41,7 +41,7 @@ internal class SongLyricsModel(
     val shouldShowChords: Boolean,
     val notation: ChordNotation = ChordNotation.STANDARD,
     val chords: List<SongChord> = emptyList(),
-    val chordInstrument: ChordInstrument? = null,
+    val chordTuning: ChordTuning? = null,
 ) {
 
     /** Whether some chord's shape is still to be looked for, see [withSearchedShapes]. */
@@ -57,8 +57,8 @@ internal class SongLyricsModel(
         isCut = isCut,
         shouldShowChords = shouldShowChords,
         notation = notation,
-        chords = chordInstrument?.let { chords.withSearchedShapes(it) } ?: chords,
-        chordInstrument = chordInstrument,
+        chords = chordTuning?.let { chords.withSearchedShapes(it) } ?: chords,
+        chordTuning = chordTuning,
     )
 }
 
@@ -71,7 +71,7 @@ internal class SongLyricsModel(
  * the key, capo, tempo and time of the metadata section.
  * @param showsTiming Whether a change of tempo or time signature further down the song is a line of its own that starts
  * a page ([RenderSection.Timing]): false with the metronome switched off, which lays the song out as if it had none.
- * @param chordInstrument The instrument the song's chords are collected for its Chords section on (see [songChordsOf]),
+ * @param chordTuning The tuning the song's chords are collected for its Chords section in (see [songChordsOf]),
  * which is the slow part of that section and so belongs here; null where the song has no such section.
  * @param notation The notation [song] is written in.
  * @param standardSong [song] before it was written in [notation], which its chords are read from.
@@ -83,7 +83,7 @@ internal fun prepareSongLyrics(
     shouldShowChords: Boolean,
     labels: DefaultSectionLabels,
     showsTiming: Boolean = true,
-    chordInstrument: ChordInstrument? = null,
+    chordTuning: ChordTuning? = null,
     notation: ChordNotation = ChordNotation.STANDARD,
     standardSong: ChordProSong = song,
     searchesShapes: Boolean = true,
@@ -94,12 +94,12 @@ internal fun prepareSongLyrics(
         isCut = isCut,
         shouldShowChords = shouldShowChords,
         notation = notation,
-        chords = if (shouldShowChords && chordInstrument != null) {
-            songChordsOf(standardSong, notation, chordInstrument, searchesShapes = searchesShapes)
+        chords = if (shouldShowChords && chordTuning != null) {
+            songChordsOf(standardSong, notation, chordTuning, searchesShapes = searchesShapes)
         } else {
             emptyList()
         },
-        chordInstrument = chordInstrument,
+        chordTuning = chordTuning,
     )
 }
 
@@ -163,7 +163,7 @@ internal data class SongLyricsInputs(
     val tempoOverride: Int? = null,
     val capoOverride: Int? = null,
     val showsTiming: Boolean = true,
-    val chordInstrument: ChordInstrument? = null,
+    val chordTuning: ChordTuning? = null,
 )
 
 /**

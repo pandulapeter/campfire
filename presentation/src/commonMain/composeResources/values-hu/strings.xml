@@ -341,7 +341,7 @@
     <string name="settings_accidentals_flats">Bé (b)</string>
     <string name="settings_accidentals_sharps">Kereszt (#)</string>
     <string name="settings_chord_instrument">Hangszer</string>
-    <string name="settings_chord_instrument_description">A hangszer, amelyen játszol, hagyományos hangolásban: ehhez készülnek az akkordábrák.</string>
+    <string name="settings_chord_instrument_description">A hangszer, amelyen játszol: ehhez készülnek az akkordábrák.</string>
     <string name="settings_chord_instrument_guitar">Gitár</string>
     <string name="settings_chord_instrument_guitar_description">Hat húr: %1$s</string>
     <string name="settings_chord_instrument_ukulele">Ukulele</string>
@@ -352,6 +352,8 @@
     <string name="settings_chord_instrument_keyboard_description">Minden akkord hangjai, a capót a transzponálásba számolva</string>
     <string name="settings_chord_instrument_other">Egyéb</string>
     <string name="settings_chord_instrument_other_description">Nincsenek akkordábrák</string>
+    <string name="settings_chord_tuning">Hangolás</string>
+    <string name="settings_chord_tuning_description">Ahogy a hangszered fel van hangolva, hogy minden fogás a te húrjaidra készüljön.</string>
     <string name="settings_general">Általános</string>
     <string name="settings_onboarding">A Campfire újbóli beállítása</string>
     <string name="settings_onboarding_description">Válaszd ki újra a megjelenést, a hangszered és a funkciókat, lépésről lépésre</string>
@@ -599,6 +601,7 @@
     <string name="song_editor_save_failed">A dalt nem sikerült menteni</string>
     <string name="song_editor_draft_lost">A nem mentett módosításokat nem sikerült visszaállítani</string>
     <string name="song_editor_draft_restored">A nem mentett módosítások visszaállítva</string>
+    <string name="song_editor_chord_shape_standard_tuning">Az akkordfogás normál hangolásra került a dalba, ahogy minden alkalmazás olvassa</string>
     <string name="song_editor_file_gone">A dal fájlja már nincs a könyvtáradban. Mentéssel visszakerül.</string>
 
     <!-- Song details screen -->
@@ -718,6 +721,11 @@
     <string name="song_details_key_change">Hangnem: %1$s</string>
     <string name="song_details_chords">Akkordok</string>
     <string name="song_details_chord_instrument_choose">Hangszer kiválasztása</string>
+    <string name="song_details_chord_instrument_tuning">%1$s · %2$s</string>
+    <string name="song_details_chord_tuning">Hangolás: %1$s</string>
+    <string name="song_details_chord_defined_standard_tuning">A dal normál hangolásra adja meg ezt az akkordot</string>
+    <string name="song_details_chord_defined_standard_tuning_show">A dal fogásának megjelenítése</string>
+    <string name="song_details_chord_defined_standard_tuning_hide">A hangolásod fogásainak megjelenítése</string>
     <string name="song_details_chord_diagram">%1$s: %2$s</string>
     <string name="song_details_chord_diagram_none">%1$s: nincs ábra</string>
     <string name="song_details_chord_letters">%1$s, azaz %2$s</string>

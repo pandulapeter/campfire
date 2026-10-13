@@ -101,6 +101,14 @@ data class UserPreferences(
     /** The instrument the diagrams are drawn for, or [ChordInstrument.OTHER] for none. */
     val chordInstrument: ChordInstrument = ChordInstrument.GUITAR,
     /**
+     * The tuning the diagrams are drawn for, by [ChordInstrument.id] to the tuning's id (the tuner's ids, `guitar_drop_d`,
+     * `ukulele_baritone`), with no entry for standard tuning. One per instrument, so that a player who keeps the guitar
+     * in drop D and the ukulele in baritone tuning switches between them without picking again. Kept on the device, like
+     * [chordInstrument], since one player may tune an instrument differently from another. An id this version does not
+     * know is kept as it is, and drawn for as standard tuning.
+     */
+    val chordTunings: Map<String, String> = emptyMap(),
+    /**
      * The shape the player has chosen for a chord, by [ChordInstrument.id] and then by the chord's id (its notes, the
      * same for every spelling of it), the value the shape as `ChordVoicings.write` writes it. One choice per chord for
      * the whole library, since which F somebody plays is a habit of their hands rather than a reading of one song; a
@@ -379,7 +387,7 @@ data class UserPreferences(
 
     /**
      * The instrument the chord diagrams are drawn for, the twin of `:chordpro`'s, which this module does not see. [OTHER]
-     * is an instrument `:chordpro` has no shapes for (a bass, an eight-string guitar, a guitar in another tuning), so no
+     * is an instrument `:chordpro` has no shapes for (a bass, an eight-string guitar, a guitar in an open tuning), so no
      * diagram is drawn: one for the six strings of a standard guitar would be wrong on it, which is worse than none.
      */
     enum class ChordInstrument(val id: String) {

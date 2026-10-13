@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.chords
 import androidx.compose.runtime.Immutable
 import com.pandulapeter.campfire.chordpro.chords.ChordVoicings
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
+import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.chordpro.model.ChordVoicing
 
 /**
@@ -62,7 +63,8 @@ internal sealed interface ChordDiagramGeometry {
 }
 
 /**
- * The geometry of [shape] on [instrument], its root dots and keys marked by the chord's [root] pitch class.
+ * The geometry of [shape] in [tuning], its root dots and keys marked by the chord's [root] pitch class, read against
+ * the tuning's own [ChordTuning.strings], since the shape sounds the chord the page names on them.
  *
  * A fretted shape is drawn in four frets, or as many as it spans, from the nut where it fits there and otherwise from
  * its lowest stopped fret ([ChordVoicings.baseFret], which a written definition agrees with). A barre is a finger
@@ -73,7 +75,7 @@ internal sealed interface ChordDiagramGeometry {
  * Whatever the shape, the diagram is bounded: at most [MAX_FRETS] frets and [MAX_OCTAVES] octaves, a dot or a key past
  * them left out, since every source of a shape meets here and a broken file's is better drawn in part than not at all.
  */
-internal fun chordDiagramGeometryOf(shape: ChordVoicing, instrument: ChordInstrument, root: Int): ChordDiagramGeometry = when (shape) {
+internal fun chordDiagramGeometryOf(shape: ChordVoicing, tuning: ChordTuning, root: Int): ChordDiagramGeometry = when (shape) {
     is ChordVoicing.Keys -> {
         val octaves = ((listOfNotNull(shape.bass) + shape.notes).maxOrNull() ?: 0).let { it / 12 + 1 }.coerceIn(MIN_OCTAVES, MAX_OCTAVES)
         val range = 0 until octaves * 12
@@ -91,6 +93,7 @@ internal fun chordDiagramGeometryOf(shape: ChordVoicing, instrument: ChordInstru
         val fretCount = maxOf(MIN_FRETS, (stopped.maxOrNull() ?: 0) - baseFret + 1).coerceAtMost(MAX_FRETS)
         val barres = barresOf(frets, shape.fingers).filter { it.row in 0 until fretCount }
         val heldByBarre = barres.flatMap { barre -> (barre.fromString..barre.toString).filter { frets[it] == barre.row + baseFret } }.toSet()
+        val strings = tuning.strings
         ChordDiagramGeometry.Fretted(
             strings = frets.size,
             baseFret = baseFret,
@@ -98,16 +101,16 @@ internal fun chordDiagramGeometryOf(shape: ChordVoicing, instrument: ChordInstru
             markers = frets.mapIndexed { string, fret ->
                 when (fret) {
                     null -> ChordDiagramGeometry.Fretted.Marker.MUTED
-                    0 -> if (isRootAt(instrument, string, 0, root)) ChordDiagramGeometry.Fretted.Marker.OPEN_ROOT else ChordDiagramGeometry.Fretted.Marker.OPEN
+                    0 -> if (isRootAt(strings, string, 0, root)) ChordDiagramGeometry.Fretted.Marker.OPEN_ROOT else ChordDiagramGeometry.Fretted.Marker.OPEN
                     else -> null
                 }
             },
-            dots = frets.indices.filter { (frets[it] ?: 0) > 0 && (it !in heldByBarre || isRootAt(instrument, it, frets[it]!!, root)) }.map { string ->
+            dots = frets.indices.filter { (frets[it] ?: 0) > 0 && (it !in heldByBarre || isRootAt(strings, it, frets[it]!!, root)) }.map { string ->
                 ChordDiagramGeometry.Fretted.Dot(
                     string = string,
                     row = frets[string]!! - baseFret,
                     finger = shape.fingers?.getOrNull(string)?.takeIf { it > 0 },
-                    isRoot = isRootAt(instrument, string, frets[string]!!, root),
+                    isRoot = isRootAt(strings, string, frets[string]!!, root),
                 )
             }.filter { it.row in 0 until fretCount },
             barres = barres,
@@ -115,8 +118,8 @@ internal fun chordDiagramGeometryOf(shape: ChordVoicing, instrument: ChordInstru
     }
 }
 
-private fun isRootAt(instrument: ChordInstrument, string: Int, fret: Int, root: Int) =
-    instrument.tuning.getOrNull(string)?.let { (it + fret) % 12 == root } == true
+private fun isRootAt(strings: List<Int>, string: Int, fret: Int, root: Int) =
+    strings.getOrNull(string)?.let { (it + fret).mod(12) == root } == true
 
 /** The barres of [frets], each on its row of the window the diagram draws. */
 private fun barresOf(frets: List<Int?>, fingers: List<Int>?): List<ChordDiagramGeometry.Fretted.Barre> {

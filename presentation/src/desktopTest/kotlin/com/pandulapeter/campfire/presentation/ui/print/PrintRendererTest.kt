@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.sp
 import com.pandulapeter.campfire.chordpro.ChordNotation
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
+import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.data.model.domain.PrintSettings
 import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
 import kotlinx.coroutines.runBlocking
@@ -312,7 +313,7 @@ internal class PrintRendererTest {
             PrintSource("Shapes", songs = listOf(PrintSong("shapes.cho", "Shapes", "Artist", song = song, chords = chords))), settings, labels, renderer::width,
         ).pages.single()
         val withoutDiagrams = renderer.selectableText(page(emptyList(), PrintSettings())).joinToString("") { it.text }
-        val pages = ChordInstrument.entries.map { instrument ->
+        val pages = ChordInstrument.entries.map { ChordTuning.standard(it) }.map { instrument ->
             val chords = printChordsOf(song, ChordNotation.STANDARD, instrument, emptyMap())
             assertEquals(listOf("G", "C", "D", "F", "Bm"), chords.map { it.name })
             page(chords, PrintSettings(showChordDiagrams = true))

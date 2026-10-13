@@ -206,8 +206,9 @@ the next run a change to carry; a value changed here while the merge ran is kept
 conflict merges again against the document it lost to, once; a document that still cannot be settled, or any
 failure but the authorization's, is reported as `SyncSummary.havePreferencesFailed` (which, like a failed file, keeps
 the run from counting as the last successful one) and leaves the base where it was.
-The player's chord shapes (`UserPreferences.chordVoicings`) are a `chords` member beside `songs`, by instrument and
-then by the chord's id, merged the same way value by value; a shape is any string and an instrument this version does
+The player's chord shapes (`UserPreferences.chordVoicings`) are a `chords` member beside `songs`, by instrument (or by
+tuning, `guitar_drop_d`, for a tuning whose shapes are not the standard ones: `ChordTuning.voicingKey`) and then by the
+chord's id, merged the same way value by value; a shape is any string and an instrument this version does
 not know is kept, a non-string value passes through, nothing in it is ever dropped with a song, and the member is only
 written once there is something in it, so a document from before it stays the same bytes.
 The tags' colors (`UserPreferences.tagColors`) are a `tags` member beside them, tag (`tagKey`) to palette id, read and
@@ -314,7 +315,7 @@ Tested with `commonTest`, run with `./gradlew :data:sync:implementation:desktopT
   read as one that removed everything, and one whose `version` is newer than this one's is left alone.
   A song no longer in the library after the run takes its entry with it, here and in the folder, unless the run
   failed to move it or it reached the folder after the run listed it. **The player's chord shapes travel the same way**
-  (`UserPreferences.chordVoicings`): a `chords` member beside `songs`, by instrument and then by the chord's notes
+  (`UserPreferences.chordVoicings`): a `chords` member beside `songs`, by instrument or tuning and then by the chord's notes
   (`{"guitar": {"F:0.4.7": "x x 3 2 1 1"}}`), merged value by value, so two devices that chose for different chords both
   keep their choice and two choices for one chord keep this device's; an instrument this version does not know passes
   through, and no entry is ever dropped with a song, since none belongs to one. The tags' colors

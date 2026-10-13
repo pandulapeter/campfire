@@ -179,6 +179,7 @@ private fun OnboardingStepPage(
             // instrument: a guitar in drop D has none.
             val setTuning = { instrument: OnboardingInstrument, newTuning: InstrumentTuning? ->
                 viewModel.setChordInstrument(instrument.chordInstrumentFor(newTuning))
+                instrument.chordTuningWrittenFor(newTuning)?.let(viewModel::setChordTuning)
                 viewModel.updateTunerSettings { copy(instrumentId = newTuning?.id ?: InstrumentTuning.CHROMATIC_ID) }
             }
             InstrumentStep(

@@ -9,7 +9,9 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.onboarding
 
+import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.data.model.domain.UserPreferences.ChordInstrument
+import com.pandulapeter.campfire.presentation.ui.chords.toChordInstrument
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerInstrument
 import com.pandulapeter.campfire.presentation.ui.tuner.instrumentOf
 import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
@@ -24,71 +26,81 @@ import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
  *
  * @param tunerInstruments The tuner's instruments this one covers, the first one's standard tuning being what picking it
  *   tunes to; empty for one the tuner reads chromatically.
- * @param diagramTunings The tunings the chord diagrams are drawn for, null standing for an instrument that is not tuned
- *   at all: the shapes are the ones of the standard tuning, which a ukulele's low G does not change, and with the strings
- *   tuned any other way they would show the wrong notes, so such a tuning has no diagrams ([chordInstrumentFor]).
  * @param isOnlyForTuner Whether the tuner is all this answer decides, the diagrams being none for it as for Something
  *   else: it is only offered with the tuner on ([onboardingInstruments]).
  */
 internal enum class OnboardingInstrument(
     private val chordInstrument: ChordInstrument,
     val tunerInstruments: List<TunerInstrument>,
-    private val diagramTunings: Set<InstrumentTuning?>,
     val isOnlyForTuner: Boolean = false,
 ) {
     GUITAR(
         chordInstrument = ChordInstrument.GUITAR,
         tunerInstruments = listOf(TunerInstrument.GUITAR, TunerInstrument.SEVEN_STRING_GUITAR, TunerInstrument.EIGHT_STRING_GUITAR),
-        diagramTunings = setOf(InstrumentTuning.GUITAR),
     ),
     UKULELE(
         chordInstrument = ChordInstrument.UKULELE,
         tunerInstruments = listOf(TunerInstrument.UKULELE),
-        diagramTunings = setOf(InstrumentTuning.UKULELE, InstrumentTuning.UKULELE_LOW_G),
     ),
     MANDOLIN(
         chordInstrument = ChordInstrument.MANDOLIN,
         tunerInstruments = listOf(TunerInstrument.MANDOLIN),
-        diagramTunings = setOf(InstrumentTuning.MANDOLIN),
     ),
     KEYBOARD(
         chordInstrument = ChordInstrument.KEYBOARD,
         tunerInstruments = emptyList(),
-        diagramTunings = setOf(null),
     ),
     BASS(
         chordInstrument = ChordInstrument.OTHER,
         tunerInstruments = listOf(TunerInstrument.BASS, TunerInstrument.FIVE_STRING_BASS),
-        diagramTunings = emptySet(),
         isOnlyForTuner = true,
     ),
     BANJO(
         chordInstrument = ChordInstrument.OTHER,
         tunerInstruments = listOf(TunerInstrument.BANJO),
-        diagramTunings = emptySet(),
         isOnlyForTuner = true,
     ),
     VIOLIN(
         chordInstrument = ChordInstrument.OTHER,
         tunerInstruments = listOf(TunerInstrument.VIOLIN),
-        diagramTunings = emptySet(),
         isOnlyForTuner = true,
     ),
     OTHER(
         chordInstrument = ChordInstrument.OTHER,
         tunerInstruments = emptyList(),
-        diagramTunings = emptySet(),
     ),
     ;
 
     /** Whether the chord diagrams are drawn for this instrument in some tuning, so that a tuning without them is worth a word. */
-    val hasDiagrams get() = diagramTunings.isNotEmpty()
+    val hasDiagrams get() = chordInstrument != ChordInstrument.OTHER
+
+    /**
+     * The tuning the chord diagrams are drawn in for this instrument tuned to [tuning], the tuner's: the diagrams' tuning
+     * of the same id, the keyboard's for an instrument that is not tuned at all, and null where the diagrams know no such
+     * tuning (a seven-string guitar, an open G), since with the strings tuned any other way they would show the wrong
+     * notes.
+     */
+    fun chordTuningFor(tuning: InstrumentTuning?): ChordTuning? = when (chordInstrument) {
+        ChordInstrument.OTHER -> null
+        ChordInstrument.KEYBOARD -> ChordTuning.KEYBOARD.takeIf { tuning == null }
+        else -> tuning?.let { ChordTuning.fromId(it.id) }?.takeIf { it.instrument.id == chordInstrument.id }
+    }
 
     /** Whether the chord diagrams are drawn for this instrument tuned to [tuning]. */
-    fun hasDiagramsIn(tuning: InstrumentTuning?) = tuning in diagramTunings
+    fun hasDiagramsIn(tuning: InstrumentTuning?) = chordTuningFor(tuning) != null
 
     /** What the diagrams are drawn for once this is picked tuned to [tuning]: none where the shapes would be wrong for it. */
     fun chordInstrumentFor(tuning: InstrumentTuning?) = if (hasDiagramsIn(tuning)) chordInstrument else ChordInstrument.OTHER
+
+    /**
+     * The tuning written as the diagrams' for this instrument once it is picked tuned to [tuning]: [chordTuningFor] where
+     * the diagrams know it, and otherwise the instrument's standard one, which is drawn for nothing while the diagrams'
+     * instrument is Other ([chordInstrumentFor]); null for an answer that names no instrument the diagrams know.
+     */
+    fun chordTuningWrittenFor(tuning: InstrumentTuning?): ChordTuning? = when (chordInstrument) {
+        ChordInstrument.OTHER, ChordInstrument.KEYBOARD -> null
+        else -> chordTuningFor(tuning) ?: chordInstrument.toChordInstrument()?.let(ChordTuning::standard)
+    }
 
     /**
      * What the tuner is set to once this is picked over [current]: [current] itself where it already is a tuning of this

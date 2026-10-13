@@ -42,7 +42,8 @@ feature switches `areChordsEnabled` (stored as the inverse `isLyricsOnlyModeEnab
 `isMetronomeEnabled` and `isTunerEnabled`, `isCoverArtEnabled`, which is what lets the app fetch the covers the songs name at all, the
 chord diagrams' `areChordDiagramsEnabled`, `songCardDetails` and `setlistCardDetails` (`CardDetails`: whether the Songs and the
 Setlists screen's cards show the key, the tempo and the duration), `chordInstrument` (`ChordInstrument`, the twin of `:chordpro`'s, which this
-module does not see), `isChordSectionFolded` (one fold for every song) and `chordVoicings` (the player's own shape of
+module does not see), `chordTunings` (the tuning the diagrams are drawn in, instrument id to the tuner's tuning id, no
+entry for standard, kept on the device like the instrument and an unknown id kept as it is), `isChordSectionFolded` (one fold for every song) and `chordVoicings` (the player's own shape of
 each chord, by instrument id and then by the chord's id, never exported but synced through `preferences.json`, an
 unknown instrument kept as it is), `tagColors` (a palette id by `tagKey`, synced the same way, never dropped with
 the last song carrying the tag, since that is as often a moment as a decision), `shouldNumberSections`, whether the

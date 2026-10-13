@@ -51,9 +51,12 @@ internal object ChordShapeGeometry {
     /** Whether a hand can hold [frets]: four fingers at most, a barre counting as one, within the first fifteen frets. */
     fun isHoldable(frets: List<Int?>) = fingerCount(frets) <= MAX_FINGERS && frets.all { it == null || it in 0..MAX_HOLDABLE_FRET }
 
-    /** The pitch classes [voicing] sounds on [instrument]. */
-    fun pitchClasses(voicing: ChordVoicing, instrument: ChordInstrument): Set<Int> = when (voicing) {
-        is ChordVoicing.Fretted -> voicing.frets.mapIndexedNotNull { string, fret -> fret?.let { (instrument.tuning[string] + it) % 12 } }.toSet()
+    /** The pitch classes [voicing] sounds on [instrument] in its standard tuning. */
+    fun pitchClasses(voicing: ChordVoicing, instrument: ChordInstrument): Set<Int> = pitchClasses(voicing, instrument.tuning)
+
+    /** The pitch classes [voicing] sounds on [strings], the open strings as MIDI note numbers. */
+    fun pitchClasses(voicing: ChordVoicing, strings: List<Int>): Set<Int> = when (voicing) {
+        is ChordVoicing.Fretted -> voicing.frets.mapIndexedNotNull { string, fret -> fret?.let { (strings[string] + it).mod(12) } }.toSet()
         is ChordVoicing.Keys -> (voicing.notes + listOfNotNull(voicing.bass)).map { it % 12 }.toSet()
     }
 

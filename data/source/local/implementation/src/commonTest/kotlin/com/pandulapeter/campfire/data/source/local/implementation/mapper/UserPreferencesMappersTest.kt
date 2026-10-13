@@ -96,9 +96,11 @@ internal class UserPreferencesMappersTest {
         assertEquals(true, defaults.areChordDiagramsEnabled)
         assertEquals(UserPreferences.ChordInstrument.GUITAR, defaults.chordInstrument)
         assertEquals(false, defaults.isChordSectionFolded)
+        assertEquals(emptyMap(), defaults.chordTunings)
         val chosen = defaults.copy(
             areChordDiagramsEnabled = false,
             chordInstrument = UserPreferences.ChordInstrument.UKULELE,
+            chordTunings = mapOf("guitar" to "guitar_drop_d", "ukulele" to "ukulele_baritone", "banjo" to "banjo_open_d"),
             chordVoicings = mapOf("guitar" to mapOf("F:0.4.7" to "x x 3 2 1 1"), "banjo" to mapOf("G:0.4.7" to "0 0 0 0 0")),
             isChordSectionFolded = true,
         )

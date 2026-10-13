@@ -68,8 +68,8 @@ what nothing outside the module calls is `internal`.
   notation instead of serializing a parsed model. The editor overflow action and every import use it. `prettifiedOffset` keeps the editor's caret and selection on
   their matched lines through header reordering and spacing changes, accounting for the original line endings.
 
-- `model/` — `Chord` (the notes a chord name stands for), `ChordInstrument` and `ChordVoicing` (a shape on a fretted
-  instrument, or keys), `ChordDefinition` (a song's own shape of a chord, in `ChordProMetadata.definitions`),
+- `model/` — `Chord` (the notes a chord name stands for), `ChordInstrument`, `ChordTuning` (a tuning the diagrams are
+  drawn in, see `ChordVoicings`) and `ChordVoicing` (a shape on a fretted instrument, or keys), `ChordDefinition` (a song's own shape of a chord, in `ChordProMetadata.definitions`),
   `ChordProSong` (metadata + blocks), `ChordProBlock` (`Section`, `ChorusRecall`, `Comment`, `Break`,
   `Transpose`, `Timing`),
   `ChordProLine` (`Lyrics` with positioned chords and annotations, `Tab`, `Grid`, `Blank`) and `ChordProMetadata`,
@@ -444,7 +444,24 @@ what nothing outside the module calls is `internal`.
   `:presentation` calls. `resetCache` empties the cache for `ChordVoicingsTest`, so `needsSearch` there does not depend
   on which test ran first; `:presentation`'s tests cannot call it and keep to chords no other test asks for.
   `ChordVoicingTablesTest` checks that every shape of the tables sounds the chord it is filed under, and the
-  `desktopTest` contact sheet draws them all into `CAMPFIRE_CHORD_QA_DIR` where that is set, for a player to look over.
+  `desktopTest` contact sheet draws them all into `CAMPFIRE_CHORD_QA_DIR` where that is set, for a player to look over,
+  with the defaults of the everyday chords in every drop tuning.
+- `ChordTuning` — what the shapes are for, in place of a bare instrument: every entry point of `ChordVoicings` takes
+  one, the keyboard's standard entry included. Its `id` is the tuner's (`:tuner:api`'s `InstrumentTuning`, which this
+  module does not see; `:presentation` tests that the two agree) and `strings` the real ones, the baritone ukulele's
+  fourth an octave below a plain shift. **A chord name always names the chord that sounds**, so every shape sounds the
+  chord it is drawn for on the strings the player has. A `Shifted` tuning (half and full step down, the mandolin's half
+  step down, the ukulele's low G, D, and baritone) answers with the standard shapes of the chord moved back by the
+  shift: a half step down an A is the standard B♭ shape, `x 1 3 3 3 1`, and the baritone's G the soprano's C shape. A
+  `Dropped` one (drop D, double drop D, and drop C♯ to drop B, which are drop D moved down) is answered on its strings
+  moved back by the shift, for the chord moved back as far:
+  its seed table (`ChordVoicingTables.drop`, the one-finger power chords), then the standard table shapes re-fretted
+  (each lowered string stopped as many frets higher, kept where it still keeps the search's rules and can be held,
+  tried again with the lowered strings muted otherwise, the fingering kept only where no stopped string moved), then
+  the search. Open and modal tunings are not here yet: they wait on a player's review of their shapes.
+- `ChordTuning.drawsDefinitions` is where a `{define}`, which ChordPro gives no tuning, is drawn: standard tuning and
+  the ukulele's low G, the only ones a standard tuning shape sounds right in. `voicingKey` is what the player's choices
+  are stored under, the instrument's id there and the tuning's id in any other.
 - `ChordProDefinitions` — a song's own shapes (`model/ChordDefinition`). `read` takes a definition's value: frets
   counted from the `base-fret` (`base_fret` read too; `x`, `X`, `N` and `-1` muted), fingers (any value that is no
   finger number from 1 to 5, a thumb's `T` among them, is shown as none), or a keyboard's `keys` counted from the root
