@@ -62,6 +62,26 @@ class ChordVoicingTablesTest {
     }
 
     @Test
+    fun `a finger laid across several strings has no string between them sounding lower`() {
+        tables.forEach { (tuning, lines) ->
+            lines.forEach { line ->
+                val voicing = (ChordProDefinitions.read(line, tuning.instrument.id) as ChordProDefinitions.Reading.Shape).voicing as ChordVoicing.Fretted
+                val fingers = voicing.fingers ?: return@forEach
+                voicing.frets.indices.filter { fingers[it] > 0 && (voicing.frets[it] ?: 0) > 0 }
+                    .groupBy { fingers[it] to voicing.frets[it]!! }
+                    .filterValues { it.size >= 2 }
+                    .forEach { (finger, strings) ->
+                        // A muted string between is allowed: the finger rests on it. One that sounds open or lower cannot be.
+                        (strings.min()..strings.max()).forEach { string ->
+                            val fret = voicing.frets[string]
+                            assertTrue(fret == null || fret >= finger.second, "$line: finger ${finger.first} lies across string ${string + 1}")
+                        }
+                    }
+            }
+        }
+    }
+
+    @Test
     fun `every tuning without a table of its own is the one whose table it reads, every string moved by one interval`() {
         ChordTuning.entries.filter { it.tableTuning != it }.forEach { tuning ->
             assertEquals(tuning.tableTuning, tuning.tableTuning.tableTuning, "${tuning.id} reads a table of its own tuning's")
