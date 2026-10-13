@@ -94,19 +94,23 @@ internal fun prepareSongLyrics(
     standardSong: ChordProSong = song,
     searchesShapes: Boolean = true,
 ) = LayoutBudget.fit(song.toRenderSections(shouldShowChords, labels, showsTiming)).let { (sections, isCut) ->
+    val chords = if (shouldShowChords && chordTuning != null) {
+        songChordsOf(standardSong, notation, chordTuning, searchesShapes = searchesShapes)
+    } else {
+        emptyList()
+    }
     SongLyricsModel(
         song = song,
         sections = sections.withoutEmptyTimings(),
         isCut = isCut,
         shouldShowChords = shouldShowChords,
         notation = notation,
-        chords = if (shouldShowChords && chordTuning != null) {
-            songChordsOf(standardSong, notation, chordTuning, searchesShapes = searchesShapes)
-        } else {
-            emptyList()
-        },
+        chords = chords,
         chordTuning = chordTuning,
-        hasChords = shouldShowChords && hasSongChords(standardSong, notation),
+        // The chords collected answer it where there are any, which spares the first model of a page, built in the frame
+        // being waited for, a second walk over the song's chords; none collected is not an answer, since there may have
+        // been no tuning to collect them for, or more chords than a section draws.
+        hasChords = shouldShowChords && (chords.isNotEmpty() || hasSongChords(standardSong, notation)),
     )
 }
 

@@ -373,6 +373,16 @@ class RenderSectionsTest {
     }
 
     @Test
+    fun `whether a song has chords does not depend on the tuning they are collected for`() {
+        val withChords = ChordProParser.parse("{sov}\n[G]la [C]la\n{eov}")
+        assertTrue(prepareSongLyrics(withChords, shouldShowChords = true, labels = labels, chordTuning = ChordTuning.GUITAR).hasChords)
+        assertTrue(prepareSongLyrics(withChords, shouldShowChords = true, labels = labels, chordTuning = null).hasChords)
+        val withoutChords = ChordProParser.parse("{sov}\nla la\n{eov}")
+        assertFalse(prepareSongLyrics(withoutChords, shouldShowChords = true, labels = labels, chordTuning = ChordTuning.GUITAR).hasChords)
+        assertFalse(prepareSongLyrics(withoutChords, shouldShowChords = true, labels = labels, chordTuning = null).hasChords)
+    }
+
+    @Test
     fun `a song without chords gets no Chords section whatever the instrument`() {
         val model = prepareSongLyrics(ChordProParser.parse("{sov}\nla la\n{eov}"), shouldShowChords = true, labels = labels)
         assertFalse(model.hasChords)
