@@ -30,6 +30,8 @@ import com.pandulapeter.campfire.presentation.resources.ic_delete
 import com.pandulapeter.campfire.presentation.resources.ic_import
 import com.pandulapeter.campfire.presentation.resources.ic_songs
 import com.pandulapeter.campfire.presentation.resources.settings_export_all
+import com.pandulapeter.campfire.presentation.resources.settings_group_import_export
+import com.pandulapeter.campfire.presentation.resources.settings_group_on_this_device
 import com.pandulapeter.campfire.presentation.resources.settings_import
 import com.pandulapeter.campfire.presentation.resources.settings_library_cover_art_cache
 import com.pandulapeter.campfire.presentation.resources.settings_library_cover_art_cache_clear
@@ -56,26 +58,71 @@ import com.pandulapeter.campfire.presentation.ui.platform.isAppAvailableOffline
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * What the library holds and where it is, then what can be done with the whole of it. The two rows that say what is
- * on the device are also how it is taken off: the library's row deletes every song and setlist, behind a dialog that
- * wants a word typed, and the cover cache's row deletes the copies of the covers, behind an ordinary one.
+ * The library tab after its sync section: what can be brought into the library and taken out of it, then what it holds
+ * on this device. The rows that say what is on the device are also how it is taken off, last on the page since they
+ * are the ones that cannot be undone: the library's row deletes every song and setlist, behind a dialog that wants a
+ * word typed, and the cover cache's row deletes the copies of the covers, behind an ordinary one.
  *
- * The two actions are disabled rather than hidden by performance mode, like the chord spelling with the chords
- * switched off: this screen is the one place the mode can be switched back off, and a settings screen whose rows come and go
+ * The actions are disabled rather than hidden by performance mode, like the chord spelling with the chords switched
+ * off: this screen is the one place the mode can be switched back off, and a settings screen whose rows come and go
  * with a switch on it is one nobody can find their way around.
  */
 @Composable
-internal fun LibrarySection(
+internal fun LibrarySections(
     viewModel: CampfireViewModel,
     isImporting: Boolean,
     isPerformanceModeEnabled: Boolean,
-) = SettingsSection {
+) {
+    ImportExportSection(viewModel = viewModel, isImporting = isImporting, isPerformanceModeEnabled = isPerformanceModeEnabled)
+    OnThisDeviceSection(viewModel = viewModel, isImporting = isImporting, isPerformanceModeEnabled = isPerformanceModeEnabled)
+}
+
+@Composable
+private fun ImportExportSection(
+    viewModel: CampfireViewModel,
+    isImporting: Boolean,
+    isPerformanceModeEnabled: Boolean,
+) = SettingsSection(title = stringResource(Res.string.settings_group_import_export)) {
+    val demoLibraryOffer by viewModel.demoLibraryOffer.collectAsStateWithLifecycle()
+    val filePicker = LocalFilePicker.current
+    ActionListItem(
+        title = stringResource(Res.string.settings_import),
+        icon = painterResource(Res.drawable.ic_import),
+        isEnabled = !isImporting && !isPerformanceModeEnabled,
+        isEmphasized = false,
+        onClick = { viewModel.importFiles(filePicker) },
+    )
+    // Only until they are all in the library, which is also what brings it back for the ones a user who wanted none
+    // of them has deleted. Null while the library is still being read, so the offer never appears for a moment over
+    // a library that turns out to hold them.
+    AnimatedSettingsRow(value = demoLibraryOffer) { offer ->
+        ActionListItem(
+            title = stringResource(Res.string.add_demo_songs),
+            icon = painterResource(Res.drawable.ic_songs),
+            isEnabled = offer == DemoLibraryOffer.AVAILABLE && !isPerformanceModeEnabled,
+            isEmphasized = false,
+            onClick = viewModel::importDemoLibrary,
+        )
+    }
+    ActionListItem(
+        title = stringResource(Res.string.settings_export_all),
+        icon = painterResource(Res.drawable.ic_export),
+        isEnabled = !isPerformanceModeEnabled,
+        isEmphasized = false,
+        onClick = { viewModel.exportLibrary(filePicker) },
+    )
+}
+
+@Composable
+private fun OnThisDeviceSection(
+    viewModel: CampfireViewModel,
+    isImporting: Boolean,
+    isPerformanceModeEnabled: Boolean,
+) = SettingsSection(title = stringResource(Res.string.settings_group_on_this_device)) {
     // Null until the library has been read, so that the row arrives with real counts instead of showing zeroes.
     val librarySummary by viewModel.librarySummary.collectAsStateWithLifecycle()
-    val demoLibraryOffer by viewModel.demoLibraryOffer.collectAsStateWithLifecycle()
     val libraryPersistence by viewModel.libraryPersistence.collectAsStateWithLifecycle()
     val coverArtCacheSize by viewModel.coverArtCacheSize.collectAsStateWithLifecycle()
-    val filePicker = LocalFilePicker.current
     AnimatedSettingsRow(value = librarySummary) { summary ->
         DeletableSettingsRow(
             title = stringResource(Res.string.settings_library_summary, summary.songCount, summary.setlistCount),
@@ -119,32 +166,6 @@ internal fun LibrarySection(
             },
         )
     }
-    ActionListItem(
-        title = stringResource(Res.string.settings_import),
-        icon = painterResource(Res.drawable.ic_import),
-        isEnabled = !isImporting && !isPerformanceModeEnabled,
-        isEmphasized = false,
-        onClick = { viewModel.importFiles(filePicker) },
-    )
-    // Only until they are all in the library, which is also what brings it back for the ones a user who wanted none
-    // of them has deleted. Null while the library is still being read, so the offer never appears for a moment over
-    // a library that turns out to hold them.
-    AnimatedSettingsRow(value = demoLibraryOffer) { offer ->
-        ActionListItem(
-            title = stringResource(Res.string.add_demo_songs),
-            icon = painterResource(Res.drawable.ic_songs),
-            isEnabled = offer == DemoLibraryOffer.AVAILABLE && !isPerformanceModeEnabled,
-            isEmphasized = false,
-            onClick = viewModel::importDemoLibrary,
-        )
-    }
-    ActionListItem(
-        title = stringResource(Res.string.settings_export_all),
-        icon = painterResource(Res.drawable.ic_export),
-        isEnabled = !isPerformanceModeEnabled,
-        isEmphasized = false,
-        onClick = { viewModel.exportLibrary(filePicker) },
-    )
 }
 
 /**

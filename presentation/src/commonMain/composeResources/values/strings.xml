@@ -316,6 +316,15 @@
     <string name="settings_cover_art_description">Show the album cover a song names next to it, downloading it once and keeping a copy on this device</string>
     <string name="settings_group_display">Display</string>
     <string name="settings_group_chords">Chords</string>
+    <string name="settings_group_appearance">Appearance</string>
+    <string name="settings_group_playing">Playing</string>
+    <string name="settings_group_online">Online</string>
+    <string name="settings_group_sync">Sync</string>
+    <string name="settings_group_import_export">Import and export</string>
+    <string name="settings_group_on_this_device">On this device</string>
+    <string name="settings_group_campfire">Campfire</string>
+    <string name="settings_group_help">Help</string>
+    <string name="settings_group_legal">Legal</string>
     <string name="settings_number_sections">Number sections</string>
     <string name="settings_number_sections_description">Tell apart repeated sections that have no name of their own, such as Verse 1 and Verse 2</string>
     <string name="settings_song_cards">Song cards</string>

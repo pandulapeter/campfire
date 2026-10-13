@@ -20,9 +20,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_app_icon_home_s
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_launcher
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_launcher_description
 import com.pandulapeter.campfire.presentation.resources.settings_background_warmth_description
-import com.pandulapeter.campfire.presentation.resources.ic_campfire
-import com.pandulapeter.campfire.presentation.resources.settings_onboarding
-import com.pandulapeter.campfire.presentation.resources.settings_onboarding_description
+import com.pandulapeter.campfire.presentation.resources.settings_group_appearance
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_window
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_window_description
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language
@@ -30,7 +28,6 @@ import com.pandulapeter.campfire.presentation.resources.settings_user_interface_
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
 import com.pandulapeter.campfire.presentation.ui.components.BackgroundWarmthSlider
 import com.pandulapeter.campfire.presentation.ui.components.LanguageChoice
 import com.pandulapeter.campfire.presentation.ui.components.SettingsSubsection
@@ -41,13 +38,25 @@ import com.pandulapeter.campfire.presentation.ui.platform.AppIconSurface
 import com.pandulapeter.campfire.presentation.ui.platform.appIconSurface
 import com.pandulapeter.campfire.presentation.ui.theme.CampfireColorScheme
 import com.pandulapeter.campfire.presentation.ui.theme.colorSchemePair
-import org.jetbrains.compose.resources.painterResource
 
+/**
+ * The General tab: how the app looks, then which language it speaks. Setting the app up again is not here but in the
+ * About tab's help, since it walks through every tab's first questions rather than this one's.
+ */
 @Composable
-internal fun GeneralSection(
+internal fun GeneralSections(
     viewModel: CampfireViewModel,
     userPreferences: UserPreferences?,
-) = SettingsSection {
+) {
+    AppearanceSection(viewModel = viewModel, userPreferences = userPreferences)
+    LanguageSection(viewModel = viewModel, userPreferences = userPreferences)
+}
+
+@Composable
+private fun AppearanceSection(
+    viewModel: CampfireViewModel,
+    userPreferences: UserPreferences?,
+) = SettingsSection(title = stringResource(Res.string.settings_group_appearance)) {
     SettingsSubsection(title = stringResource(Res.string.settings_user_interface_theme)) {
         UiModeChoice(
             selected = userPreferences?.uiMode,
@@ -83,20 +92,18 @@ internal fun GeneralSection(
         description = stringResource(Res.string.settings_background_warmth_description),
         onWarmthChanged = viewModel::setBackgroundWarmth,
     )
-    SettingsSubsection(title = stringResource(Res.string.settings_user_interface_language)) {
-        LanguageChoice(
-            selected = userPreferences?.language,
-            onSelected = viewModel::setLanguage,
-        )
-        SettingsMessage(text = stringResource(Res.string.settings_user_interface_language_more_coming))
-    }
-    // The way back into the steps the first run opens with, which start from what everything is set to now.
-    ActionListItem(
-        title = stringResource(Res.string.settings_onboarding),
-        description = stringResource(Res.string.settings_onboarding_description),
-        icon = painterResource(Res.drawable.ic_campfire),
-        onClick = viewModel::openOnboarding,
+}
+
+@Composable
+private fun LanguageSection(
+    viewModel: CampfireViewModel,
+    userPreferences: UserPreferences?,
+) = SettingsSection(title = stringResource(Res.string.settings_user_interface_language)) {
+    LanguageChoice(
+        selected = userPreferences?.language,
+        onSelected = viewModel::setLanguage,
     )
+    SettingsMessage(text = stringResource(Res.string.settings_user_interface_language_more_coming))
 }
 
 /** What the icon the theme color can reach is called on this platform. */

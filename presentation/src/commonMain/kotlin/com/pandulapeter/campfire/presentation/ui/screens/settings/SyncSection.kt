@@ -12,17 +12,19 @@ package com.pandulapeter.campfire.presentation.ui.screens.settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pandulapeter.campfire.presentation.localization.stringResource
+import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.settings_group_sync
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 
 /**
  * Collects the sync state itself, so that a run reporting every file it moves recomposes this section and no other.
- * It is the first section of the library's tab, and the one on a card of its own, since it is the one with something
- * going on in it: the card is what sets it apart from the library's rows under it, in place of a title over each.
+ * It is the first section of the library's tab, since it decides where the library lives beyond this device.
  */
 @Composable
 internal fun SyncSection(
     viewModel: CampfireViewModel,
-) = SettingsCard {
+) = SettingsSection(title = stringResource(Res.string.settings_group_sync)) {
     val syncState by viewModel.syncState.collectAsStateWithLifecycle()
     SyncSettings(viewModel = viewModel, syncState = syncState)
 }

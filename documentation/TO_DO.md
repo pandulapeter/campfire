@@ -13,8 +13,6 @@
 - Changing the instrument / tuning should modify how tabs are displayed. Handle changing to instruments that don't support tab
 
 ### Improvements
-- Rename Settings -> Songs to Preferences and reorganize it
-- Finalize the onboarding experience
 - Find a way to allow entering tempo using the keyboard
 - Search: highlight matched substrings
 - Simplify adding tab charts in the editor
@@ -22,26 +20,21 @@
 
 ### Features
 - Shared setlists via Dropbox public links -> deeplink to Campfire. Rewrite documentation/plans/song-links.md - allow scanning deep links via QR code
-- Scale library
+- Scale library tab
 
 ## Midterm (in the next versions)
 - New song from the clipboard: documentation/plans/clipboard-import.md
 - Share to Campfire (iOS share extension, Android audit): documentation/plans/share-extension.md (after the clipboard plan)§
-- Search field for tags / languages
+- Search input for tags and languages
 - Comments in setlists (between songs)
 - Simplify adding comments / annotations to songs
 
 ## Long-term
 - Rename master branch to main
-- Onboarding: integrate feature toggle-presets (singers, drummers, etc)
-- Settings: promote Dropbox sign-in
 - Streaming zip writer on all platforms
 
 ## Ideas (not detailed enough yet)
 - Global sync status display
 - Fast scroller on the song details screen
 - External monitor support for lyrics only...? Maybe as a new window on desktop, lyric projection via AirPlay / Chromecast, etc
-- Backing tracks?
 - Native iOS, macOS, feel (overscroll, touch feedback, fonts, icons, colors, themes - Liquid Glass)
-
-## Other

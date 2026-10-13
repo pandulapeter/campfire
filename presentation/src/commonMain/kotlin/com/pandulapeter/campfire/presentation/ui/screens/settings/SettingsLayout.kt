@@ -21,15 +21,14 @@ import com.pandulapeter.campfire.presentation.ui.components.THEME_COLOR_CHOICE_W
 /**
  * What the settings screen decides from the width it settles at without its insets, rather than the one it is being
  * measured at, which follows the navigation chrome while that animates: whether the tabs are a [SettingsCategoryPane]
- * or a row, and how many [MIN_COLUMN_WIDTH] wide columns a [SettingsPage] has room for, across the whole width and
- * beside the pane. The app's `CampfireScreens` works it out and hands it down in place of the width itself, so that a
+ * or a row, and how many [MIN_COLUMN_WIDTH] wide columns a [SettingsPage] of the Metronome and the Tuner has room for
+ * (the settings tabs themselves are always one column, see [SettingsTabPage]). The app's `CampfireScreens` works it out and hands it down in place of the width itself, so that a
  * window being resized recomposes the screen only in the frames one of these changes in.
  */
 @Immutable
 internal data class SettingsWidthLayout(
     val isWide: Boolean,
     val sectionColumns: Int,
-    val sectionColumnsBesidePane: Int,
 ) {
     /**
      * How wide a [SettingsPage] of this many sections gets at most, for what is pinned above one and has to end where
@@ -49,7 +48,6 @@ internal data class SettingsWidthLayout(
             return SettingsWidthLayout(
                 isWide = pageWidth > SETTINGS_TAB_ROW_MAX_WIDTH + SETTINGS_CATEGORY_PANE_WIDTH,
                 sectionColumns = (pageWidth / MIN_COLUMN_WIDTH).toInt(),
-                sectionColumnsBesidePane = ((pageWidth - SETTINGS_CATEGORY_PANE_WIDTH) / MIN_COLUMN_WIDTH).toInt(),
             )
         }
     }

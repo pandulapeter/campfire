@@ -20,6 +20,7 @@ import com.pandulapeter.campfire.presentation.resources.ic_git_hub
 import com.pandulapeter.campfire.presentation.resources.ic_license
 import com.pandulapeter.campfire.presentation.resources.ic_phone
 import com.pandulapeter.campfire.presentation.resources.ic_privacy_policy
+import com.pandulapeter.campfire.presentation.resources.ic_settings
 import com.pandulapeter.campfire.presentation.resources.ic_star
 import com.pandulapeter.campfire.presentation.resources.settings_created_by
 import com.pandulapeter.campfire.presentation.resources.settings_distribution_app_store
@@ -30,8 +31,13 @@ import com.pandulapeter.campfire.presentation.resources.settings_distributions_a
 import com.pandulapeter.campfire.presentation.resources.settings_distributions_all_description
 import com.pandulapeter.campfire.presentation.resources.settings_git_hub
 import com.pandulapeter.campfire.presentation.resources.settings_git_hub_description
+import com.pandulapeter.campfire.presentation.resources.settings_group_campfire
+import com.pandulapeter.campfire.presentation.resources.settings_group_help
+import com.pandulapeter.campfire.presentation.resources.settings_group_legal
 import com.pandulapeter.campfire.presentation.resources.settings_help
 import com.pandulapeter.campfire.presentation.resources.settings_help_description
+import com.pandulapeter.campfire.presentation.resources.settings_onboarding
+import com.pandulapeter.campfire.presentation.resources.settings_onboarding_description
 import com.pandulapeter.campfire.presentation.resources.settings_open_source_licenses
 import com.pandulapeter.campfire.presentation.resources.settings_open_source_licenses_description
 import com.pandulapeter.campfire.presentation.resources.settings_privacy_policy
@@ -41,42 +47,49 @@ import com.pandulapeter.campfire.presentation.resources.settings_rate_descriptio
 import com.pandulapeter.campfire.presentation.resources.settings_support
 import com.pandulapeter.campfire.presentation.resources.settings_support_description
 import com.pandulapeter.campfire.presentation.resources.settings_version
+import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
 import com.pandulapeter.campfire.presentation.ui.components.LinkListItem
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.platform.Distribution
 import com.pandulapeter.campfire.presentation.ui.platform.canAskForDonations
 import com.pandulapeter.campfire.presentation.ui.platform.platformStore
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * What the app is and where it lives, in four groups: where to get it and where to get help; how to give something
- * back; the fine print; and, last, who made it and which version this is. The row that names the author is the link to
- * the author's own site, since that is what a name with a link on it is expected to lead to. campfire-songbook.com is the
+ * What the app is and where it lives, in three groups: the app itself (where every build of it is, how to give
+ * something back, and, last, who made it and which version this is); help (setting it up again, the website's support
+ * page, and the source code and issue tracker); and the fine print. The row that names the author is the link to the
+ * author's own site, since that is what a name with a link on it is expected to lead to. campfire-songbook.com is the
  * app's home page: every build of Campfire is listed there, which is the whole of what the app says about the other
  * platforms, since a page can be kept up to date without a release and it is the one place App Review has nothing to
  * say about; and its support page answers the common questions and says how to reach the author, by email or on
  * GitHub. GitHub comes after those, as the source code and the issue tracker, since that is what it is to somebody who
- * has never used it, with the open-source licenses and the privacy policy closing the section.
+ * has never used it.
  *
  * The rating row leads to the store of the platform the app is running on, and only once that listing exists. It
  * says "rate", never "get it from the store": a store page has an install button on it, and somebody who has the
  * direct download would end up with a second copy of the app, sandboxed, with a library of its own.
  */
 @Composable
-internal fun AboutSection(
+internal fun AboutSections(
+    viewModel: CampfireViewModel,
     urlOpener: (String) -> Unit,
-    onOpenSourceLicensesClicked: () -> Unit,
-) = SettingsSection {
+) {
+    AppSection(urlOpener = urlOpener)
+    HelpSection(urlOpener = urlOpener, onOnboardingClicked = viewModel::openOnboarding)
+    LegalSection(urlOpener = urlOpener, onOpenSourceLicensesClicked = { viewModel.showDialog(DialogType.OpenSourceLicenses) })
+}
+
+@Composable
+private fun AppSection(
+    urlOpener: (String) -> Unit,
+) = SettingsSection(title = stringResource(Res.string.settings_group_campfire)) {
     LinkListItem(
         title = stringResource(Res.string.settings_distributions_all),
         description = stringResource(Res.string.settings_distributions_all_description),
         icon = painterResource(Res.drawable.ic_phone),
         onClick = { urlOpener("$WEBSITE_URL#download") },
-    )
-    LinkListItem(
-        title = stringResource(Res.string.settings_help),
-        description = stringResource(Res.string.settings_help_description),
-        icon = painterResource(Res.drawable.ic_bug),
-        onClick = { urlOpener("${WEBSITE_URL}support/") },
     )
     platformStore?.let { store ->
         store.listingUrl?.let { listingUrl ->
@@ -97,11 +110,45 @@ internal fun AboutSection(
         )
     }
     LinkListItem(
+        title = stringResource(Res.string.settings_created_by),
+        description = stringResource(Res.string.settings_version, CAMPFIRE_VERSION_NAME),
+        icon = painterResource(Res.drawable.ic_campfire),
+        onClick = { urlOpener("https://pandulapeter.com/") },
+    )
+}
+
+@Composable
+private fun HelpSection(
+    urlOpener: (String) -> Unit,
+    onOnboardingClicked: () -> Unit,
+) = SettingsSection(title = stringResource(Res.string.settings_group_help)) {
+    // The way back into the steps the first run opens with, which start from what everything is set to now.
+    ActionListItem(
+        title = stringResource(Res.string.settings_onboarding),
+        description = stringResource(Res.string.settings_onboarding_description),
+        icon = painterResource(Res.drawable.ic_settings),
+        isEmphasized = false,
+        onClick = onOnboardingClicked,
+    )
+    LinkListItem(
+        title = stringResource(Res.string.settings_help),
+        description = stringResource(Res.string.settings_help_description),
+        icon = painterResource(Res.drawable.ic_bug),
+        onClick = { urlOpener("${WEBSITE_URL}support/") },
+    )
+    LinkListItem(
         title = stringResource(Res.string.settings_git_hub),
         description = stringResource(Res.string.settings_git_hub_description),
         icon = painterResource(Res.drawable.ic_git_hub),
         onClick = { urlOpener("https://github.com/pandulapeter/campfire") },
     )
+}
+
+@Composable
+private fun LegalSection(
+    urlOpener: (String) -> Unit,
+    onOpenSourceLicensesClicked: () -> Unit,
+) = SettingsSection(title = stringResource(Res.string.settings_group_legal)) {
     LinkListItem(
         title = stringResource(Res.string.settings_open_source_licenses),
         description = stringResource(Res.string.settings_open_source_licenses_description),
@@ -113,12 +160,6 @@ internal fun AboutSection(
         description = stringResource(Res.string.settings_privacy_policy_description),
         icon = painterResource(Res.drawable.ic_privacy_policy),
         onClick = { urlOpener("${WEBSITE_URL}privacy/") },
-    )
-    LinkListItem(
-        title = stringResource(Res.string.settings_created_by),
-        description = stringResource(Res.string.settings_version, CAMPFIRE_VERSION_NAME),
-        icon = painterResource(Res.drawable.ic_campfire),
-        onClick = { urlOpener("https://pandulapeter.com/") },
     )
 }
 

@@ -21,6 +21,8 @@ import com.pandulapeter.campfire.presentation.resources.settings_chord_diagrams_
 import com.pandulapeter.campfire.presentation.resources.settings_chords_description
 import com.pandulapeter.campfire.presentation.resources.settings_cover_art
 import com.pandulapeter.campfire.presentation.resources.settings_cover_art_description
+import com.pandulapeter.campfire.presentation.resources.settings_group_online
+import com.pandulapeter.campfire.presentation.resources.settings_group_playing
 import com.pandulapeter.campfire.presentation.resources.settings_metronome_description
 import com.pandulapeter.campfire.presentation.resources.settings_read_only_mode
 import com.pandulapeter.campfire.presentation.resources.settings_read_only_mode_description
@@ -36,15 +38,25 @@ import com.pandulapeter.campfire.presentation.ui.components.SwitchListItem
  * The parts of the app a reader can do without, each a switch that takes it out of every screen it is on, so that a
  * singer is not handed a metronome and a band that plays from one list is not handed a setlist tab. Read only mode is
  * first: it is the one that decides what the rest of the app is still allowed to do. Then what a song page shows, the
- * most musical first, then the tab that is only a tab, and last the one switch that decides whether the app reaches the
- * network on its own.
+ * most musical first, and the tab that is only a tab. The two switches that let the app reach the network are a group
+ * of their own, so that what can make a request is found in one place rather than among the rest.
  */
 @Composable
-internal fun FeaturesSection(
+internal fun FeaturesSections(
     viewModel: CampfireViewModel,
     userPreferences: UserPreferences?,
     isPerformanceModeEnabled: Boolean,
-) = SettingsSection {
+) {
+    PlayingSection(viewModel = viewModel, userPreferences = userPreferences, isPerformanceModeEnabled = isPerformanceModeEnabled)
+    OnlineSection(viewModel = viewModel, userPreferences = userPreferences)
+}
+
+@Composable
+private fun PlayingSection(
+    viewModel: CampfireViewModel,
+    userPreferences: UserPreferences?,
+    isPerformanceModeEnabled: Boolean,
+) = SettingsSection(title = stringResource(Res.string.settings_group_playing)) {
     SwitchListItem(
         title = stringResource(Res.string.settings_read_only_mode),
         description = stringResource(Res.string.settings_read_only_mode_description),
@@ -85,6 +97,13 @@ internal fun FeaturesSection(
         isChecked = userPreferences?.areSetlistsEnabled != false,
         onCheckedChange = viewModel::setSetlistsEnabled,
     )
+}
+
+@Composable
+private fun OnlineSection(
+    viewModel: CampfireViewModel,
+    userPreferences: UserPreferences?,
+) = SettingsSection(title = stringResource(Res.string.settings_group_online)) {
     // Off, nothing is asked of either catalogue for a song's details: the button in the Edit song details form is gone.
     SwitchListItem(
         title = stringResource(Res.string.settings_song_details_lookup),

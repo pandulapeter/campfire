@@ -20,9 +20,9 @@ import com.pandulapeter.campfire.presentation.ui.components.LIST_ITEM_KEYLINE
 import com.pandulapeter.campfire.presentation.ui.components.SettingsSectionTitle
 
 /**
- * One group of settings. Most are untitled, since the tab names them already, and the Library tab sets the first of its
- * two apart by putting it on a card (the sync section); a tab whose two sections are about different things names each
- * with a [title] instead (the Songs tab's display and chords).
+ * One group of settings. Every one on the settings screen has a [title]: each tab is a column of these, so the pages read
+ * alike whichever is open, and the title says what the rows have in common rather than which tab they are on. The
+ * Metronome and the Tuner leave theirs untitled, since there the tab names the one group of controls a page has.
  *
  * The rows lie on the screen itself rather than on a card of their own, so a row's ripple and its text keep the
  * keylines of the app bar and of every list in the app.

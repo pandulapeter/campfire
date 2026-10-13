@@ -10,7 +10,7 @@
 
 # :presentation — ui/screens/onboarding
 
-The onboarding: a few questions, one a page, each shown on what it changes; a first run opens it, and Settings → General ("Set up Campfire again") opens it again.
+The onboarding: a few questions, one a page, each shown on what it changes; a first run opens it, and Settings → About ("Set up Campfire again", under Help) opens it again.
 
 ### The pages
 
@@ -95,7 +95,7 @@ so an app ended in the middle of it starts it again, the answers given so far ke
 consent answered while it is on top does not open Settings over it; the Dropbox page says how it went. That holds where
 the app did not live through the consent page too: Android's restored onboarding is back on that page, and the web,
 whose answer is a new start up on the songs, puts the onboarding back on it (`SyncConsentOrigin`, over the settings
-screen's General tab where that was what opened it), or moves an owed onboarding the start up opened meanwhile
+screen's About tab where that was what opened it), or moves an owed onboarding the start up opened meanwhile
 from its first page to it (`syncConsentAnswerOf`), rather than opening Settings.
 
 ### Layout

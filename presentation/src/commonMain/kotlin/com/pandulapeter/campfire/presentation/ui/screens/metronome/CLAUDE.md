@@ -34,7 +34,7 @@ steppers side by side with a slash between them, which reads as the signature an
 the one line saying that the beats of the pinned bar are tapped to accent or mute them) and the subdivision, a
 `SegmentedChoice` of the clicks per beat as numbers (1 to 4), since the note value a beat is cut into depends on the bar
 and the words for them do not fit a phone side by side — and how it reaches the player (`MetronomeSoundOptions`, on a
-`SettingsCard` as the library tab's sync section is, since unlike the first section it is how every click is played, a
+`SettingsCard`, since unlike the first section it is how every click is played, a
 song's included): the sound (a tap previews it) as chips, the volume — whose zero is the mute, so there is no switch for
 one — and the Animate and Vibrate switches (the latter where `rememberBeatHaptics` has a vibrator). The screen is kept
 on while a click plays. Every way onto it clears the back stack, so no song is behind it.

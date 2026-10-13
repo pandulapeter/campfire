@@ -1125,7 +1125,7 @@ class CampfireViewModel(
 
     /**
      * Shows the answer to a consent page the app was sent away to, which is where the user was when they left
-     * ([takeSyncConsentOrigin]): the onboarding's Dropbox page, over the settings screen where that was what opened it, or
+     * ([takeSyncConsentOrigin]): the onboarding's Dropbox page, over the settings screen's About tab where that was what opened it, or
      * Settings, on the tab holding the sync section. Only onto a stack nobody has built on since the app started - the
      * songs the app opens on, the settings screen Android brings back after reclaiming the process behind the browser, or
      * an owed onboarding still on its first page, which a start up that still owes it opens while the
@@ -1142,7 +1142,7 @@ class CampfireViewModel(
             SyncConsentAnswer.NOTHING -> Unit
             SyncConsentAnswer.ONBOARDING -> navigator.openOnboarding(isOpenedFromSettings = false, step = OnboardingStep.SYNC)
             SyncConsentAnswer.ONBOARDING_FROM_SETTINGS -> {
-                openSettingsOn(SettingsTab.GENERAL)
+                openSettingsOn(SettingsTab.ABOUT)
                 navigator.openOnboarding(isOpenedFromSettings = true, step = OnboardingStep.SYNC)
             }
             SyncConsentAnswer.SETTINGS -> openSettingsOn(SettingsTab.LIBRARY)

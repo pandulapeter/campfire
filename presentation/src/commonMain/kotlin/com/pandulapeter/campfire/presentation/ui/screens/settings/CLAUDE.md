@@ -18,26 +18,35 @@ The settings screen.
 the available width fits the 560dp tab row and, above that, the entries of a 180dp `SettingsCategoryPane` at the start
 of the screen with the selected page next to it (`NavigationDrawerItem`s, the dot of a pending sync answer as their
 badge; the choice is written straight to `settingsTab`, and the pager, which keeps a state of its own in
-`SettingsTabPager`, opens on it when a window narrows again): General (theme, color, whether the app icon takes that
-color, the sepia slider, language, and "Set up Campfire again", which opens the onboarding; the slider and the language
-list are `components/`' `BackgroundWarmthSlider` and `LanguageChoice`, which the onboarding's first page shares), Features (the switches that take whole parts of the app away, see the root
-`CLAUDE.md`: read only mode, chords, chord diagrams — disabled with the chords off —, metronome, setlists and cover
-art), Songs (two titled sections, side by side on a wide window like the Library tab's: Chords first — one Instrument
-row holding the instrument and tuning chips (`components/InstrumentSetting.kt`, opening their sheets, see
-`ui/CLAUDE.md`), first since it decides the shapes, the tuner, and the capo, and disabled only with both the chords and
-the tuner switched off, since the tuner listens for the same instrument and the keyboard reads the capo as a
-transposition whether or not diagrams are drawn; then the chord spelling — the notation as a `PickerChip` like the
-instrument's, naming the one picked and opening a popup of the five (Standard, German, Latin, Nashville numbers, and
-Roman numerals), each with an example under it, which closes with the choice, and the accidentals, which stay enabled
-under a numbering since they still spell its key; the accidentals' examples, the instruments' strings, and the tunings'
-notes are written in the notation picked there, never in the language — then Display — section numbers, then one Song
-cards setting with a row of `CardDetailsChoice` chips for each list, named Songs and Setlists and set beside their name
-while it fits (`LabeledControlRow`), the key's chip gone with the chords off, the tempo's kept with the metronome off,
-and the Setlists row disabled with the setlists (see `ui/CLAUDE.md`)), Library (the sync section on an `ElevatedCard`,
-the one card in the app, then what the library holds and what can be done with it — its song and setlist counts and the cover cache are each a row that deletes what it
-counts, the cache behind an ordinary confirmation and the library behind `DeleteLibraryDialog`, which wants `DELETE`
-typed in every language, into a field that capitalizes what is typed) and About (the app, its links and where its other
-builds are listed).
+`SettingsTabPager`, opens on it when a window narrows again). **Every tab is one column of titled sections**, the same
+at every width (see below), in this order:
+
+- **General**: Appearance (theme, color, whether the app icon takes that color, the sepia slider) and Language. The
+  slider and the language list are `components/`' `BackgroundWarmthSlider` and `LanguageChoice`, which the
+  onboarding's first page shares.
+- **Features**: the switches that take whole parts of the app away (see the root `CLAUDE.md`). Playing: read only
+  mode, chords, chord diagrams (disabled with the chords off), metronome, tuner, and setlists; then Online: the song
+  details lookup and cover art, the two that let the app make a request, in a group of their own so that they are
+  found in one place.
+- **Songs**: Chords, then Display. Chords is one Instrument row holding the instrument and tuning chips
+  (`components/InstrumentSetting.kt`, opening their sheets, see `ui/CLAUDE.md`), first since it decides the shapes,
+  the tuner, and the capo, and disabled only with both the chords and the tuner switched off, since the tuner listens
+  for the same instrument and the keyboard reads the capo as a transposition whether or not diagrams are drawn; then
+  the chord spelling — the notation as a `PickerChip` like the instrument's, naming the one picked and opening a popup
+  of the five (Standard, German, Latin, Nashville numbers, and Roman numerals), each with an example under it, which
+  closes with the choice, and the accidentals, which stay enabled under a numbering since they still spell its key.
+  The accidentals' examples, the instruments' strings, and the tunings' notes are written in the notation picked
+  there, never in the language.
+- Display is section numbers, then one Song cards setting with a row of `CardDetailsChoice` chips for each list, named
+  Songs and Setlists and set beside their name while it fits (`LabeledControlRow`), the key's chip gone with the chords
+  off, the tempo's kept with the metronome off, and the Setlists row disabled with the setlists (see `ui/CLAUDE.md`).
+- **Library**: Sync (`SyncSettings.kt`, below), Import and export (import, the demo songs while they are not all in
+  the library, export), and On this device, last since its rows are the ones that cannot be undone: the song and
+  setlist counts and the cover cache are each a row that deletes what it counts, the cache behind an ordinary
+  confirmation and the library behind `DeleteLibraryDialog`, which wants `DELETE` typed in every language, into a field
+  that capitalizes what is typed; the web's storage row is there too.
+- **About**: Campfire, Help ("Set up Campfire again", which opens the onboarding, with the support page and GitHub),
+  and Legal (see below).
 
 The screen has no app bar: the tabs are at the top of the screen, next to the navigation rail, and everything on it
 starts at the start edge like the lists of the other screens rather than being centered. **The tabs stay flat** and have
@@ -67,13 +76,15 @@ top, as does pressing the Songs, Setlists or Metronome item on its screen (`Camp
 which every top level screen collects with `collectLatest`: a touch that interrupts the scroll ends its animation in a
 `CancellationException`, which would end a plain `collect`, and every later press with it). The two layouts crossfade
 when a window is resized across the line between them, and so do the pages of the wide one as a category is picked (a pager slides only where a finger drags it). Each page
-(`SettingsPage`, `SettingsPage.kt`) is a `SettingsSection` or two: side by side where the settled width has room for
-both at 380dp each, stacked otherwise, each column capped at `THEME_COLOR_CHOICE_WIDTH` (every color disc in one row)
-and starting at the start edge, the room next to the category pane being what the columns are counted in. Sections have
-no background, so their rows keep the keylines of the app bar and of every list, and no title where the tab names them;
-of the two tabs with two, the Library tab sets the first apart by putting it on a card, and the Songs tab, whose two are
-about different things, titles both (`SettingsSection`'s `title`, a `SettingsSectionTitle`). A page may have a `header`
-above its sections, spanning every column and capped where they end: the Tuner tab's strings, on a wide window.
+(`SettingsTabPage`, through `SettingsPage`) is **one column, capped at `THEME_COLOR_CHOICE_WIDTH`** (every color disc in
+one row) and starting at the start edge, on a phone, on a tablet, and beside the category pane of a maximized window
+alike: two columns made the tabs that had two sections look unlike the ones that had one, and changed a tab's look
+with the window's width. Every section has a title (`SettingsSection`'s `title`, a `SettingsSectionTitle`), so a tab
+reads as a few named groups whichever it is, and no background, so their rows keep the keylines of the app bar and of
+every list; there is no card on a settings tab. `SettingsPage` itself still lays two sections side by side where the
+settled width has room for both at 380dp each, for the Metronome and the Tuner, whose second section is a card beside
+their controls; a page may also have a `header` above its sections, spanning every column and capped where they end:
+the Tuner tab's strings, on a wide window.
 
 It is a `verticalScroll` and not a lazy list: a lazy list has no notion of a section holding several rows, a tab is a
 few dozen rows, and **every row is first composed in the state it is in** — what comes and goes afterwards (the demo
@@ -83,12 +94,12 @@ late was animated in. A control that does not fit at the end of a row (the segme
 language list) is a `SettingsSubsection`, set in a list item's own headline and supporting styles since it is a peer of
 the switch next to it.
 
-**The About tab is one section** (`AboutSection`, untitled, since the tab names it) and the same rows on every platform,
-in four groups: "Every version of Campfire" (the download section of campfire-songbook.com, which is the whole of what
-the app says about the other builds) and Help and support (the website's support page, which gives an email address and
-the GitHub issues); the rating row and, where `canAskForDonations`, the coffee; GitHub (the source code and the issue
-tracker, after the website's rows on purpose), Open-source licenses (a sheet of the app's own), and the privacy policy;
-and, last, the author and the version. Every row has a description and a leading icon, and none a mark at its end.
+**The About tab** (`AboutSections`) has the same rows on every platform, in three titled groups: Campfire — "Every
+version of Campfire" (the download section of campfire-songbook.com, which is the whole of what the app says about the
+other builds), the rating row and, where `canAskForDonations`, the coffee, and, last, the author and the version; Help
+— "Set up Campfire again", Help and support (the website's support page, which gives an email address and the GitHub
+issues), and GitHub (the source code and the issue tracker, after the website's rows on purpose); and Legal —
+Open-source licenses (a sheet of the app's own) and the privacy policy. Every row has a description and a leading icon, and none a mark at its end.
 The rating row opens `platformStore`'s `listingUrl` — the store of the platform the app runs on rather than the one it
 came from — and is absent on Linux, in the web build and wherever that listing does not exist yet; its wording says
 *rate*, since a store page also offers to install a second copy of the app. **campfire-songbook.com is the app's

@@ -15,73 +15,54 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.navigation.SettingsTab
 
+/**
+ * One tab of the settings screen: a single column of titled [SettingsSection]s, the same on every tab and at every
+ * width. A second column would put two lists side by side that are read one after the other, and it would come and go
+ * with the width of the window, so that the same tab looked different from one size to the next; the room a wide
+ * window has left is what the category pane next to the page is for.
+ */
 @Composable
 internal fun SettingsTabPage(
     modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
     tab: SettingsTab,
-    sectionColumns: Int,
     scrollState: ScrollState,
     contentPadding: PaddingValues,
     isImporting: Boolean,
     isPerformanceModeEnabled: Boolean,
     userPreferences: UserPreferences?,
     urlOpener: (String) -> Unit,
-) = when (tab) {
-    SettingsTab.GENERAL -> SettingsPage(
-        modifier = modifier,
-        sectionColumns = sectionColumns,
-        scrollState = scrollState,
-        contentPadding = contentPadding,
-        section = { GeneralSection(viewModel = viewModel, userPreferences = userPreferences) },
-    )
-
-    SettingsTab.FEATURES -> SettingsPage(
-        modifier = modifier,
-        sectionColumns = sectionColumns,
-        scrollState = scrollState,
-        contentPadding = contentPadding,
-        section = {
-            FeaturesSection(
+) = SettingsPage(
+    modifier = modifier,
+    sectionColumns = 1,
+    scrollState = scrollState,
+    contentPadding = contentPadding,
+    section = {
+        when (tab) {
+            SettingsTab.GENERAL -> GeneralSections(viewModel = viewModel, userPreferences = userPreferences)
+            SettingsTab.FEATURES -> FeaturesSections(
                 viewModel = viewModel,
                 userPreferences = userPreferences,
                 isPerformanceModeEnabled = isPerformanceModeEnabled,
             )
-        },
-    )
-
-    SettingsTab.SONGS -> SettingsPage(
-        modifier = modifier,
-        sectionColumns = sectionColumns,
-        scrollState = scrollState,
-        contentPadding = contentPadding,
-        section = { ChordsSection(viewModel = viewModel, userPreferences = userPreferences) },
-        secondSection = { SongDisplaySection(viewModel = viewModel, userPreferences = userPreferences) },
-    )
-
-    SettingsTab.LIBRARY -> SettingsPage(
-        modifier = modifier,
-        sectionColumns = sectionColumns,
-        scrollState = scrollState,
-        contentPadding = contentPadding,
-        section = { SyncSection(viewModel = viewModel) },
-        secondSection = {
-            LibrarySection(
+            SettingsTab.SONGS -> {
+                ChordsSection(viewModel = viewModel, userPreferences = userPreferences)
+                SongDisplaySection(viewModel = viewModel, userPreferences = userPreferences)
+            }
+            SettingsTab.LIBRARY -> {
+                SyncSection(viewModel = viewModel)
+                LibrarySections(
+                    viewModel = viewModel,
+                    isImporting = isImporting,
+                    isPerformanceModeEnabled = isPerformanceModeEnabled,
+                )
+            }
+            SettingsTab.ABOUT -> AboutSections(
                 viewModel = viewModel,
-                isImporting = isImporting,
-                isPerformanceModeEnabled = isPerformanceModeEnabled,
+                urlOpener = urlOpener,
             )
-        },
-    )
-
-    SettingsTab.ABOUT -> SettingsPage(
-        modifier = modifier,
-        sectionColumns = sectionColumns,
-        scrollState = scrollState,
-        contentPadding = contentPadding,
-        section = { AboutSection(urlOpener = urlOpener, onOpenSourceLicensesClicked = { viewModel.showDialog(DialogType.OpenSourceLicenses) }) },
-    )
-}
+        }
+    },
+)

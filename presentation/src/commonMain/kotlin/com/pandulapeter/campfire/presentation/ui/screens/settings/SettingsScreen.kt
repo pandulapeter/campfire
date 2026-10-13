@@ -170,7 +170,6 @@ internal fun SettingsScreen(
                         SettingsTabPage(
                             viewModel = viewModel,
                             tab = tab,
-                            sectionColumns = layout.sectionColumnsBesidePane,
                             scrollState = scrollStates[tab.ordinal],
                             contentPadding = contentPadding.only(bottom = true, extraEnd = endPadding),
                             isImporting = isImporting,
@@ -195,7 +194,6 @@ internal fun SettingsScreen(
                 SettingsTabPage(
                     viewModel = viewModel,
                     tab = tab,
-                    sectionColumns = layout.sectionColumns,
                     scrollState = scrollStates[tab.ordinal],
                     contentPadding = contentPadding,
                     isImporting = isImporting,
