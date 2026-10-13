@@ -312,6 +312,8 @@
     <string name="settings_chord_instrument_guitar_description">Six strings: %1$s</string>
     <string name="settings_chord_instrument_ukulele">Ukulele</string>
     <string name="settings_chord_instrument_ukulele_description">Four strings: %1$s</string>
+    <string name="settings_chord_instrument_mandolin">Mandolin</string>
+    <string name="settings_chord_instrument_mandolin_description">Four pairs of strings: %1$s</string>
     <string name="settings_chord_instrument_keyboard">Keyboard</string>
     <string name="settings_chord_instrument_keyboard_description">The notes of each chord, with the capo counted into the transposition</string>
     <string name="settings_chord_instrument_other">Other</string>

@@ -60,7 +60,7 @@ class ChordProDefinitionsTest {
             "B" to ChordVoicing.Keys(listOf(10, 14, 17)),
             "C/B" to ChordVoicing.Keys(listOf(12, 16, 19), bass = 10),
         ).forEach { (name, voicing) ->
-            val line = ChordProDefinitions.line(name, voicing, ChordNotation.GERMAN)
+            val line = ChordProDefinitions.line(name, voicing, ChordInstrument.KEYBOARD, ChordNotation.GERMAN)
             assertEquals(voicing, ChordProParser.parse("$line\n[$name]x", ChordNotation.GERMAN).metadata.definitions.single().voicing, line)
         }
     }
@@ -69,6 +69,8 @@ class ChordProDefinitionsTest {
     fun `a selector names the instrument, and one that contradicts the shape is unreadable`() {
         assertEquals(ChordInstrument.UKULELE, definitions("{define-ukulele: C frets 0 0 0 3}").single().instrument)
         assertEquals(ChordInstrument.KEYBOARD, definitions("{define-piano: C keys 0 4 7}").single().instrument)
+        assertEquals(ChordInstrument.MANDOLIN, definitions("{define-mandolin: G frets 0 0 2 3}").single().instrument)
+        assertEquals(ChordInstrument.UKULELE, definitions("{define: G frets 0 0 2 3}").single().instrument)
         assertEquals(emptyList(), definitions("{define-ukulele: G frets 3 2 0 0 0 3}"))
         assertEquals(ChordProDefinitions.Reading.Invalid, ChordProDefinitions.read("G frets 3 2 0 0 0 3", "ukulele"))
         assertEquals(ChordProDefinitions.Reading.Invalid, ChordProDefinitions.read("G keys 0 4 7", "guitar"))
@@ -164,28 +166,31 @@ class ChordProDefinitionsTest {
     @Test
     fun `the line written for a shape reads back as it`() {
         listOf(
-            "G" to ChordVoicing.Fretted(listOf(3, 2, 0, 0, 0, 3), listOf(2, 1, 0, 0, 0, 3)),
-            "Bb" to ChordVoicing.Fretted(listOf(null, 6, 8, 8, 8, 6)),
-            "D" to ChordVoicing.Fretted(listOf(null, null, 0, 7, 7, 5)),
-            "C" to ChordVoicing.Fretted(listOf(0, 0, 0, 3)),
-            "D" to ChordVoicing.Keys(listOf(2, 6, 9)),
-            "D/F#" to ChordVoicing.Keys(listOf(14, 18, 21), bass = 6),
-            "C/D" to ChordVoicing.Keys(listOf(12, 16, 19), bass = 2),
-        ).forEach { (name, voicing) ->
-            val line = ChordProDefinitions.line(name, voicing)
+            Triple("G", ChordVoicing.Fretted(listOf(3, 2, 0, 0, 0, 3), listOf(2, 1, 0, 0, 0, 3)), ChordInstrument.GUITAR),
+            Triple("Bb", ChordVoicing.Fretted(listOf(null, 6, 8, 8, 8, 6)), ChordInstrument.GUITAR),
+            Triple("D", ChordVoicing.Fretted(listOf(null, null, 0, 7, 7, 5)), ChordInstrument.GUITAR),
+            Triple("C", ChordVoicing.Fretted(listOf(0, 0, 0, 3)), ChordInstrument.UKULELE),
+            Triple("G", ChordVoicing.Fretted(listOf(0, 0, 2, 3), listOf(0, 0, 1, 2)), ChordInstrument.MANDOLIN),
+            Triple("D", ChordVoicing.Keys(listOf(2, 6, 9)), ChordInstrument.KEYBOARD),
+            Triple("D/F#", ChordVoicing.Keys(listOf(14, 18, 21), bass = 6), ChordInstrument.KEYBOARD),
+            Triple("C/D", ChordVoicing.Keys(listOf(12, 16, 19), bass = 2), ChordInstrument.KEYBOARD),
+        ).forEach { (name, voicing, instrument) ->
+            val line = ChordProDefinitions.line(name, voicing, instrument)
             val read = definitions(line).single()
             assertEquals(name, read.name, line)
             assertEquals(voicing, read.voicing, line)
+            assertEquals(instrument, read.instrument, line)
         }
         assertEquals(ChordVoicing.Keys(listOf(4, 7, 12)), definitions("{define: C/E keys 4 7 12}").single().voicing)
-        assertEquals("{define: G base-fret 1 frets 3 2 0 0 0 3 fingers 2 1 0 0 0 3}", ChordProDefinitions.line("G", ChordVoicing.Fretted(listOf(3, 2, 0, 0, 0, 3), listOf(2, 1, 0, 0, 0, 3))))
-        assertEquals("{define: Bb base-fret 6 frets x 1 3 3 3 1}", ChordProDefinitions.line("Bb", ChordVoicing.Fretted(listOf(null, 6, 8, 8, 8, 6))))
-        assertEquals("{define: D keys 0 4 7}", ChordProDefinitions.line("D", ChordVoicing.Keys(listOf(2, 6, 9))))
+        assertEquals("{define: G base-fret 1 frets 3 2 0 0 0 3 fingers 2 1 0 0 0 3}", ChordProDefinitions.line("G", ChordVoicing.Fretted(listOf(3, 2, 0, 0, 0, 3), listOf(2, 1, 0, 0, 0, 3)), ChordInstrument.GUITAR))
+        assertEquals("{define: Bb base-fret 6 frets x 1 3 3 3 1}", ChordProDefinitions.line("Bb", ChordVoicing.Fretted(listOf(null, 6, 8, 8, 8, 6)), ChordInstrument.GUITAR))
+        assertEquals("{define: D keys 0 4 7}", ChordProDefinitions.line("D", ChordVoicing.Keys(listOf(2, 6, 9)), ChordInstrument.KEYBOARD))
+        assertEquals("{define-mandolin: G base-fret 1 frets 0 0 2 3}", ChordProDefinitions.line("G", ChordVoicing.Fretted(listOf(0, 0, 2, 3)), ChordInstrument.MANDOLIN))
     }
 
     @Test
     fun `the serializer writes the definitions back`() {
-        val text = "{title: X}\n{define: G frets 3 2 0 0 0 3 fingers 2 1 0 0 0 3}\n{define-ukulele: C frets 0 0 0 3}\n{define: D keys 0 4 7}\n\n[G]la [C]la [D]la"
+        val text = "{title: X}\n{define: G frets 3 2 0 0 0 3 fingers 2 1 0 0 0 3}\n{define-ukulele: C frets 0 0 0 3}\n{define-mandolin: C frets 0 2 3 0}\n{define: D keys 0 4 7}\n\n[G]la [C]la [D]la"
         val parsed = ChordProParser.parse(text)
         assertEquals(parsed, ChordProParser.parse(ChordProSerializer.serialize(parsed)))
     }

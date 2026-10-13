@@ -43,14 +43,19 @@ class ChordVoicingsTest {
             "A" to "2 1 0 0", "Dm" to "2 2 1 0", "G7" to "0 2 1 2", "C7" to "0 0 0 1", "Bb" to "3 2 1 1", "E7" to "1 2 0 2",
             "A7" to "0 1 0 0", "Bm" to "4 2 2 2", "D7" to "2 2 2 3", "F#m" to "2 1 2 0", "C#m" to "1 1 0 4", "E" to "1 4 0 2",
         ).forEach { (name, shape) -> assertEquals(shape, first(name, ChordInstrument.UKULELE), name) }
+        mapOf(
+            "G" to "0 0 2 3", "C" to "0 2 3 0", "D" to "2 0 0 2", "Em" to "0 2 2 0", "Am" to "2 2 3 0", "A" to "2 2 4 0",
+            "E" to "1 2 2 0", "F" to "2 3 3 1", "Bm" to "4 0 2 2", "G7" to "0 0 2 1", "D7" to "2 0 3 2", "B7" to "2 1 2 2",
+            "C#" to "1 3 4 1",
+        ).forEach { (name, shape) -> assertEquals(shape, first(name, ChordInstrument.MANDOLIN), name) }
     }
 
     @Test
     fun `every shape the search finds keeps its rules`() {
         corpus.forEach { name ->
             val chord = ChordProChords.parse(name)!!
-            listOf(ChordInstrument.GUITAR, ChordInstrument.UKULELE).forEach { instrument ->
-                val played = if (instrument == ChordInstrument.UKULELE) chord.copy(bass = null) else chord
+            listOf(ChordInstrument.GUITAR, ChordInstrument.UKULELE, ChordInstrument.MANDOLIN).forEach { instrument ->
+                val played = if (instrument.playsChordOver) chord.copy(bass = null) else chord
                 val shapes = ChordVoicings.all(chord, instrument)
                 assertEquals(shapes.size, shapes.map { (it as ChordVoicing.Fretted).frets }.distinct().size, "$name has no shape twice")
                 shapes.forEach { voicing ->

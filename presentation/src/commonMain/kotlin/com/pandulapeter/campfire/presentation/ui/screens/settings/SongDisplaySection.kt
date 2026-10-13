@@ -27,6 +27,8 @@ import com.pandulapeter.campfire.presentation.resources.settings_chord_instrumen
 import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_description
 import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_guitar
 import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_keyboard
+import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_mandolin
+import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_mandolin_description
 import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_ukulele
 import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_guitar_description
 import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_keyboard_description
@@ -156,6 +158,11 @@ private fun ChordInstrumentChoice(
                 stringResource(Res.string.settings_chord_instrument_ukulele_description, stringNames(UKULELE_STRINGS, notation)),
             ),
             Triple(
+                UserPreferences.ChordInstrument.MANDOLIN,
+                stringResource(Res.string.settings_chord_instrument_mandolin),
+                stringResource(Res.string.settings_chord_instrument_mandolin_description, stringNames(MANDOLIN_STRINGS, notation)),
+            ),
+            Triple(
                 UserPreferences.ChordInstrument.KEYBOARD,
                 stringResource(Res.string.settings_chord_instrument_keyboard),
                 stringResource(Res.string.settings_chord_instrument_keyboard_description),
@@ -182,6 +189,7 @@ private fun stringNames(strings: List<String>, notation: ChordNotation) = string
 
 private val GUITAR_STRINGS = listOf("E", "A", "D", "G", "B", "E")
 private val UKULELE_STRINGS = listOf("G", "C", "E", "A")
+private val MANDOLIN_STRINGS = listOf("G", "D", "A", "E")
 
 /**
  * The notation chords are written in, as a list rather than a segmented control: five names with an example under each

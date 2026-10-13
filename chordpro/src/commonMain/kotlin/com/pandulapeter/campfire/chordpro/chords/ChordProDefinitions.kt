@@ -23,18 +23,32 @@ import com.pandulapeter.campfire.chordpro.syntax.ChordProLines
  * fret (1 is the base fret itself, 0 an open string, `x`, `X`, `N` and `-1` a muted one; `base_fret` is read too), its
  * fingers numbered 1 to 5 and every other finger value, a thumb's `T` included, shown as none, as the specification
  * has it ignored, and `{define: G keys 0 4 7}` a keyboard one, its keys counted in semitones from the chord's root. The instrument is the
- * directive's selector where it names one (`{define-ukulele: …}`, `-guitar`, `-keyboard`, `-piano`), and otherwise the
- * one with as many strings as the shape has frets.
+ * directive's selector where it names one (`{define-ukulele: …}`, `-guitar`, `-mandolin`, `-keyboard`, `-piano`), and
+ * otherwise the first one with as many strings as the shape has frets: four frets are a ukulele's unless the selector
+ * says mandolin.
  */
 public object ChordProDefinitions {
 
     /**
-     * The line that defines [voicing] as the shape of [name], the way [read] reads it back:
-     * `{define: G base-fret 1 frets 3 2 0 0 0 3 fingers 2 1 0 0 0 3}`, `{define: G keys 0 4 7}`. It carries no
-     * selector, since the number of frets already says which instrument a shape is for. A keyboard's keys are counted
-     * from the root of [name] as it is spelled in [notation].
+     * The line that defines [voicing] as the shape of [name] on [instrument], the way [read] reads it back:
+     * `{define: G base-fret 1 frets 3 2 0 0 0 3 fingers 2 1 0 0 0 3}`, `{define: G keys 0 4 7}`. It carries a selector
+     * only where the number of frets would otherwise say another instrument (`{define-mandolin: …}`), so that a guitar's
+     * or a ukulele's line is one every other ChordPro program reads as well. A keyboard's keys are counted from the root
+     * of [name] as it is spelled in [notation].
      */
-    public fun line(name: String, voicing: ChordVoicing, notation: ChordNotation = ChordNotation.STANDARD): String = "{$DEFINE: $name ${shapeOf(name, voicing, notation)}}"
+    public fun line(
+        name: String,
+        voicing: ChordVoicing,
+        instrument: ChordInstrument,
+        notation: ChordNotation = ChordNotation.STANDARD,
+    ): String {
+        val implied = (voicing as? ChordVoicing.Fretted)?.let { implicitInstrumentOf(it.frets.size) } ?: ChordInstrument.KEYBOARD
+        val directive = if (implied == instrument) DEFINE else "$DEFINE-${instrument.id}"
+        return "{$directive: $name ${shapeOf(name, voicing, notation)}}"
+    }
+
+    /** The instrument a shape of [strings] frets is for where its directive has no selector, or null for none. */
+    private fun implicitInstrumentOf(strings: Int) = ChordInstrument.entries.firstOrNull { it.isFretted && it.tuning.size == strings }
 
     /** The part of a definition after the chord's name, as [line] writes it. */
     internal fun shapeOf(name: String, voicing: ChordVoicing, notation: ChordNotation = ChordNotation.STANDARD) = when (voicing) {
@@ -379,7 +393,7 @@ public object ChordProDefinitions {
             )
             else -> return Reading.Other(name)
         }
-        val instrument = selected ?: ChordInstrument.entries.firstOrNull { it.isFretted && it.tuning.size == frets.size } ?: return Reading.Other(name)
+        val instrument = selected ?: implicitInstrumentOf(frets.size) ?: return Reading.Other(name)
         if (instrument.tuning.size != frets.size) return Reading.Invalid
         return Reading.Shape(name, instrument, voicing)
     }
@@ -433,6 +447,7 @@ public object ChordProDefinitions {
     private val selectorInstruments = mapOf(
         "guitar" to ChordInstrument.GUITAR,
         "ukulele" to ChordInstrument.UKULELE,
+        "mandolin" to ChordInstrument.MANDOLIN,
         "keyboard" to ChordInstrument.KEYBOARD,
         "piano" to ChordInstrument.KEYBOARD,
     )

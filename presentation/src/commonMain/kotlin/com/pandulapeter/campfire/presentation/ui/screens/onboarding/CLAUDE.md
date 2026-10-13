@@ -23,7 +23,7 @@ changes; a first run opens it, and Settings → General ("Set up Campfire again"
   group), each switching the chords, the setlists, the metronome, and the tuner on or off at once, with the four
   switches under them to change one by one. The role is not stored and starts unpicked; the switches are the setting.
 - **What do you play?**: only with the chords or the tuner on, its line naming which of them the answer is for. Guitar,
-  Ukulele, Piano or keyboard, and Something else; Bass, Banjo, Mandolin, and Violin too with the tuner on
+  Ukulele, Mandolin, Piano or keyboard, and Something else; Bass, Banjo, and Violin too with the tuner on
   (`onboardingInstruments`), since with it off they would only be Something else by another name. With the chords on,
   the chord diagrams switch is under them, a G drawn beside it for the instrument picked.
 - **How do you write chords?**: only with the chords on; the five notations as cards, the song preview rewritten in each.

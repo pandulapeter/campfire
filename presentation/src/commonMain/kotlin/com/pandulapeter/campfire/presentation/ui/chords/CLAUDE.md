@@ -78,7 +78,7 @@ own instrument, whatever the switches say.
 
 ### How every chord of a song is fingered is shown at its top
 
-**How every chord of a song is fingered is shown at its top**, on the guitar, the ukulele or the keyboard (the Songs
+**How every chord of a song is fingered is shown at its top**, on the guitar, the ukulele, the mandolin or the keyboard (the Songs
 tab's Instrument, a list naming the standard tuning's strings under each in the reader's chord notation, since that is the only tuning
 the shapes are for;
 its Other, for every other instrument and tuning, draws no diagram at all, as the Features switch does, and the editor's
@@ -94,7 +94,8 @@ rather than its number and keyed by the chord's notes so every spelling shares i
 synced, see `data/sync/implementation/CLAUDE.md`); and the app's first shape.
 
 A definition for another instrument is not used on the page, nor translated: a guitar shape's fingers make another chord
-on a ukulele, and a keyboard plays the chord's own notes. A definition follows its chord through every transposition —
+on a ukulele, and a keyboard plays the chord's own notes. Four frets with no selector are the ukulele's, so the
+mandolin's definitions name it (`{define-mandolin}`, which the editor's Chord shape button writes). A definition follows its chord through every transposition —
 the reader's, the file's `{transpose}` and the editor's transpose action, which rewrites the line in place — along the
 neck, in whichever octave a hand can hold it, and one a transposition left needing a fifth finger gives way to the
 player's shape — the keyboard's capo, counted into the transposition there, included. The editor writes definitions (its Chord

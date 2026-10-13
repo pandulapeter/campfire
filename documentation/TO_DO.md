@@ -13,7 +13,6 @@
 - CoverArtArchive thumbnails load really slowly
 
 ### Improvements
-- Mandolin chord diagrams
 
 ### Features
 - Import zip screen that displays the content before actually importing it, prepare the screen for loading remote zips

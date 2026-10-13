@@ -23,11 +23,11 @@ class ChordVoicingTablesTest {
     fun `every shape of the tables sounds exactly the chord it is filed under`() {
         tables.forEach { (instrument, lines) ->
             lines.forEach { line ->
-                val shape = assertIs<ChordProDefinitions.Reading.Shape>(ChordProDefinitions.read(line), line)
+                val shape = assertIs<ChordProDefinitions.Reading.Shape>(ChordProDefinitions.read(line, instrument.id), line)
                 assertEquals(instrument, shape.instrument, line)
                 val chord = assertNotNull(ChordProChords.parse(shape.name), line)
                 val voicing = assertIs<ChordVoicing.Fretted>(shape.voicing)
-                val played = if (instrument == ChordInstrument.UKULELE) chord.copy(bass = null) else chord
+                val played = if (instrument.playsChordOver) chord.copy(bass = null) else chord
                 val sounded = ChordShapeGeometry.pitchClasses(voicing, instrument)
                 val fifth = (played.root + 7) % 12
                 assertTrue(played.pitchClasses.containsAll(sounded), "$line sounds only notes of its chord")
@@ -45,9 +45,9 @@ class ChordVoicingTablesTest {
 
     @Test
     fun `every fingering names as many fingers as frets are stopped`() {
-        tables.forEach { (_, lines) ->
+        tables.forEach { (instrument, lines) ->
             lines.forEach { line ->
-                val voicing = (ChordProDefinitions.read(line) as ChordProDefinitions.Reading.Shape).voicing as ChordVoicing.Fretted
+                val voicing = (ChordProDefinitions.read(line, instrument.id) as ChordProDefinitions.Reading.Shape).voicing as ChordVoicing.Fretted
                 val fingers = assertNotNull(voicing.fingers, line)
                 voicing.frets.forEachIndexed { string, fret ->
                     assertEquals(fret != null && fret > 0, fingers[string] > 0, "$line, string ${string + 1}")
@@ -61,5 +61,6 @@ class ChordVoicingTablesTest {
     private val tables = mapOf(
         ChordInstrument.GUITAR to ChordVoicingTables.guitar,
         ChordInstrument.UKULELE to ChordVoicingTables.ukulele,
+        ChordInstrument.MANDOLIN to ChordVoicingTables.mandolin,
     )
 }

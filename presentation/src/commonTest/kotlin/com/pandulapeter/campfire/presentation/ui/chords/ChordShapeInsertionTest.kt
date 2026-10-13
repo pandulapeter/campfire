@@ -50,6 +50,16 @@ class ChordShapeInsertionTest {
     }
 
     @Test
+    fun `the mandolin names itself, since its four frets would otherwise read as a ukulele's`() {
+        val (text, selected) = apply(song, song.indexOf("Am"), instrument = ChordInstrument.MANDOLIN)
+        assertEquals("2 2 3 0", selected)
+        assertEquals(true, "{define-mandolin: Am base-fret 1 frets 2 2 3 0 fingers 1 2 3 0}" in text)
+        val insertion = chordShapeInsertion(text, text.lastIndexOf("Am"), ChordNotation.STANDARD, ChordInstrument.MANDOLIN, emptyMap())
+        assertEquals("", insertion.text)
+        assertEquals("2 2 3 0", text.substring(insertion.selectionStart, insertion.selectionEnd))
+    }
+
+    @Test
     fun `with the caret in no chord the name is left to be typed`() {
         val insertion = chordShapeInsertion(song, song.indexOf("Hello") + 2, ChordNotation.STANDARD, ChordInstrument.GUITAR, emptyMap())
         assertEquals("{define: }\n", insertion.text)

@@ -420,13 +420,14 @@ what nothing outside the module calls is `internal`.
   recalled choruses are read and which a test holds against every name the chord rewrite renames. `spelledNoteNames` spells a chord's notes by degree from the root's letter (`Cm` is
   `C Eb G`, a white-key enharmonic or a double accidental falling back to the plain name), which a chord's sheet on the
   song details screen shows under its diagram.
-- `ChordVoicings` / `ChordVoicingTables` — how a chord is played on the guitar, the ukulele and the keyboard
-  (`model/ChordInstrument`, `model/ChordVoicing`). The tables are the shapes everybody knows, typed by hand in a
+- `ChordVoicings` / `ChordVoicingTables` — how a chord is played on the guitar, the ukulele, the mandolin (a string
+  for each of its four pairs, G D A E) and the keyboard (`model/ChordInstrument`, `model/ChordVoicing`). The tables are the shapes everybody knows, typed by hand in a
   `{define}`'s syntax, and always come first; a shape with no open string stands for its quality on every root and is
   moved to it. A search finds the rest: every way to stop the strings within four frets up to the twelfth that sounds
   only notes of the chord and all of the ones that make it (the fifth of a chord of four notes or more, and the root
-  where there are more notes than strings, may go), with the bass or else the root lowest (not on the re-entrant
-  ukulele, which plays a slash chord as the chord over it), no muted string between two that sound, open strings only
+  where there are more notes than strings, may go), with the bass or else the root lowest (not on an instrument that
+  `playsChordOver`, the re-entrant ukulele and the mandolin, whose shapes everybody plays put the fifth or the third
+  under the root: there every string sounds, and a slash chord is played as the chord over it), no muted string between two that sound, open strings only
   with a hand in the first five frets, no more than four fingers (`fingerCount`: a barre at the lowest fret and a finger
   laid across neighbouring strings at one fret each count as one), and no shape that is another with a string left out;
   a chord that needs more notes than there are strings has no shape, without a search. The keyboard plays the notes from
@@ -451,11 +452,11 @@ what nothing outside the module calls is `internal`.
   or no note of the chord) — from the root its chord has in the notation the text is read in, which `normalized`
   re-roots a German definition to (`renamedFromNotation`);
   frets and the base fret stay on a 24-fret neck (`Invalid` past it), and keys past four octaves are wrapped by their
-  note, as the specification says, so no file can make a diagram draw without end; the instrument is the selector's where it names one and otherwise the one with as many strings; a `copy`, a
+  note, as the specification says, so no file can make a diagram draw without end; the instrument is the selector's where it names one and otherwise the first one with as many strings (four frets are a ukulele's, a mandolin's only as `{define-mandolin}`); a `copy`, a
   `display` alone or a string count no instrument has is `Other`, and what cannot be read, or gives `base-fret`,
   `frets`, `fingers` or `keys` twice, `Invalid`. The last `{define}` of a chord on an instrument wins, in the place of the
   first; a `{chord}`, which the specification has show a diagram only where it stands, counts only where the song
-  defines none, and `rangeOf` sends the caret to the line that counts. `line` writes one the way it is read, with no selector and the base fret a diagram would draw. `transposed`
+  defines none, and `rangeOf` sends the caret to the line that counts. `line` writes one the way it is read, with the base fret a diagram would draw and a selector only where the frets alone would name another instrument (`define-mandolin`). `transposed`
   moves one with the song: the name renamed like any chord, a fretted shape moved along the neck, up by the rest of the
   octave where it has an open string and otherwise whichever of the two octaves a hand can hold, the lower where both or
   neither can, the fingering following a barre coming or going (and left out where it would need a fifth finger or

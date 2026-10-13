@@ -61,7 +61,7 @@ class OnboardingInstrumentTest {
     @Test
     fun `without the tuner only the instruments the diagrams are drawn for are offered, and Something else`() {
         assertEquals(
-            listOf(OnboardingInstrument.GUITAR, OnboardingInstrument.UKULELE, OnboardingInstrument.KEYBOARD, OnboardingInstrument.OTHER),
+            listOf(OnboardingInstrument.GUITAR, OnboardingInstrument.UKULELE, OnboardingInstrument.MANDOLIN, OnboardingInstrument.KEYBOARD, OnboardingInstrument.OTHER),
             onboardingInstruments(isTunerEnabled = false),
         )
     }

@@ -366,6 +366,7 @@ data class UserPreferences(
     enum class ChordInstrument(val id: String) {
         GUITAR("guitar"),
         UKULELE("ukulele"),
+        MANDOLIN("mandolin"),
         KEYBOARD("keyboard"),
         OTHER("other"),
     }

@@ -49,7 +49,7 @@ internal fun chordShapeInsertion(
     }
     val chord = name?.let { ChordProChords.parse(it, notation) }
     val shape = chord?.let { storedShapes[it.id]?.let { stored -> ChordVoicings.read(stored, instrument, it) } ?: ChordVoicings.default(it, instrument) }
-    val line = if (name == null || shape == null) "{$DEFINE_DIRECTIVE: ${name.orEmpty()}}" else ChordProDefinitions.line(name, shape, notation)
+    val line = if (name == null || shape == null) "{$DEFINE_DIRECTIVE: ${name.orEmpty()}}" else ChordProDefinitions.line(name, shape, instrument, notation)
     val insertion = ChordProHeader.insertDefinition(text, line)
     val nameStart = line.indexOf(':') + 2
     val lineStart = insertion.caretOffset - nameStart

@@ -33,10 +33,10 @@ internal enum class OnboardingInstrument(
 ) {
     GUITAR(ChordInstrument.GUITAR, listOf(TunerInstrument.GUITAR, TunerInstrument.SEVEN_STRING_GUITAR, TunerInstrument.EIGHT_STRING_GUITAR)),
     UKULELE(ChordInstrument.UKULELE, listOf(TunerInstrument.UKULELE)),
+    MANDOLIN(ChordInstrument.MANDOLIN, listOf(TunerInstrument.MANDOLIN)),
     KEYBOARD(ChordInstrument.KEYBOARD, emptyList()),
     BASS(ChordInstrument.OTHER, listOf(TunerInstrument.BASS, TunerInstrument.FIVE_STRING_BASS), isOnlyForTuner = true),
     BANJO(ChordInstrument.OTHER, listOf(TunerInstrument.BANJO), isOnlyForTuner = true),
-    MANDOLIN(ChordInstrument.OTHER, listOf(TunerInstrument.MANDOLIN), isOnlyForTuner = true),
     VIOLIN(ChordInstrument.OTHER, listOf(TunerInstrument.VIOLIN), isOnlyForTuner = true),
     OTHER(ChordInstrument.OTHER, emptyList()),
     ;

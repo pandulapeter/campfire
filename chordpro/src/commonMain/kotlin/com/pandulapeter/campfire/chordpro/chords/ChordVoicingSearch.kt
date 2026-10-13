@@ -30,6 +30,7 @@ internal object ChordVoicingSearch {
     private fun table(instrument: ChordInstrument) = when (instrument) {
         ChordInstrument.GUITAR -> guitarTable
         ChordInstrument.UKULELE -> ukuleleTable
+        ChordInstrument.MANDOLIN -> mandolinTable
         ChordInstrument.KEYBOARD -> emptyList()
     }
 
@@ -39,9 +40,10 @@ internal object ChordVoicingSearch {
 
     private val guitarTable by lazy { readTable(ChordVoicingTables.guitar, ChordInstrument.GUITAR) }
     private val ukuleleTable by lazy { readTable(ChordVoicingTables.ukulele, ChordInstrument.UKULELE) }
+    private val mandolinTable by lazy { readTable(ChordVoicingTables.mandolin, ChordInstrument.MANDOLIN) }
 
     private fun readTable(lines: List<String>, instrument: ChordInstrument) = lines.map { line ->
-        val reading = ChordProDefinitions.read(line) as ChordProDefinitions.Reading.Shape
+        val reading = ChordProDefinitions.read(line, instrument.id) as ChordProDefinitions.Reading.Shape
         check(reading.instrument == instrument) { line }
         TableShape(checkNotNull(ChordProChords.parse(reading.name)) { line }, reading.voicing as ChordVoicing.Fretted)
     }
@@ -62,8 +64,8 @@ internal object ChordVoicingSearch {
 
     private val Chord.bassInterval get() = bass?.let { (it - root).mod(12) }
 
-    /** The ukulele's fourth string is not its lowest, so a slash chord is played on it as the chord over it. */
-    private fun playedOn(chord: Chord, instrument: ChordInstrument) = if (instrument == ChordInstrument.UKULELE) chord.copy(bass = null) else chord
+    /** See [ChordInstrument.playsChordOver]. */
+    private fun playedOn(chord: Chord, instrument: ChordInstrument) = if (instrument.playsChordOver) chord.copy(bass = null) else chord
 
     /**
      * The moves by [interval] and its octaves that keep a shape with no open string between the first and the ninth
@@ -84,8 +86,8 @@ internal object ChordVoicingSearch {
         val required = pitchClasses - omissions(played, tuning.size)
         // Every string sounds one note, so a chord that needs more notes than there are strings has no shape at all.
         if (required.size > tuning.size) return emptyList()
-        val lowest = if (instrument == ChordInstrument.UKULELE) null else played.bass ?: played.root.takeIf { it in required }
-        val minimumStrings = if (instrument == ChordInstrument.UKULELE) tuning.size else if (pitchClasses.size <= 2) 3 else 4
+        val lowest = if (instrument.playsChordOver) null else played.bass ?: played.root.takeIf { it in required }
+        val minimumStrings = if (instrument.playsChordOver) tuning.size else if (pitchClasses.size <= 2) 3 else 4
         val found = mutableSetOf<List<Int?>>()
         for (position in 1..MAX_POSITION) {
             val options = tuning.map { open ->

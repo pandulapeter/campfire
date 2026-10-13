@@ -22,7 +22,8 @@ class ChordProDefinitionsTranspositionTest {
     private val tableDefinitions = mapOf(
         ChordInstrument.GUITAR to ChordVoicingTables.guitar,
         ChordInstrument.UKULELE to ChordVoicingTables.ukulele,
-    ).flatMap { (_, lines) -> lines.map { (ChordProDefinitions.read(it) as ChordProDefinitions.Reading.Shape).let { shape -> ChordDefinition(shape.name, shape.instrument, shape.voicing) } } }
+        ChordInstrument.MANDOLIN to ChordVoicingTables.mandolin,
+    ).flatMap { (instrument, lines) -> lines.map { (ChordProDefinitions.read(it, instrument.id) as ChordProDefinitions.Reading.Shape).let { shape -> ChordDefinition(shape.name, shape.instrument, shape.voicing) } } }
 
     private fun move(definition: ChordDefinition, semitones: Int) =
         ChordProDefinitions.transposed(definition, semitones) { ChordProTransposer.transposeChord(it, semitones, preferFlats = false) }
@@ -32,7 +33,7 @@ class ChordProDefinitionsTranspositionTest {
         tableDefinitions.forEach { definition ->
             (-5..6).forEach { semitones ->
                 val moved = move(definition, semitones)
-                val chord = ChordProChords.parse(moved.name)!!.let { if (definition.instrument == ChordInstrument.UKULELE) it.copy(bass = null) else it }
+                val chord = ChordProChords.parse(moved.name)!!.let { if (definition.instrument.playsChordOver) it.copy(bass = null) else it }
                 val sounded = ChordShapeGeometry.pitchClasses(moved.voicing, definition.instrument)
                 assertTrue(chord.pitchClasses.containsAll(sounded), "${definition.name} $semitones -> ${moved.name} ${ChordVoicings.write(moved.voicing)}")
                 assertEquals(
