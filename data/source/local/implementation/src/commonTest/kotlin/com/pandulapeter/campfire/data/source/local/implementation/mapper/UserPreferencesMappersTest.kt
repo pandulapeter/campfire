@@ -118,6 +118,16 @@ internal class UserPreferencesMappersTest {
     }
 
     @Test
+    fun `an instrument this version does not know keeps every tuning and ignores the legacy keys`() {
+        val model = UserPreferencesDocumentFormat.decode(
+            """{"instrument": "mandola", "tunings": {"guitar": "guitar_drop_d", "mandola": "mandola_gdae"}, "chordInstrument": "ukulele", "tunerSettings": {"instrument": "banjo_open_d"}}""",
+        ).document.toModel()
+        assertEquals(UserPreferences.Instrument.GUITAR, model.instrument)
+        assertEquals(mapOf("guitar" to "guitar_drop_d", "mandola" to "mandola_gdae"), model.tunings)
+        assertEquals(model.tunings, UserPreferencesDocumentFormat.decode(UserPreferencesDocumentFormat.encode(model.toDocument())).document.toModel().tunings)
+    }
+
+    @Test
     fun `a document written now carries none of the legacy instrument keys`() {
         val preferences = UserPreferencesDocumentFormat.decode("{}").document.toModel().copy(
             instrument = UserPreferences.Instrument.MANDOLIN,

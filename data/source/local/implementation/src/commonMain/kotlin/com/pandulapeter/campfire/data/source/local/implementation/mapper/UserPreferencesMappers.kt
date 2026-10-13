@@ -191,19 +191,26 @@ internal fun MetronomeSettings.toDocument() = MetronomeSettingsDocument(
     isSongPanelShown = isSongPanelShown,
 )
 
+/** Whether this document was written before the tuner and the chord diagrams shared one instrument: it names none. */
+private val UserPreferencesDocument.predatesInstrument get() = instrument.isBlank()
+
 /**
  * The instrument in the player's hands. A document written before the tuner and the chord diagrams shared one instrument
  * has none, and it is derived from the two old answers: the tuner's first, since it is the more specific one (a
- * seven-string player told the tuner so and the diagrams Other), otherwise the diagrams' instrument.
+ * seven-string player told the tuner so and the diagrams Other), otherwise the diagrams' instrument. An instrument this
+ * version does not know is the guitar, with every tuning of the document kept.
  */
-private fun UserPreferencesDocument.instrument() = UserPreferences.Instrument.fromId(instrument)
-    ?: UserPreferences.Instrument.ofTuningId(tunerSettings.instrument)
-    ?: UserPreferences.Instrument.fromId(chordInstrument)
-    ?: UserPreferences.Instrument.GUITAR
+private fun UserPreferencesDocument.instrument() = if (predatesInstrument) {
+    UserPreferences.Instrument.ofTuningId(tunerSettings.instrument)
+        ?: UserPreferences.Instrument.fromId(chordInstrument)
+        ?: UserPreferences.Instrument.GUITAR
+} else {
+    UserPreferences.Instrument.fromId(instrument) ?: UserPreferences.Instrument.GUITAR
+}
 
 /** The tunings picked for each instrument; on a document from before [instrument] the diagrams', plus the tuner's own. */
 private fun UserPreferencesDocument.tunings(): Map<String, String> {
-    if (UserPreferences.Instrument.fromId(instrument) != null) return tunings
+    if (!predatesInstrument) return tunings
     val tunerTuning = tunerSettings.instrument
     val tunerInstrument = UserPreferences.Instrument.ofTuningId(tunerTuning)
     return if (tunerInstrument == null || tunerTuning == tunerInstrument.id) chordTunings else chordTunings + (tunerInstrument.id to tunerTuning)
