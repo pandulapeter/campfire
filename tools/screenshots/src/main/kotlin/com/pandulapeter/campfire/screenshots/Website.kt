@@ -112,7 +112,6 @@ internal val websiteShots: List<Triple<String, Device, Shot>> by lazy {
         Triple("laptop-song-medium", Device.LAPTOP, song("laptop-song-medium", "the_rembrandts-ill_be_there_for_you.cho", fontScale = 1.4f)),
         Triple("laptop-song-large", Device.LAPTOP, song("laptop-song-large", "the_rembrandts-ill_be_there_for_you.cho", fontScale = 2.3f)),
         Triple("laptop-import", Device.LAPTOP, editor("laptop-import", "ed_sheeran-thinking_out_loud.cho")),
-        Triple("laptop-editor", Device.LAPTOP, editor("laptop-editor", "the_proclaimers-im_gonna_be_500_miles.cho")),
         Triple("laptop-setlists", Device.LAPTOP, setlists),
     ).flatMap { (name, device, shot) ->
         listOf(UserPreferences.UiMode.LIGHT, UserPreferences.UiMode.DARK).map { uiMode ->
