@@ -32,6 +32,7 @@ import com.pandulapeter.campfire.presentation.resources.ic_check
 import com.pandulapeter.campfire.presentation.resources.ic_expand
 import com.pandulapeter.campfire.presentation.resources.import_conflicts_keep_both
 import com.pandulapeter.campfire.presentation.resources.import_conflicts_keep_both_description
+import com.pandulapeter.campfire.presentation.resources.import_conflicts_mixed
 import com.pandulapeter.campfire.presentation.resources.import_conflicts_replace
 import com.pandulapeter.campfire.presentation.resources.import_conflicts_replace_description
 import com.pandulapeter.campfire.presentation.resources.import_review_show_library_song
@@ -42,13 +43,14 @@ import org.jetbrains.compose.resources.painterResource
  * What a name already taken does, as an outlined button reading the current choice that opens a popup of the two, each
  * with its one line of description; the same for one row and, in the header of the group, for all of them.
  *
+ * @param resolution Null where the rows of the group differ, which the button reads as Mixed and no item is checked for.
  * @param onShowLibrarySong Where the row is about a song the library still holds, opens that song, so the one being
  *   replaced can be read before the choice is made; null for the group's header and for a setlist.
  */
 @Composable
 internal fun ConflictResolutionDropdown(
     modifier: Modifier = Modifier,
-    resolution: ImportConflictResolution,
+    resolution: ImportConflictResolution?,
     onResolutionSelected: (ImportConflictResolution) -> Unit,
     onShowLibrarySong: (() -> Unit)? = null,
 ) = OverflowMenu(
@@ -58,7 +60,7 @@ internal fun ConflictResolutionDropdown(
             onClick = open,
             contentPadding = PaddingValues(start = 12.dp, end = 8.dp),
         ) {
-            Text(text = stringResource(resolution.label), maxLines = 1)
+            Text(text = stringResource(resolution?.label ?: Res.string.import_conflicts_mixed), maxLines = 1)
             Spacer(Modifier.width(4.dp))
             Icon(modifier = Modifier.size(18.dp), painter = painterResource(Res.drawable.ic_expand), contentDescription = null)
         }

@@ -132,6 +132,35 @@ class ImportReviewSectionsTest {
     }
 
     @Test
+    fun `the group's choice is what every row comes to`() {
+        val rows = listOf(conflictRow(FIRST_TAKEN), conflictRow(SECOND_TAKEN))
+        val replace = ImportConflictResolution.REPLACE
+
+        assertEquals(ImportConflictResolution.KEEP_BOTH, groupConflictResolution(rows, ImportChoices()))
+        assertNull(groupConflictResolution(rows, ImportChoices(conflictResolutions = mapOf(FIRST_TAKEN to replace))))
+        assertEquals(replace, groupConflictResolution(rows, ImportChoices(conflictResolutions = mapOf(FIRST_TAKEN to replace, SECOND_TAKEN to replace))))
+        assertEquals(replace, groupConflictResolution(rows.take(1), ImportChoices(conflictResolutions = mapOf(FIRST_TAKEN to replace))))
+    }
+
+    @Test
+    fun `choosing for the whole group drops the rows' own choices`() {
+        val choices = ImportChoices(conflictResolutions = mapOf(FIRST_TAKEN to ImportConflictResolution.REPLACE))
+            .withGroupResolution(keys = listOf(FIRST_TAKEN, SECOND_TAKEN), isFiltered = false, resolution = ImportConflictResolution.KEEP_BOTH)
+
+        assertEquals(ImportConflictResolution.KEEP_BOTH, choices.resolutionOf(FIRST_TAKEN))
+        assertEquals(ImportConflictResolution.KEEP_BOTH, choices.resolutionOf(SECOND_TAKEN))
+        assertTrue(choices.conflictResolutions.isEmpty())
+    }
+
+    @Test
+    fun `choosing for a narrowed group sets only the matching rows`() {
+        val choices = ImportChoices().withGroupResolution(keys = listOf(FIRST_TAKEN), isFiltered = true, resolution = ImportConflictResolution.REPLACE)
+
+        assertEquals(ImportConflictResolution.REPLACE, choices.resolutionOf(FIRST_TAKEN))
+        assertEquals(ImportConflictResolution.KEEP_BOTH, choices.resolutionOf(SECOND_TAKEN))
+    }
+
+    @Test
     fun `a plan of nothing but files already there has nothing to choose`() {
         assertTrue(PLAN.hasEntriesToChoose)
         assertFalse(ImportPlan(songs = listOf(PLAN.songs[3]), skippedFileNames = listOf("x.mp3")).hasEntriesToChoose)
@@ -141,6 +170,10 @@ class ImportReviewSectionsTest {
 
     private companion object {
         val CONFLICT = ImportEntryKey(ImportEntryKey.Kind.SONG, 2)
+        val FIRST_TAKEN = ImportEntryKey(ImportEntryKey.Kind.SONG, 0)
+        val SECOND_TAKEN = ImportEntryKey(ImportEntryKey.Kind.SONG, 1)
+
+        fun conflictRow(key: ImportEntryKey) = ImportReviewRow(key = key, rowKey = "song_${key.index}", fileName = "taken_${key.index}.cho")
 
         val PLAN = ImportPlan(
             songs = listOf(

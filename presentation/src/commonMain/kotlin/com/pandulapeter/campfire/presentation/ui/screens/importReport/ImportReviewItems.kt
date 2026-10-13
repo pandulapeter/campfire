@@ -49,16 +49,17 @@ internal fun LazyListScope.reviewHeader(
 }
 
 /**
- * Every group of the review with its heading, its box, and its rows. A group's box acts on the rows it shows, which
- * is only the matching ones while the search narrows them, so that unticking a group under a search for "live" leaves
- * the rest of it alone.
+ * Every group of the review with its heading, its box, and its rows. A group's box, and the choice for all of them of
+ * the names already taken, act on the rows it shows, which is only the matching ones while the search narrows them, so
+ * that unticking a group under a search for "live" leaves the rest of it alone.
  */
 internal fun LazyListScope.reviewSections(
     sections: List<ImportReviewSection>,
     isFiltered: Boolean,
     choices: () -> ImportChoices,
     onEntriesChosenChange: (Collection<ImportEntryKey>, Boolean) -> Unit,
-    onConflictResolutionSelected: (ImportEntryKey?, ImportConflictResolution) -> Unit,
+    onConflictResolutionSelected: (ImportEntryKey, ImportConflictResolution) -> Unit,
+    onGroupConflictResolutionSelected: (keys: Collection<ImportEntryKey>, isFiltered: Boolean, ImportConflictResolution) -> Unit,
     onOpenSong: (songFileNames: List<String>, index: Int) -> Unit,
 ) {
     if (isFiltered && sections.isEmpty()) {
@@ -74,15 +75,16 @@ internal fun LazyListScope.reviewSections(
         val isConflicts = section.kind == ImportReviewSection.Kind.CONFLICTS
         item(key = "header_${section.kind}", contentType = if (isConflicts) "conflictsHeader" else "header") {
             val boxState by remember(section.rows) { derivedStateOf { groupBoxState(section.rows, choices()) } }
-            val resolution by remember { derivedStateOf { choices().conflictResolution } }
+            val resolution by remember(section.rows) { derivedStateOf { groupConflictResolution(section.rows, choices()) } }
             ImportReviewSectionHeader(
                 modifier = ItemWidth.animateItem().padding(top = 16.dp),
                 title = stringResource(section.kind.label),
                 count = section.rows.size,
                 boxState = boxState.takeIf { keys.isNotEmpty() },
                 onBoxClick = { onEntriesChosenChange(keys, boxState != ToggleableState.On) },
-                resolution = resolution.takeIf { isConflicts },
-                onResolutionSelected = { onConflictResolutionSelected(null, it) },
+                isConflicts = isConflicts,
+                resolution = resolution,
+                onResolutionSelected = { onGroupConflictResolutionSelected(keys, isFiltered, it) },
             )
         }
         // A library song opened from a row is read in a pager over the songs of its group the library holds.

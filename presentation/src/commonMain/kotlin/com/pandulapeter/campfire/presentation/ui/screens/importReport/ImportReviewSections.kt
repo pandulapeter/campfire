@@ -234,6 +234,28 @@ internal fun replaceCount(plan: ImportPlan, choices: ImportChoices) = importRevi
 internal val ImportPlan.hasEntriesToChoose
     get() = songs.any { it.status != ImportPlan.Status.IDENTICAL } || setlists.any { it.status != ImportPlan.Status.IDENTICAL }
 
+/**
+ * The choice for all of them in the header of the names already taken: what every row of [rows] with a box resolves to,
+ * or null where they differ, which the header shows as Mixed. A group with no such row reads the default.
+ */
+internal fun groupConflictResolution(rows: List<ImportReviewRow>, choices: ImportChoices): ImportConflictResolution? =
+    rows.mapNotNull { it.key }.map(choices::resolutionOf).distinct().singleOrNull()
+        ?: choices.conflictResolution.takeIf { rows.none { it.key != null } }
+
+/**
+ * [resolution] for every row of [keys], the rows the header shows. Unfiltered that is all of them, so it becomes the
+ * default and the rows' own choices go; narrowed by a search, only the matching rows are set, by hand.
+ */
+internal fun ImportChoices.withGroupResolution(
+    keys: Collection<ImportEntryKey>,
+    isFiltered: Boolean,
+    resolution: ImportConflictResolution,
+) = if (isFiltered) {
+    copy(conflictResolutions = conflictResolutions + keys.associateWith { resolution })
+} else {
+    copy(conflictResolution = resolution, conflictResolutions = conflictResolutions - keys.toSet())
+}
+
 /** The box of a group's header: ticked where every row it shows is, empty where none is, and in between otherwise. */
 internal fun groupBoxState(rows: List<ImportReviewRow>, choices: ImportChoices): ToggleableState {
     val keys = rows.mapNotNull { it.key }

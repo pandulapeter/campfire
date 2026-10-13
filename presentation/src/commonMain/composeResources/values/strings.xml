@@ -91,6 +91,7 @@
     <string name="import_conflicts_keep_both_description">Import them next to the files they collide with, numbered \"_2\"</string>
     <string name="import_conflicts_replace">Replace</string>
     <string name="import_conflicts_replace_description">Write them over what your library has. The replaced files are gone.</string>
+    <string name="import_conflicts_mixed">Mixed</string>
     <string name="import_loading_title">Reading the files</string>
     <string name="import_progress_downloading">Downloading the file</string>
     <string name="import_failed_unreachable">%1$s could not be reached. Check the internet connection and try again.</string>

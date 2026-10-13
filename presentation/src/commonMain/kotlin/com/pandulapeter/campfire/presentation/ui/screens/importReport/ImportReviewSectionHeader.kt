@@ -30,7 +30,8 @@ import com.pandulapeter.campfire.presentation.resources.import_review_for_all
  * unticking every row the group shows; the names already taken have the choice for all of them under it.
  *
  * @param boxState Null for a group without boxes.
- * @param resolution The choice for all, for the group of names already taken; null for every other group.
+ * @param isConflicts Whether this is the group of names already taken, which has the choice for all of them.
+ * @param resolution What every row the group shows resolves to; null where they differ, shown as Mixed.
  */
 @Composable
 internal fun ImportReviewSectionHeader(
@@ -39,6 +40,7 @@ internal fun ImportReviewSectionHeader(
     count: Int,
     boxState: ToggleableState?,
     onBoxClick: () -> Unit,
+    isConflicts: Boolean,
     resolution: ImportConflictResolution?,
     onResolutionSelected: (ImportConflictResolution) -> Unit,
 ) = Column(modifier = modifier) {
@@ -56,7 +58,7 @@ internal fun ImportReviewSectionHeader(
             )
         }
     }
-    if (resolution != null) {
+    if (isConflicts) {
         Row(
             modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
             verticalAlignment = Alignment.CenterVertically,

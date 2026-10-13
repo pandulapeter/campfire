@@ -24,7 +24,8 @@ data class ImportEntryKey(
  * What the review of an [ImportPlan] answered: which entries go in, and what each one whose name is taken does.
  *
  * A choice made on one row outlives a change of the choice for all of them, even when it comes to say the same thing,
- * since it is the answer the user gave about that one entry.
+ * since it is the answer the user gave about that one entry. The review's header for all of them sets the rows it shows
+ * as well, though, so that what it reads and what it does are what the rows come to.
  */
 data class ImportChoices(
     /** Entries the user unticked; a repeat of one of them follows it out. */

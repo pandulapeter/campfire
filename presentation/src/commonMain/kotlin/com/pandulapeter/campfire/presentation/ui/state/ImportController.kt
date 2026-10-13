@@ -39,6 +39,7 @@ import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportFail
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportReport
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.followingLibraryFileNames
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.replaceCount
+import com.pandulapeter.campfire.presentation.ui.screens.importReport.withGroupResolution
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
@@ -373,17 +374,20 @@ internal class ImportController(
         choices.copy(leftOut = if (isChosen) choices.leftOut - keys.toSet() else choices.leftOut + keys)
     }
 
-    /**
-     * What a name already taken does: one row's choice for [key], or with a null [key] the choice for all of them,
-     * which leaves the rows set by hand as they are.
-     */
-    fun setImportConflictResolution(key: ImportEntryKey?, resolution: ImportConflictResolution) = updateChoices { choices ->
-        if (key == null) {
-            choices.copy(conflictResolution = resolution)
-        } else {
-            choices.copy(conflictResolutions = choices.conflictResolutions + (key to resolution))
-        }
+    /** What a name already taken does: one row's choice for [key]. */
+    fun setImportConflictResolution(key: ImportEntryKey, resolution: ImportConflictResolution) = updateChoices { choices ->
+        choices.copy(conflictResolutions = choices.conflictResolutions + (key to resolution))
     }
+
+    /**
+     * The group header's choice for all of them, over the rows the screen shows, which is only the matching ones while a
+     * search narrows them, as the group's box acts: see [withGroupResolution].
+     */
+    fun setImportGroupConflictResolution(
+        keys: Collection<ImportEntryKey>,
+        isFiltered: Boolean,
+        resolution: ImportConflictResolution,
+    ) = updateChoices { it.withGroupResolution(keys = keys, isFiltered = isFiltered, resolution = resolution) }
 
     private fun updateChoices(update: (ImportChoices) -> ImportChoices) = _importReport.update { report ->
         if (report is ImportReport.Review) report.copy(choices = update(report.choices)) else report

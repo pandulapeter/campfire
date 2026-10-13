@@ -91,6 +91,7 @@
     <string name="import_conflicts_keep_both_description">Importálás a meglévő fájlok mellé, \"_2\" számozással</string>
     <string name="import_conflicts_replace">Felülírás</string>
     <string name="import_conflicts_replace_description">A könyvtáradban lévő fájlok helyére kerülnek. A felülírt fájlok elvesznek.</string>
+    <string name="import_conflicts_mixed">Vegyes</string>
     <string name="import_loading_title">Fájlok beolvasása</string>
     <string name="import_progress_downloading">A fájl letöltése</string>
     <string name="import_failed_unreachable">%1$s nem érhető el. Ellenőrizd az internetkapcsolatot, és próbáld újra.</string>

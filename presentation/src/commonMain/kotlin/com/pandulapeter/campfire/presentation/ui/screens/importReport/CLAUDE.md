@@ -36,7 +36,8 @@ would do with the ticks as they stand (`importReviewSummary`), the search field,
 appears), and the three groups of what cannot be imported. Every entry is ticked to start with; a group with boxes has a
 tri-state box in its header acting on the rows it shows, the search's matches only while it narrows them. A taken name
 has its own Keep both / Replace choice, a song's with **Show the one you have**, and the group's header the choice for
-all of them, which leaves the rows set by hand alone. The floating button reads **Import N files**, dimmed and inert at
+all of them, which reads what the rows it shows come to (Mixed where they differ) and sets each of them, the search's
+matches only while it narrows them, as its box does. The floating button reads **Import N files**, dimmed and inert at
 zero and absent where nothing can be ticked (titled "Nothing to import"); where the choices replace anything,
 `DialogType.ConfirmImportReplace` asks first (`confirmImport`). It steps aside while the keyboard is up, which is when
 the rows it would cover are being searched. The choices live in the view model's report, so a recreated activity keeps

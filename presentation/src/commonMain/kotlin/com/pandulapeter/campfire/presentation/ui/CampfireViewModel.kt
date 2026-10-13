@@ -1556,8 +1556,11 @@ class CampfireViewModel(
 
     fun setImportEntriesChosen(keys: Collection<ImportEntryKey>, isChosen: Boolean) = importController.setImportEntriesChosen(keys, isChosen)
 
-    fun setImportConflictResolution(key: ImportEntryKey?, resolution: ImportConflictResolution) =
+    fun setImportConflictResolution(key: ImportEntryKey, resolution: ImportConflictResolution) =
         importController.setImportConflictResolution(key, resolution)
+
+    fun setImportGroupConflictResolution(keys: Collection<ImportEntryKey>, isFiltered: Boolean, resolution: ImportConflictResolution) =
+        importController.setImportGroupConflictResolution(keys = keys, isFiltered = isFiltered, resolution = resolution)
 
     fun confirmImport() = importController.confirmImport()
 

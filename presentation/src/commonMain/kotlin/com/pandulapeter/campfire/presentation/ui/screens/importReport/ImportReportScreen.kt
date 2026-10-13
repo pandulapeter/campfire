@@ -148,6 +148,7 @@ internal fun ImportReportScreen(
                             choices = choices,
                             onEntriesChosenChange = viewModel::setImportEntriesChosen,
                             onConflictResolutionSelected = viewModel::setImportConflictResolution,
+                            onGroupConflictResolutionSelected = viewModel::setImportGroupConflictResolution,
                             onOpenSong = viewModel::openReportedSong,
                         )
                     }
