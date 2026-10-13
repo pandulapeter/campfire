@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_details_cut
 import com.pandulapeter.campfire.presentation.localization.stringResource
+import com.pandulapeter.campfire.presentation.ui.chords.ChordCell
 import com.pandulapeter.campfire.presentation.ui.components.scaled
 import com.pandulapeter.campfire.presentation.ui.songLayout.rememberDefaultSectionLabels
 
@@ -188,13 +189,20 @@ internal fun SongLyrics(
             hasMetronome = hasMetronome,
         )
     }.let { sections ->
+        // The cells last built are drawn on while the model for a new tuning is still being built, so that a tuning picked
+        // crossfades once, from the old shapes to the new, rather than through the old shapes drawn on the new strings.
+        // Not a state: nothing is redrawn because of it.
+        val lastCells = remember { LastChordCells() }
         val cells = remember(model, chordDiagrams?.tuning, chordDiagrams?.storedShapes, chordDiagrams?.showsDefinitionsOnly) {
             when {
                 chordDiagrams == null -> emptyList()
                 chordDiagrams.showsDefinitionsOnly -> definitionCellsOf(model.song, chordDiagrams.notation)
-                else -> chordDiagrams.tuning?.let { chordCellsOf(model.chords, it, chordDiagrams.storedShapes) }.orEmpty()
+                else -> chordDiagrams.tuning?.let { tuning ->
+                    chordCellsOf(model.chords, model.chordTuning, tuning, chordDiagrams.storedShapes) ?: lastCells.value
+                }.orEmpty()
             }
         }
+        lastCells.value = cells
         val isInstrumentShown = chordDiagrams?.onInstrumentClicked != null
         remember(sections, cells, chordDiagrams?.isFolded, model.hasChords, isInstrumentShown) {
             withChordsSection(
@@ -549,6 +557,9 @@ private fun CutSongNotice(
     style = MaterialTheme.typography.bodyMedium,
     color = MaterialTheme.colorScheme.onSurfaceVariant,
 )
+
+/** The Chords section's cells as [SongLyrics] last built them. */
+private class LastChordCells(var value: List<ChordCell> = emptyList())
 
 private val CARD_ELEVATION = 1.dp
 

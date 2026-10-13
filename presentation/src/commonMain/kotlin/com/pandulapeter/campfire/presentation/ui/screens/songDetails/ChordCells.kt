@@ -67,6 +67,14 @@ internal fun chordCellsOf(chords: List<SongChord>, tuning: ChordTuning, storedSh
 }
 
 /**
+ * The cells of [chords] in [tuning], or null while they were collected for another one ([collectedFor]): a model is
+ * rebuilt away from the main thread when the tuning changes, and its chords carry the shapes of the tuning they were
+ * collected for, which drawn on another tuning's strings are other chords.
+ */
+internal fun chordCellsOf(chords: List<SongChord>, collectedFor: ChordTuning?, tuning: ChordTuning, storedShapes: Map<String, String>) =
+    if (collectedFor != tuning) null else chordCellsOf(chords, tuning, storedShapes)
+
+/**
  * The cells of every definition [song] holds, in file order and each on its own instrument in standard tuning, see
  * [ChordDiagrams.showsDefinitionsOnly]. A numbering leaves a song's definitions in letters, which is how they are named.
  */
