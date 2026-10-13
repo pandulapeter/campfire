@@ -71,6 +71,21 @@ public object ChordProNotation {
     }
 
     /**
+     * The chord [name] stands for, typed in [notation], named the way the app names it in [notation]: its root and its
+     * bass in capitals in the standard and the German notations and in title case in the Latin one, a lowercase minor
+     * spelled out (`c7` is `Cm7`), the parentheses and the `♯` and `♭` signs dropped, and the rest as it was typed, since
+     * the case of a quality is part of what it says (`CM7` is not `Cm7`). In a numbering it is read and named in letters,
+     * as [ChordProChords.parse] reads it. Null where [name] is no chord.
+     */
+    public fun canonicalName(name: String, notation: ChordNotation): String? {
+        val standard = read(name.trim(), isGerman = notation == ChordNotation.GERMAN)
+        if (!ChordProChordNames.isChordName(standard)) return null
+        val notes = ChordProChordNames.notes(standard)
+        val bass = notes.getOrNull(1)?.let { it.first().uppercaseChar() + it.substring(1) }
+        return shownName(listOfNotNull(notes.first(), bass).joinToString("/"), notation)
+    }
+
+    /**
      * Rewrites the chords of a raw document written in [from] in [to], leaving every other character where it was.
      * A text read from a file is converted from [ChordNotation.STANDARD], a text somebody typed in their own notation
      * from that one, which is what makes it unambiguous (see [ChordNotation]). Whatever it is converted to, the chords

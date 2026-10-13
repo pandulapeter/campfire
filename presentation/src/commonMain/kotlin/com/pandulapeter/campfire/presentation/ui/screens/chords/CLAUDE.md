@@ -32,7 +32,8 @@ sharp, or all flat) and named in the reader's notation, a numbering by its lette
 `CHORD_LIBRARY_QUALITIES` in order, the everyday chords first — each a different set of notes, each among the ones the
 tables were filled with — leaving out any the instrument has no shape for (`chordLibraryResults`, `ChordLibrary.kt`,
 tested). A search that names a chord in the reader's notation (`F#m7b5`, `Lam`) is that chord alone, whatever key is
-picked; any other narrows the key's chords to the names that hold it (`sus`, `m7`); one that does neither, or names a
+picked, named as a key names its chords rather than as it was typed (`ChordProNotation.canonicalName`: `c7` is `Cm7`,
+`LAm` is `Lam`); any other narrows the key's chords to the names that hold it (`sus`, `m7`); one that does neither, or names a
 chord no shape plays on the instrument, says so in the chords' place.
 
 ### The cells and the sheet
@@ -44,9 +45,9 @@ changes. The shapes are looked up off the main thread, except where the tables a
 already the page wherever the tab was visited in this session, not only where the tables answer; a key that needs
 the search keeps the chords on screen until it is answered, drawn for the tuning they were found for, and not opened,
 after the tuning or the instrument changes (`ChordLibraryShown`). A tap opens `ChordReferenceSheet`
-(`DialogType.ChordReference`): the song details screen's chord sheet without a song around it, the same pager
-(`dialogs/ChordShapePager.kt`), titled the same way and naming a tuning that is not the standard one, **whose page is
-written at once as the player's shape for the chord** — so choosing a shape here changes it in every song, synced like
+(`DialogType.ChordReference`): the song details screen's chord sheet without a song around it, the same grid of shapes
+(`dialogs/ChordShapeGrid.kt`), titled the same way and naming a tuning that is not the standard one, **whose shape picked
+is written at once as the player's shape for the chord** — so choosing a shape here changes it in every song, synced like
 any other choice. It is offered in read only mode too, since it writes no file.
 
 ### Where it lives

@@ -19,6 +19,7 @@ import com.pandulapeter.campfire.chordpro.model.GridToken
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class ChordProNotationTest {
@@ -265,6 +266,30 @@ class ChordProNotationTest {
         assertEquals(listOf("F", "B"), ChordProParser.parse("[F]a [B]b").chordNames())
         assertEquals("Bb", ChordProParser.summarize("{key: B}\n[F]a", ChordNotation.GERMAN).metadata.key)
         assertEquals("Bb", ChordProSummaryCache(ChordNotation.GERMAN).summaryOf("{key: B}\n[F]a").metadata.key)
+    }
+
+    @Test
+    fun `a typed chord is named with its root and bass in capitals in the standard notation`() {
+        assertEquals("Cmaj7", ChordProNotation.canonicalName("Cmaj7", ChordNotation.STANDARD))
+        assertEquals("Cm7", ChordProNotation.canonicalName("c7", ChordNotation.STANDARD))
+        assertEquals("CmM7", ChordProNotation.canonicalName(" cM7 ", ChordNotation.STANDARD))
+        assertEquals("F#m/E", ChordProNotation.canonicalName("(f♯/e)", ChordNotation.STANDARD))
+        assertEquals("CM7", ChordProNotation.canonicalName("CM7", ChordNotation.STANDARD))
+        assertNull(ChordProNotation.canonicalName("cmaj7", ChordNotation.STANDARD))
+    }
+
+    @Test
+    fun `a typed chord is named in title case in the Latin notation`() {
+        assertEquals("Lam", ChordProNotation.canonicalName("LAm", ChordNotation.LATIN))
+        assertEquals("Do/Mi", ChordProNotation.canonicalName("DO/mi", ChordNotation.LATIN))
+        assertEquals("Lam", ChordProNotation.canonicalName("a", ChordNotation.LATIN))
+    }
+
+    @Test
+    fun `a typed chord is named in German notation as it is read there`() {
+        assertEquals("Hm", ChordProNotation.canonicalName("h", ChordNotation.GERMAN))
+        assertEquals("B7", ChordProNotation.canonicalName("B7", ChordNotation.GERMAN))
+        assertEquals("G", ChordProNotation.canonicalName("G", ChordNotation.NASHVILLE))
     }
 
     private fun ChordProSong.lines() = blocks.filterIsInstance<ChordProBlock.Section>().flatMap { it.lines }

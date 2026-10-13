@@ -375,7 +375,9 @@ what nothing outside the module calls is `internal`.
   `rewriteDefinition`), numbering each stretch a modulation starts from the key it moved to, so a chorus recalled after
   one reads the same numbers; a song whose key is not a note stays in letters. `convertText`, `parse`, `summarize` and
   the summary cache read a numbering as the standard notation, and no text is ever converted into one, nor are number
-  charts read (`[1]` is as often an ending as a chord). `shownNames` maps every chord name a song plays to the name the
+  charts read (`[1]` is as often an ending as a chord). `canonicalName` is a chord typed in a notation named the way the
+  app names it there (the root and the bass in capitals, in title case in Latin, a lowercase minor spelled out), which the
+  Chords tab's search and the chord sheet's title use. `shownNames` maps every chord name a song plays to the name the
   page shows it under, which is what the Chords section is named by, since a step of a key cannot be read back into
   notes without the stretch it stands in. The viewer, which reads an already converted song, recognizes a chord as a
   page may show it (`ChordProChordNames.isDisplayedChordName`), which is what keeps a row of `Sol Lam` or `1 4 5`

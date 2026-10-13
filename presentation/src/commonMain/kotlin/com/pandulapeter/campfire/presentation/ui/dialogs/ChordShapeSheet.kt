@@ -10,10 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.dialogs
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -30,6 +27,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pandulapeter.campfire.chordpro.ChordNotation
+import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
 import com.pandulapeter.campfire.chordpro.chords.ChordVoicings
 import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
@@ -47,9 +46,7 @@ import com.pandulapeter.campfire.presentation.ui.chords.chordTuningLabel
 import com.pandulapeter.campfire.presentation.ui.chords.selectShape
 import com.pandulapeter.campfire.presentation.ui.chords.songChordsOf
 import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
-import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.textResource
-import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
 import com.pandulapeter.campfire.presentation.ui.playing.effectiveCapo
 import com.pandulapeter.campfire.presentation.ui.playing.readsCapoAsTransposition
 import com.pandulapeter.campfire.presentation.ui.playing.soundingTransposition
@@ -57,10 +54,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /**
- * One chord of a song, opened by tapping its diagram in the Chords section: the chord larger than the section draws it,
- * with its fingers and its notes, on a pager through the other ways it can be played. The page it settles on is the
- * player's choice for that chord in that tuning in every song, written at once like the page's own steppers write,
- * so the sheet has nothing to save and its close button cancels nothing; the section behind it follows. It reads the song
+ * One chord of a song, opened by tapping its diagram in the Chords section: every way it can be played, as a grid of
+ * diagrams larger than the section draws, with their fingers and the chord's notes ([ChordShapeGrid]). The shape picked
+ * there is the player's choice for that chord in that tuning in every song, written at once like the page's own steppers
+ * write, so the sheet has nothing to save and its close button cancels nothing; the section behind it follows. Its title
+ * names the chord with its root in capitals, or in title case in Latin, however the song writes it. It reads the song
  * as the page shows it: transposed (on the keyboard by the capo too, see `withCapoSounding`) and spelled the same way,
  * and finds the chord by the name the page gave it. A tuning other than the standard one is named under the title, so
  * that a shape is never read for the wrong strings, and a chord the song defines for standard tuning, which such a
@@ -98,68 +96,83 @@ internal fun ChordShapeSheet(
     if (chords != null && chord == null) return LaunchedEffect(Unit) { viewModel.dismissSheet(dialog) }
     val storedShapes = userPreferences?.chordVoicings?.get(tuning.voicingKey).orEmpty()
     CampfireBottomSheet(
-        title = textResource(Res.string.song_details_chord_shape_choose, dialog.chordName),
+        // A numbering names the chord by its step, which reads as another chord in letters (`b7`), so it stays as it is.
+        title = textResource(
+            Res.string.song_details_chord_shape_choose,
+            dialog.chordName.takeIf { notation.isNumbering } ?: ChordProNotation.canonicalName(dialog.chordName, notation) ?: dialog.chordName,
+        ),
         subtitle = songLabel(song),
         onDismiss = { viewModel.dismissSheet(dialog) },
     ) { contentPadding ->
-        val scrollState = rememberScrollState()
-        Column(
-            modifier = Modifier
-                .weight(1f, fill = false)
-                .fillMaxWidth()
-                .fadingTopEdge(scrollState, sheetContainerColor())
-                .bounceVerticalScroll(scrollState)
-                .padding(contentPadding)
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            if (chord == null) {
-                // The chords are worked out off the main thread, which is over before the sheet has slid up: the frame
-                // of a diagram and the room of the rest hold the sheet at its height meanwhile.
-                ChordShapePlaceholder(instrument = tuning.instrument, chordName = dialog.chordName)
-            } else {
-                // The pager holds its chord's shapes while a new list of chords is worked out under the open sheet, so
-                // it is keyed on the chord: its pages are never handed to another one.
-                key(chord.chord.id, chord.name) {
-                    var showsDefinition by rememberSaveable { mutableStateOf(false) }
-                    val definition = chord.undrawnDefinition?.takeIf { showsDefinition }
-                    val shownChord = if (definition == null) chord else chord.copy(definition = definition)
-                    val shownTuning = if (definition == null) tuning else ChordTuning.standard(tuning.instrument)
-                    if (!tuning.isStandard) {
-                        ChordTuningLine(text = stringResource(Res.string.song_details_chord_tuning, chordTuningLabel(shownTuning, notation)))
-                    }
-                    key(showsDefinition) {
-                        ChordShapePager(
-                            chord = shownChord,
-                            tuning = shownTuning,
-                            notation = notation,
-                            selection = selectShape(shownChord, shownTuning, storedShapes),
-                            onShapeSelected = { shape -> viewModel.setChordVoicing(tuning.voicingKey, chord.chord.id, shape?.let(ChordVoicings::write)) },
-                        )
-                    }
-                    if (chord.undrawnDefinition != null) {
-                        UndrawnDefinitionNote(
-                            isShown = showsDefinition,
-                            onToggled = { showsDefinition = !showsDefinition },
-                        )
-                    }
+        val gridModifier = Modifier.weight(1f, fill = false)
+        if (chord == null) {
+            // The chords are worked out off the main thread, which is over before the sheet has slid up: the frame of a
+            // diagram holds the place of the shapes meanwhile.
+            ChordShapeGrid(
+                modifier = gridModifier,
+                chord = null,
+                chordName = dialog.chordName,
+                tuning = tuning,
+                notation = notation,
+                selection = null,
+                tuningLine = tuningLine(tuning, notation),
+                contentPadding = contentPadding,
+                onShapeSelected = {},
+            )
+        } else {
+            // The grid holds its chord's shapes while a new list of chords is worked out under the open sheet, so it is
+            // keyed on the chord: its shapes are never handed to another one.
+            key(chord.chord.id, chord.name) {
+                var showsDefinition by rememberSaveable { mutableStateOf(false) }
+                val definition = chord.undrawnDefinition?.takeIf { showsDefinition }
+                val shownChord = if (definition == null) chord else chord.copy(definition = definition)
+                val shownTuning = if (definition == null) tuning else ChordTuning.standard(tuning.instrument)
+                key(showsDefinition) {
+                    ChordShapeGrid(
+                        modifier = gridModifier,
+                        chord = shownChord,
+                        chordName = shownChord.name,
+                        tuning = shownTuning,
+                        notation = notation,
+                        selection = selectShape(shownChord, shownTuning, storedShapes),
+                        tuningLine = tuningLine(shownTuning, notation),
+                        contentPadding = contentPadding,
+                        onShapeSelected = { shape -> viewModel.setChordVoicing(tuning.voicingKey, chord.chord.id, shape?.let(ChordVoicings::write)) },
+                        footer = if (chord.undrawnDefinition == null) {
+                            null
+                        } else {
+                            {
+                                UndrawnDefinitionNote(
+                                    isShown = showsDefinition,
+                                    onToggled = { showsDefinition = !showsDefinition },
+                                )
+                            }
+                        },
+                    )
                 }
             }
         }
     }
 }
 
+/** The tuning the shapes are drawn for, named under the title where it is not the standard one. */
+@Composable
+private fun tuningLine(tuning: ChordTuning, notation: ChordNotation) =
+    if (tuning.isStandard) null else stringResource(Res.string.song_details_chord_tuning, chordTuningLabel(tuning, notation))
+
 /**
  * That the song defines the chord for standard tuning, which the tuning the sheet is in does not draw, with a button
- * showing the definition in the pager's place, and the tuning's shapes again.
+ * showing the definition in the grid's place, and the tuning's shapes again.
  */
 @Composable
 private fun UndrawnDefinitionNote(
     isShown: Boolean,
     onToggled: () -> Unit,
+) = Column(
+    horizontalAlignment = Alignment.CenterHorizontally,
 ) {
     Text(
-        modifier = Modifier.padding(top = 12.dp),
+        modifier = Modifier.padding(top = 4.dp),
         text = stringResource(Res.string.song_details_chord_defined_standard_tuning),
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.primary,

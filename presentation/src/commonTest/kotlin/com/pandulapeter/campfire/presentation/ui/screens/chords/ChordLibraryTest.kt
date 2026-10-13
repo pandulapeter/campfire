@@ -73,6 +73,14 @@ internal class ChordLibraryTest {
     }
 
     @Test
+    fun `a chord found by a search is named with its root in capitals, or in title case in Latin`() {
+        val standard = assertIs<ChordLibraryResults.Chords>(results(query = "c7")).chords.single()
+        assertEquals("Cm7", standard.name)
+        assertEquals("Cm7", standard.spelling)
+        assertEquals("Lam7", assertIs<ChordLibraryResults.Chords>(results(query = "LAm7", notation = ChordNotation.LATIN)).chords.single().name)
+    }
+
+    @Test
     fun `any other search narrows the key's chords to the names that hold it`() {
         val chords = assertIs<ChordLibraryResults.Chords>(results(query = "sus")).chords
         assertEquals(listOf("Csus2", "Csus4", "C7sus4"), chords.map { it.name })

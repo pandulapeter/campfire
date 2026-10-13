@@ -114,9 +114,11 @@ internal fun chordLibraryResults(
     if (typed.isNotEmpty()) {
         ChordProChords.parse(typed, notation)?.let { chord ->
             if (!searchesShapes && ChordVoicings.needsSearch(chord, tuning)) return null
-            val shape = ChordVoicings.default(chord, tuning) ?: return ChordLibraryResults.NoShape(typed)
+            // Named as the key row names its chords rather than as it was typed, which may be `c7` or `LAm`.
+            val name = ChordProNotation.canonicalName(typed, notation) ?: typed
+            val shape = ChordVoicings.default(chord, tuning) ?: return ChordLibraryResults.NoShape(name)
             // The standard notation's spelling is what spells the notes; a name typed in another one is spelled by them.
-            return ChordLibraryResults.Chords(listOf(SongChord(name = typed, chord = chord, spelling = typed.takeIf { notation == ChordNotation.STANDARD }, defaultShape = shape)))
+            return ChordLibraryResults.Chords(listOf(SongChord(name = name, chord = chord, spelling = name.takeIf { notation == ChordNotation.STANDARD }, defaultShape = shape)))
         }
     }
     val key = keys[keyIndex.coerceIn(keys.indices)]

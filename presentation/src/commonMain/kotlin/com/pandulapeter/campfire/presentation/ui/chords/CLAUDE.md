@@ -63,16 +63,17 @@ four, a key past them left out, white keys the lighter of the two theme colours 
 filled whole — the root in the second accent, the rest (a slash chord's bass included) in a shade of it moved away from
 the white keys (deeper in the dark theme, paler in the light one).
 
-The **chord sheet** (`ChordShapeSheet`, `DialogType.ChordShape`, closed with the song; its pager, `ChordShapePager.kt`,
+The **chord sheet** (`ChordShapeSheet`, `DialogType.ChordShape`, closed with the song; its grid, `ChordShapeGrid.kt`,
 is shared with the Chords tab's sheet, see `ui/screens/chords/CLAUDE.md`) is titled "Choose chord shape -
-G", the label of the screen reader action that opens it, and reads the song as the page plays it, finding the chord by
-its name (gone, it closes): the chord larger, with its
-fingers and notes, its shapes the pages of a `HorizontalPager` through `ChordVoicings.all` (searched off the main
-thread, the pages decided once they are there, a stored shape the app does not list first) and a `Stepper` under it
-reading the page and turning it, for a mouse, a keyboard, and a screen reader. The page it settles on is written at once
-by `setChordVoicing` (settling on the app's first shape removes the entry), never highlighted and with no reset, since
-which shape is the default means nothing to the player; a chord the song defines has one page and "Defined in this
-song" (and by how many frets it was moved) in the stepper's place. The **editor**'s first toolbar row
+G", the label of the screen reader action that opens it, the chord named with its root and bass in capitals, or in title
+case in Latin, however the song writes it (`ChordProNotation.canonicalName`; a numbering's step as it is), and reads the
+song as the page plays it, finding the chord by its name (gone, it closes): the chord's letters and notes, then every
+shape of it as one vertically scrolling grid of diagrams larger than the section's, with their fingers, through
+`ChordVoicings.all` (searched off the main thread, an empty frame in the first cell meanwhile, the shapes decided once
+they are there, a stored shape the app does not list first). The shape the songs draw it with is marked, and a tap on
+another marks it and writes it at once by `setChordVoicing` (picking the app's first shape removes the entry); there is
+no reset, since which shape is the default means nothing to the player. A chord the song defines has its definition
+alone, not to be picked, and "Defined in this song" (and by how many frets it was moved) under it. The **editor**'s first toolbar row
 ends in Chord shape (`chordShapeInsertion`, tested), which writes a `{define}` for the chord at the caret into the
 header, filled in with the shape the player would be shown and its frets selected, or sends the caret to the frets of
 the line already there; the preview's Chords section holds every definition of the text and nothing else, each on its
@@ -153,7 +154,7 @@ somebody who did not set it is not read for the wrong instrument or strings.
 written for standard tuning, so a definition is drawn only where a standard tuning shape sounds what it says, standard
 tuning and the ukulele's low G (`ChordTuning.drawsDefinitions`) and is otherwise kept as `SongChord.undrawnDefinition`: the cell draws the player's
 or the app's shape, and the chord's sheet says "Defined in this song for standard tuning" under it with a button that
-shows the definition, named as standard tuning, in the pager's place, and back. The player's choices made in such a
+shows the definition, named as standard tuning, in the grid's place, and back. The player's choices made in such a
 tuning are kept under the tuning's own key and never turn up in standard tuning. The editor's Chord shape button writes
 the standard tuning shape in every tuning (the player's choice under the instrument's key, else the app's first), since
 every program reads a definition that way, and where the diagrams are in a tuning that does not draw definitions the
