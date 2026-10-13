@@ -126,8 +126,8 @@ screen. Its app bar starts with Close rather than Back. The whole bar is one sur
   away everything typed since the last save is not something to end up in by mistapping the button next to Save. It is
   answered by the screen rather than by the view model — the text goes back through the field's own editing, so a revert
   is one more step of the undo history instead of the end of it. In a document of more than 50,000 characters a
-  whole-document rewrite (a transposition, a revert) starts the undo history over first, since each is recorded as the
-  whole text twice.
+  whole-document rewrite (a transposition, a revert, a Replace all of more than one match) starts the undo history over
+  first, since each is recorded as the whole text twice.
 - **Find** and **Find and replace** come first in the overflow menu, and out of it as buttons of their own (the search
   icon and the find and replace one) wherever the bar keeps the title 160dp beside them (`editorMenuMaxWidth`, which
   counts the cover wherever covers are drawn and the Shortcuts chevron where the title row holds it). Ctrl / Cmd + F
@@ -148,7 +148,7 @@ screen. Its app bar starts with Close rather than Back. The whole bar is one sur
   While the sheet is open they are drawn behind the text by `ChordProOutputTransformation`, the current one in a color
   of its own, and the current one is scrolled into the top part of the pane, which the sheet leaves uncovered, unless it
   is there already. Replace writes over the current match and moves on; Replace all writes every match in one edit, so
-  one undo takes it back; nothing but Save writes the file.
+  one undo takes it back (in a long document the history before it is gone, as before a transposition); nothing but Save writes the file.
 - The screen itself is a `BasicTextField` over a `TextFieldState`, scrolled by containers around it rather than by its
   own `scrollState`, which has no way to hold room after the last line: a `verticalScroll`, which hands the field its
   viewport height as the minimum so a short song is still a field down to the bottom of the pane, and inside it a

@@ -132,16 +132,7 @@ internal class EditorSearch(
     }
 
     /** Writes the replacement over every match as one edit, so that a single undo takes all of them back. */
-    fun replaceAll() {
-        val starts = matchStarts.takeIf { it.isNotEmpty() } ?: return
-        val replacementText = replacement.text.toString()
-        val length = query.text.length
-        textFieldState.edit {
-            // From the end, so that every replacement leaves the offsets of the ones still to be written where they were.
-            starts.asReversed().forEach { start -> replace(start, start + length, replacementText) }
-            selection = TextRange(starts.first())
-        }
-    }
+    fun replaceAll() = textFieldState.replaceMatches(matchStarts, query.text.length, replacement.text.toString())
 
     /** The current match as the range it covers, for [select] to follow whenever it changes. */
     val currentMatch get() = matchStarts.getOrNull(currentIndex)?.let { TextRange(it, it + query.text.length) }

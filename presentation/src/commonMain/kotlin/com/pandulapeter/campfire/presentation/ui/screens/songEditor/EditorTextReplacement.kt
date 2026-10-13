@@ -75,6 +75,22 @@ internal fun TextFieldState.replaceWithPrettification(prettified: String) {
 }
 
 /**
+ * Writes [replacement] over the [length] characters at each of [starts] (ascending, never overlapping) as one edit,
+ * leaving the caret at the first of them. With more than one match the undo history records it the way it records a
+ * [replaceAll], so a long document's history starts over the same way; a single match is recorded as that change only.
+ */
+@OptIn(ExperimentalFoundationApi::class)
+internal fun TextFieldState.replaceMatches(starts: List<Int>, length: Int, replacement: String) {
+    if (starts.isEmpty()) return
+    if (starts.size > 1 && text.length > LONG_DOCUMENT_LENGTH) undoState.clearHistory()
+    edit {
+        // From the end, so that every replacement leaves the offsets of the ones still to be written where they were.
+        starts.asReversed().forEach { start -> replace(start, start + length, replacement) }
+        selection = TextRange(starts.first())
+    }
+}
+
+/**
  * What the editor takes for a long document: 100 KB as a saved state writes it, several times the longest song
  * and a tenth of what the transaction has room for.
  */
