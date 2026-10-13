@@ -87,4 +87,7 @@ from its first page to it (`syncConsentAnswerOf`), rather than opening Settings.
 
 A page is centered while it fits and scrolls with faded edges while it does not, never wider than
 `ONBOARDING_CONTENT_WIDTH`; the mark is left out under `ONBOARDING_MARK_MIN_HEIGHT`. Back and the way out share one
-slot of the footer, so the dots and Next never move.
+slot of the footer, so the dots and Next never move. Each slot is as wide as its widest label on any page, and the dots
+are centered between the two where both fit and moved toward the narrower slot where they do not
+(`onboardingDotsStart`), so that Start playing stays on one line on a 360dp phone; where even that leaves too little
+room, at a large font or interface scale, the dots stay centered and each button gets the half its side has.

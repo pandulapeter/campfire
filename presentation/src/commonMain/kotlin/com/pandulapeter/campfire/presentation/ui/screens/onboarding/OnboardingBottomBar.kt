@@ -14,18 +14,20 @@ import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.SubcomposeLayout
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -45,6 +47,11 @@ import com.pandulapeter.campfire.presentation.resources.onboarding_start_playing
  * ([onClose]): Skip on a first run, Close where it was opened from Settings. It is a tonal pill rather than a text
  * button, so that it reads as a choice of its own rather than as a step of the pages, and the two crossfade into each
  * other as the first page is left or come back to, in one slot, so that the dots and Next never move.
+ *
+ * Each slot is as wide as the widest of the buttons it can hold on any page, measured from all of them rather than from
+ * the one on screen, so that the dots do not move as one label crossfades into another. The dots are centered between
+ * the slots where both fit, and moved toward the narrower one where they do not ([onboardingDotsStart]), which is what
+ * keeps Start playing on one line on a 360dp phone with every page shown.
  */
 @Composable
 internal fun OnboardingBottomBar(
@@ -56,52 +63,74 @@ internal fun OnboardingBottomBar(
     onBack: () -> Unit,
     onClose: () -> Unit,
     onNext: () -> Unit,
-) = Row(
-    modifier = modifier.widthIn(max = ONBOARDING_CONTENT_WIDTH).fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
-    verticalAlignment = Alignment.CenterVertically,
 ) {
-    Box(
-        modifier = Modifier.weight(1f),
-        contentAlignment = Alignment.CenterStart,
-    ) {
-        AnimatedContent(
-            targetState = previousOnboardingStep(currentStep, steps) != null,
-            transitionSpec = { fadeIn() togetherWith fadeOut() using SizeTransform(clip = false) },
-            contentAlignment = Alignment.CenterStart,
-        ) { canGoBack ->
-            if (canGoBack) {
-                TextButton(onClick = onBack) { Text(stringResource(Res.string.back)) }
-            } else {
-                FilledTonalButton(onClick = onClose) {
-                    Text(stringResource(if (isOpenedFromSettings) Res.string.close else Res.string.onboarding_skip))
+    val backLabel = stringResource(Res.string.back)
+    val closeLabel = stringResource(if (isOpenedFromSettings) Res.string.close else Res.string.onboarding_skip)
+    val nextLabel = stringResource(Res.string.onboarding_next)
+    val lastLabel = stringResource(if (isOpenedFromSettings) Res.string.done else Res.string.onboarding_start_playing)
+    SubcomposeLayout(
+        modifier = modifier.widthIn(max = ONBOARDING_CONTENT_WIDTH).fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+    ) { constraints ->
+        val looseConstraints = constraints.copy(minWidth = 0, minHeight = 0)
+        // Measured and never placed, so they are neither drawn nor touched; their semantics are cleared all the same.
+        val startSlotWidth = subcompose(FooterSlot.START_CANDIDATES) {
+            TextButton(onClick = {}, modifier = Modifier.clearAndSetSemantics {}) { Text(backLabel) }
+            FilledTonalButton(onClick = {}, modifier = Modifier.clearAndSetSemantics {}, contentPadding = FOOTER_BUTTON_PADDING) { Text(closeLabel) }
+        }.maxOf { it.measure(looseConstraints).width }
+        val endSlotWidth = subcompose(FooterSlot.END_CANDIDATES) {
+            Button(onClick = {}, modifier = Modifier.clearAndSetSemantics {}, contentPadding = FOOTER_BUTTON_PADDING) { Text(nextLabel) }
+            Button(onClick = {}, modifier = Modifier.clearAndSetSemantics {}, contentPadding = FOOTER_BUTTON_PADDING) { Text(lastLabel) }
+        }.maxOf { it.measure(looseConstraints).width }
+        // Measured on every pass, since the dots animate: the pill stretching, and a dot growing in or shrinking out.
+        val dots = subcompose(FooterSlot.DOTS) { OnboardingPageIndicator(steps = steps, currentStep = currentStep) }.single().measure(looseConstraints)
+        val width = constraints.maxWidth
+        // No gap of its own: the dots' padding already keeps them apart from the buttons.
+        val dotsStart = onboardingDotsStart(width = width, dotsWidth = dots.width, startSlotWidth = startSlotWidth, endSlotWidth = endSlotWidth, gap = 0)
+        val start = subcompose(FooterSlot.START) {
+            AnimatedContent(
+                targetState = previousOnboardingStep(currentStep, steps) != null,
+                transitionSpec = { fadeIn() togetherWith fadeOut() using SizeTransform(clip = false) },
+                contentAlignment = Alignment.CenterStart,
+            ) { canGoBack ->
+                if (canGoBack) {
+                    TextButton(onClick = onBack) { Text(backLabel) }
+                } else {
+                    FilledTonalButton(onClick = onClose, contentPadding = FOOTER_BUTTON_PADDING) { Text(closeLabel) }
                 }
             }
-        }
-    }
-    OnboardingPageIndicator(
-        steps = steps,
-        currentStep = currentStep,
-    )
-    Box(
-        modifier = Modifier.weight(1f),
-        contentAlignment = Alignment.CenterEnd,
-    ) {
-        Button(onClick = onNext) {
-            AnimatedContent(
-                targetState = isLast,
-                transitionSpec = { fadeIn() togetherWith fadeOut() using SizeTransform(clip = false) },
-                contentAlignment = Alignment.Center,
-            ) { isLast ->
-                Text(
-                    stringResource(
-                        when {
-                            !isLast -> Res.string.onboarding_next
-                            isOpenedFromSettings -> Res.string.done
-                            else -> Res.string.onboarding_start_playing
-                        }
-                    )
-                )
+        }.single().measure(looseConstraints.copy(maxWidth = dotsStart.coerceAtLeast(0)))
+        val end = subcompose(FooterSlot.END) {
+            Button(onClick = onNext, contentPadding = FOOTER_BUTTON_PADDING) {
+                AnimatedContent(
+                    targetState = isLast,
+                    transitionSpec = { fadeIn() togetherWith fadeOut() using SizeTransform(clip = false) },
+                    contentAlignment = Alignment.Center,
+                ) { isLast ->
+                    Text(if (isLast) lastLabel else nextLabel)
+                }
             }
+        }.single().measure(looseConstraints.copy(maxWidth = (width - dotsStart - dots.width).coerceAtLeast(0)))
+        val height = maxOf(start.height, dots.height, end.height)
+        layout(width, height) {
+            start.placeRelative(0, (height - start.height) / 2)
+            dots.placeRelative(dotsStart, (height - dots.height) / 2)
+            end.placeRelative(width - end.width, (height - end.height) / 2)
         }
     }
 }
+
+private enum class FooterSlot {
+    START_CANDIDATES,
+    END_CANDIDATES,
+    DOTS,
+    START,
+    END,
+}
+
+/** Material's small button padding: the default's 24dp sides would leave Start playing no room on a 360dp phone. */
+private val FOOTER_BUTTON_PADDING = PaddingValues(
+    start = 16.dp,
+    top = ButtonDefaults.ContentPadding.calculateTopPadding(),
+    end = 16.dp,
+    bottom = ButtonDefaults.ContentPadding.calculateBottomPadding(),
+)
