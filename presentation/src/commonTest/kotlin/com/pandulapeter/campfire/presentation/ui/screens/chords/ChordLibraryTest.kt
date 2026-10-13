@@ -101,4 +101,32 @@ internal class ChordLibraryTest {
         val dropD = ChordVoicings.all(g.chord, ChordTuning.GUITAR_DROP_D).map(ChordVoicings::write)
         assertTrue(g.defaultShape?.let(ChordVoicings::write) !in dropD)
     }
+
+    @Test
+    fun `a return opens on the results held for the same inputs without asking the tables`() {
+        val inputs = ChordLibraryInputs(keys, 2, "", ChordNotation.STANDARD, ChordTuning.GUITAR_DADGAD)
+        val held = ChordLibraryShown(inputs, ChordLibraryResults.NoChord("held"))
+        assertEquals(held, initialChordLibraryShown(held, inputs.copy()) { error("The tables are not asked.") })
+    }
+
+    @Test
+    fun `other inputs open on what the tables answer`() {
+        val held = ChordLibraryShown(ChordLibraryInputs(keys, 2, "", ChordNotation.STANDARD, ChordTuning.GUITAR), ChordLibraryResults.NoChord("held"))
+        val inputs = held.inputs.copy(keyIndex = 3)
+        val answer = ChordLibraryResults.NoChord("tables")
+        assertEquals(ChordLibraryShown(inputs, answer), initialChordLibraryShown(held, inputs) { answer })
+    }
+
+    @Test
+    fun `another key the tables cannot answer keeps the held results of the same tuning`() {
+        val held = ChordLibraryShown(ChordLibraryInputs(keys, 2, "", ChordNotation.STANDARD, ChordTuning.GUITAR_DADGAD), ChordLibraryResults.NoChord("held"))
+        assertEquals(held, initialChordLibraryShown(held, held.inputs.copy(keyIndex = 7)) { null })
+    }
+
+    @Test
+    fun `held results of another tuning are dropped where the tables cannot answer`() {
+        val held = ChordLibraryShown(ChordLibraryInputs(keys, 2, "", ChordNotation.STANDARD, ChordTuning.GUITAR), ChordLibraryResults.NoChord("held"))
+        assertNull(initialChordLibraryShown(held, held.inputs.copy(tuning = ChordTuning.GUITAR_DADGAD)) { null })
+        assertNull(initialChordLibraryShown(null, held.inputs) { null })
+    }
 }

@@ -16,9 +16,9 @@ import androidx.compose.runtime.setValue
 import com.pandulapeter.campfire.presentation.ui.components.ScrollPosition
 
 /**
- * Where the Chords tab was left: the key, the search and the scroll position, held by the view model for the session
- * for the reason [ScrollPosition] gives, since the tab is taken off the back stack whenever another one is picked. The
- * instrument and its tuning are the preferences' (Settings → Songs), so they are not here.
+ * Where the Chords tab was left: the key, the search, the results and the scroll position, held by the view model for the
+ * session for the reason [ScrollPosition] gives, since the tab is taken off the back stack whenever another one is picked.
+ * The instrument and its tuning are the preferences' (Settings → Songs), so they are not here.
  */
 internal class ChordLibraryState {
 
@@ -28,4 +28,10 @@ internal class ChordLibraryState {
     var query by mutableStateOf("")
 
     val scrollPosition = ScrollPosition()
+
+    /**
+     * The results last drawn, which the next visit opens on where they are still the answer, a plain property since only
+     * that visit's first composition reads it.
+     */
+    var shown: ChordLibraryShown? = null
 }

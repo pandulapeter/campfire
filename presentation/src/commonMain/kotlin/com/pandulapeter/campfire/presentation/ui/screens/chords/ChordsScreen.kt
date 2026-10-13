@@ -26,6 +26,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -104,13 +105,22 @@ internal fun ChordsScreen(
     // What the tables answer alone is there from the first frame; a chord only the search finds keeps the chords that
     // were on screen up until it has been found, rather than emptying the page in between. They are held with the tuning
     // they were found for, since each carries that tuning's shape, which the new strings would play as another chord.
+    // The session keeps the last results too, so that a return opens on them, and with them in the first layout the
+    // retained scroll position has the rows to land on, rather than being clamped to the top of an empty page.
     var shown by remember {
-        mutableStateOf(tuning?.let { ChordLibraryShown(it, chordLibraryResults(keys, keyIndex, query, notation, it, searchesShapes = false)) })
+        mutableStateOf(
+            tuning?.let {
+                initialChordLibraryShown(state.shown, ChordLibraryInputs(keys, keyIndex, query, notation, it)) {
+                    chordLibraryResults(keys, keyIndex, query, notation, it, searchesShapes = false)
+                }
+            },
+        )
     }
+    SideEffect { state.shown = shown }
     LaunchedEffect(keys, keyIndex, query, notation, tuning) {
         shown = tuning?.let {
             ChordLibraryShown(
-                tuning = it,
+                inputs = ChordLibraryInputs(keys, keyIndex, query, notation, it),
                 results = chordLibraryResults(keys, keyIndex, query, notation, it, searchesShapes = false)
                     ?: withContext(Dispatchers.Default) { chordLibraryResults(keys, keyIndex, query, notation, it) },
             )

@@ -23,8 +23,9 @@ with the keyboard up, the field is scrolled to the top of the page, once per foc
 keyboard, on its side too, where a short window also takes the status bar away while it is typed into. An
 instrument without shapes has a line naming it in the chords' place, pointing at the chip ("Bass: no chord diagrams",
 Other a line of its own). **The instrument and its tuning are the one the songs' diagrams and the tuner follow**,
-written at once, since somebody browsing ukulele chords has a ukulele in hand; the key, the search and the scroll position are the
-session's (`ChordLibraryState`, held by the view model, since the tab leaves the back stack whenever another is picked).
+written at once, since somebody browsing ukulele chords has a ukulele in hand; the key, the search, the last results, and
+the scroll position are the session's (`ChordLibraryState`, held by the view model, since the tab leaves the back stack
+whenever another is picked), so the tab opens on the results it was left on (`initialChordLibraryShown`).
 
 The keys are spelled as the reader's accidentals preference asks (`chordLibraryKeys`: as a chart spells them, or all
 sharp, or all flat) and named in the reader's notation, a numbering by its letters. Under them a key lists
@@ -39,7 +40,8 @@ chord no shape plays on the instrument, says so in the chords' place.
 `ChordLibraryCell` is the chord's name in the chords' accent over its diagram, **drawn with the shape the songs draw it
 with** (`selectShape`: the player's choice for the chord in that tuning, then the app's first), crossfading when that
 changes. The shapes are looked up off the main thread, except where the tables answer every chord on screen
-(`searchesShapes = false`), which is what the tab opens on, so its first frame is already the page; a key that needs
+(`searchesShapes = false`), or the results the session kept, which is what the tab opens on, so its first frame is
+already the page wherever the tab was visited in this session, not only where the tables answer; a key that needs
 the search keeps the chords on screen until it is answered, drawn for the tuning they were found for, and not opened,
 after the tuning or the instrument changes (`ChordLibraryShown`). A tap opens `ChordReferenceSheet`
 (`DialogType.ChordReference`): the song details screen's chord sheet without a song around it, the same pager

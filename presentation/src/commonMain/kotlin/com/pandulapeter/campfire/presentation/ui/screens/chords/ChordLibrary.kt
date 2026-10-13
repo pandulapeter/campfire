@@ -54,15 +54,42 @@ internal sealed interface ChordLibraryResults {
     data class NoShape(val name: String) : ChordLibraryResults
 }
 
+/** What the Chords tab's results are found for: the arguments of [chordLibraryResults]. */
+@Immutable
+internal data class ChordLibraryInputs(
+    val keys: List<String>,
+    val keyIndex: Int,
+    val query: String,
+    val notation: ChordNotation,
+    val tuning: ChordTuning,
+)
+
 /**
- * The results the Chords tab draws, with the [tuning] they were found for: results held on screen while the next ones are
+ * The results the Chords tab draws, with the [inputs] they were found for: results held on screen while the next ones are
  * searched for are drawn on their own strings, since every chord carries the shape it was given for that tuning.
  */
 @Immutable
 internal data class ChordLibraryShown(
-    val tuning: ChordTuning,
+    val inputs: ChordLibraryInputs,
     val results: ChordLibraryResults?,
-)
+) {
+    val tuning get() = inputs.tuning
+}
+
+/**
+ * What the Chords tab opens on for [inputs], [held] being the results it was left on in this session: those where they
+ * were found for the same inputs, then what the tables answer alone ([answerFromTables]), then the held results where
+ * they are for the same tuning, kept on screen while the search answers the rest as within a visit, else nothing.
+ */
+internal fun initialChordLibraryShown(
+    held: ChordLibraryShown?,
+    inputs: ChordLibraryInputs,
+    answerFromTables: () -> ChordLibraryResults?,
+): ChordLibraryShown? {
+    if (held?.inputs == inputs) return held
+    answerFromTables()?.let { return ChordLibraryShown(inputs, it) }
+    return held?.takeIf { it.tuning == inputs.tuning }
+}
 
 /**
  * The chords the Chords tab lists in the key at [keyIndex] of [keys] (see [chordLibraryKeys]) on [tuning], named in
