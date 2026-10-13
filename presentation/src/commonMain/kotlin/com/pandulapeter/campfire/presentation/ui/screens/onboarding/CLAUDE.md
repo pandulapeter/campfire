@@ -85,8 +85,10 @@ mouse drag, and a trackpad's sideways scroll, and the page one settles on become
 but not a page passed while the pager is still on its way to the step (`PagerFollowingStep`), which a second Next taking
 over from the first would otherwise turn back to. The step is saved with the back
 stack (`SavedStateStore`), so a process ended behind the onboarding comes back on the page it was left on, every answer
-kept. On the web the screen is one history entry at the address of the screen under it (`BrowserRoutes`), so a reload
-opens the app rather than a question, and neither does a Forward once it is finished, skipped, or closed.
+kept. On the web the screen is one history entry at the address of the screen under it (`BrowserRoutes`), so it has no
+address of its own: a reload while it is still owed opens it again on its first page, over the songs rather than the
+address the page was at (the start up puts it on the stack before `navigateOnLaunch` looks), and neither a reload nor a
+Forward opens it once it is finished, skipped, or closed.
 
 `FirstRunController.openOnboardingOnStartUp` opens it as the demo library is settled, while the launch screen is still
 up, so the app is uncovered on it; it is skipped where a dialog is up or an import is waiting (`canShowOnboarding`). It

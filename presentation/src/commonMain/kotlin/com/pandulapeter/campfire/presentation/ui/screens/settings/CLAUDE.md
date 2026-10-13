@@ -73,9 +73,9 @@ there, and a cancel back).
 
 Pressing the Settings item while it is open scrolls the open tab to its top, and once it is there goes to General
 (the Tools item does the same with its first tool, see `ui/CLAUDE.md`); pressing the tab that is open scrolls it to the
-top, as does pressing the Songs, Setlists or Metronome item on its screen (`CampfireViewModel.scrollToTopRequests`,
-which every top level screen collects with `collectLatest`: a touch that interrupts the scroll ends its animation in a
-`CancellationException`, which would end a plain `collect`, and every later press with it). The two layouts crossfade
+top, as does pressing the Songs, Setlists, Metronome, Tuner, or Chords item on its screen, or a tool's tab where the
+tools are grouped (`CampfireViewModel.scrollToTopRequests`, which every top level screen collects with `collectLatest`:
+a touch that interrupts the scroll ends its animation in a `CancellationException`, which would end a plain `collect`, and every later press with it). The two layouts crossfade
 when a window is resized across the line between them, and so do the pages of the wide one as a category is picked (a pager slides only where a finger drags it). Each page
 (`SettingsTabPage`, through `SettingsPage`) is **one column, capped at `THEME_COLOR_CHOICE_WIDTH`** (every color disc in
 one row) and starting at the start edge, on a phone, on a tablet, and beside the category pane of a maximized window
