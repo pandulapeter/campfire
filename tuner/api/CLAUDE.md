@@ -25,7 +25,7 @@ so that no data or domain type leaks into it and the engine reads no settings of
   cents off it — beyond ±50 where a preset's nearest string is further than half a semitone — the frequency heard and
   `isInTune`), `TunerStopReason`, `TunerInputIssue` (`SILENT`: digital silence, or a sample or two of dither, for two seconds,
   which is how the desktop operating systems answer an app that may not record and what Windows' audio enhancements
-  leave of a held note; `WAITING_FOR_GESTURE`), `NoteOffset`, and `InstrumentTuning` —
+  leave of a held note, but also how a quiet audio interface can idle; `WAITING_FOR_GESTURE`), `NoteOffset`, and `InstrumentTuning` —
   the presets (six-string guitar in standard, drop D, half and full step down, drop C#, drop C, drop B, double drop D,
   open G, D, E, A, and C, and DADGAD; seven-string guitar in standard, drop A, and half and full step down; eight-string
   guitar in standard, drop E, and half and full step down; four-string bass in standard, drop D, half and full step

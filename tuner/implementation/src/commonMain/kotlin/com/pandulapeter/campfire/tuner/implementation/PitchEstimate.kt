@@ -14,7 +14,8 @@ package com.pandulapeter.campfire.tuner.implementation
  *
  * @param frequency The pitch in Hz, null where no clear one was found in the range asked for.
  * @param clarity How periodic the window is at that pitch, from 0 to 1: the height of the peak it was read from.
- * @param level The window's RMS, full scale being 1: 0 for digital silence, and a few thousandths of a sample step for a gated input.
+ * @param level The window's RMS once the mean and the rumble under 100 Hz are taken away, full scale being 1: 0 for digital
+ * silence. What Windows' gated input measures has not been recorded; it is only known as a sample or two of dither.
  */
 internal data class PitchEstimate(
     val frequency: Float?,

@@ -169,7 +169,9 @@ internal class PitchTracker {
         /**
          * The level under which the input is taken for silent, about 1.5 steps of a 16-bit sample (-86 dBFS): not only
          * exact zeros, since Windows' audio enhancements gate what they take for noise down to a sample or two of dither
-         * rather than to nothing, and a live microphone's own noise is well above it.
+         * rather than to nothing. A laptop's or a phone's microphone, which runs with a lot of gain, is well above it, but a
+         * clean audio interface with its gain turned down in a quiet room can idle under it, and with 16-bit samples it can
+         * arrive as the same zeros and stray steps as a gated input, so the notice this raises reads as a hint, not a fault.
          */
         const val SILENT_LEVEL = 5e-5f
         const val TARGET_HOLD_COUNT = 3

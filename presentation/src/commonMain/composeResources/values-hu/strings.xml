@@ -494,7 +494,7 @@
     <string name="tuner_notice_busy">A mikrofont egy hívás vagy egy másik alkalmazás használja.</string>
     <string name="tuner_notice_not_supported">Ez a böngésző nem engedi, hogy egy oldal a mikrofont használja.</string>
     <string name="tuner_notice_failed">A mikrofont nem sikerült megnyitni.</string>
-    <string name="tuner_notice_silent">Semmi sem hallatszik. Ellenőrizd, hogy a mikrofon nincs-e elnémítva, és hogy a Campfire használhatja-e.</string>
+    <string name="tuner_notice_silent">Még semmi sem hallatszik. Ha szól egy húr, ellenőrizd, hogy a mikrofon nincs-e elnémítva vagy teljesen lehalkítva, és hogy a Campfire használhatja-e.</string>
     <string name="tuner_notice_waiting">Koppints bárhová, hogy a böngésző hallgathasson.</string>
     <string name="tuner_use_microphone">Mikrofon használata</string>
     <string name="tuner_notice_silent_enhancements">Ellenőrizd, hogy a mikrofon nincs-e elnémítva, és hogy a Campfire használhatja-e. A Windows a kitartott hangot zajként is eltávolíthatja: kapcsold ki a hangbeállításokban a mikrofon hangjavításait.</string>
