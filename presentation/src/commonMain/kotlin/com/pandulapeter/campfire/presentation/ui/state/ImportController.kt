@@ -225,7 +225,9 @@ internal class ImportController(
     /**
      * Suspends until no import is running and none has anything left to report. A reviewed batch leaves its review on
      * the import screen when [import] returns, and the import the review decides on only starts after that; whatever
-     * the screen shows is the one import it is about, so the next batch also waits for it to be left.
+     * the screen shows is the one import it is about, so the next batch also waits for it to be left. The queue waits
+     * for this before taking a batch as well as after it, since a result reopened from the snackbar's Details is a
+     * report the queue did not start.
      */
     suspend fun awaitImportSettled() {
         combine(_importReport, _isImporting) { report, isImporting -> report != null || isImporting }.first { !it }
@@ -238,9 +240,9 @@ internal class ImportController(
      * this was left.
      */
     suspend fun import(request: ImportRequest) {
-        // Only ever called by the consumer of importQueue, which waits for each import to settle before the next, and
-        // by the first run's demo library before that consumer takes anything, so this holds by construction; it is
-        // kept so that a second caller could not start an import over a running one.
+        // Only ever called by the consumer of importQueue, which waits for each import to settle before the next and
+        // for any report on screen, and by the first run's demo library before that consumer takes anything, so this
+        // holds by construction; it is kept so that a second caller could not start an import over a running one.
         if (request.source.isEmpty || _isImporting.value || activeRequest != null) return
         val isReviewed = request.isReviewed
         if (isReviewed) {
@@ -641,10 +643,16 @@ internal class ImportController(
         demoLibraryDecision.await()
         for (request in importQueue) {
             try {
-                // A batch that arrived while the library was being deleted is planned against what the deletion
-                // left, not against a library half gone. Checked again after every wait, so that nothing can start
-                // a deletion between the check and import claiming the import flag.
-                while (isDeletingLibrary.value) isDeletingLibrary.first { !it }
+                // A result reopened from the snackbar's Details is on screen while the queue is idle; a batch taken now
+                // would replace it in place, and leaving the screen would drop the new import with it. A batch that
+                // arrived while the library was being deleted is planned against what the deletion left, not against a
+                // library half gone. Both are checked again after every wait, since either can begin while the other is
+                // waited out, and nothing can start a deletion or open a report between the last check and import
+                // claiming the queue.
+                do {
+                    awaitImportSettled()
+                    while (isDeletingLibrary.value) isDeletingLibrary.first { !it }
+                } while (_importReport.value != null || _isImporting.value)
                 // Checked after the deletion wait rather than before it, so that a batch that waited one out does not
                 // start once the exit has begun. Skipping it still settles it in the finally below.
                 if (isLeaving()) continue

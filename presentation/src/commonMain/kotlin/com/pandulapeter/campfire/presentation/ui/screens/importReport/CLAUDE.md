@@ -62,5 +62,6 @@ itself; Ctrl / Cmd + F gives it the caret (`openCurrentSearch`, through `importR
 emptied as the screen is left), and Escape and Back go straight to leaving the screen. Leaving it in `Loading` cancels,
 in `Failed` or `Review` drops the import, which needs no confirmation since nothing has been written; leaving it while
 the import is written lets that finish, reported by a snackbar with Details; leaving a result lets the next batch of
-the queue start, which waits for the report as it waits for an import (`awaitImportSettled`). The single song a system
+the queue start, which waits for the report, a result reopened from **Details** included, as it waits for an import
+(`awaitImportSettled`). The single song a system
 "open with" handed over is opened in place of the screen once its review is answered.
