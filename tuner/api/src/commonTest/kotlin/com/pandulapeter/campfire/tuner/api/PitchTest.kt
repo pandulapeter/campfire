@@ -10,9 +10,12 @@
 package com.pandulapeter.campfire.tuner.api
 
 import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
+import com.pandulapeter.campfire.tuner.api.model.StringCourses
+import com.pandulapeter.campfire.tuner.api.model.TunerConfig
 import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class PitchTest {
@@ -46,10 +49,10 @@ class PitchTest {
 
     @Test
     fun `a preset reads a sound against its nearest string however far it is`() {
-        val nearD = Pitch.nearestString(Pitch.frequencyOf(51, 440), InstrumentTuning.GUITAR, 440)
+        val nearD = Pitch.nearestString(Pitch.frequencyOf(51, 440), InstrumentTuning.GUITAR.strings, 440)
         assertEquals(50, nearD.note)
         assertEquals(100f, nearD.cents, 0.01f)
-        val lowE = Pitch.nearestString(70f, InstrumentTuning.GUITAR, 440)
+        val lowE = Pitch.nearestString(70f, InstrumentTuning.GUITAR.strings, 440)
         assertEquals(40, lowE.note)
         assertTrue(lowE.cents < -100)
     }
@@ -58,6 +61,20 @@ class PitchTest {
     fun `the target is the nearest semitone without a tuning and the nearest string with one`() {
         val frequency = Pitch.frequencyOf(47, 440)
         assertEquals(47, Pitch.targetOf(frequency, null, 440).note)
-        assertEquals(45, Pitch.targetOf(frequency, InstrumentTuning.GUITAR, 440).note)
+        assertEquals(45, Pitch.targetOf(frequency, InstrumentTuning.GUITAR.strings, 440).note)
+    }
+
+    @Test
+    fun `paired strings are listened for with their partners, and chromatic tuning has no strings`() {
+        val sixString = TunerConfig(referencePitch = 440, tuning = InstrumentTuning.GUITAR)
+        val twelveString = sixString.copy(courses = StringCourses.TWELVE_STRING)
+        val octaveG = Pitch.frequencyOf(67, 440)
+        assertEquals(64, Pitch.targetOf(octaveG, sixString.strings, 440).note)
+        assertEquals(67, Pitch.targetOf(octaveG, twelveString.strings, 440).note)
+        assertEquals(10, twelveString.strings?.size)
+        assertNull(twelveString.copy(tuning = null).strings)
+        val mandolin = TunerConfig(referencePitch = 440, tuning = InstrumentTuning.MANDOLIN, courses = StringCourses.UNISON_PAIRS)
+        assertEquals(InstrumentTuning.MANDOLIN.strings, mandolin.strings)
+        assertEquals(InstrumentTuning.MANDOLIN.strings, mandolin.partners)
     }
 }

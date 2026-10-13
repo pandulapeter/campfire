@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.tuner.api
 
 import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
+import com.pandulapeter.campfire.tuner.api.model.StringCourses
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -85,6 +86,18 @@ class InstrumentTuningTest {
         assertEquals(listOf("F#3", "C#4", "G#4", "D#5"), InstrumentTuning.MANDOLIN_HALF_STEP_DOWN.strings.map(::name))
         assertEquals(listOf("A3", "E4", "A4", "E5"), InstrumentTuning.MANDOLIN_AEAE.strings.map(::name))
         assertEquals(listOf("G3", "D4", "G4", "D5"), InstrumentTuning.MANDOLIN_GDGD.strings.map(::name))
+    }
+
+    @Test
+    fun `a twelve-string guitar doubles the four lowest courses an octave up and the two highest in unison`() {
+        assertEquals(listOf("E3", "A3", "D4", "G4", "B3", "E4"), StringCourses.TWELVE_STRING.partnersOf(InstrumentTuning.GUITAR)?.map(::name))
+        assertEquals(listOf("D3", "A3", "D4", "G4", "B3", "E4"), StringCourses.TWELVE_STRING.partnersOf(InstrumentTuning.GUITAR_DROP_D)?.map(::name))
+    }
+
+    @Test
+    fun `unison pairs double every string and single strings have no partners`() {
+        assertEquals(InstrumentTuning.MANDOLIN.strings, StringCourses.UNISON_PAIRS.partnersOf(InstrumentTuning.MANDOLIN))
+        assertNull(StringCourses.SINGLE.partnersOf(InstrumentTuning.GUITAR))
     }
 
     private fun name(note: Int) = listOf("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")[note % 12] + (note / 12 - 1)

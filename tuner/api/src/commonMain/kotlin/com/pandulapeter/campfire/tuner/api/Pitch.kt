@@ -9,7 +9,6 @@
  */
 package com.pandulapeter.campfire.tuner.api
 
-import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 import com.pandulapeter.campfire.tuner.api.model.NoteOffset
 import kotlin.math.abs
 import kotlin.math.log2
@@ -40,12 +39,12 @@ public object Pitch {
         return NoteOffset(note = note, cents = centsBetween(frequency, note, referencePitch))
     }
 
-    /** The string of [tuning] nearest to [frequency], however far that is, and how far it is from it. */
-    public fun nearestString(frequency: Float, tuning: InstrumentTuning, referencePitch: Int): NoteOffset = tuning.strings
+    /** The one of [strings] nearest to [frequency], however far that is, and how far it is from it. */
+    public fun nearestString(frequency: Float, strings: List<Int>, referencePitch: Int): NoteOffset = strings
         .map { NoteOffset(note = it, cents = centsBetween(frequency, it, referencePitch)) }
         .minBy { abs(it.cents) }
 
-    /** The note [frequency] is read against: the nearest string of [tuning], or the nearest semitone without one. */
-    public fun targetOf(frequency: Float, tuning: InstrumentTuning?, referencePitch: Int): NoteOffset =
-        if (tuning == null) noteOf(frequency, referencePitch) else nearestString(frequency, tuning, referencePitch)
+    /** The note [frequency] is read against: the nearest of [strings], or the nearest semitone without them. */
+    public fun targetOf(frequency: Float, strings: List<Int>?, referencePitch: Int): NoteOffset =
+        if (strings == null) noteOf(frequency, referencePitch) else nearestString(frequency, strings, referencePitch)
 }

@@ -27,7 +27,7 @@ import com.pandulapeter.campfire.presentation.resources.instrument_choose
 import com.pandulapeter.campfire.presentation.resources.instrument_tuning_choose
 import com.pandulapeter.campfire.presentation.resources.instrument_tuning_standard
 import com.pandulapeter.campfire.presentation.ui.instrument.instrumentLabel
-import com.pandulapeter.campfire.presentation.ui.instrument.of
+import com.pandulapeter.campfire.presentation.ui.instrument.isStandard
 import com.pandulapeter.campfire.presentation.ui.instrument.tunings
 import com.pandulapeter.campfire.presentation.ui.tuner.tuningLabel
 import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
@@ -77,9 +77,9 @@ internal fun InstrumentChips(
         PickerChip(
             modifier = chipModifier,
             // Named in full where it is the standard one, which "Standard" alone does not say out of the sheet's context. Asked
-            // of the tuning's own instrument rather than [instrument], since a chip fading out is still drawing the tuning of
-            // the instrument picked before, and the one picked now may have no tunings at all (the keyboard, Other).
-            text = if (lastTuning == UserPreferences.Instrument.of(lastTuning).tunings.first()) {
+            // of the tuning rather than of [instrument], since a chip fading out is still drawing the tuning of the
+            // instrument picked before, and the one picked now may have no tunings at all (the keyboard, Other).
+            text = if (lastTuning.isStandard) {
                 stringResource(Res.string.instrument_tuning_standard)
             } else {
                 tuningLabel(lastTuning, notation)

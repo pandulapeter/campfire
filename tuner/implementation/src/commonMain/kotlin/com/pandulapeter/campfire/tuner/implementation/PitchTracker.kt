@@ -90,7 +90,7 @@ internal class PitchTracker {
         recent.addLast(frequency)
         if (recent.size > MEDIAN_SIZE) recent.removeFirst()
         val median = recent.sorted()[recent.size / 2]
-        val heardTarget = Pitch.targetOf(median, config.tuning, config.referencePitch).note
+        val heardTarget = Pitch.targetOf(median, config.strings, config.referencePitch).note
         if (heardTarget == target) {
             candidate = null
             candidateCount = 0

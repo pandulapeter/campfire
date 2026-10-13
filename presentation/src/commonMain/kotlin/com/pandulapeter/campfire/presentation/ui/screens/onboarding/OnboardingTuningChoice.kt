@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.onboarding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.pandulapeter.campfire.chordpro.ChordNotation
+import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.instrument_tuning
@@ -26,6 +27,7 @@ import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 @Composable
 internal fun OnboardingTuningChoice(
     modifier: Modifier = Modifier,
+    instrument: UserPreferences.Instrument,
     selected: InstrumentTuning,
     notation: ChordNotation,
     onSelected: (InstrumentTuning) -> Unit,
@@ -35,6 +37,7 @@ internal fun OnboardingTuningChoice(
     shouldApplyPadding = false,
 ) {
     TuningChips(
+        instrument = instrument,
         selected = selected,
         notation = notation,
         onSelected = onSelected,

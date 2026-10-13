@@ -365,6 +365,7 @@
     <string name="instrument_strings_seven">Seven strings</string>
     <string name="instrument_strings_eight">Eight strings</string>
     <string name="instrument_strings_pairs">Four pairs of strings</string>
+    <string name="instrument_strings_six_pairs">Six pairs of strings</string>
     <string name="instrument_no_chord_diagrams">%1$s · No chord diagrams</string>
     <string name="instrument_keyboard_description">The notes of each chord, with the capo counted into the transposition</string>
     <string name="instrument_other_description">No strings, no chord diagrams</string>
@@ -521,6 +522,7 @@
     <string name="tuner_strings_description">Tap a string to hear its note, and again to stop it.</string>
     <!-- A string chip as a screen reader reads it, e.g. "String 6, E2". -->
     <string name="tuner_string">String %1$d, %2$s</string>
+    <string name="tuner_string_pair">Pair of string %1$d, %2$s</string>
     <!-- A sharp note as a screen reader says it, given its name without the sign: "C sharp", or for the syllables of the
          Latin notation, "Do sharp". -->
     <string name="tuner_note_sharp_letter">%1$s sharp</string>

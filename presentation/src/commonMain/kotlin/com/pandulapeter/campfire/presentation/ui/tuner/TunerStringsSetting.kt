@@ -18,27 +18,28 @@ import com.pandulapeter.campfire.presentation.resources.tuner_strings
 import com.pandulapeter.campfire.presentation.resources.tuner_strings_description
 import com.pandulapeter.campfire.presentation.ui.components.SettingsSubsection
 import com.pandulapeter.campfire.presentation.ui.screens.settings.AnimatedSettingsRow
-import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
+import com.pandulapeter.campfire.tuner.api.model.TunerConfig
 
 /**
- * The strings of [tuning] under their title ([TunerStrings]), the same on the tab and in the sheet over a song, and
- * nothing in chromatic mode, where there are no strings to play.
+ * The strings [config] listens for under their title ([TunerStrings]), the same on the tab and in the sheet over a song,
+ * and nothing in chromatic mode, where there are no strings to play.
  */
 @Composable
 internal fun ColumnScope.TunerStringsSetting(
-    tuning: InstrumentTuning?,
+    config: TunerConfig,
     notation: ChordNotation,
     tone: Int?,
     heardNote: Int?,
     tunedNotes: Set<Int>,
     onToggleTone: (Int) -> Unit,
-) = AnimatedSettingsRow(value = tuning) { shownTuning ->
+) = AnimatedSettingsRow(value = config.tuning?.let { it to config.partners }) { (shownTuning, partners) ->
     SettingsSubsection(
         title = stringResource(Res.string.tuner_strings),
         description = stringResource(Res.string.tuner_strings_description),
     ) {
         TunerStrings(
             tuning = shownTuning,
+            partners = partners,
             notation = notation,
             tone = tone,
             heardNote = heardNote,

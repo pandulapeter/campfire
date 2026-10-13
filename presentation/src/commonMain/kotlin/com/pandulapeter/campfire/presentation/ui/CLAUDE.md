@@ -478,6 +478,15 @@ whole song is played, read only mode included, since they change this device's p
 setlist; they stand on the Tuner tab (under its Chromatic switch, and only while that is off), the Chords tab, and Settings → Songs
 (`InstrumentSetting`, `InstrumentChipRow`); the onboarding's instrument page lists the same instruments. Chromatic is not an instrument but the tuner's own switch (`TunerSettings.isChromatic`).
 
+**The twelve-string guitar is the guitar to everything but the tuner** (`Instrument.isTwelveString`): its six courses
+are fingered and tuned as the guitar's six strings, so it offers the guitar's tunings (`InstrumentTuning` has none of its
+own; its pick is kept under its own id in `UserPreferences.tunings`, so the two can be tuned apart) and is drawn with the
+guitar's shapes, the player's chosen ones included, since those are filed by `:chordpro`'s instrument. The tuner alone
+hears the second string of each course too (`Instrument.courses`, the mandolin's unison pairs being the other paired
+instrument, see `ui/tuner/`). A tuning therefore names no
+instrument of its own: `withTuning` tunes the instrument picked, and the chips ask a tuning whether it is standard
+(`isStandard`) rather than which instrument it is of.
+
 ## Haptics
 
 **The hand is told only what the eye cannot easily follow**, through Compose's `LocalHapticFeedback`, which is the

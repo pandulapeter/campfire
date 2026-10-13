@@ -26,7 +26,7 @@ The onboarding: a few questions, one a page, each shown on what it changes; a fi
 - **What do you play?**: only with the chords or the tuner on, its line naming which of them the answer is for. Every
   instrument the instrument sheet lists, Piano or keyboard and Something else in the page's own words; with the tuner
   off only the ones with diagrams and Something else (`onboardingInstruments`), since the others would only be
-  Something else by another name. Under them the tunings of the one picked (`OnboardingTuningChoice`, the sheet's
+  Something else by another name, and the twelve-string guitar the guitar by another name. Under them the tunings of the one picked (`OnboardingTuningChoice`, the sheet's
   `TuningChips`), asked with the tuner off too, since the diagrams are drawn in it. With the chords on, the chord
   diagrams switch follows for an instrument they are drawn for, a G drawn beside it in its tuning; an instrument they
   are never drawn for leaves the place empty.

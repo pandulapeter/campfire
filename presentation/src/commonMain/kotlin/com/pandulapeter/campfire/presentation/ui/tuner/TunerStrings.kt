@@ -12,10 +12,13 @@ package com.pandulapeter.campfire.presentation.ui.tuner
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -30,6 +33,7 @@ import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -50,7 +54,9 @@ import com.pandulapeter.campfire.presentation.resources.ic_check
 import com.pandulapeter.campfire.presentation.resources.ic_sound
 import com.pandulapeter.campfire.presentation.resources.tuner_in_tune
 import com.pandulapeter.campfire.presentation.resources.tuner_string
+import com.pandulapeter.campfire.presentation.resources.tuner_string_pair
 import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
+import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -60,22 +66,73 @@ import org.jetbrains.compose.resources.painterResource
  * selected and carries the sound mark, and so is the one being heard while none sounds, so the hand finds the string the
  * tuner is reading. A string heard in tune since the microphone was opened is ticked ([tunedNotes]), so that the player
  * sees which strings are still to do.
+ *
+ * An instrument whose strings are paired (the mandolin, the twelve-string guitar) gets a second row under the first,
+ * [partners], the other string of each course right under the one it is paired with, rather than twice the segments in
+ * one row, which a phone has no room to name. A pair in unison is one note to the tuner, so its two segments are
+ * selected, sounding and ticked together.
  */
 @Composable
 internal fun TunerStrings(
     tuning: InstrumentTuning,
+    partners: List<Int>?,
+    notation: ChordNotation,
+    tone: Int?,
+    heardNote: Int?,
+    tunedNotes: Set<Int>,
+    onToggleTone: (Int) -> Unit,
+) = Column(
+    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+) {
+    StringRow(
+        notes = tuning.strings,
+        description = Res.string.tuner_string,
+        notation = notation,
+        tone = tone,
+        heardNote = heardNote,
+        tunedNotes = tunedNotes,
+        onToggleTone = onToggleTone,
+    )
+    // Kept while it shrinks away, so that the row leaves as it was rather than as nothing. Not a state: nothing is redrawn
+    // because of it.
+    val lastPartners = remember { LastPartners() }
+    partners?.let { lastPartners.value = it }
+    AnimatedVisibility(
+        visible = partners != null,
+        enter = fadeIn() + expandVertically(),
+        exit = fadeOut() + shrinkVertically(),
+    ) {
+        StringRow(
+            modifier = Modifier.padding(top = COURSE_GAP),
+            notes = lastPartners.value.orEmpty(),
+            description = Res.string.tuner_string_pair,
+            notation = notation,
+            tone = tone,
+            heardNote = heardNote,
+            tunedNotes = tunedNotes,
+            onToggleTone = onToggleTone,
+        )
+    }
+}
+
+/** One row of [TunerStrings], [notes] numbered down to the first and each described by [description]. */
+@Composable
+private fun StringRow(
+    modifier: Modifier = Modifier,
+    notes: List<Int>,
+    description: StringResource,
     notation: ChordNotation,
     tone: Int?,
     heardNote: Int?,
     tunedNotes: Set<Int>,
     onToggleTone: (Int) -> Unit,
 ) = SingleChoiceSegmentedButtonRow(
-    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+    modifier = modifier.fillMaxWidth(),
 ) {
     val inTune = stringResource(Res.string.tuner_in_tune)
-    tuning.strings.forEachIndexed { index, note ->
+    notes.forEachIndexed { index, note ->
         val name = noteNameWithOctave(note, notation)
-        val description = stringResource(Res.string.tuner_string, tuning.strings.size - index, spokenNoteName(note, notation))
+        val stringDescription = stringResource(description, notes.size - index, spokenNoteName(note, notation))
         val isSounding = tone == note
         val isTuned = note in tunedNotes
         val isSelected = if (tone != null) isSounding else heardNote == note
@@ -84,7 +141,7 @@ internal fun TunerStrings(
             // stops, and being selected only says which string is sounding or heard.
             modifier = Modifier.clearAndSetSemantics {
                 role = Role.Button
-                contentDescription = description
+                contentDescription = stringDescription
                 selected = isSelected
                 if (isTuned) stateDescription = inTune
                 onClick {
@@ -94,7 +151,7 @@ internal fun TunerStrings(
             },
             selected = isSelected,
             onClick = { onToggleTone(note) },
-            shape = SegmentedButtonDefaults.itemShape(index = index, count = tuning.strings.size),
+            shape = SegmentedButtonDefaults.itemShape(index = index, count = notes.size),
             icon = {},
             contentPadding = STRING_CONTENT_PADDING,
         ) {
@@ -145,6 +202,9 @@ private fun StringMark(
 private val STRING_MARK_SIZE = 16.dp
 private val STRING_MARK_GAP = 4.dp
 
+/** Between the two rows of an instrument's paired strings. */
+private val COURSE_GAP = 8.dp
+
 /**
  * How far a string's name shrinks before it is cut: an eight-string guitar leaves each string about 40dp on a 360dp
  * phone, which a name with its mark beside it only fits in smaller.
@@ -161,3 +221,6 @@ private val STRING_CONTENT_PADDING = PaddingValues(
     end = 4.dp,
     bottom = SegmentedButtonDefaults.ContentPadding.calculateBottomPadding(),
 )
+
+/** The partners [TunerStrings] last drew. */
+private class LastPartners(var value: List<Int>? = null)

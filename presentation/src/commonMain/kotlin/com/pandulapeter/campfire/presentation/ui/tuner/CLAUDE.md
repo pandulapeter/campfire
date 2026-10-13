@@ -60,7 +60,10 @@ share.
 - `TunerStringsSetting` / `TunerStrings` — on both: one segmented row, a segment per string, so the strings read as one
   instrument: the tone's or the heard one selected, a tap toggling its tone, the sounding one carrying a speaker (what it is
   doing, where a stop square read as a media control) and a tuned one a check; read as buttons rather than the radio buttons Material makes segments; the names shrinking to fit
-  eight strings on a phone. Gone in chromatic mode.
+  eight strings on a phone. An instrument with paired strings (`Instrument.courses`: the mandolin, the twelve-string
+  guitar) gets a second row, growing in under the first, the other string of each course under its partner ("Pair of
+  string 6", `TunerConfig.partners`), rather than twice the segments no phone has room to name; a pair in unison is one
+  note to the tuner, so its two segments are selected, sounding, and ticked together. Gone in chromatic mode.
 - `TunerInstrumentSetting` — **the tab's alone**, the Chromatic switch first (`TunerSettings.isChromatic`), which reads
   the nearest note rather than the nearest string, and while it is off the instrument and tuning chips every screen
   opens their sheets with (see `ui/CLAUDE.md`), which chromatic tuning has no use for; an instrument without strings (the

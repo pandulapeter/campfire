@@ -13,11 +13,13 @@ import com.pandulapeter.campfire.data.model.domain.TunerSettings
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.domain.api.useCases.UpdateUserPreferencesUseCase
 import com.pandulapeter.campfire.presentation.ui.instrument.instrumentTuning
+import com.pandulapeter.campfire.presentation.ui.instrument.courses
 import com.pandulapeter.campfire.presentation.ui.state.DebouncedPreference
 import com.pandulapeter.campfire.presentation.ui.state.asState
 import com.pandulapeter.campfire.tuner.api.Pitch
 import com.pandulapeter.campfire.tuner.api.Tuner
 import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
+import com.pandulapeter.campfire.tuner.api.model.StringCourses
 import com.pandulapeter.campfire.tuner.api.model.TunerConfig
 import com.pandulapeter.campfire.tuner.api.model.TunerListening
 import kotlinx.coroutines.CoroutineScope
@@ -58,8 +60,8 @@ internal class TunerController(
      * preferences, and the tuner's own settings, so that a pick in the sheet retunes a tuner that is listening at once.
      */
     val tunerConfig = combine(userPreferences, tunerSettings) { userPreferences, settings ->
-        tunerConfigOf(settings, userPreferences.listenedTuning)
-    }.asState(scope, tunerConfigOf(tunerSettings.value, userPreferences.value.listenedTuning))
+        tunerConfigOf(settings, userPreferences.listenedTuning, userPreferences.listenedCourses)
+    }.asState(scope, tunerConfigOf(tunerSettings.value, userPreferences.value.listenedTuning, userPreferences.value.listenedCourses))
 
     val tunerState = tuner.state
 
@@ -137,10 +139,10 @@ internal class TunerController(
             if (last == null || last == config) return@collect
             if (tuner.state.value.listening !is TunerListening.Stopped) tuner.update(config)
             // The strings ticked off belong to the instrument they were tuned for.
-            if (last.tuning != config.tuning) _tunedNotes.value = emptySet()
+            if (last.strings != config.strings) _tunedNotes.value = emptySet()
             val tone = tuner.state.value.tone ?: return@collect
             when {
-                last.tuning != config.tuning -> tuner.stopTone()
+                last.strings != config.strings -> tuner.stopTone()
                 last.referencePitch != config.referencePitch -> tuner.playTone(tone, config.referencePitch)
             }
         }
@@ -153,11 +155,16 @@ internal class TunerController(
 /** What the instrument in the player's hands is tuned to, a fresh installation's guitar before the preferences are read. */
 private val UserPreferences?.listenedTuning get() = if (this == null) InstrumentTuning.GUITAR else instrumentTuning
 
+/** How the instrument in the player's hands strings its tuning, single strings before the preferences are read. */
+private val UserPreferences?.listenedCourses get() = this?.instrument?.courses ?: StringCourses.SINGLE
+
 /**
- * The tuner's own model of what it listens for: the strings of [instrumentTuning], or the nearest note (a null tuning)
- * where the chromatic switch is on or the instrument has no strings to tune.
+ * The tuner's own model of what it listens for: the strings of [instrumentTuning], both of each course where [courses]
+ * pairs them, or the nearest note (a null tuning) where the chromatic switch is on or the instrument has no strings to
+ * tune.
  */
-internal fun tunerConfigOf(settings: TunerSettings, instrumentTuning: InstrumentTuning?) = TunerConfig(
+internal fun tunerConfigOf(settings: TunerSettings, instrumentTuning: InstrumentTuning?, courses: StringCourses) = TunerConfig(
     referencePitch = settings.referencePitch.coerceIn(Pitch.REFERENCE_PITCH_RANGE),
     tuning = if (settings.isChromatic) null else instrumentTuning,
+    courses = courses,
 )

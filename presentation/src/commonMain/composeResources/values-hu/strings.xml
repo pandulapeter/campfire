@@ -365,6 +365,7 @@
     <string name="instrument_strings_seven">Hét húr</string>
     <string name="instrument_strings_eight">Nyolc húr</string>
     <string name="instrument_strings_pairs">Négy húrpár</string>
+    <string name="instrument_strings_six_pairs">Hat húrpár</string>
     <string name="instrument_no_chord_diagrams">%1$s · Nincsenek akkordábrák</string>
     <string name="instrument_keyboard_description">Minden akkord hangjai, a capót a transzponálásba számolva</string>
     <string name="instrument_other_description">Nincsenek húrok és akkordábrák</string>
@@ -521,6 +522,7 @@
     <string name="tuner_strings_description">Koppints egy húrra, hogy meghalld a hangját, majd újra, hogy leállítsd.</string>
     <!-- A string chip as a screen reader reads it, e.g. "String 6, E2". -->
     <string name="tuner_string">%1$d. húr, %2$s</string>
+    <string name="tuner_string_pair">%1$d. húr párja, %2$s</string>
     <!-- A sharp note as a screen reader says it, given its name without the sign: "C sharp", or for the syllables of the
          Latin notation, "Do sharp". -->
     <string name="tuner_note_sharp_letter">%1$sisz</string>

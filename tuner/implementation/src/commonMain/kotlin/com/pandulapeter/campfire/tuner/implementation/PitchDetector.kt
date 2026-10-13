@@ -10,7 +10,6 @@
 package com.pandulapeter.campfire.tuner.implementation
 
 import com.pandulapeter.campfire.tuner.api.Pitch
-import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 import kotlin.math.sqrt
 
 /**
@@ -174,10 +173,10 @@ internal class PitchDetector(private val sampleRate: Int) {
          * The frequencies searched: G#0 to C7 in chromatic mode, and from four semitones under a preset's lowest string to
          * an octave over its highest, which is most of what keeps a bass from being read an octave up.
          */
-        fun rangeFor(tuning: InstrumentTuning?, referencePitch: Int): ClosedFloatingPointRange<Float> = if (tuning == null) {
+        fun rangeFor(strings: List<Int>?, referencePitch: Int): ClosedFloatingPointRange<Float> = if (strings == null) {
             CHROMATIC_MIN_FREQUENCY..CHROMATIC_MAX_FREQUENCY
         } else {
-            Pitch.frequencyOf(tuning.strings.min() - SEMITONES_UNDER_LOWEST_STRING, referencePitch)..Pitch.frequencyOf(tuning.strings.max() + SEMITONES_OVER_HIGHEST_STRING, referencePitch)
+            Pitch.frequencyOf(strings.min() - SEMITONES_UNDER_LOWEST_STRING, referencePitch)..Pitch.frequencyOf(strings.max() + SEMITONES_OVER_HIGHEST_STRING, referencePitch)
         }
     }
 }

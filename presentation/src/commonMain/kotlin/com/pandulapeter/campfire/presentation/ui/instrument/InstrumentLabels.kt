@@ -31,6 +31,7 @@ import com.pandulapeter.campfire.presentation.resources.instrument_strings_five
 import com.pandulapeter.campfire.presentation.resources.instrument_strings_four
 import com.pandulapeter.campfire.presentation.resources.instrument_strings_pairs
 import com.pandulapeter.campfire.presentation.resources.instrument_strings_seven
+import com.pandulapeter.campfire.presentation.resources.instrument_strings_six_pairs
 import com.pandulapeter.campfire.presentation.resources.instrument_strings_six
 import com.pandulapeter.campfire.presentation.resources.instrument_ukulele
 import com.pandulapeter.campfire.presentation.resources.instrument_violin
@@ -44,6 +45,7 @@ internal fun instrumentLabel(instrument: UserPreferences.Instrument) = when (ins
     UserPreferences.Instrument.GUITAR -> stringResource(Res.string.instrument_guitar)
     UserPreferences.Instrument.GUITAR_SEVEN_STRING -> stringResource(Res.string.instrument_guitar_strings, 7)
     UserPreferences.Instrument.GUITAR_EIGHT_STRING -> stringResource(Res.string.instrument_guitar_strings, 8)
+    UserPreferences.Instrument.GUITAR_TWELVE_STRING -> stringResource(Res.string.instrument_guitar_strings, 12)
     UserPreferences.Instrument.BASS -> stringResource(Res.string.instrument_bass)
     UserPreferences.Instrument.BASS_FIVE_STRING -> stringResource(Res.string.instrument_bass_strings, 5)
     UserPreferences.Instrument.UKULELE -> stringResource(Res.string.instrument_ukulele)
@@ -56,7 +58,7 @@ internal fun instrumentLabel(instrument: UserPreferences.Instrument) = when (ins
 
 /**
  * What the instrument list says under the instrument's name: how many strings it has ("Six strings", the banjo's short
- * one and the mandolin's pairs worth a word of their own), and after that that there are no diagrams for an instrument
+ * one and the pairs of the mandolin and the twelve-string guitar worth a word of their own), and after that that there are no diagrams for an instrument
  * without shapes, so that the player knows before picking it. Nothing about a tuning, which is a choice of its own
  * ([tuningStringsLabel]). The keyboard and Other, which have no strings, say what they do instead.
  */
@@ -70,10 +72,14 @@ internal fun instrumentDescription(instrument: UserPreferences.Instrument): Stri
     return if (instrument.hasDiagrams) strings else stringResource(Res.string.instrument_no_chord_diagrams, strings)
 }
 
-/** The sentence naming [count] strings: the banjo's short one and the mandolin's pairs are worth a word of their own. */
+/**
+ * The sentence naming [count] strings: the banjo's short one and the pairs of the mandolin and the twelve-string guitar
+ * are worth a word of their own, the twelve-string's counted by its six courses, since [count] is its guitar tuning's.
+ */
 private fun stringsSentenceOf(instrument: UserPreferences.Instrument, count: Int): StringResource = when {
     instrument == UserPreferences.Instrument.BANJO -> Res.string.instrument_strings_banjo
     instrument == UserPreferences.Instrument.MANDOLIN -> Res.string.instrument_strings_pairs
+    instrument.isTwelveString -> Res.string.instrument_strings_six_pairs
     count <= 4 -> Res.string.instrument_strings_four
     count == 5 -> Res.string.instrument_strings_five
     count == 6 -> Res.string.instrument_strings_six

@@ -154,7 +154,7 @@ internal class TunerEngine(
                 tracker.reset()
                 setListening(TunerListening.Hearing(issue = gestureIssue))
             } else if (position != AudioInput.NO_WINDOW) {
-                val range = PitchDetector.rangeFor(config.tuning, config.referencePitch)
+                val range = PitchDetector.rangeFor(config.strings, config.referencePitch)
                 val estimate = estimates.of(window, position, range)
                 val tracked = tracker.step(estimate, start.elapsedNow().inWholeMilliseconds, config)
                 setListening(

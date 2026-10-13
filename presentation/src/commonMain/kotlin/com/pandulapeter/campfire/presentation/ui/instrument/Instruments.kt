@@ -13,14 +13,17 @@ import com.pandulapeter.campfire.chordpro.model.ChordInstrument
 import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
+import com.pandulapeter.campfire.tuner.api.model.StringCourses
 
 /**
  * The tunings the tuner knows for the instrument, in the order the sheet offers them, the standard one first. Empty for
- * [UserPreferences.Instrument.KEYBOARD] and [UserPreferences.Instrument.OTHER], which the tuner reads chromatically.
+ * [UserPreferences.Instrument.KEYBOARD] and [UserPreferences.Instrument.OTHER], which the tuner reads chromatically. The
+ * twelve-string guitar's are the guitar's own, see [isTwelveString].
  */
 internal val UserPreferences.Instrument.tunings: List<InstrumentTuning>
     get() = when (this) {
-        UserPreferences.Instrument.GUITAR -> listOf(
+        UserPreferences.Instrument.GUITAR,
+        UserPreferences.Instrument.GUITAR_TWELVE_STRING -> listOf(
             InstrumentTuning.GUITAR,
             InstrumentTuning.GUITAR_DROP_D,
             InstrumentTuning.GUITAR_HALF_STEP_DOWN,
@@ -99,7 +102,8 @@ internal val UserPreferences.Instrument.tunings: List<InstrumentTuning>
  */
 internal val UserPreferences.Instrument.chordInstrument: ChordInstrument?
     get() = when (this) {
-        UserPreferences.Instrument.GUITAR -> ChordInstrument.GUITAR
+        UserPreferences.Instrument.GUITAR,
+        UserPreferences.Instrument.GUITAR_TWELVE_STRING -> ChordInstrument.GUITAR
         UserPreferences.Instrument.UKULELE -> ChordInstrument.UKULELE
         UserPreferences.Instrument.MANDOLIN -> ChordInstrument.MANDOLIN
         UserPreferences.Instrument.BANJO -> ChordInstrument.BANJO
@@ -115,8 +119,23 @@ internal val UserPreferences.Instrument.chordInstrument: ChordInstrument?
 /** Whether the chord diagrams can be drawn for the instrument. */
 internal val UserPreferences.Instrument.hasDiagrams get() = chordInstrument != null
 
-/** The instrument [tuning] is a tuning of. */
-internal fun UserPreferences.Instrument.Companion.of(tuning: InstrumentTuning) = UserPreferences.Instrument.entries.first { tuning in it.tunings }
+/**
+ * Whether the instrument is a twelve-string guitar: one whose six courses are the guitar's six strings, each doubled (an
+ * octave up on the four lowest), so that it shares the guitar's tunings and its chord shapes, and only the tuner, which
+ * hears the second string of each course as well, tells the two apart.
+ */
+internal val UserPreferences.Instrument.isTwelveString get() = this == UserPreferences.Instrument.GUITAR_TWELVE_STRING
+
+/** How the instrument strings its tuning, which the tuner listens for: the mandolin's pairs, the twelve-string's courses. */
+internal val UserPreferences.Instrument.courses
+    get() = when (this) {
+        UserPreferences.Instrument.MANDOLIN -> StringCourses.UNISON_PAIRS
+        UserPreferences.Instrument.GUITAR_TWELVE_STRING -> StringCourses.TWELVE_STRING
+        else -> StringCourses.SINGLE
+    }
+
+/** Whether [this] is the standard tuning of the instrument, or instruments, it is a tuning of. */
+internal val InstrumentTuning.isStandard get() = UserPreferences.Instrument.entries.any { it.tunings.firstOrNull() == this }
 
 /**
  * The tuning [UserPreferences.tunings] names for [instrument], held to that instrument's own: its standard tuning where
@@ -142,11 +161,13 @@ internal fun UserPreferences.chordTuning(): ChordTuning? {
 
 internal fun UserPreferences.withInstrument(instrument: UserPreferences.Instrument) = copy(instrument = instrument)
 
-/** [this] playing the instrument [tuning] is of, in [tuning], which a standard tuning leaves no entry for. */
-internal fun UserPreferences.withTuning(tuning: InstrumentTuning): UserPreferences {
-    val instrument = UserPreferences.Instrument.of(tuning)
-    return copy(
-        instrument = instrument,
-        tunings = if (tuning == instrument.tunings.first()) tunings - instrument.id else tunings + (instrument.id to tuning.id),
-    )
+/**
+ * [this] with the instrument in the player's hands tuned to [tuning], which a standard tuning leaves no entry for. A
+ * tuning that is not one of that instrument's changes nothing: a tuning names no instrument, since the guitar's are the
+ * twelve-string's too, so it is only ever picked for the one its list was offered for.
+ */
+internal fun UserPreferences.withTuning(tuning: InstrumentTuning) = when (tuning) {
+    !in instrument.tunings -> this
+    instrument.tunings.first() -> copy(tunings = tunings - instrument.id)
+    else -> copy(tunings = tunings + (instrument.id to tuning.id))
 }

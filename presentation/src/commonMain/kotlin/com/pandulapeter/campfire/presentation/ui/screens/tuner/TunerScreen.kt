@@ -157,7 +157,7 @@ internal fun TunerScreen(
             }
             TunerInputIssueMessage(issue = issue, permission = permission)
             TunerStringsSetting(
-                tuning = config.tuning,
+                config = config,
                 notation = notation,
                 tone = tone,
                 heardNote = heardNote,

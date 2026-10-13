@@ -37,7 +37,7 @@ this module. Nothing here reaches the network, and nothing heard is kept beyond 
   (after the filter) or a clarity of 0.65, which is what a low string heard across a quiet room by a laptop reaches, and
   what a chord of four sines does not. The range searched is 26–2100 Hz in chromatic mode (a semitone under A0, a
   five-string bass's lowest string a full step down) and from four semitones under a preset's lowest string to an
-  octave over its highest (`rangeFor`), which is most of what keeps a bass from being read an octave up. Buffers are
+  octave over its highest (`rangeFor`, over `TunerConfig.strings`, so a twelve-string's octave strings are in it), which is most of what keeps a bass from being read an octave up. Buffers are
   allocated once.
 - `PitchTracker` — pure, driven by the time it is handed: the 60 ms after an onset (the level doubling) skipped, the
   median of the last five answers, the cents smoothed over about 80 ms, a target that only changes once a new one has

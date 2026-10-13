@@ -400,12 +400,15 @@ data class UserPreferences(
      * `InstrumentTuning`, and for the five `:chordpro` has shapes for (the guitar, the ukulele, the mandolin, the banjo,
      * and the keyboard) the id of its `ChordInstrument` too, which this module does not see. A guitar or a bass with more
      * strings is an instrument of its own, since a tuning of one is never a tuning of the other; [KEYBOARD] and [OTHER]
-     * have no strings to tune.
+     * have no strings to tune. [GUITAR_TWELVE_STRING] is the exception: its six courses are the six strings of the
+     * [GUITAR], fingered and tuned alike, so it shares the guitar's tunings and chord shapes, under ids of the guitar's
+     * own, and only the tuner hears it differently. Its id is the one id here that names no tuning.
      */
     enum class Instrument(val id: String) {
         GUITAR("guitar"),
         GUITAR_SEVEN_STRING("guitar_seven_string"),
         GUITAR_EIGHT_STRING("guitar_eight_string"),
+        GUITAR_TWELVE_STRING("guitar_twelve_string"),
         BASS("bass"),
         BASS_FIVE_STRING("bass_five_string"),
         UKULELE("ukulele"),

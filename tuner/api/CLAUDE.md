@@ -20,7 +20,10 @@ so that no data or domain type leaks into it and the engine reads no settings of
   opens the input only where the platform already allows it and ends in `Stopped(PERMISSION_DENIED)` where it does not,
   except on the desktop and the web, where opening the input is the only question there is. A reading is never
   published while a tone sounds, or for a moment after it stops, since the speaker is what the microphone would hear.
-- `model/` — `TunerConfig` (the reference pitch and an `InstrumentTuning`, null being chromatic), `TunerListening`
+- `model/` — `TunerConfig` (the reference pitch, an `InstrumentTuning`, null being chromatic, and how it is strung,
+  `StringCourses`: single strings, the mandolin's unison pairs, or a twelve-string guitar's courses; `partners` is the
+  second string of each course, and `strings`, the notes it reads against, holds them too, since a twelve-string's octave
+  string plucked alone would otherwise be read as the wrong string far out of tune), `TunerListening`
   (`Stopped(reason?)`, `Starting`, `Hearing(reading?, issue?)`), `TunerReading` (the target note as a MIDI number, the
   cents off it — beyond ±50 where a preset's nearest string is further than half a semitone — the frequency heard and
   `isInTune`), `TunerStopReason`, `TunerInputIssue` (`SILENT`: digital silence, or a sample or two of dither, for two seconds,
@@ -33,8 +36,10 @@ so that no data or domain type leaks into it and the engine reads no settings of
   low G, D tuning, and baritone; banjo in open G, double C, C, open D, and G modal; violin in standard, half step down,
   and the fiddle's AEAE, ADAE, and GDGD cross tunings; and mandolin in standard, half step down, AEAE, and GDGD),
   each string a MIDI note in the order the tuning is written (`gCEA`), with the stable `id` a stored setting names one
-  by (`chromatic` for none). How they are grouped on screen is `:presentation`'s.
+  by (`chromatic` for none). A twelve-string guitar has no presets of its own: it is strung in the six-string's, and
+  `StringCourses.TWELVE_STRING.partnersOf` gives the other string of each course (an octave up on the four lowest, in
+  unison on the two highest). How they are grouped on screen is `:presentation`'s.
 - `Pitch` — equal temperament from A4: `frequencyOf`, `centsBetween`, `noteOf` (the nearest semitone),
-  `nearestString` and `targetOf`, and `REFERENCE_PITCH_RANGE` (415–466 Hz).
+  `nearestString` and `targetOf` (against a list of string notes, `TunerConfig.strings`), and `REFERENCE_PITCH_RANGE` (415–466 Hz).
 
 Tests (`desktopTest`): `PitchTest`, `InstrumentTuningTest`.

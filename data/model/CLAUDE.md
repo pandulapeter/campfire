@@ -44,7 +44,7 @@ chord diagrams' `areChordDiagramsEnabled`, `songCardDetails` and `setlistCardDet
 Setlists screen's cards show the key, the tempo and the duration), `instrument` (`Instrument`, the one instrument in the player's
 hands that the diagrams, the tuner, and the capo rule read, its ids the tuner's standard tunings and, for the five with
 shapes, `:chordpro`'s, which this module does not see; `ofTuningId` finds a tuning's instrument by the longest id
-prefix), `tunings` (the tuning picked for each instrument, instrument id to the tuner's tuning id, no
+prefix; the twelve-string guitar is the one whose id names no tuning, since it shares the guitar's), `tunings` (the tuning picked for each instrument, instrument id to the tuner's tuning id, no
 entry for standard, kept on the device like the instrument and an unknown id kept as it is), `isChordSectionFolded` (one fold for every song) and `chordVoicings` (the player's own shape of
 each chord, by instrument id and then by the chord's id, never exported but synced through `preferences.json`, an
 unknown instrument kept as it is), `tagColors` (a palette id by `tagKey`, synced the same way, never dropped with

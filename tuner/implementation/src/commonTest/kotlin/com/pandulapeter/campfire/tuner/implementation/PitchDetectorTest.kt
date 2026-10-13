@@ -46,7 +46,7 @@ class PitchDetectorTest {
         SAMPLE_RATES.forEach { sampleRate ->
             val detector = PitchDetector(sampleRate)
             InstrumentTuning.entries.forEach { tuning ->
-                val range = PitchDetector.rangeFor(tuning, 440)
+                val range = PitchDetector.rangeFor(tuning.strings, 440)
                 tuning.strings.forEach { note ->
                     val frequency = Pitch.frequencyOf(note, 440)
                     val window = TestSignals.pluckedString(frequency, sampleRate, detector.inputSize, seed = note, skip = sampleRate / 10)
@@ -65,7 +65,7 @@ class PitchDetectorTest {
             val frequency = Pitch.frequencyOf(note, 440)
             val string = TestSignals.pluckedString(frequency, sampleRate, detector.inputSize, seed = note, skip = sampleRate / 10)
             val window = TestSignals.mixed(string, TestSignals.noiseUnder(string, decibels = 20f))
-            val range = PitchDetector.rangeFor(InstrumentTuning.GUITAR, 440)
+            val range = PitchDetector.rangeFor(InstrumentTuning.GUITAR.strings, 440)
             assertReads(detector.detect(window, range.start, range.endInclusive), frequency, tolerance = 2f, label = "guitar $note in noise")
         }
     }
@@ -83,7 +83,7 @@ class PitchDetectorTest {
         ).forEach { (tuning, note) ->
             val frequency = Pitch.frequencyOf(note, 440)
             val window = TestSignals.harmonics(frequency, sampleRate, detector.inputSize, listOf(0.1f, 1f, 0.7f, 0.5f, 0.35f, 0.25f, 0.15f))
-            val range = PitchDetector.rangeFor(tuning, 440)
+            val range = PitchDetector.rangeFor(tuning?.strings, 440)
             assertReads(detector.detect(window, range.start, range.endInclusive), frequency, tolerance = 1f, label = "weak fundamental $note")
         }
     }

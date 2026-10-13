@@ -117,9 +117,10 @@ internal fun InstrumentStep(
         exit = fadeOut() + shrinkVertically(),
     ) {
         // Kept while it shrinks away, so that the chips fade out as they were rather than as nothing.
-        val shownTuning = remember(tunedTuning) { tunedTuning } ?: return@AnimatedVisibility
+        val shown = remember(tunedTuning) { tunedTuning?.let { selected to it } } ?: return@AnimatedVisibility
         OnboardingTuningChoice(
-            selected = shownTuning,
+            instrument = shown.first,
+            selected = shown.second,
             notation = notation,
             onSelected = onTuningSelected,
         )
