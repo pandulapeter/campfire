@@ -46,7 +46,7 @@ class ChordVoicingsTest {
         mapOf(
             "G" to "0 0 2 3", "C" to "0 2 3 0", "D" to "2 0 0 2", "Em" to "0 2 2 0", "Am" to "2 2 3 0", "A" to "2 2 4 0",
             "E" to "1 2 2 0", "F" to "2 3 3 1", "Bm" to "4 0 2 2", "G7" to "0 0 2 1", "D7" to "2 0 3 2", "B7" to "2 1 2 2",
-            "C#" to "1 3 4 1",
+            "C#" to "1 3 4 1", "C#m" to "1 2 4 4", "G#m" to "1 1 2 4", "Bbm" to "3 3 4 6",
         ).forEach { (name, shape) -> assertEquals(shape, first(name, ChordInstrument.MANDOLIN), name) }
     }
 
