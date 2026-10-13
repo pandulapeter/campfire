@@ -96,7 +96,9 @@ internal fun SongDetailsLookupSheet(
     val credits = (creditsState as? SongCreditsState.Loaded)?.credits
     val rows = remember(dialog.draft, selected, credits) { selected?.let { songDetailsReviewRows(dialog.draft, it, credits) }.orEmpty() }
     val tickedFields = rows.filter { it.isTickedByDefault != (it.field.name in toggledFields) }.mapTo(mutableSetOf()) { it.field }
-    // Asked from here rather than from the tap, so that a row open when a restored process comes back asks again.
+    // Asked for whenever a row is open rather than from the tap, so that what is open is the one thing deciding it; an
+    // Android activity recreated with a row open finds the answer the view model kept, which asks nothing again for the
+    // row it already holds.
     LaunchedEffect(selected) { selected?.let(viewModel::loadSongCredits) }
     CampfireBottomSheet(
         title = stringResource(Res.string.song_details_lookup),

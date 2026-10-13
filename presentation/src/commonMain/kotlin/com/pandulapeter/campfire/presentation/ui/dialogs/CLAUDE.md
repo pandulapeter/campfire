@@ -67,7 +67,10 @@ which also says that neither catalogue knows a key or a tempo. A tapped row open
 (`SongDetailsReview.kt`, pure and tested): one box per field it would change, the form's current value under the
 suggestion, ticked where the form holds nothing and never for the title, an identical value left out and durations
 compared as durations. On MusicBrainz the songwriters are asked for as the row opens — one request, `LaunchedEffect`
-keyed by the row so a restored one asks again — and join the rows when they arrive; iTunes names none, and its rows say nothing about it.
+keyed by the open row, which an Android activity recreated with the row open finds already answered
+(`SongDetailsLookupController` asks nothing again for the row it already holds; opening another row replaces it, so
+coming back to the first asks again) — and join the rows when they arrive; iTunes names none, and its rows say nothing
+about it.
 
 ### The dialog stack
 
