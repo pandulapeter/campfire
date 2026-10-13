@@ -77,10 +77,11 @@ opens the app rather than a question, and neither does a Forward once it is fini
 
 `FirstRunController.openOnboardingOnFirstRun` opens it as the demo library is settled, while the launch screen is still
 up, so the app is uncovered on it; it is skipped where a dialog is up or an import is waiting (`canShowOnboarding`). A
-consent answered while it is on top does not open Settings over it; the Dropbox page says how it went. That holds
-where the app did not live through the consent page too: Android's restored onboarding is back on that page, and the
-web, whose answer is a new start up on the songs, puts the onboarding back on it (`SyncConsentOrigin`, over the
-settings screen's General tab where that was what opened it) rather than opening Settings.
+consent answered while it is on top does not open Settings over it; the Dropbox page says how it went. That holds where
+the app did not live through the consent page too: Android's restored onboarding is back on that page, and the web,
+whose answer is a new start up on the songs, puts the onboarding back on it (`SyncConsentOrigin`, over the settings
+screen's General tab where that was what opened it), or moves a first run's onboarding the start up opened meanwhile
+from its first page to it (`syncConsentAnswerOf`), rather than opening Settings.
 
 ### Layout
 

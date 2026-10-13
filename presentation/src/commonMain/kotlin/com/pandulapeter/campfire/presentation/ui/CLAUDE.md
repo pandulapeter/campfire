@@ -252,16 +252,16 @@ the first batch of the library read or a finished read that found none — and, 
 on (`navigateOnLaunch`, the web build's address), the place found once the whole library is in.
 
 Nothing on the back stack is animated while the launch screen is up (`hasShownApp`), since whatever is put there behind
-it — that place, or Settings or the onboarding after a consent page — only onto a stack the user has not built on since the app started
-(`showSyncConsentAnswer`), since the code exchange it follows can outlast the launch screen by a minute — would
-otherwise still be sliding in as the app is uncovered. Holding it through that read costs none of the time the read was
-going to take anyway, and what it saves is the handful of frames the song list would otherwise be opened on its loading
-indicator for — a startup screen handing over to a spinner being two startup screens in a row, which is the very thing
-`onAppReady` exists to prevent. **In the desktop application the mark grows half as large again as it goes, over the
-slower effects spring** (`isLaunchScreenWholeStartup`, `LAUNCH_MARK_EXIT_GROWTH`) — not in a desktop browser, where the
-page's loading screen covers it, so that the screen opens into the app rather than thinning out of it: that is the one
-platform where this screen is the whole of the startup, from the first frame the window paints to the last one before
-the app.
+it — that place, or Settings or the onboarding after a consent page — only onto a stack the user has not built on since
+the app started, a first run's onboarding still on its first page included (`showSyncConsentAnswer`), since the code
+exchange it follows can outlast the launch screen by a minute — would otherwise still be sliding in as the app is
+uncovered. Holding it through that read costs none of the time the read was going to take anyway, and what it saves is
+the handful of frames the song list would otherwise be opened on its loading indicator for — a startup screen handing
+over to a spinner being two startup screens in a row, which is the very thing `onAppReady` exists to prevent. **In the
+desktop application the mark grows half as large again as it goes, over the slower effects spring**
+(`isLaunchScreenWholeStartup`, `LAUNCH_MARK_EXIT_GROWTH`) — not in a desktop browser, where the page's loading screen
+covers it, so that the screen opens into the app rather than thinning out of it: that is the one platform where this
+screen is the whole of the startup, from the first frame the window paints to the last one before the app.
 
 The other three never watch it go — Android's splash and the web's loading page are still over it when it goes, so there
 it does not fade at all (`isStartupScreenHeldUntilAppReady`) and the app is uncovered at once, and on iOS the mark

@@ -134,9 +134,10 @@ import com.pandulapeter.campfire.presentation.ui.navigation.followingSongRename
 import com.pandulapeter.campfire.presentation.ui.navigation.isShowingSong
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.LibraryPersistence
-import com.pandulapeter.campfire.presentation.ui.platform.SyncConsentOrigin
+import com.pandulapeter.campfire.presentation.ui.platform.SyncConsentAnswer
 import com.pandulapeter.campfire.presentation.ui.platform.keepSyncConsentOrigin
 import com.pandulapeter.campfire.presentation.ui.platform.requestLibraryPersistence
+import com.pandulapeter.campfire.presentation.ui.platform.syncConsentAnswerOf
 import com.pandulapeter.campfire.presentation.ui.platform.syncConsentOriginOf
 import com.pandulapeter.campfire.presentation.ui.platform.takeSyncConsentOrigin
 import com.pandulapeter.campfire.presentation.ui.playing.Capos
@@ -1109,8 +1110,10 @@ class CampfireViewModel(
      * Shows the answer to a consent page the app was sent away to, which is where the user was when they left
      * ([takeSyncConsentOrigin]): the onboarding's Dropbox page, over the settings screen where that was what opened it, or
      * Settings, on the tab holding the sync section. Only onto a stack nobody has built on since the app started - the
-     * songs the app opens on, or the settings screen Android brings back after reclaiming the process behind the
-     * browser; an onboarding Android brings back is already on the page that says how it went. The code exchange this
+     * songs the app opens on, the settings screen Android brings back after reclaiming the process behind the browser, or
+     * a first run's onboarding still on its first page, which a start up that still counts as a first one opens while the
+     * code is being exchanged and which is moved on to its Dropbox page (see [syncConsentAnswerOf]); an onboarding
+     * Android brings back is already on the page that says how it went. The code exchange this
      * follows can take a minute on a bad network, and a user who has gone somewhere else meanwhile has moved on: the
      * settings screen says the same thing whenever they get there, and an editor they opened in the meantime holds text
      * that nothing but its own ways out may take away.
@@ -1118,15 +1121,15 @@ class CampfireViewModel(
     private fun showSyncConsentAnswer() {
         // Taken whatever happens next, so that it cannot be mistaken later for where another consent was asked from.
         val origin = takeSyncConsentOrigin()
-        val stack = backStack.toList()
-        if (stack != listOf(CampfireDestination.Songs) && stack != listOf(CampfireDestination.Songs, CampfireDestination.Settings)) return
-        when (origin) {
-            SyncConsentOrigin.ONBOARDING -> navigator.openOnboarding(isOpenedFromSettings = false, step = OnboardingStep.SYNC)
-            SyncConsentOrigin.ONBOARDING_FROM_SETTINGS -> {
+        when (syncConsentAnswerOf(backStack = backStack.toList(), onboardingStep = navigator.onboardingStep, origin = origin)) {
+            SyncConsentAnswer.NOTHING -> Unit
+            SyncConsentAnswer.ONBOARDING -> navigator.openOnboarding(isOpenedFromSettings = false, step = OnboardingStep.SYNC)
+            SyncConsentAnswer.ONBOARDING_FROM_SETTINGS -> {
                 openSettingsOn(SettingsTab.GENERAL)
                 navigator.openOnboarding(isOpenedFromSettings = true, step = OnboardingStep.SYNC)
             }
-            SyncConsentOrigin.SETTINGS, null -> openSettingsOn(SettingsTab.LIBRARY)
+            SyncConsentAnswer.SETTINGS -> openSettingsOn(SettingsTab.LIBRARY)
+            SyncConsentAnswer.ONBOARDING_ON_SYNC_PAGE -> navigator.showOnboardingStepIfOpen(OnboardingStep.SYNC)
         }
     }
 

@@ -386,6 +386,11 @@ internal class Navigator(
         nextOnboardingStep(onboardingStep, onboardingSteps())?.let { showOnboardingStep(it) } ?: closeOnboarding()
     }
 
+    /** Moves the onboarding to [step] where it is the screen on top, and does nothing otherwise. */
+    fun showOnboardingStepIfOpen(step: OnboardingStep) {
+        if (backStack.lastOrNull() is CampfireDestination.Onboarding) showOnboardingStep(step)
+    }
+
     private fun showOnboardingStep(step: OnboardingStep) {
         onboardingStep = step
         savedStateStore.persist(ONBOARDING_STEP_KEY, step)
