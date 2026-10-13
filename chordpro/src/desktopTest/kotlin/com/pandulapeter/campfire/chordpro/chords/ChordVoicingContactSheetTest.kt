@@ -22,8 +22,8 @@ import javax.imageio.ImageIO
 import kotlin.test.Test
 
 /**
- * Draws every shape of the tables into `CAMPFIRE_CHORD_QA_DIR`, where that is set, one sheet per instrument, and the
- * default shapes of the everyday chords in every dropped tuning, one sheet per tuning. A test can say a shape sounds the
+ * Draws every shape of the tables into `CAMPFIRE_CHORD_QA_DIR`, where that is set, one sheet per table, and the default
+ * shapes of the everyday chords in every drop tuning, one sheet per tuning, which is where the search fills in. A test can say a shape sounds the
  * right chord; only a player looking at it can say it is the shape they expect, which is what this is for. Without the
  * variable it does nothing.
  */
@@ -34,18 +34,20 @@ class ChordVoicingContactSheetTest {
         val directory = System.getenv("CAMPFIRE_CHORD_QA_DIR")?.takeIf { it.isNotBlank() }?.let(::File) ?: return
         directory.mkdirs()
         mapOf(
-            ChordInstrument.GUITAR to ChordVoicingTables.guitar,
-            ChordInstrument.UKULELE to ChordVoicingTables.ukulele,
-            ChordInstrument.MANDOLIN to ChordVoicingTables.mandolin,
-        ).forEach { (instrument, lines) ->
-            val shapes = lines.map { ChordProDefinitions.read(it, instrument.id) as ChordProDefinitions.Reading.Shape }
-            draw(shapes.map { it.name to it.voicing as ChordVoicing.Fretted }, File(directory, "chord-shapes-${instrument.id}.png"))
+            ChordTuning.GUITAR to ChordVoicingTables.guitar,
+            ChordTuning.GUITAR_DROP_D to ChordVoicingTables.dropD,
+            ChordTuning.GUITAR_DOUBLE_DROP_D to ChordVoicingTables.doubleDropD,
+            ChordTuning.UKULELE to ChordVoicingTables.ukulele,
+            ChordTuning.MANDOLIN to ChordVoicingTables.mandolin,
+        ).forEach { (tuning, lines) ->
+            val shapes = lines.map { ChordProDefinitions.read(it, tuning.instrument.id) as ChordProDefinitions.Reading.Shape }
+            draw(shapes.map { it.name to it.voicing as ChordVoicing.Fretted }, File(directory, "chord-shapes-${tuning.id}.png"))
         }
-        ChordTuning.entries.filter { it.kind is ChordTuning.Kind.Dropped }.forEach { tuning ->
+        ChordTuning.entries.filter { it.tableTuning != ChordTuning.GUITAR && it.instrument == ChordInstrument.GUITAR }.forEach { tuning ->
             val shapes = everydayChords.mapNotNull { name ->
                 (ChordVoicings.default(ChordProChords.parse(name)!!, tuning) as? ChordVoicing.Fretted)?.let { name to it }
             }
-            draw(shapes, File(directory, "chord-shapes-${tuning.id}.png"))
+            draw(shapes, File(directory, "chord-defaults-${tuning.id}.png"))
         }
     }
 

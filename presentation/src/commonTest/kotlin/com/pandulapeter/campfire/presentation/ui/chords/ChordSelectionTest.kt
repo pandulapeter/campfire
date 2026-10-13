@@ -99,7 +99,7 @@ class ChordSelectionTest {
         )
         val dropped = chordsOf(text, tuning = ChordTuning.GUITAR_DROP_D).single()
         assertEquals(
-            SelectedShape(ChordVoicing.Fretted(listOf(5, 2, 0, 0, 0, 3)), SelectedShape.Source.DEFAULT),
+            SelectedShape(ChordVoicing.Fretted(listOf(5, 2, 0, 0, 0, 3), listOf(4, 1, 0, 0, 0, 2)), SelectedShape.Source.DEFAULT),
             selectShape(dropped, ChordTuning.GUITAR_DROP_D, emptyMap()),
         )
         assertEquals(ChordVoicing.Fretted(listOf(3, null, 0, 0, 3, 3)), dropped.undrawnDefinition?.voicing)

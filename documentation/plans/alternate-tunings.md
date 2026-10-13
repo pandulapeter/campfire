@@ -9,7 +9,8 @@
 -->
 # Chord diagrams in alternate tunings — implementation plan
 
-Decisions 1 to 3 and 5 were corrected after phases 1 and 2 were built: chord names always name the sound. Written
+Decisions 1 to 3 and 5 were corrected after phases 1 and 2 were built: chord names always name the sound, and every
+tuning that is not a uniform shift of another has a table of its own (§3.1). Written
 2026-10-13 against `06475d270`, the commit that added the mandolin diagrams (`ChordInstrument.MANDOLIN`,
 `playsChordOver`, `{define-mandolin}`); reviewed against the same commit. Today the diagrams are drawn for one standard
 tuning per instrument, and a player in any other tuning is told to pick Other, which draws none. This plan lets them
@@ -18,8 +19,8 @@ pick their tuning instead, in three phases that each ship on their own:
 1. **Shifted tunings**: the whole instrument moved by the same interval (half and full step down, the ukulele's D and
    baritone tunings and its low G, the mandolin's half step down). The shapes are the standard ones, so this phase is
    mostly the model refactor and the setting, which the other two phases build on.
-2. **Drop tunings**: one or two strings moved (drop D, double drop D, drop C♯, drop C, and drop B). The table shapes are
-   derived from the standard tables, the rest comes from the search.
+2. **Drop tunings**: one or two strings moved (drop D, double drop D, drop C♯, drop C, and drop B). Drop D and double drop D
+   get tables of their own, drop C♯ to drop B read drop D's, and the rest comes from the search.
 3. **Open and modal tunings**: open G, D, E, A, and C, DADGAD, and the mandolin's AEAE and GDGD cross tunings. The
    search finds every shape, seeded with the few that are certain.
 
@@ -69,8 +70,8 @@ pick their tuning instead, in three phases that each ship on their own:
    | Ukulele low G | the standard A shape (only the fourth string's octave differs) |
    | Baritone ukulele (D G B E, five semitones down) | the standard D shape (the chord five semitones above) |
 2. **A drop tuning names the sound too.** Drop D is standard with the sixth string down a tone; drop C♯, drop C, and
-   drop B are drop D a half, a whole, and a step and a half down. Each is answered on drop D's strings for the chord
-   moved back by its shift, the dropped string derived as in drop D.
+   drop B are drop D a half, a whole, and a step and a half down, so each reads drop D's table for the chord moved
+   back by its shift.
 3. **A song's own `{define}` is a standard-tuning shape.** ChordPro has no tuning on a definition (it lives in the
    program's configuration, not the song), and almost every file in the wild is written for standard tuning. So a
    definition is drawn in standard tuning and the ukulele's low G, the only tunings a standard shape sounds right in,
@@ -170,31 +171,15 @@ pick their tuning instead, in three phases that each ship on their own:
 
 ## 3. Phase 2 — drop tunings
 
-### 3.1 Derived tables (`:chordpro`, `ChordVoicingSearch`)
+### 3.1 Tables of their own
 
-A drop tuning is its shifted standard with some strings lowered. A table shape becomes a drop-tuning shape by
-re-fretting each lowered string, and is kept only where the result is still a shape of the chord:
-
-1. A muted string stays muted. A string lowered by `d` semitones that sounds at fret `f` is stopped at `f + d` instead.
-2. The result is kept where it passes the search's own rules (sounds only notes of the chord and all the required
-   ones, bass or root lowest, four frets, four fingers, no muted string between two that sound, open strings only with
-   a hand in the first five frets) and is holdable. Drop D's G `3 2 0 0 0 3` becomes `5 2 0 0 0 3`, which passes them
-   all and is what the charts print; its D `x x 0 2 3 2` is unchanged.
-3. Where the re-fretted string breaks a rule, the same shape with that string muted is tried, on the same conditions.
-   Drop D's G7 `3 2 0 0 0 1` re-fretted spans five frets, and muted leaves B lowest, so nothing is derived from it and
-   the search supplies the chord.
-4. Fingering is kept only where every lowered string is muted in the shape, so nothing under a finger changed;
-   otherwise it is left out (`fingers = null`), as the search's shapes are. A moved stopped string cannot keep its
-   finger either: the F shape's barre finger cannot be at the first and the third fret at once. The price is that drop
-   D's E, Em, G, and F lose their fingering; if the contact sheet shows that hurts, a finger reassigned for a lone
-   finger on a re-fretted string is a refinement, not part of this phase.
-
-A drop tuning also carries a seed table of its own, in `ChordVoicingTables`, for the shapes its charts print that no
-standard shape derives into: the one-finger power chord (`D5 frets 0 0 0 x x x`, and `Eb5 frets 1 1 1 x x x`, a closed
-shape moved to every root like any other). Without it a D5 in drop D would come up as the standard `x 5 7 7 x x`, which
-derives unchanged and, being a table shape, would come before anything the search finds. The order is the seed table,
-then the derived shapes in the tables' order, then the search's; all of it is computed once per tuning and chord, in the
-same cache, and `needsSearch` runs the derivation (cheap) to answer whether the search would have to run.
+Drop D and double drop D have tables of their own in `ChordVoicingTables`, as the standard tunings do: drop D's are its
+own shapes for the low D string, then every standard shape that mutes the sixth string, which sounds the same there;
+double drop D's are all typed for it, since its first string is a D too. Drop C♯, drop C, and drop B are drop D with
+every string lowered by one interval, so they read drop D's table for the chord moved back by that interval, as half
+and full step down read the standard one. The search follows the table, on the tuning's real strings. (A first version
+re-fretted the standard shapes for the lowered strings instead; it was replaced, since what it made was a guess at
+what drop D players play.)
 
 ### 3.2 The tunings
 
@@ -203,10 +188,11 @@ same cache, and `needsSearch` runs the derivation (cheap) to answer whether the 
 
 ### 3.3 Tests
 
-- Every derived shape of every table entry, in every drop tuning, sounds its chord and keeps the search's rules (the
+- Every shape in every drop tuning sounds its chord and keeps the search's rules (the
   existing `every shape the search finds keeps its rules` loop, over tunings, its lowest-note check against the
   tuning's strings).
-- Every seed table entry sounds its chord (`ChordVoicingTablesTest`, over tunings).
+- Every entry of the drop D and double drop D tables sounds its chord (`ChordVoicingTablesTest`, over tunings), and
+  every tuning without a table is the one whose table it reads with every string moved by one interval.
 - The forty everyday chords in drop D are spot-checked against what a chart shows (D, G, A, Em, C, D5, …), as
   `ChordVoicingsTest` does for standard.
 - The QA contact sheet (`ChordVoicingContactSheetTest`, `CAMPFIRE_CHORD_QA_DIR`) draws every drop tuning's defaults,

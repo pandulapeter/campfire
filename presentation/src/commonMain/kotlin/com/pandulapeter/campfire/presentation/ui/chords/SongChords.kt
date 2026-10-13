@@ -136,7 +136,7 @@ internal fun chordTuningOf(instrument: ChordInstrument, chordTunings: Map<String
 /** [this] with [tuning] as the one the diagrams are drawn for on its instrument, a standard tuning leaving no entry. */
 internal fun UserPreferences.withChordTuning(tuning: ChordTuning): UserPreferences {
     val instrumentId = tuning.instrument.id
-    return copy(chordTunings = if (tuning.kind == ChordTuning.Kind.Standard) chordTunings - instrumentId else chordTunings + (instrumentId to tuning.id))
+    return copy(chordTunings = if (tuning.isStandard) chordTunings - instrumentId else chordTunings + (instrumentId to tuning.id))
 }
 
 /** `:chordpro`'s notation for the one the preferences name. */

@@ -18,68 +18,55 @@ package com.pandulapeter.campfire.chordpro.model
  * soprano's C shape. So a diagram is always a shape on the strings the player has, its root dots marking the root of
  * the chord the page names on those strings.
  *
+ * A tuning either has a table of shapes of its own (the standard tunings, drop D, and double drop D), or is one of those
+ * with every string moved by the same interval (half and full step down, drop C♯ to drop B, the ukulele's low G, D, and
+ * baritone tunings), whose shapes are that table's, moved along the chords rather than along the neck.
+ *
  * @property id What a stored choice names the tuning by, equal to the tuner's id of the same tuning (`guitar_drop_d`),
  *   so the two can be matched without this module knowing the tuner. The standard tunings' ids are their instruments'.
  * @property strings The open strings as MIDI note numbers, in [ChordInstrument.tuning]'s order: the real strings, which
  *   is not always a plain move of the standard ones (the baritone ukulele's fourth string is an octave lower than that).
- * @property kind How the tuning is made from its instrument's standard one.
  */
 public enum class ChordTuning(
     public val id: String,
     public val instrument: ChordInstrument,
     public val strings: List<Int>,
-    public val kind: Kind,
 ) {
-    GUITAR("guitar", ChordInstrument.GUITAR, ChordInstrument.GUITAR.tuning, Kind.Standard),
-    GUITAR_DROP_D("guitar_drop_d", ChordInstrument.GUITAR, listOf(38, 45, 50, 55, 59, 64), Kind.Dropped(0)),
-    GUITAR_HALF_STEP_DOWN("guitar_half_step_down", ChordInstrument.GUITAR, listOf(39, 44, 49, 54, 58, 63), Kind.Shifted(-1)),
-    GUITAR_FULL_STEP_DOWN("guitar_full_step_down", ChordInstrument.GUITAR, listOf(38, 43, 48, 53, 57, 62), Kind.Shifted(-2)),
-    GUITAR_DROP_C_SHARP("guitar_drop_c_sharp", ChordInstrument.GUITAR, listOf(37, 44, 49, 54, 58, 63), Kind.Dropped(-1)),
-    GUITAR_DROP_C("guitar_drop_c", ChordInstrument.GUITAR, listOf(36, 43, 48, 53, 57, 62), Kind.Dropped(-2)),
-    GUITAR_DROP_B("guitar_drop_b", ChordInstrument.GUITAR, listOf(35, 42, 47, 52, 56, 61), Kind.Dropped(-3)),
-    GUITAR_DOUBLE_DROP_D("guitar_double_drop_d", ChordInstrument.GUITAR, listOf(38, 45, 50, 55, 59, 62), Kind.Dropped(0)),
-    UKULELE("ukulele", ChordInstrument.UKULELE, ChordInstrument.UKULELE.tuning, Kind.Standard),
-    UKULELE_LOW_G("ukulele_low_g", ChordInstrument.UKULELE, listOf(55, 60, 64, 69), Kind.Shifted(0)),
-    UKULELE_BARITONE("ukulele_baritone", ChordInstrument.UKULELE, listOf(50, 55, 59, 64), Kind.Shifted(-5)),
-    UKULELE_D("ukulele_d", ChordInstrument.UKULELE, listOf(69, 62, 66, 71), Kind.Shifted(2)),
-    KEYBOARD("keyboard", ChordInstrument.KEYBOARD, ChordInstrument.KEYBOARD.tuning, Kind.Standard),
-    MANDOLIN("mandolin", ChordInstrument.MANDOLIN, ChordInstrument.MANDOLIN.tuning, Kind.Standard),
-    MANDOLIN_HALF_STEP_DOWN("mandolin_half_step_down", ChordInstrument.MANDOLIN, listOf(54, 61, 68, 75), Kind.Shifted(-1)),
+    GUITAR("guitar", ChordInstrument.GUITAR, ChordInstrument.GUITAR.tuning),
+    GUITAR_DROP_D("guitar_drop_d", ChordInstrument.GUITAR, listOf(38, 45, 50, 55, 59, 64)),
+    GUITAR_HALF_STEP_DOWN("guitar_half_step_down", ChordInstrument.GUITAR, listOf(39, 44, 49, 54, 58, 63)),
+    GUITAR_FULL_STEP_DOWN("guitar_full_step_down", ChordInstrument.GUITAR, listOf(38, 43, 48, 53, 57, 62)),
+    GUITAR_DROP_C_SHARP("guitar_drop_c_sharp", ChordInstrument.GUITAR, listOf(37, 44, 49, 54, 58, 63)),
+    GUITAR_DROP_C("guitar_drop_c", ChordInstrument.GUITAR, listOf(36, 43, 48, 53, 57, 62)),
+    GUITAR_DROP_B("guitar_drop_b", ChordInstrument.GUITAR, listOf(35, 42, 47, 52, 56, 61)),
+    GUITAR_DOUBLE_DROP_D("guitar_double_drop_d", ChordInstrument.GUITAR, listOf(38, 45, 50, 55, 59, 62)),
+    UKULELE("ukulele", ChordInstrument.UKULELE, ChordInstrument.UKULELE.tuning),
+    UKULELE_LOW_G("ukulele_low_g", ChordInstrument.UKULELE, listOf(55, 60, 64, 69)),
+    UKULELE_BARITONE("ukulele_baritone", ChordInstrument.UKULELE, listOf(50, 55, 59, 64)),
+    UKULELE_D("ukulele_d", ChordInstrument.UKULELE, listOf(69, 62, 66, 71)),
+    KEYBOARD("keyboard", ChordInstrument.KEYBOARD, ChordInstrument.KEYBOARD.tuning),
+    MANDOLIN("mandolin", ChordInstrument.MANDOLIN, ChordInstrument.MANDOLIN.tuning),
+    MANDOLIN_HALF_STEP_DOWN("mandolin_half_step_down", ChordInstrument.MANDOLIN, listOf(54, 61, 68, 75)),
     ;
 
-    /** How a tuning is made from its instrument's standard one. */
-    public sealed interface Kind {
+    /** Whether this is its instrument's standard tuning, which a `{define}` and the standard tables are written for. */
+    public val isStandard: Boolean get() = id == instrument.id
 
-        /** The standard tuning, which a `{define}` and the tables are written for. */
-        public data object Standard : Kind
-
-        /**
-         * Every string moved by [semitones] (as pitch classes: an octave of one string's is the [strings]' to say), so
-         * that every standard shape is still a shape, sounding [semitones] away: a chord is drawn as the standard shape
-         * of the chord [semitones] above it, which sounds the chord itself.
-         */
-        public data class Shifted(
-            public val semitones: Int,
-        ) : Kind
-
-        /**
-         * A shifted tuning, [shift] semitones from the standard one, with some strings lowered further: drop D, and
-         * drop C♯ to drop B, which are drop D a half step to a step and a half down. Which strings and how far is the
-         * difference of [strings] from the shifted standard. The shapes are the standard ones re-fretted on the lowered
-         * strings where that still makes the chord, and the search's otherwise, each sounding the chord it is drawn for.
-         */
-        public data class Dropped(
-            public val shift: Int,
-        ) : Kind
-    }
-
-    /** How many semitones the tuning moves the standard one by, the dropped strings not counted. */
-    internal val shift: Int
-        get() = when (kind) {
-            Kind.Standard -> 0
-            is Kind.Shifted -> kind.semitones
-            is Kind.Dropped -> kind.shift
+    /**
+     * The tuning whose table this one's shapes come from: itself where it has a table of its own, and otherwise the
+     * one it is with every string moved by [shift]. `ChordVoicingTablesTest` holds every such pair to one interval.
+     */
+    internal val tableTuning: ChordTuning
+        get() = when (this) {
+            GUITAR_HALF_STEP_DOWN, GUITAR_FULL_STEP_DOWN -> GUITAR
+            GUITAR_DROP_C_SHARP, GUITAR_DROP_C, GUITAR_DROP_B -> GUITAR_DROP_D
+            UKULELE_LOW_G, UKULELE_BARITONE, UKULELE_D -> UKULELE
+            MANDOLIN_HALF_STEP_DOWN -> MANDOLIN
+            GUITAR, GUITAR_DROP_D, GUITAR_DOUBLE_DROP_D, UKULELE, KEYBOARD, MANDOLIN -> this
         }
+
+    /** The pitch classes every string is moved by from [tableTuning]'s, 0 to 11: a half step down is 11. */
+    internal val shift: Int get() = if (strings.isEmpty()) 0 else (strings.first() - tableTuning.strings.first()).mod(12)
 
     /**
      * Whether a song's own `{define}` is drawn in this tuning. A definition has no tuning of its own (ChordPro keeps one
@@ -87,7 +74,7 @@ public enum class ChordTuning(
      * drawn only where a standard tuning shape sounds what it says: standard tuning, and the ukulele's low G, whose
      * strings are the standard ones but for the fourth string's octave.
      */
-    public val drawsDefinitions: Boolean get() = kind == Kind.Standard || kind is Kind.Shifted && kind.semitones == 0
+    public val drawsDefinitions: Boolean get() = tableTuning.isStandard && shift == 0
 
     /**
      * What the player's own choices of shape are stored under: the instrument's id for every tuning whose shapes are
@@ -99,7 +86,7 @@ public enum class ChordTuning(
     public companion object {
 
         /** The standard tuning of [instrument]. */
-        public fun standard(instrument: ChordInstrument): ChordTuning = entries.first { it.instrument == instrument && it.kind == Kind.Standard }
+        public fun standard(instrument: ChordInstrument): ChordTuning = entries.first { it.instrument == instrument && it.isStandard }
 
         /** The tunings of [instrument], its standard one first. */
         public fun of(instrument: ChordInstrument): List<ChordTuning> = entries.filter { it.instrument == instrument }

@@ -76,7 +76,6 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.chordpro.ChordNotation
-import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.data.model.domain.PrintSettings
 import com.pandulapeter.campfire.presentation.localization.currentLanguage
 import com.pandulapeter.campfire.presentation.localization.pluralStringResource
@@ -170,7 +169,7 @@ internal fun ExportScreen(
         time = stringResource(Res.string.print_time),
         missing = stringResource(Res.string.print_missing),
         sections = rememberDefaultSectionLabels(shouldNumberSections = preferences?.shouldNumberSections == true),
-        chordTuning = preferences?.chordTuning()?.takeIf { it.kind != ChordTuning.Kind.Standard }?.let { tuning ->
+        chordTuning = preferences?.chordTuning()?.takeIf { !it.isStandard }?.let { tuning ->
             stringResource(Res.string.song_details_chord_tuning, chordTuningLabel(tuning, preferences?.chordSpelling?.notation?.toChordNotation() ?: ChordNotation.STANDARD))
         },
     )

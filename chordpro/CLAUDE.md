@@ -445,20 +445,20 @@ what nothing outside the module calls is `internal`.
   on which test ran first; `:presentation`'s tests cannot call it and keep to chords no other test asks for.
   `ChordVoicingTablesTest` checks that every shape of the tables sounds the chord it is filed under, and the
   `desktopTest` contact sheet draws them all into `CAMPFIRE_CHORD_QA_DIR` where that is set, for a player to look over,
-  with the defaults of the everyday chords in every drop tuning.
+  one sheet per table, with the defaults of the everyday chords in every drop tuning.
 - `ChordTuning` — what the shapes are for, in place of a bare instrument: every entry point of `ChordVoicings` takes
   one, the keyboard's standard entry included. Its `id` is the tuner's (`:tuner:api`'s `InstrumentTuning`, which this
   module does not see; `:presentation` tests that the two agree) and `strings` the real ones, the baritone ukulele's
   fourth an octave below a plain shift. **A chord name always names the chord that sounds**, so every shape sounds the
-  chord it is drawn for on the strings the player has. A `Shifted` tuning (half and full step down, the mandolin's half
-  step down, the ukulele's low G, D, and baritone) answers with the standard shapes of the chord moved back by the
-  shift: a half step down an A is the standard B♭ shape, `x 1 3 3 3 1`, and the baritone's G the soprano's C shape. A
-  `Dropped` one (drop D, double drop D, and drop C♯ to drop B, which are drop D moved down) is answered on its strings
-  moved back by the shift, for the chord moved back as far:
-  its seed table (`ChordVoicingTables.drop`, the one-finger power chords), then the standard table shapes re-fretted
-  (each lowered string stopped as many frets higher, kept where it still keeps the search's rules and can be held,
-  tried again with the lowered strings muted otherwise, the fingering kept only where no stopped string moved), then
-  the search. Open and modal tunings are not here yet: they wait on a player's review of their shapes.
+  chord it is drawn for on the strings the player has. **A tuning either has a table of its own or is a tuning that has
+  one with every string moved by the same interval** (`tableTuning`, `shift`, which `ChordVoicingTablesTest` holds to
+  one interval on every string): the standard tunings, drop D (`ChordVoicingTables.dropD`: its own low-string shapes,
+  then every standard shape that mutes the sixth string, which sounds the same there), and double drop D (`doubleDropD`,
+  all typed for it) have tables; half and full step down, the mandolin's half step down, and the ukulele's low G, D,
+  and baritone read the standard table, and drop C♯ to drop B drop D's, for the chord moved back by the shift — a half
+  step down an A is the standard B♭ shape, `x 1 3 3 3 1`. The search runs on the real strings after the table, as in
+  standard tuning. An open or modal tuning gets a table of its own too when it is added (phase 3 of
+  `documentation/plans/alternate-tunings.md`), since no standard shape carries over to it.
 - `ChordTuning.drawsDefinitions` is where a `{define}`, which ChordPro gives no tuning, is drawn: standard tuning and
   the ukulele's low G, the only ones a standard tuning shape sounds right in. `voicingKey` is what the player's choices
   are stored under, the instrument's id there and the tuning's id in any other.

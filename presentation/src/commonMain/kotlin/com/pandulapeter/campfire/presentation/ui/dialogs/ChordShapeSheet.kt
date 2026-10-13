@@ -160,7 +160,7 @@ internal fun ChordShapeSheet(
                     val definition = chord.undrawnDefinition?.takeIf { showsDefinition }
                     val shownChord = if (definition == null) chord else chord.copy(definition = definition)
                     val shownTuning = if (definition == null) tuning else ChordTuning.standard(tuning.instrument)
-                    if (tuning.kind != ChordTuning.Kind.Standard) {
+                    if (!tuning.isStandard) {
                         ChordTuningLine(text = stringResource(Res.string.song_details_chord_tuning, chordTuningLabel(shownTuning, notation)))
                     }
                     key(showsDefinition) {

@@ -79,22 +79,25 @@ class ChordVoicingsTest {
     @Test
     fun `drop D plays the shapes its charts show`() {
         mapOf(
-            "D" to "x x 0 2 3 2", "G" to "5 2 0 0 0 3", "D5" to "0 0 0 x x x", "E5" to "2 2 2 x x x", "A" to "x 0 2 2 2 0",
+            "D" to "0 0 0 2 3 2", "G" to "5 2 0 0 0 3", "D5" to "0 0 0 x x x", "E5" to "2 2 2 x x x", "A" to "x 0 2 2 2 0",
             "Am" to "x 0 2 2 1 0", "C" to "x 3 2 0 1 0", "Em" to "2 2 2 0 0 0", "E" to "2 2 2 1 0 0", "F" to "3 3 3 2 1 1",
-            "Dm" to "x x 0 2 3 1", "Bm" to "x 2 4 4 3 2",
+            "Dm" to "0 0 0 2 3 1", "Bm" to "x 2 4 4 3 2", "Cm" to "x 3 5 5 4 3", "G7" to "5 5 3 4 3 3", "Bb" to "x 1 3 3 3 1",
         ).forEach { (name, shape) -> assertEquals(shape, first(name, ChordTuning.GUITAR_DROP_D), name) }
         assertEquals("0 0 0 x x x", first("C#5", ChordTuning.GUITAR_DROP_C_SHARP), "drop C#'s open power chord")
         assertEquals("1 1 1 x x x", first("D5", ChordTuning.GUITAR_DROP_C_SHARP))
         assertEquals("3 3 3 x x x", first("D5", ChordTuning.GUITAR_DROP_B))
-        assertEquals("0 0 0 x x x", first("D5", ChordTuning.GUITAR_DOUBLE_DROP_D))
+        assertEquals("0 0 0 2 3 0", first("D5", ChordTuning.GUITAR_DOUBLE_DROP_D))
+        assertEquals("0 0 0 2 3 4", first("D", ChordTuning.GUITAR_DOUBLE_DROP_D))
+        assertEquals("5 2 0 0 0 5", first("G", ChordTuning.GUITAR_DOUBLE_DROP_D))
+        assertEquals("0 0 0 2 3 2", first("C#", ChordTuning.GUITAR_DROP_C_SHARP), "drop C# reads drop D's table")
     }
 
     @Test
-    fun `a re-fretted shape keeps its fingering only where no finger moved`() {
-        val d = ChordVoicings.default(ChordProChords.parse("D")!!, ChordTuning.GUITAR_DROP_D) as ChordVoicing.Fretted
-        assertEquals(listOf(0, 0, 0, 1, 3, 2), d.fingers)
+    fun `a drop tuning's shapes are its table's, with their fingering`() {
         val g = ChordVoicings.default(ChordProChords.parse("G")!!, ChordTuning.GUITAR_DROP_D) as ChordVoicing.Fretted
-        assertNull(g.fingers)
+        assertEquals(listOf(4, 1, 0, 0, 0, 2), g.fingers)
+        val d = ChordVoicings.default(ChordProChords.parse("D")!!, ChordTuning.GUITAR_DOUBLE_DROP_D) as ChordVoicing.Fretted
+        assertEquals(listOf(0, 0, 0, 1, 2, 4), d.fingers)
     }
 
     @Test

@@ -84,7 +84,7 @@ internal fun ChordInstrumentChip(
         ) { shownTuning ->
             val instrumentName = stringResource(shownTuning.instrument.nameResource)
             Text(
-                text = if (shownTuning.kind == ChordTuning.Kind.Standard) {
+                text = if (shownTuning.isStandard) {
                     instrumentName
                 } else {
                     stringResource(Res.string.song_details_chord_instrument_tuning, instrumentName, chordTuningLabel(shownTuning, notation))

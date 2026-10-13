@@ -59,11 +59,21 @@ class ChordVoicingTablesTest {
         }
     }
 
+    @Test
+    fun `every tuning without a table of its own is the one whose table it reads, every string moved by one interval`() {
+        ChordTuning.entries.filter { it.tableTuning != it }.forEach { tuning ->
+            assertEquals(tuning.tableTuning, tuning.tableTuning.tableTuning, "${tuning.id} reads a table of its own tuning's")
+            val intervals = tuning.strings.indices.map { (tuning.strings[it] - tuning.tableTuning.strings[it]).mod(12) }.toSet()
+            assertEquals(setOf(tuning.shift), intervals, tuning.id)
+        }
+        ChordTuning.entries.filter { it.tableTuning == it }.forEach { assertTrue(it in tables || !it.instrument.isFretted, it.id) }
+    }
+
     private val tables = mapOf(
         ChordTuning.GUITAR to ChordVoicingTables.guitar,
         ChordTuning.UKULELE to ChordVoicingTables.ukulele,
         ChordTuning.MANDOLIN to ChordVoicingTables.mandolin,
-        ChordTuning.GUITAR_DROP_D to ChordVoicingTables.drop,
-        ChordTuning.GUITAR_DOUBLE_DROP_D to ChordVoicingTables.drop,
+        ChordTuning.GUITAR_DROP_D to ChordVoicingTables.dropD,
+        ChordTuning.GUITAR_DOUBLE_DROP_D to ChordVoicingTables.doubleDropD,
     )
 }
