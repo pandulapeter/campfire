@@ -17,6 +17,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -79,8 +80,11 @@ internal fun InstrumentChips(
         exit = fadeOut(),
     ) {
         val lastTuning = lastShownTuning.value ?: return@AnimatedVisibility
+        // A leaving chip names a tuning the instrument picked now does not have, so it neither opens the sheet nor is
+        // offered as a button; it is not disabled for it, which would dim it in one frame in the middle of its fade.
+        val isLeaving = shownTuning == null
         PickerChip(
-            modifier = chipModifier,
+            modifier = if (isLeaving) chipModifier.clearAndSetSemantics { } else chipModifier,
             // Named in full where it is the standard one, which "Standard" alone does not say out of the sheet's context. Asked
             // of the tuning rather than of [instrument], since a chip fading out is still drawing the tuning of the
             // instrument picked before, and the one picked now may have no tunings at all (the keyboard, Other).
@@ -94,7 +98,7 @@ internal fun InstrumentChips(
             style = style,
             chevronSize = chevronSize,
             isEnabled = isEnabled,
-            onClick = onTuningClicked,
+            onClick = { if (!isLeaving) onTuningClicked() },
         )
     }
 }

@@ -17,6 +17,7 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -49,6 +50,8 @@ internal fun TuningSheet(
 ) {
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val preferences = userPreferences ?: return
+    // Only an instrument with a choice of tunings has the chip that opens this, so any other has nothing to list here.
+    if (preferences.instrument.tunings.size <= 1) return LaunchedEffect(Unit) { viewModel.dismissSheet(dialog) }
     val notation = preferences.chordSpelling.notation.toChordNotation()
     val selected = preferences.instrumentTuning
     CampfireBottomSheet(
