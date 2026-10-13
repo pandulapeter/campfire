@@ -16,10 +16,11 @@
 - Modal tuner instrument picker...?
 - Website: update Thinking out Loud + 500 miles
 - Search: highlight matched tags
+- Rename Settings -> Songs to Preferences
 
 ### Onboarding improvements
 - Instrument: Chord-diagrams are too hidden, maybe they should be a separate page? Only if a compatible instrument + tuning was selected
-- At a glance: improve alignments and defaults
+- At a glance: not needed during onboarding
 
 ### Features
 - Import zip screen that displays the content before actually importing it, prepare the screen for loading remote zips
