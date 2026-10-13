@@ -11,6 +11,9 @@ package com.pandulapeter.campfire.presentation.ui.tuner
 
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import com.pandulapeter.campfire.chordpro.ChordNotation
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -32,19 +35,29 @@ internal fun ColumnScope.TunerStringsSetting(
     heardNote: Int?,
     tunedNotes: Set<Int>,
     onToggleTone: (Int) -> Unit,
-) = AnimatedSettingsRow(value = config.tuning?.let { it to config.partners }) { (shownTuning, partners) ->
-    SettingsSubsection(
-        title = stringResource(Res.string.tuner_strings),
-        description = stringResource(Res.string.tuner_strings_description),
-    ) {
-        TunerStrings(
-            tuning = shownTuning,
-            partners = partners,
-            notation = notation,
-            tone = tone,
-            heardNote = heardNote,
-            tunedNotes = tunedNotes,
-            onToggleTone = onToggleTone,
-        )
+) {
+    // Read through states, since the content of a row leaving is not sure to be recomposed with the newest parameters.
+    val currentConfig by rememberUpdatedState(config)
+    val currentTone by rememberUpdatedState(tone)
+    // A row leaving with its instrument, or for chromatic mode, is drawn as it was but plays nothing: only a string the
+    // tuner listens for now starts a tone, and the one sounding can always be stopped.
+    val onToggleString: (Int) -> Unit = remember(onToggleTone) {
+        { note -> if (note == currentTone || isStringOf(currentConfig, note)) onToggleTone(note) }
+    }
+    AnimatedSettingsRow(value = config.tuning?.let { it to config.partners }) { (shownTuning, partners) ->
+        SettingsSubsection(
+            title = stringResource(Res.string.tuner_strings),
+            description = stringResource(Res.string.tuner_strings_description),
+        ) {
+            TunerStrings(
+                tuning = shownTuning,
+                partners = partners,
+                notation = notation,
+                tone = tone,
+                heardNote = heardNote,
+                tunedNotes = tunedNotes,
+                onToggleTone = onToggleString,
+            )
+        }
     }
 }

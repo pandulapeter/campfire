@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.tuner
 
+import com.pandulapeter.campfire.tuner.api.model.TunerConfig
 import com.pandulapeter.campfire.tuner.api.model.TunerListening
 
 /**
@@ -21,3 +22,6 @@ internal fun tunedNotesAfter(previous: Set<Int>, listening: TunerListening): Set
     is TunerListening.Starting -> previous
     is TunerListening.Hearing -> listening.reading?.takeIf { it.isInTune }?.let { previous + it.note } ?: previous
 }
+
+/** Whether [note] is a string [config] listens for, either of a course where they are paired; none in chromatic mode. */
+internal fun isStringOf(config: TunerConfig, note: Int) = config.strings?.contains(note) == true

@@ -9,11 +9,16 @@
  */
 package com.pandulapeter.campfire.presentation.ui.tuner
 
+import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
+import com.pandulapeter.campfire.tuner.api.model.StringCourses
+import com.pandulapeter.campfire.tuner.api.model.TunerConfig
 import com.pandulapeter.campfire.tuner.api.model.TunerListening
 import com.pandulapeter.campfire.tuner.api.model.TunerReading
 import com.pandulapeter.campfire.tuner.api.model.TunerStopReason
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class TunedStringsTest {
 
@@ -29,5 +34,26 @@ class TunedStringsTest {
         assertEquals(setOf(40), tunedNotesAfter(setOf(40), TunerListening.Starting))
         assertEquals(emptySet(), tunedNotesAfter(setOf(40), TunerListening.Stopped()))
         assertEquals(emptySet(), tunedNotesAfter(setOf(40), TunerListening.Stopped(TunerStopReason.MICROPHONE_DISCONNECTED)))
+    }
+
+    @Test
+    fun `only a string the tuner listens for is a string`() {
+        val mandolin = TunerConfig(440, InstrumentTuning.MANDOLIN, StringCourses.UNISON_PAIRS)
+        assertTrue(isStringOf(mandolin, 55))
+        assertTrue(isStringOf(mandolin, 76))
+        assertFalse(isStringOf(mandolin, 40))
+    }
+
+    @Test
+    fun `the second string of a course is a string`() {
+        val twelveString = TunerConfig(440, InstrumentTuning.GUITAR, StringCourses.TWELVE_STRING)
+        assertTrue(isStringOf(twelveString, 52))
+        assertFalse(isStringOf(TunerConfig(440, InstrumentTuning.GUITAR), 52))
+    }
+
+    @Test
+    fun `nothing is a string in chromatic mode`() {
+        assertFalse(isStringOf(TunerConfig(440, null), 40))
+        assertFalse(isStringOf(TunerConfig(440, null), 69))
     }
 }
