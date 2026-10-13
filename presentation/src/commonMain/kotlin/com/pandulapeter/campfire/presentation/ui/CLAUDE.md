@@ -37,9 +37,9 @@ symbols or emoji alone, counting as no search), `setlistsWithSongs`, `visibleDia
 (`SnapshotStateList<CampfireDestination>`). `visibleDialog` is written through `setVisibleDialog`, which is where the
 work parked behind a dialog — the exit behind the unsaved changes question — is dropped whenever that dialog stops being
 the one on screen; a dropped exit is reported to `requestExit`'s `onCancelled`, since the macOS quit request behind it
-has to be answered with a cancel rather than left waiting. The three exceptions only ever replace no dialog, so there is
-nothing parked to drop: the song picker opened after a new setlist, the onboarding and the What's new dialog are each
-a compare-and-set against null.
+has to be answered with a cancel rather than left waiting. The two exceptions only ever replace no dialog, so there is
+nothing parked to drop: the song picker opened after a new setlist and the What's new dialog are each a compare-and-set
+against null (`DialogHost.showIfNoneIsShown`).
 
 The import plan behind a conflict question is parked behind the import screen instead (`importReport`,
 `onImportReportLeft`), and dropped as that screen leaves the back stack however it leaves. The theme and the language
