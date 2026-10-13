@@ -55,7 +55,7 @@ internal class UserPreferencesDocumentFormatTest {
             tagSortingMode = "alphabetical",
             languageSortingMode = "alphabetical",
             seenWhatsNewVersions = setOf("4.5.1", "4.6.0"),
-            chordTunings = mapOf("guitar" to "guitar_drop_d", "ukulele" to "ukulele_baritone"),
+            tunings = mapOf("guitar" to "guitar_drop_d", "ukulele" to "ukulele_baritone"),
         )
 
         val decoded = UserPreferencesDocumentFormat.decode(UserPreferencesDocumentFormat.encode(document))
@@ -122,7 +122,15 @@ internal class UserPreferencesDocumentFormatTest {
     }
 
     @Test
-    fun `gives up only the chord tunings that are not text`() {
+    fun `gives up only the tunings that are not text`() {
+        val decoded = UserPreferencesDocumentFormat.decode("""{"tunings": {"guitar": "guitar_drop_d", "ukulele": 3}}""")
+
+        assertEquals(mapOf("guitar" to "guitar_drop_d"), decoded.document.tunings)
+        assertFalse(decoded.isIntact)
+    }
+
+    @Test
+    fun `gives up only the legacy chord tunings that are not text`() {
         val decoded = UserPreferencesDocumentFormat.decode("""{"chordTunings": {"guitar": "guitar_drop_d", "ukulele": 3}}""")
 
         assertEquals(mapOf("guitar" to "guitar_drop_d"), decoded.document.chordTunings)

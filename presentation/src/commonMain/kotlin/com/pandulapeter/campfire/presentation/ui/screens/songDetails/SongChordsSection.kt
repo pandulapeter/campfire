@@ -9,19 +9,12 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -41,7 +34,6 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Paint
-import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.translate
@@ -93,9 +85,9 @@ import kotlin.math.roundToInt
  * tablature is drawn as systems. A tap on a cell opens that chord's sheet (see [ChordDiagrams.onChordClicked]); a tap
  * between them, or on any of them in read only mode, turns the page like a tap anywhere on the song.
  *
- * The pill is followed by the name of the instrument the diagrams are drawn for, and of its tuning, outside read only
- * mode and while the section is unfolded, opening its sheet (see [ChordDiagrams.onInstrumentClicked],
- * [ChordInstrumentChip]), so that the shapes are changed where they are read.
+ * The instrument and the tuning the diagrams are drawn for are chosen from the chips heading the song's first section
+ * ([SongInstrumentChips], see [withChordsSection]), which an instrument without shapes, and so without this section,
+ * keeps.
  *
  * @param onFoldToggled Folds the section or unfolds it, see [ChordDiagrams.onFoldToggled].
  * @param isFadingIn Whether the fold was toggled while the page is open, so that the rows coming back fade in, in
@@ -115,51 +107,17 @@ internal fun SongChordsSection(
 ) = Column(modifier = modifier) {
     val isFirstChunk = items.first == 0
     if (isFirstChunk) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            SectionHeaderPill(
-                header = stringResource(Res.string.song_details_chords),
-                toggle = onFoldToggled?.let {
-                    FoldToggle(
-                        isExpanded = !section.isFolded,
-                        onToggled = it,
-                    )
-                },
-                style = headerStyle,
-                chevronSize = FOLD_CHEVRON_SIZE * fontScale,
-            )
-            chordDiagrams?.onInstrumentClicked?.let { onInstrumentClicked ->
-                // As tall as the pill, and as far from where it is drawn as the playing tools are from each other: the pill
-                // reaches out of its column to the left, and the room it leaves behind on the right is taken back. It grows
-                // out of the pill and fades rather than widening the row, since the layout decides where the section goes
-                // from its measured size, which a width still on its way would be measured halfway through.
-                AnimatedVisibility(
-                    modifier = Modifier
-                        .weight(1f, fill = false)
-                        .offset(x = -HEADER_HORIZONTAL_PADDING)
-                        .padding(start = INSTRUMENT_BUTTON_GAP),
-                    visible = !section.isFolded,
-                    enter = scaleIn(
-                        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
-                        initialScale = INSTRUMENT_BUTTON_HIDDEN_SCALE,
-                        transformOrigin = INSTRUMENT_BUTTON_TRANSFORM_ORIGIN,
-                    ) + fadeIn(animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec()),
-                    exit = scaleOut(
-                        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
-                        targetScale = INSTRUMENT_BUTTON_HIDDEN_SCALE,
-                        transformOrigin = INSTRUMENT_BUTTON_TRANSFORM_ORIGIN,
-                    ) + fadeOut(animationSpec = MaterialTheme.motionScheme.fastEffectsSpec()),
-                ) {
-                    ChordInstrumentChip(
-                        tuning = chordDiagrams.tuning,
-                        notation = chordDiagrams.notation,
-                        height = songControlHeight(headerStyle),
-                        style = headerStyle,
-                        chevronSize = FOLD_CHEVRON_SIZE * fontScale,
-                        onClick = onInstrumentClicked,
-                    )
-                }
-            }
-        }
+        SectionHeaderPill(
+            header = stringResource(Res.string.song_details_chords),
+            toggle = onFoldToggled?.let {
+                FoldToggle(
+                    isExpanded = !section.isFolded,
+                    onToggled = it,
+                )
+            },
+            style = headerStyle,
+            chevronSize = FOLD_CHEVRON_SIZE * fontScale,
+        )
     }
     if (section.isFolded) return@Column
     ChordRowsBlock(
@@ -455,12 +413,3 @@ private const val PRESS_HIGHLIGHT_DELAY_MILLIS = 100L
 
 private const val PRESSED_ALPHA = 0.1f
 private val PRESSED_CORNER_RADIUS = 8.dp
-
-/** Between the Chords pill and the instrument after it, as between the song's playing tools. */
-private val INSTRUMENT_BUTTON_GAP = 8.dp
-
-/** How small the instrument button is as it starts growing out of the Chords pill, and as it shrinks back into it. */
-private const val INSTRUMENT_BUTTON_HIDDEN_SCALE = 0.6f
-
-/** The start edge of the instrument button, next to the pill it grows out of. */
-private val INSTRUMENT_BUTTON_TRANSFORM_ORIGIN = TransformOrigin(pivotFractionX = 0f, pivotFractionY = 0.5f)

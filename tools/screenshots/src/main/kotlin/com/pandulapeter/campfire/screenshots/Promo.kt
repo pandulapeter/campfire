@@ -134,8 +134,8 @@ internal val promoShots: List<PromoShot> by lazy {
                 uiMode = UserPreferences.UiMode.DARK,
                 preferences = {
                     mapOf(
+                        "instrument" to JsonPrimitive(UserPreferences.Instrument.GUITAR.id),
                         "tunerSettings" to buildJsonObject {
-                            put("instrument", "guitar")
                             put("referencePitch", 440)
                             put("hasTurnedOnMicrophone", true)
                         },

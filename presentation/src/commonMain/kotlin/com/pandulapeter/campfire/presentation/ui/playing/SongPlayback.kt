@@ -40,7 +40,7 @@ internal fun songPlaybackOf(song: Song, setlistFileName: String?, overrides: Pla
  * Whether the capo is read as a transposition rather than as a fret: on the keyboard, which has no capo to put on, so
  * its player reads every chord as the one that sounds, see [withCapoSounding].
  */
-internal val UserPreferences?.readsCapoAsTransposition get() = this?.chordInstrument == UserPreferences.ChordInstrument.KEYBOARD
+internal val UserPreferences?.readsCapoAsTransposition get() = this?.instrument == UserPreferences.Instrument.KEYBOARD
 
 /**
  * [this] as an instrument without a capo plays it (see [readsCapoAsTransposition]): the frets the capo raises the song by

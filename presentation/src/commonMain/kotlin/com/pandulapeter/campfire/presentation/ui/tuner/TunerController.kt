@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.tuner
 import com.pandulapeter.campfire.data.model.domain.TunerSettings
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.domain.api.useCases.UpdateUserPreferencesUseCase
+import com.pandulapeter.campfire.presentation.ui.instrument.instrumentTuning
 import com.pandulapeter.campfire.presentation.ui.state.DebouncedPreference
 import com.pandulapeter.campfire.presentation.ui.state.asState
 import com.pandulapeter.campfire.tuner.api.Pitch
@@ -52,6 +53,14 @@ internal class TunerController(
         pending ?: userPreferences?.tunerSettings ?: TunerSettings()
     }.asState(scope, TunerSettings())
 
+    /**
+     * What the tuner listens for: the instrument in the player's hands, which the instrument sheet writes into the
+     * preferences, and the tuner's own settings, so that a pick in the sheet retunes a tuner that is listening at once.
+     */
+    val tunerConfig = combine(userPreferences, tunerSettings) { userPreferences, settings ->
+        tunerConfigOf(settings, userPreferences.listenedTuning)
+    }.asState(scope, tunerConfigOf(tunerSettings.value, userPreferences.value.listenedTuning))
+
     val tunerState = tuner.state
 
     /** See [TunerSettings.hasTurnedOnMicrophone]. */
@@ -62,7 +71,7 @@ internal class TunerController(
     /** The notes heard in tune since the microphone was opened, which the strings row ticks off, see [tunedNotesAfter]. */
     val tunedNotes = _tunedNotes.asStateFlow()
 
-    private val config get() = tunerSettings.value.toConfig()
+    private val config get() = tunerConfig.value
 
     /** Whether the tuner on its way to the screen was opened by a tap, see [markOpenedByTap]. */
     private var isOpenedByTap = false
@@ -116,23 +125,23 @@ internal class TunerController(
     fun startSettingsWriter() = tunerSettingsPreference.start(scope, writeDelayMillis, updateUserPreferences::invoke)
 
     /**
-     * Follows the settings with what is listening and sounding: a listening tuner reads against the new instrument and
-     * pitch from its next window, a tone of an instrument that is no longer chosen ends, and one still chosen moves to
-     * the new reference pitch.
+     * Follows the settings and the instrument with what is listening and sounding: a listening tuner reads against the new
+     * strings and pitch from its next window, a tone of strings that are no longer chosen ends, and one still chosen moves
+     * to the new reference pitch.
      */
     fun startFollowingSettings() = scope.launch {
-        var previous: TunerSettings? = null
-        tunerSettings.collect { settings ->
+        var previous: TunerConfig? = null
+        tunerConfig.collect { config ->
             val last = previous
-            previous = settings
-            if (last == null || last == settings) return@collect
-            if (tuner.state.value.listening !is TunerListening.Stopped) tuner.update(settings.toConfig())
+            previous = config
+            if (last == null || last == config) return@collect
+            if (tuner.state.value.listening !is TunerListening.Stopped) tuner.update(config)
             // The strings ticked off belong to the instrument they were tuned for.
-            if (last.instrumentId != settings.instrumentId) _tunedNotes.value = emptySet()
+            if (last.tuning != config.tuning) _tunedNotes.value = emptySet()
             val tone = tuner.state.value.tone ?: return@collect
             when {
-                last.instrumentId != settings.instrumentId -> tuner.stopTone()
-                last.referencePitch != settings.referencePitch -> tuner.playTone(tone, settings.referencePitch)
+                last.tuning != config.tuning -> tuner.stopTone()
+                last.referencePitch != config.referencePitch -> tuner.playTone(tone, config.referencePitch)
             }
         }
     }
@@ -141,8 +150,14 @@ internal class TunerController(
     fun startStartableRule(isTunerShown: Flow<Boolean>) = scope.launch { isTunerShown.distinctUntilChanged().collect(tuner::setStartable) }
 }
 
-/** The tuner's own model of the stored settings: an instrument this version does not know is chromatic. */
-internal fun TunerSettings.toConfig() = TunerConfig(
-    referencePitch = referencePitch.coerceIn(Pitch.REFERENCE_PITCH_RANGE),
-    tuning = InstrumentTuning.fromId(instrumentId),
+/** What the instrument in the player's hands is tuned to, a fresh installation's guitar before the preferences are read. */
+private val UserPreferences?.listenedTuning get() = if (this == null) InstrumentTuning.GUITAR else instrumentTuning
+
+/**
+ * The tuner's own model of what it listens for: the strings of [instrumentTuning], or the nearest note (a null tuning)
+ * where the chromatic switch is on or the instrument has no strings to tune.
+ */
+internal fun tunerConfigOf(settings: TunerSettings, instrumentTuning: InstrumentTuning?) = TunerConfig(
+    referencePitch = settings.referencePitch.coerceIn(Pitch.REFERENCE_PITCH_RANGE),
+    tuning = if (settings.isChromatic) null else instrumentTuning,
 )

@@ -15,10 +15,12 @@ import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.data.model.domain.tagKey
 import com.pandulapeter.campfire.domain.api.useCases.GetUserPreferencesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.UpdateUserPreferencesUseCase
-import com.pandulapeter.campfire.presentation.ui.chords.withChordTuning
+import com.pandulapeter.campfire.presentation.ui.instrument.withInstrument
+import com.pandulapeter.campfire.presentation.ui.instrument.withTuning
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.FeatureSwitches
 import com.pandulapeter.campfire.presentation.ui.platform.LibraryPersistence
+import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flow
@@ -94,9 +96,9 @@ internal class PreferencesController(
 
     fun setChordDiagramsEnabled(value: Boolean) = changeUserPreferences { copy(areChordDiagramsEnabled = value) }
 
-    fun setChordInstrument(value: UserPreferences.ChordInstrument) = changeUserPreferences { copy(chordInstrument = value) }
+    fun setInstrument(value: UserPreferences.Instrument) = changeUserPreferences { withInstrument(value) }
 
-    fun setChordTuning(tuning: ChordTuning) = changeUserPreferences { withChordTuning(tuning) }
+    fun setTuning(tuning: InstrumentTuning) = changeUserPreferences { withTuning(tuning) }
 
     fun toggleChordSectionFold() = changeUserPreferences { copy(isChordSectionFolded = !isChordSectionFolded) }
 

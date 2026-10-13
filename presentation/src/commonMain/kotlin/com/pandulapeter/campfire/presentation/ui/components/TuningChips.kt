@@ -28,44 +28,44 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.chordpro.ChordNotation
-import com.pandulapeter.campfire.chordpro.model.ChordTuning
-import com.pandulapeter.campfire.presentation.ui.chords.chordTuningLabel
+import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.presentation.ui.instrument.of
+import com.pandulapeter.campfire.presentation.ui.instrument.tunings
+import com.pandulapeter.campfire.presentation.ui.tuner.tuningLabel
+import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 
 /**
- * The tunings of [selected]'s instrument the chord diagrams can be drawn for, as a wrapping row of chips that is a radio
- * group, standard first, like the Tuner tab's tuning row: each named the way the tuner names it, its note in the
- * reader's chord [notation]. The chips crossfade as one instrument's tunings follow another's. Shared by Settings and by
- * the sheet the song details screen's Chords section opens.
+ * The tunings of [selected]'s instrument, as a wrapping row of chips that is a radio group, standard first: each named
+ * the way the tuner names it, its note in the reader's chord [notation], and none needing the instrument in its name,
+ * since that is the one picked right above it. The chips crossfade as one instrument's tunings follow another's.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-internal fun ChordTuningChips(
+internal fun TuningChips(
     modifier: Modifier = Modifier,
-    selected: ChordTuning,
+    selected: InstrumentTuning,
     notation: ChordNotation,
-    isEnabled: Boolean = true,
-    onSelected: (ChordTuning) -> Unit,
+    onSelected: (InstrumentTuning) -> Unit,
 ) = AnimatedContent(
     modifier = modifier,
-    targetState = selected.instrument,
+    targetState = UserPreferences.Instrument.of(selected),
     transitionSpec = { fadeIn() togetherWith fadeOut() using SizeTransform(clip = false) },
     contentAlignment = Alignment.TopStart,
-    label = "chordTunings",
+    label = "tunings",
 ) { instrument ->
     FlowRow(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).selectableGroup(),
         horizontalArrangement = Arrangement.spacedBy(CHIP_GAP),
         verticalArrangement = Arrangement.spacedBy(CHIP_GAP),
     ) {
-        ChordTuning.of(instrument).forEach { tuning ->
+        instrument.tunings.forEach { tuning ->
             SelectableChip(
                 isSelected = tuning == selected,
-                isEnabled = isEnabled,
                 role = Role.RadioButton,
                 onClick = { if (tuning != selected) onSelected(tuning) },
             ) { contentColor ->
                 Text(
-                    text = chordTuningLabel(tuning, notation),
+                    text = tuningLabel(tuning, notation),
                     style = MaterialTheme.typography.labelLarge,
                     color = contentColor,
                 )

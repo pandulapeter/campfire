@@ -130,8 +130,8 @@ private val setlists = Shot(
 )
 
 private val tuner = mapOf(
+    "instrument" to JsonPrimitive(UserPreferences.Instrument.GUITAR.id),
     "tunerSettings" to buildJsonObject {
-        put("instrument", "guitar")
         put("referencePitch", 440)
         put("hasTurnedOnMicrophone", true)
     },

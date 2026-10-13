@@ -16,6 +16,8 @@ import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.CommentStyle
 import com.pandulapeter.campfire.chordpro.model.GridToken
+import com.pandulapeter.campfire.presentation.ui.chords.ChordCell
+import com.pandulapeter.campfire.presentation.ui.chords.SelectedShape
 import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
 import com.pandulapeter.campfire.presentation.ui.songLayout.FoldableKind
 import kotlin.test.Test
@@ -330,5 +332,30 @@ class RenderSectionsTest {
         assertTrue(gridSlots.all { it.slotCount == 3 })
         assertEquals(tab.runSlotCount(FoldableKind.TAB), slots.count { it.runFoldKey == "intro#1/tab#1" })
         assertEquals(secondTab.runSlotCount(FoldableKind.TAB), slots.count { it.runFoldKey == "intro#1/tab#2" })
+    }
+
+    @Test
+    fun `a song with chords has the instrument chips at the top of its first section, with diagrams or without`() {
+        val model = prepareSongLyrics(ChordProParser.parse("{sov}\n[G]la [C]la\n{eov}"), shouldShowChords = true, labels = labels)
+        assertTrue(model.hasChords)
+        val sections = withMetadataSection(model.sections, model.song.metadata, shouldShowChords = true, isSongInfoShown = false, hasPlayingControls = true)
+        val withoutDiagrams = withChordsSection(sections, cells = emptyList(), isFolded = false, hasChords = model.hasChords, isInstrumentShown = true)
+        assertTrue(withoutDiagrams.none { it is RenderSection.Chords })
+        assertTrue((withoutDiagrams.first() as RenderSection.Metadata).hasInstrumentChips)
+        assertEquals(sections.drop(1), withoutDiagrams.drop(1))
+        val cell = ChordCell(name = "G", tuning = ChordTuning.GUITAR, root = 7, selection = SelectedShape(null, SelectedShape.Source.DEFAULT))
+        val withDiagrams = withChordsSection(sections, cells = listOf(cell), isFolded = false, hasChords = model.hasChords, isInstrumentShown = true)
+        assertTrue((withDiagrams.first() as RenderSection.Metadata).hasInstrumentChips)
+        assertTrue(withDiagrams[1] is RenderSection.Chords)
+        assertEquals(sections, withChordsSection(sections, cells = emptyList(), isFolded = false, hasChords = model.hasChords, isInstrumentShown = false))
+    }
+
+    @Test
+    fun `a song without chords gets no Chords section whatever the instrument`() {
+        val model = prepareSongLyrics(ChordProParser.parse("{sov}\nla la\n{eov}"), shouldShowChords = true, labels = labels)
+        assertFalse(model.hasChords)
+        assertEquals(model.sections, withChordsSection(model.sections, cells = emptyList(), isFolded = false, hasChords = false, isInstrumentShown = true))
+        val lyricsOnly = prepareSongLyrics(ChordProParser.parse("{sov}\n[G]la\n{eov}"), shouldShowChords = false, labels = labels)
+        assertFalse(lyricsOnly.hasChords)
     }
 }

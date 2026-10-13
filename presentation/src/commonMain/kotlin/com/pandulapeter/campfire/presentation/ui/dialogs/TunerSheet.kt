@@ -44,7 +44,6 @@ import com.pandulapeter.campfire.presentation.ui.tuner.TunerNoticeCard
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerStringsSetting
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerInputIssueMessage
 import com.pandulapeter.campfire.presentation.ui.tuner.canListenWithoutTap
-import com.pandulapeter.campfire.presentation.ui.tuner.toConfig
 import com.pandulapeter.campfire.presentation.ui.tuner.tunerNoticeOf
 import com.pandulapeter.campfire.tuner.api.model.TunerListening
 
@@ -52,9 +51,10 @@ import com.pandulapeter.campfire.tuner.api.model.TunerListening
  * The tuner over the song being read, opened from the song details overflow menu, so that a string that went flat
  * between two songs is tuned without leaving the setlist, laid out as the Tuner tab is: its display at full size (compact
  * only in a short window, as on the tab), giving way to its notice the same way, and under them the strings of the
- * instrument picked there, all of it scrolling under the sheet's header. The instrument and the reference pitch are set on the tab alone, the way the metronome panel
- * plays with the Metronome tab's presets without offering them: the instrument in hand between two songs is the one the
- * tab was set to. It listens while it is up and the app is in front, and the view model stops it as the sheet closes.
+ * instrument in the player's hands, all of it scrolling under the sheet's header. The instrument is the app's one, set
+ * from the instrument chip of the Tuner tab, the Chords tab, Settings, or the song's own Chords section, and the
+ * reference pitch and the chromatic switch are set on the tab alone, the way the metronome panel plays with the Metronome
+ * tab's presets without offering them. It listens while it is up and the app is in front, and the view model stops it as the sheet closes.
  */
 @Composable
 internal fun TunerSheet(
@@ -64,7 +64,7 @@ internal fun TunerSheet(
     // The state changes with every reading, thirty times a second, so it is handed down as a State for the display to
     // read, and the rest of the page only reads what changes with a note or a setting.
     val state = viewModel.tunerState.collectAsStateWithLifecycle()
-    val settings by viewModel.tunerSettings.collectAsStateWithLifecycle()
+    val config by viewModel.tunerConfig.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val hasRequested by viewModel.hasTurnedOnMicrophone.collectAsStateWithLifecycle()
     val notation = (userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default).notation.toChordNotation()
@@ -78,7 +78,6 @@ internal fun TunerSheet(
     val issue by remember { derivedStateOf { (state.value.listening as? TunerListening.Hearing)?.issue } }
     val heardNote by remember { derivedStateOf { (state.value.listening as? TunerListening.Hearing)?.reading?.note } }
     val tunedNotes by viewModel.tunedNotes.collectAsStateWithLifecycle()
-    val config = remember(settings) { settings.toConfig() }
     TunerListeningEffect(
         canListen = canListenWithoutTap(status = permission.status, hasRequested = hasRequested),
         onListeningChanged = viewModel::setTunerListening,

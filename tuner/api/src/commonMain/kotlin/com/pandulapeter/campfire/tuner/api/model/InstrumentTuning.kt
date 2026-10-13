@@ -71,9 +71,6 @@ public enum class InstrumentTuning(
     ;
 
     public companion object {
-        /** What a stored setting names chromatic tuning by. */
-        public const val CHROMATIC_ID: String = "chromatic"
-
         /** The tuning [id] names, null for chromatic and for an id this version does not know. */
         public fun fromId(id: String): InstrumentTuning? = entries.firstOrNull { it.id == id }
     }

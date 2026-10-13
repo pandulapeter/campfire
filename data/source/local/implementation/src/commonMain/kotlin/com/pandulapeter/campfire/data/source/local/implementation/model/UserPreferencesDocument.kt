@@ -57,6 +57,10 @@ internal data class UserPreferencesDocument(
     // neither: a false there was picked, and a true is what the cards showed with the metronome on and only then.
     val tempoOnSongCards: Boolean? = null,
     val tempoOnSetlistCards: Boolean? = null,
+    val instrument: String = "",
+    val tunings: Map<String, String> = emptyMap(),
+    // What the chord diagrams were drawn for before the tuner and the diagrams shared one instrument: only read, for a
+    // document that has no instrument yet, and never written again.
     val chordInstrument: String = "",
     val chordTunings: Map<String, String> = emptyMap(),
     val chordVoicings: Map<String, Map<String, String>> = emptyMap(),
@@ -118,10 +122,16 @@ internal data class MetronomeSettingsDocument(
     val isSongPanelShown: Boolean = false,
 )
 
-/** The instrument is the tuner's own id, checked where it is read into its presets, in `:presentation`. */
+/**
+ * [instrument] is what the tuner listened for before it shared the instrument with the chord diagrams, its own tuning
+ * id or `chromatic`: only read, for a document that has neither an instrument of its own nor [isChromatic], and never
+ * written again. Its default is blank rather than the `chromatic` it once was, since that default was never written:
+ * a document without the key is a tuner nobody set, which opens on the instrument like a fresh installation's.
+ */
 @Serializable
 internal data class TunerSettingsDocument(
-    val instrument: String = "chromatic",
+    val isChromatic: Boolean? = null,
+    val instrument: String = "",
     val referencePitch: Int = 440,
     val hasTurnedOnMicrophone: Boolean = false,
 )

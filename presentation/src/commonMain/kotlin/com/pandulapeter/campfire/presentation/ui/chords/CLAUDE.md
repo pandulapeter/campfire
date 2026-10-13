@@ -39,13 +39,7 @@ composed (`ChordCellLayouts`: names measured by the page's measurer, diagrams by
 intrinsic measurement at a candidate width already counts the rows they wrap into, every slot answering for the whole
 section's width; a screen reader reads it row by row.
 
-It is a pill folding it (`UserPreferences.isChordSectionFolded`, one fold for every song, in read only mode too),
-followed outside read only mode, and only while the section is unfolded, by the instrument's name and a chevron
-(`ChordInstrumentChip`, a tonal pill as tall as the section's, `ChordDiagrams.onInstrumentClicked`; it grows out of the
-pill and fades in as the section unfolds and shrinks back into it as it folds, scaled rather than widened, so the
-section's measured size never passes through a width in between), since diagrams for the wrong instrument look as right as any, opening the **instrument sheet** (`ChordInstrumentSheet`, `DialogType.ChordInstrument`): the Settings list
-(`components/ChordInstrumentList.kt`, shared) without Other, which would take the section away with the way back, a pick
-written at once and closing the sheet — and
+It is a pill folding it (`UserPreferences.isChordSectionFolded`, one fold for every song, in read only mode too) and
 rows of cells — the name in the chords' style and accent over its diagram, growing with the text size, wrapping rather
 than scrolling sideways into as few rows as the width allows, shared out between them as evenly as their order lets them
 (`balancedRowStarts`: nine of which six fit a line are five over four, not six over three, and the PDF breaks its rows
@@ -86,13 +80,21 @@ own instrument, whatever the switches say.
 
 ## Which shape a chord is drawn with
 
+**The instrument and the tuning the diagrams are drawn for are the two chips heading the song's first section**
+(`SongInstrumentChips`, the `InstrumentChips` as tall as a section's pill, `ChordDiagrams.onInstrumentClicked` and
+`onTuningClicked`, read only mode included; see `ui/CLAUDE.md`), above the transposition and the capo, which are as
+much about the whole song, and for every song with chords, so an instrument without shapes, which leaves no Chords
+section, keeps them to bring the diagrams back (`RenderSection.Metadata.hasInstrumentChips`, `withChordsSection`'s
+`hasChords`, `SongLyricsModel.hasChords`). **Every chip reaches out of its column as a section's pill does**, so that
+one starting a line has its name on the keyline the lyrics, the section titles, and the controls' labels stand on, and
+a chip that does not fit beside the other goes under it whole rather than being cut short.
+
 ### How every chord of a song is fingered is shown at its top
 
-**How every chord of a song is fingered is shown at its top**, on the guitar, the ukulele, the mandolin, the banjo, or the keyboard (the Songs
-tab's Instrument, a list naming the strings of the tuning picked for each under it in the reader's chord notation, and
-under it the Tuning, below;
-its Other, for every other instrument (a seven- or eight-string guitar, the bass, the violin), draws no diagram at all, as the Features
-switch does, and the editor's Chord shape button writes a guitar's): a Chords section after the controls of how it is played, one diagram per chord in the order they are
+**How every chord of a song is fingered is shown at its top**, on the guitar, the ukulele, the mandolin, the banjo, or the keyboard (the instrument
+in the player's hands, `UserPreferences.instrument`; every other instrument — a seven- or eight-string guitar, the
+basses, the violin, Other — draws no diagram at all, as the Features switch does, and the editor's Chord shape button
+writes a guitar's): a Chords section after the controls of how it is played, one diagram per chord in the order they are
 first played, folded by one preference for every song and cut between its rows of diagrams wherever a page ends inside
 it, like any other section. Nothing is shipped for it and nothing is fetched: `:chordpro` reads what notes a chord name
 stands for (`ChordProChords`) and finds its shapes (`ChordVoicings`) — a hand-typed table of the shapes everybody knows
@@ -119,16 +121,16 @@ them, their names left out of the file's selectable text.
 
 ### The diagrams are drawn for the tuning the player has
 
-**The diagrams are drawn for the tuning the player has**: Settings → Songs → Tuning, under the instrument and only for a
-fretted one with more than one, a row of chips (`components/ChordTuningChips.kt`, shared with the instrument sheet)
-named the way the tuner names them (`ChordTuningLabels.kt`: a `ChordTuning` is the tuner's `InstrumentTuning` of the
-same id, which `ChordTuningsTest` holds it to, strings included), disabled with the diagrams off, since nothing else
-reads it. One tuning per instrument (`UserPreferences.chordTunings`, written by `withChordTuning`, read by
-`chordTuning()` / `chordTuningOf`: an id of another instrument or one this version does not know is standard), kept on
-the device like the instrument. Half and full step down, drop D to drop B, double drop D, open G, D, E, A, and C, and
-DADGAD on the guitar, the ukulele's low G, D, and baritone tunings, the mandolin's half step down and its AEAE and
-GDGD cross tunings, and the banjo's double C, C, open D, and G modal; what the shapes are in each is `:chordpro`'s `ChordTuning`. The
-onboarding writes it from the tuner's answer (`OnboardingInstrument.chordTuningWrittenFor`).
+**The diagrams are drawn for the tuning the player has**: the tuning picked for the instrument in the tuning sheet, its
+tunings named the way the tuner names them (`ChordTuningLabels.kt`: a `ChordTuning` is the tuner's `InstrumentTuning` of the same id, which
+`ui/instrument/InstrumentsTest` holds it to, strings included). One tuning per instrument (`UserPreferences.tunings`,
+written by `withTuning`, which picks the tuning's instrument too, read by `tuningOf` and `chordTuning()` in
+`ui/instrument/Instruments.kt`: an id of another instrument or one this version does not know is standard), kept on the
+device like the instrument, and the tuner's too. Every tuning the tuner knows for an instrument with shapes is one the
+diagrams know (`Instrument.tunings`): half and full step down, drop D to drop B, double drop D, open G, D, E, A, and C,
+and DADGAD on the guitar, the ukulele's low G, D, and baritone tunings, the mandolin's half step down and its AEAE and
+GDGD cross tunings, and the banjo's double C, C, open D, and G modal; what the shapes are in each is `:chordpro`'s
+`ChordTuning`.
 
 Everything that drew for an instrument draws for a tuning: `ChordDiagrams.tuning`, `SongLyricsInputs.chordTuning`, the
 cells, the sheet, the PDF and the onboarding's G. A chord name always names the chord that sounds, so a half step down

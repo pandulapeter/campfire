@@ -61,6 +61,7 @@ internal sealed interface RenderSection {
         val readsDefaults: Boolean = false,
         val hasTuner: Boolean = false,
         val hasMetronome: Boolean = false,
+        val hasInstrumentChips: Boolean = false,
     ) : RenderSection
 
     /**

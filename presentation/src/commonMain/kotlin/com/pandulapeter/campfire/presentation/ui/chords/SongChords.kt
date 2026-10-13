@@ -16,7 +16,6 @@ import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
 import com.pandulapeter.campfire.chordpro.chords.ChordVoicings
 import com.pandulapeter.campfire.chordpro.model.Chord
 import com.pandulapeter.campfire.chordpro.model.ChordDefinition
-import com.pandulapeter.campfire.chordpro.model.ChordInstrument
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.chordpro.model.ChordVoicing
@@ -113,31 +112,14 @@ internal fun List<SongChord>.withSearchedShapes(tuning: ChordTuning) = if (none 
     map { if (it.isShapePending) it.copy(defaultShape = ChordVoicings.default(it.chord, tuning), isShapePending = false) else it }
 }
 
-/** `:chordpro`'s instrument for the one the preferences name, null for [UserPreferences.ChordInstrument.OTHER], which has none. */
-internal fun UserPreferences.ChordInstrument.toChordInstrument() = when (this) {
-    UserPreferences.ChordInstrument.GUITAR -> ChordInstrument.GUITAR
-    UserPreferences.ChordInstrument.UKULELE -> ChordInstrument.UKULELE
-    UserPreferences.ChordInstrument.MANDOLIN -> ChordInstrument.MANDOLIN
-    UserPreferences.ChordInstrument.BANJO -> ChordInstrument.BANJO
-    UserPreferences.ChordInstrument.KEYBOARD -> ChordInstrument.KEYBOARD
-    UserPreferences.ChordInstrument.OTHER -> null
-}
-
 /**
- * The tuning the diagrams are drawn for: the one [UserPreferences.chordTunings] names for the instrument picked, and
- * its standard one where it names none, one this version does not know, or one of another instrument. Null for
- * [UserPreferences.ChordInstrument.OTHER], which draws no diagrams.
+ * Whether [song] has the chords [songChordsOf] would list on an instrument with shapes: at least one, and no more than
+ * [MAX_SONG_CHORDS]. Asked where there is no tuning to collect them for, so that the Chords section is there for the
+ * same songs whatever the instrument.
  */
-internal fun UserPreferences.chordTuning(): ChordTuning? = chordInstrument.toChordInstrument()?.let { chordTuningOf(it, chordTunings) }
-
-/** The tuning [chordTunings] (see [UserPreferences.chordTunings]) names for [instrument], see [chordTuning]. */
-internal fun chordTuningOf(instrument: ChordInstrument, chordTunings: Map<String, String>): ChordTuning =
-    chordTunings[instrument.id]?.let(ChordTuning::fromId)?.takeIf { it.instrument == instrument } ?: ChordTuning.standard(instrument)
-
-/** [this] with [tuning] as the one the diagrams are drawn for on its instrument, a standard tuning leaving no entry. */
-internal fun UserPreferences.withChordTuning(tuning: ChordTuning): UserPreferences {
-    val instrumentId = tuning.instrument.id
-    return copy(chordTunings = if (tuning.isStandard) chordTunings - instrumentId else chordTunings + (instrumentId to tuning.id))
+internal fun hasSongChords(song: ChordProSong, notation: ChordNotation): Boolean {
+    val chords = ChordProNotation.shownNames(song, notation).keys.mapNotNull { ChordProChords.parse(it) }.distinct()
+    return chords.isNotEmpty() && chords.size <= MAX_SONG_CHORDS
 }
 
 /** `:chordpro`'s notation for the one the preferences name. */

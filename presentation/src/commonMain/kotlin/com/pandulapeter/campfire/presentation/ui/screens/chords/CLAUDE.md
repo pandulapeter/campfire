@@ -15,12 +15,13 @@ The Chords tab: every chord the app can draw, browsed by instrument, tuning, key
 ### What it shows
 
 `ChordsScreen` is one lazy grid, its first item the controls (`ChordLibraryControls`), which scroll with the chords so
-that a phone on its side keeps a row of diagrams above the keyboard: the instrument (Guitar, Ukulele, Mandolin,
-Banjo, Keyboard — never Other, which draws nothing, and while Other is the preference none is selected and a line says what to
-do), the tunings of a fretted instrument that has more than one (`ChordTuningChips`, shared with Settings), the twelve
-keys and a search field (`components/SearchField.kt`, the pickers' own, which never takes the focus on its own).
-**The instrument and the tuning are the preferences Settings → Songs draws the songs' diagrams for**, written at once,
-since somebody browsing ukulele chords has a ukulele in hand; the key, the search and the scroll position are the
+that a phone on its side keeps a row of diagrams above the keyboard: the instrument chip under an Instrument title
+and the tuning chip after it (`components/InstrumentChipRow.kt`, opening the sheets every screen opens, see
+`ui/CLAUDE.md`), the twelve keys
+and a search field (`components/SearchField.kt`, the pickers' own, which never takes the focus on its own). An
+instrument without shapes has a line naming it in the chords' place, pointing at the chip ("Bass: no chord diagrams",
+Other a line of its own). **The instrument and its tuning are the one the songs' diagrams and the tuner follow**,
+written at once, since somebody browsing ukulele chords has a ukulele in hand; the key, the search and the scroll position are the
 session's (`ChordLibraryState`, held by the view model, since the tab leaves the back stack whenever another is picked).
 
 The keys are spelled as the reader's accidentals preference asks (`chordLibraryKeys`: as a chart spells them, or all

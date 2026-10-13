@@ -56,8 +56,8 @@ internal fun UserPreferencesDocument.toModel() = UserPreferences(
         isTempoShown = tempoOnSetlistCards ?: false.takeIf { !(isTempoShownOnSetlistCards ?: isTempoShown) },
         isDurationShown = isDurationShownOnSetlistCards,
     ),
-    chordInstrument = UserPreferences.ChordInstrument.entries.firstOrNull { it.id == chordInstrument } ?: UserPreferences.ChordInstrument.GUITAR,
-    chordTunings = chordTunings.filterValues { it.isNotBlank() },
+    instrument = instrument(),
+    tunings = tunings().filterValues { it.isNotBlank() },
     chordVoicings = chordVoicings.mapValues { (_, shapes) -> shapes.filterValues { it.isNotBlank() } }.filterValues { it.isNotEmpty() },
     isChordSectionFolded = isChordSectionFolded,
     transpositions = transpositions,
@@ -105,8 +105,8 @@ internal fun UserPreferences.toDocument() = UserPreferencesDocument(
     isDurationShownOnSetlistCards = setlistCardDetails.isDurationShown,
     tempoOnSongCards = songCardDetails.isTempoShown,
     tempoOnSetlistCards = setlistCardDetails.isTempoShown,
-    chordInstrument = chordInstrument.id,
-    chordTunings = chordTunings,
+    instrument = instrument.id,
+    tunings = tunings,
     chordVoicings = chordVoicings,
     isChordSectionFolded = isChordSectionFolded,
     transpositions = transpositions,
@@ -191,14 +191,32 @@ internal fun MetronomeSettings.toDocument() = MetronomeSettingsDocument(
     isSongPanelShown = isSongPanelShown,
 )
 
+/**
+ * The instrument in the player's hands. A document written before the tuner and the chord diagrams shared one instrument
+ * has none, and it is derived from the two old answers: the tuner's first, since it is the more specific one (a
+ * seven-string player told the tuner so and the diagrams Other), otherwise the diagrams' instrument.
+ */
+private fun UserPreferencesDocument.instrument() = UserPreferences.Instrument.fromId(instrument)
+    ?: UserPreferences.Instrument.ofTuningId(tunerSettings.instrument)
+    ?: UserPreferences.Instrument.fromId(chordInstrument)
+    ?: UserPreferences.Instrument.GUITAR
+
+/** The tunings picked for each instrument; on a document from before [instrument] the diagrams', plus the tuner's own. */
+private fun UserPreferencesDocument.tunings(): Map<String, String> {
+    if (UserPreferences.Instrument.fromId(instrument) != null) return tunings
+    val tunerTuning = tunerSettings.instrument
+    val tunerInstrument = UserPreferences.Instrument.ofTuningId(tunerTuning)
+    return if (tunerInstrument == null || tunerTuning == tunerInstrument.id) chordTunings else chordTunings + (tunerInstrument.id to tunerTuning)
+}
+
 internal fun TunerSettingsDocument.toModel() = TunerSettings(
-    instrumentId = instrument,
+    isChromatic = isChromatic ?: (instrument == "chromatic"),
     referencePitch = referencePitch.coerceIn(TunerSettings.REFERENCE_PITCH_RANGE),
     hasTurnedOnMicrophone = hasTurnedOnMicrophone,
 )
 
 internal fun TunerSettings.toDocument() = TunerSettingsDocument(
-    instrument = instrumentId,
+    isChromatic = isChromatic,
     referencePitch = referencePitch,
     hasTurnedOnMicrophone = hasTurnedOnMicrophone,
 )

@@ -20,6 +20,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.chords.SongChord
+import com.pandulapeter.campfire.presentation.ui.chords.hasSongChords
 import com.pandulapeter.campfire.presentation.ui.chords.songChordsOf
 import com.pandulapeter.campfire.presentation.ui.chords.withSearchedShapes
 import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
@@ -33,6 +34,9 @@ import kotlinx.coroutines.withContext
  * @param shouldShowChords False for lyrics-only mode, see [prepareSongLyrics].
  * @param notation The notation [song] is written in, which decides what is a chord in the brackets of a comment.
  * @param chordTuning The tuning [chords] were collected for, which their pending shapes are looked for in.
+ * @param hasChords Whether the song has a chord the Chords section could draw on some instrument, which [chords] does not
+ * say where there was no tuning to collect them for (an instrument without shapes): the section is still there then, as
+ * the instrument chip alone.
  */
 internal class SongLyricsModel(
     val song: ChordProSong,
@@ -42,6 +46,7 @@ internal class SongLyricsModel(
     val notation: ChordNotation = ChordNotation.STANDARD,
     val chords: List<SongChord> = emptyList(),
     val chordTuning: ChordTuning? = null,
+    val hasChords: Boolean = chords.isNotEmpty(),
 ) {
 
     /** Whether some chord's shape is still to be looked for, see [withSearchedShapes]. */
@@ -59,6 +64,7 @@ internal class SongLyricsModel(
         notation = notation,
         chords = chordTuning?.let { chords.withSearchedShapes(it) } ?: chords,
         chordTuning = chordTuning,
+        hasChords = hasChords,
     )
 }
 
@@ -100,6 +106,7 @@ internal fun prepareSongLyrics(
             emptyList()
         },
         chordTuning = chordTuning,
+        hasChords = shouldShowChords && hasSongChords(standardSong, notation),
     )
 }
 

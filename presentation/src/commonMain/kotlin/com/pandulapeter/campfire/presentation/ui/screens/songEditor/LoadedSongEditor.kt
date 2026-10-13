@@ -78,7 +78,7 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_redo
 import com.pandulapeter.campfire.presentation.resources.song_editor_split
 import com.pandulapeter.campfire.presentation.resources.song_editor_undo
 import com.pandulapeter.campfire.chordpro.model.ChordTuning
-import com.pandulapeter.campfire.presentation.ui.chords.chordTuning
+import com.pandulapeter.campfire.presentation.ui.instrument.chordTuning
 import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ACTION_BUTTON_OVERLAP

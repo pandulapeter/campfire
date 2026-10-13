@@ -48,9 +48,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
-import com.pandulapeter.campfire.presentation.ui.chords.chordTuning
 import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
+import com.pandulapeter.campfire.presentation.ui.instrument.chordTuning
+import com.pandulapeter.campfire.presentation.ui.instrument.instrumentTuning
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
@@ -341,8 +342,9 @@ private fun LoadSongTexts(
 
 /**
  * What the Chords section of every page is drawn with, null where the diagrams are off. One for the whole pager, since
- * nothing in it belongs to one song: the tuning, the player's shapes and whether the section is folded are the same
- * wherever a song is read.
+ * nothing in it belongs to one song: the instrument, the tuning, the player's shapes and whether the section is folded
+ * are the same wherever a song is read. An instrument without shapes still gets one, with no tuning to draw in, so that
+ * the section keeps the chip that changes it.
  */
 @Composable
 private fun rememberChordDiagrams(
@@ -350,20 +352,23 @@ private fun rememberChordDiagrams(
     userPreferences: UserPreferences?,
     shouldShowChords: Boolean,
 ): ChordDiagrams? {
-    val chordTuning = userPreferences?.takeIf { shouldShowChords && it.areChordDiagramsEnabled }?.chordTuning()
-    val storedChordShapes = chordTuning?.let { userPreferences.chordVoicings[it.voicingKey] }.orEmpty()
-    val isChordSectionFolded = userPreferences?.isChordSectionFolded == true
-    val notation = (userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default).notation.toChordNotation()
-    return remember(chordTuning, storedChordShapes, isChordSectionFolded, notation) {
-        chordTuning?.let {
-            ChordDiagrams(
-                tuning = it,
-                storedShapes = storedChordShapes,
-                isFolded = isChordSectionFolded,
-                onFoldToggled = viewModel::toggleChordSectionFold,
-                notation = notation,
-            )
-        }
+    val preferences = userPreferences?.takeIf { shouldShowChords && it.areChordDiagramsEnabled } ?: return null
+    val chordTuning = preferences.chordTuning()
+    val storedChordShapes = chordTuning?.let { preferences.chordVoicings[it.voicingKey] }.orEmpty()
+    val instrument = preferences.instrument
+    val instrumentTuning = preferences.instrumentTuning
+    val isChordSectionFolded = preferences.isChordSectionFolded
+    val notation = preferences.chordSpelling.notation.toChordNotation()
+    return remember(chordTuning, storedChordShapes, instrument, instrumentTuning, isChordSectionFolded, notation) {
+        ChordDiagrams(
+            tuning = chordTuning,
+            instrument = instrument,
+            instrumentTuning = instrumentTuning,
+            storedShapes = storedChordShapes,
+            isFolded = isChordSectionFolded,
+            onFoldToggled = viewModel::toggleChordSectionFold,
+            notation = notation,
+        )
     }
 }
 

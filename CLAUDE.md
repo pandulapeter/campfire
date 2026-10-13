@@ -225,7 +225,7 @@ tab reaches the export screen. The detail is in `:presentation`'s `ui/screens/ex
   a move nothing else can see is one other devices never follow — so a capitalised or decomposed file keeps its
   spelling until **Update file name** (or, for a setlist, a new title) moves it for a reason that is part of the name.
 - Only pure logic is tested: `commonTest` unit tests in `:data:model` (the library name identity rule, the file name
-  predicates and the tag normalization), `:chordpro` (including chord-sheet conversion, and chord names, shapes and definitions, every shape of the tables checked against the chord it is filed under), `:domain:implementation` (`ImportPlanner` and conversion import plumbing),
+  predicates, the tag normalization and which instrument a tuning id belongs to), `:chordpro` (including chord-sheet conversion, and chord names, shapes and definitions, every shape of the tables checked against the chord it is filed under), `:domain:implementation` (`ImportPlanner` and conversion import plumbing),
   `:data:formats` (zip, bounded PDF/Word readers), `:data:source:local:implementation` (the JVM file storage, with independent-producer document goldens in `desktopTest`), `:data:source:remote:*` (hashing, encoders,
   the OAuth authorization URL, the cover search's and the song details lookup's queries and answers, the songwriters,
   their `User-Agent` and their shared pace, the cover download, the import download and the name it gives the file),
@@ -233,7 +233,7 @@ tab reaches the export screen. The detail is in `:presentation`'s `ui/screens/ex
   decides what happens to every file in a sync run, the engine and the synced preferences), `:metronome:*` (the sequencer, the synthesizer, the mixer, the engine's state machine, tap tempo and time signatures), `:tuner:*` (the note arithmetic and the presets, the FFT, the pitch detector against synthesized strings and any recording dropped into its `desktopTest` resources, the tracker, the tones, the engine's state machine, the sample ring and the FFT) and
   `:presentation` (the pure helpers behind its screens: which items the navigation bar puts behind Tools, the Chords tab's keys, chords and search, the search index and ranking, the song picker's filter chips, the fast scroller's section
   index, the import review's groups, counts and group boxes, the setlist slots, stepper labels, section grid and the cutting of sections into columns, a tag's color by its key, the score a layout is chosen by, the narrow columns and the text fitted to a page, row snapping and section measurements of the details screen, the editor's token cache, its search matches and how wide its menu may be, where a song's tempo comes from, what a click plays for, which chords a song plays, in which tuning, and which
-  shape each is drawn with, the tuner's note names, the instruments its presets are offered under and what its tunings are called in each notation, the cents it writes, the strings it ticks off, the step its reading is announced at and which notice its page shows, the diagrams' geometry and what the editor's Chord shape button writes, the setlist reorder merge and
+  shape each is drawn with, the instrument table (the tunings of each instrument, which have shapes, the tuning picked for each), the tuner's note names and what its tunings are called in each notation, the cents it writes, the strings it ticks off, the step its reading is announced at and which notice its page shows, the diagrams' geometry and what the editor's Chord shape button writes, the setlist reorder merge and
   search and the list placeholders, the selection mode's Selection section, its tag and language draft and what its
   Choose setlists sheet adds; and, over small fakes of their use cases, the song text writes, the metadata sheets'
   edits, the playing overrides and the song filters), run on
@@ -281,7 +281,10 @@ What the app does, one line each; the full text is in the file named (`:presenta
   `ui/screens/chords/CLAUDE.md`.
 - Six top level screens do not fit a navigation bar, so there the Metronome, the Tuner and the Chords are tabs behind one
   Tools item, which a rail and a bar of five or fewer screens leave out: `:presentation`'s `ui/CLAUDE.md`.
-- Every chord of a song is shown fingered at its top, for the tuning picked in Settings; the shape is the song's own
+- The player has one instrument, held in one preference and picked, with its tuning, through two chips on the song
+  details screen, the Tuner, the Chords tab, and Settings, and on the onboarding; the diagrams, the tuner, and the capo rule all read it:
+  `:presentation`'s `ui/CLAUDE.md`.
+- Every chord of a song is shown fingered at its top, for the instrument and tuning picked; the shape is the song's own
   `{define}` (a standard tuning shape, drawn only where it sounds what it says), then the player's
   library-wide choice, then the app's first: `:presentation`'s `ui/chords/CLAUDE.md`.
 - The app is shipped with two demo songs and one setlist, planted once through the ordinary import on a fresh

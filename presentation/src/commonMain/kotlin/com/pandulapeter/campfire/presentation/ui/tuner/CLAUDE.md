@@ -15,8 +15,10 @@ share.
 - `TunerController` (a view model holder) — the settings (`UserPreferences.tunerSettings`, saved through a
   `DebouncedPreference` like the metronome's and written with the others on the way out), listening on the screens' say,
   the tones, and `hasTurnedOnMicrophone`, whether a tap has ever asked for the microphone on this device (saved in
-  `TunerSettings`, so it is never exported or synced). It follows the settings:
-  a listening tuner reads against the new ones, a tone ends with its instrument and moves with the reference pitch.
+  `TunerSettings`, so it is never exported or synced). What it listens for is `tunerConfig`, the instrument in the
+  player's hands (`UserPreferences.instrument` and its tuning, `ui/instrument/`) with the tuner's own Chromatic switch and
+  reference pitch (`tunerConfigOf`), and it follows that: a listening tuner reads against the new strings, a tone ends
+  with its instrument and moves with the reference pitch, whichever screen the instrument was picked on.
   **Nothing of the tuner outlives its screen**: the view model stops it whenever the top of the back stack changes -
   closing the sheet with it, since the sheet belongs to the song under it - and whenever the tuner sheet stops being the
   dialog on screen, and `AppExitController` with the view model; the screens' `TunerListeningEffect` stops it as they
@@ -59,25 +61,22 @@ share.
   instrument: the tone's or the heard one selected, a tap toggling its tone, the sounding one carrying a speaker (what it is
   doing, where a stop square read as a media control) and a tuned one a check; read as buttons rather than the radio buttons Material makes segments; the names shrinking to fit
   eight strings on a phone. Gone in chromatic mode.
-- `InstrumentChoice` — **the tab's alone**: two settings of chips, like the Metronome tab's time signatures. Instrument:
-  Chromatic first, then every instrument, each string count one of its own (`TunerInstrument`: guitar, seven- and
-  eight-string guitar, bass, five-string bass, ukulele, banjo, violin, mandolin); a chip picks its standard tuning. Every
-  guitar and bass, whatever its strings, offers a half and a full step down.
-  Tuning: that instrument's tunings, named without the instrument picked right above them (`TuningLabels.kt`), there only
-  for an instrument with more than one, the chips crossfading as one such instrument follows another. **A tuning's note
-  follows the chord notation, not the language** (`TuningName.kt`, pure, tested): the name holds a MIDI note rather than
-  a letter, so Drop B is Drop H in German and Drop Si in Latin, and DADGAD and the fiddle's cross tunings are spelled
-  from their strings (`Re La Re Sol La Re`). The reference tone button says its note the same way.
-  `TunerInstrument.kt` (`instrumentOf`; every preset under exactly one instrument, its standard tuning first, tested).
+- `TunerInstrumentSetting` — **the tab's alone**, the Chromatic switch first (`TunerSettings.isChromatic`), which reads
+  the nearest note rather than the nearest string, and while it is off the instrument and tuning chips every screen
+  opens their sheets with (see `ui/CLAUDE.md`), which chromatic tuning has no use for; an instrument without strings (the
+  keyboard, Other) is read chromatically either way. Every guitar and bass, whatever its strings, offers a half and a full step down (`Instrument.tunings`). **A
+  tuning's note follows the chord notation, not the language** (`TuningName.kt`, pure, tested): the name holds a MIDI
+  note rather than a letter, so Drop B is Drop H in German and Drop Si in Latin, and DADGAD and the fiddle's cross
+  tunings are spelled from their strings (`Re La Re Sol La Re`). The reference tone button says its note the same way.
 - `ReferencePitchSetting` — **the tab's alone**: a `Stepper` reset by a tap on its value, and a play / stop toggle
   button sounding A4.
 - **The tab's layout** follows the Metronome tab's: the display pinned and as wide as a page of two sections, and on a
   window with room for two columns the notice, the issue line and the strings as the page's `header`, spanning both,
-  with the instrument and its tuning in the first column and the reference pitch on a card in the second. A narrower
+  with the Chromatic switch and the instrument in the first column and the reference pitch on a card in the second. A narrower
   window keeps all of it in one column, in that order.
 - **The sheet offers neither the instrument nor the reference pitch**, as the song details' metronome panel plays with
-  the Metronome tab's presets without offering them: it tunes to what the tab was set to, and holds the display, the
-  issue line and the strings.
+  the Metronome tab's presets without offering them: it tunes to the instrument in the player's hands and what the tab
+  was set to, and holds the display, the issue line and the strings.
 - `NoteNames.kt` — a MIDI note in the reader's chord notation with sharps (`H` in German, `La` in Latin, letters for a
   numbering) and its octave in scientific numbering, and, for screen readers, with the sharp spoken (`spokenNoteName`: "C
   sharp", Hungarian "Cisz", and "Do kereszt" for the syllables). Tested.
@@ -102,7 +101,7 @@ it is one tap per device rather than per run; a refusal given later in the syste
 said with Open settings, and a permission the system has forgotten is asked again by its own prompt as the tuner opens.
 
 The tab (`ui/screens/tuner/`) pins the display above a `SettingsPage` whose first row is the notice while there is one
-(the display giving way to it), then the issue line, the strings, the instrument, its tuning, and the reference pitch;
+(the display giving way to it), then the issue line, the strings, the Chromatic switch, the instrument, and the reference pitch;
 it keeps the screen on while it hears, and scrolls to the top on a second tap of its item.
 The sheet is laid out like the tab, scrolling all it has under its header: the same display at the same size (compact
 in a short window only), collapsing for the notice row under it, then the issue line and the strings.

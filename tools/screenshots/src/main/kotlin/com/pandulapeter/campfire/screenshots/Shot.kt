@@ -245,8 +245,8 @@ internal val shots = listOf(
         uiMode = UserPreferences.UiMode.LIGHT,
         preferences = {
             mapOf(
+                "instrument" to JsonPrimitive(UserPreferences.Instrument.GUITAR.id),
                 "tunerSettings" to buildJsonObject {
-                    put("instrument", "guitar")
                     put("referencePitch", 440)
                     put("hasTurnedOnMicrophone", true)
                 },

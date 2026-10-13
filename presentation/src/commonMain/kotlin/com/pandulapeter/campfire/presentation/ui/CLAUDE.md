@@ -448,7 +448,7 @@ duration after that, as its card there has it.
 
 ### How a song is played on the keyboard
 
-**On the keyboard the capo is a transposition** (`readsCapoAsTransposition`, the Songs tab's Instrument set to
+**On the keyboard the capo is a transposition** (`readsCapoAsTransposition`, `UserPreferences.instrument` set to
 Keyboard, whatever the Chord diagrams switch says): a keyboard has no capo, so the song details screen has no capo
 stepper and names no capo, read only mode's line included, and counts the capo's frets into the transposition instead
 (`withCapoSounding`, wrapped around the octave like the stepper), so that the chords over the lyrics, the diagrams, the
@@ -456,8 +456,27 @@ chord sheet, and the key next to the stepper are all the sounding key the app ba
 and resets only the transposition's own override, and reads as overridden only while there is one, so a capoed song with
 nothing stepped reads the capo's amount, plainly. The capo overrides are still kept, read and stepped by the other
 instruments, and the Song defaults sheet still edits the file's `{capo}`. The PDF follows the screen (the capo the
-screen counts, the library's included, counted into the printed transposition, and no capo printed); the guitar, the
-ukulele, and Other are unchanged, the capo a stepper of its own that moves the sounding key without moving a chord.
+screen counts, the library's included, counted into the printed transposition, and no capo printed); every other
+instrument is unchanged, the capo a stepper of its own that moves the sounding key without moving a chord.
+
+### One instrument for the whole app
+
+**The player has one instrument in their hands, held in one preference and picked through two chips**
+(`UserPreferences.instrument`, and the tuning picked for each instrument in `UserPreferences.tunings`, both kept on the
+device and never synced): the chord diagrams are drawn for it, the tuner listens for its strings, and the keyboard reads
+the capo as a transposition. `ui/instrument/` is the one place that joins `:data:model`'s list of instruments to the
+tuner's tunings and `:chordpro`'s shapes (`Instruments.kt`: `Instrument.tunings`, `chordInstrument`, `tuningOf`,
+`instrumentTuning`, `chordTuning()`, `withTuning`; `InstrumentLabels.kt`: the one set of names), and the five places
+that ask the question all go through it. The instrument and its tuning are two choices, each a `PickerChip` naming
+what is picked (`components/InstrumentChips.kt`, the tuning's only for an instrument with more than one, "Standard
+tuning" in full) and opening a sheet of its own, so that neither list hides the other: the instrument sheet
+(`dialogs/InstrumentSheet.kt`, `DialogType.Instrument`: every instrument with how many strings it has, "No chord
+diagrams" after one without shapes, and nothing about tunings) and the tuning sheet (`dialogs/TuningSheet.kt`,
+`DialogType.Tuning`: the instrument's tunings, each with its open strings in the chord notation). The chips head the
+song details screen's first section, above the transposition and the capo, since like them they are about how the
+whole song is played, read only mode included, since they change this device's preference rather than the song or the
+setlist; they stand on the Tuner tab (under its Chromatic switch, and only while that is off), the Chords tab, and Settings → Songs
+(`InstrumentSetting`, `InstrumentChipRow`); the onboarding's instrument page lists the same instruments. Chromatic is not an instrument but the tuner's own switch (`TunerSettings.isChromatic`).
 
 ## Haptics
 
@@ -494,7 +513,7 @@ capo wherever a song is read, and leaving the chord spelling rows of the Songs t
 (`areChordDiagramsEnabled`), disabled while the chords are off, off taking the Chords section off every song and the
 Chords tab (which the chords off take too, `FeatureSwitches.isChordLibraryEnabled`), the
 chosen shapes kept (the Songs tab's Instrument row stays enabled, since the keyboard reads the capo as a transposition
-whether or not diagrams are drawn); **Metronome** (`isMetronomeEnabled`), off taking its
+and the tuner listens for the instrument whether or not diagrams are drawn); **Metronome** (`isMetronomeEnabled`), off taking its
 tab, the song details screen's click button and panel, its M key and the tempo and the time signature wherever a song is
 read; **Tuner** (`isTunerEnabled`), off taking its tab and the song details screen's way to the tuner sheet, and with
 them every way the app could ask for the microphone; **Setlists** (`areSetlistsEnabled`), off taking their tab and every way of putting a song into one, while setlist

@@ -37,10 +37,10 @@ import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.chords_instrument_other
+import com.pandulapeter.campfire.presentation.resources.chords_instrument_without_diagrams
 import com.pandulapeter.campfire.presentation.resources.chords_search_no_chord
 import com.pandulapeter.campfire.presentation.resources.chords_search_no_shape
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.chords.chordTuning
 import com.pandulapeter.campfire.presentation.ui.chords.selectShape
 import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
@@ -49,6 +49,9 @@ import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedLazyGridState
 import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
+import com.pandulapeter.campfire.presentation.ui.instrument.chordTuning
+import com.pandulapeter.campfire.presentation.ui.instrument.instrumentLabel
+import com.pandulapeter.campfire.presentation.ui.instrument.instrumentTuning
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableContent
 import com.pandulapeter.campfire.presentation.ui.screens.settings.PAGE_TOP_PADDING
@@ -58,9 +61,9 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.withContext
 
 /**
- * The Chords tab: every chord the app can draw, for the instrument and the tuning picked in Settings → Songs, which the
- * controls at the top of the page change for the songs too, since a player browsing ukulele chords has a ukulele in
- * hand. Under them the chords of one key, in the order of [CHORD_LIBRARY_QUALITIES], each a cell with the shape the
+ * The Chords tab: every chord the app can draw, for the instrument in the player's hands and its tuning, which the chip
+ * at the top of the page changes for the songs and the tuner too, since a player browsing ukulele chords has a ukulele in
+ * hand. An instrument without shapes gets a line naming it instead, which points at the chip. Under them the chords of one key, in the order of [CHORD_LIBRARY_QUALITIES], each a cell with the shape the
  * songs draw it with, or a search for one chord by name ([chordLibraryResults]). A tap on a cell opens every shape of
  * that chord ([DialogType.ChordReference]), the one settled on becoming the player's for that chord in every song.
  *
@@ -80,6 +83,7 @@ internal fun ChordsScreen(
     val notation = spelling.notation.toChordNotation()
     val keys = remember(spelling.accidentals) { chordLibraryKeys(spelling.accidentals) }
     val tuning = userPreferences?.chordTuning()
+    val instrument = userPreferences?.instrument ?: UserPreferences.Instrument.GUITAR
     val storedShapes = tuning?.let { userPreferences?.chordVoicings?.get(it.voicingKey) }.orEmpty()
     val keyIndex = state.keyIndex
     val query = state.query
@@ -129,14 +133,14 @@ internal fun ChordsScreen(
         ) {
             item(key = CONTROLS_KEY, span = { GridItemSpan(maxLineSpan) }, contentType = CONTROLS_KEY) {
                 ChordLibraryControls(
-                    instrument = userPreferences?.chordInstrument,
-                    tuning = tuning,
+                    instrument = instrument,
+                    instrumentTuning = userPreferences?.instrumentTuning,
                     notation = notation,
                     keys = keys,
                     selectedKeyIndex = keyIndex,
                     query = query,
-                    onInstrumentSelected = viewModel::setChordInstrument,
-                    onTuningSelected = viewModel::setChordTuning,
+                    onInstrumentClicked = { viewModel.showDialog(DialogType.Instrument) },
+                    onTuningClicked = { viewModel.showDialog(DialogType.Tuning) },
                     onKeySelected = { state.keyIndex = it },
                     onQueryChanged = { state.query = it },
                 )
@@ -146,7 +150,11 @@ internal fun ChordsScreen(
                     item(key = MESSAGE_KEY, span = { GridItemSpan(maxLineSpan) }, contentType = MESSAGE_KEY) {
                         ChordLibraryMessage(
                             modifier = listItemAnimation(gridState),
-                            text = stringResource(Res.string.chords_instrument_other),
+                            text = if (instrument == UserPreferences.Instrument.OTHER) {
+                                stringResource(Res.string.chords_instrument_other)
+                            } else {
+                                textResource(Res.string.chords_instrument_without_diagrams, instrumentLabel(instrument))
+                            },
                         )
                     }
                 }

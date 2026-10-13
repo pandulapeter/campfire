@@ -23,14 +23,13 @@ The onboarding: a few questions, one a page, each shown on what it changes; a fi
 - **What do you need?** (`FeaturesStep`): the chords, the setlists, the metronome, and the tuner as cards any of which can
   be kept, each the Features switch it stands for. There are no roles: a player sings too, and anyone may play from a
   list, so the page asks about the features rather than guessing them from the person.
-- **What do you play?**: only with the chords or the tuner on, its line naming which of them the answer is for. Guitar,
-  Ukulele, Mandolin, Banjo, Piano or keyboard, and Something else; Bass and Violin too with the tuner on
-  (`onboardingInstruments`), since with it off they would only be Something else by another name. Under them the
-  tunings of the one picked (`OnboardingTuningChoice`, `tuningsOffered`: its own, and the standard tuning of the
-  guitar's seven and eight strings and the bass's five), asked with the tuner off too, since the diagrams depend on it.
-  With the chords on, the chord diagrams switch follows, a G drawn beside it for the instrument picked, where the
-  diagrams are drawn for the instrument in that tuning; a tuning they are not drawn for says so in its place, and an
-  instrument they are never drawn for leaves it empty.
+- **What do you play?**: only with the chords or the tuner on, its line naming which of them the answer is for. Every
+  instrument the instrument sheet lists, Piano or keyboard and Something else in the page's own words; with the tuner
+  off only the ones with diagrams and Something else (`onboardingInstruments`), since the others would only be
+  Something else by another name. Under them the tunings of the one picked (`OnboardingTuningChoice`, the sheet's
+  `TuningChips`), asked with the tuner off too, since the diagrams are drawn in it. With the chords on, the chord
+  diagrams switch follows for an instrument they are drawn for, a G drawn beside it in its tuning; an instrument they
+  are never drawn for leaves the place empty.
 - **How do you write chords?**: only with the chords on; the five notations as cards with their names alone, the
   two lines of Amazing Grace above them rewritten in each (`OnboardingSongPreview`; the examples and the explanations are
   Settings'). The song is in E, so that German turns its B into an H; it has no title and names no key, to save the room,
@@ -53,13 +52,10 @@ answer takes away shrinks out from between its neighbours and one it brings back
 
 There is no draft: each tap goes through the setter the settings screen uses, and each page shows what the app is set to
 now, which is why every way out only closes the screen, why the colors picked take hold of the onboarding itself, and why
-going through it again from Settings needs no state of its own. `OnboardingInstrument` is not a preference either:
-picking one or one of its tunings writes the tuner's tuning, the chord diagrams' instrument, which is Other for a
-tuning the diagrams are not drawn for (`chordInstrumentFor`: a seven- or eight-string guitar), and the diagrams'
-tuning for that instrument, the same one where they know it and standard otherwise (`chordTuningWrittenFor`); the
-page reads its answer back out of the first two (`onboardingInstrumentOf`), keeping a tuning the tuner already has for
-that instrument (`tuningFor`, so drop D stays drop D); settings that match no answer, a fresh installation's among them,
-show nothing picked rather than a guess.
+going through it again from Settings needs no state of its own. The instrument page writes the one instrument the
+whole app reads (`UserPreferences.instrument`, see `ui/CLAUDE.md`) and the tuning picked for it, so it always shows one
+picked: the guitar on a fresh installation, and whatever was set since on a second visit, its tuning kept, so drop D
+stays drop D.
 
 ### One screen, one pager, one footer
 

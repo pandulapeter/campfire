@@ -20,14 +20,14 @@ class InstrumentTuningTest {
     @Test
     fun `every preset is read back from its id and an unknown id is chromatic`() {
         InstrumentTuning.entries.forEach { assertEquals(it, InstrumentTuning.fromId(it.id)) }
-        assertNull(InstrumentTuning.fromId(InstrumentTuning.CHROMATIC_ID))
+        assertNull(InstrumentTuning.fromId("chromatic"))
         assertNull(InstrumentTuning.fromId("theremin"))
     }
 
     @Test
     fun `the ids are unique`() {
         assertEquals(InstrumentTuning.entries.size, InstrumentTuning.entries.map { it.id }.toSet().size)
-        assertTrue(InstrumentTuning.entries.none { it.id == InstrumentTuning.CHROMATIC_ID })
+        assertTrue(InstrumentTuning.entries.none { it.id == "chromatic" })
     }
 
     @Test

@@ -98,18 +98,22 @@ data class UserPreferences(
     val songCardDetails: CardDetails = CardDetails.SongsDefault,
     /** What the cards of the Setlists screen say after the artist, the twin of [songCardDetails]. */
     val setlistCardDetails: CardDetails = CardDetails.SetlistsDefault,
-    /** The instrument the diagrams are drawn for, or [ChordInstrument.OTHER] for none. */
-    val chordInstrument: ChordInstrument = ChordInstrument.GUITAR,
     /**
-     * The tuning the diagrams are drawn for, by [ChordInstrument.id] to the tuning's id (the tuner's ids, `guitar_drop_d`,
+     * The instrument in the player's hands: what the chord diagrams are drawn for, what the tuner listens for, and what
+     * decides whether a capo is read as a transposition ([Instrument.KEYBOARD]). Kept on the device and never synced,
+     * since one player of a shared library plays the bass and another the guitar.
+     */
+    val instrument: Instrument = Instrument.GUITAR,
+    /**
+     * The tuning picked for each instrument, by [Instrument.id] to the tuning's id (the tuner's ids, `guitar_drop_d`,
      * `ukulele_baritone`), with no entry for standard tuning. One per instrument, so that a player who keeps the guitar
      * in drop D and the ukulele in baritone tuning switches between them without picking again. Kept on the device, like
-     * [chordInstrument], since one player may tune an instrument differently from another. An id this version does not
-     * know is kept as it is, and drawn for as standard tuning.
+     * [instrument]. An id this version does not know, or one of another instrument, is kept as it is and read as
+     * standard tuning.
      */
-    val chordTunings: Map<String, String> = emptyMap(),
+    val tunings: Map<String, String> = emptyMap(),
     /**
-     * The shape the player has chosen for a chord, by [ChordInstrument.id] and then by the chord's id (its notes, the
+     * The shape the player has chosen for a chord, by the instrument's id and then by the chord's id (its notes, the
      * same for every spelling of it), the value the shape as `ChordVoicings.write` writes it. One choice per chord for
      * the whole library, since which F somebody plays is a habit of their hands rather than a reading of one song; a
      * song's own `{define}` still wins in that song. Never exported, but synced, like [transpositions]. An instrument
@@ -178,7 +182,7 @@ data class UserPreferences(
     val tagColors: Map<String, String> = emptyMap(),
     val printSettings: PrintSettings = PrintSettings(),
     val metronomeSettings: MetronomeSettings = MetronomeSettings(),
-    /** Never exported or synced: which instrument one device tunes is that device's business. */
+    /** Never exported or synced: how one device's tuner listens is that device's business. */
     val tunerSettings: TunerSettings = TunerSettings(),
     /** Versions already introduced here, including the first installed version whose introduction is skipped. */
     val seenWhatsNewVersions: Set<String> = emptySet(),
@@ -392,17 +396,37 @@ data class UserPreferences(
     }
 
     /**
-     * The instrument the chord diagrams are drawn for, the twin of `:chordpro`'s, which this module does not see. [OTHER]
-     * is an instrument `:chordpro` has no shapes for (a bass, a violin, an eight-string guitar), so no
-     * diagram is drawn: one for the six strings of a standard guitar would be wrong on it, which is worse than none.
+     * The instrument in the player's hands. Each id is the id of the instrument's standard tuning in `:tuner:api`'s
+     * `InstrumentTuning`, and for the five `:chordpro` has shapes for (the guitar, the ukulele, the mandolin, the banjo,
+     * and the keyboard) the id of its `ChordInstrument` too, which this module does not see. A guitar or a bass with more
+     * strings is an instrument of its own, since a tuning of one is never a tuning of the other; [KEYBOARD] and [OTHER]
+     * have no strings to tune.
      */
-    enum class ChordInstrument(val id: String) {
+    enum class Instrument(val id: String) {
         GUITAR("guitar"),
+        GUITAR_SEVEN_STRING("guitar_seven_string"),
+        GUITAR_EIGHT_STRING("guitar_eight_string"),
+        BASS("bass"),
+        BASS_FIVE_STRING("bass_five_string"),
         UKULELE("ukulele"),
-        MANDOLIN("mandolin"),
         BANJO("banjo"),
+        MANDOLIN("mandolin"),
+        VIOLIN("violin"),
         KEYBOARD("keyboard"),
         OTHER("other"),
+        ;
+
+        companion object {
+            fun fromId(id: String) = entries.firstOrNull { it.id == id }
+
+            /**
+             * The instrument a tuning id belongs to: the one whose id it is, or the one with the longest id it starts with
+             * followed by `_`, so that `guitar_seven_string_drop_a` is the seven-string guitar rather than the guitar.
+             */
+            fun ofTuningId(tuningId: String) = entries
+                .filter { tuningId == it.id || tuningId.startsWith(it.id + "_") }
+                .maxByOrNull { it.id.length }
+        }
     }
 
     enum class Language(val id: String) {

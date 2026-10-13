@@ -9,11 +9,17 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layoutId
@@ -31,8 +37,8 @@ import com.pandulapeter.campfire.presentation.ui.components.textResource
 
 /**
  * The first section of the song: the key, capo, tempo and time, which are always on the page, since they are what is
- * played, or where [isSongInfoShown] the card of what the song is, which holds them as its Song defaults tiles. A whole,
- * uncuttable section.
+ * played, or where [isSongInfoShown] the card of what the song is, which holds them as its Song defaults tiles, headed
+ * by the instrument and tuning chips where it has them. A whole, uncuttable section.
  *
  * @param playingControls What sets those four, where they are set here rather than only read: the song details screen
  * hands them down outside read only mode, see [SongPlayingControls].
@@ -47,6 +53,9 @@ import com.pandulapeter.campfire.presentation.ui.components.textResource
  * @param chordStyle The style the chords of the lyrics are set in, already scaled, which the line of text read only mode
  * draws the four values in: the key and the capo are read in the chords' accent color, and in the chords' size they read
  * as part of what is played rather than as a caption above it.
+ * @param instrumentChips The instrument and tuning chips that head the section, above what they are as much about as the
+ * controls are: how the whole song is played (see [withChordsSection]); null where there are none. It fades in and out rather than
+ * the section growing towards it, since the layout reads the section's size as it is measured.
  */
 @Composable
 internal fun SongMetadataSection(
@@ -61,7 +70,23 @@ internal fun SongMetadataSection(
     titleStyle: TextStyle,
     chordStyle: TextStyle,
     fontScale: Float,
+    instrumentChips: (@Composable () -> Unit)? = null,
 ) = Column(modifier = modifier) {
+    // Kept while it fades out, so that it leaves as it was rather than as nothing.
+    val lastChip = remember { LastInstrumentChips() }
+    instrumentChips?.let { lastChip.content = it }
+    AnimatedVisibility(
+        visible = instrumentChips != null,
+        enter = fadeIn(),
+        exit = fadeOut(),
+    ) {
+        // On the controls' keyline, which the chips' names stand on by reaching out of it as the section pills do.
+        FlowRow(
+            modifier = Modifier.padding(start = 12.dp, end = 12.dp, bottom = INSTRUMENT_CHIP_GAP),
+            horizontalArrangement = Arrangement.spacedBy(INSTRUMENT_CHIPS_GAP),
+            verticalArrangement = Arrangement.spacedBy(INSTRUMENT_CHIPS_GAP),
+        ) { lastChip.content?.invoke() }
+    }
     if (isSongInfoShown) {
         SongInfoCard(
             metadata = metadata,
@@ -88,6 +113,9 @@ internal fun SongMetadataSection(
         )
     }
 }
+
+/** What the section's instrument chips last drew, see [SongMetadataSection]. Not a state: nothing is redrawn because of it. */
+private class LastInstrumentChips(var content: (@Composable () -> Unit)? = null)
 
 /**
  * The four values read rather than set, on one line. With [tools], the key and the capo are one group and the tempo and
@@ -185,3 +213,9 @@ private fun PlayingValuesGroup(
 /** Between the two groups where they share a line: the buttons ending the first one already set them apart. */
 private val PLAYING_VALUES_GROUP_GAP = 16.dp
 private val PLAYING_VALUES_TOOL_GAP = 12.dp
+
+/** Under the instrument chips, which sets them a little apart from the controls as a group of their own. */
+private val INSTRUMENT_CHIP_GAP = 16.dp
+
+/** Between the instrument chip and the tuning chip, and between their lines, as between the song's playing tools. */
+private val INSTRUMENT_CHIPS_GAP = 8.dp

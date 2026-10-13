@@ -92,27 +92,89 @@ internal class UserPreferencesMappersTest {
     }
 
     @Test
-    fun `chord diagrams default to the guitar and keep every chosen shape`() {
+    fun `the instrument defaults to the guitar and keeps every chosen shape and tuning`() {
         val defaults = UserPreferencesDocumentFormat.decode("{}").document.toModel()
         assertEquals(true, defaults.areChordDiagramsEnabled)
-        assertEquals(UserPreferences.ChordInstrument.GUITAR, defaults.chordInstrument)
+        assertEquals(UserPreferences.Instrument.GUITAR, defaults.instrument)
         assertEquals(false, defaults.isChordSectionFolded)
-        assertEquals(emptyMap(), defaults.chordTunings)
+        assertEquals(emptyMap(), defaults.tunings)
+        assertEquals(false, defaults.tunerSettings.isChromatic)
         val chosen = defaults.copy(
             areChordDiagramsEnabled = false,
-            chordInstrument = UserPreferences.ChordInstrument.UKULELE,
-            chordTunings = mapOf("guitar" to "guitar_drop_d", "ukulele" to "ukulele_baritone", "banjo" to "banjo_open_d"),
+            instrument = UserPreferences.Instrument.UKULELE,
+            tunings = mapOf("guitar" to "guitar_drop_d", "ukulele" to "ukulele_baritone", "banjo" to "banjo_open_d"),
             chordVoicings = mapOf("guitar" to mapOf("F:0.4.7" to "x x 3 2 1 1"), "banjo" to mapOf("G:0.4.7" to "0 0 0 0 0")),
             isChordSectionFolded = true,
         )
         assertEquals(chosen, UserPreferencesDocumentFormat.decode(UserPreferencesDocumentFormat.encode(chosen.toDocument())).document.toModel())
-        assertEquals(
-            UserPreferences.ChordInstrument.GUITAR,
-            UserPreferencesDocument(chordInstrument = "theremin").toModel().chordInstrument,
-        )
-        val other = defaults.copy(chordInstrument = UserPreferences.ChordInstrument.OTHER)
-        assertEquals(other, UserPreferencesDocumentFormat.decode(UserPreferencesDocumentFormat.encode(other.toDocument())).document.toModel())
+        val bass = defaults.copy(instrument = UserPreferences.Instrument.BASS_FIVE_STRING)
+        assertEquals(bass, UserPreferencesDocumentFormat.decode(UserPreferencesDocumentFormat.encode(bass.toDocument())).document.toModel())
         assertEquals(emptyMap(), UserPreferencesDocument(chordVoicings = mapOf("guitar" to mapOf("F:0.4.7" to " "))).toModel().chordVoicings)
+    }
+
+    @Test
+    fun `an instrument this version does not know is the guitar`() {
+        assertEquals(UserPreferences.Instrument.GUITAR, UserPreferencesDocument(instrument = "theremin").toModel().instrument)
+    }
+
+    @Test
+    fun `a document written now carries none of the legacy instrument keys`() {
+        val preferences = UserPreferencesDocumentFormat.decode("{}").document.toModel().copy(
+            instrument = UserPreferences.Instrument.MANDOLIN,
+            tunings = mapOf("mandolin" to "mandolin_gdgd"),
+            tunerSettings = TunerSettings(isChromatic = true),
+        )
+        val document = UserPreferencesDocumentFormat.decode(UserPreferencesDocumentFormat.encode(preferences.toDocument())).document
+        assertEquals("", document.chordInstrument)
+        assertEquals(emptyMap(), document.chordTunings)
+        assertEquals("", document.tunerSettings.instrument)
+        assertEquals(preferences.instrument, document.toModel().instrument)
+        assertEquals(preferences.tunings, document.toModel().tunings)
+        assertEquals(true, document.toModel().tunerSettings.isChromatic)
+    }
+
+    @Test
+    fun `a legacy tuner instrument wins over the legacy chord instrument`() {
+        val model = UserPreferencesDocumentFormat.decode("""{"chordInstrument": "other", "tunerSettings": {"instrument": "guitar_drop_d"}}""")
+            .document.toModel()
+        assertEquals(UserPreferences.Instrument.GUITAR, model.instrument)
+        assertEquals(mapOf("guitar" to "guitar_drop_d"), model.tunings)
+        assertEquals(false, model.tunerSettings.isChromatic)
+    }
+
+    @Test
+    fun `a legacy chromatic tuner keeps the chord instrument and turns the chromatic switch on`() {
+        val model = UserPreferencesDocumentFormat.decode("""{"chordInstrument": "ukulele", "tunerSettings": {"instrument": "chromatic"}}""")
+            .document.toModel()
+        assertEquals(UserPreferences.Instrument.UKULELE, model.instrument)
+        assertEquals(emptyMap(), model.tunings)
+        assertEquals(true, model.tunerSettings.isChromatic)
+    }
+
+    @Test
+    fun `a legacy five-string bass tuning names the five-string bass and its tuning`() {
+        val model = UserPreferencesDocumentFormat.decode("""{"tunerSettings": {"instrument": "bass_five_string_high_c"}}""").document.toModel()
+        assertEquals(UserPreferences.Instrument.BASS_FIVE_STRING, model.instrument)
+        assertEquals(mapOf("bass_five_string" to "bass_five_string_high_c"), model.tunings)
+    }
+
+    @Test
+    fun `a legacy seven-string guitar in standard tuning names the seven-string guitar with no tuning entry`() {
+        val model = UserPreferencesDocumentFormat.decode(
+            """{"chordInstrument": "other", "chordTunings": {"ukulele": "ukulele_d"}, "tunerSettings": {"instrument": "guitar_seven_string"}}""",
+        ).document.toModel()
+        assertEquals(UserPreferences.Instrument.GUITAR_SEVEN_STRING, model.instrument)
+        assertEquals(mapOf("ukulele" to "ukulele_d"), model.tunings)
+    }
+
+    @Test
+    fun `an unknown legacy tuner instrument falls back on the legacy chord instrument and its tunings`() {
+        val model = UserPreferencesDocumentFormat.decode(
+            """{"chordInstrument": "banjo", "chordTunings": {"banjo": "banjo_open_d"}, "tunerSettings": {"instrument": "theremin"}}""",
+        ).document.toModel()
+        assertEquals(UserPreferences.Instrument.BANJO, model.instrument)
+        assertEquals(mapOf("banjo" to "banjo_open_d"), model.tunings)
+        assertEquals(false, model.tunerSettings.isChromatic)
     }
 
     @Test
@@ -227,7 +289,7 @@ internal class UserPreferencesMappersTest {
 
     @Test
     fun `tuner settings survive saving and reloading and a reference pitch out of range is held within it`() {
-        val settings = TunerSettings(instrumentId = "ukulele", referencePitch = 432, hasTurnedOnMicrophone = true)
+        val settings = TunerSettings(isChromatic = true, referencePitch = 432, hasTurnedOnMicrophone = true)
         val preferences = UserPreferencesDocument().toModel().copy(isTunerEnabled = false, tunerSettings = settings)
         val reloaded = UserPreferencesDocumentFormat.decode(UserPreferencesDocumentFormat.encode(preferences.toDocument())).document.toModel()
         assertEquals(settings, reloaded.tunerSettings)

@@ -10,16 +10,15 @@
 # To do
 ## Short-term (in this version)
 ### Bugs / issues
+- Changing the instrument / tuning should modify how tabs are displayed. Handle changing to instruments that don't support tab
 
 ### Improvements
-- Chord library browser
-- Modal tuner instrument picker...?
-- Website: update Thinking out Loud + 500 miles
+- Rename Settings -> Songs to Preferences and reorganize it
+- Finalize the onboarding experience
+- Find a way to allow entering tempo using the keyboard
 - Search: highlight matched substrings
-- Rename Settings -> Songs to Preferences
-
-### Onboarding improvements
-- Instrument: Chord-diagrams are too hidden, maybe they should be a separate page? Only if a compatible instrument + tuning was selected
+- Simplify adding tab charts in the editor
+- Simplify adding chord diagrams in the editor
 
 ### Features
 - Shared setlists via Dropbox public links -> deeplink to Campfire. Rewrite documentation/plans/song-links.md - allow scanning deep links via QR code
@@ -28,7 +27,6 @@
 - New song from the clipboard: documentation/plans/clipboard-import.md
 - Share to Campfire (iOS share extension, Android audit): documentation/plans/share-extension.md (after the clipboard plan)§
 - Search field for tags / languages
-- Find a way to allow entering tempo using the keyboard
 - Comments in setlists (between songs)
 - Simplify adding comments / annotations to songs
 

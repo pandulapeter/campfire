@@ -84,10 +84,14 @@ sealed interface DialogType {
      */
     data class ChordReference internal constructor(internal val chord: SongChord) : DialogType
     /**
-     * The instrument the chord diagrams are drawn for, opened from the button next to the Chords section's pill, so that
-     * the shapes are changed where they are read and not only in Settings, which holds the same preference.
+     * The instrument in the player's hands and its tuning, opened from the instrument chip of every screen that depends on
+     * it (the song details screen's Chords section, the Tuner tab, the Chords tab, and Settings), so that it is changed
+     * where its effect is seen.
      */
-    data object ChordInstrument : DialogType
+    data object Instrument : DialogType
+
+    /** The tuning of the instrument in the player's hands, opened from the tuning chip next to the instrument's. */
+    data object Tuning : DialogType
 
     /** The tuner over the song being read, opened from the song details overflow menu; it listens while it is up. */
     data object Tuner : DialogType

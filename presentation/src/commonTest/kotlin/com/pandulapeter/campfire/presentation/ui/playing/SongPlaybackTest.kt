@@ -84,9 +84,9 @@ class SongPlaybackTest {
 
     @Test
     fun `only the keyboard reads the capo as a transposition`() {
-        assertTrue(testPreferences().copy(chordInstrument = UserPreferences.ChordInstrument.KEYBOARD).readsCapoAsTransposition)
-        listOf(UserPreferences.ChordInstrument.GUITAR, UserPreferences.ChordInstrument.UKULELE, UserPreferences.ChordInstrument.OTHER).forEach {
-            assertFalse(testPreferences().copy(chordInstrument = it).readsCapoAsTransposition)
+        assertTrue(testPreferences().copy(instrument = UserPreferences.Instrument.KEYBOARD).readsCapoAsTransposition)
+        UserPreferences.Instrument.entries.filter { it != UserPreferences.Instrument.KEYBOARD }.forEach {
+            assertFalse(testPreferences().copy(instrument = it).readsCapoAsTransposition)
         }
         assertFalse(null.readsCapoAsTransposition)
     }

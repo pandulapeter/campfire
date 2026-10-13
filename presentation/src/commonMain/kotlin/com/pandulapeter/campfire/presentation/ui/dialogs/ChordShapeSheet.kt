@@ -42,7 +42,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_chord_shape
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_tuning
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.chords.SongChord
-import com.pandulapeter.campfire.presentation.ui.chords.chordTuning
+import com.pandulapeter.campfire.presentation.ui.instrument.chordTuning
 import com.pandulapeter.campfire.presentation.ui.chords.chordTuningLabel
 import com.pandulapeter.campfire.presentation.ui.chords.selectShape
 import com.pandulapeter.campfire.presentation.ui.chords.songChordsOf

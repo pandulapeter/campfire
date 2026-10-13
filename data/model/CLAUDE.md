@@ -41,8 +41,10 @@ display-only `ChordSpelling`, `isPerformanceModeEnabled` — read only mode for 
 feature switches `areChordsEnabled` (stored as the inverse `isLyricsOnlyModeEnabled` it replaced), `areSetlistsEnabled`,
 `isMetronomeEnabled` and `isTunerEnabled`, `isCoverArtEnabled`, which is what lets the app fetch the covers the songs name at all, the
 chord diagrams' `areChordDiagramsEnabled`, `songCardDetails` and `setlistCardDetails` (`CardDetails`: whether the Songs and the
-Setlists screen's cards show the key, the tempo and the duration), `chordInstrument` (`ChordInstrument`, the twin of `:chordpro`'s, which this
-module does not see), `chordTunings` (the tuning the diagrams are drawn in, instrument id to the tuner's tuning id, no
+Setlists screen's cards show the key, the tempo and the duration), `instrument` (`Instrument`, the one instrument in the player's
+hands that the diagrams, the tuner, and the capo rule read, its ids the tuner's standard tunings and, for the five with
+shapes, `:chordpro`'s, which this module does not see; `ofTuningId` finds a tuning's instrument by the longest id
+prefix), `tunings` (the tuning picked for each instrument, instrument id to the tuner's tuning id, no
 entry for standard, kept on the device like the instrument and an unknown id kept as it is), `isChordSectionFolded` (one fold for every song) and `chordVoicings` (the player's own shape of
 each chord, by instrument id and then by the chord's id, never exported but synced through `preferences.json`, an
 unknown instrument kept as it is), `tagColors` (a palette id by `tagKey`, synced the same way, never dropped with
@@ -52,8 +54,8 @@ name to BPM and to fret for songs opened from the library, never exported, but s
 `preferences.json` (see `data/sync/implementation/CLAUDE.md`)), `metronomeSettings` (`MetronomeSettings`: the sound, subdivision and
 accents stored as the metronome's own ids, so this module depends on nothing, the volume, whose zero is the mute, the
 two switches, the Metronome tab's own tempo and time signature, with `TEMPO_RANGE`, and `isSongPanelShown`, whether the
-song details screen opens with the metronome panel in its app bar), `tunerSettings` (`TunerSettings`: the tuner's
-instrument as its own id and the reference pitch within `REFERENCE_PITCH_RANGE`, never exported or synced), the folded sections of each song (`foldedSections`,
+song details screen opens with the metronome panel in its app bar), `tunerSettings` (`TunerSettings`: whether the
+tuner reads chromatically and the reference pitch within `REFERENCE_PITCH_RANGE`, never exported or synced), the folded sections of each song (`foldedSections`,
 one set per song wherever it is opened from, since how much of a song one reader keeps open is theirs alone and never
 goes into a setlist, an export or a sync run), — the four maps keyed by a song's file name, which `withSongRenamed`
 moves with a renamed song or drops with a deleted one and `withoutSongOverrides` empties with the library, so that a new

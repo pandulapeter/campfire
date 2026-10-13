@@ -98,7 +98,7 @@ import com.pandulapeter.campfire.presentation.resources.songs_export_song
 import com.pandulapeter.campfire.presentation.resources.songs_export_songs
 import com.pandulapeter.campfire.presentation.resources.songs_selection_count
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.chords.chordTuning
+import com.pandulapeter.campfire.presentation.ui.instrument.chordTuning
 import com.pandulapeter.campfire.presentation.ui.chords.chordTuningLabel
 import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.components.DelayedLoadingIndicator

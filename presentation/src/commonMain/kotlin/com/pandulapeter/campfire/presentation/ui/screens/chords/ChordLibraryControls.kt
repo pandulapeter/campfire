@@ -9,11 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.chords
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -24,9 +19,6 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.semantics.Role
@@ -36,45 +28,38 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.chordpro.ChordNotation
 import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
-import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.chords_key
 import com.pandulapeter.campfire.presentation.resources.chords_search
-import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument
-import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_banjo
-import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_guitar
-import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_keyboard
-import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_mandolin
-import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_ukulele
-import com.pandulapeter.campfire.presentation.resources.settings_chord_tuning
+import com.pandulapeter.campfire.presentation.resources.instrument
 import com.pandulapeter.campfire.presentation.ui.components.CHIP_GAP
-import com.pandulapeter.campfire.presentation.ui.components.ChordTuningChips
+import com.pandulapeter.campfire.presentation.ui.components.InstrumentChipRow
 import com.pandulapeter.campfire.presentation.ui.components.SearchField
 import com.pandulapeter.campfire.presentation.ui.components.SelectableChip
+import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 
 /**
- * What the Chords tab lists: the instrument and its tuning, which are the ones Settings → Songs draws the songs'
- * diagrams for and are written there at once, the key, and a search for a chord by name. Other, which draws no diagram,
- * is not offered here, and while it is the instrument picked none of the four is selected and the tunings are gone.
+ * What the Chords tab lists: the instrument in the player's hands and its tuning, through the chips every screen opens
+ * their sheets with, the key, and a search for a chord by name. The instrument is the app's one, which the songs' diagrams are
+ * drawn for too, so a pick here is written at once and changes them as well.
  *
- * It stands in the page's grid, inside the page's side padding, while the tunings and the search are shared rows that pad
- * themselves as a sheet's do; so it reaches past that padding by as much ([CHORDS_PAGE_PADDING]) and lines its own rows up with
- * theirs.
+ * It stands in the page's grid, inside the page's side padding, while the instrument and the search are shared rows that
+ * pad themselves as a sheet's do; so it reaches past that padding by as much ([CHORDS_PAGE_PADDING]) and lines its own
+ * rows up with theirs.
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun ChordLibraryControls(
     modifier: Modifier = Modifier,
-    instrument: UserPreferences.ChordInstrument?,
-    tuning: ChordTuning?,
+    instrument: UserPreferences.Instrument,
+    instrumentTuning: InstrumentTuning?,
     notation: ChordNotation,
     keys: List<String>,
     selectedKeyIndex: Int,
     query: String,
-    onInstrumentSelected: (UserPreferences.ChordInstrument) -> Unit,
-    onTuningSelected: (ChordTuning) -> Unit,
+    onInstrumentClicked: () -> Unit,
+    onTuningClicked: () -> Unit,
     onKeySelected: (Int) -> Unit,
     onQueryChanged: (String) -> Unit,
 ) = Column(
@@ -82,35 +67,15 @@ internal fun ChordLibraryControls(
         .bleedHorizontally(CHORDS_PAGE_PADDING)
         .padding(bottom = 8.dp),
 ) {
-    ControlTitle(text = stringResource(Res.string.settings_chord_instrument))
-    ChipRow {
-        listOf(
-            UserPreferences.ChordInstrument.GUITAR to Res.string.settings_chord_instrument_guitar,
-            UserPreferences.ChordInstrument.UKULELE to Res.string.settings_chord_instrument_ukulele,
-            UserPreferences.ChordInstrument.MANDOLIN to Res.string.settings_chord_instrument_mandolin,
-            UserPreferences.ChordInstrument.BANJO to Res.string.settings_chord_instrument_banjo,
-            UserPreferences.ChordInstrument.KEYBOARD to Res.string.settings_chord_instrument_keyboard,
-        ).forEach { (choice, label) ->
-            ChoiceChip(
-                text = stringResource(label),
-                isSelected = choice == instrument,
-                onClick = { if (choice != instrument) onInstrumentSelected(choice) },
-            )
-        }
-    }
-    // The tunings stay on screen through their exit, which an instrument of one tuning or Other sets off.
-    val lastTuning = remember { mutableStateOf(tuning) }
-    SideEffect { if (tuning != null) lastTuning.value = tuning }
-    AnimatedVisibility(
-        visible = tuning != null && ChordTuning.of(tuning.instrument).size > 1,
-        enter = fadeIn() + expandVertically(),
-        exit = fadeOut() + shrinkVertically(),
-    ) {
-        Column {
-            ControlTitle(text = stringResource(Res.string.settings_chord_tuning))
-            (tuning ?: lastTuning.value)?.let { ChordTuningChips(selected = it, notation = notation, onSelected = onTuningSelected) }
-        }
-    }
+    ControlTitle(text = stringResource(Res.string.instrument))
+    InstrumentChipRow(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        instrument = instrument,
+        tuning = instrumentTuning,
+        notation = notation,
+        onInstrumentClicked = onInstrumentClicked,
+        onTuningClicked = onTuningClicked,
+    )
     ControlTitle(text = stringResource(Res.string.chords_key))
     ChipRow {
         keys.forEachIndexed { index, key ->
@@ -139,7 +104,7 @@ private fun ControlTitle(text: String) = Text(
     style = MaterialTheme.typography.titleSmall,
 )
 
-/** A wrapping row of chips that is a radio group, padded as [ChordTuningChips] pads its own. */
+/** A wrapping row of chips that is a radio group, padded as [TuningChips] pads its own. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ChipRow(content: @Composable () -> Unit) = FlowRow(

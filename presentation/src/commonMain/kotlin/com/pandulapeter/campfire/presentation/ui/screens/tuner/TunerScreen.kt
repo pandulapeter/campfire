@@ -36,6 +36,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
+import com.pandulapeter.campfire.presentation.ui.instrument.instrumentTuning
 import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.components.ScrollPosition
 import com.pandulapeter.campfire.presentation.ui.components.only
@@ -47,27 +49,26 @@ import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsCard
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsPage
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsSection
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsWidthLayout
-import com.pandulapeter.campfire.presentation.ui.tuner.InstrumentChoice
 import com.pandulapeter.campfire.presentation.ui.tuner.REFERENCE_NOTE
 import com.pandulapeter.campfire.presentation.ui.tuner.ReferencePitchSetting
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerAskOnOpenEffect
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerDisplay
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerListeningEffect
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerNoticeCard
+import com.pandulapeter.campfire.presentation.ui.tuner.TunerInstrumentSetting
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerStringsSetting
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerInputIssueMessage
 import com.pandulapeter.campfire.presentation.ui.tuner.canListenWithoutTap
-import com.pandulapeter.campfire.presentation.ui.tuner.toConfig
 import com.pandulapeter.campfire.presentation.ui.tuner.tunerNoticeOf
-import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 import com.pandulapeter.campfire.tuner.api.model.TunerListening
 import kotlinx.coroutines.flow.collectLatest
 
 /**
  * The Tuner tab: what is heard ([TunerDisplay]) pinned at the top, as wide as a page of two sections like the Metronome
  * tab's bar, and under it, scrolling, what the tuner is set to: the strings ([TunerStringsSetting]) first, since they are
- * what is reached for most while tuning, then the instrument and its tuning ([InstrumentChoice]) and the reference pitch
- * ([ReferencePitchSetting]), the last two offered only here, since the sheet over a song tunes to what they are set to.
+ * what is reached for most while tuning, then the Chromatic switch and the instrument ([TunerInstrumentSetting]) and the
+ * reference pitch ([ReferencePitchSetting]), offered here rather than on the sheet over a song, which tunes to what they
+ * are set to.
  * Where the window has room for two columns the strings span both, as the header of the page, and the reference pitch
  * stands on a card beside the instrument; a narrower window stacks all of it in that order in one column. While the
  * microphone cannot be listened to, the display gives way to a notice that is the page's first item ([TunerNoticeCard])
@@ -89,6 +90,7 @@ internal fun TunerScreen(
     // read, and the rest of the page only reads what changes with a note or a setting.
     val state = viewModel.tunerState.collectAsStateWithLifecycle()
     val settings by viewModel.tunerSettings.collectAsStateWithLifecycle()
+    val config by viewModel.tunerConfig.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val hasRequested by viewModel.hasTurnedOnMicrophone.collectAsStateWithLifecycle()
     val notation = (userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default).notation.toChordNotation()
@@ -102,7 +104,6 @@ internal fun TunerScreen(
     val issue by remember { derivedStateOf { (state.value.listening as? TunerListening.Hearing)?.issue } }
     val heardNote by remember { derivedStateOf { (state.value.listening as? TunerListening.Hearing)?.reading?.note } }
     val tunedNotes by viewModel.tunedNotes.collectAsStateWithLifecycle()
-    val config = remember(settings) { settings.toConfig() }
     TunerListeningEffect(
         canListen = canListenWithoutTap(status = permission.status, hasRequested = hasRequested),
         onListeningChanged = viewModel::setTunerListening,
@@ -182,13 +183,17 @@ internal fun TunerScreen(
             section = {
                 SettingsSection {
                     if (!isWide) playing()
-                    InstrumentChoice(
-                        selected = config.tuning,
-                        notation = notation,
-                        onSelected = { tuning ->
-                            viewModel.updateTunerSettings { copy(instrumentId = tuning?.id ?: InstrumentTuning.CHROMATIC_ID) }
-                        },
-                    )
+                    userPreferences?.let { preferences ->
+                        TunerInstrumentSetting(
+                            instrument = preferences.instrument,
+                            tuning = preferences.instrumentTuning,
+                            notation = notation,
+                            isChromatic = settings.isChromatic,
+                            onInstrumentClicked = { viewModel.showDialog(DialogType.Instrument) },
+                            onTuningClicked = { viewModel.showDialog(DialogType.Tuning) },
+                            onChromaticChanged = { value -> viewModel.updateTunerSettings { copy(isChromatic = value) } },
+                        )
+                    }
                     if (!isWide) referencePitch()
                 }
             },

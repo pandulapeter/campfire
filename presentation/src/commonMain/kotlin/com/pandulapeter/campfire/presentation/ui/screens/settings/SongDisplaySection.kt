@@ -15,19 +15,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.pandulapeter.campfire.chordpro.ChordNotation
 import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
-import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.instrument_description
 import com.pandulapeter.campfire.presentation.resources.settings_accidentals
 import com.pandulapeter.campfire.presentation.resources.settings_accidentals_description
 import com.pandulapeter.campfire.presentation.resources.settings_accidentals_flats
 import com.pandulapeter.campfire.presentation.resources.settings_accidentals_original
 import com.pandulapeter.campfire.presentation.resources.settings_accidentals_sharps
-import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument
-import com.pandulapeter.campfire.presentation.resources.settings_chord_instrument_description
-import com.pandulapeter.campfire.presentation.resources.settings_chord_tuning
-import com.pandulapeter.campfire.presentation.resources.settings_chord_tuning_description
 import com.pandulapeter.campfire.presentation.resources.settings_notation
 import com.pandulapeter.campfire.presentation.resources.settings_notation_description
 import com.pandulapeter.campfire.presentation.resources.settings_notation_german
@@ -47,11 +43,11 @@ import com.pandulapeter.campfire.presentation.resources.settings_setlist_cards_d
 import com.pandulapeter.campfire.presentation.resources.settings_song_cards
 import com.pandulapeter.campfire.presentation.resources.settings_song_cards_description
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.chords.chordTuning
 import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
+import com.pandulapeter.campfire.presentation.ui.instrument.instrumentTuning
 import com.pandulapeter.campfire.presentation.ui.components.CardDetailsChoice
-import com.pandulapeter.campfire.presentation.ui.components.ChordInstrumentList
-import com.pandulapeter.campfire.presentation.ui.components.ChordTuningChips
+import com.pandulapeter.campfire.presentation.ui.components.InstrumentSetting
 import com.pandulapeter.campfire.presentation.ui.components.RadioListItem
 import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
 import com.pandulapeter.campfire.presentation.ui.components.SettingsSubsection
@@ -131,55 +127,20 @@ internal fun SongDisplaySection(
             onSelected = viewModel::setAccidentals,
         )
     }
-    ChordInstrumentChoice(
-        selected = userPreferences?.chordInstrument,
-        chordTunings = userPreferences?.chordTunings.orEmpty(),
-        notation = notation,
-        // Enabled with the diagrams switched off too, since the keyboard also reads the capo as a transposition.
-        isEnabled = isChordSpellingEnabled,
-        onSelected = viewModel::setChordInstrument,
-    )
-    // The tuning only decides the diagrams, so unlike the instrument it goes with them.
-    AnimatedSettingsRow(value = userPreferences?.chordTuning()?.takeIf { ChordTuning.of(it.instrument).size > 1 }) { tuning ->
-        val isTuningEnabled = isChordSpellingEnabled && userPreferences?.areChordDiagramsEnabled != false
-        SettingsSubsection(
-            title = stringResource(Res.string.settings_chord_tuning),
-            description = stringResource(Res.string.settings_chord_tuning_description),
-            isEnabled = isTuningEnabled,
-        ) {
-            ChordTuningChips(
-                selected = tuning,
-                notation = notation,
-                isEnabled = isTuningEnabled,
-                onSelected = viewModel::setChordTuning,
-            )
-        }
+    // Enabled with the diagrams switched off too, since the keyboard also reads the capo as a transposition, and with the
+    // chords switched off while the tuner is on, which listens for the same instrument.
+    val isInstrumentEnabled = isChordSpellingEnabled || userPreferences?.isTunerEnabled != false
+    userPreferences?.let { preferences ->
+        InstrumentSetting(
+            instrument = preferences.instrument,
+            tuning = preferences.instrumentTuning,
+            notation = notation,
+            description = stringResource(Res.string.instrument_description),
+            isEnabled = isInstrumentEnabled,
+            onInstrumentClicked = { viewModel.showDialog(DialogType.Instrument) },
+            onTuningClicked = { viewModel.showDialog(DialogType.Tuning) },
+        )
     }
-}
-
-/**
- * The instrument the chord diagrams are drawn for, and on the keyboard what reads the capo as a transposition, see
- * [ChordInstrumentList].
- */
-@Composable
-private fun ChordInstrumentChoice(
-    selected: UserPreferences.ChordInstrument?,
-    chordTunings: Map<String, String>,
-    notation: ChordNotation,
-    isEnabled: Boolean,
-    onSelected: (UserPreferences.ChordInstrument) -> Unit,
-) = SettingsSubsection(
-    title = stringResource(Res.string.settings_chord_instrument),
-    description = stringResource(Res.string.settings_chord_instrument_description),
-    isEnabled = isEnabled,
-) {
-    ChordInstrumentList(
-        selected = selected,
-        chordTunings = chordTunings,
-        notation = notation,
-        isEnabled = isEnabled,
-        onSelected = onSelected,
-    )
 }
 
 /**

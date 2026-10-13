@@ -19,7 +19,6 @@ import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.ChordProTempo
 import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields
 import com.pandulapeter.campfire.chordpro.model.ChordProLink
-import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.data.model.domain.CoverArtQuery
 import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution
 import com.pandulapeter.campfire.data.model.domain.ImportEntryKey
@@ -116,6 +115,8 @@ import com.pandulapeter.campfire.metronome.api.model.MetronomeSound
 import com.pandulapeter.campfire.metronome.api.model.TimeSignature
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerController
 import com.pandulapeter.campfire.tuner.api.Tuner
+import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
+import com.pandulapeter.campfire.tuner.api.model.TunerConfig
 import com.pandulapeter.campfire.presentation.ui.dialogs.SONG_METADATA_FIELDS
 import com.pandulapeter.campfire.presentation.ui.dialogs.SavedDialog
 import com.pandulapeter.campfire.presentation.ui.dialogs.filledForm
@@ -921,6 +922,9 @@ class CampfireViewModel(
     /** See [TunerController.tunerSettings]. */
     val tunerSettings: StateFlow<TunerSettings> get() = tunerController.tunerSettings
 
+    /** See [TunerController.tunerConfig]. */
+    val tunerConfig: StateFlow<TunerConfig> get() = tunerController.tunerConfig
+
     /** See [TunerController.tunerState]. */
     val tunerState get() = tunerController.tunerState
 
@@ -1621,11 +1625,11 @@ class CampfireViewModel(
 
     fun setChordDiagramsEnabled(value: Boolean) = preferencesController.setChordDiagramsEnabled(value)
 
-    fun setChordInstrument(value: UserPreferences.ChordInstrument) = preferencesController.setChordInstrument(value)
+    fun setInstrument(value: UserPreferences.Instrument) = preferencesController.setInstrument(value)
 
     fun toggleChordSectionFold() = preferencesController.toggleChordSectionFold()
 
-    fun setChordTuning(tuning: ChordTuning) = preferencesController.setChordTuning(tuning)
+    fun setTuning(tuning: InstrumentTuning) = preferencesController.setTuning(tuning)
 
     fun setChordVoicing(voicingKey: String, chordId: String, shape: String?) = preferencesController.setChordVoicing(voicingKey, chordId, shape)
 

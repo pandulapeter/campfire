@@ -192,10 +192,19 @@ internal fun SongLyrics(
             when {
                 chordDiagrams == null -> emptyList()
                 chordDiagrams.showsDefinitionsOnly -> definitionCellsOf(model.song, chordDiagrams.notation)
-                else -> chordCellsOf(model.chords, chordDiagrams.tuning, chordDiagrams.storedShapes)
+                else -> chordDiagrams.tuning?.let { chordCellsOf(model.chords, it, chordDiagrams.storedShapes) }.orEmpty()
             }
         }
-        remember(sections, cells, chordDiagrams?.isFolded) { withChordsSection(sections, cells, isFolded = chordDiagrams?.isFolded == true) }
+        val isInstrumentShown = chordDiagrams?.onInstrumentClicked != null
+        remember(sections, cells, chordDiagrams?.isFolded, model.hasChords, isInstrumentShown) {
+            withChordsSection(
+                sections = sections,
+                cells = cells,
+                isFolded = chordDiagrams?.isFolded == true,
+                hasChords = model.hasChords,
+                isInstrumentShown = isInstrumentShown,
+            )
+        }
     }
     val glideScope = rememberCoroutineScope()
     val glideSpec = MaterialTheme.motionScheme.defaultSpatialSpec<IntOffset>()
@@ -400,6 +409,17 @@ internal fun SongLyrics(
                                 titleStyle = headerStyle,
                                 chordStyle = chordStyle,
                                 fontScale = fontScale,
+                                instrumentChips = chordDiagrams?.onInstrumentClicked?.takeIf { section.hasInstrumentChips }?.let { onInstrumentClicked ->
+                                    {
+                                        SongInstrumentChips(
+                                            chordDiagrams = chordDiagrams,
+                                            headerStyle = headerStyle,
+                                            fontScale = fontScale,
+                                            onInstrumentClicked = onInstrumentClicked,
+                                            onTuningClicked = chordDiagrams.onTuningClicked ?: {},
+                                        )
+                                    }
+                                },
                             )
 
                             is RenderSection.Chords -> SongChordsSection(

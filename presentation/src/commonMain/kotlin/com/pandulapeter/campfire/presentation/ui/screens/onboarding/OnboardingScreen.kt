@@ -33,11 +33,12 @@ import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
+import com.pandulapeter.campfire.presentation.ui.instrument.chordTuning
+import com.pandulapeter.campfire.presentation.ui.instrument.instrumentTuning
 import com.pandulapeter.campfire.presentation.ui.contentEdges
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.withMinTopEdge
-import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filterNotNull
 
@@ -171,30 +172,19 @@ private fun OnboardingStepPage(
             onTunerEnabledChange = viewModel::setTunerEnabled,
         )
 
-        OnboardingStep.INSTRUMENT -> {
-            val tunerSettings by viewModel.tunerSettings.collectAsStateWithLifecycle()
-            val tuning = InstrumentTuning.fromId(tunerSettings.instrumentId)
-            val selected = userPreferences?.let { onboardingInstrumentOf(it.chordInstrument, tuning) }
-            // Both settings are written for every answer, since the diagrams depend on the tuning as much as on the
-            // instrument: a guitar in drop D has none.
-            val setTuning = { instrument: OnboardingInstrument, newTuning: InstrumentTuning? ->
-                viewModel.setChordInstrument(instrument.chordInstrumentFor(newTuning))
-                instrument.chordTuningWrittenFor(newTuning)?.let(viewModel::setChordTuning)
-                viewModel.updateTunerSettings { copy(instrumentId = newTuning?.id ?: InstrumentTuning.CHROMATIC_ID) }
-            }
-            InstrumentStep(
-                selected = selected,
-                tuning = tuning,
-                notation = (notation ?: UserPreferences.Notation.STANDARD).toChordNotation(),
-                areChordsEnabled = features.areChordsEnabled,
-                isTunerEnabled = features.isTunerEnabled,
-                areChordDiagramsEnabled = userPreferences?.areChordDiagramsEnabled != false,
-                isCompact = isCompact,
-                onSelected = { instrument -> setTuning(instrument, instrument.tuningFor(tuning)) },
-                onTuningSelected = { newTuning -> selected?.let { setTuning(it, newTuning) } },
-                onChordDiagramsEnabledChange = viewModel::setChordDiagramsEnabled,
-            )
-        }
+        OnboardingStep.INSTRUMENT -> InstrumentStep(
+            selected = userPreferences?.instrument ?: UserPreferences.Instrument.GUITAR,
+            tuning = userPreferences?.instrumentTuning,
+            chordTuning = userPreferences?.chordTuning(),
+            notation = (notation ?: UserPreferences.Notation.STANDARD).toChordNotation(),
+            areChordsEnabled = features.areChordsEnabled,
+            isTunerEnabled = features.isTunerEnabled,
+            areChordDiagramsEnabled = userPreferences?.areChordDiagramsEnabled != false,
+            isCompact = isCompact,
+            onSelected = viewModel::setInstrument,
+            onTuningSelected = viewModel::setTuning,
+            onChordDiagramsEnabledChange = viewModel::setChordDiagramsEnabled,
+        )
 
         OnboardingStep.NOTATION -> NotationStep(
             selected = notation,
