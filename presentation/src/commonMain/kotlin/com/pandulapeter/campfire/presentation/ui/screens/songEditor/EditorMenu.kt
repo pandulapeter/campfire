@@ -13,11 +13,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.ic_find_replace
 import com.pandulapeter.campfire.presentation.resources.ic_info
 import com.pandulapeter.campfire.presentation.resources.ic_refresh
 import com.pandulapeter.campfire.presentation.resources.ic_open_in_new
 import com.pandulapeter.campfire.presentation.resources.ic_prettify
+import com.pandulapeter.campfire.presentation.resources.ic_search
 import com.pandulapeter.campfire.presentation.resources.song_details_song_info
+import com.pandulapeter.campfire.presentation.resources.song_editor_find
+import com.pandulapeter.campfire.presentation.resources.song_editor_find_and_replace
 import com.pandulapeter.campfire.presentation.resources.song_editor_prettify
 import com.pandulapeter.campfire.presentation.resources.song_editor_revert
 import com.pandulapeter.campfire.presentation.resources.song_editor_chordpro_reference
@@ -27,16 +31,19 @@ import org.jetbrains.compose.resources.painterResource
 
 /**
  * The actions of the editor that are neither writing the file nor undoing a keystroke, behind the same overflow button
- * the song details screen uses: the About the song sheet over the text being typed — in every pane, so that the song's
- * details are a tap away also while the preview's card that edits them is out of sight — then prettifying, the revert
- * and the ChordPro reference, the one place that explains every directive the Shortcuts write (a `{define}` above all,
- * which is not something to guess the shape of). They stay in the menu however much room the bar has
+ * the song details screen uses: first Find and Find and replace, the two that come out of the menu as buttons of their
+ * own where the bar has the room for them (as wide as the caller lets the menu be, see [editorMenuMaxWidth]), then the
+ * About the song sheet over the text being typed — in every pane, so that the song's details are a tap away also while
+ * the preview's card that edits them is out of sight — then prettifying, the revert and the ChordPro reference, the one place that explains every directive the Shortcuts write (a `{define}` above all,
+ * which is not something to guess the shape of). Those stay in the menu however much room the bar has
  * ([ActionsMenuItem.isAlwaysInMenu]), since throwing away everything typed since the last save is not something to end
  * up in by mistapping the button next to Save.
  */
 @Composable
 internal fun EditorMenu(
     modifier: Modifier = Modifier,
+    onFind: () -> Unit,
+    onFindAndReplace: () -> Unit,
     onOpenSongInfo: () -> Unit,
     canPrettify: () -> Boolean,
     onPrettify: () -> Unit,
@@ -46,6 +53,16 @@ internal fun EditorMenu(
 ) = ActionsMenu(
     modifier = modifier,
     items = listOf(
+        ActionsMenuItem(
+            title = stringResource(Res.string.song_editor_find),
+            icon = painterResource(Res.drawable.ic_search),
+            onClick = onFind,
+        ),
+        ActionsMenuItem(
+            title = stringResource(Res.string.song_editor_find_and_replace),
+            icon = painterResource(Res.drawable.ic_find_replace),
+            onClick = onFindAndReplace,
+        ),
         ActionsMenuItem(
             title = stringResource(Res.string.song_details_song_info),
             icon = painterResource(Res.drawable.ic_info),

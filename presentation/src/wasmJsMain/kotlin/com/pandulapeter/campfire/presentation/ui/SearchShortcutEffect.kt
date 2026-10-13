@@ -13,6 +13,7 @@ package com.pandulapeter.campfire.presentation.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import kotlinx.browser.window
 import org.w3c.dom.events.Event
 import org.w3c.dom.events.KeyboardEvent
@@ -22,8 +23,10 @@ import kotlin.js.unsafeCast
 /**
  * Opens the search of the list screen that is on top on Ctrl / Cmd + F ([CampfireViewModel.openCurrentSearch]), and
  * keeps the browser's own find bar shut when it does: that bar searches the page's text, and the whole of this page is
- * one canvas with none. Everywhere else - another screen, a dialog - the key is left alone and the browser opens its
- * bar as it always does.
+ * one canvas with none. With the song editor on top, Ctrl / Cmd + F and R are the editor's Find and Find and replace
+ * (`editorSearchShortcuts`), so there the browser is kept from its find bar and from reloading the page under the text
+ * being typed, and the key goes on to Compose. Everywhere else - another screen, a dialog - the key is left alone and
+ * the browser opens its bar as it always does.
  *
  * It is a listener on the window in the capture phase rather than a key handler inside the composition, for two
  * reasons. Nothing on a list screen is focused until its search is, and a key event only reaches Compose along the
@@ -41,8 +44,14 @@ internal fun SearchShortcutEffect(viewModel: CampfireViewModel) = DisposableEffe
         val shortcut = if (isF) appShortcutOf(ShortcutKey.F, isCtrlOrMeta = keyEvent.ctrlKey || keyEvent.metaKey, isAlt = keyEvent.altKey) else null
         if (shortcut is AppShortcut.OpenSearch && viewModel.perform(shortcut)) {
             keyEvent.preventDefault()
+        } else if (isEditorSearchKey(keyEvent) && viewModel.backStack.lastOrNull() is CampfireDestination.SongEditor) {
+            keyEvent.preventDefault()
         }
     }
     window.addEventListener(EVENT_KEY_DOWN, listener, true)
     onDispose { window.removeEventListener(EVENT_KEY_DOWN, listener, true) }
 }
+
+/** Ctrl / Cmd + F or R without Alt, by the physical key as Compose goes by it, or by the character a virtual keyboard sends. */
+private fun isEditorSearchKey(keyEvent: KeyboardEvent) = (keyEvent.ctrlKey || keyEvent.metaKey) && !keyEvent.altKey &&
+    (keyEvent.code == "KeyF" || keyEvent.code == "KeyR" || keyEvent.key.lowercase() == "f" || keyEvent.key.lowercase() == "r")

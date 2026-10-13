@@ -40,7 +40,9 @@ the shortcut.
 Ctrl / Cmd + F is heard by a capture phase listener on the window too (`SearchShortcutEffect`, a Kotlin listener rather
 than a `js(...)` block since the view model decides it synchronously), which calls the same `openCurrentSearch` and
 prevents the browser's find bar only when that opened something — the page is one canvas with no text to find, but on a
-screen with no search the key is left to the browser. The browser's zoom is taken over the same way while the song
+screen with no search the key is left to the browser. With the song editor on top the same listener prevents the
+default of Ctrl / Cmd + F and R, which are the editor's Find and Find and replace there, so that neither the find bar
+nor a reload of the page lands under the text being typed. The browser's zoom is taken over the same way while the song
 details screen is on top (`SongTextZoomEffect`): Ctrl / Cmd + plus, minus and zero go to `zoomSongText` instead, matched
 by `key` rather than `code` as the browser's own zoom is, and a Ctrl + wheel has its default prevented by a non-passive
 listener (a wheel listener on the window is passive unless it says otherwise) and reaches the screen's own

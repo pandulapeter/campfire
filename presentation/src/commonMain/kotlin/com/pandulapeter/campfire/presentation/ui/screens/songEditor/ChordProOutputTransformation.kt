@@ -25,6 +25,10 @@ import com.pandulapeter.campfire.chordpro.edit.ChordProHighlighter
  * and they are the viewer's, so that a chord looks like a chord in both places. The tokens come through a
  * [ChordProTokenCache], so a value that only moved the caret costs the styles and a content comparison. Compose
  * discards the transformed buffer after each display, so its current API still requires applying every style again.
+ *
+ * The matches of the editor's search are drawn over the tokens, behind the letters, and the current one in a color of
+ * its own, which also takes over the letters' color so that they stay legible on it. [searchHighlights] is snapshot
+ * state, which the field observes while it runs the transformation, so the matches follow the query as it is typed.
  */
 internal class ChordProOutputTransformation(
     private val tokenCache: ChordProTokenCache,
@@ -34,6 +38,9 @@ internal class ChordProOutputTransformation(
     private val annotation: SpanStyle,
     private val comment: SpanStyle,
     private val invalid: SpanStyle,
+    private val searchMatch: SpanStyle,
+    private val currentSearchMatch: SpanStyle,
+    private val searchHighlights: () -> SearchHighlights?,
 ) : OutputTransformation {
 
     override fun TextFieldBuffer.transformOutput() {
@@ -52,6 +59,13 @@ internal class ChordProOutputTransformation(
                 token.end,
             )
         }
+        searchHighlights()?.let { highlights ->
+            highlights.matchStarts.forEachIndexed { index, start ->
+                // The matches are of the text as the search last read it, which a keystroke may have shortened since.
+                val end = start + highlights.length
+                if (end <= length) addStyle(if (index == highlights.currentIndex) currentSearchMatch else searchMatch, start, end)
+            }
+        }
     }
 
     companion object {
@@ -68,6 +82,10 @@ internal class ChordProOutputTransformation(
             secondaryColor: Color,
             outlineColor: Color,
             errorColor: Color,
+            searchMatchColor: Color,
+            currentSearchMatchColor: Color,
+            onCurrentSearchMatchColor: Color,
+            searchHighlights: () -> SearchHighlights?,
         ) = ChordProOutputTransformation(
             tokenCache = tokenCache,
             directiveName = SpanStyle(color = primaryColor, fontWeight = FontWeight.Bold),
@@ -76,6 +94,9 @@ internal class ChordProOutputTransformation(
             annotation = SpanStyle(fontStyle = FontStyle.Italic),
             comment = SpanStyle(color = outlineColor, fontStyle = FontStyle.Italic),
             invalid = SpanStyle(color = errorColor),
+            searchMatch = SpanStyle(background = searchMatchColor),
+            currentSearchMatch = SpanStyle(color = onCurrentSearchMatchColor, background = currentSearchMatchColor),
+            searchHighlights = searchHighlights,
         )
     }
 }

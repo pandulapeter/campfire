@@ -61,11 +61,8 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.pandulapeter.campfire.chordpro.model.ChordProSummary
 import com.pandulapeter.campfire.chordpro.model.displayTitle
 import com.pandulapeter.campfire.data.model.domain.LibraryFiles
-import com.pandulapeter.campfire.data.model.domain.Song
-import com.pandulapeter.campfire.data.model.domain.normalizedTags
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -159,6 +156,7 @@ internal fun LoadedSongEditor(
     // Compare with the same formatted draft the action applies, so the option follows typing, undo and revert. Only the
     // open menu reads it (ActionsMenuItem.isEnabledInMenu), so typing never prettifies the whole song.
     val prettifiedText = remember(textFieldState, viewModel) { derivedStateOf { songRenderer.prettifyText(text.value) } }
+    val search = rememberEditorSearch(textFieldState = textFieldState, text = text)
     ReportDraft(viewModel = viewModel, fileName = destination.fileName, text = text, textFieldState = textFieldState)
 
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
@@ -192,6 +190,11 @@ internal fun LoadedSongEditor(
     var selectedPanes by rememberSaveable(stateSaver = EditorPanes.Saver) { mutableStateOf(EditorPanes.SPLIT) }
     val panes = if (selectedPanes == EditorPanes.SPLIT && !hasRoomForSplitPanes) EditorPanes.EDIT else selectedPanes
     val hasSideBySidePreview = panes == EditorPanes.SPLIT
+    // The matches are found in the field and shown there, so a search started over the preview brings the field back.
+    val onOpenSearch = { mode: EditorSearchMode ->
+        if (panes == EditorPanes.PREVIEW) selectedPanes = EditorPanes.EDIT
+        search.open(mode)
+    }
     val fontScale = userPreferences?.fontScale ?: UserPreferences.DEFAULT_FONT_SCALE
     val chordSpelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
     // The two rows of insertions are taller than what a phone has left for the text once the keyboard is up, so a
@@ -260,6 +263,10 @@ internal fun LoadedSongEditor(
             .focusRequester(focusRequester)
             .focusable()
             .saveShortcut(onSaveRequested)
+            .editorSearchShortcuts(
+                onFind = { onOpenSearch(EditorSearchMode.FIND) },
+                onReplace = { onOpenSearch(EditorSearchMode.REPLACE) },
+            )
     ) {
         CampfireTopAppBar(
             isCompact = isTypingInShortWindow,
@@ -324,7 +331,18 @@ internal fun LoadedSongEditor(
                     )
                 }
                 EditorMenu(
-                    modifier = Modifier.overlappingAction(start = ACTION_BUTTON_OVERLAP, end = 0.dp),
+                    modifier = Modifier
+                        .overlappingAction(start = ACTION_BUTTON_OVERLAP, end = 0.dp)
+                        .widthIn(
+                            max = editorMenuMaxWidth(
+                                appBarWidth = with(density) { windowContainerSize.width.toDp() } -
+                                    contentPadding.calculateStartPadding(layoutDirection) - contentPadding.calculateEndPadding(layoutDirection),
+                                isToolbarToggleShown = isControlRowHidden && panes != EditorPanes.PREVIEW,
+                                hasCover = userPreferences?.isCoverArtEnabled == true,
+                            ),
+                        ),
+                    onFind = { onOpenSearch(EditorSearchMode.FIND) },
+                    onFindAndReplace = { onOpenSearch(EditorSearchMode.REPLACE) },
                     onOpenSongInfo = onOpenSongInfo,
                     canPrettify = { !isSaving && text.value.isNotBlank() && prettifiedText.value != text.value },
                     onPrettify = {
@@ -403,6 +421,7 @@ internal fun LoadedSongEditor(
                 }
             },
         )
+        val searchHighlights = remember(search) { { search.highlights } }
         val editor: @Composable (Modifier) -> Unit = { paneModifier ->
             ChordProTextField(
                 modifier = paneModifier,
@@ -415,6 +434,7 @@ internal fun LoadedSongEditor(
                 horizontalScrollState = fieldHorizontalScrollState,
                 // Next to the preview the divider is the end of this pane, not the window.
                 contentPadding = contentPadding.only(start = true, end = !hasSideBySidePreview, bottom = true),
+                searchHighlights = searchHighlights,
             )
         }
         val preview: @Composable (Modifier) -> Unit = { paneModifier ->
@@ -449,6 +469,17 @@ internal fun LoadedSongEditor(
             }
         }
     }
+    if (search.mode != null) {
+        EditorSearchSheet(
+            search = search,
+            // The match the search was at is selected in the field by now, and the caret goes back to it, so that what
+            // was looked for is what is typed over next.
+            onDismiss = {
+                search.close()
+                fieldFocusRequester.requestFocus()
+            },
+        )
+    }
 }
 
 /**
@@ -474,37 +505,6 @@ private class FieldFocus {
 
 private const val CHORDPRO_REFERENCE_URL = "https://www.chordpro.org/chordpro/chordpro-directives/"
 
-/**
- * The song as the text being typed describes it, which is what the metadata dialogs of the preview's card and the cover
- * art sheet of the editor's menu are opened on: the library's entry describes the file, which the text may already
- * have moved away from.
- */
-internal fun ChordProSummary.toEditorSong(fileName: String) = Song(
-    fileName = fileName,
-    title = metadata.displayTitle(fileName.removeSuffix(LibraryFiles.SONG_EXTENSION)),
-    artist = metadata.artist?.takeIf { it.isNotBlank() }.orEmpty(),
-    key = metadata.key?.takeIf { it.isNotBlank() },
-    transpose = metadata.transpose,
-    tags = normalizedTags(metadata.tags),
-    languages = metadata.languages,
-    coverArtUrl = metadata.coverArt,
-    hasChords = hasChords,
-    canUpdateFileName = false,
-    lastModified = 0,
-    size = 0,
-)
-
-/**
- * The start of the line after the first `{start_of_…}`, which in a freshly created song is the blank line its
- * template leaves for the first verse.
- */
-internal fun String.caretInsideFirstSection(): Int {
-    val sectionStart = indexOf(SECTION_START)
-    if (sectionStart == -1) return length
-    val lineBreak = indexOf('\n', sectionStart)
-    return if (lineBreak == -1) length else lineBreak + 1
-}
-
 private val PANE_CHOICE_MAX_WIDTH = 400.dp
 private val SMALL_SCREEN_SIZE = 600.dp
 
@@ -514,4 +514,3 @@ private val SMALL_SCREEN_SIZE = 600.dp
  * about 340dp upright and so keeps the row, and about 112dp on its side and so loses it.
  */
 private val MIN_ROOM_FOR_CONTROL_ROW = 240.dp
-private const val SECTION_START = "{start_of_"

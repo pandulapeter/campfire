@@ -45,7 +45,7 @@ AWT sends while the key stays down, which would otherwise have closed every scre
 before the back stack, and not only because closing it is the smaller step: selecting a tab rebuilds the stack around
 it, so the setlists screen is reached with the songs screen still under it and every Escape there would otherwise leave
 the tab with the search still open behind it. What is open on top is `visibleDialog` plus `overlayState.isAnyMenuOpen`
-(`components/OverlayState.kt`, the view model's own, which `CampfireApp` provides to every `OverflowMenu` as
+(`components/OverlayState.kt`, the view model's own, which `CampfireApp` provides to every `OverflowMenu`, and to a sheet a screen hosts itself such as the editor's search, as
 `LocalOverlayState`): a window key handler runs before Compose turns Escape into a back event, so an Escape consumed
 here would pop the back stack behind a dialog, a sheet or a menu instead of closing it. The import's progress dialog is
 neither, so while it would be shown (`importProgress` set and no `importReport`) Escape is consumed and does nothing: it

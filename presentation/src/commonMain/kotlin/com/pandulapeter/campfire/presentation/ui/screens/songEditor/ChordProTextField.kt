@@ -25,6 +25,16 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextLayoutResult
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -55,6 +65,8 @@ import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
  * around it is a focus group, so a focus callback or requester outside it would see that group rather than the field.
  * @param scrollState How far the field is scrolled down, hoisted so that it survives the pane being composed again.
  * @param horizontalScrollState How far the field is scrolled sideways, hoisted for the same reason.
+ * @param searchHighlights The matches of the editor's search while its sheet is open, drawn behind the text; the current
+ *   one is scrolled into view whenever it changes, since the field has no focus under the sheet to follow it with.
  */
 @Composable
 internal fun ChordProTextField(
@@ -65,11 +77,12 @@ internal fun ChordProTextField(
     scrollState: ScrollState,
     horizontalScrollState: ScrollState,
     contentPadding: PaddingValues,
+    searchHighlights: () -> SearchHighlights?,
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val secondAccentColor = LocalSecondAccentColor.current
     val tokenCache = remember { ChordProTokenCache() }
-    val outputTransformation = remember(colorScheme, secondAccentColor, tokenCache) {
+    val outputTransformation = remember(colorScheme, secondAccentColor, tokenCache, searchHighlights) {
         ChordProOutputTransformation.of(
             tokenCache = tokenCache,
             primaryColor = colorScheme.primary,
@@ -77,6 +90,10 @@ internal fun ChordProTextField(
             secondaryColor = colorScheme.onSurfaceVariant,
             outlineColor = colorScheme.outline,
             errorColor = colorScheme.error,
+            searchMatchColor = colorScheme.tertiaryContainer,
+            currentSearchMatchColor = colorScheme.tertiary,
+            onCurrentSearchMatchColor = colorScheme.onTertiary,
+            searchHighlights = searchHighlights,
         )
     }
     val bodyLarge = MaterialTheme.typography.bodyLarge
@@ -86,6 +103,24 @@ internal fun ChordProTextField(
     // end of a drag sends the scroll back to the caret and interrupts the fling.
     val restingBottomInset = WindowInsets.contentEdges.asPaddingValues().calculateBottomPadding()
     val layoutDirection = LocalLayoutDirection.current
+    val textLayout = remember { TextLayoutHolder() }
+    val density = LocalDensity.current
+    val textStart by rememberUpdatedState(with(density) { (contentPadding.calculateStartPadding(layoutDirection) + 16.dp).toPx() })
+    LaunchedEffect(searchHighlights, scrollState, horizontalScrollState) {
+        snapshotFlow { searchHighlights()?.let { it.matchStarts.getOrNull(it.currentIndex) } }
+            .filterNotNull()
+            .collect { offset ->
+                val layout = textLayout.getResult() ?: return@collect
+                revealOffset(
+                    offset = offset,
+                    layout = layout,
+                    scrollState = scrollState,
+                    horizontalScrollState = horizontalScrollState,
+                    textStart = textStart,
+                    margin = with(density) { REVEAL_MARGIN.toPx() },
+                )
+            }
+    }
     BasicTextField(
         modifier = modifier
             // The keyboard reaches the field only through the content padding this screen was handed, see CampfireApp,
@@ -115,6 +150,7 @@ internal fun ChordProTextField(
         keyboardOptions = KeyboardOptions(autoCorrectEnabled = false),
         lineLimits = TextFieldLineLimits.MultiLine(),
         outputTransformation = outputTransformation,
+        onTextLayout = { getResult -> textLayout.getResult = getResult },
         cursorBrush = SolidColor(colorScheme.primary),
         // The margins are part of the field rather than of the scrolling around it, so that the field starts at the
         // edge of what it is scrolled in: the focus brings a field wider than the pane into view by its start edge,
@@ -157,3 +193,38 @@ private class EditorFieldPadding(
 
     override fun calculateBottomPadding() = contentPadding.calculateBottomPadding().let { if (it > restingBottomInset) it else 0.dp }
 }
+
+/** The field's text layout as it last reported it, kept outside the snapshot system since only [revealOffset] reads it. */
+private class TextLayoutHolder {
+    var getResult: () -> TextLayoutResult? = { null }
+}
+
+/**
+ * Scrolls the line holding [offset] into the top part of the pane, which is what a bottom sheet over the field leaves
+ * uncovered, unless it is there already: a match on the screen does not move the text under the eye that has found it.
+ * The vertical scroll and the sideways one are containers around the field (see [ChordProTextField]), so its layout's
+ * coordinates are theirs once the margin before the text is added.
+ */
+private suspend fun revealOffset(
+    offset: Int,
+    layout: TextLayoutResult,
+    scrollState: ScrollState,
+    horizontalScrollState: ScrollState,
+    textStart: Float,
+    margin: Float,
+) = coroutineScope {
+    val line = layout.getLineForOffset(offset.coerceAtMost(layout.layoutInput.text.length))
+    val top = layout.getLineTop(line)
+    val bottom = layout.getLineBottom(line)
+    if (top < scrollState.value || bottom > scrollState.value + scrollState.viewportSize * REVEALED_PART) {
+        launch { scrollState.animateScrollTo((top - margin).roundToInt().coerceAtLeast(0)) }
+    }
+    val x = textStart + layout.getHorizontalPosition(offset, usePrimaryDirection = true)
+    if (x < horizontalScrollState.value + margin || x > horizontalScrollState.value + horizontalScrollState.viewportSize - margin) {
+        launch { horizontalScrollState.animateScrollTo((x - margin).roundToInt().coerceAtLeast(0)) }
+    }
+}
+
+/** How much of the pane from its top a revealed line is kept in, see [revealOffset]. */
+private const val REVEALED_PART = 0.4f
+private val REVEAL_MARGIN = 48.dp

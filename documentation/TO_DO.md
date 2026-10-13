@@ -10,15 +10,20 @@
 # To do
 ## Short-term (in this version)
 ### Bugs / issues
-- CoverArtArchive thumbnails load really slowly
 
 ### Improvements
 - Alternate tuning support for chord diagrams: documentation/plans/alternate-tunings.md
+- Modal tuner instrument picker...?
+- Website: update Thinking out Loud + 500 miles
+- Search: highlight matched tags
+
+### Onboarding improvements
+- Instrument: Chord-diagrams are too hidden, maybe they should be a separate page? Only if a compatible instrument + tuning was selected
+- At a glance: improve alignments and defaults
 
 ### Features
 - Import zip screen that displays the content before actually importing it, prepare the screen for loading remote zips
 - Shared setlists via Dropbox public links -> deeplink to Campfire. Rewrite documentation/plans/song-links.md - allow scanning deep links via QR code
-- Editor search and replace
 
 ## Midterm (in the next versions)
 - New song from the clipboard: documentation/plans/clipboard-import.md

@@ -550,6 +550,17 @@
     <string name="song_editor_prettify">Prettify ChordPro</string>
     <string name="song_editor_revert">Revert all changes</string>
     <string name="song_editor_chordpro_reference">ChordPro reference</string>
+    <string name="song_editor_find">Find</string>
+    <string name="song_editor_find_and_replace">Find and replace</string>
+    <string name="song_editor_find_query">Text to find</string>
+    <string name="song_editor_find_replacement">Replace with</string>
+    <string name="song_editor_find_match_count">%1$d of %2$d</string>
+    <string name="song_editor_find_no_matches">No matches</string>
+    <string name="song_editor_find_match_case">Match case</string>
+    <string name="song_editor_find_previous">Previous match</string>
+    <string name="song_editor_find_next">Next match</string>
+    <string name="song_editor_replace">Replace</string>
+    <string name="song_editor_replace_all">Replace all</string>
     <string name="song_editor_revert_confirmation">Would you like to go back to the last saved version of this song? Everything you have written since will be lost.</string>
     <string name="song_editor_unsaved_changes">Unsaved changes</string>
     <string name="song_editor_unsaved_changes_confirmation">Would you like to save what you have written before leaving the editor?</string>

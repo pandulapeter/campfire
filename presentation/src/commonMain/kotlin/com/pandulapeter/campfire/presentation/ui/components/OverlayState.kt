@@ -23,6 +23,10 @@ import androidx.compose.runtime.staticCompositionLocalOf
  *
  * The view model owns the one the app reads and [LocalOverlayState] hands it to the menus, so that nothing about it is
  * shared between two compositions of the app in one process - the screenshot tool's renders, or a test.
+ *
+ * A bottom sheet a screen hosts itself rather than through the view model's dialogs (the editor's search) counts itself
+ * in here too, for the same reason: it is something on top that Escape and the browser's back button have to close
+ * before they go back from the screen under it.
  */
 @Stable
 internal class OverlayState {

@@ -128,6 +128,27 @@ screen. Its app bar starts with Close rather than Back. The whole bar is one sur
   is one more step of the undo history instead of the end of it. In a document of more than 50,000 characters a
   whole-document rewrite (a transposition, a revert) starts the undo history over first, since each is recorded as the
   whole text twice.
+- **Find** and **Find and replace** come first in the overflow menu, and out of it as buttons of their own (the search
+  icon and the find and replace one) wherever the bar keeps the title 160dp beside them (`editorMenuMaxWidth`, which
+  counts the cover wherever covers are drawn and the Shortcuts chevron where the title row holds it). Ctrl / Cmd + F
+  and Ctrl / Cmd + R open them from the editor and switch between them from inside the sheet
+  (`editorSearchShortcuts`; on the web the shell keeps the browser's find bar and reload from both keys while the
+  editor is on top). Both are one bottom sheet (`EditorSearchSheet`), the replacement's field and its Replace and
+  Replace all buttons coming and going with the mode, and the previous and next match in its header. A search started
+  over the preview switches to Edit, since the matches are shown in the field. The sheet is the editor's own rather
+  than a `DialogType`, so it counts itself into `OverlayState` while it is up, as a menu does: Escape on the desktop and
+  the browser's Back then close it before they go back from the editor.
+
+  The state is `EditorSearch`, saved with the field so that a restored process reopens the sheet on the same query;
+  the query and the replacement are kept from one opening to the next. Where the search is, is the field's own
+  selection: the current match is the first at or after it (`currentMatchIndex`, wrapping around), moving to a match
+  selects it, and a match reached by typing the query is selected too, so the next letter searches on from it and the
+  sheet closed over it leaves it selected, with the caret given back to the field. A selection of one line opens the
+  sheet as its query. Matches ignore the case unless Match case is ticked and never overlap (`searchMatchStarts`).
+  While the sheet is open they are drawn behind the text by `ChordProOutputTransformation`, the current one in a color
+  of its own, and the current one is scrolled into the top part of the pane, which the sheet leaves uncovered, unless it
+  is there already. Replace writes over the current match and moves on; Replace all writes every match in one edit, so
+  one undo takes it back; nothing but Save writes the file.
 - The screen itself is a `BasicTextField` over a `TextFieldState`, scrolled by containers around it rather than by its
   own `scrollState`, which has no way to hold room after the last line: a `verticalScroll`, which hands the field its
   viewport height as the minimum so a short song is still a field down to the bottom of the pane, and inside it a
