@@ -101,7 +101,7 @@ public object ChordProDefinitions {
      * the others move one back. A shape that would need a fifth finger keeps no fingering here, on the page (the text keeps
      * it, see [rewrittenLine]), and nor does one whose strings coming to rest open were held by more than one finger. A keyboard's keys move with the root they are counted from.
      * [ChordDefinition.movedBy] adds up, so there and back is zero. A drone string ([ChordInstrument.droneString]) stays
-     * where it is, and an open one is muted where its note is not one of the new chord's, which the text keeps as written.
+     * where it is, as the text keeps it; [sounding] is what mutes it where its note leaves the chord.
      */
     public fun transposed(definition: ChordDefinition, semitones: Int, rename: (String) -> String): ChordDefinition {
         val name = rename(definition.name)
@@ -120,15 +120,24 @@ public object ChordProDefinitions {
                 // A shape no move keeps on the neck is not the new chord's, so it is left as the old chord's.
                 val drone = definition.instrument.droneString
                 val (move, moved) = voicing.moved(semitones, ChordShapeGeometry.MAX_FINGERS, drone) ?: return definition
-                val chord = ChordProChords.parse(name)
-                val sounding = if (drone == null || moved.frets[drone] != 0 || chord == null || definition.instrument.tuning[drone] % 12 in chord.pitchClasses) {
-                    moved
-                } else {
-                    moved.copy(frets = moved.frets.mapIndexed { string, fret -> if (string == drone) null else fret })
-                }
-                definition.copy(name = name, voicing = sounding, movedBy = definition.movedBy + move)
+                definition.copy(name = name, voicing = moved, movedBy = definition.movedBy + move)
             }
         }
+    }
+
+    /**
+     * [definition] as it is drawn: a drone string ([ChordInstrument.droneString]) left open where its note is not one of
+     * the chord the definition is named for is muted, since it would sound a note the chord does not have. The text keeps
+     * it as written, so that a transposition there and back writes the line it was, and the model with it, so that the
+     * reader and the editor, which moves the text, draw one shape.
+     */
+    public fun sounding(definition: ChordDefinition): ChordDefinition {
+        val voicing = definition.voicing as? ChordVoicing.Fretted ?: return definition
+        val drone = definition.instrument.droneString ?: return definition
+        if (voicing.frets.getOrNull(drone) != 0) return definition
+        val chord = ChordProChords.parse(definition.name) ?: return definition
+        if (definition.instrument.tuning[drone] % 12 in chord.pitchClasses) return definition
+        return definition.copy(voicing = voicing.copy(frets = voicing.frets.mapIndexed { string, fret -> if (string == drone) null else fret }))
     }
 
     /**

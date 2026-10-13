@@ -111,7 +111,8 @@ synced, see `data/sync/implementation/CLAUDE.md`); and the app's first shape.
 A definition for another instrument is not used on the page, nor translated: a guitar shape's fingers make another chord
 on a ukulele, and a keyboard plays the chord's own notes. Four frets with no selector are the ukulele's, so the
 mandolin's definitions name it (`{define-mandolin}`, which the editor's Chord shape button writes); five frets are the
-banjo's, its short fifth string first and only ever open or muted. A definition follows its chord through every transposition —
+banjo's, its short fifth string first and only ever open or muted, and drawn muted where it is written open but its note
+is not one of the chord's (`ChordProDefinitions.sounding`, which every song's definitions are drawn through). A definition follows its chord through every transposition —
 the reader's, the file's `{transpose}` and the editor's transpose action, which rewrites the line in place — along the
 neck, in whichever octave a hand can hold it, and one a transposition left needing a fifth finger gives way to the
 player's shape — the keyboard's capo, counted into the transposition there, included. The editor writes definitions (its Chord

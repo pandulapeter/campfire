@@ -503,11 +503,14 @@ what nothing outside the module calls is `internal`.
   first; a `{chord}`, which the specification has show a diagram only where it stands, counts only where the song
   defines none, and `rangeOf` sends the caret to the line that counts. `line` writes one the way it is read, with the base fret a diagram would draw and a selector only where the frets alone would name another instrument (`define-mandolin`). `transposed`
   moves one with the song: the name renamed like any chord, a fretted shape moved along the neck, up by the rest of the
-  octave where it has an open string (the banjo's drone not counted, which stays as it is and is muted on the page where
-  its note leaves the chord, while the text keeps it as written) and otherwise whichever of the two octaves a hand can hold, the lower where both or
+  octave where it has an open string (the banjo's drone not counted, which stays as it is, in the model as in the text;
+  `sounding` mutes it where its note leaves the chord, which is how every definition is drawn, a hand-written one
+  included) and otherwise whichever of the two octaves a hand can hold, the lower where both or
   neither can, the fingering following a barre coming or going (and left out where it would need a fifth finger,
   several fingers came to rest open, or a finger other than the index did, which moving back would put the index on), and a shape no move keeps on the neck left as it is, named as it was; `movedBy`
-  adds up, so there and back is zero. `ChordProTransposer` applies it on
+  adds up, so there and back is zero. `sounding` is a definition as it is drawn: a banjo's drone left open where its
+  note is not one of the named chord's is muted, so that the reader, which moves the model, and the editor, which moves
+  the text, draw one shape. `ChordProTransposer` applies `transposed` on
   the model, by what the whole song is moved by, and in the text, where `rewrittenLine` rewrites the name, the base
   fret, the frets and the fingers where they stand and keeps every other character — a line with no base fret keeps
   counting from the nut, so that moving back writes the line it was, the fingering is kept up to the five fingers the

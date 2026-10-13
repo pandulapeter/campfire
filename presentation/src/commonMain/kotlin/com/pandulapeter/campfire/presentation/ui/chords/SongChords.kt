@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.chords
 import androidx.compose.runtime.Immutable
 import com.pandulapeter.campfire.chordpro.ChordNotation
 import com.pandulapeter.campfire.chordpro.chords.ChordProChords
+import com.pandulapeter.campfire.chordpro.chords.ChordProDefinitions
 import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
 import com.pandulapeter.campfire.chordpro.chords.ChordVoicings
 import com.pandulapeter.campfire.chordpro.model.Chord
@@ -79,7 +80,7 @@ internal fun songChordsOf(
     searchesShapes: Boolean = true,
 ): List<SongChord> {
     val shownNames = ChordProNotation.shownNames(song, notation)
-    val definitions = song.metadata.definitions.filter { it.instrument == tuning.instrument }
+    val definitions = song.metadata.definitions.filter { it.instrument == tuning.instrument }.map(ChordProDefinitions::sounding)
     fun definitionOf(name: String, chord: Chord) =
         (definitions.lastOrNull { it.name == name } ?: definitions.lastOrNull { ChordProChords.parse(it.name) == chord })
             ?.takeIf { it.movedBy == 0 || (it.voicing as? ChordVoicing.Fretted)?.frets?.let(ChordVoicings::isHoldable) != false }

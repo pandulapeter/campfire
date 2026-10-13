@@ -12,9 +12,11 @@ package com.pandulapeter.campfire.presentation.ui.chords
 import com.pandulapeter.campfire.chordpro.ChordNotation
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.chords.ChordProChords
+import com.pandulapeter.campfire.chordpro.chords.ChordProTransposer
 import com.pandulapeter.campfire.chordpro.chords.ChordVoicings
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
 import com.pandulapeter.campfire.chordpro.model.ChordTuning
+import com.pandulapeter.campfire.chordpro.model.ChordVoicing
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -26,6 +28,15 @@ class SongChordsTest {
 
     private fun names(text: String, notation: ChordNotation = ChordNotation.STANDARD, tuning: ChordTuning = ChordTuning.GUITAR) =
         songChordsOf(ChordProParser.parse(text), notation, tuning)
+
+    @Test
+    fun `a banjo definition is drawn with its drone muted where its note is not the chord's, written so or transposed into it`() {
+        fun frets(chord: SongChord) = (chord.definition?.voicing as ChordVoicing.Fretted).frets
+        val written = songChordsOf(ChordProParser.parse("{define: D frets 0 4 2 3 4}\n[D]la"), ChordNotation.STANDARD, ChordTuning.BANJO)
+        assertEquals(listOf<Int?>(null, 4, 2, 3, 4), frets(written.single()))
+        val transposed = ChordProTransposer.transpose(ChordProParser.parse("{define: C frets 0 2 0 1 2}\n[C]la"), 2)
+        assertEquals(listOf<Int?>(null, 4, 2, 3, 4), frets(songChordsOf(transposed, ChordNotation.STANDARD, ChordTuning.BANJO).single()))
+    }
 
     @Test
     fun `every chord is listed once, in the order it is first played`() {

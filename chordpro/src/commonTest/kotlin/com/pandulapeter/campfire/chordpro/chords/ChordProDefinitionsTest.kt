@@ -43,6 +43,18 @@ class ChordProDefinitionsTest {
     }
 
     @Test
+    fun `an open banjo drone is drawn muted where its note is not the chord's, and nothing else is changed`() {
+        val d = definitions("{define: D frets 0 4 2 3 4}").single()
+        assertEquals(listOf<Int?>(null, 4, 2, 3, 4), (ChordProDefinitions.sounding(d).voicing as ChordVoicing.Fretted).frets)
+        val g = definitions("{define: G frets 0 0 0 0 0}").single()
+        assertEquals(g, ChordProDefinitions.sounding(g))
+        val guitar = definitions("{define: D frets x x 0 2 3 2}").single()
+        assertEquals(guitar, ChordProDefinitions.sounding(guitar))
+        val keyboard = definitions("{define: D keys 0 4 7}").single()
+        assertEquals(keyboard, ChordProDefinitions.sounding(keyboard))
+    }
+
+    @Test
     fun `five frets are a banjo's, and one that stops its short fifth string is not Campfire's to draw`() {
         assertEquals(ChordDefinition("C", ChordInstrument.BANJO, ChordVoicing.Fretted(listOf(0, 2, 0, 1, 2))), definitions("{define: C frets 0 2 0 1 2}").single())
         assertEquals(ChordInstrument.BANJO, definitions("{define-banjo: D frets x 0 2 3 4}").single().instrument)

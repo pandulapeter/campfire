@@ -61,12 +61,21 @@ class ChordProDefinitionsTranspositionTest {
     }
 
     @Test
-    fun `a banjo's fifth string stays open where it is, and is muted where its note leaves the chord`() {
+    fun `a banjo's fifth string stays open where it is, and is drawn muted where its note leaves the chord`() {
         val c = ChordDefinition("C", ChordInstrument.BANJO, ChordVoicing.Fretted(listOf(0, 2, 0, 1, 2), listOf(0, 2, 0, 1, 3)))
-        assertEquals(ChordVoicing.Fretted(listOf(null, 4, 2, 3, 4), listOf(0, 3, 1, 2, 4)), move(c, 2).voicing)
+        assertEquals(ChordVoicing.Fretted(listOf(0, 4, 2, 3, 4), listOf(0, 3, 1, 2, 4)), move(c, 2).voicing)
+        assertEquals(ChordVoicing.Fretted(listOf(null, 4, 2, 3, 4), listOf(0, 3, 1, 2, 4)), ChordProDefinitions.sounding(move(c, 2)).voicing)
         assertEquals(listOf<Int?>(0, 9, 7, 8, 9), (move(c, 7).voicing as ChordVoicing.Fretted).frets, "G keeps the drone's G")
+        assertEquals(listOf<Int?>(0, 9, 7, 8, 9), (ChordProDefinitions.sounding(move(c, 7)).voicing as ChordVoicing.Fretted).frets, "G draws the drone's G")
         val rename = { name: String -> ChordProTransposer.transposeChord(name, 2, preferFlats = false) }
-        assertEquals("{define: D frets 0 4 2 3 4}", ChordProDefinitions.rewrittenLine("{define: C frets 0 2 0 1 2}", "", rename, 2), "the text keeps it as written")
+        val rewritten = ChordProDefinitions.rewrittenLine("{define: C frets 0 2 0 1 2}", "", rename, 2)
+        assertEquals("{define: D frets 0 4 2 3 4}", rewritten, "the text keeps it as written")
+        val readBack = ChordProParser.parse(rewritten).metadata.definitions.single()
+        assertEquals(
+            (ChordProDefinitions.sounding(move(c, 2)).voicing as ChordVoicing.Fretted).frets,
+            (ChordProDefinitions.sounding(readBack).voicing as ChordVoicing.Fretted).frets,
+            "the reader and the editor draw one shape",
+        )
     }
 
     @Test

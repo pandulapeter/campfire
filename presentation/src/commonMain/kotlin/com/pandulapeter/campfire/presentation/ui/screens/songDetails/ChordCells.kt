@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 import androidx.compose.runtime.Immutable
 import com.pandulapeter.campfire.chordpro.ChordNotation
 import com.pandulapeter.campfire.chordpro.chords.ChordProChords
+import com.pandulapeter.campfire.chordpro.chords.ChordProDefinitions
 import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
@@ -78,7 +79,7 @@ internal fun chordCellsOf(chords: List<SongChord>, collectedFor: ChordTuning?, t
  * The cells of every definition [song] holds, in file order and each on its own instrument in standard tuning, see
  * [ChordDiagrams.showsDefinitionsOnly]. A numbering leaves a song's definitions in letters, which is how they are named.
  */
-internal fun definitionCellsOf(song: ChordProSong, notation: ChordNotation) = song.metadata.definitions.map { definition ->
+internal fun definitionCellsOf(song: ChordProSong, notation: ChordNotation) = song.metadata.definitions.map(ChordProDefinitions::sounding).map { definition ->
     ChordCell(
         name = definition.name,
         tuning = ChordTuning.standard(definition.instrument),
