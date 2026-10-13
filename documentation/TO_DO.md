@@ -13,6 +13,7 @@
 - CoverArtArchive thumbnails load really slowly
 
 ### Improvements
+- Alternate tuning support for chord diagrams: documentation/plans/alternate-tunings.md
 
 ### Features
 - Import zip screen that displays the content before actually importing it, prepare the screen for loading remote zips

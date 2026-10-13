@@ -771,7 +771,7 @@
     <string name="onboarding_next">Next</string>
     <string name="onboarding_start_playing">Start playing</string>
     <string name="onboarding_welcome_title">Welcome to Campfire!</string>
-    <string name="onboarding_welcome_message">Your songbook for lyrics and chords. A few quick questions and it\'s ready for you, starting with a look you like.</string>
+    <string name="onboarding_welcome_message">A few quick questions and it\'s ready for you, starting with a look you like.</string>
     <string name="onboarding_role_title">How will you use Campfire?</string>
     <string name="onboarding_role_message">Pick the one closest to you and we\'ll switch on what you need. You can fine-tune it below.</string>
     <string name="onboarding_role_player">I play an instrument</string>

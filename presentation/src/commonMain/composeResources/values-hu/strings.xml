@@ -771,7 +771,7 @@
     <string name="onboarding_next">Tovább</string>
     <string name="onboarding_start_playing">Zenéljünk</string>
     <string name="onboarding_welcome_title">Üdv a Campfire-ben!</string>
-    <string name="onboarding_welcome_message">Dalszövegek és akkordok egy helyen. Néhány gyors kérdés, és már készen is áll, kezdve egy neked tetsző megjelenéssel.</string>
+    <string name="onboarding_welcome_message">Néhány gyors kérdés, és már készen is áll, kezdve egy neked tetsző megjelenéssel.</string>
     <string name="onboarding_role_title">Mire fogod használni a Campfire-t?</string>
     <string name="onboarding_role_message">Válaszd azt, ami a legjobban illik rád, és bekapcsoljuk, amire szükséged van. Alább finomhangolhatod.</string>
     <string name="onboarding_role_player">Hangszeren játszom</string>
