@@ -63,5 +63,8 @@ emptied as the screen is left), and Escape and Back go straight to leaving the s
 in `Failed` or `Review` drops the import, which needs no confirmation since nothing has been written; leaving it while
 the import is written lets that finish, reported by a snackbar with Details; leaving a result lets the next batch of
 the queue start, which waits for the report, a result reopened from **Details** included, as it waits for an import
-(`awaitImportSettled`). The single song a system
-"open with" handed over is opened in place of the screen once its review is answered.
+(`awaitImportSettled`). The single song a system "open with" handed over is opened in place of the screen once its
+review is answered. The screen is never restored, since its plan is far too large for the saved state; a process ended
+behind it says so with a snackbar where the import had not been written yet (`Message.ImportInterrupted`, from a flag
+saved beside the back stack, `isUnfinished`), and says nothing behind a result. The web's reload at `/import` says
+nothing either way, since its address cannot tell a review from a result.

@@ -20,8 +20,9 @@ which of them a switch in Settings → Features takes away is `isEnabled`, asked
 `SongDetails(songFileNames, setlistFileName, initialIndex, id)` (keyed by the `id` generated once per push rather than
 by its file names, so renaming a song from the details screen rewrites the entry without Navigation 3 taking it for a
 new one) `SongEditor(fileName, shouldStartInsideFirstSection)` and `ImportReport`, which carries nothing since there is
-only ever one import to report on, and is never restored (the view model's report is gone with the process), and
-`Onboarding(isOpenedFromSettings)`, the onboarding, whose page is `Navigator.onboardingStep`
+only ever one import to report on, and is never restored (the view model's report is gone with the process), which a
+snackbar says where the import had not been written yet (`Message.ImportInterrupted`, from a flag saved beside the back
+stack), and `Onboarding(isOpenedFromSettings)`, the onboarding, whose page is `Navigator.onboardingStep`
 (`ui/screens/onboarding/CLAUDE.md`).
 `SongEditor`'s `contentKey` is its file name behind a prefix of its own, leaving `shouldStartInsideFirstSection` out,
 since that says how the editor opens rather than which editor it is. Top level selection resets the stack to

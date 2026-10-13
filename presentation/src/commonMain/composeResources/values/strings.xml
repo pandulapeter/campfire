@@ -67,6 +67,7 @@
         <item quantity="other">%1$d documents have no text Campfire can read (scans, protected PDFs or an old Word format).</item>
     </plurals>
     <string name="import_failed">Import failed</string>
+    <string name="import_interrupted">The import was interrupted. Open the files again to import them.</string>
     <string name="export_failed">Export failed</string>
     <string name="export_pdf_saved">PDF saved</string>
     <string name="export_song_saved">Song exported</string>

@@ -107,5 +107,6 @@ internal class SavedStateStore(
         const val SETLISTS_SEARCH_KEY = "setlistsSearch"
         const val VISIBLE_DIALOG_KEY = "visibleDialog"
         const val ONBOARDING_STEP_KEY = "onboardingStep"
+        const val IMPORT_UNFINISHED_KEY = "importUnfinished"
     }
 }

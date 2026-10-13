@@ -67,6 +67,7 @@
         <item quantity="other">%1$d dokumentumban nincs a Campfire számára olvasható szöveg (szkennelt oldalak, védett PDF-ek vagy régi Word-formátum).</item>
     </plurals>
     <string name="import_failed">Az importálás nem sikerült</string>
+    <string name="import_interrupted">Az importálás megszakadt. Nyisd meg újra a fájlokat az importáláshoz.</string>
     <string name="export_failed">Az exportálás nem sikerült</string>
     <string name="export_pdf_saved">PDF elmentve</string>
     <string name="export_song_saved">Dal exportálva</string>

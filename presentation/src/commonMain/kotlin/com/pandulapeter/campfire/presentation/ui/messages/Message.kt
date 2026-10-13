@@ -23,6 +23,9 @@ sealed interface Message {
     data class ImportFinished(val result: ImportResult, val hasDetails: Boolean) : Message
 
     data object ImportFailed : Message
+
+    /** A restored process found that the one before it ended behind an import that had not been written yet. */
+    data object ImportInterrupted : Message
     data object ExportFailed : Message
     data object PdfSaved : Message
     data object SongExported : Message

@@ -41,6 +41,12 @@ sealed interface ImportReport {
     data class Finished(val result: ImportResult?) : ImportReport
 }
 
+/**
+ * Whether the import this report is about is lost with the process: every stage but [ImportReport.Finished], a report
+ * still waiting behind the onboarding or a dialog to be shown included.
+ */
+internal val ImportReport?.isUnfinished get() = this != null && this !is ImportReport.Finished
+
 /** Why [ImportReport.Failed] has nothing to review. */
 enum class ImportFailure {
     /** The host could not be reached, did not answer in time, or was busy; worth asking again a minute later. */
