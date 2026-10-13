@@ -51,7 +51,8 @@ at every width (see below), in this order:
 The screen has no app bar: the tabs are at the top of the screen, next to the navigation rail, and everything on it
 starts at the start edge like the lists of the other screens rather than being centered. **The tabs stay flat** and have
 no divider under them: a page scrolled under them fades out into them (`fadingTopEdge`). The tabs themselves are capped
-at 560dp and start at the start edge. The tab being headed for (`targetPage`) is the one whose name lights up, so a
+at 560dp, start at the start edge, and scroll where they add up to more than the row's width, and the row fades at an
+end past which there are more tabs (`fadingHorizontalEdges`), so that the last one is seen to be there. The tab being headed for (`targetPage`) is the one whose name lights up, so a
 pressed tab answers at once, while **the indicator follows the pages themselves** (`pagerIndicatorSpan` in
 `components/PagerIndicator.kt`, tested): it slides and resizes from one name to the next as far as the pages have
 turned, so a swipe, a press, and a predictive back move it the same way, frame by frame. A sync run waiting to hear whether its deletions are meant puts a dot on the

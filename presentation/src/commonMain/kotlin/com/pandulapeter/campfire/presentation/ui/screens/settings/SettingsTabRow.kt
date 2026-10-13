@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.MaterialTheme
@@ -28,6 +29,7 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.ui.components.IndicatorSpan
+import com.pandulapeter.campfire.presentation.ui.components.fadingHorizontalEdges
 import com.pandulapeter.campfire.presentation.ui.components.pagerIndicatorSpan
 import com.pandulapeter.campfire.presentation.ui.navigation.SettingsTab
 import kotlin.math.roundToInt
@@ -37,7 +39,9 @@ import kotlin.math.roundToInt
  *
  * The tabs are capped at [SETTINGS_TAB_ROW_MAX_WIDTH] and start where every list of the app starts - five tabs spread across a
  * wide window are five words a hand's width apart. Each is as wide as its name rather than a fifth of the row, and the row
- * scrolls where they add up to more than a phone's width: five equal tabs at 360dp leave every name cut short.
+ * scrolls where they add up to more than a phone's width: five equal tabs at 360dp leave every name cut short. It fades
+ * at an end past which there are more tabs, since on a phone the last one starts just past the edge and nothing else
+ * would say it is there.
  *
  * @param badgedTab A tab holding something that waits for an answer, marked with a dot so that it is found from the
  *   others. The dot rather than the tab opening itself, which would be the screen moving under a reader's finger.
@@ -58,10 +62,14 @@ internal fun SettingsTabRow(
     endPadding: Dp,
     onTabSelected: (SettingsTab) -> Unit,
 ) = Column(modifier = modifier.fillMaxWidth()) {
+    val scrollState = rememberScrollState()
     PrimaryScrollableTabRow(
         modifier = Modifier
             .padding(start = startPadding, end = endPadding)
-            .widthIn(max = SETTINGS_TAB_ROW_MAX_WIDTH),
+            .widthIn(max = SETTINGS_TAB_ROW_MAX_WIDTH)
+            // Masked rather than painted, since the row is transparent over whatever the screen is drawn on.
+            .fadingHorizontalEdges(scrollState),
+        scrollState = scrollState,
         selectedTabIndex = selectedTab.ordinal,
         containerColor = Color.Transparent,
         edgePadding = 0.dp,
