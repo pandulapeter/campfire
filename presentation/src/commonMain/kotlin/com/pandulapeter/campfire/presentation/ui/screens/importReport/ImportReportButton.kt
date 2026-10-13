@@ -45,18 +45,21 @@ import org.jetbrains.compose.resources.painterResource
  * Nothing while the files are read or written: there is nothing to do then but wait, and Close is still there.
  *
  * @param importCount How many files Import writes; null where the review has nothing to tick.
+ * @param isKeyboardVisible Hides the button while the keyboard is up: that is when the rows it would cover are being
+ *   searched, and in a window that leaves little height it sits over the tick boxes and the conflict buttons at their ends.
  */
 @Composable
 internal fun ImportReportButton(
     modifier: Modifier = Modifier,
     report: ImportReport,
     importCount: Int?,
+    isKeyboardVisible: Boolean,
     onImport: () -> Unit,
     onRetry: () -> Unit,
     onDone: () -> Unit,
 ) = AnimatedContent(
     modifier = modifier,
-    targetState = if (report is ImportReport.Review && importCount == null) null else report::class,
+    targetState = if (isKeyboardVisible || (report is ImportReport.Review && importCount == null)) null else report::class,
     transitionSpec = { (fadeIn() + scaleIn()) togetherWith (fadeOut() + scaleOut()) },
     contentAlignment = Alignment.BottomEnd,
 ) { stage ->

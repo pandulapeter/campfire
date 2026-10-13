@@ -16,10 +16,12 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
@@ -29,6 +31,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -91,6 +94,10 @@ internal fun ImportReportScreen(
     // Narrowed rather than taken apart, so that the keyboard of the search field lays the list out again as it slides
     // instead of recomposing the screen on every frame of it.
     val listPadding = contentPadding.only(bottom = true, extraBottom = FLOATING_BUTTON_CLEARANCE)
+    val ime = WindowInsets.ime
+    val density = LocalDensity.current
+    // Derived, so that the screen recomposes as the keyboard comes and goes rather than on every frame it slides.
+    val isKeyboardVisible by remember(ime, density) { derivedStateOf { ime.getBottom(density) > 0 } }
     Column(Modifier.fillMaxSize()) {
         ImportReportTopAppBar(
             title = shown.title(progress),
@@ -179,6 +186,7 @@ internal fun ImportReportScreen(
                     .padding(end = 16.dp),
                 report = shown,
                 importCount = importCount,
+                isKeyboardVisible = isKeyboardVisible,
                 onImport = viewModel::confirmImport,
                 onRetry = viewModel::retryImport,
                 onDone = onBack,

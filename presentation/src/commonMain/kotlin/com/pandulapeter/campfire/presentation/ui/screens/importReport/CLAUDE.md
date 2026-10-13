@@ -38,9 +38,9 @@ tri-state box in its header acting on the rows it shows, the search's matches on
 has its own Keep both / Replace choice, a song's with **Show the one you have**, and the group's header the choice for
 all of them, which leaves the rows set by hand alone. The floating button reads **Import N files**, dimmed and inert at
 zero and absent where nothing can be ticked (titled "Nothing to import"); where the choices replace anything,
-`DialogType.ConfirmImportReplace` asks first (`confirmImport`). The choices live in the view model's report, so a
-recreated activity keeps every tick, and each row reads its own tick through a derived state, so a tap recomposes that
-row and the summary only.
+`DialogType.ConfirmImportReplace` asks first (`confirmImport`). It steps aside while the keyboard is up, which is when
+the rows it would cover are being searched. The choices live in the view model's report, so a recreated activity keeps
+every tick, and each row reads its own tick through a derived state, so a tap recomposes that row and the summary only.
 
 ### The result
 
