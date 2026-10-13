@@ -109,7 +109,7 @@ internal class IosAudioOutput : AudioOutput {
         observers = observe(engine, listener)
         val stream = createStream(sampleRate)
         val frames = AudioOutput.chunkFrames(sampleRate)
-        val buffers = List(BUFFER_COUNT) { AVAudioPCMBuffer(pCMFormat = format, frameCapacity = frames.toUInt())!! }
+        val buffers = List(BUFFER_COUNT) { AVAudioPCMBuffer(pCMFormat = format, frameCapacity = frames.toUInt()) }
         val samples = ShortArray(frames)
         // Created empty, never with a count: libdispatch ends the process when a semaphore is released holding less than
         // it was created with, and the thread leaves with one wait taken. It needs none to begin with either, since

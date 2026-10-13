@@ -20,7 +20,7 @@ import io.ktor.http.contentLength
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import io.ktor.http.parseUrl
-import io.ktor.utils.io.readRemaining
+import io.ktor.utils.io.readBuffer
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
@@ -48,7 +48,7 @@ internal class CoverArtRemoteSourceImpl(
                     (response.contentLength() ?: 0) > MAXIMUM_SIZE_BYTES -> CoverArtDownload.Missing
                     else -> {
                         // A length is not promised, so the body is read one byte past the limit to find out.
-                        val bytes = response.bodyAsChannel().readRemaining(MAXIMUM_SIZE_BYTES + 1L).readByteArray()
+                        val bytes = response.bodyAsChannel().readBuffer(MAXIMUM_SIZE_BYTES + 1L).readByteArray()
                         if (bytes.isEmpty() || bytes.size > MAXIMUM_SIZE_BYTES) CoverArtDownload.Missing else CoverArtDownload.Image(bytes)
                     }
                 }

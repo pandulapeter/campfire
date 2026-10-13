@@ -77,7 +77,7 @@ internal fun ChordsSection(
     val notation = (userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default).notation.toChordNotation()
     // Enabled with the diagrams switched off too, since the keyboard also reads the capo as a transposition, and with the
     // chords switched off while the tuner is on, which listens for the same instrument.
-    val isInstrumentEnabled = areChordsEnabled || userPreferences?.isTunerEnabled != false
+    val isInstrumentEnabled = areChordsEnabled || userPreferences.isTunerEnabled
     userPreferences?.let { preferences ->
         InstrumentSetting(
             instrument = preferences.instrument,

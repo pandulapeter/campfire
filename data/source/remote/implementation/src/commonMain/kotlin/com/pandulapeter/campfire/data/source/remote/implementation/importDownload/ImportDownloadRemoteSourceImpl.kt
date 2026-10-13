@@ -19,7 +19,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentLength
 import io.ktor.http.isSuccess
 import io.ktor.http.parseUrl
-import io.ktor.utils.io.readRemaining
+import io.ktor.utils.io.readBuffer
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
@@ -46,7 +46,7 @@ internal class ImportDownloadRemoteSourceImpl(
                     (response.contentLength() ?: 0) > maxSizeBytes -> ImportDownload.TooLarge
                     else -> {
                         // A length is not promised, so the body is read one byte past the limit to find out.
-                        val bytes = response.bodyAsChannel().readRemaining(maxSizeBytes + 1).readByteArray()
+                        val bytes = response.bodyAsChannel().readBuffer(maxSizeBytes + 1).readByteArray()
                         when {
                             bytes.isEmpty() -> ImportDownload.Missing
                             bytes.size > maxSizeBytes -> ImportDownload.TooLarge

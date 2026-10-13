@@ -11,9 +11,17 @@
 ## Short-term (in this version)
 ### Bugs / issues
 - Changing the instrument / tuning should modify how tabs are displayed. Handle changing to instruments that don't support tab
+- Check how chords defined in the song file work together with the pre-defined chords
+- Choose chord shape bottom sheet - chord name should always be all-caps
+- Chord library search - chord name should always be all-caps
+- Chord library search - display partial matches but only within the selected key
 
 ### Improvements
+- Choose chord shape bottom sheet - should be a horizontally scrolling list instead of a pager
 - Find a way to allow entering tempo using the keyboard
+- Onboarding: increment horizontal padding of the pages
+- Onboarding: unbalanced vertical use of space, move contents a bit towards the top
+- Onboarding: the screen transition when the onboarding is Done should be improved
 - Search: highlight matched substrings
 - Simplify adding tab charts in the editor
 - Simplify adding chord diagrams in the editor

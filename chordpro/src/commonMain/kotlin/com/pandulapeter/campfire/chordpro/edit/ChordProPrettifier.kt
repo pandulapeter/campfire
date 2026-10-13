@@ -298,7 +298,7 @@ public object ChordProPrettifier {
             if (end != null) environments.indexOfLast { it == end.lowercase() }.takeIf { it >= 0 }?.let { environments.subList(it, environments.size).clear() }
             val value = directive?.let { (ChordProMetaItems.standardMeta(it) ?: it).value }
             val isReadable = (kind == TEMPO || kind == TIME) && value != null && ChordProMetaItems.isReadableValue(kind, value)
-            if (isReadable && kind != null && kind !in found) found[kind] = index
+            if (isReadable && kind !in found) found[kind] = index
         }
         finishSong()
         return hoisted

@@ -98,7 +98,7 @@ internal class IosToneOutput(private val session: IosTunerSession) : ToneOutput 
     }
 
     private fun buffer(format: AVAudioFormat, loop: ShortArray, gain: (Int) -> Float) =
-        AVAudioPCMBuffer(pCMFormat = format, frameCapacity = loop.size.toUInt())!!.apply {
+        AVAudioPCMBuffer(pCMFormat = format, frameCapacity = loop.size.toUInt()).apply {
             val channel = floatChannelData!![0]!!
             for (index in loop.indices) channel[index] = loop[index] / SHORT_SCALE * gain(index)
             frameLength = loop.size.toUInt()
