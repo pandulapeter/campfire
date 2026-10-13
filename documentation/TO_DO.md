@@ -10,6 +10,7 @@
 # To do
 ## Short-term (in this version)
 ### Bugs / issues
+- Clean up local worktrees
 - Changing the instrument / tuning should modify how tabs are displayed. Handle changing to instruments that don't support tab
 - Check how chords defined in the song file work together with the pre-defined chords
 - Choose chord shape bottom sheet - chord name should always be all-caps
@@ -25,6 +26,7 @@
 - Search: highlight matched substrings
 - Simplify adding tab charts in the editor
 - Simplify adding chord diagrams in the editor
+- Update website + promo video + store screenshots + store descriptions to include the chord diagram library
 
 ### Features
 - Shared setlists via Dropbox public links -> deeplink to Campfire. Rewrite documentation/plans/song-links.md - allow scanning deep links via QR code
