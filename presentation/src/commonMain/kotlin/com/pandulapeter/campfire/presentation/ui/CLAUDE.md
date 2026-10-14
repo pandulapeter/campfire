@@ -72,8 +72,7 @@ The view model facade, the composition root, and the product rules every screen 
 
 ### Performance mode
 
-- `UserPreferences.isPerformanceModeEnabled` ("Read only" in the UI, first row of Settings → Features), exposed on its own
-  as `isPerformanceModeEnabled` since every screen reads it.
+- `UserPreferences.isPerformanceModeEnabled` ("Read only" in the UI, first row of Settings → Features).
 - Hides every way to change the library: both "New" buttons, song menus (and their long press / right click), setlist
   header actions, reorder handles and row menus, "Add to setlist", "Choose songs", Edit song file, and the four playing
   controls — which is every way into the editor. Search, sorting, filters, text size, and the chords switch stay.
@@ -149,8 +148,6 @@ The view model facade, the composition root, and the product rules every screen 
 
 ### Tabs follow the instrument
 
-- `ui/tabs/`: `tabPlayerOf` builds `:chordpro`'s `TabPlayer`, `TabReading` adds notice text, `SongRenderer.transposedSong`
-  applies both (see `chordpro/tabs/CLAUDE.md`'s `ChordProTabs`).
 - Of multi-instrument tabs the player sees theirs, falling back (7/8/12-string → guitar, 5-string bass → bass), else the
   guitar's. How a tab is moved, and which staffs get a notice, is `chordpro/tabs/CLAUDE.md`'s.
 - Staff instrument: its selector, else the player's if string counts match, else bass (4–5) / guitar (6–8) — unless its

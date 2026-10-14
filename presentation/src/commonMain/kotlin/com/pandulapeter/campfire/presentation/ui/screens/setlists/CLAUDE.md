@@ -10,8 +10,6 @@
 
 # :presentation — ui/screens/setlists
 
-The setlists screen.
-
 ### The screen
 
 - Setlists are listed whenever any exist, an empty library included; the library's empty state belongs to the songs
@@ -50,8 +48,8 @@ The setlists screen.
 - The screen keeps the dragged order (`DraggedSetlist`, via `SetlistWithSongs.rows`) until the library agrees, or the
   write fails / is refused / the setlist is archived, so nothing snaps back mid-write.
 - `reorderSetlist` writes once at the end, dealing the dragged songs back into the slots they held (`withSongOrder`,
-  `ui/state/setlists/SetlistSongOrder.kt`) so an entry that reached the file meanwhile keeps its place. Writing per move made
-  quick drags jump.
+  `ui/state/setlists/SetlistSongOrder.kt`) so an entry that reached the file meanwhile keeps its place; a write per move would
+  make quick drags jump.
 - Other setlists' rows are not drop targets (`ReorderableItem`'s `enabled`): the reorderable state locks after each move
   until the list answers, and a cross-setlist move is never answered, freezing the drag.
 - Move up / down (menu entries and accessibility actions) are the same single write.
