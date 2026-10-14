@@ -20,11 +20,7 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.onboarding_notation_message
 import com.pandulapeter.campfire.presentation.resources.onboarding_notation_title
-import com.pandulapeter.campfire.presentation.resources.settings_notation_german
-import com.pandulapeter.campfire.presentation.resources.settings_notation_latin
-import com.pandulapeter.campfire.presentation.resources.settings_notation_nashville
-import com.pandulapeter.campfire.presentation.resources.settings_notation_roman
-import com.pandulapeter.campfire.presentation.resources.settings_notation_standard
+import com.pandulapeter.campfire.presentation.ui.chords.label
 
 /**
  * "How do you write chords?", the notations of the settings screen's list as cards named and nothing more, under a few
@@ -52,13 +48,7 @@ internal fun NotationStep(
         notation = selected,
         accidentals = accidentals,
     )
-    val notations = listOf(
-        UserPreferences.Notation.STANDARD to Res.string.settings_notation_standard,
-        UserPreferences.Notation.GERMAN to Res.string.settings_notation_german,
-        UserPreferences.Notation.LATIN to Res.string.settings_notation_latin,
-        UserPreferences.Notation.NASHVILLE to Res.string.settings_notation_nashville,
-        UserPreferences.Notation.ROMAN to Res.string.settings_notation_roman,
-    )
+    val notations = UserPreferences.Notation.entries.map { it to it.label }
     // Two columns where they fit, since five cards with a name each would otherwise make the longest page of the
     // onboarding out of the shortest answers.
     BoxWithConstraints {
