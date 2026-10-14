@@ -9,7 +9,6 @@
  */
 package com.pandulapeter.campfire.chordpro.chords
 
-import com.pandulapeter.campfire.chordpro.edit.ChordProTabWrapper
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
@@ -18,7 +17,6 @@ import com.pandulapeter.campfire.chordpro.model.CommentStyle
 import com.pandulapeter.campfire.chordpro.model.TabNotice
 import com.pandulapeter.campfire.chordpro.model.TabPlayer
 import com.pandulapeter.campfire.chordpro.model.TabTuning
-import com.pandulapeter.campfire.chordpro.syntax.ChordProTokens
 
 /**
  * The tabs of a parsed song as one reader is shown them: which of the tabs written for several instruments they see
@@ -45,12 +43,22 @@ public object ChordProTabs {
         val environments = TabEnvironments(blocks)
         if (environments.selectors.all { it == null }) return blocks.map { block -> block.withRecallSelected(selectors) }
         val shown = environments.shown(selectors)
+        // A section whose first piece held nothing but tabs for somebody else goes on in its continuation, which is
+        // then the piece the reader sees first and the one its heading belongs to, and the comments between the two
+        // open it rather than carrying on what is no longer there.
+        var isHeadTakenOut = false
         val selected = blocks.mapIndexedNotNull { blockIndex, block ->
             when (block) {
-                is ChordProBlock.Section -> block.copy(
-                    lines = block.lines.filterIndexed { lineIndex, _ -> environments.of(blockIndex, lineIndex)?.let { it in shown } ?: true },
-                ).takeUnless { section -> section.lines.all { it == ChordProLine.Blank } }
+                is ChordProBlock.Section -> {
+                    val section = block.copy(
+                        lines = block.lines.filterIndexed { lineIndex, _ -> environments.of(blockIndex, lineIndex)?.let { it in shown } ?: true },
+                    ).takeUnless { section -> section.lines.all { it == ChordProLine.Blank } }
+                    val kept = section?.takeIf { it.isContinuation && isHeadTakenOut }?.copy(isContinuation = false) ?: section
+                    isHeadTakenOut = section == null && (!block.isContinuation || isHeadTakenOut)
+                    kept
+                }
                 is ChordProBlock.Comment -> block.takeIf { environments.of(blockIndex)?.let { it in shown } ?: true }
+                    ?.let { comment -> if (isHeadTakenOut && comment.placement == CommentPlacement.IN_SECTION) comment.copy(placement = CommentPlacement.START_OF_SECTION) else comment }
                 else -> block.withRecallSelected(selectors)
             }
         }
@@ -112,8 +120,7 @@ public object ChordProTabs {
             val first = section.lines[index]
             when {
                 run != null && player.hidesTabs -> {
-                    val tabs = run.map { section.lines[it] }.filterIsInstance<ChordProLine.Tab>()
-                    cut(TabNotice(TabNotice.Kind.HIDDEN, instrument = instrumentOf(tabs, player)))
+                    cut(TabNotice(TabNotice.Kind.HIDDEN, instrument = instrumentOf(run.map { section.lines[it] }, player)))
                     index = run.last + 1
                     continue
                 }
@@ -131,14 +138,9 @@ public object ChordProTabs {
         }
     }
 
-    /** The instrument a hidden run is for: the one its selector names, or the one as many strings make it most likely. */
-    private fun instrumentOf(tabs: List<ChordProLine.Tab>, player: TabPlayer): String? {
-        val lines = tabs.map { it.text }
-        val isStaffLine = lines.map(ChordProTokens::isStaffLine)
-        val strings = ChordProTabWrapper.systems(lines, isStaffLine).firstOrNull { range -> range.any { isStaffLine[it] } }
-            ?.count { isStaffLine[it] } ?: return null
-        return player.assumedTuning(strings, tabs.first().selector?.takeUnless { it.endsWith(NEGATION) })?.instrument
-    }
+    /** The instrument a hidden run is for: the one its selector names, or the one its strings make it most likely. */
+    private fun instrumentOf(lines: List<ChordProLine>, player: TabPlayer): String? =
+        ChordProTabRetuner.instrumentOf(lines.map { line -> (line as? ChordProLine.Tab)?.text.orEmpty() }, (lines.first() as ChordProLine.Tab).selector, player)
 
     /** The runs of tablature among [lines]: from a tab line that starts an environment to the last tab line of it. */
     private fun runsOf(lines: List<ChordProLine>): List<IntRange> {

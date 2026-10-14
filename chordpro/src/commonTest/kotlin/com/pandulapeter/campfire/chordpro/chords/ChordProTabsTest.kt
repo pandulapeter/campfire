@@ -81,6 +81,26 @@ class ChordProTabsTest {
     }
 
     @Test
+    fun `a staff whose names stand before the dashes without a bar is read and given its bars`() {
+        val song = tab("  Am", "e --0--", "B --1--", "G --2--", "D --2--", "A --0--", "E -----")
+
+        val moved = ChordProTransposer.transpose(song, 1, tabPlayer = player(GUITAR))
+
+        assertEquals(listOf("  Bbm", "e|--1--", "B|--2--", "G|--3--", "D|--3--", "A|--1--", "E|-----"), moved.tabLines())
+    }
+
+    @Test
+    fun `the systems a blank line separates are moved and named each on its own`() {
+        val song = ChordProParser.parse("{start_of_tab}\n|--0--|\n|-----|\n|-----|\n|-----|\n|-----|\n|-----|\n\n|-----|\n|-----|\n|-----|\n|-----|\n|-----|\n|--3--|\n{end_of_tab}")
+
+        val moved = ChordProTransposer.transpose(song, 0, tabPlayer = player(GUITAR_HALF_STEP_DOWN))
+
+        assertEquals(listOf("d#|--1--|", "A#|-----|", "F#|-----|", "C#|-----|", "G#|-----|", "D#|-----|"), moved.tabLines().take(6))
+        assertEquals("D#|--4--|", moved.tabLines().last())
+        assertEquals(1, moved.blocks.filterIsInstance<ChordProBlock.Section>().single().lines.count { it == ChordProLine.Blank })
+    }
+
+    @Test
     fun `a drop D riff on an open string is moved up an octave for a guitar in standard tuning and says so`() {
         val song = tab("e|---------|", "B|---------|", "G|---------|", "D|---------|", "A|---------|", "D|--0---2--|")
 
@@ -182,6 +202,23 @@ class ChordProTabsTest {
     }
 
     @Test
+    fun `a section whose first piece was all somebody else's tab keeps its heading on the piece that is left`() {
+        val song = ChordProParser.parse(
+            "{start_of_verse: Solo}\n{start_of_tab-guitar}\ne|--0--|\n{comment: again}\ne|--2--|\n{end_of_tab}\n{comment: For the ukulele}\n{start_of_tab-ukulele}\nA|--3--|\n{end_of_tab}\n{end_of_verse}",
+        )
+
+        val selected = ChordProTabs.select(song, listOf("ukulele"))
+
+        val comment = selected.blocks[0] as ChordProBlock.Comment
+        val section = selected.blocks[1] as ChordProBlock.Section
+        assertEquals("For the ukulele", comment.text)
+        assertEquals(CommentPlacement.START_OF_SECTION, comment.placement)
+        assertEquals("Solo", section.label)
+        assertTrue(!section.isContinuation)
+        assertEquals(listOf("A|--3--|"), selected.tabLines())
+    }
+
+    @Test
     fun `a tab with a negated selector is shown to everybody but the players of that instrument`() {
         val song = ChordProParser.parse("{start_of_tab-guitar!}\nA|--3--|\n{end_of_tab}")
 
@@ -206,12 +243,14 @@ class ChordProTabsTest {
         val song = ChordProParser.parse("{start_of_tab: Riff}\n{comment: Let it ring}\n|--0--|\n|-----|\n|-----|\n|-----|\n|-----|\n|-----|\n{end_of_tab}")
 
         val hidden = ChordProTabs.withNotices(song, player(null, hidesTabs = true)) { notice -> "${notice.kind} ${notice.instrument}" }
+        val twoSystems = ChordProParser.parse("{start_of_tab}\n|--0--|\n|-----|\n|-----|\n|-----|\n|-----|\n|-----|\n\n|--0--|\n|-----|\n|-----|\n|-----|\n|-----|\n|-----|\n{end_of_tab}")
 
         assertEquals(emptyList(), hidden.tabLines())
         assertEquals(
             listOf(ChordProBlock.Comment("HIDDEN guitar", hidden.comments().single().style, CommentPlacement.BETWEEN_SECTIONS, isInTabOrGrid = true)),
             hidden.comments(),
         )
+        assertEquals("HIDDEN guitar", ChordProTabs.withNotices(twoSystems, player(null, hidesTabs = true)) { "${it.kind} ${it.instrument}" }.comments().single().text)
     }
 
     private fun tab(vararg lines: String) = ChordProParser.parse("{start_of_tab}\n${lines.joinToString("\n")}\n{end_of_tab}")
@@ -234,10 +273,10 @@ class ChordProTabsTest {
         selectors = listOfNotNull(tuning?.instrument),
         tuning = tuning,
         hidesTabs = hidesTabs,
-        assumedTuning = { strings, selector ->
-            STANDARD_TUNINGS.firstOrNull { it.instrument == selector && it.strings.size == strings }
-                ?: STANDARD_TUNINGS.firstOrNull { it.instrument == tuning?.instrument && it.strings.size == strings }
-                ?: STANDARD_TUNINGS.firstOrNull { it.strings.size == strings }
+        assumedTuning = { notes, selector ->
+            STANDARD_TUNINGS.firstOrNull { it.instrument == selector && it.strings.size == notes.size }
+                ?: STANDARD_TUNINGS.firstOrNull { it.instrument == tuning?.instrument && it.strings.size == notes.size }
+                ?: STANDARD_TUNINGS.firstOrNull { it.strings.size == notes.size }
         },
         stringName = { note -> NOTE_NAMES[note.mod(12)] },
     )

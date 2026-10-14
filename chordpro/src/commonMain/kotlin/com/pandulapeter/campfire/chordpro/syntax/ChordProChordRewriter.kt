@@ -171,7 +171,8 @@ internal object ChordProChordRewriter {
      * A blank line does not end a run, a second environment does: a tab environment keeps its blank lines, and the text
      * path moves an environment as one fingerboard however many systems it is written in, and every environment as a
      * fingerboard of its own, so the model has to make the same octave decisions for the same lines. Only the tab lines
-     * are handed to the rewrite of the tablature; the blanks go back where they were.
+     * are handed to [ChordRewrite.rewriteTabLines], and [ChordRewrite.rewriteTabRun] gets the blanks as empty lines; the
+     * blanks go back where they were either way.
      */
     private fun rewriteLines(lines: List<ChordProLine>, rewrite: ChordRewrite): List<ChordProLine> {
         val rename = rewrite.rename
@@ -181,9 +182,10 @@ internal object ChordProChordRewriter {
         fun flushRun() {
             if (run.isEmpty()) return
             val tabs = run.filterIsInstance<ChordProLine.Tab>()
-            val texts = tabs.map { it.text }
-            val tabRun = rewrite.rewriteTabRun?.invoke(texts, tabs.first().selector) ?: ChordProTabRetuner.Run(rewrite.rewriteTabLines(texts), notice = null)
-            val tabLines = tabRun.lines.iterator()
+            // The blanks go to the retuner as empty lines, since a blank line is where one system of the run ends and the
+            // next begins, and come back as the blanks they were.
+            val tabRun = rewrite.rewriteTabRun?.invoke(run.map { line -> (line as? ChordProLine.Tab)?.text.orEmpty() }, tabs.first().selector)
+            val tabLines = (tabRun?.lines?.filterIndexed { index, _ -> run[index] is ChordProLine.Tab } ?: rewrite.rewriteTabLines(tabs.map { it.text })).iterator()
             var isFirst = true
             run.forEach { line ->
                 if (line is ChordProLine.Tab) {
@@ -193,7 +195,7 @@ internal object ChordProChordRewriter {
                         label = line.label?.let { rewriteLyricsLineChords(it, rename) },
                         // A rewrite with nothing to say about the run (a change of notation) leaves what was said.
                         notice = when {
-                            rewrite.rewriteTabRun == null -> line.notice
+                            tabRun == null -> line.notice
                             isFirst -> tabRun.notice
                             else -> null
                         },

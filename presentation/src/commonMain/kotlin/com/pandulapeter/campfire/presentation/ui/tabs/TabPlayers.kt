@@ -34,10 +34,14 @@ internal fun tabPlayerOf(
     selectors = selectorsOf(instrument),
     tuning = tuning?.takeIf { isMoved && instrument.hasFrets }?.let { TabTuning(instrument = instrument.tabInstrument, strings = it.strings) },
     hidesTabs = isMoved && !instrument.hasFrets && instrument != UserPreferences.Instrument.OTHER,
-    assumedTuning = { strings, selector ->
-        selector?.let(::instrumentOfSelector)?.standardTabTuning?.takeIf { it.strings.size == strings }
-            ?: instrument.takeIf { it.hasFrets }?.standardTabTuning?.takeIf { it.strings.size == strings }
-            ?: likelyInstruments[strings]?.standardTabTuning
+    assumedTuning = { notes, selector ->
+        // A selector says who the tab is for, whatever its staff names; without one the names tell the instruments
+        // with as many strings apart, where they are the open strings of one of them.
+        val candidates = listOfNotNull(instrument.takeIf { it.hasFrets }, likelyInstruments[notes.size]) + UserPreferences.Instrument.entries.filter { it.hasFrets }
+        val tunings = candidates.mapNotNull { candidate -> candidate.standardTabTuning?.takeIf { it.strings.size == notes.size } }
+        selector?.let(::instrumentOfSelector)?.standardTabTuning?.takeIf { it.strings.size == notes.size }
+            ?: tunings.firstOrNull { tuning -> tuning.strings.zip(notes).all { (string, note) -> note == null || string.mod(SEMITONES_IN_OCTAVE) == note } }
+            ?: tunings.firstOrNull()
     },
     stringName = { note -> noteName(note, notation) },
 )
@@ -99,3 +103,4 @@ private val likelyInstruments = mapOf(
 )
 
 private const val PIANO_SELECTOR = "piano"
+private const val SEMITONES_IN_OCTAVE = 12

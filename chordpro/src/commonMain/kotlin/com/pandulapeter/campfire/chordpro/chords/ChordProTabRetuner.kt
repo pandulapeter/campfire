@@ -20,8 +20,10 @@ import kotlin.math.abs
 /**
  * Moves one run of tablature to the strings of a [TabPlayer], for [ChordProTransposer], so that it sounds what it was
  * written to sound: the strings a staff names (`Eb|`, `e|`) are the tuning it was written in, every one of them is moved
- * by how far it is from the player's string it lands on, and the transposition is added on top. A staff that names no
- * strings is in the standard tuning [TabPlayer.assumedTuning] gives it.
+ * by how far it is from the player's string it lands on, and the transposition is added on top. A staff is taken to be
+ * written for the instrument [TabPlayer.assumedTuning] names from the strings it names, and one that names no strings
+ * is in the standard tuning that gives it. The blank lines of the run arrive as empty lines, which end a system the way
+ * any other line between two staves does, and leave as they came.
  *
  * Every staff line is named for the string it lands on, so the run reads as a tab for the player's instrument, and a
  * staff that named nothing is named all the same. One decision is made for the whole run, as the plain transposition
@@ -71,10 +73,26 @@ internal object ChordProTabRetuner {
     private fun otherInstrument(systems: List<StaffSystem>, target: TabTuning) =
         systems.firstNotNullOfOrNull { system -> system.tuning?.instrument?.takeIf { it != target.instrument } }
 
+    /**
+     * The instrument the first staff of a run is written for, as [TabPlayer.assumedTuning] names it from the strings the
+     * staff names and the selector of its environment, or null where no instrument has as many strings: what a notice
+     * about a run that is not shown at all names it by.
+     */
+    fun instrumentOf(lines: List<String>, selector: String?, player: TabPlayer): String? {
+        val isStaffLine = lines.map(ChordProTokens::isStaffLine)
+        val range = ChordProTabWrapper.systems(lines, isStaffLine).firstOrNull { range -> range.any { isStaffLine[it] } } ?: return null
+        val staff = range.filter { isStaffLine[it] }
+        return assumedTuning(staff.map { staffPrefix(lines[it]) }, selector?.takeUnless { it.endsWith(NEGATION) }, player)?.instrument
+    }
+
+    /** The standard tuning [player] takes a staff opened by [prefixes] to be written in, where an instrument has as many strings. */
+    private fun assumedTuning(prefixes: List<StaffPrefix>, instrumentHint: String?, player: TabPlayer) =
+        player.assumedTuning(prefixes.map { it.note }.asReversed(), instrumentHint)?.takeIf { it.strings.size == prefixes.size }
+
     private fun readSystem(lines: List<String>, isStaffLine: List<Boolean>, range: IntRange, instrumentHint: String?, player: TabPlayer): StaffSystem {
         val staff = range.filter { isStaffLine[it] }
         val prefixes = staff.map { staffPrefix(lines[it]) }
-        val standard = player.assumedTuning(staff.size, instrumentHint)?.takeIf { it.strings.size == staff.size }
+        val standard = assumedTuning(prefixes, instrumentHint, player)
         val notes = prefixes.map { it.note }
         val tuning = standard?.let {
             val standardFromTop = standard.strings.asReversed()
@@ -263,8 +281,9 @@ internal object ChordProTabRetuner {
 
     /**
      * What opens a staff line: the name of its string (`Eb`, `e`, `D#`, `Mi`; a string's number, `1|`, names no note)
-     * and the bar after it. [bodyStart] is where the music starts: after the bar, after a name with no bar (`e-----`), or
-     * after the indentation of a line that names nothing (`|-----`'s bar is music, the one a staff starts with).
+     * and the bar after it. [bodyStart] is where the music starts: after the bar, at the first dash after a name with no
+     * bar (`e-----`, `e -----`), or after the indentation of a line that names nothing (`|-----`'s bar is music, the one a
+     * staff starts with).
      */
     private class StaffPrefix(val note: Int?, val bodyStart: Int)
 
@@ -278,8 +297,9 @@ internal object ChordProTabRetuner {
         while (barIndex < line.length && line[barIndex] == ' ') barIndex++
         return when {
             name.isNotEmpty() && line.getOrNull(barIndex) == BAR -> StaffPrefix(note = noteOf(name), bodyStart = barIndex + 1)
-            // Without a bar only a note followed by the staff names a string: a staff that starts with a fret is music.
-            noteOf(name) != null && line.getOrNull(index) == '-' -> StaffPrefix(note = noteOf(name), bodyStart = index)
+            // Without a bar only a note followed by the staff (`e-----`, `e -----`) names a string: a staff that starts
+            // with a fret is music.
+            noteOf(name) != null && line.getOrNull(barIndex) == '-' -> StaffPrefix(note = noteOf(name), bodyStart = barIndex)
             line.getOrNull(indentation) == BAR -> StaffPrefix(note = null, bodyStart = indentation + 1)
             else -> StaffPrefix(note = null, bodyStart = indentation)
         }

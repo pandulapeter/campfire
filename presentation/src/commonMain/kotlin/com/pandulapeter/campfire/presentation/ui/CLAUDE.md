@@ -498,8 +498,10 @@ instrument of its own: `withTuning` tunes the instrument picked, and the chips a
 `ChordProTabs`). Of the tabs written for several instruments (`{start_of_tab-ukulele}`) the player sees theirs — a
 seven- and an eight-string or a twelve-string guitar the guitar's when there is none of their own, a five-string bass
 the bass's — and otherwise the guitar's. Every tab is moved to their strings so that it sounds what its string names
-say, and every staff is named, one that names nothing being in the standard tuning of the player's instrument where it
-has as many strings, and else a bass's of four or five, a guitar's of six, seven, or eight. Only a judgment call is
+say, and every staff is named. A staff is of the instrument its selector names, else of the player's where that has as
+many strings, else a bass of four or five strings and a guitar of six, seven, or eight — unless the strings it names
+are the open strings of another instrument with as many (`A E C G` is a ukulele's to a guitarist, `E A D G` a
+mandolin's), which is then the one; one that names nothing is in that instrument's standard tuning. Only a judgment call is
 said, in an italic line above the tab: an octave move, a tab from another instrument, or one that could not be moved
 and is shown as written. The keyboard and the violin hide every tab, a line saying which in its place; Other is shown
 every tab as written. There is no switch for any of it: a reader who wants a tab as written tunes to what it names,

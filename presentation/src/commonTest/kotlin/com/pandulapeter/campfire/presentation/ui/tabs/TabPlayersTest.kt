@@ -25,25 +25,38 @@ class TabPlayersTest {
     fun `a staff that names nothing is in the standard tuning of the player's instrument where that has as many strings`() {
         val ukulele = tabPlayerOf(Instrument.UKULELE, InstrumentTuning.UKULELE_LOW_G, ChordNotation.STANDARD, isMoved = true)
 
-        assertEquals(InstrumentTuning.UKULELE.strings, ukulele.assumedTuning(4, null)?.strings)
-        assertEquals("ukulele", ukulele.assumedTuning(4, null)?.instrument)
+        assertEquals(InstrumentTuning.UKULELE.strings, ukulele.assumedTuning(unnamed(4), null)?.strings)
+        assertEquals("ukulele", ukulele.assumedTuning(unnamed(4), null)?.instrument)
     }
 
     @Test
     fun `a staff that names nothing is a bass's of four or five strings and a guitar's of six to eight elsewhere`() {
         val ukulele = tabPlayerOf(Instrument.UKULELE, InstrumentTuning.UKULELE, ChordNotation.STANDARD, isMoved = true)
 
-        assertEquals(listOf("bass_five_string", "guitar", "guitar_seven_string", "guitar_eight_string"), (5..8).map { ukulele.assumedTuning(it, null)?.instrument })
-        assertEquals("bass", tabPlayerOf(Instrument.GUITAR, InstrumentTuning.GUITAR, ChordNotation.STANDARD, isMoved = true).assumedTuning(4, null)?.instrument)
-        assertNull(ukulele.assumedTuning(3, null))
+        assertEquals(listOf("bass_five_string", "guitar", "guitar_seven_string", "guitar_eight_string"), (5..8).map { ukulele.assumedTuning(unnamed(it), null)?.instrument })
+        assertEquals("bass", tabPlayerOf(Instrument.GUITAR, InstrumentTuning.GUITAR, ChordNotation.STANDARD, isMoved = true).assumedTuning(unnamed(4), null)?.instrument)
+        assertNull(ukulele.assumedTuning(unnamed(3), null))
     }
 
     @Test
     fun `a tab's selector names the instrument it is in the standard tuning of`() {
         val guitar = tabPlayerOf(Instrument.GUITAR, InstrumentTuning.GUITAR, ChordNotation.STANDARD, isMoved = true)
 
-        assertEquals(InstrumentTuning.MANDOLIN.strings, guitar.assumedTuning(4, "mandolin")?.strings)
-        assertEquals("bass", guitar.assumedTuning(4, "ukulele_baritone")?.instrument)
+        assertEquals(InstrumentTuning.MANDOLIN.strings, guitar.assumedTuning(unnamed(4), "mandolin")?.strings)
+        assertEquals("bass", guitar.assumedTuning(unnamed(4), "ukulele_baritone")?.instrument)
+    }
+
+    @Test
+    fun `a staff that names its strings is of the instrument whose open strings sound them`() {
+        val guitar = tabPlayerOf(Instrument.GUITAR, InstrumentTuning.GUITAR, ChordNotation.STANDARD, isMoved = true)
+        val bass = tabPlayerOf(Instrument.BASS, InstrumentTuning.BASS, ChordNotation.STANDARD, isMoved = true)
+
+        assertEquals("ukulele", guitar.assumedTuning(pitchClasses(InstrumentTuning.UKULELE), null)?.instrument)
+        assertEquals("mandolin", guitar.assumedTuning(pitchClasses(InstrumentTuning.MANDOLIN), null)?.instrument)
+        assertEquals("bass", bass.assumedTuning(pitchClasses(InstrumentTuning.BASS), null)?.instrument)
+        assertEquals("bass", guitar.assumedTuning(pitchClasses(InstrumentTuning.MANDOLIN), "bass")?.instrument)
+        assertEquals("guitar", guitar.assumedTuning(pitchClasses(InstrumentTuning.GUITAR_HALF_STEP_DOWN), null)?.instrument)
+        assertEquals("ukulele", guitar.assumedTuning(listOf(7, null, null, 9), null)?.instrument)
     }
 
     @Test
@@ -52,7 +65,7 @@ class TabPlayersTest {
 
         assertEquals(listOf("guitar_twelve_string", "guitar"), twelveString.selectors)
         assertEquals("guitar", twelveString.tuning?.instrument)
-        assertEquals("guitar", twelveString.assumedTuning(6, null)?.instrument)
+        assertEquals("guitar", twelveString.assumedTuning(unnamed(6), null)?.instrument)
     }
 
     @Test
@@ -81,6 +94,10 @@ class TabPlayersTest {
         assertEquals(listOf("A", "E", "C", "G"), emptyTabStaffOf(Instrument.UKULELE, InstrumentTuning.UKULELE).map { it.substringBefore('|') })
         assertEquals(listOf("e", "B", "G", "D", "A", "E"), emptyTabStaffOf(Instrument.KEYBOARD, null).map { it.substringBefore('|') })
     }
+
+    private fun unnamed(strings: Int) = List<Int?>(strings) { null }
+
+    private fun pitchClasses(tuning: InstrumentTuning) = tuning.strings.map { it.mod(12) }
 
     @Test
     fun `a notice names the instrument a tab is written for where it is not the reader's`() {

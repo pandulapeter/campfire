@@ -21,10 +21,14 @@ package com.pandulapeter.campfire.chordpro.model
  *   preview, which shows a song as it is written, or an instrument nothing is known about).
  * @property hidesTabs Whether the reader's instrument has nothing a tab could be played on (a keyboard): every tab is
  *   then left out, a notice standing in its place.
- * @property assumedTuning The tuning a tab of so many strings is written in where its staff does not name its strings,
- *   or null for a number of strings no instrument has: the standard tuning of the instrument its selector names, of the
- *   reader's own instrument where that has as many strings, and of the one a tab of that many strings is most likely
- *   for otherwise. It also says what octave each string a staff names is in, and what instrument the tab is for.
+ * @property assumedTuning The standard tuning of the instrument a staff is written for, given the pitch classes it names
+ *   its strings by (the bottom string first, as [TabTuning.strings] are, null for a string it leaves unnamed) and the
+ *   selector of its environment, or null for a number of strings no instrument has: the instrument the selector names
+ *   where it has as many strings, whatever the staff names; else the reader's own, the one a tab of that many strings
+ *   is most likely for, or any other with as many — the first of them whose open strings sound the names the staff
+ *   writes, and the first of them where none does (a guitar tuned down names strings no instrument has open). It says
+ *   what instrument the tab is for and what octave each string it names is in; a staff that names nothing is in the
+ *   tuning itself.
  * @property stringName The name a string tuned to a MIDI note is written with in front of the staff, in the notation
  *   the reader reads chords in, before the top string of a staff that names its note twice is put in lowercase.
  */
@@ -32,6 +36,6 @@ public class TabPlayer(
     public val selectors: List<String>,
     public val tuning: TabTuning?,
     public val hidesTabs: Boolean,
-    public val assumedTuning: (strings: Int, selector: String?) -> TabTuning?,
+    public val assumedTuning: (notes: List<Int?>, selector: String?) -> TabTuning?,
     public val stringName: (note: Int) -> String,
 )

@@ -320,8 +320,11 @@ what nothing outside the module calls is `internal`.
   (`ChordProTransposer.transpose`'s `tabPlayer`, through `ChordRewrite.rewriteTabRun`), so that one octave decision
   is made for both. **A staff's string names are the tuning it is written in**, sounding notes as a chord name is
   (`Eb|` on a guitar in standard tuning moves that string a fret down), and a staff that names none is in the assumed
-  standard tuning. A name is read in the standard, German or Latin notation, in the octave of the assumed tuning's
-  string nearest to it; a number (`1|`) names nothing. On the instrument it is written for every string moves by
+  standard tuning — the one `TabPlayer.assumedTuning` picks from the names the staff writes and its selector, which is
+  how a staff named `A E C G` is a ukulele's to everybody. A name is read in the standard, German or Latin notation, in
+  the octave of the assumed tuning's string nearest to it; a number (`1|`) names nothing. The blank lines of a run end a
+  system the way a chord line between two staves does, each moved and named on its own, and one octave decision is
+  still made for the run. On the instrument it is written for every string moves by
   exactly how far it is from the reader's; on another (a bass tab on a guitar, a guitar tab on a ukulele) the strings
   are lined up as one block, unused ones falling off the ends, moved by pitch class and no further apart than two
   semitones, or the shapes would fall apart.
