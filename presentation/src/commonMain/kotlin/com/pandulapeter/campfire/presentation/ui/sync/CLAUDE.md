@@ -16,3 +16,5 @@
   fresh start; Android restores its back stack.
 - `rememberSyncNotifications` only reports "nothing to show" after showing something; otherwise opening the app onto a
   background run would stop the Android service.
+- `SyncController.startRestoring` forgets the credentials on a first launch before restoring, because the iOS Keychain
+  outlives an uninstall.

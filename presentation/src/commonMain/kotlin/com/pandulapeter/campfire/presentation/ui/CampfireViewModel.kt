@@ -148,7 +148,7 @@ import com.pandulapeter.campfire.presentation.ui.state.SongFilesController
 import com.pandulapeter.campfire.presentation.ui.state.SongPickerState
 import com.pandulapeter.campfire.presentation.ui.state.SongSelection
 import com.pandulapeter.campfire.presentation.ui.state.SongTextStore
-import com.pandulapeter.campfire.presentation.ui.state.SyncController
+import com.pandulapeter.campfire.presentation.ui.sync.SyncController
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
