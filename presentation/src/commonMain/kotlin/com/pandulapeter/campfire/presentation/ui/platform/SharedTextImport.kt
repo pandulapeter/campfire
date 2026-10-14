@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.platform
 
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
-import com.pandulapeter.campfire.data.model.domain.LibraryFiles
+import com.pandulapeter.campfire.data.model.library.LibraryFiles
 
 /**
  * Text that was shared to Campfire rather than a file - a chord sheet selected on a web page, a note - which is

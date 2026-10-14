@@ -13,8 +13,8 @@ import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.data.model.domain.SongLanguage
 import com.pandulapeter.campfire.data.model.domain.Tag
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
-import com.pandulapeter.campfire.data.model.domain.isCombiningMark
-import com.pandulapeter.campfire.data.model.domain.withoutAccent
+import com.pandulapeter.campfire.data.model.library.isCombiningMark
+import com.pandulapeter.campfire.data.model.library.withoutAccent
 
 /**
  * The order the tags and the languages of one song are shown in: alphabetical by what the chip reads, without regard

@@ -10,8 +10,8 @@
 package com.pandulapeter.campfire.domain.implementation.text
 
 import com.pandulapeter.campfire.domain.api.text.NormalizeTextUseCase
-import com.pandulapeter.campfire.data.model.domain.isCombiningMark
-import com.pandulapeter.campfire.data.model.domain.withoutAccent
+import com.pandulapeter.campfire.data.model.library.isCombiningMark
+import com.pandulapeter.campfire.data.model.library.withoutAccent
 import org.koin.core.annotation.Factory
 
 @Factory

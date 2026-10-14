@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.data.model.domain
 
+import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+
 /**
  * Everything the user chose on this device, written as one document. Every map keyed by a song's file name is listed
  * in [withSongRenamed] and [withoutSongOverrides], so that a new one is added there and a renamed or deleted song never

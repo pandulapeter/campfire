@@ -9,8 +9,8 @@
  */
 package com.pandulapeter.campfire.data.source.local.api
 
-import com.pandulapeter.campfire.data.model.domain.LibraryFile
-import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.LibraryFile
+import com.pandulapeter.campfire.data.model.library.LibraryFileKind
 
 /**
  * The library as bytes, which is what sync moves around. The other local sources hand out parsed models; this one

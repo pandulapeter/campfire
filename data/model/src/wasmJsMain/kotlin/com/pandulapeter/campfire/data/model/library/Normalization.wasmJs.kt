@@ -7,8 +7,8 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.data.model.domain
+package com.pandulapeter.campfire.data.model.library
 
-import java.text.Normalizer
+actual fun String.normalizedToNfc(): String = normalizeToNfc(this)
 
-actual fun String.normalizedToNfc(): String = Normalizer.normalize(this, Normalizer.Form.NFC)
+private fun normalizeToNfc(value: String): String = js("value.normalize('NFC')")

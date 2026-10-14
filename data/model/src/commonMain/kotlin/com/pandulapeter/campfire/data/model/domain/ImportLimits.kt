@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.data.model.domain
 
+import com.pandulapeter.campfire.data.model.library.LibraryFiles
+
 /**
  * How much an import is willing to read. A song is a few kilobytes of text, and every way into the library reads a
  * file whole, so without a ceiling one wrong file in a selection is an allocation the process does not survive: an

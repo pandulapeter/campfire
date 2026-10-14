@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.domain.api.export
 
-import com.pandulapeter.campfire.data.model.domain.ExportedFile
+import com.pandulapeter.campfire.data.model.library.ExportedFile
 
 interface ExportSetlistUseCase {
 

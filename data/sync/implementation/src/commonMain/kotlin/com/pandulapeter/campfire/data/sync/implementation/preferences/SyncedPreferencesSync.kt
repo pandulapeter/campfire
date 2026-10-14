@@ -12,8 +12,8 @@ package com.pandulapeter.campfire.data.sync.implementation.preferences
 import com.pandulapeter.campfire.data.sync.implementation.run.foldRemoteNamesOntoLocal
 import com.pandulapeter.campfire.data.sync.implementation.run.folded
 import com.pandulapeter.campfire.data.sync.implementation.run.plus
-import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
-import com.pandulapeter.campfire.data.model.domain.LibraryFiles
+import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource

@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.domain.implementation.export
 
-import com.pandulapeter.campfire.data.model.domain.LibraryFiles
+import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.domain.SongContent
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 

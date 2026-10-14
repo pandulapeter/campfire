@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.domain.implementation.songs
 
 import com.pandulapeter.campfire.chordpro.edit.ChordProTags
-import com.pandulapeter.campfire.data.model.domain.normalizedToNfc
+import com.pandulapeter.campfire.data.model.library.normalizedToNfc
 import com.pandulapeter.campfire.domain.api.songs.SetChordProTagUseCase
 import org.koin.core.annotation.Factory
 

@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.data.model.domain
 
+import com.pandulapeter.campfire.data.model.library.normalizedToNfc
+
 /**
  * The tags of a song as every part of the app lists them: each composed to NFC, and one spelling per tag whatever its
  * case, the first one kept, in the order they were written. The song list, the tag sheet and the editor read them
