@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.state
 
+import com.pandulapeter.campfire.presentation.ui.state.importing.ImportController
 import com.pandulapeter.campfire.data.model.domain.SyncProgress
 import com.pandulapeter.campfire.data.model.domain.SyncState
 import com.pandulapeter.campfire.domain.api.useCases.GetSyncStateUseCase

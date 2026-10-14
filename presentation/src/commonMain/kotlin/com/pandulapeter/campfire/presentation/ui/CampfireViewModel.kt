@@ -134,8 +134,8 @@ import com.pandulapeter.campfire.presentation.ui.songInfo.hasSongInfo
 import com.pandulapeter.campfire.presentation.ui.state.AppExitController
 import com.pandulapeter.campfire.presentation.ui.state.CoverArtSearchController
 import com.pandulapeter.campfire.presentation.ui.state.SongDetailsLookupController
-import com.pandulapeter.campfire.presentation.ui.state.ImportController
-import com.pandulapeter.campfire.presentation.ui.state.ImportReportState
+import com.pandulapeter.campfire.presentation.ui.state.importing.ImportController
+import com.pandulapeter.campfire.presentation.ui.state.importing.ImportReportState
 import com.pandulapeter.campfire.presentation.ui.state.LibraryState
 import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore

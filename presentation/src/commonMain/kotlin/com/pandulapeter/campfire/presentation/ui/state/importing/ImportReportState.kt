@@ -7,8 +7,9 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.state
+package com.pandulapeter.campfire.presentation.ui.state.importing
 
+import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.snapshots.SnapshotStateList

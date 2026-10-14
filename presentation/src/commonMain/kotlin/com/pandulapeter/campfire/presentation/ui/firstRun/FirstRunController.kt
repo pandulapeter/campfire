@@ -26,9 +26,9 @@ import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportReport
 import com.pandulapeter.campfire.presentation.ui.screens.settings.DemoLibraryOffer
-import com.pandulapeter.campfire.presentation.ui.state.ImportController
-import com.pandulapeter.campfire.presentation.ui.state.ImportRequest
-import com.pandulapeter.campfire.presentation.ui.state.ImportSource
+import com.pandulapeter.campfire.presentation.ui.state.importing.ImportController
+import com.pandulapeter.campfire.presentation.ui.state.importing.ImportRequest
+import com.pandulapeter.campfire.presentation.ui.state.importing.ImportSource
 import com.pandulapeter.campfire.presentation.ui.state.asState
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
