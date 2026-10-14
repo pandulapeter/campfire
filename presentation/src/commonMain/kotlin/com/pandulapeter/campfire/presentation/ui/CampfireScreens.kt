@@ -26,22 +26,17 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.Stable
-import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -71,50 +66,6 @@ import com.pandulapeter.campfire.presentation.ui.screens.songEditor.SongEditorSc
 import com.pandulapeter.campfire.presentation.ui.screens.songs.SongsScreen
 import com.pandulapeter.campfire.presentation.ui.update.LocalIsCoveredByRequiredUpdate
 import kotlin.math.roundToInt
-
-/**
- * The window insets a screen hands to its scrolling content: what the system bars and the chrome leave of the
- * edges, and at the bottom the keyboard wherever it reaches higher than that.
- *
- * The keyboard is asked about when the padding is used rather than when it is made. Its inset is animated, so a
- * composition that reads it runs again on every frame the keyboard is moving for, and the composition these are
- * made in holds the whole app - the navigation display, every screen on it and the song list with them. What
- * uses a padding is a layout, and a layout that reads a state that has changed is only laid out again.
- *
- * @param coveredHeight How much of the keyboard's height is taken by chrome it slides over rather than pushes
- *   away, which is the navigation bar's.
- * @param ime Held as a state because the platforms other than Android hand out a new instance on every
- *   composition, and two of these have to be equal for as long as nothing but the keyboard has moved, or every
- *   screen would be recomposed whenever this composition is.
- */
-@Stable
-private class KeyboardAwarePadding(
-    private val start: Dp,
-    private val end: Dp,
-    private val bottom: Dp,
-    private val coveredHeight: Dp,
-    private val ime: State<WindowInsets>,
-    private val density: Density,
-) : PaddingValues {
-
-    override fun calculateLeftPadding(layoutDirection: LayoutDirection) = if (layoutDirection == LayoutDirection.Ltr) start else end
-
-    override fun calculateTopPadding() = 0.dp
-
-    override fun calculateRightPadding(layoutDirection: LayoutDirection) = if (layoutDirection == LayoutDirection.Ltr) end else start
-
-    override fun calculateBottomPadding() = maxOf(bottom, with(density) { ime.value.getBottom(this).toDp() } - coveredHeight)
-
-    override fun equals(other: Any?) = other is KeyboardAwarePadding &&
-            start == other.start &&
-            end == other.end &&
-            bottom == other.bottom &&
-            coveredHeight == other.coveredHeight &&
-            ime === other.ime &&
-            density == other.density
-
-    override fun hashCode() = listOf(start, end, bottom, coveredHeight, density).hashCode()
-}
 
 /**
  * The [NavDisplay] and everything laid out over it, sized for the window [NavigationChromeScaffold] measured.
@@ -269,6 +220,21 @@ internal fun CampfireScreens(
     // What the screens' own lifecycles are compared with, see ScreenSurface.
     val hostLifecycle = LocalLifecycleOwner.current.lifecycle
     val navigationScrim = remember { NavigationScrim() }
+    val topLevelScreen: @Composable (CampfireDestination.TopLevel, @Composable () -> Unit) -> Unit = { destination, content ->
+        ReportNavigationTransition(viewModel, onNavigationTransitionRunningChanged)
+        TopLevelScreenSurface(
+            scrim = navigationScrim,
+            windowSize = windowSize,
+            railWidth = railWidth,
+            navigationBarHeight = navigationBarHeight,
+            chrome = screenChrome(destination),
+            content = content,
+        )
+    }
+    val cardScreen: @Composable (@Composable () -> Unit) -> Unit = { content ->
+        ReportNavigationTransition(viewModel, onNavigationTransitionRunningChanged)
+        ScreenSurface(hostLifecycle = hostLifecycle, scrim = navigationScrim, content = content)
+    }
     val scrimColor = MaterialTheme.colorScheme.scrim
     // The export screen is drawn in this layout rather than in a window of its own, which a screen reader would take for
     // modal, so the app under it is taken out of the semantics tree while it covers it - only once fully, so that the
@@ -299,14 +265,7 @@ internal fun CampfireScreens(
             // Stable string content keys, so that the transitions can recognize the top level destinations.
             entryProvider = entryProvider {
                 entry<CampfireDestination.Songs>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
-                    ReportNavigationTransition(viewModel, onNavigationTransitionRunningChanged)
-                    TopLevelScreenSurface(
-                        scrim = navigationScrim,
-                        windowSize = windowSize,
-                        railWidth = railWidth,
-                        navigationBarHeight = navigationBarHeight,
-                        chrome = screenChrome(destination),
-                    ) {
+                    topLevelScreen(destination) {
                         SongsScreen(
                             viewModel = viewModel,
                             layout = listLayout,
@@ -315,14 +274,7 @@ internal fun CampfireScreens(
                     }
                 }
                 entry<CampfireDestination.Setlists>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
-                    ReportNavigationTransition(viewModel, onNavigationTransitionRunningChanged)
-                    TopLevelScreenSurface(
-                        scrim = navigationScrim,
-                        windowSize = windowSize,
-                        railWidth = railWidth,
-                        navigationBarHeight = navigationBarHeight,
-                        chrome = screenChrome(destination),
-                    ) {
+                    topLevelScreen(destination) {
                         SetlistsScreen(
                             viewModel = viewModel,
                             layout = listLayout,
@@ -331,14 +283,7 @@ internal fun CampfireScreens(
                     }
                 }
                 entry<CampfireDestination.Metronome>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
-                    ReportNavigationTransition(viewModel, onNavigationTransitionRunningChanged)
-                    TopLevelScreenSurface(
-                        scrim = navigationScrim,
-                        windowSize = windowSize,
-                        railWidth = railWidth,
-                        navigationBarHeight = navigationBarHeight,
-                        chrome = screenChrome(destination),
-                    ) {
+                    topLevelScreen(destination) {
                         toolScreen(destination) {
                             MetronomeScreen(
                                 viewModel = viewModel,
@@ -350,14 +295,7 @@ internal fun CampfireScreens(
                     }
                 }
                 entry<CampfireDestination.Tuner>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
-                    ReportNavigationTransition(viewModel, onNavigationTransitionRunningChanged)
-                    TopLevelScreenSurface(
-                        scrim = navigationScrim,
-                        windowSize = windowSize,
-                        railWidth = railWidth,
-                        navigationBarHeight = navigationBarHeight,
-                        chrome = screenChrome(destination),
-                    ) {
+                    topLevelScreen(destination) {
                         toolScreen(destination) {
                             TunerScreen(
                                 viewModel = viewModel,
@@ -369,14 +307,7 @@ internal fun CampfireScreens(
                     }
                 }
                 entry<CampfireDestination.Chords>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
-                    ReportNavigationTransition(viewModel, onNavigationTransitionRunningChanged)
-                    TopLevelScreenSurface(
-                        scrim = navigationScrim,
-                        windowSize = windowSize,
-                        railWidth = railWidth,
-                        navigationBarHeight = navigationBarHeight,
-                        chrome = screenChrome(destination),
-                    ) {
+                    topLevelScreen(destination) {
                         toolScreen(destination) {
                             ChordsScreen(
                                 viewModel = viewModel,
@@ -387,14 +318,7 @@ internal fun CampfireScreens(
                     }
                 }
                 entry<CampfireDestination.Settings>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
-                    ReportNavigationTransition(viewModel, onNavigationTransitionRunningChanged)
-                    TopLevelScreenSurface(
-                        scrim = navigationScrim,
-                        windowSize = windowSize,
-                        railWidth = railWidth,
-                        navigationBarHeight = navigationBarHeight,
-                        chrome = screenChrome(destination),
-                    ) {
+                    topLevelScreen(destination) {
                         SettingsScreen(
                             viewModel = viewModel,
                             layout = settingsLayout,
@@ -406,8 +330,7 @@ internal fun CampfireScreens(
                 }
                 // These four cover the chrome, so they are the only ones laid out edge to edge.
                 entry<CampfireDestination.SongEditor>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
-                    ReportNavigationTransition(viewModel, onNavigationTransitionRunningChanged)
-                    ScreenSurface(hostLifecycle = hostLifecycle, scrim = navigationScrim) {
+                    cardScreen {
                         SongEditorScreen(
                             viewModel = viewModel,
                             destination = destination,
@@ -419,8 +342,7 @@ internal fun CampfireScreens(
                     }
                 }
                 entry<CampfireDestination.ImportReport>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) {
-                    ReportNavigationTransition(viewModel, onNavigationTransitionRunningChanged)
-                    ScreenSurface(hostLifecycle = hostLifecycle, scrim = navigationScrim) {
+                    cardScreen {
                         ImportReportScreen(
                             viewModel = viewModel,
                             // Its search is typed into, so its list ends above the keyboard as the editor's text does.
@@ -430,8 +352,7 @@ internal fun CampfireScreens(
                     }
                 }
                 entry<CampfireDestination.Onboarding>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
-                    ReportNavigationTransition(viewModel, onNavigationTransitionRunningChanged)
-                    ScreenSurface(hostLifecycle = hostLifecycle, scrim = navigationScrim) {
+                    cardScreen {
                         OnboardingScreen(
                             viewModel = viewModel,
                             destination = destination,
@@ -439,8 +360,7 @@ internal fun CampfireScreens(
                     }
                 }
                 entry<CampfireDestination.SongDetails>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
-                    ReportNavigationTransition(viewModel, onNavigationTransitionRunningChanged)
-                    ScreenSurface(hostLifecycle = hostLifecycle, scrim = navigationScrim) {
+                    cardScreen {
                         SongDetailsScreen(
                             viewModel = viewModel,
                             destination = destination,
