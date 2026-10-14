@@ -404,9 +404,16 @@ private fun TextLayoutResult.descent() = descents.getOrPut(layoutInput.style) {
 
 private val descents = mutableMapOf<TextStyle, Float>()
 
-/** What a step control covers: a button's icon is described, but the round button around it is drawn over the song too. */
+/**
+ * What a step control covers: a button's icon is described, but the button around it is drawn over the song too, and
+ * its shadow around that, which read as part of a line would make the line reach under the button.
+ */
 private fun SemanticsNode.drawnBounds() = unclippedBounds().let { bounds ->
-    if (config.getOrNull(SemanticsProperties.ProgressBarRangeInfo) != null) bounds else Rect(center = bounds.center, radius = STEP_BUTTON_SIZE.value / 2)
+    if (config.getOrNull(SemanticsProperties.ProgressBarRangeInfo) != null) {
+        bounds
+    } else {
+        Rect(center = bounds.center, radius = STEP_BUTTON_SIZE.value / 2 + STEP_BUTTON_SHADOW.value)
+    }
 }
 
 private fun SemanticsNode.unclippedBounds() = Rect(offset = positionInRoot, size = Size(size.width.toFloat(), size.height.toFloat()))
@@ -417,6 +424,9 @@ private val RISING_SUN = TestSong(title = "House of the Rising Sun", file = null
 private val LONG_SONG = TestSong(title = "The Long Road North", file = "campfire_tests-the_long_road_north.cho")
 private val DESKTOP = TestWindow(width = 1280.dp, height = 800.dp)
 private val EDGE_ROWS = EDGE_FADE_SIZE.value.toInt()
+
+/** How far a step button's shadow reaches past the button: a little further than its elevation's, measured. */
+private val STEP_BUTTON_SHADOW = 8.dp
 private const val MAX_STEPS = 500
 private const val MAX_SCROLL_ATTEMPTS = 10
 private const val MAX_LOOK_ATTEMPTS = 3
