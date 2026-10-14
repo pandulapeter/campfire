@@ -108,6 +108,9 @@ wrong or undo it".
   their own, a pure algorithm moves next to its users in a file named for it, a Composable's visual groups become
   named children. What was already over when the check came in is listed in `size_allowances.json` and may only
   shrink; never raise an allowance or add one — split instead, then run `check_sizes.py --update`.
+  Pure data is exempt by name in the script's `EXEMPT` list (the chord tables, the PDF glyph names, the color
+  schemes; `strings.xml` and tests are never measured): a new data file is added there in a commit of its own,
+  never split for the check and never given an allowance.
 - **Package by role, not by first user.** A screen's package (`ui.screens.<screen>`) holds only that
   screen; a building block a second screen needs moves to a shared package (`ui.components`, `ui.chords`,
   `ui.metronome`, `ui.playing`, `ui.search`, `ui.songLayout`, …) rather than being imported out of the
