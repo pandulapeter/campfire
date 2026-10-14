@@ -13,7 +13,6 @@ import com.pandulapeter.campfire.presentation.ui.songView.ColumnCenteringHold
 import com.pandulapeter.campfire.presentation.ui.songView.SongSectionsLayout
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.places
 import com.pandulapeter.campfire.presentation.ui.songView.model.sectionChunkStarts
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.snappedScrollTarget
 import kotlin.math.ceil
 import kotlin.math.max
 

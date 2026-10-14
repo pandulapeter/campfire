@@ -9,7 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.songView
 
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongDetailsScreen
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongMetadataSection
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingControls
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingTools
@@ -91,7 +90,7 @@ import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
  * fits into this if it can. It is the height the page has at rest, which may differ from [rowViewportHeight] for the
  * frames an app bar or a panel above it is moving, so that the grid is not searched again on every one of them.
  * @param extraWidth How much wider this layout is going to be once the animation that is currently resizing it has
- * finished (see [SongDetailsScreen]'s settled width). The column count is decided for that final width, so that the
+ * finished (see `SongDetailsScreen`'s settled width). The column count is decided for that final width, so that the
  * sections do not flow into a different number of columns for the duration of a navigation transition and then jump
  * back. While it is not zero the sections also stop springing to their new place: the layout is following a width
  * that changes on every frame, and springing after each of those only makes it lag behind.

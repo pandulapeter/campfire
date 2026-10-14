@@ -10,20 +10,20 @@
 
 # :presentation — ui/chords
 
-Chord diagrams (`ui/chords/`, `screens/songDetails/SongChordsSection.kt`,
-`dialogs/ChordShapeSheet.kt`). Nothing is shipped or fetched: `:chordpro` reads what notes a name means
-(`ChordProChords`) and finds shapes (`ChordVoicings`: a hand-typed table first, a search for the rest).
+Chord diagrams (`ui/chords/`, `songView/SongChordsSection.kt`, `dialogs/ChordShapeSheet.kt`). Nothing is shipped or
+fetched: `:chordpro` reads what notes a name means (`ChordProChords`) and finds shapes (`ChordVoicings`: a hand-typed
+table first, a search for the rest).
 
 ## Which instruments
 
 Guitar (and the twelve-string, drawn as a guitar), ukulele, mandolin, banjo, and keyboard draw diagrams. Seven- and
-eight-string guitars, basses, violin, and Other draw none, as if the Features switch were off. The instrument and tuning chips head the song's first section for every song with
-chords, even an instrument without shapes, so the diagrams can be brought back
-(`RenderSection.Metadata.instrumentChips`). On the keyboard the page is already in the sounding chords (see
-`ui/CLAUDE.md`), so diagrams count no capo.
+eight-string guitars, basses, violin, and Other draw none, as if the Features switch were off. The instrument and tuning
+chips head the song's first section for every song with chords, even an instrument without shapes, so the diagrams can
+be brought back (`RenderSection.Metadata.instrumentChips`). On the keyboard the page is already in the sounding chords
+(see `ui/CLAUDE.md`), so diagrams count no capo.
 
-- The section's content holds what the chips name (`InstrumentChipsContent`), since label widths decide line count and
-  a section's measured size is keyed by its content; a leaving tuning chip is named until it has faded out.
+- The section's content holds what the chips name (`InstrumentChipsContent`), since label widths decide line count and a
+  section's measured size is keyed by its content; a leaving tuning chip is named until it has faded out.
 - Chips reach out of their column like a section's pill, so a line-starting chip's name sits on the lyrics' keyline; a
   chip that doesn't fit goes under the other whole.
 
@@ -31,12 +31,11 @@ chords, even an instrument without shapes, so the diagrams can be brought back
 
 `selectShape` (`ChordSelection.kt`, tested), in order:
 
-1. The song's own `{define}` / `{chord}` for that instrument (and tuning, below).
-2. The player's choice, **one per chord and instrument for the whole library** (a habit of the hands, not a reading of
-   one song): `UserPreferences.chordVoicings` under the tuning's `voicingKey`, stored as the shape rather than its
-   index and keyed by the chord's notes so every spelling shares it; synced. Used only while it still reads as a shape
-   of that instrument.
-3. The app's first shape.
+1. The song's own `{define}` / `{chord}` for that instrument (and tuning, below). 2. The player's choice, **one per
+chord and instrument for the whole library** (a habit of the hands, not a reading of one song):
+`UserPreferences.chordVoicings` under the tuning's `voicingKey`, stored as the shape rather than its index and keyed by
+the chord's notes so every spelling shares it; synced. Used only while it still reads as a shape of that instrument. 3.
+The app's first shape.
 
 Definitions:
 
@@ -53,8 +52,8 @@ Definitions:
 
 - One tuning per instrument (`UserPreferences.tunings`, device-only), written by `withTuning`, read by `tuningOf` /
   `chordTuning()` in `ui/instrument/Instruments.kt`; an unknown or foreign id is standard.
-- A `ChordTuning` is the tuner's `InstrumentTuning` of the same id (`ui/instrument/InstrumentsTest` holds them
-  together, strings included): **every tuning the tuner knows for an instrument with shapes is one the diagrams know**.
+- A `ChordTuning` is the tuner's `InstrumentTuning` of the same id (`ui/instrument/InstrumentsTest` holds them together,
+  strings included): **every tuning the tuner knows for an instrument with shapes is one the diagrams know**.
 - **A chord name always names the chord that sounds**: half step down, an A is drawn `x 1 3 3 3 1`; roots are read
   against the tuning's own strings. Player choices made in a tuning are kept under its own key.
 - On a tuning change the page keeps its cells until chords are re-collected for the new tuning off the main thread, so
@@ -62,24 +61,24 @@ Definitions:
 
 ## The Chords section
 
-- `songChordsOf` (tested): every chord once however spelled, in first-played order, read from the song *before*
-  notation is applied (a numbering's step means nothing without its stretch's key), named as the page names it
+- `songChordsOf` (tested): every chord once however spelled, in first-played order, read from the song *before* notation
+  is applied (a numbering's step means nothing without its stretch's key), named as the page names it
   (`ChordProNotation.shownNames`). **More than 48 chords (`MAX_SONG_CHORDS`) is a songbook and gets no section.**
-- A page's first model is built in place without the shapes only the search finds (`isShapePending`, empty frame);
-  those follow from `Dispatchers.Default` (`withSearchedShapes`), keeping the same sections so only the Chords section
+- A page's first model is built in place without the shapes only the search finds (`isShapePending`, empty frame); those
+  follow from `Dispatchers.Default` (`withSearchedShapes`), keeping the same sections so only the Chords section
   re-measures.
-- **Cut between rows like any section**: drawn as slots (`chordSlotCount`, `ChordRows.kt`, tested), each holding the
-  row its index names at the measured width, the last holding the rest. Cells are *drawn*, not composed
+- **Cut between rows like any section**: drawn as slots (`chordSlotCount`, `ChordRows.kt`, tested), each holding the row
+  its index names at the measured width, the last holding the rest. Cells are *drawn*, not composed
   (`ChordCellLayouts`), so an intrinsic measurement at a candidate width already counts the rows they wrap into.
 - Rows are balanced (`balancedRowStarts`: nine where six fit is five over four); the PDF breaks rows the same way.
 - One fold for every song (`UserPreferences.isChordSectionFolded`), read only mode included.
 - **Every cell opens its chord's sheet** outside read only mode, hit-tested by `chordCellAt` (tested). The press
   highlight waits for the tap timeout (immediate for a mouse), so a scroll started on a diagram never lights it; the tap
   is consumed so it doesn't also turn the page. A screen reader gets one custom action per cell.
-- A cell whose chord changes shape (picked, retuned) crossfades (`ChordShapeCrossfade.kt`, `changedShapeCells`
-  tested); a searched shape arriving into the empty frame, or a cell that is now another chord, does not.
-- `ChordDiagramGeometry` (pure, tested) draws the shape: at least four frets, up to 24; the root in the second accent;
-  a keyboard of two to four octaves.
+- A cell whose chord changes shape (picked, retuned) crossfades (`ChordShapeCrossfade.kt`, `changedShapeCells` tested);
+  a searched shape arriving into the empty frame, or a cell that is now another chord, does not.
+- `ChordDiagramGeometry` (pure, tested) draws the shape: at least four frets, up to 24; the root in the second accent; a
+  keyboard of two to four octaves.
 
 ## The chord sheet
 
@@ -95,9 +94,9 @@ in the song as the page plays it, and closes if it is gone.
 
 ## The editor
 
-Chord shape (`chordShapeInsertion`, tested) ends the first Shortcuts row: writes a `{define}` for the chord at the
-caret into the header with the standard-tuning shape the player would see (their choice under the instrument key, else
-the app's first; a guitar's for an instrument without shapes), frets selected, or moves the caret to an existing line's
+Chord shape (`chordShapeInsertion`, tested) ends the first Shortcuts row: writes a `{define}` for the chord at the caret
+into the header with the standard-tuning shape the player would see (their choice under the instrument key, else the
+app's first; a guitar's for an instrument without shapes), frets selected, or moves the caret to an existing line's
 frets. Where the diagrams are in a tuning that doesn't draw definitions it says so
-(`Message.ChordShapeWrittenForStandardTuning`). The preview's Chords section shows every definition in the text, each
-on its own instrument, whatever the switches.
+(`Message.ChordShapeWrittenForStandardTuning`). The preview's Chords section shows every definition in the text, each on
+its own instrument, whatever the switches.

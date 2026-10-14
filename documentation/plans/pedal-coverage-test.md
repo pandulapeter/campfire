@@ -51,4 +51,4 @@ About a day once the harness exists.
 
 ## Docs
 
-One line in `ui/screens/songDetails/CLAUDE.md` pointing at the test as the guard of the pedal promise.
+One line in `ui/screens/songDetails/stepping/CLAUDE.md` pointing at the test as the guard of the pedal promise.

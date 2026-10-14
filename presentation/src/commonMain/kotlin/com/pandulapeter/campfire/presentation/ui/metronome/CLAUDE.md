@@ -85,7 +85,7 @@ haptics).
 
 - **A later `{tempo}` or `{time}` is a change from where it stands** (`ChordProBlock.Timing`), and the page says where
   the band is: on the song details screen each change starts a page, headed by a read-only line, and a playing click
-  follows the page being read from beat one of the next bar (layout in `screens/songDetails/CLAUDE.md`).
+  follows the page being read from beat one of the next bar (layout in `songView/model/CLAUDE.md`).
 - **Until that bar ends the screen shows what is heard**: the beat row draws the playing bar (`Playing.pattern`), with
   its own accents where its signature differs from the one waiting (`barBeingLeft`), and ignores taps, since the accents
   would be written for the wrong song.

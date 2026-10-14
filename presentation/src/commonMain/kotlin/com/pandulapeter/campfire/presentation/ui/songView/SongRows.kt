@@ -9,9 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.songView
 
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.LineAnchor
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.ReadingAnchor
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.timingIndexAt
 import com.pandulapeter.campfire.presentation.ui.songView.model.sectionChunkStarts
 import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.first
@@ -26,16 +23,16 @@ import kotlinx.coroutines.flow.first
  * offsets of a song that scrolls in rows, and just above every section of any other ([isSteppedByRow] telling the two
  * apart), the first one at the top of the song either way, so that a song opens on its first stop. None before the song
  * has been laid out. Each stop is also named by the index of the section it starts with ([stepSections], one per stop), which is
- * what it is still called once a new layout has flowed the sections into different rows or columns (see [ReadingAnchor]).
+ * what it is still called once a new layout has flowed the sections into different rows or columns (see `stepping.ReadingAnchor`).
  *
  * [lineTops] are where the pieces a single column is made of start - every section, and within one the chunks it may be
  * cut into, which start between two of its lines (see [sectionChunkStarts]) - so that a step that pages through what
  * does not fit the screen can bring a line to the top of it rather than half of one. [lineBottoms] are where each of
  * those pieces ends and [lineSections] the section each belongs to, which together name a line in terms another layout
- * of the song still has (see [LineAnchor]).
+ * of the song still has (see `stepping.LineAnchor`).
  *
  * [timingSections] are the sections that change the tempo or the time signature the song is played in from there on,
- * ascending, each of which starts a stop of its own wherever the song is stepped by rows (see [timingIndexAt]). A change
+ * ascending, each of which starts a stop of its own wherever the song is stepped by rows (see `stepping.timingIndexAt`). A change
  * written before the song's first line is reported at section 0 and starts no stop, since it is in force from the first.
  */
 internal data class SongRows(

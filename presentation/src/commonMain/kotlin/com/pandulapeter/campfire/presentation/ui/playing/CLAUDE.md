@@ -12,6 +12,9 @@
 
 The values a song is played with and where each is kept.
 
+- **The transposition wraps around the octave** (`wrapTransposition`, −5 to +6), when stepped and when read, so its
+  buttons are never disabled.
+
 ## Where a tempo lives
 
 - **Overrides mirror the transposition** (`SongOverrides<Int>`, keyed by a `SongPlace`; `Tempos`, `Capos`, and

@@ -24,69 +24,10 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
   page index onto the wrong song over a partial batch.
 - Once every song it names is gone from a read library, the screen closes itself.
 
-### Scrolling, stepping, and snapping
+### The steppers
 
-- **A fling rests the top of the screen exactly below a row's divider** (`RowSnapping.kt`, rows from `SongRows`); a row
-  taller than the screen is landed on at its top and then scrolls freely. Rows are measured by content, never trailing
-  space. The fling finishes the sub-pixel remainder. The top fade is the scroll past the current row's top
-  (`SongRows.scrolledIntoRow`), so a rested row is unfaded. Dividers come from the lookahead pass, not mid-animation.
-- **Step buttons** (`StepButtons`, one pair over the whole pager, answering the current page's `SongStepper`): stops are
-  rows or pages, or sections in an unpaged single column, each stop `EDGE_FADE_SIZE` above its section. `SongStepper`
-  scans offsets without sorting or allocating per scroll update.
-- Inside a stop taller than the screen a step pages (`nextStepTarget`, `previousStepTarget`, `ReadingWindow`): the screen
-  less the top fade, the bars, and two lines (at most a third), adjusted to start at a line (`lineTops`); it moves on only
-  once the stop's end is in view. Buttons read "Scroll down" / "Scroll up" while paging.
-- A press moves at least a line where that skips nothing (near-equal clamped stops are chained); the last press hands off
-  only once the whole song is on screen.
-- **A press mid-step steps on from its target**, so two quick pedal presses are two steps.
-- Previous leaves only at the very top; next only once the end has been on screen; a song that fits has neither. In a
-  setlist they go on to the next song's top and the previous song's end (that page's scroll is set to its end
-  beforehand, else a second press skips it).
-- **They never cover a line**: a scrolling song is laid out narrower (`stepButtonInset`); the full width is kept where the
-  song fits there as one row and the full-width grid does too (`isReadWithoutStepping`), never in a setlist
-  (`keepsStepButtonInset`). An unpaged single column is assumed to scroll.
-- The dots (`StepProgressIndicator`) count reachable stops (`reachableStops`), the top padding belonging to the first
-  (`SongRows.belowPadding`). The stop is read through derived state so it recomposes per stop, not per pixel; drawn and
-  faded by color, not a layer, for the web build (see `FastScroller`).
-- **Tap to step** (`stepOnTap`): top half previous, bottom half next, only for taps nothing inside consumed; never a long
-  press, a right or middle click, a fling-stopping press, or one the system cancelled (Android's home and back gestures
-  arrive as a consumed release). A drag under 250 ms and a tenth of the height is still a tap (a strumming hand slides),
-  stepping from where the song was at finger-down and replacing the fling.
-- **A fling goes no further than one step** (`oneStepCappedTarget`); a drag goes anywhere.
-- Focus: the buttons take none, and the screen retakes it when lost to nothing while uncovered (`isUncovered`), or
-  Compose spends the next arrow on a focus search, which scrolls. While something is over it the step keys are
-  swallowed: the export screen shares the window and takes focus itself (`focusTarget()` on its root).
-- **A held step key is one step until released** (window focus loss counts as a release): key repeats would chain pages.
-  A held arrow still scrolls where there are no buttons.
-
-#### Keeping the reader in place
-
-- The scroll keeps pixels across a resize, pinch, fold, or transposition, so `RowSnapFlingBehavior.keepReaderInPlace`
-  records at rest a `ReadingAnchor` (the stop's first section and the offset past it) and, inside a tall stop, a
-  `LineAnchor` (section, chunk, fraction). Once a new layout has held still for 250 ms it scrolls there, snapped by
-  `settledScrollTarget`. The wait prevents flicker during a pinch; anchors are taken only at rest and never from its own
-  moves, so a pinch through many layouts returns to the starting row.
-- A height-only change (metronome panel, title row collapse) only changes row trailing padding, so it is followed in the
-  same layout pass (`onRowsPlaced`), before the scroll places the song: the divider never slides into view. Only the
-  current page follows frame by frame; pages beside it use `pageViewportHeight`.
-
-### Text size and the steppers
-
-- `fontScale` is snapshot state on the view model, not a flow, so a pinch recomposes only its readers. Saved to
-  `UserPreferences.fontScale` debounced; a pending value is written on `onCleared` and before the desktop exits. The
-  stored value wins whenever nothing local is pending, so Settings, a restore, or sync are followed.
-- Pages beside the current one read `settledFontScale` (held still 500 ms; a stepper or shortcut sets it at once; a
-  swipe settles it, so the song being left does not jump back).
-- Kept in whole percent, so sub-percent pinch frames lay nothing out again; `FontScaleAccumulator` adds the wheel's
-  unrounded deltas, since each fraction would otherwise round away.
-- `fontScaleGestures`: pinch damped by an exponent; Ctrl / Cmd + wheel counted in notches (`verticalWheelNotches`, the
-  web reporting pixel or line deltas); both consumed in the initial pass. A touchpad pinch the platform reports (macOS
-  desktop, browsers' Ctrl-less wheel) goes to `magnifyByTouchpad` with the same `PINCH_SENSITIVITY`. Ctrl / Cmd + plus,
-  minus, and zero are answered by the desktop window and the web page (`zoomSongText`), since the browser acts first.
 - Steppers are shorter than Material buttons and lower `LocalMinimumInteractiveComponentSize` to match (touch still gets
   48dp). Height is `STEPPER_HEIGHT` in a bar or menu, `songControlHeight` in a song; `trailing` holds the Tap segment.
-- **The transposition wraps around the octave** (`wrapTransposition`, −5 to +6), when stepped and when read, so its
-  buttons are never disabled.
 - The app bar: the text size stepper where it fits, else at the end of the menu (`MenuStepperRow` as `menuFooter`, the
   menu staying open while pressed). As the bar narrows the text size goes into the menu, then Choose setlists, then the
   cover, each while the title keeps 160dp (`appBarButtons`, from the settled width, for every page at once). Performance
@@ -128,8 +69,6 @@ on the desktop.
 
 - `MetronomeButton` shows and hides the panel (`toggleMetronomePanel`): opening starts nothing, closing stops a playing
   click. M toggles the click from anywhere on the song, opening the panel with it.
-- The pendulum (`MetronomeIcon`, `ic_metronome_body` + `ic_metronome_pendulum`, `rememberMetronomeIconBeat`; the
-  navigation item too) is at an arc end on every heard beat and swings over one beat at the tempo read from `playback`,
-  each beat restarting the swing from where it is, so it never drifts from the ear. The Animate switch stills it.
+- The pendulum (`MetronomeIcon`) is described in `ui/metronome/CLAUDE.md`.
 - `TempoStepper` is highlighted while overridden and reset by a tap on its value; Tap sits in its `trailing` slot, since
   it sets the number the stepper steps.

@@ -9,6 +9,10 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.PageStepper
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.SongStepper
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.StepProgressIndicator
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.stepOnTap
 import com.pandulapeter.campfire.presentation.ui.songView.SongLyrics
 import com.pandulapeter.campfire.presentation.ui.songView.model.ChordDiagrams
 import androidx.compose.animation.AnimatedVisibility

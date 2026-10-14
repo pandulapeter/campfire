@@ -9,6 +9,10 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.ReadingWindow
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.RowSnapFlingBehavior
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.SongStepper
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.timingIndexAt
 import com.pandulapeter.campfire.presentation.ui.songView.SectionMotion
 import com.pandulapeter.campfire.presentation.ui.songView.SongLyrics
 import com.pandulapeter.campfire.presentation.ui.songView.rememberSongLyricsModel
