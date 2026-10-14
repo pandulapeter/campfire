@@ -9,107 +9,39 @@
 -->
 # :domain:api
 
-Use case interfaces and the `ScreenData` aggregate. This is what the presentation layer depends on — it never sees
-repositories. It exposes `:chordpro` as an `api` dependency, so the UI can render a `ChordProSong` without depending on
-the parser itself.
+Use case interfaces and `ScreenData`: all the presentation layer sees (never repositories). Exposes `:chordpro` as
+`api` so the UI can render a `ChordProSong`.
 
-Conventions: one interface per use case, a single `operator fun invoke(...)`, named `Get*` (observe a flow or read one
-value), `Load*` (trigger a read), `Save*` / `Create*` / `Update*` / `Rename*` / `Delete*` (change something), `Import*` / `Export*` for the file
-paths, `Is*` for a question with a yes or no answer (`IsFirstRun`), or a verb for pure transforms (`NormalizeText`,
-`NormalizeSearchText`, `ParseChordPro`, `TransposeChordPro`, `TransposeChordProText`, `ConvertChordProNotation`,
-`ConvertChordProTextNotation`).
+Naming: `Get*` (observe or read), `Load*` (trigger a read), `Save*` / `Create*` / `Update*` / `Rename*` / `Delete*`,
+`Import*` / `Export*`, `Is*` for yes/no, a plain verb for pure transforms.
 
-- `ScreenData` bundles what the song and setlist screens need in one object: the setlists (every one of them, archived
-  included, in the order `UserPreferences.SetlistSortingMode` asks for), the songs filtered and sorted the way the
-  preferences ask for and the same list cut into its sections (`songSections`, `SongSection`: an artist or an initial
-  per header, the texts that start with no letter first) — cut where it is sorted, so that a header cannot come up
-  twice, `tags` (every label the library uses with how many songs carry it, most used first),
-  `languages` (the same for the languages its songs declare, with the ones that declare none last) and
-  `unfilteredSongs` — the whole library, hidden songs included, which is what a setlist and the song details screen
-  are read from: a setlist shows what somebody wrote down rather than a view of the library, so the song filters
-  never reach into one, and an entry missing from there is a file that is really gone. `sortedSongs` is that same
-  library in the order `songs` is sorted in, the filters left out, which is what the song picker lists: the use case
-  sorts the library once per change of the library or the sorting mode, and a filter only narrows that order. Each of the two filter groups
-  is counted after every other filter but before its own, so that selecting one value does not empty the list of the
-  ones that could be selected next. `isWholeLibrary` is false for a value in which an unreadable part stands in empty;
-  the demo library and the library counts ask it.
-- `EditSetlistUseCase` / `RenameSongFileUseCase` are the two that move a file rather than write one. A setlist's
-  file follows its title on its own, since nothing in the library points at a setlist by name — which is why editing
-  one is a single use case: the title it is filed under and the description it carries are written together, and only
-  the first of them decides where the file goes — and it is told which setlist by file name rather than handed one,
-  so that the entries it writes back are the library's and not the ones a dialog was opened with; a song's moves only
-  when the user asks (`Song.canUpdateFileName` is what offers it), and everything that named the old one — every
-  setlist entry holding the song, its saved transposition — moves with it, which is the same walk
-  `DeleteSongUseCase` makes to drop those references.
-- `SongFilter` is the tags and languages the song list is narrowed to, and the one input of `GetScreenDataUseCase`
-  that comes from above rather than from a repository: the presentation layer holds it and passes it in as a flow.
-  It is deliberately not a preference and never written anywhere — a filter is a question asked of the library for
-  the moment, and one that came back on the next launch would read as songs having gone missing. How several selected
-  values of a group combine (`tagMatchMode`, `languageMatchMode`) is a standing choice, and stays a preference.
-- `GetUserPreferencesUseCase` is separate from `ScreenData` on purpose: the theme and the language must reach the UI
-  before the library has been scanned, and folding them into the aggregate would make the whole app wait for the songs.
-- `PrettifyChordProUseCase` formats raw ChordPro for the editor overflow action, retaining unsupported directives,
-  comments and literal environment interiors. Imports use the same formatter in `PrepareImportUseCaseImpl`.
+## Rules a change must keep
 
-- `TransposeChordProUseCase` transposes the parsed model (what the viewer shows), `TransposeChordProTextUseCase` the raw
-  text (what the editor's transpose action rewrites). Both take `UserPreferences.Accidentals` as well as the semitones,
-  because how a black key is spelled is the reader's preference and not a property of the move.
-- `SetChordProTagUseCase` puts one tag into a document or takes it out of it, leaving the rest of the text byte for
-  byte — the text-level half of tagging, like `TransposeChordProTextUseCase`, because the result is written back to
-  the user's own file. Which songs a tag then matches is decided in `GetScreenDataUseCase`, without regard to case.
-- `SetChordProLanguagesUseCase` is the same for the languages of a song, except that it takes the whole set rather
-  than one value at a time: the picker asks about every language before it is closed, and the file is better rewritten
-  once than once per checkbox. The codes are normalized by `:chordpro` on the way in, so `en-US`, `EN` and `eng` all
-  name the language `en` does.
-- `SetChordProLinksUseCase` is the same for every link of a song at once, each a `ChordProLink` with an address and
-  optional name: unchanged lines stay as written, renamed ones change in place, and new links follow the others.
-- `SetChordProMetadataUseCase` is the same for the single-valued header fields that say what a song is (title, artist, album, year, …),
-  given as a map of the fields to change: each is rewritten in place, written into the header, or removed when blank.
-- `SetChordProCoverArtUseCase` is the same for the cover, a song having one: it rewrites the cover line in place,
-  writes one after the album, or takes it off for null.
-- `GetCoverArtUseCase` and `SearchCoverArtUseCase` are the covers themselves: the bytes of one, from the device's copy
-  or downloaded, or nothing to show; and a flow of where the search of every catalogue is — the records found so far,
-  the catalogues still pending, waiting or failed — which is what the sheet builds its grid, its indicators and its
-  retry from. Both reach the network through `:data:source:remote`, the only
-  things besides sync that do.
-- `DownloadImportFileUseCase` downloads the file at an address for an import the user started, which the import screen
-  then reads like a picked file; with the cover's two and the catalogue searches, the only things besides sync that
-  reach the network. Nothing in the app calls it yet: the shared links will.
-- `IsFirstRunUseCase` is the only one that asks about the installation rather than about the library: whether
-  Campfire has ever written its preferences, which is the first thing it writes about itself and therefore the one
-  trace a device that has been used has. It exists for the demo library alone, and has to be asked before anything is
-  saved, so it is read once as the app starts.
-- `NormalizeLanguageCodeUseCase` answers what language a piece of text names, under the code the library files it by:
-  the same normalization `SetChordProLanguagesUseCase` puts a code through on its way into a file, offered to the UI so
-  that a search field can be typed into with a code rather than a name.
-- `ConvertChordProNotationUseCase` is the last step of rendering: it writes the transposed model in the notation of
-  `UserPreferences.ChordSpelling`, and hands the song back untouched for the standard one.
-  `ConvertChordProTextNotationUseCase` is its text-level counterpart, the editor's two boundaries: a file is shown in
-  the reader's notation and what is typed is written back in `UserPreferences.Notation.STANDARD`, the only notation a
-  file is ever in. `ParseChordProUseCase` takes the notation its text is written in, the standard one for a file and
-  the reader's for the editor's field. The two numberings (`Notation.isNumbering`, Nashville and Roman numerals) are
-  only ever the first use case's: no text is converted into them or read as written in them, which is why the editor's
-  field is in `Notation.forTyping`. See `:chordpro`'s `ChordProNotation` for how each is read.
-
-`GetEditorDraftUseCase` and `SaveEditorDraftUseCase` read and replace the editor's unsaved text kept outside the
-library, which is what reopens an editor the system ended the app under; the stored draft is a copy against the process
-ending, never a write of the song.
-
-Sync adds `GetSyncStateUseCase`, `GetSyncProvidersUseCase`, `ConnectSyncProviderUseCase`,
-`DisconnectSyncProviderUseCase`, `ForgetSyncConnectionUseCase`, `CancelSyncConnectionUseCase`, `RestoreSyncUseCase`,
-`RememberDemoLibraryFilesUseCase` (what the demo files just planted hold, for sync to take another version's untouched
-demo instead of keeping both),
-`SynchronizeLibraryUseCase` and `CancelSynchronizationUseCase` — the only ones that share a file with each other (two
-of them), since they are one feature and each is a single line over `SyncRepository`. `ForgetSyncConnectionUseCase`
-differs from the disconnect in telling the service nothing: it is what a first launch runs before restoring, so a
-reinstalled app does not pick up credentials the iOS Keychain kept across the uninstall. `GetSyncStateUseCase` is separate from
-`GetScreenDataUseCase` for the same reason the preferences are: a settings screen must not wait for a scan of the
-whole library to say whether an account is connected. `ConnectSyncProviderUseCase` takes an
-`AuthorizationCompletionPage` along with the provider, because the page the desktop's browser lands on after consent
-is the one piece of Campfire's text rendered outside the app and the data layer can see neither the translations nor
-the chosen language — so the words travel down from the UI like any other string the user reads.
-
-Import preparation and application accept an optional `ImportProgress` observer, which may run on the worker dispatcher.
-Application takes the review's `ImportChoices` (what is left out, and what each taken name does), counts duplicates and
-the entries left out as processed entries, stops on a write failure, and returns the
-partial `ImportResult` with failed and unprocessed names rather than losing the successful ones; cancellation still throws.
+- `ScreenData.unfilteredSongs` (hidden songs included) is what setlists and song details read: song filters never
+  reach into a setlist, and an entry missing there is a file really gone. Each filter group is counted after every
+  other filter but before its own. Sections are cut where the list is sorted, so a header cannot repeat.
+- `SongFilter` is deliberately not a preference and never persisted: a filter restored on next launch reads as songs
+  gone missing. The match modes (`tagMatchMode`, `languageMatchMode`) are preferences.
+- `GetUserPreferencesUseCase` and `GetSyncStateUseCase` are separate from `ScreenData` so theme, language, and sync
+  status never wait for a library scan.
+- `EditSetlistUseCase` takes the setlist's file name, not a setlist, so the entries written back are the library's,
+  not a dialog's stale copy; title and description are written together and the title decides the file name.
+- Text-level `SetChordPro*` use cases (tag, languages, links, metadata, cover) rewrite only what they change, byte for
+  byte elsewhere, since the result is the user's own file. Languages take the whole set (one rewrite per picker
+  close); codes are normalized by `:chordpro` (`en-US`, `EN`, `eng` → `en`). Tag matching ignores case.
+- Transposition takes `UserPreferences.Accidentals`: spelling is the reader's preference, not part of the move.
+- Notation: files are only ever in `Notation.STANDARD`. `ConvertChordProNotationUseCase` is the last rendering step;
+  the text variant is the editor's two boundaries (show in the reader's notation, write back standard).
+  `ParseChordProUseCase` takes the notation its text is in. Numberings (Nashville, Roman) are display-only, never
+  typed or parsed, hence the editor uses `Notation.forTyping`.
+- `IsFirstRunUseCase` (has Campfire ever written its preferences) exists for the demo library and must be read once at
+  start, before anything is saved.
+- Network: only sync, `GetCoverArtUseCase` / `SearchCoverArtUseCase`, the song details lookup, and
+  `DownloadImportFileUseCase` (unused yet; for shared links) reach it, all through `:data:source:remote`.
+- The editor draft use cases keep a copy against process death, never a write of the song.
+- `ForgetSyncConnectionUseCase` tells the service nothing: a first launch runs it before restoring, since the iOS
+  Keychain survives an uninstall. `ConnectSyncProviderUseCase` takes an `AuthorizationCompletionPage` because the
+  desktop browser's landing page is rendered outside the app and the data layer has no translations.
+  `RememberDemoLibraryFilesUseCase` lets sync take another version's untouched demo instead of keeping both.
+- Import application takes `ImportChoices`, stops on a write failure, and returns a partial `ImportResult` rather than
+  losing what was written; cancellation still throws. The `ImportProgress` observer may run on the worker dispatcher.

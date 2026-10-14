@@ -10,99 +10,74 @@
 
 # :presentation — ui/screens/export
 
-The export screen. The PDF it draws is laid out, rendered and written by `ui/print` (see its notes).
+The export screen. Formats, options, and the PDF pipeline are in `ui/print/CLAUDE.md`.
 
-## Export
+## Entry and sources
 
-`ui/screens/export/ExportScreen.kt` and `ui/print/`, opened as `DialogType.Export` from the one export entry of a song's
-actions ("Export song", which also titles the screen) (with the setlist it was reached through, whose key it then prints
-in) and a setlist's ("Export setlist"), and from the songs screen's selection mode ("Export songs",
-`DialogType.Export.songs`, the ticked songs in the order the screen sorts by; one ticked song is the row's own Export).
-The source says which of the three it is (`PrintSource.Kind`), and the screen asks it the two things it needs: whether
-there is a running order (`hasRunningOrder`, a setlist's: the setlist content choice, the overview, and the zip's
-manifest) and whether there are several songs (`hasSeveralSongs`: the song ticks with Select all, "Start each song on a
-new page", and the Zip format and its preview). Several songs are listed unnumbered, printed in the keys the library plays
-them in as one song exported from the library is, zipped as `campfire_songs.zip` by `ExportSongsUseCase` even when
-only one of them is left chosen, and saved as `campfire_songs.pdf`, the PDF titled with how many songs it holds; the screen closes onto the selection as it was. It is
-a dialog to the view model and a screen to the user: `ExportHost`, composed by `CampfireScreens` after the `NavDisplay`
-and before the dialogs and the snackbars, deals it in over everything and takes it away again however the dialog goes,
-exactly as a destination is pushed and popped: from the right, on the same spring (`slideFractionSpec`, `slideSpec` as a
-fraction of the width), with the `NavDisplay` giving way by the same 12% (`ExportTransition` is the one progress both
-read), and following a predictive back gesture with the finger. It is an opaque `Surface` under the host's
-`NavigationBackHandler`, so that Escape, the browser's Back, and the back gesture close it as they closed every sheet,
-and the snackbar of a failed export still shows over it. It is a focus group that cancels every exit while it is the
-dialog shown (not while it slides away), so Tab never reaches the screen under it, which `clearAndSetSemantics` only
-hides from a screen reader. The preview's pager fades into nothing under the app bar and towards the options (below it,
-or at its start beside them) as far as a zoomed, panned, or turning page has moved past where it rests, so a page at rest
-is drawn whole.
+- Opened as `DialogType.Export` from a song's "Export song" (with the setlist it was reached through, whose key it then
+  prints in), a setlist's "Export setlist", or the selection mode's "Export songs" (`DialogType.Export.songs`, in the
+  songs screen's sort order; one ticked song is that row's own Export).
+- The screen asks the source two things: `hasRunningOrder` (setlist: content choice, overview, zip manifest) and
+  `hasSeveralSongs` (song ticks, Select all, new page per song, Zip). Several songs are unnumbered, in library keys,
+  zipped by `ExportSongsUseCase` as `campfire_songs.zip` (even if one is left) and saved as `campfire_songs.pdf`.
 
-**The format is the first option** (`PrintSettings.format`, saved with the rest), a `SegmentedChoice` with a line under
-it that says what each is for — PDF for printing, the library's own files (`Format.FILES`) for sharing with other
-Campfire users — since the names alone do not tell anybody which to pick. Those files are labelled by what they are:
-ChordPro for a song, its `.cho`, and Zip for a setlist, whose line says what is in it — a setlist manifest, which keeps
-the running order and every song's key, and the chosen songs as ChordPro files. They are written by the export use cases
-(`CampfireViewModel.exportFiles`), and a saved one closes the screen as a saved PDF does.
+## A dialog to the view model, a screen to the user
 
-Every PDF option folds away under them (`PdfOption`) except a setlist's song checkboxes, one selection for both formats,
-so switching does not put back the songs that were left out; a zip of some of them is narrowed to those songs, manifest
-included (`chosenSongFileNames`, null when all are ticked so the manifest goes out as it is stored), and one of none is
-not offered unless the setlist has no songs at all. The layout is not run for them, and the preview crossfades to what
-is written (`FilesPreview`): the song's text from the snapshot (`PrintSong.text`), unwrapped in the monospaced font, or
-the zip's files (`ZipContents`) — the manifest under its file name, then each chosen song under its `.cho` name, all of
-them under one heading, a missing one dimmed as not included. Save and Share are the same two buttons for either.
-Every row of the options and of the zip's files goes through `listItemAnimation`, keyed by its place in the source (a
-setlist may name a song twice), so a tick fades the file in or out of the zip and slides the rest; the options fade
-only, since what moves them is the PDF options folding, which they already follow frame by frame; the files preview
-crossfades between the list, the song's text, and its messages (the one asking for a song once the last tick is gone),
-and the overview and "Start each song on a new page" fold away with a setlist's running order rather than vanishing.
+- `ExportHost`, composed by `CampfireScreens` after the `NavDisplay` and before dialogs and snackbars, slides it in and
+  out exactly like a pushed destination: same spring (`slideFractionSpec`), the `NavDisplay` giving way 12% through the
+  shared `ExportTransition` progress, following predictive back.
+- An opaque `Surface` under the host's `NavigationBackHandler`, so Escape, browser Back, and the gesture close it; a
+  failed export's snackbar still shows over it.
+- A focus group that cancels every exit while it is the dialog shown, so Tab never reaches the screen beneath
+  (`clearAndSetSemantics` only hides that from screen readers).
 
-The screen's state is a `ExportState` from `rememberExportState(dialog)`, which remembers each field on its own: the
-selection, the preview's page and how it is zoomed are `rememberSaveable`, so a rotation keeps them; the options, the
-source and the Retry count start over. The previous document stays on screen while the next is laid out (120 ms after
-the last change), and Save only takes a document laid out from what the screen shows now — a tap made before it is,
-which a floating action button has no disabled look to refuse, is kept and carried out once it is (`ExportRequest`).
-Options are written to the view model's `pendingPrintSettings` as they change and saved to the preferences once they
-have settled for half a second; whatever is still pending is saved as the screen goes, however it goes
-(`setVisibleDialog`). On phones the preview is the first item of the options' list, 360dp for the page — large enough
-to judge it by — plus the band of the page buttons over it (`STACKED_PREVIEW_HEIGHT`), and scrolls away with them, and
-the list ends above the save button (`FLOATING_CONTROLS_CLEARANCE`) rather than under it, so the button never rests on
-an option.
+## Format and files preview
 
-From 520dp of width (a phone on its side) the options are 260dp beside the preview instead, 330dp on a window that is
-also tall, and the button floats over the preview. **The preview is the whole of its pane** and its controls float over
-it: the page buttons are a raised pill at the top end of the preview — under the app bar where the preview is a pane,
-and inside the preview item on a phone, scrolling away with it — fading in and out with the PDF format. **Neither control
-ever rests on the page**: at a zoom of 1 the page fits the pane less its margin at the sides and one band
-(`FLOATING_CONTROLS_CLEARANCE`, the taller control and a margin on either side of it) at each end that a control floats
-over — the pill's at the top everywhere, the save button's at the bottom where the preview is a pane (`PageFit`,
-decided by the screen, which places the controls, and `fitArea`) — so it is centered between the two with the same room
-over it as under it. In a short window (`SHORT_WINDOW_HEIGHT`, a phone on its side) the two bands would leave a page no
-taller than a control, so there the page sits beside the two, which stack at the pane's end, in the pane less the column
-they take — as wide as the wider of the two, the pill set as wide as its text at its widest for the PDF's page count,
-every digit counted as the widest one, so the page beside it does not move as the pages are turned. A zoomed page grows
-out to the pane's edges and under them, which is what says that the sheet of paper is what grew. Pages are turned by a swipe, the
-buttons, or the arrow, Page Up / Down, Home and End keys, and zoomed by a pinch (around its centroid), a double tap, on
-a touch screen the second tap held and dragged (`doubleTapZoom`: down zooms in, up out, doubling every 120dp, around
-where it landed; the second press is consumed so neither the pager nor the pan moves under it) or a touchpad pinch
-(`magnifyByTouchpad`, the song details screen's path, around the pointer while it is over the page); Ctrl / Cmd and the
-scroll wheel zoom in the desktop application only, which `isLaunchScreenWholeStartup` stands in for, since in a browser
-that chord is the page's own zoom.
+- **The format is the first option**, with a line saying what each is for (the names alone don't tell anybody).
+  `Format.FILES` are written by `CampfireViewModel.exportFiles`; a saved one closes the screen like a PDF.
+- All PDF options fold away for files except a setlist's song ticks, one selection for both formats (switching doesn't
+  restore unticked songs). `chosenSongFileNames` is null when all are ticked, so the manifest goes out as stored. A zip
+  of none isn't offered unless the setlist has no songs.
+- Files skip the layout; `FilesPreview` shows the song's text (`PrintSong.text`, monospace, unwrapped) or `ZipContents`
+  (manifest, then each `.cho`, missing ones dimmed).
+- Option and zip rows use `listItemAnimation`, keyed by their place in the source (a setlist may name a song twice).
 
-Zooming grows the whole sheet, edges and all, past the pane that cuts it off, as a document viewer does: content growing
-inside a page that kept its size read as the text being enlarged for the file. The zoom is kept as the point of the page
-in the middle of the pane (`PageView`) rather than as a pan in pixels, so a pane laid out at another size shows the same
-part of the page; turning the page opens the next one whole. The options are composed once whatever the arrangement
-(`PrintPanes`), and the preview, which is composed again as it moves between their list and a pane of its own, keeps its
-page and zoom in the screen's saved state, so crossing between beside and under keeps the zoom and the options' scroll,
-and the options travel to their new place on the spatial spring (`animateBounds`), while a resize within one arrangement
-is followed as it comes. A page is described to a screen reader by its number.
+## State
 
-Export: `CampfireViewModel.exportPdf` draws the pages off the main thread, counting them into `pdfExportProgress`, which
-the save button shows as a ring in place of its icon; while it counts, the button is Cancel (`cancelPdfExport`). Once
-the picker is up there is nothing to cancel, and the progress is gone. The button leaves while there are no pages. A
-failure, an `OutOfMemoryError` included (except on the web, where it cannot be caught), is reported as a failed export.
-A saved file closes that screen (the view model dismisses it, whether or not the screen is composed at that moment, e.g.
-after an Activity recreated under the picker); a share leaves it open. Share is an app bar action where
-`FilePicker.canShare` (Android and iOS). The file is named by `pdfFileName` the way `ExportFileNames.kt` names a song,
-from its header, and a setlist's running order gets a `-running_order` suffix so the two exports of one setlist do not
-collide.
+- `rememberExportState(dialog)`: selection, preview page, and zoom are `rememberSaveable` (survive rotation); options,
+  source, and Retry count start over.
+- The previous document stays up while the next is laid out (debounced). **Save only takes a document laid out from what
+  is on screen**: an earlier tap (a FAB has no disabled look) is kept and carried out once it is (`ExportRequest`).
+- Options go to `pendingPrintSettings` as they change, saved after settling, and whatever is pending is saved however
+  the screen closes (`setVisibleDialog`).
+- `CampfireViewModel.exportPdf` draws off the main thread into `pdfExportProgress` (a ring on the save button, which is
+  Cancel, `cancelPdfExport`, until the picker is up). The button leaves while there are no pages. Failures, including
+  `OutOfMemoryError` (not catchable on the web), report a failed export.
+- A saved file closes the screen from the view model, even if not composed (an Activity recreated under the picker); a
+  share leaves it open. Share is an app bar action where `FilePicker.canShare` (Android, iOS).
+- `pdfFileName` names it like `ExportFileNames.kt` names a song; a running order gets `-running_order`, so the two
+  exports of one setlist don't collide.
+
+## Layout
+
+- Phone: the preview is the options list's first item (`STACKED_PREVIEW_HEIGHT`) and scrolls away; the list ends above
+  the save button (`FLOATING_CONTROLS_CLEARANCE`). From 520dp wide, options sit beside the preview and the button
+  floats over the preview.
+- **The preview is its whole pane, and no floating control ever rests on the page at zoom 1**: the page fits the pane
+  less one `FLOATING_CONTROLS_CLEARANCE` band at each end a control floats over (`PageFit`, `fitArea`). In a short window
+  (`SHORT_WINDOW_HEIGHT`) the controls stack at the pane's end and the page sits beside them; the page-count pill is
+  sized for its widest possible text so the page doesn't shift as pages turn.
+- The options are composed once in any arrangement (`PrintPanes`); the preview keeps page and zoom in saved state across
+  arrangements, and the options move on the spatial spring (`animateBounds`).
+- The pager fades under the app bar and toward the options only as far as a zoomed, panned, or turning page has moved,
+  so a page at rest is drawn whole.
+
+## Zoom and paging
+
+- **Zoom grows the whole sheet**, edges included, past the pane (content growing in a fixed page read as larger text in
+  the file). The zoom is stored as the page point at the pane's center (`PageView`), not a pixel pan, so resizing keeps
+  the view; turning the page opens the next one whole.
+- Turning: swipe, buttons, arrows, Page Up / Down, Home, and End. Zoom: pinch, double tap, double-tap-and-drag
+  (`doubleTapZoom`, second press consumed so pager and pan don't move), touchpad pinch (`magnifyByTouchpad`). Ctrl / Cmd
+  plus wheel zooms only in the desktop app (`isLaunchScreenWholeStartup`), since in a browser that is the page's zoom.
+- A page is described to screen readers by its number.

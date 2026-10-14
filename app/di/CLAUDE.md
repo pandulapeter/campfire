@@ -9,22 +9,16 @@
 -->
 # :app:di
 
-The Koin application, and nothing else: one file, `CampfireDependencyGraph.kt`. A `campfire-library` module like the
-rest of the shared code, because all four platform entry points call into it, and the one shared module that is
-allowed to depend on the `implementation` modules — it exists so that the list of them is written once rather than in
-each `:app:*` module.
+The Koin application, in `CampfireDependencyGraph.kt`: a `campfire-library` module called by all four entry points,
+and the one shared module allowed to depend on `implementation` modules, so their list is written once.
 
-- `CampfireDependencyGraph` is the `@KoinApplication`, naming the eight module objects (`DataLocalSourceModule`,
-  `DataRemoteSourceModule`, `DataRepositoryModule`, `DataSyncModule`, `DomainModule`, `MetronomeModule`,
-  `PresentationModule`, `TunerModule`). Adding a Koin module to the app is adding it to that list. The compiler plugin validates the
-  whole graph at this declaration, so a definition that asks for something no module declares fails this module's build;
-  the plugin also recompiles this module on every build for that reason, which is what the `strictSafety` line in the
-  Gradle output is about.
-- `startCampfireDependencyGraph(configuration)` is `startKoin<CampfireDependencyGraph>` with the platform's own
-  additions: Android passes `androidContext`, which is what its file storage, authenticator, audio output and the tuner's input and tone output take as
-  `@Provided`;
-  the other three pass nothing. It starts Koin globally rather than through the `KoinApplication` composable, since
-  the graph belongs to the process and `koinViewModel()` reaches the global instance on its own. It also starts the
-  first read of the preferences, the songs and the setlists (`LoadScreenDataUseCase`) on `Dispatchers.Default`, so
-  the read the launch screen waits for overlaps the platform bringing its window up; the view model's own read joins
-  it (a repository holds its lock for its whole read) and reads again only where this one failed.
+- `CampfireDependencyGraph` (`@KoinApplication`) names every module object; adding a Koin module means adding it there.
+  The compiler plugin validates the whole graph here (so this module recompiles every build — the `strictSafety` line
+  in the Gradle output).
+- `startCampfireDependencyGraph(configuration)` starts Koin globally (not the `KoinApplication` composable: the graph
+  belongs to the process, and `koinViewModel()` finds the global instance). Android passes `androidContext`, the
+  `@Provided` dependency of its file storage, authenticator, metronome output, and tuner input and tone output; the
+  others pass nothing.
+- It also starts the first `LoadScreenDataUseCase` read on `Dispatchers.Default`, overlapping the platform's window
+  setup; the view model's read joins it (repositories hold their lock for the whole read) and re-reads only what
+  failed.

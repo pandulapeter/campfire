@@ -14,515 +14,222 @@ The shared building blocks of the screens.
 
 ### `ui/components/`
 
-`ui/components/` — Material 3 list items (`SongListItem`, `SectionHeader`, `SwitchListItem`, `CheckboxListItem` — which
-also comes with a box that can be half ticked, for the selection mode's sheets —, ...; a song listed inside a setlist
-prefixes its one-based place to the title, including when its file is missing.
-`CenteredSongCardContent` measures the body and actions together so both stay vertically centered however many lines the
-card has — the body is laid out by hand with a list item's paddings, minimum heights and text styles rather than as a
-`ListItem`, which pins a three-line item's content to its top and grows it to 88dp, leaving empty card under the labels;
-`DragHandle` is the grip in front of the overflow button of such a row and narrower than it, so that the button lands
-exactly where it does on the songs screen — the trailing controls are shifted slightly toward their card edge
-(`ListItemActions`) — on both list screens the cards end before the fast scroller's column, in every grid column alike —
-an icon (Material's drag indicator, two columns of three dots) rather than an `IconButton` because the caller is what
-makes it draggable and because the width it gives up that way is empty space around an icon rather than anything that
-can be pressed), `SearchableTopAppBar.kt` (`SearchableTopAppBar`, the app bar both list screens use: not a `TopAppBar`
-but a row of its own drawn *over* the top of the list, because a `TopAppBar` is a `Surface` and would take every touch
-meant for the pinned header under it.
+#### Song cards
 
-While the search is closed it is transparent and holds only the actions, on a tonal pill (`surfaceContainerHigh`) so
-that they read as the screen's own rather than as actions of the section whose header they sit on - the same pill the
-open search's field sits on (`SearchPill`: one rounded rectangle drawn by the bar, interpolated on the search action's
-spring between where the buttons' row settles while the search is closed and where the field settles while it is open,
-both taken as the lookahead rectangles of their own state so that neither end is moving and each edge only ever travels
-one way, from behind the buttons to behind the field and back rather than one fading into the other; the field itself is
-transparent and only clips to its shape), the list's pinned `SectionHeader` standing where a title would; the header row
-is as tall as the bar (`LIST_APP_BAR_HEIGHT`, 56dp, a little lower than a `TopAppBar`) and the header itself has nothing
-behind it: its one line of text (the settings tab labels' style) is laid out as a transparent pill as tall as the bar's,
-which takes the press up to where a setlist's actions begin and draws none — its name and icon dim while it is held
-instead, as the song details title does (`PRESSED_HEADING_ALPHA`), and a pointer gets the hand over it — and as a header
-comes into the pinned place (`SectionHeaderState.pinnedFraction`) its pill, as wide as the cards everywhere else,
-narrows to the room the buttons leave (`onReachChanged`, measured while the search is closed and settled, and measured
-before the list — `ListUnderAppBar` — so that a screen's first frame already counts a setlist header's room with it
-rather than letting the header's actions out of their menu and shrinking them away a frame later) along an eased curve
-rather than a linear one, and widens and narrows again along the same curve as an opening or closing search moves the
-list out from under the buttons and back (`AppBarOverlap.coverage`): the pinned header is a bar reaching up to the
-buttons' pill, its name cut off sooner and a setlist's menu at its end.
+- A song inside a setlist prefixes its one-based place, missing files included.
+- `CenteredSongCardContent` lays the body out by hand rather than as a `ListItem`, which pins a three-line item to its
+  top and grows it to 88dp.
+- `DragHandle` is a plain icon, narrower than the overflow button, so the button lands exactly where it does on the songs
+  screen; the caller makes it draggable.
+- `SongListItem` names the **sounding** key next to the artist (never the title, which must not be pushed out):
+  `{key}` moved by the file's `{transpose}`, the listing's transposition, and its capo (`SongRenderer.renderKey`), so
+  one song can read differently inside a setlist. The tempo follows (`EffectiveTempo.bpm`, 120 where nothing names one),
+  in the muted color so it doesn't compete with the key. Both come from scanned metadata, never by parsing the file.
+  "Lyrics only" replaces the key for a chordless song — but with the Chords switch off the place is empty. Changes
+  crossfade (`SongCardNote`).
+- **In a window under 480dp wide** card text uses 8dp padding (and headers follow, `songCardTextKeyline`) and titles get
+  two lines; touch targets stay.
+- **Column width** (`minSongColumnWidth`, from `UserPreferences.CardDetails` and the chords/metronome switches): 368dp
+  base, +16dp each for key and tempo, +32dp for duration, so the default Songs card keeps 400dp and a phone on its side
+  stays one column. Setlists start 24dp wider for the slot number (`MIN_SETLIST_COLUMN_WIDTH`). `CampfireScreens`
+  computes both into `ListLayout.of`.
+- `hasRoomForSidePanel`: the filter panel shows only while two columns still fit beside it, the fast scroller counted;
+  otherwise the filters open in a sheet.
 
-The cards are what makes room for it: they are faded out entirely under the header's row and fade back in over the 24dp
-below it (`ListTopFade` in `components/EdgeFade.kt`), so the name is always read against the background; each card masks
-itself with the part of the gradient it overlaps, since an overlay would fade the sticky headers, which are items of the
-same list; its strength grows with how far the list is scrolled, over those 24dp, so a list at rest shows its first
-cards whole (on the setlists screen, how far it is scrolled past the start of the setlist being read, or short of the
-next one's header, so a setlist brought to the top by a tap on its header shows its description and first song whole, as
-the first setlist does), and a card takes no press inside the gradient - only the press is consumed, so a drag started
-there still scrolls the list. `AppBarOverlap` carries that reach and the bar's height to the list, and the fast scroller
-starts below it so its thumb is never under a button. Opening the search fills the bar in behind the field
-(`animateAppBarReveal`). On Songs, opening search collapses and fades all section headers on the same spring as
-`Modifier.underAppBar`, even with an empty query.
+#### `SearchableTopAppBar`
 
-Section boundaries stay in the grid so incomplete rows keep their columns. A visible card anchors the scroll in screen
-coordinates during each layout, keeping the active section stationary while later sections close up; closing an
-unchanged search reverses the collapse and restores the exact original scroll index and offset. Scrolling or changing
-the results releases the saved anchor; the room kept at the end of the list for it stays until it has scrolled out of
-sight, the results change or the search is toggled, since dropping it in sight would pull the end of the list up under
-the finger. `SongSearchScrollAnchor` checks for an active scroll both when the mode changes and before returning a
-correction during measurement; a transition begun or interrupted during a drag or fling never resumes an old correction
-once scrolling stops. Its pure state tests cover both races and the exact unchanged round trip. The cards' top fade
-loses its covered header row on that same transition, ending directly beneath the search bar. On Setlists, the list
-moves down on the search action's spring and its headers pin under the bar instead.
+- Not a `TopAppBar`: a row drawn *over* the list, because a `TopAppBar` is a `Surface` and would take every touch meant
+  for the pinned header under it.
+- Closed, it holds the actions on a tonal pill (`SearchPill`), the pinned `SectionHeader` standing where a title would.
+  The pill animates between the buttons' row and the field as **lookahead rectangles of each settled state**, so each
+  edge only travels one way.
+- The pinned header's pill narrows to the room the buttons leave (`onReachChanged`, measured before the list via
+  `ListUnderAppBar` so the first frame is right) and along `AppBarOverlap.coverage` as the search opens and closes.
+- Cards fade out under the header row and back in over 24dp (`ListTopFade` in `EdgeFade.kt`): each card masks itself,
+  since an overlay would fade the sticky headers (items of the same list). Strength grows with scroll, so a list at rest
+  shows its first cards whole. A card takes no press inside the gradient, but a drag there still scrolls.
+- The fast scroller starts below `AppBarOverlap`'s reach so its thumb is never under a button.
+- On Songs, opening search collapses all section headers (even with an empty query); section boundaries stay so rows
+  keep their columns. `SongSearchScrollAnchor` keeps the visible section stationary and restores the exact scroll on
+  closing an unchanged search; scrolling or new results release it. It checks for an active scroll both on mode change
+  and before each correction, so an interrupted transition never resumes a stale one (tested). On Setlists the list moves
+  down instead and headers pin under the bar.
+- The "New" menu yields to the field (`closedSearchActions`); the selection menu stays
+  (`areClosedSearchActionsKeptInSearch`). The bar stays filled while the list has no header (placeholder, ranked
+  results). It spans the list only, never the side panel.
+- `SearchBackHandler` uses `NavigationBackHandler` over a hoisted `NavigationEventState`, not `BackHandler` (which only
+  hears a gesture on release), and previews the close via `SearchState.backProgress` (`SearchRecession`). The offset is
+  layout, not a drawn translation, so `animateBounds` carries on from where the gesture left.
+- `SearchAction` is **one button travelling** between the actions slot and the navigation slot (`movableContentOf` +
+  `animateBounds` in a bar-only `LookaheadScope`), keeping its icon's animation state; bounds animate only while opening
+  or closing, so it doesn't lag a window resize. `SearchActionSlot` reserves its room on the same spring.
+- The field is a hand-laid `BasicTextField`, not `SearchBarDefaults.InputField` (fixed 56dp, no padding control). It
+  never leaves its `Box` (emptied, zero width when closed) because `animateBounds` only animates a rectangle it has seen.
+  It collapses into its end edge rather than sliding. The pill moves by `animateBounds` to `CLOSED_FIELD_OFFSET`, not an
+  animated width fraction, which settles short and jumps on the last frame.
+- `SearchToCloseIcon` is a `Canvas` because Compose Multiplatform resources read only static vectors; it transcribes
+  `avd_search_to_close.xml` on **one linear timeline**, not springs (overlapping stages would drift), played faster than
+  authored.
 
-The "New" menu makes way for the field on the same spring (`closedSearchActions`), since making something is not what a
-search is for — the songs screen's selection menu, which takes its place in the selection mode, stays instead
-(`areClosedSearchActionsKeptInSearch`), since the search is where a selection is put together; the bar also stays
-filled in while the list has no header to stand in its place (a placeholder, or a search's ranked results, which come
-in one headerless group). The bar spans the list alone, never the side panel beside
-it, so the buttons and the open search stay at the top of the list they act on and the panel reaches the top of the
-screen; plus `SearchBackHandler`, which closes an open search before a back gesture leaves the screen. It is a
-navigation event handler (`NavigationBackHandler` over a hoisted `NavigationEventState`) rather than the plain
-`BackHandler`, which only hears about a gesture once it is over: the whole drag of a predictive back went by with
-nothing answering it and the search vanished on release.
+#### Menus and actions
 
-The gesture's progress goes to `SearchState.backProgress` on every frame, and previews the close while the finger is
-still down — the search action's cross runs back along its timeline towards the magnifier and the field fades and
-collapses into its end edge the way its exit takes it, with the button offset by exactly as far as the field's start
-edge has moved, so the two head back to the end of the bar together (`SearchRecession`, held by the bar so both read the
-same value on the same frame; the offset is layout rather than a drawn translation, so a gesture that closes the search
-has `animateBounds` carry the button on from where the gesture left it) — and each carries on from wherever the gesture
-was let go of, on to the end if the search closed and back to where it was if the gesture was cancelled, rather than
-jumping first; `SearchAction`, the bar button that opens and closes it, which heads the screen's actions while the
-search is closed and stands at the very start of the bar, where a back button would, while it is open, with the field
-after it.
+- **An overflow menu expands into buttons wherever there is room** (`ActionsMenu`), one at a time in menu order, the
+  overflow button going last. Neighboring icon buttons overlap touch targets by 12dp (`ActionOverlap.kt`'s
+  `overlappingAction`).
+- **Some entries stay in the menu whatever the room** (`ActionsMenuItem.isAlwaysInMenu`): a setlist's Edit details,
+  Reorder, Archive, Duplicate, Export, and Delete; a song's Update file name and Duplicate; the editor's Revert. A song
+  card never expands (`isExpandable = false`).
+- `SongActions`: edit, Update file name (only where `Song.canUpdateFileName`), Duplicate song (songs screen cards only,
+  `isDuplicable`), Export song, delete — **delete never from a setlist row or a details screen opened from a setlist**
+  (`isDeletable`).
+- Choose setlists is `SetlistAssignmentsButton` in front of the overflow on song rows and the details bar (moved into the
+  menu as `setlistAssignmentsAction` when out of room); in a setlist row's menu after "Remove from setlist" (not on an
+  archived setlist). From a details screen opened from a setlist, that setlist's box is disabled
+  (`DialogType.SetlistPicker.setlistFileName`), since unticking it would pull the screen from under the reader.
+- **Every overflow button opens a dropdown**, touch included. Long press (touch) and right click (`ContextClick.kt`,
+  which beats the row's clickable since Android clickables answer a right click like a left) open the same dropdown from
+  the row's button (`OverflowMenuState`); the button is always there, since a gesture announces itself to nobody.
+- `SetlistActions`: only Choose songs ever becomes a header button.
+- `OverflowMenu` counts open menus (the desktop Escape handler is outside the composition) and acts through
+  `OverflowMenuState.select`, which runs an entry once per opening: a `DropdownMenu` stays tappable during its exit, and
+  a double tap on Export would export twice.
+- `SortMenu` (`SongSortMenu`, `SetlistSortMenu`) is shared by each screen and its picker sheet.
+- `SongFilters` is a side panel or a sheet, and neither when there is nothing to filter by (`hasSongFilters`).
+  `ControlsSidePanel`: only the list feeds the bar's nested scroll.
 
-It is one button travelling across the bar rather than two swapping places, since its mark is turning into the cross as
-it goes: `movableContentOf` hands it from the actions slot to the navigation icon slot and back, keeping the mark's
-animation state, and `animateBounds` carries it between them inside a `LookaheadScope` that is only the bar. Each slot
-keeps a touch target's room for it that grows and shrinks on the same spring (`SearchActionSlot`), which is what moves
-the title and the other actions out of its way rather than snapping them, and the bounds only animate while the search
-is opening or closing, so the button does not lag behind a window being resized. Its mark keeps the actions' color in
-both slots, since the bar draws its navigation icon in a stronger one; and the field itself. The two share one `Box`,
-the field never leaving it but emptied and laid out with no width while the search is closed, since `animateBounds` only
-animates a rectangle it has already seen; that also keeps the box as tall as the field, with the title centered in it.
+#### Other choices
 
-The field is a `BasicTextField` laid out by hand rather than `SearchBarDefaults.InputField`, which is fixed at the 56dp
-of a search bar standing on its own and lets neither its height nor the content padding that decides it be passed in:
-inside a 64dp app bar that leaves four pixels of daylight above and below, so the field reads as the whole of the bar
-rather than as something in it. At the 40dp of the actions beside it the clear button comes down to the compact size the
-header pills' actions use. The pill is what the field never needed while it *was* the title: the bar's close button now
-sits a few pixels in front of it, and without it the button that empties the field and the button that leaves the search
-are two bare crosses on one line. The field comes and goes by collapsing into its end edge rather than by sliding, so
-that its start edge follows the search action from the end of the bar to its start as the search opens and back into the
-end as it closes, and what it holds is laid out at the full width of the slot, rides the pill's start edge and is cut
-off at the end - text moving any slower than that edge reads as standing still - so nothing passes under the button that
-is turning into the close mark as it goes.
-
-The pill travels by `animateBounds` on the button's own spring, between the whole field slot and no width at the
-button's end edge (`CLOSED_FIELD_OFFSET`), rather than being clipped by an animated fraction of its width: a fraction
-settles a hundredth short of the whole, which is several pixels of the edge jumping on the last frame of a wide window
-while the button is still moving, and two rectangles on one spring arrive together), `SearchToCloseIcon` (that button's
-mark — a magnifier whose lens unwinds while its handle grows backwards into one diagonal of a cross, and a second
-diagonal drawn in behind it. It is a `Canvas` rather than a drawable because it is an animated vector and Compose
-Multiplatform's resources read only the static kind; the geometry, the stroke, the three stages' offsets and their
-easings are `avd_search_to_close.xml` transcribed, and they share one linear timeline rather than each getting a spring,
-since the stages deliberately overlap and three springs would drift apart.
-
-The stages keep the milliseconds they were authored in and the whole timeline is *played* over a shorter one: what the
-drawing carries is the choreography — which stage waits for which, and by how much — which is a set of proportions
-rather than a length, and a toolbar icon under a finger has to be done well before an icon designed in isolation does),
-`SegmentedChoice` (offering a selected label only the width its check mark leaves, since Material measures it at the
-whole segment and cuts it off, and a row whose labels would not all fit beside a check mark has none, the fill alone
-marking the choice, so "Keyboard" and "Sharps (#)" are whole at 360dp; `isInline` for one control of several in a row,
-the editor's panes, which drops the mark and the wide side gap and pads its labels less, so the editor's Preview /
-Előnézet is not ellipsized at 360dp), `ColorChoice` (the theme colors as discs rather than as names, wrapping instead of
-scrolling so none of them hides behind a gesture; the ones whose color is not the whole of what picks them out carry an
-icon, which the check replaces while it is selected: the app's own, first and a disc of its two colors' gradient, with
-the app's mark, and the system's, second where there is one.
-
-The order is the preference's own: the app's own, the system's, the colors around the hue circle, and the gray last. The
-selected one is ringed in its own color, because a mark in the middle of a disc is read as what that color *is* once
-some of them carry an icon, so the selection has to sit where an icon never can), `SongActions` (`ActionsMenu`, the row
-of buttons **an overflow menu expands into wherever there is room**: the actions come out of the menu one at a time, in
-its own order, each an icon button, until none is left and the overflow button goes too, and they go back in the same
-way as the room shrinks — counted from the largest width the caller hands down (a setlist header keeps 160dp of its name
-at the width it narrows to once pinned, so it does not trade buttons for a menu as it scrolls into the bar's place, and
-its pushed copy draws the same icons; the song details bar lets them out only while the title keeps 280dp), and each
-comes and goes by expanding and shrinking. Neighboring icon buttons reach 12dp into each other's touch targets wherever
-they stand in a row — a song card's star and dots, the list screens' pill, a setlist header, the song details and editor
-bars — through `components/ActionOverlap.kt`'s `overlappingAction`, the row padding its ends by half of that so its
-outer buttons stay where a bar puts them.
-
-**What stays behind the tap whatever the room** is part of the rule, since keeping the interface clean matters more than
-one tap saved: a song card never expands at all (`isExpandable = false`, keeping only its star or drag handle in front
-of the menu), and a setlist's Edit details, Reorder songs, Archive, Duplicate, Export, and Delete, a song's Update file
-name and Duplicate song, and the editor's Revert are always menu entries (`ActionsMenuItem.isAlwaysInMenu`) — dangerous,
-not to be promoted, or rarely wanted — so a menu holding any of them keeps its overflow button. `SongActions` never
-expands (the song details bar puts its own buttons in front of it, see below), so what can come out is a setlist's
-Choose songs in its header. On the song details screen it is the bar's one menu, Edit song file first among its own
-entries; every metadata and cover art editor is the About the song sheet's, which the title opens, so no menu lists them
-one by one.
-
-`SongActions` is the per-song set: edit, "Update file name" where the file is named something other than what its
-metadata would name it (`Song.canUpdateFileName`, which is also why the entry is absent from most songs), "Duplicate
-song" on the songs screen's cards alone (`isDuplicable`, since a copy is a new song of the library, see
-`ui/dialogs/CLAUDE.md`), "Export song" (the one way out of the app for a song, whatever the format or the platform, see
-Export below), and delete — the last only where the song is reached as part of the library, never from a setlist row or
-a song details screen opened from a setlist (`isDeletable`), since a song read through a setlist is taken out of that
-setlist rather than out of the library.
-
-The Choose setlists sheet is not in a songs screen row's menu: on a row of the songs screen and in the song details app
-bar, wherever that screen was opened from, it has a `SetlistAssignmentsButton` of its own in front of the overflow
-button (which the details bar moves into its menu as `setlistAssignmentsAction` where it runs out of room, see
-`appBarButtons`) (on a song row it reaches 12dp into that button, so the star and the dots are as far apart as a setlist
-row's grip and dots), since filing songs into setlists is what the library is mostly visited for, whose star, filled
-where the song is already in a setlist and outlined where it is not (`CampfireViewModel.songFileNamesInSetlists`), cross
-fades between its outline and its fill while turning clockwise by two fifths of a turn either way, with an
-anticipate-overshoot easing, a star's five points making the turn end on the outline it started from; a setlist row
-offers the sheet as `setlistAssignmentsAction` in its menu, after "Remove from setlist" (an archived setlist's rows
-leave it out, as they leave out every row action), every box free, so that unticking the row's own setlist takes the row
-off the screen behind the sheet as it happens; a song details screen opened from a setlist offers it with that setlist's
-box shown but disabled (`DialogType.SetlistPicker.setlistFileName`), because taking the song out of the setlist being
-read would pull the screen out from under the reader.
-
-Every song row and the song details app bar reach the list through `SongActions`, and they get the same entries in the
-same order otherwise - which is an overflow button on every platform wherever the actions do not all have a button of
-their own - a gesture announces itself to nobody, so touch cannot be left with one - and **every overflow button in the
-app opens a dropdown**, touch included, since that is what an overflow button promises. A long press on a song row of
-the songs screen or of a setlist (outside reorder mode, where it lifts the row) opens that very dropdown on touch
-platforms, and so does a mouse's right click on every platform (`onContextClick`, `components/ContextClick.kt`, which
-takes the press before the row's clickable does, since Android's clickables answer a right click like a left one),
-hanging from the row's button (the row holds the menu's `OverflowMenuState`), since the same entries shown two ways would read as two different things; it is a shortcut for the
-reader who knows about it rather than the way in, which is why the button is there whatever is pointing at it),
-`SetlistActions` (the per-setlist actions at the end of its `SectionHeader` pill: edit, Choose songs, reorder songs
-(Done reordering while the mode is on, offered for an unarchived setlist of two songs or more), duplicate, archive or
-unarchive, "Export setlist", delete - Choose songs is the only one that becomes a header button where the header has
-room, every other entry always staying behind the overflow button, and all but one of them lead somewhere else anyway.
-
-It starts with edit and then the assignments, the way a song's menu does, so the two read alike. "Edit" is the rename
-and the one place a setlist's description and date are written, since the three are the whole of what the user gets to
-say about one; the date is a read-only field that opens Material's date picker, so there is no typed text that could
-fail to be a day), `OverflowMenu` (the dropdown behind every overflow button - the song and setlist menus and the
-editor's revert - which is also what counts the open ones, since a menu keeps that inside the composition and the
-desktop Escape handler is outside it; its entries act through `OverflowMenuState.select`, which closes the menu and runs
-the entry once per opening, because a `DropdownMenu` stays on screen and tappable through its exit animation and a
-double tap on Export would export twice), `ImportProgress`, `SortMenu` (the order of either list, a popup of radio rows
-headed by what it sorts ("Sort songs", "Sort setlists") behind the app bar's sort action on both list screens and at the
-end of both picker sheets' headers, which closes with the choice; `SongSortMenu` and `SetlistSortMenu` are the two,
-shared by a screen and its sheet), `SongFilters` (the song list's filters, the order not among them), used both as side
-panel and bottom sheet, and as neither where the library offers nothing to filter by — no tag, and at most one language
-(`CampfireViewModel.hasSongFilters`) — since there is no longer anything in them that is always there; the filter action
-leaves the bar the same way; `ControlsSidePanel` holds those controls beside the songs list, under the app bar and next
-to the list, the way the rail is at the other end; only the list feeds the bar's nested scroll, since the bar is kept in
-step with the list's own position.
-
-`SongListItem` names the key the song sounds in next to the artist rather than next to the title, which is the longest
-thing on the row and the one that must never be pushed out of sight, in the accent color the song details header keeps
-for what is played: `{key}` moved by the `{transpose}` the file opens with, by the transposition of the listing it is
-read in and by the fret it is capoed at there (`SongRenderer.renderKey`), which is why one song is in one key on the
-songs screen and in another inside a setlist that plays it differently.
-
-The capo is in it because this is what the band hears: a capo raises every fretted chord without renaming one of them,
-so a card is the one place that says so - the song details screen's Transposition control names the written key instead.
-
-The tempo follows it (`EffectiveTempo.bpm`, the setlist's entry, the library's override, or the file's `{tempo}`, and
-the metronome's default of 120 where none of them names one, as if the file did), in the duration's muted color rather than the
-accent one, since a second emphasized value beside the key halves what the key is there for.
-
-Both are worked out from the metadata the library scan already read rather than by parsing the file, since a list holds
-the whole library and none of its lyrics. A song with no chords says "Lyrics only" in the key's place instead, and a
-song that names no artist starts the line with the note itself.
-
-Whatever stands there is crossfaded rather than swapped (`SongCardNote`), since it changes under the reader: a
-transposition or a capo renames the key, a stepper moves the tempo, and the chords switched off empty the key's place
-altogether.
-
-The Chords switch off empties the place altogether — no key, and no "Lyrics only" either, since that marker only tells
-one song from another while the others are showing chords — the way the switch takes the transposition control off the
-viewer.
-
-The song list has priority over the panel: `hasRoomForSidePanel` only shows it when at least two `ListColumns` columns
-still fit beside it, the fast scroller's column counted (~1150dp of screen width next to the rail), otherwise the same
-controls open in a bottom sheet from an app bar action.
-
-**In a window under 480dp wide** a song card gives its text 8dp of padding instead of the keyline — and the section
-headers, a setlist's countdown and its description move in with it (`songCardTextKeyline`), so the list's text starts on
-one line — the dot between the artist and the key a 16dp box instead of 24dp, and its title two lines instead of one;
-the touch targets of its buttons stay as they are.
-
-A list's narrowest column follows what its cards say after the artist (`minSongColumnWidth`, from the list's
-`UserPreferences.CardDetails` and the chords and metronome switches): 368dp for a card that says nothing there, 16dp
-more for the key and for the tempo, and 32dp for the duration, so the Songs screen's cards as a fresh installation has
-them keep their 400dp, which keeps a phone held sideways at one column, since two would each be narrower than the one
-in portrait — a card told to say less can give that up for more columns. The Setlists screen's start 24dp wider for the
-slot number (456dp with all three, `MIN_SETLIST_COLUMN_WIDTH`, `ListLayout.setlistColumnCount`), since at the songs'
-width a laptop's maximized window cut those lines short across four columns. `CampfireScreens` works both out and hands
-them to `ListLayout.of`, which the side panel's room is counted in too.
+- `SegmentedChoice` gives a selected label only the width its check mark leaves (Material cuts it off), and drops the
+  mark where labels wouldn't fit beside it; `isInline` for the editor's panes. Constraint: "Keyboard", "Sharps (#)", and
+  "Előnézet" must be whole at 360dp.
+- `ColorChoice`: discs that wrap rather than scroll; app's own first, then system's, then hues, gray last. The selection
+  is a ring in its own color, since an icon in the middle would read as the color's identity.
 
 ### `ui/components/ChordsIcon.kt`
 
-The mark of the Chords navigation item and of the onboarding's chord diagrams card: a fretboard for every fretted
-instrument (and Other), a keyboard (`ic_piano`) for the keyboard, crossfading as the instrument is picked. Nothing is
-composed before the preferences are read, so it starts on the right one.
+Fretboard for fretted instruments and Other, `ic_piano` for the keyboard, crossfading on change.
 
 ### `ui/components/LabeledControlRow.kt`
 
-A setting whose label stands beside a wide control that grows with the text and never wraps — the tuner's reference
-pitch, the Metronome tab's tempo, the export screen's text size and margins — is a `LabeledControlRow`: the label stays
-beside the controls while its longest word fits there (its min intrinsic width), and goes above them, the
-`SettingsSubsection` way, when a word would otherwise be broken between its letters. So nothing changes at 1.0x, and a
-large text size on a phone stacks the row. The form never changes with the value: a label that changes width with it
-names its widest form as `decidingLabel` (every tempo marking), measured and never drawn, and a row that stacked at a
-width stays stacked at that width (`isLabelBesideControls`, tested), so a dragged slider or a held stepper button never
-moves under the finger. The change is not animated, since it comes from the text size or the window.
+The label sits beside a wide control while its longest word fits, else above it. The form never changes with the value:
+`decidingLabel` names the widest form (measured, never drawn), and a row that stacked at a width stays stacked
+(`isLabelBesideControls`, tested), so nothing moves under a dragging finger. Not animated.
 
 ### `ui/components/Languages.kt`
 
-`ui/components/Languages.kt` — what a language is called, and the only part of the language feature the app ships:
-`LANGUAGE_CODES` (the ~620 codes the picker offers — ISO 639-1 plus the three letter ones 639-1 never covered, since no
-browser will enumerate languages) and `languageLabel(code)` / `languageName(code, appLanguageCode)`, which ask the
-platform for the name in the language the app is set to — `currentLanguage` is Compose state, so a chip follows the
-settings screen without a restart — and capitalize it, since CLDR writes `angol` rather than `Angol`. The English name
-stands in where the app's own language has none (CLDR thins out fast past the first few hundred languages, and a picker
-that lost a row when the app was switched to Hungarian would be worse), and only a code no platform can name at all is
-shown in capitals as the file wrote it. `pickableLanguages` is the picker's list: what can be named, ordered by that
-name through `NormalizeTextUseCase` so accents sort where a reader expects them — with the languages the library already
-sings in ahead of the rest, since the next song to be filed is far likelier to be in one of that handful than in any of
-the six hundred the library has never held. `SongLanguage.UNKNOWN` is the one code that is named from the string
-resources instead.
+- `LANGUAGE_CODES` (~620: ISO 639-1 plus the 639-2/3 codes it lacks; no browser enumerates languages) is all the app
+  ships. `languageName` asks the platform in the app's language (reactive via `currentLanguage`), capitalizes it (CLDR
+  writes `angol`), falls back to English, then to the code in caps.
+- `pickableLanguages`: sorted through `NormalizeTextUseCase`, the library's own languages first.
+  `SongLanguage.UNKNOWN` is named from string resources.
 
 ### `ui/components/CoverArtImage.kt` / `ProvideCoverArtImageLoader.kt`
 
-`ui/components/CoverArtImage.kt` / `ProvideCoverArtImageLoader.kt` — the covers, drawn by Coil 3 (`coil-compose`, and no
-network artifact: the bytes come from `GetCoverArtUseCase`, which keeps the offline copy and goes through the one HTTP
-client in `:data:source:remote`). `ProvideCoverArtImageLoader`, called once by `CampfireApp`, which resolves the use
-case there (`koinInject`, where the composition is) rather than when Coil first asks, sets the singleton loader up with
-a fetcher and a keyer for `CoverArt(url)` and no disk cache of Coil's own, since the use case's copy is that on all four
-platforms; Coil keeps what it decoded in memory for scrolling, and crossfades only what did not come from there.
-`CoverArtImage` is a cover on its own, whole, over a placeholder of its own size (a tinted square with the album icon),
-which is what shows while it loads and where it never does: the room is taken from the first frame, so an image arriving
-in a list being scrolled moves nothing around it, and the image crossfades in over the placeholder.
-
-A song card (`SongListItem`'s `coverArtUrl`, on the Songs and the Setlists screen alike, never on a missing entry's row)
-puts it at 44dp with small corners at the start of its body, 12dp before the text, next to the title and the artist line
-only and as tall as the two, while the labels under them start from the keyline beneath it, 8dp under the cover
-(`CenteredSongCardContent`'s `labelsContent`). The song details screen puts it at 40dp in its app bar, in front of the
-title and the artist of the song on screen, and counts it in the width the Choose setlists button is let out of the menu
-by whenever any song of the pager has one, leaving it out where that would leave the title less than 160dp; it is part
-of the title there, so a tap on it scrolls to the top, or opens the About the song sheet once the song is already there,
-like the rest of the bar, with no press drawn.
-
-The editor's bar draws it the same way, from the text as it is typed, so a cover written or changed by hand is seen
-before it is saved: an address only once the typing has paused for 500 ms (`rememberSettledCoverArtUrl`), since every
-half-typed one that happens to be valid would be a download of its own, and with no press, since the search is opened
-from the cover in the About the song sheet and in the preview's card. The About the song sheet and the preview's card
-put it at 72dp at the start of their Details tile,
-the detail tiles flowing beside it (the group is there for a cover alone too), the card's following the text the same
-settled way; where the cover search is offered (outside performance mode, cover art on) a tap on it opens that search,
-and a song with no cover gets an empty place with the album icon in it that does the same. The lyrics' header draws none. Both follow
-`UserPreferences.isCoverArtEnabled`, the Features tab's "Cover art" switch, which leaves every cover unfetched and
-undrawn when it is off; performance mode keeps them, since a cover changes nothing.
+- Coil 3 with no network artifact and **no disk cache of its own**: bytes come from `GetCoverArtUseCase` (the offline
+  copy, through `:data:source:remote`'s one HTTP client). `ProvideCoverArtImageLoader` is called once by `CampfireApp`
+  and resolves the use case there.
+- `CoverArtImage` reserves its room from the first frame with a placeholder, so arrival moves nothing; never on a
+  missing entry's row.
+- In the details bar it is part of the title (tap scrolls to top / opens About the song, no press drawn). The editor's
+  bar follows typed text only after 500 ms of no typing (`rememberSettledCoverArtUrl`), since each valid half-typed URL
+  would be a download.
+- Follows `isCoverArtEnabled` (off: nothing fetched or drawn); performance mode keeps covers.
 
 ### `ui/components/PagerIndicator.kt`
 
-`ui/components/PagerIndicator.kt` — what a pager's indicator shows at the pager's position (its page plus its offset):
-how far each item is selected (`pagerSelection`, the onboarding's dots) and where a tab indicator is between two tabs
-(`pagerIndicatorSpan`, the settings tabs). **An indicator follows the pages rather than the page index**, read while
-laying out or drawing so a swipe moves it without recomposing, and never animates on its own: a swipe, a button, and a
-predictive back all move it the way they move the pages.
+An indicator follows the pager's position (page plus offset), read during layout/draw so swipes don't recompose, and
+never animates on its own.
 
 ### `ui/components/SaveShortcut.kt`
 
-`ui/components/SaveShortcut.kt` — `Modifier.saveShortcut`, Ctrl / Cmd + S (not with Alt, which AltGr arrives as), on
-every surface that saves: the editor, the export screen (Save, while the button is there and not counting pages), the
-editor's unsaved changes question, and every `CampfireBottomSheet`, where it presses the `BottomSheetConfirmButton` in
-the header (`LocalSheetSaveShortcut`, which the button sets while it is there; the library deletion's opts out with
-`isSaveShortcut`), doing nothing while that is disabled or the sheet is closing. A key only travels along the focus
-path, so each of them holds the focus itself as it opens with a bare focus target, which draws nothing and brings up no
-keyboard: the sheet takes it a frame in and only where nothing in it has it by then, so a form's first field keeps the
-caret. The key is consumed whether or not anything is saved, so that it never reaches what is under a sheet.
+- `Modifier.saveShortcut`: Ctrl / Cmd + S, **not with Alt** (AltGr arrives as Alt). In a `CampfireBottomSheet` it presses
+  the header's `BottomSheetConfirmButton` (`LocalSheetSaveShortcut`; library deletion opts out with `isSaveShortcut`),
+  nothing while disabled or closing.
+- Keys travel only along the focus path, so each surface takes focus with a bare focus target as it opens — a sheet a
+  frame in and only if nothing has focus yet, so a form's first field keeps the caret. The key is always consumed.
 
 ### `ui/components/DelayedLoadingIndicator.kt`
 
-`ui/components/DelayedLoadingIndicator.kt` — the loading indicator of the song details and editor screens, which only
-fades in once a read has taken 300ms: those read one local file, which is nearly always done before an indicator would
-have been seen, and flashing one for a few frames on every page is noise rather than feedback. The song lists keep the
-plain indicator, since the launch screen covers their first read.
+Song details and editor only: fades in after 300ms, since one local file is nearly always read before then. Lists keep
+the plain indicator (the launch screen covers their first read).
 
 ### `ui/components/TagFlowRow.kt` / `TagPill.kt`
 
-`ui/components/TagFlowRow.kt` / `TagPill.kt` — `TagFlowRow` and `TagPill`, the one place a tag is drawn: under the
-artist in a song row (`SongLabels`, kept to a single line that scrolls sideways, so a song filed under a dozen labels
-cannot make its row taller than the others and none of them is cut off; the row fades out towards whichever edge it
-continues past, each fade as wide as what is left to scroll that way, masked with `BlendMode.DstIn` in an offscreen
-layer so that it fades to the card rather than punching through it — and leaving off whatever every song in the library
-carries, `CampfireViewModel.labelsOnEverySong`: a tag on every song tells one song from no other, and a library sung in
-one language has nothing to mark a song with. That is counted over the whole library rather than the filtered list,
-since a tag filter narrows the list to songs that all carry the tag, and the rows would lose the very label they were
-narrowed by).
+- The one place a tag is drawn. In a song row (`SongLabels`) one line that scrolls sideways, edge fades masked with
+  `BlendMode.DstIn` in an offscreen layer (to fade to the card, not punch through). Labels on **every song in the whole
+  library** are omitted (`labelsOnEverySong`), counted over the whole library, not the filtered list, or a filter would
+  hide the label it filters by.
+- Tapping a row's tag or language toggles its filter chip without scrolling; no row chip edits tags. Setlist rows show
+  no labels (`shouldShowLabels`).
+- Pills are outlined (only a selected row pill is filled). Tags carry `ic_label`, languages `ic_language` — "Magyar" is
+  otherwise ambiguous.
+- `TagIcon` fills the mark with the tag's color under an outline in the content color, so color never stands alone;
+  from `LocalTagColors`, provided once by `CampfireApp`. `TagColor`'s ids are what devices store; an unknown id draws as
+  no color. Light/dark tones are chosen by surface luminance.
+- Filter chips are `CountedFilterChip` on `SelectableChip`, not Material's `FilterChip` (its state layer hugs the label);
+  the `indication` sits outside the padding under a `clip`. No chip in the app is a Material `FilterChip`.
+- `LabelSortingToggle` sorts tags and languages on one preference; "Unknown" stays last.
 
-A tag or a language there is a shortcut to its own chip in the song filters (`toggleTagFilter`, `toggleLanguageFilter`),
-keeping the tapped row in place rather than sending the list to the top, drawn selected while it is on — a row has no
-chip that writes the song's tags, which is the business of the song card's menu, the selection mode, and the About the
-song sheet's Tags tile; the setlists screen leaves both off its rows altogether (`shouldShowLabels`), since a setlist is
-not a view of the library either could narrow. Tags and languages in the About the song sheet and the editor preview's
-card are labels only; a tap on their tile opens their dialogs. A pill looks the same in both places:
-outlined rather than filled, since the card's tiles are the tone just below a tonal fill and an outline reads on any
-container, as the link buttons beside them do; only a selected one in a row is filled. `SongLabels` draws the song's languages
-there too, after the tags (the order of the details header and of the filters) each kind carrying the mark the details
-card's chips and the overflow menu's entries do (`ic_label` for a tag, `ic_language` for a language) — a pill reading
-"Magyar" is otherwise either, and a list gives no other way of telling the two apart. The filter chips of `SongFilters`
-are Material filter chips instead, since there the selected state is the point — drawn by `CountedFilterChip` itself
-rather than by `FilterChip`, which puts its state layer around the label instead of around the chip, so only a band
-hugging the text lit up under the pointer.
+#### `FilterGroupsLayout.kt`
 
-A tag the user gave a color has its mark filled with it (`TagIcon`: `ic_label_fill` under the outline, which stays in
-the content color, so the color only ever tells tags apart and never stands alone), in the pills, the song filters' tag
-chips, and the song picker's alike (a language chip carries `ic_language` in both, for the same look), read from
-`LocalTagColors`, which `CampfireApp` provides once from the preferences rather than every caller handing the map down.
-`TagColor` is the palette: fourteen fixed colors, eleven hues around the circle and then brown, gray, and black, the ones
-the theme has too under its names, each with a saturated middle tone for a light scheme and a lighter one for a dark
-scheme (told by the surface's luminance, so the theme's cross fade and the sepia need nothing of their own; black is a
-charcoal there, since a black fill is what a mark with no color already shows on a dark background), and an id that is what every device stores — one this version does
-not know is drawn as no color.
-
-Every color, the border, the shape and the height still come from `FilterChipDefaults`; what the chip is built out of
-here is a `selectable` whose `indication` is a node of its own, placed outside the chip's padding so the state layer
-covers what can be clicked, under a `clip` that rounds it (nothing else binds it, which is what let it spill past the
-corners on the web). `TagFilters` (in `SongFilters.kt`) shows the first tags in the chosen order — most used, or
-alphabetical, switched by the `LabelSortingToggle` right after the group's title, whose icon shows the order the chips
-are in; `LanguageFilters` and the tag and language dialogs (at the end of their title row) carry the same toggle on the
-same preference, and "Unknown" stays last either way — and keeps the rest behind "Show all": the set of tags is whatever
-the library grew, and a hundred of them must not push the languages off the bottom of the panel.
-
-**Where the fold falls is decided by the room, not by a count** (`FilterGroupsLayout.kt`): `FilterGroupsLayout` shares
-the height of the panel or the sheet between the two groups' chips, measuring everything else first and asking each
-`CollapsibleChipFlow` for its height whole and collapsed as far as it goes (two lines, the selected chips and the
-toggle) as its intrinsic heights, so one measure pass decides it; `chipBudgets` fills the groups like vessels, a short
-group shown whole next to a long one and two long ones cut to about the same height, and a flow given less than it needs
-shows the lines that fit, the first chips in order plus every selected one, and "Show all" under them. Everything fits
-whole where there is room, and nothing is cut below the minimum where there is not — the content scrolls. A chip whose
-place changes — the order toggled, or a count that moved it past another — travels to its new place (`animateBounds` in
-the filter column's one `LookaheadScope`, inside the scroll, each chip composed under its key), as the song picker's
-chip rows do the same way. A group opened with "Show all" is shared out as if it were collapsed, so opening one never
-closes the other, and the "any / every" choice is left out of the sharing (`FilterSlot.TRANSIENT`), since taking its
-height from the chips would hide some of them under the finger that just selected the second one.
-
-In a sheet the height is the sheet's at its tallest (`BottomSheetContentScope.uncoveredTopInset`): Material pads a sheet
-by the part of the top inset its edge has come into, so the height offered changes with its offset, and content cut to
-that height would decide the sheet's height and so its offset again — a layout pass on every frame that never settled. A
-selected tag is always among the visible ones, and the "any / every" choice only appears once two are on, because with
-one it would mean the same either way. What empties either group sits at the end of that group's title
-(`FilterSectionTitle`) rather than under its chips: it comes and goes with the selection, and a button of its own would
-have moved everything below it — the height of the sheet included — every time a filter was turned on. The row is built
-to keep the height of the plain title it replaces, so the action can never decide it. Under the last group a "Reset all
-filters" button empties both at once (`clearSongFilter`), offered for as long as the filter action carries its badge
-(`isSongFilterActive`) and left out of the sharing (`FilterSlot.TRANSIENT`) like the "any / every" choice; "Show all"
-stays under the chips, since it belongs to the list it ends and appears with the room the chips have rather than with
-what is selected.
-
-Opening and closing a group is animated both ways: the room is shared out in the lookahead pass only, where each group
-decides its chips, and the approach pass animates the group's bounds, the groups below following; a chip that joins or
-leaves fades as the group's edge passes it (`chipTransitionAlpha`), and the toggle rides that edge, its label
-crossfading. `LanguageFilters` sits under it and is laid out the same way — a library that sings in a handful of
-languages shows them whole, and one gathered from all over the world is cut down like the tags — with an "any / every"
-question of its own, since a song can carry several languages. The whole group only appears once the library holds more
-than one language, counting the songs that declare none as one of them: below that there is nothing to choose between.
-Both groups draw the same `CountedFilterChip`, which is a `SelectableChip` (`SelectableChip.kt`) with a count in it; the
-metronome's time signature and sound chips are `SelectableChip`s too, so no chip in the app is a Material `FilterChip`.
+- **The fold is decided by room, not a count**: groups report whole and fully collapsed heights as intrinsics, and
+  `chipBudgets` shares the height like vessels. Selected chips are always visible; "Show all" opens the rest. Below the
+  minimum the content scrolls.
+- In a sheet, use the sheet's tallest height (`BottomSheetContentScope.uncoveredTopInset`): Material's offset-dependent
+  top padding would otherwise make the layout oscillate every frame.
+- The "any / every" choice (only with two selected) and "Reset all filters" are `FilterSlot.TRANSIENT`, out of the
+  sharing, so selecting a chip never hides chips under the finger. The clear action sits in `FilterSectionTitle`, built
+  to keep the plain title's height, so the sheet never resizes on a selection.
+- Room is shared in the lookahead pass only; the approach pass animates bounds. Moving chips use `animateBounds` in one
+  `LookaheadScope`.
+- The language group appears only with more than one language (no-language songs counting as one).
 
 ### `ui/components/FastScroller.kt`
 
-`ui/components/FastScroller.kt` — the only scrollbar in the app, on the song list and the setlists: a draggable thumb
-and, only while the thumb is pressed, an animated bubble with the letter of the section at the top — on the song list
-alone, since a setlist is named by whatever somebody called it and has no letter to be found by. Its
-`FAST_SCROLLER_WIDTH` (24dp) touch column overlays the grid's end padding, so cards and their overflow buttons end
-before it while full-width sticky headers continue underneath it. This keeps the touch target clear of every card,
-including the inner columns of a wide grid. The column is kept whether or not the list is scrollable, since one that
-came and went would reflow every row as the list grew past the screen.
-
-The whole column is the touch target, and it reaches on over the last column's 8dp outer margin up to the cards' edge,
-since nothing in that margin can be pressed; it stops 8dp short of either end of the list like everything the scroller
-draws: a press anywhere on it centers the thumb under the pointer and carries on as a drag, the way the fast scroller of
-a contacts app answers a touch on its edge — at once for a mouse, but for a touch only once the finger has been held
-there for a long press or has set off more vertically than horizontally past the touch slop (`awaitThumbPress`): the
-column runs down the edge Android's back gesture starts from, the system takes a swipe over only after it has travelled,
-and a thumb that jumped on the press moved the list under every back gesture made there, so a sideways swipe is left
-alone, and a tap jumps the thumb only once the finger lifts — a lift the system has taken over for its back gesture
-arrives already consumed, and is left alone too — while a press on the thumb or within 8dp of it never makes it jump; a
-faint track fades in behind the thumb while the column is hovered or dragged, so its reach can be seen.
-
-Only the circular bubble reaches out of the column: it is level with the thumb, at the height of the finger, centered
-under the divider between the closed app bar's buttons and its new item menu
-(`CLOSED_SEARCH_ACTIONS_DIVIDER_END_INSET`), and stays inside the track near either end. The thumb and the track fade by
-the alpha they are drawn with rather than through a `graphicsLayer`: an offscreen buffer the size of the column would
-cut the bubble off, and the web build does not redraw a `ModulateAlpha` layer whose alpha alone changed, so the thumb
-stayed invisible there until a hover redrew it. Scroll position is estimated from the average visible item size; the
-pinned sticky header is excluded from that estimate, since it is listed among the visible items out of order. Visible on
-every platform for as long as the list is scrollable. A finger dragging it feels it (a mouse does not): a tap as the thumb
-is taken, a light tick (`SegmentFrequentTick`) for every row that passes the top of the list, so the hand feels the
-list move at the speed it moves however long its sections are, and a stronger notch (`SegmentTick`) for every section
-letter that comes to the top and at either end of the track — the end decided by where the finger asked the thumb to
-be, since the estimated range moves under a thumb pushed into it (`FastScrollerDetent.kt`, `detentNotch`). It is read
-once a frame, so a thumb flung past many rows is one tick a frame. The list screens' app bars have fixed color and elevation, so
-scrolling the fast scroller does not alter them.
+- The only scrollbar, on both lists; the letter bubble only on the song list. The `FAST_SCROLLER_WIDTH` column overlays
+  the grid's end padding, so cards end before it while sticky headers run under it. The column stays whether or not the
+  list scrolls, so rows never reflow.
+- A press centers the thumb: at once for a mouse, but **for touch only after a long press or a mostly vertical move past
+  slop** (`awaitThumbPress`), because the column is on Android's back-gesture edge. A tap jumps only on lift, and a lift
+  the system consumed for back is ignored.
+- Thumb and track fade by draw alpha, not a `graphicsLayer`: a layer would clip the bubble, and the web build doesn't
+  redraw a `ModulateAlpha` layer whose alpha alone changed.
+- Position is estimated from average item size, excluding the pinned sticky header (listed out of order).
+- Haptics (touch only): a tick per row, a notch per section letter and at the ends (`FastScrollerDetent.kt`,
+  `detentNotch`), the end decided by where the finger asked the thumb to be; read once a frame.
 
 ### `ui/components/CampfireTopAppBar.kt`
 
-`ui/components/CampfireTopAppBar.kt` — the app bar of the song details and the editor: flat, in the background color,
-never tinting or lifting. In a short window the song details screen hands it an `enterAlwaysScrollBehavior`, so it
-leaves as the song is dragged down and comes back as it is dragged up or reaches the top — the bar and the status bar
-are a third of a phone on its side — while the step buttons, the keys and the pedal leave it where it is, since they do
-not scroll through the nested scroll. The pages decide their grid against the height they have with the bar and the
-metronome panel at rest (`isAppBarSettled`, `settledHeight`), while their rows follow the live viewport, so a bar on the
-move searches no grid; the editor's is `isCompact`, a 48dp title row, while its keyboard is up.
+- Song details and editor bar: flat, background color, never tints or lifts. In a short window the details screen gives
+  it `enterAlwaysScrollBehavior`; pages choose their grid from the settled height (`isAppBarSettled`, `settledHeight`) so
+  a moving bar searches no grid. The editor's is `isCompact` (48dp) while the keyboard is up.
+- `bottomContent` holds a second row inside the same surface (the editor's toolbar).
 
-Nothing in the app has an elevated bar or a divider under a bar or tabs; what scrolls under them fades out into them
-instead (`fadingTopEdge` in `components/EdgeFade.kt`, a gradient over the top 24dp of the scrolling container's
-viewport, as strong as the content is scrolled over those 24dp; every fade over one known opaque color paints that color
-over the content's edge rather than masking it, which would take a viewport-sized offscreen buffer on every frame drawn
-while scrolled — screens on the background color, sheets on `sheetContainerColor()` (`dialogs/CampfireBottomSheet.kt`),
-the color has to be the one directly behind the container, and the settings pager's swipe fade (`fadingLeftEdge`, its
-strength read while drawing) — and the transparent mask is kept only for the alert dialogs, the list screens' cards
-(`ListTopFade`), sideways-scrolling rows (`fadingUnderStartOverlay`) and the overscroll pull; `fadingVerticalEdges`
-fades both ends the same way, as far as there is content past each, for a list inside a dialog, which has no bar above
-it or screen edge below it to say it goes on — the What's new dialog's list, above its button; never a sheet's content,
-which ends at the bottom of the window or at the keyboard; the list screens' cards fade the same way per card, see
-`ListTopFade` below).
+#### Edge fades (`EdgeFade.kt`)
 
-A screen with more controls than one row holds puts the rest in `bottomContent`, which is drawn inside the same surface
-(the editor's toolbar). Each song row sits on a low tonal card with rounded corners and an 8dp gap in either grid
-direction; the outer columns keep their 8dp screen gutter, and a dragged setlist card lifts above its neighbors. The
-lists' sticky section rows (`SectionHeader`) have no background and no divider, the cards being faded out under the
-pinned one instead, and only the header's content takes a touch, and neither it nor a setlist's menu button in it takes
-the focus: a lazy grid keeps a focused item placed after it has scrolled away, and a header held that way stops the grid
-drawing the headers it pins after it. As the next header pushes the pinned one away, a visual copy outside the grid
-crosses the grid's top edge, under the transparent app bar, so the grid's top clip cannot cut it off; its content lags
-behind the row and fades with the visible height, and it keeps the pinned width it had in the bar's place rather than
-widening again as it leaves.
+- `fadingTopEdge`: over a **known opaque color**, paint that color over the edge rather than masking (a mask costs a
+  viewport-sized offscreen buffer every frame). The color must be the one directly behind (`sheetContainerColor()` for
+  sheets). Masks are kept only for alert dialogs, `ListTopFade`, `fadingUnderStartOverlay`, and overscroll.
+- `fadingVerticalEdges`: lists inside a dialog; never a sheet's content.
 
-The row extends behind the fast scroller, so the pill's end and the app bar's reach are measured from one edge, and the
-pill never reaches past the cards' end. Their text is one line in the settings tab labels' style (with a second in the
-description's style: a setlist's countdown where one was asked for, then, after a ` · `, the total of its songs'
-durations wherever one of them has one, with a `+` where some have none or are missing, `SetlistTotalDuration.kt` — the
-pill is as tall as the bar's and holds both), and leaves the setlist menu its space at the pill's end. The section being
-read stays named at the top of the list with its cards passing under the row, and the setlist header's menu stays in
-reach however long the setlist is; clicking one scrolls back to the start of that section, which is the index the list
-hands a sticky header's content.
+#### Sticky section headers
+
+- No background or divider; only the content takes touches, and **neither the header nor its menu button is
+  focusable**: a lazy grid keeps a focused item placed after scrolling away, which stops it drawing later pinned headers.
+- The pushed-away pinned header is a visual copy outside the grid, so the grid's clip can't cut it, keeping its pinned
+  width. The row extends behind the fast scroller so pill and app bar reach measure from one edge.
+- A setlist header's second line: countdown, then total duration (`SetlistTotalDuration.kt`, `+` where some are
+  unknown). Clicking a header scrolls to its section start.
 
 ## Scrolling performance
 
-Overscroll is Compose's own: Android's stretch, iOS's bounce, and none on the desktop and the web, where Compose
-provides no effect. Foundation only applies it while there is something to scroll, so the scrolling containers that can
-be short — the list screens, the sheets, the settings, the song and the editor — also take `bounceScrollableContent`
-(`ui/platform/ContentOverscroll.kt`, or `bounceVerticalScroll` / `bounceHorizontalScroll`), which hands the drags of
-content that fits to the same effect, after offering them to the parents first, so a bottom sheet whose content fits is
-still dragged down by it. Content that fits and is pulled up is carried to the top edge of its viewport, under a sheet's
-header or an app bar, with its scroll position still at zero, so the container's own `fadingTopEdge` stays off: the
-vertical form draws a top fade of its own over the stretched content, as strong as the finger has pulled it up and
-settling back on a spring as the effect relaxes. The two list screens fade their cards under the pinned header rather
-than at the grid's edge, so they hand their `ListTopFade`'s `OverscrollPull` in instead: the cards' fade then grows with
-the pull, and its gradient is moved down the cards by as much, since the stretch carries their drawing up with them.
-
-`ListTopFade` caches an inverse gradient and uses `DstOut` inside its existing offscreen layer, translating the drawing
-rather than rebuilding a shader for every card position. `FastScroller` consumes a conflated channel once per frame so
-new pointer events cannot cancel the frame wait or a scroll in progress; animation values are read while drawing.
-`SongStepper` scans offsets without sorting or allocating lists per scroll update and derives button availability
-independently from the target position.
+- Overscroll is Compose's own (none on desktop/web). Foundation skips it when content fits, so short containers use
+  `bounceScrollableContent` / `bounceVerticalScroll` / `bounceHorizontalScroll` (`ui/platform/ContentOverscroll.kt`),
+  offering drags to parents first so a fitting sheet still drags down. The vertical form draws its own top fade while
+  pulled (scroll position stays zero, so `fadingTopEdge` is off); list screens pass their `ListTopFade`'s
+  `OverscrollPull` instead.
+- `ListTopFade` caches an inverse gradient and draws with `DstOut` in its existing layer, translating rather than
+  rebuilding a shader per card.
+- `FastScroller` consumes a conflated channel once per frame so pointer events can't cancel the frame wait or a scroll;
+  animation values are read while drawing.
+- `SongStepper` scans offsets without sorting or allocating per scroll update.

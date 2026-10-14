@@ -9,186 +9,81 @@
 -->
 # :data:model
 
-Pure Kotlin domain models with no dependencies. The one platform difference is `normalizedToNfc`
-(`domain/Normalization.kt`), an expect/actual over what each standard library already has — `java.text.Normalizer`,
-`NSString.precomposedStringWithCanonicalMapping`, `String.prototype.normalize`. Every other module depends on this
-(usually transitively via an `api` module).
+Pure Kotlin domain models, no dependencies; the layer-crossing currency (stored documents and bytes never leak past
+their own module). The one platform difference is `normalizedToNfc` (`domain/Normalization.kt`, expect/actual).
+`DataState<T>` (`Idle` / `Loading` / `Failure`, each with nullable cached `data`) wraps everything out of a repository.
 
-### `DataState<T>`
+## Identity and names (`domain/LibraryFiles.kt`)
 
-`DataState<T>` — `Idle` / `Loading` / `Failure`, each carrying nullable cached `data`. The universal wrapper for
-anything flowing out of a repository.
+- **A song's or setlist's identity is its file name**, extension included, not a generated id.
+- The extension lists (`SONG_EXTENSIONS`, `IMPORTABLE_EXTENSIONS`, `LIBRARY_BACKUP_EXTENSIONS`) **must agree with the
+  import rules, the storage layer, and the three OS registrations** (Android manifest, iOS plist, desktop Gradle file).
+  Importable-only types are never claimed system wide; legacy `.doc` is listed only to report it unreadable.
+- `isSongFileName` / `isSetlistFileName` (and `LibraryFileKind.matches`) are the one answer to which files are the
+  library, asked by the scan, the local sync listing, and the remote listing: right extension and not hidden
+  (`._song.cho` is macOS's AppleDouble companion).
+- `ARTIST_TITLE_SEPARATOR` lives here because `" - "` in a file name is structure, read by both new-song and export
+  naming.
+- `normalizedName` (rules in the root CLAUDE.md) **must stay idempotent**: an exported name is normalized again on its
+  way back in. NFC comes first, before folding and lowercasing (it is what composes non-Latin marks). Letters outside
+  the BMP are kept as surrogate pairs and never cut; symbols, emoji, and planes 14–16 become separators. A Latin letter
+  `Accents.kt`'s `withoutAccent` table does not know becomes a separator, so extend the table; it lives here because two
+  modules share it.
+- `identityKey` / `isSameLibraryName` are the one rule for whether two names are one file (NFC, then
+  `uppercaseChar().lowercaseChar()` per code point, matching the JVM's `equals(ignoreCase = true)`); asked by storage
+  renames, sync matching, and the import (`LibraryNameIdentityJvmTest` holds it against the JVM).
+- `withoutCollisionSuffix` reads both the app's `_2` names and sync's ` (2)` conflict copies.
 
-### `domain/`
+## Text (`domain/LibraryText.kt`)
 
-`domain/` — `Song` (the metadata of one `.cho` file, without its text, tags included, its first `{tempo}` rounded, its
-first `{time}` as written and its first readable `{capo}` — read at scan time so that a metronome paged on to the next
-song of a setlist has them before that song's text is loaded, and `CAPO_RANGE`, the frets a capo can be put on — plus
-`canUpdateFileName` — whether the file is named something other than what its own metadata would name it, worked out
-once per scan because every row of the song list asks it, and the size of its file, which is what the settings screen
-adds up as the library's size), `SongContent` (that text), `Setlist` (with its `date`, which every setlist has —
-`ParsedSetlist` is one as read, for an import or by the library's listing, saying whether the day was the file's own —
-with per-entry transposition, tempo and capo, so they travel with the setlist, `isArchived`, so a setlist put away on
-one device is put away on every other one it syncs to, and the optional `description`, which travels the same way and is
-what the setlists screen's search reads besides the title, and the size of its file, for the same sum, and
-`unknownFields` on the setlist and on each entry — the members of the file this version does not know, kept as opaque
-JSON text so that a later version's field survives this one's next save), `Tag` (one label with the number of songs
-carrying it, which is all the filter controls need), `SongLanguage` (the same for a language), `UserPreferences` (which
-owns the text size range, `MIN_FONT_SCALE` to `MAX_FONT_SCALE` — the floor bounding the whole song details screen, the
-controls of a song's first section included, rather than the lyrics alone — with `SortingMode`, `SetlistSortingMode`,
-`UiMode`, `ThemeColor`, `Language`, `Accidentals` and `MatchMode` enums whose `id` values are persisted, the
-display-only `ChordSpelling`, `isPerformanceModeEnabled` — read only mode for the whole app, see `:presentation` — the
-feature switches `areChordsEnabled` (stored as the inverse `isLyricsOnlyModeEnabled` it replaced), `areSetlistsEnabled`,
-`isMetronomeEnabled` and `isTunerEnabled`, `isCoverArtEnabled`, which is what lets the app fetch the covers the songs name at all, the
-chord diagrams' `areChordDiagramsEnabled`, `songCardDetails` and `setlistCardDetails` (`CardDetails`: whether the Songs and the
-Setlists screen's cards show the key, the tempo and the duration), `instrument` (`Instrument`, the one instrument in the player's
-hands that the diagrams, the tuner, and the capo rule read, its ids the tuner's standard tunings and, for the five with
-shapes, `:chordpro`'s, which this module does not see; `ofTuningId` finds a tuning's instrument by the longest id
-prefix; the twelve-string guitar is the one whose id names no tuning, since it shares the guitar's), `tunings` (the tuning picked for each instrument, instrument id to the tuner's tuning id, no
-entry for standard, kept on the device like the instrument and an unknown id kept as it is), `isChordSectionFolded` (one fold for every song) and `chordVoicings` (the player's own shape of
-each chord, by instrument id and then by the chord's id, never exported but synced through `preferences.json`, an
-unknown instrument kept as it is), `tagColors` (a palette id by `tagKey`, synced the same way, never dropped with
-the last song carrying the tag, since that is as often a moment as a decision), `shouldNumberSections`, whether the
-unlabeled sections of a kind are headed "Verse 1", "Verse 2" (on by default), plus the library-wide transpositions, tempos, and capos (`tempos` and `capos`, song file
-name to BPM and to fret for songs opened from the library, never exported, but synced through the cloud folder's
-`preferences.json` (see `data/sync/implementation/CLAUDE.md`)), `metronomeSettings` (`MetronomeSettings`: the sound, subdivision and
-accents stored as the metronome's own ids, so this module depends on nothing, the volume, whose zero is the mute, the
-two switches, the Metronome tab's own tempo and time signature, with `TEMPO_RANGE`, and `isSongPanelShown`, whether the
-song details screen opens with the metronome panel in its app bar), `tunerSettings` (`TunerSettings`: whether the
-tuner reads chromatically and the reference pitch within `REFERENCE_PITCH_RANGE`, never exported or synced), the folded sections of each song (`foldedSections`,
-one set per song wherever it is opened from, since how much of a song one reader keeps open is theirs alone and never
-goes into a setlist, an export or a sync run), — the four maps keyed by a song's file name, which `withSongRenamed`
-moves with a renamed song or drops with a deleted one and `withoutSongOverrides` empties with the library, so that a new
-per-song map is listed there and nowhere else (`UserPreferencesSongMapsTest`) — and `shouldShowArchivedSetlists`, plus
-`seenWhatsNewVersions`, the local history of versions introduced or deliberately skipped, `isOnboardingPending`, set
-by the first run and cleared only once the onboarding is finished or skipped (false by default, so that an installation
-from before the onboarding is never sent through it; local only), and
-`demoLibraryContentHashes`, the content hash of every demo file this device planted by its library path, local only
-(never exported or synced), which sync reads to take the cloud folder's version of a demo still holding exactly that
-instead of keeping both — but not which tags and languages the song list is filtered to, which is never stored, see
-`SongFilter` in `:domain:api`), `ImportedFile` / `ExportedFile` / `ImportResult` for the import and export paths
-(including the entries the review left out and partial failures), `ImportProgress` for phase-local processed counts and the current
-filename, `ImportLimits` and `ImportBudget` — how much an import reads (8 MiB a text file, 16 MiB a PDF/Word document,
-24 MiB a selection and an unpacked import, sized for an Android heap) and the one function every platform reads its
-incoming files through, so that a file the import would not look inside is never kept (one of an unknown type is read
-only to see whether it is a zip archive) and one that is too large is reported rather than loaded — and `ImportPlan`
-(what an import would do to each name, worked out before anything is written; each song entry carries the `title` and
-`artist` its header gives, and the plan the picked files' `sourceNames`, for the review to show) with the
-`ImportChoices` the review answers it with: the entries left unticked (`ImportEntryKey`, a song's or a setlist's place
-in the plan), and the `ImportConflictResolution` (Keep both or Replace) for all taken names and for each row set by
-hand, which a change of the one for all leaves alone. `ImportDownload` is what downloading a file to import from an
-address came to (the file, too large, missing, unreachable), here because the import screen tells them apart.
+`decodeLibraryText` is how every library file and every incoming file becomes text, so a file reads the same however it
+arrived: UTF-8; mostly-UTF-8 files have stray bytes read through a code page; otherwise Windows-1250 only where the
+bytes can only be Hungarian or Polish and no Western-only letter appears, else Windows-1252. Czech, Slovak, and Romanian
+stay on 1252 on purpose (their bytes overlap Western ones; guessing would misread correct files). A leading BOM is
+dropped (a mid-file one is `ChordProSplitter`'s).
 
-### `domain/LibraryFiles.kt`
+## `UserPreferences`
 
-`domain/LibraryFiles.kt` — the extension vocabulary: `.cho` is what Campfire writes, `SONG_EXTENSIONS` is the whole
-ChordPro family it reads and registers with each operating system, and `IMPORTABLE_EXTENSIONS` adds the types (PDF,
-Word, zip, other apps' library backups — `LIBRARY_BACKUP_EXTENSIONS`, SongbookPro's — plain text, JSON, and legacy
-`.doc` only to report it as unreadable) it will read when handed one but never claims system wide. `isArchiveFileName`
-is the zip and the backups, unpacked by name; `isZipArchive` is the signature a file of any *other* unknown name is
-unpacked by, which `ImportBudget` reads such a file to check, handing back anything else unread and its share of the
-budget with it. `isSongFileName` / `isSetlistFileName` are the one answer to which files of the library folder are the
-library — the right extension and not a hidden name (`._song.cho`, the AppleDouble companion macOS writes on volumes
-without extended attributes) — asked by the library scan, by the listing sync works from and, through
-`LibraryFileKind.matches`, by the remote listing; `isHiddenFileName` is the half of it the import uses.
+- Enum `id`s are persisted; never change them. `areChordsEnabled` is stored as the inverse `isLyricsOnlyModeEnabled`.
+- **Per-song maps keyed by file name** (`transpositions`, `tempos`, `capos`, `beatLevels`, `foldedSections`) must be
+  listed in `withSongRenamed` and `withoutSongOverrides` and nowhere else (`UserPreferencesSongMapsTest`).
+- What travels where: `chordVoicings`, `tagColors`, and the per-song transpositions, tempos, capos, and `beatLevels`
+  sync through `preferences.json` but are never exported. `tagColors` are never pruned when a tag's last song goes.
+  Local only: `instrument`/`tunings`, `foldedSections` (one reader's choice), `tunerSettings`, `seenWhatsNewVersions`,
+  `isOnboardingPending` (default false so old installations are never sent through onboarding), and
+  `demoLibraryContentHashes` (sync uses it to prefer the cloud's copy of an untouched demo file). Song filters are never
+  stored (`SongFilter` in `:domain:api`).
+- `instrument` ids are the tuner's standard tuning ids and, for the five with shapes, `:chordpro`'s; `ofTuningId`
+  matches by longest prefix; the twelve-string guitar's id names no tuning. `tunings` has no entry for standard, and
+  unknown ids (here and in `chordVoicings`) are kept as they are.
+- `MetronomeSettings` stores the metronome's own ids, so this module depends on nothing; volume zero is the mute.
+- `MIN_FONT_SCALE` bounds the whole song details screen, not only the lyrics.
 
-The import rules, the storage layer and the three OS registrations (Android manifest, iOS plist, desktop Gradle file)
-all have to agree with this list. `ARTIST_TITLE_SEPARATOR` is there for the same reason: the `" - "` in a song's file
-name is structure rather than the user's text, so both the naming of a new song and the naming of an exported one read
-it from here. `normalizedName` is the other shared rule — the name brought to Unicode NFC first, then lowercase
-unaccented words joined with underscores, capped and never empty, letters outside the Basic Multilingual Plane (Adlam,
-Old Hungarian, CJK Extension B) kept as a pair of surrogates and never cut in two, while the musical symbols, the
-mathematical alphanumerics, the emoji and pictographs of U+1F000 on and planes 14 to 16 still become separators — and
-`NORMALIZED_ARTIST_TITLE_SEPARATOR` the bare dash that joins the two halves of a song's name once each has been through
-it.
+## Songs and setlists
 
-Three of its rules exist so that the same song written down by two people arrives at one name rather than two files: an
-apostrophe is deleted rather than folded to a separator, `&` and `+` are spelled out as "and", and `feat` / `featuring`
-are filed as `ft`. All of it is idempotent, which it has to be: an exported name is normalized again on its way back in
-(`LibraryFilesTest`, which also covers which names of a folder are library files).
-Every name the app writes goes through it — the export path (`:domain:implementation`) and the import path
-(`SongLocalSource.importFileName`) included, which is what makes a song arrive under the same name whether it was
-written in the app, exported from another copy of it or downloaded from somewhere that names its downloads after the
-page. It folds accents through `Accents.kt`'s `withoutAccent` — every Latin letter that is a plain letter with marks on
-it, and the ones drawn with a stroke (`ł`, `đ`, the dotless `ı`), since a letter the table does not know becomes a
-separator — which lives here rather than next to the search normalization that also uses it, since two modules need the
-same table.
+- `Song` is metadata only, read at scan time: its first `{tempo}`, `{time}`, and readable `{capo}` are there so a
+  metronome paged to the next setlist song has them before its text loads. `canUpdateFileName` is computed once per scan
+  because every row asks.
+- **`Setlist.unknownFields`** (and each entry's) keep members this version does not know, as opaque JSON, so a later
+  version's field survives this one's save. Per-entry transposition, tempo, and capo, `isArchived`, and `description`
+  travel with the file.
+- Tags, languages, cover, and links live in the song text as directives (see `:chordpro`); `Tag` / `SongLanguage` are
+  counted views built per scan. `SongLanguage.UNKNOWN` (`und`, which `:chordpro` reads as no language, so no song
+  carries it) groups songs that declare none. Language display names are the platform's (`:presentation`).
 
-The ligatures and `þ` fold to two letters in `normalizedName` itself, and the Latin letters that are letters of their
-own rather than letters with marks (`ə ɛ ɔ ŋ`) to the one a keyboard spells them with. Next to it, `isCombiningMark` is
-what both drop after the fold, so a Latin title that arrives decomposed (an `e` followed by U+0301) names and finds
-itself the way the composed spelling does; for every other script, whose marks are kept, it is the NFC step that does
-this (`и` followed by U+0306 is `й`), which is why it comes before the fold and before the lowercasing.
-`withoutCollisionSuffix` is the shared reading of the `_2` names the app derives and the ` (2)` conflict copies sync
-writes. `identityKey` / `isSameLibraryName` are the one rule for whether two names are one file — NFC, then every
-character through `uppercaseChar().lowercaseChar()`, which is what `equals(ignoreCase = true)` compares, cased letters
-above U+FFFF folded as one code point the way the JVM folds them — asked by the storage layer's renames and free names,
-sync's name matching and the import alike (`LibraryNameIdentityTest`, and `LibraryNameIdentityJvmTest` against the JVM's
-own comparison).
+## Import
 
-### `domain/Tags.kt`
+`ImportBudget` is the one function every platform reads incoming files through: a file the import would not look inside
+is never kept (an unknown type is read only to check for a zip signature), and an oversized one is reported rather than
+loaded. Limits are in `ImportLimits` (sized for an Android heap). `ImportPlan` is computed before anything is written;
+`ImportChoices` answers it (unticked `ImportEntryKey`s, Keep both or Replace for all and per row; changing the for-all
+choice leaves per-row ones alone). `ExtractedDocument` is transient; no original file is stored with a song.
 
-`domain/Tags.kt` — `normalizedTags`, how a song's tags are listed everywhere: composed, one spelling per tag whatever
-its case, the first kept, and `tagKey`, what a setting kept for one tag (`UserPreferences.tagColors`) is filed
-under: NFC, then lowercase (`TagsTest`).
+## Other
 
-### `domain/LibraryText.kt`
-
-`domain/LibraryText.kt` — `decodeLibraryText`, how the bytes of a song or setlist become text: UTF-8; a file that is not
-valid UTF-8 but has at least as many well-formed multi-byte UTF-8 characters as stray bytes is UTF-8 with the stray
-bytes read through the code page (a line pasted from an old document into a songbook), and any other file is read whole
-as Windows-1250 where the bytes can only be Hungarian (`ő`/`ű` next to `á`/`í`) or Polish (`ą ł ż ź` after a letter) and
-no Western-only letter (`à ã è ä ç`…) is among them, Windows-1252 otherwise. The code page of stray bytes is chosen by
-the same test, asked about the file with its UTF-8 set aside; and no byte order mark at the start (one in the middle,
-where two files were joined, is `ChordProSplitter`'s to drop). Czech, Slovak and Romanian are left on 1252 on purpose:
-their letters share bytes with Western ones, and guessing the language would misread files that read right. The storage
-layer reads every library file through it and the import every incoming file, so a file reads the same whichever way it
-arrived (`LibraryTextDecodingTest`).
-
-- `ExtractedDocument` — transient pages, lines and positioned spans (size, bold, monospace and raised) from the local
-  PDF/Word readers. The domain maps it to `:chordpro`'s input model; no original file or origin is stored with a song.
-  `ImportPlan.unreadableDocumentFileNames` distinguishes no readable text from unsupported files.
-  `SongEntry.isConverted` travels only as far as the result's actual-write conversion count and optional single-song
-  Open action.
-
-- `AuthorizationCompletionPage` and `SystemBrowser` — the two pieces of the sync authorization the UI hands down: the
-  words of the page the desktop's browser lands on after consent, and the port through which the desktop shell's URL
-  opener opens that page. Here rather than in `:data:source:remote:api` so that nothing above the repositories has to
-  see the remote source's contracts to connect an account.
-
-These types are the layer-crossing currency: stored documents and file bytes are mapped to/from them and never leak past
-their own module.
-
-Tags have no store of their own: they live in the songs' own text as ChordPro directives (see `:chordpro`), so the set
-of them is whatever the library happens to carry, and a tagged song takes its tags with it when it is exported or
-synced. `Tag` is the counted view of that set, built per library scan rather than kept anywhere.
-
-The cover of a song is carried the same way (`{meta: cover https://…}`, read into `Song.coverArtUrl`): the address only,
-never the image. `CoverArtQuery` is what the cover search is asked — an album, or a title where there is no album,
-narrowed by an artist — `CoverArtCandidate` one record it found in one `Catalogue` (MusicBrainz, iTunes), with the
-address that is written into the song when it is picked, and `CoverArtSearchResults` (a `CatalogueSearchResults`) where a
-search of all of them stands.
-
-The song details lookup asks the same catalogues: `SongDetailsQuery` is a title narrowed by an artist and an album,
-`SongDetailsCandidate` one recording found, with the artist, album, year and duration it would fill in, `SongCredits` the
-composer and lyricist the catalogue names for the one picked and `SongCreditsState` where asking for them is. Nothing of
-it is kept: the lookup only fills the Edit song details form, see `:presentation`.
-
-`SongLanguage` is the same thing for the languages a song is sung in (`{meta: language en}`, read into `Song.languages`
-as lowercase ISO codes — two letters wherever the standard has them, three for the languages ISO 639-1 left out), with
-one addition: the code `SongLanguage.UNKNOWN` — `und`, which `:chordpro` reads as *no* language, so no song can ever
-carry it — stands for the songs that declare none, which is how the filter offers them as a group. What a code is
-*called* is not here: that is whatever the platform says in the language the app is set to, see `:presentation`.
-
-Song and setlist identity is the **file name**, extension included — not a generated id. Two songs with the same title
-are two files with different names, and a rename in the library folder is a different song as far as the app is
-concerned.
-
-`LibraryFile` / `LibraryFileKind` describe the library as sync sees it — a name in one of the two folders, plus what the
-file system could tell about it. `LibraryFileKind.matches` is the one rule for whether a name is a library file, shared
-by the local listing and the sync engine. `SyncState` and the types around it (`SyncProviderId`, `SyncAccount`,
-`SyncOutcome`, `SyncDeletionDirection`, `SyncSummary`, `SyncFailureReason`) are everything the UI needs to know about
-sync; `SyncState.Connected` carries the outcome of the last run rather than a message of its own, so a failure stays on
-screen until something replaces it instead of flashing past in a snackbar. `SyncSummary.failed` names the files a run
-that reached its end could not move, and `havePreferencesFailed` says the shared `preferences.json` could not be
-settled, so that such a run is not reported as one that left the two sides in step (`isComplete`).
+- `AuthorizationCompletionPage` and `SystemBrowser` live here, not in `:data:source:remote:api`, so nothing above the
+  repositories sees the remote contracts to connect an account.
+- Cover search and song details lookup types (`CoverArtQuery`, `SongDetailsQuery`, …): only addresses are ever stored,
+  never images, and nothing of a lookup is kept.
+- `SyncState.Connected` carries the last run's outcome so a failure stays on screen until replaced. A run with
+  `SyncSummary.failed` files or `havePreferencesFailed` is not `isComplete`.

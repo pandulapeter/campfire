@@ -10,75 +10,47 @@
 
 # :presentation — ui/firstRun
 
-The demo library.
-
-### `ui/firstRun/DemoLibrary.kt`
-
-`ui/firstRun/DemoLibrary.kt` — the songs and the one setlist the app is shipped with, bundled in
-`composeResources/files/demo` and read back as `ImportedFile`s, so that they reach the library through `importFiles`
-exactly as a dropped archive does and nothing here writes a file itself. They are named as the library will name them,
-which is what lets `isPresentIn` answer whether they are already there from the library's own file names rather than
-from anything the app remembers doing — so the offer in the settings screen comes back when one of them is deleted, and
-putting them back adds only what is missing, since an import disregards a name taken by identical content. The same
-offer is the last of the empty library state's buttons (`components/ListPlaceholder.kt`, after "Create a song" and
-"Import files"), where it needs no condition of its own: a library with none of the demo library in it is exactly what
-that state is.
-
-`EmptyState` takes those as a list of `EmptyStateAction`s, the first filled and the rest outlined, laid out in a row
-where the window is wider than it is tall and stacked to one width where it is not - three labels this long are a list
-rather than a row, and a portrait window has no room for them side by side anyway.
-`CampfireViewModel.plantDemoLibraryOnFirstRun` is the one import nobody asks for, and it only happens where
-`IsFirstRunUseCase` and an empty library — a whole one (`ScreenData.isWholeLibrary`), not a folder that could not be
-read standing in empty — agree that this installation has nothing of its own; it announces nothing, and the preferences
-are saved afterwards, whether anything was planted or not, so that the next start is no longer a first one — if they
-could be read at all: a first run whose read failed saves nothing, and the launch screen is released before that save
-rather than after it. It is imported directly rather than through the import queue, and the queue takes no batch before
-that decision is over (`demoLibraryDecision`): a file opened with the app on its first start is queued before the
-library has even been read, and it goes into a library that already has the demo rather than the demo being planted
-after it.
-
-`isDemoLibraryPending` is what keeps the launch screen up over the whole decision: it starts out true rather than being
-set when the planting begins, because the scan can finish before the app has worked out whether it is planting anything,
-and an empty library would then be announced a moment before the songs arrived. Reading the bundled files is given ten
-seconds (`readDemoLibrary`): on the web they are requests to the site, and one that never answered would hold the launch
-screen, and the web's loading page, for good. Both ways of planting them remember what they wrote under the demo's own
-names (`RememberDemoLibraryFilesUseCase`, from `applyImportPlan` for a request marked `isDemoLibrary`), which is what
-lets sync take another version's untouched demo from the cloud folder instead of a copy of each; the first run's
-preferences write that follows is an `updateUserPreferences` rather than a save of the view model's copy, which could
-lag the record by a dispatch and write it back out. See the root `CLAUDE.md`.
-
 ## The demo library and the first run
 
 ### The app is shipped with two songs and one setlist
 
-**The app is shipped with two songs and one setlist**, in `presentation/src/commonMain/composeResources/files/demo`:
-public domain campfire standards, bundled as the plain ChordPro and setlist files they are and reaching the library
-through the ordinary import, so they collide, are numbered and are disregarded when the same file is already there like
-anything else. The songs are few on purpose and chosen so that between them they use the directives the song details
-screen draws, and every one carries a `Demo` tag, so that they can be filtered out of a library that has grown past
-them. They are planted once, on a run that finds no preferences document *and* an empty library — which is what a fresh
-installation looks like from the inside, and is why a library somebody has been using is never touched. That first run
-writes the preferences whether it planted anything or not, so an installation that started with an import of its own and
-was emptied later is not taken for a fresh one.
+- Public domain songs in `composeResources/files/demo`, read back as `ImportedFile`s (`DemoLibrary.kt`) and planted
+  through the ordinary `importFiles`, so nothing here writes a file and collisions behave like any import. The songs use
+  between them the directives the details screen draws, and each carries a `Demo` tag so it can be filtered out.
+- Each file is named exactly as the library would name it, so `isPresentIn` answers from the library's own file names,
+  not from anything remembered: Settings offers to add them back while any is missing (adding only what is missing),
+  and the empty library state offers it as its last button with no condition of its own.
+- **Planted once**, by `CampfireViewModel.plantDemoLibraryOnFirstRun`, only when `IsFirstRunUseCase` (no preferences
+  document) and an empty *whole* library (`ScreenData.isWholeLibrary`, not an unreadable folder) agree. It announces
+  nothing. Preferences are written afterwards whether or not anything was planted, so a library emptied later is not
+  taken for fresh — unless the preferences read failed, which saves nothing. The launch screen is released before that
+  save.
+- That preferences write is an `updateUserPreferences`, not a save of the view model's copy, which could lag the record
+  by a dispatch and write it back out.
+- Imported directly, not through the import queue; the queue takes no batch until the decision is over
+  (`demoLibraryDecision`), so a file opened with the app on first start lands in a library that already has the demo.
+- `isDemoLibraryPending` starts true (not set when planting begins) and keeps the launch screen up over the whole
+  decision: the scan can finish first, and an empty library would flash before the songs arrived.
+- Reading the bundle times out after ten seconds (`readDemoLibrary`): on the web those are requests, and one that never
+  answers would hold the launch screen for good.
+- Both ways of planting record what they wrote under the demo's names (`RememberDemoLibraryFilesUseCase`, local-only;
+  from `applyImportPlan` for an `isDemoLibrary` request), so sync takes another device's untouched demo from the cloud
+  instead of keeping a copy of each.
 
-Settings offers to add them for as long as the library is missing any of them, so a deleted one comes back by being
-asked for rather than on its own. Both ways of planting them remember what they wrote under the demo's own names
-(`RememberDemoLibraryFilesUseCase`, a local-only preference), so that a sync run meeting another version's untouched
-demo in the cloud folder takes it instead of keeping a copy of each. That first run also opens the **onboarding**
-(`ui/screens/onboarding/CLAUDE.md`), put on the back stack while the launch screen is still up, held back only by a
-dialog (`canShowOnboarding`): a file the app was opened with does not take it away, but is read behind it, and its import
-screen — or the one song it opens — follows as the onboarding leaves the back stack. That holds on any start up that
-owes the onboarding. Its preferences write marks the onboarding as owed (`UserPreferences.isOnboardingPending`), and only
-the onboarding leaving the back stack — finished, skipped, or gone back out of from its first page — clears it
-(`onBackStackChanged`), before any import screen is pushed after it, so a start up that finds it still owed after an app
-ended in the middle of the pages opens it again (onto a stack holding only the songs), and What's new is recorded rather
-than shown over it. Each file is named
-exactly as the library would name the song inside it, which is what lets one list both read the resources and answer
-whether they are already there.
+### The onboarding on a first run
+
+- The first run opens the onboarding (`ui/screens/onboarding/CLAUDE.md`), put on the back stack behind the launch
+  screen and held back only by a dialog (`canShowOnboarding`). A file the app was opened with is read behind it; its
+  import screen (or the one song it opens) follows as the onboarding leaves.
+- The first run's preferences write sets `UserPreferences.isOnboardingPending`; only the onboarding leaving the back
+  stack (finished, skipped, or backed out of from page one) clears it (`onBackStackChanged`), before any import screen
+  is pushed. A start that finds it still owed opens it again onto a stack of only Songs, and What's new is recorded
+  rather than shown over it.
 
 ### What's new
 
-**What's new** introduces each version once, after the app is on screen and startup imports and their reviews have finished.
-`UserPreferences.seenWhatsNewVersions` remembers every introduced version and the first installed version, which is
-skipped in favor of the onboarding. Empty `whats_new_message` resources suppress the dialog and still record the version;
-the prepare-release skill replaces or clears that message in both languages for every release.
+- Introduces each version once, after the app is on screen and startup imports and their reviews have finished.
+- `UserPreferences.seenWhatsNewVersions` remembers every introduced version and the first installed one, which is
+  skipped in favor of the onboarding.
+- An empty `whats_new_message` suppresses the dialog and still records the version; the prepare-release skill replaces
+  or clears it in both languages for every release.

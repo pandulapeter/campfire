@@ -9,64 +9,41 @@
 -->
 # :presentation — ui/screens/importReport
 
-The import screen.
+The import screen (`CampfireDestination.ImportReport`). Every import the user starts goes through five stages on it in
+place (`importReport`: `Loading`, `Failed`, `Review`, `Importing`, `Finished`), crossfading rather than replacing
+dialogs. What the review decides is `domain/implementation/CLAUDE.md`'s.
 
-### `ui/screens/importReport/`
+## When it shows
 
-`ui/screens/importReport/` — **the import screen** (`CampfireDestination.ImportReport`): every import the user starts
-opens it, and goes through five stages on it in place (the title, the subtitle naming the source, the content and the
-floating button crossfading) rather than dialogs replacing one another. The view model holds what it shows
-(`importReport`: `Loading`, `Failed`, `Review`, `Importing`, `Finished`) and puts it on the back stack once no
-dialog is up, no editor with unsaved text is on the stack and the onboarding is not (`showImportReport`); the reading
-runs behind any of those meanwhile. Two imports are not reviewed: the demo library (`shouldReview = false`), and a single
-song file the system handed over, which is written and opened as before — each of them puts the screen up only for a
-name it finds taken, as a one-row review. The demo library's subtitle says "Demo library" (`Review.isDemoLibrary`) rather
-than naming the bundled files it is read from. A song picked from the app's own Import files is reviewed.
+- The view model puts it on the back stack only once no dialog is up, no editor with unsaved text is on the stack, and
+  the onboarding is not (`showImportReport`); reading runs meanwhile.
+- Not reviewed: the demo library (`shouldReview = false`) and a single song file the system handed over, which is
+  written and opened directly. Each shows the screen only for a taken name, as a one-row review. A song picked from
+  the app's own Import files *is* reviewed.
 
-**Loading** shows the download (an address, `importFromAddress`, reached by nothing yet) or the reading, through
-`ImportProgressContent`, with Cancel under it while the phase only reads (`isCancellable`); Close does the same.
-**Failed** says why in one sentence (`ImportFailure`: the host unreachable, nothing at the address, larger than the
-24 MB an import reads, unreadable) with **Try again** as the floating button (`retryImport`: the same address asked
-again, or the same bytes read again, since a downloaded address becomes the file it downloaded).
+## Stages
 
-### The review
+- **Loading**: `ImportProgressContent`, Cancel only while the phase only reads (`isCancellable`); Close does the same.
+- **Failed**: one sentence (`ImportFailure`) and **Try again** (`retryImport`: a downloaded address becomes its bytes,
+  so those are read again).
+- **Review** (`ImportReviewSections.kt`, pure and tested): every entry starts ticked. Group header boxes and the taken
+  names' group Keep both / Replace choice act on the rows shown, the search's matches only while it narrows them. The
+  button reads **Import N files**, inert at zero, absent where nothing can be ticked; a Replace is confirmed first
+  (`DialogType.ConfirmImportReplace`). It steps aside while the keyboard is up. Choices live in the view model's report
+  (survive activity recreation); each row reads its tick through a derived state, so a tap recomposes that row and the
+  summary only.
+- **Importing**: progress, nothing to press.
+- **Finished**: a clean reviewed import closes into a snackbar with **Details** (`openImportReport`); one that left
+  anything out (the user's unticks included), stopped, or failed stays here, failures first
+  (`ImportReportSections.kt`, pure and tested). A song opens in a pager over its group (`openReportedSong`).
 
-**Review** lists everything the files hold (`ImportReviewSections.kt`, pure and tested): a summary card of what Import
-would do with the ticks as they stand (`importReviewSummary`), the search field, then **Names already taken**, **Songs**,
-**Setlists**, **Already in the library** (no boxes; a repeat inside the batch is not listed, its entry saying how often it
-appears), and the three groups of what cannot be imported. Every entry is ticked to start with; a group with boxes has a
-tri-state box in its header acting on the rows it shows, the search's matches only while it narrows them. A taken name
-has its own Keep both / Replace choice, a song's with **Show the one you have**, and the group's header the choice for
-all of them, which reads what the rows it shows come to (Mixed where they differ) and sets each of them, the search's
-matches only while it narrows them, as its box does. The floating button reads **Import N files**, dimmed and inert at
-zero and absent where nothing can be ticked (titled "Nothing to import"); where the choices replace anything,
-`DialogType.ConfirmImportReplace` asks first (`confirmImport`). It steps aside while the keyboard is up, which is when
-the rows it would cover are being searched. The choices live in the view model's report, so a recreated activity keeps
-every tick, and each row reads its own tick through a derived state, so a tap recomposes that row and the summary only.
+## Search and leaving
 
-### The result
-
-**Importing** is the progress again, with nothing to press. A reviewed import that went clean closes the screen into
-the snackbar with **Details** (`openImportReport`, which reopens `Finished`); one that left anything out, the user's own
-unticked entries included, stopped, or failed stays on **Finished**, which lists what went wrong first (failed, not
-processed, left out by your choice, unsupported, too large, unreadable) and what arrived after it, each group under a
-heading with its count (`ImportReportSections.kt`, pure and tested): songs and setlists named as the library names them,
-a song opening in a pager over its group (`openReportedSong`) that Back returns from, a converted one marked and openable
-in the editor outside performance mode.
-
-### Search and leaving
-
-The search is a field that is always there, a sticky item right above the files it narrows that pins at the top of the
-list once they scroll under it — the list's own fade at the bar giving way as the field arrives, and the field drawing
-the fade the rows pass under from then on — so the bar holds nothing but Close and the title. It matches a row's file
-name, title and artist folded the way the library's searches fold (`ymca` finds `Y.M.C.A.`). It never takes the focus by
-itself; Ctrl / Cmd + F gives it the caret (`openCurrentSearch`, through `importReportSearch`, which stays open and is
-emptied as the screen is left), and Escape and Back go straight to leaving the screen. Leaving it in `Loading` cancels,
-in `Failed` or `Review` drops the import, which needs no confirmation since nothing has been written; leaving it while
-the import is written lets that finish, reported by a snackbar with Details; leaving a result lets the next batch of
-the queue start, which waits for the report, a result reopened from **Details** included, as it waits for an import
-(`awaitImportSettled`). The single song a system "open with" handed over is opened in place of the screen once its
-review is answered. The screen is never restored, since its plan is far too large for the saved state; a process ended
-behind it says so with a snackbar where the import had not been written yet (`Message.ImportInterrupted`, from a flag
-saved beside the back stack, `isUnfinished`), and says nothing behind a result. The web's reload at `/import` says
-nothing either way, since its address cannot tell a review from a result.
+- The search field is a sticky item above the files it narrows, so the bar holds only Close and the title. It never
+  takes focus by itself; Ctrl / Cmd + F does (`importReportSearch`). Escape and Back leave the screen directly.
+- Leaving in `Loading` cancels; in `Failed` or `Review` drops the import without confirmation (nothing written); while
+  `Importing` lets it finish, reported by a snackbar; leaving a result lets the queue's next batch start
+  (`awaitImportSettled` waits for the report too, including one reopened from Details).
+- **Never restored**: the plan is too large for saved state. A process ended behind an unwritten import says so
+  (`Message.ImportInterrupted`, from `isUnfinished` saved beside the back stack); behind a result it says nothing. The
+  web's reload at `/import` says nothing either way.

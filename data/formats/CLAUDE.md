@@ -9,86 +9,61 @@
 -->
 # :data:formats
 
-The pure, dependency-free codecs the import and the export read and write documents with: the PDF and Word text
-extractors and the zip reader and writer, in common Kotlin on all five targets, with no `FileStorage`, no Koin and no
-network. Depends on `:data:model` (`ExtractedDocument`, `ImportLimits`) and `:chordpro` (`ChordSheetConverter.isChordLine`,
-for the Word reader); consumed only by `:data:source:local:implementation`'s `DocumentLocalSourceImpl` and
-`ArchiveLocalSourceImpl`. Public is only what those two use — `PdfTextExtractor`, `DocxTextExtractor`, `ZipReader`,
-`ZipWriter`, `ZipEntry`, `ZipContent`, `UnreadZipEntry`, `DosTimestamp`; everything else is `internal`, the tests being
-in the same module. `ZipReader`, an object with no constructor, is the one place here that prints, the name of an entry
-it could not read.
-
-- **`document/`** — bounded, text-only PDF and Word readers in common Kotlin, with no platform parser or network.
-  The output is `ExtractedDocument`
-  with pages, lines and positioned/style-bearing spans, never the original bytes in storage. `DocxTextExtractor`
-  opens only `word/document.xml` and `word/styles.xml` through `ZipReader`; the bounded XML parser refuses DTDs,
-  supports entities and CDATA, and the walker reads paragraphs, tabs, styles, page breaks and chord-grid/layout
-  tables while leaving deleted text and external parts out. Proportional positions are estimates. The PDF reader
-  supports classic/stream xrefs, object streams, incremental saves and recovery scans, Flate/ASCIIHex/ASCII85/LZW
-  filters and predictors, inherited page resources, horizontal text operators and form XObjects. Fonts use
-  ToUnicode maps or WinAnsi/MacRoman/Standard encodings and Adobe glyph names; images and font programs are never
-  decoded. `PdfTextExtractor` walks the page tree, `PdfContentInterpreter` runs a page's content against the
-  document's one `PdfContentBudget`, `PdfLineLayout` sets the glyphs into lines and columns and `PdfRunningLines` finds
-  the repeated headers, footers and page numbers. Positioned glyphs form lines and columns, with paragraph gaps and repeated edge furniture removed. A gutter
-  is a whitespace band 0.8 em wide that at most a fifth of the lines cross (a title over the columns may), found at
-  every half point rather than sampled, since Campfire's own export leaves only 18 points at its 20-point text; each
-  side is searched again, which is what reads three and four columns, and a band nothing crosses splits off a short
-  last column whose lines start at one edge.
-  Object, recursion, stream, page, operator, glyph, output and XML event (600,000, some 21,000 Word paragraphs, which
-  also bounds the element tree at half that) limits bound untrusted input, and one work budget of 96 MiB of
-  interpreted content and of stream input per document, so re-reading a form or a shared contents stream is paid for, and
-  one of 2^20 font table entries (widths and ToUnicode mappings, which stay in memory with the cached fonts), so thousands
-  of font dictionaries naming one shared `/W` array or CMap are paid for too; a CID font whose `/W` ranges expand to more
-  than 131,072 widths (twice the codes it can have, so only overlapping ranges get there) is a malformed font. A
-  budget running out is a `PdfLimitException`, told apart from a malformed object. A malformed page, font or form costs only
-  itself, and the document is unreadable only when more than half of its glyphs or pages are; budgets, encryption, a
-  broken page tree and more than 2,000 pages still fail it whole, the last because a songbook silently losing its tail
-  is worse than one reported as unreadable. A `/Rotate` that is no multiple of 90 is read as the nearest one.
-  An `ActualText` over glyphs on one baseline replaces them (an empty one removes them), which is how Campfire's export
-  carries a right-to-left run in its logical order; one over several baselines (a hyphenated word) is left alone, and
-  it is charged to the text budget. A PDF from elsewhere with right-to-left text in visual order and no `ActualText` is
-  still read in visual order. Page, operator and work yields keep
-  the web responsive. Stream ends are found once per file (`PdfStreamEnds`, every `endstream` offset in one pass) rather
-  than by searching the rest of the file for each object, and at most 1 KiB of whitespace is walked past a declared
-  `/Length`, so a recovery scan over thousands of streams with no usable end stays linear. The spaces that bridge a gap
-  between glyphs (as many as the gap holds in a monospace font) are charged to the same text budget as the glyphs,
-  so a tiny monospace font cannot pad a page into hundreds of megabytes. `commonTest` exercises syntax, filters, encodings, geometry and rejection paths,
-  through `ReadableDocuments`, a mirror of what the local source does around the extractors; the end-to-end goldens
-  stay with that source in `:data:source:local:implementation`.
-- **`zip/`** — a dependency-free zip implementation: `ZipReader` (STORED + DEFLATE; a ZIP64 archive rejected, a ZIP64,
-  encrypted or otherwise compressed entry left out),
-  `ZipWriter` (STORED only — the module has no DEFLATE encoder, and a stored archive's size is what an import unpacks,
-  which is what lets the export warn by the archive's size that it is past `ImportLimits.MAX_IMPORT_SIZE`; song text
-  would compress about 2×), with every entry dated by its supplied DOS timestamp and more than 65,534 entries refused rather than written as ZIP64, `Inflater` (raw DEFLATE, RFC 1951,
-  following `puff.c`) and `Crc32`. It exists because no multiplatform zip library covers wasmJs. Sizes an archive
-  declares are trusted only as far as a first guess: an entry is asked about by name before it is inflated — hidden
-  files and anything an import would not look inside are never read, a song over `ImportLimits.MAX_TEXT_FILE_SIZE` is
-  not either, and the caller says how much the whole import may still unpack to (`ImportLimits.MAX_IMPORT_SIZE`,
-  24 MiB, nested archives included) — charged before an entry is read, so a damaged entry costs what it declared, and
-  an inflating entry is stopped at the size it declared rather than at the 24 MiB any entry may reach; the entries'
-  compressed sizes may not add up to more than the archive holds, which is what a central directory pointing many
-  entries at the same bytes (a zip bomb) runs into. An entry that cannot be read is left out and reported by name; only an archive
-  that cannot be walked at all is a `ZipException`. The buffer still starts at no more than 1 MiB whatever the central
-  directory claims. Entry names are UTF-8 where they say so or are valid UTF-8 (macOS does not say so), and code page
-  437 otherwise, as the format specifies. A backslash separates paths as well as a slash, since Windows PowerShell 5.1
-  writes one.
-
-Tested with `commonTest` (syntax, filters, encodings, geometry and rejections of the readers, zip round trips, reader
-rejections, the inflater's limit) and `desktopTest` (the inflater and the zip reader against archives the JVM produced,
-and the writer's entry dates as the JVM reads them back), run with `./gradlew :data:formats:desktopTest`.
+Pure, dependency-free PDF and Word text extractors and zip reader/writer in common Kotlin on every target: no
+`FileStorage`, no Koin, no network. Used only by `:data:source:local:implementation`'s `DocumentLocalSourceImpl` and
+`ArchiveLocalSourceImpl`; public is only what those use, everything else `internal`. `ZipReader` is the one place that
+prints (the name of an entry it could not read).
 
 ## Documents as the import sees them
 
-- **Documents are converted locally**, never rendered, uploaded or kept: `.pdf` and `.docx` pass through
-  `DocumentRepository` to pure-Kotlin extractors, then `ChordSheetConverter` to ordinary ChordPro. Plain `.txt`
-  and text shared on Android use the same converter; the ChordPro extension family never does. Recognized ChordPro
-  text keeps its content, with chords written in the standard notation (see below) and raw formatting standardized
-  by `ChordProPrettifier`, also available from the editor overflow menu. All imported songs use that formatter after
-  conversion and splitting. Import comparisons format both sides so older library files still match. Documents with no readable text (scans, encrypted PDFs and legacy `.doc`) are
-  reported separately from unsupported files. The input limit is 16 MiB per document, 8 MiB for the text produced,
-  within the selection's existing 24 MiB budget. Positioned chords, English/Hungarian sections and styled headers
-  are best attempts, and clearly titled page starts can split a songbook. Converted songs are named by the header
-  the converter wrote, with the ordinary filename fallback when it wrote none; duplicate and conflict rules are
-  unchanged. The result counts only converted songs actually written and offers **Open** for a single converted
-  song, without navigating automatically. No new document Open with association is registered; Android adds only
-  PDF and Word share MIME types.
+- **Documents are converted locally, never rendered, uploaded, or kept**: `.pdf` and `.docx` are extracted to an
+  `ExtractedDocument` (pages, lines, positioned and styled spans), then `ChordSheetConverter` turns them into ChordPro
+  (`:chordpro`). Plain `.txt` uses the same converter; the ChordPro extension family never does. Every imported song is
+  formatted by `ChordProPrettifier` and written in the standard chord notation.
+- Documents with no readable text (scans, encrypted PDFs, legacy `.doc`) are reported separately from unsupported files.
+  No "Open with" association is registered for documents; Android adds only PDF and Word share MIME types.
+
+## `document/`
+
+- Images and font programs are never decoded. Proportional positions in Word are estimates. `DocxTextExtractor` opens
+  only `word/document.xml` and `word/styles.xml`; the XML parser refuses DTDs. Deleted text and external parts are left
+  out.
+- **Every limit exists to bound untrusted input; keep them all.** Object, recursion, stream, page, operator, glyph,
+  output, and XML event limits, plus one per-document work budget (interpreted content and stream input, so re-reading a
+  shared form or contents stream is paid for) and one font-table-entry budget (shared `/W` arrays and CMaps are paid for
+  each time). Bridging spaces between glyphs are charged to the text budget, so a tiny monospace font cannot pad a page
+  to hundreds of megabytes. A budget running out is `PdfLimitException`, distinct from a malformed object.
+- Damage is local: a malformed page, font, or form costs only itself, and the document fails only when more than half
+  its glyphs or pages do. Budgets, encryption, a broken page tree, and over 2,000 pages fail it whole (a songbook
+  silently losing its tail is worse than one reported unreadable).
+- Must stay linear: `PdfStreamEnds` finds every `endstream` once per file, and at most 1 KiB of whitespace is walked
+  past a declared `/Length`.
+- Columns: a gutter is a 0.8 em whitespace band crossed by at most a fifth of the lines, **found at every half point,
+  not sampled**, since Campfire's own export leaves only 18 points between 20-point text. Each side is searched again
+  (three and four columns).
+- An `ActualText` over glyphs on one baseline replaces them; this is how Campfire's export carries right-to-left runs in
+  logical order. One spanning several baselines (a hyphenated word) is ignored.
+- Page, operator, and work yields keep the web build responsive.
+
+## `zip/`
+
+Exists because no multiplatform zip library covers wasmJs. `ZipReader` reads STORED and DEFLATE (ZIP64 archives
+rejected; ZIP64, encrypted, or otherwise compressed entries left out); `Inflater` follows `puff.c`.
+
+- **`ZipWriter` writes STORED only, on purpose**: a stored archive's size is what an import unpacks, which lets the
+  export warn when it is past `ImportLimits.MAX_IMPORT_SIZE`. More than 65,534 entries are refused rather than written
+  as ZIP64.
+- **Declared sizes are only a first guess.** Entries are asked about by name before inflating (hidden or uninteresting
+  files, and oversized songs, are never read); the caller's remaining import budget is charged before an entry is read,
+  and inflation stops at the declared size. Compressed sizes may not add up to more than the archive holds, which stops
+  zip bombs whose central directory points many entries at the same bytes. The buffer starts at no more than 1 MiB
+  whatever the directory claims.
+- An unreadable entry is left out and reported by name; only an unwalkable archive is a `ZipException`.
+- Entry names are UTF-8 where flagged or valid (macOS does not flag), else code page 437. A backslash is a path
+  separator too (Windows PowerShell 5.1 writes one).
+
+## Tests
+
+`./gradlew :data:formats:desktopTest`. `commonTest` goes through `ReadableDocuments`, a mirror of what the local source
+does around the extractors; `desktopTest` checks against archives the JVM produced. End-to-end document goldens live in
+`:data:source:local:implementation`.

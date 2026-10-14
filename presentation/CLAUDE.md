@@ -10,81 +10,35 @@
 
 # :presentation
 
-Document imports (`.pdf`, `.docx`, plain `.txt` and Android shared text) become ordinary songs before the UI sees them.
-Import summaries report unreadable documents separately and append the number of converted songs actually written, in
-both English and Hungarian. A single converted song offers a snackbar **Open** action, handled by
-`CampfireViewModel.openImportedSong`; converted imports never navigate automatically. The existing behavior for an
-unconverted ChordPro file is unchanged. Every import the user starts is reviewed on the import screen before anything
-is written (see `ui/screens/importReport/`), whose review carries the same unreadable-document note, and
-settings/empty-library import labels name documents too.
+The entire UI plus the thin per-platform shells the `:app:*` modules call into. Depends on `:domain:api` and
+`:chordpro`, never on repositories or local sources. `CampfireViewModel` is a `@KoinViewModel`, obtained with
+`koinViewModel()`.
 
-The entire UI: all Compose components, plus the thin per-platform shells the `:app:*` modules call into. A single Kotlin
-Multiplatform module (`campfire-compose-library`) — `commonMain` must stay free of JVM-only APIs (`java.*`,
-`KoinJavaComponent`); use `kotlin.uuid.Uuid`, `androidx.compose.ui.text.intl.Locale` and `KoinPlatform.getKoin()`
-instead (`desktopMain` may use `java.*`). Depends on `:domain:api` and `:chordpro` (the song model it renders) — never
-on repositories or local sources. Koin wiring: `Module.kt` holds the `@Module @ComponentScan object PresentationModule`,
-and `CampfireViewModel` is a `@KoinViewModel` — the compiler plugin writes the constructor call, so its thirty-odd
-parameters are no concern of the wiring — obtained in Compose with `koinViewModel()`.
+- **Shells** live in the `ui` package of each platform source set and only do what common Compose cannot; anything
+  non-trivial belongs in `commonMain` (with `expect`/`actual`, see `ui/platform/`). Each provides `LocalFilePicker` and a
+  `Flow` of files the OS handed over ("open with", share, drop). Notes: `src/androidMain/CLAUDE.md`,
+  `src/desktopMain/CLAUDE.md`, `src/iosMain/CLAUDE.md`, `src/wasmJsMain/CLAUDE.md`.
+- **Everything else** is `commonMain`, with notes in the `CLAUDE.md` of each package under
+  `src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/`; `ui/CLAUDE.md` holds the view model, the chrome,
+  and the cross-screen product rules.
 
-The platform shells all live in the `ui` package next to `CampfireApp`, one per platform source set. They exist only to
-do what Compose cannot do in common code; anything non-trivial belongs in `commonMain` (platform-specific behavior such
-as scrollbars is done there with `expect`/`actual`, see `ui/platform/Platform.kt`). Each of them provides
-`LocalFilePicker` and passes on a `Flow` of files the operating system handed over ("open with", a share, a drop).
+## Document imports
 
-Each shell's notes are in its source set: `src/androidMain/CLAUDE.md`, `src/desktopMain/CLAUDE.md`,
-`src/iosMain/CLAUDE.md` and `src/wasmJsMain/CLAUDE.md` (the web build's addresses and history included).
+- `.pdf`, `.docx`, `.txt`, and Android shared text become ordinary songs before the UI sees them. Every user-started
+  import is reviewed on the import screen first (`ui/screens/importReport/`).
+- Summaries report unreadable documents separately and append the number of converted songs actually written (English
+  and Hungarian). A single converted song gets a snackbar **Open** (`CampfireViewModel.openImportedSong`); converted
+  imports never navigate on their own.
 
-Everything else is `commonMain`:
+## Strings
 
-The notes on it are split by directory, each in the `CLAUDE.md` of the package it is about, under
-`src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/`:
-
-- `ui/` — the view model facade and its holders, `CampfireApp` and the navigation chrome, performance mode, and the
-  product rules that span modules: what a song carries in its file, how it is played, the Features switches.
-- `ui/navigation/` — `CampfireDestination` and the back stack.
-- `ui/firstRun/` — the demo library.
-- `ui/screens/` — what every screen shares (insets, padding, the list screens' common behaviour).
-- `ui/screens/songs/`, `ui/screens/setlists/` — the two list screens (reorder mode, archived setlists, row cost).
-- `ui/screens/songDetails/` — the song page: `SongLyrics`, the steppers, the app bar, keyboard reading, its metronome
-  panel.
-- `ui/screens/songEditor/` — the ChordPro editor.
-- `ui/screens/settings/` — the five settings tabs and the sync rows.
-- `ui/screens/importReport/` — the import screen.
-- `ui/screens/metronome/` — the Metronome tab.
-- `ui/screens/tuner/` — the Tuner tab; `ui/tuner/` — what it and the song details screen's tuner sheet share.
-- `ui/screens/chords/` — the Chords tab.
-- `ui/screens/export/` — the export screen; `ui/print/` — the PDF pipeline behind it.
-- `ui/components/` — the shared components (list items, tags, covers, the fast scroller, the app bar) and scrolling
-  performance.
-- `ui/dialogs/` — `CampfireDialogs`, the cover search, the import's progress.
-- `ui/theme/` — the theme, the typography and the fonts.
-- `ui/platform/` — the `expect` declarations and the interfaces the shells provide.
-- `ui/update/` — in-app updates.
-- `ui/chords/` — chord diagrams.
-- `ui/metronome/` — the metronome's helpers and controls; `ui/playing/` — where a tempo and a capo live.
-
-What is left here is about the module as a whole:
-
-### `localization/ApplyLanguagePreference.kt`
-
-`localization/ApplyLanguagePreference.kt` — `ApplyLanguagePreference` maps the user preference to the generated
-`AppLocale` and sets `currentLanguage`, which every `stringResource` call observes.
-
-### `composeResources/values[-hu]/strings.xml`
-
-`composeResources/values[-hu]/strings.xml` — all UI strings. The `com.hyperether.localization` Gradle plugin turns them
-into Kotlin string tables (`build/generated/compose/resourceGenerator/kotlin/commonCustomResClass`, package
-`com.pandulapeter.campfire.presentation.localization`): `StringsDefault`, `StringsHu`, `AppLocale`, `currentLanguage`,
-`LocalizedStrings` and the language-aware `stringResource` overloads. Adding a new `values-xx` folder needs a clean
-build so the plugin regenerates `AppLocale`. It also needs the language added to `CFBundleLocalizations` in the iOS
-`Info.plist`, which is how iOS learns that the app speaks it, and an `InfoPlist.strings` for the microphone prompt (see
-`app/ios`).
-
-The plugin's `generateTranslateFile` task only declares the resources folder *path* as an input, so `build.gradle.kts`
-registers the `strings.xml` files as inputs too; without that, new strings render as "???" until a clean build. A
-sentence that counts something and has to read right at one as well as at several is a `<plurals>` with `one` and
-`other` items rather than two keys, read with `pluralStringResource(Res.plurals.x, count, count)` — the count is passed
-twice because it picks the item and then fills the `%1$d` in it. `textResource` and its plural twin `pluralTextResource`
-are the other readers: the same templates with the user's own text put into them, filled in outside the plugin's
-formatter because that one reads what it has put in as a template again; a plural that carries user text (a file name)
-is read with `pluralTextResource`, passing the count as text.
+- `localization/ApplyLanguagePreference.kt` maps the preference to the generated `AppLocale` and sets
+  `currentLanguage`, which every `stringResource` observes.
+- The `com.hyperether.localization` plugin generates the string tables into
+  `build/generated/compose/resourceGenerator/kotlin/commonCustomResClass` (package `…presentation.localization`).
+- Its `generateTranslateFile` task declares only the resources folder *path* as input, so `build.gradle.kts` registers
+  the `strings.xml` files too; without that, new strings render as "???" until a clean build.
+- A new `values-xx` folder needs a clean build (to regenerate `AppLocale`), the language in the iOS `Info.plist`'s
+  `CFBundleLocalizations`, and an `InfoPlist.strings` for the microphone prompt (see `app/ios`).
+- `pluralStringResource(Res.plurals.x, count, count)`: the count is passed twice, once to pick the item and once to
+  fill `%1$d`. `pluralTextResource` (for plurals carrying user text) takes the count as text.

@@ -9,37 +9,21 @@
 -->
 # :tuner:api
 
-The contract of the tuner, and nothing else: depends on nothing but coroutines (for `StateFlow`), like `:metronome:api`,
-so that no data or domain type leaks into it and the engine reads no settings of its own. It builds in explicit API mode
-(`explicitApi()`).
+The contract of the tuner, and nothing else: depends on nothing but coroutines, like `:metronome:api`, so no data or
+domain type leaks in and the engine reads no settings of its own. Explicit API mode.
 
-- `Tuner` — the one stateful interface: `state` (`TunerState`: `listening` and the `tone` sounding), `listen` (opens the
-  microphone and reads against a `TunerConfig`; listening already is `update`), `update`, `stopListening`, `playTone`
-  (a MIDI note at a reference pitch, until `stopTone`, replacing one that sounds) and `setStartable` (the web's gesture
-  rule, as on `Metronome`). Every call returns at once and never throws. **It never asks for a permission**: `listen`
-  opens the input only where the platform already allows it and ends in `Stopped(PERMISSION_DENIED)` where it does not,
-  except on the desktop and the web, where opening the input is the only question there is. A reading is never
-  published while a tone sounds, or for a moment after it stops, since the speaker is what the microphone would hear.
-- `model/` — `TunerConfig` (the reference pitch, an `InstrumentTuning`, null being chromatic, and how it is strung,
-  `StringCourses`: single strings, the mandolin's unison pairs, or a twelve-string guitar's courses; `partners` is the
-  second string of each course, and `strings`, the notes it reads against, holds them too, since a twelve-string's octave
-  string plucked alone would otherwise be read as the wrong string far out of tune), `TunerListening`
-  (`Stopped(reason?)`, `Starting`, `Hearing(reading?, issue?)`), `TunerReading` (the target note as a MIDI number, the
-  cents off it — beyond ±50 where a preset's nearest string is further than half a semitone — the frequency heard and
-  `isInTune`), `TunerStopReason`, `TunerInputIssue` (`SILENT`: digital silence, or a sample or two of dither, for two seconds,
-  which is how the desktop operating systems answer an app that may not record and what Windows' audio enhancements
-  leave of a held note, but also how a quiet audio interface can idle; `WAITING_FOR_GESTURE`), `NoteOffset`, and `InstrumentTuning` —
-  the presets (six-string guitar in standard, drop D, half and full step down, drop C#, drop C, drop B, double drop D,
-  open G, D, E, A, and C, and DADGAD; seven-string guitar in standard, drop A, and half and full step down; eight-string
-  guitar in standard, drop E, and half and full step down; four-string bass in standard, drop D, half and full step
-  down, and drop C; five-string bass in standard, drop A, high C, and half and full step down; ukulele in standard,
-  low G, D tuning, and baritone; banjo in open G, double C, C, open D, and G modal; violin in standard, half step down,
-  and the fiddle's AEAE, ADAE, and GDGD cross tunings; and mandolin in standard, half step down, AEAE, and GDGD),
-  each string a MIDI note in the order the tuning is written (`gCEA`), with the stable `id` a stored setting names one
-  by (`chromatic` for none). A twelve-string guitar has no presets of its own: it is strung in the six-string's, and
-  `StringCourses.TWELVE_STRING.partnersOf` gives the other string of each course (an octave up on the four lowest, in
-  unison on the two highest). How they are grouped on screen is `:presentation`'s.
-- `Pitch` — equal temperament from A4: `frequencyOf`, `centsBetween`, `noteOf` (the nearest semitone),
-  `nearestString` and `targetOf` (against a list of string notes, `TunerConfig.strings`), and `REFERENCE_PITCH_RANGE` (415–466 Hz).
-
-Tests (`desktopTest`): `PitchTest`, `InstrumentTuningTest`.
+- `Tuner`: every call returns at once and never throws. **It never asks for a permission**: `listen` opens the input
+  only where the platform already allows it and otherwise ends in `Stopped(PERMISSION_DENIED)`, except on the desktop
+  and the web, where opening the input is the only question there is. `setStartable` is the web's gesture rule, as on
+  `Metronome`.
+- **No reading is published while a tone sounds, or briefly after**, since the microphone would hear the speaker.
+- `StringCourses`: `strings` includes each course's partner string, since a twelve-string's octave string plucked alone
+  would otherwise read as the wrong string far out of tune. A twelve-string guitar has no presets of its own; it uses
+  the six-string's, with `TWELVE_STRING.partnersOf` adding the other string of each course.
+- `TunerReading.cents` may exceed ±50 when a preset's nearest string is further than half a semitone.
+- `TunerInputIssue.SILENT` (digital silence for two seconds) is how desktop OSes answer an app that may not record, but
+  also what Windows' audio enhancements leave of a held note and how a quiet interface idles, so it is ambiguous.
+- `InstrumentTuning` presets list strings as MIDI notes in written order (`gCEA`). **Their `id`s are stored settings,
+  and `:chordpro`'s `ChordTuning` and `:data:model`'s `Instrument` reuse them** (`chromatic` for none). Screen grouping
+  is `:presentation`'s.
+- Tests: `desktopTest` (`PitchTest`, `InstrumentTuningTest`).

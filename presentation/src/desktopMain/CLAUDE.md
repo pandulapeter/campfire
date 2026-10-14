@@ -12,39 +12,29 @@
 
 The desktop shell, called by `:app:desktop`.
 
-### `desktopMain/ui/CampfireDesktopApp.kt`
+## `ui/CampfireDesktopApp.kt`
 
-`desktopMain/ui/CampfireDesktopApp.kt` — `CampfireDesktopApp()` hosts `CampfireApp` inside a `dragAndDropTarget` that
-accepts dropped files (a folder standing for the files directly inside it); a drop whose file list cannot be read is
-refused rather than thrown, since an exception out of the target skips the end of the drag session and the window would
-refuse every drag after it; links open through `java.awt.Desktop`, or through the system's own command (`open`,
-`rundll32`, `xdg-open`) where AWT has no desktop or its `browse` fails — and on macOS and Windows for anything but a web
-page (the microphone's and the sound settings pages), since `browse` there hands every address to the default browser,
-which shows an error or an empty page of its own for a scheme it cannot open — and a link nothing would open is answered with a
-snackbar naming the address (`Message.LinkNotOpened`). That opener (`openUrl`, in
-`desktopMain/ui/platform/SystemBrowser.desktop.kt`) is also a Koin definition, `DesktopSystemBrowser`, the
-`SystemBrowser` the sync authorizer opens the consent page with, so the consent page and the links in Settings take
-exactly the same path.
+- Dropped files are imported (a folder stands for the files directly inside it). A drop whose file list can't be read
+  is refused, never thrown: an exception out of the target skips the end of the drag session and the window refuses
+  every later drag.
+- Links (`openUrl` in `ui/platform/SystemBrowser.desktop.kt`) go through `java.awt.Desktop`, falling back to `open`,
+  `rundll32`, or `xdg-open` where AWT has no desktop or `browse` fails. On macOS and Windows anything but a web page
+  (the microphone and sound settings pages) always uses the system command, since `browse` hands every address to the
+  default browser. A link nothing opens shows `Message.LinkNotOpened`. The same opener is the Koin
+  `DesktopSystemBrowser` the sync authorizer opens the consent page with.
 
-`CampfireViewModel.handleKeyEvent(...)` is wired into the window's `onKeyEvent` by `:app:desktop`: desktop has no back
-gesture, so Escape dismisses whatever is open on top of the app, closes the search of the screen that is on top
-(`CampfireViewModel.currentSearch`), pops the back stack, or — with nothing left to go back from — asks whether to close
-the app (`DialogType.ConfirmExit`, `CampfireViewModel.confirmExit`; Close goes on through `requestExit`), since an
-Escape too many is a habit of the hand rather than a decision; the window's close button and the system's quit, which
-are, close without asking. Which keys are shortcuts at all is decided for both the desktop and the web by one common,
-tested table (`ui/AppShortcuts.kt`: `appShortcutOf`, then `perform`), each shell only naming its keys. The same handler
-answers Ctrl / Cmd + F with `CampfireViewModel.openCurrentSearch`, which opens the search of the list screen on top, or
-gives an open one the caret back with its text selected (`SearchState.openOrFocus`), and leaves the key alone under a
-dialog, a sheet or a menu: nothing on a list screen is focused while its search is closed, so a shortcut inside the
-composition would never hear it.
+## Keys (`CampfireViewModel.handleKeyEvent`, wired by `:app:desktop`)
 
-Ctrl / Cmd + plus (or equals), minus and zero, the shortcuts a browser zooms a page with, step the text size of the song
-details screen and reset it (`CampfireViewModel.zoomSongText`), under the same conditions (`isSongTextZoomable`). Only
-the first press of a held Escape counts: the window's preview key handler (`handlePreviewKeyEvent`) swallows the repeats
-AWT sends while the key stays down, which would otherwise have closed every screen and then the app. The search comes
-before the back stack, and not only because closing it is the smaller step: selecting a tab rebuilds the stack around
-it, so the setlists screen is reached with the songs screen still under it and every Escape there would otherwise leave
-the tab with the search still open behind it. What is open on top is `visibleDialog` plus `overlayState.isAnyMenuOpen`
-(`components/OverlayState.kt`, the view model's own, which `CampfireApp` provides to every `OverflowMenu`, and to a sheet a screen hosts itself such as the editor's search, as
-`LocalOverlayState`): a window key handler runs before Compose turns Escape into a back event, so an Escape consumed
-here would pop the back stack behind a dialog, a sheet or a menu instead of closing it.
+- Which keys are shortcuts is one common, tested table for desktop and web (`ui/AppShortcuts.kt`: `appShortcutOf`, then
+  `perform`); each shell only names its keys.
+- **Escape**, in order: dismiss what is open on top, close the top screen's search, pop the back stack, or ask
+  `DialogType.ConfirmExit` (an extra Escape is a habit, not a decision; the close button and system quit don't ask).
+  - "Open on top" is `visibleDialog` plus `overlayState.isAnyMenuOpen` (`LocalOverlayState`, also given to sheets a
+    screen hosts itself, like the editor's search). A window key handler runs before Compose turns Escape into a back
+    event, so missing one here pops the stack behind the modal.
+  - Search before the back stack: selecting a tab rebuilds the stack with the songs under it, so Escape would otherwise
+    leave the tab with its search open.
+  - `handlePreviewKeyEvent` swallows held-Escape repeats, which would close every screen and then the app.
+- **Ctrl/Cmd + F** → `openCurrentSearch` (opens it, or refocuses an open one with its text selected), not under a
+  dialog, sheet, or menu. It must be a window handler: nothing on a list screen is focused while its search is closed.
+- **Ctrl/Cmd + plus (or equals), minus, zero** → `zoomSongText` on the song details screen (`isSongTextZoomable`).

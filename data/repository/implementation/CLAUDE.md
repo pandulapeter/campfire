@@ -9,166 +9,99 @@
 -->
 # :data:repository:implementation
 
-Implements `:data:repository:api` — all of it but `SyncRepository` and `DemoLibraryRepository`, which
-`:data:sync:implementation` implements — on top of `:data:source:local:api` and, for the covers and the song details
-lookup alone, `:data:source:remote:api`. Koin wiring: `Module.kt` holds the `@Module @ComponentScan object DataRepositoryModule`, and every
+Implements `:data:repository:api` except `SyncRepository` and `DemoLibraryRepository` (`:data:sync:implementation`),
+over `:data:source:local:api` and, for covers and the song details lookup only, `:data:source:remote:api`. Every
 repository is a `@Single`.
 
-Nothing here prints: what fails without an exception is written to the injected `Logger` (`:data:model`), whose one
-`@Single` is `DataRepositoryModule.logger()` for every module of the app, sync's included, and `base/recovering` is an
-extension of it;
-the tests hand a `RecordingLogger` to check that a failure was noticed and what it said.
+Nothing prints: failures without an exception go to the injected `Logger`, whose one `@Single`
+(`DataRepositoryModule.logger()`) serves every module, sync included. Tests use `RecordingLogger`.
 
-`DocumentRepositoryImpl` is stateless, a pass-through to `DocumentLocalSource`, like `ArchiveRepositoryImpl`:
-extraction is a one-shot import operation, not another cached library. Conversion belongs to the domain/chordpro
-layers, and no original document enters the repository's stored state.
+## `base/BaseLocalDataRepository` — read rules
 
-`base/BaseLocalDataRepository<T>` holds all the caching logic — new repositories should extend it rather than
-reimplement state handling. It owns a `MutableStateFlow<DataState<T>>` that starts as `Loading(null)` (nothing has been
-read yet is not an error), reads the local source on the first `loadDataIfNeeded()`, and guards that read with a
-`Mutex` so that the parallel loads in `LoadScreenDataUseCase` wait for each other instead of racing. A re-read keeps the
-data already on screen in the `Loading` state, so a refresh never blanks the list, and a failed read becomes
-`Failure(previous data)` rather than an empty list. A failure stays one through `updateData`, and so does a `Loading`
-— a change made while the first scan is going, or before it, is not the finished library, and an `Idle` is what the
-cover cache's prune and the launch's deep link wait for. The next
-`loadDataIfNeeded()` reads again even though a change since has put data in the cache — otherwise a song created after
-a failed scan would stand in for the whole library. A write that lands through `updateData` while a read is running
-makes that read go again once it has published, since its directory listing may predate the file — once: the changes
-that land during that second read are applied onto its result instead, since a sync run refreshes the files it wrote
-about once a second and a scan slower than that would otherwise never finish. Every `updateData` transform replaces or
-drops the entries of the files it names with what is on disk, so applying one again is harmless.
+New cached repositories extend it rather than reimplement state handling. `commonTest` covers these rules, none of
+which is visible once a load has finished:
 
-A load that arrives in pieces can publish them with `publishPartialData`, which is what the song scan does with the
-batches it has parsed — a library of thousands then fills the list as it is read instead of showing nothing
-until the last file. Partial data is only ever published while there is nothing on screen: during a re-read the
-previous library is up, and replacing it with a partial one would make the list shrink and fill again under the user.
-Every batch has the changes `updateData` recorded since the read started applied onto it, or a song changed while the
-list fills would revert on screen until the read ends.
-A read that fails or is cancelled falls back on the data from *before* it started rather than on whatever it had
-published, or half a library would sit there looking like the whole of it and nothing would ever read the rest.
-For a first read that is cancelled that is `Loading(null)`, the state the repository starts in, and
-`loadDataIfNeeded()` reads again whenever it finds a `Loading` state — under the lock it runs in, one can only be what
-an unfinished read left behind.
-`commonTest` covers those rules, since none of them can be seen once a load has finished.
+- Starts as `Loading(null)`; the first `loadDataIfNeeded()` reads under a `Mutex`, so parallel loads wait, not race.
+- A re-read keeps the data on screen (`Loading(data)`); a failed read is `Failure(previous)`, never an empty list.
+- `Failure` and `Loading` survive `updateData`: a change made during or before the first scan is not the library.
+  The next `loadDataIfNeeded()` reads again even though a change put data in the cache, and also whenever it finds
+  `Loading` (under the lock that can only be an unfinished read). `Idle` is what the cover prune and the launch's deep
+  link wait for.
+- A write landing via `updateData` during a read makes that read go again once (its listing may predate the file);
+  changes during the second read are applied onto its result instead, or a sync run refreshing every second would
+  keep a slow scan from ever finishing. `updateData` transforms replace or drop the named files' entries from disk, so
+  reapplying one is harmless.
+- `publishPartialData` (the song scan's batches) publishes only while nothing is on screen, never during a re-read
+  (the list would shrink and refill). Each batch gets the changes recorded since the read started.
+- A failed or cancelled read falls back on the data from *before* it started, not what it published. Cancellation is
+  rethrown, keeping the old data plus changes that landed meanwhile.
 
-Writing is deliberately **not** part of that shape. Songs and setlists are one file each, so a change writes that file
-and updates the one cached entry (`updateData`, which takes a transform of the current list and applies it atomically,
-so a save landing during a rescan cannot overwrite what the rescan found). The cached lists are in no particular order
-— a scan leaves them by file name, a write moves its item to the end — and ordering them is the domain layer's
-business. The two lists share those transforms through `base/LibraryListRepository` (`putInCache`, `replaceInCache`,
-`dropFromCache`, `keepOnlyInCache`). Only the preferences are persisted as a whole (`writeData`), through
-`base/WholeDocumentRepository`, the subclass `UserPreferencesRepositoryImpl` extends and the list repositories do not,
-so neither can replace its cached library with a list of its own making; the base gives it `currentState` and
-`updateState` rather than its state flow, and `WholeDocumentRepositoryTest` covers the writes. What `writeData` publishes is `Idle` from the
-first moment, never a `Loading` the write then resolves: the data being written is already what every reader should
-show, and it stays that way even when the write fails, while a `Loading` would tell whoever reads this state for
-"nothing has been read yet" exactly that — for as long as the storage takes to answer. The publish also comes before
-the storage is waited for, since every caller builds its change on the state it finds; the writes then go through a
-lock of their own one at a time, each writing what is published by then rather than what it was called with, so the
-last change is the last thing on disk and a burst of changes ends in one write. A write that succeeded publishes
-nothing more, and one that failed turns the state into a `Failure` only while its data is still the data on show.
-A change to one preference goes through `transformAndWriteData` (`updateUserPreferences`) rather than a whole
-document the caller built: the transform is applied to the state atomically, since a caller's copy of the state — the
-ViewModel's is a few `stateIn` hops downstream — may not have the previous change in it yet, and saving a document
-built on it would undo that change. A transform that changes nothing publishes and writes nothing. `saveUserPreferences`
-is left for writing the document as it is. `commonTest` covers this too. A cancelled read is not a failed one: it is rethrown and leaves the cache with what it
-held before, plus any change that landed while it ran. A `rescan()` — the refresh action — is the only thing that walks the
-directory again; an import ends with `adoptImported`, which puts the songs and setlists it wrote into the list in one
-change, dropping the cached texts of the songs among them. `refresh(fileNames)` reads the named files alone, for a
-sync run that changed them: each is put in the list in place of its old entry or drops out, as a rescan would drop it,
-and a repository that has not been read yet rescans instead, since there is no list to put them into. It reads them
-and updates the list under `LibraryFileLock`, which every write holds from its write to its cache update, so a save or
-a deletion of one of those files lands before its reads or after its update and is never undone by it.
+## Writes
 
-- `SetlistRepositoryImpl` makes every write to a setlist file — `updateSetlist`, `renameSetlist`, `saveSetlist`,
-  `deleteSetlist` — under one lock, held from reading the setlist out of its **file** to having the write back in the
-  cache (and `LibraryFileLock` inside it for the same span), so a second change reads what the first one wrote, and a
-  move or a deletion cannot cross a change that is halfway through. The file and not the cache, because sync writes setlist files behind this repository's back and the
-  cache only catches up at the run's next refresh: a change built on it in between would put the version from before the run
-  back, and the next run would upload that over the other device's edit. A file that is gone drops the setlist from
-  the cache and changes nothing; one that cannot be decoded is changed as the cache has it. The cache is the one place that is current straight after a write; anything observing
-  `setlists` catches up a few hops later. Creating and importing a setlist take it as well, from the storage finding
-  a name free to the file being there under it. The write and the cache update under that lock run as one
-  `NonCancellable` step, so a change whose screen goes away while it is being written is still in the cache the next
-  change reads; the lock itself is waited for cancellably. `loadSetlistFileNamesNaming` reads every setlist file afresh
-  for the reference walks, outside the locks — `updateSetlist` reads each one again under them. No read writes
-  anything: the local source lists an undated file with today's day in memory (`ParsedSetlist.isDated` false), and
-  `writeDays`, after `loadSetlistsIfNeeded` and `rescan` have published, saves each such file through `latest` under
-  both locks — from a fresh read, so a download or an edit that landed since the listing is what gets the day, not
-  the listing's older copy. It announces nothing. It never runs inside the read itself, since `latest` takes the read
-  lock while it holds the other two.
-- `SongRepositoryImpl` has the same kind of lock for the three writers that pick a free name before they write
-  (`createSong`, `importSong`, `renameSong`): finding the name and writing under it are two trips to the storage, and a
-  second asker in between is given the same name. Every write, `saveSong`'s guard included, also holds
-  `LibraryFileLock`, which is what keeps a sync run from writing the file between the guard and the write. Its writes
-  (`createSong`, `renameSong`, `deleteSong`, and `saveSong` once its guard has passed) change the file and the cached
-  list as one `NonCancellable` step as well, the locks themselves still being waited for cancellably. `editSongs`, the
-  selection mode's tags and languages, reads and writes each file under `LibraryFileLock` (from the file rather than
-  the cache, so there is no guard to compare), each write `NonCancellable` once begun, names a file it could not read
-  or write and carries on, and then reads the files it changed again under `LibraryFileLock` and puts them into the list
-  as `refresh` does, so that a save, deletion, or rename that landed on one of them after it was written is not undone,
-  drops their cached texts and announces the change once, whatever happened to the caller, as an import ends: three hundred `saveSong`s would be three
-  hundred emissions of the whole library, each sorted and sectioned again. Every change to either cached list replaces by file name and never
-  appends, since the file name is what the lists key their rows by.
-- `EditorDraftRepositoryImpl` is not a `BaseLocalDataRepository` either, and holds no cache: the draft is read once
-  per start and written on every pause, under a lock so that a pause's write and the deletion that follows a save
-  land in the order they were asked for.
-- `CoverArtRepositoryImpl` is not a `BaseLocalDataRepository` either: a cover is read from the device's copy (named by
-  the SHA-256 of its address) and otherwise downloaded and written, in a scope of the repository's own rather than the
-  caller's, so that a row scrolled out of view, which cancels its request, does not throw away a download another row
-  is waiting for. Callers asking for one address at once share one download. At most `MAX_CONCURRENT_DOWNLOADS` (4)
-  reach the network at a time, and one whose every caller has gone before it gets its turn is not made and records no
-  failure: a fling through a library whose covers are not on the device yet would otherwise queue a request per row in
-  the HTTP client, whose timeout counts the queueing, and the rows it stops on would come last. An address that answered with something
-  that is not a cover is not asked again for the session, and one that could not be reached not for a minute, so a
-  dead address costs one request rather than one per scroll. It watches `SongRepository.songs` and, whenever a
-  library read has finished (`Idle`, never the `Loading` batches of a scan, which would prune the covers of the songs
-  not read yet) with a different set of addresses, deletes every copy no song names — a search result's thumbnail,
-  which is fetched the same way, included. The search runs every `CoverArtSearchRemoteSource` side by side through
-  `searchCatalogues` (`CatalogueSearch.kt`), a `channelFlow`, so cancelling the collection stops them all, and appends
-  each one's candidates in the order they answer — the grid grows at its end rather than shifting under the user. `coverArtCacheSize` lists the copies again
-  after every write and prune, off a counter in a `StateFlow`, whose conflation keeps a burst of downloads to one
-  listing at a time. `commonTest` covers the sharing, the bound and the downloads it skips, the failures, the
-  pruning, the cache size and the search's order of emissions.
-- `SongDetailsRepositoryImpl` keeps nothing: `searchSongDetails` is `searchCatalogues` over the
-  `SongDetailsSearchRemoteSource`s, and `loadSongCredits` asks the source of the candidate's own catalogue, turning a
-  failure into `SongCreditsState.Failed` (logged by its class name alone, as every catalogue failure is) and null into
-  `Unavailable`. `commonTest` covers both.
-- `ImportDownloadRepositoryImpl` keeps nothing either: one line over `ImportDownloadRemoteSource` with the import's own
-  ceiling, there so that the use case reaches it through a repository.
-- `SongContentRepositoryImpl` is not a `BaseLocalDataRepository`: it is a keyed in-memory cache of song *texts*, so
-  paging through a setlist re-reads nothing. It keeps the 32 most recently used, and at most a million characters of
-  them — a long session would otherwise hold every song it opened, and a few songbooks pasted into one file each
-  would hold the rest; a text larger than all of that is handed out and not kept. The exports and the import's check
-  for a song already there pass `useCache = false`, which reads the file itself and neither answers from the cache
-  nor fills it: they have to see what is on disk now, and walking the library through the cache would leave all of it
-  in memory. The editor invalidates one entry after a save. The lock only guards the map, never a read: a read that
-  started before an invalidation is told so by a generation counter and does not put the text it read back into the
-  cache. `invalidations` is that counter as a `StateFlow`, which is how the ViewModel's own copies of the open texts
-  learn that a sync run or a rescan has replaced the files under them; it re-reads all of them on every new value.
-  A state rather than one event per file, since a collector busy reading while a burst of them arrives would lose
-  events that did not fit a buffer, and with them a copy that nobody then re-read.
-- `SongRepositoryImpl.saveSong` takes an optional `expectedText`, the text an edit (a tag, a language) was built on:
-  the file is only written while it still holds exactly that, and otherwise the save writes nothing, drops the cached
-  text and returns false, so the caller rebuilds the edit on the file as it is now. The editor's explicit save passes
-  none — the user has been asked, and the draft is the answer. `commonTest` covers the guard with a map-backed local
-  source.
-- `ArchiveRepositoryImpl` is a pass-through to the zip code in the local source implementation; it exists so the domain
-  layer can reach it without depending on a local source.
-- Sync lives in `:data:sync:implementation`, which reads the library through these repositories' API, holds
-  `LibraryFileLock` and listens to `LibraryChanges` (both in `:data:source:local:api` now that two modules share them),
-  and records the demo files (`DemoLibraryRepositoryImpl`); see its `CLAUDE.md`.
+- Songs and setlists: a write changes one file and its cached entry through `updateData` (an atomic transform, so a
+  save during a rescan is not overwritten). Shared transforms in `base/LibraryListRepository`; every change replaces by
+  file name, never appends (rows key by file name). Cached lists are unordered — ordering is the domain's job.
+- Preferences only are written whole, via `base/WholeDocumentRepository` (the list repositories cannot extend it, so
+  neither can replace its library with a list of its own). `writeData` publishes `Idle` at once (never a `Loading`,
+  which readers take as "nothing read yet"), before waiting on storage; writes are serialized and each writes what is
+  published by then, so a burst ends in one write and the last change is last on disk. A failed write becomes
+  `Failure` only while its data is still on show.
+- One preference changes through `transformAndWriteData` (`updateUserPreferences`), applied atomically to the state:
+  the caller's copy (the ViewModel's is several `stateIn` hops behind) may miss the previous change. A no-op
+  transform writes nothing.
+- `refresh(fileNames)` reads the named files and updates the list under `LibraryFileLock`, which every write holds from
+  file write to cache update, so a concurrent save or delete is never undone by it. Unread repository → rescan.
+- File write plus cache update is one `NonCancellable` step (a screen closing mid-write still leaves the cache right);
+  locks are waited for cancellably.
+
+### `SetlistRepositoryImpl`
+
+- Every write (`updateSetlist`, `renameSetlist`, `saveSetlist`, `deleteSetlist`, create, import) holds one lock, plus
+  `LibraryFileLock`, from reading the setlist **from its file** to the cache update. The file, not the cache: sync
+  writes setlists behind the repository's back, and a change built on the stale cache would put the old version back
+  and upload it over another device's edit. A gone file drops the setlist and changes nothing; an undecodable one is
+  changed as cached.
+- No read writes: an undated file is listed with today's day in memory (`ParsedSetlist.isDated` false). `writeDays`
+  saves those days after `loadSetlistsIfNeeded` / `rescan` publish, from a fresh read under both locks, announcing
+  nothing; never inside the read itself (`latest` takes the read lock while holding the other two).
+- `loadSetlistFileNamesNaming` reads every file afresh, outside the locks, for the reference walks.
+
+### `SongRepositoryImpl`
+
+- `createSong`, `importSong`, and `renameSong` share a lock: finding a free name and writing are two storage trips.
+  Every write holds `LibraryFileLock` (so sync cannot write between `saveSong`'s guard and the write).
+- `saveSong(expectedText)` writes only while the file still holds exactly that text; otherwise it writes nothing, drops
+  the cached text, and returns false so the caller rebuilds the edit. The editor's explicit save passes none.
+- `editSongs` reads and writes each file from disk under `LibraryFileLock`, carries on past failures (naming them), then
+  re-reads the changed files like `refresh` and announces once — a few hundred `saveSong`s would be as many re-sorts.
+
+## Others
+
+- `SongContentRepositoryImpl`: in-memory LRU of song texts (32 entries, at most a million characters; a larger text is
+  not kept). Exports and the import's duplicate check pass `useCache = false` (see disk now, don't fill memory). The
+  lock guards only the map; a generation counter stops a read begun before an invalidation from caching its text.
+  `invalidations` is a `StateFlow`, not events, so a busy collector cannot lose one; the ViewModel re-reads all open
+  texts on each value.
+- `EditorDraftRepositoryImpl`: no cache; writes serialized so a pause's write and the post-save deletion keep order.
+- `DocumentRepositoryImpl`, `ArchiveRepositoryImpl`, `ImportDownloadRepositoryImpl`, `SongDetailsRepositoryImpl`: keep
+  nothing. `loadSongCredits` turns a failure into `SongCreditsState.Failed` (logged by class name only, like every
+  catalogue failure) and null into `Unavailable`.
+- Sync (`:data:sync:implementation`) reads the library through this module's API and shares `LibraryFileLock` and
+  `LibraryChanges` from `:data:source:local:api`.
 
 ## The cover copies
 
-- **The copy is the offline cache on all four platforms**: `covers/<sha256 of the address>`, outside `library/`, kept
-  out of every device backup and deleted after a library read that leaves no song naming it (`CoverArtRepository`).
-  Settings → Library shows how much they take up, under the library's own size, once there is any, and tapping that
-  row deletes them (`CoverArtRepository.clearCoverArtCache`) after a confirmation; the library's own row deletes every
-  song and setlist, after a sheet that wants `DELETE` typed, stops any run that is going and then starts a sync run
-  with the deletions allowed
-  (`DeleteLibraryUseCase`), the typed word being the answer the run's guard would otherwise stop to ask for — so the
-  cloud folder and every device synced with it are emptied too, which the sheet says while an account is connected.
-  Requests for one address share one download, only a few are made at a time, one nobody is waiting for any more by
-  its turn is not made at all, and an address that failed is not asked again for the rest of the
-  session (an answer that is not a cover) or for a minute (no answer at all).
+- `covers/<sha256 of the address>` is the offline cache on all platforms, outside `library/`, out of device backups.
+  `CoverArtRepositoryImpl` watches `SongRepository.songs` and, after each finished read (`Idle` only, never scan
+  batches, which would prune covers of songs not read yet) with a changed address set, deletes every copy no song
+  names (search thumbnails included).
+- Downloads run in the repository's own scope (a row scrolled away must not cancel another row's wait); one download
+  per address; at most `MAX_CONCURRENT_DOWNLOADS` (4) at once, and one with no callers left by its turn is skipped (a
+  fling would otherwise queue a request per row, the HTTP timeout counting the queue). A non-cover answer is not asked
+  again this session; an unreachable address not for a minute.
+- `coverArtCacheSize` re-lists after writes and prunes off a conflated `StateFlow` counter.
+- Searches run every catalogue at once via `searchCatalogues` (`CatalogueSearch.kt`, a `channelFlow`), appending each
+  one's results as it answers so the grid only grows at its end.
+- Settings → Library deletes the copies after a confirmation (`clearCoverArtCache`). The library's own row deletes
+  every song and setlist after typing `DELETE` (`DeleteLibraryUseCase`): it stops any running sync, then runs one with
+  deletions allowed (the typed word answering the guard), emptying the cloud folder and every synced device too.

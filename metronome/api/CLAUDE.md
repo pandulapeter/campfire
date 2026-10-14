@@ -9,27 +9,17 @@
 -->
 # :metronome:api
 
-The contract of the click, and nothing else: depends on nothing but coroutines (for `StateFlow` / `SharedFlow`), like
-`:chordpro` depends on nothing, so that no data or domain type leaks into it and the engine reads no settings of its own.
-It builds in explicit API mode (`explicitApi()`), so every public declaration says `public` and its type on purpose.
+The contract of the click, and nothing else: depends on nothing but coroutines, so no data or domain type leaks in and
+the engine reads no settings of its own. Explicit API mode.
 
-- `Metronome` — the one stateful interface: `playback` (`Stopped(reason?)` or
-  `Playing(pattern, audioIssue?, pendingPattern?)`, the pattern heard and the one waiting for the bar to end), `beats`
-  (one `MetronomeBeat` per click, emitted when it is *heard*, subdivisions flagged), `start`, `update` (the timing from
-  the next beat, or with `fromNextBar` once the bar being played has ended, as beat one of a new count of bars; the
-  sound, volume and accents from the next click), `preview` (one click of a sound, mixed into a playing click or on its own), `stop` and `setStartable` (whether a
-  screen that can start a click is showing, which only the web's output uses, to listen for the gesture its audio
-  needs only there). Every call returns at once and never throws: a start that cannot happen ends in
-  `Stopped(reason)`.
-- `model/` — `MetronomePattern` (complete: tempo within `BPM_RANGE` 30–300, `TimeSignature`, one `BeatLevel` per
-  beat, `Subdivision`, `MetronomeSound`, volume — at 0 the click runs on silently, for the visual beat alone, which is
-  why there is no mute of its own; `canSound` says whether a pattern is ever heard and `hasUnmutedBeat` whether it
-  plays anything at all, for the app to stop a silent click it can no longer show or vibrate), `TimeSignature` (1–16 beats over 1/2/4/8/16, written and
-  parsed as `"7/8"`, with the default accents: one, and every group of three in a compound meter), the enums with the
-  stable `id`s a stored setting uses, `MetronomeStopReason` and `MetronomeAudioIssue`. The engine keeps no notion of
-  what a click is played for: it is started and stopped by the screen that holds the controls, and there are two.
-- `TapTempo` — taps to a tempo: a minute over the median of the last eight intervals, a new series after a two second
-  gap, clamped to the range. Pure, tested with a `TestTimeSource`.
-
-**The tempo counts the clicks of the bar**: 6/8 at 120 is six clicks a bar at 120 a minute; the unit only decides the
-default accents.
+- `Metronome`: **every call returns at once and never throws**; a start that cannot happen ends in `Stopped(reason)`.
+  `beats` emits when a click is *heard*, not scheduled. `update` applies timing from the next beat (or, with
+  `fromNextBar`, after the current bar as beat one of a new count) and sound, volume, and accents from the next click.
+  `setStartable` matters only to the web output, which needs a user gesture for audio.
+- The engine has no notion of what a click is played for: the screen holding the controls starts and stops it.
+- `MetronomePattern`: volume 0 keeps the click running silently for the visual beat, which is why there is no separate
+  mute. `canSound` / `hasUnmutedBeat` let the app stop a click it can no longer show, sound, or vibrate.
+- Enum `id`s are stored settings; never change them. `TimeSignature` is written and parsed as `"7/8"`.
+- **The tempo counts the clicks of the bar**: 6/8 at 120 is six clicks a bar at 120 a minute; the unit only decides the
+  default accents (one, and every group of three in a compound meter).
+- `TapTempo` is pure and tested with a `TestTimeSource`.

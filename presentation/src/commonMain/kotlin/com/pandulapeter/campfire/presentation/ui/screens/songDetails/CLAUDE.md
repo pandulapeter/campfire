@@ -10,717 +10,318 @@
 
 # :presentation — ui/screens/songDetails
 
-The song details screen.
+The song details screen. What the first section holds, read only mode, and the About the song sheet as a product are in
+`ui/CLAUDE.md`; chord diagrams in `ui/chords/`; the click in `ui/metronome/`.
+
+The guarantee most of this file serves: **every line of a song can be reached with Up and Down alone** (a page turner
+pedal), at any text size on any screen. `LayoutBudget` is its only exception.
 
 ### The songs it pages through
 
-The screen resolves the songs its destination names against `songLookup`, the library by file name and whether it has
-been read in one value, since the index arrives on `Dispatchers.Default` after `isLoading` has turned false
-(`songDetailsSongsOf`). Before the read it only resolves a destination whose songs are all in the lookup, so a restored
-setlist pager never lays out over a partial batch, which would restore its saved page index onto the wrong song. Once
-every song it names is gone from a library that has been read, it closes itself, as if the song had been deleted there.
-
-### `screens/songDetails/SongLyrics.kt`
-
-`screens/songDetails/SongLyrics.kt` (with `SongSectionContent.kt`, `SongComment.kt`, `SongTabBlock.kt`,
-`SongGridLine.kt`, `SongKeyChange.kt` …) — renders the `ChordProSong` the parser produced (sections, chorus recall, the
-three comment styles, tabs and grids in a monospace font, since both are columns of characters that have to line up, the
-song's info section). A comment draws the chords in its brackets, which the transposition moves, in the chord colour,
-the ones `ChordProHighlighter.chordsOfShownText` names, which the editor colours too. A recall draws the chorus
-`ChordProBlock.ChorusRecall` carries, every piece of it, headed once; the continuation of a cut section is not named
-again. **A section cut by a comment is drawn whole again**: the parser keeps the cut
-(`ChordProBlock.Section.isContinuation`), and `toRenderSections` joins a section with the comments, breaks and
-transpositions that cut it and the continuations after them (`joinCutSections`), so the comment stands between the lines
-it was written between rather than being placed as a unit of its own that could land in another column or row. The
-comments a section opens or ends with are joined to it as well (`ChordProBlock.Comment.placement`), so **every comment
-written in a section folds away with it**, while one written between sections is a unit of its own that nothing folds.
-
-In lyrics-only mode a comment written inside a tab or a grid (`isInTabOrGrid`) goes with it. **A `{transpose}` further
-down the song leaves a line naming the key it is in from there on** (`RenderSection.KeyChange`, "Key: A", set as the
-chords are): `ChordProBlock.Transpose.key`, which the transposition and the notation move with the chords after it, so
-the line reads the reader's own transposition and spelling — the capo left out of it, as it is out of the Transposition
-control. It stands where a comment would, a part of the section it was written in and kept with the line under it, or a
-unit of its own between two sections, and is left out where the song declares no `{key}` or the chords are switched off;
-the PDF prints it in the heading's detail type with the chords.
-
-**A `{tempo}` or `{time}` further down starts a page of its own** (`RenderSection.Timing`, `showsTiming`, false with the
-Metronome feature off, which joins the change over like a `{transpose}` and leaves the page as if it had none): it is
-never joined into its section, so the section ends before it, the line naming the tempo and the time signature from
-there on as the click plays them stands in its place (`SongTimingLine`, read only, the read only line of the song's
-first section again, the tempo scaled with an override by `withTempo` / `sectionBpm`), and the rest of the section after
-it is headed by its fold toggle alone and folded under the section's own key with a `~n` after it, so switching the
-metronome does not renumber the folds after it.
-
-A line no line of the song follows before the next one or the end is dropped (`withoutEmptyTimings`, after
-`LayoutBudget`). The layout searches each stretch from one change to the next as a song of its own against the height of
-a page and puts the grids end to end (`SongUnits.timingStarts`, `searchSegment`, `SectionGrid.concatenated`), each
-starting a page, the change never half of a side-by-side pair; such a song is always stepped through. A change written
-before the song's first line starts no page (`timingStretchesOf`): it stands in place on the first one, as in the
-preview and the PDF, and the click plays it from there (`SongRows.timingSections` reports it at section 0). Where
-nothing is paged (the editor's preview, a songbook past 200 sections) the changes are lines of the one column: a
-songbook of more than 200 sections that changes its tempo or time is one column whatever the width
-(`widthColumnCountFor`), stepped by its sections, the click following the change scrolled past. The PDF prints a change
-as one detail row kept with what follows it. Tablature is a run of lines inside a section rather than a section of its
-own (see `:chordpro`), so the lines of a section are grouped before they are drawn: each run of `ChordProLine.Tab`
-becomes one block (`SongTabBlock`), because its columns only line up while they are measured together, and everything
-else is laid out line by line around it.
-
-The block cuts the run into rows that fit its width, a blank line apart, the way a tab book breaks a staff into systems:
-where the cuts fall is `ChordProTabWrapper`'s rule (after a bar line wherever one fits), and the block only turns its
-width into a number of characters of its monospace font. It draws the text rather than composing it, because the cuts
-depend on the width and a section is measured at several widths before one wins — a `Layout` with no children answers an
-intrinsic measurement by running its measure block, so the height it reports for a candidate column width already counts
-the rows the tab wraps into there. Every text the page measures by hand goes through one `TextMeasurer` per page, and
-what the chorded lines ask of it (the chord names, the width of each piece of lyrics, the height of a line) is kept in
-`SongTextMeasurements` for the page rather than per line, keyed on the styles and the measurer and not on the song, so
-that a transposition only lays out the chord names it has not drawn yet; the rows of each tab run and the aligned bars of
-each grid run are kept there too, once for all the chunks the run is drawn as. The lyrics take their direction from their own
-content (`TextDirection.Content`) rather than from the app's, so a Hebrew or Arabic line is a right to left paragraph
-starting at the right edge, and a chorded one is drawn that way too (`TextLayoutResult.getParagraphDirection`): its
-chords hang to the left of the characters they name and are kept apart leftwards, since x falls as the offset grows
-there.
-
-The chords of a line are drawn over its lyrics rather than composed, and the lyrics under a chord wider than they are
-are padded with non-breaking spaces to make room for it (`padLyricsToFitChords`); the padded line may wrap only between
-two chords where the text has a word boundary — the whitespace at either end of a padded piece is non-breaking too, and
-a zero-width space after the piece is the break — so a chord-only intro wraps between its chords, each starting its row,
-and no chord is ever pulled back over the one before it. What a chord or an annotation wider than the line still draws
-past its end is clipped, by the line and by each pager page, rather than wrapped onto the lyrics under it. Since they
-are drawn, each chorded line carries the ChordPro form of itself (`[Am]There is a…`) as its content description, and a
-tab block its lines, so a screen reader reads the chords too. A run with no staff line in it (chord names over lyrics in
-a `{start_of_tab}`) is preformatted text, which the same block cuts between words instead
-(`ChordProTabWrapper.wrapPreformatted`), a line of chord names together with the lyrics under it and the rows with no
-gap between them: nothing on the page scrolls sideways, since a song may be read with nothing but a pedal.
-
-**Every section with a header folds from it, and so does every run of tablature and of grid lines inside one**
-(`FoldedRuns`). Folds are saved per song in `UserPreferences.foldedSections` through
-`CampfireViewModel.toggleSectionFold`, one set per song wherever it is opened from — unlike a transposition, which the
-band plays the song in and which a setlist carries, how much of a song one reader keeps open is theirs alone, so it
-never reaches a setlist, an export or a sync run; a rename carries it and a deletion drops it, with the transposition. A
-fold is keyed by what the file calls the section (its label as written, or its kind: `verse`, `chorus`…) and which of
-the sections called that it is (`chorus#2`), and a run inside it by the section's key and the run's own label or kind
-(`Intro#1/Picking pattern#1`): never by its position, so a verse added above leaves the saved folds naming the same
-parts, and never by the heading shown, which is translated for the sections the file leaves unnamed. The page only keeps
-which keys were toggled while it was open, so that only those fade in. The editor's preview folds nothing, for the
-reason the Chords switch does not reach it.
-
-The pill is the toggle, its chevron after the name — it no longer scrolls back to its section's start — and a chorus,
-which has no pill, folds from the whole title row of its card, its chevron at the far end the way an expandable card
-carries one, so a folded chorus is a slim card of its own that still stands out, narrowed to its title; the card's
-paddings are laid out inside `SongSectionContent` so the row's press reaches the card's edges.
-
-**Every section has a header to fold it from, named or not**: an unnamed verse is headed "Verse" the way an unnamed
-chorus or bridge is headed by its kind, and so are the intro, pre-chorus, solo and outro the editor writes without a
-label, in the app's language (`DefaultSectionLabels.labelOf`, which the PDF shares; any other kind keeps the file's
-wording, capitalised), **numbered by kind where a song has several** ("Verse 1", "Verse 2"; `withNumberedSections` in
-`SectionNumbering.kt`, shared by the details screen, the editor's preview and the PDF, switched by
-`UserPreferences.shouldNumberSections`, the Songs tab's "Number sections" switch, on by default): only sections without
-a label count, and those labelled with the kind's own name — "Verse" is numbered with them, and "Verse 2" keeps its
-label and the number it names — so no two sections share a number; a lone one stays "Verse", and the number is
-`ChordProBlock.Section.number` rather than part of the label, so the saved folds, keyed by the label as written, do not
-move with the setting; a `{chorus}` recall that names nothing takes the number of the chorus it repeats, one that is
-nothing but tablature or a grid gets a toggle named after it, and a paragraph of lyrics, which the file says nothing
-about — lyrics pasted in as plain text are a paragraph per block between blank lines — a pill holding the chevron alone
-(`UNNAMED_SECTION_HEADER`), which a screen reader names by the section's first sung line (`firstLyric`).
-
-The editor's preview, folding nothing, draws that pill empty, keeping the chevron's room, so it lays the song out the
-way the details screen will. The rest of a section a chorus recall cut in two (the only cut `joinCutSections` does not
-join over) gets the same pill rather than its name again, so every part of a song folds; only comments between sections
-never do. A run inside a section with other lines gets a small toggle of its own above it, named by the environment's
-label (`{start_of_tab: Picking pattern}`) or "Tab" / "Grid" where it has none, and two environments written back to back
-under different labels fold apart; a section that is nothing but one run is folded as the section, with no second
-toggle. Its chevron is `components/ExpandChevron.kt`, the one the editor's Shortcuts toggle turns too, so that every
-fold in the app turns alike. The folds of each section are part of what its chunks' measured sizes are kept by
-(`UnitContent.foldedKeys`), so a fold measures only its own section again, while the grid is still searched again since
-the columns change; a run that is unfolded fades in while `animateBounds` grows its section, and only the opacity is
-animated, since a height still on its way would be measured halfway there. The chords switched off drop both altogether,
-so there is nothing to fold.
-
-The lines of a grid run are aligned the way a chord chart is written in a monospaced font (`alignedGridBars` in
-`GridColumns.kt`, which the PDF uses too): every bar padded with spaces so that its bar lines and cells stand under
-those of the same bar on the other lines, whatever the width of each chord — what follows a line's last bar line (a
-repeat count, a note) is drawn after it as written, aligned with nothing, so it never widens a bar of a longer line —
-and each bar drawn as one text, since only the characters of one monospaced text are sure to keep those columns. A grid
-line wider than its column breaks between bars (`SongGridLine`, a `FlowRow` of whole bars), and a bar wider than the
-column wraps inside itself, so no chord of it is cut off at a large text size. A paragraph that holds nothing *but* one
-of the two still gets the default "Tab" / "Grid" heading, on screen and in the PDF alike, since that is a bare
-`{start_of_tab}` standing on its own and it named itself before; one with lyrics around the run is an ordinary paragraph
-and heading it would be a lie. Lyrics-only mode drops the tab and grid lines the way it drops the chords, since neither
-says anything without them, and a section left with nothing that way is dropped whole rather than leaving its heading
-behind.
-
-It drops the key, capo, tempo and time line of the info section too, which is what is played rather than sung, and the
-info section itself where the song says nothing else (`withMetadataSection`). The song's first grid section is its info
-section (`SongMetadataSection` in `SongMetadataSection.kt`), flowing with the lyrics through the same rows and columns
-and remaining whole: **the transposition, capo, tempo and time, each next to the control that sets it**
-(`SongPlayingControls`, built per page by `rememberSongPlayingControls`) — the transposition stepper, labelled
-**Transposition** rather than Key since the amount is what it steps, reading that amount next to the key it takes the
-chords on the page to (the capo deliberately left out of it, or the control would name a key written nowhere in the
-song: the app bar names the sounding one), the capo stepper (neither on the keyboard, whose transposition counts the
-capo in, see `ui/CLAUDE.md`), the tempo stepper ending in the Tap segment that taps one
-in, inside the same pill and behind a divider, and after it the time signature, labelled like the rest but its value
-plain text, since only the file says it — laid out in balanced rows (`BalancedRows`: all on one line, two and two in
-aligned columns, or one per line, never three over one; a control the rows move, a stepper widening or the rows
-rearranging, springs to its new place on the sections' own spring, followed by its `layoutId`, and only where the
-sections spring rather than glide), their labels in the content colour and bold type alone setting the section apart.
-
-What the file declares for all four is edited in the Song defaults sheet, opened from the About the song sheet, and the
-page holds nothing but the song and its controls, no line or button of the app's own explaining them. **Labels and
-controls grow and shrink with the lyrics together, the way the sections' own header pills do** rather than as a bar's
-buttons scaled up: a `fontScale` grows what is written in a control — its value, its label, and its icons — while the
-padding around them stays as it is, so every one of them is exactly as tall as the pill heading the section under it
-(`songControlHeight` in `components/Stepper.kt`, the pills' `titleStyle` over their own `HEADER_VERTICAL_PADDING`; a
-pill scaled whole towered over the page at a large text size). What keeps them big enough to hit at the other end is
-`UserPreferences.MIN_FONT_SCALE`, the size below which this screen is not read at all.
-
-**The tools the song is played with end the groups they belong to** (`SongPlayingTools`, built per page by
-`rememberSongPlayingTools`, drawn by `SongPlayingToolButtons`): the tuner after the capo (or the transposition where
-there is no capo), since the strings are tuned for what those two ask of them, and the metronome after the time
-signature, the click it plays. Each is a `SongToolButton` (`components/`), the tonal circle the steppers are pills of
-and exactly as tall, its icon scaled with them, the metronome's drawn in the secondary container colour while its panel
-is up and the tuner's while its sheet is open. Two and two, they stand in a column of their own at the end of either
-row. A button whose values are not on the page goes after the other group, and both stand alone where neither group is
-(`playingToolPlaces`, tested), so with the chords switched off the tuner sits by the metronome. The section is there
-wherever the chords or the metronome are on; with both off the tuner is an entry of the overflow menu (`tunerAction`),
-since there is nothing played to stand next to. Whether a section holds either button is part of
-`RenderSection.Metadata`, since its measured size is kept by it.
-
-Read only mode (performance mode, a song from an archived setlist) gets a **line of text**, set
-in the chords' size and weight (the key and the capo in the accent colour, the tempo and the time signature in the
-content colour), those four used to be instead; the chords switched off leave out the key and the capo, the metronome
-switched off the tempo and the time signature, and both leave out the line and the controls entirely. The editor's
-preview has neither: its card's Song defaults tile (below) reads all four whatever the switches, since it shows what is
-being written. The line keeps the tool buttons too, split in two around them — the key and the capo with the tuner, the
-tempo and the time signature with the metronome — side by side where they fit and one under the other where not. That
-line always names the capo,
-the tempo and the time signature (`withMetadataSection`'s `readsDefaults`: "Capo 0", and the 120 BPM and 4/4 the click
-starts at where the file names no `{tempo}` or `{time}`), so read only mode is there for every song too. The line
-reads the values the way the click and the steppers do — the tempo as a number held to the click's range, the time
-signature as one it can count (a `C` as 4/4, one it cannot count as 4/4 where the line always names one and left out
-elsewhere), the capo held to the neck — so it says what is played rather than the directive's text.
-
-The section is there for every song where the controls are, since a capo and a tempo can be set on one that names
-neither, and whether it has them is part of `RenderSection.Metadata`, which is what the measured sizes of a section are
-kept by. In the editor's preview (`SongLyrics`' `isSongInfoShown`) the section is the About the song tiles instead,
-the Song defaults among them — as wide as their column, whatever they hold, untitled since every tile names itself,
-everything in them scaling with the lyrics — and nothing above the grid is ever laid out outside a row. The info
-section is emitted under one key whatever it says, so the cover in the editor preview's card
-waits for the typing to pause rather than following every half-typed address. On the song details screen the same is the
-About the song sheet instead (`DialogType.SongInfo`, read live from the song's text and closed with the song like the
-other song sheets), opened by a tap on the app bar's title (see below) and by nothing else, since a menu entry would
-only repeat it; outside performance mode for every song, in it only where the sheet has something in it.
-
-The card and the sheet share `SongInfoBody`: the cover, then album, year, composer, lyricist, and duration as
-label-over-value tiles flowing side by side beside it, then a Song defaults group (`SongDefaults`): the file's key,
-capo, tempo, and time as the same tiles (the 120 BPM
-and the 4/4 the click starts at where the file names none, as if they were written there, the way every place that
-reads a song's tempo has it; in the preview the values as the line would read them), a line in the primary colour
-naming the setlist's or the library's overrides while there are any, which the editor's text never has
-(`songPlayingOverrides`, shared with the Song defaults sheet's card); then a group of chips for each of the tags
-and the languages the song has, and one of buttons for its links, always titled in the plural, like a form's label, so that the title does not change its wording under the finger that
-adds the first one or takes the second away, and counted where there are several. The chips are labels only, the plain
-tonal pills of the song cards, taking no tap of their own: the tile takes it.
-
-**The sheet is the one place a song's description is edited, and it has no pencils.** It draws every group as a tile of
-one grouped list (`SongInfoGroup`, `songInfoTileShape`: the list's outer corners rounded like a card, 2dp between tiles,
-the details and the Song defaults untitled since the cover and the labelled values say what they are), kept compact — a group's title set as
-small as the details' labels rather than on a title row of its own, the values in body medium and the cover 72dp, two
-rows of details beside it — since the sheet is looked over on a phone and every line it saves is one more group in view.
-Outside read only mode (`SongInfoEditing`, built by `rememberSongInfoEditing`) the whole tile is what opens that group's
-sheet on top of this one — Edit song details, Edit song defaults, Manage tags, Manage languages, Manage links — a chevron at
-its end saying so, and an empty group, the details included, is not left out but holds a call to action as plain text in the
-primary color behind a plus (`SongInfoAction`) — the editor's name for the details and the defaults, Add tags, Add
-languages, and Add links for the other three, since there is nothing to manage yet — rather than a pill, which would ask for a tap of
-its own: the same call to action in every tile, exactly as tall as a row of the chips it stands in for
-(`tagPillHeight`), so a tile keeps its height as its first chip arrives (`songInfoGroupsOf` decides which tiles are
-there, and so which get the outer corners). The cover is what opens the cover search, and a song without one gets an
-empty place with the album icon in it that does the same.
-
-**The links are outlined buttons rather than chips** (`SongInfoLinkButtons`): a link opens its page when tapped, which a
-tag and a language do not, so inside a tile whose every other spot opens the Manage links sheet each one looks and is
-hit like a control of its own — taller than a pill, with Material's 48dp touch target around it — while the tile, its
-chevron, and its empty state stay exactly those of the other groups. **No tile is shorter than the links tile with one link**
-(`songInfoTileMinHeight`, from the sheet's `songInfoLinkRowHeight`), so the tiles of the list are of one height until one of them
-needs more. Every tile centers what it shows, a title and the row under it as one block, so it has as much room above
-as below whatever it holds; the link buttons report their own height rather than their touch targets', which reach
-into the tile's padding (`withoutTouchTargetSlack`), since otherwise their tile would have empty space under the buttons
-with nothing to match it above.
-**The editor preview's card is compact** (`isCompact`, wherever the links are not followed): its links are chips like
-the tags, so its minimum is measured by a row of chips (`tagPillHeight`) rather than of buttons, and its paddings and
-title gap are smaller (10dp and 4dp rather than 12dp and 6dp). Each sheet is put
-over this one, which stays open under it (the dialog stack, see `ui/dialogs/`, for an edit of the same target), so
-closing or saving it only uncovers this one. The
-header has no buttons, and no menu lists these editors one by one.
-
-Over the editor (`SongEditTarget.EditorDraft`, opened from the editor's menu) the sheet reads
-`CampfireViewModel.editorDraft` rather than the file, its header naming the song from that text, the key shown as typed
-(it is in the reader's notation already) and no overrides named; its tiles edit the text being typed. The preview's card
-(`SongInfoCard`) is the same tiles, untitled, the Song defaults included: it already
-shows everything the sheet would, so each tile opens its own editor directly rather than the sheet, and a song that says
-nothing about itself yet has every tile all the same, each offering its editor. Links open their page in the sheet,
-named by their optional label or by the host without `www.`
-(`linkLabel`), and are not followed from the editor's card. The cover art sheet's Remove cover asks for confirmation over
-it: Cancel uncovers the sheet as it was, and Remove closes the question and slides the sheet away after it.
-
-`SongMetadataDialog.kt` presents what the song is as a bottom-sheet form — title, subtitle, artist, album, composer,
-lyricist, and the year and the duration side by side; the key, capo, tempo and time are the Song defaults sheet's — the
-year typed as four digits at most, and the duration as digits that fill in from the right like a timer's
-(`DurationDigits.kt`: `428` reads `4:28`, since a number pad has no colon), opened from what the file says where
-`ChordProDuration` reads it, empty and left alone on Save where it does not (or where it is longer than six digits
-show), and written as `m:ss`, a typed value carried over no further than `99:59:59` — opening with no field focused,
-since it is a form to look over as much as to type into, fading at the top of its scroll, prefilled from the held text
-and written on Save through `SetChordProMetadataUseCase`, only the fields changed in it, so a field another device
-synced in meanwhile and left untouched here keeps that device's value. A blank field takes the directive off. The search
-button beside Save puts the song details lookup up over the form with its draft, and the form comes back with it — the
-suggestions ticked there typed in — see `ui/dialogs/`. A new
-title or artist is not a rename: the file keeps its name until the menu's Update file name is taken.
-`SongLinksDialog.kt` presents a bottom sheet that edits all addresses and optional names as a draft, fading at the top
-of its scroll, written once on Save through `SetChordProLinksUseCase`; closing the sheet drops the draft.
-
-Add link is an icon button in the header beside Save, with its localized label as its accessibility description, so it
-is in reach however many links there are, and the list scrolls to the row it adds. Each row's buttons move it up or down
-— the rows are a lazy list keyed by an id of the dialog's own, so a moved row slides to its place rather than two rows
-trading contents, and the list scrolls just far enough to keep it wholly in view — and that order is the file's and the
-card's: the links are shown in the order they are written, where the tags and the languages are sorted alphabetically by
-what their chips read, ignoring case and accents (`sortedAlphabeticallyBy` in `components/Tags.kt`), in the card and
-under a song in the lists alike. Duplicate or unusable addresses, and a named row without one, cannot be saved (a wholly
-empty row is left out instead, `songLinksToSave`), and links synced in while the dialog was open but never offered there
-are kept. The title, the subtitle and the artist are the ones that are deliberately not repeated, since the bar has all
-three — the subtitle in parentheses after the title (`ChordProMetadata.displayTitle`, which is how a song is named
-everywhere in the app).
-
-The menu's Edit song file is absent in performance mode and the sheet's tiles do nothing there; link buttons still open their pages
-there, and only display their labels in the editor's preview, where a tap is meant for the text. The song is parsed,
-transposed, and split into sections away from the main thread (`rememberSongLyricsModel`, which builds only the first
-rendering of the page on screen, headed for or before the target page in place, so that it never opens on an empty frame
-and a step back from a song's top has the previous song's end to land on (`buildsModelInPlace`) — without the chord
-shapes only the search finds, which follow from `Dispatchers.Default` right after — while the next page builds its first
-rendering on `Dispatchers.Default` too, and keeps the previous one on screen until the next is ready), since that is a
-pass over the whole song that would otherwise land on the frame after a transposition or a pause in typing. **What is
-laid out is capped** (`LayoutBudget`, 3000 lines and 200,000 characters, several times the longest real song): every
-section is fitted into the columns at once and every chorded line measured on the main thread, which a songbook
-concatenated into one file or a log dropped into the folder turned into a freeze of seconds and gigabytes of memory — on
-a phone, the app being killed.
-
-The model stops at the end of the last section that fits, or inside a first section too long on its own (a file with no
-blank line in it), and says so under the last one; the overflow menu's editor shows the whole file; nothing is cut from
-the file itself, and the header is still built from all of it. It is the one bound on the promise that every line can be
-reached by stepping: past it the notice stands in for the rest, and in performance mode, which takes the editor away,
-nothing does. Lyrics are split into sections and flowed into columns by `SongSectionsLayout`.
-
-It uses the *fewest* (and therefore widest) columns the song still fits the screen with, so the vertical space is used
-and the lyrics wrap as little as possible — in a single row wherever any number of columns fits it in one, since several
-rows are stepped through even where all of them fit, and only otherwise the fewest columns that fit it in several
-(`searchColumnCount`, so lyrics only mode, whose shorter sections may fit two rows of fewer columns, is not stepped
-through where the chords are one row): the candidates are evaluated from the sections' intrinsic heights (the winner is
-the only width they are measured at, and a candidate that does not fit jumps straight to the smallest count that could)
-and a window with room for a single column asks for none of them, since it is paged instead (below); column widths are
-clamped to 384–560dp scaled by `fontScale` (288dp where narrow columns save a page, below), and once the grid is decided every column is narrowed to the widest thing in
-it and **the space every row leaves is shared out evenly** before, between and after its columns (never less than a
-column gap between two), by what the row holds rather than by the columns it was given, whatever the rows around it
-hold; the whole width is shared out wherever that keeps the row clear of the step buttons, and the width left beside
-them otherwise. **Where several counts fit the song in one row, the one that fills the page most evenly is taken**
-(`balancedAmong`): the share of the width the columns and the gaps between them fill against the share of the height the tallest one does, a
-count of more columns only where that is better by a margin and where it wraps no more of the song's lines, so a short
-song on a large screen at a small size is three loose columns rather than two tall ones in the middle of it.
-
-**A page with room to spare is spread out over it the way a designer would** (`SectionGrid.arrange`'s
-`maxExtraSectionGap`): every column of a single row's page is centered on its own in the page's height, as the columns
-are in its width. The room a column leaves first widens the gaps between its sections, by no more than a chorded line
-and no more than it keeps above and below them (so a full column is never justified against the screen's edges), and
-the rest is shared out above and below, 45% of it above, since what is centered exactly reads as sitting low. A column
-holding a piece of a section cut across two is centered like any other: held against the cut, the two columns leaned
-away from each other across the page. That room is the screen wherever a row is read alone on it, and for a song read
-whole in one row the room it was decided for (or what the screen shows of it while the app bar or the metronome panel
-moves in), so it never scrolls for it. A page of several rows (the joined rows of a single column's pages) is moved
-down whole instead.
-
-**A fold leaves the columns where they were for 900 ms** (`ColumnCenteringHold`, as far as they still fit their page)
-before they spring to their new center, since centering at once would move the header that was just tapped, and a
-second tap aimed at it would miss; a page of several rows keeps the shift it had the same way. `SongLyrics` keys the
-hold by the song's folds and its Chords section's, `ColumnCenteringHold.kt` arms it in a `SideEffect` as the fold is
-composed, ahead of that frame's measure, and releases it only by the delay, `SongSectionsLayout` records the spreads
-and the page shifts on every lookahead measure while nothing holds, and `arrange`'s `heldSpreads` and `heldPageShifts`
-place them; so `SongLyrics` passing no hold turns it off.
-
-Each section is a traversal group with its index as the `traversalIndex`, so a screen reader reads it whole and in the
-song's order whatever column it is in; the geometry alone read the columns across, line by line. Songs that do not fit
-at any count get as many columns as the width allows. `SongDetailsScreen` has to pass the height available without
-scrolling (`availableHeight`, from a `BoxWithConstraints` around the scrolling content), since inside the
-`verticalScroll` the layout only sees infinite height. Sections are distributed with a dynamic program that minimizes
-the columns' squared deviation from the ideal height — a greedy fill leaves every column short of the target and dumps
-all the accumulated slack on the last one. The song reader's section headers remain raised pills, scrolling with their
-section and hanging into the left padding so their text keeps the content's keyline; choruses are drawn on a raised card
-instead — only as wide as its widest line, up to the column — and keep a plain label (in the pills' `primary` text
-color), the other sections are indented to match the card's content.
-
-**A song that is not read whole in one row is set like a magazine** (`flowLikeAMagazine` in `SectionCutting.kt`): every
-column is filled down to the screen and a section that does not fit what is left of one runs on at the top of the next —
-from the last column of a row into the first of the next row too — since a page that ends with a section rather than
-with the screen is a page turn more for a reader who has to find the step buttons, and more for a pedal player to keep
-up with. **The fewest pages decide first, and then a score decides how they read** (`LayoutScoring` in `LayoutScore.kt`):
-the pages are as many as filling every column as full as it goes reaches, and where the columns of those pages end is a
-dynamic program over the ends of every column (`ColumnFlow.program`) that pays for every cut, more for one inside a
-section of four lines or fewer and almost nothing for one after an empty line or in front of a comment, for every piece
-of a cut section holding one or two lines of lyrics, and for the empty space at the end of every column of a page that is
-not the last, by its square in chorded lines. So a verse moves to the next column whole rather than leave a line of itself
-behind, and a column ends a line short rather than strand one, unless that costs a page. A row of chord diagrams, a tab
-system, a comment, and the song's first section are no stranded lines; they pay for the cut alone.
-
-Each page is then evened out on its own (`ColumnFlow.evenOut`): set under the lowest height it fits in its columns, one,
-two, and three lines more, and the screen, the one taken whose cuts and whose spread of column bottoms cost least. The last
-page, and one ending before a stretch that cannot be cut and is taller than the screen (a single column row of its own,
-paged through), takes the fewest columns that hold it; the slack stays there, at the end of the song. It is tried at
-every column count the width allows and compared, with the sections whole (`flowIntoRows`, with its wide tab rows), by
-pages (`SectionGrid.pageCount`) and then by score (`SectionGrid.score`, which also counts the lines a width wraps): the
-sections whole keep a full tie, the most columns the rest. A song read whole in a single row is never cut.
-
-**A song still stepped through may take columns narrower than a readable one** (`NARROW_COLUMN_WIDTH`, 288dp scaled by
-`fontScale`, three quarters of the minimum): every count up to what fits at that width is a candidate wherever no more
-than a quarter of the song's lines of lyrics wrap there (`fitsNarrowColumns`), the fewest that hold the song whole in one
-row first — read without stepping at all — and otherwise cut like a magazine, taken only where it has strictly fewer
-pages than the best readable layout, never on a tie (`withNarrowColumns`). A phone held upright stays one column; the
-default 800 × 600 desktop window can become two.
-
-**A song a few lines too long for its pages is set a little smaller** (`TextFitting.kt`): 97.5%, then 95% of the reader's
-size, never below `UserPreferences.MIN_FONT_SCALE`, the first at which the whole search takes a page fewer
-(`chooseFitScale`), searched only where the song could fit a page fewer even with none of its lines wrapped, none of its
-gaps, and every narrow section beside another. The heights are read at a width that much wider and scaled down, and the
-song is drawn the same way — every chunk laid out wider and placed through a scaled layer, which scales its hit testing
-with it — so nothing is composed again and the first frame is already the fitted one; `DecidedGrid.fitScale` keeps it with the grid, a change of it is a grid change that glides like any other, and
-while what the grid is decided for keeps changing (a pinch, a window edge being dragged; not the app bar or the metronome
-panel, which change the grid once, when they come to rest) the song is laid out at the reader's own size and fitted once
-the change holds still (`DecidedGrid.isFitDeferred`), since fitting costs two or three more layouts of the song on every
-frame; the stepper, the menu, and the app bar keep the reader's own size. The editor's preview and a songbook are neither
-narrowed nor fitted.
-
-**A width with room for one column is paged the same way** (`flowIntoPages`, also in `SectionCutting.kt`): the column is
-filled down to the screen, a section running on onto the next page, so that a step turns a screen of the song rather
-than a section of it — a phone held upright is where the reader has the least of the song in view. Where the pages end
-is the same score's dynamic program, a page at a time. Two neighboring
-sections that both fit half the column without wrapping (a run of chords, a short refrain, a folded section) are set
-side by side there, in a row of two columns that joins the page (`SectionGrid.joinsPrevious`: a section gap under the
-row above rather than a divider and a page of its own), wherever that is lower than stacking them; such a pair is never
-cut, so where it does not fit what is left of a page the two are stacked and cut instead wherever the first can start
-there, and the score decides whether the page ends there or before the pair. Whatever cannot be cut to fit what is left
-of a page (a staff of tablature, such a pair) may only start the next page where this one is at least half full;
-otherwise it starts here and the page runs on past the screen, paged through like a stretch too tall for any screen,
-since a page left mostly empty is never acceptable.
-
-The rows of these pages share one start edge (`sharesKeyline`), the pair's second section starting from the middle, and
-a page shorter than the screen is centered in it like any other (above): spread out into its gaps where it is a single
-row, moved down whole where it holds joined rows. A full page barely moves, and a short
-section left alone on one is read in the middle of the screen rather than at the top of an empty one. The editor's preview and a songbook of more than `MAX_CUT_SECTION_COUNT` sections keep the plain single column,
-which is never measured.
-
-Every section that may be cut is composed line by line (`SongUnits`, one chunk per line, a comment, a line of a grid or
-a system of tablature, or a row of the Chords section's diagrams, drawn as slots the same way (see Chord diagrams): a
-run of tablature is drawn as slots (`runSlotCount`, `SongTabBlock`'s `slot`), each holding the row of systems its index
-names at the width it is measured at — all six strings and whole bars — and the last whatever is left, so a section is
-cut between systems that are only known once the width is; a slot with no row at that width has no height, and nothing
-is cut in front of it; asked for its intrinsic width, every slot answers with the whole run's unwrapped width, since the
-columns are narrowed to the widest thing in them once the grid is decided, and a column narrowed to one slot's share
-would wrap the rest of the run into other, taller rows than the ones the page was planned with), which the layout places
-together unless it cuts between two of them, and it may only cut where `sectionChunkStarts` allows: at least one line
-(with its chords) on either side, never after a comment nor before an empty line; the lines are chunks of their own
-rather than the stretches between two cuts, so that the layout knows where every line starts (`SongRows.lineTops`),
-which is where a page of a section taller than the screen is brought to; a folded section is one chunk, and so is every
-section of the editor's preview, which does not cut (`canCutSections`), since what is typed would move pieces from
-column to column.
-
-A song of more than 200 sections is never cut (`MAX_CUT_SECTION_COUNT`): it is a songbook, read by paging through it,
-and the search would run again on every frame of a pinch. The piece that continues a section shows nothing of its
-header, and a chorus is cut into cards of its own: the cards are drawn by the layout behind the chunks, one for every
-piece, rather than around the section, with the card's own padding kept inside its first and last chunk and added at a
-cut, so that an uncut card is exactly what it was. Sections move between layouts as `SectionMotion` says: a single
-change springs them with `animateBounds` inside a `LookaheadScope`; while the width, the height or the text size keeps
-changing (a pinch, a window edge being dragged, the short window's title row collapsing, the metronome panel opening or
-closing in the app bar: `GLIDE`, from the second change within 200 ms until they hold still) they follow it as it comes,
-since springing after every frame only makes them trail behind and lays every line out twice a frame, and only the jump
-a new grid makes is glided over (`SectionGlides`: the jump found in the lookahead pass becomes an offset of the approach
-pass's placement that runs down to nothing, so each section is still measured once, and a section still gliding when the
-change stops is left to finish before `animateBounds` is put back on it); the editor's preview, which follows every
-edit, does neither (`NONE`).
-
-A section too tall for `animateBounds` glides in its place: `animateBounds` measures its content with
-`Constraints.fixed` of its own size, which cannot hold a height of 262,143 px next to any width, so `SongSectionsLayout`
-measures an animated section no taller than half of that (`maxAnimatedSectionHeight`), and one that reaches the limit
-loses the modifier in the next composition and is measured in full from then on. `isLyricsOnlyModeEnabled` drops the
-chords (and with them the tab and grid sections, and the transposition control, which would have nothing left to act
-on). The columns are filled in rows across the page the way the systems of sheet music are read, never column by column,
-which would send the reader of a song that scrolls back up to the top of the next column — where no row of several
-columns is ever taller than the screen, whose whole height every row has — so a section taller than the screen is given
-a row of its own, however little it overflows by, rather than sending the reader back up to the top of the column beside
-it — which a reader stepping through the song with a pedal could only reach by going back over what they had just
-played.
-
-Up to that height a row's columns are as tall as they need (`flowIntoRows` in `SectionGrid.kt`, a dynamic program over
-where the rows end and how many columns each has that takes the fewest pages — a row taller than the screen counting as
-every page it is paged through in (`pagesOf`) — and of those, the one whose first rows reach furthest into the song
-(`isBetterRow`), each row as tall as the lowest split of its sections into that many columns allows and then balanced
-like the plain columns: a row is a stop the song is read at, and one shorter than the screen saves nothing but leaves
-its page empty, so the slack is left on the last page rather than on the first, where the short sections a song opens
-with, its info section and an intro, would otherwise pack lowest together), so a song that fits the screen in columns is
-never made to scroll by reading it across: it is one row, or a few that fit just as well.
-
-Read that way, the song details page's fling comes to rest with the top of the screen exactly on the bottom edge of a
-row's divider, so the divider itself is just out of view, and the top edge's fade is as strong as the song has been
-scrolled past the top of the row it is in rather than past the top of the song (`SongRows.scrolledIntoRow`), so a row
-rested on is not faded at all (`RowSnapping.kt`, handed the rows by the layout as it places them, `SongRows`: where each
-is rested on and where its content ends; the fling finishes with the whole pixels its animation left short, since the
-scroll keeps the fraction of a pixel a drag left it at). A row that fits is snapped to its divider or the next one. One
-whose content is taller than the screen is landed on at its top, and once the reader is in it scrolls freely until its
-bottom comes into view, since it could not be read from a single position - measured by its content, never by the empty
-space after it. **Every row shorter than the screen is followed by empty space down to the bottom of it**, always —
-there is no setting for it (`SectionGrid.arrange`'s `minRowPitch`, wherever `SongLyrics` is given a `rowViewportHeight`,
-which the editor's preview is not), so that a scroll resting on a row shows that row and no other, spread out over what
-the screen shows below the divider (`centeredRowHeight`; the divider stays where it is, so the scroll rests on the same
-spot).
-
-The last row gets that space too (`minLastRowHeight`), so that it can be brought to the top and fill the screen like the
-rest; a song of a single row taller than the screen too. That space is only there where the song scrolls anyway — where
-it is taller than the screen, or is several pages — since a song of one page that fits the screen is read whole; a
-single column that is not paged gets none, and the grid is decided without it. **Two small floating buttons at the end
-edge step through the song** (`StepButtons`, one pair drawn over the whole pager rather than one on every page, so they
-stay put while the songs slide under them, answering the `SongStepper` the current page hands up): between the pages
-wherever it is read in rows or pages and scrolls, a single row included, so that the sections stacked in a column of a
-row are never stops of their own, and between the sections of a single column that is not paged (a songbook) - each stop
-as far above a section as the top edge fades (`EDGE_FADE_SIZE`), so the section is read whole, its label included,
-rather than from under the fade.
-
-A row or a section taller than what can be read at once is **paged through** on the way (`nextStepTarget`,
-`previousStepTarget`, `ReadingWindow`): a step moves the song by the screen less the top fade, the system bars and two
-lines kept from the page before (never more than a third of what can be read, so a page is at least two thirds of it) -
-or a little less, so that the page starts with the start of a line (`lineTops`) rather than half of one - and goes on to
-the next stop only once the end of the one being read is in view, so that a song can be read to its last line with
-nothing but Up and Down at any text size on any screen — the one guarantee these buttons exist for; a row is measured by
-its content, never by the empty space after it, and the buttons are named "Scroll down" / "Scroll up" while that is what
-they do. A press moves the song by at least a line wherever that skips nothing: one that would move it less - stops the
-end of the song clamped to within a few pixels of each other, a fling that came to rest just above one - goes on step by
-step for as long as that stays within a screen of the reader, the dots count such a run of stops once, and the last
-press of a song hands off only once all of its content is on screen.
-
-A step is animated slowly enough to be followed with the eyes (700 ms for a screen's worth, never under 400 ms), and a
-press while one is under way steps on from where that one is headed rather than from wherever it has got to, so that two
-quick presses of a pedal are two whole steps. The previous one is at the top, the next one at the bottom, each scaling
-in and out as there starts or stops being something of the song to step to in its direction - the top of the song
-counting as a stop, so the previous button only leaves at the very top of the song, the next one (or its turn to the
-next song of a setlist) only once the end of the song has been on screen, and a song that fits the screen has neither.
-In a setlist they go on to the song beside this one where nothing is left their way, their arrows turning a quarter turn
-to point the way the pager goes, and only leave at the ends of the setlist: forward to the next song's top, and back to
-the previous song's end (the page beside is composed, so its scroll is put at its end before the pager gets there),
-since landing on its top would have a second press skip that song whole.
-
-They never cover a line: a song that has to be scrolled is laid out that much narrower (`stepButtonInset`, a grid
-searched for at the narrower width, the full one taken where the song fits the screen there as one row, and the grid
-found for the full width does too (`isReadWithoutStepping`) - except in a setlist, `keepsStepButtonInset`, where the
-buttons page a song that fits too; a single column that is not paged is never measured to find out, and is taken for one
-that scrolls). **Between the two buttons a column of dots counts the song's stops** (`StepProgressIndicator`, answering
-the same `SongStepper`): one per stop the song can be brought to (`reachableStops`, the stops too close to the end of
-the song to reach the top of the screen counted once, where it ends), and a mark that follows the scroll itself rather
-than the stop it is in (`stopProgress`), sliding from dot to dot as the song moves under a finger, a fling or a step
-alike and on through a row taller than the screen as it is read; it takes the room between the buttons whether or not
-they are there. The first stop is the top of the song: the page's padding above the first row or section is read with it
-(`SongRows.belowPadding`) rather than being a stop of its own, so a song opens on its first row with its dot marked.
-
-A page paged to with a different number of stops grows or shrinks the column into its new length, while a column fading
-in shows its song as it is; a song of fewer than two stops, which is every song that does not scroll, fades it away.
-More stops than it has room for are scrolled through with the mark kept in the middle (`stepProgressOffset`), the dots
-shrinking and fading towards an end with more beyond it. A screen reader hears it as a progress bar, "Page 3 of 8" (or
-"Section" where the song is stepped by its sections), the buttons being "Next page" / "Previous page" the same way, the
-stop read through a derived state so that it recomposes once per stop rather than per pixel scrolled. It is drawn rather
-than composed and fades by its colors rather than through a layer, for the web build's sake (see `FastScroller`). **The
-whole area the song is read in is their touch target too** (`stepOnTap`, on the box around the pager and the buttons): a
-tap on its top half presses the previous one and a tap on its bottom half the next one, while that button is there —
-only a tap nothing inside wanted (a fold toggle, a button or a pinch), never a long press, never a mouse's right or
-middle click, never the press that stops a fling and never one the system took away (the cancellation Compose makes of
-Android's home and back gestures arrives as a consumed release), while a press during a step steps on as the buttons do.
-
-A tap between two strums often slides, so a drag the scroll took that is over within 250 ms and travelled less than a
-tenth of the area's height is still a tap, by where it landed: the step is counted from where the song was when the
-finger came down and replaces the fling the release started a frame later, and one that slid mostly sideways only steps
-once the pager has settled back on its song. **A fling goes no further than one step** (`oneStepCappedTarget`, from
-where the finger let go), so a swipe never skips a row or a page of one; a drag still takes the song anywhere. The
-buttons take no focus, and the screen takes it back whenever it lost it to nothing while nothing is drawn over it
-(`songKeyboardShortcuts`' `isUncovered`): a focused button leaving, or a focused chip on a page the pager let go of,
-would otherwise leave no path for a key, and Compose spends the next arrow on a focus search of its own, which scrolls.
-While something is drawn over it, Up, Down, Page Up, Page Down, Left and Right are swallowed rather than acted on or
-left alone, since the export screen is drawn in the same window and does not take the focus by being there (it takes it
-itself, with a bare `focusTarget()` on its root, on every platform).
-
-Wherever the buttons are there, Up, Down, Page Up and Page Down press them - on purpose instead of scrolling, since a
-Bluetooth page turner pedal is a keyboard sending exactly those keys, and a nudge of a tenth of the screen leaves the
-player halfway through a verse. A step key held down is one step until it is released, the window losing the focus
-counting as a release (`songKeyboardShortcuts`' held set): the repeats the system sends would otherwise chain a page per
-repeat, and a foot resting on a pedal is not a request to page; a held arrow still scrolls continuously where there are
-no buttons. The dividers it snaps to are where the lookahead pass settles them rather than where an animation has got
-them.
-
-**A new layout keeps the reader where they were** (`RowSnapFlingBehavior.keepReaderInPlace`): the scroll keeps its
-position in pixels, which a window resized, a pinch or a stepper, a fold or a transposition puts somewhere else in the
-song, so wherever the scroll comes to rest it takes the stop it is past - its row, or its section where it is not
-stepped by rows - named by the section that stop starts with, and how far past it (`ReadingAnchor`) — and, inside a stop
-taller than the screen, where a pixel offset is a different line at every text size, the line they were reading, named
-by its section and its place among that section's chunks, and how far into it as a proportion of its height
-(`LineAnchor`) — and once a new layout has held still for 250 ms the scroll is animated to that line where the new
-layout still pages through it in a single column, and otherwise to the stop now holding that section, as far past it
-(never past the bottom of a row taller than the screen). A reader resting on a stop is put back on the stop, and the
-place found is snapped as a fling would be (`settledScrollTarget`), so that one falling between two rows of the new
-layout — or a scroll that has not caught up with it — never leaves a divider standing on screen. The wait is
-what keeps a pinch or a window edge being dragged from flickering: they lay the song out on every frame while its
-sections glide, and a scroll following each layout under them does. It is taken only at rest and never where a move of
-its own left it, so a pinch through many layouts returns to the row it started in instead of drifting, and a scroll of
-the reader's own is left alone.
-
-A viewport that only changes height — the metronome panel opening or closing, the short window's title row collapsing —
-moves nothing but the padding after each row, so that one is followed in the very layout pass that places the rows
-(`RowSnapFlingBehavior.onRowsPlaced`), before the scroll places the song, and the divider above the row being read never
-slides into view while it changes. Only the page being read (and the one a swipe is heading to) follows it frame by
-frame; the pages composed beside it keep the height the viewport last rested at (`pageViewportHeight`), as they keep the
-settled text size during a pinch. A section whose minimum intrinsic width is more than a column's — a staff of
-tablature, which the column would cut into systems — may instead have a row as wide as that, up to the whole width, and
-takes it wherever that saves a page, makes the row longer or lowers the same row (a tab exactly as wide as its block is
-never wrapped, whatever the estimated character width says); the sections next to it may be stacked in that row's single
-column too, each at its own width — the rest at a single column's — and each centered in the row, as the columns of
-every other row are, while the stack fits the screen (`forEachWideRow`), so that a short section beside a tab, the info
-section above the demo song's picking pattern, is not left with a row and a screen of its own. Both apply to the
-editor's preview as well, since it renders the same `SongLyrics`.
-
-### The steppers
-
-`components/Stepper.kt` / `screens/songDetails/TranspositionControls.kt` / `FontScaleControls.kt` /
-`LiveFontScaleControls.kt` / `CapoControls.kt` / `MenuStepperRow.kt` / `FontScaleGestures.kt` — the transposition and
-text size steppers (`fontScale` in the view model, persisted in `UserPreferences.fontScale` with a debounce because a
-pinch changes it every frame; a value still waiting when the view model is cleared, or when the desktop process is about
-to end, is written then). The live value is snapshot state on the view model rather than a flow, read where it is used —
-each page's `SongLyrics`, the stepper, the gesture — so that a pinch recomposes those and not the screen around them;
-the stored value wins whenever nothing set on this device is still waiting to be saved, so a preference written
-elsewhere (Settings, a restore, a sync run) is followed after a pinch too. Only the page on screen (and the one a swipe
-is heading to) follows a pinch frame by frame; the pages composed beside it read `settledFontScale`, the live value once
-it has held still for 500 ms, which a step of the stepper or a shortcut sets at once. That is after the page being read
-has stopped gliding and re-anchored its scroll, so the pages beside it are laid out again in frames of their own; a
-swipe settles it at once, so the song being left never goes back to the old size as it slides away. The scale is kept in whole
-percent, which is all the stepper's label shows, so a slow pinch's sub-percent frames lay nothing out again.
-
-Each stepper is a tonal pill (`surfaceContainerHighest`, `CircleShape`) around its two buttons and the value, so that
-two of them still read as two controls, shorter than Material's own buttons (which also lowers
-`LocalMinimumInteractiveComponentSize` to match — a touch screen still gets a 48dp touch area around each, from
-Compose's own touch target expansion); the editor's transposition is the same pill. Its `height` is `STEPPER_HEIGHT`
-(40dp) wherever it belongs to a bar or a menu, and `songControlHeight` — a section header pill's — where it is part of a
-song; the metronome's Tap button takes the same two, and a stepper's `trailing` slot draws a control that sets the same
-value inside the pill, behind a divider (the tempo's Tap segment). The transposition goes around the octave rather than
-to an end (`wrapTransposition` in `playing/Transpositions.kt`, from −5 to +6, the halfway point reading +6 as the
-website does), both when it is stepped and when a stored amount is read, so its buttons are never disabled.
-
-**The transposition stepper belongs to the song's first section** (`SongPlayingControlsRow.kt`), next to the key it
-reads, and is in neither the bar nor the menu; what is left is the text size, which is the reader's own rather than the
-song's: in the bar where it has the room, and otherwise at the end of the menu (`MenuStepperRow`, handed to `SongActions`
-as its `menuFooter`, drawn at a menu entry's height after the entries), which stays open while its buttons are pressed.
-Outside read only mode the overflow button is always in the bar, holding the way into the editor first (the metronome
-and the tuner are the song's first section's, above); as the bar narrows, the text size goes into the menu first, then
-the Choose setlists button, and then the cover leaves the title, each while the title keeps 160dp (`appBarButtons`,
-decided from the settled width for every song of the pager at once), so the smallest phone has the back button, the
-cover, the title, Choose setlists, and the menu. The overflow button reaches into the button before it and not into the
-stepper's pill or the title (`overflowOverlap`). Performance
-mode leaves only the text size and empties the app bar of everything else, so there the one stepper is in the bar
-(`LiveFontScaleControls`) wherever that leaves the title 160dp (`showsFontScaleInPerformanceBar`) and alone in an
-overflow menu otherwise; the cover is only in that bar next to the stepper and only where the title still keeps its
-160dp beside both (`showsCoverInPerformanceMode`): the title is what tells the player which song is up.
-
-`Modifier.fontScaleGestures` handles pinch (damped with an exponent, so it is slow and precise) and Ctrl / Cmd + scroll
-wheel (counted in notches of the wheel: the web reports the browser's own pixel or line delta, which
-`verticalWheelNotches` in `ui/platform` converts, or one notch would jump the size from end to end) in the initial
-pointer pass and consumes them, leaving one-finger scrolling and plain wheel scrolling to the content. The wheel's
-changes are added up unrounded by a `FontScaleAccumulator`, since the view model keeps the scale in whole percent and a
-touchpad's scroll (and the Ctrl + wheel Windows makes of its pinch) comes in fractions of a notch each rounded away on
-its own. A touchpad pinch that the platform tells apart from a scroll — macOS to the desktop app, the browsers' Ctrl +
-wheel without Ctrl — goes to the view model's `magnifyByTouchpad` from the window instead, as a ratio of the finger
-spread damped by the same `PINCH_SENSITIVITY` as a touch pinch and added up the same way, gated like the shortcuts. Ctrl
-/ Cmd + plus, minus and zero step and reset it too, but they are answered by the desktop window and the web page
-(`zoomSongText`, see those shells above), since the browser acts on them before Compose could stop it.
-
-### The song details app bar says what the song sounds like
-
-**The song details app bar says what the song sounds like**, under the title and the way a song card's second line does
-(`SongHeaderNote`): the artist, then the key with the transposition *and* the capo applied — so it is the key the band
-hears rather than the one the Transposition control names, the two reading differently wherever the capo is not zero —
-and inside a setlist the song's duration, as its card there says it, each after a 16dp dot (the cards' 24dp one would
-grow the bar and with it the room the lyrics are laid out in). Both are worked out for the song the crossfaded content
-was composed for rather than for the current one, since a page change draws two songs at once, both crossfade where they
-stand as a stepper moves them, and the chords switched off leave the key out as they do on a card (the duration stays,
-as it does there). The artist gives way to them, since the key and the duration are short and fixed while an artist is
-as long as somebody wrote it. The tempo is not among them: the song's own first section, a line below, already says it.
-
-### The song details title scrolls the song back to its top
-
-**The song details title scrolls the song back to its top** when pressed, and **opens the About the song sheet when the
-song is already there**: the title and the cover are that sheet's own heading, so once there is nothing left to scroll
-back to a tap on them is the one way into it. A chevron after the title (`ic_expand`) says so, fading in on the
-effects spring and growing from half its size on the spatial one while a tap opens the sheet, and back out while it
-scrolls instead; its room is
-kept wherever the sheet is offered at all, so a long title is not cut off afresh as the song passes its top. Its touch
-target (`titleTouchTarget`) is all of the bar that the back button and the actions leave, as tall as the bar and
-reaching up to their touch targets, so a tap on any empty part of it counts; it reports only the title's own room to the
-bar, so the back button, the title, and the actions stay exactly where the bar puts them.
-
-It draws no indication — a highlight over most of the bar reads as the bar reacting, and one around the title alone has
-no room, the title starting 4dp after the back button's target — so a press dims the title, its cover and its chevron
-instead, the way an iOS text button answers one, and a pointer gets the hand over it while a click does anything. The
-scroll is read inside the bar's title slot, so passing the top recomposes that alone rather than the screen. It takes
-nothing at the top where the sheet is not offered — performance mode with a song that says nothing about itself, or a
-text that has not been read yet — rather than announcing a scroll that would do nothing.
-
-### The song details screen keeps the display on
-
-**The song details screen keeps the display on** for as long as it is composed (`Modifier.keepScreenOn()` on its root),
-since a song is read with both hands on the instrument. Compose implements it on Android (the view's flag), iOS
-(`idleTimerDisabled`) and the web (a Screen Wake Lock, taken again whenever the tab is shown, and only granted in a
-secure context); on the desktop the modifier does nothing.
-
-### `screens/songDetails/SongKeyboardShortcuts.kt`
-
-`screens/songDetails/SongKeyboardShortcuts.kt` — `Modifier.songKeyboardShortcuts` reads the song details screen with the
-arrow keys: Up and Down scroll the song, Left and Right step to the previous and the next song of the setlist whatever
-the song is laid out as, and wherever the song has its step buttons, Up, Down, Page Up and Page Down press those instead
-(the previous or next section or row, a page of one taller than the screen, or in a setlist the song beside it at either
-end); where the buttons are not there Up and Down scroll and the page keys are left unconsumed — counted from the song
-the pager is on its way to, so that two quick presses go two songs, as do two quick taps on the pager bar's buttons.
-That is a keyboard on the desktop and the web, and it is also a page turner pedal paired with a phone or a tablet, which
-is exactly what those send. The screen takes focus as it opens, since nothing on it would otherwise ever be focused and
-a key event only travels along the focus path, and the handler sits in the preview pass rather than the bubbling one so
-that it sees the event wherever inside the screen the focus has since moved to (an app bar button that was clicked, the
-scrolling content itself) and so that the scrolling container underneath never interprets an arrow of its own.
-
-Consuming all four takes two dimensional focus traversal away from this screen, which is the trade — the keys are worth
-more to a reader here than they are to Tab, which still traverses everything. Left and Right are left unconsumed at the
-ends of the setlist and when there is a single song to read, and all four are left unconsumed when Alt, Meta or Ctrl is
-held: Alt + Left is the browser's Back, which on the web is the app's own back stack, and Cmd + Left and Cmd + Right are
-Back and Forward on a Mac. The scroll step is a tenth of the viewport animated linearly over roughly the interval a held
-key repeats at, so one press is a smooth nudge and a held key scrolls at a steady pace instead of stuttering between
-steps; it reaches the scroll state of the page that is current, which `SongDetailsScreen` hoists out of
-`SongDetailsPage` for it (each page scrolls on its own, and the current one hands its state up). The pager bar numbers a
-song by its place in the setlist and counts the setlist's entries, missing files included, as the setlist's rows do; the
-pages themselves are the songs that are there, so stepping skips a missing entry.
-
-### On the song details screen
-
-**On the song details screen** the `MetronomeButton` **shows and hides the panel** rather than starting the click
-(`toggleMetronomePanel`: opening it starts nothing, and closing it stops a click that is playing). Its mark stays the
-metronome, drawn in the button's content color — `onSecondaryContainer` on the secondary container circle while the
-panel is up, the way the tuner's is while its sheet is open (`SongToolButton`) — and pulsing on every heard beat unless
-the Animate switch is off, growing and leaning towards the primary color as the pulse fades, the way the navigation bar's
-does. **Its pendulum
-swings with the click**, and the Metronome item in the navigation bar and the rails both swings and pulses the same way
-(`MetronomeIcon`, the mark as two drawables, `ic_metronome_body` and `ic_metronome_pendulum`, the second turned about
-its pivot, driven by `rememberMetronomeIconBeat`): the pendulum is at an end of its arc on every heard beat and swings
-to the other over one beat at the playing tempo, which is read from `playback` as the beat arrives, each beat restarting
-the swing from wherever the pendulum is, so it never drifts from the ear; the Animate switch stills both, and a stopped
-click lets the pendulum back to the mark as drawn.
-
-It is the last control of the song's own first section, after the time signature, in read only mode too (see the tools
-above), so it scrolls away with the song; M still starts and stops the click from anywhere in it, which opens the panel
-with it. The tempo (`TempoStepper`: the stepper, highlighted while overridden and reset by a tap on its value, with the
-Tap segment inside its own pill behind a divider — `Stepper`'s `trailing`, since tapping a tempo in sets the number the
-stepper steps rather than a value of its own) is in the song's own first section outside read only mode, beside the
-button. The page's tempo line shows the effective tempo (`withTempo`), as the key line shows the transposed key; the PDF
-prints a setlist's tempo the same way and a library export the file's own.
+- `songDetailsSongsOf` resolves the destination against `songLookup` (the library and whether it has been read). Before
+  the read it resolves only a destination whose songs are all present, so a restored setlist pager never restores its
+  page index onto the wrong song over a partial batch.
+- Once every song it names is gone from a read library, the screen closes itself.
+
+### Rendering (`SongLyrics.kt` and its siblings)
+
+- Tabs and grids are monospace: they are columns of characters that must line up.
+- A comment's bracketed chords are transposed and colored (`ChordProHighlighter.chordsOfShownText`, shared with the
+  editor). A chorus recall draws everything `ChordProBlock.ChorusRecall` carries, headed once.
+- **A section cut by a comment, break, or `{transpose}` is drawn whole again** (`joinCutSections`, over
+  `Section.isContinuation`), so the comment stays between its lines rather than becoming a unit that could land in
+  another column. Comments opening or ending a section join it (`Comment.placement`), so every comment inside a section
+  folds with it; one between sections is a unit of its own that never folds. A chorus recall is the one cut not joined.
+- A later `{transpose}` leaves a "Key: A" line (`RenderSection.KeyChange`) in the reader's transposition and notation,
+  the capo left out as in the Transposition control; omitted where the song has no `{key}` or the chords are off.
+- Lyrics-only mode drops tab and grid lines (and comments inside them, `isInTabOrGrid`), a section left empty whole, and
+  the info section's key, capo, tempo, and time line (the section itself where nothing else is, `withMetadataSection`).
+- Lyrics take their direction from content (`TextDirection.Content`), so chords of an RTL line hang leftwards.
+- Chords are drawn over the lyrics, not composed. Lyrics under a wider chord are padded with non-breaking spaces
+  (`padLyricsToFitChords`); a padded line may break only between two chords at a word boundary (padding whitespace is
+  non-breaking, a zero-width space is the break), so no chord is pulled back over the one before. Overflow is clipped by
+  the line and each pager page, never wrapped onto the lyrics.
+- Because chords are drawn, each chorded line's content description is its ChordPro form (`[Am]There is a…`), and a tab
+  block's its lines, so screen readers read the chords.
+- One `TextMeasurer` per page; `SongTextMeasurements` caches chord names, lyric widths, line heights, tab rows, and
+  aligned grid bars per page, keyed on the styles and the measurer (not the song), so a transposition only measures chord
+  names it has not drawn yet.
+
+#### Tabs and grids
+
+- Each run of `ChordProLine.Tab` is one `SongTabBlock`: its columns only line up measured together. Row cuts are
+  `ChordProTabWrapper`'s rule. The block draws text rather than composing it because a section is measured at several
+  widths: a childless `Layout` answers an intrinsic measurement by running its measure block, so the height for a
+  candidate width already counts the rows the tab wraps into.
+- A run with no staff line (chord names over lyrics in `{start_of_tab}`) is preformatted text, cut between words
+  (`wrapPreformatted`), a chord line kept with its lyrics. **Nothing on the page scrolls sideways.**
+- Grids: `alignedGridBars` (`GridColumns.kt`, shared with the PDF) pads every bar so bar lines align across lines; text
+  after a line's last bar line is aligned with nothing so it never widens a bar; each bar is one text, since only one
+  monospaced text keeps its columns. A too-wide grid line breaks between bars (`SongGridLine`), a too-wide bar inside
+  itself.
+- A paragraph holding nothing but one tab or grid run is headed "Tab" / "Grid" (screen and PDF); one with lyrics around
+  the run is not.
+
+#### Tempo and time changes
+
+Product side in `ui/metronome/CLAUDE.md`.
+
+- **A later `{tempo}` / `{time}` starts a page of its own** (`RenderSection.Timing`, `showsTiming`): never joined into
+  its section; a read-only `SongTimingLine` stands in its place (an override scaled in by `withTempo` / `sectionBpm`); the
+  rest of the section is headed by its fold toggle alone and folded under the section's key plus `~n`, so switching the
+  Metronome feature does not renumber later folds. With the feature off it is joined over like a `{transpose}`.
+- A timing line with no song line after it is dropped (`withoutEmptyTimings`, after `LayoutBudget`).
+- Each stretch between changes is searched as a song of its own (`SongUnits.timingStarts`, `searchSegment`,
+  `SectionGrid.concatenated`), each starting a page, never half of a side-by-side pair; such a song is always stepped.
+- A change before the first line starts no page (`timingStretchesOf`); `SongRows.timingSections` reports it at section 0.
+- Unpaged layouts (the editor's preview, a songbook) show changes as lines; a songbook with changes is one column
+  whatever the width (`widthColumnCountFor`).
+
+### Folding
+
+- Every section with a header folds, and so does every tab or grid run inside one (`FoldedRuns`). Saved per song in
+  `UserPreferences.foldedSections` (`toggleSectionFold`), the same wherever the song is opened from: it is the reader's,
+  so it never reaches a setlist, an export, or a sync run; a rename carries it, a deletion drops it.
+- **A fold is keyed by what the file calls the section** (label as written, else its kind) plus which occurrence
+  (`chorus#2`), and a run by its section's key plus its own label or kind (`Intro#1/Picking pattern#1`). Never by
+  position (a verse added above would shift every fold) and never by the shown heading (translated).
+- The page remembers only keys toggled while it was open, so only those fade in.
+- Every section has a header: unnamed kinds labelled in the app's language (`DefaultSectionLabels.labelOf`, shared with
+  the PDF), numbered where a song has several (`withNumberedSections` in `SectionNumbering.kt`,
+  `UserPreferences.shouldNumberSections`). Only unlabelled sections and those labelled with the kind's own name are
+  numbered, and "Verse 2" keeps its number, so no two share one. The number is `Section.number`, not part of the label,
+  so the saved folds do not move with the setting. An unnamed `{chorus}` recall takes the repeated chorus's number.
+- A plain paragraph, and the rest of a section a chorus recall cut, get a chevron-only pill (`UNNAMED_SECTION_HEADER`),
+  named for screen readers by `firstLyric`. The editor's preview folds nothing but draws that pill empty, keeping the
+  chevron's room, so it lays out like the details screen.
+- A run's own toggle is labelled by its environment's label, else "Tab" / "Grid"; two back-to-back environments with
+  different labels fold apart; a section that is only one run folds as the section, no second toggle.
+- A chorus has no pill and folds from its whole title row; its card's paddings are inside `SongSectionContent` so the
+  press reaches the card's edges. The chevron is `components/ExpandChevron.kt`, shared by every fold in the app.
+- Folds are part of `UnitContent.foldedKeys`, so a fold re-measures only its own section (the grid is still
+  re-searched). An unfolding run animates only opacity: a height still animating would be measured halfway.
+
+### The first section (`SongMetadataSection.kt`)
+
+- Flows through the same rows and columns, never cut. Controls are `SongPlayingControls` (`SongPlayingControlsRow.kt`)
+  in `BalancedRows`: one line, two and two, or one per line, never three over one; a moved control springs on the
+  sections' spring via its `layoutId`.
+- **Controls scale with the lyrics like the header pills**: `fontScale` grows their content, not their padding, so each
+  is exactly `songControlHeight` (the pill's `titleStyle` plus `HEADER_VERTICAL_PADDING`). Scaling a pill whole towered
+  over the page. `UserPreferences.MIN_FONT_SCALE` is what keeps them big enough to hit.
+- Tool buttons (`SongPlayingTools`, `SongToolButton`): the tuner after the capo (or the transposition), the metronome
+  after the time signature; a button whose group is absent goes after the other (`playingToolPlaces`, tested). With
+  chords and metronome both off there is no section and the tuner is an overflow menu entry (`tunerAction`).
+- Whether the section holds either button is part of `RenderSection.Metadata`, since measured sizes are keyed by it.
+- Read only line: always names capo, tempo, and time (`readsDefaults`: "Capo 0", 120, 4/4) and reads values as the click
+  and the steppers do (tempo clamped to the click's range, `C` as 4/4, capo within the neck); split around the tools.
+- In the editor's preview (`isSongInfoShown`) the section is the About the song tiles (`SongInfoCard`), emitted under one
+  key whatever it says, so its cover waits for typing to pause rather than fetching half-typed addresses.
+
+### The About the song sheet and its editors
+
+- `DialogType.SongInfo`, read live from the song's text and closed with the song; opened only by the title (below). The
+  sheet and the preview's card share `SongInfoBody`; `songPlayingOverrides` is shared with the Song defaults sheet.
+- Group titles are always plural, so a title does not change wording under the finger adding the first item.
+- Chips in a tile are labels; the tile takes the tap. An empty group's call to action (`SongInfoAction`) is exactly
+  `tagPillHeight` tall, so the tile keeps its height as its first chip arrives.
+- Links are outlined buttons (they open a page, inside a tile that opens Manage links). **No tile is shorter than the
+  links tile with one link** (`songInfoTileMinHeight`). Link buttons report their height without the touch target slack
+  (`withoutTouchTargetSlack`), or their tile's centering would be off. The editor's compact card (`isCompact`) shows
+  links as chips.
+- Over the editor (`SongEditTarget.EditorDraft`) it reads `CampfireViewModel.editorDraft`, the key as typed, no
+  overrides; its tiles edit the typed text.
+- `SongMetadataDialog.kt`: the duration's digits fill from the right like a timer (`DurationDigits.kt`, `428` is `4:28`,
+  since a number pad has no colon), written as `m:ss`, at most `99:59:59`; a duration it cannot read is left alone on
+  Save. Opens with no field focused. **Writes only the fields changed** (`SetChordProMetadataUseCase`), so a field
+  synced in meanwhile survives. A blank field removes the directive. A new title or artist is not a rename.
+- `SongLinksDialog.kt`: a draft written once on Save. Rows are keyed by an id of the dialog's own so a moved row slides
+  rather than two rows trading contents. Links keep the file's order (tags and languages are alphabetical,
+  `sortedAlphabeticallyBy`). Duplicate or unusable addresses and a named row without one block Save; empty rows are
+  dropped (`songLinksToSave`); links synced in while open but never offered are kept.
+
+### Building the model, and the budget
+
+- `rememberSongLyricsModel` parses, transposes, and splits off the main thread, except the first rendering of the page
+  on screen (and pages before it), built in place (`buildsModelInPlace`) so the page never opens on an empty frame and a
+  step back from a song's top has the previous song's end to land on. Search-found chord shapes follow from
+  `Dispatchers.Default`. Later builds keep the previous rendering until the next is ready.
+- **`LayoutBudget` caps what is laid out** (3,000 lines, 200,000 characters): every section is fitted and every chorded
+  line measured on the main thread, and a concatenated songbook or a log file froze the app for seconds (on a phone,
+  killed it). The model stops after the last section that fits (or inside an oversized first one) and says so; the file
+  is untouched and the header is built from all of it.
+
+### Layout (`SongSectionsLayout`, `SectionGrid.kt`, `SectionCutting.kt`, `LayoutScore.kt`, `TextFitting.kt`)
+
+- **Fewest (widest) columns that fit the song in one row**, else the fewest that fit it in several (`searchColumnCount`),
+  from intrinsic heights; a failing candidate jumps to the smallest count that could fit. A single-column window skips
+  the search (it is paged).
+- Column width 384–560dp scaled by `fontScale` (288dp narrow, below). Once decided, each column narrows to its widest
+  content and each row's leftover width is shared evenly before, between, and after its columns, clear of the step
+  buttons where needed.
+- **Several counts fit one row → the most even fill** (`balancedAmong`): width filled against height filled; more columns
+  only by a margin and wrapping no more lines.
+- **A page with room spreads out** (`SectionGrid.arrange`'s `maxExtraSectionGap`): each column of a single-row page is
+  centered vertically, the room widening section gaps first (by at most a chorded line), the rest 45% above, since exact
+  centering reads low. A multi-row page moves down whole. The room is that the grid was decided for, so it never
+  scrolls.
+- **A fold holds the columns in place for 900 ms** (`ColumnCenteringHold`) before re-centering, or the header just
+  tapped would move and a second tap miss. Armed in a `SideEffect` ahead of the frame's measure, released only by the
+  delay; `SongSectionsLayout` records spreads and page shifts on unheld lookahead passes, `arrange`'s `heldSpreads` /
+  `heldPageShifts` place them. `SongLyrics` passing no hold turns it off.
+- Rows are read across like systems of sheet music, never column by column, which would send the reader back up. **A
+  section taller than the screen gets a row of its own**: a pedal reader cannot go back up to a column beside it.
+- `flowIntoRows`: a dynamic program over row ends and column counts, fewest pages first (a tall row counts its pages,
+  `pagesOf`), then the one reaching furthest (`isBetterRow`), leaving slack on the last page. Columns within a row are
+  balanced by a DP over squared deviation from the ideal height; greedy fill dumps all slack on the last column.
+- A section wider than a column (a tab staff) may take a wider row, up to the full width, where that saves a page or
+  lowers the row; neighbours may stack in that row's single column (`forEachWideRow`), so a short section beside a tab
+  gets no screen of its own. The editor's preview does this too.
+- **A song not read whole in one row is set like a magazine** (`flowLikeAMagazine`): columns filled to the screen,
+  sections running on into the next column or row, since every page ending early is an extra page turn. Fewest pages
+  first, then `LayoutScoring` (`ColumnFlow.program`) prices cuts (more inside a section of four lines or fewer, almost
+  nothing after an empty line or before a comment), pieces of one or two lyric lines, and the squared empty space at the
+  end of non-last columns. Diagram rows, tab systems, comments, and the first section are never "stranded lines". Each
+  page is then evened out (`ColumnFlow.evenOut`); the last takes the fewest columns that hold it. Compared against the
+  whole-section layout by `SectionGrid.pageCount`, then `score`; a full tie keeps sections whole. A song read whole in
+  one row is never cut.
+- **Narrow columns** (`NARROW_COLUMN_WIDTH`, 288dp): counts where at most a quarter of lyric lines wrap
+  (`fitsNarrowColumns`), taken only for strictly fewer pages (`withNarrowColumns`).
+- **Text fitting** (`TextFitting.kt`): 97.5%, then 95%, never below `MIN_FONT_SCALE`, the first that saves a page
+  (`chooseFitScale`), only searched where a lower bound says it could. Measured wider and drawn through a scaled layer
+  (hit testing scales with it), so nothing recomposes and the first frame is fitted (`DecidedGrid.fitScale`). Deferred
+  while the inputs keep changing (`isFitDeferred`: pinch, resize), since it costs two or three more layouts a frame.
+- **A single-column width is paged** (`flowIntoPages`) with the same scoring. Two neighbours that fit half the column
+  unwrapped may sit side by side (`SectionGrid.joinsPrevious`); such a pair is never cut. Something uncuttable may move
+  to the next page only if this one is at least half full; otherwise the page runs past the screen. Rows share a start
+  edge (`sharesKeyline`).
+- The editor's preview and a songbook (over `MAX_CUT_SECTION_COUNT`, 200 sections) keep a plain, unmeasured single
+  column, neither cut, narrowed, nor fitted: the search would rerun on every pinch frame, and typing would move pieces.
+- **Chunks** (`SongUnits`): a cuttable section is composed per line (a line, comment, grid line, tab system, or diagram
+  row), so `SongRows.lineTops` is known. Tab runs are drawn as slots (`runSlotCount`, `SongTabBlock`'s `slot`): slot *i*
+  holds row *i* at the measured width; an empty slot has no height and no cut before it; **every slot's intrinsic width
+  is the whole run's**, or narrowing the column to one slot would rewrap the run. Cuts only where `sectionChunkStarts`
+  allows: a line each side, never after a comment or before an empty line. A folded section is one chunk; the preview
+  never cuts (`canCutSections`).
+- A continuation piece shows no header. Chorus cards are drawn by the layout behind the chunks, one per piece, padding
+  inside the first and last chunk and added at a cut, so an uncut card is unchanged.
+- **Motion** (`SectionMotion`): a single change springs with `animateBounds` in a `LookaheadScope`; continuous changes
+  (pinch, resize, title row collapse, metronome panel; `GLIDE` from the second change within 200 ms) follow directly,
+  only a new grid's jump glided (`SectionGlides`, an offset from the lookahead pass, so each section is measured once).
+  The preview animates neither (`NONE`).
+- `animateBounds` measures with `Constraints.fixed`, which cannot hold 262,143 px with any width: animated sections are
+  measured no taller than half that (`maxAnimatedSectionHeight`), and one reaching it loses the modifier.
+- Each section is a traversal group indexed in song order, or screen readers read across the columns.
+- `SongDetailsScreen` passes `availableHeight` from a `BoxWithConstraints`: inside `verticalScroll` height is infinite.
+
+### Scrolling, stepping, and snapping
+
+- **A fling rests the top of the screen exactly below a row's divider** (`RowSnapping.kt`, rows from `SongRows`); a row
+  taller than the screen is landed on at its top and then scrolls freely. Rows are measured by content, never trailing
+  space. The fling finishes the sub-pixel remainder. The top fade is the scroll past the current row's top
+  (`SongRows.scrolledIntoRow`), so a rested row is unfaded. Dividers come from the lookahead pass, not mid-animation.
+- **Every row shorter than the screen is followed by space down to its bottom** (`minRowPitch`, where `rowViewportHeight`
+  is given; never in the preview), the last too (`minLastRowHeight`), so a rest shows one row. Only where the song
+  scrolls anyway.
+- **Step buttons** (`StepButtons`, one pair over the whole pager, answering the current page's `SongStepper`): stops are
+  rows or pages, or sections in an unpaged single column, each stop `EDGE_FADE_SIZE` above its section.
+- Inside a stop taller than the screen a step pages (`nextStepTarget`, `previousStepTarget`, `ReadingWindow`): the screen
+  less the top fade, the bars, and two lines (at most a third), adjusted to start at a line (`lineTops`); it moves on only
+  once the stop's end is in view. Buttons read "Scroll down" / "Scroll up" while paging.
+- A press moves at least a line where that skips nothing (near-equal clamped stops are chained); the last press hands off
+  only once the whole song is on screen.
+- **A press mid-step steps on from its target**, so two quick pedal presses are two steps.
+- Previous leaves only at the very top; next only once the end has been on screen; a song that fits has neither. In a
+  setlist they go on to the next song's top and the previous song's end (that page's scroll is set to its end
+  beforehand, else a second press skips it).
+- **They never cover a line**: a scrolling song is laid out narrower (`stepButtonInset`); the full width is kept where the
+  song fits there as one row and the full-width grid does too (`isReadWithoutStepping`), never in a setlist
+  (`keepsStepButtonInset`). An unpaged single column is assumed to scroll.
+- The dots (`StepProgressIndicator`) count reachable stops (`reachableStops`), the top padding belonging to the first
+  (`SongRows.belowPadding`). The stop is read through derived state so it recomposes per stop, not per pixel; drawn and
+  faded by color, not a layer, for the web build (see `FastScroller`).
+- **Tap to step** (`stepOnTap`): top half previous, bottom half next, only for taps nothing inside consumed; never a long
+  press, a right or middle click, a fling-stopping press, or one the system cancelled (Android's home and back gestures
+  arrive as a consumed release). A drag under 250 ms and a tenth of the height is still a tap (a strumming hand slides),
+  stepping from where the song was at finger-down and replacing the fling.
+- **A fling goes no further than one step** (`oneStepCappedTarget`); a drag goes anywhere.
+- Focus: the buttons take none, and the screen retakes it when lost to nothing while uncovered (`isUncovered`), or
+  Compose spends the next arrow on a focus search, which scrolls. While something is over it the step keys are
+  swallowed: the export screen shares the window and takes focus itself (`focusTarget()` on its root).
+- **A held step key is one step until released** (window focus loss counts as a release): key repeats would chain pages.
+  A held arrow still scrolls where there are no buttons.
+
+#### Keeping the reader in place
+
+- The scroll keeps pixels across a resize, pinch, fold, or transposition, so `RowSnapFlingBehavior.keepReaderInPlace`
+  records at rest a `ReadingAnchor` (the stop's first section and the offset past it) and, inside a tall stop, a
+  `LineAnchor` (section, chunk, fraction). Once a new layout has held still for 250 ms it scrolls there, snapped by
+  `settledScrollTarget`. The wait prevents flicker during a pinch; anchors are taken only at rest and never from its own
+  moves, so a pinch through many layouts returns to the starting row.
+- A height-only change (metronome panel, title row collapse) only changes row trailing padding, so it is followed in the
+  same layout pass (`onRowsPlaced`), before the scroll places the song: the divider never slides into view. Only the
+  current page follows frame by frame; pages beside it use `pageViewportHeight`.
+
+### Text size and the steppers
+
+- `fontScale` is snapshot state on the view model, not a flow, so a pinch recomposes only its readers. Saved to
+  `UserPreferences.fontScale` debounced; a pending value is written on `onCleared` and before the desktop exits. The
+  stored value wins whenever nothing local is pending, so Settings, a restore, or sync are followed.
+- Pages beside the current one read `settledFontScale` (held still 500 ms; a stepper or shortcut sets it at once; a
+  swipe settles it, so the song being left does not jump back).
+- Kept in whole percent, so sub-percent pinch frames lay nothing out again; `FontScaleAccumulator` adds the wheel's
+  unrounded deltas, since each fraction would otherwise round away.
+- `fontScaleGestures`: pinch damped by an exponent; Ctrl / Cmd + wheel counted in notches (`verticalWheelNotches`, the
+  web reporting pixel or line deltas); both consumed in the initial pass. A touchpad pinch the platform reports (macOS
+  desktop, browsers' Ctrl-less wheel) goes to `magnifyByTouchpad` with the same `PINCH_SENSITIVITY`. Ctrl / Cmd + plus,
+  minus, and zero are answered by the desktop window and the web page (`zoomSongText`), since the browser acts first.
+- Steppers are shorter than Material buttons and lower `LocalMinimumInteractiveComponentSize` to match (touch still gets
+  48dp). Height is `STEPPER_HEIGHT` in a bar or menu, `songControlHeight` in a song; `trailing` holds the Tap segment.
+- **The transposition wraps around the octave** (`wrapTransposition`, −5 to +6), when stepped and when read, so its
+  buttons are never disabled.
+- The app bar: the text size stepper where it fits, else at the end of the menu (`MenuStepperRow` as `menuFooter`, the
+  menu staying open while pressed). As the bar narrows the text size goes into the menu, then Choose setlists, then the
+  cover, each while the title keeps 160dp (`appBarButtons`, from the settled width, for every page at once). Performance
+  mode: the stepper in the bar where the title keeps 160dp (`showsFontScaleInPerformanceBar`), else alone in a menu; the
+  cover only where the title keeps 160dp beside both (`showsCoverInPerformanceMode`).
+
+### The app bar
+
+- **The subtitle (`SongHeaderNote`) names the sounding key**, transposition and capo applied (unlike the Transposition
+  control), and inside a setlist the duration, after 16dp dots (the cards' 24dp would grow the bar and shrink the
+  lyrics' room). Worked out for the song its crossfaded content was composed for, since a page change draws two. Chords
+  off drop the key. No tempo: the first section says it.
+- **The title scrolls the song to its top, and at the top opens the About the song sheet** (its only way in). A chevron
+  (`ic_expand`) shows while a tap would open it; its room is kept wherever the sheet is offered, so a long title is not
+  cut afresh. The touch target (`titleTouchTarget`) is all the bar's free space but reports only the title's room. No
+  ripple: a press dims the title, cover, and chevron. The scroll is read inside the title slot, so passing the top
+  recomposes only it. Nothing is taken at the top where the sheet is not offered.
+
+### Keeping the display on
+
+`Modifier.keepScreenOn()` on the root, since a song is read with both hands on the instrument: the view flag on Android,
+`idleTimerDisabled` on iOS, a Screen Wake Lock on the web (retaken when the tab is shown, secure contexts only), nothing
+on the desktop.
+
+### Keyboard (`SongKeyboardShortcuts.kt`)
+
+- Up and Down scroll a tenth of the viewport, linearly over the key repeat interval; Left and Right change the setlist's
+  song. Where the step buttons are, Up, Down, Page Up, and Page Down press them instead (a Bluetooth page turner sends
+  exactly these; a nudge leaves the player mid-verse); elsewhere the page keys are unconsumed. Counted from the page the
+  pager is heading to, so two quick presses go two songs.
+- The screen takes focus as it opens (nothing on it would otherwise), and the handler is in the preview pass, so it sees
+  keys wherever focus has moved and the scroll container never handles an arrow. The trade is 2D focus traversal; Tab
+  still works.
+- Left and Right are unconsumed at the setlist's ends and for a single song; all four with Alt, Meta, or Ctrl (Alt + Left
+  is the web's Back, Cmd + Left / Right a Mac's Back and Forward).
+- The pager bar numbers by place in the setlist, missing entries included; pages are only the songs that exist.
+
+### The metronome button
+
+- `MetronomeButton` shows and hides the panel (`toggleMetronomePanel`): opening starts nothing, closing stops a playing
+  click. M toggles the click from anywhere on the song, opening the panel with it.
+- The pendulum (`MetronomeIcon`, `ic_metronome_body` + `ic_metronome_pendulum`, `rememberMetronomeIconBeat`; the
+  navigation item too) is at an arc end on every heard beat and swings over one beat at the tempo read from `playback`,
+  each beat restarting the swing from where it is, so it never drifts from the ear. The Animate switch stills it.
+- `TempoStepper` is highlighted while overridden and reset by a tap on its value; Tap sits in its `trailing` slot, since
+  it sets the number the stepper steps.

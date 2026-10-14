@@ -9,100 +9,70 @@
 -->
 # :metronome:implementation
 
-The engine (`MetronomeImpl`, `@Single`, which only builds a `MetronomeEngine` with the real scope and dispatcher and
-delegates to it, so the state machine can be tested on virtual time) and one `AudioOutput` per platform source set, found by the module's
-`@ComponentScan` like any platform definition (the Android one takes the `@Provided` `Context`). `:app:di` names
-`MetronomeModule`; only `:app:di` sees this module.
+`MetronomeImpl` (`@Single`) only builds a `MetronomeEngine` with the real scope and dispatcher, so the state machine is
+testable on virtual time. One `AudioOutput` per platform source set, found by `@ComponentScan` (Android's takes the
+`@Provided` `Context`). Only `:app:di` sees this module.
 
-**Every click is placed by its position in the output's sample stream, never by a timer.** `MetronomeSequencer` (pure,
-the most tested class here) answers which ticks fall before a frame: each tick's frame is the frame its timing
-started at plus `ticks × sampleRate × 60 / (bpm × clicksPerBeat)` in one integer division, so it is never more than a
-frame off however long it runs, where adding rounded intervals drifts. A pattern change replaces the pattern of every
-tick not yet handed out — what sounds from the next tick, what places them from the next beat, so a subdivided beat is
-never cut in two lengths, or, for a change made `fromNextBar` (another song, another stretch of one), once the bar being
-played has ended, as beat one of bar zero; a later change waits with it rather than bringing it forward. Such a change
-has an id, carried by every tick it places, and the engine reports it as `Playing.pendingPattern` until the first of
-those ticks is heard; the engine keeps every such change not yet heard, so one made while another is rendered but not
-heard leaves `Playing.pattern` following each in turn. `Playing.pattern` is always what reaches the ear.
-`ClickSynthesizer` computes every sound's three voices (accent, normal, subdivision) once per sample rate — decaying
-sines, partial pairs, first-differenced noise from a seeded `Random`, the same generator on
-every platform — with ramps at both ends and peaks below full scale; its golden test compares checksums of the 16-bit
-samples, never the floats, which may differ by an ulp between the JVM's interpreter and JIT. `ClickMixer` mixes clicks
-into 16-bit PCM a chunk at a time, carrying a click across chunk boundaries (tested to be the same however it is
-chunked), reusing every buffer. `ClickStream` is one session: the sequencer, the mixer, and channels (whose
-non-suspending ends are safe from any thread) for the changes going in and the rendered ticks coming out. The volume is
-squared on its way to a gain.
+## Timing
 
-How each output turns its platform's clock into a frame of the stream (`heardFrame`) is `AudioClock`'s arithmetic in
-`commonMain` — microseconds, an extrapolated `AudioTimestamp`, an `AudioContext`'s seconds, a latency — and the iOS
-player's gaps, the frames it ran with nothing queued, are counted by a `PlaybackGapTracker` of each session's own; both
-are tested, the platform outputs only call them.
+- **Every click is placed by sample position, never a timer.** `MetronomeSequencer` computes each tick's frame as the
+  timing's start frame plus `ticks × sampleRate × 60 / (bpm × clicksPerBeat)` in one integer division — never more
+  than a frame off; summing rounded intervals drifts.
+- A pattern change applies from the next tick (sound) and next beat (placement), so a subdivided beat is never split
+  into two lengths; a `fromNextBar` change waits for the bar to end and starts at beat one of bar zero, and later
+  changes queue behind it. Each such change has an id carried by its ticks; `Playing.pendingPattern` until the first
+  is heard, and `Playing.pattern` is always what reaches the ear (the engine keeps every unheard change).
+- `ClickSynthesizer` builds the voices once per sample rate, with a seeded `Random` (same on every platform); its golden
+  test checksums the 16-bit samples, never floats (they differ by an ulp between JVM interpreter and JIT).
+  `ClickMixer` must give the same result however the stream is chunked. Volume is squared into a gain.
+- `AudioClock` (platform clock → `heardFrame`) and `PlaybackGapTracker` are common and tested; platform outputs only
+  call them.
 
-`MetronomeEngine` runs every call on one confined coroutine (`limitedParallelism(1)`), so calls from the UI, platform
-callbacks and media buttons apply in order without a lock, and each start is a session whose late listener callbacks
-are ignored. **`beats` are released when heard**: a coroutine polls the output's `heardFrame()` (the reported playback
-position, the route's latency included where the platform reports it) and emits the queued ticks it has passed. It
-polls every 5 ms only within 50 ms of the next tick (and before the output reports a position or the session's first
-tick is released), and once a chunk otherwise: only Android's position moves continuously, so a wait computed straight
-to a tick's frame could end just before the step that passes it. An output that cannot open (`AudioOutputStart.Unavailable`: no device, a refused `AudioContext`) is swapped for
-`SilentAudioOutput`, the same stream clocked by `TimeSource.Monotonic`, so the UI has one source of beats either way and
-`playback` says `audioIssue = UNAVAILABLE`. A refusal (`Refused`: the audio taken by a call) ends in `Stopped(reason)`. A
-preview while stopped opens the output for one and a half seconds after the last tap, a preview's focus (Android's
-transient duck, iOS's ambient category) rather than playback's.
+## Engine
 
-The outputs (~20 ms chunks, ~100 ms queued — latency is only heard at start and stop, and the depth is the slack a
-locked phone, a busy desktop or a Kotlin/Native collection needs; a stop flushes rather than plays out; the two
-durations, the frames they come to at a rate and the 48 kHz default are declared once, on `AudioOutput`'s companion):
+- Every call runs on one confined coroutine (`limitedParallelism(1)`), so UI, platform callbacks, and media buttons
+  apply in order without a lock; each start is a session whose late callbacks are ignored.
+- **`beats` are released when heard**: polled from `heardFrame()` (playback position including reported latency) every
+  5 ms only within 50 ms of the next tick (or before a position or the first tick), otherwise once a chunk. Only
+  Android's position moves continuously, so a wait computed to the frame could end just short.
+- `AudioOutputStart.Unavailable` (no device, refused `AudioContext`) swaps in `SilentAudioOutput` clocked by
+  `TimeSource.Monotonic` (`audioIssue = UNAVAILABLE`), so the UI has one beat source. `Refused` (audio taken by a call)
+  ends in `Stopped(reason)`.
+- A preview while stopped holds the output open 1.5 s after the last tap, with preview focus (Android transient duck,
+  iOS ambient), not playback's.
 
-- **Android** — `AudioTrack` streaming at the device's native rate, default performance mode (not low latency, which
-  buys nothing audible and costs underruns with the screen off), fed from a thread at `THREAD_PRIORITY_URGENT_AUDIO`
-  that also releases the track. It owns the `AudioFocusRequest` (a refusal is `Refused`, any loss stops) and the
-  `ACTION_AUDIO_BECOMING_NOISY` receiver, so a click stops for a call or pulled headphones whether or not the service is
-  up. `heardFrame` from `getTimestamp` (the speaker's frame, latency included), extrapolated from the last one when one
-  is missed; never the playback head, which starts at zero on `play()` and runs ahead by the whole latency, so a beat
-  released by it is felt and seen before it is heard — nothing is heard until the first timestamp, and only a track
-  that has reported none for 1.5 s is clocked by its head (`AudioClock.heardFrameBeforeTimestamp`).
-- **iOS** — `AVAudioEngine` with an `AVAudioPlayerNode` fed five buffers in flight from a Kotlin `NSThread`, the
-  completion handler only signalling a semaphore (never an `AVAudioSourceNode`, which would run Kotlin/Native on the
-  real-time thread). The player starts once the first five buffers are queued, in `start` and never from the feed
-  thread, since `play()` on a stopped engine throws; `heardFrame` leaves out the frames the player ran with nothing
-  queued (counted per session by the feed thread), since its own time keeps running through them. It owns the session (playback category, so the silent switch does not mute it; activated on start,
-  deactivated with `notifyOthersOnDeactivation`) and the interruption, route change (`OldDeviceUnavailable`), engine
-  configuration change and media services reset observers, each of which stops the click with its reason.
-- **Desktop** — a `SourceDataLine` (16-bit mono, 48 kHz, its buffer the queue) fed from a daemon thread at max priority;
-  `LineUnavailableException` and friends are `Unavailable`. No focus, no media keys.
-- **Web** — the two clocks: clicks within the next 100 ms scheduled with `AudioBufferSourceNode.start(time)` on the
-  `AudioContext`'s clock, woken every 25 ms by `metronome-timer.js` in `:app:web` (a worker's timer is not throttled
-  in a hidden tab), each wake-up a promise awaited in a loop since a Kotlin lambda cannot be handed to a `js(...)`
-  block. A capture-phase listener resumes (creating on the first) the context on every press and key, which is before
-  Compose sees the tap; it is installed only while the UI reports a screen that can start a click
-  (`Metronome.setStartable`), so the rest of the app never opens the audio device; until the context runs,
-  `audioIssue = WAITING_FOR_GESTURE`. A start always resumes the context, whatever its state reads, since a suspend from the
-  previous session's stop may still be in flight. Voices are copied into `AudioBuffer`s a sample at a time, once each.
-  An idle context is suspended again three seconds after the last gesture.
+## Outputs
 
-Tests (`desktopTest`): `MetronomeSequencerTest`, `ClickSynthesizerTest`, `ClickMixerTest`, `MetronomeEngineTest` (the
-state machine on virtual time, against a `FakeAudioOutput`: starts, refusals, the silent fallback, stale sessions, beats
-released as they are heard, the preview's hold), `SilentAudioOutputTest` and `AudioClockTest`; `TapTempoTest` and `TimeSignatureTest` in
-`:metronome:api`.
+~20 ms chunks, ~100 ms queued (the slack a locked phone, a busy desktop, or a Kotlin/Native GC needs; latency is only
+heard at start and stop); a stop flushes. The durations and the 48 kHz default live on `AudioOutput`'s companion.
+
+- **Android**: `AudioTrack` at the native rate, default performance mode (low latency buys nothing audible and
+  underruns with the screen off), fed from a `THREAD_PRIORITY_URGENT_AUDIO` thread. Owns audio focus (refusal =
+  `Refused`, any loss stops) and `ACTION_AUDIO_BECOMING_NOISY`, so calls and pulled headphones stop it with or without
+  the service. `heardFrame` from `getTimestamp`, extrapolated when one is missed — never the playback head, which runs
+  ahead by the whole latency; only a track with no timestamp for 1.5 s is clocked by its head
+  (`AudioClock.heardFrameBeforeTimestamp`).
+- **iOS**: `AVAudioEngine` + `AVAudioPlayerNode`, five buffers in flight from a Kotlin `NSThread`; the completion
+  handler only signals a semaphore. Never an `AVAudioSourceNode` (Kotlin/Native on the real-time thread). The player
+  starts once five buffers are queued, in `start`, never from the feed thread (`play()` on a stopped engine throws).
+  `heardFrame` excludes frames played with nothing queued. Owns the session (playback category, so the silent switch
+  does not mute; deactivated with `notifyOthersOnDeactivation`) and stops on interruption, `OldDeviceUnavailable`,
+  engine configuration change, or media services reset.
+- **Desktop**: `SourceDataLine` (16-bit mono, 48 kHz) from a max-priority daemon thread. No focus, no media keys.
+- **Web**: clicks within the next 100 ms scheduled on the `AudioContext` clock, woken every 25 ms by
+  `metronome-timer.js` in `:app:web` (worker timers are not throttled in hidden tabs); each wake-up is a promise
+  awaited in a loop since a Kotlin lambda cannot be passed to `js(...)`. A capture-phase listener resumes (or creates)
+  the context on every press and key, before Compose sees it, installed only while `Metronome.setStartable` says a
+  screen can start a click, so the rest of the app never opens audio; until then `WAITING_FOR_GESTURE`. A start always
+  resumes, since the previous stop's suspend may be in flight. An idle context is suspended 3 s after the last gesture.
 
 ## The click as the app plays it
 
-- **Timing is by sample count, never by a timer**: `:metronome:implementation`'s `MetronomeSequencer` places every click
-  at its frame in the output's stream with one integer division from the frame its timing started at, so nothing
-  drifts; the sounds are synthesized in Kotlin (no assets, identical everywhere). The flash and the haptics follow the
-  `beats` the engine emits when each click is *heard*, from the output's reported playback position; an output that
-  cannot open runs the same clock silently and says so.
-
-- **Playback is media**: on Android a `mediaPlayback` foreground service with a media session and notification
-  (`app/android`), on iOS the `audio` background mode, Now Playing and the remote commands (`app/ios`), on the web a
-  worker-timed Web Audio scheduler and a best-effort media session (`app/web`); the desktop needs nothing. Each audio
-  output owns the platform's focus or session: a call refuses or stops the click, as do headphones pulled and another
-  app taking the audio, and a click that stopped on its own says why. **A click outlives the app being sent to the
-  background and not the app being left**: the screen locked or another app in front is a phone on a music stand and
-  keeps it, while the app being closed — swiped away or backed out of on Android, quit on the desktop — stops it, since
-  nothing is left to look at the notification it keeps up. A click that cannot sound — the volume at zero or every
-  beat muted — is the exception: it is stopped a few seconds after the app goes out of sight, and says so, since out
-  of sight it has nothing left to show and the phones' background audio is not for silence
-  (`MetronomePattern.canSound`, `CampfireViewModel.onAppStopped`) — except on Android with Vibrate on and a beat not
-  muted, where the click is still felt in a pocket and plays on (iOS has no background haptics).
+- **Playback is media**: Android `mediaPlayback` foreground service with media session and notification (`app/android`);
+  iOS `audio` background mode, Now Playing, and remote commands (`app/ios`); web, a best-effort media session
+  (`app/web`); desktop nothing. A click that stopped on its own says why.
+- **A click outlives the app going to the background, not the app being left**: locked screen or another app in front
+  keeps it (a phone on a music stand); swiped away, backed out of (Android), or quit (desktop) stops it.
+- A click that cannot sound (volume zero or every beat muted, `MetronomePattern.canSound`) is stopped a few seconds
+  after the app goes out of sight, and says so (`CampfireViewModel.onAppStopped`) — except on Android with Vibrate on
+  and a beat not muted, which plays on (iOS has no background haptics).

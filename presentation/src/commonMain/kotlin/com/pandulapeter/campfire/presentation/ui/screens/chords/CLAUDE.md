@@ -10,49 +10,33 @@
 
 # :presentation — ui/screens/chords
 
-The Chords tab: every chord the app can draw, browsed by instrument, tuning, key and name.
+The Chords tab: every chord the app can draw, browsed by instrument, tuning, key, and name. A top level destination
+(`CampfireDestination.Chords`, `/chords` on the web) and one of the tools behind the Tools item (see `ui/CLAUDE.md`);
+follows `FeatureSwitches.isChordLibraryEnabled` (the Chord diagrams switch, disabled by the Chords switch).
 
-### What it shows
+## What it shows
 
-`ChordsScreen` is one lazy grid, its first item the controls (`ChordLibraryControls`), which scroll with the chords so
-that a phone on its side keeps a row of diagrams above the keyboard: the instrument chip under an Instrument title
-and the tuning chip after it (`components/InstrumentChipRow.kt`, opening the sheets every screen opens, see
-`ui/CLAUDE.md`), the twelve keys
-and a search field (`components/SearchField.kt`, the pickers' own, which never takes the focus on its own). Focused
-with the keyboard up, the field is scrolled to the top of the page, once per focus, so the chords it finds are above the
-keyboard, on its side too, where a short window also takes the status bar away while it is typed into. An
-instrument without shapes has a line naming it in the chords' place, pointing at the chip ("Bass: no chord diagrams",
-Other a line of its own). **The instrument and its tuning are the one the songs' diagrams and the tuner follow**,
-written at once, since somebody browsing ukulele chords has a ukulele in hand; the key, the search, the last results, and
-the scroll position are the session's (`ChordLibraryState`, held by the view model, since the tab leaves the back stack
-whenever another is picked), so the tab opens on the results it was left on (`initialChordLibraryShown`).
+- One lazy grid whose first item is the controls (`ChordLibraryControls`), so they scroll away and a phone on its side
+  keeps a row of diagrams above the keyboard. The search field never takes focus on its own; once focused with the
+  keyboard up it is scrolled to the top once per focus.
+- **The instrument and tuning chips are the app-wide preference** (the one the songs' diagrams and the tuner follow),
+  written at once. The key, search, last results, and scroll position are session state (`ChordLibraryState`, in the
+  view model, since the tab leaves the back stack whenever another is picked).
+- Keys follow the reader's accidentals preference (`chordLibraryKeys`) and notation (a numbering by its letters). A key
+  lists `CHORD_LIBRARY_QUALITIES`, omitting any the instrument has no shape for (`chordLibraryResults`,
+  `ChordLibrary.kt`, tested).
+- A search that names a chord (in the reader's notation) shows that chord alone whatever key is picked, named
+  canonically (`ChordProNotation.canonicalName`: `c7` is `Cm7`); any other text narrows the key's chords by name
+  (`sus`, `m7`). An instrument without shapes shows a line pointing at the chip.
 
-The keys are spelled as the reader's accidentals preference asks (`chordLibraryKeys`: as a chart spells them, or all
-sharp, or all flat) and named in the reader's notation, a numbering by its letters. Under them a key lists
-`CHORD_LIBRARY_QUALITIES` in order, the everyday chords first — each a different set of notes, each among the ones the
-tables were filled with — leaving out any the instrument has no shape for (`chordLibraryResults`, `ChordLibrary.kt`,
-tested). A search that names a chord in the reader's notation (`F#m7b5`, `Lam`) is that chord alone, whatever key is
-picked, named as a key names its chords rather than as it was typed (`ChordProNotation.canonicalName`: `c7` is `Cm7`,
-`LAm` is `Lam`); any other narrows the key's chords to the names that hold it (`sus`, `m7`); one that does neither, or names a
-chord no shape plays on the instrument, says so in the chords' place.
+## Cells and the sheet
 
-### The cells and the sheet
-
-`ChordLibraryCell` is the chord's name in the chords' accent over its diagram, **drawn with the shape the songs draw it
-with** (`selectShape`: the player's choice for the chord in that tuning, then the app's first), crossfading when that
-changes. The shapes are looked up off the main thread, except where the tables answer every chord on screen
-(`searchesShapes = false`), or the results the session kept, which is what the tab opens on, so its first frame is
-already the page wherever the tab was visited in this session, not only where the tables answer; a key that needs
-the search keeps the chords on screen until it is answered, drawn for the tuning they were found for, and not opened,
-after the tuning or the instrument changes (`ChordLibraryShown`). A tap opens `ChordReferenceSheet`
-(`DialogType.ChordReference`): the song details screen's chord sheet without a song around it, the same grid of shapes
-(`dialogs/ChordShapeGrid.kt`), titled and subtitled the same way and naming a tuning that is not the standard one, **whose shape picked
-is written at once as the player's shape for the chord** — so choosing a shape here changes it in every song, synced like
-any other choice. It is offered in read only mode too, since it writes no file.
-
-### Where it lives
-
-A top level destination (`CampfireDestination.Chords`, `/chords` on the web), one of the tools
-(`CampfireDestination.TopLevel.tools`, with the Metronome and the Tuner): where the navigation bar, or a short window's
-rail, has no room for every screen it is a tab behind their Tools item (see the navigation chrome in `ui/CLAUDE.md`). It
-follows the Chord diagrams switch in Settings → Features (`FeatureSwitches.isChordLibraryEnabled`), which the Chords switch disables.
+- `ChordLibraryCell` is **drawn with the shape the songs draw it with** (`selectShape`: player's choice in that tuning,
+  then the app's first), crossfading on change.
+- Shapes are looked up off the main thread, except where the tables answer every chord on screen
+  (`searchesShapes = false`) or the session's kept results are shown, so the tab's first frame is already the page.
+  After a tuning or instrument change, a key that needs the search keeps the old chords, drawn for the tuning they were
+  found for, until answered (`ChordLibraryShown`).
+- A tap opens `ChordReferenceSheet` (`DialogType.ChordReference`), the song chord sheet's grid without a song. **A
+  shape picked there is written at once as the player's shape for that chord**, changing it in every song (synced).
+  Offered in read only mode, since it writes no file.

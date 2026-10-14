@@ -10,212 +10,145 @@
 
 # :presentation — ui/screens/songEditor
 
-The song editor.
+The raw ChordPro editor. **Nothing but Save ever writes the file** the editor is open on: the menus' sheets, the
+transposition, Prettify, Replace, and revert all edit the field (one more undo step each).
 
-### `screens/songEditor/`
+## App bar rows
 
-`screens/songEditor/` — the raw ChordPro editor, opened over the song with the same horizontal slide as the song details
-screen. Its app bar starts with Close rather than Back. The whole bar is one surface (`CampfireTopAppBar`'s
-`bottomContent`), and it is four rows deep on a narrow window:
+- **Title row**: undo/redo, Save, overflow menu. Close rather than Back.
+- **Control row**: transposition stepper + Edit / Preview / Split. These are the two controls that do not write at the
+  caret, so they are the ones that stay when the rest folds. Split is offered only at `WindowSize.EXPANDED` but is the
+  default; a window that narrows only *shows* Edit, so widening returns to both panes. The choice is drawn whenever the
+  row is, so the stepper is never alone in a row; its segments have no side padding, which keeps "Preview" whole at
+  360dp. Where the keyboard leaves under 240dp (`MIN_ROOM_FOR_CONTROL_ROW`) the row animates away and its Shortcuts
+  chevron moves into the title row; only visibility follows the keyboard, so the user's pane and fold come back.
+- **Two Shortcuts rows** (`EditorToolbar.kt`): a button for every directive `ChordProParser` understands and the app
+  shows. First row: what the song *is* (header directives, then Tag, Language, Link, then Chord shape); second: the
+  song body (chords, sections, Tab and Grid, comments, then Key change, Tempo, and Time signature).
 
-- the **title row**, holding what acts on the file — undo/redo from `TextFieldState.undoState`, Save, and an overflow
-  menu;
-- a row with the **transposition stepper** and the **Edit / Preview / Split** choice. These two are together because
-  they are the two controls here that do not write at the caret, which is why they are also the two that stay when the
-  rest leaves. Split is only offered where two panes fit (`WindowSize.EXPANDED`) but is what the choice starts at, and a
-  window that narrows only *shows* Edit instead of it, so widening the window again goes back to both panes. Split's
-  preview stacks the song in a single column however wide its pane is (`SongLyrics`' `isSingleColumn`), since columns
-  that the next keystroke reshuffles hide the line being typed; Preview on its own lays the song out as the song details
-  screen does. The choice is drawn whenever the row is, including on a window wide enough that it has all three options,
-  so that the stepper is never alone in a row of its own; its segments are inline and add no padding at their sides,
-  which is what keeps "Preview" whole beside the stepper at 360dp. The insertion rows below it fold once as the keyboard
-  appears (see below), and **where the keyboard leaves less than 240dp** of the window (`MIN_ROOM_FOR_CONTROL_ROW`, a
-  phone on its side) this row gives way too, animating away while its Shortcuts chevron moves into the title row, so the
-  rows can still be opened while typing; only its visibility follows the keyboard, so the pane and the fold the user
-  chose come back with it;
-- two rows of `EditorToolbar.kt`, a button for every directive `ChordProParser` understands and the app then shows, so
-  that a format whose vocabulary only exists in its own documentation can be written without knowing it by heart. They
-  are split into what writes what the song **is** (title, key, tags — what a file opens with, usually filled in once:
-  the directives a song holds once first, then Tag, Language and Link, then Chord shape) and, under it, what writes the
-  **song** (chords, the seven sections the app has a name for, tablature and grids, comments, and last the changes from
-  where they stand: Key change, Tempo and Time signature), so the row being scrolled through is always the short one.
-  Tab and Grid are a group of their own between the sections and the comments, because that is what they are: a display
-  mode that opens inside a section rather than a section of its own. Tab first asks, in a popup hanging from it
-  (`EditorToolbarMenuButton`, which takes no focus, so the keyboard stays up), what the tab is for: Any instrument
-  (`{start_of_tab}`) or one of the instruments with frets (`tabInstruments`), whose id becomes the selector
-  (`{start_of_tab-ukulele}`, closed by a plain `{end_of_tab}`). It then writes an empty staff of one bar, named — the
-  player's strings for their own instrument or for any, the standard tuning's for another, in the field's notation
-  (`emptyTabStaffFor`, see `ui/CLAUDE.md`'s Tabs follow the instrument) — the caret after the top string's name, and with something selected only
-  puts the environment around it, since that is most likely a tab pasted in.
-- Two kinds of directive are deliberately absent, both still read without complaint: `{new_song}`, since the editor only
-  ever holds one song, and `{new_page}` / `{column_break}`, since Campfire flows sections into columns at whatever size
-  the window is and a hand written break would decide nothing. `{transpose}` is offered as **Key change**, in the second
-  row's last group, written at the caret like a comment: further down a song it is the key change the page then names
-  (see `SongKeyChange.kt`), and it is not among the header's buttons, since the one a song opens with shifts every chord
-  away from what the file spells out, which the details screen's transposition and the editor's transpose action do
-  while saying what they did. The rows scroll horizontally rather than wrapping, and their buttons take no focus, or the
-  keyboard would close under the toolbar on every tap and the insertion would land where the caret used to be.
-  Everything in braces is inserted on a line of its own, which is the only way ChordPro reads it as a directive.
+### Shortcut rules
 
-  The metadata row is the one that does not write at the caret at all: a directive describing the song is valid anywhere
-  in the file and belongs in none of those places but the header, so `:chordpro`'s `ChordProHeader` picks the line (in
-  the order the row itself lists them, and without moving anything the user has arranged their own way) and the caret
-  follows it there, ready for the value. Those buttons also go out of reach once the file carries what they write — a
-  song has one title and came out in one year — which leaves Tag and Language as the two that can be tapped again and
-  again, since a song has as many of either as it carries — and Tempo and Time signature, which go into the header while
-  it has no line of their kind and otherwise at the start of the caret's line in the body, as a change from there on
-  (`ChordProHeader.insertChangeable`), selecting the header's value where the caret is in the header; what the file
-  declares is read from the text as it is typed, so a directive written by hand disables its button as well.
+- Toolbar buttons and the Tab menu (`EditorToolbarMenuButton`) **take no focus**, or the keyboard closes on every tap
+  and the insertion lands where the caret used to be. The rows scroll horizontally rather than wrap.
+- Everything in braces goes on a line of its own (the only way ChordPro reads a directive).
+- Deliberately absent: `{new_song}` (one song per editor) and `{new_page}` / `{column_break}` (Campfire flows sections
+  into columns itself). `{transpose}` is offered only as **Key change**, written at the caret, never in the header: one
+  at the top would silently shift every chord away from what the file spells.
+- Header directives don't write at the caret: `ChordProHeader` picks the line (in the row's order, not moving the
+  user's own arrangement) and the caret follows. A button is disabled once the file carries what it writes (read from
+  the text as typed, so hand-written directives count); Tag and Language stay tappable. Tempo and Time signature go
+  into the header while it has none of their kind, otherwise at the caret's line as a change
+  (`ChordProHeader.insertChangeable`).
+- Tab asks what the tab is for (Any instrument, or one with frets → `{start_of_tab-<id>}`, closed by plain
+  `{end_of_tab}`) and writes one empty bar named by `emptyTabStaffFor` (see `ui/CLAUDE.md`'s Tabs follow the
+  instrument). With a selection it only wraps it (likely a pasted tab).
+- Chord shape: see `ui/chords/CLAUDE.md`.
 
-  The two rows fold away behind a chevron at the end of the row holding the transposition and the pane choice, since
-  together they are taller than what a phone has left for the text once the keyboard is up: a window whose shorter side
-  is under 600dp opens the editor with them folded, anything larger with them out. The shorter side rather than the
-  width class, because a phone turned sideways counts as a wide window and has the least height of all. On these small
-  screens, and in short windows, the rows collapse once when the keyboard appears. Closing the keyboard does not restore
-  an earlier expansion state. The chevron stays available while typing — in the control row, or in the title row where
-  that row has given way. Where the window is wider than the compact class the chevron carries a "Shortcuts" label,
-  naming the rows rather than the action so it keeps one width as the chevron turns. Over a preview the chevron is
-  disabled rather than hidden, so the segments beside it keep their width. While the keyboard is up in a short window
-  the title row is 48dp (`CampfireTopAppBar`'s `isCompact`), and the field's lines are 18sp apart without the letters
-  getting any smaller, to keep more room for text above a landscape keyboard, with the status bar taken away too on
-  Android (`CompactKeyboardEffect`).
-- **The field is in the reader's notation** (`UserPreferences.ChordSpelling.notation`,
-  `CampfireViewModel.editorNotation`) and the file always in the standard one — except under a numbering, where the
-  field is in letters (`Notation.forTyping`) and only the preview is in numbers: a field in numbers would make
-  correcting a wrong `{key}` move every chord at Save, and a key half typed would leave every number with nothing to
-  count from. Otherwise `SongRenderer.editorTextOf` (`rendering/SongRenderer.kt`, tested, handed the view model's
-  `editorNotation` explicitly) converts the file's text as the field is opened, reverted or made to follow its file, and
-  Save converts the field back (`fileTextOf`), so a German reader types `[B]` for B flat in any key and the file says
-  `Bb`. The names of a tab's strings are converted with the chords (`e|` is `mi|` in Latin, a German `B|` the B flat),
-  the staff keeping its columns, and a file opened and saved unedited is the file it was, byte for byte (see
-  `:chordpro`'s `ChordProStaffNames`).
+### Folding
 
-  Every comparison of the field with the file — what is unsaved, the draft reopened on launch — is made in the field's
-  notation, while the stored draft is in the file's, so it means the same chords whatever the notation is by the time it
-  is reopened. A chord typed in a spelling the notation has a second one for (a German `Bb`, a `♭`) is written the one
-  way, and a save brings the field to what was written, through the same `editorTextEdits` the metadata sheets use. The
-  preview parses the field in its notation, the summary reads it that way too (`editorSummaryCache`) and the stepper
-  shows the key in it (`editorKeyOf`); the transposition converts the field to the standard notation, transposes it and
-  converts it back. Settings cannot change the notation under an open editor, since selecting a top level screen clears
-  the stack.
-- The stepper is the details screen's own `TextTranspositionControls`, except that transposing here rewrites the file
-  rather than changing how it is read: there is no amount and nothing to reset to, so it shows the song's key, or a `?`
-  where the file names none. Either a `{key}` or a chord is enough to enable it — a key says what the song is in and is
-  worth moving before a chord has been written under it, and a chord chart with no key is still a chord chart. The title
-  is `ChordProMetadata.displayTitle` over the text as it is typed and the line under it the artist, with the cover in
-  front of them (see `CoverArtImage.kt` above), both from one summary of the text (`ChordProSummaryCache`, which parses
-  again only for a keystroke that could change it) that also answers whether there is anything to transpose; the save
-  state is the Save button's own enabled state and is not spelled out.
+- Windows whose shorter side is under 600dp open with the Shortcuts folded (shorter side, not width class: a phone on
+  its side is "wide" but has the least height). On small screens and short windows they fold once when the keyboard
+  appears; closing the keyboard does not restore them. The chevron stays reachable while typing.
+- Over a preview the chevron is disabled, not hidden, so the segments keep their width. Above compact width it is
+  labelled "Shortcuts" (a noun, so the width doesn't change as it turns).
+- Keyboard up in a short window: 48dp title row (`isCompact`), lines 18sp apart at unchanged letter size, and on Android
+  the status bar hidden (`CompactKeyboardEffect`).
 
-  A transposition keeps the caret and the selection next to the text they were at
-  (`ChordProTransposer.transposedOffset`), since every chord name that grows or shrinks above them would move them
-  otherwise; Prettify likewise keeps both ends of the selection on their matched lines
-  (`ChordProPrettifier.prettifiedOffset`), and whether it would change anything is only decided while the menu is open
-  (`ActionsMenuItem.isEnabledInMenu`), never per keystroke; an edit from the menus' sheets, a save's respelling and a
-  file followed while untouched keep both next to their text too (`editedOffset`: line by line where the line count is
-  unchanged, otherwise across one changed stretch); a revert has nothing to map by and keeps the offset.
-- The preview shows the text as written: none of the reader's transposition, whether the song was opened from the
-  library or a setlist (the file's own `{transpose}` still applies, being part of the text), as it ignores the Chords
-  and Metronome switches — so the field, the stepper and the preview name the same chords and the same key, the one
-  exception being a numbering, whose preview counts the chords the field names in letters.
-- The preview's About the song card is the About the song sheet's tiles, each opening its own editor directly
-  (`rememberSongInfoEditing`, so the card is there even for a song that says nothing about itself yet), since it shows
-  all the sheet would. The first entry of the overflow menu opens that sheet over the text being typed
-  (`DialogType.SongInfo` with a `SongEditTarget.EditorDraft`), in every pane, so the editors are there while the
-  preview, and with it the card, is out of sight; the rest of the menu is Prettify, a link to the ChordPro directives
-  reference on chordpro.org (for what the Shortcuts write, a `{define}` above all), and the revert. Card and sheet open
-  the same bottom sheets the song details screen's do, on a snapshot of the text being typed (`toEditorSong`), but there they edit that text rather than the file (`DialogType.SongEdit.target`): the change
-  reaches the screen through `CampfireViewModel.editorTextEdits` and goes through the field's own editing
-  (`EditOnRequest`), one more step of the undo history that Save writes with the rest, since nothing but Save ever
-  writes the file the editor is open on. Such a sheet is not taken down when the file leaves the library, since the
-  draft is still there.
-- Export and Delete are not here: they belong to the song list and the viewer. Revert is, last in the overflow menu and
-  behind a confirmation (`DialogType.RevertChanges`) — in the menu rather than a button of its own, because throwing
-  away everything typed since the last save is not something to end up in by mistapping the button next to Save. It is
-  answered by the screen rather than by the view model — the text goes back through the field's own editing, so a revert
-  is one more step of the undo history instead of the end of it. In a document of more than 50,000 characters a
-  whole-document rewrite (a transposition, a revert, a Replace all of more than one match) starts the undo history over
-  first, since each is recorded as the whole text twice.
-- **Find** and **Find and replace** come first in the overflow menu, and out of it as buttons of their own (the search
-  icon and the find and replace one) wherever the bar keeps the title 160dp beside them (`editorMenuMaxWidth`, which
-  counts the cover wherever covers are drawn and the Shortcuts chevron where the title row holds it). Ctrl / Cmd + F
-  and Ctrl / Cmd + R open them from the editor and switch between them from inside the sheet
-  (`editorSearchShortcuts`; on the web the shell keeps the browser's find bar and reload from both keys while the
-  editor is on top). Both are one bottom sheet (`EditorSearchSheet`), the replacement's field and its Replace and
-  Replace all buttons coming and going with the mode, and the previous and next match in its header. A search started
-  over the preview switches to Edit, since the matches are shown in the field. The sheet is the editor's own rather
-  than a `DialogType`, so it counts itself into `OverlayState` while it is up, as a menu does: Escape on the desktop and
-  the browser's Back then close it before they go back from the editor.
+## Notation
 
-  The state is `EditorSearch`, saved with the field so that a restored process reopens the sheet on the same query;
-  the query and the replacement are kept from one opening to the next. Where the search is, is the field's own
-  selection: the current match is the first at or after it (`currentMatchIndex`, wrapping around), moving to a match
-  selects it, and a match reached by typing the query is selected too, so the next letter searches on from it and the
-  sheet closed over it leaves it selected, with the caret given back to the field. A selection of one line opens the
-  sheet as its query. Matches ignore the case unless Match case is ticked and never overlap (`searchMatchStarts`).
-  Replace writes over the current match and moves on; Replace all writes every match in one edit, so one undo takes it
-  back (in a long document the history before it is gone, as before a transposition); nothing but Save writes the file.
-- While the search sheet is open the matches are drawn behind the text by `ChordProOutputTransformation`, the current
-  one in a color of its own. The sheet reports its top edge on the screen (`EditorSearch.sheetTop`, through
-  `CampfireBottomSheet`'s `onTopMoved`), and the current match is scrolled into the strip of the field above it, unless
-  it is there already, with a margin of at most a third of the strip (`revealTarget`). It is revealed again whenever the
-  strip settles at another height (the sheet sliding in, the keyboard, Find turning into Find and replace), debounced so
-  that the slide starts no scroll per frame; on the smallest phone with the keyboard up there is no strip, and nothing
-  is revealed. While the sheet is open the field also gains the height the sheet covers as room after its last line, so
-  that a match in the last lines can be scrolled above it: grown before the reveal, and shrunk only once the text has
-  been scrolled back above the shorter end, so that closing the sheet slides the text down rather than jumping.
-- The screen itself is a `BasicTextField` over a `TextFieldState`, scrolled by containers around it rather than by its
-  own `scrollState`, which has no way to hold room after the last line: a `verticalScroll`, which hands the field its
-  viewport height as the minimum so a short song is still a field down to the bottom of the pane, and inside it a
-  `horizontalScroll`, since the field never wraps a line — the staff lines of a tab only stay in their columns while
-  each is one line on screen — which measures it against an unbounded width and still hands it the pane's as the
-  minimum. Both follow the caret because the field asks its ancestors to bring it into view. The margins and the room
-  after the last line (the navigation bar and 32dp) are the field's own decorator, so a press in them places the caret,
-  the focus never scrolls a margin out of sight, and the text runs edge to edge under the navigation bar, as every list
-  does, clearing it once scrolled to the end.
+**The field is in the reader's notation, the file always in standard** (`CampfireViewModel.editorNotation`,
+`SongRenderer.editorTextOf` / `fileTextOf`, tested). Under a numbering the field is in letters (`Notation.forTyping`)
+and only the preview numbers: correcting a `{key}` would otherwise move every chord at Save, and a half-typed key leaves
+numbers nothing to count from.
 
-  Only the keyboard is taken off outside the scroll, once it reaches above the navigation bar it covers
-  (`EditorFieldPadding`, read while the field is laid out), so the viewport ends at the keyboard and a caret brought
-  into view is above it; the preview's scroll room is read the same way (`PaddingValues.only`), while the height the
-  preview's sections are laid out against leaves the keyboard out: it only covers the lower part of the preview, so it
-  moves neither pane's composition nor the preview's columns as it slides.
+- Tab string names convert with the chords, columns kept; a file opened and saved unedited is byte-for-byte unchanged
+  (see `:chordpro`'s `ChordProStaffNames`).
+- Field-vs-file comparisons (unsaved state, draft reopened) are made in the field's notation; the stored draft is in
+  the file's, so it survives a notation change.
+- A chord typed in an alternative spelling is saved one way, and the save brings the field to what was written through
+  `editorTextEdits`.
+- Transposition converts to standard, transposes, and converts back. Settings cannot change the notation under an open
+  editor, since selecting a top level screen clears the stack.
 
-  Both scroll states and the preview's are held by the screen next to the `TextFieldState` rather than by the panes,
-  since a pane is composed from scratch whenever Edit, Preview and Split change places and would otherwise go back to
-  the first line every time, an explicit Save action (and Ctrl / Cmd + S, heard by the whole editor, which takes the
-  focus itself as it opens and whenever its panes change, since nothing in it is focused before the text is clicked or
-  while only the preview shows — except that a field that was being typed in keeps the focus across a change that still
-  shows it, such as a rotation or a resize across Split's width, so the caret and the keyboard stay) which is the only
-  thing that ever writes the file, and a live preview of the same `SongLyrics` the viewer uses (parsed and split into
-  sections away from the main thread once the typing pauses, the previous rendering staying on screen until the new one
-  is ready), side by side where the window has the room for it and one at a time otherwise — and the insertion rows
-  leave with the field they write into whenever the preview is the only pane showing.
+## Transposition, caret, and undo
 
-  The text size preference reaches the preview and deliberately not the field: it is how large the lyrics are read from
-  across a room, and the field holds the source of the file rather than the song (scaling it would also move the columns
-  of a tab away from the width the monospaced font keeps them at). The Chords switch does not reach the preview's
-  lyrics: it is a way of reading a song, and a preview that hid the chords being typed opposite it would answer an edit
-  with nothing. Nor does it or the Metronome switch reach the preview's playing line, which names the key, the capo, the
-  tempo and the time signature being typed whatever either switch says (`SongPreview` passes `shouldShowChords = true`
-  and no `shouldShowTempo`), since the preview shows what is being written. The two panes are `weight(1f)` and not
-  `fillMaxSize()`: a `Column` measures a weightless child against an unbounded height, and a song longer than the screen
-  then lays the field out past the bottom edge of it instead of scrolling inside it.
+- The stepper is the details screen's `TextTranspositionControls`, but rewrites the file text: no amount or reset; it
+  shows the song's key, or `?`. Either a `{key}` or a chord enables it.
+- Title, artist, and "anything to transpose" come from one `ChordProSummaryCache`, which re-parses only on a keystroke
+  that could change them.
+- Every whole-text rewrite keeps the caret and selection next to their text: transposition
+  (`ChordProTransposer.transposedOffset`), Prettify (`ChordProPrettifier.prettifiedOffset`), sheet edits, save
+  respelling, and file-follow (`editedOffset`). A revert keeps the offset.
+- Whether Prettify would change anything is computed only while the menu is open (`isEnabledInMenu`), never per
+  keystroke.
+- In documents over 50,000 characters (`LONG_DOCUMENT_LENGTH`), a whole-document rewrite (transposition, revert,
+  Replace all of several matches) clears the undo history first, since each is recorded as the whole text twice.
 
-  `ChordProOutputTransformation` colours the text from `ChordProHighlighter`'s tokens in the viewer's own colours, so a
-  chord looks like a chord on both sides of the divider. A directive line whose value cannot be read (`{time: 5/7}`,
-  `{capo: second}`) is drawn whole in the error colour, since the song comes out without it. The field runs that
-  transformation for every caret move as well as for every edit, so the tokens are kept by `ChordProTokenCache` and only
-  worked out again once the text has changed. The screen reports the text to the view model as it is typed without
-  saving it (`onEditorTextChanged`), which is what `hasUnsavedEditorChanges` is measured from — a field nobody has typed
-  in follows its file when that changes, so only text of the user's own is ever unsaved: every way back out of a screen
-  goes through `CampfireViewModel.navigateBack`, so that is where an editor with unsaved text is caught and the
-  `UnsavedChanges` dialog (save / discard / cancel) is asked instead of popping.
+## Overflow menu
 
-  The draft is also what the dialog saves, which is why it lives in the view model rather than here. A draft reopened on
-  launch is unsaved like any other, so the update gate, the way out and the web's `beforeunload` treat it the same. The
-  dialog's Save leaves only once the write has reported success (`saveEditorChangesAndLeave`): until then the editor
-  holds the only copy of the text, so a write that fails takes the dialog away and leaves the editor, the text and the
-  ordinary `SaveFailed` message — and a desktop window that was being closed stays open. A first read that fails shows
-  the details screen's failed state, with Retry and Close, instead of the loading indicator. An editor composed in a
-  restored process waits for the draft recovery before it opens (`awaitEditorDraftRecovery`), so that a long document
-  gets its unsaved text back from the draft on disk rather than from its file.
+- Find and Find and replace first (promoted to buttons where the bar keeps the title 160dp wide, `editorMenuMaxWidth`);
+  then the About the song sheet over the draft (`SongEditTarget.EditorDraft`), in every pane; Prettify; the ChordPro
+  directives reference link; and Revert last.
+- Revert is in the menu, behind `DialogType.RevertChanges`, so it can't be mistapped next to Save. The screen answers
+  it through the field's own editing, so it is undoable.
+- Sheets opened from the menu or the preview's card edit a snapshot of the draft (`toEditorSong`,
+  `DialogType.SongEdit.target`), applied via `CampfireViewModel.editorTextEdits` / `EditOnRequest`. They are not taken
+  down when the file leaves the library, since the draft remains.
+- No Export or Delete here: those belong to the list and the viewer.
+
+## Find and replace
+
+- Ctrl / Cmd + F and + R open and switch modes (`editorSearchShortcuts`; on the web the shell keeps the browser's find
+  bar and reload from both while the editor is on top).
+- `EditorSearchSheet` is the editor's own, not a `DialogType`, so it counts itself into `OverlayState`: Escape and the
+  browser's Back close it before leaving the editor. Its state (`EditorSearch`) is saved with the field.
+- A search over the preview switches to Edit. The current match is the first at or after the field's selection
+  (`currentMatchIndex`, wrapping); reaching a match selects it, so the next typed letter searches on from it. A one-line
+  selection opens as the query. Matches are case-insensitive unless Match case, never overlapping
+  (`searchMatchStarts`). Replace all is one edit.
+- The current match is revealed in the strip above the sheet (`EditorSearch.sheetTop` via `onTopMoved`,
+  `revealTarget`), re-revealed when the strip settles at another height, debounced so the slide doesn't scroll per
+  frame. While open, the field gains the covered height as room after its last line, shrunk only once the text has
+  scrolled back above it, so closing slides rather than jumps.
+
+## The field and panes
+
+- A `BasicTextField` scrolled by a surrounding `verticalScroll` and `horizontalScroll`, not its own `scrollState`
+  (which cannot hold room after the last line). **It never wraps**: tab staff lines must stay one screen line each.
+  Margins and the bottom room are the field's decorator, so presses there place the caret.
+- Only the keyboard is excluded outside the scroll (`EditorFieldPadding`, read during layout). The preview lays out its
+  sections against a height ignoring the keyboard, so sliding it moves neither pane's composition nor the columns.
+- Scroll states live next to the `TextFieldState`, not in the panes: panes are recomposed from scratch when Edit,
+  Preview, and Split change places.
+- The panes are `weight(1f)`, not `fillMaxSize()`: a weightless `Column` child is measured against unbounded height
+  and a long song would overflow instead of scrolling.
+- Ctrl / Cmd + S is heard by the whole editor, which takes focus itself on open and whenever panes change, except that
+  a field being typed in keeps focus across a change that still shows it (rotation, resize across Split).
+- Insertion rows leave whenever only the preview shows.
+- `ChordProOutputTransformation` colours tokens like the viewer (and draws search matches); unreadable directive values
+  (`{time: 5/7}`) are drawn whole in the error colour. It runs on every caret move, hence `ChordProTokenCache`.
+
+## Preview
+
+- Parsed and split into sections off the main thread once typing pauses; the previous rendering stays meanwhile.
+- **Shows the text as written**: none of the reader's transposition (the file's own `{transpose}` applies), and it
+  ignores the Chords and Metronome switches (`shouldShowChords = true`, no `shouldShowTempo`), since it shows what is
+  being written. The text size preference reaches the preview but not the field (the field is source, and scaling would
+  break tab columns).
+- Split stacks the song in one column (`isSingleColumn`), since columns reshuffling on every keystroke hide the line
+  being typed; Preview alone lays out like the details screen.
+- The About the song card's tiles open their editors directly (`rememberSongInfoEditing`, present even for an empty
+  song).
+
+## Unsaved text and the draft
+
+- The screen reports the text as typed (`onEditorTextChanged`) without saving; `hasUnsavedEditorChanges` is measured
+  from it. A field nobody typed in follows its file (see `ui/CLAUDE.md`), so only the user's own text is ever unsaved.
+- Every way out goes through `CampfireViewModel.navigateBack`, which asks `UnsavedChanges` (save / discard / cancel).
+  The draft lives in the view model because that dialog saves it.
+- **The dialog's Save leaves only after the write succeeded** (`saveEditorChangesAndLeave`): until then the editor
+  holds the only copy, so a failed write keeps the editor (and a closing desktop window) open with `SaveFailed`.
+- A draft reopened on launch is unsaved like any other (update gate, way out, web `beforeunload`). An editor composed
+  in a restored process waits for draft recovery (`awaitEditorDraftRecovery`) so a long document gets its text from the
+  draft, not the file.
+- A failed first read shows the details screen's failed state (Retry, Close).

@@ -10,137 +10,72 @@
 
 # :presentation — ui/screens/settings
 
-The settings screen.
+The settings screen: five tabs (General, Features, Songs, Library, About), a `HorizontalPager` under a tab row (capped
+at 560dp) while that fits, else a `SettingsCategoryPane` beside the selected page. The two layouts crossfade across the
+breakpoint, as do the wide layout's pages.
 
-### `ui/screens/settings/`
+## Tab contents (rules not obvious from the code)
 
-`ui/screens/settings/` — the settings screen is **five tabs**, one `SettingsTab` per page of a `HorizontalPager` while
-the available width fits the 560dp tab row and, above that, the entries of a 180dp `SettingsCategoryPane` at the start
-of the screen with the selected page next to it (`NavigationDrawerItem`s, the dot of a pending sync answer as their
-badge; the choice is written straight to `settingsTab`, and the pager, which keeps a state of its own in
-`SettingsTabPager`, opens on it when a window narrows again). **Every tab is one column of titled sections**, the same
-at every width (see below), in this order:
+- **Features**: Playing switches first (read only, chords, chord diagrams, metronome, tuner, setlists), then an Online
+  group (song details lookup, cover art) so the two that make requests are found together. Rules in `ui/CLAUDE.md`.
+- **Songs**: the Instrument row (chips) comes first, since it decides shapes, tuner, and capo; it is disabled only when
+  both chords and tuner are off (the tuner and the keyboard's capo reading use it without diagrams). Accidentals stay
+  enabled under a numbering notation (they still spell its key). Examples, strings, and tuning notes are written in the
+  picked notation, never in the language.
+- **Library**: Sync, Import and export, then On this device last, since its rows can't be undone. Deleting the library
+  goes through `DeleteLibraryDialog`, which wants `DELETE` typed in every language (into a capitalizing field).
+- `BackgroundWarmthSlider` and `LanguageChoice` are shared with the onboarding's first page.
 
-- **General**: Appearance (theme, color, whether the app icon takes that color, the sepia slider) and Language. The
-  slider and the language list are `components/`' `BackgroundWarmthSlider` and `LanguageChoice`, which the
-  onboarding's first page shares.
-- **Features**: the switches that take whole parts of the app away (see the root `CLAUDE.md`). Playing: read only
-  mode, chords, chord diagrams (disabled with the chords off), metronome, tuner, and setlists; then Online: the song
-  details lookup and cover art, the two that let the app make a request, in a group of their own so that they are
-  found in one place.
-- **Songs**: Chords, then Display. Chords is one Instrument row holding the instrument and tuning chips
-  (`components/InstrumentSetting.kt`, opening their sheets, see `ui/CLAUDE.md`), first since it decides the shapes,
-  the tuner, and the capo, and disabled only with both the chords and the tuner switched off, since the tuner listens
-  for the same instrument and the keyboard reads the capo as a transposition whether or not diagrams are drawn; then
-  the chord spelling — the notation as a `PickerChip` like the instrument's, naming the one picked and opening a sheet
-  of the five (`dialogs/NotationSheet.kt`, `DialogType.Notation`: Standard, German, Latin, Nashville numbers, and Roman
-  numerals), each with an example under it, which closes with the choice, and the accidentals, which stay enabled under a numbering since they still spell its key.
-  The accidentals' examples, the instruments' strings, and the tunings' notes are written in the notation picked
-  there, never in the language.
-- Display is section numbers, then one Song cards setting with a row of `CardDetailsChoice` chips for each list, named
-  Songs and Setlists and set beside their name while it fits (`LabeledControlRow`), the key's chip gone with the chords
-  off, the tempo's kept with the metronome off, and the Setlists row disabled with the setlists (see `ui/CLAUDE.md`).
-- **Library**: Sync (`SyncSettings.kt`, below), Import and export (import, the demo library while it is not all in
-  the library, export), and On this device, last since its rows are the ones that cannot be undone: the song and
-  setlist counts and the cover cache are each a row that deletes what it counts, the cache behind an ordinary
-  confirmation and the library behind `DeleteLibraryDialog`, which wants `DELETE` typed in every language, into a field
-  that capitalizes what is typed; the web's storage row is there too.
-- **About**: Campfire, Help ("Set up Campfire again", which opens the onboarding, with the support page and GitHub),
-  and Legal (see below).
+## Layout invariants
 
-The screen has no app bar: the tabs are at the top of the screen, next to the navigation rail, and everything on it
-starts at the start edge like the lists of the other screens rather than being centered. **The tabs stay flat** and have
-no divider under them: a page scrolled under them fades out into them (`fadingTopEdge`). The tabs themselves are capped
-at 560dp, start at the start edge, and scroll where they add up to more than the row's width, and the row fades at an
-end past which there are more tabs (`fadingHorizontalEdges`), so that the last one is seen to be there. The tab being headed for (`targetPage`) is the one whose name lights up, so a
-pressed tab answers at once, while **the indicator follows the pages themselves** (`pagerIndicatorSpan` in
-`components/PagerIndicator.kt`, tested): it slides and resizes from one name to the next as far as the pages have
-turned, so a swipe, a press, and a predictive back move it the same way, frame by frame. A sync run waiting to hear whether its deletions are meant puts a dot on the
-Library tab rather than opening it, since the question may be a tab away; that is read through a derived state so a run
-reporting every file does not recompose the whole screen. Every page is composed with the screen
-(`beyondViewportPageCount` covers them all), so a tab is never first composed as it is swiped to.
+- No app bar; tabs at the top, everything start-aligned. **Tabs stay flat**, no divider: pages fade into them
+  (`fadingTopEdge`); the tab row fades at an end with more tabs (`fadingHorizontalEdges`).
+- `targetPage` lights the tab name (a press answers at once); **the indicator follows the pages**
+  (`pagerIndicatorSpan`), so swipe, press, and predictive back move it identically.
+- Every page is composed with the screen (`beyondViewportPageCount` covers all).
+- **Each page is one column**, capped at `THEME_COLOR_CHOICE_WIDTH`, at every width: two columns made tabs look unlike
+  each other and change with window width. `SettingsPage` still allows two side-by-side sections (380dp each) for the
+  Metronome and Tuner tabs, plus a spanning `header` (the Tuner's strings).
+- Every section is titled, has no background, and no tab uses a card.
+- A `verticalScroll`, not a lazy list: **every row is first composed in its current state**; rows that come and go
+  (demo offer, sync progress, web storage) use `AnimatedSettingsRow`, which keeps the last value while leaving. Controls
+  that don't fit a row's end are a `SettingsSubsection`.
+- A pending sync deletion question puts a dot on the Library tab (and pane entry) instead of opening it; read through a
+  derived state so per-file progress doesn't recompose the screen.
 
-The tab left open and each tab's own scroll position are `CampfireViewModel.settingsTab` and `settingsScrollPositions`,
-next to the other screens' scroll positions and for the same reason — the tab is a state, written whenever the pages
-settle, since the web build's address names it; the tab lasts for the session, while the scroll of every tab is reset
-whenever Settings is selected from another top level screen (the one screen that does not keep where it was left). Back
-from any other tab goes to General before it leaves the screen (`isSettingsBackToGeneral`, answered in `navigateBack`
-for the desktop's Escape and by a `NavigationBackHandler` of the screen's own for the gestures and the browser's Back,
-so a predictive back does not preview the songs it is not going to, and previews General instead: the pager scrolls
-towards it with the finger, inside one scroll that lasts the gesture so the tabs it passes are never settled on, and the
-wide layout's crossfade is a `SeekableTransitionState` held at the gesture's fraction; letting go animates on from
-there, and a cancel back).
+## Navigation and scroll
 
-Pressing the Settings item while it is open scrolls the open tab to its top, and once it is there goes to General
-(the Tools item does the same with its first tool, see `ui/CLAUDE.md`); pressing the tab that is open scrolls it to the
-top, as does pressing the Songs, Setlists, Metronome, Tuner, or Chords item on its screen, or a tool's tab where the
-tools are grouped (`CampfireViewModel.scrollToTopRequests`, which every top level screen collects with `collectLatest`:
-a touch that interrupts the scroll ends its animation in a `CancellationException`, which would end a plain `collect`, and every later press with it). The two layouts crossfade
-when a window is resized across the line between them, and so do the pages of the wide one as a category is picked (a pager slides only where a finger drags it). Each page
-(`SettingsTabPage`, through `SettingsPage`) is **one column, capped at `THEME_COLOR_CHOICE_WIDTH`** (every color disc in
-one row) and starting at the start edge, on a phone, on a tablet, and beside the category pane of a maximized window
-alike: two columns made the tabs that had two sections look unlike the ones that had one, and changed a tab's look
-with the window's width. Every section has a title (`SettingsSection`'s `title`, a `SettingsSectionTitle`), so a tab
-reads as a few named groups whichever it is, and no background, so their rows keep the keylines of the app bar and of
-every list; there is no card on a settings tab. `SettingsPage` itself still lays two sections side by side where the
-settled width has room for both at 380dp each, for the Metronome and the Tuner, whose second section is a card beside
-their controls; a page may also have a `header` above its sections, spanning every column and capped where they end:
-the Tuner tab's strings, on a wide window.
+- `CampfireViewModel.settingsTab` (a state, since the web address names it) lasts the session;
+  `settingsScrollPositions` are reset whenever Settings is entered from another top level screen.
+- Back from any other tab goes to General first (`isSettingsBackToGeneral`): via `navigateBack` for Escape and a
+  screen-owned `NavigationBackHandler` for gestures/browser Back, so predictive back previews General (one pager scroll
+  for the whole gesture; the wide layout uses a `SeekableTransitionState` at the gesture's fraction).
+- Pressing the open Settings item scrolls to top, then goes to General. Top level items and the open tab scroll to top
+  through `CampfireViewModel.scrollToTopRequests`, collected with **`collectLatest`**: a touch interrupting the scroll
+  throws `CancellationException`, which would end a plain `collect` and every later press.
 
-It is a `verticalScroll` and not a lazy list: a lazy list has no notion of a section holding several rows, a tab is a
-few dozen rows, and **every row is first composed in the state it is in** — what comes and goes afterwards (the demo
-offer, a sync run's progress, the web's storage row) expands and shrinks inside its section through
-`AnimatedSettingsRow`, which keeps the last value to draw while it leaves, where an item added to a lazy list a frame
-late was animated in. A control that does not fit at the end of a row (the segmented choices, the color discs, the
-language list) is a `SettingsSubsection`, set in a list item's own headline and supporting styles since it is a peer of
-the switch next to it.
+## `SyncSettings.kt`
 
-**The About tab** (`AboutSections`) has the same rows on every platform, in three titled groups: Campfire — "Every
-version of Campfire" (the download section of campfire-songbook.com, which is the whole of what the app says about the
-other builds), the rating row and, where `canAskForDonations`, the coffee, and, last, the author and the version; Help
-— "Set up Campfire again", Help and support (the website's support page, which gives an email address and the GitHub
-issues), and GitHub (the source code and the issue tracker, after the website's rows on purpose); and Legal —
-Open-source licenses (a sheet of the app's own) and the privacy policy. Every row has a description and a leading icon, and none a mark at its end.
-The rating row opens `platformStore`'s `listingUrl` — the store of the platform the app runs on rather than the one it
-came from — and is absent on Linux, in the web build and wherever that listing does not exist yet; its wording says
-*rate*, since a store page also offers to install a second copy of the app. **campfire-songbook.com is the app's
-website** and GitHub its source code and issue tracker; the author row is the link to the author's own site.
-
-### `ui/screens/settings/SyncSettings.kt`
-
-`ui/screens/settings/SyncSettings.kt` — the rows of the sync section (the first section of the Library tab), driven
-entirely by `SyncState`: an invitation to connect, or the account with what the last run did and the two things one can
-do about it. No action ever takes the place of another as the state it starts changes: "Sync now" stays where it is and
-is disabled during a run, "Stop syncing" is part of the progress row under it, and the reason a connection failed is
-under the Connect row rather than above it — a double tap otherwise landed its second half on the opposite action.
-
-`SyncState.ConnectionFailed` is drawn as the invitation to connect with the reason under it, so a refused consent, a
-redirect that did not match or a failed code exchange says what happened instead of putting the button back as if it had
-done nothing; pressing it again moves on to `Connecting`, which clears the message, and `Connecting` is left through its
-Cancel row whether or not the attempt that got there is still running — on the web it never is. A build with no sync
-credentials has an empty `viewModel.syncProviders` and says so, rather than offering a button that cannot work. A
-finished run is reported as a success with how long ago it happened ("15 minutes ago", "Yesterday", `elapsed` in
-`components/RelativeTime.kt`), worked out again for as long as the screen is open at the very moment the words would
-change and at least once a minute (`rememberElapsed`), so it is never behind the clock, never as a count of what moved.
+- Driven entirely by `SyncState`. **No action takes another's place as its state changes** (a double tap's second half
+  would hit the opposite action): "Sync now" stays and is disabled during a run, "Stop syncing" is in the progress row,
+  a connection failure's reason sits under Connect.
+- `ConnectionFailed` is drawn as the invitation with the reason; pressing again goes to `Connecting`, which clears it.
+  `Connecting` is left through Cancel whether or not the attempt still runs (on the web it never does).
+- Empty `viewModel.syncProviders` (no key in the build) says so instead of offering a button that can't work.
+- A finished run shows how long ago (`rememberElapsed`, recomputed when the words would change and at least each
+  minute), never a count of what moved.
 
 ## The About section
 
 ### The app says nothing about the other builds but where to find them
 
-**The app says nothing about the other builds but where to find them.** Settings → About is one section on every
-platform, and the row that names no platform — "Every version of Campfire" — leads to the download section of the app's
-website, https://campfire-songbook.com/#download (the `campfire-website` repository, which the web build is deployed
-into as well), which is a page that can be kept up to date without a release and the one place a store has nothing to
-say about. `Distribution` (in `:presentation`'s `ui/platform/Platform.kt`) is now just the four app stores and their
-listing URLs, a null `listingUrl` marking one the app is not on yet; publishing is filling it in.
-
-Every platform has exactly one official way to get the app, so no build is told where it is handed out: `platformStore`
-is the store of the platform the app is **running** on — a Mac build made by hand is a Mac build like the one the Mac
-App Store hands out — and it decides both the one "Rate Campfire" row, absent on Linux, on the web and wherever that
-listing does not exist yet, and whether the app may ask for money at all (`canAskForDonations`: never on an Apple
-platform, guideline 3.1.1). The row says *rate* and never *install*: a store page carries an install button, and a
-second copy of the app would come with a library of its own. **campfire-songbook.com is the project's website**, and
-what the app and the README point people at first: the downloads, the support page (which answers the common questions
-and gives both an email address and the GitHub issues as the way to report a problem — Settings' "Help and support"
-row), and the privacy policy. **GitHub is the source code and the issue tracker**, and its row comes after those; the
-About section links nothing else but the author's own site and the donation page.
+- "Every version of Campfire" links to https://campfire-songbook.com/#download, which can change without a release.
+- `Distribution` (`ui/platform/Platform.kt`) is the four stores and their listing URLs; a null `listingUrl` means not
+  on that store yet (publishing fills it in).
+- `platformStore` is the store of the platform the app **runs** on (a hand-built Mac build is still a Mac build). It
+  decides the one "Rate Campfire" row (absent on Linux, the web, and where the listing is null) and
+  `canAskForDonations` (never on Apple platforms, guideline 3.1.1).
+- The row says *rate*, never *install*: a second copy would have its own library.
+- **campfire-songbook.com is the website** (downloads, support page, privacy policy) and is linked first; **GitHub is
+  the source code and issue tracker**, after it. Nothing else is linked but the author's site and the donation page.
+- Every About row has a description and a leading icon, none a trailing mark.

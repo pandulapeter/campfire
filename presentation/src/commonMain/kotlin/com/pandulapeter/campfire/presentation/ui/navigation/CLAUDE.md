@@ -12,48 +12,38 @@
 
 The destinations and the back stack.
 
-### `ui/navigation/CampfireDestination.kt`
+### `CampfireDestination.kt`
 
-`ui/navigation/CampfireDestination.kt` — `NavKey`s: `Songs`, `Setlists`, `Metronome`, `Tuner`, `Chords`, `Settings`
-(top level, the middle three `TopLevel.tools`, which the navigation bar may offer behind one item, see `ui/CLAUDE.md`;
-which of them a switch in Settings → Features takes away is `isEnabled`, asked with `FeatureSwitches`),
-`SongDetails(songFileNames, setlistFileName, initialIndex, id)` (keyed by the `id` generated once per push rather than
-by its file names, so renaming a song from the details screen rewrites the entry without Navigation 3 taking it for a
-new one) `SongEditor(fileName, shouldStartInsideFirstSection)` and `ImportReport`, which carries nothing since there is
-only ever one import to report on, and is never restored (the view model's report is gone with the process), which a
-snackbar says where the import had not been written yet (`Message.ImportInterrupted`, from a flag saved beside the back
-stack), and `Onboarding(isOpenedFromSettings)`, the onboarding, whose page is `Navigator.onboardingStep`
-(`ui/screens/onboarding/CLAUDE.md`).
-`SongEditor`'s `contentKey` is its file name behind a prefix of its own, leaving `shouldStartInsideFirstSection` out,
-since that says how the editor opens rather than which editor it is. Top level selection resets the stack to
-`[Songs, tab?]` so back always returns to Songs. Every destination is
-`@Serializable`, because `CampfireViewModel` writes the whole stack into its `SavedStateHandle` as JSON on every change
-(`updateBackStack`, and the rename that rewrites entries in place) and reads it back when it is created: a process
-Android killed in the background comes back on the screen it was showing, and Navigation 3's per-entry saved state —
-keyed by `contentKey`, the editor's typed text included — only ever goes back to an entry with the same key, so a stack
-that restarted on Songs would leave it all unclaimed.
+- Songs and setlists are addressed by **file name** everywhere (their identity on disk).
+- `SongDetails` is keyed by an `id` generated once per push, not by its file names, so a rename rewrites the entry
+  without Navigation 3 taking it for a new one.
+- `SongEditor`'s `contentKey` is its file name behind its own prefix, excluding `shouldStartInsideFirstSection` (how it
+  opens, not which editor).
+- `ImportReport` carries nothing (one import at a time) and is never restored (the report dies with the process);
+  `Message.ImportInterrupted` says so where the import had not been written yet (a flag saved beside the back stack).
+- Top level selection resets the stack to `[Songs, tab?]`, so Back always returns to Songs. The tools behind one Tools
+  item: see `ui/CLAUDE.md`. Feature switches: `isEnabled` with `FeatureSwitches`.
 
-The editor saves its text and caret only, and only up to 50,000 characters (`EditorFieldSaver`): the Activity's saved
-state is one Binder transaction, and the field's own saver writes an undo history that holds the whole document twice
-per transposition. For the same reason the view model saves a back stack only as far as it fits 100,000 characters of
-JSON (a song opened from a setlist of thousands names every one of them, and a restored process then comes back one
-screen short). The field itself, undo history included, is kept by the view model across a configuration change
-(`retainEditorField`), and a long document that came back from a killed process takes its unsaved text from the draft
-the pause put on disk (below), which the editor waits for. Only when that is missing too does it open on the file and
-say so in a snackbar. Where no process is restored — iOS, the desktop, the web, an Android task swiped away — the editor's unsaved
-text is put in `preferences/editor-draft.json` whenever the app is paused (`onAppPaused`, which also starts an automatic
-sync run that is still waiting, see the root `CLAUDE.md`) and removed as soon as nothing is unsaved — on a desktop quit,
-written or removed before the process ends (`settleSynchronizationBeforeExit`), since the removal otherwise trails the
-editor by a few hops; a start that finds it reopens the editor on it behind the launch screen, with a snackbar, unless
-the restored stack already has an editor, which is handed the draft instead (`recoveredEditorField`), and keeps the file
-for as long as it holds unsaved text.
+### Saved state and process death
 
-The song filter and the two searches are saved the same way, and so is the form sheet that was up (`SavedDialog`: its
-kind and file names), reopened through its ordinary opener once the library has been read, where the sheet's own saved
-fields find it again; confirmations, the export screen and the tuner are never reopened. A search field takes at most 100 characters
-(`MAX_SEARCH_QUERY_LENGTH`, the pickers' fields included), since its text goes into that saved state as well; on every
-real start, and on the platforms that never restore a process, the handle is empty. Songs and setlists are addressed by
-**file name** everywhere, which is their identity on disk. `NavigationState` next to it is where the user is as more
-than the stack — the two searches, the settings tab, and each details screen's page as its `initialIndex` (the page the
-pager settled on, reported through `onSongDetailsPageSettled`) — which `CampfireViewModel.navigationState` reads and
-`restoreNavigationState` puts back in one step, refusing while the editor holds unsaved text.
+- Every destination is `@Serializable`: `CampfireViewModel` writes the whole stack into its `SavedStateHandle` as JSON
+  on every change and restores it, because Navigation 3's per-entry saved state (keyed by `contentKey`, editor text
+  included) is only claimed by an entry with the same key.
+- Saved state is one Binder transaction, so: the editor saves only text and caret, only up to 50,000 characters
+  (`EditorFieldSaver`; the field's own saver stores undo history with the document twice per transposition); the back
+  stack only up to 100,000 characters of JSON (`MAX_SAVED_BACK_STACK_LENGTH`), so a huge setlist restores one screen
+  short. Search fields cap at 100 characters (`MAX_SEARCH_QUERY_LENGTH`, pickers included) for the same reason.
+- The editor field (undo included) survives configuration changes via the view model (`retainEditorField`). A long
+  document from a killed process takes its text from the on-disk draft (below); only if that is missing too does it
+  open on the file, with a snackbar.
+- **Editor draft** (`preferences/editor-draft.json`), for when no process is restored (iOS, desktop, web, a swiped-away
+  Android task): written on every pause (`onAppPaused`), removed once nothing is unsaved. On desktop quit it is
+  settled before the process ends (`settleSynchronizationBeforeExit`). A start that finds it reopens the editor on it
+  behind the launch screen with a snackbar, or hands it to a restored editor (`recoveredEditorField`); kept while it
+  holds unsaved text.
+- The song filter, both searches, and the open form sheet (`SavedDialog`: kind and file names, reopened through its
+  ordinary opener once the library is read) are saved too. Confirmations, the export screen, and the tuner are never
+  reopened.
+- `NavigationState` is where the user is beyond the stack (searches, settings tab, each details screen's page as
+  `initialIndex` via `onSongDetailsPageSettled`); `restoreNavigationState` applies it in one step and refuses while the
+  editor holds unsaved text.

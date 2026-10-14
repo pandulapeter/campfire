@@ -10,44 +10,36 @@
 
 # :tools:screenshots
 
-The store screenshots, rendered rather than taken: a plain JVM module that draws the desktop build of the app
-offscreen (`ImageComposeScene`) as each platform's store listing shows it, at the exact pixels of the Screenshot Bro
-device frame it goes into. No app module depends on it and no workflow runs it; the `store-screenshots` skill drives
-it, then imports and exports through Screenshot Bro. `./gradlew :tools:screenshots:run` writes
-`renders/<row label>/<NN-id>.png` here (gitignored, replaced on every run); `--args="--out <folder> --only <names>"`.
-`Website.kt` adds campfire-songbook.com's screenshots, which go to the website's repository rather than through
-Screenshot Bro. `Banners.kt` adds the rows that show several shots at once - the README's two banners, the Play Store's feature
-graphic and the website's link preview - from the same shots, in their own theme where a row asks for one.
+The store screenshots, rendered rather than taken: a plain JVM module that draws the desktop build offscreen
+(`ImageComposeScene`) as each platform's listing shows it, at the exact pixels of its Screenshot Bro device frame.
+Nothing depends on it and no workflow runs it; the `store-screenshots` skill drives it.
 
-- **The library is a copy, and never committed**: `library/` here (gitignored) holds a Campfire data folder's
-  `library/`, `covers/` and `preferences/preferences.json`. Every render copies it into a temporary home of its own
-  (`user.home`, which the desktop file storage derives its folder from as Koin creates it) with the shot's theme and
-  language written into the preferences and the current version marked as introduced, so nothing a render does
-  reaches the copy, let alone the user's own library, and no What's new dialog opens over a shot.
-- **One app start per image** (`render`): the home, `PlatformImpersonation` and Koin are set up before the scene, and
-  Koin is stopped after it, since the storage, the repositories and the view model all read their start once. The
-  scene runs on `Dispatchers.Main` (Swing), which the view model dispatches to, and is pumped a frame at a time with a
-  real `delay` between frames so the library's IO lands; `CampfireApp`'s `onAppReady` says the launch screen has gone.
-- **What makes it look like the platform** (`Device`, `SystemChrome`, `Fonts`): `PlatformImpersonation` (in
-  `:presentation`'s desktop source set) gives the shared UI the platform's answers — the touch scale instead of the
-  desktop's 0.85, the store and the app icon the settings name, Android's wallpaper colors, the interface and monospace
-  fonts — and the tool provides the rest itself: the `FilePicker` (whether Share is offered), and the insets through
-  `LocalPlatformWindowInsets` (an internal Compose API) for the status and navigation bars of the phones and tablets
-  and the title bars of the desktops, which `SystemChrome` then draws over the app in the shot's theme, all at 9:41
-  with a full battery. Fonts: Roboto and Droid Sans Mono for Android and ChromeOS, Open Sans for Windows (the closest
-  open relative of Segoe UI, whose license keeps it on Windows), the Mac's own SF for the Apple platforms; the build
-  downloads the three into `build/fonts`, each pinned to a commit of its repository and checked against its SHA-256 in
-  `build.gradle.kts` — updating one means a new commit in its address and a new checksum there.
-- **Nothing reaches outside** (`Fakes.kt`): sync is a repository that shows a connected account and runs nothing, the
-  metronome is silent and lights only the beat a shot asks for, the tuner (`ScriptedTuner`) hears only the readings a
-  shot hands it, the file picker writes nothing. Covers come from the copied cache.
-- **The shots** are `shots` in `Shot.kt`, in the listing's order, each with its theme, language and the `drive` block
-  that brings the app to its state through `CampfireViewModel`; their rules are kept there, so a retake is the same
-  picture. The headlines are part of the Screenshot Bro project, not of the images.
-- **The promotional video's footage** is `Promo.kt`, rendered only when asked for (`--only promo`), into `Promo/`: stills,
-  and clips whose drive calls `record`, which draws a frame every sixtieth of a second of the scene's clock and writes
-  each as a JPEG into a folder named after the clip, so an animation plays at its own speed however long a frame takes
-  to draw. A drag is a finger moved a frame at a time (`touch`), and a tap within a clip a press and a release on frames
-  of their own at the middle of what is labelled (`centerOf`), since `tap` settles between them. The metronome lights
-  its beats at the video's 160 BPM, and the tuner is `ScriptedTuner`, which hears only the readings a clip hands it. The video itself is composed outside
-  the repository, from these clips.
+- `./gradlew :tools:screenshots:run` writes `renders/<row label>/<NN-id>.png` (gitignored, replaced every run);
+  `--args="--out <folder> --only <names>"`. `Website.kt` adds the website's shots, `Banners.kt` the multi-shot rows
+  (README banners, Play feature graphic, website link preview).
+- **The library is a copy, never committed**: `library/` (gitignored) holds a data folder's `library/`, `covers/`, and
+  `preferences/preferences.json`. Every render copies it into its own temporary `user.home` (the desktop file storage
+  derives its folder from it when Koin creates it), with the shot's theme and language written in and the current
+  version marked as introduced (no What's new dialog). Nothing reaches the copy or the user's library.
+- **One app start per image** (`render`): home, `PlatformImpersonation`, and Koin are set up before the scene and Koin
+  stopped after, since storage, repositories, and the view model read their start once. The scene runs on
+  `Dispatchers.Main` (Swing), which the view model dispatches to, pumped a frame at a time with a real `delay` so IO
+  lands; `onAppReady` says the launch screen is gone.
+- **Looking like the platform**: `PlatformImpersonation` (`:presentation`'s desktop source set) supplies the
+  platform's answers (touch scale, store, icon, Android wallpaper colors, fonts); the tool provides the `FilePicker`
+  (whether Share is offered) and insets through `LocalPlatformWindowInsets` (an internal Compose API), which
+  `SystemChrome` draws over the app (9:41, full battery).
+- Fonts: Roboto and Droid Sans Mono (Android, ChromeOS), Open Sans (Windows; Segoe UI's license keeps it on Windows),
+  the Mac's own SF (Apple). The build downloads the three into `build/fonts`, each pinned to a commit and checked
+  against its SHA-256 in `build.gradle.kts` — updating one means a new commit address and a new checksum.
+- **Nothing reaches outside** (`Fakes.kt`): sync shows a connected account and runs nothing, the metronome is silent and
+  lights only the beat a shot asks for, the tuner (`ScriptedTuner`) hears only scripted readings, the file picker
+  writes nothing. Covers come from the copied cache.
+- **The shots** are `shots` in `Shot.kt`, in listing order, each with theme, language, and a `drive` block that brings
+  the app to its state through `CampfireViewModel`; keep their rules there so a retake is the same picture. Headlines
+  belong to the Screenshot Bro project, not the images.
+- **Promo video footage** is `Promo.kt`, rendered only with `--only promo` into `Promo/`: stills and clips. `record`
+  draws a frame every 1/60 s of the scene's clock as JPEGs, so animations play at their own speed however slow drawing
+  is. A drag moves a finger a frame at a time (`touch`); a tap within a clip is press and release on separate frames at
+  the label's middle (`centerOf`), since `tap` settles between them. The metronome runs at the video's 160 BPM. The video
+  is composed outside the repository.

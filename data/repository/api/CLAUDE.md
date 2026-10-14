@@ -9,53 +9,26 @@
 -->
 # :data:repository:api
 
-Repository interfaces only. Consumed by `:domain:implementation`; implemented by `:data:repository:implementation`.
+Repository interfaces only; consumed by `:domain:implementation`, implemented by `:data:repository:implementation`
+(and `SyncRepository` / `DemoLibraryRepository` by `:data:sync:implementation`).
 
-- `SongRepository` — an observable `songs: Flow<DataState<List<Song>>>` plus `loadSongsIfNeeded()`, `rescan()` (re-read
-  the folder: the app back in front where the folder can be edited outside it, a retry, a sync run cut short by
-  something that is not an exception), `refresh(fileNames)` (re-read only the files a sync run changed, which the run hands over while it goes and whichever
-  way it ends), `adoptImported` (put the songs an import wrote into the list in one change, the way an import ends),
-  `saveSong`, `editSongs` (an edit of many files at once, the selection's tags and languages, announced once),
-  `createSong`, `importFileName`, `importSong`, `deleteSong`.
-- `SetlistRepository` — the same shape over `*.setlist.json`, plus `parseSetlist` / `loadSetlistDocument` for the export
-  and import paths (the latter optionally narrowed to some of the setlist's songs, for a zip of only those). A setlist that is already in the library is changed through `updateSetlist` (read the latest,
-  transform, write, one change at a time), never by saving a copy the caller read earlier: that copy lags a write
-  behind, and two quick changes built on it would undo each other. `renameSetlist` is the same thing for the title and
-  the description, the one change that may move the file: it takes the setlist's name and reads the rest of it itself.
-  `saveSetlist` is for a setlist the caller owns as a whole — one just created or copied.
-- `SongContentRepository` — the *text* of the songs that have been opened recently, cached in memory so that paging
-  through a setlist does not re-read the same files. Deliberately not a `DataState` flow: it is a lookup, not a screen's state.
-- `UserPreferencesRepository` — one document, read once and written whole. `hasStoredUserPreferences` is the one
-  thing here that is not about what is in it: the demo library asks it to tell a fresh installation from a device
-  Campfire has been used on, and it is deliberately uncached, since the very first save makes it false.
-- `CoverArtRepository` — the cover images and the search that recommends one. `getCoverArt` answers bytes or nothing,
-  never a failure; `searchCoverArt` is a `Flow<CoverArtSearchResults>` that asks every catalogue at once and emits
-  where the search is each time one waits or answers, a failing one recorded in `failed` rather than thrown;
-  `coverArtCacheSize` is what the copies take up, listed again as they change, and `clearCoverArtCache` deletes them.
-- `SongDetailsRepository` — the song details lookup: `searchSongDetails` emits like `searchCoverArt`, and
-  `loadSongCredits` is a `Flow<SongCreditsState>` that never throws, ending in what the catalogue said, that it never
-  names songwriters, or that it could not be asked. Nothing is kept.
-  `SongRepository.deleteAllSongs` and `SetlistRepository.deleteAllSetlists` empty their folder as one change to the
-  list, going on past a file that fails — what Settings' "delete the library" is made of.
-- `ImportDownloadRepository` — `download(url)`, a file to import from an address, no larger than
-  `ImportLimits.MAX_IMPORT_SIZE`, or why there is none. Nothing is kept.
-- `SyncRepository` — the state machine around sync: `syncState: Flow<SyncState>`, the providers the build has, and
-  `restore` / `connect` / `cancelConnection` / `disconnect` / `forgetStoredConnection` / `synchronize` /
-  `cancelSynchronization`; `forgetStoredConnection` is the local-only wipe a first launch does, with no request — retried by
-  `restore` until it has worked. Unlike the others it caches no list — the library keeps
-  living in `SongRepository` and `SetlistRepository`, which is why a run hands the files it changed to their
-  `refresh`, done by the implementation itself. It is also the only thing above the data layer that knows a
-  service is involved: the screens see a `SyncState` and never learn which provider produced it.
-- `DemoLibraryRepository` — `rememberDemoLibraryFiles` records the content hash of the demo files just planted (in
-  `UserPreferences`, local only), so that a first sync comparison with a cloud folder holding another version of an
-  untouched demo takes the folder's instead of keeping both. Not part of `SyncRepository`, since it runs on every
-  planting, sync connected or not, and touches no sync state.
-- `ArchiveRepository` — zip pack/unpack. It has no state to cache and exists only so that the use cases can reach the
-  zip code without the domain layer having to see the local sources.
-- `DocumentRepository` — the same stateless boundary for text extraction from `.pdf` and `.docx`; answers
-  positioned `ExtractedDocument` or null, never retains bytes and never swallows cancellation.
-
-A `rescan()` is the only thing that lists the library folder again; `refresh` re-reads named files, and everything else
-keeps the cached list in step by updating the one entry it changed, so writing a song does not cost a directory scan. The entry a setlist write puts in
-is the one `saveSetlist` returns, carrying the size of the file it wrote, since the settings screen adds the library's
-size up from the models.
+- **Only `rescan()` lists the library folder again.** `refresh(fileNames)` re-reads named files (what a sync run
+  changed); `adoptImported` puts an import's writes in as one change; every other write updates its one cached entry.
+  A setlist write caches the entry `saveSetlist` returns, carrying the file size (Settings sums the library size from
+  the models).
+- **An existing setlist is changed through `updateSetlist`** (read latest, transform, write, serialized), never by
+  saving a copy read earlier: that copy lags, and two quick changes would undo each other. `renameSetlist` is the same
+  for title and description (may move the file) and takes the setlist's name. `saveSetlist` is for a setlist the caller
+  owns whole (just created or copied).
+- `SongContentRepository` is a recent-texts lookup, deliberately not a `DataState` flow.
+- `UserPreferencesRepository.hasStoredUserPreferences` is deliberately uncached: the first save makes it false, and the
+  demo library uses it to detect a fresh installation.
+- `CoverArtRepository.getCoverArt` answers bytes or nothing, never a failure; searches (`searchCoverArt`,
+  `searchSongDetails`) emit progress as each catalogue answers, a failing one recorded in `failed`, not thrown.
+  `loadSongCredits` never throws. Nothing from the details lookup or `ImportDownloadRepository` is kept.
+- `SyncRepository` caches no list (the library stays in the song and setlist repositories, which a run feeds through
+  `refresh`) and is the only thing above the data layer that knows a service is involved. `forgetStoredConnection` is
+  local-only, retried by `restore` until it works.
+- `DemoLibraryRepository` is not part of `SyncRepository`: it runs on every planting, sync connected or not.
+- `ArchiveRepository` and `DocumentRepository` are stateless boundaries so use cases reach the zip and extraction code
+  without seeing local sources; `DocumentRepository` never retains bytes or swallows cancellation.

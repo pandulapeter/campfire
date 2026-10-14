@@ -9,72 +9,52 @@
 -->
 # :data:source:remote:api
 
-The sync contracts, the two cover art ones and the song details lookup's. Consumed by `:data:repository:implementation`
-(the engine, the cover repository and the song details one) and implemented by `:data:source:remote:implementation`. Depends only on `:data:model`.
+The sync, cover art, import download, and song details lookup contracts. Consumed by `:data:sync:implementation` and
+`:data:repository:implementation`, implemented by `:data:source:remote:implementation`; depends only on `:data:model`.
+A second sync provider must be one new class, not an engine change; the rules are in the KDoc of `SyncFolder` and
+`SyncConnection`.
 
-Everything here is shaped so that a second provider is one new class rather than a change to the engine — the rules,
-and why each of them is load bearing, are spelled out in the KDoc of `SyncFolder` and `SyncConnection`.
+## Sync provider contract
 
-- `SyncProvider` — one cloud service, the two halves of it named apart: `SyncConnection`, the account (`isConnected`,
-  the authorization, `disconnect`, `forgetStoredCredentials`, `loadAccount`, `storedAccount`), and `SyncFolder`, the
-  files a run reads and writes, which is all the engine and `SyncedPreferencesSync` are handed — so a run's type says
-  it never connects or re-authorizes anything. The folder is a single flat one addressed by `(LibraryFileKind, name)`,
-  exactly the shape the library has. Revisions are **opaque strings**: the engine stores them and hands them back,
-  and never parses one, so a Dropbox `rev` and a Drive `headRevisionId` are equally fine. Every run lists the whole
-  folder rather than asking what changed — one request for a library of songs, and right even after a run that was
-  interrupted half way. `download` answers the bytes with the revision it actually fetched (`RemoteDocument`), which
-  may be newer than the listing's: another device can write the file again in between. `upload` takes
-  the revision the caller believes the file has and reports `RemoteWriteResult.Conflict` rather than clobbering a
-  change made elsewhere. `contentHashOf` hashes local bytes in the *service's own* format, which is what keeps
-  Dropbox's block hashing and Drive's MD5 out of the engine. Names must be unique, and a service that allows
-  duplicates has to resolve that inside its own `list`. `storedAccount` answers who is connected without a request,
-  `loadAccount` with one. `disconnect` is the user's disconnect and revokes the token; `forgetStoredCredentials` only
-  drops what is stored, telling the service nothing, for a fresh installation that found a previous one's credentials.
-  `downloadDocument` / `uploadDocument` reach a **document of the folder's own** by name alone — beside the library
-  folders, never in `list`, and coming back with its revision (`RemoteDocument`), since it is read once per run rather
-  than compared — and write it with the same conflict rule as `upload`. `preferences.json` is the one there is.
-- `SyncAuthenticator` — the platform half of the OAuth flow. The interface is shaped by the awkward platform rather
-  than the easy ones: the web *navigates away* from the running app to ask for consent, so `authorize` returns an
-  outcome (which may be `Redirected`) instead of a URL, and `consumePendingRedirect` picks the answer up at the next
-  start (the web always, Android after process death). `prepareRedirectUri` is separate because the desktop's redirect URI is a loopback socket that does not
-  exist until it is opened.
-- `SystemBrowser` (in `:data:model`) — opening a URL in the user's browser, which only the desktop's authorization
-  needs from outside itself (the other three open theirs through an API of their own). A port in the data model
-  because the one implementation is the desktop shell's URL opener in `:presentation`, which sees neither this module
-  nor the data layer below the domain.
-- `PendingAuthorizationStore` — the authorization that has been started and not finished, for the same reason: the
-  PKCE verifier has to outlive a full page reload.
-- `hashing/` — `Sha256` (written out; a multiplatform hashing library would be one more dependency on four targets
-  for eighty lines of arithmetic) and `localContentHash`, **Campfire's own** fingerprint of a file. It is what
-  decides whether a file changed, and is never compared against anything a service reports — deliberately not a
-  timestamp, since the platforms disagree about those and the web has none.
-- `model/` — `RemoteFile`, `RemoteListing`, `RemoteWriteResult`, the authorization request and response, and
-  `redirectParameters`, which picks a redirect URI apart (four platforms, four URL libraries, one URL to parse).
-  `AuthorizationCompletionPage` (in `:data:model`, since the UI builds it and the UI does not see this module) is the
-  odd one: the desktop has no custom scheme to be redirected to and answers the
-  browser with a page of its own, which is the only Campfire text rendered outside the app — so its two strings are
-  handed down from the UI, which is the only layer that knows the translations and the chosen language. The other
-  three platforms ignore it, because their browser closes itself.
-- `CoverArtRemoteSource` — downloads the image a song's `{meta: cover …}` names, from whatever host that is. It never
-  throws for anything but a cancellation: what comes back is a `CoverArtDownload` — the image, `Missing` (the address
-  answered with something that is not a cover, which asking again will not change) or `Unreachable` (no answer, which
-  may be different a minute later) — so the caller can decide how long to remember a failure.
-- `ImportDownloadRemoteSource` — downloads a file to import from an address the user opened, once, keeping nothing.
-  It never reads past the ceiling it is handed and never throws but for a cancellation: what comes back is an
-  `ImportDownload` (`:data:model`, since the import screen shows its outcome) — the file under the name the host gave
-  it, `TooLarge`, `Missing` or `Unreachable`. It does not judge the file by its content type.
-- `CoverArtSearchRemoteSource` — the records a song may have come out on in one catalogue (its `catalogue`), each with
-  the address of its front cover. The contract is shaped by MusicBrainz's rules: an implementation keeps its own pace
-  and waits out a refusal by itself, reporting each wait through `onBusy` so the sheet can say why it is taking a
-  while, and throws `CatalogueSearchException` only once it has given up. Every source is registered as one
-  `CoverArtSearchRemoteSources`, never a bare list, for the reason `SyncProviders` is.
-- `SongDetailsSearchRemoteSource` — the recordings a song's title names in one catalogue, with what each would fill
-  the song's header with, and `loadSongCredits` for the songwriters of the one picked (null, without a request, from a
-  catalogue that never names them). The same rules as the cover search's, and one more: a catalogue's pace is shared
-  with its cover search, since it counts the app's requests and not one sheet's — so one object implements both
-  contracts for each catalogue. Registered as `SongDetailsSearchRemoteSources`.
-- `SyncAuthorizationException` / `SyncNetworkException` / `SyncRemoteStorageFullException` — the three failures the
-  engine treats as reasons to stop a run, the subclasses of the sealed `SyncRunEndingException`, each carrying the
-  `SyncFailureReason` the run is reported as, so that a fourth is one subclass rather than one more case in every list; the last one only ever comes from `upload`, since every upload after it
-  would be refused the same way. Everything else is one file's problem and must not keep the other four hundred from
-  travelling.
+- `SyncProvider` = `SyncConnection` (the account) + `SyncFolder` (the files). A run is handed only the `SyncFolder`, so
+  it never connects or re-authorizes.
+- One flat folder addressed by `(LibraryFileKind, name)`. Names must be unique; a service allowing duplicates resolves
+  that in its own `list`.
+- Revisions are **opaque strings**, stored and handed back, never parsed.
+- Every run lists the whole folder (correct even after an interrupted run).
+- `download` returns the revision it actually fetched (`RemoteDocument`), which may be newer than the listing's.
+- `upload` takes the expected revision and returns `RemoteWriteResult.Conflict` rather than overwriting.
+- `contentHashOf` hashes in the service's own format, keeping service hashes out of the engine.
+- `disconnect` revokes the token; `forgetStoredCredentials` only drops local storage (no request).
+- `downloadDocument` / `uploadDocument`: folder-level documents by name (only `preferences.json`), never in `list`,
+  same conflict rule as `upload`.
+- `SyncAuthorizationException`, `SyncNetworkException`, and `SyncRemoteStorageFullException` (subclasses of sealed
+  `SyncRunEndingException`, each carrying its `SyncFailureReason`) are the only failures that end a run; storage full
+  comes only from `upload`. Anything else is one file's problem.
+
+## Authorization
+
+- `SyncAuthenticator.authorize` returns an outcome (possibly `Redirected`), not a URL, because the web navigates away;
+  `consumePendingRedirect` picks the answer up at the next start (web always, Android after process death).
+  `prepareRedirectUri` exists because the desktop's loopback socket must be opened first.
+- `PendingAuthorizationStore` keeps the PKCE verifier across a full page reload.
+- `SystemBrowser` and `AuthorizationCompletionPage` live in `:data:model` because their only implementer / builder is
+  `:presentation`. The completion page is the only Campfire text shown outside the app, so the UI hands its translated
+  strings down.
+
+## Hashing
+
+`Sha256` is hand-written (avoids a dependency on four targets). `localContentHash` is Campfire's own fingerprint and
+decides whether a file changed; it is never compared with a service hash and is never a timestamp.
+
+## Other contracts
+
+- `CoverArtRemoteSource`: never throws but cancellation; returns the image, `Missing` (asking again won't help), or
+  `Unreachable` (may change soon), so the caller can choose how long to remember a failure.
+- `ImportDownloadRemoteSource`: one download, nothing kept, never reads past the given ceiling, never throws but
+  cancellation (`ImportDownload`: file, `TooLarge`, `Missing`, `Unreachable`). Does not judge by content type.
+- `CoverArtSearchRemoteSource` / `SongDetailsSearchRemoteSource`: an implementation keeps its own pace, waits out
+  refusals itself (reporting via `onBusy`), and throws `CatalogueSearchException` only once it gives up. A catalogue's
+  pace is shared between both searches, so one object implements both per catalogue. `loadSongCredits` answers null
+  without a request for a catalogue that never names songwriters. Registered as `CoverArtSearchRemoteSources` /
+  `SongDetailsSearchRemoteSources`, never a bare list (see the root `CLAUDE.md` on `List<T>`).

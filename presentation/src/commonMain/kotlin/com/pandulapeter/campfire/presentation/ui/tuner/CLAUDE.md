@@ -12,100 +12,71 @@
 What the Tuner tab (`ui/screens/tuner/TunerScreen`) and the song details screen's tuner sheet (`dialogs/TunerSheet`)
 share.
 
-- `TunerController` (a view model holder) — the settings (`UserPreferences.tunerSettings`, saved through a
-  `DebouncedPreference` like the metronome's and written with the others on the way out), listening on the screens' say,
-  the tones, and `hasTurnedOnMicrophone`, whether a tap has ever asked for the microphone on this device (saved in
-  `TunerSettings`, so it is never exported or synced). What it listens for is `tunerConfig`, the instrument in the
-  player's hands (`UserPreferences.instrument` and its tuning, `ui/instrument/`) with the tuner's own Chromatic switch and
-  reference pitch (`tunerConfigOf`), and it follows that: a listening tuner reads against the new strings, a tone ends
-  with its instrument and moves with the reference pitch, whichever screen the instrument was picked on.
-  **Nothing of the tuner outlives its screen**: the view model stops it whenever the top of the back stack changes -
-  closing the sheet with it, since the sheet belongs to the song under it - and whenever the tuner sheet stops being the
-  dialog on screen, and `AppExitController` with the view model; the screens' `TunerListeningEffect` stops it as they
-  stop (the app out of sight, the screen locked, a required update drawn over the app) and starts it again as they
-  start, so the system's recording indicator is lit exactly while a tuner shows. Opening the sheet stops a click playing
-  on the song, since the two never hold the audio together. The web's `setStartable` follows the Tuner tab or the sheet
-  being on top.
-- `TunerNotice.kt` — pure: which notice the page shows in place of the display (`tunerNoticeOf`: a reason listening
-  stopped wins, then a refusal, then a question never asked — on the platforms that cannot say, one no tap on this
-  device has asked) and whether the microphone may be opened without a tap (`canListenWithoutTap`). Tested.
-- `TunerNoticeCard` — one sentence and at most two buttons: **Use the microphone** (the platform's request, or opening
-  the input on the desktop and the web, where that is the question; pressed for the player as a tap opens the tuner), **Open settings** where the platform has a page to
-  open and **Ask again** where the system would still ask, **Try again** for a missing, busy or failed microphone; its
-  sentence a polite live region, as is `TunerInputIssueMessage`, since both arrive without a tap.
-- `TunerDisplay` / `TunerMeter` — the note with its octave, sized to the display's width (`TextAutoSize`, 57 to 96sp), and
-  no taller on the tab than in the sheet, however wide the tab's page, since what scrolls under the pinned display is
-  the room the tab has left; the cents meter: a scale of ticks every five
-  cents between the words for its ends, rather than a track with a knob, which reads as a slider and is reached for; the
-  in-tune window around the centre tinted with the second accent color; a needle on a spring, gone while nothing is
-  heard, and giving way to the notch closing into a check in tune, so it is never said by color alone (the note and the
-  reading take the second accent color with it); under the meter the reading in words, the signed cents (`CentsText.kt`,
-  `signedCents`: a typographic minus, tested) or "In tune", crossfading only when what it says changes kind
-  (`tunerReadingKindOf`, tested) while the number changes in place; and last the frequency heard and the target's. A tone being
-  played is named instead and the meter rests. Compact (note beside the rest, in a label of one width so the meter never
-  moves) in a short window, on the tab and in the sheet alike. The prompt is laid out over an invisible note, so the label is one height
-  either way and nothing under it moves as a note comes and goes. Explored as one node with the exact reading; a second
-  node announces only the note and a coarse step (far flat, flat, in tune, sharp, far sharp, `TunerAnnouncement.kt`, tested) once it has
-  held for 700 ms, since a reading every 33 ms would be a queue of speech the microphone hears too. With nothing heard it
-  is read as the prompt, and while a tone plays as that tone. It reads the tuner's state itself (a `State`), so the
-  readings, thirty a second, recompose the display and nothing around it; the screens pass the rest of the page only
-  what changes with a note or a setting.
-- `TunedStrings.kt` — pure, tested: the notes heard in tune since the microphone was opened (`tunedNotesAfter`), which
-  `TunerController.tunedNotes` keeps and the strings row ticks off, so the player sees which strings are still to do;
-  forgotten as the microphone closes, since a string in tune when the instrument was put down is not known to be when it
-  is picked up again, and as the instrument changes.
-- `TunerInputIssueMessage` — the input issue line (`SILENT`, with Open settings, and `WAITING_FOR_GESTURE`), on both.
-  On Windows the silent line also names the system's audio enhancements, which remove a held note as noise and which
-  Java Sound cannot switch off, and offers Open sound settings (`MicrophonePermission.openSoundSettings`).
-- `TunerStringsSetting` / `TunerStrings` — on both: one segmented row, a segment per string, so the strings read as one
-  instrument: the tone's or the heard one selected, a tap toggling its tone, the sounding one carrying a speaker (what it is
-  doing, where a stop square read as a media control) and a tuned one a check; read as buttons rather than the radio buttons Material makes segments; the names shrinking to fit
-  eight strings on a phone. An instrument with paired strings (`Instrument.courses`: the mandolin, the twelve-string
-  guitar) gets a second row, growing in under the first, the other string of each course under its partner ("Pair of
-  string 6", `TunerConfig.partners`), rather than twice the segments no phone has room to name; a pair in unison is one
-  note to the tuner, so its two segments are selected, sounding, and ticked together. Gone in chromatic mode. A row
-  leaving with its instrument, or for chromatic mode, is drawn as it was but plays nothing (`isStringOf`).
-- `TunerInstrumentSetting` — **the tab's alone**, the Chromatic switch first (`TunerSettings.isChromatic`), which reads
-  the nearest note rather than the nearest string, and while it is off the instrument and tuning chips every screen
-  opens their sheets with (see `ui/CLAUDE.md`), which chromatic tuning has no use for; an instrument without strings (the
-  keyboard, Other) is read chromatically either way. Every guitar and bass, whatever its strings, offers a half and a full step down (`Instrument.tunings`). **A
-  tuning's note follows the chord notation, not the language** (`TuningName.kt`, pure, tested): the name holds a MIDI
-  note rather than a letter, so Drop B is Drop H in German and Drop Si in Latin, and DADGAD and the fiddle's cross
-  tunings are spelled from their strings (`Re La Re Sol La Re`). The reference tone button says its note the same way.
-- `ReferencePitchSetting` — **the tab's alone**: a `Stepper` reset by a tap on its value, and a play / stop toggle
-  button sounding A4.
-- **The tab's layout** follows the Metronome tab's: the display pinned and as wide as a page of two sections, and on a
-  window with room for two columns the notice, the issue line and the strings as the page's `header`, spanning both,
-  with the Chromatic switch and the instrument in the first column and the reference pitch on a card in the second. A narrower
-  window keeps all of it in one column, in that order.
-- **The sheet offers neither the instrument nor the reference pitch**, as the song details' metronome panel plays with
-  the Metronome tab's presets without offering them: it tunes to the instrument in the player's hands and what the tab
-  was set to, and holds the display, the issue line and the strings.
-- `NoteNames.kt` — a MIDI note in the reader's chord notation with sharps (`H` in German, `La` in Latin, letters for a
-  numbering) and its octave in scientific numbering, and, for screen readers, with the sharp spoken (`spokenNoteName`: "C
-  sharp", Hungarian "Cisz", and "Do kereszt" for the syllables). Tested.
-- `TunerButton` — the song details screen's way in: a button of the song's first section after the transposition and
-  the capo (see `screens/songDetails/CLAUDE.md`), in read only mode too, since nothing about it writes a file;
-  `tunerAction`, an entry of the overflow menu instead, only where that section is not there (the chords and the
-  metronome both switched off).
+## Lifecycle
 
-The microphone permission is `ui/platform/MicrophonePermission.kt`, an `expect` read where a tuner shows: Android's
-`checkSelfPermission` and the Activity's launcher, iOS's `recordPermission` and `requestRecordPermission`, each read
-again on every resume, with the app's page of the system settings; the web's `navigator.permissions.query`, asked as the
-app starts (`CampfireWebApp`) so the tab's first frame knows, and followed through its change events, so an answer given
-in the browser's prompt is known by the next frame too; the desktop always unknown, with the macOS and Windows
-microphone privacy pages. Nothing asks at launch. **A tap that opens a tuner asks** (`TunerAskOnOpenEffect`): the Tuner
-tab's item and the song's tuner button and menu entry mark the opening (`TunerController.markOpenedByTap`, set only where
-the tuner did open), and the page that comes up consumes the mark and, where its notice is the question never asked,
-does what the notice's button would, so the player taps once to tune rather than twice. A tuner shown without a tap
-(restored with the app, the web's address or its Back) keeps the notice and waits for its button, since a system prompt
-nobody asked for is easily refused and iOS and Android only ask so often; a refusal keeps its notice too. Where the
-platform cannot say (the desktop), the first ask is remembered, and from then on opening a tuner opens the microphone without one, so
-it is one tap per device rather than per run; a refusal given later in the system's settings is heard as silence and
-said with Open settings, and a permission the system has forgotten is asked again by its own prompt as the tuner opens.
+- `TunerController` holds the settings (`UserPreferences.tunerSettings`, a `DebouncedPreference`), listening, tones,
+  and `hasTurnedOnMicrophone` (device-only, never exported or synced). It listens for `tunerConfig`: the player's
+  instrument and tuning (`ui/instrument/`) plus Chromatic and reference pitch, and follows changes made on any screen.
+- **Nothing of the tuner outlives its screen**: the view model stops it whenever the top of the back stack changes
+  (closing the sheet, which belongs to the song under it), whenever the tuner sheet stops being the visible dialog, and
+  on exit (`AppExitController`). `TunerListeningEffect` stops and restarts it with the screen's lifecycle (app hidden,
+  screen locked, required update drawn over), so the system's recording indicator is lit exactly while a tuner shows.
+- Opening the sheet stops a click playing on the song; the two never hold audio together. The web's `setStartable`
+  follows the Tuner tab or the sheet being on top.
 
-The tab (`ui/screens/tuner/`) pins the display above a `SettingsPage` whose first row is the notice while there is one
-(the display giving way to it), then the issue line, the strings, the Chromatic switch, the instrument, and the reference pitch;
-it keeps the screen on while it hears, and scrolls to the top on a second tap of its item.
-The sheet is laid out like the tab, scrolling all it has under its header: the same display at the same size (compact
-in a short window only), collapsing for the notice row under it, then the issue line and the strings.
+## Microphone permission
+
+`ui/platform/MicrophonePermission.kt`: Android and iOS re-read on every resume; the web queries
+`navigator.permissions` at app start (`CampfireWebApp`) and follows its change events; the desktop is always unknown.
+
+- **Nothing asks at launch.** A tap that opens a tuner (the Tuner item, the song's tuner button or menu entry) marks
+  the opening (`TunerController.markOpenedByTap`, only where the tuner did open), and the page consumes the mark and,
+  if the notice is the never-asked question, presses its button for the player (`TunerAskOnOpenEffect`).
+- A tuner shown without a tap (restored, the web's address or Back) waits for the button: an unrequested system prompt
+  is easily refused, and iOS and Android only ask so often.
+- Where the platform cannot say (desktop), the first ask is remembered and later openings listen without a tap; a later
+  refusal is heard as silence and shown with Open settings.
+- `TunerNotice.kt` (pure, tested): which notice replaces the display (`tunerNoticeOf`: a stop reason, then a refusal,
+  then a never-asked question) and `canListenWithoutTap`. `TunerNoticeCard` and `TunerInputIssueMessage` are polite
+  live regions, since both arrive without a tap.
+- On Windows the silent line names the system's audio enhancements, which remove a held note as noise and which Java
+  Sound cannot switch off, and offers Open sound settings.
+
+## Display
+
+- The note is sized to the display's width but **no taller on the tab than in the sheet**, since what scrolls under the
+  pinned display is what the tab has left.
+- The cents meter is a scale of ticks, not a track with a knob (which reads as a slider and gets reached for). In tune
+  is shown by the notch closing into a check, never by colour alone.
+- The reading crossfades only when its kind changes (`tunerReadingKindOf`, tested); numbers change in place.
+  `signedCents` uses a typographic minus.
+- The prompt is laid out over an invisible note so the label keeps one height.
+- **Accessibility**: one node explored with the exact reading; a second announces only the note and a coarse step
+  (`TunerAnnouncement.kt`, tested) after it held 700 ms, since a reading every 33 ms would queue speech the microphone
+  hears.
+- The display reads the tuner's state itself, so thirty readings a second recompose only it; screens pass the rest of
+  the page only what changes with a note or a setting.
+
+## Strings and settings
+
+- `TunedStrings.kt` (pure, tested): notes heard in tune since the microphone opened, ticked off in the strings row;
+  forgotten when the microphone closes or the instrument changes.
+- `TunerStrings`: one segmented row (read as buttons, not radio buttons), names shrinking to fit eight strings on a
+  phone. Paired-string instruments (`Instrument.courses`: mandolin, twelve-string) get a second row of partners; a
+  unison pair is one note to the tuner, so its segments act together. Hidden in chromatic mode; a row leaving is drawn
+  as it was but plays nothing (`isStringOf`).
+- **The tab alone** offers the Chromatic switch (`TunerSettings.isChromatic`; keyboard and Other are always chromatic),
+  the instrument and tuning chips while it is off, and the reference pitch. **The sheet offers neither**: it tunes to
+  the player's instrument and the tab's settings.
+- **A tuning's note follows the chord notation, not the language** (`TuningName.kt`, pure, tested): names hold a MIDI
+  note, so Drop B is Drop H in German and Drop Si in Latin. `NoteNames.kt` (tested) does the same for notes, with a
+  spoken form for screen readers (`spokenNoteName`).
+- `TunerButton` sits in the song's first section, read only mode included; `tunerAction` is the overflow menu entry
+  instead only where that section is absent (chords and metronome both off).
+
+## Layout
+
+The tab pins the display above a `SettingsPage` (notice, issue line, strings, Chromatic, instrument, reference pitch),
+two columns where there is room, following the Metronome tab; it keeps the screen on while it hears. The sheet scrolls
+everything under its header: the same display at the same size (compact only in a short window), then the issue line
+and strings.
