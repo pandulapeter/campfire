@@ -2,7 +2,6 @@
   "chordpro/src/commonMain/kotlin/com/pandulapeter/campfire/chordpro/convert/ChordSheetConverter.kt": 573,
   "data/sync/implementation/src/commonMain/kotlin/com/pandulapeter/campfire/data/sync/implementation/SyncEngine.kt": 596,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/CLAUDE.md": 2778,
-  "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/CampfireApp.kt::CampfireApp": 167,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/CampfireScreens.kt::CampfireScreens": 326,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/CampfireViewModel.kt": 1574,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/chords/CLAUDE.md": 1003,
