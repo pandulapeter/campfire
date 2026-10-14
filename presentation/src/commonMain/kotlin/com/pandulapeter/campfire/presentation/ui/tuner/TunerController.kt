@@ -9,10 +9,13 @@
  */
 package com.pandulapeter.campfire.presentation.ui.tuner
 
+import androidx.compose.runtime.snapshotFlow
 import com.pandulapeter.campfire.data.model.domain.TunerSettings
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.domain.api.useCases.UpdateUserPreferencesUseCase
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.instrument.instrumentTuning
+import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.instrument.courses
 import com.pandulapeter.campfire.presentation.ui.state.DebouncedPreference
 import com.pandulapeter.campfire.presentation.ui.state.asState
@@ -23,7 +26,6 @@ import com.pandulapeter.campfire.tuner.api.model.StringCourses
 import com.pandulapeter.campfire.tuner.api.model.TunerConfig
 import com.pandulapeter.campfire.tuner.api.model.TunerListening
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -43,7 +45,7 @@ import kotlinx.coroutines.launch
 internal class TunerController(
     private val scope: CoroutineScope,
     private val tuner: Tuner,
-    userPreferences: StateFlow<UserPreferences?>,
+    private val userPreferences: StateFlow<UserPreferences?>,
     private val updateUserPreferences: UpdateUserPreferencesUseCase,
     private val writeDelayMillis: Long,
 ) {
@@ -148,8 +150,19 @@ internal class TunerController(
         }
     }
 
-    /** Tells the engine whether a tuner screen is showing, see `Tuner.setStartable`. */
-    fun startStartableRule(isTunerShown: Flow<Boolean>) = scope.launch { isTunerShown.distinctUntilChanged().collect(tuner::setStartable) }
+    /**
+     * Tells the engine whether a tuner screen is showing, see `Tuner.setStartable`: the Tuner tab on top of [backStack],
+     * or the tuner sheet as [visibleDialog], while the tuner is switched on.
+     */
+    fun startStartableRule(backStack: List<CampfireDestination>, visibleDialog: StateFlow<DialogType?>) = scope.launch {
+        combine(
+            snapshotFlow { backStack.lastOrNull() },
+            visibleDialog,
+            userPreferences.map { it?.isTunerEnabled != false },
+        ) { top, dialog, isTunerEnabled -> isTunerEnabled && (top == CampfireDestination.Tuner || dialog is DialogType.Tuner) }
+            .distinctUntilChanged()
+            .collect(tuner::setStartable)
+    }
 }
 
 /** What the instrument in the player's hands is tuned to, a fresh installation's guitar before the preferences are read. */

@@ -19,7 +19,7 @@ import com.pandulapeter.campfire.data.model.domain.LibraryFiles
  * is the one thing that still puts the screen up for it. A song picked from the app's own Import files is reviewed,
  * since one row and an Import is what the user asked to see; a document or an archive is reviewed whoever picked it.
  */
-internal val ImportController.ImportRequest.isReviewed
+internal val ImportRequest.isReviewed
     get() = shouldReview && !(shouldOpenSong && (source as? ImportSource.Files)?.files?.singleOrNull()?.let { isSingleSong(it.name) } == true)
 
 private fun isSingleSong(name: String) = LibraryFiles.isSongFileName(name) && !LibraryFiles.isArchiveFileName(name)

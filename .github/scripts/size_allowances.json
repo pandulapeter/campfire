@@ -4,7 +4,7 @@
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/CLAUDE.md": 2944,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/CampfireApp.kt::CampfireApp": 167,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/CampfireScreens.kt::CampfireScreens": 326,
-  "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/CampfireViewModel.kt": 1719,
+  "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/CampfireViewModel.kt": 1707,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/chords/CLAUDE.md": 1005,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/components/CLAUDE.md": 2431,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/components/EdgeFade.kt": 537,
@@ -67,7 +67,7 @@
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/screens/songs/SongList.kt::SongList": 396,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/screens/songs/SongsScreen.kt::SongsScreen": 172,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/screens/tuner/TunerScreen.kt::TunerScreen": 130,
-  "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/state/ImportController.kt": 654,
+  "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/state/ImportController.kt": 644,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/theme/CLAUDE.md": 885,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/tuner/CLAUDE.md": 793,
   "tools/screenshots/src/main/kotlin/com/pandulapeter/campfire/screenshots/Render.kt::render": 130

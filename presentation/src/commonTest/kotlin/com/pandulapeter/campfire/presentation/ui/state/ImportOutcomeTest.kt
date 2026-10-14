@@ -64,7 +64,7 @@ class ImportOutcomeTest {
         assertEquals(4, plan.entryCount)
     }
 
-    private fun requestOf(vararg names: String, shouldOpenSong: Boolean, shouldReview: Boolean = true) = ImportController.ImportRequest(
+    private fun requestOf(vararg names: String, shouldOpenSong: Boolean, shouldReview: Boolean = true) = ImportRequest(
         source = ImportSource.Files(names.map { ImportedFile(name = it, bytes = ByteArray(0)) }),
         shouldAnnounceResult = true,
         shouldOpenSong = shouldOpenSong,

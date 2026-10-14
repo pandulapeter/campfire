@@ -37,6 +37,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportFailure
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportReport
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.followingLibraryFileNames
+import com.pandulapeter.campfire.presentation.ui.screens.importReport.isUnfinished
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.replaceCount
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.withGroupResolution
 import kotlinx.coroutines.CancellationException
@@ -584,28 +585,6 @@ internal class ImportController(
         }
     }
 
-    /**
-     * One batch in [importQueue].
-     *
-     * @param source Emptied once a preparation has succeeded: the plan carries everything the rest of the import needs,
-     *   while the request lives for as long as the review does. Kept while a preparation failed, for Try again, and an
-     *   address that was downloaded becomes the file it downloaded, so a read that failed is not downloaded again.
-     * @param shouldAnnounceResult False for the import nobody asked for: the demo library planted on a first run is
-     *   the library the user is about to be shown, and a snackbar or a result counting the files of it would be the app
-     *   reporting on something that, as far as anyone can tell, simply came with it.
-     * @param shouldOpenSong True for files the system handed over and for an address, see [importFiles].
-     * @param shouldReview See [enqueueImport].
-     * @param isDemoLibrary The files are [DemoLibrary]'s, and what of them is written is remembered for sync.
-     */
-    class ImportRequest(
-        var source: ImportSource,
-        val shouldAnnounceResult: Boolean,
-        val shouldOpenSong: Boolean,
-        val shouldReview: Boolean = true,
-        val isDemoLibrary: Boolean = false,
-        val settled: CompletableDeferred<Unit> = CompletableDeferred(),
-    )
-
     /** What [prepare] came to: a plan to review or write, or why there is none. */
     private sealed interface Preparation {
         class Planned(val plan: ImportPlan) : Preparation
@@ -643,6 +622,17 @@ internal class ImportController(
                 request.settled.complete(Unit)
             }
         }
+    }
+
+    /**
+     * Says that a process ended behind an unwritten import, and keeps [savedStateStore] noting whether one is. The
+     * import screen is never restored, and its plan is far too large to be saved, so a process ended behind an
+     * unwritten import says so instead. Read before the collector writes the first report over it.
+     */
+    fun startReportingInterruption(savedStateStore: SavedStateStore) {
+        val wasImportInterrupted = savedStateStore.restore<Boolean>(SavedStateStore.IMPORT_UNFINISHED_KEY) == true
+        scope.launch { importReport.collect { savedStateStore.persist(SavedStateStore.IMPORT_UNFINISHED_KEY, it.isUnfinished) } }
+        if (wasImportInterrupted) messageSink.sendMessage(Message.ImportInterrupted)
     }
 
     /** Notes whether the import screen is still on the back stack, and lets go of what it asked once it is not. */

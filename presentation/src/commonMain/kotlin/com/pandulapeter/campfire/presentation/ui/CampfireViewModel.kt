@@ -133,7 +133,6 @@ import com.pandulapeter.campfire.presentation.ui.playing.Capos
 import com.pandulapeter.campfire.presentation.ui.screens.chords.ChordLibraryState
 import com.pandulapeter.campfire.presentation.ui.screens.export.ExportController
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportReport
-import com.pandulapeter.campfire.presentation.ui.screens.importReport.isUnfinished
 import com.pandulapeter.campfire.presentation.ui.screens.onboarding.OnboardingStep
 import com.pandulapeter.campfire.presentation.ui.screens.onboarding.onboardingSteps
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.SetlistWithSongs
@@ -163,7 +162,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
@@ -1005,11 +1003,7 @@ class CampfireViewModel(
         syncController.startRestoring(isFirstLaunch = isFirstLaunch, onConsentAnswered = ::showSyncConsentAnswer)
         songTextStore.startFollowingFiles()
         importController.startQueue(firstRunController.demoLibraryDecision)
-        // Read before the collector below writes the first report over it. The import screen is never restored, and
-        // its plan is far too large to be saved, so a process ended behind an unwritten import says so instead.
-        val wasImportInterrupted = savedStateStore.restore<Boolean>(SavedStateStore.IMPORT_UNFINISHED_KEY) == true
-        viewModelScope.launch { importController.importReport.collect { savedStateStore.persist(SavedStateStore.IMPORT_UNFINISHED_KEY, it.isUnfinished) } }
-        if (wasImportInterrupted) sendMessage(Message.ImportInterrupted)
+        importController.startReportingInterruption(savedStateStore)
         navigator.addOnBackStackChanged { _, stack -> firstRunController.onBackStackChanged(stack) }
         dialogHost.startClosingWithSong(allSongs = allSongs, isLoading = isLoading, songsBeingRenamed = songsBeingRenamed)
         editorSession.startRecovery()
@@ -1038,13 +1032,7 @@ class CampfireViewModel(
         tunerController.startSettingsWriter()
         tunerController.startFollowingSettings()
         tunerController.startTrackingTunedNotes()
-        tunerController.startStartableRule(
-            combine(
-                snapshotFlow { backStack.lastOrNull() },
-                dialogHost.visibleDialog,
-                userPreferences.map { it?.isTunerEnabled != false },
-            ) { top, dialog, isTunerEnabled -> isTunerEnabled && (top == CampfireDestination.Tuner || dialog is DialogType.Tuner) },
-        )
+        tunerController.startStartableRule(backStack = backStack, visibleDialog = dialogHost.visibleDialog)
     }
 
     // Navigation

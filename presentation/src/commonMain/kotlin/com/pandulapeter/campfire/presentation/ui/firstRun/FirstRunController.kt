@@ -30,7 +30,7 @@ import com.pandulapeter.campfire.presentation.ui.navigation.NavigationState
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportReport
 import com.pandulapeter.campfire.presentation.ui.screens.settings.DemoLibraryOffer
 import com.pandulapeter.campfire.presentation.ui.state.ImportController
-import com.pandulapeter.campfire.presentation.ui.state.ImportController.ImportRequest
+import com.pandulapeter.campfire.presentation.ui.state.ImportRequest
 import com.pandulapeter.campfire.presentation.ui.state.ImportSource
 import com.pandulapeter.campfire.presentation.ui.state.asState
 import kotlinx.coroutines.CancellationException
