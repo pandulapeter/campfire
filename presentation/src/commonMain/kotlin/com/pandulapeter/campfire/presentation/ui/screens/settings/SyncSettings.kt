@@ -52,10 +52,6 @@ import com.pandulapeter.campfire.presentation.resources.settings_sync_connect_dr
 import com.pandulapeter.campfire.presentation.resources.settings_sync_conflicts
 import com.pandulapeter.campfire.presentation.resources.settings_sync_connected_as
 import com.pandulapeter.campfire.presentation.resources.settings_sync_connecting
-import com.pandulapeter.campfire.presentation.resources.settings_sync_connection_failed_authorization
-import com.pandulapeter.campfire.presentation.resources.settings_sync_connection_failed_network
-import com.pandulapeter.campfire.presentation.resources.settings_sync_connection_failed_storage
-import com.pandulapeter.campfire.presentation.resources.settings_sync_connection_failed_unknown
 import com.pandulapeter.campfire.presentation.resources.settings_sync_delete_locally
 import com.pandulapeter.campfire.presentation.resources.settings_sync_delete_remotely
 import com.pandulapeter.campfire.presentation.resources.settings_sync_deletions_pending
@@ -80,12 +76,9 @@ import com.pandulapeter.campfire.presentation.resources.settings_sync_never
 import com.pandulapeter.campfire.presentation.resources.settings_sync_now
 import com.pandulapeter.campfire.presentation.resources.settings_sync_preparing
 import com.pandulapeter.campfire.presentation.resources.settings_sync_progress
-import com.pandulapeter.campfire.presentation.resources.settings_sync_redirect_page_message
-import com.pandulapeter.campfire.presentation.resources.settings_sync_redirect_page_title
 import com.pandulapeter.campfire.presentation.resources.settings_sync_remote_deletions_pending
 import com.pandulapeter.campfire.presentation.resources.settings_sync_unavailable
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.data.model.domain.AuthorizationCompletionPage
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
 import com.pandulapeter.campfire.presentation.ui.components.Elapsed
 import com.pandulapeter.campfire.presentation.ui.components.pluralTextResource
@@ -95,6 +88,9 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.platform.withSyncCounts
 import com.pandulapeter.campfire.presentation.ui.settingsPage.AnimatedSettingsRow
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsMessage
+import com.pandulapeter.campfire.presentation.ui.sync.connectionFailedMessage
+import com.pandulapeter.campfire.presentation.ui.sync.rememberAuthorizationCompletionPage
+import com.pandulapeter.campfire.presentation.ui.sync.stage
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 import org.jetbrains.compose.resources.painterResource
@@ -132,30 +128,12 @@ internal fun ColumnScope.SyncSettings(
     }
 }
 
-/**
- * What [SyncSettings] animates between. A failed connection is the invitation to connect with the reason under it,
- * so the two are one stage and the reason is a row that comes and goes within it.
- */
-private enum class SyncStage { DISCONNECTED, CONNECTING, CONNECTED }
-
-private val SyncState.stage
-    get() = when (this) {
-        SyncState.Disconnected, is SyncState.ConnectionFailed -> SyncStage.DISCONNECTED
-        is SyncState.Connecting -> SyncStage.CONNECTING
-        is SyncState.Connected -> SyncStage.CONNECTED
-    }
-
 @Composable
 private fun ColumnScope.DisconnectedSyncSettings(
     viewModel: CampfireViewModel,
     syncState: SyncState,
 ) {
-    // Resolved out here rather than in the data layer, which can see neither the translations nor the language the
-    // user picked.
-    val completionPage = AuthorizationCompletionPage(
-        title = stringResource(Res.string.settings_sync_redirect_page_title),
-        message = stringResource(Res.string.settings_sync_redirect_page_message),
-    )
+    val completionPage = rememberAuthorizationCompletionPage()
     ActionListItem(
         title = stringResource(Res.string.settings_sync_connect_dropbox),
         icon = painterResource(Res.drawable.ic_cloud),
@@ -167,15 +145,7 @@ private fun ColumnScope.DisconnectedSyncSettings(
     // that the second click of a double click lands on.
     AnimatedSettingsRow(value = (syncState as? SyncState.ConnectionFailed)?.reason) { reason ->
         SettingsMessage(
-            text = stringResource(
-                when (reason) {
-                    SyncFailureReason.NETWORK -> Res.string.settings_sync_connection_failed_network
-                    SyncFailureReason.AUTHORIZATION -> Res.string.settings_sync_connection_failed_authorization
-                    SyncFailureReason.STORAGE -> Res.string.settings_sync_connection_failed_storage
-                    SyncFailureReason.REMOTE_STORAGE_FULL,
-                    SyncFailureReason.UNKNOWN -> Res.string.settings_sync_connection_failed_unknown
-                }
-            ),
+            text = stringResource(reason.connectionFailedMessage),
             isAnnounced = true,
         )
     }

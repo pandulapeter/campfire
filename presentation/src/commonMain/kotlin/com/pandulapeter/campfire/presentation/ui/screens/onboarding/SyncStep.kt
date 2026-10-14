@@ -48,13 +48,10 @@ import com.pandulapeter.campfire.presentation.resources.onboarding_sync_title
 import com.pandulapeter.campfire.presentation.resources.settings_sync_connect_dropbox
 import com.pandulapeter.campfire.presentation.resources.settings_sync_connected_as
 import com.pandulapeter.campfire.presentation.resources.settings_sync_connecting
-import com.pandulapeter.campfire.presentation.resources.settings_sync_connection_failed_authorization
-import com.pandulapeter.campfire.presentation.resources.settings_sync_connection_failed_network
-import com.pandulapeter.campfire.presentation.resources.settings_sync_connection_failed_storage
-import com.pandulapeter.campfire.presentation.resources.settings_sync_connection_failed_unknown
-import com.pandulapeter.campfire.presentation.resources.settings_sync_redirect_page_message
-import com.pandulapeter.campfire.presentation.resources.settings_sync_redirect_page_title
 import com.pandulapeter.campfire.presentation.ui.components.textResource
+import com.pandulapeter.campfire.presentation.ui.sync.connectionFailedMessage
+import com.pandulapeter.campfire.presentation.ui.sync.rememberAuthorizationCompletionPage
+import com.pandulapeter.campfire.presentation.ui.sync.stage
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -80,11 +77,7 @@ internal fun SyncStep(
     message = stringResource(Res.string.onboarding_sync_message),
     isCompact = isCompact,
 ) {
-    // Resolved here rather than in the data layer, which can see neither the translations nor the language picked.
-    val completionPage = AuthorizationCompletionPage(
-        title = stringResource(Res.string.settings_sync_redirect_page_title),
-        message = stringResource(Res.string.settings_sync_redirect_page_message),
-    )
+    val completionPage = rememberAuthorizationCompletionPage()
     AnimatedContent(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
         targetState = syncState,
@@ -110,16 +103,6 @@ internal fun SyncStep(
     }
 }
 
-/** What the page crossfades between: a failed connection is the invitation with its reason, so the two are one. */
-private enum class SyncStage { DISCONNECTED, CONNECTING, CONNECTED }
-
-private val SyncState.stage
-    get() = when (this) {
-        SyncState.Disconnected, is SyncState.ConnectionFailed -> SyncStage.DISCONNECTED
-        is SyncState.Connecting -> SyncStage.CONNECTING
-        is SyncState.Connected -> SyncStage.CONNECTED
-    }
-
 @Composable
 private fun DisconnectedContent(
     failureReason: SyncFailureReason?,
@@ -139,15 +122,7 @@ private fun DisconnectedContent(
     failureReason?.let { reason ->
         Text(
             modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
-            text = stringResource(
-                when (reason) {
-                    SyncFailureReason.NETWORK -> Res.string.settings_sync_connection_failed_network
-                    SyncFailureReason.AUTHORIZATION -> Res.string.settings_sync_connection_failed_authorization
-                    SyncFailureReason.STORAGE -> Res.string.settings_sync_connection_failed_storage
-                    SyncFailureReason.REMOTE_STORAGE_FULL,
-                    SyncFailureReason.UNKNOWN -> Res.string.settings_sync_connection_failed_unknown
-                }
-            ),
+            text = stringResource(reason.connectionFailedMessage),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.error,
             textAlign = TextAlign.Center,
