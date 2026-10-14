@@ -20,8 +20,6 @@
 
 ### Refactor + testing
 - Verify the current unit test coverage, extend it if needed
-- Two-device sync scenarios: documentation/plans/sync-scenario-tests.md
-- Pedal coverage walk: documentation/plans/pedal-coverage-test.md
 - Golden renders: documentation/plans/golden-renders.md
 - Review for performance issues.
 
