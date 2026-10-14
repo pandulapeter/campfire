@@ -49,7 +49,7 @@ Nothing depends on it; the `store-screenshots` skill drives it, and its test sou
 `./gradlew :tools:screenshots:test` (`src/test`), run by `tests.yml`. Each test starts the whole app with `runAppTest`
 (`AppTest.kt`) — real view model, use cases, repositories, and files in a temporary home — and drives it like a user,
 through Compose's `SkikoComposeUiTest` at a density of one, so a `TestWindow` is in dp. `TestAppearance` sets the
-language, theme, system text size, and fonts.
+language, theme, and system text size.
 
 - **Assert what a user sees or what lands on disk**: semantics found by text read from the resources (`string`,
   `pluralString`, never typed English) or the library folder (`songsFolder`), or pixels where semantics cannot tell
@@ -66,7 +66,8 @@ language, theme, system text size, and fonts.
 - The view model keeps `Dispatchers.Main` (Swing) while the composition runs on the test clock, and library writes
   happen on IO threads: wait for them with `waitForLibrary` / `waitUntil`, never a sleep. A flaky test is fixed or
   deleted the same day, never retried.
-- Tests use Compose's default font, except the golden renders, which are set in the downloaded Android fonts.
+- Tests are set in the downloaded Android fonts (`testFonts`), so a song breaks its lines in the same places on a Mac
+  and on CI's Linux; the systems' own default fonts differ in their metrics.
 
 ### Golden renders
 

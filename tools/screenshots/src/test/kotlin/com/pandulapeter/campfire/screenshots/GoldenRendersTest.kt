@@ -57,13 +57,12 @@ internal class GoldenRendersTest {
             output = File(System.getProperty("campfire.screenshots.goldenOutput")),
             isUpdating = System.getProperty("campfire.screenshots.updateGoldens").toBoolean(),
         )
-        val fonts = Fonts(File(System.getProperty("campfire.screenshots.fonts")))
         val failures = mutableListOf<String>()
         cases.forEach { case ->
             runAppTest(
                 window = case.window,
                 setlists = case.setlists,
-                appearance = case.appearance.copy(fonts = fonts),
+                appearance = case.appearance,
                 isCoverArtEnabled = case.isCoverArtEnabled,
             ) {
                 case.drive(this)

@@ -56,15 +56,11 @@ internal class TestWindow(val width: Dp, val height: Dp) {
     }
 }
 
-/**
- * How the app is drawn for a test: in [language], in the dark theme or the light one, with the system's text size at
- * [textScale], and with its text set in [fonts]' Android ones, or in Compose's default where there are none.
- */
+/** How the app is drawn for a test: in [language], in the dark theme or the light one, with the system's text size at [textScale]. */
 internal data class TestAppearance(
     val language: UserPreferences.Language = UserPreferences.Language.ENGLISH,
     val isDark: Boolean = false,
     val textScale: Float = 1f,
-    val fonts: Fonts? = null,
 )
 
 /**
@@ -92,8 +88,8 @@ internal fun runAppTest(
     platform = ImpersonatedPlatform.ANDROID,
     chrome = SystemChrome.None,
     density = 1f,
-    fontFamily = appearance.fonts?.android,
-    monospaceFontFamily = appearance.fonts?.androidMonospace,
+    fontFamily = testFonts.android,
+    monospaceFontFamily = testFonts.androidMonospace,
     writeData = { dataDirectory -> writeLibrary(dataDirectory, songs, setlists, fontScale, appearance, isCoverArtEnabled) },
 ) { host ->
     host.koin.loadModules(listOf(testFakes), allowOverride = true)
@@ -220,6 +216,12 @@ private class TestFilePicker(private val files: List<ImportedFile>) : FilePicker
 
     override suspend fun shareFile(file: ExportedFile) = false
 }
+
+/**
+ * The Android fonts the build downloads, pinned, which every test sets the app in: the systems' own default fonts have
+ * different metrics, so a song laid out on a Mac would break its lines elsewhere than on the Linux that CI runs.
+ */
+private val testFonts by lazy { Fonts(File(System.getProperty("campfire.screenshots.fonts"))) }
 
 private const val LAUNCH_TIMEOUT_MILLIS = 30_000L
 private const val WRITE_TIMEOUT_MILLIS = 10_000L
