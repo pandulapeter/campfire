@@ -160,6 +160,23 @@ class GetScreenDataUseCaseImplTest {
     }
 
     @Test
+    fun `a tag filter narrows the counts but leaves the whole library's tags and languages`() = runTest {
+        songs.value = DataState.Idle(
+            listOf(
+                song("Yesterday", tags = listOf("Ballad"), languages = listOf("en")),
+                song("Kalinka", tags = listOf("Folk"), languages = listOf("ru")),
+                song("Katyusha", tags = listOf("Folk", "Ballad"), languages = listOf("ru")),
+            )
+        )
+        filter.value = SongFilter(selectedTags = setOf("folk"))
+        val screenData = collectScreenData().first { it?.data?.songs?.size == 2 }?.data
+
+        assertEquals(listOf("ru" to 2, "en" to 0), screenData?.languages?.map { it.code to it.songCount })
+        assertEquals(listOf("Ballad" to 2, "Folk" to 2), screenData?.libraryTags?.map { it.name to it.songCount })
+        assertEquals(listOf("ru" to 2, "en" to 1), screenData?.libraryLanguages?.map { it.code to it.songCount })
+    }
+
+    @Test
     fun `the song list carries the filter and the preferences it was built for`() = runTest {
         filter.value = SongFilter(selectedTags = setOf("Folk"), selectedLanguages = setOf("ru"))
         preferences.value = DataState.Idle(TEST_PREFERENCES.copy(tagMatchMode = UserPreferences.MatchMode.ALL))

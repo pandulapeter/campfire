@@ -45,6 +45,14 @@ data class ScreenData(
      */
     val languages: List<SongLanguage>,
     /**
+     * Every tag of the whole library, counted over all of it and ordered as [tags] is: what a control that ignores the
+     * songs screen's filters offers (the song picker), so that it never counts the library a second time by a rule of
+     * its own.
+     */
+    val libraryTags: List<Tag> = emptyList(),
+    /** Every language of the whole library, counted over all of it and ordered as [languages] is; see [libraryTags]. */
+    val libraryLanguages: List<SongLanguage> = emptyList(),
+    /**
      * The whole library, whether or not the filters hide a song and in no particular order. The setlists are read
      * from here rather than from [songs]: a setlist is the list somebody wrote down, so it shows what it holds
      * whatever the song list is currently narrowed to, and an entry missing from here is a file that is really gone.

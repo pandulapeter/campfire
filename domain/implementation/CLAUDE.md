@@ -29,6 +29,8 @@ conventions have it. A failure a use case notes but does not throw goes to the i
   leaves. Neither can empty the other: what counts as a tag/language is decided before either filter runs; a selected
   value no song carries any more is ignored (not emptying the list); a value the other group narrowed to nothing stays
   with count zero, sorted last, drawn disabled, so chips hold still.
+- `ScreenData.libraryTags` / `libraryLanguages` are the whole library's counts the filters start from, for controls that
+  ignore the filters (the song picker); tags are compared by `tagKey` everywhere.
 
 ## Import
 

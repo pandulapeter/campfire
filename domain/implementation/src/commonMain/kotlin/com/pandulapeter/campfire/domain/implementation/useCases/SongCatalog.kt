@@ -13,19 +13,20 @@ import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.SongLanguage
 import com.pandulapeter.campfire.data.model.domain.Tag
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.data.model.domain.tagKey
 import com.pandulapeter.campfire.domain.api.models.SongFilter
 
 /**
- * Tags are matched without regard to case, here and everywhere else, so both sides are folded to lower case
- * before they meet. A selected tag no song carries any more is dropped instead of emptying the list: it is kept
+ * Tags are matched without regard to case, here and everywhere else, so both sides are compared by `tagKey`
+ * when they meet. A selected tag no song carries any more is dropped instead of emptying the list: it is kept
  * in the filter on purpose, see [SongFilter.selectedTags].
  */
 internal fun List<Song>.filterTags(songFilter: SongFilter, matchMode: UserPreferences.MatchMode, tags: List<Tag>): List<Song> {
-    val available = tags.mapTo(mutableSetOf()) { it.name.lowercase() }
-    val selected = songFilter.selectedTags.map { it.lowercase() }.filter { it in available }
+    val available = tags.mapTo(mutableSetOf()) { tagKey(it.name) }
+    val selected = songFilter.selectedTags.map(::tagKey).filter { it in available }
     if (selected.isEmpty()) return this
     return filter { song ->
-        val songTags = song.tags.mapTo(mutableSetOf()) { it.lowercase() }
+        val songTags = song.tags.mapTo(mutableSetOf(), ::tagKey)
         when (matchMode) {
             UserPreferences.MatchMode.ANY -> selected.any { it in songTags }
             UserPreferences.MatchMode.ALL -> selected.all { it in songTags }
@@ -62,9 +63,9 @@ internal fun List<Song>.filterLanguages(songFilter: SongFilter, matchMode: UserP
 internal fun List<Tag>.recountedTagsOver(songs: List<Song>, normalize: (String) -> String): List<Tag> {
     val counts = mutableMapOf<String, Int>()
     songs.forEach { song ->
-        song.tags.mapTo(mutableSetOf()) { it.lowercase() }.forEach { tag -> counts[tag] = (counts[tag] ?: 0) + 1 }
+        song.tags.mapTo(mutableSetOf(), ::tagKey).forEach { tag -> counts[tag] = (counts[tag] ?: 0) + 1 }
     }
-    return map { it.copy(songCount = counts[it.name.lowercase()] ?: 0) }.sortedWith(tagOrder(normalize))
+    return map { it.copy(songCount = counts[tagKey(it.name)] ?: 0) }.sortedWith(tagOrder(normalize))
 }
 
 /** Every language of the library counted over [songs] - the ones the tag filter leaves - the way [recountedTagsOver] counts the tags. */
@@ -101,8 +102,8 @@ internal fun List<Song>.toLanguages(): List<SongLanguage> {
 internal fun List<Song>.toTags(normalize: (String) -> String): List<Tag> {
     val tagsByName = linkedMapOf<String, SpelledTag>()
     forEach { song ->
-        song.tags.forEach { tag ->
-            val spelled = tagsByName.getOrPut(tag.lowercase()) { SpelledTag(name = tag, fileName = song.fileName) }
+        song.tags.distinctBy(::tagKey).forEach { tag ->
+            val spelled = tagsByName.getOrPut(tagKey(tag)) { SpelledTag(name = tag, fileName = song.fileName) }
             spelled.songCount++
             if (song.fileName < spelled.fileName) {
                 spelled.name = tag
