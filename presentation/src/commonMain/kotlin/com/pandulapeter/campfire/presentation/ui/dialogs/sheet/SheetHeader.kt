@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.dialogs.sheet
 
-import com.pandulapeter.campfire.presentation.ui.dialogs.label
+import com.pandulapeter.campfire.presentation.ui.dialogs.forms.label
 import com.pandulapeter.campfire.presentation.ui.dialogs.songLabel
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row

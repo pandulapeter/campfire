@@ -7,8 +7,10 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.dialogs
+package com.pandulapeter.campfire.presentation.ui.dialogs.forms
 
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
+import com.pandulapeter.campfire.presentation.ui.dialogs.rememberSingleConfirmation
 import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.BottomSheetConfirmButton
 import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.LocalIsSheetClosing
 import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.TextFieldBottomSheet

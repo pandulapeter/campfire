@@ -11,7 +11,7 @@
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/components/list/FastScroller.kt::FastScroller": 155,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/components/list/SectionHeader.kt::SectionHeader": 139,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/components/songCard/SongListItem.kt::SongListItem": 129,
-  "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/dialogs/CLAUDE.md": 1921,
+  "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/dialogs/CLAUDE.md": 1552,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/dialogs/CampfireDialogs.kt::CampfireDialog": 281,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/dialogs/CoverArtResults.kt::CoverArtResults": 136,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/dialogs/CoverArtSearchSheet.kt::CoverArtSearchSheet": 123,

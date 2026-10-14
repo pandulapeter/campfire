@@ -9,6 +9,10 @@
  */
 package com.pandulapeter.campfire.presentation.ui.dialogs
 
+import com.pandulapeter.campfire.presentation.ui.dialogs.forms.SONG_METADATA_FIELDS
+import com.pandulapeter.campfire.presentation.ui.dialogs.forms.durationDigitsOf
+import com.pandulapeter.campfire.presentation.ui.dialogs.forms.durationTextOf
+import com.pandulapeter.campfire.presentation.ui.dialogs.forms.toSongMetadataDraft
 import com.pandulapeter.campfire.chordpro.ChordProDuration
 import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields.Field
 import com.pandulapeter.campfire.data.model.domain.SongCredits

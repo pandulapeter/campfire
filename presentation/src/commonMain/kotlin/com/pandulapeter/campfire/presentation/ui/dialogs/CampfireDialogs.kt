@@ -9,6 +9,11 @@
  */
 package com.pandulapeter.campfire.presentation.ui.dialogs
 
+import com.pandulapeter.campfire.presentation.ui.dialogs.forms.NewSongDialog
+import com.pandulapeter.campfire.presentation.ui.dialogs.forms.SetlistDetailsDialog
+import com.pandulapeter.campfire.presentation.ui.dialogs.forms.SongLinksDialog
+import com.pandulapeter.campfire.presentation.ui.dialogs.forms.SongMetadataDialog
+import com.pandulapeter.campfire.presentation.ui.dialogs.forms.SongPlayingDialog
 import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.CampfireBottomSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.LocalIsSheetCloseRequested
 import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.sheetContainerColor
