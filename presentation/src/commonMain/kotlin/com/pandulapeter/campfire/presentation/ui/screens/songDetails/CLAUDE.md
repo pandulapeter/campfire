@@ -156,12 +156,14 @@ Product side in `ui/metronome/CLAUDE.md`.
   killed it). The model stops after the last section that fits (or inside an oversized first one) and says so; the file
   is untouched and the header is built from all of it.
 
-### Layout (`SongSectionsLayout`, `SectionGrid.kt`, `SectionCutting.kt`, `LayoutScore.kt`, `TextFitting.kt`)
+### Layout (`SongSectionsLayout`, `SongGridSearch`, `SectionPlacement`, `SectionGrid`, `SectionCutting`, `LayoutScore`, `TextFitting`)
 
+- The search and the placement are pure (`SongGridSearch` over `SectionMetrics`, `placeSections`); the layout only
+  measures and places.
 - **Fewest (widest) columns that fit the song in one row**, else the fewest that fit it in several (`searchColumnCount`),
   from intrinsic heights; a failing candidate jumps to the smallest count that could fit. A single-column window skips
-  the search (it is paged).
-- Column width 384–560dp scaled by `fontScale` (288dp narrow, below). Once decided, each column narrows to its widest
+  the search.
+- Column width 384–560dp scaled by `fontScale` (288dp narrow, below). Each column narrows to its widest
   content and each row's leftover width is shared evenly before, between, and after its columns, clear of the step
   buttons where needed.
 - **Several counts fit one row → the most even fill** (`balancedAmong`): width filled against height filled; more columns
@@ -181,15 +183,14 @@ Product side in `ui/metronome/CLAUDE.md`.
   balanced by a DP over squared deviation from the ideal height; greedy fill dumps all slack on the last column.
 - A section wider than a column (a tab staff) may take a wider row, up to the full width, where that saves a page or
   lowers the row; neighbours may stack in that row's single column (`forEachWideRow`), so a short section beside a tab
-  gets no screen of its own. The editor's preview does this too.
+  gets no screen of its own.
 - **A song not read whole in one row is set like a magazine** (`flowLikeAMagazine`): columns filled to the screen,
   sections running on into the next column or row, since every page ending early is an extra page turn. Fewest pages
   first, then `LayoutScoring` (`ColumnFlow.program`) prices cuts (more inside a section of four lines or fewer, almost
   nothing after an empty line or before a comment), pieces of one or two lyric lines, and the squared empty space at the
   end of non-last columns. Diagram rows, tab systems, comments, and the first section are never "stranded lines". Each
   page is then evened out (`ColumnFlow.evenOut`); the last takes the fewest columns that hold it. Compared against the
-  whole-section layout by `SectionGrid.pageCount`, then `score`; a full tie keeps sections whole. A song read whole in
-  one row is never cut.
+  whole-section layout by `SectionGrid.pageCount`, then `score`; a full tie keeps sections whole.
 - **Narrow columns** (`NARROW_COLUMN_WIDTH`, 288dp): counts where at most a quarter of lyric lines wrap
   (`fitsNarrowColumns`), taken only for strictly fewer pages (`withNarrowColumns`).
 - **Text fitting** (`TextFitting.kt`): 97.5%, then 95%, never below `MIN_FONT_SCALE`, the first that saves a page

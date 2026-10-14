@@ -35,7 +35,7 @@
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/screens/setlists/SetlistList.kt::SetlistList": 294,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/screens/settings/CLAUDE.md": 823,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/screens/settings/SettingsScreen.kt::SettingsScreen": 136,
-  "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/screens/songDetails/CLAUDE.md": 4535,
+  "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/screens/songDetails/CLAUDE.md": 4534,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/screens/songDetails/SectionCutting.kt::flowIntoPages": 167,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/screens/songDetails/SectionGrid.kt": 715,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/screens/songDetails/SectionGrid.kt::SectionGrid.arrange": 134,
