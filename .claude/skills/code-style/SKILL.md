@@ -100,10 +100,13 @@ wrong or undo it".
   small private helpers used only by it stay with it. Shared non-UI helpers (constants, state classes,
   `Modifier` extensions, `remember…` functions) go into a file named for what they are
   (`SongCardDefaults.kt`, `ListItemMetrics.kt`, `SearchBarMotion.kt`) — never `Utils.kt` / `Helpers.kt`.
-- **Files stay small.** Aim for under ~500 lines. A file that outgrows that is split by cohesion as part of
-  the change that grows it: private state classes become `internal` top-level classes in files of their
-  own, a pure algorithm moves next to its users in a file named for it. A pure algorithm that splitting
-  would only scatter (`SectionGrid`, `PrintLayout`) may stay whole.
+- **Files stay small, and CI enforces it** (`.github/scripts/check_sizes.py`): a main source file is at most
+  500 lines, a top-level function — a Composable above all — at most 120, a `CLAUDE.md` at most 2,500 words at
+  the root, 1,500 in a module, `.github` or a source set, and 600 in a package. Split by cohesion in the change
+  that would cross a limit, never after: private state classes become `internal` top-level classes in files of
+  their own, a pure algorithm moves next to its users in a file named for it, a Composable's visual groups become
+  named children. What was already over when the check came in is listed in `size_allowances.json` and may only
+  shrink; never raise an allowance or add one — split instead, then run `check_sizes.py --update`.
 - **Package by role, not by first user.** A screen's package (`ui.screens.<screen>`) holds only that
   screen; a building block a second screen needs moves to a shared package (`ui.components`, `ui.chords`,
   `ui.metronome`, `ui.playing`, `ui.search`, `ui.songLayout`, …) rather than being imported out of the
@@ -111,7 +114,8 @@ wrong or undo it".
   (`ui.screens.export`), and `ui.dialogs` holds dialog and sheet content. Tests sit in the package of the
   code they test.
 - **No god objects.** When a class gains a responsibility unrelated to the ones it has, give that
-  responsibility a collaborator of its own instead of another dozen members. Interfaces are as narrow as
+  responsibility a collaborator of its own instead of another dozen members. A facade such as
+  `CampfireViewModel` holds one-line delegations only; logic it would grow goes into the holder it belongs to. Interfaces are as narrow as
   their clients (split one that two clients use halves of); a long-lived class takes its
   `CoroutineScope`, dispatcher and clocks rather than building them, so a test can pass virtual time.
 - **A behaviour-preserving split moves code verbatim**: the same declarations, KDoc with its declaration,
