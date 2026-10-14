@@ -7,8 +7,25 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.data.sync.implementation
+package com.pandulapeter.campfire.data.sync.implementation.scheduling
 
+import com.pandulapeter.campfire.data.sync.implementation.DataSyncModule
+import com.pandulapeter.campfire.data.sync.implementation.FakeLibraryFileLocalSource
+import com.pandulapeter.campfire.data.sync.implementation.FakeSyncIndexLocalSource
+import com.pandulapeter.campfire.data.sync.implementation.FakeSyncProvider
+import com.pandulapeter.campfire.data.sync.implementation.FakeUserPreferencesRepository
+import com.pandulapeter.campfire.data.sync.implementation.NoSetlistComparison
+import com.pandulapeter.campfire.data.sync.implementation.RecordingSetlistRepository
+import com.pandulapeter.campfire.data.sync.implementation.RecordingSongRepository
+import com.pandulapeter.campfire.data.sync.implementation.RunCounter
+import com.pandulapeter.campfire.data.sync.implementation.SyncIndexStore
+import com.pandulapeter.campfire.data.sync.implementation.SyncKey
+import com.pandulapeter.campfire.data.sync.implementation.SyncStateHolder
+import com.pandulapeter.campfire.data.sync.implementation.SyncedPreferencesSync
+import com.pandulapeter.campfire.data.sync.implementation.TEST_ACCOUNT
+import com.pandulapeter.campfire.data.sync.implementation.song
+import com.pandulapeter.campfire.data.sync.implementation.synchronize
+import com.pandulapeter.campfire.data.sync.implementation.testEnvironment
 import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.domain.SyncState

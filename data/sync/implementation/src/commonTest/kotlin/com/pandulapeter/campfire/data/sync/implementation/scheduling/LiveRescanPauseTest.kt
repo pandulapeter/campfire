@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.data.sync.implementation
+package com.pandulapeter.campfire.data.sync.implementation.scheduling
 
 import kotlin.test.Test
 import kotlin.test.assertEquals

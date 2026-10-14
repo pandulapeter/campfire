@@ -9,8 +9,12 @@
  */
 @file:OptIn(ExperimentalAtomicApi::class)
 
-package com.pandulapeter.campfire.data.sync.implementation
+package com.pandulapeter.campfire.data.sync.implementation.scheduling
 
+import com.pandulapeter.campfire.data.sync.implementation.SyncEnvironment
+import com.pandulapeter.campfire.data.sync.implementation.SyncIndexDocument
+import com.pandulapeter.campfire.data.sync.implementation.SyncStateHolder
+import com.pandulapeter.campfire.data.sync.implementation.SyncedPreferencesSync
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.domain.SyncProgress
 import com.pandulapeter.campfire.data.model.domain.SyncState
