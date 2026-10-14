@@ -87,9 +87,11 @@ import com.pandulapeter.campfire.presentation.ui.components.ScrollToTopWhenChang
 import com.pandulapeter.campfire.presentation.ui.components.SectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.SetlistActions
 import com.pandulapeter.campfire.presentation.ui.components.MissingSongListItem
+import com.pandulapeter.campfire.presentation.ui.components.SongCardOptions
 import com.pandulapeter.campfire.presentation.ui.components.SongListItem
 import com.pandulapeter.campfire.presentation.ui.components.belowAppBarOverlap
 import com.pandulapeter.campfire.presentation.ui.components.draggedListItemContainerColor
+import com.pandulapeter.campfire.presentation.ui.components.rememberSongCardKey
 import com.pandulapeter.campfire.presentation.ui.components.songCardTextKeyline
 import com.pandulapeter.campfire.presentation.ui.components.listItemAnimation
 import com.pandulapeter.campfire.presentation.ui.components.rememberListTopFade
@@ -202,17 +204,7 @@ internal fun SetlistList(
             onReorderingSetlistChanged(null)
         }
     }
-    // The chords switched off take them out of the viewer, and the key is the shortest way of writing them down.
-    val shouldShowChords = userPreferences?.areChordsEnabled != false
-    // The tempo is what the click plays, so unless the reader picked it, it goes with the metronome.
-    val isMetronomeEnabled = userPreferences?.isMetronomeEnabled != false
-    // And each can be left off the cards by the reader, see UserPreferences.setlistCardDetails.
-    val cardDetails = userPreferences?.setlistCardDetails ?: UserPreferences.CardDetails.SetlistsDefault
-    val isKeyShown = cardDetails.isKeyShown
-    val isTempoShown = cardDetails.isTempoShown(isMetronomeEnabled)
-    val isDurationShown = cardDetails.isDurationShown
-    val isCoverArtEnabled = userPreferences?.isCoverArtEnabled == true
-    val chordSpelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
+    val cardOptions = SongCardOptions.of(userPreferences = userPreferences, details = userPreferences?.setlistCardDetails ?: UserPreferences.CardDetails.SetlistsDefault)
     // The order the rows are drawn in while a drag is in flight, before any of it has been written down. The
     // reorderable state has to see every move answered in the frame it reports it, and the library is several frames
     // away: a move that had to go to disk and come back through the repository left the row under the finger
@@ -477,9 +469,13 @@ internal fun SetlistList(
                             val playback = songPlaybackOf(song = present.song, setlistFileName = setlistWithSongs.setlist.fileName, overrides = playingOverrides)
                             val transposition = playback.transposition
                             val capo = playback.capo.fret
-                            remember(present.song.key, present.song.transpose, transposition, capo, chordSpelling) {
-                                viewModel.songRenderer.renderKey(song = present.song, transposition = transposition, capo = capo, spelling = chordSpelling)
-                            }
+                            rememberSongCardKey(
+                                songRenderer = viewModel.songRenderer,
+                                song = present.song,
+                                transposition = transposition,
+                                capo = capo,
+                                chordSpelling = cardOptions.chordSpelling,
+                            )
                         }
                         // ReorderableItem's drag tracking, and the elevation and color it animates while a row is
                         // lifted, are only paid for while reorder mode is on. Every row of every setlist is wrapped
@@ -557,16 +553,16 @@ internal fun SetlistList(
                                         song = entry.song,
                                         index = row.index,
                                         cardPadding = songCardPadding(rowIndex, columnCount),
-                                        key = renderedKey.takeIf { isKeyShown },
+                                        key = renderedKey.takeIf { cardOptions.isKeyShown },
                                         // And the setlist's own tempo, for the same reason.
                                         tempo = songPlaybackOf(
                                             song = entry.song,
                                             setlistFileName = setlistFileName,
                                             overrides = playingOverrides,
-                                        ).tempo.bpm.takeIf { isTempoShown },
-                                        shouldShowChords = shouldShowChords,
-                                        duration = entry.song.duration?.takeIf { isDurationShown },
-                                        coverArtUrl = entry.song.coverArtUrl?.takeIf { isCoverArtEnabled },
+                                        ).tempo.bpm.takeIf { cardOptions.isTempoShown },
+                                        shouldShowChords = cardOptions.shouldShowChords,
+                                        duration = entry.song.duration?.takeIf { cardOptions.isDurationShown },
+                                        coverArtUrl = entry.song.coverArtUrl?.takeIf { cardOptions.isCoverArtEnabled },
                                         labelsOnEverySong = labelsOnEverySong,
                                         shouldShowLabels = false,
                                         containerColor = containerColor,

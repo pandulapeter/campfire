@@ -32,6 +32,8 @@ import com.pandulapeter.campfire.presentation.resources.ic_select
 import com.pandulapeter.campfire.presentation.resources.songs_select_multiple
 import com.pandulapeter.campfire.presentation.ui.components.ActionsMenuItem
 import com.pandulapeter.campfire.presentation.ui.components.SONG_CARD_OUTER_PADDING
+import com.pandulapeter.campfire.presentation.ui.components.SongCardOptions
+import com.pandulapeter.campfire.presentation.ui.components.rememberSongCardKey
 import org.jetbrains.compose.resources.painterResource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -163,17 +165,7 @@ internal fun SongList(
     val labelsOnEverySong by viewModel.labelsOnEverySong.collectAsStateWithLifecycle()
     val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     val songFileNamesInSetlists by viewModel.songFileNamesInSetlists.collectAsStateWithLifecycle()
-    // The chords switched off take them out of the viewer, and the key is the shortest way of writing them down.
-    val shouldShowChords = userPreferences?.areChordsEnabled != false
-    // The tempo is what the click plays, so unless the reader picked it, it goes with the metronome.
-    val isMetronomeEnabled = userPreferences?.isMetronomeEnabled != false
-    // And each can be left off the cards by the reader, see UserPreferences.songCardDetails.
-    val cardDetails = userPreferences?.songCardDetails ?: UserPreferences.CardDetails.SongsDefault
-    val isKeyShown = cardDetails.isKeyShown
-    val isTempoShown = cardDetails.isTempoShown(isMetronomeEnabled)
-    val isDurationShown = cardDetails.isDurationShown
-    val isCoverArtEnabled = userPreferences?.isCoverArtEnabled == true
-    val chordSpelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
+    val cardOptions = SongCardOptions.of(userPreferences = userPreferences, details = userPreferences?.songCardDetails ?: UserPreferences.CardDetails.SongsDefault)
     val filePicker = LocalFilePicker.current
     val keyboardController = LocalSoftwareKeyboardController.current
     val coroutineScope = rememberCoroutineScope()
@@ -330,9 +322,13 @@ internal fun SongList(
                     // since the row is composed again as every scroll starts and ends and it is a whole transposition
                     // to work out again.
                     val (transposition, capo, tempo) = songPlaybackOf(song = song, setlistFileName = null, overrides = playingOverrides)
-                    val key = remember(song.key, song.transpose, transposition, capo, chordSpelling) {
-                        viewModel.songRenderer.renderKey(song = song, transposition = transposition, capo = capo.fret, spelling = chordSpelling)
-                    }
+                    val key = rememberSongCardKey(
+                        songRenderer = viewModel.songRenderer,
+                        song = song,
+                        transposition = transposition,
+                        capo = capo.fret,
+                        chordSpelling = cardOptions.chordSpelling,
+                    )
                     // Worked out here rather than inside the row's actions, so that they capture what changes for this row
                     // alone rather than the set that is new on every write to any setlist.
                     val isInSetlist = song.fileName in songFileNamesInSetlists
@@ -352,11 +348,11 @@ internal fun SongList(
                             modifier = Modifier.fadingUnderListTop(topFade).then(selectionSemantics),
                             song = song,
                             cardPadding = songCardPadding(songIndex, columnCount),
-                            key = key.takeIf { isKeyShown },
-                            tempo = tempo.bpm.takeIf { isTempoShown },
-                            shouldShowChords = shouldShowChords,
-                            duration = song.duration?.takeIf { isDurationShown },
-                            coverArtUrl = song.coverArtUrl?.takeIf { isCoverArtEnabled },
+                            key = key.takeIf { cardOptions.isKeyShown },
+                            tempo = tempo.bpm.takeIf { cardOptions.isTempoShown },
+                            shouldShowChords = cardOptions.shouldShowChords,
+                            duration = song.duration?.takeIf { cardOptions.isDurationShown },
+                            coverArtUrl = song.coverArtUrl?.takeIf { cardOptions.isCoverArtEnabled },
                             labelsOnEverySong = labelsOnEverySong,
                             songFilter = songFilter,
                             onTagClicked = { onTagClicked(itemKey, it) },
