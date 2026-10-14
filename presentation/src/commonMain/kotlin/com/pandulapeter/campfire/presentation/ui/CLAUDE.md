@@ -137,7 +137,7 @@ Files: `CampfireApp.kt`, `CampfireContent.kt`, `CampfireScreens.kt`, `Navigation
 
 - `UserPreferences.tagColors`, keyed by `tagKey` (case and Unicode form share one). Synced, never exported, **never
   pruned** when the last song loses the tag. Picked from the tag sheet's popup (`dialogs/labels/TagColorButton.kt`) and written
-  at once, not on Save. Drawn by `TagIcon` (see `components/CLAUDE.md`).
+  at once, not on Save. Drawn by `TagIcon` (see `components/labels/CLAUDE.md`).
 
 ### The language of a song is carried the same way, and is its own category rather than one more tag
 

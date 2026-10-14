@@ -26,7 +26,7 @@ What every screen shares; each destination's package has its own notes.
 ## List screen app bars
 
 - "New song" / "New setlist" sit in the app bar, not a FAB, leaving the corner to the fast scroller. Each opens a
-  dropdown (`components/NewItemMenu.kt`): create vs. import is asked first; only "Create…" opens the naming sheet.
+  dropdown (`components/menu/NewItemMenu.kt`): create vs. import is asked first; only "Create…" opens the naming sheet.
   Import is the same on both screens (an archive holds songs and setlists alike).
 - The divider before it (`ClosedSearchActionsDivider`, shown with `areClosedSearchActionsShown`) animates on the search
   action's spring, not inside the button's exit, whose clipped shrink would cut it off on the first frame.
@@ -35,7 +35,7 @@ What every screen shares; each destination's package has its own notes.
 
 ## Searching the list screens
 
-- **Both list screens are searched from a button, not an ever-present field** (`components/SearchableTopAppBar.kt`):
+- **Both list screens are searched from a button, not an ever-present field** (`components/appBar/SearchableTopAppBar.kt`):
   the bar has no title (the pinned section header stands in), and the search icon morphs into the close button. On the
   desktop and the web Ctrl / Cmd + F opens it, in place of the browser's find bar.
 - Songs match by title, artist, and tags through `NormalizeSearchTextUseCase` on both sides (case, accents, spaces, and
@@ -46,7 +46,7 @@ What every screen shares; each destination's package has its own notes.
 
 ## List animation and scroll position
 
-- Every lazy list animates items through `listItemAnimation` (`components/ListItemAnimation.kt`), never
+- Every lazy list animates items through `listItemAnimation` (`components/list/ListItemAnimation.kt`), never
   `Modifier.animateItem()` directly, because it must be off in two cases:
   - **Until the library has arrived whole**: the first read publishes in batches, which would animate as rearranging
     while the app opens. `rememberHasLoadedLibrary` draws the line as an effect, not `!isLoading`, since the last batch

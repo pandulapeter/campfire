@@ -10,7 +10,8 @@
 
 # :presentation — ui/dialogs
 
-Dialog and sheet content. The export screen is `ui/screens/export`.
+Dialog and sheet content; the root holds the dialog stack and the confirmations, and `sheet`, `forms`, `pickers`,
+`labels`, `lookup`, and `about` have a `CLAUDE.md` of their own. The export screen is `ui/screens/export`.
 
 - A new form sheet with typed or picked input gets a `SavedDialog` variant, so a process Android restores reopens it
   (`SavedDialogRestorer`). A new confirmation deliberately does not: an unanswered question is not one to put back.
