@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_sort
+import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSectionTitle
 import org.jetbrains.compose.resources.painterResource
 
 /**

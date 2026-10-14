@@ -16,6 +16,8 @@ import androidx.compose.ui.Modifier
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.navigation.SettingsTab
+import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsPage
+import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSection
 
 /**
  * One tab of the settings screen: a single column of titled [SettingsSection]s, the same on every tab and at every

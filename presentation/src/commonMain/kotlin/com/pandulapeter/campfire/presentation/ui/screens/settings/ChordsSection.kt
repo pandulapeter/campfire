@@ -33,9 +33,10 @@ import com.pandulapeter.campfire.presentation.ui.components.InstrumentSetting
 import com.pandulapeter.campfire.presentation.ui.components.LIST_ITEM_KEYLINE
 import com.pandulapeter.campfire.presentation.ui.components.PickerChip
 import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
-import com.pandulapeter.campfire.presentation.ui.components.SettingsSubsection
+import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSubsection
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.instrument.instrumentTuning
+import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSection
 
 /**
  * The first section of the Songs tab: what the chords are played on and how they are written. The instrument comes

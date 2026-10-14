@@ -19,8 +19,8 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.tuner_strings
 import com.pandulapeter.campfire.presentation.resources.tuner_strings_description
-import com.pandulapeter.campfire.presentation.ui.components.SettingsSubsection
-import com.pandulapeter.campfire.presentation.ui.screens.settings.AnimatedSettingsRow
+import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSubsection
+import com.pandulapeter.campfire.presentation.ui.settingsPage.AnimatedSettingsRow
 import com.pandulapeter.campfire.tuner.api.model.TunerConfig
 
 /**

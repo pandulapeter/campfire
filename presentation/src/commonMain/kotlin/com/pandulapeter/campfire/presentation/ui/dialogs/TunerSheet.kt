@@ -36,7 +36,7 @@ import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
 import com.pandulapeter.campfire.presentation.ui.platform.rememberMicrophonePermission
-import com.pandulapeter.campfire.presentation.ui.screens.settings.AnimatedSettingsRow
+import com.pandulapeter.campfire.presentation.ui.settingsPage.AnimatedSettingsRow
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerAskOnOpenEffect
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerDisplay
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerListeningEffect

@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.components
+package com.pandulapeter.campfire.presentation.ui.settingsPage
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,6 +19,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.presentation.ui.components.LIST_ITEM_KEYLINE
+import com.pandulapeter.campfire.presentation.ui.components.SectionHeader
+import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
 
 /**
  * Title of a group of controls: the label above a [SegmentedChoice] or a set of switches, in the same color as a

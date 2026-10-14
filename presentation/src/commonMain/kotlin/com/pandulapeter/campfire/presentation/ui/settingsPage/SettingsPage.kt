@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.screens.settings
+package com.pandulapeter.campfire.presentation.ui.settingsPage
 
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
+import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsTabPage
 
 /**
  * The scrolling body of one tab of the settings screen: its [section], and the [secondSection] where it has one, side

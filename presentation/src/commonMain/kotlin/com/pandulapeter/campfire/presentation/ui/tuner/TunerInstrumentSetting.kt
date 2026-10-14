@@ -19,7 +19,7 @@ import com.pandulapeter.campfire.presentation.resources.tuner_chromatic
 import com.pandulapeter.campfire.presentation.resources.tuner_chromatic_description
 import com.pandulapeter.campfire.presentation.ui.components.InstrumentSetting
 import com.pandulapeter.campfire.presentation.ui.components.SwitchListItem
-import com.pandulapeter.campfire.presentation.ui.screens.settings.AnimatedSettingsRow
+import com.pandulapeter.campfire.presentation.ui.settingsPage.AnimatedSettingsRow
 import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 
 /**

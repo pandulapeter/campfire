@@ -33,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSectionTitle
 
 /**
  * The title of a filter group, with the [LabelSortingToggle] of its chips right after it and the action that empties

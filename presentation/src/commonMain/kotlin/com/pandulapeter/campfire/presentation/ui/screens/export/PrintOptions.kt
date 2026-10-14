@@ -88,7 +88,7 @@ import com.pandulapeter.campfire.presentation.ui.components.CheckboxListItem
 import com.pandulapeter.campfire.presentation.ui.components.LIST_ITEM_KEYLINE
 import com.pandulapeter.campfire.presentation.ui.components.LabeledControlRow
 import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
-import com.pandulapeter.campfire.presentation.ui.components.SettingsSectionTitle
+import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSectionTitle
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.listItemAnimation
 import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableContent

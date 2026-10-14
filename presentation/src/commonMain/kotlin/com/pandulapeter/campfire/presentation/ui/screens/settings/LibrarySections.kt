@@ -55,6 +55,8 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.platform.LibraryPersistence
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.isAppAvailableOffline
+import com.pandulapeter.campfire.presentation.ui.settingsPage.AnimatedSettingsRow
+import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSection
 import org.jetbrains.compose.resources.painterResource
 
 /**

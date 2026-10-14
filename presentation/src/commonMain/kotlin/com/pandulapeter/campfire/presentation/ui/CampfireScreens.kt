@@ -60,7 +60,7 @@ import com.pandulapeter.campfire.presentation.ui.screens.setlists.SetlistsScreen
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportReportScreen
 import com.pandulapeter.campfire.presentation.ui.screens.onboarding.OnboardingScreen
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsScreen
-import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsWidthLayout
+import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsWidthLayout
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongDetailsScreen
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.SongEditorScreen
 import com.pandulapeter.campfire.presentation.ui.screens.songs.SongsScreen

@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.settings_group_sync
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSection
 
 /**
  * Collects the sync state itself, so that a run reporting every file it moves recomposes this section and no other.

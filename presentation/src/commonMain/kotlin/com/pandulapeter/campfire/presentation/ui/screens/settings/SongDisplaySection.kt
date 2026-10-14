@@ -31,8 +31,9 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.CardDetailsChoice
 import com.pandulapeter.campfire.presentation.ui.components.LIST_ITEM_KEYLINE
 import com.pandulapeter.campfire.presentation.ui.components.LabeledControlRow
-import com.pandulapeter.campfire.presentation.ui.components.SettingsSubsection
+import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSubsection
 import com.pandulapeter.campfire.presentation.ui.components.SwitchListItem
+import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSection
 
 /**
  * The second section of the Songs tab: what the app adds to a song's text and to its cards.

@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.screens.settings
+package com.pandulapeter.campfire.presentation.ui.settingsPage
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -17,7 +17,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.ui.components.LIST_ITEM_KEYLINE
-import com.pandulapeter.campfire.presentation.ui.components.SettingsSectionTitle
 
 /**
  * One group of settings. Every one on the settings screen has a [title]: each tab is a column of these, so the pages read

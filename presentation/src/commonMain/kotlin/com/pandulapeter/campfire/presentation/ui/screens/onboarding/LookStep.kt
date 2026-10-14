@@ -19,7 +19,7 @@ import com.pandulapeter.campfire.presentation.resources.onboarding_look_title
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color
 import com.pandulapeter.campfire.presentation.ui.components.BackgroundWarmthSlider
-import com.pandulapeter.campfire.presentation.ui.components.SettingsSubsection
+import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSubsection
 import com.pandulapeter.campfire.presentation.ui.components.ThemeColorChoice
 import com.pandulapeter.campfire.presentation.ui.components.UiModeChoice
 

@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSectionTitle
 
 /**
  * Whether the values selected in a filter group mean "any of them" or "all of them", under the group's chips. Only

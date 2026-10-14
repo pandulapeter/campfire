@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.checklist_selected
+import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSectionTitle
 
 /**
  * The order of a checklist in a sheet: a selected group at the top, and under it every other row in the caller's

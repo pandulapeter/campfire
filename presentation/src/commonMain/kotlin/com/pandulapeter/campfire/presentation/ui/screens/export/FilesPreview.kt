@@ -45,7 +45,7 @@ import com.pandulapeter.campfire.presentation.resources.print_zip_manifest
 import com.pandulapeter.campfire.presentation.resources.print_zip_manifest_description
 import com.pandulapeter.campfire.presentation.resources.print_zip_missing
 import com.pandulapeter.campfire.presentation.resources.print_zip_song_description
-import com.pandulapeter.campfire.presentation.ui.components.SettingsSectionTitle
+import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSectionTitle
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.fadingVerticalEdges
 import com.pandulapeter.campfire.presentation.ui.components.listItemAnimation

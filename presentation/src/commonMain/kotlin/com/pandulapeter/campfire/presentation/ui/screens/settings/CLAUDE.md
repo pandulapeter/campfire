@@ -34,8 +34,8 @@ breakpoint, as do the wide layout's pages.
   (`pagerIndicatorSpan`), so swipe, press, and predictive back move it identically.
 - Every page is composed with the screen (`beyondViewportPageCount` covers all).
 - **Each page is one column**, capped at `THEME_COLOR_CHOICE_WIDTH`, at every width: two columns made tabs look unlike
-  each other and change with window width. `SettingsPage` still allows two side-by-side sections (380dp each) for the
-  Metronome and Tuner tabs, plus a spanning `header` (the Tuner's strings).
+  each other and change with window width. `SettingsPage` (`ui/settingsPage/`) allows two side-by-side sections (380dp
+  each) for the Metronome and Tuner tabs, plus a spanning `header` (the Tuner's strings).
 - Every section is titled, has no background, and no tab uses a card.
 - A `verticalScroll`, not a lazy list: **every row is first composed in its current state**; rows that come and go
   (demo offer, sync progress, web storage) use `AnimatedSettingsRow`, which keeps the last value while leaving. Controls

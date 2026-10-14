@@ -25,8 +25,8 @@ import com.pandulapeter.campfire.presentation.resources.tuner_notice_waiting
 import com.pandulapeter.campfire.presentation.resources.tuner_open_settings
 import com.pandulapeter.campfire.presentation.resources.tuner_open_sound_settings
 import com.pandulapeter.campfire.presentation.ui.platform.MicrophonePermission
-import com.pandulapeter.campfire.presentation.ui.screens.settings.AnimatedSettingsRow
-import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsMessage
+import com.pandulapeter.campfire.presentation.ui.settingsPage.AnimatedSettingsRow
+import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsMessage
 import com.pandulapeter.campfire.tuner.api.model.TunerInputIssue
 
 /**

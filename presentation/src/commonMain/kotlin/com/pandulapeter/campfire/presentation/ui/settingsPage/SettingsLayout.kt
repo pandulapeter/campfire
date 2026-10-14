@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.screens.settings
+package com.pandulapeter.campfire.presentation.ui.settingsPage
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
@@ -17,6 +17,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.ui.components.THEME_COLOR_CHOICE_WIDTH
+import com.pandulapeter.campfire.presentation.ui.screens.settings.SETTINGS_CATEGORY_PANE_WIDTH
+import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsCategoryPane
+import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsTabPage
 
 /**
  * What the settings screen decides from the width it settles at without its insets, rather than the one it is being
@@ -52,9 +55,6 @@ internal data class SettingsWidthLayout(
         }
     }
 }
-
-/** Leaves a full [MAX_COLUMN_WIDTH] for a page as soon as the tab row reaches its width cap. */
-internal val SETTINGS_CATEGORY_PANE_WIDTH = 180.dp
 
 /** Below this a column is too narrow for a switch next to two lines of description, so a tab stacks its sections. */
 internal val MIN_COLUMN_WIDTH = 380.dp

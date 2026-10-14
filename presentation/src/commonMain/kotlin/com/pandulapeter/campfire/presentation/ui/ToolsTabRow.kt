@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeIconBeat
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
-import com.pandulapeter.campfire.presentation.ui.screens.settings.SETTINGS_TAB_ROW_MAX_WIDTH
+import com.pandulapeter.campfire.presentation.ui.settingsPage.SETTINGS_TAB_ROW_MAX_WIDTH
 
 /**
  * The tabs between the tools behind the Tools item of the navigation bar or of a short window's rail (see

@@ -69,8 +69,8 @@ import com.pandulapeter.campfire.presentation.ui.instrument.instrumentTuning
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.CompactKeyboardEffect
 import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableContent
-import com.pandulapeter.campfire.presentation.ui.screens.settings.PAGE_TOP_PADDING
-import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsWidthLayout
+import com.pandulapeter.campfire.presentation.ui.settingsPage.PAGE_TOP_PADDING
+import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsWidthLayout
 import kotlin.math.roundToInt
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest

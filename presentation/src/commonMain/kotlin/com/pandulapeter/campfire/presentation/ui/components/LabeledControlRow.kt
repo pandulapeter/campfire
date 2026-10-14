@@ -17,6 +17,8 @@ import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.presentation.ui.settingsPage.SUBSECTION_CONTROL_GAP
+import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSubsection
 
 /**
  * A setting's label with its controls at the end of the row, the way a switch row has its switch, for as long as the

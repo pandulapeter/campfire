@@ -30,12 +30,14 @@ import com.pandulapeter.campfire.presentation.resources.settings_user_interface_
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.BackgroundWarmthSlider
 import com.pandulapeter.campfire.presentation.ui.components.LanguageChoice
-import com.pandulapeter.campfire.presentation.ui.components.SettingsSubsection
+import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSubsection
 import com.pandulapeter.campfire.presentation.ui.components.SwitchListItem
 import com.pandulapeter.campfire.presentation.ui.components.ThemeColorChoice
 import com.pandulapeter.campfire.presentation.ui.components.UiModeChoice
 import com.pandulapeter.campfire.presentation.ui.platform.AppIconSurface
 import com.pandulapeter.campfire.presentation.ui.platform.appIconSurface
+import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsMessage
+import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSection
 import com.pandulapeter.campfire.presentation.ui.theme.CampfireColorScheme
 import com.pandulapeter.campfire.presentation.ui.theme.colorSchemePair
 

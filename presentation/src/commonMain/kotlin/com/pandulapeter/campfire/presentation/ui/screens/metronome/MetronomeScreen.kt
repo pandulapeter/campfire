@@ -52,13 +52,13 @@ import com.pandulapeter.campfire.presentation.ui.metronome.timeSignatureOrDefaul
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.rememberBeatHaptics
 import com.pandulapeter.campfire.presentation.ui.screens.rememberMetronomePanelState
-import com.pandulapeter.campfire.presentation.ui.screens.settings.AnimatedSettingsRow
-import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsCard
-import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsMessage
-import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsPage
-import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsSection
-import com.pandulapeter.campfire.presentation.ui.components.SettingsSubsection
-import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsWidthLayout
+import com.pandulapeter.campfire.presentation.ui.settingsPage.AnimatedSettingsRow
+import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsCard
+import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsMessage
+import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsPage
+import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSection
+import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSubsection
+import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsWidthLayout
 import kotlinx.coroutines.flow.collectLatest
 
 /**

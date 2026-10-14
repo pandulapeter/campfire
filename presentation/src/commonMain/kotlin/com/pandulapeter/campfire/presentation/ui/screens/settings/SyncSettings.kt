@@ -93,6 +93,8 @@ import com.pandulapeter.campfire.presentation.ui.components.rememberElapsed
 import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.platform.withSyncCounts
+import com.pandulapeter.campfire.presentation.ui.settingsPage.AnimatedSettingsRow
+import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsMessage
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 import org.jetbrains.compose.resources.painterResource

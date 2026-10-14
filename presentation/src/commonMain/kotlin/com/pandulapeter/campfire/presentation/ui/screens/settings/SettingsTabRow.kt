@@ -32,6 +32,7 @@ import com.pandulapeter.campfire.presentation.ui.components.IndicatorSpan
 import com.pandulapeter.campfire.presentation.ui.components.fadingHorizontalEdges
 import com.pandulapeter.campfire.presentation.ui.components.pagerIndicatorSpan
 import com.pandulapeter.campfire.presentation.ui.navigation.SettingsTab
+import com.pandulapeter.campfire.presentation.ui.settingsPage.SETTINGS_TAB_ROW_MAX_WIDTH
 import kotlin.math.roundToInt
 
 /**

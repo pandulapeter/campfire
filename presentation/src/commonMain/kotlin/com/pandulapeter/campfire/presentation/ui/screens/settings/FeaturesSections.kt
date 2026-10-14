@@ -33,6 +33,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_tuner_descripti
 import com.pandulapeter.campfire.presentation.resources.tuner
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.SwitchListItem
+import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSection
 
 /**
  * The parts of the app a reader can do without, each a switch that takes it out of every screen it is on, so that a
