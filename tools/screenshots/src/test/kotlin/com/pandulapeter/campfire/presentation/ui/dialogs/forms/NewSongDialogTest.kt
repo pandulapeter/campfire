@@ -40,7 +40,13 @@ internal class NewSongDialogTest {
         onNodeWithContentDescription(string(Res.string.close)).performClick()
         waitForIdle()
         onNodeWithText(string(Res.string.create)).assertDoesNotExist()
-        assertEquals(before, songFileNames())
+        // A write goes to the disk after the sheet is gone, so a second song created the same way is what tells that the
+        // first one would have arrived by now.
+        openNewSong()
+        onAllNodes(hasSetTextAction()).onFirst().performTextInput(OTHER_TITLE)
+        onNodeWithText(string(Res.string.create)).performClick()
+        waitForLibrary { songFileNames().size > before.size }
+        assertEquals(before + "another_song_from_a_test.cho", songFileNames())
     }
 
     @Test
@@ -63,4 +69,5 @@ internal class NewSongDialogTest {
 }
 
 private const val TITLE = "New Song from a Test"
+private const val OTHER_TITLE = "Another Song from a Test"
 private const val EDITOR_TIMEOUT_MILLIS = 10_000L
