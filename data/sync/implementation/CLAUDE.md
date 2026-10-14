@@ -36,5 +36,6 @@ The module-wide rules are here; each package (`run`, `scheduling`, `connection`,
 A rename reaches sync as a deletion plus a new file (`SyncPlanner` knows no moves). By "an edit beats a deletion", a
 device that edited the old name since the last run puts it back, leaving both.
 
-Tests: `./gradlew :data:sync:implementation:desktopTest`. `TwoDeviceSyncTest` runs two `Device`s in turn against one
-shared fake cloud folder, through the real engine and preferences merge.
+Tests: `./gradlew :data:sync:implementation:desktopTest`. A behaviour that spans devices (renames, conflicts, deletions,
+synced preferences) gets a case in `TwoDeviceSyncTest`, which runs two `Device`s against one fake cloud folder through
+the real engine.
