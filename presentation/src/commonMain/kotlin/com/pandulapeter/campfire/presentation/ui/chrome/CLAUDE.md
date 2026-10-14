@@ -39,7 +39,7 @@ The navigation chrome (bar, rail, transitions, and the Tools item), laid around 
 
 ### The Tools item
 
-- A navigation bar holds at most five items (`MAX_NAVIGATION_BAR_ITEMS`); with six screens on, Metronome, Tuner and
+- A navigation bar holds at most five items (`MAX_NAVIGATION_BAR_ITEMS`); with six screens on, Metronome, Tuner, and
   Chords go behind one Tools item (`areToolsGrouped`, `navigationBarItems`, tested) — on the bar, and on a rail in a
   short window (`SHORT_WINDOW_HEIGHT`). Five or fewer screens never group.
 - The tools stay top level destinations (addresses, restored stack, tuner listening unchanged). The item opens the tool

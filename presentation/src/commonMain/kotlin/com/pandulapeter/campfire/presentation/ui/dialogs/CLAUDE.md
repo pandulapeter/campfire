@@ -24,7 +24,7 @@ Dialog and sheet content; the root holds the dialog stack and the confirmations,
 ### The dialog stack
 
 **A dialog opened from another one is put over it rather than in its place**, so going back slides only the top one
-away and uncovers the one under it as it was (its sheet, draft and scroll position), never re-opened.
+away and uncovers the one under it as it was (its sheet, draft, and scroll position), never re-opened.
 
 - `DialogHost.openDialogs` is the stack (`visibleDialog` last); `CampfireDialogs` draws all of it, slotted by `slotKey`.
 - Which dialog stacks over which is `stacksOver` (`DialogStack.kt`, pure and tested): the About the song sheet's
