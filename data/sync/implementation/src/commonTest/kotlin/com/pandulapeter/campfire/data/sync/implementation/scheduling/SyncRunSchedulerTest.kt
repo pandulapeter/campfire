@@ -21,7 +21,7 @@ import com.pandulapeter.campfire.data.sync.implementation.RunCounter
 import com.pandulapeter.campfire.data.sync.implementation.index.SyncIndexStore
 import com.pandulapeter.campfire.data.sync.implementation.SyncKey
 import com.pandulapeter.campfire.data.sync.implementation.SyncStateHolder
-import com.pandulapeter.campfire.data.sync.implementation.SyncedPreferencesSync
+import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesSync
 import com.pandulapeter.campfire.data.sync.implementation.TEST_ACCOUNT
 import com.pandulapeter.campfire.data.sync.implementation.song
 import com.pandulapeter.campfire.data.sync.implementation.synchronize

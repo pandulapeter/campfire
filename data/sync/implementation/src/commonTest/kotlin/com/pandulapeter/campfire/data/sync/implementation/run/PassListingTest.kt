@@ -12,7 +12,7 @@ package com.pandulapeter.campfire.data.sync.implementation.run
 import com.pandulapeter.campfire.data.sync.implementation.LocalFileState
 import com.pandulapeter.campfire.data.sync.implementation.SyncIndexEntry
 import com.pandulapeter.campfire.data.sync.implementation.SyncKey
-import com.pandulapeter.campfire.data.sync.implementation.SyncedPreferencesDocument
+import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesDocument
 import com.pandulapeter.campfire.data.sync.implementation.song
 import com.pandulapeter.campfire.data.sync.implementation.tooLarge
 import com.pandulapeter.campfire.data.model.domain.LibraryFileKind

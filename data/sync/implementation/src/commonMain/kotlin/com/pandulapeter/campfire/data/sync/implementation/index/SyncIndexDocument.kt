@@ -11,7 +11,7 @@ package com.pandulapeter.campfire.data.sync.implementation.index
 
 import com.pandulapeter.campfire.data.sync.implementation.SyncIndexEntry
 import com.pandulapeter.campfire.data.sync.implementation.SyncKey
-import com.pandulapeter.campfire.data.sync.implementation.SyncedPreferencesDocument
+import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesDocument
 import com.pandulapeter.campfire.data.model.domain.SyncAccount
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
