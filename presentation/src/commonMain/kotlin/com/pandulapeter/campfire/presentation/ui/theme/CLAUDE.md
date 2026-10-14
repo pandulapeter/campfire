@@ -49,7 +49,7 @@ preferences: `themeColor` (palette), `backgroundWarmth` (sepia), and `uiMode` (l
 - `OrangeColorScheme.kt` is hand-saturated over Material's mapping of #F57C00; `GrayColorScheme.kt` is that palette
   taken to gray (error roles aside, `secondaryContainer` a step further from surfaces so selected chips stay visible).
 - `MaterialColorSchemes.kt`: seeds run through Material's tonal spot mapping and pasted in — a new color is a seed.
-- `DynamicColorSchemePair.kt` (the one `expect`/`actual`): Android 12+ dynamic color, null elsewhere (no "System"
+- `DynamicColorSchemePair.kt`: Android 12+ dynamic color, null elsewhere (no "System"
   swatch). From Android 14 those read role colors, which Samsung leaves at the framework's blue while recoloring the
   palette; where the role primary is far from the palette's tone 40, the actual maps the palettes itself.
 
