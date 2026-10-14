@@ -93,8 +93,7 @@ campfire.log / campfire.log.1          desktop only: bounded process log
 - Classes declare themselves: `@Single` (repositories, sources, storage, authenticators), `@Factory` (use cases),
   `@KoinViewModel`. Each module has one `@Module @ComponentScan object XxxModule` in its top-level `Module.kt`, with
   `@Single` functions only for built definitions. Platform definitions are annotated classes in platform source sets.
-- `:app:di` names the module objects in one `@KoinApplication` and checks the graph at compile time.
-  `@Provided` marks only what a platform shell supplies (the Android `Context`).
+- The application and its compile-time graph check: `app/di/CLAUDE.md`.
 - **Never inject a `List<T>`**: it resolves as `getAll<T>()` and arrives empty. Wrap a list in its own type
   (`SyncProviders`).
 - No defaulted parameter on a Koin definition's constructor or `@Single` function (see the `code-style` skill).
@@ -218,7 +217,6 @@ compiles every platform (iOS on macOS) on every PR, nightly, and before `publish
   `val` or function. An incompatible plugin gets `notCompatibleWithConfigurationCache("<why>")`, never the cache off.
 - `org.gradle.workers.max=4` because the shared Kotlin daemon ran out of memory; lower it rather than turning parallel
   off.
-- `campfire-library` sets `archivesName` from the Gradle path, since many modules are called `api` or `implementation`.
 - `.run/` holds the IDE-written run configurations (no license header, the IDE would drop it).
 
 Commands:
