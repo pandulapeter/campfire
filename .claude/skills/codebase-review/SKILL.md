@@ -92,7 +92,8 @@ All in the plans folder, untracked until the user commits them, and only for com
 
 ## Problem        what goes wrong, for whom, with the quoted code and file:line at the reviewed commit
 ## Fix            exactly what to change; where there is a choice, the options and the recommended one
-## Tests          the unit test to add (pure logic only), or why none can be written
+## Tests          the unit test to add, or the UI test (`tools/screenshots`) for what only the running app shows,
+                 or why none can be written
 ## Manual check   only when the fix can't be verified without a device, account or network and a mistake would
                  hurt (data loss, a crash, a store rejection); otherwise leave the section out
 ```
