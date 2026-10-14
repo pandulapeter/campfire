@@ -7,8 +7,11 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.screens.importReport
+package com.pandulapeter.campfire.presentation.ui.screens.importReport.finished
 
+import com.pandulapeter.campfire.presentation.ui.screens.importReport.ItemWidth
+import com.pandulapeter.campfire.presentation.ui.screens.importReport.ReportNote
+import com.pandulapeter.campfire.presentation.ui.screens.importReport.SectionTitle
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -58,52 +61,6 @@ import com.pandulapeter.campfire.presentation.ui.components.EDGE_FADE_SIZE
 import com.pandulapeter.campfire.presentation.ui.components.SearchState
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
-
-/**
- * The search of the list, standing right above the files it narrows and pinned at the top of the list once they are
- * scrolled under it: always there rather than behind a button, since the list is the screen's whole content and a
- * name is what somebody comes to it to find. The rows fade out under it the way they fade out under a bar, by a
- * gradient drawn below the field over what passes under it, as strong as the rows have been scrolled under it.
- */
-internal fun LazyListScope.searchField(
-    searchState: SearchState,
-    listState: LazyListState,
-    index: Int,
-) = stickyHeader(key = "search", contentType = "search") {
-    val backgroundColor = MaterialTheme.colorScheme.background
-    val fadeHeight = with(LocalDensity.current) { EDGE_FADE_SIZE.toPx() }
-    Box(
-        modifier = ItemWidth
-            .drawWithContent {
-                drawContent()
-                val scrolledUnder = when {
-                    listState.firstVisibleItemIndex > index -> fadeHeight
-                    listState.firstVisibleItemIndex == index -> listState.firstVisibleItemScrollOffset.toFloat()
-                    else -> 0f
-                }
-                val strength = (scrolledUnder / fadeHeight).coerceIn(0f, 1f)
-                if (strength > 0f) {
-                    drawRect(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(backgroundColor, backgroundColor.copy(alpha = 0f)),
-                            startY = size.height,
-                            endY = size.height + fadeHeight,
-                        ),
-                        topLeft = Offset(0f, size.height),
-                        size = Size(size.width, fadeHeight),
-                        alpha = strength,
-                    )
-                }
-            }
-            .background(backgroundColor)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-    ) {
-        ImportReportSearchField(
-            searchState = searchState,
-            placeholder = stringResource(Res.string.import_report_search),
-        )
-    }
-}
 
 /** What the import came to in one sentence, above the files it is about. */
 internal fun LazyListScope.finishedHeader(result: ImportResult?) {

@@ -7,8 +7,12 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.screens.importReport
+package com.pandulapeter.campfire.presentation.ui.screens.importReport.review
 
+import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportReport
+import com.pandulapeter.campfire.presentation.ui.screens.importReport.finished.ImportReportSection
+import com.pandulapeter.campfire.presentation.ui.screens.importReport.finished.matching
+import com.pandulapeter.campfire.presentation.ui.screens.importReport.finished.sections
 import androidx.compose.ui.state.ToggleableState
 import com.pandulapeter.campfire.data.model.domain.ImportChoices
 import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution

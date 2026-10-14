@@ -7,8 +7,9 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.screens.importReport
+package com.pandulapeter.campfire.presentation.ui.screens.importReport.review
 
+import com.pandulapeter.campfire.presentation.ui.screens.importReport.SectionTitle
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding

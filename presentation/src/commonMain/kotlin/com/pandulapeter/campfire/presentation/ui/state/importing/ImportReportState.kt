@@ -25,7 +25,7 @@ import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportReport
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.followingLibraryFileNames
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.isUnfinished
-import com.pandulapeter.campfire.presentation.ui.screens.importReport.withGroupResolution
+import com.pandulapeter.campfire.presentation.ui.screens.importReport.review.withGroupResolution
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
