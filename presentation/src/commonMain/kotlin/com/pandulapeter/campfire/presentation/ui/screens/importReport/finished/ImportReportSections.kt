@@ -129,6 +129,15 @@ internal fun List<ImportReportSection>.matching(query: String, normalize: (Strin
     }
 }
 
+/**
+ * [normalize] remembering what it folded, so that a search narrowing the review of a whole backup, thousands of rows
+ * matched in composition, folds each name once rather than on every keystroke.
+ */
+internal fun foldedOnce(normalize: (String) -> String): (String) -> String {
+    val folded = mutableMapOf<String, String>()
+    return { text -> folded.getOrPut(text) { normalize(text) } }
+}
+
 /** Numbers the second and every later occurrence of a name in its key, so that each row has one of its own. */
 private fun List<String>.toRows(
     row: (String) -> ImportReportRow = { ImportReportRow(key = it, fileName = it) },

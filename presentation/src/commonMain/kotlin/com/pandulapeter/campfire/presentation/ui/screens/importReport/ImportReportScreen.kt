@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.screens.importReport
 
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.finished.finishedHeader
+import com.pandulapeter.campfire.presentation.ui.screens.importReport.finished.foldedOnce
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.finished.importReportSections
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.finished.matching
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.finished.sections
@@ -95,12 +96,13 @@ internal fun ImportReportScreen(
     // it rather than everything the stage is handed to.
     val choices = remember { { (report as? ImportReport.Review)?.choices ?: ImportChoices() } }
     val plan = (shown as? ImportReport.Review)?.plan
+    val normalizeForSearch = remember { foldedOnce(viewModel.songRenderer::normalizeForSearch) }
     val reviewSections = remember(plan, songs, setlists) { plan?.let { importReviewSections(it, songs, setlists) }.orEmpty() }
-    val matchingReviewSections = remember(reviewSections, query) { reviewSections.matchingReview(query, viewModel.songRenderer::normalizeForSearch) }
+    val matchingReviewSections = remember(reviewSections, query) { reviewSections.matchingReview(query, normalizeForSearch) }
     val importCount by remember(plan) { derivedStateOf { plan?.takeIf { it.hasEntriesToChoose }?.let { importReviewSummary(it, choices()).importCount } } }
     val result = (shown as? ImportReport.Finished)?.result
     val resultSections = remember(result, songs, setlists) { result?.let { importReportSections(it, songs, setlists) }.orEmpty() }
-    val matchingResultSections = remember(resultSections, query) { resultSections.matching(query, viewModel.songRenderer::normalizeForSearch) }
+    val matchingResultSections = remember(resultSections, query) { resultSections.matching(query, normalizeForSearch) }
     val layoutDirection = LocalLayoutDirection.current
     // Narrowed rather than taken apart, so that the keyboard of the search field lays the list out again as it slides
     // instead of recomposing the screen on every frame of it.
