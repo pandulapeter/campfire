@@ -11,30 +11,22 @@ package com.pandulapeter.campfire.presentation.ui.screens.songEditor
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -50,7 +42,6 @@ import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -68,37 +59,23 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.close
 import com.pandulapeter.campfire.presentation.resources.ic_clear
-import com.pandulapeter.campfire.presentation.resources.ic_redo
-import com.pandulapeter.campfire.presentation.resources.ic_save
-import com.pandulapeter.campfire.presentation.resources.ic_undo
-import com.pandulapeter.campfire.presentation.resources.save
-import com.pandulapeter.campfire.presentation.resources.song_editor_edit
-import com.pandulapeter.campfire.presentation.resources.song_editor_preview
-import com.pandulapeter.campfire.presentation.resources.song_editor_redo
-import com.pandulapeter.campfire.presentation.resources.song_editor_split
-import com.pandulapeter.campfire.presentation.resources.song_editor_undo
 import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.presentation.ui.instrument.chordTuning
 import com.pandulapeter.campfire.presentation.ui.chords.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.components.ACTION_BUTTON_OVERLAP
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.components.only
-import com.pandulapeter.campfire.presentation.ui.components.overlappingAction
 import com.pandulapeter.campfire.presentation.ui.components.saveShortcut
-import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.instrument.instrumentTuning
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.TextTranspositionControls
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.rememberSongInfoEditing
 import com.pandulapeter.campfire.presentation.ui.platform.CompactKeyboardEffect
 import com.pandulapeter.campfire.presentation.ui.tabs.emptyTabStaffFor
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
 import org.jetbrains.compose.resources.painterResource
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -190,7 +167,7 @@ internal fun LoadedSongEditor(
     // rather than being forgotten the moment it cannot be honored.
     val hasRoomForSplitPanes = windowSize == WindowSize.EXPANDED
     var selectedPanes by rememberSaveable(stateSaver = EditorPanes.Saver) { mutableStateOf(EditorPanes.SPLIT) }
-    val panes = if (selectedPanes == EditorPanes.SPLIT && !hasRoomForSplitPanes) EditorPanes.EDIT else selectedPanes
+    val panes = shownPanes(selected = selectedPanes, hasRoomForSplitPanes = hasRoomForSplitPanes)
     val hasSideBySidePreview = panes == EditorPanes.SPLIT
     // The matches are found in the field and shown there, so a search started over the preview brings the field back.
     val onOpenSearch = { mode: EditorSearchMode ->
@@ -199,36 +176,13 @@ internal fun LoadedSongEditor(
     }
     val fontScale = userPreferences?.fontScale ?: UserPreferences.DEFAULT_FONT_SCALE
     val chordSpelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
-    // The two rows of insertions are taller than what a phone has left for the text once the keyboard is up, so a
-    // phone opens the editor with them folded away. The shorter side of the window is what decides that rather than
-    // the width class: a phone turned sideways is wide enough to count as a large screen and is the one with the
-    // least height of all.
     val windowContainerSize = LocalWindowInfo.current.containerSize
     val density = LocalDensity.current
-    val isSmallScreen = with(density) { minOf(windowContainerSize.width, windowContainerSize.height).toDp() } < SMALL_SCREEN_SIZE
-    // Derived rather than read here, so that the keyboard sliding in recomposes the editor only as it crosses a line
-    // these care about, not on every frame of its animation.
-    val ime = WindowInsets.ime
-    val windowHeight = with(density) { windowContainerSize.height.toDp() }
-    val isKeyboardVisibleState = remember(ime, density) { derivedStateOf { ime.getBottom(density) > 0 } }
-    val isTypingInShortWindowState = remember(ime, density, windowHeight) {
-        derivedStateOf {
-            val imeHeight = with(density) { ime.getBottom(this).toDp() }
-            imeHeight > 0.dp && windowHeight - imeHeight < SHORT_WINDOW_HEIGHT
-        }
-    }
-    // Above a phone's landscape keyboard the control row would leave the field a single line, so there it gives way
-    // and only its Shortcuts chevron stays, in the title row; transposing and switching panes wait for the keyboard
-    // to go.
-    val isControlRowHiddenState = remember(ime, density, windowHeight) {
-        derivedStateOf {
-            val imeHeight = with(density) { ime.getBottom(this).toDp() }
-            imeHeight > 0.dp && windowHeight - imeHeight < MIN_ROOM_FOR_CONTROL_ROW
-        }
-    }
-    val isKeyboardVisible by isKeyboardVisibleState
-    val isTypingInShortWindow by isTypingInShortWindowState
-    val isControlRowHidden by isControlRowHiddenState
+    val keyboard = rememberEditorKeyboard()
+    val isSmallScreen = keyboard.isSmallScreen
+    val isKeyboardVisible by keyboard.isKeyboardVisibleState
+    val isTypingInShortWindow by keyboard.isTypingInShortWindowState
+    val isControlRowHidden by keyboard.isControlRowHiddenState
     CompactKeyboardEffect(isEnabled = isTypingInShortWindow && LocalWindowInfo.current.containerDpSize.height < SHORT_WINDOW_HEIGHT)
     var isToolbarExpanded by rememberSaveable {
         mutableStateOf(!isSmallScreen)
@@ -239,7 +193,7 @@ internal fun LoadedSongEditor(
         if (!isKeyboardVisible) return@LaunchedEffect
         // The keyboard's inset is animated, so its first frame is only a few pixels and a large window is not short
         // yet: the rows are folded once the keyboard has grown far enough to make it so, if it ever does.
-        if (!isSmallScreen) snapshotFlow { isTypingInShortWindowState.value }.first { it }
+        if (!isSmallScreen) snapshotFlow { keyboard.isTypingInShortWindowState.value }.first { it }
         isToolbarExpanded = false
     }
     // Key events only travel along the focus path, and nothing in the editor is focused until the text is clicked,
@@ -288,61 +242,19 @@ internal fun LoadedSongEditor(
                 )
             },
             actions = {
-                AnimatedVisibility(
-                    // Outside the animated width (see overlappingAction's KDoc), and at its end: it is the first action,
-                    // and the undo button after it is drawn last, so a press on the overlap still reaches undo.
-                    modifier = Modifier.overlappingAction(start = 0.dp, end = ACTION_BUTTON_OVERLAP),
-                    visible = isControlRowHidden && panes != EditorPanes.PREVIEW,
-                    enter = expandHorizontally() + fadeIn(),
-                    exit = shrinkHorizontally() + fadeOut(),
-                ) {
-                    EditorToolbarToggle(
-                        isExpanded = isToolbarExpanded,
-                        isLabeled = false,
-                        isEnabled = true,
-                        onToggled = { isToolbarExpanded = !isToolbarExpanded },
-                    )
-                }
-                IconButton(
-                    enabled = textFieldState.undoState.canUndo,
-                    onClick = { textFieldState.undoState.undo() },
-                ) {
-                    Icon(
-                        painter = painterResource(Res.drawable.ic_undo),
-                        contentDescription = stringResource(Res.string.song_editor_undo),
-                    )
-                }
-                IconButton(
-                    modifier = Modifier.overlappingAction(start = ACTION_BUTTON_OVERLAP, end = 0.dp),
-                    enabled = textFieldState.undoState.canRedo,
-                    onClick = { textFieldState.undoState.redo() },
-                ) {
-                    Icon(
-                        painter = painterResource(Res.drawable.ic_redo),
-                        contentDescription = stringResource(Res.string.song_editor_redo),
-                    )
-                }
-                IconButton(
-                    modifier = Modifier.overlappingAction(start = ACTION_BUTTON_OVERLAP, end = 0.dp),
-                    enabled = hasUnsavedChanges && !isSaving,
-                    onClick = onSaveRequested,
-                ) {
-                    Icon(
-                        painter = painterResource(Res.drawable.ic_save),
-                        contentDescription = stringResource(Res.string.save),
-                    )
-                }
-                EditorMenu(
-                    modifier = Modifier
-                        .overlappingAction(start = ACTION_BUTTON_OVERLAP, end = 0.dp)
-                        .widthIn(
-                            max = editorMenuMaxWidth(
-                                appBarWidth = with(density) { windowContainerSize.width.toDp() } -
-                                    contentPadding.calculateStartPadding(layoutDirection) - contentPadding.calculateEndPadding(layoutDirection),
-                                isToolbarToggleShown = isControlRowHidden && panes != EditorPanes.PREVIEW,
-                                hasCover = userPreferences?.isCoverArtEnabled == true,
-                            ),
-                        ),
+                EditorAppBarActions(
+                    textFieldState = textFieldState,
+                    isToolbarToggleShown = isControlRowHidden && panes != EditorPanes.PREVIEW,
+                    isToolbarExpanded = isToolbarExpanded,
+                    onToolbarToggled = { isToolbarExpanded = !isToolbarExpanded },
+                    canSave = hasUnsavedChanges && !isSaving,
+                    onSave = onSaveRequested,
+                    menuMaxWidth = editorMenuMaxWidth(
+                        appBarWidth = with(density) { windowContainerSize.width.toDp() } -
+                            contentPadding.calculateStartPadding(layoutDirection) - contentPadding.calculateEndPadding(layoutDirection),
+                        isToolbarToggleShown = isControlRowHidden && panes != EditorPanes.PREVIEW,
+                        hasCover = userPreferences?.isCoverArtEnabled == true,
+                    ),
                     onFind = { onOpenSearch(EditorSearchMode.FIND) },
                     onFindAndReplace = { onOpenSearch(EditorSearchMode.REPLACE) },
                     onOpenSongInfo = onOpenSongInfo,
@@ -357,51 +269,24 @@ internal fun LoadedSongEditor(
                 )
             },
             bottomContent = {
-                // Transposing, switching pane and folding the insertions away are the things here that do not write at
-                // the caret, so they are the ones that stay when the insertions leave.
                 AnimatedVisibility(visible = !isControlRowHidden) {
-                    Row(
-                        modifier = Modifier.padding(
-                            start = contentPadding.calculateStartPadding(layoutDirection) + 16.dp,
-                            end = contentPadding.calculateEndPadding(layoutDirection) + 4.dp,
-                            bottom = 8.dp,
-                        ),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        TextTranspositionControls(
-                            // The summary reads the key into the standard notation, and the field is in the editor's.
-                            key = summary.metadata.key?.let { songRenderer.editorKeyOf(it, notation) },
-                            // A key is enough on its own: it says what the song is in, and moving it is a transposition
-                            // even before a chord has been written under it.
-                            isEnabled = summary.hasChords || !summary.metadata.key.isNullOrBlank(),
-                            onTransposed = { semitones ->
-                                textFieldState.replaceWithTransposition(songRenderer.transposeText(textFieldState.text.toString(), semitones, chordSpelling.accidentals, notation))
-                            },
-                        )
-                        SegmentedChoice(
-                            // Not the whole of a desktop window's width: the row is a pair of controls rather than a
-                            // tab bar, and the stepper next to it would be lost at the end of a metre of segments.
-                            modifier = Modifier.weight(1f, fill = false).widthIn(max = PANE_CHOICE_MAX_WIDTH),
-                            options = listOfNotNull(
-                                EditorPanes.EDIT to stringResource(Res.string.song_editor_edit),
-                                EditorPanes.PREVIEW to stringResource(Res.string.song_editor_preview),
-                                if (hasRoomForSplitPanes) EditorPanes.SPLIT to stringResource(Res.string.song_editor_split) else null,
-                            ),
-                            selected = panes,
-                            isInline = true,
-                            shouldApplyPadding = false,
-                            onSelected = { selectedPanes = it },
-                        )
-                        // Disabled rather than hidden over a preview, so that the segments next to it do not change
-                        // width under the finger that has just picked one of them.
-                        EditorToolbarToggle(
-                            isExpanded = isToolbarExpanded,
-                            isLabeled = windowSize != WindowSize.COMPACT,
-                            isEnabled = panes != EditorPanes.PREVIEW,
-                            onToggled = { isToolbarExpanded = !isToolbarExpanded },
-                        )
-                    }
+                    EditorControlRow(
+                        contentPadding = contentPadding,
+                        // The summary reads the key into the standard notation, and the field is in the editor's.
+                        key = summary.metadata.key?.let { songRenderer.editorKeyOf(it, notation) },
+                        // A key is enough on its own: it says what the song is in, and moving it is a transposition
+                        // even before a chord has been written under it.
+                        isTranspositionEnabled = summary.hasChords || !summary.metadata.key.isNullOrBlank(),
+                        onTransposed = { semitones ->
+                            textFieldState.replaceWithTransposition(songRenderer.transposeText(textFieldState.text.toString(), semitones, chordSpelling.accidentals, notation))
+                        },
+                        panes = panes,
+                        hasRoomForSplitPanes = hasRoomForSplitPanes,
+                        onPanesSelected = { selectedPanes = it },
+                        isToolbarExpanded = isToolbarExpanded,
+                        isToolbarToggleLabeled = windowSize != WindowSize.COMPACT,
+                        onToolbarToggled = { isToolbarExpanded = !isToolbarExpanded },
+                    )
                 }
                 // Nothing below can act on a preview, so the insertions leave with the field they write into.
                 AnimatedVisibility(visible = isToolbarExpanded && panes != EditorPanes.PREVIEW) {
@@ -493,19 +378,6 @@ internal fun LoadedSongEditor(
 }
 
 /**
- * Which of the two panes the editor shows. [SPLIT] needs a window wide enough for both and is the choice a window
- * that has the room opens with, since seeing the song take shape is the reason the preview exists at all.
- */
-private enum class EditorPanes {
-    EDIT, PREVIEW, SPLIT;
-
-    companion object {
-        /** Saved by name rather than left to the automatic saver, which only stores what a platform can serialize. */
-        val Saver = Saver<EditorPanes, String>(save = { it.name }, restore = ::valueOf)
-    }
-}
-
-/**
  * Whether the editor's field holds the focus, kept outside the snapshot system: it is only read at the moment the
  * panes change, and state read there would compose the whole screen again on every focus change of the field.
  */
@@ -514,13 +386,3 @@ private class FieldFocus {
 }
 
 private const val CHORDPRO_REFERENCE_URL = "https://www.chordpro.org/chordpro/chordpro-directives/"
-
-private val PANE_CHOICE_MAX_WIDTH = 400.dp
-private val SMALL_SCREEN_SIZE = 600.dp
-
-/**
- * The least the keyboard has to leave of the window for the editor's control row to stay over the field: the 48dp
- * compact title row, the 56dp control row and three 18sp lines with the field's padding. The smallest phone keeps
- * about 340dp upright and so keeps the row, and about 112dp on its side and so loses it.
- */
-private val MIN_ROOM_FOR_CONTROL_ROW = 240.dp
