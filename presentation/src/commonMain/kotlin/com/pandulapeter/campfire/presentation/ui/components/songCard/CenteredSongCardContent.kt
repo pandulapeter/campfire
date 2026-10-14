@@ -7,8 +7,12 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.components
+package com.pandulapeter.campfire.presentation.ui.components.songCard
 
+import com.pandulapeter.campfire.presentation.ui.components.CoverArtImage
+import com.pandulapeter.campfire.presentation.ui.components.LIST_ITEM_KEYLINE
+import com.pandulapeter.campfire.presentation.ui.components.LIST_ITEM_TRAILING_KEYLINE_ADJUSTMENT
+import com.pandulapeter.campfire.presentation.ui.components.only
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row

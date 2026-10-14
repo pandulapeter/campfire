@@ -42,11 +42,11 @@ import com.pandulapeter.campfire.presentation.ui.components.OverflowMenuState
 import com.pandulapeter.campfire.presentation.ui.components.SetlistAssignmentsButton
 import com.pandulapeter.campfire.presentation.ui.components.SongActionHandler
 import com.pandulapeter.campfire.presentation.ui.components.SongActions
-import com.pandulapeter.campfire.presentation.ui.components.SongCardOptions
-import com.pandulapeter.campfire.presentation.ui.components.SongListItem
+import com.pandulapeter.campfire.presentation.ui.components.songCard.SongCardOptions
+import com.pandulapeter.campfire.presentation.ui.components.songCard.SongListItem
 import com.pandulapeter.campfire.presentation.ui.components.fadingUnderListTop
 import com.pandulapeter.campfire.presentation.ui.components.rememberOverflowMenuState
-import com.pandulapeter.campfire.presentation.ui.components.rememberSongCardKey
+import com.pandulapeter.campfire.presentation.ui.components.songCard.rememberSongCardKey
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.playing.PlayingOverridesSnapshot
 import com.pandulapeter.campfire.presentation.ui.playing.songPlaybackOf

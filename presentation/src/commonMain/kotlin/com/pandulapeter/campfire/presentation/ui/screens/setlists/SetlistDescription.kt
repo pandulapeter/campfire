@@ -27,9 +27,9 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
-import com.pandulapeter.campfire.presentation.ui.components.SONG_CARD_VERTICAL_PADDING
+import com.pandulapeter.campfire.presentation.ui.components.songCard.SONG_CARD_VERTICAL_PADDING
 import com.pandulapeter.campfire.presentation.ui.components.sectionHeaderBottomGap
-import com.pandulapeter.campfire.presentation.ui.components.songCardTextKeyline
+import com.pandulapeter.campfire.presentation.ui.components.songCard.songCardTextKeyline
 
 /**
  * The description of a setlist, the first thing to read about it under the row naming it.

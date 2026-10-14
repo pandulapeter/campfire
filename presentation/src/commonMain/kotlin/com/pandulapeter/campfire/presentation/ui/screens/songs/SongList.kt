@@ -22,8 +22,8 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_select
 import com.pandulapeter.campfire.presentation.resources.songs_select_multiple
-import com.pandulapeter.campfire.presentation.ui.components.SONG_CARD_OUTER_PADDING
-import com.pandulapeter.campfire.presentation.ui.components.SongCardOptions
+import com.pandulapeter.campfire.presentation.ui.components.songCard.SONG_CARD_OUTER_PADDING
+import com.pandulapeter.campfire.presentation.ui.components.songCard.SongCardOptions
 import org.jetbrains.compose.resources.painterResource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -73,7 +73,7 @@ import com.pandulapeter.campfire.presentation.ui.components.listTopFadeViewport
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.rememberListTopFade
 import com.pandulapeter.campfire.presentation.ui.components.rememberSectionHeaderState
-import com.pandulapeter.campfire.presentation.ui.components.songCardPadding
+import com.pandulapeter.campfire.presentation.ui.components.songCard.songCardPadding
 import com.pandulapeter.campfire.presentation.ui.components.searchTravelSpec
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
