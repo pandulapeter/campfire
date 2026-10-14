@@ -9,6 +9,12 @@
  */
 package com.pandulapeter.campfire.domain.implementation.useCases
 
+import com.pandulapeter.campfire.domain.implementation.FakeArchiveRepository
+import com.pandulapeter.campfire.domain.implementation.SetlistRepositoryStub
+import com.pandulapeter.campfire.domain.implementation.SongContentRepositoryStub
+import com.pandulapeter.campfire.domain.implementation.SongRepositoryStub
+import com.pandulapeter.campfire.domain.implementation.testSetlist
+import com.pandulapeter.campfire.domain.implementation.testSong
 import com.pandulapeter.campfire.data.model.domain.ImportChoices
 import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution
 import com.pandulapeter.campfire.data.model.domain.ImportEntryKey

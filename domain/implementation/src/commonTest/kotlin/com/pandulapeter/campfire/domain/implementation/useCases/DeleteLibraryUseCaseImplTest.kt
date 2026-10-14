@@ -9,6 +9,11 @@
  */
 package com.pandulapeter.campfire.domain.implementation.useCases
 
+import com.pandulapeter.campfire.domain.implementation.SetlistRepositoryStub
+import com.pandulapeter.campfire.domain.implementation.SongRepositoryStub
+import com.pandulapeter.campfire.domain.implementation.SyncRepositoryStub
+import com.pandulapeter.campfire.domain.implementation.TEST_PREFERENCES
+import com.pandulapeter.campfire.domain.implementation.UserPreferencesRepositoryStub
 import com.pandulapeter.campfire.data.model.domain.Logger
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.domain.UserPreferences

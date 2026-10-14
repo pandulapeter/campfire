@@ -9,6 +9,9 @@
  */
 package com.pandulapeter.campfire.domain.implementation.useCases
 
+import com.pandulapeter.campfire.domain.implementation.SongContentRepositoryStub
+import com.pandulapeter.campfire.domain.implementation.SongRepositoryStub
+import com.pandulapeter.campfire.domain.implementation.testSong
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields.Field
 import com.pandulapeter.campfire.data.model.domain.Song
