@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.sync.implementation
 
 import com.pandulapeter.campfire.data.model.Logger
+import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLock
 import com.pandulapeter.campfire.data.sync.implementation.index.SyncIndexDocument
 import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesSync
@@ -33,9 +34,9 @@ internal class Device(
     /** The library by file name, as text. */
     val contents get() = library.files.entries.associate { (key, bytes) -> key.name to bytes.decodeToString() }
 
-    suspend fun sync(cloud: FakeSyncProvider) {
-        val result = synchronize(local = library, provider = cloud, document = index, setlistComparison = DayBlindSetlistComparison, lock = lock)
-        val completed = assertIs<SyncEngine.Result.Completed>(result)
+    /** A run that must complete, after which the index is kept and the synced preferences settled. */
+    suspend fun sync(cloud: FakeSyncProvider, deletionPolicy: SyncDeletionPolicy = SyncDeletionPolicy.ASK) {
+        val completed = assertIs<SyncEngine.Result.Completed>(syncResult(cloud, deletionPolicy))
         val syncedPreferences = preferencesSync?.synchronize(
             provider = cloud,
             base = completed.index.syncedPreferences,
@@ -43,4 +44,14 @@ internal class Device(
         )
         index = completed.index.copy(syncedPreferences = syncedPreferences ?: completed.index.syncedPreferences)
     }
+
+    /** A run whatever it comes to; only [sync] keeps what a completed one leaves. */
+    suspend fun syncResult(cloud: FakeSyncProvider, deletionPolicy: SyncDeletionPolicy) = synchronize(
+        local = library,
+        provider = cloud,
+        document = index,
+        setlistComparison = DayBlindSetlistComparison,
+        lock = lock,
+        deletionPolicy = deletionPolicy,
+    )
 }

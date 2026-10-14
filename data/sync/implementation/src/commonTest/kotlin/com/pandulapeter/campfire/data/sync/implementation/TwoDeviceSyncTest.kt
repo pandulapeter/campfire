@@ -9,8 +9,11 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation
 
+import com.pandulapeter.campfire.data.model.sync.SyncDeletionDirection
+import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferences
 import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesDocument
+import com.pandulapeter.campfire.data.sync.implementation.run.SyncEngine
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -101,6 +104,53 @@ class TwoDeviceSyncTest {
     }
 
     @Test
+    fun `a song renamed on one device and edited under its old name on the other is kept twice`() = runTest {
+        val (a, b) = devicesInStep()
+        // Both ways round at once: the rename of the first song reaches the folder before its edit does, and the edit
+        // of the second before its rename.
+        a.library.files[song("song_one")] = a.library.files.remove(song(1))!!
+        b.library.files[song(1)] = "Edited on B".encodeToByteArray()
+        b.library.files[song("song_two")] = b.library.files.remove(song(2))!!
+        a.library.files[song(2)] = "Edited on A".encodeToByteArray()
+        a.sync(cloud)
+        b.sync(cloud)
+        a.sync(cloud)
+
+        val expected = sharedContents() +
+            ("song_1.cho" to "Edited on B") +
+            ("song_one.cho" to "Song 1") +
+            ("song_2.cho" to "Edited on A") +
+            ("song_two.cho" to "Song 2")
+        assertEverywhere(expected, a, b)
+        assertConverges(a, b)
+    }
+
+    @Test
+    fun `a device that sees most of the library deleted elsewhere asks before following`() = runTest {
+        val a = Device(librarySongs(10))
+        val b = Device()
+        a.sync(cloud)
+        b.sync(cloud)
+        (1..6).forEach { a.library.files -= song(it) }
+        a.sync(cloud, SyncDeletionPolicy.DELETE_REMOTELY)
+
+        assertEquals(
+            SyncEngine.Result.DeletionsNeedConfirmation(count = 6, total = 10, direction = SyncDeletionDirection.LOCAL),
+            b.syncResult(cloud, SyncDeletionPolicy.ASK),
+        )
+        val all = librarySongs(10).entries.associate { (key, bytes) -> key.name to bytes.decodeToString() }
+        assertEquals(all, b.contents, "Device B")
+        assertEquals(all - (1..6).map { song(it).name }.toSet(), cloud.contents, "The cloud folder")
+
+        b.sync(cloud, SyncDeletionPolicy.KEEP_AND_UPLOAD)
+        assertEquals(all, cloud.contents, "The cloud folder")
+        a.sync(cloud)
+
+        assertEverywhere(all, a, b)
+        assertConverges(a, b)
+    }
+
+    @Test
     fun `a song spelled with different case on the two devices settles on one file`() = runTest {
         // Dropbox, which takes the two spellings for one file.
         val cloud = FakeSyncProvider(ignoresCase = true)
@@ -114,6 +164,27 @@ class TwoDeviceSyncTest {
 
         assertEquals(sharedContents() + ("Hallelujah.cho" to THERE.decodeToString()), a.contents)
         assertEquals(sharedContents() + ("hallelujah.cho" to THERE.decodeToString()), b.contents)
+        assertEquals(a.contents, cloud.contents)
+        assertConverges(a, b, cloud)
+    }
+
+    @Test
+    fun `a song spelled in two Unicode forms on the two devices settles on one file`() = runTest {
+        // Dropbox, which takes the composed and the decomposed spelling for one file. Escaped, so that no editor or
+        // formatter folds the two names into one.
+        val cloud = FakeSyncProvider(ignoresCase = true)
+        val composed = "caf\u00e9"
+        val decomposed = "cafe\u0301"
+        val a = Device(shared() + (song(composed) to ORIGINAL))
+        val b = Device(shared() + (song(decomposed) to ORIGINAL))
+        a.sync(cloud)
+        b.sync(cloud)
+        b.library.files[song(decomposed)] = THERE
+        b.sync(cloud)
+        a.sync(cloud)
+
+        assertEquals(sharedContents() + ("$composed.cho" to THERE.decodeToString()), a.contents)
+        assertEquals(sharedContents() + ("$decomposed.cho" to THERE.decodeToString()), b.contents)
         assertEquals(a.contents, cloud.contents)
         assertConverges(a, b, cloud)
     }
@@ -185,13 +256,23 @@ class TwoDeviceSyncTest {
         assertEquals(expected, SyncedPreferencesDocument.preferencesOf(document), "The cloud folder")
     }
 
-    /** One more round on both devices, which a library that has settled comes out of unchanged. */
+    /**
+     * One more round on both devices, which a library that has settled comes out of unchanged: the same files and
+     * preferences everywhere, and not one upload to the folder, which every file's and document's revision shows.
+     */
     private suspend fun assertConverges(a: Device, b: Device, cloud: FakeSyncProvider = this.cloud) {
-        val before = listOf(a.state(), b.state(), cloud.contents to cloud.documents.mapValues { it.value.first.decodeToString() })
+        val before = listOf(a.state(), b.state(), cloud.state())
         a.sync(cloud)
         b.sync(cloud)
-        assertEquals(before, listOf(a.state(), b.state(), cloud.contents to cloud.documents.mapValues { it.value.first.decodeToString() }))
+        assertEquals(before, listOf(a.state(), b.state(), cloud.state()))
     }
+
+    private fun FakeSyncProvider.state() = listOf(
+        contents,
+        documents.mapValues { it.value.first.decodeToString() },
+        files.entries.associate { (key, file) -> key.name to file.second },
+        documents.mapValues { it.value.second },
+    )
 
     private fun Device.state() = contents to preferences?.current?.let(SyncedPreferences::of)
 
