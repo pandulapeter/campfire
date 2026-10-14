@@ -41,7 +41,7 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.songs_filters_reset
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
+import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
 
 /**
  * The filters of the song list, shown in a side panel on wide enough screens and in a bottom sheet otherwise, and

@@ -43,7 +43,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.unit.Dp
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
-import com.pandulapeter.campfire.presentation.ui.platform.bounceHorizontalScroll
+import com.pandulapeter.campfire.presentation.ui.components.bounceHorizontalScroll
 
 /**
  * A group of filter chips on one row that scrolls sideways, with its [LabelSortingToggle] pinned at the start of the

@@ -32,7 +32,7 @@ import com.pandulapeter.campfire.presentation.ui.chords.description
 import com.pandulapeter.campfire.presentation.ui.chords.label
 import com.pandulapeter.campfire.presentation.ui.components.RadioListItem
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
-import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
+import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
 
 /**
  * The notation chords are written in, opened from its chip in Settings: the five as a list, each with its example under

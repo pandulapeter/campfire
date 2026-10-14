@@ -91,7 +91,7 @@ import com.pandulapeter.campfire.presentation.ui.components.controls.SegmentedCh
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSectionTitle
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.list.listItemAnimation
-import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableContent
+import com.pandulapeter.campfire.presentation.ui.components.bounceScrollableContent
 import com.pandulapeter.campfire.presentation.ui.print.PrintSource
 import com.pandulapeter.campfire.presentation.ui.components.controls.Stepper
 import org.jetbrains.compose.resources.painterResource

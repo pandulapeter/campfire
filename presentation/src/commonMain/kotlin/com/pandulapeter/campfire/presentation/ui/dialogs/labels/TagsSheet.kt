@@ -68,7 +68,7 @@ import com.pandulapeter.campfire.presentation.ui.components.list.listItemAnimati
 import com.pandulapeter.campfire.presentation.ui.components.labels.orderedBy
 import com.pandulapeter.campfire.presentation.ui.components.rememberClearTextButton
 import com.pandulapeter.campfire.presentation.localization.textResource
-import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableContent
+import com.pandulapeter.campfire.presentation.ui.components.bounceScrollableContent
 import org.jetbrains.compose.resources.painterResource
 
 /**

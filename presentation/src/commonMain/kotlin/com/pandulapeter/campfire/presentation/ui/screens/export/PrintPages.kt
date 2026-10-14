@@ -68,7 +68,7 @@ import com.pandulapeter.campfire.presentation.resources.print_page
 import com.pandulapeter.campfire.presentation.ui.components.DelayedLoadingIndicator
 import com.pandulapeter.campfire.presentation.ui.components.fadingUnderStartOverlay
 import com.pandulapeter.campfire.presentation.ui.components.fadingVerticalEdges
-import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableContent
+import com.pandulapeter.campfire.presentation.ui.components.bounceScrollableContent
 import com.pandulapeter.campfire.presentation.ui.platform.isDesktopPlatform
 import com.pandulapeter.campfire.presentation.ui.platform.isCtrlWheelZoomOwnedByApp
 import com.pandulapeter.campfire.presentation.ui.platform.verticalWheelNotches

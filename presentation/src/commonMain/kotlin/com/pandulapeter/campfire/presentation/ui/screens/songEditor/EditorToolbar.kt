@@ -72,7 +72,7 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_section_vers
 import com.pandulapeter.campfire.presentation.resources.song_editor_tab_any_instrument
 import com.pandulapeter.campfire.presentation.ui.chords.chordShapeInsertion
 import com.pandulapeter.campfire.presentation.ui.instrument.instrumentLabel
-import com.pandulapeter.campfire.presentation.ui.platform.bounceHorizontalScroll
+import com.pandulapeter.campfire.presentation.ui.components.bounceHorizontalScroll
 import com.pandulapeter.campfire.presentation.ui.tabs.tabInstruments
 
 /**

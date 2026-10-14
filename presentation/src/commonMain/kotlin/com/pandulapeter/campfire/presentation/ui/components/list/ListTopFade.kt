@@ -35,7 +35,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalDensity
-import com.pandulapeter.campfire.presentation.ui.platform.OverscrollPull
+import com.pandulapeter.campfire.presentation.ui.components.OverscrollPull
 
 /**
  * The fade the two list screens' cards go out in towards the top of the list, where the pinned section header and the

@@ -59,7 +59,7 @@ import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.rememberClearTextButton
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.delay
-import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
+import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
 
 /**
  * The address of a cover typed in, and under it the image it names, so that a typo is seen before it is saved. The

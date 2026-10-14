@@ -35,7 +35,7 @@ import com.pandulapeter.campfire.presentation.resources.whats_new_title
 import com.pandulapeter.campfire.presentation.resources.whats_new_message
 import com.pandulapeter.campfire.presentation.CAMPFIRE_VERSION_NAME
 import com.pandulapeter.campfire.presentation.ui.components.fadingVerticalEdges
-import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
+import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
 
 /**
  * Each change gets its own row so wrapped lines stay aligned with the words rather than the bullet, a bold headline

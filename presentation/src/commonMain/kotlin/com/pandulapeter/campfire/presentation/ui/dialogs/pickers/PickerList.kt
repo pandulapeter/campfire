@@ -34,7 +34,7 @@ import com.pandulapeter.campfire.presentation.ui.components.ScrollToStartWhenCha
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.list.listItemAnimation
 import com.pandulapeter.campfire.presentation.ui.components.only
-import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableContent
+import com.pandulapeter.campfire.presentation.ui.components.bounceScrollableContent
 
 /**
  * The scrolling part of a picker sheet, which takes whatever height the sheet has left under its header rather than

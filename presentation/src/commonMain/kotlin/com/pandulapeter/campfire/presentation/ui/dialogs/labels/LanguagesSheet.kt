@@ -62,7 +62,7 @@ import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.list.listItemAnimation
 import com.pandulapeter.campfire.presentation.ui.components.labels.pickableLanguages
 import com.pandulapeter.campfire.presentation.ui.components.rememberClearTextButton
-import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableContent
+import com.pandulapeter.campfire.presentation.ui.components.bounceScrollableContent
 
 /**
  * The languages of one song or of several, asked about all at once: the whole set is written when the sheet is

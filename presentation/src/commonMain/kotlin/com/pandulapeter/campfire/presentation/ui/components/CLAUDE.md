@@ -37,7 +37,7 @@ the plain indicator (the launch screen covers their first read).
 ### Scrolling performance
 
 - Overscroll is Compose's own (none on desktop/web). Foundation skips it when content fits, so short containers use
-  `bounceScrollableContent` / `bounceVerticalScroll` / `bounceHorizontalScroll` (`ui/platform/ContentOverscroll.kt`),
+  `bounceScrollableContent` / `bounceVerticalScroll` / `bounceHorizontalScroll` (`ContentOverscroll.kt`),
   offering drags to parents first so a fitting sheet still drags down. The vertical form draws its own top fade while
   pulled (scroll position stays zero, so `fadingTopEdge` is off); list screens pass their `ListTopFade`'s
   `OverscrollPull` instead.

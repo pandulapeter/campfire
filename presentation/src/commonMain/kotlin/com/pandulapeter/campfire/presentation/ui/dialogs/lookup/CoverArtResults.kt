@@ -62,7 +62,7 @@ import com.pandulapeter.campfire.presentation.ui.components.coverArt.CoverArt
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import org.jetbrains.compose.resources.painterResource
-import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableContent
+import com.pandulapeter.campfire.presentation.ui.components.bounceScrollableContent
 
 /**
  * The grid of what was found, or what stands in its place: why there is nothing to show yet, that the search is
