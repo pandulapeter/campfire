@@ -18,7 +18,7 @@ What every screen shares; each destination's package has its own notes.
   `TopLevelScreenSurface`. Every screen gets a `contentPadding` (system bars and cutout, `contentEdges`) from the outer
   scaffold so lists scroll edge to edge.
 - That padding follows the keyboard and reads it at use, not at creation (`KeyboardAwarePadding`, in
-  `KeyboardAwarePadding.kt`), so the keyboard relayouts lists without recomposing the app. Narrow it with
+  `ui/KeyboardAwarePadding.kt`), so the keyboard relayouts lists without recomposing the app. Narrow it with
   `PaddingValues.only(…)`; taking it apart while composing brings the recomposition back.
 - Exception: song details' padding ignores the keyboard, or a dialog's keyboard would reflow the lyrics behind it and
   lift the setlist pager bar.

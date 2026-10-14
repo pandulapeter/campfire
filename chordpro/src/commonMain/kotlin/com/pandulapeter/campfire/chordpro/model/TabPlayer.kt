@@ -21,8 +21,8 @@ import com.pandulapeter.campfire.chordpro.ChordNotation
  *   for the first of these the row has are shown.
  * @property tuning The strings the tabs are moved to, null where they are not moved at all and only named (the editor's
  *   preview, which shows a song as it is written, or an instrument nothing is known about).
- * @property hidesTabs Whether the reader's instrument has nothing a tab could be played on (a keyboard): every tab is
- *   then left out, a notice standing in its place.
+ * @property hidesTabs Whether the reader's instrument has nothing a tab could be played on (a keyboard, a violin):
+ *   every tab is then left out, a notice standing in its place.
  * @property assumedTuning The standard tuning of the instrument a staff is written for, given the pitch classes it names
  *   its strings by (the bottom string first, as [TabTuning.strings] are, null for a string it leaves unnamed) and the
  *   selector of its environment, or null for a number of strings no instrument has: the instrument the selector names

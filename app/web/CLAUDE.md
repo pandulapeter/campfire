@@ -103,7 +103,9 @@ Rules:
 - `window.campfireSavedForOffline` is computed every launch, read by `isAppAvailableOffline()` for the Storage row.
 
 `service-worker.js` decides nothing (kept page or network; nothing outside the folder), which is why `skipWaiting()` +
-`clients.claim()` is safe.
+`clients.claim()` is safe. Its routes, which update detection depends on: a screen address is redirected to the `?/`
+form; `build.json` and the worker itself always come from the network; any other GET inside the folder is answered
+from its exact cache entry, else the network.
 **Two rules outlive any release**:
 - The cache layout is a contract with every page ever kept; a new layout takes a new cache name.
 - The worker's address is permanent, registered with `updateViaCache: 'none'`. Fix a broken kept page by publishing a

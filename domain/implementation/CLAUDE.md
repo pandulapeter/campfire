@@ -109,7 +109,8 @@ conventions have it. A failure a use case notes but does not throw goes to the i
   names a song by file: setlists and the per-song preference maps (`UserPreferences.withSongRenamed`). Rename moves
   the file first, then follows every reference; delete drops them. Every reference is attempted even after one fails;
   failure is returned, not thrown; not cancellable once the file has moved / is gone. Setlists naming the song are
-  found from the files, not the cache, and changed through `updateSetlist`.
+  found from the files, not the cache, and changed through `updateSetlist`; one already naming the new name keeps
+  one entry.
 
 ## Others with logic
 

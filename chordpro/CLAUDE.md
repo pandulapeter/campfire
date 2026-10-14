@@ -25,8 +25,8 @@ test are not repeated here.
   conversion edit the text, not the model, since the result is written straight back to the user's file.
   `ChordProLines.joinLines` keeps the file's line separator and trailing line break.
 - **A directive is added after the last of its kind, else into the header in `metadataOrder`**
-  (`ChordProHeaderLayout`); nothing is ever reordered. A body `{key}`/`{tempo}`/`{time}` is a mid-song change, never
-  the header's.
+  (`ChordProHeaderLayout`); adding a line never reorders the others, only Prettify reorders the header. A body
+  `{key}`/`{tempo}`/`{time}` is a mid-song change, never the header's.
 - **Delegated environments** (`abc`, `ly`, `svg`, `textblock`) are verbatim chordless lyrics: only their closing
   `{end_of_…}` and a directive written with a colon are directives inside them.
 - **The model is immutable**, and the Compose compiler is told so (`gradle/compose-stability.conf`): never hand it a
@@ -114,7 +114,9 @@ by the parser's own functions; an *empty* value is not invalid.
 ## Chords and shapes
 
 - `ChordProChords.parse` reads a name through the same walk as `isChordName`, so a name is read exactly where it is
-  recognized. **`Chord.id` (`C#:0.3.7.10`) is what player shape choices are stored under**; never change its format.
+  recognized. **`Chord.id` (`C#:0.3.7.10`) is what player shape choices are stored under**, inside a `voicingKey`
+  (the instrument id where it `drawsDefinitions`, else the tuning id); both are synced and stored, so never change
+  either format.
 - The tables (sources and notices in each file's KDoc): every shape
   must sound exactly the chord it is filed under, below the twelfth fret, holdable (`ChordVoicingTablesTest`). **Table
   order is written, not computed** (most comfortable first). The stored choice format arrives through sync, so `read`

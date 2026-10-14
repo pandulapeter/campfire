@@ -57,7 +57,8 @@ them up by.
     sees) as briefly as possible.
 - **Failures**: one file failing does not end a run; only `SyncRunEndingException`s do. `CancellationException` is
   caught *first* and rethrown. A failed or still contested file keeps `lastSyncedAt` where it was. A run ending in a
-  non-`Exception` throwable rescans the whole library, since it may have come mid-write.
+  non-`Exception` throwable rescans the whole library if any operation had finished, since it may have come
+  mid-write.
 
 ## The index
 
@@ -89,8 +90,8 @@ them up by.
 
 - `restore` is called once per view model; finding `Connected` it reads nothing (re-reading would make a running run
   look interrupted). It shows the stored account before asking the service, so a slow network never shows
-  disconnected. Refused credentials start disconnected; credentials unreadable right now are a connection failure with
-  the file left alone.
+  disconnected. Refused credentials are a `ConnectionFailed` (authorization), nothing deleted and no launch run;
+  credentials unreadable right now are a connection failure with the file left alone.
 - A previous installation's credentials that could not be forgotten are noted and retried by every `restore` first;
   until then it answers disconnected. A start-up carrying the answer to a waiting authorization forgets nothing, even if
   it looks like a first launch.

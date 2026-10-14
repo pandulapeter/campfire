@@ -116,6 +116,7 @@ leaves `Connecting`. The rest is `data/source/remote/implementation/CLAUDE.md`'s
   `NavDisplay`).
 - Keeps `SingleInstance.kt`'s write-only `heldLock`, or GC releases the lock.
 - Carries Coil's keep rules (ProGuard doesn't read them from the jar).
+- Obfuscation stays off: `TouchScreen.kt` finds the scene by its `androidx.compose.` class names.
 - Output is one jar (Windows Defender rescans per file). The merge keeps the first of duplicate resources, so no two
   dependencies may ship the same `META-INF/services` file.
 - **Start a release build before shipping it** (`runRelease`): ProGuard breakage only shows then.
