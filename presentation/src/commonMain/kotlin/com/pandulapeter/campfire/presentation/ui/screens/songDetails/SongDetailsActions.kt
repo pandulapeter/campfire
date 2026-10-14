@@ -33,11 +33,11 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.menu.ACTION_BUTTON_OVERLAP
 import com.pandulapeter.campfire.presentation.ui.components.menu.ActionsMenu
 import com.pandulapeter.campfire.presentation.ui.components.menu.ActionsMenuItem
-import com.pandulapeter.campfire.presentation.ui.components.SetlistAssignmentsButton
-import com.pandulapeter.campfire.presentation.ui.components.SongActionHandler
-import com.pandulapeter.campfire.presentation.ui.components.SongActions
+import com.pandulapeter.campfire.presentation.ui.components.actions.SetlistAssignmentsButton
+import com.pandulapeter.campfire.presentation.ui.components.actions.SongActionHandler
+import com.pandulapeter.campfire.presentation.ui.components.actions.SongActions
 import com.pandulapeter.campfire.presentation.ui.components.menu.overlappingAction
-import com.pandulapeter.campfire.presentation.ui.components.setlistAssignmentsAction
+import com.pandulapeter.campfire.presentation.ui.components.actions.setlistAssignmentsAction
 import com.pandulapeter.campfire.presentation.ui.tuner.tunerAction
 
 /**

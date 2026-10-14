@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components.menu
 
-import com.pandulapeter.campfire.presentation.ui.components.SongActions
+import com.pandulapeter.campfire.presentation.ui.components.actions.SongActions
 import com.pandulapeter.campfire.presentation.ui.components.only
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade

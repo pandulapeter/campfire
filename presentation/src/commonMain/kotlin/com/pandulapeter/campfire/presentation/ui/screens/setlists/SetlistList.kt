@@ -62,7 +62,7 @@ import com.pandulapeter.campfire.presentation.ui.components.list.ListColumns
 import com.pandulapeter.campfire.presentation.ui.components.list.ListPlaceholder
 import com.pandulapeter.campfire.presentation.ui.components.list.ScrollToTopWhenChanged
 import com.pandulapeter.campfire.presentation.ui.components.list.SectionHeader
-import com.pandulapeter.campfire.presentation.ui.components.SetlistActions
+import com.pandulapeter.campfire.presentation.ui.components.actions.SetlistActions
 import com.pandulapeter.campfire.presentation.ui.components.songCard.SongCardOptions
 import com.pandulapeter.campfire.presentation.ui.components.appBar.belowAppBarOverlap
 import com.pandulapeter.campfire.presentation.ui.components.list.listItemAnimation

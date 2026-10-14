@@ -21,10 +21,10 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.menu.ActionsMenu
 import com.pandulapeter.campfire.presentation.ui.components.menu.ActionsMenuItem
 import com.pandulapeter.campfire.presentation.ui.components.menu.OverflowMenuState
-import com.pandulapeter.campfire.presentation.ui.components.SongActionHandler
-import com.pandulapeter.campfire.presentation.ui.components.SongActions
+import com.pandulapeter.campfire.presentation.ui.components.actions.SongActionHandler
+import com.pandulapeter.campfire.presentation.ui.components.actions.SongActions
 import com.pandulapeter.campfire.presentation.ui.components.only
-import com.pandulapeter.campfire.presentation.ui.components.setlistAssignmentsAction
+import com.pandulapeter.campfire.presentation.ui.components.actions.setlistAssignmentsAction
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import org.jetbrains.compose.resources.painterResource

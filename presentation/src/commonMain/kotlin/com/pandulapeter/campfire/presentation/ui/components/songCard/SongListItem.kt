@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.components.songCard
 
 import com.pandulapeter.campfire.presentation.ui.components.LabelsOnEverySong
-import com.pandulapeter.campfire.presentation.ui.components.SongActions
+import com.pandulapeter.campfire.presentation.ui.components.actions.SongActions
 import com.pandulapeter.campfire.presentation.ui.components.SongLabels
 import com.pandulapeter.campfire.presentation.ui.components.list.onContextClick
 import com.pandulapeter.campfire.presentation.ui.components.only

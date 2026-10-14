@@ -16,14 +16,6 @@ The shared building blocks of the screens.
 
 #### Menus and actions
 
-- `SongActions`: edit, Update file name (only where `Song.canUpdateFileName`), Duplicate song (songs screen cards only,
-  `isDuplicable`), Export song, delete — **delete never from a setlist row or a details screen opened from a setlist**
-  (`isDeletable`).
-- Choose setlists is `SetlistAssignmentsButton` in front of the overflow on song rows and the details bar (moved into the
-  menu as `setlistAssignmentsAction` when out of room); in a setlist row's menu after "Remove from setlist" (not on an
-  archived setlist). From a details screen opened from a setlist, that setlist's box is disabled
-  (`DialogType.SetlistPicker.setlistFileName`), since unticking it would pull the screen from under the reader.
-- `SetlistActions`: only Choose songs ever becomes a header button.
 - `SongFilters` is a side panel or a sheet, and neither when there is nothing to filter by (`hasSongFilters`).
   `ControlsSidePanel`: only the list feeds the bar's nested scroll.
 

@@ -45,7 +45,7 @@ import com.pandulapeter.campfire.presentation.ui.components.LabelsOnEverySong
 import com.pandulapeter.campfire.presentation.ui.components.list.ListTopFade
 import com.pandulapeter.campfire.presentation.ui.components.MissingSongListItem
 import com.pandulapeter.campfire.presentation.ui.components.menu.OverflowMenuState
-import com.pandulapeter.campfire.presentation.ui.components.SongActionHandler
+import com.pandulapeter.campfire.presentation.ui.components.actions.SongActionHandler
 import com.pandulapeter.campfire.presentation.ui.components.songCard.SongCardOptions
 import com.pandulapeter.campfire.presentation.ui.components.songCard.SongListItem
 import com.pandulapeter.campfire.presentation.ui.components.songCard.draggedListItemContainerColor
