@@ -9,6 +9,14 @@
  */
 package com.pandulapeter.campfire.presentation.ui.dialogs
 
+import com.pandulapeter.campfire.presentation.ui.dialogs.pickers.AppLanguageSheet
+import com.pandulapeter.campfire.presentation.ui.dialogs.pickers.SelectionSetlistsSheet
+import com.pandulapeter.campfire.presentation.ui.dialogs.pickers.SetlistPicker
+import com.pandulapeter.campfire.presentation.ui.dialogs.pickers.SongPicker
+import com.pandulapeter.campfire.presentation.ui.dialogs.labels.SelectionLanguagesSheet
+import com.pandulapeter.campfire.presentation.ui.dialogs.labels.SelectionTagsSheet
+import com.pandulapeter.campfire.presentation.ui.dialogs.labels.SongLanguagesDialog
+import com.pandulapeter.campfire.presentation.ui.dialogs.labels.SongTagsDialog
 import com.pandulapeter.campfire.presentation.ui.dialogs.forms.NewSongDialog
 import com.pandulapeter.campfire.presentation.ui.dialogs.forms.SetlistDetailsDialog
 import com.pandulapeter.campfire.presentation.ui.dialogs.forms.SongLinksDialog

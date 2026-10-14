@@ -7,8 +7,9 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.dialogs
+package com.pandulapeter.campfire.presentation.ui.dialogs.pickers
 
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.forms.label
 import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.CampfireBottomSheet
 import androidx.compose.foundation.layout.Arrangement
@@ -41,7 +42,7 @@ import com.pandulapeter.campfire.presentation.ui.search.songPickerMatches
 import com.pandulapeter.campfire.presentation.ui.components.checklist.CheckboxListItem
 import com.pandulapeter.campfire.presentation.ui.components.controls.CHIP_GAP
 import com.pandulapeter.campfire.presentation.ui.components.songFilters.CountedFilterChip
-import com.pandulapeter.campfire.presentation.ui.components.SortableChipRow
+import com.pandulapeter.campfire.presentation.ui.dialogs.pickers.SortableChipRow
 import com.pandulapeter.campfire.presentation.ui.components.checklist.ChecklistOrder
 import com.pandulapeter.campfire.presentation.ui.components.checklist.checklistItems
 import com.pandulapeter.campfire.presentation.ui.components.checklist.rememberChecklistOrder

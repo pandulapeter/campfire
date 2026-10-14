@@ -40,47 +40,6 @@ away and uncovers the one under it as it was (its sheet, draft and scroll positi
   `SavedDialogRestorer` saves) is kept by `DialogHost.addOpenDialogsChange`.
 - Nested setlist naming and calendar sheets are local state of the sheet under them, not stack entries.
 
-### Pickers
-
-The setlist picker (every setlist, one song) and the song picker (every song, one setlist) share parts:
-
-- The header's sort button is the list screen's own preference, so the sheet orders as the screen does. A new sort or
-  tag/language order sends the list to its first row (`ScrollToStartWhenChanged`, held until the reordered list
-  arrives).
-- `PickerList` takes the height the sheet has left and **never gets shorter while open**, so narrowing by search does
-  not shrink the sheet and move the field being typed into. Its gap under the search field is content padding.
-- The song picker lists the setlist's own songs first (held while open), then the rest in the songs screen's order.
-  Its tag and language chips (`SortableChipRow`) are a plain `Row` animated by `animateBounds`, since a lazy row sent to
-  its start drops its placement animation; their selection is the sheet's own, empty each opening. Rows are built off
-  the main thread once per library (`SongPickerIndex.kt`); chips are `ScreenData.libraryTags`/`libraryLanguages`.
-- **One write per tick** (`CampfireViewModel.setSetlistSong`, serialized by a `Mutex`, each applied to the setlist as
-  the library has it then): ticks come faster than a write round-trips, and boxes following `setlists` would flick
-  back. A gone setlist is not recreated from the sheet's copy. A ticked song goes to the end; an entry whose file is
-  missing is kept.
-- The setlist picker's "New setlist" renders the naming sheet over the picker from its own state, not via the stack,
-  since the song goes into the setlist as soon as it exists (`createSetlistWithSongs`). It opens named after a search
-  that found nothing. A song with no listable setlist (`hasListableSetlist`) skips straight to the naming sheet.
-- Language picker: search over names and codes (`HUN` and `hu-HU` both find Hungarian, via
-  `ChordProLanguages.code`); the song's own languages stay at the top while open, since a row reordering under
-  the finger that ticked it is worse than scrolling.
-
-### The selection mode's sheets
-
-For the songs screen's selection mode (see `ui/screens/songs`). Each holds the selection as it was when opened; none
-has a `SavedDialog`, since the mode is not restored either.
-
-- **Choose setlists** (`SelectionSetlistsSheet`): a box per setlist, ticked / empty / half ticked by how many of the
-  songs it holds (`selectionBoxState`, following the library until the sheet is first tapped on it, then the sheet's
-  own record, since the library lags its writes). Tapping an empty or half box appends the missing songs in one write
-  (`Setlist.withSongsAdded`); tapping a box the sheet filled removes exactly those (`withSongsTakenOut`). **A song the
-  setlist already held is never removed from here**, since that loses its place and key. A library with nothing to
-  list skips to the naming sheet (`createSetlistWithSongs`).
-- **Manage tags / Manage languages** (`TagsSheet`, `LanguagesSheet`, shared with the one-song dialogs) run on
-  `BulkLabelDraft`: a half-ticked row cycles on → off → half; Save writes only rows turned on or off, leaving half rows
-  alone. Writes go through `EditSongsUseCase` on the file as on disk, run `NonCancellable`, and end in one snackbar.
-- A tag's color (`TagColorButton`, a popup rather than a second sheet) is written at once (`setTagColor`), not on Save,
-  and survives cancelling: the color belongs to the tag library-wide.
-
 ### `CoverArtSearchSheet.kt`
 
 Opened from the cover in the About the song sheet; absent in performance mode or with Cover art off.

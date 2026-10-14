@@ -34,9 +34,9 @@ import com.pandulapeter.campfire.presentation.ui.screens.setlists.SetlistDetails
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.SetlistWithSongs
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.details
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.mergedSetlistDetails
-import com.pandulapeter.campfire.presentation.ui.screens.setlists.withSongTicked
-import com.pandulapeter.campfire.presentation.ui.screens.setlists.withSongsAdded
-import com.pandulapeter.campfire.presentation.ui.screens.setlists.withSongsTakenOut
+import com.pandulapeter.campfire.presentation.ui.state.withSongTicked
+import com.pandulapeter.campfire.presentation.ui.state.withSongsAdded
+import com.pandulapeter.campfire.presentation.ui.state.withSongsTakenOut
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.Companion.SETLISTS_SEARCH_KEY
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

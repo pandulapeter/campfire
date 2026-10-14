@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.dialogs
 
+import com.pandulapeter.campfire.presentation.ui.dialogs.pickers.SetlistPicker
+import com.pandulapeter.campfire.presentation.ui.dialogs.pickers.SongPicker
 import com.pandulapeter.campfire.presentation.ui.dialogs.forms.toSongMetadataDraft
 import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields
 import com.pandulapeter.campfire.chordpro.model.ChordProLink
