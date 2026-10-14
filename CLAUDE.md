@@ -197,8 +197,8 @@ checked by hand. Add or update tests with every change to tested logic.
 ./gradlew -p gradle :build-logic:test      # packaging helpers
 ```
 
-The web build's JavaScript has Node tests (`app/web`), the release-notes parser a Python `unittest`
-(`.github/scripts`). `.github/workflows/tests.yml` runs all of them plus `spotlessCheck`, the license header check, and
+The web build's JavaScript has Node tests (`app/web`), and the Python scripts in `.github/scripts` have `unittest`s
+beside them (`test_*.py`). `.github/workflows/tests.yml` runs all of them plus `spotlessCheck`, the license header check, and
 compiles every platform (iOS on macOS) on every PR, nightly, and before `publish-all.yml` builds anything.
 
 ## Build
