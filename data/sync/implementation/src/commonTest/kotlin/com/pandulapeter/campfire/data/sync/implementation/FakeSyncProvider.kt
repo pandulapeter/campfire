@@ -149,8 +149,6 @@ internal class FakeSyncProvider(
         onUpload(key)
         val target = stored(key)
         if (files[target]?.second != expectedRevision) return RemoteWriteResult.Conflict
-        val isHeldInAnotherCase = files.keys.any { it.kind == kind && it.name.lowercase() == name.lowercase() }
-        if (expectedRevision == null && ignoresCase && isHeldInAnotherCase) return RemoteWriteResult.Conflict
         val revision = "r${nextRevision++}"
         files[target] = bytes to revision
         return RemoteWriteResult.Written(revision)
