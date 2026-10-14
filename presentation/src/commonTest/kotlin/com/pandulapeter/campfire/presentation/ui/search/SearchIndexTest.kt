@@ -10,9 +10,6 @@
 package com.pandulapeter.campfire.presentation.ui.search
 
 import com.pandulapeter.campfire.data.model.domain.Song
-import com.pandulapeter.campfire.domain.api.models.SongSection
-import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroup
-import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroupHeader
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -88,28 +85,6 @@ class SearchIndexTest {
         assertEquals(listOf(metadataEdit), rankSongs(snapshot.filtered, "first"))
         // The index exists so that a library value that leaves a song's text alone does not fold it again.
         assertEquals(callsAfterFirstUpdate, calls)
-    }
-
-    @Test
-    fun `an empty normalized query keeps the sections`() {
-        val first = searchable("first", "first", "a", emptyList())
-        val second = searchable("second", "second", "b", emptyList())
-        val sections = listOf(
-            SongSection(header = SongSection.Header.Letter('F'), songs = listOf(first.song)),
-            SongSection(header = SongSection.Header.Letter('S'), songs = listOf(second.song)),
-        )
-        assertEquals(
-            listOf(
-                SongGroup(header = SongGroupHeader.Section(SongSection.Header.Letter('F')), songs = listOf(first.song)),
-                SongGroup(header = SongGroupHeader.Section(SongSection.Header.Letter('S')), songs = listOf(second.song)),
-            ),
-            songGroupsFor(sections, listOf(first, second), ""),
-        )
-        assertEquals(
-            listOf(SongGroup(header = null, songs = listOf(second.song))),
-            songGroupsFor(sections, listOf(first, second), "sec"),
-        )
-        assertEquals(emptyList(), songGroupsFor(sections, listOf(first, second), "nothing"))
     }
 
     private fun searchable(name: String, title: String, artist: String, tags: List<String>) = SearchableSong(

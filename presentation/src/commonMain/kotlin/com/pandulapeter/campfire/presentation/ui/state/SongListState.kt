@@ -15,12 +15,16 @@ import com.pandulapeter.campfire.data.model.domain.Tag
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.domain.api.models.ScreenData
 import com.pandulapeter.campfire.domain.api.models.SongFilter
+import com.pandulapeter.campfire.domain.api.models.SongSection
 import com.pandulapeter.campfire.domain.api.useCases.NormalizeSearchTextUseCase
 import com.pandulapeter.campfire.presentation.ui.components.Placeholder
 import com.pandulapeter.campfire.presentation.ui.components.ScrollPosition
 import com.pandulapeter.campfire.presentation.ui.components.SearchState
+import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroup
+import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroupHeader
 import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroups
-import com.pandulapeter.campfire.presentation.ui.search.songGroupsFor
+import com.pandulapeter.campfire.presentation.ui.search.SearchableSong
+import com.pandulapeter.campfire.presentation.ui.search.rankSongs
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.Companion.SONGS_SEARCH_KEY
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -141,4 +145,23 @@ internal class SongListState(
             selectedLanguages = filter.selectedLanguages.filterNotTo(mutableSetOf()) { it in libraryLanguages },
         )
     }
+}
+
+/**
+ * What the song list shows for [normalizedQuery]: the [sections] as they are when there is nothing to search for, and
+ * otherwise the ranked matches of [filtered] as one headerless group. The decision is made on the normalized query
+ * rather than on the typed one, since a query of punctuation, symbols or emoji alone folds to nothing and would
+ * otherwise "rank" the whole list in its own order, without its headers.
+ *
+ * No groups at all when nothing matches, rather than one empty group: a search with no results has to look empty to
+ * whoever decides between the list and a placeholder, not like a list with one section.
+ */
+internal fun songGroupsFor(
+    sections: List<SongSection>,
+    filtered: List<SearchableSong>,
+    normalizedQuery: String,
+): List<SongGroup> = if (normalizedQuery.isEmpty()) {
+    sections.map { SongGroup(header = SongGroupHeader.Section(it.header), songs = it.songs) }
+} else {
+    rankSongs(filtered, normalizedQuery).takeIf { it.isNotEmpty() }?.let { listOf(SongGroup(header = null, songs = it)) }.orEmpty()
 }

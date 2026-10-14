@@ -10,9 +10,6 @@
 package com.pandulapeter.campfire.presentation.ui.search
 
 import com.pandulapeter.campfire.data.model.domain.Song
-import com.pandulapeter.campfire.domain.api.models.SongSection
-import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroup
-import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroupHeader
 
 /** A song with the title, artist and tags the search compares, normalized for searching. */
 internal data class SearchableSong(
@@ -107,22 +104,3 @@ internal fun searchRank(title: String, artist: String, tags: List<String>, query
 
 /** How many values [searchRank] has: its three keys have eight combinations. */
 internal const val SEARCH_RANK_COUNT = 8
-
-/**
- * What the song list shows for [normalizedQuery]: the [sections] as they are when there is nothing to search for, and
- * otherwise the ranked matches of [filtered] as one headerless group. The decision is made on the normalized query
- * rather than on the typed one, since a query of punctuation, symbols or emoji alone folds to nothing and would
- * otherwise "rank" the whole list in its own order, without its headers.
- *
- * No groups at all when nothing matches, rather than one empty group: a search with no results has to look empty to
- * whoever decides between the list and a placeholder, not like a list with one section.
- */
-internal fun songGroupsFor(
-    sections: List<SongSection>,
-    filtered: List<SearchableSong>,
-    normalizedQuery: String,
-): List<SongGroup> = if (normalizedQuery.isEmpty()) {
-    sections.map { SongGroup(header = SongGroupHeader.Section(it.header), songs = it.songs) }
-} else {
-    rankSongs(filtered, normalizedQuery).takeIf { it.isNotEmpty() }?.let { listOf(SongGroup(header = null, songs = it)) }.orEmpty()
-}

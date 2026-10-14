@@ -11,11 +11,16 @@ package com.pandulapeter.campfire.presentation.ui.state
 
 import androidx.lifecycle.SavedStateHandle
 import com.pandulapeter.campfire.data.model.DataState
+import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.SongLanguage
 import com.pandulapeter.campfire.data.model.domain.Tag
 import com.pandulapeter.campfire.domain.api.models.ScreenData
 import com.pandulapeter.campfire.domain.api.models.SongFilter
+import com.pandulapeter.campfire.domain.api.models.SongSection
 import com.pandulapeter.campfire.domain.api.useCases.NormalizeSearchTextUseCase
+import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroup
+import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroupHeader
+import com.pandulapeter.campfire.presentation.ui.search.SearchableSong
 import com.pandulapeter.campfire.presentation.ui.search.SongSearchSnapshot
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
@@ -69,6 +74,38 @@ class SongListStateTest {
         runCurrent()
         assertTrue(state.isSongFilterActive.value, "A tag of the library, in another case")
     }
+
+    @Test
+    fun `an empty normalized query keeps the sections`() {
+        val first = searchable("first", "first", "a", emptyList())
+        val second = searchable("second", "second", "b", emptyList())
+        val sections = listOf(
+            SongSection(header = SongSection.Header.Letter('F'), songs = listOf(first.song)),
+            SongSection(header = SongSection.Header.Letter('S'), songs = listOf(second.song)),
+        )
+        assertEquals(
+            listOf(
+                SongGroup(header = SongGroupHeader.Section(SongSection.Header.Letter('F')), songs = listOf(first.song)),
+                SongGroup(header = SongGroupHeader.Section(SongSection.Header.Letter('S')), songs = listOf(second.song)),
+            ),
+            songGroupsFor(sections, listOf(first, second), ""),
+        )
+        assertEquals(
+            listOf(SongGroup(header = null, songs = listOf(second.song))),
+            songGroupsFor(sections, listOf(first, second), "sec"),
+        )
+        assertEquals(emptyList(), songGroupsFor(sections, listOf(first, second), "nothing"))
+    }
+
+    private fun searchable(name: String, title: String, artist: String, tags: List<String>) = SearchableSong(
+        song = song(name), title = title, artist = artist, tags = tags,
+    )
+
+    private fun song(name: String) = Song(
+        fileName = "$name.cho", title = name, artist = "", key = null, transpose = 0,
+        tags = emptyList(), languages = emptyList(), coverArtUrl = null, hasChords = false,
+        canUpdateFileName = false, lastModified = 0L, size = 0L,
+    )
 
     private fun TestScope.songListState() = SongListState(
         scope = backgroundScope,
