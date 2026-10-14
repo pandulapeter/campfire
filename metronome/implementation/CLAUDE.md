@@ -70,7 +70,7 @@ heard at start and stop); a stop flushes. The durations and the 48 kHz default l
 
 - **Playback is media**: Android `mediaPlayback` foreground service with media session and notification (`app/android`);
   iOS `audio` background mode, Now Playing, and remote commands (`app/ios`); web, a best-effort media session
-  (`app/web`); desktop nothing. A click that stopped on its own says why.
+  (`:presentation`'s `wasmJsMain`); desktop nothing. A click that stopped on its own says why.
 - **A click outlives the app going to the background, not the app being left**: locked screen or another app in front
   keeps it (a phone on a music stand); swiped away, backed out of (Android), or quit (desktop) stops it.
 - A click that cannot sound (volume zero or every beat muted, `MetronomePattern.canSound`) is stopped a few seconds
