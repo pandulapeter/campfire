@@ -19,8 +19,7 @@
 - Update website + store screenshots + store descriptions to include the chord diagram library
 
 ### Refactor + testing
-- Verify the current unit test coverage, extend it if needed 
-- UI tests on the desktop JVM: documentation/plans/ui-test-harness.md (first; the pedal walk and the goldens build on it)
+- Verify the current unit test coverage, extend it if needed
 - Two-device sync scenarios: documentation/plans/sync-scenario-tests.md
 - Pedal coverage walk: documentation/plans/pedal-coverage-test.md
 - Golden renders: documentation/plans/golden-renders.md
