@@ -13,7 +13,7 @@ import kotlin.math.min
 
 /**
  * What to wait, in seconds, before attempt [attempt] + 1 of a call to a service that asked to slow down without saying
- * for how long: two seconds, doubled on every attempt up to half a minute.
+ * for how long: two seconds, doubled on every attempt up to 32 seconds.
  */
 internal fun exponentialBackoffSeconds(attempt: Int) = min(DEFAULT_RETRY_SECONDS shl attempt, MAXIMUM_RETRY_SECONDS)
 

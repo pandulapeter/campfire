@@ -51,8 +51,8 @@ private object CampfireDependencyGraph
  * platform's entry point calls it once, before anything asks for the view model, which joins the read started here
  * rather than starting another one.
  *
- * @param configuration What only the platform can add: the Android shell's `androidContext`, which the file storage
- *   and the authenticator there are built from. The other three have nothing to add.
+ * @param configuration What only the platform can add: the Android shell's `androidContext`, the one `@Provided`
+ *   dependency of the graph. The other three have nothing to add.
  */
 fun startCampfireDependencyGraph(configuration: KoinAppDeclaration = {}) =
     startKoin<CampfireDependencyGraph>(configuration).also { koinApplication ->
