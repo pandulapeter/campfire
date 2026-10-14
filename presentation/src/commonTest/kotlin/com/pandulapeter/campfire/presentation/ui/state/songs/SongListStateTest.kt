@@ -16,9 +16,9 @@ import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.SongLanguage
 import com.pandulapeter.campfire.data.model.domain.Tag
-import com.pandulapeter.campfire.domain.api.models.ScreenData
-import com.pandulapeter.campfire.domain.api.models.SongFilter
-import com.pandulapeter.campfire.domain.api.models.SongSection
+import com.pandulapeter.campfire.domain.api.library.ScreenData
+import com.pandulapeter.campfire.domain.api.library.SongFilter
+import com.pandulapeter.campfire.domain.api.library.SongSection
 import com.pandulapeter.campfire.domain.api.text.NormalizeSearchTextUseCase
 import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroup
 import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroupHeader

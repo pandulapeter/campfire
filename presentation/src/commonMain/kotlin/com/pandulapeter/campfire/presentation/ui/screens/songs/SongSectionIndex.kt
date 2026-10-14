@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songs
 
-import com.pandulapeter.campfire.domain.api.models.SongSection
+import com.pandulapeter.campfire.domain.api.library.SongSection
 
 /** Cumulative lazy-grid boundaries keep fast-scroll lookup and pushed-header lookup proportional to sections. */
 internal class SongSectionIndex(groups: List<Group>) {

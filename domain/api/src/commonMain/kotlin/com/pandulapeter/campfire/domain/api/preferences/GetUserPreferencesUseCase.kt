@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.domain.api.preferences
 
-import com.pandulapeter.campfire.domain.api.useCases.GetScreenDataUseCase
+import com.pandulapeter.campfire.domain.api.library.GetScreenDataUseCase
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import kotlinx.coroutines.flow.Flow

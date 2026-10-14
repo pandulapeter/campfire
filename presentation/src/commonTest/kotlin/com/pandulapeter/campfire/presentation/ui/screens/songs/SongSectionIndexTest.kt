@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songs
 
-import com.pandulapeter.campfire.domain.api.models.SongSection
+import com.pandulapeter.campfire.domain.api.library.SongSection
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

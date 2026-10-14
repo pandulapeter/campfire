@@ -21,7 +21,7 @@ import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
-import com.pandulapeter.campfire.domain.api.models.ScreenData
+import com.pandulapeter.campfire.domain.api.library.ScreenData
 import com.pandulapeter.campfire.domain.api.setlists.CreateSetlistUseCase
 import com.pandulapeter.campfire.domain.api.setlists.DeleteSetlistUseCase
 import com.pandulapeter.campfire.domain.api.setlists.EditSetlistUseCase

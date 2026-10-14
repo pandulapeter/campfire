@@ -7,10 +7,10 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.domain.api.useCases
+package com.pandulapeter.campfire.domain.api.library
 
-interface LoadScreenDataUseCase {
+interface RememberDemoLibraryFilesUseCase {
 
-    /** @param isRescan Whether to read the library directory again instead of using what is already in memory. */
-    suspend operator fun invoke(isRescan: Boolean)
+    /** See `DemoLibraryRepository.rememberDemoLibraryFiles`: what the demo files just planted under these names hold. */
+    suspend operator fun invoke(songFileNames: Collection<String>, setlistFileNames: Collection<String>)
 }

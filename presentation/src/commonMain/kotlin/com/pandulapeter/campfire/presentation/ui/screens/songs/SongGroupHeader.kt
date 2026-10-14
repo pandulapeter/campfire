@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songs
 
-import com.pandulapeter.campfire.domain.api.models.SongSection
+import com.pandulapeter.campfire.domain.api.library.SongSection
 
 /**
  * What a group of the song list is headed by: a section the sort cut the library into, or the songs ticked in the

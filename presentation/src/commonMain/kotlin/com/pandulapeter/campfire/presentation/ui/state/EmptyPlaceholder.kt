@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.state
 
 import com.pandulapeter.campfire.data.model.DataState
-import com.pandulapeter.campfire.domain.api.models.ScreenData
+import com.pandulapeter.campfire.domain.api.library.ScreenData
 import com.pandulapeter.campfire.presentation.ui.components.Placeholder
 
 /**

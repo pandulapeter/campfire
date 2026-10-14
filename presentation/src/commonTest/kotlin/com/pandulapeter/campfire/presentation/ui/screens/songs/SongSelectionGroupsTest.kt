@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songs
 
 import com.pandulapeter.campfire.data.model.domain.Song
-import com.pandulapeter.campfire.domain.api.models.SongSection
+import com.pandulapeter.campfire.domain.api.library.SongSection
 import com.pandulapeter.campfire.presentation.ui.components.checklist.ChecklistOrder
 import kotlin.test.Test
 import kotlin.test.assertEquals

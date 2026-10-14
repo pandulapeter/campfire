@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
 import com.pandulapeter.campfire.presentation.ui.state.asState
 import com.pandulapeter.campfire.data.model.domain.tagKey
 import com.pandulapeter.campfire.data.model.DataState
-import com.pandulapeter.campfire.domain.api.models.ScreenData
+import com.pandulapeter.campfire.domain.api.library.ScreenData
 import com.pandulapeter.campfire.presentation.ui.search.PickerFilterOptions
 import com.pandulapeter.campfire.presentation.ui.search.PickerSongs
 import com.pandulapeter.campfire.presentation.ui.search.pickerFilterOptionsOf

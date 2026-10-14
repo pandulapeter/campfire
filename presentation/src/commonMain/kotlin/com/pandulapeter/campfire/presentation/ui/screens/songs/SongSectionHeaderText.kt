@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songs
 
 import androidx.compose.runtime.Composable
-import com.pandulapeter.campfire.domain.api.models.SongSection
+import com.pandulapeter.campfire.domain.api.library.SongSection
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.checklist_selected

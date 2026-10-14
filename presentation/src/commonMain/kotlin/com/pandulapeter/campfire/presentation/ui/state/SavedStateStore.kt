@@ -11,7 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.state
 
 import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.SavedStateHandle
-import com.pandulapeter.campfire.domain.api.models.SongFilter
+import com.pandulapeter.campfire.domain.api.library.SongFilter
 import com.pandulapeter.campfire.presentation.ui.components.SearchState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow

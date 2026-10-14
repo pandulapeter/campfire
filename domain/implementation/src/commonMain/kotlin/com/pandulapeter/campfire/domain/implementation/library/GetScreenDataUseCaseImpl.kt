@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.domain.implementation.useCases
+package com.pandulapeter.campfire.domain.implementation.library
 
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.Setlist
@@ -18,10 +18,10 @@ import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
-import com.pandulapeter.campfire.domain.api.models.ScreenData
-import com.pandulapeter.campfire.domain.api.models.SongFilter
-import com.pandulapeter.campfire.domain.api.models.SongSection
-import com.pandulapeter.campfire.domain.api.useCases.GetScreenDataUseCase
+import com.pandulapeter.campfire.domain.api.library.ScreenData
+import com.pandulapeter.campfire.domain.api.library.SongFilter
+import com.pandulapeter.campfire.domain.api.library.SongSection
+import com.pandulapeter.campfire.domain.api.library.GetScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.text.NormalizeTextUseCase
 import kotlin.concurrent.Volatile
 import kotlinx.coroutines.Dispatchers
