@@ -44,7 +44,7 @@ The workflows that test and publish Campfire, and the scripts and actions they s
 ### Release notes and per-store switches
 
 `publish-all.yml` reads hidden comments in the release description with `.github/scripts/release_description.py`
-(format in its header): `<!-- whats-new en-US … -->` (every store), `<!-- play-store update-priority: 0 -->`, and
+(format in `publish-all.yml`'s header): `<!-- whats-new en-US … -->` (every store), `<!-- play-store update-priority: 0 -->`, and
 `<!-- <store> submit: true -->` for `play-store`, `app-store`, `mac-app-store`, and `microsoft-store` (`false` passes
 `submit` off, leaving that store a draft).
 
