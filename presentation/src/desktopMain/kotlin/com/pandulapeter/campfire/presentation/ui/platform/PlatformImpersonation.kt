@@ -12,8 +12,9 @@ package com.pandulapeter.campfire.presentation.ui.platform
 /**
  * The platform the desktop build draws its interface as. The desktop app never sets it, so it is always itself; the
  * store screenshot tool (`tools/screenshots`) does, since it renders this build offscreen as every platform's store
- * listing shows the app. The platforms share every line of the interface, and its fonts, but what the expect declarations of this package decide - whether it is a desktop (and so the scale it is drawn at,
- * see `interfaceScale`), the store and the app icon the settings name, whether the library can be edited outside the
+ * listing shows the app. The platforms share every line of the interface, and its fonts, but what the expect
+ * declarations of this package decide - whether it is a desktop (and so the scale it is drawn at, see
+ * `interfaceScale`), the store and the app icon the settings name, whether the library can be edited outside the
  * app - and what only the platform has: Android's wallpaper colors, which the color options offer next to the app's
  * own, and a phone's vibrator, which the metronome offers to tap the beat with. Those read this on every access, so it
  * has to be set before the first composition and left alone after it.
