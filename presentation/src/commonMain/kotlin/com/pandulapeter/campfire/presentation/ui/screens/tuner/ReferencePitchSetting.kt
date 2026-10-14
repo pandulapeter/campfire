@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.tuner
+package com.pandulapeter.campfire.presentation.ui.screens.tuner
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -37,6 +37,9 @@ import com.pandulapeter.campfire.presentation.resources.tuner_reference_pitch_va
 import com.pandulapeter.campfire.presentation.ui.components.LabeledControlRow
 import com.pandulapeter.campfire.presentation.ui.components.Stepper
 import com.pandulapeter.campfire.presentation.ui.metronome.PlayStopMark
+import com.pandulapeter.campfire.presentation.ui.tuner.REFERENCE_NOTE
+import com.pandulapeter.campfire.presentation.ui.tuner.noteName
+import com.pandulapeter.campfire.presentation.ui.tuner.noteNameWithOctave
 import com.pandulapeter.campfire.tuner.api.Pitch
 import org.jetbrains.compose.resources.painterResource
 
@@ -97,6 +100,3 @@ internal fun ReferencePitchSetting(
         }
     }
 }
-
-/** The note the reference pitch names, A4. */
-internal const val REFERENCE_NOTE = 69
