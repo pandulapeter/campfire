@@ -168,11 +168,12 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
 ### Feature invariants (detail in the named files)
 
 - **Sync** (`data/sync/implementation`, `data/source/remote/api`): no Campfire server; a run belongs to the app, not
-  the screen; content decides what changed, never a clock; an edit beats a deletion; a run that would delete most of
-  the library on either side stops and asks.
+  the screen; content decides what changed, never a clock; a run that would delete most of the library on either side
+  stops and asks.
 - **Metronome** (`metronome/implementation`, `ui/metronome`, `ui/playing`): timing by sample count, never a timer; a
   click never outlives its screen; tempo overrides live where transpositions do.
-- **Tuner** (`tuner/implementation`, `ui/tuner`): nothing heard is kept; the desktop remembers its first ask.
+- **Tuner** (`tuner/implementation`, `ui/tuner`): the desktop, which cannot tell whether it may listen, remembers its
+  first ask.
 - **Cover art** and **song details lookup** (`data/source/remote/implementation`, `data/repository/implementation`,
   `ui/dialogs`): lookup only fills the form's draft; Save is the only write.
 - **Updates** (`ui/update`): Play in-app updates on Android only; the release's `updatePriority` is the policy.
