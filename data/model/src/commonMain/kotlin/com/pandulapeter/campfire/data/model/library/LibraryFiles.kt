@@ -187,7 +187,9 @@ object LibraryFiles {
             nameBytes += addedBytes
         }
         if (name.isEmpty() && words.isNotEmpty()) name.append(words.first().takeBytes(MAX_NAME_BYTES))
-        return name.toString().ifEmpty { FALLBACK_NAME }
+        // Composed again, since a dropped apostrophe can leave a letter and a mark of another script side by side, which
+        // the next pass would compose into a different name.
+        return name.toString().normalizedToNfc().ifEmpty { FALLBACK_NAME }
     }
 
     /**

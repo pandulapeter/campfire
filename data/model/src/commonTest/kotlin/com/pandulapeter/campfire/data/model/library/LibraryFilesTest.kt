@@ -27,6 +27,14 @@ internal class LibraryFilesTest {
     }
 
     @Test
+    fun `a name with an apostrophe between a letter and its mark survives being normalized again`() {
+        listOf("\u03A9\u2019\u0301", "\u0391\u0301'\u0308", "\u0418'\u0306").forEach { title ->
+            val name = LibraryFiles.normalizedName(title)
+            assertEquals(name, LibraryFiles.normalizedName(name))
+        }
+    }
+
+    @Test
     fun `a song is named after its artist and title, or its title alone without an artist`() {
         assertEquals("tukorfurogep-arviz", LibraryFiles.songBaseName(title = "Árvíz", artist = "Tükörfúrógép"))
         assertEquals("arviz", LibraryFiles.songBaseName(title = "Árvíz", artist = ""))
