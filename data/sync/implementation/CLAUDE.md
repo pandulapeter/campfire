@@ -15,9 +15,6 @@ the song, setlist, and preferences repositories' API. Everything is `internal`. 
 since the Koin plugin would hand an annotated constructor its `{ null }` default. `DemoLibraryRepositoryImpl` lives here
 because it records demo files under `SyncKey.path`, the key the engine looks them up by.
 
-`SyncRepositoryImpl` is a facade over `SyncStateHolder`, `SyncConnectionManager`, `SyncRunScheduler`, `SyncRunner`,
-`SyncIndexStore`, and `SyncLibraryRefresher`.
-
 ## Locks
 
 - `SyncConnectionManager`'s restore lock: never held across a run; forgetting the stored connection runs under it.
@@ -116,7 +113,6 @@ because it records demo files under `SyncKey.path`, the key the engine looks the
   the caller's thread and puts `SyncProgress()` in the state before returning, so the shell can hand the run to the
   platform keep-alive in the same callback; a completion handler clears it if the run is cancelled before its body. The
   run slot is an `AtomicReference` swapped with `compareAndSet` (main thread and repository scope both start runs).
-  A desktop quit hides the window and lets a running run finish for up to fifteen seconds before the process ends.
 - `SyncLibraryRefresher` re-reads only the files a run changed (`onLocalFileChanged`, `refresh`, never a rescan), after
   any ending (`finishRunCutShort`, under `NonCancellable`). The live refresh during a run waits five times what the last
   one took (`liveRescanPauseAfter`); a stopped one puts back what it had not read.
@@ -178,11 +174,5 @@ chord shapes (`chordVoicings`, keyed by instrument or `ChordTuning.voicingKey`, 
 
 A rename reaches sync as a deletion plus a new file (`SyncPlanner` knows no moves). By "an edit beats a deletion", a
 device that edited the old name since the last run puts it back, leaving both.
-
-## Other rules
-
-- Authorization is OAuth 2.0 PKCE with no client secret; no server of Campfire's own.
-- A fresh installation never inherits a connection: a launch finding no preferences document forgets stored
-  credentials (`ForgetSyncConnectionUseCase`) before anything restores them.
 
 Tests: `./gradlew :data:sync:implementation:desktopTest`.

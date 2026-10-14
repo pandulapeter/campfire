@@ -133,6 +133,9 @@ split exists so a whole archive can be put to the user as one review before anyt
 - `DuplicateSongUseCaseImpl`: the original's current file text with only the changed fields set, named by the copy's
   own title and artist (unchanged copy gets numbered). Null if the original is unreadable.
 - `EditSongsUseCaseImpl`: `SongRepository.editSongs`, many files, one announcement.
+- `DeleteLibraryUseCase` (Settings → Library, after typing `DELETE`) deletes every song and setlist: it stops any
+  running sync, then runs one with deletions allowed (the typed word answering the guard), emptying the cloud folder and
+  every synced device too.
 - `:chordpro` use cases (`Transpose*`, `Parse*`, `Convert*Notation`, `Prettify*`, `SetChordPro*`) are kept where a
   preference is translated for `:chordpro` (which knows none): `mapper/AccidentalsMappers.kt` (nullable `preferFlats`)
   and `mapper/NotationMappers.kt` (`ChordNotation`) are the whole translation.

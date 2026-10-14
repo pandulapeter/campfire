@@ -102,6 +102,4 @@ which is visible once a load has finished:
 - `coverArtCacheSize` re-lists after writes and prunes off a conflated `StateFlow` counter.
 - Searches run every catalogue at once via `searchCatalogues` (`CatalogueSearch.kt`, a `channelFlow`), appending each
   one's results as it answers so the grid only grows at its end.
-- Settings → Library deletes the copies after a confirmation (`clearCoverArtCache`). The library's own row deletes
-  every song and setlist after typing `DELETE` (`DeleteLibraryUseCase`): it stops any running sync, then runs one with
-  deletions allowed (the typed word answering the guard), emptying the cloud folder and every synced device too.
+- Settings → Library deletes the copies after a confirmation (`clearCoverArtCache`).
