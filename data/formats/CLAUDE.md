@@ -9,8 +9,8 @@
 -->
 # :data:formats
 
-Pure, dependency-free PDF and Word text extractors and zip reader/writer in common Kotlin on every target: no
-`FileStorage`, no Koin, no network. Used only by `:data:source:local:implementation`'s `DocumentLocalSourceImpl` and
+Pure PDF and Word text extractors and zip reader/writer in common Kotlin on every target, on no third-party library
+(only `kotlinx.coroutines`) and no module but `:data:model` and `:chordpro`: no `FileStorage`, no Koin, no network. Used only by `:data:source:local:implementation`'s `DocumentLocalSourceImpl` and
 `ArchiveLocalSourceImpl`; public is only what those use, everything else `internal`. `ZipReader` is the one place that
 prints (the name of an entry it could not read).
 
