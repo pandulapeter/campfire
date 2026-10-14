@@ -10,8 +10,8 @@
 
 # :presentation — ui/screens/songDetails/stepping
 
-The pedal stepping and snapping only the song details screen does, over the `SongRows` the layout reports
-(`ui/songView/`).
+The song details screen's pedal stepping and snapping, over the `SongRows` the layout reports (`ui/songView/`).
+`PedalCoverageTest` (`tools/screenshots`) guards the pedal promise.
 
 ### Snapping
 
@@ -25,7 +25,7 @@ The pedal stepping and snapping only the song details screen does, over the `Son
   moves on only once the stop's end is in view.
 - A press moves at least a line where that skips nothing (near-equal clamped stops are chained); the last press hands
   off only once the whole song is on screen.
-- **A press mid-step steps on from its target**, so two quick pedal presses are two steps.
+- **A press mid-step steps on from its target**: two quick presses are two steps.
 - Previous leaves only at the very top; next only once the end has been on screen; a song that fits has neither. In a
   setlist they go on to the next song's top and the previous song's end (that page's scroll is set to its end
   beforehand, else a second press skips it).

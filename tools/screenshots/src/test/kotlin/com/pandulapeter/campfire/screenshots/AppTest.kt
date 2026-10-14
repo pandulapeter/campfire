@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.library.ExportedFile
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.AppLocale
 import com.pandulapeter.campfire.presentation.localization.LocalizedStrings
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -49,7 +50,8 @@ internal class TestWindow(val width: Dp, val height: Dp) {
 /**
  * Runs [test] against the whole app - its real view model, use cases, repositories and files - started in [window]
  * over a library that holds the demo songs and the [songs] of the test resources' `songs` folder, with the launch
- * screen gone. The file picker hands over [pickedFiles] whenever the app asks for files.
+ * screen gone and the song details screen's text at [fontScale]. The file picker hands over [pickedFiles] whenever the
+ * app asks for files.
  *
  * Only the network is kept out: sync is `Fakes.kt`'s, covers are switched off, and nothing else reaches outside unless
  * a test opens a lookup. The language is English and the current version's What's new counts as seen.
@@ -58,6 +60,7 @@ internal class TestWindow(val width: Dp, val height: Dp) {
 internal fun runAppTest(
     window: TestWindow = TestWindow.PHONE,
     songs: List<String> = emptyList(),
+    fontScale: Float = UserPreferences.DEFAULT_FONT_SCALE,
     pickedFiles: List<ImportedFile> = emptyList(),
     test: suspend AppTestScope.() -> Unit,
 ) = withCampfireApp(
@@ -66,7 +69,7 @@ internal fun runAppTest(
     density = 1f,
     fontFamily = null,
     monospaceFontFamily = null,
-    writeData = { dataDirectory -> writeLibrary(dataDirectory, songs) },
+    writeData = { dataDirectory -> writeLibrary(dataDirectory, songs, fontScale) },
 ) { host ->
     runSkikoComposeUiTest(size = Size(window.width.value, window.height.value), density = Density(1f)) {
         var isAppReady by mutableStateOf(false)
@@ -120,7 +123,7 @@ internal const val HOME_ON_THE_RANGE = "traditional_american-home_on_the_range_m
  * Fills the data directory of a fresh install with what a test starts from. A preferences document is written, so the
  * start is not a first run (no onboarding, no demo planted on its own), and the demo songs are written as files instead.
  */
-private fun writeLibrary(dataDirectory: File, songs: List<String>) {
+private fun writeLibrary(dataDirectory: File, songs: List<String>, fontScale: Float) {
     val songsFolder = File(dataDirectory, "library/songs").apply { mkdirs() }
     listOf(HOUSE_OF_THE_RISING_SUN, HOME_ON_THE_RANGE).forEach { File(songsFolder, it).writeText(demoSongText(it)) }
     songs.forEach { File(songsFolder, it).writeText(resourceText("songs/$it")) }
@@ -128,6 +131,7 @@ private fun writeLibrary(dataDirectory: File, songs: List<String>) {
         put("language", "en")
         // Covers are downloaded from the address a song names, the demo songs' included.
         put("isCoverArtEnabled", false)
+        put("fontScale", fontScale)
         putJsonArray("seenWhatsNewVersions") { add(JsonPrimitive(System.getProperty("campfire.screenshots.versionName"))) }
     }
     File(dataDirectory, "preferences").mkdirs()

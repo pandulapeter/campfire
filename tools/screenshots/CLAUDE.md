@@ -51,10 +51,12 @@ Nothing depends on it; the `store-screenshots` skill drives it, and its test sou
 through Compose's `runSkikoComposeUiTest` at a density of one, so a `TestWindow` is in dp.
 
 - **Assert what a user sees or what lands on disk**: semantics found by text read from the resources (`string`,
-  `pluralString`, never typed English) or the library folder (`songsFolder`). Never the view model's fields; a test that
+  `pluralString`, never typed English) or the library folder (`songsFolder`), or pixels where semantics cannot tell
+  (`PedalCoverageTest` reads the song's faded top edge from them). Never the view model's fields; a test that
   would fail after a correct rewrite of the screen is the wrong test. Tests sit in the package of the screen they cover.
 - The library is the demo songs plus `src/test/resources/songs` files a test names; never the tool's own `library/`.
-  A preferences document is written, so no onboarding and no planted demo; covers are off (they would download).
+  A preferences document is written, so no onboarding and no planted demo; covers are off (they would download), and
+  the song text size is `runAppTest`'s `fontScale`.
 - **What may be faked** is only what reaches outside or picks files: `Fakes.kt` and the test's file picker
   (`pickedFiles`). A new fake comes with the test that needs it.
 - The view model keeps `Dispatchers.Main` (Swing) while the composition runs on the test clock, and library writes
