@@ -16,9 +16,9 @@ import com.pandulapeter.campfire.data.model.domain.PrintSettings
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.domain.api.models.ScreenData
-import com.pandulapeter.campfire.domain.api.useCases.ExportLibraryUseCase
-import com.pandulapeter.campfire.domain.api.useCases.ExportSetlistUseCase
-import com.pandulapeter.campfire.domain.api.useCases.ExportSongsUseCase
+import com.pandulapeter.campfire.domain.api.export.ExportLibraryUseCase
+import com.pandulapeter.campfire.domain.api.export.ExportSetlistUseCase
+import com.pandulapeter.campfire.domain.api.export.ExportSongsUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetSongContentUseCase
 import com.pandulapeter.campfire.domain.api.preferences.UpdateUserPreferencesUseCase
 import com.pandulapeter.campfire.presentation.ui.instrument.chordTuning

@@ -61,9 +61,9 @@ import com.pandulapeter.campfire.domain.api.useCases.DuplicateSongUseCase
 import com.pandulapeter.campfire.domain.api.sync.DisconnectSyncProviderUseCase
 import com.pandulapeter.campfire.domain.api.setlists.EditSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.EditSongsUseCase
-import com.pandulapeter.campfire.domain.api.useCases.ExportLibraryUseCase
-import com.pandulapeter.campfire.domain.api.useCases.ExportSetlistUseCase
-import com.pandulapeter.campfire.domain.api.useCases.ExportSongsUseCase
+import com.pandulapeter.campfire.domain.api.export.ExportLibraryUseCase
+import com.pandulapeter.campfire.domain.api.export.ExportSetlistUseCase
+import com.pandulapeter.campfire.domain.api.export.ExportSongsUseCase
 import com.pandulapeter.campfire.domain.api.sync.ForgetSyncConnectionUseCase
 import com.pandulapeter.campfire.domain.api.catalogue.GetCoverArtCacheSizeUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetEditorDraftUseCase

@@ -7,14 +7,14 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.domain.implementation.useCases
+package com.pandulapeter.campfire.domain.implementation.export
 
 import com.pandulapeter.campfire.data.model.domain.ExportedFile
 import com.pandulapeter.campfire.data.repository.api.ArchiveRepository
 import com.pandulapeter.campfire.data.repository.api.SongContentRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
-import com.pandulapeter.campfire.domain.api.useCases.ExportSongsUseCase
-import com.pandulapeter.campfire.domain.implementation.songExportFileName
+import com.pandulapeter.campfire.domain.api.export.ExportSongsUseCase
+import com.pandulapeter.campfire.domain.implementation.export.songExportFileName
 import org.koin.core.annotation.Factory
 
 @Factory
