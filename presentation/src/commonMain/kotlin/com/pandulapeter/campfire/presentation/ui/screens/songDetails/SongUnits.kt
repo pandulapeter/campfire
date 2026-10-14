@@ -166,3 +166,40 @@ internal class SongUnits(
         }
     }
 }
+
+/**
+ * The key each of [sections] is emitted under in [SongLyrics]: its content, so a section inserted above the others does
+ * not hand each of their nodes the section that used to be its neighbour, equal sections told apart by the order they
+ * come in.
+ */
+internal fun sectionKeysOf(sections: List<RenderSection>): List<SectionKey> {
+    val occurrences = HashMap<Any, Int>()
+    return sections.map { section ->
+        // The info section is the song's one header card: keyed by its content, every keystroke in a header directive
+        // would compose it afresh, and whatever it remembers (the cover waiting for the typing to pause, the cover's
+        // crossfade) would start over each time.
+        val identity: Any = when (section) {
+            is RenderSection.Metadata -> RenderSection.Metadata::class
+            // Kept for the same reason: a shape chosen or the section folded is the same section, and folding it
+            // has to fade its body in rather than compose the whole of it afresh.
+            is RenderSection.Chords -> RenderSection.Chords::class
+            else -> section
+        }
+        val occurrence = (occurrences[identity] ?: 0) + 1
+        occurrences[identity] = occurrence
+        SectionKey(hash = identity.hashCode(), occurrence = occurrence)
+    }
+}
+
+/** The key of each chunk of [units], by its section's key in [sectionKeys]. */
+internal fun unitKeysOf(units: SongUnits, sectionKeys: List<SectionKey>) =
+    List(units.unitSections.size) { unit -> UnitKey(section = sectionKeys[units.unitSections[unit]], firstItem = units.itemRanges[unit].first) }
+
+/** The key of each card of [units], as many for a section on a card as it could be cut into. */
+internal fun cardKeysOf(units: SongUnits, sectionKeys: List<SectionKey>) = buildList {
+    sectionKeys.indices.forEach { section ->
+        if (units.cardStarts[section] >= 0) {
+            repeat(units.sectionStarts[section + 1] - units.sectionStarts[section]) { piece -> add(CardKey(section = sectionKeys[section], piece = piece)) }
+        }
+    }
+}

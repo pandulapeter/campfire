@@ -12,24 +12,17 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.animateBounds
 import androidx.compose.animation.core.MutableTransitionState
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -53,7 +46,6 @@ import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_details_cut
 import com.pandulapeter.campfire.presentation.localization.stringResource
-import com.pandulapeter.campfire.presentation.ui.chords.ChordCell
 import com.pandulapeter.campfire.presentation.ui.components.scaled
 import com.pandulapeter.campfire.presentation.ui.instrument.tunings
 import com.pandulapeter.campfire.presentation.ui.songLayout.rememberDefaultSectionLabels
@@ -179,57 +171,19 @@ internal fun SongLyrics(
             notation = it.notation,
         )
     }
-    val sections = remember(
-        model.sections,
-        model.song.metadata,
-        model.shouldShowChords,
-        shouldShowTempo,
-        isSongInfoShown,
-        isSongInfoEditable,
-        shownPlayingControls != null,
-        readsDefaults,
-        shouldShowCapo,
-        hasTuner,
-        hasMetronome,
-    ) {
-        withMetadataSection(
-            sections = model.sections,
-            metadata = model.song.metadata,
-            shouldShowChords = model.shouldShowChords,
-            shouldShowCapo = shouldShowCapo,
-            shouldShowTempo = shouldShowTempo,
-            isSongInfoShown = isSongInfoShown,
-            isSongInfoEditable = isSongInfoEditable,
-            hasPlayingControls = shownPlayingControls != null,
-            readsDefaults = readsDefaults,
-            hasTuner = hasTuner,
-            hasMetronome = hasMetronome,
-        )
-    }.let { sections ->
-        // The cells last built are drawn on while the model for a new tuning is still being built, so that a tuning picked
-        // crossfades once, from the old shapes to the new, rather than through the old shapes drawn on the new strings.
-        // Not a state: nothing is redrawn because of it.
-        val lastCells = remember { LastChordCells() }
-        val cells = remember(model, chordDiagrams?.tuning, chordDiagrams?.storedShapes, chordDiagrams?.showsDefinitionsOnly) {
-            when {
-                chordDiagrams == null -> emptyList()
-                chordDiagrams.showsDefinitionsOnly -> definitionCellsOf(model.song, chordDiagrams.notation)
-                else -> chordDiagrams.tuning?.let { tuning ->
-                    chordCellsOf(model.chords, model.chordTuning, tuning, chordDiagrams.storedShapes) ?: lastCells.value
-                }.orEmpty()
-            }
-        }
-        lastCells.value = cells
-        remember(sections, cells, chordDiagrams?.isFolded, model.hasChords, instrumentChips) {
-            withChordsSection(
-                sections = sections,
-                cells = cells,
-                isFolded = chordDiagrams?.isFolded == true,
-                hasChords = model.hasChords,
-                instrumentChips = instrumentChips,
-            )
-        }
-    }
+    val sections = rememberShownSections(
+        model = model,
+        chordDiagrams = chordDiagrams,
+        instrumentChips = instrumentChips,
+        shouldShowTempo = shouldShowTempo,
+        isSongInfoShown = isSongInfoShown,
+        isSongInfoEditable = isSongInfoEditable,
+        hasPlayingControls = shownPlayingControls != null,
+        readsDefaults = readsDefaults,
+        shouldShowCapo = shouldShowCapo,
+        hasTuner = hasTuner,
+        hasMetronome = hasMetronome,
+    )
     val glideScope = rememberCoroutineScope()
     val glideSpec = MaterialTheme.motionScheme.defaultSpatialSpec<IntOffset>()
     val sectionGlides = if (sectionMotion == SectionMotion.NONE) null else remember(glideScope, glideSpec) { SectionGlides(glideScope, glideSpec) }
@@ -305,38 +259,9 @@ internal fun SongLyrics(
     }
     // Whether each chunk, and then each card, is too tall to be animated, which only the layout finds out.
     val animations = remember(units) { List(units.unitSections.size + units.cardCount) { SectionAnimation() } }
-    // Each section is emitted under a key of its content, so a section inserted above the others does not hand each of
-    // their nodes the section that used to be its neighbour. Equal sections are told apart by the order they come in.
-    val sectionKeys = remember(sections) {
-        val occurrences = HashMap<Any, Int>()
-        sections.map { section ->
-            // The info section is the song's one header card: keyed by its content, every keystroke in a header directive
-            // would compose it afresh, and whatever it remembers (the cover waiting for the typing to pause, the cover's
-            // crossfade) would start over each time.
-            val identity: Any = when (section) {
-                is RenderSection.Metadata -> RenderSection.Metadata::class
-                // Kept for the same reason: a shape chosen or the section folded is the same section, and folding it
-                // has to fade its body in rather than compose the whole of it afresh.
-                is RenderSection.Chords -> RenderSection.Chords::class
-                else -> section
-            }
-            val occurrence = (occurrences[identity] ?: 0) + 1
-            occurrences[identity] = occurrence
-            SectionKey(hash = identity.hashCode(), occurrence = occurrence)
-        }
-    }
-    val unitKeys = remember(units, sectionKeys) {
-        List(units.unitSections.size) { unit -> UnitKey(section = sectionKeys[units.unitSections[unit]], firstItem = units.itemRanges[unit].first) }
-    }
-    val cardKeys = remember(units, sectionKeys) {
-        buildList {
-            sections.indices.forEach { section ->
-                if (units.cardStarts[section] >= 0) {
-                    repeat(units.sectionStarts[section + 1] - units.sectionStarts[section]) { piece -> add(CardKey(section = sectionKeys[section], piece = piece)) }
-                }
-            }
-        }
-    }
+    val sectionKeys = remember(sections) { sectionKeysOf(sections) }
+    val unitKeys = remember(units, sectionKeys) { unitKeysOf(units, sectionKeys) }
+    val cardKeys = remember(units, sectionKeys) { cardKeysOf(units, sectionKeys) }
     // One measurer for the whole page. Everything measured through it is kept by whoever asked for it (see
     // [SongTextMeasurements] and [TabRows]), so a cache of its own would only hold every layout a second time.
     val textMeasurer = rememberTextMeasurer(cacheSize = 0)
@@ -420,133 +345,34 @@ internal fun SongLyrics(
                             isTraversalGroup = true
                             traversalIndex = unit.toFloat()
                         }
-                        when (section) {
-                            is RenderSection.Metadata -> SongMetadataSection(
-                                modifier = unitModifier,
-                                metadata = section.metadata,
-                                isSongInfoShown = isSongInfoShown,
-                                songInfoEditing = songInfoEditing,
-                                playingControls = shownPlayingControls,
-                                playingTools = playingTools,
-                                readsDefaults = section.readsDefaults,
-                                animatesControls = sectionMotion == SectionMotion.SPRING && extraWidth <= 0.dp,
-                                titleStyle = headerStyle,
-                                chordStyle = chordStyle,
-                                fontScale = fontScale,
-                                instrumentChips = chordDiagrams?.onInstrumentClicked?.takeIf { section.instrumentChips != null }?.let { onInstrumentClicked ->
-                                    {
-                                        SongInstrumentChips(
-                                            chordDiagrams = chordDiagrams,
-                                            headerStyle = headerStyle,
-                                            fontScale = fontScale,
-                                            tuningChipVisibility = tuningChipVisibility,
-                                            onInstrumentClicked = onInstrumentClicked,
-                                            onTuningClicked = chordDiagrams.onTuningClicked ?: {},
-                                        )
-                                    }
-                                },
-                            )
-
-                            is RenderSection.Chords -> SongChordsSection(
-                                modifier = unitModifier.padding(horizontal = CARD_PADDING),
-                                section = section,
-                                items = items,
-                                layouts = checkNotNull(chordLayouts),
-                                chordDiagrams = chordDiagrams,
-                                onFoldToggled = onChordFoldToggled,
-                                isFadingIn = hasChordFoldBeenToggled,
-                                headerStyle = headerStyle,
-                                fontScale = fontScale,
-                            )
-
-                            is RenderSection.Comment -> SongComment(
-                                modifier = unitModifier.padding(horizontal = CARD_PADDING),
-                                comment = section,
-                                notation = model.notation,
-                                fontScale = fontScale,
-                            )
-
-                            is RenderSection.KeyChange -> SongKeyChange(
-                                modifier = unitModifier.padding(horizontal = CARD_PADDING),
-                                keyChange = section,
-                                chordStyle = chordStyle,
-                            )
-
-                            is RenderSection.Timing -> SongTimingLine(
-                                modifier = unitModifier,
-                                timing = section,
-                                style = chordStyle,
-                            )
-
-                            is RenderSection.Lines -> if (section.isOnCard) {
-                                // The card is drawn by the layout behind the chunks of every piece; the chunk only takes
-                                // the card's corners, so that a press on its title row is drawn inside them.
-                                val cardShape = MaterialTheme.shapes.large
-                                val zeroCorner = CornerSize(0.dp)
-                                val isFirstChunk = items.first == 0
-                                val isLastChunk = items.last >= section.itemCount - 1
-                                CompositionLocalProvider(LocalContentColor provides contentColorFor(MaterialTheme.colorScheme.surfaceContainerHigh)) {
-                                    SongSectionContent(
-                                        modifier = unitModifier.clip(
-                                            cardShape.copy(
-                                                topStart = if (isFirstChunk) cardShape.topStart else zeroCorner,
-                                                topEnd = if (isFirstChunk) cardShape.topEnd else zeroCorner,
-                                                bottomEnd = if (isLastChunk) cardShape.bottomEnd else zeroCorner,
-                                                bottomStart = if (isLastChunk) cardShape.bottomStart else zeroCorner,
-                                            ),
-                                        ),
-                                        section = section,
-                                        items = items,
-                                        isOnCard = true,
-                                        headerStyle = headerStyle,
-                                        lyricsStyle = lyricsStyle,
-                                        chordStyle = chordStyle,
-                                        textMeasurements = textMeasurements,
-                                        foldedRuns = foldedRuns,
-                                        defaultLabels = defaultLabels,
-                                        notation = model.notation,
-                                        fontScale = fontScale,
-                                    )
-                                }
-                            } else {
-                                // The same horizontal padding as inside a card, so that every section's text starts at the
-                                // same x position whether it is carded or not.
-                                SongSectionContent(
-                                    modifier = unitModifier.padding(horizontal = CARD_PADDING),
-                                    section = section,
-                                    items = items,
-                                    isOnCard = false,
-                                    headerStyle = headerStyle,
-                                    lyricsStyle = lyricsStyle,
-                                    chordStyle = chordStyle,
-                                    textMeasurements = textMeasurements,
-                                    foldedRuns = foldedRuns,
-                                    defaultLabels = defaultLabels,
-                                    notation = model.notation,
-                                    fontScale = fontScale,
-                                )
-                            }
-                        }
+                        SongSectionItem(
+                            modifier = unitModifier,
+                            section = section,
+                            items = items,
+                            notation = model.notation,
+                            isSongInfoShown = isSongInfoShown,
+                            songInfoEditing = songInfoEditing,
+                            playingControls = shownPlayingControls,
+                            playingTools = playingTools,
+                            animatesControls = sectionMotion == SectionMotion.SPRING && extraWidth <= 0.dp,
+                            chordDiagrams = chordDiagrams,
+                            tuningChipVisibility = tuningChipVisibility,
+                            chordLayouts = chordLayouts,
+                            onChordFoldToggled = onChordFoldToggled,
+                            isChordsSectionFadingIn = hasChordFoldBeenToggled,
+                            headerStyle = headerStyle,
+                            lyricsStyle = lyricsStyle,
+                            chordStyle = chordStyle,
+                            textMeasurements = textMeasurements,
+                            foldedRuns = foldedRuns,
+                            defaultLabels = defaultLabels,
+                            fontScale = fontScale,
+                        )
                     }
                 }
                 // The cards the pieces of the sections on a card are drawn on, as many as each could be cut into; the
                 // ones a layout has no piece for stay unmeasured.
-                val cardShape = MaterialTheme.shapes.large
-                val cardColor = MaterialTheme.colorScheme.surfaceContainerHigh
-                cardKeys.forEachIndexed { card, cardKey ->
-                    key(cardKey) {
-                        Box(
-                            modifier = Modifier
-                                .movedBy(cardKey, animations[units.unitSections.size + card])
-                                .graphicsLayer {
-                                    shadowElevation = CARD_ELEVATION.toPx()
-                                    shape = cardShape
-                                    clip = false
-                                }
-                                .background(color = cardColor, shape = cardShape),
-                        )
-                    }
-                }
+                SectionCards(cardKeys = cardKeys) { card, cardKey -> Modifier.movedBy(cardKey, animations[units.unitSections.size + card]) }
                 // The dividers between the pages, one for every place a page can start at - a section, or a place a section
                 // may be cut at - since that is as many as there can be; the ones a song laid out on fewer pages has no
                 // place for stay unmeasured.
@@ -577,11 +403,6 @@ private fun CutSongNotice(
 
 /** What the tuning chip of [SongLyrics] last named. */
 private class LastShownTuning(var value: InstrumentTuning? = null)
-
-/** The Chords section's cells as [SongLyrics] last built them. */
-private class LastChordCells(var value: List<ChordCell> = emptyList())
-
-private val CARD_ELEVATION = 1.dp
 
 private val MIN_COLUMN_WIDTH = 384.dp
 

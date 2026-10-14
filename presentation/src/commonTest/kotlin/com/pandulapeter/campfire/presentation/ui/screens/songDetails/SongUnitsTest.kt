@@ -19,6 +19,8 @@ import com.pandulapeter.campfire.presentation.ui.chords.ChordCell
 import com.pandulapeter.campfire.presentation.ui.chords.SelectedShape
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class SongUnitsTest {
 
@@ -66,6 +68,39 @@ class SongUnitsTest {
         val units = SongUnits.of(listOf(lines(SectionPart.Lines(listOf(lyrics("Intro")))), verseWithStanzas())) { true }.slice(1, 2)
         assertContentEquals(intArrayOf(1, 0, 1, 1, 0, 1, 1), units.lineCount)
         assertContentEquals(booleanArrayOf(false, false, true, false, true, false, false), units.isStanzaBreakBefore)
+    }
+
+    @Test
+    fun `equal sections are told apart by the order they come in`() {
+        val keys = sectionKeysOf(listOf(verseWithStanzas(), verseWithStanzas()))
+        assertEquals(keys[0].hash, keys[1].hash)
+        assertEquals(listOf(1, 2), keys.map { it.occurrence })
+    }
+
+    @Test
+    fun `the info section keeps its key whatever it says`() {
+        val before = sectionKeysOf(listOf(RenderSection.Metadata(ChordProMetadata(title = "A"))))
+        val after = sectionKeysOf(listOf(RenderSection.Metadata(ChordProMetadata(title = "B"))))
+        assertEquals(before, after)
+    }
+
+    @Test
+    fun `a chunk is keyed by its section and its first item`() {
+        val sections = listOf(verseWithStanzas())
+        val units = SongUnits.of(sections) { true }
+        val sectionKeys = sectionKeysOf(sections)
+        assertEquals(units.itemRanges.map { UnitKey(section = sectionKeys[0], firstItem = it.first) }, unitKeysOf(units, sectionKeys))
+    }
+
+    @Test
+    fun `a section on a card has a card for every piece it could be cut into`() {
+        val sections = listOf(verseWithStanzas().copy(isOnCard = true), verseWithStanzas())
+        val units = SongUnits.of(sections) { true }
+        val sectionKeys = sectionKeysOf(sections)
+        val cards = cardKeysOf(units, sectionKeys)
+        assertTrue(cards.isNotEmpty())
+        assertTrue(cards.all { it.section == sectionKeys[0] })
+        assertEquals(cards.indices.toList(), cards.map { it.piece })
     }
 
     private val cell = ChordCell(
