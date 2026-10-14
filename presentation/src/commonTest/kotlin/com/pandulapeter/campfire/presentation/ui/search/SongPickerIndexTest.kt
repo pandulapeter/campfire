@@ -20,49 +20,16 @@ import kotlin.test.assertSame
 class SongPickerIndexTest {
 
     @Test
-    fun `tags are spelled by the first song by file name and counted once per song`() {
-        val options = pickerFilterOptions(
-            listOf(
-                song("c", tags = listOf("christmas")),
-                song("a", tags = listOf("Christmas", "CHRISTMAS")),
-                song("b", tags = listOf("Rock", "christmas")),
-                song("d", tags = listOf("rock")),
-                song("e", tags = listOf("Solo")),
-            ),
-        )
-        assertEquals(
-            listOf(Tag(name = "CHRISTMAS", songCount = 3), Tag(name = "Rock", songCount = 2), Tag(name = "Solo", songCount = 1)),
-            options.tags,
-        )
-    }
-
-    @Test
     fun `a library in one language has no languages to offer`() {
-        val options = pickerFilterOptions(listOf(song("a", languages = listOf("en")), song("b", languages = listOf("en"))))
+        val options = pickerFilterOptionsOf(tags = listOf(Tag(name = "Rock", songCount = 2)), languages = listOf(SongLanguage("en", 2)))
         assertEquals(emptyList(), options.languages)
+        assertEquals(listOf(Tag(name = "Rock", songCount = 2)), options.tags)
     }
 
     @Test
-    fun `languages are most used first with the unknown ones last`() {
-        val options = pickerFilterOptions(
-            listOf(
-                song("a"),
-                song("b"),
-                song("c"),
-                song("d", languages = listOf("hu")),
-                song("e", languages = listOf("en", "hu")),
-                song("f", languages = listOf("en")),
-                song("g", languages = listOf("hu")),
-            ),
-        )
-        assertEquals(
-            listOf(
-                SongLanguage(code = "hu", songCount = 3),
-                SongLanguage(code = "en", songCount = 2),
-                SongLanguage(code = SongLanguage.UNKNOWN, songCount = 3),
-            ),
-            options.languages,
-        )
+    fun `two languages are offered as the domain counted them`() {
+        val languages = listOf(SongLanguage(code = "hu", songCount = 3), SongLanguage(code = SongLanguage.UNKNOWN, songCount = 1))
+        assertEquals(languages, pickerFilterOptionsOf(tags = emptyList(), languages = languages).languages)
     }
 
     @Test

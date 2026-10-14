@@ -646,7 +646,7 @@ class CampfireViewModel(
         scope = viewModelScope,
         savedStateStore = savedStateStore,
         indexedSongs = indexedSongs,
-        allSongs = allSongs,
+        screenData = screenData,
     )
 
     /** See [SongPickerState.songPickerSelectedTags]. */

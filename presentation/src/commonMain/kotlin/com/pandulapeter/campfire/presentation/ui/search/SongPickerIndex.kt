@@ -90,8 +90,9 @@ internal fun pickerSongsOf(sorted: List<Song>, byFileName: Map<String, Searchabl
 }
 
 /**
- * What the song picker can be narrowed by: every language and tag of the library, counted over the whole of it.
- * [languages] is empty for a library that sings in one language, which has nothing to choose between.
+ * What the song picker can be narrowed by: every language and tag of the library, counted over the whole of it by the
+ * domain (`ScreenData.libraryTags`, `libraryLanguages`). [languages] is empty for a library that sings in one language,
+ * which has nothing to choose between.
  */
 internal data class PickerFilterOptions(
     val languages: List<SongLanguage>,
@@ -102,34 +103,6 @@ internal data class PickerFilterOptions(
     }
 }
 
-/**
- * The languages and tags of the library, counted and ordered the way the songs screen's filters order them: most
- * used first, the songs that declare no language after the rest, and a tag spelled the way the song that comes first
- * by file name spells it, so that the chip does not change its capitals as the library is written to. That spelling
- * is kept by comparing file names as the songs come rather than by sorting the library first.
- */
-internal fun pickerFilterOptions(songs: List<Song>): PickerFilterOptions {
-    val languageCounts = mutableMapOf<String, Int>()
-    val tagCounts = mutableMapOf<String, Int>()
-    val tagSpellings = mutableMapOf<String, Pair<String, String>>()
-    songs.forEach { song ->
-        song.languages.ifEmpty { listOf(SongLanguage.UNKNOWN) }.toSet().forEach { languageCounts[it] = (languageCounts[it] ?: 0) + 1 }
-        song.tags.associateBy { it.lowercase() }.forEach { (key, tag) ->
-            tagCounts[key] = (tagCounts[key] ?: 0) + 1
-            val spelled = tagSpellings[key]
-            if (spelled == null || song.fileName < spelled.first) tagSpellings[key] = song.fileName to tag
-        }
-    }
-    return PickerFilterOptions(
-        languages = if (languageCounts.size > 1) {
-            languageCounts
-                .map { (code, songCount) -> SongLanguage(code = code, songCount = songCount) }
-                .sortedWith(compareBy<SongLanguage> { it.code == SongLanguage.UNKNOWN }.thenByDescending { it.songCount }.thenBy { it.code })
-        } else {
-            emptyList()
-        },
-        tags = tagCounts
-            .map { (key, songCount) -> Tag(name = tagSpellings.getValue(key).second, songCount = songCount) }
-            .sortedWith(compareByDescending<Tag> { it.songCount }.thenBy { it.name.lowercase() }),
-    )
-}
+/** [languages] is offered only where the library sings in more than one, since one has nothing to choose between. */
+internal fun pickerFilterOptionsOf(tags: List<Tag>, languages: List<SongLanguage>) =
+    PickerFilterOptions(languages = if (languages.size > 1) languages else emptyList(), tags = tags)

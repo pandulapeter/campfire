@@ -114,8 +114,8 @@ The setlist picker (every setlist, one song) and the song picker (every song, on
   not shrink the sheet and move the field being typed into. Its gap under the search field is content padding.
 - The song picker lists the setlist's own songs first (held while open), then the rest in the songs screen's order.
   Its tag and language chips (`SortableChipRow`) are a plain `Row` animated by `animateBounds`, since a lazy row sent to
-  its start drops its placement animation; their selection is the sheet's own, empty on every opening. Rows and chips
-  are built off the main thread once per library (`SongPickerIndex.kt`).
+  its start drops its placement animation; their selection is the sheet's own, empty each opening. Rows are built off
+  the main thread once per library (`SongPickerIndex.kt`); chips are `ScreenData.libraryTags`/`libraryLanguages`.
 - **One write per tick** (`CampfireViewModel.setSetlistSong`, serialized by a `Mutex`, each applied to the setlist as
   the library has it then): ticks come faster than a write round-trips, and boxes following `setlists` would flick
   back. A gone setlist is not recreated from the sheet's copy. A ticked song goes to the end; an entry whose file is

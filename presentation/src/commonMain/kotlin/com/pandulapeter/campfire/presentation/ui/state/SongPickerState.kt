@@ -9,10 +9,11 @@
  */
 package com.pandulapeter.campfire.presentation.ui.state
 
-import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.data.model.DataState
+import com.pandulapeter.campfire.domain.api.models.ScreenData
 import com.pandulapeter.campfire.presentation.ui.search.PickerFilterOptions
 import com.pandulapeter.campfire.presentation.ui.search.PickerSongs
-import com.pandulapeter.campfire.presentation.ui.search.pickerFilterOptions
+import com.pandulapeter.campfire.presentation.ui.search.pickerFilterOptionsOf
 import com.pandulapeter.campfire.presentation.ui.search.pickerSongsOf
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.Companion.SONG_PICKER_LANGUAGES_KEY
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.Companion.SONG_PICKER_TAGS_KEY
@@ -31,7 +32,7 @@ internal class SongPickerState(
     private val scope: CoroutineScope,
     savedStateStore: SavedStateStore,
     indexedSongs: StateFlow<LibraryState.IndexedSongs>,
-    allSongs: StateFlow<List<Song>>,
+    screenData: StateFlow<DataState<ScreenData>>,
 ) {
 
     /** Assignment-sheet tags survive reopening the sheet, independently of the main Songs filter. Same run lifetime. */
@@ -60,10 +61,9 @@ internal class SongPickerState(
         .flowOn(Dispatchers.Default)
         .asState(scope, PickerSongs.Empty)
 
-    /** The song picker's filter chips, counted over the whole library for the same reason [pickerSongs] is sorted here. */
-    val songPickerFilters = allSongs
-        .map(::pickerFilterOptions)
-        .flowOn(Dispatchers.Default)
+    /** The song picker's filter chips, the whole library's tags and languages as the domain counted them. */
+    val songPickerFilters = screenData
+        .map { state -> state.data?.let { pickerFilterOptionsOf(it.libraryTags, it.libraryLanguages) } ?: PickerFilterOptions.Empty }
         .asState(scope, PickerFilterOptions.Empty)
 
     fun toggleSongPickerTag(tag: String) = _songPickerSelectedTags.update { selected ->
