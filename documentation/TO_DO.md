@@ -20,7 +20,6 @@
 
 ### Refactor + testing
 - Verify the current unit test coverage, extend it if needed
-- Golden renders: documentation/plans/golden-renders.md
 - Review for performance issues.
 
 ### Features
