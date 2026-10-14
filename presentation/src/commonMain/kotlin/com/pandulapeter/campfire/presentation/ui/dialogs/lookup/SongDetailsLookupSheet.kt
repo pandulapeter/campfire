@@ -56,7 +56,7 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.bounceScrollableContent
-import com.pandulapeter.campfire.presentation.ui.state.songDetailsQueryOf
+import com.pandulapeter.campfire.presentation.ui.state.online.songDetailsQueryOf
 
 /**
  * "Find song details online", put up over the Edit song details form: the form's title, artist and album as fields,
