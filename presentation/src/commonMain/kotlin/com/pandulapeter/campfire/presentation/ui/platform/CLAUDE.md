@@ -31,7 +31,7 @@ The `expect` declarations and the interfaces the platform shells provide.
 
 - `isDesktopPlatform`: a long press on a song row opens nothing; also decides the interface scale.
 - `canAskForDonations` is false on Apple platforms: guideline 3.1.1 allows only in-app purchase.
-- The desktop actuals of these, the fonts, and `dynamicColorSchemePair` read `PlatformImpersonation` (desktopMain) on
+- The desktop actuals of these and `dynamicColorSchemePair` read `PlatformImpersonation` (desktopMain) on
   every access: `tools/screenshots` sets it to draw other platforms; the desktop app never does.
 
 ### `LibraryPersistence.kt`
