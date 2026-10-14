@@ -67,7 +67,6 @@ language, theme, and system text size.
 - The view model keeps `Dispatchers.Main` (Swing) while the composition runs on the test clock, and library writes
   happen on IO threads: wait for them with `waitForLibrary` / `waitUntil`, never a sleep. A flaky test is fixed or
   deleted the same day, never retried.
-- Tests draw the app in the fonts it bundles, so a song breaks its lines in the same places on a Mac and on CI's Linux.
 
 ### Golden renders
 
