@@ -121,10 +121,8 @@ campfire.log / campfire.log.1          desktop only: bounded process log
   button cancels. Ctrl/Cmd + S presses Save, Create, or Done (never Delete).
 - **Pinned height budget**: a 360 × 640 dp phone with the keyboard up leaves ~330 dp. Pin only the header, tabs, and
   a field typed into throughout; set-once controls scroll; finishing actions go in the header.
-- **Short window** (`SHORT_WINDOW_HEIGHT`, 480 dp): sheet headers scroll away with the content; the editor collapses
-  its Shortcuts once when the keyboard appears; assignment sheets open without the keyboard; the song details app bar
-  hides on scroll; on Android typing hides the status bar (`CompactKeyboardEffect`). Song list columns are at least
-  400 dp (setlists 456 dp), so a landscape phone stays one column.
+- **A short window** (`SHORT_WINDOW_HEIGHT`, 480 dp: a phone on its side, or the smallest with the keyboard up) gives
+  the keyboard everything it can; each screen's own short-window rules are in its package `CLAUDE.md`.
 
 ### Files and names
 
