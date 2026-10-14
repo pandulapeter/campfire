@@ -190,16 +190,8 @@ wrong or undo it".
 
 ## Tests
 
-- Only pure logic is tested, in `commonTest`, run on the desktop target: `:data:model` (name identity, tags),
-  `:chordpro`, `:domain:implementation` (`ImportPlanner`), `:data:formats` (zip, PDF/Word readers),
-  `:data:source:local:implementation` (file storage), `:data:source:remote:*` (hashing, encoders, the authorization
-  URL), `:data:repository:implementation` (the caches), `:data:sync:implementation` (`SyncPlanner`, the engine),
-  `:metronome:*` and `:presentation` (pure helpers pulled out of the screens and the view model, never a Composable).
-  The root `CLAUDE.md` has the full list. The UI itself is untested.
-- **When you change any of those, add or update the tests in the same change**, and run:
-  ```bash
-  ./gradlew :data:model:desktopTest :data:formats:desktopTest :chordpro:desktopTest :domain:implementation:desktopTest :data:source:local:implementation:desktopTest :data:source:remote:api:desktopTest :data:source:remote:implementation:desktopTest :data:repository:implementation:desktopTest :data:sync:implementation:desktopTest :metronome:api:desktopTest :metronome:implementation:desktopTest :tuner:api:desktopTest :tuner:implementation:desktopTest :presentation:desktopTest
-  ```
+- What is tested, and the command that runs it, are in the root `CLAUDE.md`'s Tests section. **When you change tested
+  logic, add or update its tests in the same change** and run them.
 - Don't add a test module or a UI test framework for a change that doesn't warrant one.
 - **Tests assert behaviour, not implementation.** Check what a user or a caller could observe — a returned value, a
   file on disk, an emitted state — never a private constant copied into the test, an exact count of internal calls or
