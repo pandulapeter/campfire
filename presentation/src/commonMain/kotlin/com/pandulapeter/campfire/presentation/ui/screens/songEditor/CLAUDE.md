@@ -72,8 +72,8 @@ numbers nothing to count from.
 
 ## Transposition, caret, and undo
 
-- The stepper is the details screen's `TextTranspositionControls`, but rewrites the file text: no amount or reset; it
-  shows the song's key, or `?`. Either a `{key}` or a chord enables it.
+- The stepper (`TextTranspositionControls`) mirrors the details screen's, but rewrites the file text: no amount or
+  reset; it shows the song's key, or `?`. Either a `{key}` or a chord enables it.
 - Title, artist, and "anything to transpose" come from one `ChordProSummaryCache`, which re-parses only on a keystroke
   that could change them.
 - Every whole-text rewrite keeps the caret and selection next to their text: transposition

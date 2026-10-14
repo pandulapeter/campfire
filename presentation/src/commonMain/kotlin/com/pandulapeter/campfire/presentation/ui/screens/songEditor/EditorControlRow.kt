@@ -27,7 +27,6 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_edit
 import com.pandulapeter.campfire.presentation.resources.song_editor_preview
 import com.pandulapeter.campfire.presentation.resources.song_editor_split
 import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.TextTranspositionControls
 
 /**
  * The editor's control row: transposing, switching pane and folding the insertions away, the things here that do not
