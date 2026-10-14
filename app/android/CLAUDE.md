@@ -87,8 +87,6 @@ tuner; `android.hardware.microphone` is not required, so Play still offers the a
   running.
 - Swiping the app away stops the engine and the service in `onTaskRemoved`, which is why `stopWithTask` is false (the
   callback would never come).
-- A click that can't sound is stopped shortly after the app leaves sight (`:presentation`), so `mediaPlayback` never runs
-  for silence — unless beats are vibrated.
 - The Play Console needs the `mediaPlayback` type declared.
 
 ## Launcher icon (`AppIconSwitcher`)

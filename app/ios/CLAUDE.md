@@ -84,8 +84,7 @@ static, so Compose's, skiko's, and the Kotlin runtime's calls are the app's to d
 
 `MPNowPlayingInfoCenter` (song or "Metronome", tempo, in the app's language) and `MPRemoteCommandCenter` pause, stop, and
 toggle — all stop (no paused state). Draws and answers only: the audio session, background audio, and interruptions
-belong to `:metronome:implementation`. Follows the engine's `playback` to take Now Playing down. A click that can't
-sound is stopped by `:presentation` soon after leaving the front.
+belong to `:metronome:implementation`. Follows the engine's `playback` to take Now Playing down.
 
 ## Xcode project and building
 

@@ -73,6 +73,3 @@ heard at start and stop); a stop flushes. The durations and the 48 kHz default l
   (`:presentation`'s `wasmJsMain`); desktop nothing. A click that stopped on its own says why.
 - **A click outlives the app going to the background, not the app being left**: locked screen or another app in front
   keeps it (a phone on a music stand); swiped away, backed out of (Android), or quit (desktop) stops it.
-- A click that cannot sound (volume zero or every beat muted, `MetronomePattern.canSound`) is stopped a few seconds
-  after the app goes out of sight, and says so (`CampfireViewModel.onAppStopped`) — except on Android with Vibrate on
-  and a beat not muted, which plays on (iOS has no background haptics).

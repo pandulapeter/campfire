@@ -27,6 +27,11 @@ on**, so nothing ever plays with no way on screen to stop it. Three rules stop i
   "Don't keep activities" does, keeps its click), where a singleton metronome would otherwise click on, notification
   and all, under a process nobody is looking at.
 
+Apart from those, a click that cannot sound (volume zero or every beat muted, `MetronomePattern.canSound`) is stopped a
+few seconds after the app goes out of sight, and says so (`CampfireViewModel.onAppStopped`), so no background playback
+runs for silence — except on Android with Vibrate on and a beat not muted, which plays on (iOS has no background
+haptics).
+
 ## What a click plays for (`MetronomeContext.kt`, tested)
 
 - The `SongDetails` destination on top of the stack, at the page its pager is heading for (`onSongDetailsPageChanged`,
@@ -74,8 +79,7 @@ on**, so nothing ever plays with no way on screen to stop it. Three rules stop i
   follows the tab again.
 - Each beat's whole column takes the press, not the block (a sliver at a muted beat).
 - Settings (sound, subdivision, per-signature accents, volume, flash, vibrate) are `UserPreferences.metronomeSettings`,
-  saved once they hold still. Volume zero leaves the click running silently, for the flash and the haptics; there is no
-  separate mute.
+  saved once they hold still.
 
 ## Tempo and time changes inside a song
 
