@@ -54,7 +54,7 @@
 	<key>LSSupportsOpeningDocumentsInPlace</key>
 	<true/>
 	<!-- A playing metronome carries on with the screen locked. The audio session is active only while a click plays
-	     (see AudioOutput.ios.kt in :metronome:implementation), which is what App Review checks this mode against. -->
+	     (see IosAudioOutput.kt in :metronome:implementation), which is what App Review checks this mode against. -->
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>

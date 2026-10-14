@@ -71,7 +71,7 @@ private val isWindows get() = !isMacOs && operatingSystem.contains("win")
  * Explorer does not show, so the path the "Location" row opened would not be where the library is.
  *
  * Derived the same way the storage derives it; the two have to agree, so keep this in step with
- * `FileStorage.desktop.kt` in `:data:source:local:implementation`.
+ * `DesktopFileStorage.kt` in `:data:source:local:implementation`.
  */
 fun desktopDataDirectory(): File {
     val userHome = File(System.getProperty("user.home").orEmpty())

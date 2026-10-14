@@ -10,7 +10,7 @@
 'use strict';
 
 /*
- * The metronome's wake-up (see AudioOutput.wasmJs.kt in :metronome:implementation): the page schedules its clicks on
+ * The metronome's wake-up (see WebAudioOutput.kt in :metronome:implementation): the page schedules its clicks on
  * the audio clock a little ahead, and has to be woken to schedule the next ones. A hidden tab's own timers run at most
  * once a second, which would leave the click silent between them; a dedicated worker's are not throttled that way.
  */

@@ -27,7 +27,7 @@ kotlin {
             implementation(libs.kotlin.coroutines.test)
         }
         wasmJsMain.dependencies {
-            // The Origin Private File System is reached through the browser APIs, see FileStorage.wasmJs.kt.
+            // The Origin Private File System is reached through the browser APIs, see OpfsFileStorage.kt.
             implementation(libs.kotlin.browser)
         }
     }
