@@ -44,9 +44,9 @@ internal fun PushedSetlistHeader(
     reorderingSetlistFileName: String?,
     appBarOverlap: () -> AppBarOverlap,
 ) {
-    val pushed = pushedSectionHeader(listState, contentType = "setlist_header")
+    val pushed = pushedSectionHeader(listState, contentType = SetlistItemKey.HEADER_CONTENT_TYPE)
     val key by remember(pushed) { derivedStateOf { pushed.value?.key } }
-    val setlistsByKey = remember(setlistsWithSongs) { setlistsWithSongs.associateBy { "setlist_${it.setlist.fileName}" } }
+    val setlistsByKey = remember(setlistsWithSongs) { setlistsWithSongs.associateBy { SetlistItemKey.header(it.setlist.fileName) } }
     val setlistWithSongs = key?.let { setlistsByKey[it] } ?: return
     val setlist = setlistWithSongs.setlist
     val today by rememberToday()

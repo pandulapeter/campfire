@@ -21,6 +21,9 @@ sealed interface SongGroupHeader {
     /** What tells this header from every other one of the list, as a lazy list asks of an item's key. */
     val key: String
 
+    /** The header's key in the grid, which no song's key can be. */
+    val itemKey get() = "header_$key"
+
     data class Section(val header: SongSection.Header) : SongGroupHeader {
         override val key get() = header.key
     }
@@ -30,3 +33,6 @@ sealed interface SongGroupHeader {
         override val key = "\u0000selection"
     }
 }
+
+/** What a header of the song list is to the grid, and so to its pushed copy. */
+internal const val SONG_HEADER_CONTENT_TYPE = "header"

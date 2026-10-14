@@ -293,13 +293,13 @@ internal fun SongList(
             groups.forEachIndexed { groupIndex, group ->
                 group.header?.let { header ->
                     stickyHeader(
-                        key = "header_${header.key}",
-                        contentType = "header",
+                        key = header.itemKey,
+                        contentType = SONG_HEADER_CONTENT_TYPE,
                     ) { headerIndex ->
                         val headerState = rememberSectionHeaderState(listState, headerIndex)
                         SectionHeader(
                             modifier = listItemAnimation(listState, hasLoadedLibrary, placementSpec = if (areHeadersCollapsing) null else itemPlacementSpec)
-                                .anchoredTransition(filterAnchor, listState, "header_${header.key}")
+                                .anchoredTransition(filterAnchor, listState, header.itemKey)
                                 .collapseSearchHeader { appBarOverlap().coverage },
                             state = { headerState.value },
                             endPadding = headerEndPadding,

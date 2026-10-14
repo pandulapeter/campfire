@@ -37,7 +37,7 @@ internal fun PushedSongSectionHeader(
     selectionCount: Int,
     appBarOverlap: () -> AppBarOverlap,
 ) {
-    val pushed = pushedSectionHeader(listState, contentType = "header")
+    val pushed = pushedSectionHeader(listState, contentType = SONG_HEADER_CONTENT_TYPE)
     val key by remember(pushed) { derivedStateOf { pushed.value?.key } }
     val header = key?.let(sectionIndex::headerForKey) ?: return
     SectionHeader(

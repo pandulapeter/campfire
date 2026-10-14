@@ -123,10 +123,7 @@ internal fun SetlistList(
         // anywhere else, the grid would lose that item and fall back to its index somewhere inside the setlist.
         fun isSetlistAtTop(): Boolean {
             val key = listState.layoutInfo.visibleItemsInfo.firstOrNull { it.index == listState.firstVisibleItemIndex }?.key
-            return key == "setlist_$reorderingSetlistFileName" ||
-                key == "description_$reorderingSetlistFileName" ||
-                key == "choose_songs_$reorderingSetlistFileName" ||
-                SetlistItemKey(key as? String).setlistFileName == reorderingSetlistFileName
+            return SetlistItemKey.setlistFileNameOf(key) == reorderingSetlistFileName
         }
         if (!isSetlistAtTop()) {
             val headerIndex = setlistsWithSongs.headerIndexOf(reorderingSetlistFileName)
@@ -154,7 +151,7 @@ internal fun SetlistList(
     val labelsOnEverySong by viewModel.labelsOnEverySong.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val hasLoadedLibrary = rememberHasLoadedLibrary(isLoading)
-    val topFade = rememberListTopFade(listState, sectionHeaderContentType = SETLIST_HEADER_CONTENT_TYPE)
+    val topFade = rememberListTopFade(listState, sectionHeaderContentType = SetlistItemKey.HEADER_CONTENT_TYPE)
     // Remembered, since a new modifier every time the list recomposes would recompose the grid with it.
     val gridModifier = remember(topFade) { Modifier.fillMaxSize().listTopFadeViewport(topFade) }
     val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
@@ -226,8 +223,8 @@ internal fun SetlistList(
 
                 else -> shownSetlists.forEach { setlistWithSongs ->
                     stickyHeader(
-                        key = "setlist_${setlistWithSongs.setlist.fileName}",
-                        contentType = SETLIST_HEADER_CONTENT_TYPE,
+                        key = SetlistItemKey.header(setlistWithSongs.setlist.fileName),
+                        contentType = SetlistItemKey.HEADER_CONTENT_TYPE,
                     ) { headerIndex ->
                         val headerState = rememberSectionHeaderState(listState, headerIndex)
                         SectionHeader(
@@ -273,7 +270,7 @@ internal fun SetlistList(
                     // Under the header: the row names the setlist, then this is the first thing to read about it.
                     if (setlistWithSongs.setlist.description.isNotBlank()) {
                         item(
-                            key = "description_${setlistWithSongs.setlist.fileName}",
+                            key = SetlistItemKey.description(setlistWithSongs.setlist.fileName),
                             span = { GridItemSpan(maxLineSpan) },
                             contentType = "setlist_description",
                         ) {
@@ -318,7 +315,7 @@ internal fun SetlistList(
                     // header, so the way to them is where the songs will be rather than behind the header's menu.
                     if (!isPerformanceModeEnabled) {
                         item(
-                            key = "choose_songs_${setlistWithSongs.setlist.fileName}",
+                            key = SetlistItemKey.chooseSongs(setlistWithSongs.setlist.fileName),
                             span = { GridItemSpan(maxLineSpan) },
                             contentType = "setlist_action",
                         ) {
@@ -384,6 +381,3 @@ internal fun SetlistList(
         )
     }
 }
-
-/** What a setlist's header is to the grid, and to the cards' fade, which is measured from the setlist being read. */
-private const val SETLIST_HEADER_CONTENT_TYPE = "setlist_header"

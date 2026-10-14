@@ -26,7 +26,7 @@ internal class SongSectionIndex(groups: List<Group>) {
             end += group.itemCount + if (group.header == null) 0 else 1
             ends[index] = end
             labels += group.header?.fastScrollerLabel
-            group.header?.let { headersByKey["header_${it.key}"] = it }
+            group.header?.let { headersByKey[it.itemKey] = it }
         }
     }
 
