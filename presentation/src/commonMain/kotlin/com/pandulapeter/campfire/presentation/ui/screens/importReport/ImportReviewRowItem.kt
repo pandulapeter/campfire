@@ -33,7 +33,7 @@ import com.pandulapeter.campfire.presentation.resources.import_review_setlist_so
 import com.pandulapeter.campfire.presentation.resources.import_review_setlist_songs_in_import
 import com.pandulapeter.campfire.presentation.resources.import_review_will_be_numbered
 import com.pandulapeter.campfire.presentation.resources.import_review_will_replace
-import com.pandulapeter.campfire.presentation.ui.components.CheckboxListItem
+import com.pandulapeter.campfire.presentation.ui.components.checklist.CheckboxListItem
 import com.pandulapeter.campfire.presentation.ui.components.textResource
 
 /**

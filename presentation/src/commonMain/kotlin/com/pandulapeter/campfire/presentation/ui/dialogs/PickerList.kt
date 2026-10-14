@@ -25,8 +25,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.ui.components.HideKeyboardWhenScrolledDown
-import com.pandulapeter.campfire.presentation.ui.components.ChecklistLayout
-import com.pandulapeter.campfire.presentation.ui.components.KeepChecklistRowsInPlace
+import com.pandulapeter.campfire.presentation.ui.components.checklist.ChecklistLayout
+import com.pandulapeter.campfire.presentation.ui.components.checklist.KeepChecklistRowsInPlace
 import com.pandulapeter.campfire.presentation.ui.components.ScrollToStartWhenChanged
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.list.listItemAnimation

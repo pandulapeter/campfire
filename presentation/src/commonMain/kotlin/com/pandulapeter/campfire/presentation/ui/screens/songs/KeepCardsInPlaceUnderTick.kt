@@ -23,7 +23,7 @@ import com.pandulapeter.campfire.presentation.ui.components.list.ListAnchor
  * item is below the section; with the section or its header at the top of the viewport, everything after it would be
  * pushed down a row. So, in the composition the new order arrives in, the grid is asked to keep the first card whose
  * top is in sight exactly where it is, by its index in the new groups, the content above it moving out of the way, as
- * the Choose songs sheet keeps its rows ([com.pandulapeter.campfire.presentation.ui.components.KeepChecklistRowsInPlace]).
+ * the Choose songs sheet keeps its rows ([com.pandulapeter.campfire.presentation.ui.components.checklist.KeepChecklistRowsInPlace]).
  *
  * A request for a different position is a jump to the grid, which answers it by forgetting where every item was: the
  * copy that joins the section, and the header and the divider the first tick brings, would simply be there, and the

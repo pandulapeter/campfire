@@ -52,7 +52,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_lookup_itun
 import com.pandulapeter.campfire.presentation.resources.song_details_lookup_musicbrainz
 import com.pandulapeter.campfire.presentation.resources.song_details_lookup_nothing_new
 import com.pandulapeter.campfire.presentation.resources.song_details_lookup_now
-import com.pandulapeter.campfire.presentation.ui.components.CheckboxListItem
+import com.pandulapeter.campfire.presentation.ui.components.checklist.CheckboxListItem
 import com.pandulapeter.campfire.presentation.ui.components.textResource
 
 /**

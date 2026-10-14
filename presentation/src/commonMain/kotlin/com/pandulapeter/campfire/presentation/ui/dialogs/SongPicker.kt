@@ -36,13 +36,13 @@ import com.pandulapeter.campfire.presentation.resources.songs_search
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.search.PickerFilterOptions
 import com.pandulapeter.campfire.presentation.ui.search.songPickerMatches
-import com.pandulapeter.campfire.presentation.ui.components.CheckboxListItem
+import com.pandulapeter.campfire.presentation.ui.components.checklist.CheckboxListItem
 import com.pandulapeter.campfire.presentation.ui.components.CHIP_GAP
 import com.pandulapeter.campfire.presentation.ui.components.songFilters.CountedFilterChip
 import com.pandulapeter.campfire.presentation.ui.components.SortableChipRow
-import com.pandulapeter.campfire.presentation.ui.components.ChecklistOrder
-import com.pandulapeter.campfire.presentation.ui.components.checklistItems
-import com.pandulapeter.campfire.presentation.ui.components.rememberChecklistOrder
+import com.pandulapeter.campfire.presentation.ui.components.checklist.ChecklistOrder
+import com.pandulapeter.campfire.presentation.ui.components.checklist.checklistItems
+import com.pandulapeter.campfire.presentation.ui.components.checklist.rememberChecklistOrder
 import com.pandulapeter.campfire.presentation.ui.components.menu.SongSortMenu
 import com.pandulapeter.campfire.presentation.ui.components.languageLabel
 import com.pandulapeter.campfire.presentation.ui.components.languageName

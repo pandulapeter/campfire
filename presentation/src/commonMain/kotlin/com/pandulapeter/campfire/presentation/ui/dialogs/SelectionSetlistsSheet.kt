@@ -31,11 +31,11 @@ import com.pandulapeter.campfire.presentation.resources.songs_selection_count
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
-import com.pandulapeter.campfire.presentation.ui.components.CheckboxListItem
+import com.pandulapeter.campfire.presentation.ui.components.checklist.CheckboxListItem
 import com.pandulapeter.campfire.presentation.ui.components.menu.SetlistSortMenu
-import com.pandulapeter.campfire.presentation.ui.components.checklistItems
+import com.pandulapeter.campfire.presentation.ui.components.checklist.checklistItems
 import com.pandulapeter.campfire.presentation.ui.components.list.listItemAnimation
-import com.pandulapeter.campfire.presentation.ui.components.rememberChecklistOrder
+import com.pandulapeter.campfire.presentation.ui.components.checklist.rememberChecklistOrder
 import com.pandulapeter.campfire.presentation.ui.components.SearchField
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.heldOf
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.selectionBoxState

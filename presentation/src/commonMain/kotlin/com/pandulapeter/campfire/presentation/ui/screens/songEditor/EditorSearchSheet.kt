@@ -55,7 +55,7 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_find_replace
 import com.pandulapeter.campfire.presentation.resources.song_editor_replace
 import com.pandulapeter.campfire.presentation.resources.song_editor_replace_all
 import com.pandulapeter.campfire.presentation.ui.components.menu.ACTION_BUTTON_OVERLAP
-import com.pandulapeter.campfire.presentation.ui.components.CheckboxListItem
+import com.pandulapeter.campfire.presentation.ui.components.checklist.CheckboxListItem
 import com.pandulapeter.campfire.presentation.ui.components.menu.LocalOverlayState
 import com.pandulapeter.campfire.presentation.ui.components.appBar.TruncateSearchQuery
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge

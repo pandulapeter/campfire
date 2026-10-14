@@ -55,7 +55,7 @@ import com.pandulapeter.campfire.presentation.resources.setlists_show_archived
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
 import com.pandulapeter.campfire.presentation.ui.components.appBar.AppBarOverlap
-import com.pandulapeter.campfire.presentation.ui.components.CheckboxListItem
+import com.pandulapeter.campfire.presentation.ui.components.checklist.CheckboxListItem
 import com.pandulapeter.campfire.presentation.ui.components.list.FastScroller
 import com.pandulapeter.campfire.presentation.ui.components.list.FAST_SCROLLER_WIDTH
 import com.pandulapeter.campfire.presentation.ui.components.list.ListColumns

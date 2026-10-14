@@ -45,12 +45,12 @@ import com.pandulapeter.campfire.presentation.resources.song_details_tags_manage
 import com.pandulapeter.campfire.presentation.resources.song_details_tags_search
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
-import com.pandulapeter.campfire.presentation.ui.components.CheckboxListItem
+import com.pandulapeter.campfire.presentation.ui.components.checklist.CheckboxListItem
 import com.pandulapeter.campfire.presentation.ui.components.HideKeyboardWhenScrolledDown
 import com.pandulapeter.campfire.presentation.ui.components.LabelSortingToggle
-import com.pandulapeter.campfire.presentation.ui.components.KeepChecklistRowsInPlace
-import com.pandulapeter.campfire.presentation.ui.components.checklistItems
-import com.pandulapeter.campfire.presentation.ui.components.rememberChecklistOrder
+import com.pandulapeter.campfire.presentation.ui.components.checklist.KeepChecklistRowsInPlace
+import com.pandulapeter.campfire.presentation.ui.components.checklist.checklistItems
+import com.pandulapeter.campfire.presentation.ui.components.checklist.rememberChecklistOrder
 import com.pandulapeter.campfire.presentation.ui.components.sortedAlphabeticallyBy
 import com.pandulapeter.campfire.presentation.ui.components.tagColorOf
 import com.pandulapeter.campfire.presentation.ui.components.ScrollToStartWhenChanged

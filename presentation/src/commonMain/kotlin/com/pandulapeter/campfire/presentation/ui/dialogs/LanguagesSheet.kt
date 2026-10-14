@@ -42,13 +42,13 @@ import com.pandulapeter.campfire.presentation.resources.song_details_languages_e
 import com.pandulapeter.campfire.presentation.resources.song_details_language_no_search_results
 import com.pandulapeter.campfire.presentation.resources.song_details_language_search
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.components.CheckboxListItem
+import com.pandulapeter.campfire.presentation.ui.components.checklist.CheckboxListItem
 import com.pandulapeter.campfire.presentation.ui.components.HideKeyboardWhenScrolledDown
 import com.pandulapeter.campfire.presentation.ui.components.LabelSortingToggle
 import com.pandulapeter.campfire.presentation.ui.components.MAX_SEARCH_QUERY_LENGTH
-import com.pandulapeter.campfire.presentation.ui.components.KeepChecklistRowsInPlace
-import com.pandulapeter.campfire.presentation.ui.components.checklistItems
-import com.pandulapeter.campfire.presentation.ui.components.rememberChecklistOrder
+import com.pandulapeter.campfire.presentation.ui.components.checklist.KeepChecklistRowsInPlace
+import com.pandulapeter.campfire.presentation.ui.components.checklist.checklistItems
+import com.pandulapeter.campfire.presentation.ui.components.checklist.rememberChecklistOrder
 import com.pandulapeter.campfire.presentation.ui.components.ScrollToStartWhenChanged
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.list.listItemAnimation
