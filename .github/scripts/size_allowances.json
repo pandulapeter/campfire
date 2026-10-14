@@ -1,6 +1,6 @@
 {
   "chordpro/src/commonMain/kotlin/com/pandulapeter/campfire/chordpro/convert/ChordSheetConverter.kt": 573,
-  "data/sync/implementation/src/commonMain/kotlin/com/pandulapeter/campfire/data/sync/implementation/run/SyncEngine.kt": 601,
+  "data/sync/implementation/src/commonMain/kotlin/com/pandulapeter/campfire/data/sync/implementation/run/SyncEngine.kt": 611,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/CLAUDE.md": 2099,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/CampfireScreens.kt::CampfireScreens": 326,
   "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/CampfireViewModel.kt": 789,

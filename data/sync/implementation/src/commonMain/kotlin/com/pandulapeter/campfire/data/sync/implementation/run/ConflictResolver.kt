@@ -22,6 +22,8 @@ import com.pandulapeter.campfire.data.source.remote.api.sync.SyncNetworkExceptio
 import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteWriteResult
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 
 /**
  * Settles a file that changed on both sides: both versions kept under two names, except where nothing anybody wrote is
@@ -90,14 +92,16 @@ internal class ConflictResolver(
         // and push the file itself on to the next number. Folded, as the service may take two spellings for one name.
         val remoteNames = pass.remoteFiles.keys.filter { it.kind == key.kind }.mapTo(hashSetOf()) { it.folded().name }
         // Under the lock like every other write: the repositories pick a free name and write under it in two steps too,
-        // and would otherwise be given the one this is.
+        // and would otherwise be given the one this is. The write and its notice finish together once started, so a Stop
+        // never leaves a copy on disk that the library does not list.
         val copyName = libraryFileLock.withLock {
-            libraryFileLocalSource.writeLibraryFileToFreeName(key.kind, key.name, remote) { name ->
-                SyncKey(kind = key.kind, name = name).folded().name in remoteNames
+            withContext(NonCancellable) {
+                libraryFileLocalSource.writeLibraryFileToFreeName(key.kind, key.name, remote) { name ->
+                    SyncKey(kind = key.kind, name = name).folded().name in remoteNames
+                }.also { onLocalFileChanged(SyncKey(kind = key.kind, name = it)) }
             }
         }
         val copyKey = SyncKey(kind = key.kind, name = copyName)
-        onLocalFileChanged(copyKey)
         val uploaded = try {
             provider.upload(key.kind, key.name, localBytes, revision)
         } catch (exception: CancellationException) {
@@ -149,8 +153,10 @@ internal class ConflictResolver(
             val current = libraryFileLocalSource.readLibraryFile(key.kind, key.name)
             (current != null && current.contentEquals(localBytes)).also { isSame ->
                 if (isSame) {
-                    libraryFileLocalSource.writeLibraryFile(key.kind, key.name, remote)
-                    onLocalFileChanged(key)
+                    withContext(NonCancellable) {
+                        libraryFileLocalSource.writeLibraryFile(key.kind, key.name, remote)
+                        onLocalFileChanged(key)
+                    }
                 }
             }
         }
@@ -173,8 +179,10 @@ internal class ConflictResolver(
         ) {
             libraryFileLock.withLock {
                 if (libraryFileLocalSource.readLibraryFile(copyKey.kind, copyKey.name)?.contentEquals(written) == true) {
-                    libraryFileLocalSource.deleteLibraryFile(copyKey.kind, copyKey.name)
-                    onLocalFileChanged(copyKey)
+                    withContext(NonCancellable) {
+                        libraryFileLocalSource.deleteLibraryFile(copyKey.kind, copyKey.name)
+                        onLocalFileChanged(copyKey)
+                    }
                 }
             }
         }

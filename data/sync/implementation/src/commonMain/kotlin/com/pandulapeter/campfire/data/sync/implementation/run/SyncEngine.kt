@@ -32,6 +32,7 @@ import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteDocumen
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteFile
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteWriteResult
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -39,6 +40,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.sync.withPermit
+import kotlinx.coroutines.withContext
 
 /**
  * Carries out what [SyncPlanner] worked out.
@@ -382,8 +384,13 @@ internal class SyncEngine(
             if (current != null && !current.contentEquals(local)) {
                 current
             } else {
-                libraryFileLocalSource.writeLibraryFile(key.kind, key.name, downloaded.bytes)
-                pass.run.onLocalFileChanged(key)
+                // A write once started finishes, and its notice with it: a Stop landing while the platform writes would
+                // otherwise leave the file changed on disk, unknown to the repositories, and the lock let go before the
+                // write has settled (the web resumes a cancelled call while its write is still in flight).
+                withContext(NonCancellable) {
+                    libraryFileLocalSource.writeLibraryFile(key.kind, key.name, downloaded.bytes)
+                    pass.run.onLocalFileChanged(key)
+                }
                 null
             }
         }
@@ -420,8 +427,11 @@ internal class SyncEngine(
                 local == null -> OperationOutcome(removals = setOf(key))
                 localContentHash(local) != pass.index[key]?.localHash -> null
                 else -> {
-                    libraryFileLocalSource.deleteLibraryFile(key.kind, key.name)
-                    pass.run.onLocalFileChanged(key)
+                    // Finished together once started, as in [download].
+                    withContext(NonCancellable) {
+                        libraryFileLocalSource.deleteLibraryFile(key.kind, key.name)
+                        pass.run.onLocalFileChanged(key)
+                    }
                     OperationOutcome(removals = setOf(key), summary = SyncSummary(deletedLocally = 1))
                 }
             }
