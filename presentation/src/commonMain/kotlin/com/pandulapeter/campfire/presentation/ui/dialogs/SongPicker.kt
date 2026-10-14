@@ -37,7 +37,7 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.search.PickerFilterOptions
 import com.pandulapeter.campfire.presentation.ui.search.songPickerMatches
 import com.pandulapeter.campfire.presentation.ui.components.checklist.CheckboxListItem
-import com.pandulapeter.campfire.presentation.ui.components.CHIP_GAP
+import com.pandulapeter.campfire.presentation.ui.components.controls.CHIP_GAP
 import com.pandulapeter.campfire.presentation.ui.components.songFilters.CountedFilterChip
 import com.pandulapeter.campfire.presentation.ui.components.SortableChipRow
 import com.pandulapeter.campfire.presentation.ui.components.checklist.ChecklistOrder

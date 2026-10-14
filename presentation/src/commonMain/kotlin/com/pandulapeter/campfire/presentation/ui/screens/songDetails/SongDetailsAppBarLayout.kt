@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.ui.components.menu.ACTION_BUTTON_OVERLAP
 import com.pandulapeter.campfire.presentation.ui.components.APP_BAR_COVER_GAP
 import com.pandulapeter.campfire.presentation.ui.components.APP_BAR_COVER_SIZE
-import com.pandulapeter.campfire.presentation.ui.components.STEPPER_WIDTH
+import com.pandulapeter.campfire.presentation.ui.components.controls.STEPPER_WIDTH
 
 /**
  * Whether the app bar of a screen [appBarWidth] wide has room for the text size stepper in performance mode, where it is

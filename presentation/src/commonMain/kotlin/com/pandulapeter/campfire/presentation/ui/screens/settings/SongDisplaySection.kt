@@ -30,7 +30,7 @@ import com.pandulapeter.campfire.presentation.resources.songs
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.CardDetailsChoice
 import com.pandulapeter.campfire.presentation.ui.components.list.LIST_ITEM_KEYLINE
-import com.pandulapeter.campfire.presentation.ui.components.LabeledControlRow
+import com.pandulapeter.campfire.presentation.ui.components.controls.LabeledControlRow
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSubsection
 import com.pandulapeter.campfire.presentation.ui.components.SwitchListItem
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSection

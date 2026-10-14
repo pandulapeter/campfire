@@ -21,8 +21,8 @@ import com.pandulapeter.campfire.presentation.resources.song_details_metronome_h
 import com.pandulapeter.campfire.presentation.resources.song_details_metronome_show
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo
 import com.pandulapeter.campfire.presentation.ui.components.KEY_SEPARATOR
-import com.pandulapeter.campfire.presentation.ui.components.SongToolButton
-import com.pandulapeter.campfire.presentation.ui.components.songToolIconSize
+import com.pandulapeter.campfire.presentation.ui.components.controls.SongToolButton
+import com.pandulapeter.campfire.presentation.ui.components.controls.songToolIconSize
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 

@@ -86,14 +86,14 @@ import com.pandulapeter.campfire.presentation.resources.song_details_text_size_d
 import com.pandulapeter.campfire.presentation.resources.song_details_text_size_increase
 import com.pandulapeter.campfire.presentation.ui.components.checklist.CheckboxListItem
 import com.pandulapeter.campfire.presentation.ui.components.list.LIST_ITEM_KEYLINE
-import com.pandulapeter.campfire.presentation.ui.components.LabeledControlRow
-import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
+import com.pandulapeter.campfire.presentation.ui.components.controls.LabeledControlRow
+import com.pandulapeter.campfire.presentation.ui.components.controls.SegmentedChoice
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSectionTitle
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.list.listItemAnimation
 import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableContent
 import com.pandulapeter.campfire.presentation.ui.print.PrintSource
-import com.pandulapeter.campfire.presentation.ui.components.Stepper
+import com.pandulapeter.campfire.presentation.ui.components.controls.Stepper
 import org.jetbrains.compose.resources.painterResource
 
 /**

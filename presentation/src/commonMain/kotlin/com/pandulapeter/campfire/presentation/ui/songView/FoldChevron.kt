@@ -22,7 +22,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_section_col
 import com.pandulapeter.campfire.presentation.resources.song_details_section_expand
 import com.pandulapeter.campfire.presentation.resources.song_details_tab_collapse
 import com.pandulapeter.campfire.presentation.resources.song_details_tab_expand
-import com.pandulapeter.campfire.presentation.ui.components.ExpandChevron
+import com.pandulapeter.campfire.presentation.ui.components.controls.ExpandChevron
 import com.pandulapeter.campfire.presentation.ui.songLayout.FoldableKind
 
 /**

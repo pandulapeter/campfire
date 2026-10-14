@@ -18,8 +18,8 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_tuner
 import com.pandulapeter.campfire.presentation.resources.tuner
-import com.pandulapeter.campfire.presentation.ui.components.SongToolButton
-import com.pandulapeter.campfire.presentation.ui.components.songToolIconSize
+import com.pandulapeter.campfire.presentation.ui.components.controls.SongToolButton
+import com.pandulapeter.campfire.presentation.ui.components.controls.songToolIconSize
 import org.jetbrains.compose.resources.painterResource
 
 /**

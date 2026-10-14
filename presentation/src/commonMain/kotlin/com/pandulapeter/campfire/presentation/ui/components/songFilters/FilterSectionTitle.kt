@@ -9,10 +9,10 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components.songFilters
 
-import com.pandulapeter.campfire.presentation.ui.components.CONTROLS_PADDING
+import com.pandulapeter.campfire.presentation.ui.components.controls.CONTROLS_PADDING
 import com.pandulapeter.campfire.presentation.ui.components.labels.LabelSortingToggle
-import com.pandulapeter.campfire.presentation.ui.components.SORTING_TOGGLE_GAP
-import com.pandulapeter.campfire.presentation.ui.components.SORTING_TOGGLE_SIZE
+import com.pandulapeter.campfire.presentation.ui.components.controls.SORTING_TOGGLE_GAP
+import com.pandulapeter.campfire.presentation.ui.components.controls.SORTING_TOGGLE_SIZE
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut

@@ -20,8 +20,8 @@ import com.pandulapeter.campfire.presentation.resources.ic_subtract
 import com.pandulapeter.campfire.presentation.resources.song_details_transpose_down
 import com.pandulapeter.campfire.presentation.resources.song_details_transpose_reset
 import com.pandulapeter.campfire.presentation.resources.song_details_transpose_up
-import com.pandulapeter.campfire.presentation.ui.components.STEPPER_HEIGHT
-import com.pandulapeter.campfire.presentation.ui.components.Stepper
+import com.pandulapeter.campfire.presentation.ui.components.controls.STEPPER_HEIGHT
+import com.pandulapeter.campfire.presentation.ui.components.controls.Stepper
 import com.pandulapeter.campfire.presentation.ui.playing.transpositionLabel
 import org.jetbrains.compose.resources.painterResource
 

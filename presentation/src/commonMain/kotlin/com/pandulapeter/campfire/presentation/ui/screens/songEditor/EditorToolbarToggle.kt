@@ -23,7 +23,7 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_editor_hide_shortcuts
 import com.pandulapeter.campfire.presentation.resources.song_editor_shortcuts
 import com.pandulapeter.campfire.presentation.resources.song_editor_show_shortcuts
-import com.pandulapeter.campfire.presentation.ui.components.ExpandChevron
+import com.pandulapeter.campfire.presentation.ui.components.controls.ExpandChevron
 
 @Composable
 internal fun EditorToolbarToggle(

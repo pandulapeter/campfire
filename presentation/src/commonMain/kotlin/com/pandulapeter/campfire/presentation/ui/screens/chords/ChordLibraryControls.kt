@@ -34,10 +34,10 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.chords_key
 import com.pandulapeter.campfire.presentation.resources.chords_search
 import com.pandulapeter.campfire.presentation.resources.instrument
-import com.pandulapeter.campfire.presentation.ui.components.CHIP_GAP
+import com.pandulapeter.campfire.presentation.ui.components.controls.CHIP_GAP
 import com.pandulapeter.campfire.presentation.ui.components.InstrumentChipRow
 import com.pandulapeter.campfire.presentation.ui.components.SearchField
-import com.pandulapeter.campfire.presentation.ui.components.SelectableChip
+import com.pandulapeter.campfire.presentation.ui.components.controls.SelectableChip
 import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 
 /**

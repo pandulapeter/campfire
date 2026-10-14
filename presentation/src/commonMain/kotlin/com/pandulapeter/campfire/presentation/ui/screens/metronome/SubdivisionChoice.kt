@@ -11,7 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.metronome
 
 import androidx.compose.runtime.Composable
 import com.pandulapeter.campfire.metronome.api.model.Subdivision
-import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
+import com.pandulapeter.campfire.presentation.ui.components.controls.SegmentedChoice
 
 /**
  * How many clicks each beat is cut into, as a segmented row of the numbers themselves. A number rather than a note

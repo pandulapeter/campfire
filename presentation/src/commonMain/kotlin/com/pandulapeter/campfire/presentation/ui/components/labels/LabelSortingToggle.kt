@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components.labels
 
-import com.pandulapeter.campfire.presentation.ui.components.SORTING_TOGGLE_ICON_SIZE
+import com.pandulapeter.campfire.presentation.ui.components.controls.SORTING_TOGGLE_ICON_SIZE
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon

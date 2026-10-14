@@ -16,7 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import com.pandulapeter.campfire.presentation.ui.components.InstrumentChips
-import com.pandulapeter.campfire.presentation.ui.components.PICKER_CHIP_START_PADDING
+import com.pandulapeter.campfire.presentation.ui.components.controls.PICKER_CHIP_START_PADDING
 
 /**
  * The instrument and tuning chips as a song's page draws them: as tall as a section header's pill and set in its style,

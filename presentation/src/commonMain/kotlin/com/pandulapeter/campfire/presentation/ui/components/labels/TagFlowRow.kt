@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components.labels
 
-import com.pandulapeter.campfire.presentation.ui.components.CHIP_GAP
+import com.pandulapeter.campfire.presentation.ui.components.controls.CHIP_GAP
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.FlowRowScope

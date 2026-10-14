@@ -29,8 +29,8 @@ import com.pandulapeter.campfire.presentation.resources.metronome_sound_click
 import com.pandulapeter.campfire.presentation.resources.metronome_sound_cowbell
 import com.pandulapeter.campfire.presentation.resources.metronome_sound_hi_hat
 import com.pandulapeter.campfire.presentation.resources.metronome_sound_woodblock
-import com.pandulapeter.campfire.presentation.ui.components.CHIP_GAP
-import com.pandulapeter.campfire.presentation.ui.components.SelectableChip
+import com.pandulapeter.campfire.presentation.ui.components.controls.CHIP_GAP
+import com.pandulapeter.campfire.presentation.ui.components.controls.SelectableChip
 
 /** What every click sounds like, a song's included; the caller plays a sound as it is tapped. */
 @OptIn(ExperimentalLayoutApi::class)

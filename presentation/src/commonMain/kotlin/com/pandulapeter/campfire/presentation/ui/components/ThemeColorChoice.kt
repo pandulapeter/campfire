@@ -9,6 +9,9 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components
 
+import com.pandulapeter.campfire.presentation.ui.components.controls.ColorChoice
+import com.pandulapeter.campfire.presentation.ui.components.controls.ColorChoiceOption
+import com.pandulapeter.campfire.presentation.ui.components.controls.colorChoiceWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter

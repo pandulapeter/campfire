@@ -9,9 +9,9 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components.songFilters
 
-import com.pandulapeter.campfire.presentation.ui.components.CHIP_GAP
-import com.pandulapeter.campfire.presentation.ui.components.CONTROLS_PADDING
-import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
+import com.pandulapeter.campfire.presentation.ui.components.controls.CHIP_GAP
+import com.pandulapeter.campfire.presentation.ui.components.controls.CONTROLS_PADDING
+import com.pandulapeter.campfire.presentation.ui.components.controls.SegmentedChoice
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn

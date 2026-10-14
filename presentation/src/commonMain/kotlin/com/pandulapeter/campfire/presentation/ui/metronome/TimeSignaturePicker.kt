@@ -34,9 +34,9 @@ import com.pandulapeter.campfire.presentation.resources.metronome_beat_unit_decr
 import com.pandulapeter.campfire.presentation.resources.metronome_beat_unit_increase
 import com.pandulapeter.campfire.presentation.resources.metronome_beats_decrease
 import com.pandulapeter.campfire.presentation.resources.metronome_beats_increase
-import com.pandulapeter.campfire.presentation.ui.components.CHIP_GAP
-import com.pandulapeter.campfire.presentation.ui.components.SelectableChip
-import com.pandulapeter.campfire.presentation.ui.components.Stepper
+import com.pandulapeter.campfire.presentation.ui.components.controls.CHIP_GAP
+import com.pandulapeter.campfire.presentation.ui.components.controls.SelectableChip
+import com.pandulapeter.campfire.presentation.ui.components.controls.Stepper
 import org.jetbrains.compose.resources.painterResource
 
 /**

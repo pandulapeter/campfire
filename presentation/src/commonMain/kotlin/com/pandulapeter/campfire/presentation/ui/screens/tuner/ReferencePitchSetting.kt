@@ -34,8 +34,8 @@ import com.pandulapeter.campfire.presentation.resources.tuner_reference_pitch_de
 import com.pandulapeter.campfire.presentation.resources.tuner_reference_pitch_increase
 import com.pandulapeter.campfire.presentation.resources.tuner_reference_pitch_reset
 import com.pandulapeter.campfire.presentation.resources.tuner_reference_pitch_value
-import com.pandulapeter.campfire.presentation.ui.components.LabeledControlRow
-import com.pandulapeter.campfire.presentation.ui.components.Stepper
+import com.pandulapeter.campfire.presentation.ui.components.controls.LabeledControlRow
+import com.pandulapeter.campfire.presentation.ui.components.controls.Stepper
 import com.pandulapeter.campfire.presentation.ui.metronome.PlayStopMark
 import com.pandulapeter.campfire.presentation.ui.tuner.REFERENCE_NOTE
 import com.pandulapeter.campfire.presentation.ui.tuner.noteName

@@ -43,12 +43,12 @@ import com.pandulapeter.campfire.presentation.resources.song_details_tag_color_c
 import com.pandulapeter.campfire.presentation.resources.song_details_tag_color_indigo
 import com.pandulapeter.campfire.presentation.resources.song_details_tag_color_lime
 import com.pandulapeter.campfire.presentation.resources.song_details_tag_color_none
-import com.pandulapeter.campfire.presentation.ui.components.ColorChoice
-import com.pandulapeter.campfire.presentation.ui.components.ColorChoiceOption
+import com.pandulapeter.campfire.presentation.ui.components.controls.ColorChoice
+import com.pandulapeter.campfire.presentation.ui.components.controls.ColorChoiceOption
 import com.pandulapeter.campfire.presentation.ui.components.menu.OverflowMenu
 import com.pandulapeter.campfire.presentation.ui.components.labels.TagColor
 import com.pandulapeter.campfire.presentation.ui.components.labels.TagIcon
-import com.pandulapeter.campfire.presentation.ui.components.colorChoiceWidth
+import com.pandulapeter.campfire.presentation.ui.components.controls.colorChoiceWidth
 import com.pandulapeter.campfire.presentation.ui.components.isDarkerMoreLegible
 import com.pandulapeter.campfire.presentation.ui.components.textResource
 import org.jetbrains.compose.resources.painterResource

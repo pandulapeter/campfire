@@ -9,6 +9,11 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components
 
+import com.pandulapeter.campfire.presentation.ui.components.controls.CHIP_GAP
+import com.pandulapeter.campfire.presentation.ui.components.controls.CONTROLS_PADDING
+import com.pandulapeter.campfire.presentation.ui.components.controls.SORTING_TOGGLE_GAP
+import com.pandulapeter.campfire.presentation.ui.components.controls.SORTING_TOGGLE_ICON_SIZE
+import com.pandulapeter.campfire.presentation.ui.components.controls.SORTING_TOGGLE_SIZE
 import com.pandulapeter.campfire.presentation.ui.components.labels.LabelSortingToggle
 import com.pandulapeter.campfire.presentation.ui.components.checklist.ChecklistOrder
 import androidx.compose.animation.animateBounds

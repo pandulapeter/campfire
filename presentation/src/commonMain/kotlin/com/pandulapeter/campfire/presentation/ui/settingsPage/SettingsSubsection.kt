@@ -17,7 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.dp
-import com.pandulapeter.campfire.presentation.ui.components.LabeledControlRow
+import com.pandulapeter.campfire.presentation.ui.components.controls.LabeledControlRow
 
 /**
  * A setting whose control does not fit at the end of a row - a segmented choice, the color discs, a list of radio

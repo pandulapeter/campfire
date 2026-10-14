@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components.songFilters
 
-import com.pandulapeter.campfire.presentation.ui.components.CONTROLS_PADDING
+import com.pandulapeter.campfire.presentation.ui.components.controls.CONTROLS_PADDING
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.menu.SortMenu

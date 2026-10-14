@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components.songFilters
 
-import com.pandulapeter.campfire.presentation.ui.components.SelectableChip
+import com.pandulapeter.campfire.presentation.ui.components.controls.SelectableChip
 import com.pandulapeter.campfire.presentation.ui.components.labels.TAG_GAP
 import com.pandulapeter.campfire.presentation.ui.components.labels.TagIcon
 import com.pandulapeter.campfire.presentation.ui.components.only
