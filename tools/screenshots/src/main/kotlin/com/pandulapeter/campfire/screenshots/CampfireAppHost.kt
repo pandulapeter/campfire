@@ -49,6 +49,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.ImpersonatedPlatform
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.PlatformImpersonation
+import com.pandulapeter.campfire.presentation.ui.platform.desktopDataDirectory
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.Koin
 import org.koin.core.context.stopKoin
@@ -78,9 +79,13 @@ internal inline fun <T> withCampfireApp(
 ): T {
     val home = createTempDirectory("campfire-app").toFile()
     try {
-        val dataDirectory = File(home, "Library/Application Support/Campfire")
-        writeData(dataDirectory)
         System.setProperty("user.home", home.absolutePath)
+        // Where the desktop file storage will look, which differs by system. On Linux and Windows an environment
+        // variable can move it out of the home (XDG_DATA_HOME, APPDATA), and the app started on it would then read and
+        // write the library of whoever runs the tool.
+        val dataDirectory = desktopDataDirectory()
+        check(dataDirectory.startsWith(home)) { "The app's data directory, $dataDirectory, is outside its own home; unset XDG_DATA_HOME or APPDATA." }
+        writeData(dataDirectory)
         PlatformImpersonation.platform = platform
         PlatformImpersonation.fontFamily = fontFamily
         PlatformImpersonation.monospaceFontFamily = monospaceFontFamily
