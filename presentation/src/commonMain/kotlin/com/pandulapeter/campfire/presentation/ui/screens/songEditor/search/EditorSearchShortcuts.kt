@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.screens.songEditor
+package com.pandulapeter.campfire.presentation.ui.screens.songEditor.search
 
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.Key

@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.screens.songEditor
+package com.pandulapeter.campfire.presentation.ui.screens.songEditor.search
 
 /**
  * Where [query] occurs in [text], as the offsets the occurrences start at, each one [query]'s length long: ignoring the

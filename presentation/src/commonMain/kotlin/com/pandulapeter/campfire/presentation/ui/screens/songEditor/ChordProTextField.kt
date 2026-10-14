@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songEditor
 
+import com.pandulapeter.campfire.presentation.ui.screens.songEditor.search.EditorSearch
+import com.pandulapeter.campfire.presentation.ui.screens.songEditor.search.SearchHighlights
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
