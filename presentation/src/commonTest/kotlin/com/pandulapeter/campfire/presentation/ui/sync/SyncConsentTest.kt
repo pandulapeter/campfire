@@ -7,14 +7,14 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.platform
+package com.pandulapeter.campfire.presentation.ui.sync
 
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.screens.onboarding.OnboardingStep
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class SyncConsentOriginTest {
+class SyncConsentTest {
 
     @Test
     fun `a connect tapped on the settings screen is answered there`() {

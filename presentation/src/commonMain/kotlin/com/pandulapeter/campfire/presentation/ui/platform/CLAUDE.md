@@ -57,8 +57,7 @@ The `expect` declarations and the interfaces the platform shells provide.
 
 ### `SyncConsentOrigin.kt`
 
-- Where Connect was tapped (Settings or the onboarding), so `showSyncConsentAnswer` shows the result there. Only the web
-  keeps it (session storage), since only there does every consent end in a fresh start; Android restores its back stack.
+- The `expect`s keep where Connect was tapped across a consent page, see `ui/sync/CLAUDE.md`.
 
 ### `FilePicker.kt`
 

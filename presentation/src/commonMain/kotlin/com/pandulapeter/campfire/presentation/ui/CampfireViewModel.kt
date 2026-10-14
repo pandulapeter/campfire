@@ -115,11 +115,11 @@ import com.pandulapeter.campfire.presentation.ui.navigation.NavigationState
 import com.pandulapeter.campfire.presentation.ui.navigation.closeScreensShowing
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.LibraryPersistence
-import com.pandulapeter.campfire.presentation.ui.platform.SyncConsentAnswer
+import com.pandulapeter.campfire.presentation.ui.sync.SyncConsentAnswer
 import com.pandulapeter.campfire.presentation.ui.platform.keepSyncConsentOrigin
 import com.pandulapeter.campfire.presentation.ui.platform.requestLibraryPersistence
-import com.pandulapeter.campfire.presentation.ui.platform.syncConsentAnswerOf
-import com.pandulapeter.campfire.presentation.ui.platform.syncConsentOriginOf
+import com.pandulapeter.campfire.presentation.ui.sync.syncConsentAnswerOf
+import com.pandulapeter.campfire.presentation.ui.sync.syncConsentOriginOf
 import com.pandulapeter.campfire.presentation.ui.platform.takeSyncConsentOrigin
 import com.pandulapeter.campfire.presentation.ui.playing.Capos
 import com.pandulapeter.campfire.presentation.ui.screens.chords.ChordLibraryState

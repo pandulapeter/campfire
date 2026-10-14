@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.platform
 
+import com.pandulapeter.campfire.presentation.ui.sync.SyncConsentOrigin
+
 // The app outlives every consent page here, so the screen it was opened from is still the one on top.
 internal actual fun keepSyncConsentOrigin(origin: SyncConsentOrigin) = Unit
 

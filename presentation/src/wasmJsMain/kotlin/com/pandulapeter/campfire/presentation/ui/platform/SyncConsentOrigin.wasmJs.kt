@@ -11,6 +11,7 @@
 
 package com.pandulapeter.campfire.presentation.ui.platform
 
+import com.pandulapeter.campfire.presentation.ui.sync.SyncConsentOrigin
 import kotlin.js.ExperimentalWasmJsInterop
 
 /**
