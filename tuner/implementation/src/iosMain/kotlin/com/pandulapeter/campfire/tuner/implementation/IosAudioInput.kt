@@ -29,13 +29,16 @@ import platform.Foundation.NSError
 import platform.Foundation.NSNotificationCenter
 import platform.Foundation.NSNumber
 import platform.darwin.NSObjectProtocol
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeSource
 
 /**
  * `AVAudioEngine`'s input node with a tap of 4096 frames, whose block runs on a queue of the engine's rather than on the
  * real-time thread, so Kotlin may run in it; it copies the frames into a [SampleRing]. Started only when the record
  * permission is granted, since touching the input otherwise makes the system ask on its own. An interruption (a call)
  * stops it as busy, a new route as disconnected (which the engine opens again once), the media services being reset as
- * failed.
+ * failed. A tap that stops arriving for [STALL_REOPEN] is reported as disconnected too: another user of the shared
+ * session (the metronome's stop) deactivating it stops the input with no notice at all.
  */
 @Single
 internal class IosAudioInput(private val session: IosTunerSession) : AudioInput {
@@ -43,6 +46,10 @@ internal class IosAudioInput(private val session: IosTunerSession) : AudioInput 
     private val ring = SampleRing(SampleRing.CAPACITY)
     private var engine: AVAudioEngine? = null
     private var observers = emptyList<NSObjectProtocol>()
+    private var listener: AudioInputListener? = null
+    private var lastPosition = AudioInput.NO_WINDOW
+    private var lastMoved = TimeSource.Monotonic.markNow()
+    private var isLossReported = false
 
     override suspend fun start(listener: AudioInputListener): AudioInputStart {
         stop()
@@ -75,15 +82,35 @@ internal class IosAudioInput(private val session: IosTunerSession) : AudioInput 
             return AudioInputStart.Refused(TunerStopReason.FAILED)
         }
         this.engine = engine
+        this.listener = listener
+        lastPosition = AudioInput.NO_WINDOW
+        lastMoved = TimeSource.Monotonic.markNow()
+        isLossReported = false
         observers = observe(engine, listener)
         return AudioInputStart.Started(sampleRate)
     }
 
-    override fun latest(window: FloatArray) = ring.latest(window)
+    /**
+     * Also notices a tap that stopped arriving, measured from [start] so that one that never delivered is caught too. It
+     * waits far longer than an iOS tap is ever late and than a call's or a new route's own notice takes to arrive, so
+     * those still win with their own reason. Runs on the tuner's one coroutine, as [start] and [stop] do.
+     */
+    override fun latest(window: FloatArray): Long {
+        val position = ring.latest(window)
+        if (position != lastPosition) {
+            lastPosition = position
+            lastMoved = TimeSource.Monotonic.markNow()
+        } else if (engine != null && !isLossReported && lastMoved.elapsedNow() >= STALL_REOPEN) {
+            isLossReported = true
+            listener?.onLost(TunerStopReason.MICROPHONE_DISCONNECTED)
+        }
+        return position
+    }
 
     override fun stop() {
         val engine = engine ?: return
         this.engine = null
+        listener = null
         observers.forEach(NSNotificationCenter.defaultCenter::removeObserver)
         observers = emptyList()
         engine.inputNode.removeTapOnBus(0u)
@@ -111,5 +138,6 @@ internal class IosAudioInput(private val session: IosTunerSession) : AudioInput 
 
     private companion object {
         const val TAP_FRAMES = 4_096
+        val STALL_REOPEN = 1.seconds
     }
 }

@@ -59,7 +59,8 @@ Bluetooth SCO. Every tone fades over 10 ms.
 - **iOS**: `IosTunerSession`, shared by input and tone: `playAndRecord` / `measurement` / `defaultToSpeaker`, no
   Bluetooth option, only when record permission is granted; otherwise `playback` for a tone (touching a recording
   category without permission makes the system prompt). Input is a 4096-frame tap on the input node, started only when
-  granted; interruption = busy, configuration change = disconnected, media services reset = failed. Tone: a player node
+  granted; interruption = busy, configuration change = disconnected, media services reset = failed, and no tap for 1 s
+  = disconnected (reopened once), since another audio user's deactivation stops it with no notice. Tone: a player node
   on its own engine, one faded copy then the loop.
 - **Desktop**: `TargetDataLine` at 48 kHz on a daemon thread. The JVM cannot ask for permission and a refusal arrives
   as silence, so a line hearing only zeros for 3 s is reopened (swapped in only if listening has not stopped or
