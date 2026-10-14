@@ -23,7 +23,9 @@ platform types. One multiplatform implementation, with platform differences in `
   unreadable one throws `LibraryStorageException`, since sync would carry a missing file out as a deletion and a missing
   index would undo every deletion since the last run. `loadUserPreferences()` never returns null (missing means
   defaults) and throws for an unreadable document, since defaults would be saved over it; a document that does not
-  decode loses only its bad fields. Unreadable credentials and an unreadable editor draft count as none.
+  decode loses only its bad fields. Credentials that can never be read again count as none; ones refused for a moment
+  (a Keystore or Keychain that refuses, a file somebody else holds) throw `LibraryStorageException`, so nothing saves
+  over them. An unreadable editor draft counts as none.
 
 ## Sources
 
