@@ -7,10 +7,10 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.domain.implementation.useCases
+package com.pandulapeter.campfire.domain.implementation.catalogue
 
 import com.pandulapeter.campfire.data.repository.api.CoverArtRepository
-import com.pandulapeter.campfire.domain.api.useCases.GetCoverArtUseCase
+import com.pandulapeter.campfire.domain.api.catalogue.GetCoverArtUseCase
 import org.koin.core.annotation.Factory
 
 @Factory

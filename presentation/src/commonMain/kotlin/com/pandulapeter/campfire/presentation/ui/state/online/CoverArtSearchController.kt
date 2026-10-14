@@ -13,9 +13,9 @@ import com.pandulapeter.campfire.presentation.ui.state.asState
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.data.model.domain.CoverArtQuery
 import com.pandulapeter.campfire.data.model.domain.Song
-import com.pandulapeter.campfire.domain.api.useCases.ClearCoverArtCacheUseCase
-import com.pandulapeter.campfire.domain.api.useCases.GetCoverArtCacheSizeUseCase
-import com.pandulapeter.campfire.domain.api.useCases.SearchCoverArtUseCase
+import com.pandulapeter.campfire.domain.api.catalogue.ClearCoverArtCacheUseCase
+import com.pandulapeter.campfire.domain.api.catalogue.GetCoverArtCacheSizeUseCase
+import com.pandulapeter.campfire.domain.api.catalogue.SearchCoverArtUseCase
 import com.pandulapeter.campfire.presentation.ui.dialogs.lookup.CoverArtSearchState
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType

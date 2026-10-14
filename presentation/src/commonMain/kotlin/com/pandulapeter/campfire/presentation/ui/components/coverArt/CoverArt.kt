@@ -16,7 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import com.pandulapeter.campfire.domain.api.useCases.GetCoverArtUseCase
+import com.pandulapeter.campfire.domain.api.catalogue.GetCoverArtUseCase
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.milliseconds
 

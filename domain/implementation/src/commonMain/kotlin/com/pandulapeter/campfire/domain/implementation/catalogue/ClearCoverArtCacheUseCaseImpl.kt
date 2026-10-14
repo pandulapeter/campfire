@@ -7,17 +7,16 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.domain.implementation.useCases
+package com.pandulapeter.campfire.domain.implementation.catalogue
 
-import com.pandulapeter.campfire.data.model.domain.CoverArtQuery
 import com.pandulapeter.campfire.data.repository.api.CoverArtRepository
-import com.pandulapeter.campfire.domain.api.useCases.SearchCoverArtUseCase
+import com.pandulapeter.campfire.domain.api.catalogue.ClearCoverArtCacheUseCase
 import org.koin.core.annotation.Factory
 
 @Factory
-internal class SearchCoverArtUseCaseImpl(
+internal class ClearCoverArtCacheUseCaseImpl(
     private val coverArtRepository: CoverArtRepository,
-) : SearchCoverArtUseCase {
+) : ClearCoverArtCacheUseCase {
 
-    override operator fun invoke(query: CoverArtQuery) = coverArtRepository.searchCoverArt(query)
+    override suspend operator fun invoke() = coverArtRepository.clearCoverArtCache()
 }

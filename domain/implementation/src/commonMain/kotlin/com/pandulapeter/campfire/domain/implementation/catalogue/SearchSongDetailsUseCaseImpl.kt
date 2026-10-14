@@ -7,17 +7,17 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.domain.implementation.useCases
+package com.pandulapeter.campfire.domain.implementation.catalogue
 
-import com.pandulapeter.campfire.data.model.domain.SongDetailsCandidate
+import com.pandulapeter.campfire.data.model.domain.SongDetailsQuery
 import com.pandulapeter.campfire.data.repository.api.SongDetailsRepository
-import com.pandulapeter.campfire.domain.api.useCases.LoadSongCreditsUseCase
+import com.pandulapeter.campfire.domain.api.catalogue.SearchSongDetailsUseCase
 import org.koin.core.annotation.Factory
 
 @Factory
-internal class LoadSongCreditsUseCaseImpl(
+internal class SearchSongDetailsUseCaseImpl(
     private val songDetailsRepository: SongDetailsRepository,
-) : LoadSongCreditsUseCase {
+) : SearchSongDetailsUseCase {
 
-    override operator fun invoke(candidate: SongDetailsCandidate) = songDetailsRepository.loadSongCredits(candidate)
+    override operator fun invoke(query: SongDetailsQuery) = songDetailsRepository.searchSongDetails(query)
 }

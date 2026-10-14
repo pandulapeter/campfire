@@ -12,8 +12,8 @@ package com.pandulapeter.campfire.presentation.ui.state.online
 import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields
 import com.pandulapeter.campfire.data.model.domain.SongDetailsCandidate
 import com.pandulapeter.campfire.data.model.domain.SongDetailsQuery
-import com.pandulapeter.campfire.domain.api.useCases.LoadSongCreditsUseCase
-import com.pandulapeter.campfire.domain.api.useCases.SearchSongDetailsUseCase
+import com.pandulapeter.campfire.domain.api.catalogue.LoadSongCreditsUseCase
+import com.pandulapeter.campfire.domain.api.catalogue.SearchSongDetailsUseCase
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.lookup.SongCreditsLookup

@@ -49,7 +49,7 @@ import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.domain.api.models.SongFilter
 import com.pandulapeter.campfire.domain.api.sync.CancelSyncConnectionUseCase
 import com.pandulapeter.campfire.domain.api.sync.CancelSynchronizationUseCase
-import com.pandulapeter.campfire.domain.api.useCases.ClearCoverArtCacheUseCase
+import com.pandulapeter.campfire.domain.api.catalogue.ClearCoverArtCacheUseCase
 import com.pandulapeter.campfire.domain.api.sync.ConnectSyncProviderUseCase
 import com.pandulapeter.campfire.domain.api.useCases.CreateSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.CreateSongUseCase
@@ -65,7 +65,7 @@ import com.pandulapeter.campfire.domain.api.useCases.ExportLibraryUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ExportSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ExportSongsUseCase
 import com.pandulapeter.campfire.domain.api.sync.ForgetSyncConnectionUseCase
-import com.pandulapeter.campfire.domain.api.useCases.GetCoverArtCacheSizeUseCase
+import com.pandulapeter.campfire.domain.api.catalogue.GetCoverArtCacheSizeUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetEditorDraftUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetSongContentInvalidationsUseCase
@@ -76,7 +76,7 @@ import com.pandulapeter.campfire.domain.api.useCases.GetUserPreferencesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ImportFilesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.IsFirstRunUseCase
 import com.pandulapeter.campfire.domain.api.useCases.LoadScreenDataUseCase
-import com.pandulapeter.campfire.domain.api.useCases.LoadSongCreditsUseCase
+import com.pandulapeter.campfire.domain.api.catalogue.LoadSongCreditsUseCase
 import com.pandulapeter.campfire.domain.api.useCases.NormalizeSearchTextUseCase
 import com.pandulapeter.campfire.domain.api.useCases.PrepareImportUseCase
 import com.pandulapeter.campfire.domain.api.useCases.RememberDemoLibraryFilesUseCase
@@ -85,8 +85,8 @@ import com.pandulapeter.campfire.domain.api.sync.RestoreSyncUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveEditorDraftUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveSongContentUseCase
-import com.pandulapeter.campfire.domain.api.useCases.SearchCoverArtUseCase
-import com.pandulapeter.campfire.domain.api.useCases.SearchSongDetailsUseCase
+import com.pandulapeter.campfire.domain.api.catalogue.SearchCoverArtUseCase
+import com.pandulapeter.campfire.domain.api.catalogue.SearchSongDetailsUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SetChordProTagUseCase
 import com.pandulapeter.campfire.domain.api.sync.StartScheduledSynchronizationUseCase
 import com.pandulapeter.campfire.domain.api.sync.SynchronizeLibraryUseCase

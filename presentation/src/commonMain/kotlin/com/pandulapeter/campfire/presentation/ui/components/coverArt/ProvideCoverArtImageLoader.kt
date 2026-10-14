@@ -22,7 +22,7 @@ import coil3.fetch.SourceFetchResult
 import coil3.key.Keyer
 import coil3.request.Options
 import coil3.request.crossfade
-import com.pandulapeter.campfire.domain.api.useCases.GetCoverArtUseCase
+import com.pandulapeter.campfire.domain.api.catalogue.GetCoverArtUseCase
 import okio.Buffer
 import org.koin.compose.koinInject
 
