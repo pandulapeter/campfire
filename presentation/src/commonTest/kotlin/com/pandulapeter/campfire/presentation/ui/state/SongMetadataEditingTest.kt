@@ -12,20 +12,13 @@ package com.pandulapeter.campfire.presentation.ui.state
 import androidx.compose.foundation.text.input.TextFieldState
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.edit.ChordProLinks
-import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields
 import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields.Field
 import com.pandulapeter.campfire.chordpro.edit.ChordProTags
 import com.pandulapeter.campfire.chordpro.model.ChordProLink
 import com.pandulapeter.campfire.data.model.domain.SongContent
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.data.model.domain.normalizedToNfc
-import com.pandulapeter.campfire.domain.api.useCases.ParseChordProUseCase
-import com.pandulapeter.campfire.domain.api.useCases.SetChordProCoverArtUseCase
-import com.pandulapeter.campfire.domain.api.useCases.SetChordProLanguagesUseCase
-import com.pandulapeter.campfire.domain.api.useCases.SetChordProLinksUseCase
-import com.pandulapeter.campfire.domain.api.useCases.SetChordProMetadataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SetChordProTagUseCase
-import com.pandulapeter.campfire.presentation.mapper.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
@@ -128,27 +121,12 @@ class SongMetadataEditingTest {
             retainedEditorField = { fileName -> retainedField.takeIf { fileName == FILE } },
             editorDraft = { draft },
             emitEditorTextEdit = { edits += it },
-            parseChordPro = object : ParseChordProUseCase {
-                override fun invoke(text: String, notation: UserPreferences.Notation) = ChordProParser.parse(text, notation.toChordNotation())
-            },
-            setChordProCoverArt = object : SetChordProCoverArtUseCase {
-                override fun invoke(text: String, url: String?) = error("Not used")
-            },
-            setChordProLanguages = object : SetChordProLanguagesUseCase {
-                override fun invoke(text: String, codes: List<String>) = error("Not used")
-            },
             setChordProTag = object : SetChordProTagUseCase {
                 override fun invoke(text: String, tag: String, isSelected: Boolean) = if (isSelected) {
                     ChordProTags.addTag(text, tag, fold = String::normalizedToNfc)
                 } else {
                     ChordProTags.removeTag(text, tag, fold = String::normalizedToNfc)
                 }
-            },
-            setChordProLinks = object : SetChordProLinksUseCase {
-                override fun invoke(text: String, links: List<ChordProLink>) = ChordProLinks.setLinks(text = text, links = links)
-            },
-            setChordProMetadata = object : SetChordProMetadataUseCase {
-                override fun invoke(text: String, values: Map<Field, String?>) = ChordProMetadataFields.set(text = text, values = values)
             },
         )
     }

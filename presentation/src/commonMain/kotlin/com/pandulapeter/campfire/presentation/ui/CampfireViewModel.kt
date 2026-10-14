@@ -76,7 +76,6 @@ import com.pandulapeter.campfire.domain.api.useCases.IsFirstRunUseCase
 import com.pandulapeter.campfire.domain.api.useCases.LoadScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.LoadSongCreditsUseCase
 import com.pandulapeter.campfire.domain.api.useCases.NormalizeSearchTextUseCase
-import com.pandulapeter.campfire.domain.api.useCases.ParseChordProUseCase
 import com.pandulapeter.campfire.domain.api.useCases.PrepareImportUseCase
 import com.pandulapeter.campfire.domain.api.useCases.RememberDemoLibraryFilesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.RenameSongFileUseCase
@@ -86,10 +85,6 @@ import com.pandulapeter.campfire.domain.api.useCases.SaveSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveSongContentUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SearchCoverArtUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SearchSongDetailsUseCase
-import com.pandulapeter.campfire.domain.api.useCases.SetChordProCoverArtUseCase
-import com.pandulapeter.campfire.domain.api.useCases.SetChordProLanguagesUseCase
-import com.pandulapeter.campfire.domain.api.useCases.SetChordProLinksUseCase
-import com.pandulapeter.campfire.domain.api.useCases.SetChordProMetadataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SetChordProTagUseCase
 import com.pandulapeter.campfire.domain.api.useCases.StartScheduledSynchronizationUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SynchronizeLibraryUseCase
@@ -195,11 +190,7 @@ class CampfireViewModel(
     private val deleteSetlist: DeleteSetlistUseCase,
     private val saveSongContent: SaveSongContentUseCase,
     private val updateUserPreferences: UpdateUserPreferencesUseCase,
-    private val setChordProCoverArt: SetChordProCoverArtUseCase,
-    private val setChordProLanguages: SetChordProLanguagesUseCase,
     private val setChordProTag: SetChordProTagUseCase,
-    private val setChordProLinks: SetChordProLinksUseCase,
-    private val setChordProMetadata: SetChordProMetadataUseCase,
     private val connectSyncProvider: ConnectSyncProviderUseCase,
     private val disconnectSyncProvider: DisconnectSyncProviderUseCase,
     private val cancelSyncConnection: CancelSyncConnectionUseCase,
@@ -210,7 +201,6 @@ class CampfireViewModel(
     private val synchronizeLibrary: SynchronizeLibraryUseCase,
     private val startScheduledSynchronization: StartScheduledSynchronizationUseCase,
     private val normalizeSearchText: NormalizeSearchTextUseCase,
-    private val parseChordPro: ParseChordProUseCase,
     private val searchCoverArt: SearchCoverArtUseCase,
     getCoverArtCacheSize: GetCoverArtCacheSizeUseCase,
     private val clearCoverArtCache: ClearCoverArtCacheUseCase,
@@ -535,21 +525,14 @@ class CampfireViewModel(
         retainedEditorField = { retainedEditorField(it) },
         editorDraft = { editorSession.editorDraft.value },
         emitEditorTextEdit = { editorSession.emitEditorTextEdit(it) },
-        parseChordPro = parseChordPro,
-        setChordProCoverArt = setChordProCoverArt,
-        setChordProLanguages = setChordProLanguages,
         setChordProTag = setChordProTag,
-        setChordProLinks = setChordProLinks,
-        setChordProMetadata = setChordProMetadata,
     )
 
     private val selectionEditing: SelectionEditing = SelectionEditing(
         scope = viewModelScope,
         messageSink = messageSink,
         editSongs = editSongs,
-        parseChordPro = parseChordPro,
         setChordProTag = setChordProTag,
-        setChordProLanguages = setChordProLanguages,
     )
 
     /** See [SelectionEditing.isEditingSongs]. */
@@ -683,7 +666,6 @@ class CampfireViewModel(
         searchCoverArt = searchCoverArt,
         getCoverArtCacheSize = getCoverArtCacheSize,
         clearCoverArtCache = clearCoverArtCache,
-        parseChordPro = parseChordPro,
         songTextOf = { songTextOf(it) },
     )
 

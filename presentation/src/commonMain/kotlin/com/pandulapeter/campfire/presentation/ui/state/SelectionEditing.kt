@@ -9,10 +9,10 @@
  */
 package com.pandulapeter.campfire.presentation.ui.state
 
+import com.pandulapeter.campfire.chordpro.edit.ChordProLanguages
+import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.data.model.domain.tagKey
 import com.pandulapeter.campfire.domain.api.useCases.EditSongsUseCase
-import com.pandulapeter.campfire.domain.api.useCases.ParseChordProUseCase
-import com.pandulapeter.campfire.domain.api.useCases.SetChordProLanguagesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SetChordProTagUseCase
 import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
@@ -35,9 +35,7 @@ internal class SelectionEditing(
     scope: CoroutineScope,
     private val messageSink: MessageSink,
     private val editSongs: EditSongsUseCase,
-    private val parseChordPro: ParseChordProUseCase,
     private val setChordProTag: SetChordProTagUseCase,
-    private val setChordProLanguages: SetChordProLanguagesUseCase,
 ) {
 
     private val runningEdits = MutableStateFlow(0)
@@ -52,7 +50,7 @@ internal class SelectionEditing(
     fun setSelectionTags(fileNames: List<String>, added: List<String>, removed: Set<String>) {
         val removedKeys = removed.mapTo(hashSetOf(), ::tagKey)
         edit(fileNames) { text ->
-            val removedTags = parseChordPro(text).metadata.tags.filter { tagKey(it) in removedKeys }
+            val removedTags = ChordProParser.parse(text).metadata.tags.filter { tagKey(it) in removedKeys }
             val withoutRemoved = removedTags.fold(text) { current, tag -> setChordProTag(text = current, tag = tag, isSelected = false) }
             added.fold(withoutRemoved) { current, tag -> setChordProTag(text = current, tag = tag, isSelected = true) }
         }
@@ -60,9 +58,9 @@ internal class SelectionEditing(
 
     /** Each song's own languages, less [removed] and with [added] after them. */
     fun setSelectionLanguages(fileNames: List<String>, added: Set<String>, removed: Set<String>) = edit(fileNames) { text ->
-        val codes = parseChordPro(text).metadata.languages
+        val codes = ChordProParser.parse(text).metadata.languages
         val edited = codes.filterNot { it in removed } + added.filterNot { it in codes }
-        if (edited == codes) text else setChordProLanguages(text = text, codes = edited)
+        if (edited == codes) text else ChordProLanguages.setLanguages(text, edited)
     }
 
     private fun edit(fileNames: List<String>, edit: (String) -> String) = messageSink.launchLibraryChange {

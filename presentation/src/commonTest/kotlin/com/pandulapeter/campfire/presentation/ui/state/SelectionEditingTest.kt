@@ -10,16 +10,11 @@
 package com.pandulapeter.campfire.presentation.ui.state
 
 import com.pandulapeter.campfire.chordpro.ChordProParser
-import com.pandulapeter.campfire.chordpro.edit.ChordProLanguages
 import com.pandulapeter.campfire.chordpro.edit.ChordProTags
 import com.pandulapeter.campfire.data.model.domain.EditedSongs
-import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.data.model.domain.normalizedToNfc
 import com.pandulapeter.campfire.domain.api.useCases.EditSongsUseCase
-import com.pandulapeter.campfire.domain.api.useCases.ParseChordProUseCase
-import com.pandulapeter.campfire.domain.api.useCases.SetChordProLanguagesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SetChordProTagUseCase
-import com.pandulapeter.campfire.presentation.mapper.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
@@ -80,18 +75,12 @@ class SelectionEditingTest {
                 return EditedSongs(changedFileNames = changed, failedFileNames = emptyList())
             }
         },
-        parseChordPro = object : ParseChordProUseCase {
-            override fun invoke(text: String, notation: UserPreferences.Notation) = ChordProParser.parse(text, notation.toChordNotation())
-        },
         setChordProTag = object : SetChordProTagUseCase {
             override fun invoke(text: String, tag: String, isSelected: Boolean) = if (isSelected) {
                 ChordProTags.addTag(text, tag, fold = String::normalizedToNfc)
             } else {
                 ChordProTags.removeTag(text, tag, fold = String::normalizedToNfc)
             }
-        },
-        setChordProLanguages = object : SetChordProLanguagesUseCase {
-            override fun invoke(text: String, codes: List<String>) = ChordProLanguages.setLanguages(text, codes)
         },
     )
 }

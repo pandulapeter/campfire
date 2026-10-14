@@ -9,11 +9,11 @@
  */
 package com.pandulapeter.campfire.presentation.ui.state
 
+import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.data.model.domain.CoverArtQuery
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.domain.api.useCases.ClearCoverArtCacheUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetCoverArtCacheSizeUseCase
-import com.pandulapeter.campfire.domain.api.useCases.ParseChordProUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SearchCoverArtUseCase
 import com.pandulapeter.campfire.presentation.ui.dialogs.CoverArtSearchState
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
@@ -36,7 +36,6 @@ internal class CoverArtSearchController(
     private val searchCoverArt: SearchCoverArtUseCase,
     getCoverArtCacheSize: GetCoverArtCacheSizeUseCase,
     private val clearCoverArtCache: ClearCoverArtCacheUseCase,
-    private val parseChordPro: ParseChordProUseCase,
     private val songTextOf: (SongEditTarget) -> String?,
 ) {
 
@@ -63,7 +62,7 @@ internal class CoverArtSearchController(
      * no album and a title with the subtitle after it.
      */
     fun coverArtQueryOf(song: Song, target: SongEditTarget) = songTextOf(target)?.let { text ->
-        val metadata = parseChordPro(text).metadata
+        val metadata = ChordProParser.parse(text).metadata
         CoverArtQuery(
             artist = metadata.artist.orEmpty(),
             album = metadata.album.orEmpty(),

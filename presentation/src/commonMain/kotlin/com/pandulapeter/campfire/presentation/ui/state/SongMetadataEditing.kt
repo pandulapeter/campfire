@@ -9,6 +9,9 @@
  */
 package com.pandulapeter.campfire.presentation.ui.state
 
+import com.pandulapeter.campfire.chordpro.edit.ChordProLinks
+import com.pandulapeter.campfire.chordpro.edit.ChordProLanguages
+import com.pandulapeter.campfire.chordpro.edit.ChordProCoverArt
 import androidx.compose.foundation.text.input.TextFieldState
 import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields
 import com.pandulapeter.campfire.chordpro.ChordProParser
@@ -20,11 +23,6 @@ import com.pandulapeter.campfire.data.model.domain.SongContent
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.data.model.domain.normalizedTags
 import com.pandulapeter.campfire.data.model.domain.tagKey
-import com.pandulapeter.campfire.domain.api.useCases.ParseChordProUseCase
-import com.pandulapeter.campfire.domain.api.useCases.SetChordProCoverArtUseCase
-import com.pandulapeter.campfire.domain.api.useCases.SetChordProLanguagesUseCase
-import com.pandulapeter.campfire.domain.api.useCases.SetChordProLinksUseCase
-import com.pandulapeter.campfire.domain.api.useCases.SetChordProMetadataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SetChordProTagUseCase
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
@@ -55,12 +53,7 @@ internal class SongMetadataEditing(
     private val retainedEditorField: (fileName: String) -> TextFieldState?,
     private val editorDraft: () -> SongContent?,
     private val emitEditorTextEdit: (EditorTextEdit) -> Unit,
-    private val parseChordPro: ParseChordProUseCase,
-    private val setChordProCoverArt: SetChordProCoverArtUseCase,
-    private val setChordProLanguages: SetChordProLanguagesUseCase,
     private val setChordProTag: SetChordProTagUseCase,
-    private val setChordProLinks: SetChordProLinksUseCase,
-    private val setChordProMetadata: SetChordProMetadataUseCase,
 ) {
 
     /**
@@ -74,7 +67,7 @@ internal class SongMetadataEditing(
         val keptKeys = tags.mapTo(mutableSetOf(), ::tagKey)
         val offeredKeys = offeredTags.mapTo(mutableSetOf(), ::tagKey)
         editSong(target) { text ->
-            val removed = parseChordPro(text).metadata.tags.filter { tagKey(it).let { key -> key in offeredKeys && key !in keptKeys } }
+            val removed = ChordProParser.parse(text).metadata.tags.filter { tagKey(it).let { key -> key in offeredKeys && key !in keptKeys } }
             val withoutRemoved = removed.fold(text) { current, tag -> setChordProTag(text = current, tag = tag, isSelected = false) }
             tags.fold(withoutRemoved) { current, tag -> setChordProTag(text = current, tag = tag, isSelected = true) }
         }
@@ -86,7 +79,7 @@ internal class SongMetadataEditing(
      * file the user owns is better rewritten once than once per checkbox.
      */
     fun setSongLanguages(target: SongEditTarget, codes: List<String>) = editSong(target) { text ->
-        setChordProLanguages(text = text, codes = codes)
+        ChordProLanguages.setLanguages(text, codes)
     }
 
     /** Opens the label pickers on the current draft when invoked from the editor. */
@@ -102,7 +95,7 @@ internal class SongMetadataEditing(
 
     private fun songForLabelEditing(song: Song, target: SongEditTarget): Song? {
         if (target is SongEditTarget.File) return song
-        val metadata = parseChordPro(songTextOf(target) ?: return null).metadata
+        val metadata = ChordProParser.parse(songTextOf(target) ?: return null).metadata
         return song.copy(tags = normalizedTags(metadata.tags), languages = metadata.languages)
     }
 
@@ -117,7 +110,7 @@ internal class SongMetadataEditing(
     /** The New song form filled in with what [text], the text of [song], says for each of its fields. */
     fun duplicateSongDialog(song: Song, text: String) = DialogType.DuplicateSong(song = song, values = songMetadataValuesOf(text))
 
-    private fun songMetadataValuesOf(text: String) = parseChordPro(text).metadata.let { metadata ->
+    private fun songMetadataValuesOf(text: String) = ChordProParser.parse(text).metadata.let { metadata ->
         SONG_METADATA_FIELDS.associateWith { ChordProMetadataFields.valueOf(metadata, it).orEmpty() }
     }
 
@@ -131,17 +124,17 @@ internal class SongMetadataEditing(
         offeredValues: Map<ChordProMetadataFields.Field, String>,
     ) {
         val changed = values.filter { (field, value) -> value.trim() != offeredValues[field]?.trim() }
-        if (changed.isNotEmpty()) editSong(target) { text -> setChordProMetadata(text = text, values = changed) }
+        if (changed.isNotEmpty()) editSong(target) { text -> ChordProMetadataFields.set(text = text, values = changed) }
     }
 
     /** Opens the link editor on the source text, since links are not part of the song list's lighter metadata. */
     fun showSongLinksDialog(song: Song, target: SongEditTarget) {
         val text = songTextOf(target) ?: return
-        dialogHost.showDialog(DialogType.SongLinks(song = song, links = parseChordPro(text).metadata.links, target = target))
+        dialogHost.showDialog(DialogType.SongLinks(song = song, links = ChordProParser.parse(text).metadata.links, target = target))
     }
 
     /** What [text] says about the song beyond its lines, for the sheet of what the song is (see [hasSongInfo] for the button opening it). */
-    fun songMetadataOf(text: String): ChordProMetadata = parseChordPro(text).metadata
+    fun songMetadataOf(text: String): ChordProMetadata = ChordProParser.parse(text).metadata
 
     /**
      * Whether the sheet of what the song is has anything to show for [text], from a scan of its directives alone: none
@@ -157,8 +150,8 @@ internal class SongMetadataEditing(
     fun setSongLinks(target: SongEditTarget, links: List<ChordProLink>, offeredLinks: List<ChordProLink>) {
         val offeredUrls = offeredLinks.mapTo(mutableSetOf()) { it.url }
         editSong(target) { text ->
-            val addedElsewhere = parseChordPro(text).metadata.links.filterNot { it.url in offeredUrls }
-            setChordProLinks(text = text, links = links + addedElsewhere)
+            val addedElsewhere = ChordProParser.parse(text).metadata.links.filterNot { it.url in offeredUrls }
+            ChordProLinks.setLinks(text = text, links = links + addedElsewhere)
         }
     }
 
@@ -166,7 +159,7 @@ internal class SongMetadataEditing(
     fun showSongCoverArtDialog(song: Song, target: SongEditTarget) {
         val currentSong = when (target) {
             is SongEditTarget.File -> song
-            is SongEditTarget.EditorDraft -> song.copy(coverArtUrl = parseChordPro(songTextOf(target) ?: return).metadata.coverArt)
+            is SongEditTarget.EditorDraft -> song.copy(coverArtUrl = ChordProParser.parse(songTextOf(target) ?: return).metadata.coverArt)
         }
         dialogHost.showDialog(DialogType.CoverArtSearch(song = currentSong, target = target))
     }
@@ -176,7 +169,7 @@ internal class SongMetadataEditing(
      * file like a tag is, so that the cover travels with the song wherever it goes.
      */
     fun setSongCoverArt(target: SongEditTarget, url: String?) = editSong(target) { text ->
-        setChordProCoverArt(text = text, url = url)
+        ChordProCoverArt.set(text, url)
     }
 
     /**
@@ -205,7 +198,7 @@ internal class SongMetadataEditing(
      * the editor, it reads and changes the text being typed there instead, which is read through no setlist.
      */
     fun showSongPlayingDialog(song: Song, setlistFileName: String?, target: SongEditTarget) {
-        val metadata = parseChordPro(songTextOf(target) ?: return).metadata
+        val metadata = ChordProParser.parse(songTextOf(target) ?: return).metadata
         dialogHost.showDialog(
             DialogType.SongPlaying(
                 // The sheet's key field notes a {transpose} the text opens with, which the draft may have changed since
@@ -236,7 +229,7 @@ internal class SongMetadataEditing(
         val changed = values
             .filter { (field, value) -> value.trim() != offeredValues[field]?.trim() }
             .mapValues { (field, value) -> if (field == ChordProMetadataFields.Field.KEY) fileKeyOf(value) else value }
-        if (changed.isNotEmpty()) editSong(target) { text -> setChordProMetadata(text = text, values = changed) }
+        if (changed.isNotEmpty()) editSong(target) { text -> ChordProMetadataFields.set(text = text, values = changed) }
     }
 
     /** Reopens the song edit sheet [saved] names over [song], through the opener its menu uses, see `SavedDialogRestorer`. */
@@ -251,6 +244,6 @@ internal class SongMetadataEditing(
 
     /** A key typed in the editor's notation, as the file is to hold it; the inverse of [SongRenderer.editorKeyOf]. */
     private fun fileKeyOf(key: String) = key.trim().takeIf { it.isNotEmpty() }?.let { typed ->
-        parseChordPro(songRenderer.fileTextOf("{key: $typed}", editorNotation())).metadata.key ?: typed
+        ChordProParser.parse(songRenderer.fileTextOf("{key: $typed}", editorNotation())).metadata.key ?: typed
     }.orEmpty()
 }
